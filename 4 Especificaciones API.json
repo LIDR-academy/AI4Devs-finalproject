@@ -1,0 +1,492 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Impulsa360 API",
+    "description": "API para la aplicación móvil y la plataforma de administración web de Impulsa360.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.impulsa360.com/v1",
+      "description": "Servidor principal de Impulsa360"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Registro de Usuario",
+        "description": "Permite a los usuarios registrarse en la aplicación.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "additionalData": {
+                    "type": "object",
+                    "properties": {
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "client",
+                          "provider"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "role"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro exitoso"
+          },
+          "400": {
+            "description": "Información inválida"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Autenticación de Usuario",
+        "description": "Permite a los usuarios autenticarse en la aplicación.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticación exitosa"
+          },
+          "401": {
+            "description": "Credenciales incorrectas"
+          }
+        }
+      }
+    },
+    "/services/search": {
+      "get": {
+        "summary": "Búsqueda de Servicios",
+        "description": "Permite a los clientes buscar y filtrar servicios disponibles.",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "Palabras clave para la búsqueda",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Categoría del servicio",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "description": "Ubicación del servicio",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priceRange",
+            "in": "query",
+            "description": "Rango de precios para filtrar",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de proveedores relevantes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "providerId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "services": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parámetros de búsqueda inválidos"
+          }
+        }
+      }
+    },
+    "/services/{providerId}": {
+      "get": {
+        "summary": "Detalles del Proveedor",
+        "description": "Permite a los clientes ver detalles sobre un proveedor específico.",
+        "parameters": [
+          {
+            "name": "providerId",
+            "in": "path",
+            "required": true,
+            "description": "ID del proveedor",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Información del proveedor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "services": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "price": {
+                      "type": "number"
+                    },
+                    "reviews": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rating": {
+                            "type": "integer"
+                          },
+                          "comment": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Proveedor no encontrado"
+          }
+        }
+      }
+    },
+    "/reservations": {
+      "post": {
+        "summary": "Solicitud de Reserva",
+        "description": "Permite a los clientes solicitar o reservar servicios.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "providerId": {
+                    "type": "string"
+                  },
+                  "serviceId": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "time": {
+                    "type": "string"
+                  },
+                  "additionalDetails": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitud de reserva enviada"
+          },
+          "400": {
+            "description": "Datos de reserva inválidos"
+          }
+        }
+      }
+    },
+    "/reservations/{reservationId}": {
+      "put": {
+        "summary": "Gestión de Reservas",
+        "description": "Permite a los proveedores gestionar reservas recibidas.",
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "description": "ID de la reserva",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "confirmed",
+                      "rejected",
+                      "rescheduled"
+                    ]
+                  },
+                  "newDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "newTime": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estado de la reserva actualizado"
+          },
+          "400": {
+            "description": "Datos de reserva inválidos"
+          }
+        }
+      }
+    },
+    "/providers": {
+      "post": {
+        "summary": "Registro y Gestión de Proveedores (Administración)",
+        "description": "Permite al administrador registrar y gestionar la información de los proveedores.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "providerId": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "services": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "price": {
+                    "type": "number"
+                  },
+                  "location": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Información del proveedor actualizada"
+          },
+          "400": {
+            "description": "Datos inválidos"
+          }
+        }
+      }
+    },
+    "/admin/reservations": {
+      "get": {
+        "summary": "Gestión de Reservas (Administración)",
+        "description": "Permite al administrador visualizar y gestionar todas las reservas realizadas.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Estado de la reserva",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Fecha de la reserva",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de reservas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "reservationId": {
+                        "type": "string"
+                      },
+                      "providerId": {
+                        "type": "string"
+                      },
+                      "clientId": {
+                        "type": "string"
+                      },
+                      "serviceId": {
+                        "type": "string"
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parámetros inválidos"
+          }
+        }
+      }
+    },
+    "/admin/reports": {
+      "get": {
+        "summary": "Reportes y Análisis (Administración)",
+        "description": "Permite al administrador visualizar reportes y análisis sobre el uso de la plataforma y la actividad.",
+        "responses": {
+          "200": {
+            "description": "Datos de reportes y análisis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalUsers": {
+                      "type": "integer"
+                    },
+                    "totalProviders": {
+                      "type": "integer"
+                    },
+                    "totalReservations": {
+                      "type": "integer"
+                    },
+                    "platformPerformance": {
+                      "type": "object",
+                      "properties": {
+                        "averageResponseTime": {
+                          "type": "number",
+                          "format": "float"
+                        },
+                        "uptime": {
+                          "type": "number",
+                          "format": "float"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error en la generación del reporte"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
