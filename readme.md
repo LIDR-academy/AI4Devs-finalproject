@@ -19,7 +19,7 @@ María Pizarro Cuevas
 
 ### **0.2. Nombre del proyecto:**
 
-**IkiGoo**
+![IkiGoo Logo](./docs/media/logos/logo1.png)
 
 ### **0.3. Descripción breve del proyecto:**
 
@@ -66,7 +66,17 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-(WIP)
+#### Login Page
+
+![IkiGoo Login Page](./docs/media/login.png)
+
+#### Main Page
+
+![IkiGoo Main Page](./docs/media/main.png)
+
+#### Calendar
+
+![IkiGoo Calendar](./docs/media/calendar.png)
 
 ### **1.4. Instrucciones de instalación:**
 
