@@ -87,7 +87,96 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+
+
+Aquí te presento una versión completa de la sección de **Arquitectura del Sistema** para la documentación del proyecto **IkiGoo**:
+
+---
+
+## 2. Arquitectura del Sistema
+
+### Componentes Principales y Tecnologías Utilizadas
+
+```mermaid
+graph TD
+    FE["Frontend (React + Redux)"] --> GW["API Gateway"]
+    GW --> BE["Backend (Node.js + Express)"]
+    GW --> SD["Servicios Dedicados (Integraciones e IA)"]
+    BE --> EC2["AWS EC2 (Backend + Servicios)"]
+    SD --> EC2
+    EC2 --> DocumentDB["Amazon DocumentDB"]
+    EC2 --> RDS["AWS RDS (Postgres DB)"]
+    RDS --> DBP["Postgres DB"]
+    Lambda["AWS Lambda (Funciones)"] --> EC2
+    FE --> S3["AWS S3 (Archivos Estáticos)"]
+    S3 --> CloudFront["AWS CloudFront (Distribución de Contenido)"]
+
+    class FE frontend;
+    class GW gateway;
+    class BE backend;
+    class SD services;
+    class EC2 aws;
+    class DBP database;
+    class DocumentDB database;
+    class RDS aws;
+    class Lambda aws;
+    class S3 aws;
+    class CloudFront aws;
+
+    classDef frontend fill:#ADD8E6,stroke:#333,stroke-width:2px;
+    classDef gateway fill:#90EE90,stroke:#333,stroke-width:2px;
+    classDef backend fill:#F08080,stroke:#333,stroke-width:2px;
+    classDef services fill:#FFA500,stroke:#333,stroke-width:2px;
+    classDef database fill:#FFFFE0,stroke:#333,stroke-width:2px;
+    classDef aws fill:#D3D3D3,stroke:#333,stroke-width:2px;
+```
+
+La arquitectura del sistema de **IkiGoo** se ha diseñado para ser modular, escalable y eficiente, utilizando un enfoque de monolito modular. Esto facilita la implementación inicial del MVP, manteniendo la simplicidad y la cohesión, mientras se sientan las bases para una posible transición a un modelo de arquitectura más moderno en el futuro.
+
+### Componentes en detalle
+
+1. **Frontend (React + Redux)**: La interfaz de usuario será construida con React, biblioteca de JavaScript para construir interfaces de usuario de manera modular. Redux se utiliza para gestionar el estado global de la aplicación.
+Estas herramientas proporcionan una experiencia interactiva y dinámica para los usuarios, permitiendo la planificación de itinerarios, gestión de perfiles y otras interacciones clave.
+   - **Comunicación**: Interactuará con el API Gateway para enviar y recibir datos del backend.
+
+2. **API Gateway**: Actuará como el único punto de entrada para todas las solicitudes desde el frontend hacia el backend. Su objetivo es controlar la autenticación, enrutamiento, y composición de respuestas, proporcionando una capa de seguridad y control de acceso centralizada.
+   - **Comunicación**: Redirigirá las solicitudes al backend y a los servicios dedicados según corresponda.
+
+3. **Backend (Node.js + Express)**: El núcleo del sistema será construido con Node.js, conocido entorno de ejecución de JavaScript que permite manejar múltiples conexiones simultáneas de manera eficiente. Express será el framework utilizado para manejar las rutas y la lógica de negocio.
+   - **Comunicación**: Se conectará con las bases de datos (Postgres y Amazon DocumentDB) y con los servicios dedicados.
+
+4. **Servicios Dedicados (Integraciones e IA)**: Servicios dentro del backend que gestionarán las integraciones con APIs externas (para obtener datos de vuelos, hoteles, eventos) y con la API de OpenAI para la generación de itinerarios personalizados mediante IA.
+Serán los encargados de obtener, procesar y devolver datos en tiempo real, asegurando que la aplicación pueda ofrecer información precisa y recomendaciones personalizadas.
+   - **Comunicación**: Se integrarán con el backend para procesar solicitudes específicas relacionadas con la obtención de datos y la personalización de itinerarios.
+
+5. **Bases de Datos (Postgres + Amazon DocumentDB)**:
+   - **Postgres**: Base de datos relacional utilizada para almacenar datos estructurados como usuarios e itinerarios. Esta garantiza la integridad referencial y maneja operaciones complejas de consulta y manipulación de datos.
+     - **Comunicación**: Directamente con el backend para realizar operaciones CRUD.
+   - **Amazon DocumentDB**: Base de datos NoSQL utilizada para almacenar datos no estructurados, como logs e historial de interacciones del usuario. Encargada de facilitar el almacenamiento y recuperación de datos semi-estructurados que no requieren una estructura rígida.
+     - **Comunicación**: Gestionada directamente por el backend para operaciones que no requieren integridad referencial.
+
+6. **Infraestructura en AWS**:
+   - **EC2**: Hospedará el backend y los servicios dedicados en un entorno Dockerizado.
+   - **Lambda**: Ejecutará funciones serverless para tareas específicas como la sincronización de datos.
+   - **S3**: Almacenará archivos estáticos como imágenes y otros recursos necesarios para el frontend.
+   - **RDS**: Administrará la base de datos relacional Postgres, facilitando su escalabilidad y gestión.
+   - **CloudFront**: Acelerará la entrega de contenido estático a los usuarios finales.
+
+### Patrón Arquitectónico
+
+**Monolito Modular**
+Se ha optado por un enfoque de monolito modular, donde el sistema está organizado en módulos independientes que manejan diferentes aspectos de la aplicación, pero que están unidos en una única base de código. Esta elección se ha dado por los siguientes motivos:
+  - **Simplicidad y Rapidez de Desarrollo**: Para el **MVP**, un monolito modular permite un desarrollo más rápido y sencillo, sin la complejidad adicional que conlleva una arquitectura de microservicios.
+  - **Cohesión y Facilidad de Mantenimiento**: Mantener toda la lógica del sistema en una base de código facilita la depuración y el mantenimiento en las primeras etapas del proyecto.
+  - **Escalabilidad Futurible**: El diseño modular permite que, si el sistema crece en complejidad y demanda, se pueda descomponer en el futuro, por ejemplo, en microservicios, facilitando la transición sin grandes refactorizaciones.
+
+### Desafios
+
+- **Escalabilidad Limitada Inicialmente**: Un monolito modular puede volverse difícil de escalar a medida que crece el número de usuarios y la complejidad de las funciones, lo que podría requerir una refactorización significativa en el futuro.
+- **Potencialmente Menor Resiliencia**: Si bien un monolito modular es más sencillo, también significa que todos los componentes están unidos; si una parte del sistema falla, podría impactar a todo el sistema.
+- **Mayor Complejidad en la Transición**: Si se decide migrar a una arquitectura de microservicios, la transición podría requerir un esfuerzo considerable para dividir los módulos en servicios independientes.
+
+A pesar de ello, este enfoque arquitectónico, junto con las tecnologías seleccionadas, permite a **IkiGoo** ofrecer una solución robusta y flexible, optimizada para un desarrollo rápido y eficaz del MVP, mientras que proporciona una base sólida para una evolución y escalabilidad futura.
 
 ### **2.2. Descripción de componentes principales:**
 
