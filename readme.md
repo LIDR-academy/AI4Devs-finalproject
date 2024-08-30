@@ -190,12 +190,247 @@ Serán los encargados de obtener, procesar y devolver datos en tiempo real, aseg
 
 ### **3.1. Diagrama del modelo de datos:**
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+```mermaid
+erDiagram
+    User ||--o{ Trip : "plans"
+    User ||--o{ Preferences : "has"
+    Trip ||--o{ Itinerary : "contains"
+    Itinerary ||--o{ Activity : "includes"
+    Itinerary ||--o{ Transport : "uses"
+    Itinerary ||--o{ Accommodation : "stays"
 
+    Preferences ||--o{ TravelPreference : "prefers"
+    Preferences ||--o{ MobilityPreference : "uses"
+    Preferences ||--o{ AccommodationPreference : "prefers"
+    Preferences ||--o{ FavoritePlace : "favors"
+    Preferences ||--o{ VisitedPlace : "visits"
+
+    TravelPreference }o--|| TravelType : "is a"
+    MobilityPreference }o--|| MobilityType : "is a"
+    AccommodationPreference }o--|| AccommodationType : "is a"
+    FavoritePlace }o--|| City : "is a"
+    VisitedPlace }o--|| City : "is a"
+
+    User {
+        string ID PK
+        string Name
+        string Email UK
+        string Password
+        date CreationDate "not null"
+        date LastLogin
+    }
+    
+    Preferences {
+        string ID PK
+        string UserID FK
+        int Budget "not null"
+    }
+
+    TravelPreference {
+        string ID PK
+        string PreferencesID FK "not null"
+        string TravelTypeID FK "not null"
+    }
+
+    MobilityPreference {
+        string ID PK
+        string PreferencesID FK "not null"
+        string MobilityTypeID FK "not null"
+    }
+
+    AccommodationPreference {
+        string ID PK
+        string PreferencesID FK "not null"
+        string AccommodationTypeID FK "not null"
+    }
+
+    FavoritePlace {
+        string ID PK
+        string PreferencesID FK "not null"
+        string CityID FK "not null"
+    }
+
+    VisitedPlace {
+        string ID PK
+        string PreferencesID FK "not null"
+        string CityID FK "not null"
+    }
+    
+    TravelType {
+        string ID PK
+        enum Type "{Gastronomic, Cultural, Family, Solo, Couple, ...} not null"
+    }
+
+    MobilityType {
+        string ID PK
+        enum Type "{OnFoot, Car, Train, Plane, ...} not null"
+    }
+
+    AccommodationType {
+        string ID PK
+        enum Type "{Hotel, Apartment, Hostel, ...} not null"
+    }
+
+    City {
+        string ID PK
+        string Name "not null"
+    }
+
+    Trip {
+        string ID PK
+        string UserID FK "not null"
+        string Name "not null"
+        date StartDate "not null"
+        date EndDate
+        string Description
+    }
+    
+    Itinerary {
+        string ID PK
+        string TripID FK "not null"
+        string Destination "not null"
+        date StartDate "not null"
+        date EndDate
+        string Description
+    }
+    
+    Activity {
+        string ID PK
+        string ItineraryID FK "not null"
+        string Name "not null"
+        string Description
+        int Sequence "not null"
+        date DateTime "not null"
+    }
+
+    Transport {
+        string ID PK
+        string ItineraryID FK "not null"
+        string Type "not null"
+        string Description
+        string Origin "not null"
+        string Destination "not null"
+        int Sequence "not null"
+        date DepartureDate "not null"
+        date ArrivalDate "not null"
+    }
+
+    Accommodation {
+        string ID PK
+        string ItineraryID FK "not null"
+        string Name "not null"
+        string Address
+        int Sequence "not null"
+        date CheckInDate "not null"
+        date CheckOutDate "not null"
+    }
+```
 
 ### **3.2. Descripción de entidades principales:**
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+**User**
+- **Descripción**: Representa al usuario que utiliza la aplicación.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único del usuario.
+  - `Name` (string): Nombre del usuario.
+  - `Email` (string, UK): Dirección de correo electrónico única del usuario.
+  - `Password` (string): Contraseña cifrada del usuario.
+  - `CreationDate` (date, not null): Fecha en la que se creó la cuenta del usuario.
+  - `LastLogin` (date): Fecha de la última vez que el usuario inició sesión.
+- **Relaciones**:
+  - Relación uno a muchos con `Trip` (Un usuario puede planificar múltiples viajes).
+  - Relación uno a uno con `Preferences` (Un usuario tiene un conjunto de preferencias).
+
+**Preferences**
+- **Descripción**: Contiene las preferencias del usuario, como tipos de viajes, movilidad, alojamiento, y lugares favoritos o visitados.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único de las preferencias del usuario.
+  - `UserID` (string, FK): Referencia al usuario asociado.
+  - `Budget` (int, not null): Presupuesto máximo que el usuario desea gastar en sus viajes.
+- **Relaciones**:
+  - Relación uno a muchos con `TravelPreference`, `MobilityPreference`, `AccommodationPreference`, `FavoritePlace`, y `VisitedPlace`.
+
+**Trip**
+- **Descripción**: Representa un viaje planificado por el usuario, que puede contener múltiples itinerarios.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único del viaje.
+  - `UserID` (string, FK, not null): Referencia al usuario que planifica el viaje.
+  - `Name` (string, not null): Nombre del viaje.
+  - `StartDate` (date, not null): Fecha de inicio del viaje.
+  - `EndDate` (date): Fecha de finalización del viaje.
+  - `Description` (string): Descripción opcional del viaje.
+- **Relaciones**:
+  - Relación uno a muchos con `Itinerary` (Un viaje puede contener múltiples itinerarios).
+
+**Itinerary**
+- **Descripción**: Representa un itinerario dentro de un viaje, que incluye actividades, transportes y alojamientos específicos.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único del itinerario.
+  - `TripID` (string, FK, not null): Referencia al viaje asociado.
+  - `Destination` (string, not null): Destino del itinerario.
+  - `StartDate` (date, not null): Fecha de inicio del itinerario.
+  - `EndDate` (date): Fecha de finalización del itinerario.
+  - `Description` (string): Descripción opcional del itinerario.
+- **Relaciones**:
+  - Relación uno a muchos con `Activity`, `Transport`, y `Accommodation` (Un itinerario incluye múltiples actividades, transportes, y alojamientos).
+
+**Activity**
+- **Descripción**: Representa una actividad específica dentro de un itinerario, como visitas turísticas, eventos, etc.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único de la actividad.
+  - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
+  - `Name` (string, not null): Nombre de la actividad.
+  - `Description` (string): Descripción opcional de la actividad.
+  - `Sequence` (int, not null): Orden de ejecución de la actividad dentro del itinerario.
+  - `DateTime` (date, not null): Fecha y hora en que se llevará a cabo la actividad.
+- **Relaciones**:
+  - Relación muchos a uno con `Itinerary` (Una actividad pertenece a un solo itinerario).
+
+**Transport**
+- **Descripción**: Representa un medio de transporte utilizado en un itinerario, como vuelos, trenes, etc.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único del transporte.
+  - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
+  - `Type` (string, not null): Tipo de transporte (ej., vuelo, tren, coche, etc.).
+  - `Description` (string): Descripción opcional del transporte.
+  - `Origin` (string, not null): Lugar de origen del transporte.
+  - `Destination` (string, not null): Lugar de destino del transporte.
+  - `Sequence` (int, not null): Orden de ejecución del transporte dentro del itinerario.
+  - `DepartureDate` (date, not null): Fecha y hora de salida.
+  - `ArrivalDate` (date, not null): Fecha y hora de llegada.
+- **Relaciones**:
+  - Relación muchos a uno con `Itinerary` (Un transporte pertenece a un solo itinerario).
+
+**Accommodation**
+- **Descripción**: Representa el alojamiento del usuario durante un itinerario, como un hotel o apartamento.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único del alojamiento.
+  - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
+  - `Name` (string, not null): Nombre del alojamiento.
+  - `Address` (string): Dirección del alojamiento.
+  - `Sequence` (int, not null): Orden de ejecución del alojamiento dentro del itinerario.
+  - `CheckInDate` (date, not null): Fecha y hora de check-in.
+  - `CheckOutDate` (date, not null): Fecha y hora de check-out.
+- **Relaciones**:
+  - Relación muchos a uno con `Itinerary` (Un alojamiento pertenece a un solo itinerario).
+
+**City**
+- **Descripción**: Representa una ciudad que puede ser favorita o visitada por el usuario.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único de la ciudad.
+  - `Name` (string, not null): Nombre de la ciudad.
+- **Relaciones**:
+  - Relación uno a muchos con `FavoritePlace` y `VisitedPlace` (Una ciudad puede ser favorita o visitada por múltiples usuarios).
+
+**TravelPreference, MobilityPreference, AccommodationPreference, FavoritePlace, VisitedPlace**
+- **Descripción**: Entidades que almacenan las preferencias del usuario relacionadas con tipos de viajes, movilidad, alojamiento, y lugares favoritos o visitados.
+- **Atributos**:
+  - `ID` (string, PK): Identificador único de la preferencia.
+  - `PreferencesID` (string, FK, not null): Referencia a la entidad `Preferences`.
+  - `TravelTypeID` / `MobilityTypeID` / `AccommodationTypeID` / `CityID` (string, FK, not null): Referencia a las entidades `TravelType`, `MobilityType`, `AccommodationType`, o `City`.
+- **Relaciones**:
+  - Relación muchos a uno con `Preferences` (Una preferencia pertenece a un solo conjunto de preferencias).
+  - Relación uno a uno con `TravelType`, `MobilityType`, `AccommodationType`, o `City` (Una preferencia está relacionada con un solo tipo o ciudad).
 
 ---
 
