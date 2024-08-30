@@ -599,7 +599,7 @@ paths:
           description: "Invalid input"
 ```
 
-### Ejemplo de Petición:
+**Ejemplo de Petición:**
 ```json
 {
   "name": "John Doe",
@@ -616,7 +616,7 @@ paths:
 }
 ```
 
-### Ejemplo de Respuesta:
+**Ejemplo de Respuesta:**
 ```json
 {
   "id": "12345",
@@ -769,12 +769,12 @@ paths:
           description: "Trip not found"
 ```
 
-### Ejemplo de Petición:
+**Ejemplo de Petición:**
 ```http
 GET /trips/12345
 ```
 
-### Ejemplo de Respuesta:
+**Ejemplo de Respuesta:**
 ```json
 {
   "id": "12345",
@@ -892,7 +892,7 @@ paths:
           description: "Invalid input"
 ```
 
-### Ejemplo de Petición:
+**Ejemplo de Petición:**
 ```http
 POST /trips/12345/itineraries
 ```
@@ -906,7 +906,7 @@ POST /trips/12345/itineraries
 }
 ```
 
-### Ejemplo de Respuesta:
+**Ejemplo de Respuesta:**
 ```json
 {
   "id": "123",
