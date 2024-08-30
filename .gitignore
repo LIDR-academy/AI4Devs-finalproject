@@ -1,0 +1,60 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled Source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages and Dependencies
+node_modules/
+vendor/
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and Databases
+*.log
+*.sql
+*.sqlite
+
+# Build Directories
+build/
+dist/
+out/
+
+# Environment Files
+.env
+.env.local
+.env.*.local
+
+# Temporary Files
+tmp/
+temp/
+
+# JavaScript
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates

@@ -190,6 +190,8 @@ Serán los encargados de obtener, procesar y devolver datos en tiempo real, aseg
 
 ### **3.1. Diagrama del modelo de datos:**
 
+**Base de datos relacional: Postgres**
+
 ```mermaid
 erDiagram
     User ||--o{ Trip : "plans"
@@ -326,111 +328,161 @@ erDiagram
     }
 ```
 
+**Base de datos NoSQL: Amazon DocumentDB**
+
+```mermaid
+erDiagram
+    InteractionLog {
+        string userId
+        string sessionId
+        array messages
+        ISODate lastUpdated
+    }
+    
+    Messages {
+        ISODate timestamp
+        string sender
+        string message
+        number responseTime
+    }
+
+    APICache {
+        string cacheId
+        string userId
+        object searchParameters
+        array results
+        ISODate cachedAt
+        ISODate expiresAt
+    }
+```
+
 ### **3.2. Descripción de entidades principales:**
 
-**User**
-- **Descripción**: Representa al usuario que utiliza la aplicación.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único del usuario.
-  - `Name` (string): Nombre del usuario.
-  - `Email` (string, UK): Dirección de correo electrónico única del usuario.
-  - `Password` (string): Contraseña cifrada del usuario.
-  - `CreationDate` (date, not null): Fecha en la que se creó la cuenta del usuario.
-  - `LastLogin` (date): Fecha de la última vez que el usuario inició sesión.
-- **Relaciones**:
-  - Relación uno a muchos con `Trip` (Un usuario puede planificar múltiples viajes).
-  - Relación uno a uno con `Preferences` (Un usuario tiene un conjunto de preferencias).
+**Base de datos relacional: Postgres**   
 
-**Preferences**
-- **Descripción**: Contiene las preferencias del usuario, como tipos de viajes, movilidad, alojamiento, y lugares favoritos o visitados.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único de las preferencias del usuario.
-  - `UserID` (string, FK): Referencia al usuario asociado.
-  - `Budget` (int, not null): Presupuesto máximo que el usuario desea gastar en sus viajes.
-- **Relaciones**:
-  - Relación uno a muchos con `TravelPreference`, `MobilityPreference`, `AccommodationPreference`, `FavoritePlace`, y `VisitedPlace`.
+1. **User**: Representa al usuario que utiliza la aplicación.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único del usuario.
+        - `Name` (string): Nombre del usuario.
+        - `Email` (string, UK): Dirección de correo electrónico única del usuario.
+        - `Password` (string): Contraseña cifrada del usuario.
+        - `CreationDate` (date, not null): Fecha en la que se creó la cuenta del usuario.
+        - `LastLogin` (date): Fecha de la última vez que el usuario inició sesión.
+    - **Relaciones**:
+        - Relación uno a muchos con `Trip` (Un usuario puede planificar múltiples viajes).
+        - Relación uno a uno con `Preferences` (Un usuario tiene un conjunto de preferencias).
 
-**Trip**
-- **Descripción**: Representa un viaje planificado por el usuario, que puede contener múltiples itinerarios.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único del viaje.
-  - `UserID` (string, FK, not null): Referencia al usuario que planifica el viaje.
-  - `Name` (string, not null): Nombre del viaje.
-  - `StartDate` (date, not null): Fecha de inicio del viaje.
-  - `EndDate` (date): Fecha de finalización del viaje.
-  - `Description` (string): Descripción opcional del viaje.
-- **Relaciones**:
-  - Relación uno a muchos con `Itinerary` (Un viaje puede contener múltiples itinerarios).
+2. **Preferences**: Contiene las preferencias del usuario, como tipos de viajes, movilidad, alojamiento, y lugares favoritos o visitados.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único de las preferencias del usuario.
+        - `UserID` (string, FK): Referencia al usuario asociado.
+        - `Budget` (int, not null): Presupuesto máximo que el usuario desea gastar en sus viajes.
+    - **Relaciones**:
+        - Relación uno a muchos con `TravelPreference`, `MobilityPreference`, `AccommodationPreference`, `FavoritePlace`, y `VisitedPlace`.
 
-**Itinerary**
-- **Descripción**: Representa un itinerario dentro de un viaje, que incluye actividades, transportes y alojamientos específicos.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único del itinerario.
-  - `TripID` (string, FK, not null): Referencia al viaje asociado.
-  - `Destination` (string, not null): Destino del itinerario.
-  - `StartDate` (date, not null): Fecha de inicio del itinerario.
-  - `EndDate` (date): Fecha de finalización del itinerario.
-  - `Description` (string): Descripción opcional del itinerario.
-- **Relaciones**:
-  - Relación uno a muchos con `Activity`, `Transport`, y `Accommodation` (Un itinerario incluye múltiples actividades, transportes, y alojamientos).
+3. **Trip**: Representa un viaje planificado por el usuario, que puede contener múltiples itinerarios.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único del viaje.
+        - `UserID` (string, FK, not null): Referencia al usuario que planifica el viaje.
+        - `Name` (string, not null): Nombre del viaje.
+        - `StartDate` (date, not null): Fecha de inicio del viaje.
+        - `EndDate` (date): Fecha de finalización del viaje.
+        - `Description` (string): Descripción opcional del viaje.
+    - **Relaciones**:
+        - Relación uno a muchos con `Itinerary` (Un viaje puede contener múltiples itinerarios).
 
-**Activity**
-- **Descripción**: Representa una actividad específica dentro de un itinerario, como visitas turísticas, eventos, etc.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único de la actividad.
-  - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
-  - `Name` (string, not null): Nombre de la actividad.
-  - `Description` (string): Descripción opcional de la actividad.
-  - `Sequence` (int, not null): Orden de ejecución de la actividad dentro del itinerario.
-  - `DateTime` (date, not null): Fecha y hora en que se llevará a cabo la actividad.
-- **Relaciones**:
-  - Relación muchos a uno con `Itinerary` (Una actividad pertenece a un solo itinerario).
+4. **Itinerary**: Representa un itinerario dentro de un viaje, que incluye actividades, transportes y alojamientos específicos.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único del itinerario.
+        - `TripID` (string, FK, not null): Referencia al viaje asociado.
+        - `Destination` (string, not null): Destino del itinerario.
+        - `StartDate` (date, not null): Fecha de inicio del itinerario.
+        - `EndDate` (date): Fecha de finalización del itinerario.
+        - `Description` (string): Descripción opcional del itinerario.
+    - **Relaciones**:
+        - Relación uno a muchos con `Activity`, `Transport`, y `Accommodation` (Un itinerario incluye múltiples actividades, transportes, y alojamientos).
 
-**Transport**
-- **Descripción**: Representa un medio de transporte utilizado en un itinerario, como vuelos, trenes, etc.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único del transporte.
-  - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
-  - `Type` (string, not null): Tipo de transporte (ej., vuelo, tren, coche, etc.).
-  - `Description` (string): Descripción opcional del transporte.
-  - `Origin` (string, not null): Lugar de origen del transporte.
-  - `Destination` (string, not null): Lugar de destino del transporte.
-  - `Sequence` (int, not null): Orden de ejecución del transporte dentro del itinerario.
-  - `DepartureDate` (date, not null): Fecha y hora de salida.
-  - `ArrivalDate` (date, not null): Fecha y hora de llegada.
-- **Relaciones**:
-  - Relación muchos a uno con `Itinerary` (Un transporte pertenece a un solo itinerario).
+5. **Activity**: Representa una actividad específica dentro de un itinerario, como visitas turísticas, eventos, etc.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único de la actividad.
+        - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
+        - `Name` (string, not null): Nombre de la actividad.
+        - `Description` (string): Descripción opcional de la actividad.
+        - `Sequence` (int, not null): Orden de ejecución de la actividad dentro del itinerario.
+        - `DateTime` (date, not null): Fecha y hora en que se llevará a cabo la actividad.
+    - **Relaciones**:
+        - Relación muchos a uno con `Itinerary` (Una actividad pertenece a un solo itinerario).
 
-**Accommodation**
-- **Descripción**: Representa el alojamiento del usuario durante un itinerario, como un hotel o apartamento.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único del alojamiento.
-  - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
-  - `Name` (string, not null): Nombre del alojamiento.
-  - `Address` (string): Dirección del alojamiento.
-  - `Sequence` (int, not null): Orden de ejecución del alojamiento dentro del itinerario.
-  - `CheckInDate` (date, not null): Fecha y hora de check-in.
-  - `CheckOutDate` (date, not null): Fecha y hora de check-out.
-- **Relaciones**:
-  - Relación muchos a uno con `Itinerary` (Un alojamiento pertenece a un solo itinerario).
+6. **Transport**: Representa un medio de transporte utilizado en un itinerario, como vuelos, trenes, etc.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único del transporte.
+        - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
+        - `Type` (string, not null): Tipo de transporte (ej., vuelo, tren, coche, etc.).
+        - `Description` (string): Descripción opcional del transporte.
+        - `Origin` (string, not null): Lugar de origen del transporte.
+        - `Destination` (string, not null): Lugar de destino del transporte.
+        - `Sequence` (int, not null): Orden de ejecución del transporte dentro del itinerario.
+        - `DepartureDate` (date, not null): Fecha y hora de salida.
+        - `ArrivalDate` (date, not null): Fecha y hora de llegada.
+    - **Relaciones**:
+        - Relación muchos a uno con `Itinerary` (Un transporte pertenece a un solo itinerario).
 
-**City**
-- **Descripción**: Representa una ciudad que puede ser favorita o visitada por el usuario.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único de la ciudad.
-  - `Name` (string, not null): Nombre de la ciudad.
-- **Relaciones**:
-  - Relación uno a muchos con `FavoritePlace` y `VisitedPlace` (Una ciudad puede ser favorita o visitada por múltiples usuarios).
+7. **Accommodation**: Representa el alojamiento del usuario durante un itinerario, como un hotel o apartamento.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único del alojamiento.
+        - `ItineraryID` (string, FK, not null): Referencia al itinerario asociado.
+        - `Name` (string, not null): Nombre del alojamiento.
+        - `Address` (string): Dirección del alojamiento.
+        - `Sequence` (int, not null): Orden de ejecución del alojamiento dentro del itinerario.
+        - `CheckInDate` (date, not null): Fecha y hora de check-in.
+        - `CheckOutDate` (date, not null): Fecha y hora de check-out.
+    - **Relaciones**:
+        - Relación muchos a uno con `Itinerary` (Un alojamiento pertenece a un solo itinerario).
 
-**TravelPreference, MobilityPreference, AccommodationPreference, FavoritePlace, VisitedPlace**
-- **Descripción**: Entidades que almacenan las preferencias del usuario relacionadas con tipos de viajes, movilidad, alojamiento, y lugares favoritos o visitados.
-- **Atributos**:
-  - `ID` (string, PK): Identificador único de la preferencia.
-  - `PreferencesID` (string, FK, not null): Referencia a la entidad `Preferences`.
-  - `TravelTypeID` / `MobilityTypeID` / `AccommodationTypeID` / `CityID` (string, FK, not null): Referencia a las entidades `TravelType`, `MobilityType`, `AccommodationType`, o `City`.
-- **Relaciones**:
-  - Relación muchos a uno con `Preferences` (Una preferencia pertenece a un solo conjunto de preferencias).
-  - Relación uno a uno con `TravelType`, `MobilityType`, `AccommodationType`, o `City` (Una preferencia está relacionada con un solo tipo o ciudad).
+8. **City**: Representa una ciudad que puede ser favorita o visitada por el usuario.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único de la ciudad.
+        - `Name` (string, not null): Nombre de la ciudad.
+    - **Relaciones**:
+        - Relación uno a muchos con `FavoritePlace` y `VisitedPlace` (Una ciudad puede ser favorita o visitada por múltiples usuarios).
+
+9. **TravelPreference, MobilityPreference, AccommodationPreference, FavoritePlace, VisitedPlace**: Entidades que almacenan las preferencias del usuario relacionadas con tipos de viajes, movilidad, alojamiento, y lugares favoritos o visitados.
+    - **Atributos**:
+        - `ID` (string, PK): Identificador único de la preferencia.
+        - `PreferencesID` (string, FK, not null): Referencia a la entidad `Preferences`.
+        - `TravelTypeID` / `MobilityTypeID` / `AccommodationTypeID` / `CityID` (string, FK, not null): Referencia a las entidades `TravelType`, `MobilityType`, `AccommodationType`, o `City`.
+    - **Relaciones**:
+        - Relación muchos a uno con `Preferences` (Una preferencia pertenece a un solo conjunto de preferencias).
+        - Relación uno a uno con `TravelType`, `MobilityType`, `AccommodationType`, o `City` (Una preferencia está relacionada con un solo tipo o ciudad).
+
+**Base de datos NoSQL: Amazon DocumentDB**   
+
+1. **InteractionLog**: Entidad que almacena los registros de interacción del usuario con la IA, incluyendo el historial de mensajes intercambiados durante una sesión de chat.
+    - **Atributos**:
+        - `userId` (string): Identificador único del usuario que participó en la sesión de chat.
+        - `sessionId` (string): Identificador único de la sesión de chat.
+        - `messages` (array): Lista de mensajes intercambiados durante la sesión.
+            - `timestamp` (ISODate): Fecha y hora en que se envió el mensaje.
+            - `sender` (string): Identifica si el mensaje fue enviado por el usuario o por la IA.
+            - `message` (string): Contenido textual del mensaje.
+            - `responseTime` (number): Tiempo de respuesta de la IA en milisegundos.
+        - `lastUpdated` (ISODate): Fecha y hora de la última actualización del registro.
+
+2. **Messages**: Subdocumento dentro de la entidad `InteractionLog` que almacena los detalles de cada mensaje intercambiado durante una sesión de chat con la IA.
+    - **Atributos**:
+        - `timestamp` (ISODate): Fecha y hora en que se envió el mensaje.
+        - `sender` (string): Identifica si el mensaje fue enviado por el usuario o por la IA.
+        - `message` (string): Contenido textual del mensaje.
+        - `responseTime` (number): Tiempo de respuesta de la IA en milisegundos.
+
+3. **APICache**: Entidad que almacena temporalmente los resultados de las consultas realizadas a las APIs externas, optimizando el rendimiento y reduciendo la necesidad de hacer múltiples llamadas a la misma API.
+    - **Atributos**:
+        - `cacheId` (string): Identificador único del registro de caché.
+        - `userId` (string): Identificador único del usuario que realizó la consulta.
+        - `searchParameters` (object): Conjunto de parámetros utilizados en la consulta a la API.
+        - `results` (array): Lista de resultados devueltos por la API.
+        - `cachedAt` (ISODate): Fecha y hora en que los datos fueron almacenados en la caché.
+        - `expiresAt` (ISODate): Fecha y hora en que los datos de la caché caducan y deben ser eliminados o actualizados.
 
 ---
 
