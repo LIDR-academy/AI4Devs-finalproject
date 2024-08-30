@@ -488,7 +488,434 @@ erDiagram
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+### 1. **Creación de un Usuario y sus Preferencias**: `POST /users`
+
+Este endpoint permite la creación de un nuevo usuario junto con sus preferencias.
+
+```yaml
+paths:
+  /users:
+    post:
+      summary: "Create a new user with preferences"
+      requestBody:
+        description: "User data with preferences"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "johndoe@example.com"
+                password:
+                  type: string
+                  example: "password123"
+                preferences:
+                  type: object
+                  properties:
+                    budget:
+                      type: integer
+                      example: 1500
+                    travelPreferences:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Gastronomic", "Cultural"]
+                    mobilityPreferences:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Car", "Train"]
+                    accommodationPreferences:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Hotel", "Apartment"]
+                    favoritePlaces:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Paris", "New York"]
+                    visitedPlaces:
+                      type: array
+                      items:
+                        type: string
+                      example: ["Berlin", "Tokyo"]
+      responses:
+        '201':
+          description: "User created successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "12345"
+                  name:
+                    type: string
+                    example: "John Doe"
+                  email:
+                    type: string
+                    format: email
+                    example: "johndoe@example.com"
+                  preferences:
+                    type: object
+                    properties:
+                      budget:
+                        type: integer
+                        example: 1500
+                      travelPreferences:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Gastronomic", "Cultural"]
+                      mobilityPreferences:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Car", "Train"]
+                      accommodationPreferences:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Hotel", "Apartment"]
+                      favoritePlaces:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Paris", "New York"]
+                      visitedPlaces:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Berlin", "Tokyo"]
+        '400':
+          description: "Invalid input"
+```
+
+### Ejemplo de Petición:
+```json
+{
+  "name": "John Doe",
+  "email": "johndoe@example.com",
+  "password": "password123",
+  "preferences": {
+    "budget": 1500,
+    "travelPreferences": ["Gastronomic", "Cultural"],
+    "mobilityPreferences": ["Car", "Train"],
+    "accommodationPreferences": ["Hotel", "Apartment"],
+    "favoritePlaces": ["Paris", "New York"],
+    "visitedPlaces": ["Berlin", "Tokyo"]
+  }
+}
+```
+
+### Ejemplo de Respuesta:
+```json
+{
+  "id": "12345",
+  "name": "John Doe",
+  "email": "johndoe@example.com",
+  "preferences": {
+    "budget": 1500,
+    "travelPreferences": ["Gastronomic", "Cultural"],
+    "mobilityPreferences": ["Car", "Train"],
+    "accommodationPreferences": ["Hotel", "Apartment"],
+    "favoritePlaces": ["Paris", "New York"],
+    "visitedPlaces": ["Berlin", "Tokyo"]
+  }
+}
+```
+
+### 2. **Obtención de un Viaje Completo**: `GET /trips/{tripId}`
+
+Este endpoint permite obtener la información completa de un viaje, incluyendo sus itinerarios y todos los detalles relacionados.
+
+```yaml
+paths:
+  /trips/{tripId}:
+    get:
+      summary: "Get a complete trip with itineraries"
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          description: "ID of the trip to retrieve"
+          schema:
+            type: string
+            example: "12345"
+      responses:
+        '200':
+          description: "Trip retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "12345"
+                  name:
+                    type: string
+                    example: "European Adventure"
+                  startDate:
+                    type: string
+                    format: date
+                    example: "2024-08-01"
+                  endDate:
+                    type: string
+                    format: date
+                    example: "2024-08-15"
+                  description:
+                    type: string
+                    example: "A journey through Europe visiting multiple cities."
+                  itineraries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "123"
+                        destination:
+                          type: string
+                          example: "Paris"
+                        startDate:
+                          type: string
+                          format: date
+                          example: "2024-08-01"
+                        endDate:
+                          type: string
+                          format: date
+                          example: "2024-08-03"
+                        description:
+                          type: string
+                          example: "Visit to Paris including museums, a city tour, and more."
+                        activities:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "1"
+                              name:
+                                type: string
+                                example: "Louvre Museum Tour"
+                              description:
+                                type: string
+                                example: "A guided tour through the Louvre."
+                              dateTime:
+                                type: string
+                                format: date-time
+                                example: "2024-08-01T10:00:00Z"
+                        accommodations:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "1"
+                              name:
+                                type: string
+                                example: "Hotel Paris"
+                              address:
+                                type: string
+                                example: "123 Paris St, Paris, France"
+                              checkInDate:
+                                type: string
+                                format: date-time
+                                example: "2024-08-01T14:00:00Z"
+                              checkOutDate:
+                                type: string
+                                format: date-time
+                                example: "2024-08-03T11:00:00Z"
+                        transports:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "1"
+                              type:
+                                type: string
+                                example: "Flight"
+                              description:
+                                type: string
+                                example: "Flight from Madrid to Paris"
+                              origin:
+                                type: string
+                                example: "Madrid"
+                              destination:
+                                type: string
+                                example: "Paris"
+                              departureDate:
+                                type: string
+                                format: date-time
+                                example: "2024-08-01T08:00:00Z"
+                              arrivalDate:
+                                type: string
+                                format: date-time
+                                example: "2024-08-01T10:00:00Z"
+        '404':
+          description: "Trip not found"
+```
+
+### Ejemplo de Petición:
+```http
+GET /trips/12345
+```
+
+### Ejemplo de Respuesta:
+```json
+{
+  "id": "12345",
+  "name": "European Adventure",
+  "startDate": "2024-08-01",
+  "endDate": "2024-08-15",
+  "description": "A journey through Europe visiting multiple cities.",
+  "itineraries": [
+    {
+      "id": "123",
+      "destination": "Paris",
+      "startDate": "2024-08-01",
+      "endDate": "2024-08-03",
+      "description": "Visit to Paris including museums, a city tour, and more.",
+      "activities": [
+        {
+          "id": "1",
+          "name": "Louvre Museum Tour",
+          "description": "A guided tour through the Louvre.",
+          "dateTime": "2024-08-01T10:00:00Z"
+        }
+      ],
+      "accommodations": [
+        {
+          "id": "1",
+          "name": "Hotel Paris",
+          "address": "123 Paris St, Paris, France",
+          "checkInDate": "2024-08-01T14:00:00Z",
+          "checkOutDate": "2024-08-03T11:00:00Z"
+        }
+      ],
+      "transports": [
+        {
+          "id": "1",
+          "type": "Flight",
+          "description": "Flight from Madrid to Paris",
+          "origin": "Madrid",
+          "destination": "Paris",
+          "departureDate": "2024-08-01T08:00:00Z",
+          "arrivalDate": "2024-08-01T10:00:00Z"
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### 3. **Gestión de Itinerarios dentro de un Viaje**: `POST /trips/{tripId}/itineraries`
+
+Este endpoint permite la creación de un nuevo itinerario dentro de un viaje existente.
+
+```yaml
+paths:
+  /trips/{tripId}/itineraries:
+    post:
+      summary: "Create a new itinerary within a trip"
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          description: "ID of the trip to which the itinerary will be added"
+          schema:
+            type: string
+            example: "12345"
+      requestBody:
+        description: "Itinerary data"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destination:
+                  type: string
+                  example: "Paris"
+                startDate:
+                  type: string
+                  format: date
+                  example: "2024-08-01"
+                endDate:
+                  type: string
+                  format: date
+                  example: "2024-08-03"
+                description:
+                  type: string
+                  example: "Visit to Paris including museums, a city tour, and more."
+      responses:
+        '201':
+          description: "Itinerary created successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "123"
+                  destination:
+                    type: string
+                    example: "Paris"
+                  startDate:
+                    type: string
+                    format: date
+                    example: "2024-08-01"
+                  endDate:
+                    type: string
+                    format: date
+                    example: "2024-08-03"
+                  description:
+                    type: string
+                    example: "Visit to Paris including museums, a city tour, and more."
+        '400':
+          description: "Invalid input"
+```
+
+### Ejemplo de Petición:
+```http
+POST /trips/12345/itineraries
+```
+
+```json
+{
+  "destination": "Paris",
+  "startDate": "2024-08-01",
+  "endDate": "2024-08-03",
+  "description": "Visit to Paris including museums, a city tour, and more."
+}
+```
+
+### Ejemplo de Respuesta:
+```json
+{
+  "id": "123",
+  "destination": "Paris",
+  "startDate": "2024-08-01",
+  "endDate": "2024-08-03",
+  "description": "Visit to Paris including museums, a city tour, and more."
+}
+```
 
 ---
 
