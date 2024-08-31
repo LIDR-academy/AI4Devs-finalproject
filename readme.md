@@ -66,33 +66,7 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-#### Login Page
-
-![IkiGoo Login Page](./docs/media/login.png)
-
-#### Register Page
-
-![IkiGoo Register Page](./docs/media/register.png)
-
-#### Forgot Password Page
-
-![IkiGoo Forgot Password Page](./docs/media/forgotpassword.png)
-
-#### Main Page
-
-![IkiGoo Main Page](./docs/media/main.png)
-
-#### Calendar
-
-![IkiGoo Calendar](./docs/media/calendar.png)
-
-#### Preferences
-
-![IkiGoo Preferences](./docs/media/preferences.png)
-
-#### Profile
-
-![IkiGoo Profile](./docs/media/profile.png)
+[Ver diseño completo](./docs/design.md)
 
 ### **1.4. Instrucciones de instalación:**
 
@@ -937,6 +911,59 @@ POST /trips/12345/itineraries
 
 ## 5. Historias de Usuario
 
+1. **Configuración del Proyecto y Arranque Inicial**
+    - **Título:** Configuración del entorno de desarrollo, bases de datos y arranque del proyecto.
+    - **Como:** Equipo de DevOps y equipo de desarrollo
+    - **Quiero:** Configurar el entorno de desarrollo con las bases de datos necesarias, y asegurarme de que el proyecto se pueda arrancar correctamente.
+    - **Para:** Que el equipo pueda empezar a desarrollar y probar funcionalidades sin problemas.
+
+    **Criterios de Aceptación:**
+      1. **Dado que** el repositorio ha sido clonado, **cuando** se ejecuta el script de inicialización, **entonces** el entorno debe configurarse correctamente incluyendo las variables de entorno en un archivo `.env`.
+      2. **Dado que** las bases de datos están configuradas, **cuando** se ejecuta el script de arranque, **entonces** las migraciones en Postgres deben completarse sin errores y las conexiones a Amazon DocumentDB deben estar activas.
+      3. **Dado que** el proyecto está configurado, **cuando** se arranca, **entonces** todas las conexiones a APIs externas deben estar disponibles.
+      4. **Dado que** la documentación está disponible, **cuando** un nuevo desarrollador se une al equipo, **entonces** debe poder replicar el entorno y arrancar el proyecto siguiendo las instrucciones proporcionadas.
+
+    **Estimación:** 8 horas
+
+2. **Registro de Usuario**
+    - **Título**: Registro de un nuevo usuario.
+    - **Como**: Un usuario nuevo
+    - **Quiero**: Poder registrarme en la aplicación.
+    - **Para**: Poder usar la aplicación.
+
+    **Criterios de Aceptación:**
+      1. **Dado que** el usuario completa el formulario de registro, **cuando** se envía el formulario, **entonces** el sistema debe validar los campos obligatorios y mostrar errores en caso de datos faltantes.
+      2. **Dado que** el registro es exitoso, **cuando** se guardan los datos en la base de datos, **entonces** se debe enviar un correo de confirmación al usuario.
+
+    **Estimación:** 4 horas
+
+
+3. **Creación de un Viaje**
+    - **Título**: Creación de un nuevo viaje y almacenamiento de preferencias iniciales.
+    - **Como**: Un usuario registrado
+    - **Quiero**: Crear un nuevo viaje en la aplicación
+    - **Para**: Planificar y organizar todas las etapas y detalles del próximo viaje, incluyendo las preferencias personales si es la primera interacción.
+
+    **Criterios de Aceptación:**
+      1. **Dado que** el usuario desea planificar un nuevo viaje, **cuando** accede a la opción de crear un viaje, **entonces** debe poder ingresar detalles como el nombre del viaje, fechas de inicio y fin, y una descripción general.
+      2. **Dado que** es la primera interacción del usuario con la aplicación, **cuando** se inicie la creación del viaje, **entonces** el sistema debe hacer preguntas iniciales sobre las preferencias de viaje del usuario (como presupuesto, tipo de turismo, movilidad preferida) y almacenar estas preferencias en la base de datos.
+      3. **Dado que** el usuario ha ingresado la información del viaje, **cuando** guarda el viaje, **entonces** el sistema debe validar los datos (por ejemplo, que las fechas de inicio y fin sean válidas) y almacenar la información en la base de datos.
+      4. **Dado que** el viaje ha sido creado, **cuando** el usuario visualiza su lista de viajes, **entonces** el nuevo viaje debe aparecer en la lista con la opción de agregar itinerarios y detalles adicionales.
+
+    **Estimación:** 6 horas.
+
+4. **Creación de un Itinerario dentro de un Viaje**
+    - **Título**: Creación de un itinerario personalizado dentro de un viaje existente.
+    - **Como**: Un usuario registrado
+    - **Quiero**: Poder crear un nuevo itinerario dentro de uno de mis viajes, definiendo las fechas, el destino, y las actividades planificadas.
+    - **Para**: Organizar mejor mi viaje y asegurarme de que cada etapa esté bien planificada.
+
+    **Criterios de Aceptación:**
+    1. **Dado que** el usuario está creando un itinerario, **cuando** define las fechas y el destino, **entonces** el sistema debe validar la disponibilidad de esas fechas dentro del viaje.
+    2. **Dado que** el itinerario incluye actividades, **cuando** se añaden, **entonces** estas deben estar ordenadas cronológicamente y permitir ajustes.
+    3. **Dado que** el usuario guarda el itinerario, **cuando** lo visualiza posteriormente, **entonces** debe poder editar y actualizar la información sin perder datos previos.
+
+    **Estimación:** 7 horas
 
 ---
 
