@@ -1038,6 +1038,8 @@ POST /trips/12345/itineraries
 
 **Pull Request 1**
 
+<https://github.com/LIDR-academy/AI4Devs-finalproject/pull/2>
+
 **Pull Request 2**
 
 **Pull Request 3**
