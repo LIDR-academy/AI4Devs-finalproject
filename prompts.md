@@ -14,111 +14,26 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 ---
 
+En este link están todos los links de las conversaciones con los asistentes, cada uno con su tema especificado. Una de las conversaciones comprende prácticamente todo lo solicitado para esta primera entrega, lo hice de esta forma para mantener siempre el contexto con el asistente y no repetir los mismos conceptos en distintos chats: 
+- <https://mpizarrocuevas.notion.site/14528bf39f474067a4bc9f2b433c480c?v=3adbe3b17ff04ff495141006709d619b&pvs=4>
+
 ## 1. Descripción general del producto
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
 
 ## 2. Arquitectura del Sistema
 
-### **2.1. Diagrama de arquitectura:**
+## 3. Modelo de Datos
 
-**Prompt 1:**
+## 4. Especificación de la API
 
-**Prompt 2:**
+## 5. Historias de Usuario
 
-**Prompt 3:**
+## 6. Tickets de Trabajo
 
-### **2.2. Descripción de componentes principales:**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.4. Infraestructura y despliegue**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.5. Seguridad**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.6. Tests**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+## 7. Pull Requests
 
 ---
 
-### 3. Modelo de Datos
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 4. Especificación de la API
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 5. Historias de Usuario
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 6. Tickets de Trabajo
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 7. Pull Requests
-
-**Prompt 1:**
+### [WIP]
 
 **Prompt 2:**
 
