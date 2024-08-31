@@ -78,6 +78,14 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 
 ![IkiGoo Calendar](./docs/media/calendar.png)
 
+#### Preferences
+
+![IkiGoo Preferences](./docs/media/preferences.png)
+
+#### Profile
+
+![IkiGoo Profile](./docs/media/profile.png)
+
 ### **1.4. Instrucciones de instalación:**
 
 (WIP)
