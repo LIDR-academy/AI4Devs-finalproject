@@ -70,6 +70,14 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 
 ![IkiGoo Login Page](./docs/media/login.png)
 
+#### Register Page
+
+![IkiGoo Register Page](./docs/media/register.png)
+
+#### Forgot Password Page
+
+![IkiGoo Forgot Password Page](./docs/media/forgotpassword.png)
+
 #### Main Page
 
 ![IkiGoo Main Page](./docs/media/main.png)
@@ -929,13 +937,6 @@ POST /trips/12345/itineraries
 
 ## 5. Historias de Usuario
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
-
-**Historia de Usuario 1**
-
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
 
 ---
 
@@ -952,8 +953,6 @@ POST /trips/12345/itineraries
 ---
 
 ## 7. Pull Requests
-
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
 **Pull Request 1**
 
