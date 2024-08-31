@@ -17,10 +17,30 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ## 1. Descripción general del producto
 
 **Prompt 1:**
+Actua como un experto analista de producto, en el area de software para gestión de inversiones financieras.
+
+Quiero crear un gestor de inversiones con el que los usuarios puedan seguir inversiones dentro de un portfolio, siendo los tipos de activos (lista no cerrada): acciones, fondos de inversión, depósitos a plazo fijo, cuentas de ahorro.
+
+Dime cuál serían las 10 características para que este gestor estuviera posicionado como un productor innovador y fácil de utilizar
+
 
 **Prompt 2:**
+Hay algún producto opensource que pueda usar como base para hacer realidad esta idea que tengo?
+
+--> Aquí he obtenido conocimiento de varios proyectos, el que me ha parecido más interesante es Ghostfolio, que es una aplicación opensource para llevar el seguimiento de tu patrimonio personal. Me ha parecido muy interesante ya que incluye las funcionalidades que busco tener en mi proyecto, así como una interfaz bastante atractiva.
 
 **Prompt 3:**
+EasyPortfolio es una aplicación para llevar el seguimiento de tu patrimonio personal de manera sencilla y eficiente.
+Intenta ser capaz de manejar distintos tipos de patrimonio, desde acciones, fondos de inversión, criptomonedas, depósitos a plazo fijo, cuentas de ahorro.
+
+(Pegado contenido de la seccion "1.2. Características y funcionalidades principales" del readme.md)
+
+Generame tres imágenes, una para cada pantalla que se acaba de describir
+
+**Prompt 4:**
+Puedes generarme una pantalla que sea para desktop y no para terminales móviles?
+
+
 
 ---
 
