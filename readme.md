@@ -923,7 +923,7 @@ POST /trips/12345/itineraries
       3. **Dado que** el proyecto está configurado, **cuando** se arranca, **entonces** todas las conexiones a APIs externas deben estar disponibles.
       4. **Dado que** la documentación está disponible, **cuando** un nuevo desarrollador se une al equipo, **entonces** debe poder replicar el entorno y arrancar el proyecto siguiendo las instrucciones proporcionadas.
 
-    **Estimación:** 8 horas
+    **Estimación:** 12 horas
 
 2. **Registro de Usuario**
     - **Título**: Registro de un nuevo usuario.
@@ -935,7 +935,7 @@ POST /trips/12345/itineraries
       1. **Dado que** el usuario completa el formulario de registro, **cuando** se envía el formulario, **entonces** el sistema debe validar los campos obligatorios y mostrar errores en caso de datos faltantes.
       2. **Dado que** el registro es exitoso, **cuando** se guardan los datos en la base de datos, **entonces** se debe enviar un correo de confirmación al usuario.
 
-    **Estimación:** 4 horas
+    **Estimación:** 8 horas
 
 
 3. **Creación de un Viaje**
@@ -950,7 +950,7 @@ POST /trips/12345/itineraries
       3. **Dado que** el usuario ha ingresado la información del viaje, **cuando** guarda el viaje, **entonces** el sistema debe validar los datos (por ejemplo, que las fechas de inicio y fin sean válidas) y almacenar la información en la base de datos.
       4. **Dado que** el viaje ha sido creado, **cuando** el usuario visualiza su lista de viajes, **entonces** el nuevo viaje debe aparecer en la lista con la opción de agregar itinerarios y detalles adicionales.
 
-    **Estimación:** 6 horas.
+    **Estimación:** 10 horas.
 
 4. **Creación de un Itinerario dentro de un Viaje**
     - **Título**: Creación de un itinerario personalizado dentro de un viaje existente.
@@ -969,13 +969,68 @@ POST /trips/12345/itineraries
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+### **Ticket 1: Bases de Datos**
 
-**Ticket 1**
+**Título:** Creación de la Estructura para Almacenar Usuarios y Preferencias
 
-**Ticket 2**
+**Descripción:**
+- **Propósito:** Diseñar y crear las tablas necesarias en Postgres para almacenar los datos de los usuarios y sus preferencias de viaje. Esto incluye la implementación de las relaciones y claves foráneas necesarias para asegurar la integridad referencial de los datos.
+- **Detalles Específicos:** Se deben crear las tablas `Users`, `Preferences`, `TravelPreference`, `MobilityPreference`, `AccommodationPreference`, `FavoritePlace`, y `VisitedPlace`. Cada tabla de preferencias debe estar relacionada con la tabla `Users` a través de claves foráneas. Asegurar que las restricciones (como `NOT NULL`, `UNIQUE`) se implementen donde sea necesario.
 
-**Ticket 3**
+**Criterios de Aceptación:**
+1. **Dado que** el equipo de desarrollo necesita almacenar usuarios y sus preferencias, **cuando** se crean las tablas y las relaciones, **entonces** las claves foráneas deben estar correctamente implementadas y asegurar la integridad referencial.
+2. **Dado que** las tablas han sido creadas, **cuando** se ejecutan las migraciones, **entonces** no deben producirse errores y las estructuras deben estar listas para manejar datos reales.
+3. **Dado que** los datos de usuarios y preferencias se insertan, **cuando** se realizan consultas a la base de datos, **entonces** los datos deben ser accesibles y estar correctamente relacionados.
+
+|  Prioridad | Estimación  | Asignado a | Etiquetas |
+|---|---|---|---|
+|  Alta | 7 horas | Equipo de Bases de Datos | Database, Postgres, Usuarios, Preferencias, Sprint 1 |
+
+**Comentarios:**
+- Asegurarse de que el modelo de datos relacional sigue las mejores prácticas y está optimizado para consultas frecuentes.
+- Coordinar con los equipos de frontend y backend para validar los esquemas y relaciones de datos.
+
+### **Ticket 2: Backend**
+
+**Título:** Implementación de Autenticación y Autorización de Usuarios
+
+**Descripción:**
+- **Propósito:** Desarrollar los endpoints necesarios para la autenticación y autorización de usuarios en la aplicación. Esto incluye la implementación de login y logout, así como la gestión de sesiones mediante JWT (JSON Web Tokens) para asegurar que solo los usuarios autenticados puedan acceder a funcionalidades protegidas.
+- **Detalles Específicos:** Crear un endpoint para el login que acepte el correo electrónico y la contraseña del usuario, validando estas credenciales y, si son correctas, devolviendo un JWT. También se debe implementar un endpoint de logout que invalide el token. Asegurar que todas las rutas protegidas del backend solo sean accesibles para usuarios autenticados.
+
+**Criterios de Aceptación:**
+1. **Dado que** un usuario intenta iniciar sesión, **cuando** envía sus credenciales a través del endpoint de login, **entonces** el sistema debe validar las credenciales y devolver un JWT si son correctas.
+2. **Dado que** un usuario ha iniciado sesión correctamente, **cuando** intenta acceder a una ruta protegida, **entonces** el sistema debe verificar el JWT y permitir el acceso solo si el token es válido.
+3. **Dado que** un usuario desea cerrar sesión, **cuando** envía una solicitud al endpoint de logout, **entonces** el sistema debe invalidar el JWT y revocar el acceso a rutas protegidas.
+
+|  Prioridad | Estimación  | Asignado a | Etiquetas |
+|---|---|---|---|
+|  Alta | 8 horas | Equipo de Backend | Backend, Seguridad, Autenticación, Sprint 1 |
+
+**Comentarios:**
+- Considerar la implementación de una estrategia de refresh tokens para mantener la sesión activa.
+- Revisar las mejores prácticas de seguridad para la gestión de JWT.
+
+### **Ticket 3: Frontend**
+
+**Título:** Implementación de la Interfaz de Registro de Usuario
+
+**Descripción:**
+- **Propósito:** Desarrollar el formulario de registro que permitirá a nuevos usuarios registrarse en la aplicación, incluyendo validaciones de campos obligatorios y mensajes de error en tiempo real. Este formulario debe estar vinculado con la API de registro para enviar los datos del usuario al backend.
+- **Detalles Específicos:** El formulario debe incluir campos como nombre, correo electrónico, contraseña, y confirmación de contraseña. Se deben implementar validaciones en tiempo real para campos vacíos, formatos incorrectos, y contraseñas no coincidentes. Al enviar el formulario, se debe realizar una petición POST a la API para registrar al usuario.
+
+**Criterios de Aceptación:**
+1. **Dado que** un usuario accede a la página de registro, **cuando** completa el formulario de registro, **entonces** el sistema debe validar los campos obligatorios (nombre, correo electrónico, contraseña, confirmación de contraseña).
+2. **Dado que** el usuario ingresa datos incorrectos (por ejemplo, un formato de correo electrónico inválido o contraseñas que no coinciden), **cuando** intenta enviar el formulario, **entonces** el sistema debe mostrar mensajes de error en tiempo real y evitar que se envíe la información hasta que se corrijan.
+3. **Dado que** los datos del formulario son válidos, **cuando** el usuario envía el formulario, **entonces** el sistema debe realizar una petición POST a la API de registro y manejar la respuesta (mostrar mensajes de éxito o error según corresponda).
+
+|  Prioridad | Estimación  | Asignado a | Etiquetas |
+|---|---|---|---|
+|  Alta | 6 horas | Equipo de Frontend | Frontend, UI, Registro, Sprint 1 |
+
+**Comentarios:**
+- Asegurarse de que el diseño del formulario sigue las guías de estilo del proyecto.
+- Coordinar con el equipo de backend para asegurarse de que la API de registro esté lista y documentada.
 
 ---
 
