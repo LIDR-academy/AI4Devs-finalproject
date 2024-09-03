@@ -17,10 +17,10 @@
 Enrique Rochina Ramond
 
 ### **0.2. Nombre del proyecto:**
-EasyPortfolio
+WealthTrack
 
 ### **0.3. Descripción breve del proyecto:**
-EasyPortfolio es una aplicación que permite a los usuarios llevar el seguimiento de su patrimonio personal de manera sencilla y eficiente. 
+WealthTrack es una aplicación que permite a los usuarios llevar el seguimiento de su patrimonio personal de manera sencilla y eficiente. 
 
 Quiere ser capaz de mostrar la evolución del patrimonio a lo largo del tiempo, calculando para ello el valor de cada activo en el momento de mostrar las gráficas y obteniendo de fuentes públicas los datos de cotizacion de los activos como acciones y fondos de inversión.
 
@@ -38,7 +38,7 @@ https://github.com/rochinae/AI4Devs-finalproject-private
 ## 1. Descripción general del producto
 
 ### **1.1. Objetivo:**
-EasyPortfolio es una aplicación para llevar el seguimiento de tu patrimonio personal de manera sencilla y eficiente.
+WealthTrack es una aplicación para llevar el seguimiento de tu patrimonio personal de manera sencilla y eficiente.
 Intenta ser capaz de manejar cualquier tipo de patrimonio, desde acciones, fondos de inversión, criptomonedas, depósitos bancarios a plazo fijo, cuentas de ahorro, hasta bienes raices.
 
 
@@ -83,12 +83,98 @@ WIP
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+```mermaid
+C4Component
+    title WealthTrack - Component Diagram
+
+    Container_Boundary(c1, "WealthTrack") {
+        Component(f1, "Frontend", "React.js", "User Interface")
+        Component(b1, "Backend API", "Node.js & Express.js", "Handles business logic and API requests")
+        ComponentDb(db1, "Relational Database", "PostgreSQL", "Stores structured data (users, assets, operations)")
+        ComponentDb(db2, "NoSQL Database", "MongoDB", "Stores unstructured data (historical prices)")
+        Component(a1, "Authentication Service", "JWT", "Handles user authentication and authorization")
+        Component(s1, "File Storage", "AWS S3", "Stores imported files")
+    }
+
+    Rel(f1, b1, "API Requests", "HTTP/HTTPS")
+    Rel(b1, db1, "Reads/Writes", "SQL")
+    Rel(b1, db2, "Reads/Writes", "NoSQL")
+    Rel(b1, a1, "Authentication Requests", "HTTP/HTTPS")
+    Rel(f1, s1, "Uploads/Downloads Files", "HTTP/HTTPS")
+```
+![image](./docs/componentsDiagram.png)
+
+La arquitectura de la aplicación es bastante sencilla, en la que se prima el "time-to-market" y simplicidad en el despliegue en el cloud. La única complejidad está en el uso de la aplicación MongoDB para almacenar los datos históricos de cotización de los activos, preveyendo que la cantidad de datos puede ser muy grande, y así no penalizar la base de datos SQL en la que tengamos almacenados el resto de datos.
+
+Cierto es que la tecnología utilizada
 
 
 ### **2.2. Descripción de componentes principales:**
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+    > Describe los componentes más importantes, incluyendo la tecnología utilizada
+
+
+### **1. Frontend**
+**Tecnología:** React.js + Bootstrap
+**Descripción:** React.js es una biblioteca de JavaScript para construir interfaces de usuario. Es mantenida por Facebook y una comunidad de desarrolladores individuales y empresas. También se prevee el uso de Bootstrap para obtener un diseño de la interfaz de usuario más atractivo y moderno, con coste limitado. Para ello, utilizaremos React-Bootstrap, que es la librería de componentes de Bootstrap para React.
+**Ventajas:**
+- Componentización: Permite construir interfaces de usuario a partir de componentes reutilizables.
+- Virtual DOM: Mejora el rendimiento al minimizar las actualizaciones del DOM real.
+- Ecosistema Rico: Amplia gama de bibliotecas y herramientas disponibles.
+- SEO Amigable: Con el uso de frameworks como Next.js, se puede mejorar el SEO mediante renderizado del lado del servidor.
+
+
+### **2. Backend API**
+**Tecnología:** Java y Spring Boot
+**Descripción:** Spring Boot es un framework de Java que simplifica el desarrollo de aplicaciones basadas en Spring, proporcionando configuraciones predeterminadas y herramientas para crear aplicaciones rápidamente.
+**Ventajas:**
+- Configuración Automática: Reduce la cantidad de configuración manual necesaria.
+- Ecosistema Spring: Acceso a una amplia gama de proyectos Spring (Spring Security, Spring Data, etc.).
+- Escalabilidad: Facilita la creación de aplicaciones escalables y robustas.
+- Comunidad y Soporte: Amplia comunidad y soporte empresarial disponible.
+Mejoras en el rendimiento: Java 21 incluye optimizaciones de rendimiento que pueden hacer que las aplicaciones sean más rápidas y eficientes.
+Nuevas características del lenguaje: Java 21 introduce nuevas características del lenguaje que pueden simplificar el código y mejorar la productividad del desarrollador.
+- Mejoras en la seguridad: Java 21 incluye actualizaciones de seguridad que pueden ayudar a proteger la aplicación contra vulnerabilidades.
+- Soporte a largo plazo (LTS): Java 21 es una versión LTS, lo que significa que recibirá actualizaciones y soporte a largo plazo, proporcionando estabilidad y seguridad a largo plazo.
+
+### **3. Relational Database (PostgreSQL)**
+**Tecnología:** PostgreSQL
+**Descripción:** PostgreSQL es un sistema de gestión de bases de datos relacional y objeto-relacional de código abierto.
+**Ventajas:**
+- ACID Compliance: Garantiza transacciones seguras y consistentes.
+- Extensibilidad: Soporta tipos de datos personalizados, funciones, operadores, etc.
+- Rendimiento: Optimizado para consultas complejas y grandes volúmenes de datos.
+- Comunidad Activa: Amplia documentación y soporte de la comunidad.
+
+### **4. NoSQL Database (MongoDB)**
+**Tecnología:** MongoDB
+**Descripción:** MongoDB es una base de datos NoSQL orientada a documentos que almacena datos en formato BSON (una extensión de JSON).
+**Ventajas:**
+- Flexibilidad: Permite almacenar datos no estructurados y semi-estructurados.
+- Escalabilidad Horizontal: Facilita la distribución de datos a través de múltiples servidores.
+- Consultas Ricas: Soporta consultas ad-hoc, indexación y agregaciones.
+- Desempeño: Optimizado para grandes volúmenes de datos y alta disponibilidad.
+
+### **5. Authentication Service (JWT)**
+**Tecnología:** JSON Web Tokens (JWT)
+Descripción: JWT es un estándar abierto para la creación de tokens de acceso que permiten la verificación de identidad y la transmisión segura de información entre partes.
+Ventajas:
+Seguridad: Los tokens están firmados y pueden ser encriptados.
+Descentralización: No requiere almacenamiento de sesión en el servidor.
+Escalabilidad: Facilita la autenticación en aplicaciones distribuidas y microservicios.
+Interoperabilidad: Compatible con múltiples lenguajes y plataformas.
+
+
+### **6. External Price Service (Yahoo Finance API)**
+**Tecnología:** Yahoo Finance API
+**Descripción:** Un servicio externo que proporciona datos de precios de activos financieros en tiempo real.
+**Ventajas:**
+- Actualización en Tiempo Real: Proporciona datos de precios actualizados.
+- Cobertura Amplia: Soporta una amplia gama de activos financieros.
+- Facilidad de Uso: API bien documentada y fácil de integrar.
+- Confiabilidad: Servicio confiable y ampliamente utilizado en la industria.
+
+Estos componentes, combinados, proporcionan una arquitectura robusta, escalable y eficiente para la aplicación EasyPortfolio, permitiendo un rápido "time-to-market" y una experiencia de usuario rica y funcional.    
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
