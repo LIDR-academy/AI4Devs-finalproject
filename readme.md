@@ -864,25 +864,65 @@ components:
 
 ## 5. Historias de Usuario
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+Dado que el Creador de Encuestas es el rol que primero obtendrá valor con nuestro sistema, vamos a priorizar sus historias de usuario. A continuación, te presento una propuesta de ordenamiento, considerando que la creación de encuestas básicas es el núcleo de la funcionalidad:
+
+Historias de Usuario Priorizadas para el Creador de Encuestas
+Como creador de encuestas, quiero poder crear diferentes tipos de preguntas (opción múltiple, escala de Likert, abierta, etc.) para poder diseñar encuestas variadas.
+Como creador de encuestas, quiero poder agregar nuevas preguntas a una encuesta existente para poder personalizarla.
+Como creador de encuestas, quiero poder establecer la lógica de salto entre preguntas para poder personalizar la experiencia del encuestado.
+Como creador de encuestas, quiero poder previsualizar la encuesta antes de publicarla para poder identificar y corregir errores.
+Como creador de encuestas, quiero poder duplicar encuestas existentes para poder crear nuevas encuestas basadas en plantillas.
+Como creador de encuestas, quiero poder agregar imágenes o videos a las preguntas para poder hacer las encuestas más atractivas.
+Justificación de la Priorización
+Historias 1 y 2: Son fundamentales para la creación de encuestas básicas y constituyen la base de cualquier encuesta.
+Historia 3: Permite crear encuestas más dinámicas y personalizadas, mejorando la experiencia del encuestado.
+Historia 4: Es esencial para garantizar la calidad de las encuestas antes de publicarlas.
+Historias 5 y 6: Ofrecen funcionalidades adicionales que aumentan la flexibilidad y el atractivo de la herramienta.
+Próximos Pasos y Otras Historias de Usuario
+Una vez completadas estas historias, podríamos enfocarnos en:
+
+Historias del Administrador:
+Crear cuentas de nuevos usuarios.
+Compartir encuestas con usuarios específicos.
+Ver reportes de las encuestas completadas.
+Historias del Encuestado:
+Iniciar sesión y acceder a las encuestas asignadas.
+Navegar fácilmente entre las preguntas.
+Guardar el progreso y continuar más tarde.
+Consideraciones Adicionales:
+
+Historias de Usuario Técnicas: A medida que avancemos, podríamos identificar historias de usuario técnicas relacionadas con la arquitectura, la base de datos, la seguridad, etc. Estas historias deben ser integradas en el backlog de desarrollo.
+Historias de Usuario de Mejora Continua: A medida que recibamos feedback de los usuarios, podemos agregar nuevas historias de usuario para mejorar la herramienta y adaptarla a las necesidades de los usuarios.
 
 **Historia de Usuario 1**
 
+Como creador de encuestas, quiero poder crear diferentes tipos de preguntas (opción múltiple, escala de Likert, abierta, etc.) para poder diseñar encuestas variadas.
+
+
 **Historia de Usuario 2**
 
+Como creador de encuestas, quiero poder agregar nuevas preguntas a una encuesta existente para poder personalizarla.
+
+
 **Historia de Usuario 3**
+
+Como creador de encuestas, quiero poder establecer la lógica de salto entre preguntas para poder personalizar la experiencia del encuestado.
+
 
 ---
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+| ID | Título del Ticket | Descripción Detallada | Historia de Usuario Relacionada | Estimación de Puntos |
+|---|---|---|---|---|
+| T1 | Crear componente de pregunta de opción múltiple | Desarrollar un componente reutilizable para crear preguntas de opción múltiple, incluyendo validación de respuestas. | 1, 2 | 5 |
+| T2 | Crear componente de pregunta de escala de Likert | Desarrollar un componente reutilizable para crear preguntas de escala de Likert, incluyendo personalización de la escala. | 1 | 4 |
+| T3 | Crear componente de pregunta abierta | Desarrollar un componente reutilizable para crear preguntas abiertas, incluyendo límite de caracteres. | 1 | 3 |
+| T4 | Implementar lógica de salto entre preguntas | Desarrollar la lógica para redirigir al usuario a la siguiente pregunta basada en su respuesta. | 3 | 8 |
+| T5 | Implementar funcionalidad de previsualización de encuesta | Crear una vista previa de cómo se verá la encuesta para el encuestado. | 4 | 5 |
+| T6 | Implementar funcionalidad de duplicación de encuestas | Crear una copia exacta de una encuesta existente. | 5 | 6 |
+| T7 | Implementar subida de imágenes y videos a preguntas | Permitir al usuario subir archivos multimedia para enriquecer las preguntas. | 6 | 10 |
 
-**Ticket 1**
-
-**Ticket 2**
-
-**Ticket 3**
 
 ---
 

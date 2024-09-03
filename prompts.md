@@ -235,7 +235,19 @@ Quiero que me des el archivo completo para yo poder copiar y pegar en mi proyect
 
 **Prompt 1:**
 
+Eres el product owner en una organización que fabrica software principalmente para America latina en donde se está desarrollando la nueva gran aplicación la gestión y diligenciamiento de encuestas.
+
+Hemos idetinficado 3 roles:
+
+1. Administrador: Encargado de compartir encuestas, gestionar encuestas.
+2. Creador de encuestas: Encargado de crear encuestas básicas y complejas, Agregar nuevas preguntas.
+3. Encuestado: Quien se encarga de dilgenciar, navegar y completar la encuesta.
+
+Por favor dame un listado de historias de usuario para cubrir esta funcionalidad
+
 **Prompt 2:**
+
+Ahora quiero que me las organices dando prioridad a aquellas historias que permiten crear nuevas encuestas, es decir el primer rol que obtendrá valor con nuestro sistema será el creador de encuestas, posteriormente haremos las historias que tu consideres de los demás roles.
 
 **Prompt 3:**
 
@@ -245,7 +257,11 @@ Quiero que me des el archivo completo para yo poder copiar y pegar en mi proyect
 
 **Prompt 1:**
 
+Considera el listado detallado que me acabas de dar con las historias de usuario y a partir de este genera una tabla con todos los tickets de trabajo necesarios para completar el backlog, y añade tu sugerencia de estimación de puntos.
+
 **Prompt 2:**
+
+Podrías darme la tabla en formato markdown, por favor arrópalo en """
 
 **Prompt 3:**
 
