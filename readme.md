@@ -70,7 +70,34 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 
 ### **1.4. Instrucciones de instalación:**
 
-(WIP)
+1. Clona el repositorio:
+   ```
+   git clone https://github.com/Edain92/AI4Devs-finalproject-MPC.git
+   cd AI4Devs-finalproject-MPC
+   ```
+
+2. Instala las dependencias del backend:
+   ```
+   cd backend
+   npm install
+   ```
+
+3. Crea un archivo `.env` en la carpeta `backend` con el siguiente contenido:
+   ```
+   PORT=5001
+   NODE_ENV=development
+   ```
+
+4. Inicia el servidor de desarrollo:
+   ```
+   npm run dev
+   ```
+
+El servidor backend estará corriendo en `http://localhost:5001`.
+
+Nota: Asegúrate de tener Node.js y npm instalados en tu sistema antes de comenzar.
+
+**(WIP)**
 
 ---
 
