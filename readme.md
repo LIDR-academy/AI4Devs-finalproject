@@ -70,7 +70,57 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 
 ### **1.4. Instrucciones de instalación:**
 
-(WIP)
+#### Herramientas necesarias:
+Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes de comenzar:
+- [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/) (versión 14 o superior)
+- [Docker](https://www.docker.com/)
+- [Docker Compose](https://docs.docker.com/compose/)
+
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/Edain92/AI4Devs-finalproject-MPC.git
+   cd AI4Devs-finalproject-MPC
+   ```
+
+2. Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
+   ```dotenv
+   # Server
+   PORT=5001
+   NODE_ENV=development
+
+   # Postgres Database
+   DB_NAME=ikigoo
+   DB_USER=postgres
+   DB_PASSWORD=mipostgres
+   DB_HOST=db
+
+   # MongoDB   
+   MONGODB_URI=mongodb://mongodb:27017/ikigoo
+   ```
+
+3. Construye y levanta los contenedores Docker:
+   ```bash
+   docker compose up --build
+   ```
+
+4. Verifica que los servicios estén corriendo correctamente:
+   - El backend debería estar accesible en `http://localhost:5001`.
+   - El frontend debería estar accesible en `http://localhost:3000`.
+   - PostgreSQL debería estar corriendo en el puerto `5432`.
+   - MongoDB debería estar corriendo en el puerto `27017`.
+
+5. Para detener los contenedores, ejecuta:
+   ```bash
+   docker-compose down
+   ```
+
+6. Para ver los logs de los contenedores, ejecuta:
+   ```bash
+   docker-compose logs
+   ```
+
+**(WIP)**
 
 ---
 
