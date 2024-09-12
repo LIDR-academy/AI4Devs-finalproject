@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - ./.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - mongodb
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:5000"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:4.4
+    environment:
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  db_data:
+  mongo_data:
