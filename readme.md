@@ -89,19 +89,17 @@ C4Component
 
     Container_Boundary(c1, "WealthTrack") {
         Component(f1, "Frontend", "React.js", "User Interface")
-        Component(b1, "Backend API", "Node.js & Express.js", "Handles business logic and API requests")
+        Component(b1, "Backend API", "Java & Spring Boot", "Handles business logic and API requests")
+        System(e1, "External Price Service", "Yahoo Finance API", "Provides asset price data")
         ComponentDb(db1, "Relational Database", "PostgreSQL", "Stores structured data (users, assets, operations)")
         ComponentDb(db2, "NoSQL Database", "MongoDB", "Stores unstructured data (historical prices)")
-        Component(a1, "Authentication Service", "JWT", "Handles user authentication and authorization")
-        Component(s1, "File Storage", "AWS S3", "Stores imported files")
     }
 
     Rel(f1, b1, "API Requests", "HTTP/HTTPS")
     Rel(b1, db1, "Reads/Writes", "SQL")
     Rel(b1, db2, "Reads/Writes", "NoSQL")
-    Rel(b1, a1, "Authentication Requests", "HTTP/HTTPS")
-    Rel(f1, s1, "Uploads/Downloads Files", "HTTP/HTTPS")
-```
+    Rel(b1, e1, "Fetches Price Data", "HTTP/HTTPS")
+    ```
 ![image](./docs/componentsDiagram.png)
 
 La arquitectura de la aplicación es bastante sencilla, en la que se prima el "time-to-market" y simplicidad en el despliegue en el cloud. La única complejidad está en el uso de la aplicación MongoDB para almacenar los datos históricos de cotización de los activos, preveyendo que la cantidad de datos puede ser muy grande, y así no penalizar la base de datos SQL en la que tengamos almacenados el resto de datos.

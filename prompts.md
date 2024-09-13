@@ -125,38 +125,137 @@ Cómo de fácil es integrarse Yahoo Finance para mi caso de uso? Quiero ir fáci
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+```
+Teniendo en cuenta lo explicado en @readme.md hasta la línea 87 (puedes ignorar el resto) y las siguientes especificaciones, quiero que me respondas a ciertas preguntas. Antes que nada, dime si tienes alguna duda, encuentras alguna inconsistencia o algún dato que no esté presente.
+## La aplicación podrá tener más de un portfolio. 
+Cada portfolio tendrá una lista de activos presentes y pasados (ya vendidos o expirados). 
+De cada portfolio tendremos las siguientes informaciones (aparte de los diferentes activos)
+- Divisa principal
+- Fecha creación
+- Valor actual
+* Para cada portfolio, me gustaría guardar las valorizaciones de días especificos, para no tener que volver a calcularlo
+
+
+## De cada activo tendremos las siguientes informaciones. Ten en cuenta para las restricciones de nulabilidad y cardinalidad, que algunas informaciones se usarán para cierto tipo de activos
+- Tipo de activo (lista no cerrada: acciones, ETF, fondo de inversión, criptomonedas, cuenta de ahorro, depósito a plazo fijo)
+- Nombre
+- Ticker
+- Divisa
+- Tipo de cambio divisa compra
+- Fecha de compra
+- Número de títulos
+- Precio medio unitario
+- Coste en comisiones y gastos
+- Precio total de coste
+- Precio actual
+- Última valorización
+- Fecha de actualización
+
+- Tasa de interés nóminal
+- Plazo de inversión
+- Precio unitariode venta
+- Tipo de cambio divisa venta
+
+
+## Para los activos que tengan precios que oscilan, guardaremos las siguientes informaciones (una línea por cada día y activo):
+- Fecha
+- Precio de cierre
+- Divisa
+- Ticker
+- Nombre
+- Precio de apertura
+- Precio máximo
+- Precio mínimo
+- Volumen
+```
+
+Respuesta del LLM:
+```
+No tengo dudas ni encuentro inconsistencias en la información proporcionada. Sin embargo, hay algunos datos que no están presentes y que podrían ser útiles para una implementación completa:
+1. Identificadores únicos: No se mencionan identificadores únicos para portfolios y activos. Estos son necesarios para relacionar las entidades en la base de datos.
+2. Relaciones entre entidades: No se especifica cómo se relacionan los activos con los portfolios en términos de claves foráneas.
+3. Frecuencia de actualización: No se menciona con qué frecuencia se actualizarán los precios de los activos.
+4. Historial de valorizaciones: No se especifica cómo se almacenará el historial de valorizaciones de los portfolios.
+Con esta información, puedo responder a tus preguntas y ayudarte a diseñar el modelo de datos y la estructura de la base de datos. ¿Te gustaría proceder con alguna pregunta específica o necesitas ayuda con el diseño del modelo de datos?
+```
 
 **Prompt 2:**
+1. y 2. Son columnas técnicas, que te voy a pedir que proporciones más adelante, cuando te pida generar el modelo de datos (todavía no, por favor)
+3. 1 vez al día
+4. Proporcioname una solución que me permita guardar esta información de manera eficiente, así como extraerlo rápidamente
 
 **Prompt 3:**
+Todo está correcto, generame el modelo completo por favor
+
+**Prompt 4:**
+De momento no veo necesario el uso de una BD NoSQL como DocumentDB o DynamoDB. Qué opinas?
+
+**Prompt 5:**
+Eres un experto diseñador de modelos de bases de datos relacionales, conoces todas las formas normales, incluyendo las 1FN, 2FN, 3FN y la Forma Normal de Boyce-Codd (FNBC)?
+
+**Prompt 6:**
+De acuerdo. Entonces, tomando este rol y teniendo en cuenta lo descrito en @readme.md  acerca de la aplicación WeathTrack que estoy diseñando, podrías analizar el modelo de datos descrito en @schema.sql y decirme si cumple todas las formas normales, mencionadas en mi anterior pregunta. En caso contrario, sugiéreme cómo deberíamos de adaptar el modelo para que sí las cumpla
+
+**Prompt 7:**
+Las columnas de DetallesActivos, están ya incluidas en las tables Activos (ticker, nombre y divisa). No podríamos simplemente evitar esta tabla DetallesActivos?
+
+
 
 ---
 
 ### 4. Especificación de la API
 
 **Prompt 1:**
+Basado en todo lo explicado en @readme.md y en el modelo de datos especificado en @schema.sql, listame los endpoints que la API de mi backend tiene que tener.
 
 **Prompt 2:**
+Puedes listarme los endpoints, así como una descripcion de lo que hace? Te pediré la especificación OpenAPI completa más tarde
 
 **Prompt 3:**
+Analiza las dudas que tengo en los siguientes puntos:
+
+- Portfolios: Queremos sólo obtener la información de un cierto portfolio. Hay que pensar que un portfolio es una familia y, con la autentificación implementada, no tendrá sentido obtener más de un portfolio
+- Activos: Queremos obtener los activos de un cierto portfolio, el parametro sería "portfolio_id", no id. GET /activos también debería desaparecer
+- Valorizaciones Diarias: similar a portfolio, sólo queremos para un portfolio dado
+- Precios de Activos: queremos solo aquellos relacionados con un portfolio, o un sólo activo, en caso de ver el detalle de ese activo
+
+Si estás de acuerdo en todo, actualiza esta lista. Sino, hablemos
+
+**Prompt 4:**
+Refactoriza @openAPI.yaml para que todas las propiedades estén en formato camelCase
+
 
 ---
 
 ### 5. Historias de Usuario
 
 **Prompt 1:**
+Eres un experto jefe de producto y business analyst. En base a las especificaciones descritas en @readme.md listame las diferentes historias de usuario (sólo con un título para cada una de ellas) que identificas
 
 **Prompt 2:**
+En base a esta lista, generame el CSV en @userStories.csv   para poder importarlo en JIRA y que cada línea sea una user story de JIRA basado en @https://support.atlassian.com/jira-cloud-administration/docs/import-data-from-a-csv-file/ 
+Las columnas serán las siguientes: 
+Summary, Reporter, Issue Type, Priority
+Pon prioridad 100 a todas, para empezar
 
 **Prompt 3:**
+Teniendo en cuenta lo que está descrito en @readme.md y en @schema.sql ,  redefine la prioridad de las historias. Menos valor es menos prioridad. Mayor prioridad son las de más de 100 (200, 300 o incluso más). Actualiza @userStories.csv adecuadamente
 
 ---
 
 ### 6. Tickets de Trabajo
 
 **Prompt 1:**
+Eres un desarrollador full stack experimentado, teniendo en cuenta
+- las historias de usuario que hemos definido en @userStories.csv
+- la arquitectura del sistema descrita en @readme.md
+- el modelo de datos descrito en @schema.sql
+- la especificación de la API hacia el backend descrita en @openAPI.yaml
+
+Rellename el fichero @technicalTasks.csv con los tickets de trabajo adecuados para cada historia de usuario. Encontrarás las diferentes columnas que tienes que rellenar, como por ejemplo  UserStoryId, que es el id de la historia de usuario, y InitialEstimate, que es el tiempo estimado para completar la historia de usuario en horas. 
 
 **Prompt 2:**
+Quiero focalizarme en crear valor para el usuario, desde el punto de vista de una demo, para el potencial cliente. Cuales son las 6 primeras tareas que me aconsejarías tomar para hacer un POC? Funcionalidades como el registro de usuario, la identificación no son necesarias en este contexto.
 
 **Prompt 3:**
 
@@ -165,6 +264,15 @@ Cómo de fácil es integrarse Yahoo Finance para mi caso de uso? Quiero ir fáci
 ### 7. Pull Requests
 
 **Prompt 1:**
+Eres un experto programador de backend en Java. Crea un esqueleto de proyecto, para un microservicio de backend:
+- Utilizaremos la última versión LTS de Java, 21
+- Servirá peticiones REST usando el framework SpringBoot. 
+- Usará Maven para la compilación
+Crea todo lo necesario para que después podamos empezar a añadir endpoints:
+- Prevee la estructura necesaria para los test unitarios. Añade un test unitario de ejemplo. Haz que use Mockito
+- Crea un fichero de configuración de SpringBoot, con el perfil adecuado para desarrollo.
+- Crea un fichero dockerfile para la construcción de la imagen de docker
+
 
 **Prompt 2:**
 
