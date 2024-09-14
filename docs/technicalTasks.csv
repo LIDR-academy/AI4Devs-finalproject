@@ -1,0 +1,17 @@
+Id,Summary,Description,UserStoryId,InitialEstimate
+1,Implementar Registro de Usuario,Crear endpoint para registrar nuevos usuarios y guardar la información en la base de datos,1,8
+2,Implementar Inicio de Sesión,Crear endpoint para autenticar usuarios y generar JWT,2,8
+3,Crear Pantalla de Resumen de Activos,Desarrollar la interfaz de usuario para mostrar la lista de activos y su valor actual,3,12
+4,Crear Pantalla de Evolución Global del Patrimonio,Desarrollar la interfaz de usuario para mostrar la gráfica de evolución del patrimonio,4,10
+5,Crear Pantalla de Historial de Operaciones,Desarrollar la interfaz de usuario para mostrar el historial de operaciones,5,10
+6,Implementar Importación Masiva de Operaciones,Crear endpoint para importar operaciones desde un archivo CSV y guardarlas en la base de datos,6,12
+7,Implementar Adición de Nueva Operación,Crear endpoint para añadir una nueva operación y actualizar la base de datos,7,8
+8,Actualizar Datos de Activos desde Yahoo Finance,Integrar la API de Yahoo Finance para actualizar los precios de los activos,8,10
+9,Crear Pantalla de Gestión de Perfil de Usuario,Desarrollar la interfaz de usuario para gestionar el perfil del usuario,9,6
+10,Implementar Exportación de Datos de Activos,Crear endpoint para exportar los datos de los activos a un archivo CSV,10,8
+11,Implementar Notificaciones de Cambios en el Valor de Activos,Crear sistema de notificaciones para alertar al usuario sobre cambios significativos en el valor de los activos,11,10
+12,Implementar Filtrado y Búsqueda en Historial de Operaciones,Desarrollar la funcionalidad de filtrado y búsqueda en la pantalla de historial de operaciones,12,8
+13,Crear Pantalla de Detalles de un Activo,Desarrollar la interfaz de usuario para mostrar los detalles de un activo específico,13,8
+14,Implementar Configuración de Preferencias de Visualización,Crear endpoint y pantalla para que el usuario configure sus preferencias de visualización,14,6
+15,Implementar Gestión de Seguridad y Autenticación con JWT,Configurar la seguridad del backend utilizando JWT para la autenticación,15,10
+16,Implementar Soporte Multimoneda para Activos,Actualizar el modelo de datos y la interfaz de usuario para soportar múltiples divisas,16,12

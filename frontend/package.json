@@ -22,6 +22,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",
     "react-wrap-balancer": "^1.1.0",
+    "recharts": "^2.12.7",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7"
   },
