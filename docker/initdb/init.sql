@@ -12,31 +12,31 @@ END $$;
 -- Example table creation
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL
+    session_id VARCHAR(50) UNIQUE,
+    creation_date DATE NOT NULL,
+    last_login DATE
 );
 
 -- Crear la tabla Trips
-CREATE TABLE IF NOT EXISTS Trips (
-    ID VARCHAR(50) PRIMARY KEY,
-    UserID INTEGER REFERENCES users(ID) ON DELETE CASCADE,
-    Destination VARCHAR(255) NOT NULL,
-    StartDate DATE NOT NULL,
-    EndDate DATE,
-    Description TEXT,
-    Accompaniment VARCHAR(50) NOT NULL CHECK (Accompaniment IN ('Solo', 'Friends', 'Family', 'Couple')),
-    ActivityType TEXT[] NOT NULL CHECK (ActivityType && ARRAY['Nature', 'Culture', 'Nightlife', 'Gastronomic']), 
-    BudgetMin INTEGER NOT NULL,
-    BudgetMax INTEGER NOT NULL
+CREATE TABLE IF NOT EXISTS trips (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    destination VARCHAR(255) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    description TEXT,
+    accompaniment VARCHAR(50) NOT NULL CHECK (accompaniment IN ('Solo', 'Friends', 'Family', 'Couple')),
+    activity_type TEXT[] NOT NULL CHECK (activity_type && ARRAY['Nature', 'Culture', 'Nightlife', 'Gastronomic']), 
+    budget_min INTEGER NOT NULL,
+    budget_max INTEGER NOT NULL
 );
 
 -- Crear la tabla Activities
-CREATE TABLE IF NOT EXISTS Activities (
-    ID VARCHAR(50) PRIMARY KEY,
-    TripID VARCHAR(50) REFERENCES Trips(ID) ON DELETE CASCADE,
-    Name VARCHAR(255) NOT NULL,
-    Description TEXT,
-    Sequence INTEGER NOT NULL,
-    DateTime TIMESTAMP NOT NULL
+CREATE TABLE IF NOT EXISTS activities (
+    id SERIAL PRIMARY KEY,
+    trip_id INTEGER REFERENCES trips(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    sequence INTEGER NOT NULL,
+    date_time TIMESTAMP NOT NULL
 );

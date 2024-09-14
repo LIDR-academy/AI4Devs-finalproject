@@ -71,7 +71,7 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-[Ver diseño completo](./docs/design.md)
+[Ver diseño completo](./.docs/design.md)
 
 ### **1.4. Instrucciones de instalación:**
 
