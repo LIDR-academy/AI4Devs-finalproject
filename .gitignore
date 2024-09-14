@@ -31,7 +31,6 @@ vendor/
 
 # Logs and Databases
 *.log
-*.sql
 *.sqlite
 
 # Build Directories

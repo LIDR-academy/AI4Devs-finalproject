@@ -1,36 +1,43 @@
 version: '3.8'
 
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "${PORT}:${PORT}"
-    env_file:
-      - ./.env
-    volumes:
-      - ./backend:/app
-    depends_on:
-      - db
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:5000"
-    volumes:
-      - ./frontend:/app
-    depends_on:
-      - backend
-
   db:
     image: postgres:13
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
+      - ./docker/initdb/:/docker-entrypoint-initdb.d/
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      
+  backend:
+    build: ./backend
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      PORT: ${PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${PORT}:${PORT}"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONT_PORT}:${FRONT_PORT}"
+    depends_on:
+      - backend
 
 volumes:
-  db_data:
+  db-data:
