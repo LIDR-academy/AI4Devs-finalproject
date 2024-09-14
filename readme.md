@@ -99,9 +99,6 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
    DB_USER=postgres
    DB_PASSWORD=mipostgres
    DB_HOST=db
-
-   # MongoDB   
-   MONGODB_URI=mongodb://mongodb:27017/ikigoo
    ```
 
 3. Construye y levanta los contenedores Docker:
@@ -113,7 +110,6 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
    - El backend debería estar accesible en `http://localhost:5001`.
    - El frontend debería estar accesible en `http://localhost:3000`.
    - PostgreSQL debería estar corriendo en el puerto `5432`.
-   - MongoDB debería estar corriendo en el puerto `27017`.
 
 5. Para detener los contenedores, ejecuta:
    ```bash
