@@ -262,6 +262,7 @@ Quiero focalizarme en crear valor para el usuario, desde el punto de vista de un
 ---
 
 ### 7. Pull Requests
+### 7.1. Backend
 
 **Prompt 1:**
 Eres un experto programador de backend en Java. Crea un esqueleto de proyecto, para un microservicio de backend:
@@ -273,7 +274,24 @@ Crea todo lo necesario para que después podamos empezar a añadir endpoints:
 - Crea un fichero de configuración de SpringBoot, con el perfil adecuado para desarrollo.
 - Crea un fichero dockerfile para la construcción de la imagen de docker
 
-
 **Prompt 2:**
+Genera en @backend lo necesario para empezar a comunicar con una DB postgresql, incluyendo el uso de Spring JPA y de Hibernate, si necesario. Igualmente, genera en el paquete "com.ai4devs.enrique_finalproject.data" los data beans correspondientes a las tablas definidas en @schema.sql 
 
-**Prompt 3:**
+**Prompt 3:** (nueva sesión)
+Eres un programador experto en backend con Java y Springboot. 
+Utiliza un enfoque de desarrollo TDD y una arquitectura de código hexagonal para crear en @backend el endpoint /portfolio (get) como se ha definido en @openAPI.yaml 
+
+Si necesitas validar alguna validar alguna suposición, pregúntame antes de escribir código
+
+### 7.2. Frontend
+**Prompt 1:**
+CREATION DE ESQUELETO DE FRONTEND - usando v0 by Vercel
+I want to create an application to do wealth management, at personal and family level, in a simple and efficient way. It has an dashboard where we have the list of assets where it displays the current value as well as the potential benefit or loss you are incurring it, among other informations. Secondly, we have a graph with the total value of the portfolio over time.
+
+I'm attaching some pictures of an application I want to be inspired of, even though I would like the esthetics to look more similar to the default design from the Bootstrap library
+
+
+**NO IA Prompt 3:**
+He usado el código generado por v0 dentro de un esqueleto de proyecto creado desde "React Shadcn Starter"
+
+**Prompt 4:**

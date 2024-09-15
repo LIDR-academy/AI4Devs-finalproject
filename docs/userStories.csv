@@ -1,0 +1,17 @@
+Id,Summary, Reporter, Issue Type, Priority
+1, Registro de Usuario, enrique.rochina@gmail.com, Story, 100
+2, Inicio de Sesión, enrique.rochina@gmail.com, Story, 110
+3, Visualización de Resumen de Activos, enrique.rochina@gmail.com, Story, 400
+4, Visualización de Evolución Global del Patrimonio, enrique.rochina@gmail.com, Story, 350
+5, Visualización de Historial de Operaciones, enrique.rochina@gmail.com, Story, 200
+6, Importación Masiva de Operaciones, enrique.rochina@gmail.com, Story, 300
+7, Adición de Nueva Operación, enrique.rochina@gmail.com, Story, 350
+8, Actualización de Datos de Activos desde Yahoo Finance, enrique.rochina@gmail.com, Story, 300
+9, Gestión de Perfil de Usuario, enrique.rochina@gmail.com, Story, 80
+10, Exportación de Datos de Activos, enrique.rochina@gmail.com, Story, 50
+11, Notificaciones de Cambios en el Valor de Activos, enrique.rochina@gmail.com, Story, 100
+12, Filtrado y Búsqueda en Historial de Operaciones, enrique.rochina@gmail.com, Story, 180
+13, Visualización de Detalles de un Activo, enrique.rochina@gmail.com, Story, 380
+14, Configuración de Preferencias de Visualización, enrique.rochina@gmail.com, Story, 100
+15, Gestión de Seguridad y Autenticación con JWT, enrique.rochina@gmail.com, Story, 120
+16, Soporte Multimoneda para Activos, enrique.rochina@gmail.com, Story, 190

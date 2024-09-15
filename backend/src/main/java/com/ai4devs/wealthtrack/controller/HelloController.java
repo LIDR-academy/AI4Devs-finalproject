@@ -1,4 +1,4 @@
-package com.ai4devs.enrique_finalproject.controller;
+package com.ai4devs.wealthtrack.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

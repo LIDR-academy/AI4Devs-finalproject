@@ -1,4 +1,4 @@
-package com.ai4devs.enrique_finalproject.controller;
+package com.ai4devs.wealthtrack.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

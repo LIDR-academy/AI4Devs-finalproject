@@ -1,2 +1,9 @@
-server:
-  port: 8080
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/Wealthdb?currentSchema=wealth_data
+    username: backendUser
+    password: D1ymf8wyQEGthFR1E9xhCq
+    driver-class-name: org.postgresql.Driver
+  h2:
+    console:
+      enabled: true
