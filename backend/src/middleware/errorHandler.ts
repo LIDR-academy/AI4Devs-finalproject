@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { NotFoundError } from "../domain/errors/NotFoundError";
+import { NotFoundError } from "../domain/shared/NotFoundError";
 
 export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void {
     if (err instanceof NotFoundError) {

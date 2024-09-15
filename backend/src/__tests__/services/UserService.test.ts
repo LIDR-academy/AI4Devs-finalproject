@@ -1,7 +1,7 @@
 import { UserService } from '../../services/UserService';
 import { User } from '../../domain/user/User';
 import { AppDataSource } from '../../data-source';
-import { NotFoundError } from '../../domain/errors/NotFoundError';
+import { NotFoundError } from '../../domain/shared/NotFoundError';
 
 beforeAll(async () => {
     if (!AppDataSource.isInitialized) {

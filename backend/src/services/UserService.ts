@@ -1,6 +1,6 @@
 import { UserRepository } from "../infrastructure/repositories/UserRepository";
 import { User } from "../domain/user/User";
-import { NotFoundError } from "../domain/errors/NotFoundError";
+import { NotFoundError } from "../domain/shared/NotFoundError";
 
 export class UserService {
     private userRepository: UserRepository;
