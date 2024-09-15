@@ -1,9 +1,22 @@
 import { AppDataSource } from './data-source';
 
 beforeAll(async () => {
-    await AppDataSource.initialize();
+    try {
+        if (!AppDataSource.isInitialized) {
+            await AppDataSource.initialize();
+        }
+    } catch (error) {
+        console.error('Error during Data Source initialization:', error);
+        throw error;
+    }
 });
 
 afterAll(async () => {
-    await AppDataSource.destroy();
+    try {
+        if (AppDataSource.isInitialized) {
+            await AppDataSource.destroy();
+        }
+    } catch (error) {
+        console.error('Error during Data Source destruction:', error);
+    }
 });

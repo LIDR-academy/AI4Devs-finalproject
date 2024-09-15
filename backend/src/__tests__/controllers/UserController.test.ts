@@ -1,24 +1,11 @@
 import request from 'supertest';
 import app from '../../app';
-import { AppDataSource } from '../../data-source';
-
-beforeAll(async () => {
-    if (!AppDataSource.isInitialized) {
-        await AppDataSource.initialize();
-    }
-});
-
-afterAll(async () => {
-    if (AppDataSource.isInitialized) {
-        await AppDataSource.destroy();
-    }
-});
 
 describe('UserController', () => {
     let sessionId: string;
 
     beforeEach(() => {
-        sessionId = `test-session-id-${Date.now()}`;
+        sessionId = `test-session-id-${Date.now()}-${Math.random()}}`;
     });
 
     it('should create a new user', async () => {

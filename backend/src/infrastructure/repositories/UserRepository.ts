@@ -1,8 +1,9 @@
-import { Repository } from "typeorm";
-import { User } from "../../domain/user/User";
-import { AppDataSource } from "../../data-source";
+import { IUserRepository } from './IUserRepository';
+import { User } from '../../domain/user/User';
+import { AppDataSource } from '../../data-source';
+import { Repository } from 'typeorm';
 
-export class UserRepository {
+export class UserRepository implements IUserRepository {
     private repository: Repository<User>;
 
     constructor() {

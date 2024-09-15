@@ -1,18 +1,5 @@
 import { UserRepository } from '../../../infrastructure/repositories/UserRepository';
 import { User } from '../../../domain/user/User';
-import { AppDataSource } from '../../../data-source';
-
-beforeAll(async () => {
-    if (!AppDataSource.isInitialized) {
-        await AppDataSource.initialize();
-    }
-});
-
-afterAll(async () => {
-    if (AppDataSource.isInitialized) {
-        await AppDataSource.destroy();
-    }
-});
 
 describe('UserRepository', () => {
     let userRepository: UserRepository;
@@ -21,7 +8,7 @@ describe('UserRepository', () => {
     beforeEach(async () => {
         userRepository = new UserRepository();
         testUser = new User();
-        testUser.sessionId = `test-session-id-${Date.now()}`;
+        testUser.sessionId = `test-session-id-${Date.now()}-${Math.random()}`;
         testUser.creationDate = new Date();
         testUser.lastLogin = new Date();
         await userRepository.save(testUser);
@@ -41,7 +28,7 @@ describe('UserRepository', () => {
 
     it('should save a user', async () => {
         const newUser = new User();
-        newUser.sessionId = `test-session-id-${Date.now()}`;
+        newUser.sessionId = `test-session-id-${Date.now()}-${Math.random()}`;
         newUser.creationDate = new Date();
         newUser.lastLogin = new Date();
 

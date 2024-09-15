@@ -1,18 +1,5 @@
 import request from 'supertest';
 import app from '../app';
-import { AppDataSource } from '../data-source';
-
-beforeAll(async () => {
-    if (!AppDataSource.isInitialized) {
-        await AppDataSource.initialize();
-    }
-});
-
-afterAll(async () => {
-    if (AppDataSource.isInitialized) {
-        await AppDataSource.destroy();
-    }
-});
 
 describe('GET /users', () => {
   it('should return 400 NOT FOUND', async () => {

@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { UserService } from "../services/UserService";
+import { UserRepository } from "../infrastructure/repositories/UserRepository";
 
 export class UserController {
     private userService: UserService;
 
     constructor() {
-        this.userService = new UserService();
+        const userRepository = new UserRepository();
+        this.userService = new UserService(userRepository);
     }
 
     async getUserById(req: Request, res: Response, next: NextFunction): Promise<void> {

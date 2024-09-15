@@ -1,27 +1,17 @@
+
 import { UserService } from '../../services/UserService';
+import { UserRepository } from '../../infrastructure/repositories/UserRepository';
 import { User } from '../../domain/user/User';
-import { AppDataSource } from '../../data-source';
 import { NotFoundError } from '../../domain/shared/NotFoundError';
-
-beforeAll(async () => {
-    if (!AppDataSource.isInitialized) {
-        await AppDataSource.initialize();
-    }
-});
-
-afterAll(async () => {
-    if (AppDataSource.isInitialized) {
-        await AppDataSource.destroy();
-    }
-});
 
 describe('UserService', () => {
     let userService: UserService;
     let testUser: User;
 
     beforeEach(async () => {
-        userService = new UserService();
-        testUser = await userService.createUser(`test-session-id-${Date.now()}`);
+        const userRepository = new UserRepository();
+        userService = new UserService(userRepository);
+        testUser = await userService.createUser(`test-session-id-${Date.now()}-${Math.random()}`);
     });
 
     it('should get a user by ID', async () => {
@@ -46,7 +36,7 @@ describe('UserService', () => {
     });
 
     it('should create a new user', async () => {
-        const sessionId = `test-session-id-${Date.now()}`;
+        const sessionId = `test-session-id-${Date.now()}-${Math.random()}`;
         const newUser = await userService.createUser(sessionId);
         expect(newUser).toHaveProperty('id');
         expect(newUser.sessionId).toBe(sessionId);

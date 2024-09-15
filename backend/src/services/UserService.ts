@@ -1,13 +1,11 @@
-import { UserRepository } from "../infrastructure/repositories/UserRepository";
-import { User } from "../domain/user/User";
-import { NotFoundError } from "../domain/shared/NotFoundError";
+// backend/src/domain/services/UserService.ts
+import { IUserService } from './IUserService';
+import { IUserRepository } from '../infrastructure/repositories/IUserRepository';
+import { User } from '../domain/user/User';
+import { NotFoundError } from '../domain/shared/NotFoundError';
 
-export class UserService {
-    private userRepository: UserRepository;
-
-    constructor() {
-        this.userRepository = new UserRepository();
-    }
+export class UserService implements IUserService {
+    constructor(private userRepository: IUserRepository) {}
 
     async getUserById(id: string): Promise<User> {
         const user = await this.userRepository.findById(id);
@@ -20,7 +18,7 @@ export class UserService {
     async getUserBySessionId(sessionId: string): Promise<User> {
         const user = await this.userRepository.findBySessionId(sessionId);
         if (!user) {
-            throw new NotFoundError(`User with session ID ${sessionId} not found`);
+            throw new NotFoundError(`User with sessionId ${sessionId} not found`);
         }
         return user;
     }
