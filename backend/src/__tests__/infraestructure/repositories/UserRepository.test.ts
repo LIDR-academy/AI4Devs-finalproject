@@ -1,5 +1,5 @@
 import { UserRepository } from '../../../infrastructure/repositories/UserRepository';
-import { User } from '../../../domain/user/User';
+import { User } from '../../../domain/models/User';
 
 describe('UserRepository', () => {
     let userRepository: UserRepository;

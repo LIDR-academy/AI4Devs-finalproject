@@ -1,4 +1,4 @@
-import { User } from '../../../domain/user/User';
+import { User } from '../../../domain/models/User';
 import { validate } from 'class-validator';
 
 describe('User Entity', () => {

@@ -1,4 +1,4 @@
-import { User } from '../domain/user/User';
+import { User } from '../domain/models/User';
 
 export interface IUserService {
     getUserById(id: string): Promise<User | null>;

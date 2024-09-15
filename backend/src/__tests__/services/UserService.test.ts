@@ -1,7 +1,7 @@
 
 import { UserService } from '../../services/UserService';
 import { UserRepository } from '../../infrastructure/repositories/UserRepository';
-import { User } from '../../domain/user/User';
+import { User } from '../../domain/models/User';
 import { NotFoundError } from '../../domain/shared/NotFoundError';
 
 describe('UserService', () => {

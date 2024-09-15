@@ -1,7 +1,7 @@
 // backend/src/domain/services/UserService.ts
 import { IUserService } from './IUserService';
 import { IUserRepository } from '../infrastructure/repositories/IUserRepository';
-import { User } from '../domain/user/User';
+import { User } from '../domain/models/User';
 import { NotFoundError } from '../domain/shared/NotFoundError';
 
 export class UserService implements IUserService {
