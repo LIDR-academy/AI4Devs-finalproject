@@ -2,6 +2,7 @@ package com.ai4devs.wealthtrack.controller;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ public class ActivoController {
         this.activoService = activoService;
     }
 
+    @CrossOrigin(origins = "http://localhost:5173")
     @GetMapping("/{portfolioId}")
     public List<Activo> getActivoById(@PathVariable Long portfolioId) {
         return activoService.getActivoById(portfolioId);

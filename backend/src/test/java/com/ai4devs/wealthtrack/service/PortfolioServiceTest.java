@@ -2,7 +2,6 @@ package com.ai4devs.wealthtrack.service;
 
 import com.ai4devs.wealthtrack.data.Activo;
 import com.ai4devs.wealthtrack.data.Portfolio;
-import com.ai4devs.wealthtrack.data.ValorizacionDiaria;
 import com.ai4devs.wealthtrack.repository.PortfolioRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -69,19 +68,6 @@ class PortfolioServiceTest {
         
         List<Activo> activos = Arrays.asList(activo1, activo2);
         
-        // Creación de Valorizaciones Diarias asociadas
-        ValorizacionDiaria valorizacion1 = new ValorizacionDiaria();
-        valorizacion1.setId(201L);
-        valorizacion1.setFecha(LocalDate.of(2023, 10, 1));
-        valorizacion1.setValor(new BigDecimal("10000.00"));
-        
-        ValorizacionDiaria valorizacion2 = new ValorizacionDiaria();
-        valorizacion2.setId(202L);
-        valorizacion2.setFecha(LocalDate.of(2023, 10, 2));
-        valorizacion2.setValor(new BigDecimal("10100.00"));
-        
-        List<ValorizacionDiaria> valorizaciones = Arrays.asList(valorizacion1, valorizacion2);
-        
         // Creación del Portfolio con todos los campos
         Portfolio portfolio = new Portfolio();
         portfolio.setId(1L);
@@ -90,7 +76,6 @@ class PortfolioServiceTest {
         portfolio.setFechaCreacion(LocalDate.of(2023, 1, 1));
         portfolio.setValorActual(new BigDecimal("10100.00"));
         portfolio.setActivos(activos);
-        portfolio.setValorizacionesDiarias(valorizaciones);
         
         // Simulación del comportamiento del repositorio
         when(repository.findById(1L)).thenReturn(Optional.of(portfolio));
@@ -150,20 +135,6 @@ class PortfolioServiceTest {
         assertEquals(24, resultActivo2.getPlazoInversion());
         assertEquals(new BigDecimal("102.00"), resultActivo2.getPrecioUnitarioVenta());
         assertEquals(new BigDecimal("1.0"), resultActivo2.getTipoCambioDivisaVenta());
-        
-        // Verificación de Valorizaciones Diarias
-        assertNotNull(resultPortfolio.getValorizacionesDiarias());
-        assertEquals(2, resultPortfolio.getValorizacionesDiarias().size());
-        
-        ValorizacionDiaria resultValorizacion1 = resultPortfolio.getValorizacionesDiarias().get(0);
-        assertEquals(201L, resultValorizacion1.getId());
-        assertEquals(LocalDate.of(2023, 10, 1), resultValorizacion1.getFecha());
-        assertEquals(new BigDecimal("10000.00"), resultValorizacion1.getValor());
-        
-        ValorizacionDiaria resultValorizacion2 = resultPortfolio.getValorizacionesDiarias().get(1);
-        assertEquals(202L, resultValorizacion2.getId());
-        assertEquals(LocalDate.of(2023, 10, 2), resultValorizacion2.getFecha());
-        assertEquals(new BigDecimal("10100.00"), resultValorizacion2.getValor());
         
         // Verificación del mockito
         verify(repository, times(1)).findById(1L);

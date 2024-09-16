@@ -3,6 +3,7 @@ package com.ai4devs.wealthtrack.controller;
 import com.ai4devs.wealthtrack.data.Portfolio;
 import com.ai4devs.wealthtrack.service.PortfolioService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,6 +17,7 @@ public class PortfolioController {
         this.portfolioService = portfolioService;
     }
 
+@CrossOrigin(origins = "http://localhost:5173")
     @GetMapping("/portfolio")
     public ResponseEntity<Portfolio> getPortfolio() {
         Long usuarioId = obtenerUsuarioId();

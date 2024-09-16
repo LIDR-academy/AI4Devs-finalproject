@@ -283,6 +283,14 @@ Utiliza un enfoque de desarrollo TDD y una arquitectura de código hexagonal par
 
 Si necesitas validar alguna validar alguna suposición, pregúntame antes de escribir código
 
+**Prompt 4:**
+Eres un experto backend developer. Modifica algunas tablas en  @schema.sql 
+- Portfolio no tiene valorizaciones diarias. Estas últimas ya tienen la referencia del portfolioID
+- Activo no tiene precios activos. Similar al anterior, PreciosActivos ya tienen el ticker del activo y de ahí los podríamos recuperar
+
+Ten en cuenta todo el @backend ya que hecho cambios en las capas repository, service y controller. 
+Refactoriza los test unitarios existentes para que sigan teniendo sentido y cubran todos los casos existentes y cualquier nuevo que pueda aparecer (cerciorate de verificar la existencia)
+
 ### 7.2. Frontend
 **Prompt 1:**
 CREATION DE ESQUELETO DE FRONTEND - usando v0 by Vercel
@@ -294,4 +302,102 @@ I'm attaching some pictures of an application I want to be inspired of, even tho
 **NO IA Prompt 3:**
 He usado el código generado por v0 dentro de un esqueleto de proyecto creado desde "React Shadcn Starter"
 
-**Prompt 4:**
+**Prompt 4:** NO ENVIADO
+Eres un programador de frontend experimentado. Aplica patrones de código limpio para refactorizar @dashboard.tsx para que los datos que se muestran en la tabla de holdings se obtengan del backend. Son varios endpoints (todos GET, en esta ocasión) los que se van a llamar:
+
+http://localhost:8080/portfolio
+```json
+{
+  "id": 1,
+  "nombre": "Acciones",
+  "divisaPrincipal": "EUR",
+  "fechaCreacion": "2024-09-16",
+  "valorActual": 10000,
+  "activos": [],
+  "valorizacionesDiarias": []
+}
+```
+http://localhost:8080/valorizacion-diaria/1
+```json
+[
+  {
+    "id": 2,
+    "portfolioId": 1,
+    "fecha": "2024-09-16",
+    "valor": 10000
+  },
+  {
+    "id": 3,
+    "portfolioId": 1,
+    "fecha": "2024-09-15",
+    "valor": 9000
+  },
+  {
+    "id": 4,
+    "portfolioId": 1,
+    "fecha": "2024-09-14",
+    "valor": 8500
+  }
+]
+```
+http://localhost:8080/activos/1
+```json
+[
+  {
+    "id": 1,
+    "portfolioId": 1,
+    "tipo": "ACCION",
+    "nombre": "Microsoft",
+    "ticker": "MSFT",
+    "divisa": "USD",
+    "tipoCambioDivisaCompra": 105,
+    "fechaCompra": "2024-09-10",
+    "numeroTitulos": 10,
+    "precioMedioUnitario": 490,
+    "costeComisiones": 4,
+    "precioTotalCoste": 4700,
+    "precioActual": 510,
+    "ultimaValorizacion": 4857,
+    "fechaActualizacion": null,
+    "tasaInteresNominal": null,
+    "plazoInversion": null,
+    "precioUnitarioVenta": null,
+    "tipoCambioDivisaVenta": null
+  }
+]
+```
+
+Asegúrate de que las urls están externalizadas en un fichero de configuración y no hardcodeadas. También de que @dashboard.tsx reciba un objeto de datos ya completo con la estructura de lo que se va a mostrar y que el cálculo de este se haga fuera, usando el patrón de desarrollo más adecuado a esta situación, en componentes frontend.
+
+NDLR Respuesta del gpt-4o:
+```
+Para refactorizar el código de dashboard.tsx y obtener los datos del backend, aquí hay algunas preguntas clave para asegurarme de que entiendo completamente tus necesidades:
+Estructura de Datos:
+¿Podrías confirmar la estructura exacta de los datos que deseas mostrar en la tabla de holdings? Por ejemplo, ¿cómo se calculan los campos value, allocation, change, y performance a partir de los datos obtenidos del backend?
+Endpoints:
+¿Hay algún endpoint adicional que deba considerar, o solo los tres mencionados (/portfolio, /valorizacion-diaria/1, /activos/1)?
+¿Los endpoints siempre devolverán datos en el formato proporcionado?
+Configuración de URLs:
+¿Tienes alguna preferencia sobre cómo y dónde almacenar las URLs de los endpoints? Por ejemplo, ¿en un archivo de configuración específico como config.js o config.ts?
+4. Manejo de Errores:
+¿Cómo te gustaría manejar los errores de red o de datos? ¿Deberíamos mostrar mensajes de error en la UI, o simplemente registrar los errores en la consola?
+Estado de Carga:
+¿Deseas mostrar algún tipo de indicador de carga mientras se obtienen los datos del backend?
+Librerías:
+¿Hay alguna librería específica que prefieras para realizar las solicitudes HTTP? Por ejemplo, axios o fetch.
+7. Patrón de Desarrollo:
+¿Prefieres usar un patrón específico para la gestión del estado y la obtención de datos, como React Context, Redux, o React Query?
+Una vez que tenga respuestas a estas preguntas, podré proceder con la refactorización del código.
+```
+
+
+**Prompt 5:**
+
+
+1. Todos los campos vienen del backend. Los que no se usan, se usarán en el futuro, una vez que el frontend vaya evolucionando.
+2. Siempre devolverán datos, a no ser que el portfolio indicado sea incorrecto. Para simplicidad, y porque cuando la capa de autentificación esté implementada la aplicación no pedirá información sobre portfolios incorrectos, asume que siempre serán correctos. Los id en /valorizacion-diaria/1 y  /activos/1 vienen de la llamada a /portfolio, el atributo "id".
+3. No tengo ninguna preferencia, pero dame lo que sea más compatible con el stack técnico que tiene el frontend ahora mismo.
+4. Prefiero mostrar los errores en la UI
+5. No es necesario en un primer momento. Anotala en un TODO en el emplazamiento donde sería adecuado
+6. La que sea más compatible con el stack técnico actual del frontend
+7. Utiliza el patrón de React que sea más sencillo de implementar, así como de mantener
