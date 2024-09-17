@@ -725,7 +725,7 @@ Cookie: sessionId=abcd1234session
 
 **Pull Request 4: Desarrollo de la API (Users, Trips, Activities)**
 
-- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/5>
+- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/7>
 
 **Pull Request:**
 
