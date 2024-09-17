@@ -722,3 +722,11 @@ Cookie: sessionId=abcd1234session
 **Pull Request 3: Rediseño del proyecto, vAlpha (POC)**
 
 - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/5>
+
+**Pull Request 4: Desarrollo de la API (Users, Trips, Activities)**
+
+- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/5>
+
+**Pull Request:**
+
+- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/>
