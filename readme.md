@@ -71,7 +71,7 @@ IkiGoo está diseñado para cualquier persona interesada en viajar, independient
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-[Ver diseño completo](./docs/design.md)
+[Ver diseño completo](./.docs/design.md)
 
 ### **1.4. Instrucciones de instalación:**
 
@@ -99,9 +99,6 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
    DB_USER=postgres
    DB_PASSWORD=mipostgres
    DB_HOST=db
-
-   # MongoDB   
-   MONGODB_URI=mongodb://mongodb:27017/ikigoo
    ```
 
 3. Construye y levanta los contenedores Docker:
@@ -113,7 +110,6 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
    - El backend debería estar accesible en `http://localhost:5001`.
    - El frontend debería estar accesible en `http://localhost:3000`.
    - PostgreSQL debería estar corriendo en el puerto `5432`.
-   - MongoDB debería estar corriendo en el puerto `27017`.
 
 5. Para detener los contenedores, ejecuta:
    ```bash
@@ -726,3 +722,11 @@ Cookie: sessionId=abcd1234session
 **Pull Request 3: Rediseño del proyecto, vAlpha (POC)**
 
 - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/5>
+
+**Pull Request 4: Desarrollo de la API (Users, Trips, Activities)**
+
+- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/7>
+
+**Pull Request:**
+
+- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/>
