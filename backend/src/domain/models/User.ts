@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { IsUUID, IsDate, IsString, IsOptional } from "class-validator";
-// import { Trip } from "../trip/Trip";
+import { Trip } from "./Trip";
 
 @Entity()
 export class User {
@@ -22,6 +22,6 @@ export class User {
     @IsOptional()
     lastLogin!: Date;
 
-    // @OneToMany(() => Trip, trip => trip.user)
-    // trips: Trip[];
+    @OneToMany(() => Trip, trip => trip.user, { cascade: true })
+    trips!: Trip[];
 }

@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { IsUUID, IsString, IsOptional, IsInt, IsDate } from 'class-validator';
-// import { Trip } from './Trip';
+import { Trip } from './Trip';
 
 @Entity('activities')
 export class Activity {
@@ -26,6 +26,6 @@ export class Activity {
   @IsDate()
   dateTime!: Date;
 
-  // @ManyToOne(() => Trip, (trip) => trip.activities)
-  // trip: Trip;
+  @ManyToOne(() => Trip, (trip) => trip.activities, { nullable: false })
+  trip!: Trip;
 }
