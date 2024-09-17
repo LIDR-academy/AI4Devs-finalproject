@@ -90,38 +90,42 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
 
 2. Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
    ```dotenv
-   # Server
-   PORT=5001
-   NODE_ENV=development
+    # Server
+    PORT=3000
+    NODE_ENV=development
 
-   # Postgres Database
-   DB_NAME=ikigoo
-   DB_USER=postgres
-   DB_PASSWORD=mipostgres
-   DB_HOST=db
+    # Frontend
+    FRONT_PORT=4200
+
+    # Postgres Database
+    DB_NAME=ikigoo
+    DB_USER=postgres
+    DB_PASSWORD=postgres
+    DB_HOST=localhost
+
+    # MongoDB   
+    MONGODB_URI=mongodb://localhost:27017/ikigoo
    ```
 
 3. Construye y levanta los contenedores Docker:
    ```bash
-   docker compose up --build
+   docker compose up // or // docker compose up -d
    ```
 
 4. Verifica que los servicios estén corriendo correctamente:
-   - El backend debería estar accesible en `http://localhost:5001`.
-   - El frontend debería estar accesible en `http://localhost:3000`.
+   - El backend debería estar accesible en `http://localhost:3000`.
+   - El frontend debería estar accesible en `http://localhost:4200`.
    - PostgreSQL debería estar corriendo en el puerto `5432`.
 
 5. Para detener los contenedores, ejecuta:
    ```bash
-   docker-compose down
+   docker compose down
    ```
 
 6. Para ver los logs de los contenedores, ejecuta:
    ```bash
-   docker-compose logs
+   docker compose logs
    ```
-
-**(WIP)**
 
 ---
 
@@ -660,9 +664,9 @@ Cookie: sessionId=abcd1234session
 2. **Dado que** las tablas han sido creadas, **cuando** se ejecutan las migraciones, **entonces** no deben producirse errores y las estructuras deben estar listas para manejar datos reales.
 3. **Dado que** los datos de viajes y actividades se insertan, **cuando** se realizan consultas a la base de datos, **entonces** los datos deben estar correctamente relacionados y accesibles.
 
-|  Prioridad | Estimación  | Asignado a | Etiquetas |
-|---|---|---|---|
-|  Alta | 3 horas | Equipo de Bases de Datos | Database, Postgres, Usuarios, Viajes, Sprint 1 |
+| Prioridad | Estimación | Asignado a               | Etiquetas                                      |
+| --------- | ---------- | ------------------------ | ---------------------------------------------- |
+| Alta      | 3 horas    | Equipo de Bases de Datos | Database, Postgres, Usuarios, Viajes, Sprint 1 |
 
 **Comentarios:**
 - Asegurarse de que el modelo de datos sigue las mejores prácticas y está optimizado para las consultas de viajes recientes.
@@ -681,9 +685,9 @@ Cookie: sessionId=abcd1234session
 2. **Dado que** el usuario añade una actividad a un viaje, **cuando** la actividad se valida y se guarda en la base de datos, **entonces** la actividad debe estar correctamente relacionada con el viaje.
 3. **Dado que** las APIs están en funcionamiento, **cuando** se realizan peticiones para crear un viaje o una actividad, **entonces** las respuestas deben reflejar los datos creados y las posibles validaciones incorrectas deben devolver los mensajes de error correspondientes.
 
-|  Prioridad | Estimación  | Asignado a | Etiquetas |
-|---|---|---|---|
-|  Alta | 8 horas | Equipo de Backend | Backend, API, Viajes, Actividades, Sprint 1 |
+| Prioridad | Estimación | Asignado a        | Etiquetas                                   |
+| --------- | ---------- | ----------------- | ------------------------------------------- |
+| Alta      | 8 horas    | Equipo de Backend | Backend, API, Viajes, Actividades, Sprint 1 |
 
 **Comentarios:**
 - Coordinar con el equipo de frontend para validar los datos enviados por el usuario y asegurar que los endpoints manejan adecuadamente los errores.
@@ -701,9 +705,9 @@ Cookie: sessionId=abcd1234session
 2. **Dado que** el usuario desea crear un viaje, **cuando** ingresa los detalles del viaje, **entonces** el frontend debe enviar los datos a la API de backend para crear el viaje y mostrar confirmación de éxito o mensajes de error en caso de validación incorrecta.
 3. **Dado que** el usuario desea añadir una actividad, **cuando** los detalles de la actividad se ingresan correctamente, **entonces** el frontend debe enviar los datos al backend para agregar la actividad al viaje.
 
-|  Prioridad | Estimación  | Asignado a | Etiquetas |
-|---|---|---|---|
-|  Alta | 6 horas | Equipo de Frontend | Frontend, Cookies, Viajes, Actividades, Sprint 1 |
+| Prioridad | Estimación | Asignado a         | Etiquetas                                        |
+| --------- | ---------- | ------------------ | ------------------------------------------------ |
+| Alta      | 6 horas    | Equipo de Frontend | Frontend, Cookies, Viajes, Actividades, Sprint 1 |
 
 **Comentarios:**
 - Coordinar con el equipo de backend para asegurar la correcta integración de los endpoints y validar el manejo de errores en el frontend.
