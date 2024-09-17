@@ -127,6 +127,8 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
    docker compose logs
    ```
 
+7. Puedes probar la API desde Postman importando el archivo [IkiGoo.postman_collection.json](./.docs/ikigoo.postman_collection.json).
+
 ---
 
 ## 2. Arquitectura del Sistema
