@@ -271,6 +271,40 @@ Podrías darme la tabla en formato markdown, por favor arrópalo en """
 
 **Prompt 1:**
 
+- Eres un experto desarrollador web, estoy pensando en desarrollar una aplicación usando React, pero quiero conocer tu opinión al respecto
+
+- Poidrías darme las instrucciones para crear un proyecto de React con las últimas versiones?
+
+- Quiero compartir este proyecto en gitlab.
+
+- Dime como puedo agregar MaterialUI a mi proyecto.
+
+- Quiero agregar router a mi proyecto para gestionar la navegación
+
+- Quiero modificar la página Home para que me mueste una sección para filtrar, luego un botón para buscar y finalmente una tabla de resultados
+
+- Es posible agregar un paginador a la tabla de resultados?
+
+- Podemos hacer que la búsqueda se demore un segundo y mostrar mientras tanto un indicador de progreso?
+
+- quiero el mismo efecto al cambiar de página
+
+- es probalbe hacer un poco opaca la tabla de resultados y encima de ella, centrado mostrar el indicador de progreso?
+
+- Pero puedo ver que la tabla de resultados cambia inmediatamente hago algo, la idea es que permanezca sin cambios y al cabo del tiempo definido si cambie los resultados
+
+- Quiero cambiar el comportamiento del botón Crear para que no navegue a otra página sino que en su lugar oscuresca la pantalla y me muestre un campo solicitando el nombre de la nueva encuesta
+
+- Podríamos hacer que al presionar el botón del dialogo se valide que el campo al menos tenga una letra y si es así, se agregue una nueva fila a la tabla de resultados que presentamos en la página Home?
+
+- Podemos agregar la funcionalidad para ordenar por la columna nombre al hacer click sobre ella, además debemos mostrar un indicador de como se está ordenando esta tabla de resultados bien sea ascendente o descendente
+
+- Quisiera cambiar el botón CREAR del díalogo para que diga Siguiente y al presionarlo se cierra este dialogo y se agre uno nuevo pidiendo la descripción de la nueva encuesta, En esta nueva pantalla si aparece el botón crear que agrega la nueva encuesta a la tabla de resultados
+
+- Que componentes conoces, con compatibilidad para react que faciliten la gestión y configuración de encuestas?
+
+- Quiero agregar a mi aplicación el componente surveyjs
+
 **Prompt 2:**
 
 **Prompt 3:**

@@ -52,7 +52,7 @@ Presentamos Módulo de encuestas para la Suite Visión Empresarial, la solución
 
 Con el Módulo de encuestas para la Suite Visión Empresarial, podrás:
 
-Diseñar encuestas a tu medida: Crea encuestas atractivas y personalizadas con diversos tipos de preguntas (opción múltiple, escala Likert, abiertas, etc.) y una lógica de flujo adaptable a tus necesidades.
+Diseñar encuestas a tu medida: Crea encuestas atractivas y personalizadas con diversos tipos de preguntas (opción múltiple, escala Likert, abiertas, etc.) adaptable a tus necesidades.
 Distribuir tus encuestas fácilmente: Comparte tus encuestas a través de múltiples canales (correo electrónico, redes sociales, incrustación en sitios web) y sigue su progreso en tiempo real.
 Analizar los resultados de manera sencilla: Obtén insights valiosos a través de informes detallados y visualizaciones intuitivas. Nuestras herramientas de análisis te permitirán comprender mejor a tu audiencia y tomar decisiones basadas en datos.
 Empoderar a tus clientes: Permite a tus clientes crear y gestionar sus propias encuestas, brindándoles una herramienta poderosa para recopilar feedback y mejorar sus productos o servicios.
@@ -85,20 +85,31 @@ Desarrollar una plataforma web flexible y escalable que permita tanto a la empre
 
 * **Diseño de encuestas:**
     * Editor visual intuitivo para arrastrar y soltar preguntas y secciones.
-    * Biblioteca de plantillas prediseñadas para diferentes tipos de encuestas (satisfacción del cliente, investigación de mercado, etc.).
-    * Personalización de la apariencia de la encuesta (colores, logo, etc.).
-* **Tipos de preguntas:**
+* ***Tipos de preguntas:***
     * Preguntas de opción múltiple: Con una o múltiples respuestas correctas.
     * Preguntas de escala Likert: Para medir la opinión o el acuerdo en una escala numérica.
     * Preguntas abiertas: Para respuestas textuales extensas.
-    * Preguntas de matriz: Para comparar múltiples elementos.
-    * Preguntas de clasificación: Para ordenar elementos por importancia o preferencia.
     * Preguntas de selección múltiple: Para seleccionar varias opciones de una lista.
     * Preguntas de fecha: Para capturar fechas específicas.
-    * Preguntas de carga de archivos: Para permitir a los encuestados subir archivos (imágenes, documentos, etc.).
-* **Lógica de salto:**
-    * Definición de flujos de preguntas condicionales basados en las respuestas anteriores.
-    * Creación de ramas y subramas para personalizar la experiencia del encuestado.
+* **Análsis de los datos:**
+    * Para las preguntas de opción múltiple obtendremos las mediciones correspondientes a:
+      * Moda: La opción más seleccionada. Indica la preferencia común.
+      * Frecuencia: El número de veces que cada opción fue seleccionada. Muestra la distribución de las respuestas.
+      * Procentaje: La proporción de encuestados que eligieron cada opción. Facilita la comparación entre categorías.
+      * Co-ocurrencias de opciones: Con qué frecuencia se seleccionan dos o más opciones juntas. Esto puede revelar patrones o asociaciones entre las respuestas.
+    * Para las preguntas de escala likert obtendremos las mediciones:
+      * Media: Representa el valor promedio de todas las respuestas. Te da una idea general del nivel de acuerdo o desacuerdo con la afirmación.
+      * Mediana: El valor que divide a los datos en dos partes iguales. Es útil cuando hay valores extremos que podrían distorsionar la media.
+      * Moda: La respuesta más frecuente. Te indica la opinión más común.
+      * Desviación estándar: Mide la variabilidad de las respuestas. Un valor alto indica que las opiniones están muy dispersas, mientras que un valor bajo sugiere un alto consenso.
+      * Rango: La diferencia entre el valor más alto y el más bajo. Te da una idea de la amplitud de las respuestas.
+    * Para las preguntas abiertas no se ha definido aún el método de medición, pero se revisaron las siguientes:
+      * Categorización: Agrupar las respuestas en categorías temáticas para identificar patrones y tendencias.
+      * Codificación: Asignar códigos a las respuestas para facilitar el análisis y la comparación.
+      * Frecuencia de palabras clave: Identificar las palabras o frases que se repiten con mayor frecuencia para entender los conceptos más importantes.
+      * Sentimiento: Analizar el tono de las respuestas (positivo, negativo, neutro) para evaluar la satisfacción o insatisfacción.
+      * Análisis de sentimientos: Utilizar software especializado para determinar la polaridad de las respuestas (positivo, negativo, neutro).
+
 
 ### **1.3. Diseño y experiencia de usuario:**
 
@@ -169,41 +180,22 @@ src/main/java/
                     Pregunta.java
                     OpcionRespuesta.java
                     LogicaSalto.java
-                    Plantilla.java
-                    // ... otras entidades relacionadas con encuestas
                 application/
                     CreateEncuestaService.java
                     ResponderPreguntaService.java
-                    // ... otros servicios relacionados con encuestas
                 infrastructure/
                     EncuestaRepository.java
                     PreguntaRepository.java
-                    // ... otros repositorios relacionados con encuestas
                     EncuestaController.java
-                    // ... otros controladores relacionados con encuestas
             encuestado/
                 domain/
                     Encuestado.java
                     Respuesta.java
                     RespuestaOpcion.java
-                    // ... otras entidades relacionadas con encuestados
                 application/
                     // ... servicios relacionados con encuestados
                 infrastructure/
-                    // ... repositorios relacionados con encuestados
                     EncuestadoController.java
-                    // ... otros controladores relacionados con encuestados
-            plantilla/
-                domain/
-                    Plantilla.java
-                    // ... otras entidades relacionadas con plantillas
-                // ... (análogamente a encuesta y encuestado)
-            logicaSalto/
-                domain/
-                    LogicaSalto.java
-                    // ... otras entidades relacionadas con lógica de salto
-                // ... (análogamente a encuesta y encuestado)
-            // otros conceptos (e.g., reportes, notificaciones, integraciones)
         shared/
             config/
                 AppConfig.java
@@ -220,9 +212,8 @@ En esta estructura, cada concepto clave del diagrama de datos tiene su propia ca
 
 encuesta: Todo lo relacionado con la creación, gestión y análisis de encuestas.
 encuestado: Todo lo relacionado con los usuarios que responden las encuestas y sus respuestas.
-plantilla: Gestión de las plantillas de encuestas.
-logicaSalto: Gestión de las reglas de navegación entre preguntas.
 otros conceptos: Otros conceptos que puedas necesitar, como reportes, notificaciones, integraciones con otros sistemas, etc.
+
 Ventajas de esta Estructura:
 
 Alta Cohesión: Cada concepto se mantiene aislado, lo que facilita la comprensión y el mantenimiento del código.
@@ -364,17 +355,6 @@ Propósito: Almacenar estructuras de encuestas reutilizables.
 - nombre: Nombre de la plantilla.
 - descripcion: Descripción de la plantilla.
 
-
-#### LogicaSalto
-
-Descripción: Representa una regla lógica que determina el flujo de la encuesta.
-Propósito: Implementar funcionalidades como saltos condicionales entre preguntas.
-
-##### Atributos
-
-- id: Identificador único de la regla de salto lógico.
-- condicion: Condición que debe cumplirse para que se aplique el salto.
-- accion: Acción a realizar si se cumple la condición (saltar a otra pregunta, finalizar la encuesta, etc.).
 
 #### Relaciones
 
@@ -637,123 +617,6 @@ paths:
           description: Pregunta eliminada exitosamente.
         '404':
           description: Pregunta no encontrada.
-
-  /logicasaltos:
-    get:
-      summary: Obtener todas las lógicas de salto
-      description: Obtiene una lista de lógicas de salto con paginación y ordenado.
-      parameters:
-        - name: page
-          in: query
-          description: Número de la página.
-          required: false
-          schema:
-            type: integer
-            default: 1
-        - name: pageSize
-          in: query
-          description: Cantidad de lógicas de salto por página.
-          required: false
-          schema:
-            type: integer
-            default: 10
-        - name: sortBy
-          in: query
-          description: Campo por el cual se ordenará.
-          required: false
-          schema:
-            type: string
-        - name: sortOrder
-          in: query
-          description: Orden de la ordenación (ascendente o descendente).
-          required: false
-          schema:
-            type: string
-            enum: [asc, desc]
-      responses:
-        '200':
-          description: Lista de lógicas de salto.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LogicaSalto'
-    post:
-      summary: Crear una nueva lógica de salto
-      description: Crea una nueva lógica de salto.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LogicaSalto'
-      responses:
-        '201':
-          description: Lógica de salto creada exitosamente.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogicaSalto'
-
-  /logicasaltos/{id}:
-    get:
-      summary: Obtener lógica de salto por ID
-      description: Obtiene los detalles de una lógica de salto específica.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Detalles de la lógica de salto.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogicaSalto'
-        '404':
-          description: Lógica de salto no encontrada.
-    put:
-      summary: Actualizar lógica de salto
-      description: Actualiza una lógica de salto existente.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LogicaSalto'
-      responses:
-        '200':
-          description: Lógica de salto actualizada exitosamente.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogicaSalto'
-        '404':
-          description: Lógica de salto no encontrada.
-    delete:
-      summary: Eliminar lógica de salto
-      description: Elimina una lógica de salto existente.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Lógica de salto eliminada exitosamente.
-        '404':
-          description: Lógica de salto no encontrada.
-
 components:
   schemas:
     Encuesta:
@@ -792,17 +655,7 @@ components:
         paginaEncuestaId:
           type: integer
 
-    LogicaSalto:
-      type: object
-      properties:
-        id:
-          type: integer
-        condicion:
-          type: string
-        accion:
-          type: string
-
-    Respuesta:
+Respuesta:
       type: object
       properties:
         id:
@@ -849,16 +702,6 @@ components:
           type: integer
         numeroPagina:
           type: integer
-
-    Plantilla:
-      type: object
-      properties:
-        id:
-          type: integer
-        nombre:
-          type: string
-        descripcion:
-          type: string
 
 ```
 
