@@ -243,7 +243,6 @@ erDiagram
         string Description
         enum Accompaniment "{Solo, Friends, Family, Couple} not null"
         enum ActivityType "{Nature, Culture, Nightlife, Gastronomic} not null"
-        int BudgetMin "not null"
         int BudgetMax "not null"
     }
     
@@ -279,7 +278,6 @@ erDiagram
      - `EndDate` (date, not null): Fecha de finalización del viaje.
      - `Accompaniment` (enum, not null): Categoría de acompañantes del viaje (ej., Solo, Friends, Family, Couple).
      - `ActivityType` (enum, not null): Tipo de actividades planificadas en el viaje (ej., Nature, Culture, Nightlife, Gastronomic).
-     - `BudgetMin` (int, not null): Presupuesto mínimo planificado para el viaje.
      - `BudgetMax` (int, not null): Presupuesto máximo planificado para el viaje.
      - `Description` (string): Descripción opcional del viaje.
    - **Relaciones**:
@@ -342,9 +340,6 @@ paths:
                     type: string
                     enum: ["Nature", "Culture", "Nightlife", "Gastronomic"]
                   example: ["Nature", "Culture"]
-                budgetMin:
-                  type: integer
-                  example: 500
                 budgetMax:
                   type: integer
                   example: 1500
@@ -383,9 +378,6 @@ paths:
                       type: string
                       enum: ["Nature", "Culture", "Nightlife", "Gastronomic"]
                     example: ["Nature", "Culture"]
-                  budgetMin:
-                    type: integer
-                    example: 500
                   budgetMax:
                     type: integer
                     example: 1500
@@ -404,7 +396,6 @@ paths:
   "endDate": "2024-08-10",
   "accompaniment": "Friends",
   "activityType": ["Nature", "Culture"],
-  "budgetMin": 500,
   "budgetMax": 1500,
   "description": "A relaxing trip to Paris focusing on cultural activities and nature."
 }
@@ -419,7 +410,6 @@ paths:
   "endDate": "2024-08-10",
   "accompaniment": "Friends",
   "activityType": ["Nature", "Culture"],
-  "budgetMin": 500,
   "budgetMax": 1500,
   "description": "A relaxing trip to Paris focusing on cultural activities and nature."
 }

@@ -3,7 +3,7 @@ import { getOpenAIResponse } from '../services/OpenAIService';
 
 const router = express.Router();
 
-router.post('/ikigoo-assistant', async (req, res) => {
+router.post('/', async (req, res) => {
   const { threadId, prompt } = req.body;
   try {
     const response = await getOpenAIResponse(threadId, prompt);

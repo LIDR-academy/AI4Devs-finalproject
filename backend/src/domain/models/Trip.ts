@@ -67,11 +67,6 @@ export class Trip {
     @Column({ type: 'int', nullable: false })
     @IsInt()
     @Min(0)
-    budgetMin!: number;
-
-    @Column({ type: 'int', nullable: false })
-    @IsInt()
-    @Min(0)
     budgetMax!: number;
 
     @OneToMany(() => Activity, activity => activity.trip, { cascade: true })
