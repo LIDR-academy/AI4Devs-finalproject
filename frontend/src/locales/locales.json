@@ -1,0 +1,78 @@
+{
+    "locales": [
+        {
+            "language": "en",
+            "messages": [
+                {
+                    "key": "btn-new-chat",
+                    "value": "New chat"
+                },
+                {
+                    "key": "chats",
+                    "value": "Chats"
+                },
+                {
+                    "key": "no-chats",
+                    "value": "No chats available yet"
+                },
+                {
+                    "key": "itinerary-prompt",
+                    "value": "Please start a new chat to create your own itinerary"
+                },
+                {
+                    "key": "itinerary-title",
+                    "value": "Itinerary"
+                },
+                {
+                    "key": "chat-placeholder-1",
+                    "value": "Family trip to London"
+                },
+                {
+                    "key": "chat-placeholder-2",
+                    "value": "What to do in Barcelona for 5 days?"
+                },
+                {
+                    "key": "chat-placeholder-3",
+                    "value": "I am an adventurer traveler, tell me the most interesting activities in Bali"
+                }
+            ]
+        },
+        {
+            "language": "es",
+            "messages": [
+                {
+                    "key": "btn-new-chat",
+                    "value": "Nuevo chat"
+                },
+                {
+                    "key": "chats",
+                    "value": "Chats"
+                },
+                {
+                    "key": "no-chats",
+                    "value": "Todavía no hay chats disponibles"
+                },
+                {
+                    "key": "itinerary-prompt",
+                    "value": "Por favor, inicia un nuevo chat para crear tu propio itinerario"
+                },
+                {
+                    "key": "itinerary-title",
+                    "value": "Itinerario"
+                },
+                {
+                    "key": "chat-placeholder-1",
+                    "value": "Viaje en familia a Londres"
+                },
+                {
+                    "key": "chat-placeholder-2",
+                    "value": "¿Qué hacer 5 días en Barcelona?"
+                },
+                {
+                    "key": "chat-placeholder-3",
+                    "value": "Soy un viajero que le gustan las aventuras, dime las más interesantes de Bali"
+                }
+            ]
+        }
+    ]
+}

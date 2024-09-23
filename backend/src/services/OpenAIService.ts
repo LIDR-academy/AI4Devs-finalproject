@@ -37,7 +37,7 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
 
         return {
             threadId: threadId,
-            response: assistantResponse
+            message: assistantResponse
         };
     } catch (error) {
         console.error("Error fetching response from OpenAI:", error);
