@@ -28,6 +28,7 @@
     "express-validator": "^7.2.0",
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
+    "openai": "^4.63.0",
     "pg": "^8.7.1",
     "supertest": "^7.0.0",
     "ts-node": "^10.4.0",
