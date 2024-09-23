@@ -723,6 +723,10 @@ Cookie: sessionId=abcd1234session
 
 - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/7>
 
+**Pull Request 5: Integración de la IA en el proyecto**
+
+- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/8>
+
 **Pull Request:**
 
 - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/>
