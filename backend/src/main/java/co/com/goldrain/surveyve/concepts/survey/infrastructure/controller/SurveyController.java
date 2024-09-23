@@ -52,7 +52,7 @@ public class SurveyController {
 
     @GetMapping
     @Operation(summary = "Get all surveys")
-    public ResponseEntity<List<Survey>> getAllSurveys() {
-        return ResponseEntity.ok(surveyService.getAllSurveys());
+    public ResponseEntity<List<Survey>> getAllSurveys(@RequestParam String filter) {
+        return ResponseEntity.ok(surveyService.getAllSurveys(filter));
     }
 }
