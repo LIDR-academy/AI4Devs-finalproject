@@ -1,23 +1,13 @@
 package com.ai4devs.wealthtrack.data;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Getter
 @Setter
@@ -31,9 +21,8 @@ public class Activo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "portfolio_id", nullable = false)
-    private Portfolio portfolio;
+    @Column(name = "portfolio_id", nullable = false)
+    private Long portfolioId;
 
     @Column(name="tipo", nullable = false, length = 50)
     private String tipo;
@@ -86,8 +75,6 @@ public class Activo {
     @Column(name="tipo_cambio_divisa_venta", precision = 18, scale = 6)
     private BigDecimal tipoCambioDivisaVenta;
 
-    @OneToMany(mappedBy = "activo", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PrecioActivo> preciosActivos;
-    // TODO remove preciosActivos en el sql
+
 
 }

@@ -7,3 +7,7 @@ spring:
   h2:
     console:
       enabled: true
+
+app:
+  cors:
+    allowed-origins: "http://localhost:5173"  

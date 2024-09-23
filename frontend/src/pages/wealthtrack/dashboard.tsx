@@ -13,6 +13,11 @@ export default function WealthManagementDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Clear previous state
+        setPortfolio(null);
+        setValorizacionDiaria([]);
+        setActivos([]);
+
         const portfolioData = await fetchPortfolio();
         setPortfolio(portfolioData);
 
@@ -68,12 +73,12 @@ export default function WealthManagementDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>First Activity</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Allocation</TableHead>
-                <TableHead>Change</TableHead>
-                <TableHead>Performance</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Fecha compra</TableHead>
+                <TableHead>Valor inicial</TableHead>
+                <TableHead>Valor actual</TableHead>
+                <TableHead>Ganancia</TableHead>
+                <TableHead>Ganancia %</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -84,13 +89,13 @@ export default function WealthManagementDashboard() {
                     <div className="text-sm text-muted-foreground">{activo.ticker}</div>
                   </TableCell>
                   <TableCell>{activo.fechaCompra}</TableCell>
-                  <TableCell>${activo.precioActual.toFixed(2)}</TableCell>
-                  <TableCell>{((activo.precioActual / portfolio.valorActual) * 100).toFixed(2)}%</TableCell>
-                  <TableCell className={activo.ultimaValorizacion >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    ${activo.ultimaValorizacion.toFixed(2)}
+                  <TableCell>${activo.precioTotalCoste.toFixed(2)}</TableCell>
+                  <TableCell>${activo.ultimaValorizacion.toFixed(2)}</TableCell>
+                  <TableCell className={activo.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    ${activo.ganancia !== null && activo.ganancia !== undefined ? activo.ganancia.toFixed(2) : '0.00'}
                   </TableCell>
-                  <TableCell className={activo.ultimaValorizacion >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    {((activo.ultimaValorizacion / activo.precioMedioUnitario) * 100).toFixed(2)}%
+                  <TableCell className={activo.gananciaPorcentaje >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    {activo.gananciaPorcentaje !== null && activo.gananciaPorcentaje !== undefined ? activo.gananciaPorcentaje.toFixed(2) : '0.00'}%
                   </TableCell>
                 </TableRow>
               ))}

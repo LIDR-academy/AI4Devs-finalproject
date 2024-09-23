@@ -1,5 +1,2 @@
-export const API_URLS = {
-  portfolio: 'http://localhost:8080/portfolio',
-  valorizacionDiaria: (portfolioId: number) => `http://localhost:8080/valorizacion-diaria/${portfolioId}`,
-  activos: (portfolioId: number) => `http://localhost:8080/activos/${portfolioId}`,
-};
+export const API_HOST = 'http://localhost';
+export const API_PORT = 8080;
