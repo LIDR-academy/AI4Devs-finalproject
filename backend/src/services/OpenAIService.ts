@@ -22,18 +22,14 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
         const run = await OpenAI.beta.threads.runs.createAndPoll(
             threadId,
             {
-                assistant_id: process.env.OPENAI_ASSISTANT_ID || "gpt-4o-mini",
-                temperature: 1,
-                max_prompt_tokens: 2048,
-                max_completion_tokens: 2048,     
+                assistant_id: process.env.OPENAI_ASSISTANT_ID || "gpt-4o-mini"  
             }
         );
 
         if (run.status === 'completed') {
-            const messages = await OpenAI.beta.threads.messages.list(run.thread_id);
-            const lastAssistantMessage = messages.data.reverse().find(message => message.role === 'assistant' && Array.isArray(message.content) && message.content[0].type === 'text');
 
-            console.log('lastAssistantMessage:', lastAssistantMessage);
+            const messages = await OpenAI.beta.threads.messages.list(run.thread_id);
+            const lastAssistantMessage = messages.data.find(message => message.role === 'assistant' && Array.isArray(message.content) && message.content[0].type === 'text');
 
             if (lastAssistantMessage && 'text' in lastAssistantMessage.content[0]) {
                 const rawMessage = lastAssistantMessage.content[0].text.value;

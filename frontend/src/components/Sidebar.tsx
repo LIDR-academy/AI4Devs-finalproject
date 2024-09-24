@@ -12,14 +12,14 @@ export default function Sidebar() {
 
     return (
         <div className="w-64 p-4 flex flex-col border-r-2 border-gray-100">
-            <div className="flex flex-col items-center mb-4 rounded-lg p-4 shadow-md border-2 border-gray-200">
+            <div className="flex flex-col items-center mb-4">
                 <img
                     src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Z3vqK1WAdvhcavo10sL6QxLv3IdVRd.png"
                     alt="IkiGoo Logo"
                     className="mb-2"
                 />
             </div>
-            <nav className="space-y-4 flex-grow">
+            <nav className="space-y-4 flex-grow border-t-2 border-gray-100 pt-4">
                 <div className="flex justify-center">
                     <button
                         onClick={toggleLanguage}

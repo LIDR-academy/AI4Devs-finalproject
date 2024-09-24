@@ -6,6 +6,4 @@ const openAIClient = new OpenAI({
   project: process.env.OPENAI_PROJECT,
 });
 
-openAIClient.timeout = 300000;
-
 export default openAIClient;
