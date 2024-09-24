@@ -1,0 +1,320 @@
+openapi: 3.1.0
+info:
+  title: WealthTrack API
+  version: 1.0.0
+paths:
+  /portfolio:
+    get:
+      summary: Obtener la información del portfolio del usuario autenticado
+      responses:
+        '200':
+          description: Detalles del portfolio
+    put:
+      summary: Actualizar el portfolio del usuario autenticado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Portfolio'
+      responses:
+        '200':
+          description: Portfolio actualizado
+    delete:
+      summary: Eliminar el portfolio del usuario autenticado
+      responses:
+        '204':
+          description: Portfolio eliminado
+
+  /activos:
+    get:
+      summary: Obtener todos los activos del portfolio del usuario autenticado
+      responses:
+        '200':
+          description: Lista de activos
+    post:
+      summary: Crear un nuevo activo en el portfolio del usuario autenticado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Activo'
+      responses:
+        '201':
+          description: Activo creado
+
+  /activos/{id}:
+    get:
+      summary: Obtener un activo por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalles del activo
+    put:
+      summary: Actualizar un activo por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Activo'
+      responses:
+        '200':
+          description: Activo actualizado
+    delete:
+      summary: Eliminar un activo por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Activo eliminado
+
+  /valorizaciones-diarias:
+    get:
+      summary: Obtener todas las valorizaciones diarias del portfolio del usuario autenticado
+      responses:
+        '200':
+          description: Lista de valorizaciones diarias
+    post:
+      summary: Crear una nueva valorización diaria para el portfolio del usuario autenticado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValorizacionDiaria'
+      responses:
+        '201':
+          description: Valorización diaria creada
+
+  /valorizaciones-diarias/{id}:
+    get:
+      summary: Obtener una valorización diaria por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalles de la valorización diaria
+    put:
+      summary: Actualizar una valorización diaria por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValorizacionDiaria'
+      responses:
+        '200':
+          description: Valorización diaria actualizada
+    delete:
+      summary: Eliminar una valorización diaria por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Valorización diaria eliminada
+
+  /precios-activos:
+    get:
+      summary: Obtener todos los precios de activos del portfolio del usuario autenticado
+      responses:
+        '200':
+          description: Lista de precios de activos
+    post:
+      summary: Crear un nuevo precio de activo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrecioActivo'
+      responses:
+        '201':
+          description: Precio de activo creado
+
+  /precios-activos/{id}:
+    get:
+      summary: Obtener un precio de activo por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detalles del precio de activo
+    put:
+      summary: Actualizar un precio de activo por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrecioActivo'
+      responses:
+        '200':
+          description: Precio de activo actualizado
+    delete:
+      summary: Eliminar un precio de activo por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Precio de activo eliminado
+
+components:
+  schemas:
+    Portfolio:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        divisa_principal:
+          type: string
+        fecha_creacion:
+          type: string
+          format: date
+        valor_actual:
+          type: number
+          format: double
+
+    Activo:
+      type: object
+      properties:
+        id:
+          type: integer
+        portfolio_id:
+          type: integer
+        tipo:
+          type: string
+        nombre:
+          type: string
+        ticker:
+          type: string
+        divisa:
+          type: string
+        tipo_cambio_divisa_compra:
+          type: number
+          format: double
+        fecha_compra:
+          type: string
+          format: date
+        numero_titulos:
+          type: integer
+        precio_medio_unitario:
+          type: number
+          format: double
+        coste_comisiones:
+          type: number
+          format: double
+        precio_total_coste:
+          type: number
+          format: double
+        precio_actual:
+          type: number
+          format: double
+        ultima_valorizacion:
+          type: number
+          format: double
+        fecha_actualizacion:
+          type: string
+          format: date
+        tasa_interes_nominal:
+          type: number
+          format: double
+        plazo_inversion:
+          type: integer
+        precio_unitario_venta:
+          type: number
+          format: double
+        tipo_cambio_divisa_venta:
+          type: number
+          format: double
+
+    ValorizacionDiaria:
+      type: object
+      properties:
+        id:
+          type: integer
+        portfolio_id:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        valor:
+          type: number
+          format: double
+
+    PrecioActivo:
+      type: object
+      properties:
+        id:
+          type: integer
+        activo_id:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        precio_cierre:
+          type: number
+          format: double
+        divisa:
+          type: string
+        ticker:
+          type: string
+        nombre:
+          type: string
+        precio_apertura:
+          type: number
+          format: double
+        precio_maximo:
+          type: number
+          format: double
+        precio_minimo:
+          type: number
+          format: double
+        volumen:
+          type: integer
