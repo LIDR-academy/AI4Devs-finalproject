@@ -22,6 +22,9 @@ module.exports = {
       borderRadius: {
         'xl': '1rem',
       },
+      animation: {
+        'ping-slow': 'ping 1.7s linear infinite',
+      },
     },
   },
   plugins: [],

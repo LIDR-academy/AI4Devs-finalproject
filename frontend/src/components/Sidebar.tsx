@@ -11,7 +11,7 @@ export default function Sidebar() {
     };
 
     return (
-        <div className="w-64 p-4 flex flex-col border-r-2 border-gray-100">
+        <div className="w-64 p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
             <div className="flex flex-col items-center mb-4">
                 <img
                     src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Z3vqK1WAdvhcavo10sL6QxLv3IdVRd.png"
@@ -36,7 +36,6 @@ export default function Sidebar() {
                             <span className="font-semibold">{translator('chats')}</span>
                         </div>
                         <div className="pl-8 space-y-2">
-                            {/* Aquí puedes agregar los elementos de la lista de chats */}
                         </div>
                     </div>
                 ) : (

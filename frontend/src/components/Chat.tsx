@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../context/LanguageContext';
-import { useChat } from '../hooks/useChat';
 import TypewriterEffect from './TypewriterEffect';
 import { useThrottle } from '../hooks/useThrottle';
 
-export default function Chat() {
-  const { translator } = useLanguage();
-  const {
-    messages,
-    inputValue,
-    setInputValue,
-    handleSend,
-    tripTitle
-  } = useChat();
+interface ChatProps {
+  messages: { role: string; content: string }[];
+  inputValue: string;
+  setInputValue: (value: string) => void;
+  handleSend: () => void;
+  tripTitle: string | null;
+}
 
+export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle }: ChatProps) {
+  const { translator } = useLanguage();
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   const placeholders = [
@@ -42,16 +41,19 @@ export default function Chat() {
   }, [placeholders.length]);
 
   return (
-    <div className="w-2/3 border-r-2 border-gray-100 flex flex-col p-4">
+    <div className="w-1/2 border-r-2 border-gray-100 flex flex-col p-4">
       <div className="flex justify-between items-center mb-4">
-       <h1 className="text-2xl font-bold"><TypewriterEffect text={tripTitle || ''} /></h1>
+        <h1 className="text-2xl font-bold"><TypewriterEffect text={tripTitle || ''} /></h1>
       </div>
       <div className="flex-1 overflow-y-auto mb-4">
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`mb-2 p-3 rounded-lg shadow-sm ${msg.role === 'user' ? 'bg-gray-100 text-gray-800 text-right' : 'bg-white text-gray-600 text-left'
-              }`}
+            className={`mb-2 p-3 rounded-lg shadow-sm ${
+              msg.role === 'user' 
+                ? 'bg-gray-100 text-gray-800 text-right' 
+                : 'bg-white text-gray-600 text-left'
+            }`}
           >
             <ReactMarkdown>{msg.content}</ReactMarkdown>
           </div>

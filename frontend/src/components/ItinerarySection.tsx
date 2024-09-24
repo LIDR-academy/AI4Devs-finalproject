@@ -1,34 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { ClockIcon } from "@heroicons/react/24/outline";
-import { Trip } from '../types/Trip';
+import { ClockIcon, CalendarIcon, UserGroupIcon, MapPinIcon } from "@heroicons/react/24/outline";
 import { useLanguage } from '../context/LanguageContext';
+import ReactMarkdown from 'react-markdown';
 
-export default function ItinerarySection() {
-  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+interface ItinerarySectionProps {
+  tripProperties: { [key: string]: any };
+  tripItinerary: string;
+}
+
+export default function ItinerarySection({ tripProperties, tripItinerary }: ItinerarySectionProps) {
   const [loading, setLoading] = useState(true);
   const { translator } = useLanguage();
 
   useEffect(() => {
-    // Simulate fetching the selected trip from the session
-    setTimeout(() => {
-      // Replace this with actual session fetching logic
-      const trip: Trip | null = null; // Example: fetched trip or null if no trip is selected
-      setSelectedTrip(trip);
+    if (
+      tripProperties &&
+      Object.keys(tripProperties).length > 0 &&
+      tripItinerary &&
+      tripItinerary.length > 0
+    ) {
       setLoading(false);
-    }, 2000);
-  }, []);
+    } else {
+      setLoading(true);
+    }
+  }, [tripProperties, tripItinerary]);
 
   if (loading) {
     return (
-      <div className="w-1/3 p-4 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
+      <div className="w-1/2 p-4 flex items-center justify-center">
+        <div className="animate-ping-slow rounded-full h-20 w-20 border-t-2 border-b-2 border-violet-600"></div>
       </div>
     );
   }
 
-  if (!selectedTrip) {
+  if (!tripProperties || Object.keys(tripProperties).length === 0) {
     return (
-      <div className="w-1/3 p-4 flex items-center justify-center">
+      <div className="w-1/2 p-4 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <ClockIcon className="h-6 w-6 text-gray-600" />
           <p className="text-gray-600">{translator('itinerary-prompt')}</p>
@@ -37,22 +44,31 @@ export default function ItinerarySection() {
     );
   }
 
+  const badges: { [key: string]: JSX.Element | undefined } = {
+    "Destination City": <MapPinIcon className="h-5 w-5 text-gray-600" />,
+    "Travel Start Date": <CalendarIcon className="h-5 w-5 text-gray-600" />,
+    "Travel End Date": <CalendarIcon className="h-5 w-5 text-gray-600" />,
+    "Companion Categories": <UserGroupIcon className="h-5 w-5 text-gray-600" />
+  };
+
   return (
-    <div className="w-1/3 p-4">
+    <div className="w-1/2 p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-3xl font-bold">{selectedTrip.name}</h2>
+        <h2 className="text-3xl font-bold">{tripProperties['Destination City']}</h2>
       </div>
       <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
-        {selectedTrip.features.map((feature, index) => (
-          <span key={index}>{feature}</span>
+        {Object.entries(tripProperties).map(([key, value], index) => (
+          (value && value !== '' && value.length > 0) &&
+          <div key={index} className="flex items-center space-x-2 bg-gray-200 rounded-full py-1 px-3">
+            {badges[key] || null}
+            <span>{Array.isArray(value) ? value.join(', ') : value}</span>
+          </div>
         ))}
       </div>
       <div className="bg-white rounded-lg p-4 shadow-md border-2 border-gray-200">
         <h3 className="font-semibold mb-2">{translator('itinerary-title')}</h3>
-        <div className="space-y-4">
-          {selectedTrip.itinerary.map((item, index) => (
-            <div key={index}>{item}</div>
-          ))}
+        <div className="flex-1 space-y-4 overflow-y-auto">
+          <ReactMarkdown>{tripItinerary}</ReactMarkdown>
         </div>
       </div>
     </div>

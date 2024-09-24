@@ -8,6 +8,8 @@ export function useChat() {
   const [inputValue, setInputValue] = useState('');
   const [threadId, setThreadId] = useState<string | null>(null);
   const [tripTitle, setTripTitle] = useState<string | null>(null);
+  const [tripProperties, setTripProperties] = useState<{ [key: string]: any }>({});
+  const [tripItinerary, setTripItinerary] = useState<string>('');
 
   const handleSend = async () => {
     if (inputValue.trim() === '') return;
@@ -31,6 +33,8 @@ export function useChat() {
 
     setMessages((prevMessages) => [...prevMessages, assistantMessage]);
     setTripTitle(data.response.title);
+    setTripProperties(data.response.properties);
+    setTripItinerary(data.response.itinerary);
 
     if (!threadId && data.response.threadId) {
       setThreadId(data.response.threadId);
@@ -42,6 +46,8 @@ export function useChat() {
     inputValue,
     setInputValue,
     handleSend,
-    tripTitle
+    tripTitle,
+    tripProperties,
+    tripItinerary
   };
 }

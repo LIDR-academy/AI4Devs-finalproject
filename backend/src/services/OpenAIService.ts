@@ -5,6 +5,8 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
         let assistantResponse: string = '';
         let title: string = '';
         let properties: any = {};
+        let itinerary: string = '';
+        let returned_itinerary: boolean = false;
 
         if (!threadId) {
             const thread = await OpenAI.beta.threads.create();
@@ -31,30 +33,31 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
             const messages = await OpenAI.beta.threads.messages.list(run.thread_id);
             const lastAssistantMessage = messages.data.find(message => message.role === 'assistant' && Array.isArray(message.content) && message.content[0].type === 'text');
 
+ 
             if (lastAssistantMessage && 'text' in lastAssistantMessage.content[0]) {
                 const rawMessage = lastAssistantMessage.content[0].text.value;
+
+                console.log('!! rawMessage:', rawMessage);
+
                 const jsonMatch = rawMessage.match(/```json\s*([\s\S]*)\s*```/);
 
                 if (jsonMatch && jsonMatch[1]) {
                     try {
-                        const parsedContent = JSON.parse(jsonMatch[1]);
+                        const cleanedJsonString = jsonMatch[1].replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+                        const parsedContent = JSON.parse(cleanedJsonString);
 
-                        // Validar y asignar valores
-                        title = typeof parsedContent.title === 'string' ? parsedContent.title : 'Título no proporcionado';
+                        title = typeof parsedContent.title === 'string' && parsedContent.title;
                         properties = typeof parsedContent.trip_properties === 'object' && parsedContent.trip_properties !== null ? parsedContent.trip_properties : {};
-                        assistantResponse = typeof parsedContent.user_response === 'string' ? parsedContent.user_response : 'Respuesta del asistente no proporcionada.';
+                        assistantResponse = typeof parsedContent.user_response === 'string' && parsedContent.user_response;
+                        returned_itinerary = typeof parsedContent.returned_itinerary === 'string' && (parsedContent.returned_itinerary === "true" ? true : false);
+                        itinerary = typeof parsedContent.itinerary === 'string' && parsedContent.itinerary;
+
                     } catch (err) {
                         console.error("Error parsing JSON from assistant response:", err);
-                        // Asignar valores por defecto o mensajes de error
-                        title = 'Error al procesar el título';
-                        properties = {};
                         assistantResponse = 'Hubo un error al procesar la respuesta del asistente. Por favor, intenta de nuevo.';
                     }
                 } else {
-                    // Si no se encuentra el bloque JSON, asignar valores por defecto o manejar el caso
                     console.warn("No se encontró un bloque JSON en la respuesta del asistente.");
-                    title = 'Título no proporcionado';
-                    properties = {};
                     assistantResponse = rawMessage || 'El asistente no proporcionó una respuesta válida.';
                 }
             }
@@ -66,7 +69,9 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
             threadId: threadId,
             message: assistantResponse,
             title: title,
-            properties: properties
+            properties: properties,
+            returned_itinerary: returned_itinerary,
+            itinerary: itinerary
         };
     } catch (error) {
         console.error("Error fetching response from OpenAI:", error);
