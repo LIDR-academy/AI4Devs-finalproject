@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
 
 interface TypewriterEffectProps {
   text: string;
@@ -44,7 +43,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({ text, onType, speed
     return () => cancelAnimationFrame(requestRef.current!);
   }, [text, onType, speed]);
 
-  return <ReactMarkdown>{text.slice(0, currentIndex)}</ReactMarkdown>;
+  return <>{text.slice(0, currentIndex)}</>;
 };
 
 export default TypewriterEffect;

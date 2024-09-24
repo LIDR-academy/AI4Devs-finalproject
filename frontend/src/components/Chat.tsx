@@ -6,18 +6,16 @@ import TypewriterEffect from './TypewriterEffect';
 import { useThrottle } from '../hooks/useThrottle';
 
 export default function Chat() {
-  const { translator, language } = useLanguage();
+  const { translator } = useLanguage();
   const {
     messages,
     inputValue,
     setInputValue,
     handleSend,
-    assistantResponseCount,
-    threadId
+    tripTitle
   } = useChat();
 
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [tripTitle, setTripTitle] = useState('');
 
   const placeholders = [
     translator('chat-placeholder-1'),
@@ -43,31 +41,10 @@ export default function Chat() {
     return () => clearInterval(interval);
   }, [placeholders.length]);
 
-  useEffect(() => {
-    if (threadId && ((messages.length === 2) || (assistantResponseCount > 0 && assistantResponseCount % 3 === 0))) {
-      fetchTripTitle();
-    }
-  }, [assistantResponseCount, threadId]);
-
-  const fetchTripTitle = async () => {
-    const response = await fetch('http://localhost:3000/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: language === 'ES' ? 'dame un titulo para este viaje' : 'give me a title for this trip',
-        threadId: threadId,
-      }),
-    });
-    const data = await response.json();
-    setTripTitle(data.response.message || '');
-  };
-
   return (
     <div className="w-2/3 border-r-2 border-gray-100 flex flex-col p-4">
       <div className="flex justify-between items-center mb-4">
-        <TypewriterEffect text={tripTitle} />
+       <h1 className="text-2xl font-bold"><TypewriterEffect text={tripTitle || ''} /></h1>
       </div>
       <div className="flex-1 overflow-y-auto mb-4">
         {messages.map((msg, index) => (
@@ -99,7 +76,7 @@ export default function Chat() {
             onClick={handleSend}
             className="ml-2 bg-violet-500 text-white p-3 rounded-lg shadow-sm hover:bg-violet-600 transition-colors"
           >
-            Send
+            {translator('send')}
           </button>
         </div>
       </div>

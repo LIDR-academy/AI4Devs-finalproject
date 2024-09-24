@@ -6,8 +6,8 @@ const ASSISTANT_ROLE = 'assistant';
 export function useChat() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [assistantResponseCount, setAssistantResponseCount] = useState(0);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [tripTitle, setTripTitle] = useState<string | null>(null);
 
   const handleSend = async () => {
     if (inputValue.trim() === '') return;
@@ -30,7 +30,7 @@ export function useChat() {
     const assistantMessage = { role: ASSISTANT_ROLE, content: data.response.message };
 
     setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-    setAssistantResponseCount((prevCount) => prevCount + 1);
+    setTripTitle(data.response.title);
 
     if (!threadId && data.response.threadId) {
       setThreadId(data.response.threadId);
@@ -42,7 +42,6 @@ export function useChat() {
     inputValue,
     setInputValue,
     handleSend,
-    assistantResponseCount,
-    threadId
+    tripTitle
   };
 }

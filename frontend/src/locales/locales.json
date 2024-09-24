@@ -34,6 +34,10 @@
                 {
                     "key": "chat-placeholder-3",
                     "value": "I am an adventurer traveler, tell me the most interesting activities in Bali"
+                },
+                {
+                    "key": "send",
+                    "value": "Send"
                 }
             ]
         },
@@ -71,6 +75,10 @@
                 {
                     "key": "chat-placeholder-3",
                     "value": "Soy un viajero que le gustan las aventuras, dime las más interesantes de Bali"
+                },
+                {
+                    "key": "send",
+                    "value": "Enviar"
                 }
             ]
         }
