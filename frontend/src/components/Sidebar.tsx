@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChatBubbleLeftEllipsisIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { useLanguage } from '../context/LanguageContext';
+import { apiFetch } from '../utils/api';
 
 export default function Sidebar() {
-    const [chats] = useState([]);
+    const [chats, setChats] = useState([]);
     const { language, setLanguage, translator } = useLanguage();
 
     const toggleLanguage = () => {
         setLanguage(language === 'EN' ? 'ES' : 'EN');
     };
+
+    useEffect(() => {
+        const fetchTrips = async () => {
+            try {
+                const data = await apiFetch('/trips/recent', {
+                    method: 'GET',
+                });
+                setChats(data.trips || []);
+            } catch (error) {
+                console.error('Error al recuperar los viajes:', error);
+                setChats([]);
+            }
+        };
+
+        fetchTrips();
+    }, []);
 
     return (
         <div className="w-64 p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
@@ -33,14 +50,19 @@ export default function Sidebar() {
                     <div className="flex flex-col space-y-2">
                         <div className="flex items-center space-x-1">
                             <ChatBubbleLeftEllipsisIcon className="size-6 text-gray-600" />
-                            <span className="font-semibold">{translator('chats')}</span>
+                            <span className="font-semibold">{translator('itineraries')}</span>
                         </div>
                         <div className="pl-8 space-y-2">
+                            {chats.map((chat: { title: string }, index: number) => (
+                                <div key={index} className="text-gray-800">
+                                    {chat.title}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 ) : (
                     <div className="text-gray-600">
-                        {translator('no-chats')}
+                        {translator('no-itineraries')}
                     </div>
                 )}
             </nav>

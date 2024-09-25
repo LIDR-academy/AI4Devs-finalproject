@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../context/LanguageContext';
 import TypewriterEffect from './TypewriterEffect';
-import { useThrottle } from '../hooks/useThrottle';
 
 interface ChatProps {
   messages: { role: string; content: string }[];
@@ -23,14 +22,6 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
   ];
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  useThrottle(scrollToBottom, 100);
 
   useEffect(() => {
     const interval = setInterval(() => {

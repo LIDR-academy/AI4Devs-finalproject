@@ -1,31 +1,48 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Chat from './Chat';
 import ItinerarySection from './ItinerarySection';
-import { LanguageProvider } from '../context/LanguageContext';
 import { useChat } from '../hooks/useChat';
+import { v4 as uuidv4 } from 'uuid';
+import Cookies from 'js-cookie';
+import { apiFetch } from '../utils/api';
 
 export default function MainPage() {
   const chat = useChat();
 
+  useEffect(() => {
+    let sessionId = Cookies.get('sessionId');
+    if (!sessionId) {
+      sessionId = uuidv4();
+      Cookies.set('sessionId', sessionId, { expires: 365, secure: true, sameSite: 'Strict' });
+
+      apiFetch('/users', {
+        method: 'POST',
+        body: JSON.stringify({ sessionId }),
+      })
+      .then()
+      .catch((error) => {
+        console.error('Error al crear el usuario:', error);
+      });
+    }
+  }, []);
+
   return (
-    <LanguageProvider>
-      <div className="flex h-screen bg-white text-black">
-        <Sidebar />
-        <div className="flex-grow flex">
-          <Chat 
-            messages={chat.messages}
-            inputValue={chat.inputValue}
-            setInputValue={chat.setInputValue}
-            handleSend={chat.handleSend}
-            tripTitle={chat.tripTitle}
-          />
-          <ItinerarySection 
-            tripProperties={chat.tripProperties} 
-            tripItinerary={chat.tripItinerary} 
-          />
-        </div>
+    <div className="flex h-screen bg-white text-black">
+      <Sidebar />
+      <div className="flex-grow flex">
+        <Chat 
+          messages={chat.messages}
+          inputValue={chat.inputValue}
+          setInputValue={chat.setInputValue}
+          handleSend={chat.handleSend}
+          tripTitle={chat.tripTitle}
+        />
+        <ItinerarySection 
+          tripProperties={chat.tripProperties} 
+          tripItinerary={chat.tripItinerary} 
+        />
       </div>
-    </LanguageProvider>
+    </div>
   );
 }

@@ -8,12 +8,12 @@
                     "value": "New chat"
                 },
                 {
-                    "key": "chats",
-                    "value": "Chats"
+                    "key": "itineraries",
+                    "value": "Itineraries"
                 },
                 {
-                    "key": "no-chats",
-                    "value": "No chats available yet"
+                    "key": "no-itineraries",
+                    "value": "No itineraries available yet"
                 },
                 {
                     "key": "itinerary-prompt",
@@ -49,12 +49,12 @@
                     "value": "Nuevo chat"
                 },
                 {
-                    "key": "chats",
-                    "value": "Chats"
+                    "key": "itineraries",
+                    "value": "Itinerarios"
                 },
                 {
-                    "key": "no-chats",
-                    "value": "Todavía no hay chats disponibles"
+                    "key": "no-itineraries",
+                    "value": "Todavía no has creado ningún itinerario"
                 },
                 {
                     "key": "itinerary-prompt",

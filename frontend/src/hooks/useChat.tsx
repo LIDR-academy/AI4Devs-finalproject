@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiFetch } from '../utils/api';
 
 const USER_ROLE = 'user';
 const ASSISTANT_ROLE = 'assistant';
@@ -17,27 +18,27 @@ export function useChat() {
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInputValue('');
 
-    const response = await fetch('http://localhost:3000/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: inputValue,
-        threadId: threadId || null,
-      }),
-    });
+    try {
+      const data = await apiFetch('/chat', {
+        method: 'POST',
+        body: JSON.stringify({
+          prompt: inputValue,
+          threadId: threadId || null,
+        }),
+      });
 
-    const data = await response.json();
-    const assistantMessage = { role: ASSISTANT_ROLE, content: data.response.message };
+      const assistantMessage = { role: ASSISTANT_ROLE, content: data.response.message };
 
-    setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-    setTripTitle(data.response.title);
-    setTripProperties(data.response.properties);
-    setTripItinerary(data.response.itinerary);
+      setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+      setTripTitle(data.response.title);
+      setTripProperties(data.response.properties);
+      setTripItinerary(data.response.itinerary);
 
-    if (!threadId && data.response.threadId) {
-      setThreadId(data.response.threadId);
+      if (!threadId && data.response.threadId) {
+        setThreadId(data.response.threadId);
+      }
+    } catch (error) {
+      console.error('Error al enviar el mensaje:', error);
     }
   };
 

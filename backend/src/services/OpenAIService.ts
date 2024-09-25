@@ -37,7 +37,7 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
             if (lastAssistantMessage && 'text' in lastAssistantMessage.content[0]) {
                 const rawMessage = lastAssistantMessage.content[0].text.value;
 
-                console.log('!! rawMessage:', rawMessage);
+                console.log('>>> rawMessage:', rawMessage);
 
                 const jsonMatch = rawMessage.match(/```json\s*([\s\S]*)\s*```/);
 

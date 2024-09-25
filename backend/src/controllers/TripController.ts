@@ -14,7 +14,7 @@ export class TripController {
 
     async createTrip(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const sessionId = req.cookies.sessionId;
+            const sessionId = req.headers['x-session-id'] as string;
             if (!sessionId) {
                 res.status(400).json({ message: 'Session ID is required' });
                 return;
@@ -39,7 +39,7 @@ export class TripController {
 
     async getRecentTrips(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const sessionId = req.cookies.sessionId;
+            const sessionId = req.headers['x-session-id'] as string;
             if (!sessionId) {
                 res.status(400).json({ message: 'Session ID is required' });
                 return;
