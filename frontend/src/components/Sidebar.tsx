@@ -1,39 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { RocketLaunchIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { useLanguage } from '../context/LanguageContext';
-import { apiFetch } from '../utils/api';
 import { clearSession, getRecentTrips, saveCurrentTripId, saveCurrentThreadId } from '../utils/sessionUtils';
 import { useChatContext } from '../context/ChatContext';
 
 export default function Sidebar() {
-    const [trips, setTrips] = useState([]);
     const { language, setLanguage, translator } = useLanguage();
-    const chat = useChatContext();
+    const { trips, fetchTrips, clearMessages, setCurrentThreadId, handleSend } = useChatContext();
 
     const toggleLanguage = () => {
         setLanguage(language === 'EN' ? 'ES' : 'EN');
     };
 
-    useEffect(() => {
-        const fetchTrips = async () => {
-            try {
-                const data = await apiFetch('/trips/recent', {
-                    method: 'GET',
-                });
-                setTrips(data || []);
-            } catch (error) {
-                console.error('Error al recuperar los viajes:', error);
-                setTrips([]);
-            }
-        };
-
-        fetchTrips();
-    }, []);
-
     const handleNewChat = () => {
         clearSession();
-        chat.clearMessages();
-        setTrips([]);
+        clearMessages();
+        fetchTrips();
         window.location.reload();
     };
 
@@ -44,8 +26,8 @@ export default function Sidebar() {
         if (trip) {
             saveCurrentTripId(trip.tripId);
             saveCurrentThreadId(trip.threadId);
-            chat.setCurrentThreadId(trip.threadId);
-            chat.handleSend(translator('recover-itinerary'));
+            setCurrentThreadId(trip.threadId);
+            handleSend(translator('recover-itinerary'));
         }
     };
 
@@ -74,9 +56,9 @@ export default function Sidebar() {
                             <span className="font-semibold">{translator('trips')}</span>
                         </div>
                         <div className="space-y-2">
-                            {trips.map((trip: any, index) => (
+                            {trips.map((trip: any) => (
                                 <div 
-                                    key={index} 
+                                    key={trip.id} 
                                     className="text-gray-800 pb-2 hover:text-violet-500 cursor-pointer"
                                     onClick={() => handleTripClick(trip.id)}
                                 >

@@ -18,10 +18,11 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
     });
 
 
-    console.log('>>>> PETICION');
+    console.log('>>>> NUEVA PETICION');
     console.log(`url: ${BASE_URL}${url}`);
     console.log('options', options);
     console.log('response', response);
+    console.log('>>>>>>>>>>>>>>>>>>');
     
     return response.data;
   } catch (error) {

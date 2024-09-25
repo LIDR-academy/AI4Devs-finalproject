@@ -9,10 +9,11 @@ interface ChatProps {
   setInputValue: (value: string) => void;
   handleSend: () => void;
   tripTitle: string | null;
-  clearMessages: () => void; // Añadir clearMessages a las props
+  clearMessages: () => void;
+  isLoading: boolean; // Añadir isLoading a las props
 }
 
-export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle, clearMessages }: ChatProps) {
+export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle, clearMessages, isLoading }: ChatProps) {
   const { translator } = useLanguage();
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
@@ -75,12 +76,21 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
                 handleSend();
               }
             }}
+            disabled={isLoading} // Deshabilitar el input si isLoading es true
           />
           <button
             onClick={handleSend}
             className="ml-2 bg-violet-500 text-white p-3 rounded-lg shadow-sm hover:bg-violet-600 transition-colors"
+            disabled={isLoading} // Deshabilitar el botón si isLoading es true
           >
-            {translator('send')}
+            {isLoading ? (
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+            ) : (
+              translator('send')
+            )}
           </button>
         </div>
       </div>

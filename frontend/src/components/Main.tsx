@@ -38,6 +38,7 @@ export default function MainPage() {
           handleSend={chat.handleSend}
           tripTitle={chat.tripTitle}
           clearMessages={chat.clearMessages} // Pasar clearMessages como prop
+          isLoading={chat.isLoading} // Pasar isLoading como prop
         />
         <ItinerarySection 
           tripProperties={chat.tripProperties} 

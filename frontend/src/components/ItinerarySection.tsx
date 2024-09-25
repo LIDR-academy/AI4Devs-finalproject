@@ -61,9 +61,9 @@ export default function ItinerarySection({ tripProperties, tripItinerary }: Itin
               </div>
             ))}
           </div>
-          {tripItinerary ? (
+          {tripItinerary && tripItinerary.length > 0 ? (
             <div className="bg-white rounded-lg p-4 shadow-md border-2 border-gray-200">
-              <h3 className="font-semibold mb-2">{translator('itinerary-title')}</h3>
+              <h3 className="font-semibold mb-4">{translator('itinerary-title')}</h3>
               <div className="flex-1 space-y-4 overflow-y-auto">
                 {tripItinerary.map((item, index) => (
                   <ReactMarkdown key={index}>{item}</ReactMarkdown>

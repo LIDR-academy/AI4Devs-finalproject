@@ -1,11 +1,41 @@
-import React, { createContext, useContext } from 'react';
+// frontend/src/context/ChatContext.tsx
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useChat } from '../hooks/useChat';
+import { apiFetch } from '../utils/api';
 
-const ChatContext = createContext<ReturnType<typeof useChat> | undefined>(undefined);
+interface ChatContextType extends ReturnType<typeof useChat> {
+  trips: any[];
+  fetchTrips: () => void;
+}
+
+const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const chat = useChat();
-  return <ChatContext.Provider value={chat}>{children}</ChatContext.Provider>;
+  const [trips, setTrips] = useState<any[]>([]);
+
+  const fetchTrips = async () => {
+    try {
+      const data = await apiFetch('/trips/recent', {
+        method: 'GET',
+      });
+      setTrips(data || []);
+    } catch (error) {
+      console.error('Error al recuperar los viajes:', error);
+      setTrips([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchTrips();
+  }, []);
+
+  const chat = useChat(fetchTrips);
+
+  return (
+    <ChatContext.Provider value={{ ...chat, trips, fetchTrips }}>
+      {children}
+    </ChatContext.Provider>
+  );
 };
 
 export const useChatContext = () => {

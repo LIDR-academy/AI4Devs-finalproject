@@ -13,20 +13,20 @@ import {
 const USER_ROLE = 'user';
 const ASSISTANT_ROLE = 'assistant';
 
-export function useChat() {
+export function useChat(fetchTrips: () => void) {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(getCurrentThreadId());
   const [tripTitle, setTripTitle] = useState<string | null>(null);
   const [tripProperties, setTripProperties] = useState<{ [key: string]: any }>({});
-  const [tripItinerary, setTripItinerary] = useState<string[]>([]);
+  const [tripItinerary, setTripItinerary] = useState<string[]>([]); // Inicializar como array vacío
+  const [isLoading, setIsLoading] = useState(false); // Nuevo estado de carga
 
   const prevTripTitle = useRef<string | null>(null);
   const prevTripProperties = useRef<{ [key: string]: any }>({});
   const prevTripItinerary = useRef<string[]>([]);
 
   const handleSend = async (forcedPrompt: string = '') => {
-    console.log('>>> forcedPrompt', forcedPrompt);
     if (inputValue.trim() === '' && !forcedPrompt) return;
 
     const prompt = forcedPrompt ? forcedPrompt : inputValue;
@@ -34,6 +34,7 @@ export function useChat() {
 
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInputValue('');
+    setIsLoading(true); // Iniciar carga
 
     try {
       const data = await apiFetch('/chat', {
@@ -74,6 +75,8 @@ export function useChat() {
       }
     } catch (error) {
       console.error('Error al enviar el mensaje:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,13 +115,14 @@ export function useChat() {
               });
 
               saveCurrentTripId(response.id);
+              fetchTrips(); // Actualizar la lista de viajes
             }
 
           } catch (error) {
             console.error('Error al guardar el itinerario:', error);
           }
 
-          if (tripItinerary) {
+          if (Array.isArray(tripItinerary)) { // Verificar que tripItinerary es un array
             try {
               await apiFetch(`/trips/${getCurrentTripId()}/activities/all`, {
                 method: 'POST',
@@ -132,15 +136,18 @@ export function useChat() {
           }
         }
 
-        // Actualiza las referencias solo después de guardar
         prevTripTitle.current = tripTitle;
-        prevTripProperties.current = { ...tripProperties };
-        prevTripItinerary.current = [...tripItinerary];
+        if (tripProperties) { 
+          prevTripProperties.current = { ...tripProperties };
+        }
+        if (tripItinerary && tripItinerary.length > 0) {
+          prevTripItinerary.current = [...tripItinerary];
+        }
       }
     };
 
     saveTrip();
-  }, [tripTitle, tripProperties, tripItinerary]);
+  }, [tripTitle, tripProperties, tripItinerary, fetchTrips]);
 
   const clearMessages = () => {
     setMessages([]); // Limpiar los mensajes
@@ -157,5 +164,6 @@ export function useChat() {
     tripItinerary,
     clearMessages,
     setCurrentThreadId, // Añadir esta función para actualizar el currentThreadId
+    isLoading, // Retornar el estado de carga
   };
 }
