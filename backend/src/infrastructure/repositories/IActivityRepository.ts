@@ -6,4 +6,5 @@ export interface IActivityRepository {
   findByTripId(tripId: string): Promise<Activity[]>;
   update(activity: Activity): Promise<Activity>;
   delete(id: string): Promise<void>;
+  deleteByTripId(tripId: string): Promise<void>;
 }

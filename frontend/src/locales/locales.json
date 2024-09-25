@@ -8,8 +8,8 @@
                     "value": "New chat"
                 },
                 {
-                    "key": "itineraries",
-                    "value": "Itineraries"
+                    "key": "trips",
+                    "value": "Your trips"
                 },
                 {
                     "key": "no-itineraries",
@@ -21,7 +21,7 @@
                 },
                 {
                     "key": "itinerary-title",
-                    "value": "Itinerary"
+                    "value": "Here is your itinerary:"
                 },
                 {
                     "key": "chat-placeholder-1",
@@ -41,7 +41,15 @@
                 },
                 {
                     "key": "itinerary-loading",
-                    "value": "Give us more information and we will create your complete trip"
+                    "value": "Give us more information and we will create your next dream"
+                },
+                {
+                    "key": "upgrade-to-pro",
+                    "value": "Upgrade to Pro"
+                },
+                {
+                    "key": "recover-itinerary",
+                    "value": "Recover itinerary"
                 }
             ]
         },
@@ -53,8 +61,8 @@
                     "value": "Nuevo chat"
                 },
                 {
-                    "key": "itineraries",
-                    "value": "Itinerarios"
+                    "key": "trips",
+                    "value": "Tus viajes"
                 },
                 {
                     "key": "no-itineraries",
@@ -66,7 +74,7 @@
                 },
                 {
                     "key": "itinerary-title",
-                    "value": "Itinerario"
+                    "value": "Aquí está tu itinerario:"
                 },
                 {
                     "key": "chat-placeholder-1",
@@ -86,7 +94,15 @@
                 },
                 {
                     "key": "itinerary-loading",
-                    "value": "Danos más información y crearemos tu viaje al completo"
+                    "value": "Danos más información y crearemos tu próximo sueño"
+                },
+                {
+                    "key": "upgrade-to-pro",
+                    "value": "Actualiza a Pro"
+                },
+                {
+                    "key": "recover-itinerary",
+                    "value": "Recuperar itinerario"
                 }
             ]
         }

@@ -9,9 +9,10 @@ interface ChatProps {
   setInputValue: (value: string) => void;
   handleSend: () => void;
   tripTitle: string | null;
+  clearMessages: () => void; // Añadir clearMessages a las props
 }
 
-export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle }: ChatProps) {
+export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle, clearMessages }: ChatProps) {
   const { translator } = useLanguage();
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
@@ -37,18 +38,28 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
         <h1 className="text-2xl font-bold"><TypewriterEffect text={tripTitle || ''} /></h1>
       </div>
       <div className="flex-1 overflow-y-auto mb-4">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`mb-2 p-3 rounded-lg shadow-sm ${
-              msg.role === 'user' 
-                ? 'bg-gray-100 text-gray-800 text-right' 
-                : 'bg-white text-gray-600 text-left'
-            }`}
-          >
-            <ReactMarkdown>{msg.content}</ReactMarkdown>
+        {messages.length === 0 ? (
+          <div className="flex justify-center items-end h-full">
+            <div className="animate-bounce bg-white dark:bg-slate-800 p-2 w-10 h-10 ring-1 ring-slate-900/5 dark:ring-slate-200/20 shadow-lg rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-violet-500" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+              </svg>
+            </div>
           </div>
-        ))}
+        ) : (
+          messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`mb-2 p-3 rounded-lg shadow-sm ${
+                msg.role === 'user' 
+                  ? 'bg-gray-100 text-gray-800 text-right' 
+                  : 'bg-white text-gray-600 text-left'
+              }`}
+            >
+              <ReactMarkdown>{msg.content}</ReactMarkdown>
+            </div>
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
       <div className="mt-auto">

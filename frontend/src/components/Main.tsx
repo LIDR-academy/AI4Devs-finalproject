@@ -2,13 +2,13 @@ import React, { useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Chat from './Chat';
 import ItinerarySection from './ItinerarySection';
-import { useChat } from '../hooks/useChat';
+import { useChatContext } from '../context/ChatContext';
 import { v4 as uuidv4 } from 'uuid';
 import Cookies from 'js-cookie';
 import { apiFetch } from '../utils/api';
 
 export default function MainPage() {
-  const chat = useChat();
+  const chat = useChatContext();
 
   useEffect(() => {
     let sessionId = Cookies.get('sessionId');
@@ -37,6 +37,7 @@ export default function MainPage() {
           setInputValue={chat.setInputValue}
           handleSend={chat.handleSend}
           tripTitle={chat.tripTitle}
+          clearMessages={chat.clearMessages} // Pasar clearMessages como prop
         />
         <ItinerarySection 
           tripProperties={chat.tripProperties} 

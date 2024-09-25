@@ -50,4 +50,8 @@ export class ActivityService implements IActivityService {
         }
         await this.activityRepository.delete(activityId);
     }
+
+    async deleteActivitiesByTripId(tripId: string): Promise<void> {
+      await this.activityRepository.deleteByTripId(tripId);
+    }
 }

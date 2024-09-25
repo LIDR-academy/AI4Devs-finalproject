@@ -50,6 +50,31 @@ export class ActivityController {
     }
   }
 
+  async updateActivities(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { tripId } = req.params;
+      const { activities } = req.body;
+
+      await this.activityService.deleteActivitiesByTripId(tripId);
+
+      const newActivities = await Promise.all(
+        activities.map((description: string, index: number) => {
+          const activityData = {
+            name: `Day ${index + 1}`,
+            description,
+            tripId,
+            sequence: index + 1
+          };
+          return this.activityService.createActivity(activityData, tripId);
+        })
+      );
+
+      res.status(201).json(newActivities);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async deleteActivity(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
