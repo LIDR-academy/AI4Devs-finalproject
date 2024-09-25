@@ -1,21 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { IsUUID, IsString, IsOptional, IsDate, IsInt, IsEnum, Min } from 'class-validator';
+import { IsUUID, IsString, IsOptional, IsDate, IsInt, IsArray, ArrayNotEmpty, ArrayMinSize, Min } from 'class-validator';
 import { User } from './User';
 import { Activity } from './Activity';
-
-export enum Accompaniment {
-    Solo = "Solo",
-    Friends = "Friends",
-    Family = "Family",
-    Couple = "Couple"
-}
-
-export enum ActivityType {
-    Nature = "Nature",
-    Culture = "Culture",
-    Nightlife = "Nightlife",
-    Gastronomic = "Gastronomic"
-}
 
 @Entity('trips')
 export class Trip {
@@ -31,42 +17,38 @@ export class Trip {
     @IsString()
     destination!: string;
 
-    @Column({ type: 'date' })
+    @Column({ type: 'date', nullable: true })
     @IsDate()
+    @IsOptional()
     startDate!: Date;
 
-    @Column({ type: 'date' })
+    @Column({ type: 'date', nullable: true })
     @IsDate()
+    @IsOptional()
     endDate!: Date;
 
     @Column({ nullable: true })
     @IsString()
-    @IsOptional()
     description!: string;
 
-    @Column({ default: 0 })
+    @Column({ default: 0, nullable: true })
     @IsInt()
     activityCount!: number;
 
-    @Column({
-        type: 'enum',
-        enum: Accompaniment,
-        nullable: false
-    })
-    @IsEnum(Accompaniment)
-    accompaniment!: Accompaniment;
+    @Column("simple-array", { nullable: true })
+    @IsArray()
+    @IsString({ each: true })
+    accompaniment!: string[];
 
-    @Column({
-        type: 'enum',
-        enum: ActivityType,
-        nullable: false
-    })
-    @IsEnum(ActivityType)
-    activityType!: ActivityType;
+    @Column("simple-array", { nullable: true })
+    @IsArray()
+    @IsString({ each: true })
+    activityType!: string[];
 
-    @Column({ type: 'int', nullable: false })
+    @Column({ type: 'int', nullable: true })
     @IsInt()
     @Min(0)
+    @IsOptional()
     budgetMax!: number;
 
     @OneToMany(() => Activity, activity => activity.trip, { cascade: true })
