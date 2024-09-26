@@ -22,18 +22,12 @@ export interface MessageListProps {
 }
 
 export interface ChatInputProps {
-    setInputValue: (value: string) => void;
-    handleSend: () => void;
-    isLoading: boolean;
-    placeholder: string;
-}
-
-export interface ChatInputProps {
     inputValue: string;
     setInputValue: (value: string) => void;
     handleSend: () => void;
     isLoading: boolean;
     placeholder: string;
+    translator: (key: string) => string;
 }
 
 export interface ChatProps {

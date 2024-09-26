@@ -24,7 +24,7 @@ export default function MainPage() {
           handleSend={chat.handleSend}
           isLoading={chat.isLoading}
         />
-        <div className="hidden lg:flex">
+        <div className="hidden lg:flex lg:w-1/2">
           <Itinerary 
             tripProperties={chat.tripProperties} 
             tripItinerary={chat.tripItinerary} 

@@ -56,7 +56,7 @@ const TripList = ({ trips, handleTripClick, translator }: TripListProps) => (
 const NewChatButton = ({ handleNewChat, translator }: NewChatButtonProps) => (
     <button
         onClick={handleNewChat}
-        className="bg-gray-200 rounded-full py-2 px-4 mt-4 hover:bg-gray-300 transition-colors"
+        className="bg-violet-500 rounded-full py-2 px-4 mt-4 hover:bg-violet-600 transition-colors text-white"
     >
         {translator('btn-new-chat')}
     </button>

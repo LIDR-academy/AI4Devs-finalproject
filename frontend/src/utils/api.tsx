@@ -16,13 +16,6 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
       },
       data: options.body,
     });
-
-
-    console.log('>>>> NUEVA PETICION');
-    console.log(`url: ${BASE_URL}${url}`);
-    console.log('options', options);
-    console.log('response', response);
-    console.log('>>>>>>>>>>>>>>>>>>');
     
     return response.data;
   } catch (error) {

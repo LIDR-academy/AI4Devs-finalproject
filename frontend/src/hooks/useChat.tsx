@@ -59,20 +59,26 @@ export function useChat(fetchTrips: () => void) {
 
   const processAssistantResponse = (response: any) => {
     const assistantMessage: Message = { role: ASSISTANT_ROLE, content: response.message };
-
-    const currentYear = dayjs().year();
     const updatedTripProperties = { ...response.properties };
 
-    const replaceYear = (date: string) => {
-        return date.replace(/^YYYY/, currentYear.toString());
-    };
-
     if (updatedTripProperties.startDate) {
-        updatedTripProperties.startDate = replaceYear(updatedTripProperties.startDate);
+      const formattedStartDate = validateAndFormatDate(updatedTripProperties.startDate);
+      if (formattedStartDate && dayjs(formattedStartDate, 'YYYY-MM-DD', true).isValid()) {
+        updatedTripProperties.startDate = formattedStartDate;
+      } else {
+        console.warn('Invalid startDate format:', updatedTripProperties.startDate);
+        delete updatedTripProperties.startDate;
+      }
     }
 
     if (updatedTripProperties.endDate) {
-        updatedTripProperties.endDate = replaceYear(updatedTripProperties.endDate);
+      const formattedEndDate = validateAndFormatDate(updatedTripProperties.endDate);
+      if (formattedEndDate && dayjs(formattedEndDate, 'YYYY-MM-DD', true).isValid()) {
+        updatedTripProperties.endDate = formattedEndDate;
+      } else {
+        console.warn('Invalid endDate format:', updatedTripProperties.endDate);
+        delete updatedTripProperties.endDate;
+      }
     }
 
     setMessages((prevMessages) => [...prevMessages, assistantMessage]);
@@ -113,6 +119,37 @@ export function useChat(fetchTrips: () => void) {
       .map((activity: any) => activity.description);
 
     setTripItinerary(sortedActivities);
+  };
+
+  const validateAndFormatDate = (date: string): string | null => {
+    const currentYear = dayjs().year();
+
+    const patterns = [
+      /^(\d{4})-(\d{2})-(\d{2})$/,
+      /^(\d{2})-(\d{2})$/,
+      /^(\d{4})-(\d{2})$/,
+      /^(\d{2})$/,
+      /^$/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = date.match(pattern);
+      if (match) {
+        if (pattern.source === /^(\d{4})-(\d{2})-(\d{2})$/.source) {
+          return `${currentYear}-${match[2]}-${match[3]}`;
+        } else if (pattern.source === /^(\d{2})-(\d{2})$/.source) {
+          return `${currentYear}-${match[1]}-${match[2]}`;
+        } else if (pattern.source === /^(\d{4})-(\d{2})$/.source) {
+          return `${match[1]}-${match[2]}-01`;
+        } else if (pattern.source === /^(\d{2})$/.source) {
+          return `${currentYear}-${match[1]}-01`;
+        } else if (pattern.source === /^$/.source) {
+          return null;
+        }
+      }
+    }
+
+    return null;
   };
 
   useEffect(() => {

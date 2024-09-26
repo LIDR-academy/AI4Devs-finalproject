@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import { 
-  CalendarIcon, 
-  UserGroupIcon, 
-  MapPinIcon, 
-  CurrencyDollarIcon, 
-  FaceSmileIcon 
+import {
+  CalendarIcon,
+  UserGroupIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
+  FaceSmileIcon
 } from "@heroicons/react/24/outline";
 import { useLanguage } from '../context/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 import dayjs from 'dayjs';
-import { 
-  ItineraryProps, 
-  LoadingItineraryProps, 
-  ItineraryDetailsProps 
+import {
+  ItineraryProps,
+  LoadingItineraryProps,
+  ItineraryDetailsProps
 } from '../types/global';
 
 const ITINERARY_DATE_FORMAT = 'DD/MM';
