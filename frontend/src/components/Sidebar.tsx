@@ -1,22 +1,21 @@
 import { RocketLaunchIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { useLanguage } from '../context/LanguageContext';
 import {
-    clearSession,
-    getRecentTrips,
+    getCurrentTripId,
+    removeCurrentTripId,
     saveCurrentTripId,
-    saveCurrentThreadId,
 } from '../utils/sessionUtils';
 import { useChatContext } from '../context/ChatContext';
 import {
     LanguageContextProps,
     ChatContextProps,
     Trip,
-    TripInfo,
     UpgradeButtonProps,
     LanguageToggleButtonProps,
     TripListProps,
     NewChatButtonProps
 } from '../types/global';
+import { apiFetch } from '../utils/api';
 
 const LanguageToggleButton = ({ language, toggleLanguage }: LanguageToggleButtonProps) => (
     <button
@@ -73,32 +72,28 @@ const UpgradeButton = ({ translator }: UpgradeButtonProps) => (
 
 export default function Sidebar() {
     const { language, setLanguage, translator }: LanguageContextProps = useLanguage();
-    const { trips, fetchTrips, clearChatSession, setCurrentThreadId, handleSend }: ChatContextProps = useChatContext();
+    const { trips, fetchTrips, clearChatSession, handleSend, setTripDetails }: ChatContextProps = useChatContext();
 
     const toggleLanguage = () => {
         setLanguage(language === 'EN' ? 'ES' : 'EN');
     };
 
     const handleNewChat = () => {
-        clearSession();
+        removeCurrentTripId();
         clearChatSession();
         fetchTrips();
         window.location.reload();
     };
 
-    const handleTripClick = (tripId: string) => {
-        const recentTrips: TripInfo[] = getRecentTrips();
-        const trip = recentTrips.find((t: TripInfo) => t.tripId === tripId);
-
-        console.log('>>> trip', trip);
-
-        if (trip) {
-            clearSession();
+    const handleTripClick = async (tripId: string) => {
+        if (tripId !== getCurrentTripId()) {
+            removeCurrentTripId();
             clearChatSession();
-            saveCurrentTripId(trip.tripId);
-            saveCurrentThreadId(trip.threadId);
-            setCurrentThreadId(trip.threadId);
-            handleSend(translator('recover-itinerary'));
+            saveCurrentTripId(tripId);
+
+            const tripDetails = await apiFetch(`/trips/${tripId}`, { method: 'GET' });
+            setTripDetails(tripDetails);
+            handleSend(JSON.stringify(tripDetails));
         }
     };
 

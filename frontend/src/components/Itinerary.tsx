@@ -15,7 +15,7 @@ import {
   ItineraryDetailsProps 
 } from '../types/global';
 
-const ITINERARY_DATE_FORMAT = 'DD/MM/YYYY';
+const ITINERARY_DATE_FORMAT = 'DD/MM';
 const ITINERARY_BADGES: { [key: string]: JSX.Element } = {
   "destination": <MapPinIcon className="h-5 w-5 text-gray-600" />,
   "startDate": <CalendarIcon className="h-5 w-5 text-gray-600" />,

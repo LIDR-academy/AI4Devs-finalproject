@@ -5,6 +5,7 @@ import { apiFetch } from '../utils/api';
 interface ChatContextType extends ReturnType<typeof useChat> {
   trips: any[];
   fetchTrips: () => void;
+  setTripDetails: (tripDetails: any) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);

@@ -93,8 +93,8 @@ export interface ChatContextProps {
     trips: Trip[];
     fetchTrips: () => void;
     clearChatSession: () => void;
-    setCurrentThreadId: (threadId: string) => void;
     handleSend: (message: string) => void;
+    setTripDetails: (tripDetails: any) => void;
 }
 
 export interface LanguageToggleButtonProps {

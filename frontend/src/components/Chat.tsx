@@ -93,7 +93,7 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
 
   return (
     <div className="w-full h-full flex flex-col border-r-2 border-gray-100">
-      <header className="flex justify-between items-end p-4 border-b-2 border-gray-100 lg:hidden">
+      <header className="flex justify-between items-end p-4 border-b-2 border-gray-100 lg:hidden sticky top-0 bg-white">
         <button onClick={() => setIsSidebarOpen(true)}>
           <Bars3Icon className="h-6 w-6 text-violet-500" />
         </button>
