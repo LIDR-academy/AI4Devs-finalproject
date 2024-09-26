@@ -1,4 +1,3 @@
-// backend/src/domain/services/UserService.ts
 import { IUserService } from './IUserService';
 import { IUserRepository } from '../infrastructure/repositories/IUserRepository';
 import { User } from '../domain/models/User';

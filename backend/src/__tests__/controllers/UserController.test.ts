@@ -18,14 +18,13 @@ describe('UserController', () => {
     });
 
     it('should get a user by session ID', async () => {
-        // First, create a user to ensure there is one in the database
         await request(app)
             .post('/users')
             .send({ sessionId: sessionId });
 
         const response = await request(app)
             .get('/users')
-            .set('Cookie', ['sessionId=' + sessionId]);
+            .set('X-Session-Id', sessionId);
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('sessionId', sessionId);
     });
@@ -36,7 +35,6 @@ describe('UserController', () => {
     });
 
     it('should get a user by ID', async () => {
-        // First, create a user to ensure there is one in the database
         const createUserResponse = await request(app)
             .post('/users')
             .send({ sessionId: sessionId });
