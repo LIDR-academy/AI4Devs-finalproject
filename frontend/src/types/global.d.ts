@@ -90,7 +90,7 @@ export interface LanguageContextProps {
 export interface ChatContextProps {
     trips: Trip[];
     fetchTrips: () => void;
-    clearMessages: () => void;
+    clearChatSession: () => void;
     setCurrentThreadId: (threadId: string) => void;
     handleSend: (message: string) => void;
 }

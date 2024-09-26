@@ -40,7 +40,7 @@ export function useChat(fetchTrips: () => void) {
         method: 'POST',
         body: JSON.stringify({
           prompt: prompt,
-          threadId: currentThreadId || null,
+          threadId: currentThreadId && currentThreadId !== '' ? currentThreadId : null,
         }),
       });
 
@@ -82,9 +82,12 @@ export function useChat(fetchTrips: () => void) {
     }
   };
 
-  const clearMessages = () => {
+  const clearChatSession = () => {
     setMessages([]);
     setInputValue(''); 
+    setTripTitle(null);
+    setTripProperties({});
+    setTripItinerary([]);
   };
 
   useEffect(() => {
@@ -170,7 +173,7 @@ export function useChat(fetchTrips: () => void) {
     tripTitle,
     tripProperties,
     tripItinerary,
-    clearMessages,
+    clearChatSession,
     setCurrentThreadId,
     isLoading,
   };
