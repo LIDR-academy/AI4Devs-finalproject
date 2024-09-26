@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Cookies from 'js-cookie';
 import { apiFetch } from '../utils/api';
+import { removeCurrentTripId } from '../utils/sessionUtils';
 
 export function useSession() {
   useEffect(() => {
@@ -19,5 +20,7 @@ export function useSession() {
         console.error('Error al crear el usuario:', error);
       });
     }
+
+    removeCurrentTripId();
   }, []);
 }

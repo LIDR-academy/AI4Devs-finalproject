@@ -22,18 +22,12 @@ export interface MessageListProps {
 }
 
 export interface ChatInputProps {
-    setInputValue: (value: string) => void;
-    handleSend: () => void;
-    isLoading: boolean;
-    placeholder: string;
-}
-
-export interface ChatInputProps {
     inputValue: string;
     setInputValue: (value: string) => void;
     handleSend: () => void;
     isLoading: boolean;
     placeholder: string;
+    translator: (key: string) => string;
 }
 
 export interface ChatProps {
@@ -43,6 +37,8 @@ export interface ChatProps {
     messages: { role: string; content: string }[];
     handleSend: () => void;
     isLoading: boolean;
+    tripProperties: { [key: string]: any };
+    tripItinerary: string[];
 }
 
 // Itinerary
@@ -91,8 +87,8 @@ export interface ChatContextProps {
     trips: Trip[];
     fetchTrips: () => void;
     clearChatSession: () => void;
-    setCurrentThreadId: (threadId: string) => void;
     handleSend: (message: string) => void;
+    setTripDetails: (tripDetails: any) => void;
 }
 
 export interface LanguageToggleButtonProps {

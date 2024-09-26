@@ -50,6 +50,10 @@
                 {
                     "key": "recover-itinerary",
                     "value": "Recover itinerary"
+                },
+                {
+                    "key": "recovering-conversation",
+                    "value": "Recovering thread conversation..."
                 }
             ]
         },
@@ -103,6 +107,10 @@
                 {
                     "key": "recover-itinerary",
                     "value": "Recuperar itinerario"
+                },
+                {
+                    "key": "recovering-conversation",
+                    "value": "Recuperando el hilo de la conversación..."
                 }
             ]
         }

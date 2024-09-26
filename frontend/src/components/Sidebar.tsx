@@ -1,22 +1,21 @@
 import { RocketLaunchIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { useLanguage } from '../context/LanguageContext';
 import {
-    clearSession,
-    getRecentTrips,
+    getCurrentTripId,
+    removeCurrentTripId,
     saveCurrentTripId,
-    saveCurrentThreadId,
 } from '../utils/sessionUtils';
 import { useChatContext } from '../context/ChatContext';
 import {
     LanguageContextProps,
     ChatContextProps,
     Trip,
-    TripInfo,
     UpgradeButtonProps,
     LanguageToggleButtonProps,
     TripListProps,
     NewChatButtonProps
 } from '../types/global';
+import { apiFetch } from '../utils/api';
 
 const LanguageToggleButton = ({ language, toggleLanguage }: LanguageToggleButtonProps) => (
     <button
@@ -57,7 +56,7 @@ const TripList = ({ trips, handleTripClick, translator }: TripListProps) => (
 const NewChatButton = ({ handleNewChat, translator }: NewChatButtonProps) => (
     <button
         onClick={handleNewChat}
-        className="bg-gray-200 rounded-full py-2 px-4 mt-4 hover:bg-gray-300 transition-colors"
+        className="bg-violet-500 rounded-full py-2 px-4 mt-4 hover:bg-violet-600 transition-colors text-white"
     >
         {translator('btn-new-chat')}
     </button>
@@ -73,41 +72,38 @@ const UpgradeButton = ({ translator }: UpgradeButtonProps) => (
 
 export default function Sidebar() {
     const { language, setLanguage, translator }: LanguageContextProps = useLanguage();
-    const { trips, fetchTrips, clearChatSession, setCurrentThreadId, handleSend }: ChatContextProps = useChatContext();
+    const { trips, fetchTrips, clearChatSession, handleSend, setTripDetails }: ChatContextProps = useChatContext();
 
     const toggleLanguage = () => {
         setLanguage(language === 'EN' ? 'ES' : 'EN');
     };
 
     const handleNewChat = () => {
-        clearSession();
+        removeCurrentTripId();
         clearChatSession();
         fetchTrips();
         window.location.reload();
     };
 
-    const handleTripClick = (tripId: string) => {
-        const recentTrips: TripInfo[] = getRecentTrips();
-        const trip = recentTrips.find((t: TripInfo) => t.tripId === tripId);
-
-        console.log('>>> trip', trip);
-
-        if (trip) {
-            clearSession();
+    const handleTripClick = async (tripId: string) => {
+        if (tripId !== getCurrentTripId()) {
+            removeCurrentTripId();
             clearChatSession();
-            saveCurrentTripId(trip.tripId);
-            saveCurrentThreadId(trip.threadId);
-            setCurrentThreadId(trip.threadId);
-            handleSend(translator('recover-itinerary'));
+            saveCurrentTripId(tripId);
+
+            const tripDetails = await apiFetch(`/trips/${tripId}`, { method: 'GET' });
+            setTripDetails(tripDetails);
+            handleSend(JSON.stringify(tripDetails));
         }
     };
 
     return (
-        <div className="w-64 p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
+        <div className="w-full lg:w-64 h-full p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
             <div className="flex flex-col items-center">
                 <img
                     src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Z3vqK1WAdvhcavo10sL6QxLv3IdVRd.png"
                     alt="IkiGoo Logo"
+                    className="h-48 lg:h-full"
                 />
             </div>
             <nav className="space-y-4 flex-grow">

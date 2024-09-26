@@ -4,19 +4,18 @@ import dayjs from 'dayjs';
 import isEqual from 'lodash.isequal';
 import {
   saveCurrentTripId,
-  getCurrentTripId,
-  saveCurrentThreadId,
-  getCurrentThreadId,
-  addNewTrip,
+  getCurrentTripId
 } from '../utils/sessionUtils';
 import { Message } from '../types/global';
+import { useLanguage } from '../context/LanguageContext';
+
 const USER_ROLE = 'user';
 const ASSISTANT_ROLE = 'assistant';
 
 export function useChat(fetchTrips: () => void) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [currentThreadId, setCurrentThreadId] = useState<string | null>(getCurrentThreadId());
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [tripTitle, setTripTitle] = useState<string | null>(null);
   const [tripProperties, setTripProperties] = useState<{ [key: string]: any }>({});
   const [tripItinerary, setTripItinerary] = useState<string[]>([]);
@@ -24,6 +23,7 @@ export function useChat(fetchTrips: () => void) {
   const prevTripTitle = useRef<string | null>(null);
   const prevTripProperties = useRef<{ [key: string]: any }>({});
   const prevTripItinerary = useRef<string[]>([]);
+  const { translator } = useLanguage();
 
   const handleSend = async (forcedPrompt: string = '') => {
     if (inputValue.trim() === '' && !forcedPrompt) return;
@@ -31,7 +31,12 @@ export function useChat(fetchTrips: () => void) {
     const prompt: string = forcedPrompt ? forcedPrompt : inputValue;
     const userMessage: Message = { role: USER_ROLE, content: prompt };
 
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    if (!forcedPrompt) {
+      setMessages((prevMessages) => [...prevMessages, userMessage]);
+    } else {
+      setMessages((prevMessages) => [...prevMessages, { role: USER_ROLE, content: translator('recovering-conversation') }]);
+    }
+
     setInputValue('');
     setIsLoading(true);
 
@@ -54,16 +59,26 @@ export function useChat(fetchTrips: () => void) {
 
   const processAssistantResponse = (response: any) => {
     const assistantMessage: Message = { role: ASSISTANT_ROLE, content: response.message };
-
-    const currentYear = dayjs().year();
     const updatedTripProperties = { ...response.properties };
 
-    if (updatedTripProperties.startDate && updatedTripProperties.startDate.match(/^\d{4}-11-20$/)) {
-      updatedTripProperties.startDate = updatedTripProperties.startDate.replace(/^\d{4}/, currentYear.toString());
+    if (updatedTripProperties.startDate) {
+      const formattedStartDate = validateAndFormatDate(updatedTripProperties.startDate);
+      if (formattedStartDate && dayjs(formattedStartDate, 'YYYY-MM-DD', true).isValid()) {
+        updatedTripProperties.startDate = formattedStartDate;
+      } else {
+        console.warn('Invalid startDate format:', updatedTripProperties.startDate);
+        delete updatedTripProperties.startDate;
+      }
     }
 
-    if (updatedTripProperties.endDate && updatedTripProperties.endDate.match(/^\d{4}-11-20$/)) {
-      updatedTripProperties.endDate = updatedTripProperties.endDate.replace(/^\d{4}/, currentYear.toString());
+    if (updatedTripProperties.endDate) {
+      const formattedEndDate = validateAndFormatDate(updatedTripProperties.endDate);
+      if (formattedEndDate && dayjs(formattedEndDate, 'YYYY-MM-DD', true).isValid()) {
+        updatedTripProperties.endDate = formattedEndDate;
+      } else {
+        console.warn('Invalid endDate format:', updatedTripProperties.endDate);
+        delete updatedTripProperties.endDate;
+      }
     }
 
     setMessages((prevMessages) => [...prevMessages, assistantMessage]);
@@ -73,21 +88,68 @@ export function useChat(fetchTrips: () => void) {
 
     if (!currentThreadId && response.threadId) {
       setCurrentThreadId(response.threadId);
-      saveCurrentThreadId(response.threadId);
     }
 
     if (response.tripId) {
       saveCurrentTripId(response.tripId);
-      addNewTrip(response.tripId, response.threadId);
     }
   };
 
   const clearChatSession = () => {
     setMessages([]);
-    setInputValue(''); 
+    setInputValue('');
     setTripTitle(null);
     setTripProperties({});
     setTripItinerary([]);
+  };
+
+  const setTripDetails = (tripDetails: any) => {
+    setTripTitle(tripDetails.description);
+    setTripProperties({
+      destination: tripDetails.destination,
+      startDate: tripDetails.startDate,
+      endDate: tripDetails.endDate,
+      accompaniment: tripDetails.accompaniment,
+      activityType: tripDetails.activityType,
+      budgetMax: tripDetails.budgetMax,
+    });
+
+    const sortedActivities = tripDetails.activities
+      .sort((a: any, b: any) => parseInt(a.sequence) - parseInt(b.sequence))
+      .map((activity: any) => activity.description);
+
+    setTripItinerary(sortedActivities);
+  };
+
+  const validateAndFormatDate = (date: string): string | null => {
+    const currentYear = dayjs().year();
+
+    const patterns = [
+      /^(\d{4})-(\d{2})-(\d{2})$/,
+      /^(\d{2})-(\d{2})$/,
+      /^(\d{4})-(\d{2})$/,
+      /^(\d{2})$/,
+      /^$/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = date.match(pattern);
+      if (match) {
+        if (pattern.source === /^(\d{4})-(\d{2})-(\d{2})$/.source) {
+          return `${currentYear}-${match[2]}-${match[3]}`;
+        } else if (pattern.source === /^(\d{2})-(\d{2})$/.source) {
+          return `${currentYear}-${match[1]}-${match[2]}`;
+        } else if (pattern.source === /^(\d{4})-(\d{2})$/.source) {
+          return `${match[1]}-${match[2]}-01`;
+        } else if (pattern.source === /^(\d{2})$/.source) {
+          return `${currentYear}-${match[1]}-01`;
+        } else if (pattern.source === /^$/.source) {
+          return null;
+        }
+      }
+    }
+
+    return null;
   };
 
   useEffect(() => {
@@ -95,15 +157,15 @@ export function useChat(fetchTrips: () => void) {
       const tripTitleChanged = tripTitle !== prevTripTitle.current;
       const tripPropertiesChanged = !isEqual(tripProperties, prevTripProperties.current);
       const tripItineraryChanged = !isEqual(tripItinerary, prevTripItinerary.current);
-  
+
       if (tripTitleChanged || tripPropertiesChanged || tripItineraryChanged) {
         if (tripTitle) {
           await saveTripData();
           await saveTripItinerary();
         }
-  
+
         prevTripTitle.current = tripTitle;
-        if (tripProperties) { 
+        if (tripProperties) {
           prevTripProperties.current = { ...tripProperties };
         }
         if (tripItinerary && tripItinerary.length > 0) {
@@ -111,7 +173,7 @@ export function useChat(fetchTrips: () => void) {
         }
       }
     };
-  
+
     const saveTripData = async () => {
       try {
         const tripData = {
@@ -123,11 +185,11 @@ export function useChat(fetchTrips: () => void) {
           activityType: tripProperties.activityType,
           budgetMax: tripProperties.budgetMax,
         };
-  
+
         const filteredTripData = Object.fromEntries(
           Object.entries(tripData).filter(([_, value]) => value !== undefined && value !== '')
         );
-  
+
         if (getCurrentTripId()) {
           await apiFetch(`/trips/${getCurrentTripId()}`, {
             method: 'PUT',
@@ -138,7 +200,7 @@ export function useChat(fetchTrips: () => void) {
             method: 'POST',
             body: JSON.stringify(filteredTripData),
           });
-  
+
           saveCurrentTripId(response.id);
           fetchTrips();
         }
@@ -176,5 +238,6 @@ export function useChat(fetchTrips: () => void) {
     clearChatSession,
     setCurrentThreadId,
     isLoading,
+    setTripDetails,
   };
 }
