@@ -6,7 +6,6 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
         let title: string = '';
         let properties: any = {};
         let itinerary: string = '';
-        let returned_itinerary: boolean = false;
 
         if (!threadId) {
             const thread = await OpenAI.beta.threads.create();
@@ -37,8 +36,6 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
             if (lastAssistantMessage && 'text' in lastAssistantMessage.content[0]) {
                 const rawMessage = lastAssistantMessage.content[0].text.value;
 
-                console.log('!! rawMessage:', rawMessage);
-
                 const jsonMatch = rawMessage.match(/```json\s*([\s\S]*)\s*```/);
 
                 if (jsonMatch && jsonMatch[1]) {
@@ -49,8 +46,7 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
                         title = typeof parsedContent.title === 'string' && parsedContent.title;
                         properties = typeof parsedContent.trip_properties === 'object' && parsedContent.trip_properties !== null ? parsedContent.trip_properties : {};
                         assistantResponse = typeof parsedContent.user_response === 'string' && parsedContent.user_response;
-                        returned_itinerary = typeof parsedContent.returned_itinerary === 'string' && (parsedContent.returned_itinerary === "true" ? true : false);
-                        itinerary = typeof parsedContent.itinerary === 'string' && parsedContent.itinerary;
+                        itinerary = typeof parsedContent.itinerary === 'object' && parsedContent.itinerary;
 
                     } catch (err) {
                         console.error("Error parsing JSON from assistant response:", err);
@@ -70,7 +66,6 @@ export const getOpenAIResponse = async (threadId: string, prompt: string) => {
             message: assistantResponse,
             title: title,
             properties: properties,
-            returned_itinerary: returned_itinerary,
             itinerary: itinerary
         };
     } catch (error) {

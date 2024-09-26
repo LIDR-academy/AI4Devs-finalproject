@@ -6,4 +6,5 @@ export interface IActivityService {
     getActivitiesByTripId(tripId: string): Promise<Activity[]>;
     updateActivity(activityId: string, updateData: Partial<Activity>): Promise<Activity>;
     deleteActivity(activityId: string): Promise<void>;
+    deleteActivitiesByTripId(tripId: string): Promise<void>;
 }

@@ -1,16 +1,9 @@
 import express from 'express';
-import { getOpenAIResponse } from '../services/OpenAIService';
+import { AssistantController } from '../controllers/AssistantController';
 
 const router = express.Router();
+const assistantController = new AssistantController();
 
-router.post('/', async (req, res) => {
-  const { threadId, prompt } = req.body;
-  try {
-    const response = await getOpenAIResponse(threadId, prompt);
-    res.json({ response });
-  } catch (error) {
-    res.status(500).json({ error: 'Error fetching response from OpenAI' });
-  }
-});
+router.post('/', (req, res, next) => assistantController.getResponse(req, res, next));
 
 export default router;

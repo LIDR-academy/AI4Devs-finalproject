@@ -22,8 +22,9 @@ export class Activity {
   @IsInt()
   sequence!: number;
 
-  @Column()
+  @Column({ nullable: true })
   @IsDate()
+  @IsOptional()
   dateTime!: Date;
 
   @ManyToOne(() => Trip, (trip) => trip.activities, { nullable: false })

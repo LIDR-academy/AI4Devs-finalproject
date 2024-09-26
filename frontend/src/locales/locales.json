@@ -8,12 +8,12 @@
                     "value": "New chat"
                 },
                 {
-                    "key": "chats",
-                    "value": "Chats"
+                    "key": "trips",
+                    "value": "Your trips"
                 },
                 {
-                    "key": "no-chats",
-                    "value": "No chats available yet"
+                    "key": "no-itineraries",
+                    "value": "No itineraries available yet"
                 },
                 {
                     "key": "itinerary-prompt",
@@ -21,23 +21,35 @@
                 },
                 {
                     "key": "itinerary-title",
-                    "value": "Itinerary"
+                    "value": "Here is your itinerary:"
                 },
                 {
                     "key": "chat-placeholder-1",
-                    "value": "Family trip to London"
+                    "value": "My family and I are going on a trip to London"
                 },
                 {
                     "key": "chat-placeholder-2",
-                    "value": "What to do in Barcelona for 5 days?"
+                    "value": "What to do in 5 days in Barcelona?"
                 },
                 {
                     "key": "chat-placeholder-3",
-                    "value": "I am an adventurer traveler, tell me the most interesting activities in Bali"
+                    "value": "I want to plan my trip to Bali"
                 },
                 {
                     "key": "send",
                     "value": "Send"
+                },
+                {
+                    "key": "itinerary-loading",
+                    "value": "Give us more information and we will create your next dream"
+                },
+                {
+                    "key": "upgrade-to-pro",
+                    "value": "Upgrade to Pro"
+                },
+                {
+                    "key": "recover-itinerary",
+                    "value": "Recover itinerary"
                 }
             ]
         },
@@ -49,12 +61,12 @@
                     "value": "Nuevo chat"
                 },
                 {
-                    "key": "chats",
-                    "value": "Chats"
+                    "key": "trips",
+                    "value": "Tus viajes"
                 },
                 {
-                    "key": "no-chats",
-                    "value": "Todavía no hay chats disponibles"
+                    "key": "no-itineraries",
+                    "value": "Todavía no has creado ningún itinerario"
                 },
                 {
                     "key": "itinerary-prompt",
@@ -62,23 +74,35 @@
                 },
                 {
                     "key": "itinerary-title",
-                    "value": "Itinerario"
+                    "value": "Aquí está tu itinerario:"
                 },
                 {
                     "key": "chat-placeholder-1",
-                    "value": "Viaje en familia a Londres"
+                    "value": "Mi familia y yo vamos de viaje a Londres"
                 },
                 {
                     "key": "chat-placeholder-2",
-                    "value": "¿Qué hacer 5 días en Barcelona?"
+                    "value": "¿Qué hacer en 5 días en Barcelona?"
                 },
                 {
                     "key": "chat-placeholder-3",
-                    "value": "Soy un viajero que le gustan las aventuras, dime las más interesantes de Bali"
+                    "value": "Quiero que me ayudes a planificar mi viaje a Bali"
                 },
                 {
                     "key": "send",
                     "value": "Enviar"
+                },
+                {
+                    "key": "itinerary-loading",
+                    "value": "Danos más información y crearemos tu próximo sueño"
+                },
+                {
+                    "key": "upgrade-to-pro",
+                    "value": "Actualiza a Pro"
+                },
+                {
+                    "key": "recover-itinerary",
+                    "value": "Recuperar itinerario"
                 }
             ]
         }

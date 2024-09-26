@@ -36,4 +36,8 @@ export class ActivityRepository implements IActivityRepository {
     public async delete(id: string): Promise<void> {
         await this.repository.delete(id);
     }
+
+    public async deleteByTripId(tripId: string): Promise<void> {
+      await this.repository.delete({ trip: { id: tripId } });
+    }
 }
