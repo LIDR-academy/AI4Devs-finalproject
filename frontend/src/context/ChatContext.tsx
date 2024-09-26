@@ -1,4 +1,3 @@
-// frontend/src/context/ChatContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useChat } from '../hooks/useChat';
 import { apiFetch } from '../utils/api';

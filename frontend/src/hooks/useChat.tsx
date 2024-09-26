@@ -19,9 +19,8 @@ export function useChat(fetchTrips: () => void) {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(getCurrentThreadId());
   const [tripTitle, setTripTitle] = useState<string | null>(null);
   const [tripProperties, setTripProperties] = useState<{ [key: string]: any }>({});
-  const [tripItinerary, setTripItinerary] = useState<string[]>([]); // Inicializar como array vacío
-  const [isLoading, setIsLoading] = useState(false); // Nuevo estado de carga
-
+  const [tripItinerary, setTripItinerary] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const prevTripTitle = useRef<string | null>(null);
   const prevTripProperties = useRef<{ [key: string]: any }>({});
   const prevTripItinerary = useRef<string[]>([]);
@@ -34,7 +33,7 @@ export function useChat(fetchTrips: () => void) {
 
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInputValue('');
-    setIsLoading(true); // Iniciar carga
+    setIsLoading(true);
 
     try {
       const data = await apiFetch('/chat', {
@@ -47,7 +46,6 @@ export function useChat(fetchTrips: () => void) {
 
       const assistantMessage = { role: ASSISTANT_ROLE, content: data.response.message };
 
-      // Controlar el formato de las fechas
       const currentYear = dayjs().year();
       const updatedTripProperties = { ...data.response.properties };
 
@@ -115,14 +113,14 @@ export function useChat(fetchTrips: () => void) {
               });
 
               saveCurrentTripId(response.id);
-              fetchTrips(); // Actualizar la lista de viajes
+              fetchTrips();
             }
 
           } catch (error) {
             console.error('Error al guardar el itinerario:', error);
           }
 
-          if (Array.isArray(tripItinerary)) { // Verificar que tripItinerary es un array
+          if (Array.isArray(tripItinerary)) {
             try {
               await apiFetch(`/trips/${getCurrentTripId()}/activities/all`, {
                 method: 'POST',
@@ -150,8 +148,8 @@ export function useChat(fetchTrips: () => void) {
   }, [tripTitle, tripProperties, tripItinerary, fetchTrips]);
 
   const clearMessages = () => {
-    setMessages([]); // Limpiar los mensajes
-    setInputValue(''); // Limpiar el valor del input
+    setMessages([]);
+    setInputValue(''); 
   };
 
   return {
@@ -163,7 +161,7 @@ export function useChat(fetchTrips: () => void) {
     tripProperties,
     tripItinerary,
     clearMessages,
-    setCurrentThreadId, // Añadir esta función para actualizar el currentThreadId
-    isLoading, // Retornar el estado de carga
+    setCurrentThreadId,
+    isLoading,
   };
 }

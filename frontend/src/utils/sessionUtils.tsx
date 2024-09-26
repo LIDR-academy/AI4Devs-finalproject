@@ -33,10 +33,10 @@ export function addNewTrip(tripId: string, threadId: string) {
   const newTrip = { tripId, threadId };
 
   if (recentTrips.length >= 3) {
-    recentTrips.pop(); // Remove the oldest trip
+    recentTrips.pop();
   }
 
-  recentTrips.unshift(newTrip); // Add the new trip to the beginning
+  recentTrips.unshift(newTrip);
   saveRecentTrips(recentTrips);
 }
 

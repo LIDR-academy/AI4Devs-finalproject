@@ -10,7 +10,7 @@ interface ChatProps {
   handleSend: () => void;
   tripTitle: string | null;
   clearMessages: () => void;
-  isLoading: boolean; // Añadir isLoading a las props
+  isLoading: boolean;
 }
 
 export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle, clearMessages, isLoading }: ChatProps) {
@@ -76,12 +76,12 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
                 handleSend();
               }
             }}
-            disabled={isLoading} // Deshabilitar el input si isLoading es true
+            disabled={isLoading}
           />
           <button
             onClick={handleSend}
             className="ml-2 bg-violet-500 text-white p-3 rounded-lg shadow-sm hover:bg-violet-600 transition-colors"
-            disabled={isLoading} // Deshabilitar el botón si isLoading es true
+            disabled={isLoading}
           >
             {isLoading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
