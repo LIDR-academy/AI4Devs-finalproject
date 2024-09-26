@@ -10,20 +10,26 @@ export default function MainPage() {
 
   return (
     <div className="flex h-screen bg-white text-black">
-      <Sidebar />
+      <div className="hidden lg:flex">
+        <Sidebar />
+      </div>
       <div className="flex-grow flex">
         <Chat 
           inputValue={chat.inputValue}
           setInputValue={chat.setInputValue}
           tripTitle={chat.tripTitle}
+          tripProperties={chat.tripProperties} 
+          tripItinerary={chat.tripItinerary} 
           messages={chat.messages}
           handleSend={chat.handleSend}
           isLoading={chat.isLoading}
         />
-        <Itinerary 
-          tripProperties={chat.tripProperties} 
-          tripItinerary={chat.tripItinerary} 
-        />
+        <div className="hidden lg:flex">
+          <Itinerary 
+            tripProperties={chat.tripProperties} 
+            tripItinerary={chat.tripItinerary} 
+          />
+        </div>
       </div>
     </div>
   );

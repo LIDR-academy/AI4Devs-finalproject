@@ -43,6 +43,8 @@ export interface ChatProps {
     messages: { role: string; content: string }[];
     handleSend: () => void;
     isLoading: boolean;
+    tripProperties: { [key: string]: any };
+    tripItinerary: string[];
 }
 
 // Itinerary

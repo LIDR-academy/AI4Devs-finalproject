@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../context/LanguageContext';
+import Sidebar from './Sidebar';
+import Itinerary from './Itinerary';
 import TypewriterEffect from '../utils/typewriter';
-import { 
-  MessageListProps, 
-  ChatInputProps, 
-  ChatProps 
+import {
+  MessageListProps,
+  ChatInputProps,
+  ChatProps
 } from '../types/global';
+import { Bars3Icon, CalendarIcon } from '@heroicons/react/24/outline';
 
 const MessageList = ({ messages }: MessageListProps) => (
   <div className="flex-1 overflow-y-auto mb-4">
@@ -22,11 +25,10 @@ const MessageList = ({ messages }: MessageListProps) => (
       messages.map((msg, index) => (
         <div
           key={index}
-          className={`mb-2 p-3 rounded-lg shadow-sm ${
-            msg.role === 'user' 
-              ? 'bg-gray-100 text-gray-800 text-right' 
+          className={`mb-2 p-3 rounded-lg shadow-sm ${msg.role === 'user'
+              ? 'bg-gray-100 text-gray-800 text-right'
               : 'bg-white text-gray-600 text-left'
-          }`}
+            }`}
         >
           <ReactMarkdown>{msg.content}</ReactMarkdown>
         </div>
@@ -69,9 +71,11 @@ const ChatInput = ({ inputValue, setInputValue, handleSend, isLoading, placehold
   </div>
 );
 
-export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle, isLoading }: ChatProps) {
+export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle, isLoading, tripProperties, tripItinerary }: ChatProps) {
   const { translator } = useLanguage();
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isItineraryOpen, setIsItineraryOpen] = useState(false);
 
   const placeholders = [
     translator('chat-placeholder-1'),
@@ -88,18 +92,47 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
   }, [placeholders.length]);
 
   return (
-    <div className="w-1/2 border-r-2 border-gray-100 flex flex-col p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold"><TypewriterEffect text={tripTitle || ''} /></h1>
+    <div className="w-full h-full flex flex-col border-r-2 border-gray-100">
+      <header className="flex justify-between items-end p-4 border-b-2 border-gray-100 lg:hidden">
+        <button onClick={() => setIsSidebarOpen(true)}>
+          <Bars3Icon className="h-6 w-6 text-violet-500" />
+        </button>
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Z3vqK1WAdvhcavo10sL6QxLv3IdVRd.png"
+          alt="IkiGoo Logo"
+          className="h-28"
+        />
+        <button onClick={() => setIsItineraryOpen(true)}>
+          <CalendarIcon className="h-6 w-6 text-violet-500" />
+        </button>
+      </header>
+      <div className="flex-grow flex flex-col p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold"><TypewriterEffect text={tripTitle || ''} /></h1>
+        </div>
+        <MessageList messages={messages} />
+        <ChatInput
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          handleSend={handleSend}
+          isLoading={isLoading}
+          placeholder={placeholders[placeholderIndex]}
+        />
       </div>
-      <MessageList messages={messages} />
-      <ChatInput 
-        inputValue={inputValue} 
-        setInputValue={setInputValue} 
-        handleSend={handleSend} 
-        isLoading={isLoading} 
-        placeholder={placeholders[placeholderIndex]} 
-      />
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden" onClick={() => setIsSidebarOpen(false)}>
+          <div className="absolute left-0 top-0 w-3/4 h-full bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <Sidebar />
+          </div>
+        </div>
+      )}
+      {isItineraryOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden" onClick={() => setIsItineraryOpen(false)}>
+          <div className="absolute right-0 top-0 w-3/4 h-full bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <Itinerary tripProperties={tripProperties} tripItinerary={tripItinerary} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

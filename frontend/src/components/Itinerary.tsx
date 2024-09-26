@@ -26,13 +26,13 @@ const ITINERARY_BADGES: { [key: string]: JSX.Element } = {
 };
 
 const LoadingItinerary = ({ translator }: LoadingItineraryProps) => (
-  <div className="w-1/2 p-4 flex items-center justify-center">
+  <div className="w-full h-full p-4 flex items-center justify-center">
     <div className="animate-pulse text-gray-600 px-8 text-center">{translator('itinerary-loading')}</div>
   </div>
 );
 
 const ItineraryDetails = ({ tripProperties, tripItinerary, translator, formatDate }: ItineraryDetailsProps) => (
-  <div className="w-1/2 p-4 flex flex-col h-full">
+  <div className="w-full h-full p-4 flex flex-col">
     <div className="flex justify-between items-center mb-4">
       <h2 className="text-3xl font-bold">{`${tripProperties['destination']}`}</h2>
     </div>
