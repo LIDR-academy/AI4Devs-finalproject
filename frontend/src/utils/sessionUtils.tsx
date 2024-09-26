@@ -1,8 +1,4 @@
-interface TripInfo {
-  tripId: string;
-  threadId: string;
-}
-
+import { TripInfo } from '../types/global';
 export function saveCurrentTripId(tripId: string) {
   localStorage.setItem('currentTripId', tripId);
 }

@@ -1,27 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import localesData from '../locales/locales.json'; 
-
-type Language = 'ES' | 'EN';
-
-type Message = {
-  key: string;
-  value: string;
-};
-
-type Locale = {
-  language: string;
-  messages: Message[];
-};
-
-type LocalesData = {
-  locales: Locale[];
-};
-
-interface LanguageContextProps {
-  language: Language;
-  setLanguage: (language: Language) => void;
-  translator: (key: string) => string;
-}
+import { LanguageContextProps, Language, LocalesData } from '../types/global';
 
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
@@ -34,7 +13,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     );
 
     if (!locale) {
-      console.warn(`Locale for language ${language} not found.`);
+      console.error(`Locale for language ${language} not found.`);
       return key;
     }
 

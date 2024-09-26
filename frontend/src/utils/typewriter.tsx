@@ -1,11 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-interface TypewriterEffectProps {
-  text: string;
-  speed?: number;
-  onType?: () => void;
-}
-
+import { useState, useEffect, useRef } from 'react';
+import { TypewriterEffectProps } from '../types/global';
 const TypewriterEffect: React.FC<TypewriterEffectProps> = ({ text, onType, speed = 50 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const requestRef = useRef<number>();
