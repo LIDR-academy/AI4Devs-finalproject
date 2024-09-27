@@ -41,6 +41,10 @@ export interface ChatProps {
     tripItinerary: string[];
 }
 
+interface SessionContextProps {
+    sessionId: string;
+}
+
 // Itinerary
 export interface ItineraryProps {
     tripProperties: { [key: string]: any };

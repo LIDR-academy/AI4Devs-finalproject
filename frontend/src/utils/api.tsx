@@ -7,6 +7,11 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
   const sessionId = Cookies.get('sessionId');
 
   try {
+    if (!sessionId) {
+      console.error('No sessionId found');
+      return;
+    }
+
     const response = await axios({
       url: `${BASE_URL}${url}`,
       method: options.method || 'GET',

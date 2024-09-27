@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { apiFetch } from '../utils/api';
 import dayjs from 'dayjs';
 import isEqual from 'lodash.isequal';
 import {
@@ -8,6 +7,8 @@ import {
 } from '../utils/sessionUtils';
 import { Message } from '../types/global';
 import { useLanguage } from '../context/LanguageContext';
+import { sendMessage } from '../services/chatService';
+import { saveTrip as saveTripDB, saveTripActivities } from '../services/tripService';
 
 const USER_ROLE = 'user';
 const ASSISTANT_ROLE = 'assistant';
@@ -41,14 +42,7 @@ export function useChat(fetchTrips: () => void) {
     setIsLoading(true);
 
     try {
-      const data = await apiFetch('/chat', {
-        method: 'POST',
-        body: JSON.stringify({
-          prompt: prompt,
-          threadId: currentThreadId && currentThreadId !== '' ? currentThreadId : null,
-        }),
-      });
-
+      const data = await sendMessage(prompt, currentThreadId);
       processAssistantResponse(data.response);
     } catch (error) {
       console.error('Error al enviar el mensaje:', error);
@@ -175,8 +169,10 @@ export function useChat(fetchTrips: () => void) {
     };
 
     const saveTripData = async () => {
+      const tripId = getCurrentTripId();
       try {
         const tripData = {
+          id: tripId || undefined,
           destination: tripProperties.destination,
           startDate: tripProperties.startDate,
           endDate: tripProperties.endDate,
@@ -190,20 +186,13 @@ export function useChat(fetchTrips: () => void) {
           Object.entries(tripData).filter(([_, value]) => value !== undefined && value !== '')
         );
 
-        if (getCurrentTripId()) {
-          await apiFetch(`/trips/${getCurrentTripId()}`, {
-            method: 'PUT',
-            body: JSON.stringify(filteredTripData),
-          });
-        } else {
-          const response = await apiFetch('/trips', {
-            method: 'POST',
-            body: JSON.stringify(filteredTripData),
-          });
+        const response = await saveTripDB(filteredTripData);
 
+        if(!tripId) {
           saveCurrentTripId(response.id);
-          fetchTrips();
         }
+
+        fetchTrips();
       } catch (error) {
         console.error('Error al guardar el itinerario:', error);
       }
@@ -212,12 +201,10 @@ export function useChat(fetchTrips: () => void) {
     const saveTripItinerary = async () => {
       if (Array.isArray(tripItinerary)) {
         try {
-          await apiFetch(`/trips/${getCurrentTripId()}/activities/all`, {
-            method: 'POST',
-            body: JSON.stringify({
-              "activities": tripItinerary,
-            }),
-          });
+          const tripId = getCurrentTripId();
+          if (tripId) {
+            await saveTripActivities(tripId, tripItinerary);
+          }
         } catch (error) {
           console.error('Error al guardar el itinerario:', error);
         }

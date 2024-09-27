@@ -1,11 +1,9 @@
 import { RocketLaunchIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
-import { useLanguage } from '../context/LanguageContext';
 import {
     getCurrentTripId,
     removeCurrentTripId,
     saveCurrentTripId,
 } from '../utils/sessionUtils';
-import { useChatContext } from '../context/ChatContext';
 import {
     LanguageContextProps,
     ChatContextProps,
@@ -15,7 +13,9 @@ import {
     TripListProps,
     NewChatButtonProps
 } from '../types/global';
-import { apiFetch } from '../utils/api';
+import { useLanguage } from '../context/LanguageContext';
+import { useChatContext } from '../context/ChatContext';
+import { getTrip } from '../services/tripService';
 
 const LanguageToggleButton = ({ language, toggleLanguage }: LanguageToggleButtonProps) => (
     <button
@@ -91,7 +91,7 @@ export default function Sidebar() {
             clearChatSession();
             saveCurrentTripId(tripId);
 
-            const tripDetails = await apiFetch(`/trips/${tripId}`, { method: 'GET' });
+            const tripDetails = await getTrip(tripId);
             setTripDetails(tripDetails);
             handleSend(JSON.stringify(tripDetails));
         }

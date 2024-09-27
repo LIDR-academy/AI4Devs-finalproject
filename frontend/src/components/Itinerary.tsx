@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import dayjs from 'dayjs';
 import {
   CalendarIcon,
   UserGroupIcon,
@@ -6,14 +8,12 @@ import {
   CurrencyDollarIcon,
   FaceSmileIcon
 } from "@heroicons/react/24/outline";
-import { useLanguage } from '../context/LanguageContext';
-import ReactMarkdown from 'react-markdown';
-import dayjs from 'dayjs';
 import {
   ItineraryProps,
   LoadingItineraryProps,
   ItineraryDetailsProps
 } from '../types/global';
+import { useLanguage } from '../context/LanguageContext';
 
 const ITINERARY_DATE_FORMAT = 'DD/MM';
 const ITINERARY_BADGES: { [key: string]: JSX.Element } = {

@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useLanguage } from '../context/LanguageContext';
-import Sidebar from './Sidebar';
-import Itinerary from './Itinerary';
-import TypewriterEffect from '../utils/typewriter';
+import { Bars3Icon, CalendarIcon } from '@heroicons/react/24/outline';
 import {
   MessageListProps,
   ChatInputProps,
   ChatProps
 } from '../types/global';
-import { Bars3Icon, CalendarIcon } from '@heroicons/react/24/outline';
+import TypewriterEffect from '../utils/typewriter';
+import Sidebar from './Sidebar';
+import Itinerary from './Itinerary';
+import { useLanguage } from '../context/LanguageContext';
 
 const MessageList = ({ messages }: MessageListProps) => (
   <div className="flex-1 overflow-y-auto mb-4">
@@ -29,7 +29,7 @@ const MessageList = ({ messages }: MessageListProps) => (
             className={`p-3 rounded-lg shadow-sm ${msg.role === 'user'
                 ? 'bg-gray-100 text-gray-800 self-end'
                 : 'bg-white text-gray-600 self-start'
-              } max-w-xs lg:max-w-md break-words`}
+              } max-w-xs lg:max-w-96 break-words`}
           >
             <ReactMarkdown>{msg.content}</ReactMarkdown>
           </div>

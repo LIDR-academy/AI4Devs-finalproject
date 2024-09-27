@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Cookies from 'js-cookie';
-import { apiFetch } from '../utils/api';
-interface SessionContextProps {
-  sessionId: string;
-}
+import { saveUser } from '../services/userService';
+import { SessionContextProps } from '../types/global';
+import { removeCurrentTripId } from '../utils/sessionUtils';
 
 const SessionContext = createContext<SessionContextProps | undefined>(undefined);
 
@@ -16,17 +15,11 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!id) {
       id = uuidv4();
       Cookies.set('sessionId', id, { expires: 7, secure: true, sameSite: 'Strict' });
-
-      apiFetch('/users', {
-        method: 'POST',
-        body: JSON.stringify({ sessionId: id }),
-      })
-      .then()
-      .catch((error) => {
-        console.error('Error al crear el usuario:', error);
-      });
+      saveUser({ sessionId: id })
     }
     setSessionId(id);
+
+    removeCurrentTripId();
   }, []);
 
   return (
