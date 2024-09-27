@@ -8,11 +8,6 @@ import {
   CurrencyDollarIcon,
   FaceSmileIcon
 } from "@heroicons/react/24/outline";
-import {
-  ItineraryProps,
-  LoadingItineraryProps,
-  ItineraryDetailsProps
-} from '../types/global';
 import { useLanguage } from '../context/LanguageContext';
 
 const ITINERARY_DATE_FORMAT = 'DD/MM';

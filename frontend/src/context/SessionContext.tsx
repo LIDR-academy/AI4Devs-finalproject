@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import Cookies from 'js-cookie';
 import { saveUser } from '../services/userService';
-import { SessionContextProps } from '../types/global';
 import { removeCurrentTripId } from '../utils/sessionUtils';
 
 const SessionContext = createContext<SessionContextProps | undefined>(undefined);

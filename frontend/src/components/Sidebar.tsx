@@ -4,15 +4,6 @@ import {
     removeCurrentTripId,
     saveCurrentTripId,
 } from '../utils/sessionUtils';
-import {
-    LanguageContextProps,
-    ChatContextProps,
-    Trip,
-    UpgradeButtonProps,
-    LanguageToggleButtonProps,
-    TripListProps,
-    NewChatButtonProps
-} from '../types/global';
 import { useLanguage } from '../context/LanguageContext';
 import { useChatContext } from '../context/ChatContext';
 import { getTrip } from '../services/tripService';
@@ -72,29 +63,25 @@ const UpgradeButton = ({ translator }: UpgradeButtonProps) => (
 
 export default function Sidebar() {
     const { language, setLanguage, translator }: LanguageContextProps = useLanguage();
-    const { trips, fetchTrips, clearChatSession, handleSend, setTripDetails }: ChatContextProps = useChatContext();
+    const { trips, clearChatSession, handleSend, setTripDetails }: ChatContextProps = useChatContext();
 
     const toggleLanguage = () => {
         setLanguage(language === 'EN' ? 'ES' : 'EN');
     };
 
-    const handleNewChat = () => {
-        removeCurrentTripId();
-        clearChatSession();
-        fetchTrips();
-        window.location.reload();
-    };
-
     const handleTripClick = async (tripId: string) => {
-        if (tripId !== getCurrentTripId()) {
+        const currentTripId = getCurrentTripId();
+
+        if (currentTripId && tripId !== currentTripId) {
             removeCurrentTripId();
             clearChatSession();
-            saveCurrentTripId(tripId);
-
-            const tripDetails = await getTrip(tripId);
-            setTripDetails(tripDetails);
-            handleSend(JSON.stringify(tripDetails));
         }
+
+        saveCurrentTripId(tripId);
+
+        const tripDetails = await getTrip(tripId);
+        setTripDetails(tripDetails);
+        handleSend(JSON.stringify(tripDetails));
     };
 
     return (
@@ -115,7 +102,7 @@ export default function Sidebar() {
             {trips.length === 3 ? (
                 <UpgradeButton translator={translator} />
             ) : (
-                <NewChatButton handleNewChat={handleNewChat} translator={translator} />
+                <NewChatButton handleNewChat={() => {window.location.reload()}} translator={translator} />
             )}
         </div>
     );

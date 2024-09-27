@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useReducer, useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import isEqual from 'lodash.isequal';
 import {
@@ -6,7 +6,6 @@ import {
   getCurrentTripId
 } from '../utils/sessionUtils';
 import { validateAndFormatDate } from '../utils/dateUtils';
-import { Message } from '../types/global';
 import { useLanguage } from '../context/LanguageContext';
 import { sendMessage } from '../services/chatService';
 import { saveTrip as saveTripDB, saveTripActivities } from '../services/tripService';
@@ -14,23 +13,66 @@ import { saveTrip as saveTripDB, saveTripActivities } from '../services/tripServ
 const USER_ROLE = 'user';
 const ASSISTANT_ROLE = 'assistant';
 
+const initialState = {
+  inputValue: '',
+  currentThreadId: null as string | null,
+  tripTitle: null as string | null,
+  tripProperties: {} as { [key: string]: any },
+  tripItinerary: [] as string[],
+  isLoading: false,
+};
+
+type State = typeof initialState;
+
+type Action =
+  | { type: 'SET_INPUT_VALUE'; payload: string }
+  | { type: 'SET_CURRENT_THREAD_ID'; payload: string | null }
+  | { type: 'SET_TRIP_TITLE'; payload: string | null }
+  | { type: 'SET_TRIP_PROPERTIES'; payload: { [key: string]: any } }
+  | { type: 'SET_TRIP_ITINERARY'; payload: string[] }
+  | { type: 'SET_IS_LOADING'; payload: boolean }
+  | { type: 'CLEAR_CHAT_SESSION' };
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'SET_INPUT_VALUE':
+      return { ...state, inputValue: action.payload };
+    case 'SET_CURRENT_THREAD_ID':
+      return { ...state, currentThreadId: action.payload };
+    case 'SET_TRIP_TITLE':
+      return { ...state, tripTitle: action.payload };
+    case 'SET_TRIP_PROPERTIES':
+      return { ...state, tripProperties: action.payload };
+    case 'SET_TRIP_ITINERARY':
+      return { ...state, tripItinerary: action.payload };
+    case 'SET_IS_LOADING':
+      return { ...state, isLoading: action.payload };
+    default:
+      return state;
+  }
+};
+
 export function useChat(fetchTrips: () => void) {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const setInputValue = (inputValue: string) => dispatch({ type: 'SET_INPUT_VALUE', payload: inputValue });
+  const setCurrentThreadId = (currentThreadId: string | null) => dispatch({ type: 'SET_CURRENT_THREAD_ID', payload: currentThreadId });
+  const setTripTitle = (tripTitle: string | null) => dispatch({ type: 'SET_TRIP_TITLE', payload: tripTitle });
+  const setTripProperties = (tripProperties: { [key: string]: any }) => dispatch({ type: 'SET_TRIP_PROPERTIES', payload: tripProperties });
+  const setTripItinerary = (tripItinerary: string[]) => dispatch({ type: 'SET_TRIP_ITINERARY', payload: tripItinerary });
+  const setIsLoading = (isLoading: boolean) => dispatch({ type: 'SET_IS_LOADING', payload: isLoading });
+
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
-  const [tripTitle, setTripTitle] = useState<string | null>(null);
-  const [tripProperties, setTripProperties] = useState<{ [key: string]: any }>({});
-  const [tripItinerary, setTripItinerary] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+
   const prevTripTitle = useRef<string | null>(null);
   const prevTripProperties = useRef<{ [key: string]: any }>({});
   const prevTripItinerary = useRef<string[]>([]);
   const { translator } = useLanguage();
 
   const handleSend = async (forcedPrompt: string = '') => {
-    if (inputValue.trim() === '' && !forcedPrompt) return;
+    if (state.inputValue.trim() === '' && !forcedPrompt) return;
 
-    const prompt: string = forcedPrompt ? forcedPrompt : inputValue;
+    const prompt: string = forcedPrompt ? forcedPrompt : state.inputValue;
     const userMessage: Message = { role: USER_ROLE, content: prompt };
 
     if (!forcedPrompt) {
@@ -43,13 +85,13 @@ export function useChat(fetchTrips: () => void) {
     setIsLoading(true);
 
     try {
-      const { response } = await sendMessage(prompt, currentThreadId);
+      const { response } = await sendMessage(prompt, state.currentThreadId);
       const { assistantMessage, updatedTripProperties } = processAssistantResponse(response);
 
       setTripTitle(response.title);
       setTripItinerary(response.itinerary);
 
-      if (!currentThreadId && response.threadId) {
+      if (!state.currentThreadId && response.threadId) {
         setCurrentThreadId(response.threadId);
       }
 
@@ -96,14 +138,6 @@ export function useChat(fetchTrips: () => void) {
     }
   };
 
-  const clearChatSession = () => {
-    setMessages([]);
-    setInputValue('');
-    setTripTitle(null);
-    setTripProperties({});
-    setTripItinerary([]);
-  };
-
   const setTripDetails = (tripDetails: any) => {
     setTripTitle(tripDetails.description);
     setTripProperties({
@@ -122,24 +156,28 @@ export function useChat(fetchTrips: () => void) {
     setTripItinerary(sortedActivities);
   };
 
+  const clearChatSession = () => {
+    setMessages([]);
+  };
+
   useEffect(() => {
     const saveTrip = async () => {
-      const tripTitleChanged = tripTitle !== prevTripTitle.current;
-      const tripPropertiesChanged = !isEqual(tripProperties, prevTripProperties.current);
-      const tripItineraryChanged = !isEqual(tripItinerary, prevTripItinerary.current);
+      const tripTitleChanged = state.tripTitle !== prevTripTitle.current;
+      const tripPropertiesChanged = !isEqual(state.tripProperties, prevTripProperties.current);
+      const tripItineraryChanged = !isEqual(state.tripItinerary, prevTripItinerary.current);
 
       if (tripTitleChanged || tripPropertiesChanged || tripItineraryChanged) {
-        if (tripTitle) {
+        if (state.tripTitle) {
           await saveTripData();
           await saveTripItinerary();
         }
 
-        prevTripTitle.current = tripTitle;
-        if (tripProperties) {
-          prevTripProperties.current = { ...tripProperties };
+        prevTripTitle.current = state.tripTitle;
+        if (state.tripProperties) {
+          prevTripProperties.current = { ...state.tripProperties };
         }
-        if (tripItinerary && tripItinerary.length > 0) {
-          prevTripItinerary.current = [...tripItinerary];
+        if (state.tripItinerary && state.tripItinerary.length > 0) {
+          prevTripItinerary.current = [...state.tripItinerary];
         }
       }
     };
@@ -149,13 +187,13 @@ export function useChat(fetchTrips: () => void) {
       try {
         const tripData = {
           id: tripId || undefined,
-          destination: tripProperties.destination,
-          startDate: tripProperties.startDate,
-          endDate: tripProperties.endDate,
-          description: tripTitle,
-          accompaniment: tripProperties.accompaniment,
-          activityType: tripProperties.activityType,
-          budgetMax: tripProperties.budgetMax,
+          destination: state.tripProperties.destination,
+          startDate: state.tripProperties.startDate,
+          endDate: state.tripProperties.endDate,
+          description: state.tripTitle,
+          accompaniment: state.tripProperties.accompaniment,
+          activityType: state.tripProperties.activityType,
+          budgetMax: state.tripProperties.budgetMax,
         };
 
         const filteredTripData = Object.fromEntries(
@@ -175,11 +213,11 @@ export function useChat(fetchTrips: () => void) {
     };
 
     const saveTripItinerary = async () => {
-      if (Array.isArray(tripItinerary)) {
+      if (Array.isArray(state.tripItinerary)) {
         try {
           const tripId = getCurrentTripId();
           if (tripId) {
-            await saveTripActivities(tripId, tripItinerary);
+            await saveTripActivities(tripId, state.tripItinerary);
           }
         } catch (error) {
           console.error('Error al guardar el itinerario:', error);
@@ -188,19 +226,19 @@ export function useChat(fetchTrips: () => void) {
     };
 
     saveTrip();
-  }, [tripTitle, tripProperties, tripItinerary, fetchTrips]);
+  }, [state.tripTitle, state.tripProperties, state.tripItinerary, fetchTrips]);
 
   return {
     messages,
-    inputValue,
+    inputValue: state.inputValue,
+    tripTitle: state.tripTitle,
+    tripProperties: state.tripProperties,
+    tripItinerary: state.tripItinerary,
+    isLoading: state.isLoading,
     setInputValue,
     handleSend,
-    tripTitle,
-    tripProperties,
-    tripItinerary,
-    clearChatSession,
     setCurrentThreadId,
-    isLoading,
     setTripDetails,
+    clearChatSession,
   };
 }

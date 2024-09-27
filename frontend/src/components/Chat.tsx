@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Bars3Icon, CalendarIcon } from '@heroicons/react/24/outline';
-import {
-  MessageListProps,
-  ChatInputProps,
-  ChatProps
-} from '../types/global';
 import TypewriterEffect from '../utils/typewriter';
 import Sidebar from './Sidebar';
 import Itinerary from './Itinerary';
