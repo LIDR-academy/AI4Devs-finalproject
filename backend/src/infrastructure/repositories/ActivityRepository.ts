@@ -15,18 +15,11 @@ export class ActivityRepository implements IActivityRepository {
     }
 
     public async findById(id: string): Promise<Activity | null> {
-        return this.repository.findOne({
-            where: { id },
-            relations: ['trip'],
-        });
+        return this.repository.findOne({ where: { id }, relations: ['trip'] });
     }
 
     public async findByTripId(tripId: string): Promise<Activity[]> {
-        return this.repository.find({
-            where: { trip: { id: tripId } },
-            relations: ['trip'],
-            order: { sequence: 'ASC' },
-        });
+        return this.repository.find({ where: { trip: { id: tripId } }, relations: ['trip'], order: { sequence: 'ASC' } });
     }
 
     public async update(activity: Activity): Promise<Activity> {

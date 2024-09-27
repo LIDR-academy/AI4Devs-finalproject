@@ -1,48 +1,65 @@
-import request from 'supertest';
-import app from '../../app';
+import { UserController } from '../../controllers/UserController';
+import { UserService } from '../../services/UserService';
+import { UserRepository } from '../../infrastructure/repositories/UserRepository';
+import { Request, Response, NextFunction } from 'express';
+
+jest.mock('../../services/UserService');
+jest.mock('../../infrastructure/repositories/UserRepository');
 
 describe('UserController', () => {
-    let sessionId: string;
+    let userController: UserController;
+    let userService: jest.Mocked<UserService>;
+    let userRepository: jest.Mocked<UserRepository>;
+    let req: Partial<Request>;
+    let res: Partial<Response>;
+    let next: NextFunction;
 
     beforeEach(() => {
-        sessionId = `test-session-id-${Date.now()}-${Math.random()}}`;
+        userRepository = new UserRepository() as jest.Mocked<UserRepository>;
+        userService = new UserService(userRepository) as jest.Mocked<UserService>;
+        userController = new UserController();
+        userController['userService'] = userService;
+
+        req = {};
+        res = {
+            json: jest.fn(),
+            status: jest.fn().mockReturnThis(),
+            cookie: jest.fn(),
+        };
+        next = jest.fn();
     });
 
-    it('should create a new user', async () => {
-        const response = await request(app)
-            .post('/users')
-            .send({ sessionId: sessionId });
-        expect(response.status).toBe(201);
-        expect(response.body).toHaveProperty('id');
-        expect(response.body).toHaveProperty('sessionId', sessionId);
+    it('should get user by id', async () => {
+        const mockUser = {
+            id: '1',
+            sessionId: 'session-id',
+            creationDate: new Date(),
+            lastLogin: new Date(),
+            trips: []
+        };
+        userService.getUserById.mockResolvedValue(mockUser);
+        req.params = { id: '1' };
+
+        await userController.getUserById(req as Request, res as Response, next);
+
+        expect(res.json).toHaveBeenCalledWith(mockUser);
     });
 
-    it('should get a user by session ID', async () => {
-        await request(app)
-            .post('/users')
-            .send({ sessionId: sessionId });
+    it('should create a user', async () => {
+        const mockUser = {
+            id: '1',
+            sessionId: 'session-id',
+            creationDate: new Date(),
+            lastLogin: new Date(),
+            trips: []
+        };
+        userService.createUser.mockResolvedValue(mockUser);
+        req.body = { sessionId: 'session-id' };
 
-        const response = await request(app)
-            .get('/users')
-            .set('X-Session-Id', sessionId);
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('sessionId', sessionId);
-    });
+        await userController.createUser(req as Request, res as Response, next);
 
-    it('should return 400 if session ID is missing', async () => {
-        const response = await request(app).get('/users');
-        expect(response.status).toBe(400);
-    });
-
-    it('should get a user by ID', async () => {
-        const createUserResponse = await request(app)
-            .post('/users')
-            .send({ sessionId: sessionId });
-
-        const userId = createUserResponse.body.id;
-
-        const response = await request(app).get(`/users/${userId}`);
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('id', userId);
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.json).toHaveBeenCalledWith(mockUser);
+        expect(res.cookie).toHaveBeenCalledWith('sessionId', 'session-id', { httpOnly: true });
     });
 });

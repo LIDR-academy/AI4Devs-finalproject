@@ -1,22 +1,30 @@
-import { User } from '../../../domain/models/User';
 import { validate } from 'class-validator';
+import { User } from '../../../domain/models/User';
 
-describe('User Entity', () => {
-    it('should create a valid User entity', async () => {
-        const user = new User();
-        user.sessionId = `test-session-id-${Date.now()}-${Math.random()}`;
-        user.creationDate = new Date();
-        user.lastLogin = new Date();
+describe('User Model', () => {
+  it('should validate a valid user', async () => {
+    const user = new User();
+    user.sessionId = 'valid-session-id';
+    user.creationDate = new Date();
 
-        const errors = await validate(user);
-        expect(errors.length).toBe(0);
-    });
+    const errors = await validate(user);
+    expect(errors.length).toBe(0);
+  });
 
-    it('should allow nullable lastLogin', async () => {
-        const user = new User();
-        user.sessionId = `test-session-id-${Date.now()}-${Math.random()}`;
-        user.creationDate = new Date();
-        const errors = await validate(user);
-        expect(errors.length).toBe(0);
-    });
+  it('should not validate a user without sessionId', async () => {
+    const user = new User();
+    user.creationDate = new Date();
+
+    const errors = await validate(user);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('should not validate a user with invalid date', async () => {
+    const user = new User();
+    user.sessionId = 'valid-session-id';
+    user.creationDate = new Date('invalid-date');
+
+    const errors = await validate(user);
+    expect(errors.length).toBeGreaterThan(0);
+  });
 });
