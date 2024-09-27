@@ -5,6 +5,7 @@ import {
   saveCurrentTripId,
   getCurrentTripId
 } from '../utils/sessionUtils';
+import { validateAndFormatDate } from '../utils/dateUtils';
 import { Message } from '../types/global';
 import { useLanguage } from '../context/LanguageContext';
 import { sendMessage } from '../services/chatService';
@@ -42,8 +43,22 @@ export function useChat(fetchTrips: () => void) {
     setIsLoading(true);
 
     try {
-      const data = await sendMessage(prompt, currentThreadId);
-      processAssistantResponse(data.response);
+      const { response } = await sendMessage(prompt, currentThreadId);
+      const { assistantMessage, updatedTripProperties } = processAssistantResponse(response);
+
+      setTripTitle(response.title);
+      setTripItinerary(response.itinerary);
+
+      if (!currentThreadId && response.threadId) {
+        setCurrentThreadId(response.threadId);
+      }
+
+      if (response.tripId) {
+        saveCurrentTripId(response.tripId);
+      }
+
+      setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+      setTripProperties(updatedTripProperties);
     } catch (error) {
       console.error('Error al enviar el mensaje:', error);
     } finally {
@@ -75,17 +90,9 @@ export function useChat(fetchTrips: () => void) {
       }
     }
 
-    setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-    setTripTitle(response.title);
-    setTripProperties(updatedTripProperties);
-    setTripItinerary(response.itinerary);
-
-    if (!currentThreadId && response.threadId) {
-      setCurrentThreadId(response.threadId);
-    }
-
-    if (response.tripId) {
-      saveCurrentTripId(response.tripId);
+    return {
+      assistantMessage,
+      updatedTripProperties
     }
   };
 
@@ -113,37 +120,6 @@ export function useChat(fetchTrips: () => void) {
       .map((activity: any) => activity.description);
 
     setTripItinerary(sortedActivities);
-  };
-
-  const validateAndFormatDate = (date: string): string | null => {
-    const currentYear = dayjs().year();
-
-    const patterns = [
-      /^(\d{4})-(\d{2})-(\d{2})$/,
-      /^(\d{2})-(\d{2})$/,
-      /^(\d{4})-(\d{2})$/,
-      /^(\d{2})$/,
-      /^$/,
-    ];
-
-    for (const pattern of patterns) {
-      const match = date.match(pattern);
-      if (match) {
-        if (pattern.source === /^(\d{4})-(\d{2})-(\d{2})$/.source) {
-          return `${currentYear}-${match[2]}-${match[3]}`;
-        } else if (pattern.source === /^(\d{2})-(\d{2})$/.source) {
-          return `${currentYear}-${match[1]}-${match[2]}`;
-        } else if (pattern.source === /^(\d{4})-(\d{2})$/.source) {
-          return `${match[1]}-${match[2]}-01`;
-        } else if (pattern.source === /^(\d{2})$/.source) {
-          return `${currentYear}-${match[1]}-01`;
-        } else if (pattern.source === /^$/.source) {
-          return null;
-        }
-      }
-    }
-
-    return null;
   };
 
   useEffect(() => {
@@ -188,7 +164,7 @@ export function useChat(fetchTrips: () => void) {
 
         const response = await saveTripDB(filteredTripData);
 
-        if(!tripId) {
+        if (!tripId) {
           saveCurrentTripId(response.id);
         }
 
