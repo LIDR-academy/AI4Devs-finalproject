@@ -7,9 +7,9 @@ import Itinerary from './Itinerary';
 import { useLanguage } from '../context/LanguageContext';
 
 const MessageList = ({ messages }: MessageListProps) => (
-  <div className="flex-1 overflow-y-auto mb-4">
+  <div className="message-list flex-1 overflow-y-auto mb-4">
     {messages.length === 0 ? (
-      <div className="flex justify-center items-end h-full">
+      <div className="chat-waiting-message flex justify-center items-end h-full">
         <div className="animate-bounce bg-white p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center">
           <svg className="w-6 h-6 text-violet-500" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
             <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
@@ -35,7 +35,7 @@ const MessageList = ({ messages }: MessageListProps) => (
 );
 
 const ChatInput = ({ inputValue, setInputValue, handleSend, isLoading, placeholder, translator }: ChatInputProps) => (
-  <div className="mt-auto">
+  <div className="chat-input mt-auto">
     <div className="flex">
       <input
         type="text"
@@ -89,8 +89,8 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
   }, [placeholders.length]);
 
   return (
-    <div className="w-full lg:w-1/2 flex flex-col border-r-2 border-gray-100">
-      <header className="flex justify-between items-end p-4 border-b-2 border-gray-100 lg:hidden sticky top-0 bg-white">
+    <div className="chat-container w-full lg:w-1/2 flex flex-col border-r-2 border-gray-100">
+      <header className="chat-header flex justify-between items-end p-4 border-b-2 border-gray-100 lg:hidden sticky top-0 bg-white">
         <button onClick={() => setIsSidebarOpen(true)}>
           <Bars3Icon className="h-6 w-6 text-violet-500" />
         </button>
@@ -103,8 +103,8 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
           <CalendarIcon className="h-6 w-6 text-violet-500" />
         </button>
       </header>
-      <div className="flex-grow flex flex-col p-4 h-screen">
-        <div className="flex justify-between items-center mb-4">
+      <div className="chat-content flex-grow flex flex-col p-4 h-screen">
+        <div className="chat-title flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold"><TypewriterEffect text={tripTitle || ''} /></h1>
         </div>
         <MessageList messages={messages} />

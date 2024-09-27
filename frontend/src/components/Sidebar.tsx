@@ -85,7 +85,7 @@ export default function Sidebar() {
     };
 
     return (
-        <div className="w-full lg:w-64 h-full p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
+        <div className="sidebar w-full lg:w-64 h-full p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
             <div className="flex flex-col items-center">
                 <img
                     src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Z3vqK1WAdvhcavo10sL6QxLv3IdVRd.png"
