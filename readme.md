@@ -727,6 +727,6 @@ Cookie: sessionId=abcd1234session
 
 - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/8>
 
-**Pull Request:**
+**Pueden revisar todas las PRs en el repositorio:**
 
-- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/>
+- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pulls?q=is%3Apr+is%3Aclosed>

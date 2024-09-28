@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://ikigoo-backend.onrender.com';
 
 export const apiFetch = async (url: string, options: RequestInit = {}) => {
   const sessionId = Cookies.get('sessionId');
