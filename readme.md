@@ -31,9 +31,9 @@ IkiGoo está pensada para ser una solución integral que facilita la creación d
 
 ### **0.4. URL del proyecto:**
 
-[Live: Ikigoo](https://ikigoo.com)
+El proyecto se encuentra desplegado en [Live: Ikigoo](https://ikigoo.com). Por limitaciones de la cuenta gratuita de Render, el servicio puede tardar unos minutos (o varios) en responder por primera vez.
 
-### 0.5. URL o archivo comprimido del repositorio
+### **0.5. URL o archivo comprimido del repositorio**
 
 [Github Repository - AI4Devs-finalproject-MPC](https://github.com/Edain92/AI4Devs-finalproject-MPC)
 
@@ -1002,26 +1002,15 @@ X-Session-Id: abcd1234session
 
 ## 7. Pull Requests
 
-**Pull Request 1: Primera entrega del proyecto**
-
-- <https://github.com/LIDR-academy/AI4Devs-finalproject/pull/2>
-
-**Pull Request 2: Configuración Inicial del Proyecto**
-
-- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/2>
-
-**Pull Request 3: Rediseño del proyecto, vAlpha (POC)**
-
-- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/5>
-
-**Pull Request 4: Desarrollo de la API (Users, Trips, Activities)**
-
-- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/7>
-
-**Pull Request 5: Integración de la IA en el proyecto**
-
-- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/8>
-
-**Pueden revisar todas las PRs en el repositorio:**
-
-- <https://github.com/Edain92/AI4Devs-finalproject-MPC/pulls?q=is%3Apr+is%3Aclosed>
+- **Pull Request 1: Primera entrega del proyecto**: 
+  - <https://github.com/LIDR-academy/AI4Devs-finalproject/pull/2>
+- **Pull Request 2: Configuración Inicial del Proyecto**: 
+  - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/2>
+- **Pull Request 3: Rediseño del proyecto, vAlpha (POC)**: 
+  - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/5>
+- **Pull Request 4: Desarrollo de la API (Users, Trips, Activities)**: 
+  - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/7>
+- **Pull Request 5: Integración de la IA en el proyecto**: 
+  - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pull/8>
+- **Pueden revisar todas las PRs en el repositorio:** 
+  - <https://github.com/Edain92/AI4Devs-finalproject-MPC/pulls?q=is%3Apr+is%3Aclosed>
