@@ -338,7 +338,7 @@ El proceso de despliegue se automatiza mediante la integración continua y el de
   A[Repositorio en GitHub] --> B[Render]
   B --> C[Servicio Frontend - Docker]
   B --> D[Servicio Backend - Docker]
-  C --> E[Mundo Exterior - https://ikigoo-frontend.onrender.com/]
+  C --> E[Mundo Exterior]
   D --> F[Base de Datos  - PostgreSQL]
 ```
 
@@ -369,7 +369,6 @@ Se han implementado diversas prácticas de seguridad para garantizar la protecci
   ```typescript:backend/src/__tests__/domain/trip/Trip.test.ts
   const errors = await validate(trip);
   expect(errors.length).toBe(0);
-  ```
   ```
 
 #### **Uso de HTTPS en Comunicación**
@@ -538,22 +537,22 @@ erDiagram
     Trip {
         string ID PK
         string UserID FK "not null"
-        string Destination "not null"
-        date StartDate "not null"
+        string Destination
+        date StartDate
         date EndDate
         string Description
-        enum Accompaniment "{Solo, Friends, Family, Couple} not null"
-        enum ActivityType "{Nature, Culture, Nightlife, Gastronomic} not null"
-        int BudgetMax "not null"
+        enum Accompaniment "{Solo, Friends, Family, Couple}"
+        enum ActivityType "{Nature, Culture, Nightlife, Gastronomic}"
+        int BudgetMax
     }
     
     Activity {
         string ID PK
         string TripID FK "not null"
-        string Name "not null"
+        string Name
         string Description
-        int Sequence "not null"
-        date DateTime "not null"
+        int Sequence
+        date DateTime
     }
 ```
 
@@ -574,12 +573,12 @@ erDiagram
    - **Atributos**:
      - `ID` (string, PK): Identificador único del viaje.
      - `UserID` (string, FK, not null): Referencia al usuario que planifica el viaje.
-     - `Destination` (string, not null): Ciudad de destino del viaje.
-     - `StartDate` (date, not null): Fecha de inicio del viaje.
-     - `EndDate` (date, not null): Fecha de finalización del viaje.
-     - `Accompaniment` (enum, not null): Categoría de acompañantes del viaje (ej., Solo, Friends, Family, Couple).
-     - `ActivityType` (enum, not null): Tipo de actividades planificadas en el viaje (ej., Nature, Culture, Nightlife, Gastronomic).
-     - `BudgetMax` (int, not null): Presupuesto máximo planificado para el viaje.
+     - `Destination` (string): Ciudad de destino del viaje.
+     - `StartDate` (date): Fecha de inicio del viaje.
+     - `EndDate` (date): Fecha de finalización del viaje.
+     - `Accompaniment` (enum): Categoría de acompañantes del viaje (ej., Solo, Friends, Family, Couple).
+     - `ActivityType` (enum): Tipo de actividades planificadas en el viaje (ej., Nature, Culture, Nightlife, Gastronomic).
+     - `BudgetMax` (int): Presupuesto máximo planificado para el viaje.
      - `Description` (string): Descripción opcional del viaje.
    - **Relaciones**:
      - Relación uno a muchos con `Activity` (Un viaje puede contener múltiples actividades).
@@ -588,18 +587,13 @@ erDiagram
    - **Atributos**:
      - `ID` (string, PK): Identificador único de la actividad.
      - `TripID` (string, FK, not null): Referencia al viaje asociado.
-     - `Name` (string, not null): Nombre de la actividad.
+     - `Name` (string): Nombre de la actividad.
      - `Description` (string): Descripción opcional de la actividad.
-     - `Sequence` (int, not null): Orden de ejecución de la actividad dentro del viaje.
-     - `DateTime` (date, not null): Fecha y hora en que se llevará a cabo la actividad.
+     - `Sequence` (int): Orden de ejecución de la actividad dentro del viaje.
+     - `DateTime` (date): Fecha y hora en que se llevará a cabo la actividad.
    - **Relaciones**:
      - Relación muchos a uno con `Trip` (Una actividad pertenece a un solo viaje).
 
----
-
-Perfecto. A continuación, te presento la documentación de los tres endpoints clave para la POC:
-
----
 
 ## **4. Especificación de la API**
 
@@ -817,8 +811,8 @@ paths:
     get:
       summary: "Get the last 3 trips for a user"
       parameters:
-        - name: sessionId
-          in: cookie
+        - name: X-Session-Id
+          in: header
           required: true
           description: "Session ID of the user to retrieve the trips"
           schema:
@@ -861,7 +855,7 @@ paths:
 **Ejemplo de Petición:**
 ```http
 GET /trips/recent
-Cookie: sessionId=abcd1234session
+X-Session-Id: abcd1234session
 ```
 
 **Ejemplo de Respuesta:**
