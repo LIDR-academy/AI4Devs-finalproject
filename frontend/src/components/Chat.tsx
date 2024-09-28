@@ -89,6 +89,7 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isItineraryOpen, setIsItineraryOpen] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
 
   const placeholders = [
     translator('chat-placeholder-1'),
@@ -103,6 +104,29 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
 
     return () => clearInterval(interval);
   }, [placeholders.length]);
+
+  useEffect(() => {
+    let alertTimeout: NodeJS.Timeout | undefined;
+    let hideAlertTimeout: NodeJS.Timeout | undefined;
+  
+    if (isLoading) {
+      alertTimeout = setTimeout(() => {
+        setShowAlert(true);
+        hideAlertTimeout = setTimeout(() => {
+          setShowAlert(false);
+        }, 3000);
+      }, 5000);
+    } else {
+      if (alertTimeout) clearTimeout(alertTimeout);
+      if (hideAlertTimeout) clearTimeout(hideAlertTimeout);
+      setShowAlert(false);
+    }
+  
+    return () => {
+      if (alertTimeout) clearTimeout(alertTimeout);
+      if (hideAlertTimeout) clearTimeout(hideAlertTimeout);
+    };
+  }, [isLoading]);
 
   return (
     <div className="chat w-full lg:w-1/2 flex flex-col border-r-2 border-gray-100">
@@ -133,6 +157,11 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
           <div className="absolute right-0 top-0 w-3/4 h-full bg-white shadow-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <Itinerary tripProperties={tripProperties} tripItinerary={tripItinerary} />
           </div>
+        </div>
+      )}
+      {showAlert && (
+        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 bg-violet-500 text-white p-4 rounded-lg shadow-lg">
+          {translator('chat-alert')}
         </div>
       )}
     </div>

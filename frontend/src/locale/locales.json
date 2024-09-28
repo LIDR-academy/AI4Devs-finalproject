@@ -54,6 +54,10 @@
                 {
                     "key": "recovering-conversation",
                     "value": "Recovering thread conversation..."
+                },
+                {
+                    "key": "chat-alert",
+                    "value": "Please be patient, this is a first version of our product."
                 }
             ]
         },
@@ -111,6 +115,10 @@
                 {
                     "key": "recovering-conversation",
                     "value": "Recuperando el hilo de la conversación..."
+                },
+                {
+                    "key": "chat-alert",
+                    "value": "Por favor, ten paciencia, esta es la primera versión de nuestro producto."
                 }
             ]
         }
