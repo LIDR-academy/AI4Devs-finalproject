@@ -31,7 +31,7 @@ IkiGoo está pensada para ser una solución integral que facilita la creación d
 
 ### **0.4. URL del proyecto:**
 
-(WIP)
+[Live: Ikigoo](https://ikigoo.com)
 
 ### 0.5. URL o archivo comprimido del repositorio
 
@@ -90,21 +90,18 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
 
 2. Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
    ```dotenv
-    # Server
-    PORT=3000
-    NODE_ENV=development
-
-    # Frontend
-    FRONT_PORT=4200
+   # Server
+    PORT=
+    NODE_ENV=
 
     # Postgres Database
-    DB_NAME=ikigoo
-    DB_USER=postgres
-    DB_PASSWORD=postgres
-    DB_HOST=localhost
+    DATABASE_URL=
 
-    # MongoDB   
-    MONGODB_URI=mongodb://localhost:27017/ikigoo
+    # OpenAI API
+    OPENAI_ORGANIZATION=
+    OPENAI_PROJECT=
+    OPENAI_ASSISTANT_ID=
+    OPENAI_API_KEY=
    ```
 
 3. Construye y levanta los contenedores Docker:
@@ -127,8 +124,6 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
    docker compose logs
    ```
 
-7. Puedes probar la API desde Postman importando el archivo [IkiGoo.postman_collection.json](./.docs/ikigoo.postman_collection.json).
-
 ---
 
 ## 2. Arquitectura del Sistema
@@ -137,7 +132,7 @@ Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes d
 
 ```mermaid
 graph TD
-    FE["Frontend (React + Redux)"] --> GW["API Gateway"]
+    FE["Frontend (React)"] --> GW["API Gateway"]
     GW --> BE["Backend (Node.js + Express)"]
     BE --> EC2["AWS EC2 (Backend + Servicios)"]
     BE --> OpenAI["API OpenAI (IA para itinerarios)"]
@@ -178,7 +173,7 @@ A pesar de ello, este enfoque arquitectónico, junto con las tecnologías selecc
 
 ### **2.2. Descripción de componentes principales:**
 
-1. **Frontend (React + Redux):** La interfaz de usuario será construida con React, que permite el desarrollo modular de interfaces web dinámicas. Redux se empleará para la gestión del estado global de la aplicación, facilitando la interacción con los itinerarios de viaje y la visualización de los planes recientes.
+1. **Frontend (React):** La interfaz de usuario será construida con React, que permite el desarrollo modular de interfaces web dinámicas.
    - **Comunicación:** El frontend interactuará con el API Gateway para enviar y recibir datos desde el backend.
 
 2. **API Gateway:** Servirá como el único punto de entrada para todas las solicitudes provenientes del frontend hacia el backend. Gestionará el enrutamiento y la composición de respuestas, asegurando una comunicación eficiente entre las distintas capas del sistema.
@@ -197,22 +192,328 @@ A pesar de ello, este enfoque arquitectónico, junto con las tecnologías selecc
    - **EC2:** El backend, junto con sus servicios y la integración con OpenAI, se desplegará en instancias de **AWS EC2**, utilizando un entorno Dockerizado para facilitar la escalabilidad y el despliegue rápido.
    - **S3:** Almacenará archivos estáticos como imágenes y recursos del frontend.
    - **RDS:** Se utilizará **AWS RDS** para gestionar la base de datos Postgres, proporcionando una solución escalable y gestionada para las necesidades de almacenamiento de la aplicación.
+      
+      **(No implementada)**
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-> WIP: Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+El proyecto está dividido en dos partes principales: el **frontend** y el **backend**. Cada una de estas secciones tiene una estructura de ficheros organizada que facilita el desarrollo, mantenimiento y escalabilidad de la aplicación.
+
+#### **Estructura General del Proyecto**
+
+```
+├── frontend
+│   ├── public
+│   ├── src
+│   │   ├── components
+│   │   ├── context
+│   │   ├── hooks
+│   │   ├── services
+│   │   ├── utils
+│   │   ├── locale
+│   │   ├── tests
+│   │   └── App.tsx
+│   ├── cypress
+│   │   ├── e2e
+│   │   └── support
+│   ├── package.json
+│   └── Dockerfile
+├── backend
+│   ├── src
+│   │   ├── controllers
+│   │   ├── services
+│   │   ├── infrastructure
+│   │   │   └── repositories
+│   │   ├── domain
+│   │   │   └── models
+│   │   ├── data-source.ts
+│   │   ├── app.ts
+│   │   └── server.ts
+│   ├── __tests__
+│   │   ├── controllers
+│   │   └── infrastructure
+│   │       └── repositories
+│   ├── package.json
+│   ├── jest.config.js
+│   └── Dockerfile
+├── docker-compose.yml
+└── README.md
+```
+
+#### **Frontend**
+
+El **frontend** está desarrollado con **React** y utiliza **TypeScript** para el tipado estático, lo que mejora la calidad y mantenibilidad del código. Además, se emplean herramientas como **Cypress** para pruebas de extremo a extremo y **Tailwind CSS** para el diseño de la interfaz de usuario.
+
+- **Estructura de Carpetas:**
+
+  ```
+  frontend/
+  ├── public/
+  │   └── index.html
+  ├── src/
+  │   ├── components/         # Componentes reutilizables de la UI
+  │   ├── context/            # Contextos de React para gestión de estado global
+  │   ├── hooks/              # Hooks personalizados
+  │   ├── services/           # Servicios para llamadas a APIs y lógica de negocio
+  │   ├── utils/              # Utilidades y funciones auxiliares
+  │   ├── locale/             # Archivos de localización y traducción
+  │   ├── tests/              # Pruebas unitarias y de integración
+  │   └── App.tsx             # Componente raíz de la aplicación
+  ├── cypress/
+  │   ├── e2e/                # Pruebas de extremo a extremo con Cypress
+  │   └── support/            # Configuración y comandos personalizados de Cypress
+  ├── package.json            # Configuración de dependencias y scripts
+  └── Dockerfile              # Dockerfile para contenerizar el frontend
+  ```
+
+- **Patrón de Arquitectura:**
+
+  El frontend sigue una **arquitectura basada en componentes**, donde cada componente es independiente y reutilizable. Además, se utiliza el **Context API** de React para manejar el estado global, lo que facilita la gestión de estados como la sesión del usuario.
+
+#### **Backend**
+
+El **backend** está construido con **Node.js** y **Express**, empleando **TypeScript** para garantizar la robustez del código. Utiliza una arquitectura modular que separa claramente las responsabilidades mediante controladores, servicios y repositorios.
+
+- **Estructura de Carpetas:**
+
+  ```
+  backend/
+  ├── src/
+  │   ├── controllers/         # Controladores para manejar las rutas y la lógica de las solicitudes
+  │   ├── services/            # Servicios que contienen la lógica de negocio
+  │   ├── infrastructure/
+  │   │   └── repositories/    # Repositorios para interactuar con la base de datos
+  │   ├── domain/
+  │   │   └── models/          # Modelos de dominio y definiciones de entidades
+  │   ├── data-source.ts       # Configuración de la conexión a la base de datos
+  │   ├── app.ts               # Configuración de la aplicación Express
+  │   └── server.ts            # Inicialización del servidor
+  ├── __tests__/                # Pruebas unitarias y de integración con Jest
+  │   ├── controllers/
+  │   └── infrastructure/
+  │       └── repositories/
+  ├── package.json              # Configuración de dependencias y scripts
+  ├── jest.config.js            # Configuración de Jest para pruebas
+  └── Dockerfile                # Dockerfile para contenerizar el backend
+  ```
+
+- **Patrón de Arquitectura:**
+
+  El backend implementa una **arquitectura de capas**, dividiendo el código en:
+
+  - **Controladores:** Manejan las solicitudes HTTP y responden al cliente.
+  - **Servicios:** Contienen la lógica de negocio y coordinan las operaciones entre controladores y repositorios.
+  - **Repositorios:** Interactúan directamente con la base de datos, siguiendo el patrón **Repository** para abstraer las operaciones de acceso a datos.
+  - **Modelos de Dominio:** Definen las entidades y sus relaciones dentro del sistema.
+
+#### **Ventajas de la Estructura Actual**
+
+- **Modularidad:** La separación clara entre componentes, servicios y repositorios facilita la mantenibilidad y escalabilidad del proyecto.
+- **Reutilización de Código:** Los componentes y hooks reutilizables en el frontend reducen la duplicación de código.
+- **Pruebas Eficientes:** La estructura organizada permite implementar pruebas unitarias y de integración de manera efectiva, asegurando la calidad del código.
+- **Contenerización con Docker:** Garantiza la consistencia de los entornos de desarrollo, prueba y producción, simplificando el proceso de despliegue.
 
 ### **2.4. Infraestructura y despliegue**
 
-> WIP: Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+La aplicación está dividida en dos partes principales:
+
+- **Frontend:** Desarrollado en React, gestionando la interfaz de usuario y la lógica de interacción.
+- **Backend:** Implementado con Node.js y Express, manejando la lógica de negocio, la gestión de datos y la comunicación con servicios externos.
+
+Ambas partes están alojadas y gestionadas en [Render](https://render.com/).
+
+#### **Proceso de Despliegue**
+
+El proceso de despliegue se automatiza mediante la integración continua y el despliegue continuo (CI/CD) utilizando Render y GitHub. A continuación, se detalla el flujo de trabajo:
+
+1. **Repositorio en GitHub:** Todo el código fuente está alojado en un repositorio de GitHub.
+2. **Integración con Render:** Se conecta el repositorio de GitHub con Render, configurando los servicios para el frontend y el backend.
+3. **Despliegue Automático:** Cada vez que se realiza una actualización en la rama `main` del repositorio, Render detecta los cambios y automáticamente inicia el proceso de despliegue.
+4. **Actualización de Servicios:** Render construye las imágenes Docker actualizadas y despliega los servicios, asegurando que la aplicación siempre esté ejecutando la última versión del código en contenedores aislados.
+
+#### **Diagrama de Despliegue**
+
+```mermaid
+  graph LR
+  A[Repositorio en GitHub] --> B[Render]
+  B --> C[Servicio Frontend - Docker]
+  B --> D[Servicio Backend - Docker]
+  C --> E[Mundo Exterior - https://ikigoo-frontend.onrender.com/]
+  D --> F[Base de Datos  - PostgreSQL]
+```
+
 
 ### **2.5. Seguridad**
 
-> WIP: Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+Se han implementado diversas prácticas de seguridad para garantizar la protección de los datos y la integridad de la aplicación. A continuación se describen las principales medidas de seguridad adoptadas:
+
+#### **Gestión de Sesiones Seguras**
+
+- **Cookies Seguras y HttpOnly:** Las cookies de sesión (`sessionId`) se configuran con las opciones `secure`, `httpOnly` y `sameSite: 'Strict'` para prevenir ataques de intermediarios y de cross-site request forgery (CSRF).
+
+  ```typescript:frontend/src/context/SessionContext.tsx
+  Cookies.set('sessionId', id, { expires: 7, secure: true, sameSite: 'Strict' });
+  ```
+
+#### **Protección contra CSRF**
+
+- **SameSite Cookies:** El atributo `sameSite: 'Strict'` en las cookies contribuye a prevenir ataques CSRF al restringir las solicitudes que se originan desde otros sitios, asegurando que las cookies solo se envíen en solicitudes de primer partido.
+
+  ```typescript:frontend/src/context/SessionContext.tsx
+  Cookies.set('sessionId', id, { expires: 7, secure: true, sameSite: 'Strict' });
+
+#### **Validación y Sanitización de Entradas**
+
+- **Validación en el Backend:** Se utiliza `class-validator` para asegurar que los datos recibidos cumplen con los requisitos del modelo antes de procesarlos, evitando así la inserción de datos maliciosos.
+
+  ```typescript:backend/src/__tests__/domain/trip/Trip.test.ts
+  const errors = await validate(trip);
+  expect(errors.length).toBe(0);
+  ```
+  ```
+
+#### **Uso de HTTPS en Comunicación**
+
+- **Configuración de URLs Seguras:** Dependiendo del entorno (`development` o `production`), se configuran las URLs base para asegurar que las comunicaciones entre el frontend y el backend se realicen de manera segura a través de HTTPS.
+
+  ```typescript:frontend/src/utils/api.tsx
+  const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://ikigoo-backend.onrender.com';
+  ```
+
+#### **Manejo de Errores**
+
+- **Protección de Información Sensible:** Los errores son manejados de manera adecuada sin exponer información sensible al usuario. Se registran los errores en el servidor y se proporciona un mensaje genérico al cliente para evitar la divulgación de detalles internos.
+
+  ```typescript:frontend/src/utils/api.tsx
+  catch (error) {
+      console.error('Error en la solicitud a la API', error);
+      throw new Error('Error en la solicitud a la API');
+  }
+  ```
+
+#### **Uso de TypeScript**
+
+- **Tipado Estático:** El uso de TypeScript proporciona tipado estático que ayuda a prevenir errores de tipo en tiempo de compilación, reduciendo la posibilidad de vulnerabilidades relacionadas con datos mal tipados.
+
+#### **Mantenimiento de Dependencias**
+
+- **Gestión de Dependencias Seguras:** Se utilizan versiones específicas de las dependencias en `package.json`, lo que facilita el mantenimiento y la actualización segura de los paquetes utilizados.
+
+  ```json:frontend/package.json
+  "dependencies": {
+    "@heroicons/react": "^2.1.5",
+    "@reduxjs/toolkit": "^2.2.7",
+    "axios": "^1.7.7",
+    "js-cookie": "^3.0.5",
+  },
+  ```
 
 ### **2.6. Tests**
 
-> WIP: Describe brevemente algunos de los tests realizados
+Se han implementado diferentes tipos de pruebas tanto en el frontend como en el backend para garantizar la calidad y el correcto funcionamiento de la aplicación.
+
+**Frontend**
+
+En el frontend, utilizamos [Cypress](https://www.cypress.io/) para realizar pruebas de extremo a extremo (E2E). Estas pruebas simulan la interacción del usuario con la aplicación y verifican que todas las funcionalidades principales funcionen correctamente.
+
+- Ejemplo de prueba E2E con Cypress:
+
+```typescript
+// frontend/cypress/e2e/desktop.cy.js
+describe('IKIGOO: Complete desktop E2E', () => {
+  beforeEach(() => {
+  cy.viewport(1280, 720);
+  cy.visit('http://localhost:3001');
+});
+
+  it('open app: should show the application', () => {
+    cy.get('.itinerary .itinerary-details').should('not.exist');
+    cy.get('.itinerary-loading').should('exist');
+    cy.get('.chat .message-list').should('not.exist');
+    cy.get('.chat-waiting-message').should('exist');
+  });
+
+  it('btn new chat: should reload the page and reset the chat and itinerary', () => {
+    cy.get('.sidebar .btn-new-chat').click();
+    cy.reload();
+    cy.get('.itinerary .itinerary-details').should('not.exist');
+    cy.get('.itinerary-loading').should('exist');
+    cy.get('.chat .message-list').should('not.exist');
+    cy.get('.chat-waiting-message').should('exist');
+  });
+
+  it('btn send message: should send a message to the chat', () => {
+  cy.get('.chat-input .input-message').type('Itinerary to London');
+  cy.get('.chat-input .btn-send-message').click();
+  cy.get('.chat .message-list').should('exist');
+  cy.get('.chat .message-list').should('have.length', 1);
+  });
+
+  it('receiving message: should show the assistant message in the chat', () => {
+    cy.intercept('POST', '/chat').as('askChat');
+    cy.get('.chat-input .input-message').type('Itinerary to London');
+    cy.get('.chat-input .input-message').should('have.value', 'Itinerary to London');
+    cy.get('.chat-input .btn-send-message').click();
+    cy.get('.chat .message-list').should('exist');
+    cy.get('.chat .message-list .message-item').should('have.length', 1);
+    cy.wait('@askChat', { timeout: 10000 });
+    cy.get('.chat .message-list .message-item').should('have.length', 2);
+  });
+});
+```
+
+**Backend**
+
+En el backend, las pruebas se encuentran en el directorio `__tests__`. Utilizamos [Jest](https://jestjs.io/) para realizar pruebas unitarias y de integración, asegurando que cada componente y endpoint funcione según lo esperado.
+
+- Ejemplo de prueba unitaria con Jest:
+
+```typescript
+// backend/src/__tests__/domain/user/User.test.ts
+import { validate } from 'class-validator';
+import { User } from '../../../domain/models/User';
+
+describe('User Model', () => {
+  it('should validate a valid user', async () => {
+    const user = new User();
+    user.sessionId = 'valid-session-id';
+    user.creationDate = new Date();
+
+    const errors = await validate(user);
+    expect(errors.length).toBe(0);
+  });
+
+  it('should not validate a user without sessionId', async () => {
+    const user = new User();
+    user.creationDate = new Date();
+
+    const errors = await validate(user);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('should not validate a user with invalid date', async () => {
+    const user = new User();
+    user.sessionId = 'valid-session-id';
+    user.creationDate = new Date('invalid-date');
+
+    const errors = await validate(user);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+});
+```
+
+**Ejecución de pruebas**
+
+- **Frontend:**
+  ```bash
+  npm run cypress:open
+  npm run cypress:run
+  ```
+
+- **Backend:**
+  ```bash
+  npm run test
+  ```
 
 ---
 
