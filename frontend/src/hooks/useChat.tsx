@@ -70,12 +70,17 @@ export function useChat(fetchTrips: () => void) {
   const { translator } = useLanguage();
 
   const handleSend = async (forcedPrompt: string = '') => {
-    if (state.inputValue.trim() === '' && !forcedPrompt) return;
+    if (
+      state.inputValue.trim() === '' &&
+      (!forcedPrompt ||
+      typeof forcedPrompt !== 'string')
+    ) return;
 
-    const prompt: string = forcedPrompt ? forcedPrompt : state.inputValue;
+    const prompt: string = state.inputValue ? state.inputValue : forcedPrompt;
+    
     const userMessage: Message = { role: USER_ROLE, content: prompt };
 
-    if (!forcedPrompt) {
+    if (state.inputValue) {
       setMessages((prevMessages) => [...prevMessages, userMessage]);
     } else {
       setMessages((prevMessages) => [...prevMessages, { role: USER_ROLE, content: translator('recovering-conversation') }]);

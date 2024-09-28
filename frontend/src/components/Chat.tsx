@@ -21,7 +21,7 @@ const MessageList = ({ messages }: MessageListProps) => (
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`p-3 rounded-lg shadow-sm ${msg.role === 'user'
+            className={`message-item p-3 rounded-lg shadow-sm ${msg.role === 'user'
               ? 'bg-gray-100 text-gray-800 self-end'
               : 'bg-white text-gray-600 self-start'
               } max-w-xs lg:max-w-96 break-words`}

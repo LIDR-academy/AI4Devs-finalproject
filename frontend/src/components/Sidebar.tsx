@@ -25,11 +25,11 @@ const TripList = ({ trips, handleTripClick, translator }: TripListProps) => (
                 <RocketLaunchIcon className="size-6 text-gray-600" />
                 <span className="font-semibold">{translator('trips')}</span>
             </div>
-            <div className="space-y-2">
+            <div className="trips-list space-y-2">
                 {trips.map((trip: Trip) => (
                     <div
                         key={trip.id}
-                        className="text-gray-800 pb-2 hover:text-violet-500 cursor-pointer"
+                        className="trips-list-item text-gray-800 pb-2 hover:text-violet-500 cursor-pointer"
                         onClick={() => handleTripClick(trip.id)}
                     >
                         <div>{trip.description}</div>
@@ -84,6 +84,11 @@ export default function Sidebar() {
         handleSend(JSON.stringify(tripDetails));
     };
 
+    const handleNewChat = () => {
+        removeCurrentTripId();
+        window.location.reload();
+    };
+
     return (
         <div className="sidebar w-full lg:w-64 h-full p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
             <div className="flex flex-col items-center">
@@ -101,9 +106,9 @@ export default function Sidebar() {
             </nav>
             {trips.length === 3 ? (
                 <UpgradeButton translator={translator} />
-            ) : (
-                <NewChatButton handleNewChat={() => {window.location.reload()}} translator={translator} />
-            )}
+                ) : (
+                    <NewChatButton handleNewChat={handleNewChat} translator={translator} />
+                )}
         </div>
     );
 }
