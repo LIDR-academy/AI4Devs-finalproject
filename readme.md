@@ -31,7 +31,7 @@ IkiGoo está pensada para ser una solución integral que facilita la creación d
 
 ### **0.4. URL del proyecto:**
 
-El proyecto se encuentra desplegado en [Live: Ikigoo](https://ikigoo.com). Por limitaciones de la cuenta gratuita de Render, el servicio puede tardar unos minutos (o varios) en responder por primera vez.
+El proyecto se encuentra desplegado en [Live: Ikigoo](https://ikigoo.onrender.com). Por limitaciones de la cuenta gratuita de Render, el servicio puede tardar unos minutos (o varios) en responder por primera vez.
 
 ### **0.5. URL o archivo comprimido del repositorio**
 
