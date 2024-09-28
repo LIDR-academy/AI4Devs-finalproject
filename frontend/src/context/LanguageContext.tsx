@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import localesData from '../locale/locales.json'; 
-import { LanguageContextProps, Language, LocalesData } from '../types/global';
 
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 

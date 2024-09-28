@@ -2,11 +2,9 @@ import Sidebar from './Sidebar';
 import Chat from './Chat';
 import Itinerary from './Itinerary';
 import { useChatContext } from '../context/ChatContext';
-import { useSession } from '../hooks/useSession';
 
 export default function MainPage() {
   const chat = useChatContext();
-  useSession();
 
   return (
     <div className="flex h-screen bg-white text-black">

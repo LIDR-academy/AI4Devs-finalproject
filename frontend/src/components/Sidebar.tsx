@@ -1,21 +1,12 @@
 import { RocketLaunchIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
-import { useLanguage } from '../context/LanguageContext';
 import {
     getCurrentTripId,
     removeCurrentTripId,
     saveCurrentTripId,
 } from '../utils/sessionUtils';
+import { useLanguage } from '../context/LanguageContext';
 import { useChatContext } from '../context/ChatContext';
-import {
-    LanguageContextProps,
-    ChatContextProps,
-    Trip,
-    UpgradeButtonProps,
-    LanguageToggleButtonProps,
-    TripListProps,
-    NewChatButtonProps
-} from '../types/global';
-import { apiFetch } from '../utils/api';
+import { getTrip } from '../services/tripService';
 
 const LanguageToggleButton = ({ language, toggleLanguage }: LanguageToggleButtonProps) => (
     <button
@@ -34,11 +25,11 @@ const TripList = ({ trips, handleTripClick, translator }: TripListProps) => (
                 <RocketLaunchIcon className="size-6 text-gray-600" />
                 <span className="font-semibold">{translator('trips')}</span>
             </div>
-            <div className="space-y-2">
+            <div className="trips-list space-y-2">
                 {trips.map((trip: Trip) => (
                     <div
                         key={trip.id}
-                        className="text-gray-800 pb-2 hover:text-violet-500 cursor-pointer"
+                        className="trips-list-item text-gray-800 pb-2 hover:text-violet-500 cursor-pointer"
                         onClick={() => handleTripClick(trip.id)}
                     >
                         <div>{trip.description}</div>
@@ -56,7 +47,7 @@ const TripList = ({ trips, handleTripClick, translator }: TripListProps) => (
 const NewChatButton = ({ handleNewChat, translator }: NewChatButtonProps) => (
     <button
         onClick={handleNewChat}
-        className="bg-violet-500 rounded-full py-2 px-4 mt-4 hover:bg-violet-600 transition-colors text-white"
+        className="btn-new-chat bg-violet-500 rounded-full py-2 px-4 mt-4 hover:bg-violet-600 transition-colors text-white"
     >
         {translator('btn-new-chat')}
     </button>
@@ -72,33 +63,34 @@ const UpgradeButton = ({ translator }: UpgradeButtonProps) => (
 
 export default function Sidebar() {
     const { language, setLanguage, translator }: LanguageContextProps = useLanguage();
-    const { trips, fetchTrips, clearChatSession, handleSend, setTripDetails }: ChatContextProps = useChatContext();
+    const { trips, clearChatSession, handleSend, setTripDetails }: ChatContextProps = useChatContext();
 
     const toggleLanguage = () => {
         setLanguage(language === 'EN' ? 'ES' : 'EN');
     };
 
+    const handleTripClick = async (tripId: string) => {
+        const currentTripId = getCurrentTripId();
+
+        if (currentTripId && tripId !== currentTripId) {
+            removeCurrentTripId();
+            clearChatSession();
+        }
+
+        saveCurrentTripId(tripId);
+
+        const tripDetails = await getTrip(tripId);
+        setTripDetails(tripDetails);
+        handleSend(JSON.stringify(tripDetails));
+    };
+
     const handleNewChat = () => {
         removeCurrentTripId();
-        clearChatSession();
-        fetchTrips();
         window.location.reload();
     };
 
-    const handleTripClick = async (tripId: string) => {
-        if (tripId !== getCurrentTripId()) {
-            removeCurrentTripId();
-            clearChatSession();
-            saveCurrentTripId(tripId);
-
-            const tripDetails = await apiFetch(`/trips/${tripId}`, { method: 'GET' });
-            setTripDetails(tripDetails);
-            handleSend(JSON.stringify(tripDetails));
-        }
-    };
-
     return (
-        <div className="w-full lg:w-64 h-full p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
+        <div className="sidebar w-full lg:w-64 h-full p-4 flex flex-col border-r-2 border-gray-100 flex-shrink-0">
             <div className="flex flex-col items-center">
                 <img
                     src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Z3vqK1WAdvhcavo10sL6QxLv3IdVRd.png"
@@ -114,9 +106,9 @@ export default function Sidebar() {
             </nav>
             {trips.length === 3 ? (
                 <UpgradeButton translator={translator} />
-            ) : (
-                <NewChatButton handleNewChat={handleNewChat} translator={translator} />
-            )}
+                ) : (
+                    <NewChatButton handleNewChat={handleNewChat} translator={translator} />
+                )}
         </div>
     );
 }

@@ -18,9 +18,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
   "include": [
-    "src"
-  ]
+    "src/**/*",
+    "types/**/*"
+, "types"  ]
 }

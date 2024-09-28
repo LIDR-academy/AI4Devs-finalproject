@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useChat } from '../hooks/useChat';
-import { apiFetch } from '../utils/api';
+import { getRecentTrips } from '../services/tripService';
 
 interface ChatContextType extends ReturnType<typeof useChat> {
   trips: any[];
@@ -15,9 +15,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchTrips = useCallback(async () => {
     try {
-      const data = await apiFetch('/trips/recent', {
-        method: 'GET',
-      });
+      const data = await getRecentTrips();
       setTrips(data || []);
     } catch (error) {
       console.error('Error al recuperar los viajes:', error);
@@ -25,14 +23,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const chat = useChat(fetchTrips);
+
   useEffect(() => {
     fetchTrips();
   }, [fetchTrips]);
 
-  const chat = useChat(fetchTrips);
-
   return (
-    <ChatContext.Provider value={{ ...chat, trips, fetchTrips }}>
+    <ChatContext.Provider
+      value={{
+        ...chat,
+        trips,
+        fetchTrips,
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );

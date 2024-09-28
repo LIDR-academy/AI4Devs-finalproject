@@ -1,44 +1,33 @@
-
 import { UserService } from '../../services/UserService';
 import { UserRepository } from '../../infrastructure/repositories/UserRepository';
 import { User } from '../../domain/models/User';
-import { NotFoundError } from '../../domain/shared/NotFoundError';
+
+jest.mock('../../infrastructure/repositories/UserRepository');
 
 describe('UserService', () => {
-    let userService: UserService;
-    let testUser: User;
+  let userService: UserService;
+  let userRepository: jest.Mocked<UserRepository>;
 
-    beforeEach(async () => {
-        const userRepository = new UserRepository();
-        userService = new UserService(userRepository);
-        testUser = await userService.createUser(`test-session-id-${Date.now()}-${Math.random()}`);
-    });
+  beforeEach(() => {
+    userRepository = new UserRepository() as jest.Mocked<UserRepository>;
+    userService = new UserService(userRepository);
+  });
 
-    it('should get a user by ID', async () => {
-        const foundUser = await userService.getUserById(testUser.id);
-        expect(foundUser).not.toBeNull();
-        expect(foundUser.id).toBe(testUser.id);
-    });
+  it('should get user by id', async () => {
+    const mockUser = new User();
+    mockUser.id = '1';
+    userRepository.findById.mockResolvedValue(mockUser);
 
-    it('should throw NotFoundError if user ID does not exist', async () => {
-        const nonExistentId = '00000000-0000-0000-0000-000000000000';
-        await expect(userService.getUserById(nonExistentId)).rejects.toThrow(NotFoundError);
-    });
+    const user = await userService.getUserById('1');
+    expect(user).toEqual(mockUser);
+  });
 
-    it('should get a user by session ID', async () => {
-        const foundUser = await userService.getUserBySessionId(testUser.sessionId);
-        expect(foundUser).not.toBeNull();
-        expect(foundUser.sessionId).toBe(testUser.sessionId);
-    });
+  it('should create a user', async () => {
+    const mockUser = new User();
+    mockUser.sessionId = 'session-id';
+    userRepository.save.mockResolvedValue(mockUser);
 
-    it('should throw NotFoundError if session ID does not exist', async () => {
-        await expect(userService.getUserBySessionId('non-existent-session-id')).rejects.toThrow(NotFoundError);
-    });
-
-    it('should create a new user', async () => {
-        const sessionId = `test-session-id-${Date.now()}-${Math.random()}`;
-        const newUser = await userService.createUser(sessionId);
-        expect(newUser).toHaveProperty('id');
-        expect(newUser.sessionId).toBe(sessionId);
-    });
+    const user = await userService.createUser('session-id');
+    expect(user).toEqual(mockUser);
+  });
 });

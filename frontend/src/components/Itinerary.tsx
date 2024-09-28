@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import dayjs from 'dayjs';
 import {
   CalendarIcon,
   UserGroupIcon,
@@ -7,13 +9,6 @@ import {
   FaceSmileIcon
 } from "@heroicons/react/24/outline";
 import { useLanguage } from '../context/LanguageContext';
-import ReactMarkdown from 'react-markdown';
-import dayjs from 'dayjs';
-import {
-  ItineraryProps,
-  LoadingItineraryProps,
-  ItineraryDetailsProps
-} from '../types/global';
 
 const ITINERARY_DATE_FORMAT = 'DD/MM';
 const ITINERARY_BADGES: { [key: string]: JSX.Element } = {
@@ -26,13 +21,13 @@ const ITINERARY_BADGES: { [key: string]: JSX.Element } = {
 };
 
 const LoadingItinerary = ({ translator }: LoadingItineraryProps) => (
-  <div className="w-full h-full p-4 flex items-center justify-center">
+  <div className="itinerary-loading w-full h-full p-4 flex items-center justify-center">
     <div className="animate-pulse text-gray-600 px-8 text-center">{translator('itinerary-loading')}</div>
   </div>
 );
 
 const ItineraryDetails = ({ tripProperties, tripItinerary, translator, formatDate }: ItineraryDetailsProps) => (
-  <div className="w-full h-full p-4 flex flex-col">
+  <div className="itinerary-details w-full h-full p-4 flex flex-col">
     <div className="flex justify-between items-center mb-4">
       <h2 className="text-3xl font-bold">{`${tripProperties['destination']}`}</h2>
     </div>

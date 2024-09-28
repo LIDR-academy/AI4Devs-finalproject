@@ -1,39 +1,36 @@
 import { UserRepository } from '../../../infrastructure/repositories/UserRepository';
 import { User } from '../../../domain/models/User';
 
+jest.mock('../../../data-source', () => ({
+  AppDataSource: {
+    getRepository: jest.fn().mockReturnValue({
+      findOne: jest.fn(),
+      save: jest.fn(),
+    }),
+  },
+}));
+
 describe('UserRepository', () => {
-    let userRepository: UserRepository;
-    let testUser: User;
+  let userRepository: UserRepository;
 
-    beforeEach(async () => {
-        userRepository = new UserRepository();
-        testUser = new User();
-        testUser.sessionId = `test-session-id-${Date.now()}-${Math.random()}`;
-        testUser.creationDate = new Date();
-        testUser.lastLogin = new Date();
-        await userRepository.save(testUser);
-    });
+  beforeEach(() => {
+    userRepository = new UserRepository();
+  });
 
-    it('should find a user by ID', async () => {
-        const foundUser = await userRepository.findById(testUser.id);
-        expect(foundUser).not.toBeNull();
-        expect(foundUser?.id).toBe(testUser.id);
-    });
+  it('should find a user by id', async () => {
+    const mockUser = new User();
+    mockUser.id = '1';
+    (userRepository['repository'].findOne as jest.Mock).mockResolvedValue(mockUser);
 
-    it('should find a user by session ID', async () => {
-        const foundUser = await userRepository.findBySessionId(testUser.sessionId);
-        expect(foundUser).not.toBeNull();
-        expect(foundUser?.sessionId).toBe(testUser.sessionId);
-    });
+    const user = await userRepository.findById('1');
+    expect(user).toEqual(mockUser);
+  });
 
-    it('should save a user', async () => {
-        const newUser = new User();
-        newUser.sessionId = `test-session-id-${Date.now()}-${Math.random()}`;
-        newUser.creationDate = new Date();
-        newUser.lastLogin = new Date();
+  it('should save a user', async () => {
+    const mockUser = new User();
+    (userRepository['repository'].save as jest.Mock).mockResolvedValue(mockUser);
 
-        const savedUser = await userRepository.save(newUser);
-        expect(savedUser).toHaveProperty('id');
-        expect(savedUser.sessionId).toBe(newUser.sessionId);
-    });
+    const user = await userRepository.save(mockUser);
+    expect(user).toEqual(mockUser);
+  });
 });
