@@ -42,6 +42,11 @@ declare global {
         tripItinerary: string[];
     }
 
+    interface ChatHeaderProps {
+        setIsSidebarOpen: (isOpen: boolean) => void;
+        setIsItineraryOpen: (isOpen: boolean) => void;
+    }
+
     interface SessionContextProps {
         sessionId: string;
     }

@@ -7,7 +7,7 @@ import Itinerary from './Itinerary';
 import { useLanguage } from '../context/LanguageContext';
 
 const MessageList = ({ messages }: MessageListProps) => (
-  <div className="message-list flex-1 overflow-y-auto mb-4">
+  <div className="flex-1 overflow-y-auto mb-4">
     {messages.length === 0 ? (
       <div className="chat-waiting-message flex justify-center items-end h-full">
         <div className="animate-bounce bg-white p-2 w-10 h-10 ring-1 ring-slate-900/5 shadow-lg rounded-full flex items-center justify-center">
@@ -17,13 +17,13 @@ const MessageList = ({ messages }: MessageListProps) => (
         </div>
       </div>
     ) : (
-      <div className="h-96 lg:h-full flex flex-col space-y-2">
+      <div className="message-list h-96 lg:h-full flex flex-col space-y-2">
         {messages.map((msg, index) => (
           <div
             key={index}
             className={`p-3 rounded-lg shadow-sm ${msg.role === 'user'
-                ? 'bg-gray-100 text-gray-800 self-end'
-                : 'bg-white text-gray-600 self-start'
+              ? 'bg-gray-100 text-gray-800 self-end'
+              : 'bg-white text-gray-600 self-start'
               } max-w-xs lg:max-w-96 break-words`}
           >
             <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -39,7 +39,7 @@ const ChatInput = ({ inputValue, setInputValue, handleSend, isLoading, placehold
     <div className="flex">
       <input
         type="text"
-        className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="input-message w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder={placeholder}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
@@ -52,7 +52,7 @@ const ChatInput = ({ inputValue, setInputValue, handleSend, isLoading, placehold
       />
       <button
         onClick={handleSend}
-        className="ml-2 bg-violet-500 text-white p-3 rounded-lg shadow-sm hover:bg-violet-600 transition-colors"
+        className="btn-send-message ml-2 bg-violet-500 text-white p-3 rounded-lg shadow-sm hover:bg-violet-600 transition-colors"
         disabled={isLoading}
       >
         {isLoading ? (
@@ -67,6 +67,22 @@ const ChatInput = ({ inputValue, setInputValue, handleSend, isLoading, placehold
     </div>
   </div>
 );
+
+const ChatHeader: React.FC<ChatHeaderProps> = ({ setIsSidebarOpen, setIsItineraryOpen }) => (
+  <header className="chat-header flex justify-between items-end p-4 border-b-2 border-gray-100 lg:hidden sticky top-0 bg-white">
+    <button onClick={() => setIsSidebarOpen(true)}>
+      <Bars3Icon className="menu-icon h-6 w-6 text-violet-500" />
+    </button>
+    <img
+      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Z3vqK1WAdvhcavo10sL6QxLv3IdVRd.png"
+      alt="IkiGoo Logo"
+      className="h-28"
+    />
+    <button onClick={() => setIsItineraryOpen(true)}>
+      <CalendarIcon className="calendar-icon h-6 w-6 text-violet-500" />
+    </button>
+  </header>
+)
 
 export default function Chat({ messages, inputValue, setInputValue, handleSend, tripTitle, isLoading, tripProperties, tripItinerary }: ChatProps) {
   const { translator } = useLanguage();
@@ -89,20 +105,8 @@ export default function Chat({ messages, inputValue, setInputValue, handleSend, 
   }, [placeholders.length]);
 
   return (
-    <div className="chat-container w-full lg:w-1/2 flex flex-col border-r-2 border-gray-100">
-      <header className="chat-header flex justify-between items-end p-4 border-b-2 border-gray-100 lg:hidden sticky top-0 bg-white">
-        <button onClick={() => setIsSidebarOpen(true)}>
-          <Bars3Icon className="h-6 w-6 text-violet-500" />
-        </button>
-        <img
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-Z3vqK1WAdvhcavo10sL6QxLv3IdVRd.png"
-          alt="IkiGoo Logo"
-          className="h-28"
-        />
-        <button onClick={() => setIsItineraryOpen(true)}>
-          <CalendarIcon className="h-6 w-6 text-violet-500" />
-        </button>
-      </header>
+    <div className="chat w-full lg:w-1/2 flex flex-col border-r-2 border-gray-100">
+      <ChatHeader setIsSidebarOpen={setIsSidebarOpen} setIsItineraryOpen={setIsItineraryOpen} />
       <div className="chat-content flex-grow flex flex-col p-4 h-screen">
         <div className="chat-title flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold"><TypewriterEffect text={tripTitle || ''} /></h1>
