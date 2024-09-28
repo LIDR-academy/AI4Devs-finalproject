@@ -22,10 +22,7 @@ services:
       - ./backend:/usr/src/app
       - /usr/src/app/node_modules
     environment:
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: db
+      DATABASE_URL: ${DATABASE_URL}
       PORT: ${PORT}
     depends_on:
       db:
