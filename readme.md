@@ -19,7 +19,7 @@ María Pizarro Cuevas
 
 ### **0.2. Nombre del proyecto:**
 
-![IkiGoo Logo](./.docs/media/logos/logo1.png)
+<img src="./.docs/media/logos/logo1.png" height="150"/>
 
 ### **0.3. Descripción breve del proyecto:**
 
