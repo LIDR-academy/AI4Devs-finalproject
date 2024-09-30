@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -19,10 +20,15 @@ public class AnswerController {
 
     private final AnswerService answerService;
 
-    @PostMapping
-    @Operation(summary = "Create a new answer")
-    public ResponseEntity<Answer> createAnswer(@RequestBody Answer answer) {
-        return ResponseEntity.ok(answerService.createAnswer(answer));
+    @PostMapping("/{id}/{emailId}/{nameId}")
+    @Operation(summary = "Insert new answers")
+    public ResponseEntity<Void> createAnswer(
+            @PathVariable UUID id,
+            @PathVariable UUID emailId,
+            @PathVariable UUID nameId,
+            @RequestBody Map<UUID, String> answers) {
+        answerService.saveAnswers(id, emailId, nameId, answers);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")

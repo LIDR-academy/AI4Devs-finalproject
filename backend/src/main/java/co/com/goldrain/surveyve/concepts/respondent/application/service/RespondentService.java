@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -45,5 +46,9 @@ public class RespondentService {
         return respondentRepository.findAll().stream()
                 .map(respondentMapper::toDomain)
                 .toList();
+    }
+
+    public Optional<Respondent> getRespondentByEmail(String email) {
+        return respondentRepository.findFirstByEmail(email).map(respondentMapper::toDomain);
     }
 }

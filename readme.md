@@ -744,28 +744,21 @@ Como creador de encuestas, quiero poder crear diferentes tipos de preguntas (opc
 
 **Historia de Usuario 2**
 
-Como creador de encuestas, quiero poder agregar nuevas preguntas a una encuesta existente para poder personalizarla.
-
+Como usuario, quiero completar una encuesta para que mi opinión sea tomada en cuenta en los resultados finales.
 
 **Historia de Usuario 3**
 
-Como creador de encuestas, quiero poder establecer la lógica de salto entre preguntas para poder personalizar la experiencia del encuestado.
-
+Como administrador de una encuesta, quiero generar un reporte detallado que incluya gráficos y estadísticas sobre las respuestas de los encuestados para tomar decisiones basadas en datos.
 
 ---
 
 ## 6. Tickets de Trabajo
 
-| ID | Título del Ticket | Descripción Detallada | Historia de Usuario Relacionada | Estimación de Puntos |
-|---|---|---|---|---|
-| T1 | Crear componente de pregunta de opción múltiple | Desarrollar un componente reutilizable para crear preguntas de opción múltiple, incluyendo validación de respuestas. | 1, 2 | 5 |
-| T2 | Crear componente de pregunta de escala de Likert | Desarrollar un componente reutilizable para crear preguntas de escala de Likert, incluyendo personalización de la escala. | 1 | 4 |
-| T3 | Crear componente de pregunta abierta | Desarrollar un componente reutilizable para crear preguntas abiertas, incluyendo límite de caracteres. | 1 | 3 |
-| T4 | Implementar lógica de salto entre preguntas | Desarrollar la lógica para redirigir al usuario a la siguiente pregunta basada en su respuesta. | 3 | 8 |
-| T5 | Implementar funcionalidad de previsualización de encuesta | Crear una vista previa de cómo se verá la encuesta para el encuestado. | 4 | 5 |
-| T6 | Implementar funcionalidad de duplicación de encuestas | Crear una copia exacta de una encuesta existente. | 5 | 6 |
-| T7 | Implementar subida de imágenes y videos a preguntas | Permitir al usuario subir archivos multimedia para enriquecer las preguntas. | 6 | 10 |
-
+| Ticket | Título | Descripción | Tareas | Prioridad | Etiquetas |
+|---|---|---|---|---|---|
+| 1 | Implementar diferentes tipos de preguntas en el formulario de encuestas | Desarrollar la funcionalidad necesaria para permitir a los creadores de encuestas agregar preguntas de opción múltiple, escala de Likert, abiertas y otros tipos de preguntas a sus encuestas. | Crear componentes de interfaz de usuario para cada tipo de pregunta. Desarrollar la lógica backend para almacenar y procesar las diferentes respuestas. Validar los datos ingresados en cada tipo de pregunta. Implementar una interfaz intuitiva para que los creadores puedan seleccionar el tipo de pregunta y configurar sus opciones. | Alta | desarrollo, frontend, backend |
+| 2 | Implementar el flujo de respuesta a encuestas | Desarrollar la funcionalidad para que los usuarios puedan completar las encuestas de forma sencilla y clara. | Crear una interfaz de usuario amigable para responder a las preguntas. Implementar la lógica para guardar las respuestas de los usuarios. Mostrar una barra de progreso o indicador para que los usuarios sepan cuánto han avanzado. Implementar un mecanismo para enviar recordatorios a los usuarios que no han completado la encuesta. | Alta | desarrollo, frontend, backend |
+| 3 | Desarrollar la funcionalidad de generación de reportes | Crear un módulo para generar reportes detallados con gráficos y estadísticas a partir de los datos de las encuestas. | Seleccionar una biblioteca de visualización de datos (e.g., Chart.js, D3.js). Desarrollar consultas a la base de datos para obtener los datos necesarios para los reportes. Crear diferentes tipos de reportes (resúmenes, comparaciones, tendencias). Permitir a los administradores personalizar los reportes según sus necesidades. Implementar la exportación de reportes en diferentes formatos (PDF, CSV, etc.). | Media | desarrollo, backend, reporting |
 
 ---
 
@@ -775,7 +768,11 @@ Como creador de encuestas, quiero poder establecer la lógica de salto entre pre
 
 **Pull Request 1**
 
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/4
+
 **Pull Request 2**
+
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/7
 
 **Pull Request 3**
 
