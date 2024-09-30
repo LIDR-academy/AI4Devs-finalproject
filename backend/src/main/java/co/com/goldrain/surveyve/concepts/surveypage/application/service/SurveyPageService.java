@@ -25,7 +25,7 @@ public class SurveyPageService {
         return saveSurveyPage(surveyPage);
     }
 
-    private SurveyPage saveSurveyPage(SurveyPage surveyPage) {
+    public SurveyPage saveSurveyPage(SurveyPage surveyPage) {
         SurveyPageEntity surveyPageEntity = surveyPageMapper.toEntity(surveyPage);
         surveyPageEntity = surveyPageRepository.save(surveyPageEntity);
         return surveyPageMapper.toDomain(surveyPageEntity);

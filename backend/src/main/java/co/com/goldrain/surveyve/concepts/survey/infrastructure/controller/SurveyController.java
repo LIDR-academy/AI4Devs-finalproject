@@ -2,6 +2,8 @@ package co.com.goldrain.surveyve.concepts.survey.infrastructure.controller;
 
 import co.com.goldrain.surveyve.concepts.survey.application.service.SurveyService;
 import co.com.goldrain.surveyve.concepts.survey.domain.Survey;
+import co.com.goldrain.surveyve.concepts.survey.domain.dto.SurveyDTO;
+import co.com.goldrain.surveyve.concepts.survey.infrastructure.mapper.SurveyMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +25,17 @@ public class SurveyController {
 
     @PostMapping
     @Operation(summary = "Create a new survey")
-    public ResponseEntity<Survey> createSurvey(@RequestBody Survey survey) {
+    public ResponseEntity<Survey> createSurvey(@RequestBody SurveyDTO surveyDTO) {
+        surveyDTO.fix();
+        Survey survey = surveyService.getSurveyMapper().toDomain(surveyDTO);
         return ResponseEntity.ok(surveyService.createSurvey(survey));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing survey")
-    public ResponseEntity<Survey> updateSurvey(@PathVariable UUID id, @RequestBody Survey survey) {
+    public ResponseEntity<Survey> updateSurvey(@PathVariable UUID id, @RequestBody SurveyDTO surveyDTO) {
+        surveyDTO.fix();
+        Survey survey = surveyService.getSurveyMapper().toDomain(surveyDTO);
         survey.setId(id);
         return ResponseEntity.ok(surveyService.updateSurvey(survey));
     }

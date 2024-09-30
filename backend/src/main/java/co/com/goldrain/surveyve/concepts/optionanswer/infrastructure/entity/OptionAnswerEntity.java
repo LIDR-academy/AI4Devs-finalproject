@@ -15,16 +15,14 @@ import java.util.UUID;
 @Setter
 public class OptionAnswerEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     private String value;
     private boolean isCorrect;
 
-    @ManyToOne
-    @JoinColumn(name = "question_id")
-    private QuestionEntity question;
+    @Column(name = "question_id")
+    private UUID question;
 
-    @OneToMany(mappedBy = "optionAnswer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AnswerOptionEntity> answerOptions;
+    private String json;
+
 }

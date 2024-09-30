@@ -9,6 +9,6 @@ import java.util.UUID;
 @Data
 public class AnswerOption {
     private UUID id;
-    private Answer answer;
-    private OptionAnswer optionAnswer;
+    private UUID answer;
+    private UUID optionAnswer;
 }

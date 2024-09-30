@@ -12,11 +12,26 @@ import java.util.UUID;
 @Data
 public class Question {
     private UUID id;
-    private String statement;
     private String type;
+    private String name;
+    private String title;
+    private boolean isRequired;
+    private boolean visible;
+    private boolean readOnly;
+    private String autocomplete;
+    private String inputType;
+    private Min min;
+    private Max max;
+    private Double step;
+    private String placeholder;
+    private Integer rateCount;
+    private Integer rateMax;
+    private List<?> rateValues;
+    private String rateType;
+    private List<?> choices;
+
     private int templateId;
-    private Survey survey;
-    private SurveyPage surveyPage;
-    private List<Answer> answers;
-    private List<OptionAnswer> optionAnswers;
+    private UUID survey;
+    private UUID surveyPage;
+    private String json;
 }

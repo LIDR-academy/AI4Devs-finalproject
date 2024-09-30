@@ -14,14 +14,14 @@ import java.util.UUID;
 @Setter
 public class AnswerOptionEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "answer_id")
-    private AnswerEntity answer;
+    @Column(name = "answer_id")
+    private UUID answer;
 
-    @ManyToOne
-    @JoinColumn(name = "option_answer_id")
-    private OptionAnswerEntity optionAnswer;
+
+    @Column(name = "option_answer_id")
+    private UUID optionAnswer;
+
+    private String json;
 }

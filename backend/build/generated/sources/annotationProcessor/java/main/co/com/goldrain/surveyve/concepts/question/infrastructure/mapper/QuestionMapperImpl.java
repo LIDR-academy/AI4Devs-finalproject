@@ -1,33 +1,20 @@
 package co.com.goldrain.surveyve.concepts.question.infrastructure.mapper;
 
-import co.com.goldrain.surveyve.concepts.answer.infrastructure.mapper.AnswerMapper;
-import co.com.goldrain.surveyve.concepts.optionanswer.infrastructure.mapper.OptionAnswerMapper;
 import co.com.goldrain.surveyve.concepts.question.domain.Question;
 import co.com.goldrain.surveyve.concepts.question.infrastructure.entity.QuestionEntity;
-import co.com.goldrain.surveyve.concepts.respondent.domain.Respondent;
-import co.com.goldrain.surveyve.concepts.respondent.infrastructure.entity.RespondentEntity;
-import co.com.goldrain.surveyve.concepts.survey.domain.Survey;
-import co.com.goldrain.surveyve.concepts.survey.infrastructure.entity.SurveyEntity;
-import co.com.goldrain.surveyve.concepts.surveypage.domain.SurveyPage;
-import co.com.goldrain.surveyve.concepts.surveypage.infrastructure.entity.SurveyPageEntity;
+import co.com.goldrain.surveyve.concepts.survey.domain.dto.ElementDTO;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.processing.Generated;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-09-22T16:12:48-0500",
+    date = "2024-09-29T18:12:28-0500",
     comments = "version: 1.6.1, compiler: IncrementalProcessingEnvironment from gradle-language-java-8.10.1.jar, environment: Java 21 (Microsoft)"
 )
 @Component
 public class QuestionMapperImpl implements QuestionMapper {
-
-    @Autowired
-    private AnswerMapper answerMapper;
-    @Autowired
-    private OptionAnswerMapper optionAnswerMapper;
 
     @Override
     public Question toDomain(QuestionEntity questionEntity) {
@@ -38,13 +25,62 @@ public class QuestionMapperImpl implements QuestionMapper {
         Question question = new Question();
 
         question.setId( questionEntity.getId() );
-        question.setStatement( questionEntity.getStatement() );
         question.setType( questionEntity.getType() );
-        question.setTemplateId( questionEntity.getTemplateId() );
-        question.setSurvey( surveyEntityToSurvey( questionEntity.getSurvey() ) );
-        question.setSurveyPage( surveyPageEntityToSurveyPage( questionEntity.getSurveyPage() ) );
-        question.setAnswers( answerMapper.toDomainList( questionEntity.getAnswers() ) );
-        question.setOptionAnswers( optionAnswerMapper.toDomainList( questionEntity.getOptionAnswers() ) );
+        question.setName( questionEntity.getName() );
+        question.setTitle( questionEntity.getTitle() );
+        question.setRequired( questionEntity.isRequired() );
+        question.setVisible( questionEntity.isVisible() );
+        question.setReadOnly( questionEntity.isReadOnly() );
+        question.setAutocomplete( questionEntity.getAutocomplete() );
+        question.setInputType( questionEntity.getInputType() );
+        question.setMin( mapMin( questionEntity.getMin() ) );
+        question.setMax( mapMax( questionEntity.getMax() ) );
+        question.setStep( questionEntity.getStep() );
+        question.setPlaceholder( questionEntity.getPlaceholder() );
+        question.setRateCount( questionEntity.getRateCount() );
+        question.setRateMax( questionEntity.getRateMax() );
+        question.setRateValues( map( questionEntity.getRateValues() ) );
+        question.setRateType( questionEntity.getRateType() );
+        question.setChoices( map( questionEntity.getChoices() ) );
+        question.setSurvey( questionEntity.getSurvey() );
+        question.setSurveyPage( questionEntity.getSurveyPage() );
+        question.setJson( questionEntity.getJson() );
+
+        return question;
+    }
+
+    @Override
+    public Question toDomain(ElementDTO elementDTO) {
+        if ( elementDTO == null ) {
+            return null;
+        }
+
+        Question question = new Question();
+
+        question.setId( elementDTO.getId() );
+        question.setType( elementDTO.getType() );
+        question.setName( elementDTO.getName() );
+        question.setTitle( elementDTO.getTitle() );
+        question.setRequired( elementDTO.isRequired() );
+        question.setVisible( elementDTO.isVisible() );
+        question.setReadOnly( elementDTO.isReadOnly() );
+        question.setAutocomplete( elementDTO.getAutocomplete() );
+        question.setInputType( elementDTO.getInputType() );
+        question.setMin( mapMin( elementDTO.getMin() ) );
+        question.setMax( mapMax( elementDTO.getMax() ) );
+        question.setStep( elementDTO.getStep() );
+        question.setPlaceholder( elementDTO.getPlaceholder() );
+        question.setRateCount( elementDTO.getRateCount() );
+        question.setRateMax( elementDTO.getRateMax() );
+        List<?> list = elementDTO.getRateValues();
+        if ( list != null ) {
+            question.setRateValues( new ArrayList<Object>( list ) );
+        }
+        question.setRateType( elementDTO.getRateType() );
+        List<?> list1 = elementDTO.getChoices();
+        if ( list1 != null ) {
+            question.setChoices( new ArrayList<Object>( list1 ) );
+        }
 
         return question;
     }
@@ -72,13 +108,26 @@ public class QuestionMapperImpl implements QuestionMapper {
         QuestionEntity questionEntity = new QuestionEntity();
 
         questionEntity.setId( question.getId() );
-        questionEntity.setStatement( question.getStatement() );
         questionEntity.setType( question.getType() );
-        questionEntity.setTemplateId( question.getTemplateId() );
-        questionEntity.setSurvey( surveyToSurveyEntity( question.getSurvey() ) );
-        questionEntity.setSurveyPage( surveyPageToSurveyPageEntity( question.getSurveyPage() ) );
-        questionEntity.setAnswers( answerMapper.toEntityList( question.getAnswers() ) );
-        questionEntity.setOptionAnswers( optionAnswerMapper.toEntityList( question.getOptionAnswers() ) );
+        questionEntity.setName( question.getName() );
+        questionEntity.setTitle( question.getTitle() );
+        questionEntity.setRequired( question.isRequired() );
+        questionEntity.setVisible( question.isVisible() );
+        questionEntity.setReadOnly( question.isReadOnly() );
+        questionEntity.setAutocomplete( question.getAutocomplete() );
+        questionEntity.setInputType( question.getInputType() );
+        questionEntity.setMin( map( question.getMin() ) );
+        questionEntity.setMax( map( question.getMax() ) );
+        questionEntity.setStep( question.getStep() );
+        questionEntity.setPlaceholder( question.getPlaceholder() );
+        questionEntity.setRateCount( question.getRateCount() );
+        questionEntity.setRateMax( question.getRateMax() );
+        questionEntity.setRateValues( map( question.getRateValues() ) );
+        questionEntity.setRateType( question.getRateType() );
+        questionEntity.setChoices( map( question.getChoices() ) );
+        questionEntity.setSurvey( question.getSurvey() );
+        questionEntity.setSurveyPage( question.getSurveyPage() );
+        questionEntity.setJson( question.getJson() );
 
         return questionEntity;
     }
@@ -95,161 +144,5 @@ public class QuestionMapperImpl implements QuestionMapper {
         }
 
         return list;
-    }
-
-    protected SurveyPage surveyPageEntityToSurveyPage(SurveyPageEntity surveyPageEntity) {
-        if ( surveyPageEntity == null ) {
-            return null;
-        }
-
-        SurveyPage surveyPage = new SurveyPage();
-
-        surveyPage.setId( surveyPageEntity.getId() );
-        surveyPage.setPageNumber( surveyPageEntity.getPageNumber() );
-        surveyPage.setSurvey( surveyEntityToSurvey( surveyPageEntity.getSurvey() ) );
-        surveyPage.setQuestions( toDomainList( surveyPageEntity.getQuestions() ) );
-
-        return surveyPage;
-    }
-
-    protected List<SurveyPage> surveyPageEntityListToSurveyPageList(List<SurveyPageEntity> list) {
-        if ( list == null ) {
-            return null;
-        }
-
-        List<SurveyPage> list1 = new ArrayList<SurveyPage>( list.size() );
-        for ( SurveyPageEntity surveyPageEntity : list ) {
-            list1.add( surveyPageEntityToSurveyPage( surveyPageEntity ) );
-        }
-
-        return list1;
-    }
-
-    protected Respondent respondentEntityToRespondent(RespondentEntity respondentEntity) {
-        if ( respondentEntity == null ) {
-            return null;
-        }
-
-        Respondent respondent = new Respondent();
-
-        respondent.setId( respondentEntity.getId() );
-        respondent.setName( respondentEntity.getName() );
-        respondent.setEmail( respondentEntity.getEmail() );
-        respondent.setPhone( respondentEntity.getPhone() );
-        respondent.setSurvey( surveyEntityToSurvey( respondentEntity.getSurvey() ) );
-        respondent.setAnswers( answerMapper.toDomainList( respondentEntity.getAnswers() ) );
-
-        return respondent;
-    }
-
-    protected List<Respondent> respondentEntityListToRespondentList(List<RespondentEntity> list) {
-        if ( list == null ) {
-            return null;
-        }
-
-        List<Respondent> list1 = new ArrayList<Respondent>( list.size() );
-        for ( RespondentEntity respondentEntity : list ) {
-            list1.add( respondentEntityToRespondent( respondentEntity ) );
-        }
-
-        return list1;
-    }
-
-    protected Survey surveyEntityToSurvey(SurveyEntity surveyEntity) {
-        if ( surveyEntity == null ) {
-            return null;
-        }
-
-        Survey survey = new Survey();
-
-        survey.setId( surveyEntity.getId() );
-        survey.setTitle( surveyEntity.getTitle() );
-        survey.setDescription( surveyEntity.getDescription() );
-        survey.setTemplateId( surveyEntity.getTemplateId() );
-        survey.setStatus( surveyEntity.getStatus() );
-        survey.setPublicationDate( surveyEntity.getPublicationDate() );
-        survey.setClosingDate( surveyEntity.getClosingDate() );
-        survey.setPages( surveyPageEntityListToSurveyPageList( surveyEntity.getPages() ) );
-        survey.setRespondents( respondentEntityListToRespondentList( surveyEntity.getRespondents() ) );
-
-        return survey;
-    }
-
-    protected SurveyPageEntity surveyPageToSurveyPageEntity(SurveyPage surveyPage) {
-        if ( surveyPage == null ) {
-            return null;
-        }
-
-        SurveyPageEntity surveyPageEntity = new SurveyPageEntity();
-
-        surveyPageEntity.setId( surveyPage.getId() );
-        surveyPageEntity.setPageNumber( surveyPage.getPageNumber() );
-        surveyPageEntity.setSurvey( surveyToSurveyEntity( surveyPage.getSurvey() ) );
-        surveyPageEntity.setQuestions( toEntityList( surveyPage.getQuestions() ) );
-
-        return surveyPageEntity;
-    }
-
-    protected List<SurveyPageEntity> surveyPageListToSurveyPageEntityList(List<SurveyPage> list) {
-        if ( list == null ) {
-            return null;
-        }
-
-        List<SurveyPageEntity> list1 = new ArrayList<SurveyPageEntity>( list.size() );
-        for ( SurveyPage surveyPage : list ) {
-            list1.add( surveyPageToSurveyPageEntity( surveyPage ) );
-        }
-
-        return list1;
-    }
-
-    protected RespondentEntity respondentToRespondentEntity(Respondent respondent) {
-        if ( respondent == null ) {
-            return null;
-        }
-
-        RespondentEntity respondentEntity = new RespondentEntity();
-
-        respondentEntity.setId( respondent.getId() );
-        respondentEntity.setName( respondent.getName() );
-        respondentEntity.setEmail( respondent.getEmail() );
-        respondentEntity.setPhone( respondent.getPhone() );
-        respondentEntity.setSurvey( surveyToSurveyEntity( respondent.getSurvey() ) );
-        respondentEntity.setAnswers( answerMapper.toEntityList( respondent.getAnswers() ) );
-
-        return respondentEntity;
-    }
-
-    protected List<RespondentEntity> respondentListToRespondentEntityList(List<Respondent> list) {
-        if ( list == null ) {
-            return null;
-        }
-
-        List<RespondentEntity> list1 = new ArrayList<RespondentEntity>( list.size() );
-        for ( Respondent respondent : list ) {
-            list1.add( respondentToRespondentEntity( respondent ) );
-        }
-
-        return list1;
-    }
-
-    protected SurveyEntity surveyToSurveyEntity(Survey survey) {
-        if ( survey == null ) {
-            return null;
-        }
-
-        SurveyEntity surveyEntity = new SurveyEntity();
-
-        surveyEntity.setId( survey.getId() );
-        surveyEntity.setTitle( survey.getTitle() );
-        surveyEntity.setDescription( survey.getDescription() );
-        surveyEntity.setTemplateId( survey.getTemplateId() );
-        surveyEntity.setStatus( survey.getStatus() );
-        surveyEntity.setPublicationDate( survey.getPublicationDate() );
-        surveyEntity.setClosingDate( survey.getClosingDate() );
-        surveyEntity.setPages( surveyPageListToSurveyPageEntityList( survey.getPages() ) );
-        surveyEntity.setRespondents( respondentListToRespondentEntityList( survey.getRespondents() ) );
-
-        return surveyEntity;
     }
 }

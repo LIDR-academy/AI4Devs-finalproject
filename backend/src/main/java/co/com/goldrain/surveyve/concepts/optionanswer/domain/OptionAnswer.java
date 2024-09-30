@@ -12,6 +12,5 @@ public class OptionAnswer {
     private UUID id;
     private String value;
     private boolean isCorrect;
-    private Question question;
-    private List<AnswerOption> answerOptions;
+    private UUID question;
 }

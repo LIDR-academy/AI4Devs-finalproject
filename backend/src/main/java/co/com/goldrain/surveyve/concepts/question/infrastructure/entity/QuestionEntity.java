@@ -2,9 +2,6 @@ package co.com.goldrain.surveyve.concepts.question.infrastructure.entity;
 
 import co.com.goldrain.surveyve.concepts.answer.infrastructure.entity.AnswerEntity;
 import co.com.goldrain.surveyve.concepts.optionanswer.infrastructure.entity.OptionAnswerEntity;
-
-import co.com.goldrain.surveyve.concepts.survey.infrastructure.entity.SurveyEntity;
-import co.com.goldrain.surveyve.concepts.surveypage.infrastructure.entity.SurveyPageEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,24 +15,36 @@ import java.util.UUID;
 @Setter
 public class QuestionEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private String statement;
     private String type;
-    private int templateId;
+    private String name;
+    private String title;
+    private boolean isRequired;
+    private boolean visible;
+    private boolean readOnly;
+    private String autocomplete;
+    private String inputType;
+    private String min;
+    private String max;
+    private Double step;
+    private String placeholder;
+    private Integer rateCount;
+    private Integer rateMax;
 
-    @ManyToOne
-    @JoinColumn(name = "survey_id")
-    private SurveyEntity survey;
+    @Column(length = 10000)
+    private String rateValues;
+    private String rateType;
 
-    @ManyToOne
-    @JoinColumn(name = "survey_page_id")
-    private SurveyPageEntity surveyPage;
+    @Column(length = 10000)
+    private String choices;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AnswerEntity> answers;
+    @Column(name = "survey_id")
+    private UUID survey;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OptionAnswerEntity> optionAnswers;
+    @Column(name = "survey_page_id")
+    private UUID surveyPage;
+
+    @Column(length = 10000)
+    private String json;
 }

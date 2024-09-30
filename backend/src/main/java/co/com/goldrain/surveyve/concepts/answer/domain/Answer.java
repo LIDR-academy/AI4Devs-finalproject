@@ -12,7 +12,6 @@ import java.util.UUID;
 public class Answer {
     private UUID id;
     private String textValue;
-    private Question question;
-    private Respondent respondent;
-    private List<AnswerOption> answerOptions;
+    private UUID question;
+    private UUID respondent;
 }

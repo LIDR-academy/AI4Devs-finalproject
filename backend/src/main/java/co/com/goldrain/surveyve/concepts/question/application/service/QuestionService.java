@@ -25,7 +25,7 @@ public class QuestionService {
         return saveQuestion(question);
     }
 
-    private Question saveQuestion(Question question) {
+    public Question saveQuestion(Question question) {
         QuestionEntity questionEntity = questionMapper.toEntity(question);
         questionEntity = questionRepository.save(questionEntity);
         return questionMapper.toDomain(questionEntity);

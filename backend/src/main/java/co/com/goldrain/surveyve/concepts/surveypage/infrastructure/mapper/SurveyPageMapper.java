@@ -1,6 +1,9 @@
 package co.com.goldrain.surveyve.concepts.surveypage.infrastructure.mapper;
 
 import co.com.goldrain.surveyve.concepts.question.infrastructure.mapper.QuestionMapper;
+import co.com.goldrain.surveyve.concepts.survey.domain.Survey;
+import co.com.goldrain.surveyve.concepts.survey.domain.dto.PageDTO;
+import co.com.goldrain.surveyve.concepts.survey.domain.dto.SurveyDTO;
 import co.com.goldrain.surveyve.concepts.surveypage.domain.SurveyPage;
 import co.com.goldrain.surveyve.concepts.surveypage.infrastructure.entity.SurveyPageEntity;
 import org.mapstruct.Mapper;
@@ -13,6 +16,8 @@ public interface SurveyPageMapper {
     SurveyPageMapper INSTANCE = Mappers.getMapper(SurveyPageMapper.class);
 
     SurveyPage toDomain(SurveyPageEntity surveyPageEntity);
+
+    SurveyPage toDomain(PageDTO pageDTO);
 
     List<SurveyPage> toDomainList(List<SurveyPageEntity> surveyPageEntities);
 

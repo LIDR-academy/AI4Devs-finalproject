@@ -17,19 +17,16 @@ import lombok.Setter;
 @Setter
 public class AnswerEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     private String textValue;
 
-    @ManyToOne
-    @JoinColumn(name = "question_id")
-    private QuestionEntity question;
+    @Column(name = "question_id")
+    private UUID question;
 
-    @ManyToOne
-    @JoinColumn(name = "respondent_id")
-    private RespondentEntity respondent;
+    @Column(name = "respondent_id")
+    private UUID respondent;
 
-    @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AnswerOptionEntity> answerOptions;
+    private String json;
+
 }

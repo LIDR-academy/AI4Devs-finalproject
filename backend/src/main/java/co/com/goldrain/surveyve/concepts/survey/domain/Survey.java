@@ -13,10 +13,11 @@ public class Survey {
     private UUID id;
     private String title;
     private String description;
-    private int templateId;
     private String status;
     private Date publicationDate;
     private Date closingDate;
+    private String json;
+
     private List<SurveyPage> pages;
     private List<Respondent> respondents;
 }

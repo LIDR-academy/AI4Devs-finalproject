@@ -13,6 +13,5 @@ public class Respondent {
     private String name;
     private String email;
     private String phone;
-    private Survey survey;
-    private List<Answer> answers;
+    private UUID survey;
 }
