@@ -23,8 +23,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.COLOR);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
@@ -367,8 +367,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.EMAIL);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
@@ -419,8 +419,8 @@ class ElementDTOTest {
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.EMAIL);
         element.setPlaceholder("Enter your email");
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setRateCount(5);
         element.setRateMax(10);
@@ -662,7 +662,7 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.NUMBER);
-        element.setMin(1);
+        element.setMin("1");
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
         element.setRateMax(10);
@@ -683,7 +683,7 @@ class ElementDTOTest {
         assertFalse(element.isReadOnly());
         assertEquals("on", element.getAutocomplete());
         assertEquals("number", element.getInputType());
-        assertEquals(1, element.getMin());
+        assertEquals("1", element.getMin());
 
         // Validar que las demás propiedades tienen valores false, null o 0 según su tipo
         assertNull(element.getMax());
@@ -710,8 +710,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.NUMBER);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
         element.setRateMax(10);
@@ -732,8 +732,8 @@ class ElementDTOTest {
         assertFalse(element.isReadOnly());
         assertEquals("on", element.getAutocomplete());
         assertEquals("number", element.getInputType());
-        assertEquals(1, element.getMin());
-        assertEquals(10, element.getMax());
+        assertEquals("1", element.getMin());
+        assertEquals("10", element.getMax());
 
         // Validar que las demás propiedades tienen valores false, null o 0 según su tipo
         assertNull(element.getStep());
@@ -759,8 +759,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.NUMBER);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
@@ -782,8 +782,8 @@ class ElementDTOTest {
         assertFalse(element.isReadOnly());
         assertEquals("on", element.getAutocomplete());
         assertEquals("number", element.getInputType());
-        assertEquals(1, element.getMin());
-        assertEquals(10, element.getMax());
+        assertEquals("1", element.getMin());
+        assertEquals("10", element.getMax());
         assertEquals(1.0, element.getStep());
 
         // Validar que las demás propiedades tienen valores false, null o 0 según su tipo
@@ -809,8 +809,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.PASSWORD);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
@@ -861,8 +861,8 @@ class ElementDTOTest {
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.PASSWORD);
         element.setPlaceholder("Enter your password");
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setRateCount(5);
         element.setRateMax(10);
@@ -957,7 +957,7 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.RANGE);
-        element.setMin(1);
+        element.setMin("1");
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
         element.setRateMax(10);
@@ -978,7 +978,7 @@ class ElementDTOTest {
         assertFalse(element.isReadOnly());
         assertEquals("on", element.getAutocomplete());
         assertEquals("range", element.getInputType());
-        assertEquals(1, element.getMin());
+        assertEquals("1", element.getMin());
 
         // Validar que las demás propiedades tienen valores false, null o 0 según su tipo
         assertNull(element.getMax());
@@ -1005,8 +1005,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.RANGE);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
         element.setRateMax(10);
@@ -1027,8 +1027,8 @@ class ElementDTOTest {
         assertFalse(element.isReadOnly());
         assertEquals("on", element.getAutocomplete());
         assertEquals("range", element.getInputType());
-        assertEquals(1, element.getMin());
-        assertEquals(10, element.getMax());
+        assertEquals("1", element.getMin());
+        assertEquals("10", element.getMax());
 
         // Validar que las demás propiedades tienen valores false, null o 0 según su tipo
         assertNull(element.getStep());
@@ -1054,8 +1054,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.RANGE);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setPlaceholder("Enter value");
         element.setRateCount(5);
@@ -1077,8 +1077,8 @@ class ElementDTOTest {
         assertFalse(element.isReadOnly());
         assertEquals("on", element.getAutocomplete());
         assertEquals("range", element.getInputType());
-        assertEquals(1, element.getMin());
-        assertEquals(10, element.getMax());
+        assertEquals("1", element.getMin());
+        assertEquals("10", element.getMax());
         assertEquals(1.0, element.getStep());
 
         // Validar que las demás propiedades tienen valores false, null o 0 según su tipo
@@ -1104,8 +1104,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.TEL);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setRateCount(5);
         element.setRateMax(10);
@@ -1154,8 +1154,8 @@ class ElementDTOTest {
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.TEL);
         element.setPlaceholder("Enter your phone number");
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setRateCount(5);
         element.setRateMax(10);
@@ -1350,8 +1350,8 @@ class ElementDTOTest {
         element.setReadOnly(false);
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.URL);
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setRateCount(5);
         element.setRateMax(10);
@@ -1400,8 +1400,8 @@ class ElementDTOTest {
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.URL);
         element.setPlaceholder("Enter your URL");
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setRateCount(5);
         element.setRateMax(10);
@@ -1597,8 +1597,8 @@ class ElementDTOTest {
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.TEXT);
         element.setPlaceholder("Enter your comment");
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setRateCount(5);
         element.setRateMax(10);
@@ -1647,8 +1647,8 @@ class ElementDTOTest {
         element.setAutocomplete("on");
         element.setInputType(ElementDTO.TEXT);
         element.setPlaceholder("Enter your comment");
-        element.setMin(1);
-        element.setMax(10);
+        element.setMin("1");
+        element.setMax("10");
         element.setStep(1.0);
         element.setRateCount(5);
         element.setRateMax(10);
