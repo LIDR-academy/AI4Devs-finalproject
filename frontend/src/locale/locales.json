@@ -1,0 +1,126 @@
+{
+    "locales": [
+        {
+            "language": "en",
+            "messages": [
+                {
+                    "key": "btn-new-chat",
+                    "value": "New chat"
+                },
+                {
+                    "key": "trips",
+                    "value": "Your trips"
+                },
+                {
+                    "key": "no-itineraries",
+                    "value": "No itineraries available yet"
+                },
+                {
+                    "key": "itinerary-prompt",
+                    "value": "Please start a new chat to create your own itinerary"
+                },
+                {
+                    "key": "itinerary-title",
+                    "value": "Here is your itinerary:"
+                },
+                {
+                    "key": "chat-placeholder-1",
+                    "value": "My family and I are going on a trip to London"
+                },
+                {
+                    "key": "chat-placeholder-2",
+                    "value": "What to do in 5 days in Barcelona?"
+                },
+                {
+                    "key": "chat-placeholder-3",
+                    "value": "I want to plan my trip to Bali"
+                },
+                {
+                    "key": "send",
+                    "value": "Send"
+                },
+                {
+                    "key": "itinerary-loading",
+                    "value": "Give us more information and we will create your next dream"
+                },
+                {
+                    "key": "upgrade-to-pro",
+                    "value": "Upgrade to Pro"
+                },
+                {
+                    "key": "recover-itinerary",
+                    "value": "Recover itinerary"
+                },
+                {
+                    "key": "recovering-conversation",
+                    "value": "Recovering thread conversation..."
+                },
+                {
+                    "key": "chat-alert",
+                    "value": "Please be patient, this is a first version of our product."
+                }
+            ]
+        },
+        {
+            "language": "es",
+            "messages": [
+                {
+                    "key": "btn-new-chat",
+                    "value": "Nuevo chat"
+                },
+                {
+                    "key": "trips",
+                    "value": "Tus viajes"
+                },
+                {
+                    "key": "no-itineraries",
+                    "value": "Todavía no has creado ningún itinerario"
+                },
+                {
+                    "key": "itinerary-prompt",
+                    "value": "Por favor, inicia un nuevo chat para crear tu propio itinerario"
+                },
+                {
+                    "key": "itinerary-title",
+                    "value": "Aquí está tu itinerario:"
+                },
+                {
+                    "key": "chat-placeholder-1",
+                    "value": "Mi familia y yo vamos de viaje a Londres"
+                },
+                {
+                    "key": "chat-placeholder-2",
+                    "value": "¿Qué hacer en 5 días en Barcelona?"
+                },
+                {
+                    "key": "chat-placeholder-3",
+                    "value": "Quiero que me ayudes a planificar mi viaje a Bali"
+                },
+                {
+                    "key": "send",
+                    "value": "Enviar"
+                },
+                {
+                    "key": "itinerary-loading",
+                    "value": "Danos más información y crearemos tu próximo sueño"
+                },
+                {
+                    "key": "upgrade-to-pro",
+                    "value": "Actualiza a Pro"
+                },
+                {
+                    "key": "recover-itinerary",
+                    "value": "Recuperar itinerario"
+                },
+                {
+                    "key": "recovering-conversation",
+                    "value": "Recuperando el hilo de la conversación..."
+                },
+                {
+                    "key": "chat-alert",
+                    "value": "Por favor, ten paciencia, esta es la primera versión de nuestro producto."
+                }
+            ]
+        }
+    ]
+}
