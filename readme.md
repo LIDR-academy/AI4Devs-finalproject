@@ -37,7 +37,7 @@ Mantenimiento: La plataforma será documentada de manera exhaustiva y estará in
 
 ### **0.4. URL del proyecto:**
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+http://survey.goldrain.online/
 
 ### 0.5. URL o archivo comprimido del repositorio
 
