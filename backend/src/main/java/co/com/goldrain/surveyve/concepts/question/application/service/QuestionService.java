@@ -46,4 +46,10 @@ public class QuestionService {
                 .map(questionMapper::toDomain)
                 .toList();
     }
+
+    public List<Question> getQuestionsBySurvey(UUID surveyId) {
+        return questionRepository.findBySurvey(surveyId).stream()
+                .map(questionMapper::toDomain)
+                .toList();
+    }
 }

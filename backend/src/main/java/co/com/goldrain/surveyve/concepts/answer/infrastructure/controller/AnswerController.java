@@ -56,4 +56,11 @@ public class AnswerController {
     public ResponseEntity<List<Answer>> getAllAnswers() {
         return ResponseEntity.ok(answerService.getAllAnswers());
     }
+
+    @GetMapping("/count-by-option/{questionId}")
+    @Operation(summary = "Count answers by option for a given question ID")
+    public ResponseEntity<List<Map<String, Object>>> countAnswersByOption(@PathVariable UUID questionId) {
+        return ResponseEntity.ok(answerService.countAnswersByOption(questionId));
+    }
+
 }

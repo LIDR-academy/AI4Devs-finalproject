@@ -50,4 +50,10 @@ public class QuestionController {
     public ResponseEntity<List<Question>> getAllQuestions() {
         return ResponseEntity.ok(questionService.getAllQuestions());
     }
+
+    @GetMapping("/survey/{surveyId}")
+    @Operation(summary = "Get questions by survey ID")
+    public ResponseEntity<List<Question>> getQuestionsBySurveyId(@PathVariable UUID surveyId) {
+        return ResponseEntity.ok(questionService.getQuestionsBySurvey(surveyId));
+    }
 }

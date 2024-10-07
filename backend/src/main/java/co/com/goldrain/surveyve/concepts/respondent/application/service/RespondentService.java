@@ -51,4 +51,10 @@ public class RespondentService {
     public Optional<Respondent> getRespondentByEmail(String email) {
         return respondentRepository.findFirstByEmail(email).map(respondentMapper::toDomain);
     }
+
+    public List<Respondent> getRespondentsBySurveyId(UUID surveyId) {
+        return respondentRepository.findDistinctRespondentsBySurveyId(surveyId).stream()
+                .map(respondentMapper::toDomain)
+                .toList();
+    }
 }

@@ -113,10 +113,95 @@ Desarrollar una plataforma web flexible y escalable que permita tanto a la empre
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+Ruta de acceso al proyecto: http://survey.goldrain.online/
+
+Puedes encontrar un video introductorio en el siguiente enlace:
+
+https://www.loom.com/share/a7aa52fa29984e70b0f300f8ec713297?sid=2160fa2c-323d-451b-8c07-cae1628be3fb
+
+
+
 
 ### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+SurveyVE ha sido empaquetado usando contenedores de docker, para facilitar la instalación y ejecución de la aplicación, sin depender de configuraciones previas o adicionales.
+
+Para realizar la instalación debes crear un directorio en tu sistema, y posteriormente crear 2 archivos de texto, así:
+
+- docker-compose.yml
+- application.properties
+
+![Archivos de configuración](installer/02.png)
+
+Posteriormente, copiar el contenido de los archivos tal como se indican a continuación:
+
+#### docker-compose.yml
+```
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: survey
+      POSTGRES_PASSWORD: pensemos
+      POSTGRES_DB: surveydb
+    volumes:
+      - survey_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  survey-engine:
+    image: sysdent/survey-engine:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./application.properties:/survey/application.properties
+    depends_on:
+      - db
+
+  survey:
+    image: sysdent/survey-ui:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - survey-engine
+
+volumes:
+  survey_data:
+
+```
+
+#### application.properties
+```
+spring.application.name=surveyve
+
+spring.datasource.url=jdbc:postgresql://db:5432/surveydb
+spring.datasource.username=survey
+spring.datasource.password=pensemos
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+management.endpoints.web.exposure.include=*
+
+
+springdoc.swagger-ui.path=/swagger-ui.html
+```
+
+Una vez creados los archivos, con su contenido correspondiente, deberás abrir una terminal en dicho directorio y ejecutar el comando:
+
+```
+  docker compose up -d
+```
+![docker compose up -d](installer/03.png)
+
+Posteriormente, podrás usar la aplicación abriendo un navegador y navegando a http://localhost
+
+
+![SurveyVE en ejecución en el navegador](installer/04.png)
+
 
 ---
 

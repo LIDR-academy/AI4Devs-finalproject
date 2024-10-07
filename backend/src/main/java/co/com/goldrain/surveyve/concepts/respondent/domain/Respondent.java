@@ -4,6 +4,7 @@ import co.com.goldrain.surveyve.concepts.answer.domain.Answer;
 import co.com.goldrain.surveyve.concepts.survey.domain.Survey;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,4 +15,5 @@ public class Respondent {
     private String email;
     private String phone;
     private UUID survey;
+    private LocalDateTime creationDate;
 }
