@@ -373,6 +373,7 @@ To ensure an accessible and intuitive user experience, the following elements sh
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
 **Pull Request 1**
+* https://github.com/eltonina/finalproject-JAA/pull/1
 
 **Pull Request 2**
 
