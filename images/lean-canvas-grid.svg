@@ -1,0 +1,83 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#ffffff"/>
+  
+  <!-- Grid lines -->
+  <line x1="0" y1="400" x2="1200" y2="400" stroke="#333" stroke-width="2"/>
+  <line x1="400" y1="0" x2="400" y2="800" stroke="#333" stroke-width="2"/>
+  <line x1="800" y1="0" x2="800" y2="800" stroke="#333" stroke-width="2"/>
+  <line x1="0" y1="200" x2="1200" y2="200" stroke="#333" stroke-width="2"/>
+  <line x1="0" y1="600" x2="1200" y2="600" stroke="#333" stroke-width="2"/>
+
+  <!-- Headers -->
+  <!-- Top Row -->
+  <g font-family="Arial, sans-serif">
+    <!-- Problem -->
+    <rect x="0" y="0" width="400" height="200" fill="#f8f9fa"/>
+    <text x="20" y="30" font-weight="bold" font-size="20">1. PROBLEM</text>
+    <text x="20" y="70" font-size="14">• Limited health management tools</text>
+    <text x="20" y="100" font-size="14">• Lack of AI health insights</text>
+    <text x="20" y="130" font-size="14">• Complex medical data</text>
+
+    <!-- Solution -->
+    <rect x="400" y="0" width="400" height="200" fill="#ffffff"/>
+    <text x="420" y="30" font-weight="bold" font-size="20">4. SOLUTION</text>
+    <text x="420" y="70" font-size="14">• AI Health Coach</text>
+    <text x="420" y="100" font-size="14">• Digital Twin Simulation</text>
+    <text x="420" y="130" font-size="14">• Health Records Management</text>
+
+    <!-- Customer Segments -->
+    <rect x="800" y="0" width="400" height="200" fill="#f8f9fa"/>
+    <text x="820" y="30" font-weight="bold" font-size="20">2. CUSTOMER SEGMENTS</text>
+    <text x="820" y="70" font-size="14">• Chronic condition patients</text>
+    <text x="820" y="100" font-size="14">• Health-conscious users</text>
+    <text x="820" y="130" font-size="14">• Caregivers</text>
+    <text x="820" y="160" font-size="14">• Healthcare providers</text>
+
+    <!-- Middle Row -->
+    <!-- Unique Value Proposition -->
+    <rect x="400" y="200" width="400" height="200" fill="#e9ecef"/>
+    <text x="420" y="230" font-weight="bold" font-size="20">3. UNIQUE VALUE PROPOSITION</text>
+    <text x="420" y="270" font-size="14">• Personal Health AI platform</text>
+    <text x="420" y="300" font-size="14">• Preventive & Predictive Focus</text>
+    <text x="420" y="330" font-size="14">• User-Friendly Interface</text>
+
+    <!-- Bottom Row -->
+    <!-- Cost Structure -->
+    <rect x="0" y="600" width="600" height="200" fill="#f8f9fa"/>
+    <text x="20" y="630" font-weight="bold" font-size="20">7. COST STRUCTURE</text>
+    <text x="20" y="670" font-size="14">• Development & Maintenance</text>
+    <text x="20" y="700" font-size="14">• AI Infrastructure</text>
+    <text x="20" y="730" font-size="14">• Compliance & Legal</text>
+    <text x="20" y="760" font-size="14">• Marketing & Support</text>
+
+    <!-- Revenue Streams -->
+    <rect x="600" y="600" width="600" height="200" fill="#ffffff"/>
+    <text x="620" y="630" font-weight="bold" font-size="20">6. REVENUE STREAMS</text>
+    <text x="620" y="670" font-size="14">• Subscription Model</text>
+    <text x="620" y="700" font-size="14">• Freemium Model</text>
+    <text x="620" y="730" font-size="14">• Partnership Fees</text>
+
+    <!-- Key Metrics -->
+    <rect x="0" y="400" width="400" height="200" fill="#ffffff"/>
+    <text x="20" y="430" font-weight="bold" font-size="20">8. KEY METRICS</text>
+    <text x="20" y="470" font-size="14">• User Growth Rate</text>
+    <text x="20" y="500" font-size="14">• Retention Rate</text>
+    <text x="20" y="530" font-size="14">• Engagement Rate</text>
+    <text x="20" y="560" font-size="14">• Revenue & Satisfaction</text>
+
+    <!-- Channels -->
+    <rect x="400" y="400" width="400" height="200" fill="#f8f9fa"/>
+    <text x="420" y="430" font-weight="bold" font-size="20">5. CHANNELS</text>
+    <text x="420" y="470" font-size="14">• Mobile & Web Platform</text>
+    <text x="420" y="500" font-size="14">• Healthcare Partnerships</text>
+    <text x="420" y="530" font-size="14">• Digital Marketing</text>
+
+    <!-- Unfair Advantage -->
+    <rect x="800" y="400" width="400" height="200" fill="#ffffff"/>
+    <text x="820" y="430" font-weight="bold" font-size="20">9. UNFAIR ADVANTAGE</text>
+    <text x="820" y="470" font-size="14">• Proprietary AI Algorithms</text>
+    <text x="820" y="500" font-size="14">• Health Source Partnerships</text>
+    <text x="820" y="530" font-size="14">• Advanced Data Privacy</text>
+  </g>
+</svg>
