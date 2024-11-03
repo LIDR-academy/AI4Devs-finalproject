@@ -132,9 +132,9 @@ For an engaging and user-friendly experience, visual aids like wireframes, walkt
 
 #### **Mockups and Wireframes**
    - **Dashboard Wireframe**: Display the layout of main feature tiles, the navigation bar, and quick-access buttons.
-   [Dashboard1](/images/dashboard_main.png)
-   [Dashboard2](/images/dashboard_health_Insight.png)
-   [Dashboard3](/images/dashboard_recent_activity.png)
+   ![Dashboard1](/images/dashboard_main.png)
+   ![Dashboard2](/images/dashboard_health_Insight.png)
+   ![Dashboard3](/images/dashboard_recent_activity.png)
 
    - **Health Records Upload Screen**: Show file selection options, a step-by-step guide, and a secure upload indicator.
    - **Health Coach Chat Interface**: Mockup of the chat window with sample prompts and a displayed AI response.
