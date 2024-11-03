@@ -165,6 +165,8 @@ time, tasks, and collaborate effectively."
 [Prompt Result](prompt_details/prompt3_results.md)
 
 **Additional Prompts**
+1. [Prompt Lean Canvas](prompt_details/prompt_lean.md)
+
 1. [Prompt Design](prompt_details/prompt_design.md)
 2. [Prompt Design](prompt_details/prompt_design2.md)
 3. [Prompt Design](prompt_details/prompt_design3.md)
