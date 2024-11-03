@@ -137,6 +137,16 @@ For an engaging and user-friendly experience, visual aids like wireframes, walkt
    ![Dashboard3](/images/dashboard_recent_activity.png)
 
    - **Health Records Upload Screen**: Show file selection options, a step-by-step guide, and a secure upload indicator.
+   ![HealthRecord1](/images/health_records1.png)
+   ![HealthRecord2](/images/health_records2.png)
+   ![HealthRecord3](/images/health_records3.png)
+   ![HealthRecord4](/images/health_records4.png)
+   ![HealthRecord5](/images/health_records5.png)
+   ![HealthRecord6](/images/health_records6.png)
+   ![HealthRecord7](/images/health_records7.png)
+   ![HealthRecord8](/images/health_records8.png)
+   ![HealthRecord9](/images/health_records9.png)
+
    - **Health Coach Chat Interface**: Mockup of the chat window with sample prompts and a displayed AI response.
    - **Digital Twin Simulation Panel**: Interactive sliders for lifestyle adjustments and visualizations of simulated health outcomes.
 
