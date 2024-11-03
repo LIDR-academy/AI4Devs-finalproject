@@ -152,6 +152,7 @@ For an engaging and user-friendly experience, visual aids like wireframes, walkt
    ![HealthCoach2](/images/health_coach2.png)
 
    - **Digital Twin Simulation Panel**: Interactive sliders for lifestyle adjustments and visualizations of simulated health outcomes.
+   ![DigitalTwin](/images/digital_twins.png)
 
 #### **Video Walkthrough Script**
    - A short video walkthrough of the main features can help users get started and understand the app’s functionality.
