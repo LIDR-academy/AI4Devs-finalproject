@@ -148,6 +148,9 @@ For an engaging and user-friendly experience, visual aids like wireframes, walkt
    ![HealthRecord9](/images/health_records9.png)
 
    - **Health Coach Chat Interface**: Mockup of the chat window with sample prompts and a displayed AI response.
+   ![HealthCoach](/images/health_coach.png)
+   ![HealthCoach2](/images/health_coach2.png)
+
    - **Digital Twin Simulation Panel**: Interactive sliders for lifestyle adjustments and visualizations of simulated health outcomes.
 
 #### **Video Walkthrough Script**
