@@ -38,6 +38,7 @@ Provide clear, step-by-step guidance in response to queries. Responses should be
 - Remain open to adjusting guidance based on the user’s feedback and additional requirements.
 ```
 
+[Prompt Result](prompt_details/prompt1_results.md)
 
 **Prompt 2:**
 ```markdown
@@ -88,6 +89,8 @@ Responses should be structured in paragraphs or bullet points as necessary, prov
 - Always ensure data privacy and compliance with relevant health data regulations.
 - Maintain a balance between providing useful information and not substituting for professional medical advice.    
 ```
+
+[Prompt Result](prompt_details/prompt2_results.md)
 
 **Prompt 3:**
 ```markdown
@@ -158,6 +161,8 @@ time, tasks, and collaborate effectively."
 - Consider the target audience's level of technical expertise when describing installation instructions. Adjust complexity accordingly.
 
 ```
+
+[Prompt Result](prompt_details/prompt3_results.md)
 
 ---
 
