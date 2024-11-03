@@ -38,7 +38,9 @@ Provide clear, step-by-step guidance in response to queries. Responses should be
 - Remain open to adjusting guidance based on the user’s feedback and additional requirements.
 ```
 
+```markdown
 [Prompt Result](prompt_details/prompt1_results.md)
+```
 
 **Prompt 2:**
 ```markdown
@@ -90,7 +92,9 @@ Responses should be structured in paragraphs or bullet points as necessary, prov
 - Maintain a balance between providing useful information and not substituting for professional medical advice.    
 ```
 
+```markdown
 [Prompt Result](prompt_details/prompt2_results.md)
+```
 
 **Prompt 3:**
 ```markdown
@@ -162,7 +166,16 @@ time, tasks, and collaborate effectively."
 
 ```
 
+```markdown
 [Prompt Result](prompt_details/prompt3_results.md)
+```
+
+**Additional Prompts**
+[Prompt Design](prompt_details/prompt_design.md)
+[Prompt Design](prompt_details/prompt_design2.md)
+[Prompt Design](prompt_details/prompt_design3.md)
+[Prompt Design](prompt_details/prompt_design4.md)
+[Prompt Design](prompt_details/prompt_design5.md)
 
 ---
 
