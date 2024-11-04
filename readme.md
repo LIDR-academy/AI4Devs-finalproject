@@ -372,7 +372,7 @@ La infraestructura del sistema está basada en servicios cloud con los siguiente
 | notificacion | contribuyente_id, fecha_envio | INDEX | Historial de notificaciones |
 
 ## Diagrama Entidad Relación (3FN)
-![Diagrama entidad relacion](/images/erd.png)
+![Diagrama entidad relacion](/images/ERD.png)
 
 ---
 
