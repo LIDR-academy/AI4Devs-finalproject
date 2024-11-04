@@ -75,20 +75,178 @@ El objetivo es crear una experiencia fluida y eficiente que facilite la toma de 
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
-
+### Arquitectura de Microservicios
+![Arquitectura](/images/arquitectura_base.png)
 
 ### **2.2. Descripción de componentes principales:**
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+**1.Frontend**
+   - React + TypeScript
+   - Material-UI (componentes pre-construidos)
+   - Axios para llamadas HTTP
+   - Context API (gestión de estado simple)
+
+**2.API Gateway**
+   - nginx como proxy reverso
+   - Enrutamiento a microservicios
+   - Autenticación centralizada
+
+**3.Microservicios Esenciales**
+   - Servicio de Clasificación (Python/FastAPI)
+   - Servicio de Gestión de Cobro (Node.js/Express)
+   - Servicio de Notificaciones (Node.js/Express)
+
+**4.Base de Datos**
+   - PostgreSQL (una instancia con esquemas separados)
+   - Redis para caché y sesiones
+
+**5.Mensajería**
+   - RabbitMQ para comunicación asíncrona
+
+Esta arquitectura proporciona un balance entre la simplicidad necesaria para un MVP y la flexibilidad requerida para el crecimiento futuro, manteniendo los beneficios clave de los microservicios sin excesiva complejidad inicial.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+## Descripción de Alto Nivel del Proyecto
+
+### Estructura del Proyecto
+
+```
+project/
+├── api-gateway/               # Puerta de enlace API y enrutamiento
+│   ├── src/
+│   │   ├── config/           # Configuraciones
+│   │   ├── middleware/       # Middlewares compartidos
+│   │   └── routes/           # Definición de rutas
+│
+├── services/                  # Microservicios
+│   ├── classification/        # Servicio de Clasificación
+│   │   ├── src/
+│   │   │   ├── config/       # Configuraciones
+│   │   │   ├── controllers/  # Controladores
+│   │   │   ├── services/     # Lógica de negocio
+│   │   │   ├── models/       # Modelos de datos
+│   │   │   └── utils/        # Utilidades
+│   │
+│   ├── collection/           # Servicio de Gestión de Cobro
+│   │   ├── src/
+│   │   │   ├── config/      
+│   │   │   ├── controllers/ 
+│   │   │   ├── services/    
+│   │   │   ├── models/      
+│   │   │   └── utils/       
+│   │
+│   └── notification/         # Servicio de Notificaciones
+│       ├── src/
+│       │   ├── config/      
+│       │   ├── controllers/ 
+│       │   ├── services/    
+│       │   ├── templates/    # Plantillas de notificaciones
+│       │   └── utils/       
+│
+├── frontend/                 # Aplicación Frontend
+│   ├── src/
+│   │   ├── components/       # Componentes React
+│   │   ├── pages/           # Páginas de la aplicación
+│   │   ├── services/        # Servicios y API clients
+│   │   ├── hooks/           # Custom hooks
+│   │   ├── context/         # Contextos de React
+│   │   ├── utils/           # Utilidades
+│   │   └── assets/          # Recursos estáticos
+│
+└── shared/                   # Recursos compartidos
+    ├── types/               # Definiciones de tipos
+    └── utils/               # Utilidades comunes
+```
+
+## Componentes Principales
+
+### 1. API Gateway
+- Punto de entrada único para el frontend
+- Enrutamiento a microservicios
+- Autenticación centralizada
+- Control de acceso y rate limiting
+
+### 2. Microservicios
+
+#### Servicio de Clasificación
+- Análisis de contribuyentes
+- Cálculo de probabilidades de pago
+- Integración con ERP
+- Clasificación automática
+
+#### Servicio de Gestión de Cobro
+- Gestión de estrategias de cobro
+- Seguimiento de acciones
+- Planes de pago
+- Reportes de gestión
+
+#### Servicio de Notificaciones
+- Envío de notificaciones
+- Gestión de plantillas
+- Seguimiento de comunicaciones
+- Programación de recordatorios
+
+### 3. Frontend
+- Interfaz de usuario responsive
+- Dashboards y reportes
+- Gestión de usuarios
+- Configuración del sistema
+
+### 4. Recursos Compartidos
+- Tipos comunes
+- Utilidades compartidas
+- Configuraciones base
+
+### Tecnologías Principales
+
+- **Frontend**: React + TypeScript
+- **Backend**: Node.js/Express
+- **Base de Datos**: PostgreSQL
+- **Comunicación**: REST APIs
+
 
 ### **2.4. Infraestructura y despliegue**
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+## Infraestructura y Despliegue del Sistema
+
+### Descripción de la Infraestructura
+
+La infraestructura del sistema está basada en servicios cloud con los siguientes componentes:
+
+**1. Frontend**
+   - Cliente web React alojado en servicios de hosting estático
+   - CDN para recursos estáticos
+   - SSL/TLS para conexiones seguras
+
+**2. API Gateway**
+   - nginx como reverse proxy
+   - Balanceador de carga
+   - Manejo de SSL/TLS
+   - Rate limiting y caching
+
+**3. Microservicios**
+   - Contenedores Docker
+   - Orquestación con Docker Compose (MVP)
+   - Escalamiento horizontal por servicio
+
+**4. Base de Datos**
+   - PostgreSQL en cluster dedicado
+   - Backups automatizados
+   - Replicación para alta disponibilidad
+
+**5. Caché**
+   - Redis para caché distribuido
+   - Sesiones y datos temporales
+   - Mejora de rendimiento
+
+## Diagramas
+
+### Diagrama de Contenedores
+![C4 contenedores](/images/C4Container.png)
+
+### Diagrama de Despliegue
+![C4 Despliegue](/images/C4Deployment.png)
 
 ### **2.5. Seguridad**
 
@@ -104,12 +262,117 @@ El objetivo es crear una experiencia fluida y eficiente que facilite la toma de 
 
 ### **3.1. Diagrama del modelo de datos:**
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
-
-
 ### **3.2. Descripción de entidades principales:**
+# Modelo Entidad Relación y Diccionario de Datos
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+### Contribuyente
+
+| Atributo | Tipo | Descripción | Restricciones |
+|----------|------|-------------|---------------|
+| id | SERIAL | Identificador único | PK, NOT NULL |
+| documento | VARCHAR(20) | Número de documento | UNIQUE, NOT NULL |
+| tipo_documento | VARCHAR(10) | Tipo de documento (CC, NIT, etc.) | NOT NULL |
+| nombre | VARCHAR(100) | Nombre completo | NOT NULL |
+| direccion | VARCHAR(200) | Dirección física | NOT NULL |
+| telefono | VARCHAR(20) | Número de contacto | |
+| email | VARCHAR(100) | Correo electrónico | |
+| fecha_registro | TIMESTAMP | Fecha de registro en el sistema | NOT NULL, DEFAULT NOW() |
+| activo | BOOLEAN | Estado del contribuyente | NOT NULL, DEFAULT TRUE |
+
+### Deuda
+
+| Atributo | Tipo | Descripción | Restricciones |
+|----------|------|-------------|---------------|
+| id | SERIAL | Identificador único | PK, NOT NULL |
+| contribuyente_id | INTEGER | ID del contribuyente | FK (contribuyente.id), NOT NULL |
+| monto | DECIMAL(15,2) | Monto de la deuda | NOT NULL |
+| fecha_vencimiento | DATE | Fecha de vencimiento | NOT NULL |
+| estado | VARCHAR(20) | Estado de la deuda | NOT NULL |
+| concepto | VARCHAR(200) | Concepto de la deuda | NOT NULL |
+| fecha_registro | TIMESTAMP | Fecha de registro | NOT NULL, DEFAULT NOW() |
+
+### Pago
+
+| Atributo | Tipo | Descripción | Restricciones |
+|----------|------|-------------|---------------|
+| id | SERIAL | Identificador único | PK, NOT NULL |
+| contribuyente_id | INTEGER | ID del contribuyente | FK (contribuyente.id), NOT NULL |
+| deuda_id | INTEGER | ID de la deuda | FK (deuda.id), NOT NULL |
+| monto | DECIMAL(15,2) | Monto pagado | NOT NULL |
+| fecha_pago | DATE | Fecha del pago | NOT NULL |
+| medio_pago | VARCHAR(50) | Método de pago | NOT NULL |
+| referencia | VARCHAR(50) | Referencia del pago | UNIQUE |
+| estado | VARCHAR(20) | Estado del pago | NOT NULL |
+
+### Clasificación
+
+| Atributo | Tipo | Descripción | Restricciones |
+|----------|------|-------------|---------------|
+| id | SERIAL | Identificador único | PK, NOT NULL |
+| contribuyente_id | INTEGER | ID del contribuyente | FK (contribuyente.id), NOT NULL |
+| nivel_probabilidad | VARCHAR(20) | Nivel de probabilidad de pago | NOT NULL |
+| score | DECIMAL(5,2) | Puntuación calculada | NOT NULL |
+| fecha_clasificacion | TIMESTAMP | Fecha de clasificación | NOT NULL |
+| estado | VARCHAR(20) | Estado de la clasificación | NOT NULL |
+
+### Estrategia_Cobro
+
+| Atributo | Tipo | Descripción | Restricciones |
+|----------|------|-------------|---------------|
+| id | SERIAL | Identificador único | PK, NOT NULL |
+| clasificacion_id | INTEGER | ID de la clasificación | FK (clasificacion.id), NOT NULL |
+| nombre | VARCHAR(100) | Nombre de la estrategia | NOT NULL |
+| descripcion | VARCHAR(500) | Descripción detallada | |
+| activa | BOOLEAN | Estado de la estrategia | NOT NULL, DEFAULT TRUE |
+| fecha_creacion | TIMESTAMP | Fecha de creación | NOT NULL, DEFAULT NOW() |
+
+### Accion_Cobro
+
+| Atributo | Tipo | Descripción | Restricciones |
+|----------|------|-------------|---------------|
+| id | SERIAL | Identificador único | PK, NOT NULL |
+| estrategia_id | INTEGER | ID de la estrategia | FK (estrategia_cobro.id), NOT NULL |
+| tipo_accion | VARCHAR(50) | Tipo de acción a realizar | NOT NULL |
+| descripcion | VARCHAR(500) | Descripción de la acción | NOT NULL |
+| orden | INTEGER | Orden de ejecución | NOT NULL |
+| activa | BOOLEAN | Estado de la acción | NOT NULL, DEFAULT TRUE |
+
+### Notificación
+
+| Atributo | Tipo | Descripción | Restricciones |
+|----------|------|-------------|---------------|
+| id | SERIAL | Identificador único | PK, NOT NULL |
+| accion_cobro_id | INTEGER | ID de la acción de cobro | FK (accion_cobro.id), NOT NULL |
+| contribuyente_id | INTEGER | ID del contribuyente | FK (contribuyente.id), NOT NULL |
+| tipo | VARCHAR(50) | Tipo de notificación | NOT NULL |
+| contenido | VARCHAR(1000) | Contenido de la notificación | NOT NULL |
+| estado | VARCHAR(20) | Estado de la notificación | NOT NULL |
+| fecha_envio | TIMESTAMP | Fecha de envío | NOT NULL |
+| fecha_lectura | TIMESTAMP | Fecha de lectura | |
+
+## Relaciones
+
+| Entidad Origen | Tipo | Entidad Destino | Descripción |
+|----------------|------|-----------------|-------------|
+| Contribuyente | 1:N | Deuda | Un contribuyente puede tener múltiples deudas |
+| Contribuyente | 1:N | Pago | Un contribuyente puede realizar múltiples pagos |
+| Contribuyente | 1:N | Clasificación | Un contribuyente puede tener múltiples clasificaciones |
+| Clasificación | 1:N | Estrategia_Cobro | Una clasificación puede tener múltiples estrategias |
+| Estrategia_Cobro | 1:N | Accion_Cobro | Una estrategia puede tener múltiples acciones |
+| Accion_Cobro | 1:N | Notificación | Una acción puede generar múltiples notificaciones |
+
+## Índices Recomendados
+
+| Tabla | Columna(s) | Tipo | Descripción |
+|-------|------------|------|-------------|
+| contribuyente | documento, tipo_documento | UNIQUE | Búsqueda rápida de contribuyentes |
+| deuda | contribuyente_id, fecha_vencimiento | INDEX | Consulta de deudas por contribuyente |
+| pago | contribuyente_id, fecha_pago | INDEX | Historial de pagos |
+| clasificacion | contribuyente_id, fecha_clasificacion | INDEX | Histórico de clasificaciones |
+| notificacion | contribuyente_id, fecha_envio | INDEX | Historial de notificaciones |
+
+## Diagrama Entidad Relación (3FN)
+![Diagrama entidad relacion](/images/erd.png)
 
 ---
 

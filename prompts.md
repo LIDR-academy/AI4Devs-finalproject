@@ -64,37 +64,6 @@ Adicionalmente, la idea no es construir un ERP, la comunicacion con estos para e
 8. El principal beneficio es incrementar las tasas de recaudo del impuesto predial y reducir la cantidad de contribuyentes con pagos pendientes ante el Municipio.
 
 **Prompt 3:**
-Ahora requiero generar 3 "historias de usuario" para un producto mínimo viable, 
-el cual se debe enfocar en mostrar el valor de la solución en el proceso de clasificacion de contribuyentes y las estrategias de cobro personalizado de acuerdo a la probabilidad de pago.
-El resultado debe ser en formato markdown de acuerdo a la siguiente especificación:
-
-Cada "historia de usuario" debe contener:
-- Título de la Historia de Usuario: 
-- Como [rol del usuario], quiero [acción que desea realizar el usuario], para que [beneficio que espera obtener el usuario].
-
-- Criterios de Aceptación:
-[Detalle específico de funcionalidad]
-[Detalle específico de funcionalidad]
-[Detalle específico de funcionalidad]
-
-- Notas Adicionales:
-[Cualquier consideración adicional]
-
-- Historias de Usuario Relacionadas:
-[Relaciones con otras historias de usuario]
-
-Ahora documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend y uno de base de datos para la historia de usuario: 
-Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta buenas prácticas al respecto.
- 
-Cada "Ticket de Trabajo Técnico" debe incluir:
-  - ID:
-  - Título:
-  - Descripción:
-  - Criterios de aceptación:
-  - Prioridad:
-  - Estimación de esfuerzo (en horas):
-  - Tareas Técnicas:
-  - Notas
 
 ---
 
@@ -103,6 +72,11 @@ Cada "Ticket de Trabajo Técnico" debe incluir:
 ### **2.1. Diagrama de arquitectura:**
 
 **Prompt 1:**
+Genera un diagrama de la arquitectura para representar los componentes principales del producto y las tecnologías utilizadas para esto. 
+Explica que patrón se sigue, justifica la elección de la arquitectura y destaca los beneficios principales que aportan al proyecto y justifican su uso, 
+así como sacrificios o déficits que implica.
+
+Adicionalmente, genera el prompt para "diagramgpt" y generar el diagrama correspondiente. 
 
 **Prompt 2:**
 
@@ -111,6 +85,7 @@ Cada "Ticket de Trabajo Técnico" debe incluir:
 ### **2.2. Descripción de componentes principales:**
 
 **Prompt 1:**
+Describe cada uno de los componentes que hacen parte de la arquitectura del producto.
 
 **Prompt 2:**
 
@@ -119,6 +94,9 @@ Cada "Ticket de Trabajo Técnico" debe incluir:
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 **Prompt 1:**
+La arquitectura de microservicios para el producto este enmarcada en componentes tecnológicos: React + TypeScript, Node.js/Express y PostgreSQL como base de datos. 
+Deseo aplicar patrones arquitectónicos adecuados para este stack. 
+Tambien quisiera que me recomendaras herramientas o tecnologías adicionales que puedan facilitar la implementación y el mantenimiento de esta arquitectura.
 
 **Prompt 2:**
 
@@ -127,6 +105,7 @@ Cada "Ticket de Trabajo Técnico" debe incluir:
 ### **2.4. Infraestructura y despliegue**
 
 **Prompt 1:**
+Detalla brevemente la insfraestructura del proyecto e incluye el código para generar los diagramas de contenedores C4Container y C4Deployment, y explica el proceso de despliegue que se sigue
 
 **Prompt 2:**
 
@@ -153,6 +132,8 @@ Cada "Ticket de Trabajo Técnico" debe incluir:
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+Ahora generemos el modelo entidad relación en 3 forma normal en formato mermaid.
+Genera un diccionario de datos que formato markdown tipo tabla que incluya el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…).
 
 **Prompt 2:**
 
@@ -173,6 +154,24 @@ Cada "Ticket de Trabajo Técnico" debe incluir:
 ### 5. Historias de Usuario
 
 **Prompt 1:**
+Ahora requiero generar 3 "historias de usuario" para un producto mínimo viable, 
+el cual se debe enfocar en mostrar el valor de la solución en el proceso de clasificacion de contribuyentes y las estrategias de cobro personalizado de acuerdo a la probabilidad de pago.
+El resultado debe ser en formato markdown de acuerdo a la siguiente especificación:
+
+Cada "historia de usuario" debe contener:
+- Título de la Historia de Usuario: 
+- Como [rol del usuario], quiero [acción que desea realizar el usuario], para que [beneficio que espera obtener el usuario].
+
+- Criterios de Aceptación:
+[Detalle específico de funcionalidad]
+[Detalle específico de funcionalidad]
+[Detalle específico de funcionalidad]
+
+- Notas Adicionales:
+[Cualquier consideración adicional]
+
+- Historias de Usuario Relacionadas:
+[Relaciones con otras historias de usuario]
 
 **Prompt 2:**
 
@@ -183,6 +182,18 @@ Cada "Ticket de Trabajo Técnico" debe incluir:
 ### 6. Tickets de Trabajo
 
 **Prompt 1:**
+Ahora documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend y uno de base de datos para la historia de usuario: 
+Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta buenas prácticas al respecto.
+ 
+Cada "Ticket de Trabajo Técnico" debe incluir:
+  - ID:
+  - Título:
+  - Descripción:
+  - Criterios de aceptación:
+  - Prioridad:
+  - Estimación de esfuerzo (en horas):
+  - Tareas Técnicas:
+  - Notas
 
 **Prompt 2:**
 
