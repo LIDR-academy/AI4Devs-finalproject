@@ -623,155 +623,153 @@ These additions would support:
 - Global market reach
 - Code reusability  
 
-
 ```
 /project-root
-  /frontend
-    /src
-      /assets
-        /images
-        /fonts
-        /icons
-      /components
-        /shared
-        /forms
-        /layouts
-        /widgets
-      /pages
-      /hooks
-      /context
-      /styles
-      /utils
-      /services      # API calls
-      /locales       # i18n translations
-      /types        # TypeScript definitions
-      /constants
-    /public
-    /tests
-      /unit
-      /integration
-      /e2e
-      /fixtures
-
-  /backend
-    /src
-      /api
-        /v1
-        /v2
-      /controllers
-      /models
-      /services
-      /middleware
-        /auth
-        /validation
-        /error
-      /utils
-      /types
-      /constants
-    /tests
-      /unit
-      /integration
-      /performance
-      /fixtures
-
-  /AI_service
-    /src
-      /models
-        /training
-        /inference
-      /data
-        /raw
-        /processed
-        /embeddings
-      /pipelines
-      /utils
-    /tests
-      /unit
-      /integration
-      /model-validation
-
-  /db
-    /migrations
-    /seeds
-    /scripts
-    /backups
-    /models        # Database models/schemas
-
-  /security
-    /encryption
-    /auth
-    /certificates
-    /policies
-    /audit
-
-  /shared         # Code shared between services
-    /types
-    /constants
-    /utils
-    /interfaces
-    /schemas
-
-  /infrastructure
-    /docker
-      /development
-      /production
-    /kubernetes
-      /development
-      /staging
-      /production
-    /terraform    # Infrastructure as Code
-
-  /config
-    /development
-    /staging
-    /production
-    /testing
-
-  /scripts
-    /deployment
-    /backup
-    /monitoring
-    /database
-    /development  # Dev utilities
-
-  /docs
-    /api
-      /swagger
-      /postman
-    /architecture
-      /diagrams
-      /decisions  # Architecture Decision Records (ADR)
-    /deployment
-    /user-guides
-    /development
-
-  /monitoring
-    /metrics
-    /logs
-    /traces
-    /alerts
-    /dashboards
-
-  /tests         # Project-level tests
-    /e2e
-    /load
-    /security
-    /acceptance
-    /smoke
-
-  /.github       # CI/CD and GitHub specific
-    /workflows
-    /templates
-    /hooks
-
-  # Root level configuration files
-  .gitignore
-  .dockerignore
-  docker-compose.yml
-  package.json
-  README.md
-  CHANGELOG.md
-  LICENSE
+|-- frontend
+|   |-- src
+|   |   |-- assets
+|   |   |   |-- images
+|   |   |   |-- fonts 
+|   |   |   `-- icons
+|   |   |-- components
+|   |   |   |-- shared
+|   |   |   |-- forms
+|   |   |   |-- layouts
+|   |   |   `-- widgets
+|   |   |-- pages
+|   |   |-- hooks
+|   |   |-- context
+|   |   |-- styles
+|   |   |-- utils
+|   |   |-- services      # API calls
+|   |   |-- locales      # i18n translations
+|   |   |-- types        # TypeScript definitions
+|   |   `-- constants
+|   |-- public
+|   `-- tests
+|       |-- unit
+|       |-- integration
+|       |-- e2e
+|       `-- fixtures
+|
+|-- backend
+|   |-- src
+|   |   |-- api
+|   |   |   |-- v1
+|   |   |   `-- v2
+|   |   |-- controllers
+|   |   |-- models
+|   |   |-- services
+|   |   |-- middleware
+|   |   |   |-- auth
+|   |   |   |-- validation
+|   |   |   `-- error
+|   |   |-- utils
+|   |   |-- types
+|   |   `-- constants
+|   `-- tests
+|       |-- unit
+|       |-- integration
+|       |-- performance
+|       `-- fixtures
+|
+|-- AI_service
+|   |-- src
+|   |   |-- models
+|   |   |   |-- training
+|   |   |   `-- inference
+|   |   |-- data
+|   |   |   |-- raw
+|   |   |   |-- processed
+|   |   |   `-- embeddings
+|   |   |-- pipelines
+|   |   `-- utils
+|   `-- tests
+|       |-- unit
+|       |-- integration
+|       `-- model-validation
+|
+|-- db
+|   |-- migrations
+|   |-- seeds
+|   |-- scripts
+|   |-- backups
+|   `-- models        # Database models/schemas
+|
+|-- security
+|   |-- encryption
+|   |-- auth
+|   |-- certificates
+|   |-- policies
+|   `-- audit
+|
+|-- shared           # Code shared between services
+|   |-- types
+|   |-- constants
+|   |-- utils
+|   |-- interfaces
+|   `-- schemas
+|
+|-- infrastructure
+|   |-- docker
+|   |   |-- development
+|   |   `-- production
+|   |-- kubernetes
+|   |   |-- development
+|   |   |-- staging
+|   |   `-- production
+|   `-- terraform    # Infrastructure as Code
+|
+|-- config
+|   |-- development
+|   |-- staging
+|   |-- production
+|   `-- testing
+|
+|-- scripts
+|   |-- deployment
+|   |-- backup
+|   |-- monitoring
+|   |-- database
+|   `-- development  # Dev utilities
+|
+|-- docs
+|   |-- api
+|   |   |-- swagger
+|   |   `-- postman
+|   |-- architecture
+|   |   |-- diagrams
+|   |   `-- decisions  # Architecture Decision Records (ADR)
+|   |-- deployment
+|   |-- user-guides
+|   `-- development
+|
+|-- monitoring
+|   |-- metrics
+|   |-- logs
+|   |-- traces
+|   |-- alerts
+|   `-- dashboards
+|
+|-- tests           # Project-level tests
+|   |-- e2e
+|   |-- load
+|   |-- security
+|   |-- acceptance
+|   `-- smoke
+|
+|-- .github         # CI/CD and GitHub specific
+|   |-- workflows
+|   |-- templates
+|   `-- hooks
+|
+|-- .gitignore
+|-- .dockerignore
+|-- docker-compose.yml
+|-- package.json
+|-- README.md
+|-- CHANGELOG.md
+`-- LICENSE
 ```
 
 1. **Better Frontend Organization**

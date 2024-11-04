@@ -401,14 +401,37 @@ please create a definitive folder structure with all the improvements
 ### **2.4. Infraestructura y despliegue**
 
 **Prompt 1:**
+```markdown
+please create a diagram given the following:
+1. **AWS EC2 Instances**: Hosts the frontend, backend, and AI/ML services in Docker containers.
+2. **AWS RDS**: Manages secure databases (e.g., PostgreSQL) for structured user health data and records.
+3. **AWS S3**: Stores uploaded health records, with encryption at rest.
+4. **AWS IAM**: Provides role-based access control to manage permissions.
+5. **AWS CloudWatch**: Monitors logs and triggers alerts for unusual activity.
+```
 
 **Prompt 2:**
+```markdown
+please create a diagram given the following:
+1. **Development**: Code is developed and tested locally.
+2. **CI/CD Pipeline**: GitHub Actions automates the CI/CD pipeline, testing and building Docker images for each service.
+3. **Deployment**: Upon successful testing, Docker containers are deployed to AWS EC2.
+4. **Monitoring**: AWS CloudWatch monitors logs and system metrics, alerting the team of potential issues.
+```
 
 **Prompt 3:**
 
 ### **2.5. Seguridad**
 
 **Prompt 1:**
+```markdown
+please create a diagram given the following:
+1. **Data Encryption**: All health data and medical records are encrypted using AES-256 in transit and at rest.
+2. **Authentication & Authorization**: Implemented via JWT for session management, with OAuth2.0 for API access and role-based access control (RBAC) for permissions.
+3. **Data Anonymization**: User data is anonymized before being used for AI model training or simulations, complying with GDPR and HIPAA regulations.
+4. **Input Validation**: Strict input validation ensures no harmful data is accepted, reducing security risks such as injection attacks.
+5. **Monitoring & Auditing**: Continuous monitoring of system logs for unusual activity, with audit trails to track access and modifications to health data.
+```
 
 **Prompt 2:**
 
@@ -417,6 +440,14 @@ please create a definitive folder structure with all the improvements
 ### **2.6. Tests**
 
 **Prompt 1:**
+```markdown
+please create a diagram given the following:
+1. **Unit Testing**: Each microservice, especially the AI Service and backend endpoints, undergoes extensive unit testing to validate functionality.
+2. **Integration Testing**: Tests interactions between frontend, backend, and AI Service to ensure they communicate as expected.
+3. **End-to-End Testing**: Simulated user flows (e.g., health record upload, AI health recommendations) are tested to validate the entire system.
+4. **Security Testing**: Vulnerability scanning and penetration testing ensure that sensitive data remains secure and protected.
+
+```
 
 **Prompt 2:**
 
