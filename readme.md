@@ -181,7 +181,7 @@ The user flow is structured around VitaMind’s three core functionalities: Heal
      2. **Run Simulation**: User starts the simulation, and real-time visual feedback shows the predicted outcome.
      3. **Summary and Recommendations**: The AI provides insights based on results, possibly directing the user to resources for lifestyle changes.
 
-### **1.3.2 Visual Content Recommendations**
+### **1.3.2 Visual Content**
 
 For an engaging and user-friendly experience, visual aids like wireframes, walkthrough videos, and annotated images can guide users effectively.
 
