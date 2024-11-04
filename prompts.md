@@ -180,26 +180,223 @@ time, tasks, and collaborate effectively."
 ### **2.1. Diagrama de arquitectura:**
 
 **Prompt 1:**
+```markdown
+Create a detailed description of the system architecture for your project using the specified template. Focus on the main components, technologies, predefined patterns, use cases, and security practices.
+
+# Steps
+
+1. **System Architecture Overview**:
+    - Explain the overall architecture of the system, stating if it follows any predefined architectural pattern (e.g., MVC, microservices).      
+    - Justify the architectural choice with its benefits and potential deficits.
+
+2. **Use Cases**:
+    - Identify three main use cases.
+    - For each use case, outline:
+        - User roles and their interactions with the system.
+        - Actions performed by each role.
+        - Dependencies between different actions.
+
+3. **Components and Technologies**:
+    - Detail the most important components of the system and the technology stack used.
+
+4. **Project Structure**:
+    - Depict the structure of the project, explaining the purpose of main folders.
+    - Mention any specific folder structure or pattern being followed.
+
+5. **Infrastructure and Deployment**:
+    - Describe the project infrastructure.
+    - Include a diagram illustrating the infrastructure.
+    - Explain the process for deploying the application.
+
+6. **Security Practices**:
+    - List and describe key security practices implemented in the project.
+    - Provide examples if applicable.
+
+7. **Testing**:
+    - Briefly describe the tests performed on the project to ensure its reliability and functionality.
+
+# Output Format
+
+Use the following template format for structuring the response:
+ 
+## 2. Arquitectura del Sistema
+
+### **2.1. Diagrama de arquitectura:**
+- [Include an architecture diagram in an appropriate format, such as ASCII art or verbal description.]
+
+### **2.2. Descripción de componentes principales:**
+- [List and describe each main component and the technologies used.]
+
+### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+- [Explain the purpose of main folders and any specific structure or pattern followed.]
+
+### **2.4. Infraestructura y despliegue**
+- [Detail the infrastructure and deployment process with a diagram.]
+
+### **2.5. Seguridad**
+- [List and describe key security practices with examples if applicable.]
+
+### **2.6. Tests**
+- [Briefly describe some of the tests performed.]
+
+### **2.6. Tests**
+- [Briefly describe some of the tests performed.]
+
+# Examples
+
+Note: The examples should be illustrative of how a complete, realistic description might be structured. Replace placeholders with actual content details from the project.
+
+# Notes
+
+- Ensure that each section is focused and clearly articulated.
+- Consider practical scenarios to highlight interactions and dependencies in use cases.
+- Place emphasis on security and testing to indicate robustness.
+```
 
 **Prompt 2:**
+```markdown
+Evaluate the functional areas of this project VitaMind, that is built on a microservices architecture and recommend the best AI stack and technologies, emphasizing the use of OpenAI. Additionally, assess the replacement of TensorFlow with other options like RAG, multiple LLMs, multi-agents, or LangChain technology.
+
+Focus on the following:
+
+- **Frontend Service**: Web and mobile interfaces for user interaction.
+- **Backend Service**: A RESTful API to handle business logic, user requests, and data processing.
+- **AI/ML Service**: Manages AI-driven health insights, risk assessments, and digital twin simulations.
+- **Data Storage Service**: Manages secure databases for user health data, encrypted medical records, and interaction logs.
+- **Authentication & Authorization Service**: Handles user login, role-based access control, and token generation.
+- **Logging and Monitoring Service**: Ensures system reliability, activity monitoring, and provides real-time alerts.
+
+# Evaluation Process
+
+1. **Functional Analysis**: Evaluate deeper into each functional area to understand their specific requirements and challenges.
+2. **Technology Recommendation**: Propose an appropriate AI stack and technologies for each functional area:
+   - Core emphasis on leveraging OpenAI for AI/ML Service.
+   - Consider employing RAG (Retrieval-Augmented Generation), multi-agents, LangChain, or other LLMs for tasks that could replace TensorFlow effectively.
+3. **Rationale and Justification**: Detail why the recommended technologies are the best choice, considering the need for scalability, modularity, and data security.
+
+# Output Format
+
+Present your evaluation and recommendations in a structured report format. Each section should include:
+
+- **Functional Area**: Name and brief description.
+- **Recommended Technologies**: List suitable technologies and tools.
+- **Rationale**: Explanation of why these choices are ideal.
+- **Potential Drawbacks**: Outline any possible challenges with the proposed technologies.
+
+# Example
+
+**Functional Area**: AI/ML Service
+
+**Recommended Technologies**:
+- OpenAI for generating AI-driven insights.
+- LangChain to support advanced language processing tasks.
+- RAG with LLMs for robust knowledge retrieval and conversational AI.
+
+**Rationale**: OpenAI offers state-of-the-art AI capabilities essential for health insights and simulations. LangChain provides versatility in handling complex language tasks, and RAG models enhance interaction quality by integrating comprehensive knowledge bases.
+
+**Potential Drawbacks**: Integrating multiple LLMs and managing them may introduce complexity and require additional resources.
+
+# Notes
+
+- Ensure all recommended technologies align with the healthcare industry's security and compliance standards.
+- Consider the scalability and future-proofing of all technology suggestions.
+- Mention any required integrations and how they might impact existing systems.
+```
 
 **Prompt 3:**
+```markdown
+Adjust the last response with the following: Node.JS and Python 3.8+ for backend and AI services. React for frontend development.  Docker for containerized deployment. AWS as cloud provider. Postgres for database
+```
 
 ### **2.2. Descripción de componentes principales:**
 
 **Prompt 1:**
+```markdown
+ I want you to create a mermaid use case diagram for this use case: 
+**Health Records Upload and Parsing**
+   - **User Roles**: 
+     - **User**: Uploads health records and views parsed insights.
+     - **AI Service**: Processes and extracts key data points from the uploaded records.
+   - **Actions**:
+     - User uploads a PDF/image of medical records.
+     - Backend Service verifies file format and security, forwards it to the AI/ML Service.
+     - AI Service extracts relevant health insights, anonymizes sensitive data, and stores it securely.
+     - User views a summary of insights in the UI.
+   - **Dependencies**: 
+     - Backend relies on AI/ML service for data parsing.
+     - All data passes through the security layer for compliance with privacy policies.
+ ```
 
 **Prompt 2:**
+```markdown
+ I want you to create a mermaid use case diagram for this use case: 
+**Personal Health Coach Interactivity**
+   - **User Roles**:
+     - **User**: Interacts with the AI Health Coach to receive health recommendations.
+     - **AI Service**: Provides personalized responses and health recommendations.
+   - **Actions**:
+     - User asks health-related questions.
+     - Backend Service relays the query to the AI/ML Service.
+     - AI Service generates a response based on stored health data and medical knowledge sources.
+     - Response is displayed to the user with action recommendations or health guidance.
+   - **Dependencies**: 
+     - Backend depends on AI Service for generating accurate recommendations.
+     - Real-time data encryption ensures sensitive health information is secure.
+ ```
 
 **Prompt 3:**
+```markdown
+ I want you to create a mermaid use case diagram for this use case: 
+**Digital Twin Simulation**
+   - **User Roles**:
+     - **User**: Simulates lifestyle changes and views potential health outcomes.
+     - **AI Service**: Runs simulation algorithms based on user-inputted lifestyle changes.
+   - **Actions**:
+     - User adjusts factors (diet, exercise) and triggers simulation.
+     - Backend requests AI Service to model health outcomes based on input.
+     - AI Service returns predicted health outcomes.
+     - User views visual simulation results.
+   - **Dependencies**:
+     - Backend interacts with AI Service to generate simulations and validate data.
+     - Data anonymization practices ensure simulated results are privacy-compliant.
+```
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 **Prompt 1:**
+```markdown
+Explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica:  
+- **/frontend**: Contains UI code for web and mobile versions, built using React (web) and React Native (mobile).
+  - `/assets`: Stores images, fonts, and static files.
+  - `/components`: Houses reusable UI components, such as forms and widgets.
+  - `/pages`: Organizes pages for different views (e.g., Health Records, Health Coach, Digital Twin).
+  
+- **/backend**: Manages business logic and API services.
+  - `/controllers`: Handles API request processing and routing.
+  - `/models`: Defines data structures and interactions with the database.
+  - `/services`: Contains helper functions and modules for inter-service communication.
+  - `/middleware`: Implements security checks, including authentication and encryption.
+  
+- **/AI_service**: Dedicated to AI processing, including health record parsing, risk assessment, and digital twin algorithms.
+  - `/models`: Includes pre-trained AI models and algorithms.
+  - `/data`: Stores model-specific data like weights, configurations, and embeddings.
+  
+- **/db**: Manages secure data storage.
+  - `/migrations`: Scripts to set up, modify, or drop database tables.
+  - `/seeds`: Predefined data for testing and initialization.
+  
+- **/security**: Contains scripts and configurations for encryption, role-based access, and token management.
+```
 
 **Prompt 2:**
+```markdown
+Are we missing any other good pattern, like testing or any other?
+```
 
 **Prompt 3:**
+```markdown
+please create a definitive folder structure with all the improvements
+```
 
 ### **2.4. Infraestructura y despliegue**
 
@@ -270,6 +467,10 @@ time, tasks, and collaborate effectively."
 ### 7. Pull Requests
 
 **Prompt 1:**
+
+```
+Create a pull request description with all the changes in the readme file and prompt file.
+```
 
 **Prompt 2:**
 

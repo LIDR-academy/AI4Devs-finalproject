@@ -2,7 +2,7 @@
 
 0. [Ficha del proyecto](#0-ficha-del-proyecto)
 1. [Descripción general del producto](#1-general-product-description)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
+2. [Arquitectura del sistema](#2-system-architecture)
 3. [Modelo de datos](#3-modelo-de-datos)
 4. [Especificación de la API](#4-especificación-de-la-api)
 5. [Historias de usuario](#5-historias-de-usuario)
@@ -297,31 +297,579 @@ To ensure an accessible and intuitive user experience, the following elements sh
 
 ---
 
-## 2. Arquitectura del Sistema
+## 2. System Architecture
 
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+### **2.1. Architecture Diagram**
+
+Below is a description of the system architecture in a verbal format, outlining the interaction between major components:
+
+The system follows a **microservices-based architecture**. The main services include:
+1. **Frontend Service**: Web and mobile interfaces for user interaction.
+2. **Backend Service**: A RESTful API that handles business logic, user requests, and data processing.
+3. **AI/ML Service**: A dedicated microservice for managing AI-driven health insights, risk assessments, and digital twin simulations.
+4. **Data Storage Service**: Secure databases for user health data, encrypted medical records, and interaction logs.
+5. **Authentication & Authorization Service**: Manages user login, role-based access control, and token generation.
+6. **Logging and Monitoring Service**: Ensures system reliability, monitors activity, and provides real-time alerts.
+
+**Choice Rationale**:  
+The microservices pattern enables **scalability, modularity,** and **fault isolation**. Each service is isolated, making it easy to scale or update components independently without affecting other services. This architecture is well-suited for healthcare applications, where data security, reliability, and performance are critical. 
+
+**Potential Drawbacks**:
+- Increased complexity in managing distributed services.
+- Higher resource requirements, especially for API management and inter-service communication.
+
+**Tech Stacks**:
+For the VitaMind project, this technology stack emphasizes scalability, modularity, and high security, aligning with healthcare industry standards:
+
+- Node.js and Python 3.8+ for backend and AI services provide a flexible, high-performance environment for handling both real-time interactions and complex AI workflows.
+- React and React Native deliver a consistent user experience across web and mobile platforms.
+- OpenAI APIs combined with LangChain and RAG models maximize AI’s capacity for generating health insights while ensuring accurate, context-aware responses.
+- Docker containers ensure consistent deployment and easy management of microservices, especially critical in a multi-environment architecture.
+- AWS provides a secure and scalable cloud infrastructure, meeting HIPAA and GDPR requirements, with services like Cognito, RDS, and S3 for streamlined data handling and compliance.
+
+This approach ensures VitaMind’s architecture remains secure, adaptable, and future-proof, supporting the project’s growth and evolving healthcare needs.
+
+![alt text](/images/architecture_design.png)
+
+### **2.2. Main Use Cases**
+
+1. **Health Records Upload and Parsing**
+   - **User Roles**: 
+     - **User**: Uploads health records and views parsed insights.
+     - **AI Service**: Processes and extracts key data points from the uploaded records.
+   - **Actions**:
+     - User uploads a PDF/image of medical records.
+     - Backend Service verifies file format and security, forwards it to the AI/ML Service.
+     - AI Service extracts relevant health insights, anonymizes sensitive data, and stores it securely.
+     - User views a summary of insights in the UI.
+   - **Dependencies**: 
+     - Backend relies on AI/ML service for data parsing.
+     - All data passes through the security layer for compliance with privacy policies.
+
+```mermaid
+---
+title: Health Records Upload and Parsing System
+---
+flowchart TB
+    User((User))
+    AI((AI Service))
+    Security[[Security Layer]]
+    Backend[[Backend Service]]
+    
+    subgraph System Boundary
+        UploadRecords[Upload Health Records]
+        VerifyFiles[Verify File Format]
+        ProcessData[Process Health Data]
+        AnonymizeData[Anonymize Data]
+        StoreData[Store Data Securely]
+        ViewInsights[View Health Insights]
+    end
+    
+    User --> UploadRecords
+    User --> ViewInsights
+    
+    UploadRecords --> VerifyFiles
+    VerifyFiles --> Security
+    Security --> ProcessData
+    
+    ProcessData --> AnonymizeData
+    AnonymizeData --> StoreData
+    StoreData --> ViewInsights
+    
+    AI --> ProcessData
+    AI --> AnonymizeData
+    
+    %% Dependencies
+    Backend --> AI
+    Backend --> Security
+```         
+
+2. **Personal Health Coach Interactivity**
+   - **User Roles**:
+     - **User**: Interacts with the AI Health Coach to receive health recommendations.
+     - **AI Service**: Provides personalized responses and health recommendations.
+   - **Actions**:
+     - User asks health-related questions.
+     - Backend Service relays the query to the AI/ML Service.
+     - AI Service generates a response based on stored health data and medical knowledge sources.
+     - Response is displayed to the user with action recommendations or health guidance.
+   - **Dependencies**: 
+     - Backend depends on AI Service for generating accurate recommendations.
+     - Real-time data encryption ensures sensitive health information is secure.
+
+```mermaid
+---
+title: Personal Health Coach System
+---
+flowchart TB
+    User((User))
+    AI((AI Health Coach))
+    Backend[[Backend Service]]
+    Security[[Encryption Layer]]
+
+    subgraph System Boundary
+        AskQuestions[Ask Health Questions]
+        ProcessQuery[Process Query]
+        AccessData[Access Health Data]
+        GenerateResponse[Generate Recommendations]
+        DisplayResponse[View Health Guidance]
+        VerifyEncryption[Verify Data Security]
+    end
+
+    User --> AskQuestions
+    User --> DisplayResponse
+
+    AskQuestions --> ProcessQuery
+    ProcessQuery --> Security
+    Security --> AccessData
+    AccessData --> GenerateResponse
+    GenerateResponse --> VerifyEncryption
+    VerifyEncryption --> DisplayResponse
+
+    AI --> GenerateResponse
+    AI --> AccessData
+
+    %% Dependencies
+    Backend --> AI
+    Backend --> Security
+
+    %% Additional relationships
+    AccessData -.-> |"Uses Stored\nHealth Data"| GenerateResponse
+    GenerateResponse -.-> |"Uses Medical\nKnowledge Base"| DisplayResponse
+```
+
+3. **Digital Twin Simulation**
+   - **User Roles**:
+     - **User**: Simulates lifestyle changes and views potential health outcomes.
+     - **AI Service**: Runs simulation algorithms based on user-inputted lifestyle changes.
+   - **Actions**:
+     - User adjusts factors (diet, exercise) and triggers simulation.
+     - Backend requests AI Service to model health outcomes based on input.
+     - AI Service returns predicted health outcomes.
+     - User views visual simulation results.
+   - **Dependencies**:
+     - Backend interacts with AI Service to generate simulations and validate data.
+     - Data anonymization practices ensure simulated results are privacy-compliant.
+
+```mermaid
+---
+title: Digital Twin Health Simulation System
+---
+flowchart TB
+    User((User))
+    AI((AI Service))
+    Backend[[Backend Service]]
+    Privacy[[Privacy Layer]]
+
+    subgraph System Boundary
+        InputFactors[Input Lifestyle Factors]
+        TriggerSim[Trigger Simulation]
+        AnonymizeData[Anonymize Data]
+        RunSimulation[Run Health Simulation]
+        GenerateOutcomes[Generate Health Outcomes]
+        DisplayResults[View Visual Results]
+    end
+
+    User --> InputFactors
+    User --> TriggerSim
+    User --> DisplayResults
+
+    InputFactors --> AnonymizeData
+    TriggerSim --> AnonymizeData
+    AnonymizeData --> RunSimulation
+    RunSimulation --> GenerateOutcomes
+    GenerateOutcomes --> DisplayResults
+
+    AI --> RunSimulation
+    AI --> GenerateOutcomes
+
+    %% Dependencies
+    Backend --> AI
+    Backend --> Privacy
+    Privacy --> AnonymizeData
+
+    %% Additional relationships
+    InputFactors -.-> |"Diet & Exercise\nData"| RunSimulation
+    RunSimulation -.-> |"Simulation\nAlgorithms"| GenerateOutcomes
+    GenerateOutcomes -.-> |"Visual\nRepresentation"| DisplayResults
+```
+
+### **2.3. High-Level Project Description and Folder Structure**
+
+The project is structured as follows:
+
+- **/frontend**: Contains UI code for web and mobile versions, built using React (web) and React Native (mobile).
+  - `/assets`: Stores images, fonts, and static files.
+  - `/components`: Houses reusable UI components, such as forms and widgets.
+  - `/pages`: Organizes pages for different views (e.g., Health Records, Health Coach, Digital Twin).
+  
+- **/backend**: Manages business logic and API services.
+  - `/controllers`: Handles API request processing and routing.
+  - `/models`: Defines data structures and interactions with the database.
+  - `/services`: Contains helper functions and modules for inter-service communication.
+  - `/middleware`: Implements security checks, including authentication and encryption.
+  
+- **/AI_service**: Dedicated to AI processing, including health record parsing, risk assessment, and digital twin algorithms.
+  - `/models`: Includes pre-trained AI models and algorithms.
+  - `/data`: Stores model-specific data like weights, configurations, and embeddings.
+  
+- **/db**: Manages secure data storage.
+  - `/migrations`: Scripts to set up, modify, or drop database tables.
+  - `/seeds`: Predefined data for testing and initialization.
+  
+- **/security**: Contains scripts and configurations for encryption, role-based access, and token management.
+  
+Here's a brief explanation of the main folders' purposes and the architectural patterns they follow:
+
+1. **Layered Architecture**
+   - Clear separation between presentation (`/frontend`), business logic (`/backend`), and data (`/db`)
+   - Each layer has well-defined responsibilities and can evolve independently
+
+2. **Microservices Architecture**
+   - Services are decoupled (`/backend`, `/AI_service`)
+   - Each service can be deployed and scaled independently
+   - Inter-service communication via APIs
+
+3. **MVC Pattern (Model-View-Controller)**
+   - In backend: `/models` (data), `/controllers` (logic), and frontend acts as view
+   - Clear separation of concerns
+
+4. **Component-Based Architecture** (in frontend)
+   - `/components`: Reusable components
+   - `/pages`: Complete views built with components
+   - Facilitates maintainability and reusability
+
+5. **Security Principles**
+   - Dedicated `/security` folder
+   - Security middleware
+   - Centralized authentication and authorization handling
+
+6. **Clean Architecture**
+   - Dependencies flow inward
+   - Clear separation of concerns
+   - Implementation details (UI, database) are in outer layers
+
+There are several important architectural patterns and folders that could enhance the project structure. Here's what we could add:
+
+1. **Testing Structure**
+```
+/tests
+  /unit          # Unit tests for individual components/functions
+  /integration   # Tests for component interactions
+  /e2e          # End-to-end tests
+  /performance  # Load and stress tests
+  /fixtures     # Test data and mock objects
+```
+
+2. **Documentation Pattern**
+```
+/docs
+  /api           # API documentation
+  /architecture  # System design docs and diagrams
+  /deployment    # Deployment guides
+  /user-guides   # End-user documentation
+```
+
+3. **DevOps & Configuration**
+```
+/config
+  /environments  # Environment-specific configurations
+  /docker       # Docker configurations
+  /kubernetes   # K8s deployment files
+  
+/scripts
+  /deployment   # Deployment scripts
+  /backup       # Backup procedures
+  /monitoring   # Monitoring setup
+```
+
+4. **Logging & Monitoring**
+```
+/logging
+  /metrics      # Application metrics
+  /traces       # Distributed tracing
+  /alerts      # Alert configurations
+```
+
+5. **API Versioning**
+```
+/backend
+  /api
+    /v1         # Version 1 endpoints
+    /v2         # Version 2 endpoints
+```
+
+6. **Internationalization**
+```
+/frontend
+  /locales      # Translation files
+  /i18n        # i18n configuration
+```
+
+7. **Shared Code**
+```
+/shared
+  /types        # Shared TypeScript interfaces
+  /constants    # Common constants
+  /utils        # Utility functions used across services
+```
+
+These additions would support:
+- Quality Assurance through comprehensive testing
+- Better maintainability through documentation
+- DevOps practices and CI/CD
+- Observability and monitoring
+- API evolution
+- Global market reach
+- Code reusability  
 
 
-### **2.2. Descripción de componentes principales:**
+```
+/project-root
+  /frontend
+    /src
+      /assets
+        /images
+        /fonts
+        /icons
+      /components
+        /shared
+        /forms
+        /layouts
+        /widgets
+      /pages
+      /hooks
+      /context
+      /styles
+      /utils
+      /services      # API calls
+      /locales       # i18n translations
+      /types        # TypeScript definitions
+      /constants
+    /public
+    /tests
+      /unit
+      /integration
+      /e2e
+      /fixtures
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+  /backend
+    /src
+      /api
+        /v1
+        /v2
+      /controllers
+      /models
+      /services
+      /middleware
+        /auth
+        /validation
+        /error
+      /utils
+      /types
+      /constants
+    /tests
+      /unit
+      /integration
+      /performance
+      /fixtures
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+  /AI_service
+    /src
+      /models
+        /training
+        /inference
+      /data
+        /raw
+        /processed
+        /embeddings
+      /pipelines
+      /utils
+    /tests
+      /unit
+      /integration
+      /model-validation
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+  /db
+    /migrations
+    /seeds
+    /scripts
+    /backups
+    /models        # Database models/schemas
 
-### **2.4. Infraestructura y despliegue**
+  /security
+    /encryption
+    /auth
+    /certificates
+    /policies
+    /audit
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+  /shared         # Code shared between services
+    /types
+    /constants
+    /utils
+    /interfaces
+    /schemas
 
-### **2.5. Seguridad**
+  /infrastructure
+    /docker
+      /development
+      /production
+    /kubernetes
+      /development
+      /staging
+      /production
+    /terraform    # Infrastructure as Code
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+  /config
+    /development
+    /staging
+    /production
+    /testing
+
+  /scripts
+    /deployment
+    /backup
+    /monitoring
+    /database
+    /development  # Dev utilities
+
+  /docs
+    /api
+      /swagger
+      /postman
+    /architecture
+      /diagrams
+      /decisions  # Architecture Decision Records (ADR)
+    /deployment
+    /user-guides
+    /development
+
+  /monitoring
+    /metrics
+    /logs
+    /traces
+    /alerts
+    /dashboards
+
+  /tests         # Project-level tests
+    /e2e
+    /load
+    /security
+    /acceptance
+    /smoke
+
+  /.github       # CI/CD and GitHub specific
+    /workflows
+    /templates
+    /hooks
+
+  # Root level configuration files
+  .gitignore
+  .dockerignore
+  docker-compose.yml
+  package.json
+  README.md
+  CHANGELOG.md
+  LICENSE
+```
+
+1. **Better Frontend Organization**
+   - Separated hooks and context
+   - Dedicated styles directory
+   - Clear separation of components
+
+2. **Enhanced Backend Structure**
+   - Versioned API endpoints
+   - Better middleware organization
+   - Type definitions included
+
+3. **Improved Testing Strategy**
+   - Service-specific tests
+   - Project-level tests
+   - Various test types (unit, integration, e2e, etc.)
+
+4. **Complete Infrastructure Setup**
+   - Docker and Kubernetes configs
+   - Infrastructure as Code (Terraform)
+   - Environment-specific configurations
+
+5. **Comprehensive Documentation**
+   - API documentation
+   - Architecture diagrams
+   - Development guides
+   - ADRs for tracking decisions
+
+6. **Monitoring & Observability**
+   - Metrics collection
+   - Logging
+   - Tracing
+   - Alerting
+
+7. **Security Considerations**
+   - Dedicated security module
+   - Certificate management
+   - Audit logging
+
+8. **Development Tools**
+   - Development scripts
+   - CI/CD configuration
+   - Git hooks
+
+9. **Shared Resources**
+   - Common types
+   - Shared utilities
+   - Cross-service interfaces
+
+This structure supports:
+- Scalability
+- Maintainability
+- Testing
+- Documentation
+- Security
+- DevOps practices
+- Monitoring
+- Team collaboration
+
+### **2.4. Infrastructure and Deployment**
+
+#### Infrastructure Diagram
+The infrastructure uses AWS as the primary hosting environment, with Docker containers to streamline deployments and ensure scalability.
+
+1. **AWS EC2 Instances**: Hosts the frontend, backend, and AI/ML services in Docker containers.
+2. **AWS RDS**: Manages secure databases (e.g., PostgreSQL) for structured user health data and records.
+3. **AWS S3**: Stores uploaded health records, with encryption at rest.
+4. **AWS IAM**: Provides role-based access control to manage permissions.
+5. **AWS CloudWatch**: Monitors logs and triggers alerts for unusual activity.
+
+![alt text](/images/aws_infra.png)
+
+#### Deployment Process
+1. **Development**: Code is developed and tested locally.
+2. **CI/CD Pipeline**: GitHub Actions automates the CI/CD pipeline, testing and building Docker images for each service.
+3. **Deployment**: Upon successful testing, Docker containers are deployed to AWS EC2.
+4. **Monitoring**: AWS CloudWatch monitors logs and system metrics, alerting the team of potential issues.
+
+![alt text](/images/deplyment.png)
+
+### **2.5. Security**
+
+1. **Data Encryption**: All health data and medical records are encrypted using AES-256 in transit and at rest.
+2. **Authentication & Authorization**: Implemented via JWT for session management, with OAuth2.0 for API access and role-based access control (RBAC) for permissions.
+3. **Data Anonymization**: User data is anonymized before being used for AI model training or simulations, complying with GDPR and HIPAA regulations.
+4. **Input Validation**: Strict input validation ensures no harmful data is accepted, reducing security risks such as injection attacks.
+5. **Monitoring & Auditing**: Continuous monitoring of system logs for unusual activity, with audit trails to track access and modifications to health data.
+
+![alt text](/images/security.png)
 
 ### **2.6. Tests**
 
-> Describe brevemente algunos de los tests realizados
+1. **Unit Testing**: Each microservice, especially the AI Service and backend endpoints, undergoes extensive unit testing to validate functionality.
+2. **Integration Testing**: Tests interactions between frontend, backend, and AI Service to ensure they communicate as expected.
+3. **End-to-End Testing**: Simulated user flows (e.g., health record upload, AI health recommendations) are tested to validate the entire system.
+4. **Security Testing**: Vulnerability scanning and penetration testing ensure that sensitive data remains secure and protected.
+
+![alt text](/images/tests.png)
 
 ---
 
