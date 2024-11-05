@@ -261,9 +261,11 @@ La infraestructura del sistema está basada en servicios cloud con los siguiente
 ## 3. Modelo de Datos
 
 ### **3.1. Diagrama del modelo de datos:**
+## Diagrama Entidad Relación (3FN)
+![Diagrama entidad relacion](/images/ERD.png)
 
 ### **3.2. Descripción de entidades principales:**
-# Modelo Entidad Relación y Diccionario de Datos
+## Modelo Entidad Relación y Diccionario de Datos
 
 ### Contribuyente
 
@@ -370,9 +372,6 @@ La infraestructura del sistema está basada en servicios cloud con los siguiente
 | pago | contribuyente_id, fecha_pago | INDEX | Historial de pagos |
 | clasificacion | contribuyente_id, fecha_clasificacion | INDEX | Histórico de clasificaciones |
 | notificacion | contribuyente_id, fecha_envio | INDEX | Historial de notificaciones |
-
-## Diagrama Entidad Relación (3FN)
-![Diagrama entidad relacion](/images/ERD.png)
 
 ---
 
