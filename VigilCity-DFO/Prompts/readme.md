@@ -89,7 +89,15 @@ _**Público objetivo:**_
 7. **Puntos de interés seguros:** Indicación de áreas o negocios reconocidos como seguros (como estaciones de policía o lugares bien iluminados).
 8. **Acceso a recomendaciones y consejos de seguridad:** Sugerencias para los ciudadanos sobre cómo reducir riesgos en sus zonas.
 9. **Dashboard para autoridades:** Interfaz específica para autoridades con estadísticas detalladas, mapas de calor y análisis de patrones delictivos.
-10. **Modo anónimo para reportes:** Los usuarios pueden reportar incidentes de manera anónima, protegiendo su identidad.
+
+### **1.2.1. producto mínimo Viable (MVP):**
+
+> **Características y funcionalidades del MVP:**
+
+1. **Autenticación con OAUTH2 con Google:** Permite el registro de usuarios con su cuenta de google en caso de querer realizar algún reporte.
+2. **Capacidad de reportar incidencias:** Los usuarios registrados pueden reportar problemas como robos, vandalismo, iluminación deficiente, entre otros.
+3. **Sistema de comentarios y valoraciones:** Permite a los usuarios calificar y comentar sobre la seguridad de zonas específicas, creando una base de opiniones comunitaria.
+4. **Modo anónimo para consulta:** Culquier persona puede consultar incidentes de manera anónima.
 
 ### **1.3. Diseño y experiencia de usuario:**
 
@@ -102,7 +110,7 @@ _**Público objetivo:**_
 
 ## 2. Arquitectura del Sistema
 
-### **2.1. Diagrama de arquitectura:**
+### **2.1. Diagrama de arquitectura General:**
 
 Para la solución del "Mapa de Seguridad Urbana", sigue un patrón arquitectónico de microservicios con varios componentes y servicios especializados, cada uno de los cuales cumple funciones específicas dentro del sistema. Este tipo de arquitectura es común en aplicaciones modernas y escalables, especialmente aquellas que requieren modularidad, independencia entre servicios y una alta capacidad de respuesta ante cambios en la demanda.
 
@@ -158,6 +166,61 @@ La arquitectura presentada utiliza los siguientes patrones principales:
 
 5. **Trazabilidad Distribuida y Monitoreo**:
    - Con **Jaeger** para trazabilidad, **Prometheus + Grafana** para monitoreo de métricas, y el **ELK Stack** para el análisis de logs, la arquitectura sigue un patrón de **Observabilidad**. Esto permite supervisar y rastrear el flujo de solicitudes, rendimiento y errores, lo cual es esencial para un sistema de producción en microservicios.
+
+### **2.1.1. Diagrama de arquitectura del MVP:**
+
+Aquí tienes un modelo de arquitectura simple en **Mermaid** para el MVP. Este diseño se enfoca en la simplicidad y facilidad de despliegue, con una arquitectura de tres capas:
+
+- **Frontend (Angular)**: Interfaz de usuario.
+- **Backend (Node.js con Express)**: API para la lógica de negocio y gestión de autenticación, incidencias y comentarios.
+- **Base de datos (PostgreSQL)**: Almacenamiento para la información de usuarios, reportes de incidencias, y comentarios.
+
+```mermaid
+graph TD
+    subgraph Frontend
+        Angular[Angular App]
+    end
+
+    subgraph Backend
+        Node[Node.js API Server]
+    end
+
+    subgraph Database
+        PostgreSQL[(PostgreSQL)]
+    end
+
+    Angular -->|HTTP Requests| Node
+    Node -->|SQL Queries| PostgreSQL
+
+    subgraph OAuth2
+        Google[Google OAuth2 Provider]
+    end
+
+    Angular -- "OAuth2 Auth Flow" --> Google
+    Google -- "Auth Token" --> Angular
+    Angular -->|Pass Token| Node
+    Node -->|Store & Retrieve User Data| PostgreSQL
+```
+
+![Modelo de arquitectura del MVP](.\images\arquitectura_MVP_v1.png)
+
+### **2.1.2. Descripción de componentes principales del MVP:**
+
+1. **Frontend (Angular)**: Proporciona la interfaz para los usuarios, permitiéndoles ver las incidencias de seguridad en la ciudad, comentar y valorar zonas, y, si están autenticados, reportar nuevas incidencias.
+
+2. **Backend (Node.js con Express)**: 
+   - **Autenticación con OAuth2**: Gestiona el flujo de autenticación con Google, asegurando que solo usuarios autenticados puedan reportar incidentes y agregar comentarios.
+   - **Endpoints de API**: Expone endpoints para manejar el reporte de incidencias, el registro de comentarios, y la visualización de incidencias (disponible también en modo anónimo).
+
+3. **Base de datos (PostgreSQL)**:
+   - **Esquemas**: Organiza la información en esquemas específicos para usuarios, incidencias, y comentarios.
+   - **Consultas SQL**: Realiza operaciones CRUD para las incidencias y comentarios, así como para la gestión de usuarios.
+
+### Justificación y beneficios:
+
+- **Arquitectura liviana y desplegable rápidamente**: Esta configuración permite implementar el proyecto fácilmente en plataformas como Heroku.
+- **Simplicidad en la autenticación y la comunicación**: Al no depender de componentes adicionales, reduce la complejidad de mantenimiento.
+- **Escalabilidad básica**: La arquitectura permite escalar el backend y frontend en un futuro, en caso de que la carga aumente.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -307,7 +370,116 @@ pause
 
 ### **2.4. Infraestructura y despliegue**
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+```mermaid
+graph TD
+    subgraph Frontend
+        Angular[Angular App]
+    end
+
+    subgraph Backend
+        Back4App[Back4App Node.js API]
+    end
+
+    subgraph External_DB
+        ElephantSQL[(ElephantSQL PostgreSQL)]
+    end
+
+    subgraph OAuth2
+        Google[Google OAuth2 Provider]
+    end
+
+    Angular -->|HTTP Requests| Back4App
+    Back4App -->|SQL Queries| ElephantSQL
+
+    Angular -- "OAuth2 Auth Flow" --> Google
+    Google -- "Auth Token" --> Angular
+    Angular -->|Pass Token| Back4App
+    Back4App -->|Store & Retrieve User Data| ElephantSQL
+```
+
+![Modelo de despligue en back4app y elephantsql](.\images\Despliegue_v1.png)
+
+El proceso de despliegue para el **MVP** en un entorno de **Back4App** (para backend y frontend), **ElephantSQL** (base de datos) y **GitHub** (código fuente) se realiará en los siguientes pasos:
+
+### 1. Configuración de Repositorios en GitHub
+
+1. **Organizar el Repositorio**: Crea un repositorio en GitHub con el código del proyecto organizado en dos carpetas principales: `/backend` y `/frontend`.
+   - **Backend**: Contendrá el código de tu API Node.js.
+   - **Frontend**: Contendrá el código de la aplicación Angular.
+
+2. **Configurar el `.gitignore`**: Añade un archivo `.gitignore` en cada carpeta, asegurándote de excluir archivos sensibles (como `node_modules`, archivos de configuración local, y variables de entorno).
+
+3. **Configurar Variables de Entorno**:
+   - Usa un archivo de ejemplo como `.env.example` en cada carpeta con las variables de entorno necesarias, como la URL de la base de datos (ElephantSQL), credenciales de OAuth2 y cualquier otro secreto.
+   - Asegúrate de no incluir este archivo `.env` en el repositorio, usando `.gitignore` para proteger tus credenciales.
+
+### 2. Configuración de la Base de Datos en ElephantSQL
+
+1. **Crear una instancia en ElephantSQL**:
+   - Inicia sesión en ElephantSQL y crea una nueva instancia PostgreSQL.
+   - Anota las credenciales de conexión (nombre de usuario, contraseña, nombre de base de datos y URL de la base de datos) para usarlas en el backend.
+
+2. **Configurar el Backend para Conectar con ElephantSQL**:
+   - En el archivo de configuración de conexión de la base de datos (normalmente en `/backend/config/db.js` o similar), configura la URL de conexión con los datos de ElephantSQL.
+   - Asegúrate de cargar la URL desde una variable de entorno para mantener la seguridad.
+
+### 3. Configuración del Backend en Back4App
+
+1. **Crear una nueva Aplicación en Back4App**:
+   - Inicia sesión en Back4App y crea una nueva aplicación para el backend.
+   - Configura Back4App para trabajar con Node.js y carga el código de tu backend desde la carpeta `/backend` del repositorio de GitHub.
+
+2. **Configurar Variables de Entorno en Back4App**:
+   - Dentro del panel de configuración de Back4App, agrega todas las variables de entorno necesarias para el backend:
+     - `DATABASE_URL` con la URL de conexión de ElephantSQL.
+     - `OAUTH_CLIENT_ID` y `OAUTH_CLIENT_SECRET` para el OAuth2 con Google, si aplica.
+   - Asegúrate de configurar cualquier otra variable que el backend necesite.
+
+3. **Configurar el Despliegue Automático**:
+   - En Back4App, conecta el repositorio de GitHub al entorno de despliegue. Esto permite el despliegue automático cada vez que se realiza un **commit** en la rama principal (ej., `main` o `master`).
+   - Configura las ramas de despliegue (producción y desarrollo, si aplicable).
+
+4. **Pruebas**:
+   - Verifica que la aplicación esté corriendo correctamente y que las rutas del backend puedan conectarse exitosamente a ElephantSQL.
+
+### 4. Configuración del Frontend en Back4App
+
+1. **Crear una Aplicación de Hosting en Back4App para el Frontend**:
+   - En Back4App, crea una nueva aplicación para el frontend que permita alojar contenido estático (HTML, CSS, JS) de Angular.
+
+2. **Configurar Variables de Entorno y API Endpoint**:
+   - Asegúrate de que el frontend en Angular esté configurado para apuntar al backend desplegado en Back4App.
+   - Configura el archivo de ambiente de Angular (`environment.prod.ts` y `environment.ts`) para que el `baseURL` apunte al backend.
+
+3. **Configurar el Despliegue Automático del Frontend**:
+   - Conecta el repositorio de GitHub en Back4App para el frontend.
+   - Esto permite que el frontend se despliegue automáticamente cada vez que se realiza un commit.
+
+4. **Build y Pruebas del Frontend**:
+   - Ejecuta una compilación del frontend desde Angular (`ng build`) y verifica que se despliegue correctamente en Back4App.
+   - Accede a la URL de la aplicación en Back4App para asegurarte de que el frontend esté funcionando y conectándose al backend correctamente.
+
+### 5. Pruebas de Integración y Verificación Final
+
+1. **Pruebas de Flujo Completo**:
+   - Realiza pruebas de flujo completo en el frontend (consultas de incidentes, autenticación, registro de incidencias y comentarios).
+   - Verifica que los datos fluyen correctamente entre el frontend, backend y base de datos de ElephantSQL.
+
+2. **Revisar Logs y Monitoreo**:
+   - Utiliza las herramientas de logging de Back4App para verificar si hay errores en el backend.
+   - Si hay errores o problemas de rendimiento, realiza ajustes en el código o en la configuración del entorno.
+
+3. **Configurar Dominios Personalizados (Opcional)**:
+   - Si deseas usar un dominio propio para el frontend, configúralo en Back4App y asegúrate de que el certificado SSL esté activo.
+
+### Resumen del Flujo de Despliegue:
+
+1. Código en GitHub.
+2. Configuración de instancias en **ElephantSQL**.
+3. Configuración de backend en **Back4App** con conexión a ElephantSQL.
+4. Configuración de frontend en **Back4App**.
+5. Pruebas de flujo completo y ajustes.
+6. Monitoreo y ajustes de logs.
 
 ### **2.5. Seguridad**
 
@@ -321,14 +493,15 @@ pause
 
 ## 3. Modelo de Datos
 
-### **3.1. Diagrama del modelo de datos:**
+### **3.1. Diagrama del modelo de datos del MVP:**
 
 ```mermaid
 erDiagram
+   erDiagram
    Usuario {
         int id_usuario PK "Identificador único del usuario"
         string nombre "Nombre del usuario"
-        string correo_electronico "Correo electrónico del usuario"
+        string correo_electronico UNIQUE "Correo electrónico del usuario"
         string contrasena "Contraseña del usuario"
         timestamp fecha_creacion "Fecha y hora de creación"
         timestamp fecha_actualizacion "Fecha y hora de última actualización"
@@ -337,12 +510,12 @@ erDiagram
     Reporte {
         int id_reporte PK "Identificador único del reporte"
         int id_usuario FK "ID del usuario que crea el reporte"
-        string titulo "Título del reporte"
         text descripcion "Descripción del reporte"
-        geography ubicacion "Ubicación geográfica del reporte"
-        string estado "Estado del reporte"
+        string direccion "Dirección aproximada del incidente"
+        float latitud "Coordenada latitud de la ubicación"
+        float longitud "Coordenada longitud de la ubicación"
+        string categoria "Categoría del reporte (Iluminación, Robo, etc.)"
         timestamp fecha_creacion "Fecha y hora de creación"
-        timestamp fecha_actualizacion "Fecha y hora de última actualización"
     }
     
     Comentario {
@@ -350,95 +523,119 @@ erDiagram
         int id_reporte FK "ID del reporte al que pertenece el comentario"
         int id_usuario FK "ID del usuario que crea el comentario"
         text contenido "Contenido del comentario"
+        float puntaje_promedio "Puntaje promedio calculado a partir de los ratings"
         timestamp fecha_creacion "Fecha y hora de creación"
-        timestamp fecha_actualizacion "Fecha y hora de última actualización"
     }
-    
-    Notificacion {
-        int id_notificacion PK "Identificador único de la notificación"
-        int id_usuario FK "ID del usuario que recibe la notificación"
-        text mensaje "Contenido de la notificación"
-        string tipo "Tipo de notificación"
-        timestamp fecha_envio "Fecha y hora de envío de la notificación"
-        boolean leido "Estado de lectura de la notificación"
-        timestamp fecha_creacion "Fecha y hora de creación"
-        timestamp fecha_actualizacion "Fecha y hora de última actualización"
+
+    Rating {
+        int id_rating PK "Identificador único del puntaje"
+        int id_comentario FK "ID del comentario al que pertenece el puntaje"
+        int id_usuario FK "ID del usuario que asigna el puntaje"
+        int puntaje "Puntaje del comentario (1 a 5)"
+        timestamp fecha_creacion "Fecha y hora de creación del puntaje"
     }
 
     Usuario ||--o{ Reporte : crea
     Usuario ||--o{ Comentario : crea
     Reporte ||--o{ Comentario : tiene
-    Usuario ||--o{ Notificacion : recibe
+    Comentario ||--o{ Rating : recibe
+    Usuario ||--o{ Rating : asigna
 ```
-![Modelo de datos inicial](.\images\modelo_datos_v1.png)
+
+![Modelo de datos MVP](.\images\modelo_datos_mvp_v1.png)
+
+### Descripción de las Entidades
+
+Aquí está el modelo de datos actualizado, agregando una nueva entidad `Rating` para almacenar los puntajes individuales que recibe cada comentario. La entidad `Comentario` ahora incluirá un campo `puntaje_promedio`, que se calculará como el promedio de los puntajes en la entidad `Rating`.
+
+```mermaid
+erDiagram
+   Usuario {
+        int id_usuario PK "Identificador único del usuario"
+        string nombre "Nombre del usuario"
+        string correo_electronico UNIQUE "Correo electrónico del usuario"
+        string contrasena "Contraseña del usuario"
+        timestamp fecha_creacion "Fecha y hora de creación"
+        timestamp fecha_actualizacion "Fecha y hora de última actualización"
+    }
+    
+    Reporte {
+        int id_reporte PK "Identificador único del reporte"
+        int id_usuario FK "ID del usuario que crea el reporte"
+        text descripcion "Descripción del reporte"
+        string direccion "Dirección aproximada del incidente"
+        float latitud "Coordenada latitud de la ubicación"
+        float longitud "Coordenada longitud de la ubicación"
+        string categoria "Categoría del reporte (Iluminación, Robo, etc.)"
+        timestamp fecha_creacion "Fecha y hora de creación"
+    }
+    
+    Comentario {
+        int id_comentario PK "Identificador único del comentario"
+        int id_reporte FK "ID del reporte al que pertenece el comentario"
+        int id_usuario FK "ID del usuario que crea el comentario"
+        text contenido "Contenido del comentario"
+        float puntaje_promedio "Puntaje promedio calculado a partir de los ratings"
+        timestamp fecha_creacion "Fecha y hora de creación"
+    }
+
+    Rating {
+        int id_rating PK "Identificador único del puntaje"
+        int id_comentario FK "ID del comentario al que pertenece el puntaje"
+        int id_usuario FK "ID del usuario que asigna el puntaje"
+        int puntaje "Puntaje del comentario (1 a 5)"
+        timestamp fecha_creacion "Fecha y hora de creación del puntaje"
+    }
+
+    Usuario ||--o{ Reporte : crea
+    Usuario ||--o{ Comentario : crea
+    Reporte ||--o{ Comentario : tiene
+    Comentario ||--o{ Rating : recibe
+    Usuario ||--o{ Rating : asigna
+```
 
 ### **3.2. Descripción de entidades principales:**
 
-A continuación se presenta la especificación detallada para cada entidad del modelo de datos en forma de tabla. Cada tabla incluye el nombre y tipo de cada atributo, su descripción, claves primarias y foráneas, relaciones, tipos de relación y restricciones.
+#### **Usuario**
+| Atributo            | Tipo       | Descripción                                  | Restricciones                |
+|---------------------|------------|----------------------------------------------|------------------------------|
+| `id_usuario`        | `int`      | Identificador único del usuario              | PK                           |
+| `nombre`            | `string`   | Nombre del usuario                           | NOT NULL                     |
+| `correo_electronico`| `string`   | Correo electrónico del usuario               | NOT NULL, UNIQUE             |
+| `contrasena`        | `string`   | Contraseña del usuario                       | NOT NULL                     |
+| `fecha_creacion`    | `timestamp`| Fecha y hora de creación del registro        | NOT NULL                     |
+| `fecha_actualizacion`| `timestamp`| Fecha y hora de última actualización del registro | NOT NULL              |
 
-> **Esquema Comunes**
+#### **Reporte**
+| Atributo            | Tipo       | Descripción                                  | Restricciones                |
+|---------------------|------------|----------------------------------------------|------------------------------|
+| `id_reporte`        | `int`      | Identificador único del reporte              | PK                           |
+| `id_usuario`        | `int`      | ID del usuario que crea el reporte           | FK (`Usuario.id_usuario`)    |
+| `descripcion`       | `text`     | Descripción del reporte                      | NOT NULL                     |
+| `direccion`         | `string`   | Dirección aproximada del incidente           | NULLABLE                     |
+| `latitud`           | `float`    | Coordenada latitud de la ubicación           | NOT NULL                     |
+| `longitud`          | `float`    | Coordenada longitud de la ubicación          | NOT NULL                     |
+| `categoria`         | `string`   | Categoría del reporte                        | NOT NULL (Iluminación, Robo, Vandalismo, Drogadicción, Vías en mal estado, Asalto en transporte público, Esquina peligrosa) |
+| `fecha_creacion`    | `timestamp`| Fecha y hora de creación del registro        | NOT NULL                     |
 
-**`Usuario`**
+#### **Comentario**
+| Atributo            | Tipo       | Descripción                                  | Restricciones                |
+|---------------------|------------|----------------------------------------------|------------------------------|
+| `id_comentario`     | `int`      | Identificador único del comentario           | PK                           |
+| `id_reporte`        | `int`      | ID del reporte al que pertenece el comentario | FK (`Reporte.id_reporte`)    |
+| `id_usuario`        | `int`      | ID del usuario que crea el comentario        | FK (`Usuario.id_usuario`)    |
+| `contenido`         | `text`     | Contenido del comentario                     | NOT NULL                     |
+| `puntaje_promedio`  | `float`    | Puntaje promedio del comentario              | Calculado a partir de `Rating` |
+| `fecha_creacion`    | `timestamp`| Fecha y hora de creación del registro        | NOT NULL                     |
 
-| Atributo                | Tipo        | Descripción                                         | Clave        | Relación                 | Restricciones          |
-|-------------------------|-------------|-----------------------------------------------------|--------------|-------------------------|------------------------|
-| `id_usuario`            | INT         | Identificador único del usuario                      | PK           | -                       | NOT NULL, UNIQUE       |
-| `nombre`                | VARCHAR(255)| Nombre del usuario                                   | -            | -                       | NOT NULL               |
-| `correo_electronico`    | VARCHAR(255)| Correo electrónico del usuario                       | -            | -                       | NOT NULL, UNIQUE       |
-| `contraseña`            | VARCHAR(255)| Contraseña del usuario                               | -            | -                       | NOT NULL               |
-| `fecha_creacion`        | TIMESTAMP   | Fecha y hora de creación del registro                | -            | -                       | NOT NULL               |
-| `fecha_actualizacion`   | TIMESTAMP   | Fecha y hora de última actualización del registro    | -            | -                       | NOT NULL               |
-
-> **Esquema Reportes**
-
-**`Reporte`**
-
-| Atributo                | Tipo         | Descripción                                            | Clave        | Relación                  | Restricciones          |
-|-------------------------|--------------|--------------------------------------------------------|--------------|--------------------------|------------------------|
-| `id_reporte`            | INT          | Identificador único del reporte                         | PK           | -                        | NOT NULL, UNIQUE       |
-| `id_usuario`            | INT          | ID del usuario que crea el reporte                     | FK           | comunes.Usuario           | NOT NULL               |
-| `titulo`                | VARCHAR(255) | Título del reporte                                     | -            | -                        | NOT NULL               |
-| `descripcion`           | TEXT         | Descripción del reporte                                 | -            | -                        | NOT NULL               |
-| `ubicacion`             | GEOGRAPHY    | Ubicación geográfica del reporte                        | -            | -                        | NOT NULL               |
-| `estado`                | VARCHAR(50)  | Estado del reporte (ej. "pendiente", "resuelto")      | -            | -                        | NOT NULL               |
-| `fecha_creacion`        | TIMESTAMP    | Fecha y hora de creación del registro                   | -            | -                        | NOT NULL               |
-| `fecha_actualizacion`   | TIMESTAMP    | Fecha y hora de última actualización del registro       | -            | -                        | NOT NULL               |
-
-> **Esquema Comentarios**
-
-**`Comentario`**
-
-| Atributo                | Tipo         | Descripción                                          | Clave        | Relación                  | Restricciones          |
-|-------------------------|--------------|------------------------------------------------------|--------------|--------------------------|------------------------|
-| `id_comentario`         | INT          | Identificador único del comentario                   | PK           | -                        | NOT NULL, UNIQUE       |
-| `id_reporte`            | INT          | ID del reporte al que pertenece el comentario        | FK           | reportes.Reporte         | NOT NULL               |
-| `id_usuario`            | INT          | ID del usuario que crea el comentario                | FK           | comunes.Usuario           | NOT NULL               |
-| `contenido`             | TEXT         | Contenido del comentario                             | -            | -                        | NOT NULL               |
-| `fecha_creacion`        | TIMESTAMP    | Fecha y hora de creación del registro                | -            | -                        | NOT NULL               |
-| `fecha_actualizacion`   | TIMESTAMP    | Fecha y hora de última actualización del registro     | -            | -                        | NOT NULL               |
-
-> **Esquema Notificaciones**
-
-**`Notificación`**
-
-| Atributo                | Tipo         | Descripción                                           | Clave        | Relación                  | Restricciones          |
-|-------------------------|--------------|-------------------------------------------------------|--------------|--------------------------|------------------------|
-| `id_notificacion`       | INT          | Identificador único de la notificación                | PK           | -                        | NOT NULL, UNIQUE       |
-| `id_usuario`            | INT          | ID del usuario que recibe la notificación             | FK           | comunes.Usuario           | NOT NULL               |
-| `mensaje`               | TEXT         | Contenido de la notificación                          | -            | -                        | NOT NULL               |
-| `tipo`                  | VARCHAR(50)  | Tipo de notificación (ej. "alerta", "info")          | -            | -                        | NOT NULL               |
-| `fecha_envio`           | TIMESTAMP    | Fecha y hora de envío de la notificación              | -            | -                        | NOT NULL               |
-| `leido`                 | BOOLEAN      | Estado de lectura de la notificación                  | -            | -                        | NOT NULL               |
-| `fecha_creacion`        | TIMESTAMP    | Fecha y hora de creación del registro                 | -            | -                        | NOT NULL               |
-| `fecha_actualizacion`   | TIMESTAMP    | Fecha y hora de última actualización del registro      | -            | -                        | NOT NULL               |
-
-> **Resumen de Relaciones**
-
-1. **Usuario** (comunes) puede:
-   - Crear múltiples **Reportes** (reportes), por lo que hay una relación uno a muchos entre `Usuario` y `Reporte`.
-   - Crear múltiples **Comentarios** (comentarios), estableciendo también una relación uno a muchos.
-   - recibir múltiples **Notificaciones** (notificaciones), creando otra relación uno a muchos.
-2. **Reporte** (reportes) puede tener múltiples **Comentarios** (comentarios), configurando una relación uno a muchos.
+#### **Rating**
+| Atributo            | Tipo       | Descripción                                  | Restricciones                |
+|---------------------|------------|----------------------------------------------|------------------------------|
+| `id_rating`         | `int`      | Identificador único del puntaje              | PK                           |
+| `id_comentario`     | `int`      | ID del comentario al que pertenece el puntaje | FK (`Comentario.id_comentario`) |
+| `id_usuario`        | `int`      | ID del usuario que asigna el puntaje         | FK (`Usuario.id_usuario`)    |
+| `puntaje`           | `int`      | Puntaje asignado al comentario (escala de 1 a 5) | NOT NULL, CHECK (1 <= puntaje <= 5) |
+| `fecha_creacion`    | `timestamp`| Fecha y hora de creación del puntaje         | NOT NULL                     |
 
 ---
 
@@ -450,33 +647,116 @@ A continuación se presenta la especificación detallada para cada entidad del m
 
 ## 5. Historias de Usuario
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+**HU 1. Autenticación con OAUTH2 con Google**
 
-**Historia de Usuario 1**
+Como **usuario nuevo**, quiero **registrarme e iniciar sesión con mi cuenta de Google** para **acceder rápidamente sin crear una nueva cuenta en la plataforma**.
 
-**Historia de Usuario 2**
+**Criterios de aceptación:**
+1. El usuario debe poder registrarse usando su cuenta de Google.
+2. La autenticación con Google debe ser segura, y no almacenar la contraseña del usuario en la plataforma.
+3. El sistema debe crear un perfil de usuario en la base de datos una vez que el registro con Google sea exitoso.
+4. Si el usuario ya está registrado con Google, el sistema debe permitirle iniciar sesión sin duplicar su cuenta.
+5. Si la autenticación falla, el usuario debe ver un mensaje de error y debe poder intentar de nuevo.
 
-**Historia de Usuario 3**
+**HU 2. Capacidad de reportar incidencias**
+
+Como **usuario autenticado**, quiero **reportar incidencias** para **informar a la comunidad y las autoridades sobre problemas de seguridad en una zona específica**.
+
+**Criterios de aceptación:**
+1. El usuario debe poder seleccionar una ubicación en el mapa y marcarla como el lugar de la incidencia.
+2. El sistema debe permitir al usuario seleccionar una categoría para el reporte, como "Iluminación", "Robo", "Vandalismo", etc.
+3. El reporte debe incluir los campos de descripción, dirección, latitud, longitud y categoría, y ser almacenado en la base de datos al enviar el formulario.
+4. Al guardar el reporte, debe mostrarse un mensaje de confirmación al usuario y el reporte debe aparecer en el mapa.
+5. Si falta información obligatoria, el sistema debe mostrar un mensaje de error indicando los campos pendientes.
+
+**HU 3. Sistema de comentarios y valoraciones**
+
+Como **usuario autenticado**, quiero **comentar y calificar reportes de incidentes** para **contribuir con mis opiniones sobre la seguridad de un área**.
+
+**Criterios de aceptación:**
+1. El usuario debe poder escribir un comentario sobre un reporte existente y enviarlo.
+2. El usuario debe poder asignar una puntuación de 1 a 5 (representada en estrellas) al comentario, donde 1 es "poco importante" y 5 es "muy importante".
+3. La plataforma debe almacenar cada comentario y su puntuación en la base de datos, asociándolo con el reporte y el usuario.
+4. El sistema debe mostrar un promedio de las puntuaciones para cada comentario, calculado automáticamente.
+5. Si el comentario no se puede enviar, debe mostrarse un mensaje de error y permitir al usuario intentarlo de nuevo.
 
 ---
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+### Historia de Usuario 2: Capacidad de Reportar Incidencias
 
-**Ticket 1**
+Como **usuario registrado**, quiero **reportar problemas de seguridad en mi área** para **que otros usuarios puedan conocer los riesgos y ayudar a mejorar la seguridad en la comunidad**.
 
-**Ticket 2**
+**Ticket de Trabajo 2.1: Creación de la entidad y API de Reporte de Incidencias (Backend)**
 
-**Ticket 3**
+- **ID del Ticket:** TKT-201
+- **Título del Ticket:** Implementación de la entidad y API de Reporte de Incidencias
+- **Descripción:** Crear el modelo de datos para la entidad "Reporte" en la base de datos usando Sequelize, incluyendo los campos `id_reporte`, `id_usuario`, `descripcion`, `direccion`, `latitud`, `longitud`, `categoria`, y `fecha_creacion`.
+- **Criterios de aceptación:**
+  - La entidad "Reporte" se almacena correctamente en la base de datos.
+  - La API permite crear un nuevo reporte asociándolo al `id_usuario` correspondiente.
+  - Los datos del reporte incluyen todos los campos requeridos (`descripcion`, `direccion`, `latitud`, `longitud`, y `categoria`).
+- **Prioridad:** Alta
+- **Estimación de esfuerzo:** 6 horas
+- **Tareas Técnicas:**
+  1. Crear el modelo de la entidad "Reporte" con Sequelize.
+  2. Configurar las relaciones entre "Reporte" y "Usuario".
+  3. Crear la migración para la tabla "Reporte".
+  4. Implementar una ruta API en el backend para crear un nuevo reporte de incidencia.
+  5. Agregar validaciones para asegurar que todos los campos requeridos estén presentes.
+- **Notas:**
+  - Definir las posibles categorías para los reportes y aplicarlas como valores predefinidos.
+  - Verificar que cada reporte esté asociado a un usuario registrado.
+
+### Ticket de Trabajo 2.2: Endpoint para listar reportes por ubicación (Backend)
+
+- **ID del Ticket:** TKT-202
+- **Título del Ticket:** Creación de Endpoint para listar reportes según ubicación
+- **Descripción:** Crear un endpoint en el backend que permita obtener todos los reportes de incidencias filtrados por ubicación, devolviendo los reportes más cercanos a las coordenadas proporcionadas por el usuario.
+- **Criterios de aceptación:**
+  - El endpoint recibe coordenadas (`latitud`, `longitud`) y devuelve reportes dentro de un radio de distancia.
+  - La respuesta incluye datos relevantes de cada reporte como `descripcion`, `categoria`, `direccion`, y coordenadas.
+  - Se pueden listar múltiples reportes ordenados por proximidad a la ubicación.
+- **Prioridad:** Media
+- **Estimación de esfuerzo:** 4 horas
+- **Tareas Técnicas:**
+  1. Implementar la lógica para calcular y filtrar reportes cercanos usando las coordenadas.
+  2. Crear el endpoint `/api/reportes/ubicacion` en el backend.
+  3. Agregar paginación para gestionar grandes cantidades de datos.
+  4. Implementar pruebas para validar el filtro y ordenamiento por proximidad.
+- **Notas:**
+  - Utilizar funciones geoespaciales de PostgreSQL para el cálculo de la distancia entre coordenadas.
+  - Probar el endpoint con distintas ubicaciones para verificar precisión.
+
+### Ticket de Trabajo 2.3: Formulario de Reporte en el Frontend (Angular)
+
+- **ID del Ticket:** TKT-203
+- **Título del Ticket:** Creación de formulario de reporte en el frontend
+- **Descripción:** Implementar el formulario en Angular que permite al usuario registrado enviar un nuevo reporte, incluyendo los campos `descripcion`, `direccion`, `latitud`, `longitud`, y `categoria`.
+- **Criterios de aceptación:**
+  - El formulario permite la captura de todos los campos requeridos.
+  - El usuario puede seleccionar una categoría de una lista de opciones.
+  - Al enviar el reporte, este se guarda correctamente en el backend y el usuario recibe una confirmación.
+- **Prioridad:** Alta
+- **Estimación de esfuerzo:** 5 horas
+- **Tareas Técnicas:**
+  1. Crear el formulario en Angular con los campos necesarios.
+  2. Implementar la selección de la categoría mediante un menú desplegable.
+  3. Realizar la integración con la API de backend para enviar los datos del reporte.
+  4. Validar el formulario para asegurar que todos los campos estén completos antes de enviarlo.
+  5. Mostrar mensaje de éxito o error según el resultado del envío.
+- **Notas:**
+  - Utilizar Angular Reactive Forms para manejar validaciones.
+  - Asegurarse de que el formulario sea accesible solo para usuarios autenticados.
 
 ---
 
 ## 7. Pull Requests
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
-
 **Pull Request 1**
+
+`git commit -m "VigilCity-DFO: Primera entrega. Descriçión del proyecto, arquitectura inicial y modelo inicial de datos"`
 
 **Pull Request 2**
 

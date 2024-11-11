@@ -139,3 +139,16 @@ Genera la estructura de archivos completa para todos los microservicios.
 **Prompt 7:**
 
 Genera un archivo .bat para correrlo en windows 11 con comandos de DOS, para crear toda la estructura de archivos del back del proyecto para todos los microservicios en modalidad de "monorepo". Ten en cuenta que se deben crear las carpetas y los archivos donde correspondan.
+
+**Prompt 8:**
+
+Dame el modelo de arquitectura en mermaid para MVP, teniendo en cuenta que solo se ha de contar con el back, front y postgres, no vamos a usar caché, balanceadores ni componentes adicionales, necesitamos una arquitectura liviana que nos permita hacer un despliegue rápido, un ejemplo como si fuesemos a desplegar en Heroku.
+
+**Prompt 9:**
+
+¿Cuál sería la infraestructura de despliegue para el MVP si lo voy a desplegar en back4app y la base de datos la tendré de manera externa en ElefanteSQL?
+
+**Prompt 10:**
+
+Teniendo en cuenta que el código fuente lo tendré en github, el back y el front será desplegado en back4app y la base de datos estará en elephantsql, ¿Cuál sería el proceso de despliegue?
+Genera una respuesta detallada

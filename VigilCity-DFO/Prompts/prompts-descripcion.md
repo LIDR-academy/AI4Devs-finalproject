@@ -31,3 +31,14 @@ Ahora para la investigación responde las siguientes preguntas:
 - Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
 - Enumera los beneficios que ofrece el producto
 - Enumera 10 opciones para el nombre del producto, teniendo en cuenta que debe ser un nombre corto, de alto impacto, creativo, de fácil recordación y transmitir el objetivo del producto. 
+
+**Prompt 2:**
+
+Hola, vamos a acotar el proyecto a un producto mínimo viable, en el que se endrán las siguientes funcionalidades:
+
+1. **Autenticación con OAUTH2 con Google:** Permite el registro de usuarios con su cuenta de google en caso de querer realizar algún reporte.
+2. **Capacidad de reportar incidencias:** Los usuarios registrados pueden reportar problemas como robos, vandalismo, iluminación deficiente, entre otros.
+3. **Sistema de comentarios y valoraciones:** Permite a los usuarios calificar y comentar sobre la seguridad de zonas específicas, creando una base de opiniones comunitaria.
+4. **Modo anónimo para consulta:** Culquier persona puede consultar incidentes de manera anónima.
+
+espera hasta que te pregunte sobre lo que vamos a seguir haciendo
