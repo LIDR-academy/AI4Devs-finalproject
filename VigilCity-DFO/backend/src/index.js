@@ -7,6 +7,7 @@ const userRoutes = require('./interfaces/http/userRoutes'); // Importar las ruta
 const authRoutes = require('./interfaces/http/authRoutes'); // Importar las rutas de autenticación
 const reportRoutes = require('./interfaces/http/reportRoutes'); // Importar las rutas de reportes
 const errorMiddleware = require('./middleware/errorMiddleware'); // Importar el middleware de errores
+const ratingRoutes = require('./interfaces/http/ratingRoutes'); // Asegúrate de que la ruta sea correcta
 
 app.use(express.json()); // Middleware para parsear JSON
 
@@ -17,7 +18,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
 // Integrar las rutas de reportes
-app.use('/api', reportRoutes); 
+app.use('/api', reportRoutes);
+
+// Integrar las rutas de calificaciones
+app.use('/api', ratingRoutes);
 
 // Middleware de manejo de errores
 app.use(errorMiddleware);
@@ -29,3 +33,5 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
+module.exports = app;

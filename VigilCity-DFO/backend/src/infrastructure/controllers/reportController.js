@@ -1,4 +1,5 @@
 const Report = require('../models/reportModel');
+const Rating = require('../models/ratingModel');
 const { Op } = require('sequelize');
 
 const createReport = async (req, res) => {
@@ -79,17 +80,48 @@ const getReports = async (req, res) => {
         });
 
         // Calcular la distancia lineal y agregarla a cada reporte
-        const reportsWithDistance = reports.map(report => {
+        const reportsWithDistanceAndRating = await Promise.all(reports.map(async report => {
             const distanciaLineal = calculateDistance(latitud, longitud, report.latitud, report.longitud);
+            const ratings = await Rating.findAll({ where: { reporteId: report.id } });
+            const averageRating = ratings.length > 0 
+                ? ratings.reduce((acc, rating) => acc + rating.valor, 0) / ratings.length 
+                : null; // Promedio de ratings
+
             return {
                 ...report.toJSON(), // Convertir el reporte a JSON
                 distanciaLineal,
+                rating: averageRating, // Incluir el promedio de ratings
             };
-        });
+        }));
 
-        return res.status(200).json(reportsWithDistance);
+        return res.status(200).json(reportsWithDistanceAndRating);
     } catch (error) {
         return res.status(500).json({ message: 'Error al consultar reportes', error });
+    }
+};
+
+const getReportById = async (req, res) => {
+    try {
+        const { id } = req.params; // ID del reporte
+
+        // Buscar el reporte por ID
+        const report = await Report.findByPk(id);
+        if (!report) {
+            return res.status(404).json({ message: 'Reporte no encontrado' });
+        }
+
+        // Obtener ratings para el reporte
+        const ratings = await Rating.findAll({ where: { reporteId: report.id } });
+        const averageRating = ratings.length > 0 
+            ? ratings.reduce((acc, rating) => acc + rating.valor, 0) / ratings.length 
+            : null; // Promedio de ratings
+
+        return res.status(200).json({
+            ...report.toJSON(), // Convertir el reporte a JSON
+            rating: averageRating, // Incluir el promedio de ratings
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Error al obtener el reporte', error });
     }
 };
 
@@ -109,4 +141,4 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     return R * c; // Distancia en metros
 };
 
-module.exports = { createReport, deleteReport, getReports }; 
+module.exports = { createReport, deleteReport, getReports, getReportById }; 

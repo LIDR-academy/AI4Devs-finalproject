@@ -40,12 +40,18 @@ Rating.init({
     fechaCreacion: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
+    }, createdAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+    }, updatedAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
     },
 }, {
     sequelize,
     modelName: 'Rating',
     tableName: 'ratings', // Nombre de la tabla en la base de datos
-    timestamps: false, // Si no deseas que Sequelize maneje createdAt y updatedAt
+    timestamps: true, // Si no deseas que Sequelize maneje createdAt y updatedAt
 });
 
 module.exports = Rating;
