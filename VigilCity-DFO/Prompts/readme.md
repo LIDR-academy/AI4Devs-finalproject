@@ -767,7 +767,336 @@ erDiagram
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+**API de Reportes de Incidentes de Seguridad Urbana**
+
+```yaml
+
+openapi: 3.0.3
+info:
+  title: API de Reportes de Seguridad
+  description: Endpoints para la gestión de reportes de seguridad.
+  version: "1.0.0"
+servers:
+  - url: https://api.example.com
+    description: Servidor principal de la API
+
+paths:
+  /api/reportes:
+    post:
+      summary: Crear un reporte de incidente
+      description: Permite a un usuario registrado crear un reporte de incidente de seguridad.
+      tags:
+        - Reportes
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Datos del reporte a crear
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                descripcion:
+                  type: string
+                  description: Descripción del incidente
+                  example: "Descripción del incidente"
+                direccion:
+                  type: string
+                  description: Dirección del incidente
+                  example: "Dirección del incidente"
+                latitud:
+                  type: number
+                  format: float
+                  description: Latitud de la ubicación del incidente
+                  example: 12.345678
+                longitud:
+                  type: number
+                  format: float
+                  description: Longitud de la ubicación del incidente
+                  example: 98.765432
+                categoria:
+                  type: string
+                  description: Categoría del incidente
+                  example: "Categoría del incidente"
+      responses:
+        '201':
+          description: Reporte creado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: Fecha de creación del reporte
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: Fecha de última actualización del reporte
+                  id:
+                    type: string
+                    description: Identificador único del reporte
+                  fechaCreacion:
+                    type: string
+                    format: date-time
+                    description: Fecha de creación del incidente
+                  descripcion:
+                    type: string
+                    description: Descripción del incidente
+                  latitud:
+                    type: string
+                    description: Latitud del incidente
+                  longitud:
+                    type: string
+                    description: Longitud del incidente
+                  categoria:
+                    type: string
+                    description: Categoría del incidente
+                  usuarioId:
+                    type: string
+                    description: Identificador único del usuario que creó el reporte
+              example:
+                createdAt: "2024-11-16T18:02:28.476Z"
+                updatedAt: "2024-11-16T18:02:28.478Z"
+                id: "58d7d518-58b9-4e4d-bc2b-e523602feaaa"
+                fechaCreacion: "2024-11-16T18:02:28.475Z"
+                descripcion: "Descripción del incidente"
+                latitud: "12.345678"
+                longitud: "98.765432"
+                categoria: "Categoría del incidente"
+                usuarioId: "2d290d17-c462-4888-93e1-784ae20755b2"
+        '401':
+          description: No se proporcionó token de autenticación
+        '403':
+          description: Token no válido
+        '500':
+          description: Error interno del servidor
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+```
+
+**Consultar reportes de seguridad por rango**
+
+
+```yaml
+paths:
+  /api/reportes:
+    get:
+      summary: Consultar reportes de seguridad por rango
+      description: Permite consultar reportes de seguridad en un rango de distancia desde una ubicación específica.
+      tags:
+        - Reportes
+      parameters:
+        - name: latitud
+          in: query
+          required: true
+          description: Coordenada de latitud en punto decimal.
+          schema:
+            type: number
+            format: float
+            example: 4.599394
+        - name: longitud
+          in: query
+          required: true
+          description: Coordenada de longitud en punto decimal.
+          schema:
+            type: number
+            format: float
+            example: -74.214062
+        - name: rango
+          in: query
+          required: false
+          description: Distancia en kilómetros (predeterminado: 1).
+          schema:
+            type: number
+            format: float
+            example: 1
+      responses:
+        '200':
+          description: Lista de reportes dentro del rango especificado.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Identificador único del reporte.
+                    usuarioId:
+                      type: string
+                      description: Identificador único del usuario que creó el reporte.
+                    descripcion:
+                      type: string
+                      description: Descripción del incidente.
+                    categoria:
+                      type: string
+                      description: Categoría del incidente.
+                    latitud:
+                      type: string
+                      description: Latitud del incidente.
+                    longitud:
+                      type: string
+                      description: Longitud del incidente.
+                    fechaCreacion:
+                      type: string
+                      format: date-time
+                      description: Fecha de creación del reporte.
+                    createdAt:
+                      type: string
+                      format: date-time
+                      description: Fecha de creación en el sistema.
+                    updatedAt:
+                      type: string
+                      format: date-time
+                      description: Fecha de última actualización.
+                    distanciaLineal:
+                      type: number
+                      format: float
+                      description: Distancia lineal desde la ubicación especificada (en metros).
+                    rating:
+                      type: string
+                      description: Puntuación promedio del reporte (si aplica).
+              example:
+                - id: "936dfa9d-f959-4318-84dd-c6dfa99d2f5c"
+                  usuarioId: "2d290d17-c462-4888-93e1-784ae20755b2"
+                  descripcion: "delectus veniam ut"
+                  categoria: "Esquina peligrosa"
+                  latitud: "4.57939400000000000000000000"
+                  longitud: "-74.21406200000000000000000000"
+                  fechaCreacion: "2024-11-16T18:56:50.834Z"
+                  createdAt: "2024-11-16T18:56:50.834Z"
+                  updatedAt: "2024-11-16T18:56:50.834Z"
+                  distanciaLineal: 1060.89728726091
+                  rating: null
+                - id: "8bbe49aa-bd7f-4fcf-88d3-cf466a0537fb"
+                  usuarioId: "2d290d17-c462-4888-93e1-784ae20755b2"
+                  descripcion: "voluptatem"
+                  categoria: "Asalto en transporte público"
+                  latitud: "4.57231300000000000000000000"
+                  longitud: "-74.22019000000000000000000000"
+                  fechaCreacion: "2024-11-16T18:56:54.234Z"
+                  createdAt: "2024-11-16T18:56:54.234Z"
+                  updatedAt: "2024-11-16T18:56:54.235Z"
+                  distanciaLineal: 268.49359568507225
+                  rating: null
+        '400':
+          description: Parámetros de consulta no válidos.
+        '500':
+          description: Error interno del servidor.
+
+components:
+  securitySchemes: {}
+
+```  
+
+**Calificar un reporte de seguridad**
+
+```yaml
+paths:
+  /api/ratings:
+    post:
+      summary: Calificar un reporte de seguridad
+      description: Permite a los usuarios registrados dar una calificación entre 1 y 5 a un reporte de seguridad, con un comentario opcional.
+      tags:
+        - Calificaciones
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reporteId:
+                  type: string
+                  description: Identificador único del reporte que se va a calificar.
+                  example: "8ec8978e-78da-49b8-9c2c-7d5442e00231"
+                valor:
+                  type: integer
+                  description: Valor de la calificación entre 1 y 5.
+                  example: 5
+                  minimum: 1
+                  maximum: 5
+                comentario:
+                  type: string
+                  description: Comentario opcional sobre el reporte.
+                  example: "No me lo habría imaginado"
+            example:
+              reporteId: "8ec8978e-78da-49b8-9c2c-7d5442e00231"
+              valor: 5
+              comentario: "No me lo habría imaginado"
+      responses:
+        '201':
+          description: Calificación creada exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Identificador único de la calificación creada.
+                  fechaCreacion:
+                    type: string
+                    format: date-time
+                    description: Fecha de creación de la calificación.
+                  reporteId:
+                    type: string
+                    description: Identificador del reporte calificado.
+                  usuarioId:
+                    type: string
+                    description: Identificador del usuario que realizó la calificación.
+                  valor:
+                    type: integer
+                    description: Valor de la calificación.
+                  comentario:
+                    type: string
+                    description: Comentario sobre el reporte.
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: Fecha de creación en el sistema.
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: Fecha de última actualización en el sistema.
+              example:
+                id: "f9354f5b-35cc-4543-acee-b7088278a70b"
+                fechaCreacion: "2024-11-16T21:51:36.493Z"
+                reporteId: "8ec8978e-78da-49b8-9c2c-7d5442e00231"
+                usuarioId: "2d290d17-c462-4888-93e1-784ae20755b2"
+                valor: 5
+                comentario: "No me lo habría imaginado"
+                createdAt: "2024-11-16T21:51:36.494Z"
+                updatedAt: "2024-11-16T21:51:36.494Z"
+        '404':
+          description: El reporte especificado no fue encontrado.
+        '401':
+          description: El usuario no está autenticado.
+        '403':
+          description: El token proporcionado no es válido.
+        '500':
+          description: Error interno del servidor.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+```  
 
 ---
 

@@ -6,9 +6,9 @@
 1. [Descripción general del producto](prompts-descripcion.md#1-descripción-general-del-producto)
 2. [Arquitectura del sistema](prompts-arquitectura.md#2-arquitectura-del-sistema)
 3. [Modelo de datos](prompts-modelo-datos.md#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
+4. [Especificación de la API](prompts-especificacioapi.md#4-especificación-de-la-api)
+5. [Historias de usuario](prompts-hu.md#5-historias-de-usuario)
+6. [Tickets de trabajo](prompts-tickets.md#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
 
 ---
