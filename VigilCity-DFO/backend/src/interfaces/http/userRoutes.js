@@ -20,12 +20,15 @@ const validate = (req, res, next) => {
 router.get('/:id', authMiddleware, UserController.getUserById); // Asegúrate de que UserController.getUserById esté definido
 
 // Ruta para obtener todos los usuarios
-router.get('/', UserController.getAllUsers); // Asegúrate de que UserController.getAllUsers esté definido
+router.get('/', authMiddleware, UserController.getAllUsers); // Asegúrate de que UserController.getAllUsers esté definido
 
 // Ruta para actualizar un usuario
 router.put('/:id', authMiddleware, userValidation.updateUser, validate, UserController.updateUser); // Verifica que UserController.updateUser esté definido
 
 // Ruta para eliminar un usuario
 router.delete('/:id', authMiddleware, UserController.deleteUser); // Verifica que UserController.deleteUser esté definido
+
+// Ruta para actualizar la contraseña
+router.put('/:id/password', authMiddleware, userValidation.updatePassword, validate, UserController.updatePassword);
 
 module.exports = router;

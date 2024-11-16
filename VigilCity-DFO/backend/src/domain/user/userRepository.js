@@ -66,6 +66,10 @@ class UserRepository {
             throw new Error('Error al eliminar el usuario: ' + error.message);
         }
     }
+
+    async updatePassword(userId, newPassword) {
+        return await User.update({ contraseña: newPassword }, { where: { id: userId } });
+    }
 }
 
 module.exports = new UserRepository(); 

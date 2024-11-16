@@ -40,6 +40,28 @@ class UserService {
     async getAllUsers() {
         return await UserRepository.getAllUsers(); // Asegúrate de que esta función exista en tu repositorio
     }
+
+    async updatePassword(userId, contraseña, nuevaContraseña) {
+        const user = await UserRepository.getUserById(userId); // Asegúrate de que esta función exista
+
+        if (!user) {
+            throw new Error('Usuario no encontrado');
+        }
+
+        // Verificar la contraseña actual
+        const isMatch = await bcrypt.compare(contraseña, user.contraseña);
+        if (!isMatch) {
+            throw new Error('La contraseña actual es incorrecta');
+        }
+
+        // Hashear la nueva contraseña
+        const hashedNewPassword = await bcrypt.hash(nuevaContraseña, 10);
+
+        // Actualizar la contraseña en el repositorio
+        await UserRepository.updatePassword(userId, hashedNewPassword); // Asegúrate de que esta función exista
+
+        return user; // O devuelve el usuario actualizado si es necesario
+    }
 }
 
 module.exports = new UserService();

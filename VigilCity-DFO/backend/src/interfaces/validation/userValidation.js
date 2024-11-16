@@ -29,6 +29,18 @@ const userValidation = {
         body('contraseña').optional().isString().isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres.'),
         body('rol').optional().isString().withMessage('El rol debe ser una cadena de texto.'),
     ],
+    updatePassword: [
+        body('contraseña')
+            .isString()
+            .withMessage('La contraseña debe ser una cadena de texto.')
+            .isLength({ min: 6 })
+            .withMessage('La contraseña debe tener al menos 6 caracteres.'),
+        body('nuevaContraseña')
+            .isString()
+            .withMessage('La nueva contraseña debe ser una cadena de texto.')
+            .isLength({ min: 6 })
+            .withMessage('La nueva contraseña debe tener al menos 6 caracteres.'),
+    ],
 };
 
 module.exports = userValidation;
