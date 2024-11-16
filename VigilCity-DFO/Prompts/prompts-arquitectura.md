@@ -152,3 +152,25 @@ Dame el modelo de arquitectura en mermaid para MVP, teniendo en cuenta que solo 
 
 Teniendo en cuenta que el código fuente lo tendré en github, el back y el front será desplegado en back4app y la base de datos estará en elephantsql, ¿Cuál sería el proceso de despliegue?
 Genera una respuesta detallada
+
+**Prompt 11:**
+
+> Usando el asistente Cursor
+
+Vamos a trabajar con node y express, teniendo en cuenta el las variables dentro del environment en @docker-compose.yml ¿Cómo se puede dejar en un archivo .env y que sean mapeadas al archivo docker-compose?
+
+Para mover las variables de entorno a un archivo .env y hacer que sean mapeadas en tu archivo docker-compose.yml, puedes seguir estos pasos:
+1. Crea un archivo .env en el mismo directorio que tu docker-compose.yml y agrega las variables de entorno allí. Por ejemplo:
+Modifica tu archivo docker-compose.yml para que use las variables del archivo .env. Aquí está el código actualizado:
+Explicación de los cambios:
+Se creó un archivo .env que contiene las variables de entorno.
+En el archivo docker-compose.yml, se reemplazaron las variables de entorno por referencias a las variables definidas en el archivo .env usando la sintaxis ${VARIABLE_NAME}.
+Esto permite que Docker Compose cargue automáticamente las variables desde el archivo .env al iniciar los servicios.
+# Contexto del proyecto: @readme.md 
+La estructura de archivos estaba pensada para hacerlo por microservicios, pero lo vamos a cambiar y a usar api rest en una única estructura de archivos que contenga las funcionalidades para el MVP que se compone de las entidades Usuario, Reporte, Cometario y Rating.
+
+Usando el patrón de arquitectura DDD, define:
+
+1. La estructura de carpetas y archivos del backend
+2. Genera en un script .bat para DOS que permita crear la estructura de archivos
+3. Explica la estructura de las carpetas

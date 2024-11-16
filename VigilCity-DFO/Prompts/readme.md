@@ -368,6 +368,132 @@ echo Estructura de archivos del backend creada exitosamente.
 pause
 ```
 
+### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros del MVP**
+
+/backend
+├── src
+│   ├── application                # Casos de uso / lógica de aplicación
+│   │   ├── user                   # Casos de uso para Usuario
+│   │   │   ├── createUser.js      # Caso de uso: Crear usuario
+│   │   │   ├── listUsers.js       # Caso de uso: Listar usuarios
+│   │   │   └── deleteUser.js      # Caso de uso: Eliminar usuario
+│   │   ├── report                  # Casos de uso para Reporte
+│   │   │   ├── createReport.js     # Caso de uso: Crear reporte
+│   │   │   ├── listReports.js      # Caso de uso: Listar reportes
+│   │   │   └── deleteReport.js     # Caso de uso: Eliminar reporte
+│   │   ├── comment                 # Casos de uso para Comentario
+│   │   │   ├── createComment.js    # Caso de uso: Crear comentario
+│   │   │   ├── listComments.js      # Caso de uso: Listar comentarios
+│   │   │   └── deleteComment.js     # Caso de uso: Eliminar comentario
+│   │   └── rating                  # Casos de uso para Rating
+│   │       ├── createRating.js     # Caso de uso: Crear rating
+│   │       ├── listRatings.js      # Caso de uso: Listar ratings
+│   │       └── deleteRating.js     # Caso de uso: Eliminar rating
+│   ├── domain                     # Lógica de negocio y entidades del dominio
+│   │   ├── user
+│   │   │   ├── user.js             # Entidad de dominio "Usuario"
+│   │   │   └── userRepository.js    # Interfaz del repositorio de usuarios
+│   │   ├── report
+│   │   │   ├── report.js           # Entidad de dominio "Reporte"
+│   │   │   └── reportRepository.js  # Interfaz del repositorio de reportes
+│   │   ├── comment
+│   │   │   ├── comment.js          # Entidad de dominio "Comentario"
+│   │   │   └── commentRepository.js # Interfaz del repositorio de comentarios
+│   │   └── rating
+│   │       ├── rating.js           # Entidad de dominio "Rating"
+│   │       └── ratingRepository.js  # Interfaz del repositorio de ratings
+│   ├── infrastructure             # Adaptadores de infraestructura (API, DB)
+│   │   ├── controllers            # Controladores HTTP
+│   │   │   ├── userController.js   # Controlador para usuarios
+│   │   │   ├── reportController.js  # Controlador para reportes
+│   │   │   ├── commentController.js # Controlador para comentarios
+│   │   │   └── ratingController.js  # Controlador para ratings
+│   │   ├── database                # Adaptadores de base de datos
+│   │   │   ├── models              # Modelos de la base de datos
+│   │   │   │   ├── userModel.js     # Modelo de la entidad "Usuario"
+│   │   │   │   ├── reportModel.js   # Modelo de la entidad "Reporte"
+│   │   │   │   ├── commentModel.js  # Modelo de la entidad "Comentario"
+│   │   │   │   └── ratingModel.js   # Modelo de la entidad "Rating"
+│   │   │   └── db.js               # Configuración de la base de datos
+│   │   └── webserver.js            # Configuración del servidor web (Express)
+│   └── interfaces                 # Interfaces de entrada y salida
+│       ├── http                   # Definición de rutas HTTP
+│       │   ├── userRoutes.js       # Rutas para usuarios
+│       │   ├── reportRoutes.js      # Rutas para reportes
+│       │   ├── commentRoutes.js     # Rutas para comentarios
+│       │   └── ratingRoutes.js      # Rutas para ratings
+├── config                         # Configuración específica del servicio
+│   ├── default.json               # Configuración por defecto
+│   ├── development.json           # Configuración de desarrollo
+│   └── production.json            # Configuración de producción
+├── tests                          # Pruebas unitarias y de integración
+│   ├── unit
+│   │   ├── userService.test.js     # Prueba unitaria del servicio de usuarios
+│   │   ├── reportService.test.js    # Prueba unitaria del servicio de reportes
+│   │   ├── commentService.test.js   # Prueba unitaria del servicio de comentarios
+│   │   └── ratingService.test.js    # Prueba unitaria del servicio de ratings
+│   └── integration
+│       ├── userRoutes.test.js      # Prueba de integración de rutas de usuarios
+│       ├── reportRoutes.test.js     # Prueba de integración de rutas de reportes
+│       ├── commentRoutes.test.js    # Prueba de integración de rutas de comentarios
+│       └── ratingRoutes.test.js     # Prueba de integración de rutas de ratings
+├── .env                           # Variables de entorno
+├── Dockerfile                     # Definición del contenedor Docker para el backend
+├── docker-compose.yml             # Configuración de Docker Compose
+└── package.json                   # Dependencias y scripts del proyecto
+
+**Explicación de la Estructura de Carpetas**
+
+La estructura de carpetas propuesta para el backend del proyecto utilizando el patrón de arquitectura DDD (Domain-Driven Design) está organizada de manera que cada componente del sistema se agrupe según su responsabilidad y función. A continuación, se detalla la función de cada carpeta:
+
+````plaintext
+/backend
+├── src
+│   ├── application                # Casos de uso / lógica de aplicación
+│   ├── domain                     # Lógica de negocio y entidades del dominio
+│   ├── infrastructure             # Adaptadores de infraestructura (API, DB)
+│   └── interfaces                 # Interfaces de entrada y salida
+├── config                         # Configuración específica del servicio
+├── tests                          # Pruebas unitarias y de integración
+├── .env                           # Variables de entorno
+├── Dockerfile                     # Definición del contenedor Docker para el backend
+├── docker-compose.yml             # Configuración de Docker Compose
+└── package.json                   # Dependencias y scripts del proyecto
+````
+
+1. **`src`**: 
+   - Contiene todo el código fuente de la aplicación. Se divide en varias subcarpetas que representan diferentes capas de la arquitectura.
+
+   - **`application`**: 
+     - Aquí se encuentran los casos de uso de la aplicación. Cada carpeta dentro de `application` corresponde a una entidad del dominio (Usuario, Reporte, Comentario, Rating) y contiene los archivos que implementan la lógica específica para crear, listar, eliminar, etc. de cada entidad.
+
+   - **`domain`**: 
+     - Esta carpeta contiene las entidades del dominio y la lógica de negocio. Cada entidad tiene su propio archivo que define sus propiedades y comportamientos. También incluye interfaces de repositorio que definen cómo interactuar con la persistencia de datos.
+
+   - **`infrastructure`**: 
+     - Aquí se encuentran los adaptadores que permiten la interacción con el mundo exterior, como controladores HTTP y modelos de base de datos. Los controladores manejan las solicitudes y respuestas HTTP, mientras que los modelos definen cómo se estructuran los datos en la base de datos.
+
+   - **`interfaces`**: 
+     - Contiene las definiciones de las rutas HTTP que conectan los controladores con el cliente. Cada archivo de rutas se encarga de definir las rutas y los métodos HTTP asociados a cada entidad.
+
+2. **`config`**: 
+   - Esta carpeta contiene archivos de configuración para diferentes entornos (desarrollo, producción, etc.). Aquí se pueden definir configuraciones específicas que la aplicación necesita para funcionar correctamente en cada entorno.
+
+3. **`tests`**: 
+   - Contiene las pruebas unitarias y de integración. Se divide en subcarpetas para pruebas unitarias y de integración, donde se pueden encontrar pruebas específicas para cada caso de uso y ruta.
+
+4. **`.env`**: 
+   - Archivo que contiene las variables de entorno necesarias para la configuración de la aplicación, como credenciales de base de datos y otras configuraciones sensibles.
+
+5. **`Dockerfile`**: 
+   - Define cómo se construye la imagen Docker para el backend. Incluye instrucciones sobre cómo instalar dependencias y configurar el entorno de ejecución.
+
+6. **`docker-compose.yml`**: 
+   - Archivo de configuración para Docker Compose que define cómo se deben ejecutar los contenedores de la aplicación, incluyendo la base de datos y otros servicios necesarios.
+
+7. **`package.json`**: 
+   - Archivo que contiene las dependencias del proyecto y scripts de ejecución. Es fundamental para la gestión de paquetes en un proyecto Node.js.
+
 ### **2.4. Infraestructura y despliegue**
 
 ```mermaid
