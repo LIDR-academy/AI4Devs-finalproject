@@ -13,25 +13,33 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
         references: {
-          model: 'usuarios', // Nombre de la tabla de usuarios
+          model: 'usuarios',
           key: 'id',
         },
-      },
-      titulo: {
-        type: Sequelize.STRING,
-        allowNull: false,
       },
       descripcion: {
         type: Sequelize.TEXT,
         allowNull: false,
       },
+      direccion: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      latitud: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      longitud: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      categoria: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       fechaCreacion: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
-      },
-      estado: {
-        type: Sequelize.STRING,
-        allowNull: false,
       },
       createdAt: {
         allowNull: false,

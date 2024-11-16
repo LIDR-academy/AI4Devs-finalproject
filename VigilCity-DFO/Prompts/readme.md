@@ -818,11 +818,11 @@ Como **usuario registrado**, quiero **reportar problemas de seguridad en mi áre
 
 - **ID del Ticket:** TKT-201
 - **Título del Ticket:** Implementación de la entidad y API de Reporte de Incidencias
-- **Descripción:** Crear el modelo de datos para la entidad "Reporte" en la base de datos usando Sequelize, incluyendo los campos `id_reporte`, `id_usuario`, `descripcion`, `direccion`, `latitud`, `longitud`, `categoria`, y `fecha_creacion`.
+- **Descripción:** Crear el modelo de datos para la entidad "Reporte" en la base de datos usando Sequelize, incluyendo los campos `id_reporte`, `id_usuario`, `descripcion`, `latitud`, `longitud`, `categoria`, y `fecha_creacion`.
 - **Criterios de aceptación:**
   - La entidad "Reporte" se almacena correctamente en la base de datos.
   - La API permite crear un nuevo reporte asociándolo al `id_usuario` correspondiente.
-  - Los datos del reporte incluyen todos los campos requeridos (`descripcion`, `direccion`, `latitud`, `longitud`, y `categoria`).
+  - Los datos del reporte incluyen todos los campos requeridos (`descripcion`, `latitud`, `longitud`, y `categoria`).
 - **Prioridad:** Alta
 - **Estimación de esfuerzo:** 6 horas
 - **Tareas Técnicas:**

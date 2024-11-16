@@ -17,27 +17,41 @@ Report.init({
             key: 'id',
         },
     },
-    titulo: {
+    descripcion: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
+    categoria: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    descripcion: {
-        type: DataTypes.TEXT,
+    latitud: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+    },
+    longitud: {
+        type: DataTypes.FLOAT,
         allowNull: false,
     },
     fechaCreacion: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
-    estado: {
-        type: DataTypes.STRING,
+    createdAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+        allowNull: false,
+    },
+    updatedAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
         allowNull: false,
     },
 }, {
     sequelize,
     modelName: 'Report',
     tableName: 'reportes', // Nombre de la tabla en la base de datos
-    timestamps: false, // Si no deseas que Sequelize maneje createdAt y updatedAt
+    timestamps: true, // Si no deseas que Sequelize maneje createdAt y updatedAt
 });
 
 module.exports = Report;
