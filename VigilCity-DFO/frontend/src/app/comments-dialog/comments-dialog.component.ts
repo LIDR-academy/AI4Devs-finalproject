@@ -146,6 +146,7 @@ export class CommentsDialogComponent {
     
     if (confirmar && this.data.onDelete) {
       this.data.onDelete();
+      this.dialogRef.close();
     }
   }
 
@@ -156,7 +157,9 @@ export class CommentsDialogComponent {
         rating: this.newRating,
         text: this.newComment
       });
-      this.dialogRef.close();
+      this.dialogRef.close(); // Cierra el diálogo después de aceptar
+    } else {
+      alert('Por favor, asegúrate de que has seleccionado una calificación y escrito un comentario.'); // Mensaje de error si no se cumplen las condiciones
     }
   }
 }

@@ -209,18 +209,29 @@ export class MapaComponent implements OnInit {
   }
 
   onMarkerClick(marker: Marker, mapMarker: MapMarker) {
-    this.selectedMarker = marker;
-    
-    const dialogRef = this.dialog.open(CommentsDialogComponent, {
-      width: '500px',
-      position: { top: '50px' },
-      data: { 
-        marker: marker,
-        onDelete: () => {
-          this.removeMarker(marker);
-          dialogRef.close();
-        }
-      }
+    const infoWindow = new google.maps.InfoWindow({
+      content: `
+        <div style="padding: 10px;">
+          <strong>${marker.category}</strong><br>
+          ${marker.description}<br>
+          <div style="margin-top: 10px;">
+            <button onclick="window.openComments()">Ver Comentarios</button>
+          </div>
+        </div>
+      `
+    });
+
+    (window as any).openComments = () => {
+      infoWindow.close();
+      const dialogRef = this.dialog.open(CommentsDialogComponent, {
+        width: '500px',
+        data: { marker: marker, onDelete: () => this.onDelete(marker) }
+      });
+    };
+
+    infoWindow.open({
+      anchor: mapMarker.marker,
+      shouldFocus: false,
     });
   }
 
@@ -241,5 +252,9 @@ export class MapaComponent implements OnInit {
     if (this.infoWindow) {
       this.infoWindow.close();
     }
+  }
+
+  onDelete(marker: Marker) {
+    this.removeMarker(marker);
   }
 }
