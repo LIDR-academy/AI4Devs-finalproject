@@ -1215,5 +1215,16 @@ Como **usuario registrado**, quiero **reportar problemas de seguridad en mi áre
 
 **Pull Request 2**
 
+- Frontend ajustado con la creación de marcas y consulta de comentarios en una marca
+- Frontend angular 18
+- Gitignore actualizado con las exepciones para angular
+- Se crea el archivo readme para el backend
+- Se ajustan los Prompts para la especificación de las API y se actualiza el readme de prompts
+- Backend del MVP finalizado
+- Finalizados los endpoints para los reportes
+- Autenticación completa con cambio de contraseña y no mostrando la contraseña actual al consultar el o los usuarios  
+- APIs de autenticación completado
+- Prompts generales finalizados, se pasa a generar código fuente
+
 **Pull Request 3**
 
