@@ -478,8 +478,92 @@ please create a diagram given the following:
 ### 5. Historias de Usuario
 
 **Prompt 1:**
+Add the main three User Stories related to the Health Records Manager Feature by analyzing core functionalities to create an MVP. Focus on technical and functional requirements already defined from previous conversations.
+
+# Steps
+
+1. **Analyze Core Functionalities**: Review and understand the main functionalities of the Health Records Manager feature that are critical for an MVP.
+2. **Examine Requirements**: Look at technical and functional requirements from previous conversations to guide feature selection.
+3. **Draft User Stories**: Use the given template to create three detailed user stories that best represent the essential features.
+
+# User Story Template
+
+Title: [Short descriptive main title]
+
+***As a [role], I want to [action], so that [benefit].***
+
+Acceptance Criteria:
+- [List specific acceptance criteria relevant to the actions and benefits described]
+
+Priority: [High/Medium/Low]
+
+Story Points: [Estimate, often as a numeric value indicating complexity or effort required]
+
+Description:
+[Provide additional details or context that add value to the understanding of the story's scope or purpose]
+
+# Output Format
+
+The response should be composed of three user stories formatted according to the template provided. Each story should include:
+- A descriptive title 
+- A user scenario including role, desired action, and benefit
+- Clear acceptance criteria as bulleted list
+- Priority level
+- Story points estimation
+- A detailed description
+
+# Examples
+
+Example 1:
+
+Title: Access Medical History
+
+***As a doctor, I want to view a patient's complete medical history, so that I can make informed treatment decisions.***
+
+Acceptance Criteria:
+- The system displays complete medical history sorted chronologically.
+- Users can search specific medical events.
+- Relevant medical history data is accessible within three clicks.
+
+Priority: High
+
+Story Points: 8
+
+Description:
+The feature should pull historical data from integrated hospital databases and display it through an intuitive interface to ensure quick access during patient consultations.
+
+(Real examples should have more specific acceptance criteria tailored to the project's unique requirements, including technical considerations and potential integration issues.)
 
 **Prompt 2:**
+Revise the user stories according to the instructions provided:
+
+# Steps
+
+1. Revise User Story 1:
+   - Alter the story to describe masking all PII data on the frontend before uploading files.
+   - Ensure the conversion of files to text also occurs on the frontend, so registered and encrypted data is in text format.
+   - Include that the text will be used for summarizing and interpreting results.
+   - Change the functionality from deleting uploaded files to allowing users to remove specific registries.
+   - Indicate that a lightweight database will be used in the backend instead of S3.
+
+2. Revise User Story 2:
+   - Modify the story to show extracted information without opening PDFs or files.
+   - Add a constraint that only allows files of no more than 10 pages.
+   - Specify that extracted data will be used for interpreting results.
+
+3. Replace User Story 3:
+   - Remove the current story and replace it with a feature that creates trends based on previous data.
+
+# Output Format
+
+- Each revised or new user story should be clearly and separately written.
+- Use bullet points or short paragraphs for each user story to maintain clarity.
+
+# Notes
+
+- Ensure that the revised user stories address all the stated changes and constraints.
+- Replace technical functionality descriptions with user needs where applicable in user stories.
+- Consider the user’s perspective; ensure stories reflect functionality that is clear and actionable from a user's point of view.
 
 **Prompt 3:**
 
