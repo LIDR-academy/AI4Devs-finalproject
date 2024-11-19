@@ -26,7 +26,7 @@
    - **Pending!**
 
 ### 0.5. URL o archivo comprimido del repositorio
-   - **[Final-Project-JAA](https://github.com/eltonina/finalproject-JAA)**
+   - **[Final-Project-JAA](https://github.com/eltonina/vitamind)**
 
 ---
 
@@ -896,11 +896,63 @@ The infrastructure uses AWS as the primary hosting environment, with Docker cont
 
 **Historia de Usuario 1**
 
+### Revised User Stories for the Health Records Manager Feature (VitaMind MVP)
+
+---
+
+### **1. Title: Mask PII and Upload Summarized Health Records**
+
+***As a user, I want my personal information masked before uploading health records, so that my sensitive data remains protected.***
+
+**Acceptance Criteria:**
+- The system automatically identifies and masks PII (e.g., name, address, date of birth) in uploaded files on the frontend.
+- Uploaded files are converted to text format on the frontend before submission.
+- Text data is encrypted before being sent to the backend for storage.
+- Users can view a summary of the text data, which includes interpreted results.
+- Users can remove specific entries from their health records instead of deleting full documents.
+- Backend stores data in a lightweight relational database (PostgreSQL), not file storage like S3.
+
+**Priority**: High  
+**Story Points**: 10  
+
+**Description**:  
+This feature ensures data privacy by masking PII during file preprocessing on the frontend, providing peace of mind to users. The use of a lightweight database like PostgreSQL allows efficient storage of structured text data while supporting fast access for analytics and summarization.
+
+
 **Historia de Usuario 2**
+
+***As a user, I want to view extracted and summarized data from my health records, so that I can access relevant information without needing to open the original files.***
+
+**Acceptance Criteria:**
+- Users can see extracted information (e.g., key metrics, medical terms) in an organized table or card format without opening files.
+- Files larger than 10 pages are rejected during upload with a clear message displayed.
+- Extracted data is categorized for interpretation, such as lab results, prescriptions, or diagnoses.
+- Data is available for further AI-driven analysis and interpretation.
+
+**Priority**: High  
+**Story Points**: 6  
+
+**Description**:  
+This feature optimizes usability by showing users the most critical insights directly within the interface, eliminating the need for manual file reviews. The 10-page limit ensures manageable processing times and enhances performance.
+
 
 **Historia de Usuario 3**
 
----
+***As a user, I want to see trends generated from my health records, so that I can monitor my progress over time.***
+
+**Acceptance Criteria:**
+- The system analyzes uploaded records to identify trends in key health metrics (e.g., glucose levels, cholesterol, blood pressure).
+- Users can view visualized trends, such as graphs or charts, over customizable time ranges (e.g., months or years).
+- Data used for trends is automatically updated when new records are uploaded.
+- Users can filter trend data by category (e.g., lab tests, prescriptions).
+- Insights are generated in compliance with healthcare data privacy standards.
+
+**Priority**: Medium  
+**Story Points**: 8  
+
+**Description**:  
+This feature leverages uploaded data to provide users with actionable insights into their health trends. By offering visual feedback, the system empowers users to make informed decisions and track their health progress easily.
+
 
 ## 6. Tickets de Trabajo
 
@@ -908,11 +960,55 @@ The infrastructure uses AWS as the primary hosting environment, with Docker cont
 
 **Ticket 1**
 
+- **Title**: Implement File Upload Feature  
+- **Description**:  
+  Build a frontend interface to allow users to upload health records securely. Include validations for file type (PDF, DOCX) and size limits (e.g., 10MB). Uploaded files will be passed to the frontend preprocessing pipeline for PII masking and text conversion.  
+
+- **Criteria of Acceptance**:  
+  - Users can upload files through the UI.  
+  - File type and size validations are implemented.  
+  - Files are temporarily stored on the client side before preprocessing.  
+  - Error messages are displayed for invalid file uploads.  
+
+- **Priority**: High  
+- **Estimate**: 5 Story Points  
+- **Tags**: Frontend, UI/UX  
+- **User Stories Links**: Story_1  
+
 **Ticket 2**
+
+- **Title**: Create Backend Endpoint for Storing Processed Data  
+- **Description**:  
+  Develop a RESTful API endpoint to securely receive processed health records (text data) from the frontend. The endpoint should validate incoming requests, encrypt the data, and store it in the database.  
+
+- **Criteria of Acceptance**:  
+  - API endpoint accepts processed data payloads in JSON format.  
+  - Requests without authentication or proper structure are rejected.  
+  - Encrypted data is successfully stored in the PostgreSQL database.  
+  - Unit tests cover key validation and storage flows.  
+
+- **Priority**: High  
+- **Estimate**: 5 Story Points  
+- **Tags**: Backend, API, Security  
+- **User Stories Links**: Story_1  
 
 **Ticket 3**
 
----
+#### **Task 5: Database Migrations**  
+- **Title**: Create Database Migrations for Health Records Schema  
+- **Description**:  
+  Define and execute PostgreSQL database migrations for health record storage. Include fields for encrypted data, metadata, and user association.  
+
+- **Criteria of Acceptance**:  
+  - Migrations are created and tested for the development and production databases.  
+  - Schema includes fields for encrypted text, timestamps, and user IDs.  
+  - Migrations can be rolled back if necessary.  
+
+- **Priority**: High  
+- **Estimate**: 3 Story Points  
+- **Tags**: Backend, Database  
+- **User Stories Links**: Story_1  
+
 
 ## 7. Pull Requests
 

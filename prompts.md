@@ -478,8 +478,92 @@ please create a diagram given the following:
 ### 5. Historias de Usuario
 
 **Prompt 1:**
+Add the main three User Stories related to the Health Records Manager Feature by analyzing core functionalities to create an MVP. Focus on technical and functional requirements already defined from previous conversations.
+
+# Steps
+
+1. **Analyze Core Functionalities**: Review and understand the main functionalities of the Health Records Manager feature that are critical for an MVP.
+2. **Examine Requirements**: Look at technical and functional requirements from previous conversations to guide feature selection.
+3. **Draft User Stories**: Use the given template to create three detailed user stories that best represent the essential features.
+
+# User Story Template
+
+Title: [Short descriptive main title]
+
+***As a [role], I want to [action], so that [benefit].***
+
+Acceptance Criteria:
+- [List specific acceptance criteria relevant to the actions and benefits described]
+
+Priority: [High/Medium/Low]
+
+Story Points: [Estimate, often as a numeric value indicating complexity or effort required]
+
+Description:
+[Provide additional details or context that add value to the understanding of the story's scope or purpose]
+
+# Output Format
+
+The response should be composed of three user stories formatted according to the template provided. Each story should include:
+- A descriptive title 
+- A user scenario including role, desired action, and benefit
+- Clear acceptance criteria as bulleted list
+- Priority level
+- Story points estimation
+- A detailed description
+
+# Examples
+
+Example 1:
+
+Title: Access Medical History
+
+***As a doctor, I want to view a patient's complete medical history, so that I can make informed treatment decisions.***
+
+Acceptance Criteria:
+- The system displays complete medical history sorted chronologically.
+- Users can search specific medical events.
+- Relevant medical history data is accessible within three clicks.
+
+Priority: High
+
+Story Points: 8
+
+Description:
+The feature should pull historical data from integrated hospital databases and display it through an intuitive interface to ensure quick access during patient consultations.
+
+(Real examples should have more specific acceptance criteria tailored to the project's unique requirements, including technical considerations and potential integration issues.)
 
 **Prompt 2:**
+Revise the user stories according to the instructions provided:
+
+# Steps
+
+1. Revise User Story 1:
+   - Alter the story to describe masking all PII data on the frontend before uploading files.
+   - Ensure the conversion of files to text also occurs on the frontend, so registered and encrypted data is in text format.
+   - Include that the text will be used for summarizing and interpreting results.
+   - Change the functionality from deleting uploaded files to allowing users to remove specific registries.
+   - Indicate that a lightweight database will be used in the backend instead of S3.
+
+2. Revise User Story 2:
+   - Modify the story to show extracted information without opening PDFs or files.
+   - Add a constraint that only allows files of no more than 10 pages.
+   - Specify that extracted data will be used for interpreting results.
+
+3. Replace User Story 3:
+   - Remove the current story and replace it with a feature that creates trends based on previous data.
+
+# Output Format
+
+- Each revised or new user story should be clearly and separately written.
+- Use bullet points or short paragraphs for each user story to maintain clarity.
+
+# Notes
+
+- Ensure that the revised user stories address all the stated changes and constraints.
+- Replace technical functionality descriptions with user needs where applicable in user stories.
+- Consider the user’s perspective; ensure stories reflect functionality that is clear and actionable from a user's point of view.
 
 **Prompt 3:**
 
@@ -488,8 +572,62 @@ please create a diagram given the following:
 ### 6. Tickets de Trabajo
 
 **Prompt 1:**
+Act as an expert project manager to organize tasks for a project with one full-stack developer, ensuring iterative and valuable releases. Create tasks using the given template and prioritize them for these three user stories.
+
+Consider the following details for each task:
+
+- Identify tasks that deliver immediate value or enable further progress as high priority.
+- Break down tasks into manageable units.
+- Define clear acceptance criteria to ensure task completion satisfaction.
+- Include relevant user stories to maintain a link to overall project goals.
+
+# Steps
+
+1. **Task Identification**: Analyze project requirements to identify key tasks. 
+2. **Prioritization**: Assign each task a priority based on its impact and urgency.
+3. **Template Integration**: Use the provided template to outline tasks, ensuring each section is completed.
+4. **Validation**: Ensure tasks meet project goals and can be accomplished by the single available developer.
+5. **Iterative Release Planning**: Structure tasks so they contribute to incremental, valuable releases.
+
+# Output Format
+
+Each task should be formatted according to this structure:
+
+- Title: [Job Ticket Title]
+- Description: Detailed technical description of the task.
+- Criteria of Acceptance: Specific success indicators for the task.
+  - List out each acceptance criterion clearly.
+- Priority: Use High, Medium, or Low to indicate urgency and importance.
+- Estimate: Use a range of story points as an estimate for task completion.
+- Tags: Identify applicable tags such as Frontend, Backend, or DevOps.
+- User Stories Links: Reference the relevant user story linked to the task.
+
+# Examples
+
+**Example 1**
+- Title: Setup Authentication Framework
+- Description: Implement and configure the authentication system using OAuth 2.0.
+- Criteria of acceptance:
+  - Users can sign up with an email and password.
+  - Users can log in using Google OAuth.
+  - Password reset functionality is active.
+- Priority: High
+- Estimate: 5 Story Points
+- Tags: Backend, Security
+- User Stories Links: Story_1
+
+**Example 2**
+- Title: Design User Dashboard
+- Description: Create the frontend interface for the user dashboard, incorporating reactive elements.
+- Criteria of acceptance:
+  - Dashboard displays user data dynamically from the API.
+  - Responsive design for different screen sizes.
+  - Consistent look and feel with the overall design scheme.
+- Priority: Medium
+- Estimate: 8 Story Points
 
 **Prompt 2:**
+add more tasks  that are missed, for example we need to upload the file before task 1. We need to create the endpoints relatives to backend for task 2 and 3. We need to consider User interface relevant to each features. We need to create yaml or actions in GitHub for pipelines and create the Terraform files. We also need to create seeder for test data and create migrations in the backend. Please add these tasks and use the same format than before, and unify everything 
 
 **Prompt 3:**
 
