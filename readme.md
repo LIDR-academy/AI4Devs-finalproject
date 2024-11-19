@@ -960,11 +960,55 @@ This feature leverages uploaded data to provide users with actionable insights i
 
 **Ticket 1**
 
+- **Title**: Implement File Upload Feature  
+- **Description**:  
+  Build a frontend interface to allow users to upload health records securely. Include validations for file type (PDF, DOCX) and size limits (e.g., 10MB). Uploaded files will be passed to the frontend preprocessing pipeline for PII masking and text conversion.  
+
+- **Criteria of Acceptance**:  
+  - Users can upload files through the UI.  
+  - File type and size validations are implemented.  
+  - Files are temporarily stored on the client side before preprocessing.  
+  - Error messages are displayed for invalid file uploads.  
+
+- **Priority**: High  
+- **Estimate**: 5 Story Points  
+- **Tags**: Frontend, UI/UX  
+- **User Stories Links**: Story_1  
+
 **Ticket 2**
+
+- **Title**: Create Backend Endpoint for Storing Processed Data  
+- **Description**:  
+  Develop a RESTful API endpoint to securely receive processed health records (text data) from the frontend. The endpoint should validate incoming requests, encrypt the data, and store it in the database.  
+
+- **Criteria of Acceptance**:  
+  - API endpoint accepts processed data payloads in JSON format.  
+  - Requests without authentication or proper structure are rejected.  
+  - Encrypted data is successfully stored in the PostgreSQL database.  
+  - Unit tests cover key validation and storage flows.  
+
+- **Priority**: High  
+- **Estimate**: 5 Story Points  
+- **Tags**: Backend, API, Security  
+- **User Stories Links**: Story_1  
 
 **Ticket 3**
 
----
+#### **Task 5: Database Migrations**  
+- **Title**: Create Database Migrations for Health Records Schema  
+- **Description**:  
+  Define and execute PostgreSQL database migrations for health record storage. Include fields for encrypted data, metadata, and user association.  
+
+- **Criteria of Acceptance**:  
+  - Migrations are created and tested for the development and production databases.  
+  - Schema includes fields for encrypted text, timestamps, and user IDs.  
+  - Migrations can be rolled back if necessary.  
+
+- **Priority**: High  
+- **Estimate**: 3 Story Points  
+- **Tags**: Backend, Database  
+- **User Stories Links**: Story_1  
+
 
 ## 7. Pull Requests
 

@@ -572,8 +572,62 @@ Revise the user stories according to the instructions provided:
 ### 6. Tickets de Trabajo
 
 **Prompt 1:**
+Act as an expert project manager to organize tasks for a project with one full-stack developer, ensuring iterative and valuable releases. Create tasks using the given template and prioritize them for these three user stories.
+
+Consider the following details for each task:
+
+- Identify tasks that deliver immediate value or enable further progress as high priority.
+- Break down tasks into manageable units.
+- Define clear acceptance criteria to ensure task completion satisfaction.
+- Include relevant user stories to maintain a link to overall project goals.
+
+# Steps
+
+1. **Task Identification**: Analyze project requirements to identify key tasks. 
+2. **Prioritization**: Assign each task a priority based on its impact and urgency.
+3. **Template Integration**: Use the provided template to outline tasks, ensuring each section is completed.
+4. **Validation**: Ensure tasks meet project goals and can be accomplished by the single available developer.
+5. **Iterative Release Planning**: Structure tasks so they contribute to incremental, valuable releases.
+
+# Output Format
+
+Each task should be formatted according to this structure:
+
+- Title: [Job Ticket Title]
+- Description: Detailed technical description of the task.
+- Criteria of Acceptance: Specific success indicators for the task.
+  - List out each acceptance criterion clearly.
+- Priority: Use High, Medium, or Low to indicate urgency and importance.
+- Estimate: Use a range of story points as an estimate for task completion.
+- Tags: Identify applicable tags such as Frontend, Backend, or DevOps.
+- User Stories Links: Reference the relevant user story linked to the task.
+
+# Examples
+
+**Example 1**
+- Title: Setup Authentication Framework
+- Description: Implement and configure the authentication system using OAuth 2.0.
+- Criteria of acceptance:
+  - Users can sign up with an email and password.
+  - Users can log in using Google OAuth.
+  - Password reset functionality is active.
+- Priority: High
+- Estimate: 5 Story Points
+- Tags: Backend, Security
+- User Stories Links: Story_1
+
+**Example 2**
+- Title: Design User Dashboard
+- Description: Create the frontend interface for the user dashboard, incorporating reactive elements.
+- Criteria of acceptance:
+  - Dashboard displays user data dynamically from the API.
+  - Responsive design for different screen sizes.
+  - Consistent look and feel with the overall design scheme.
+- Priority: Medium
+- Estimate: 8 Story Points
 
 **Prompt 2:**
+add more tasks  that are missed, for example we need to upload the file before task 1. We need to create the endpoints relatives to backend for task 2 and 3. We need to consider User interface relevant to each features. We need to create yaml or actions in GitHub for pipelines and create the Terraform files. We also need to create seeder for test data and create migrations in the backend. Please add these tasks and use the same format than before, and unify everything 
 
 **Prompt 3:**
 
