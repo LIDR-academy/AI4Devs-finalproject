@@ -20,7 +20,8 @@ JUAN CARLOS RAVE ARANGO
 Gestión de cartera con base a un sistema de recomendacion.
 
 ### **0.3. Descripción breve del proyecto:**
-Este proyecto se enfoca en desarrollar un sistema de gestión de cartera de contribuyentes para entidades públicas colombianas, específicamente municipios, que busca optimizar los esfuerzos de recaudación del impuesto predial. La solución utilizará un sistema de recomendación para clasificar a los contribuyentes en diferentes niveles de probabilidad de pago (alto, medio, bajo), permitiendo que las entidades enfoquen sus recursos de manera más eficiente en aquellos contribuyentes con mayor propensión a regularizar su situación.
+Este proyecto se enfoca en desarrollar un sistema de gestión de cartera para entidades públicas colombianas, específicamente municipios, que busca optimizar los esfuerzos de recaudación del impuesto predial. 
+La solución utilizará un sistema de recomendación para clasificar a los contribuyentes en diferentes niveles de probabilidad de pago (alto, medio, bajo), permitiendo que las entidades enfoquen sus recursos de manera más eficiente en aquellos contribuyentes con mayor propensión a regularizar su situación.
 
 ### **0.4. URL del proyecto:**
 
@@ -53,7 +54,7 @@ El objetivo principal del producto es incrementar las tasas de recaudo del impue
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-A continuación, un videotutorial que muestra la experiencia del usuario desde la perspectiva de un administrador de la entidad pública:
+A continuación, una pequeña guia que muestra la experiencia del usuario desde la perspectiva de un administrador de la entidad pública:
 [PENDIENTE POR IMPLEMENTAR]
 
 El diseño de la aplicación seguirá un enfoque minimalista y visualmente limpio, con una interfaz intuitiva y de fácil navegación. 
@@ -377,9 +378,109 @@ La infraestructura del sistema está basada en servicios cloud con los siguiente
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+### 4.1. Servicios de Clasificación
 
----
+Los servicios de clasificación permiten obtener la clasificación de los contribuyentes en función de su historial de pagos y otros factores relevantes. Esto ayuda a las entidades a identificar a los contribuyentes con mayor probabilidad de pago y a aplicar estrategias de cobro personalizadas.
+
+#### Endpoint: Obtener clasificación de un contribuyente
+- **Método:** `GET`
+- **Ruta:** `/api/collection/contributor/{contribuyenteId}/classification`
+- **Parámetros:**
+  - `contribuyenteId`: ID del contribuyente (número entero).
+- **Respuesta:**
+  - **200 OK:** Devuelve la clasificación del contribuyente.
+  - **404 Not Found:** Si no se encuentra la clasificación para el contribuyente.
+  - **500 Internal Server Error:** En caso de error en el servidor.
+
+#### Ejemplo de uso
+```bash
+GET http://localhost:3000/api/collection/contributor/1/classification
+```
+
+#### Ejemplo de respuesta
+```json
+{
+  "contribuyente_id": 1,
+  "contribuyente_nombre": "Juan Pérez",
+  "numero_identificacion": "123456789",
+  "clasificacion_id": 1,
+  "nivel_probabilidad": "ALTO",
+  "clasificacion_descripcion": "Clasificación inicial",
+  "fecha_clasificacion": "2024-01-01T00:00:00Z"
+}
+```
+
+### 4.2. Servicios de Gestión de Cobro
+
+Los servicios de gestión de cobro permiten obtener las estrategias de cobro asociadas a un contribuyente. Esto facilita la aplicación de acciones de cobro personalizadas basadas en la clasificación del contribuyente.
+
+#### Endpoint: Obtener estrategias de cobro de un contribuyente
+- **Método:** `GET`
+- **Ruta:** `/api/collection/contributor/{contribuyenteId}/strategies`
+- **Parámetros:**
+  - `contribuyenteId`: ID del contribuyente (número entero).
+- **Respuesta:**
+  - **200 OK:** Devuelve una lista de estrategias de cobro asociadas al contribuyente.
+  - **404 Not Found:** Si no se encuentran estrategias para el contribuyente.
+  - **500 Internal Server Error:** En caso de error en el servidor.
+
+#### Ejemplo de uso
+```bash
+GET http://localhost:3000/api/collection/contributor/1/strategies
+```
+
+#### Ejemplo de respuesta
+```json
+[
+  {
+    "contribuyente_id": 1,
+    "contribuyente_nombre": "Juan Pérez",
+    "nivel_probabilidad": "ALTO",
+    "estrategia_id": 1,
+    "estrategia_nombre": "Estrategia Premium",
+    "estrategia_descripcion": "Estrategia para contribuyentes de alto valor"
+  },
+  {
+    "contribuyente_id": 1,
+    "contribuyente_nombre": "Juan Pérez",
+    "nivel_probabilidad": "ALTO",
+    "estrategia_id": 2,
+    "estrategia_nombre": "Recordatorio de Pago",
+    "estrategia_descripcion": "Notificación amigable para recordar el pago"
+  }
+]
+```
+
+### 4.3. Servicios de Monitorización
+
+Además de los servicios de clasificación y gestión de cobro, se han implementado servicios de monitorización que permiten obtener métricas sobre el desempeño de la recaudación, la efectividad de las estrategias de cobro y las tendencias de recaudación.
+
+#### Endpoint: Obtener métricas de recaudación
+- **Método:** `GET`
+- **Ruta:** `/api/collection/monitoring/metrics`
+- **Parámetros:**
+  - `fechaInicio`: Fecha inicial del período (formato: YYYY-MM-DD).
+  - `fechaFin`: Fecha final del período (formato: YYYY-MM-DD).
+- **Respuesta:**
+  - **200 OK:** Devuelve las métricas de recaudación.
+  - **500 Internal Server Error:** En caso de error en el servidor.
+
+#### Ejemplo de uso
+```bash
+GET http://localhost:3000/api/collection/monitoring/metrics?fechaInicio=2024-01-01&fechaFin=2024-12-31
+```
+
+#### Ejemplo de respuesta
+```json
+{
+  "total_pagos": 100,
+  "monto_total_recaudado": 50000,
+  "promedio_pago": 500,
+  "contribuyentes_pagadores": 80,
+  "total_contribuyentes_deuda": 150,
+  "monto_total_deuda": 75000
+}
+```
 
 ## 5. Historias de Usuario
 
