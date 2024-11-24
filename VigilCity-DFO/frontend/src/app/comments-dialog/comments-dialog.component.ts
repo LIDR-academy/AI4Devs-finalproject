@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { ReporteService } from '../services/reporte.service';
 
 interface Comment {
   rating: number;
@@ -134,7 +135,8 @@ export class CommentsDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<CommentsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private reporteService: ReporteService
   ) {}
 
   setRating(rating: number) {
@@ -144,9 +146,28 @@ export class CommentsDialogComponent {
   onDelete() {
     const confirmar = confirm('¿Estás seguro de que deseas eliminar esta marca?');
     
-    if (confirmar && this.data.onDelete) {
-      this.data.onDelete();
-      this.dialogRef.close();
+    if (confirmar) {
+      console.log('Intentando eliminar marcador:', this.data.marker);
+      
+      if (!this.data.marker?.id) {
+        console.error('Error: No hay ID de marcador:', this.data.marker);
+        alert('Error: No se puede eliminar el reporte porque falta el ID');
+        return;
+      }
+
+      this.reporteService.eliminarReporte(this.data.marker.id).subscribe({
+        next: () => {
+          console.log('Reporte eliminado exitosamente');
+          if (this.data.onDelete) {
+            this.data.onDelete();
+          }
+          this.dialogRef.close(true);
+        },
+        error: (error) => {
+          console.error('Error al eliminar:', error);
+          alert('Error al eliminar el reporte');
+        }
+      });
     }
   }
 

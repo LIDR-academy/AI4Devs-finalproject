@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { tap, map } from 'rxjs/operators';
 
 // Interfaz para crear un nuevo reporte
 interface NuevoReporte {
@@ -49,9 +50,20 @@ export class ReporteService {
     });
   }
 
-  eliminarReporte(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`, { 
-      headers: this.getHeaders() 
-    });
+  eliminarReporte(id: string): Observable<void> {
+    const url = `${this.apiUrl}/${id}`;
+    console.log('URL de eliminación:', url);
+    console.log('Headers:', this.getHeaders().keys());
+    
+    return this.http.delete<void>(url, { 
+      headers: this.getHeaders(),
+      observe: 'response'
+    }).pipe(
+      tap(response => {
+        console.log('Respuesta del servidor:', response);
+        console.log('Status:', response.status);
+      }),
+      map(response => void 0)
+    );
   }
 }

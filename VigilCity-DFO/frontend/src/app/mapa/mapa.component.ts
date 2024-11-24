@@ -11,14 +11,17 @@ import { HttpClientModule } from '../services/http-client.module';
 import { MarkerFormDialogComponent } from '../marker-form-dialog/marker-form-dialog.component';
 import { CommentsDialogComponent } from '../comments-dialog/comments-dialog.component';
 import { ReporteService } from '../services/reporte.service';
+import { finalize } from 'rxjs/operators';
 
 // Definir el tipo de datos para los marcadores
 type Marker = {
+  id?: string;
   lat: number;
   lng: number;
   isCurrentLocation?: boolean;
   description?: string;
   category?: string;
+  isDeleting?: boolean;
 };
 
 // Agregar al inicio del archivo junto con los otros tipos
@@ -138,6 +141,7 @@ export class MapaComponent implements OnInit {
     const index = this.markers.indexOf(marker);
     if (index > -1) {
       this.markers.splice(index, 1);
+      console.log('Marcador eliminado del mapa');
     }
   }
 
@@ -157,13 +161,46 @@ export class MapaComponent implements OnInit {
 
       dialogRef.afterClosed().subscribe(result => {
         if (result) {
-          const marker: Marker = {
-            lat: result.lat,
-            lng: result.lng,
-            description: result.description,
-            category: result.category
+          const nuevoReporte = {
+            descripcion: result.description,
+            latitud: lat,
+            longitud: lng,
+            categoria: result.category
           };
-          this.markers.push(marker);
+
+          console.log('Enviando nuevo reporte:', nuevoReporte);
+
+          this.reporteService.grabarReporte(nuevoReporte).subscribe({
+            next: (response) => {
+              console.log('Respuesta completa del servidor:', response);
+              
+              if (!response.id) {
+                console.error('El servidor no devolvió un ID');
+                return;
+              }
+
+              const marker: Marker = {
+                id: response.id,
+                lat: lat,
+                lng: lng,
+                description: result.description,
+                category: result.category
+              };
+
+              console.log('Nuevo marcador creado:', marker);
+              this.markers.push(marker);
+            },
+            error: (error) => {
+              console.error('Error detallado al grabar reporte:', error);
+              if (error.error) {
+                console.error('Mensaje del servidor:', error.error);
+              }
+              if (error.status) {
+                console.error('Código de estado HTTP:', error.status);
+              }
+              alert('Error al grabar el reporte. Por favor, intente nuevamente.');
+            }
+          });
         }
       });
     }
@@ -187,29 +224,38 @@ export class MapaComponent implements OnInit {
   }
 
   onSubmitForm() {
-    const newMarker: Marker = {
-      lat: this.formData.lat,
-      lng: this.formData.lng,
-      description: this.formData.description || '',
-      category: this.formData.category || ''
+    const nuevoReporte = {
+      descripcion: this.formData.description || '',
+      latitud: this.formData.lat,
+      longitud: this.formData.lng,
+      categoria: this.formData.category || ''
     };
     
-    this.markers.push(newMarker);
-    
-    const nuevoReporte: NuevoReporte = {
-      descripcion: newMarker.description || '',
-      latitud: newMarker.lat,
-      longitud: newMarker.lng,
-      categoria: newMarker.category || ''
-    };
-    
-    this.reporteService.grabarReporte(nuevoReporte).subscribe(response => {
-      console.log('Reporte grabado:', response);
-    }, error => {
-      console.error('Error al grabar el reporte:', error);
-    });
+    console.log('Intentando grabar reporte:', nuevoReporte);
+    console.log('URL API:', this.reporteService['apiUrl']); // Para verificar la URL
 
-    this.resetForm();
+    this.reporteService.grabarReporte(nuevoReporte).subscribe({
+      next: (response) => {
+        console.log('Respuesta del servidor:', response);
+        const newMarker: Marker = {
+          lat: this.formData.lat,
+          lng: this.formData.lng,
+          description: this.formData.description || '',
+          category: this.formData.category || ''
+        };
+        this.markers.push(newMarker);
+        this.resetForm();
+      },
+      error: (error) => {
+        console.error('Error detallado al grabar el reporte:', error);
+        if (error.error) {
+          console.error('Mensaje del servidor:', error.error);
+        }
+        if (error.status) {
+          console.error('Código de estado HTTP:', error.status);
+        }
+      }
+    });
   }
 
   onCancelForm() {
@@ -250,9 +296,27 @@ export class MapaComponent implements OnInit {
 
     (window as any).openComments = () => {
       infoWindow.close();
+      console.log('Abriendo diálogo con marcador:', marker); // Debug log
+      
       const dialogRef = this.dialog.open(CommentsDialogComponent, {
         width: '500px',
-        data: { marker: marker, onDelete: () => this.onDelete(marker) }
+        data: {
+          marker: {
+            id: marker.id,          // Asegurarnos de pasar el ID
+            category: marker.category,
+            description: marker.description,
+            lat: marker.lat,
+            lng: marker.lng
+          },
+          onDelete: () => this.onDelete(marker)
+        }
+      });
+
+      // Manejar el resultado del diálogo
+      dialogRef.afterClosed().subscribe(result => {
+        if (result === true) {  // Si el marcador fue eliminado
+          this.removeMarker(marker);
+        }
       });
     };
 
@@ -282,6 +346,44 @@ export class MapaComponent implements OnInit {
   }
 
   onDelete(marker: Marker) {
-    this.removeMarker(marker);
+    if (!marker.id) {
+      console.error('No se puede eliminar: el marcador no tiene ID', marker);
+      return;
+    }
+
+    // Evitar múltiples eliminaciones del mismo marcador
+    if (marker.isDeleting) {
+      console.log('Ya se está procesando la eliminación de este marcador');
+      return;
+    }
+
+    marker.isDeleting = true; // Flag para evitar múltiples eliminaciones
+
+    console.log('Iniciando eliminación del marcador:', marker.id);
+    
+    this.reporteService.eliminarReporte(marker.id)
+      .pipe(
+        finalize(() => {
+          marker.isDeleting = false; // Limpiar el flag al finalizar
+        })
+      )
+      .subscribe({
+        next: () => {
+          console.log('Marcador eliminado exitosamente');
+          this.removeMarker(marker);
+          this.dialog.closeAll();
+        },
+        error: (error) => {
+          // Si ya fue eliminado (404), considerarlo como éxito
+          if (error.status === 404) {
+            console.log('El marcador ya fue eliminado previamente');
+            this.removeMarker(marker);
+            this.dialog.closeAll();
+          } else {
+            console.error('Error al eliminar el marcador:', error);
+            alert('Error al eliminar el marcador');
+          }
+        }
+      });
   }
 }
