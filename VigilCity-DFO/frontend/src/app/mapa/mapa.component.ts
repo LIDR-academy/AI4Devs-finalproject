@@ -129,6 +129,9 @@ export class MapaComponent implements OnInit {
     animation: google.maps.Animation.DROP,
   };
 
+  // Agregar una propiedad para mantener referencia a la ventana de información activa
+  private activeInfoWindow: google.maps.InfoWindow | null = null;
+
   constructor(private dialog: MatDialog, private reporteService: ReporteService) {
     this.google = google;
   }
@@ -224,12 +227,13 @@ export class MapaComponent implements OnInit {
             // Convertir los reportes a marcadores y agregarlos al array existente
             const marcadoresCercanos: Marker[] = reportes.map(reporte => ({
               id: reporte.id,
-              lat: reporte.latitud,
-              lng: reporte.longitud,
+              lat: Number(reporte.latitud),  // Convertir explícitamente a número
+              lng: Number(reporte.longitud), // Convertir explícitamente a número
               description: reporte.descripcion,
               category: reporte.categoria
             }));
             
+            console.log('Marcadores convertidos:', marcadoresCercanos);
             // Agregar los nuevos marcadores al array existente
             this.markers.push(...marcadoresCercanos);
           },
@@ -303,6 +307,12 @@ export class MapaComponent implements OnInit {
   }
 
   onMarkerClick(marker: Marker, mapMarker: MapMarker) {
+    // Cerrar la ventana de información activa si existe
+    if (this.activeInfoWindow) {
+      this.activeInfoWindow.close();
+    }
+
+    // Crear la nueva ventana de información
     const infoWindow = new google.maps.InfoWindow({
       content: `
         <div style="padding: 10px;">
@@ -315,15 +325,18 @@ export class MapaComponent implements OnInit {
       `
     });
 
+    // Guardar referencia a la ventana activa
+    this.activeInfoWindow = infoWindow;
+
     (window as any).openComments = () => {
       infoWindow.close();
-      console.log('Abriendo diálogo con marcador:', marker); // Debug log
+      console.log('Abriendo diálogo con marcador:', marker);
       
       const dialogRef = this.dialog.open(CommentsDialogComponent, {
         width: '500px',
         data: {
           marker: {
-            id: marker.id,          // Asegurarnos de pasar el ID
+            id: marker.id,
             category: marker.category,
             description: marker.description,
             lat: marker.lat,
@@ -333,9 +346,8 @@ export class MapaComponent implements OnInit {
         }
       });
 
-      // Manejar el resultado del diálogo
       dialogRef.afterClosed().subscribe(result => {
-        if (result === true) {  // Si el marcador fue eliminado
+        if (result === true) {
           this.removeMarker(marker);
         }
       });
