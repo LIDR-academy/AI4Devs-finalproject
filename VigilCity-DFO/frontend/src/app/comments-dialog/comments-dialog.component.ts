@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { ReporteService } from '../services/reporte.service';
+import { RatingService } from '../services/rating.service';
 
 interface Comment {
   rating: number;
@@ -67,7 +68,7 @@ interface Comment {
     <mat-dialog-actions align="end">
       <button mat-button (click)="dialogRef.close()">Cancelar</button>
       <button mat-button color="warn" (click)="onDelete()">Eliminar</button>
-      <button mat-raised-button color="primary" (click)="onAccept()">Aceptar</button>
+      <button mat-raised-button color="primary" (click)="onAccept()">Guardar</button>
     </mat-dialog-actions>
   `,
   styles: [`
@@ -136,7 +137,8 @@ export class CommentsDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<CommentsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private reporteService: ReporteService
+    private reporteService: ReporteService,
+    private ratingService: RatingService
   ) {}
 
   setRating(rating: number) {
@@ -173,14 +175,28 @@ export class CommentsDialogComponent {
 
   onAccept() {
     if (this.newRating && this.newComment.trim()) {
-      // Aquí puedes agregar la lógica para guardar el comentario
-      this.comments.unshift({
-        rating: this.newRating,
-        text: this.newComment
+      const nuevoRating = {
+        reporteId: this.data.marker.id,
+        valor: this.newRating,
+        comentario: this.newComment.trim()
+      };
+
+      this.ratingService.crearRating(nuevoRating).subscribe({
+        next: (response) => {
+          console.log('Rating guardado exitosamente:', response);
+          this.comments.unshift({
+            rating: this.newRating,
+            text: this.newComment
+          });
+          this.dialogRef.close();
+        },
+        error: (error) => {
+          console.error('Error al guardar el rating:', error);
+          alert('Error al guardar el comentario. Por favor, intente nuevamente.');
+        }
       });
-      this.dialogRef.close(); // Cierra el diálogo después de aceptar
     } else {
-      alert('Por favor, asegúrate de que has seleccionado una calificación y escrito un comentario.'); // Mensaje de error si no se cumplen las condiciones
+      alert('Por favor, asegúrate de que has seleccionado una calificación y escrito un comentario.');
     }
   }
 }
