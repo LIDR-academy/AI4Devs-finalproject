@@ -24,7 +24,7 @@ type Marker = {
   isDeleting?: boolean;
   ratingPromedio?: number;
   cantidadRatings?: number;
-  options?: google.maps.MarkerOptions;
+  distanciaLineal?: number;
 };
 
 // Agregar al inicio del archivo junto con los otros tipos
@@ -33,6 +33,18 @@ interface NuevoReporte {
   latitud: number;
   longitud: number;
   categoria: string;
+  distanciaLineal?: number;
+}
+
+interface Reporte {
+  id: string;
+  latitud: number;
+  longitud: number;
+  descripcion: string;
+  categoria: string;
+  ratingPromedio?: number;
+  cantidadRatings?: number;
+  distanciaLineal?: number;
 }
 
 @Component({
@@ -184,12 +196,7 @@ export class MapaComponent implements OnInit {
       const lng = event.latLng.lng();
       
       const dialogRef = this.dialog.open(MarkerFormDialogComponent, {
-        data: {
-          lat: lat,
-          lng: lng,
-          description: '',
-          category: ''
-        }
+        data: { lat, lng, description: '', category: '' }
       });
 
       dialogRef.afterClosed().subscribe(result => {
@@ -201,45 +208,31 @@ export class MapaComponent implements OnInit {
             categoria: result.category
           };
 
-          console.log('Enviando nuevo reporte:', nuevoReporte);
-
           this.reporteService.grabarReporte(nuevoReporte).subscribe({
             next: (response) => {
-              console.log('Respuesta completa del servidor:', response);
-              
               if (!response.id) {
                 console.error('El servidor no devolvió un ID');
                 return;
               }
-
-              const marker: Marker = {
-                id: response.id,
-                lat: lat,
-                lng: lng,
-                description: result.description,
-                category: result.category
-              };
-
-              console.log('Nuevo marcador creado:', marker);
-              this.markers.push(marker);
-
-              // Actualizar la información del reporte
-              this.reporteService.consultarReporte(response.id).subscribe({
-                next: (reporteActualizado) => {
-                  // Actualizar los datos de la marca con la información actualizada
-                  // Dependiendo de tu implementación, podrías actualizar el array de marcadores
-                  this.actualizarDatosMarca(reporteActualizado);
+              
+              // Recargar todos los puntos cercanos
+              this.reporteService.consultarReportes(this.lat, this.lng).subscribe({
+                next: (reportes) => {
+                  this.markers = reportes.map(reporte => ({
+                    id: reporte.id,
+                    lat: Number(reporte.latitud),
+                    lng: Number(reporte.longitud),
+                    description: reporte.descripcion,
+                    category: reporte.categoria,
+                    ratingPromedio: reporte.ratingPromedio,
+                    cantidadRatings: reporte.cantidadRatings,
+                    distanciaLineal: reporte.distanciaLineal
+                  }));
                 }
               });
             },
             error: (error) => {
               console.error('Error detallado al grabar reporte:', error);
-              if (error.error) {
-                console.error('Mensaje del servidor:', error.error);
-              }
-              if (error.status) {
-                console.error('Código de estado HTTP:', error.status);
-              }
               alert('Error al grabar el reporte. Por favor, intente nuevamente.');
             }
           });
@@ -278,12 +271,13 @@ export class MapaComponent implements OnInit {
             // Convertir los reportes a marcadores y agregarlos al array existente
             const marcadoresCercanos: Marker[] = reportes.map(reporte => ({
               id: reporte.id,
-              lat: Number(reporte.latitud),  // Convertir explícitamente a número
-              lng: Number(reporte.longitud), // Convertir explícitamente a número
+              lat: Number(reporte.latitud),
+              lng: Number(reporte.longitud),
               description: reporte.descripcion,
               category: reporte.categoria,
               ratingPromedio: reporte.ratingPromedio,
-              cantidadRatings: reporte.cantidadRatings
+              cantidadRatings: reporte.cantidadRatings,
+              distanciaLineal: reporte.distanciaLineal
             }));
             
             console.log('Marcadores convertidos:', marcadoresCercanos);
@@ -371,6 +365,9 @@ export class MapaComponent implements OnInit {
         <div style="padding: 10px;">
           <strong>${marker.category}</strong><br>
           ${marker.description}<br>
+          <div style="margin-top: 5px; color: #666; font-size: 12px;">
+            Distancia: ${Math.round(marker.distanciaLineal || 0)} metros
+          </div>
           <div style="margin-top: 10px;">
             <button onclick="window.openComments()">Ver Comentarios</button>
           </div>
@@ -503,7 +500,6 @@ export class MapaComponent implements OnInit {
       this.reporteService.consultarReportes(this.lat, this.lng).subscribe({
         next: (reportes) => {
           console.log('Nuevos reportes cercanos obtenidos:', reportes);
-          // Convertir los reportes a marcadores
           const marcadoresCercanos = reportes.map(reporte => ({
             id: reporte.id,
             lat: Number(reporte.latitud),
@@ -511,10 +507,10 @@ export class MapaComponent implements OnInit {
             description: reporte.descripcion,
             category: reporte.categoria,
             ratingPromedio: reporte.ratingPromedio,
-            cantidadRatings: reporte.cantidadRatings
+            cantidadRatings: reporte.cantidadRatings,
+            distanciaLineal: reporte.distanciaLineal
           }));
           
-          // Actualizar array de marcadores
           this.markers = marcadoresCercanos;
         },
         error: (error) => {

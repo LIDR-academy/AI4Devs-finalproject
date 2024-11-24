@@ -17,6 +17,7 @@ interface Reporte extends NuevoReporte {
   id: string;
   ratingPromedio: number;
   cantidadRatings: number;
+  distanciaLineal?: number;
 }
 
 @Injectable({
@@ -43,7 +44,9 @@ export class ReporteService {
     return this.http.get<Reporte[]>(this.apiUrl, {
       headers: this.getHeaders(),
       params: params
-    });
+    }).pipe(
+      tap(reportes => console.log('Reportes recibidos:', reportes))
+    );
   }
 
   grabarReporte(reporte: NuevoReporte): Observable<Reporte> {
