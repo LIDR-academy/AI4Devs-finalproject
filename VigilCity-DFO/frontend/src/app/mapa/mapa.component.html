@@ -18,7 +18,8 @@
 
     <map-marker *ngIf="currentLocationMarker"
       [position]="{ lat: currentLocationMarker.lat, lng: currentLocationMarker.lng }"
-      [options]="markerCurrentLocationOptions">
+      [options]="markerCurrentLocationOptions"
+      (mapDragend)="onCurrentLocationMarkerDragEnd($event)">
     </map-marker>
   </google-map>
 </div>

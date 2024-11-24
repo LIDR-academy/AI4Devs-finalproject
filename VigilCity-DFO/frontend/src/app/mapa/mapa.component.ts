@@ -482,4 +482,45 @@ export class MapaComponent implements OnInit {
       marker.cantidadRatings = reporte.cantidadRatings;
     }
   }
+
+  // Agregar método para manejar el evento de arrastre
+  onCurrentLocationMarkerDragEnd(event: google.maps.MapMouseEvent) {
+    if (event.latLng) {
+      // Actualizar coordenadas
+      this.lat = event.latLng.lat();
+      this.lng = event.latLng.lng();
+      
+      if (this.currentLocationMarker) {
+        this.currentLocationMarker.lat = this.lat;
+        this.currentLocationMarker.lng = this.lng;
+      }
+
+      // Limpiar marcadores existentes
+      this.markers = [];
+      
+      // Consultar nuevos reportes cercanos
+      console.log('Consultando reportes cercanos desde nueva ubicación:', { lat: this.lat, lng: this.lng });
+      this.reporteService.consultarReportes(this.lat, this.lng).subscribe({
+        next: (reportes) => {
+          console.log('Nuevos reportes cercanos obtenidos:', reportes);
+          // Convertir los reportes a marcadores
+          const marcadoresCercanos = reportes.map(reporte => ({
+            id: reporte.id,
+            lat: Number(reporte.latitud),
+            lng: Number(reporte.longitud),
+            description: reporte.descripcion,
+            category: reporte.categoria,
+            ratingPromedio: reporte.ratingPromedio,
+            cantidadRatings: reporte.cantidadRatings
+          }));
+          
+          // Actualizar array de marcadores
+          this.markers = marcadoresCercanos;
+        },
+        error: (error) => {
+          console.error('Error al consultar reportes cercanos:', error);
+        }
+      });
+    }
+  }
 }
