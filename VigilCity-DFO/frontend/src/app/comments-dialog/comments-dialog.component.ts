@@ -125,21 +125,29 @@ interface Comment {
 export class CommentsDialogComponent {
   newRating: number = 0;
   newComment: string = '';
-  
-  comments: Comment[] = [
-    { rating: Math.floor(Math.random() * 5) + 1, text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' },
-    { rating: Math.floor(Math.random() * 5) + 1, text: 'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' },
-    { rating: Math.floor(Math.random() * 5) + 1, text: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco.' },
-    { rating: Math.floor(Math.random() * 5) + 1, text: 'Duis aute irure dolor in reprehenderit in voluptate velit.' },
-    { rating: Math.floor(Math.random() * 5) + 1, text: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa.' }
-  ];
+  comments: Comment[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<CommentsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private reporteService: ReporteService,
     private ratingService: RatingService
-  ) {}
+  ) {
+    if (this.data.marker?.id) {
+      this.ratingService.consultarRatingsPorReporte(this.data.marker.id).subscribe({
+        next: (ratings) => {
+          console.log('Ratings obtenidos:', ratings);
+          this.comments = ratings.map(rating => ({
+            rating: rating.valor,
+            text: rating.comentario
+          }));
+        },
+        error: (error) => {
+          console.error('Error al cargar los ratings:', error);
+        }
+      });
+    }
+  }
 
   setRating(rating: number) {
     this.newRating = rating;
