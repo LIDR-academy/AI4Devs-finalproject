@@ -216,6 +216,27 @@ export class MapaComponent implements OnInit {
           lng: this.lng,
           isCurrentLocation: true
         };
+
+        // Consultar reportes cercanos una vez que tengamos la ubicación
+        this.reporteService.consultarReportes(this.lat, this.lng).subscribe({
+          next: (reportes) => {
+            console.log('Reportes cercanos obtenidos:', reportes);
+            // Convertir los reportes a marcadores y agregarlos al array existente
+            const marcadoresCercanos: Marker[] = reportes.map(reporte => ({
+              id: reporte.id,
+              lat: reporte.latitud,
+              lng: reporte.longitud,
+              description: reporte.descripcion,
+              category: reporte.categoria
+            }));
+            
+            // Agregar los nuevos marcadores al array existente
+            this.markers.push(...marcadoresCercanos);
+          },
+          error: (error) => {
+            console.error('Error al consultar reportes cercanos:', error);
+          }
+        });
       }, (error) => {
         console.error("Error al obtener la ubicación: ", error);
         alert("No se pudo obtener la ubicación.");
