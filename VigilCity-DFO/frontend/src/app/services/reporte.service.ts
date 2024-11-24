@@ -68,4 +68,11 @@ export class ReporteService {
       map(response => void 0)
     );
   }
+
+  consultarReporte(id: string): Observable<Reporte> {
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.get<Reporte>(url, {
+      headers: this.getHeaders()
+    });
+  }
 }

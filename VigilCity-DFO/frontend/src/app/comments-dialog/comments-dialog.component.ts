@@ -9,9 +9,20 @@ import { MatIconModule } from '@angular/material/icon';
 import { ReporteService } from '../services/reporte.service';
 import { RatingService } from '../services/rating.service';
 
+interface Rating {
+  valor: number;
+  comentario: string;
+}
+
 interface Comment {
   rating: number;
   text: string;
+}
+
+interface RatingResponse {
+  ratings: Array<{valor: number, comentario: string}>;
+  cantidadRatings: number;
+  ratingPromedio: number;
 }
 
 @Component({
@@ -32,12 +43,12 @@ interface Comment {
       <div class="rating-summary">
         <div class="rating-count">
           <span class="people-icon">👥</span>
-          {{data.marker.cantidadRatings}}
+          {{cantidadRatings}}
         </div>
         <div class="stars">
           <span *ngFor="let star of [1,2,3,4,5]" 
                 class="star"
-                [class.active]="star <= (data.marker.ratingPromedio ? Math.round(data.marker.ratingPromedio) : 0)">
+                [class.active]="star <= (ratingPromedio ? Math.round(ratingPromedio) : 0)">
             ★
           </span>
         </div>
@@ -183,6 +194,8 @@ export class CommentsDialogComponent {
   newComment: string = '';
   comments: Comment[] = [];
   Math = Math;
+  cantidadRatings: number = 0;
+  ratingPromedio: number = 0;
 
   constructor(
     public dialogRef: MatDialogRef<CommentsDialogComponent>,
@@ -190,14 +203,21 @@ export class CommentsDialogComponent {
     private reporteService: ReporteService,
     private ratingService: RatingService
   ) {
+    if (this.data.marker) {
+      this.cantidadRatings = this.data.marker.cantidadRatings || 0;
+      this.ratingPromedio = this.data.marker.ratingPromedio || 0;
+    }
+
     if (this.data.marker?.id) {
       this.ratingService.consultarRatingsPorReporte(this.data.marker.id).subscribe({
-        next: (ratings) => {
-          console.log('Ratings obtenidos:', ratings);
-          this.comments = ratings.map(rating => ({
+        next: (response: Rating[]) => {
+          console.log('Respuesta del servicio:', response);
+          this.comments = response.map(rating => ({
             rating: rating.valor,
             text: rating.comentario
           }));
+          this.cantidadRatings = response.length;
+          this.ratingPromedio = response.reduce((acc, curr) => acc + curr.valor, 0) / response.length || 0;
         },
         error: (error) => {
           console.error('Error al cargar los ratings:', error);

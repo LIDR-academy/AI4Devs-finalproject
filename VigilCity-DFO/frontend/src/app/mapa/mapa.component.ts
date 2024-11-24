@@ -222,6 +222,15 @@ export class MapaComponent implements OnInit {
 
               console.log('Nuevo marcador creado:', marker);
               this.markers.push(marker);
+
+              // Actualizar la información del reporte
+              this.reporteService.consultarReporte(response.id).subscribe({
+                next: (reporteActualizado) => {
+                  // Actualizar los datos de la marca con la información actualizada
+                  // Dependiendo de tu implementación, podrías actualizar el array de marcadores
+                  this.actualizarDatosMarca(reporteActualizado);
+                }
+              });
             },
             error: (error) => {
               console.error('Error detallado al grabar reporte:', error);
@@ -464,5 +473,13 @@ export class MapaComponent implements OnInit {
           }
         }
       });
+  }
+
+  private actualizarDatosMarca(reporte: any) {
+    const marker = this.markers.find(m => m.id === reporte.id);
+    if (marker) {
+      marker.ratingPromedio = reporte.ratingPromedio;
+      marker.cantidadRatings = reporte.cantidadRatings;
+    }
   }
 }
