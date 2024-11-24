@@ -1,5 +1,6 @@
 const Report = require('../models/reportModel');
 const Rating = require('../models/ratingModel');
+const ReportRating = require('../models/reportRatingModel');
 const { Op } = require('sequelize');
 
 const createReport = async (req, res) => {
@@ -51,50 +52,51 @@ const deleteReport = async (req, res) => {
 
 const getReports = async (req, res) => {
     try {
-        const { latitud, longitud, rango = 1 } = req.query; // Rango por defecto de 1 km
+        const { latitud, longitud, rango = 1 } = req.query;
 
-        // Validar que se envíen latitud y longitud
         if (!latitud || !longitud) {
             return res.status(400).json({ message: 'Latitud y longitud son requeridas.' });
         }
 
-        // Convertir rango de kilómetros a metros
         const rangoEnMetros = rango * 1000;
 
-        // Consultar reportes dentro del rango especificado
         const reports = await Report.findAll({
             where: {
                 latitud: {
                     [Op.and]: [
-                        { [Op.gte]: parseFloat(latitud) - (rangoEnMetros / 111320) }, // Latitud mínima
-                        { [Op.lte]: parseFloat(latitud) + (rangoEnMetros / 111320) }, // Latitud máxima
+                        { [Op.gte]: parseFloat(latitud) - (rangoEnMetros / 111320) },
+                        { [Op.lte]: parseFloat(latitud) + (rangoEnMetros / 111320) },
                     ],
                 },
                 longitud: {
                     [Op.and]: [
-                        { [Op.gte]: parseFloat(longitud) - (rangoEnMetros / (111320 * Math.cos(parseFloat(latitud) * (Math.PI / 180)))) }, // Longitud mínima
-                        { [Op.lte]: parseFloat(longitud) + (rangoEnMetros / (111320 * Math.cos(parseFloat(latitud) * (Math.PI / 180)))) }, // Longitud máxima
+                        { [Op.gte]: parseFloat(longitud) - (rangoEnMetros / (111320 * Math.cos(parseFloat(latitud) * (Math.PI / 180)))) },
+                        { [Op.lte]: parseFloat(longitud) + (rangoEnMetros / (111320 * Math.cos(parseFloat(latitud) * (Math.PI / 180)))) },
                     ],
                 },
             },
+            include: [{
+                model: ReportRating,
+                as: 'reportRating',
+                attributes: ['ratingPromedio', 'cantidadRatings'],
+                required: false
+            }]
         });
 
-        // Calcular la distancia lineal y agregarla a cada reporte
-        const reportsWithDistanceAndRating = await Promise.all(reports.map(async report => {
+        const reportsWithDistance = reports.map(report => {
             const distanciaLineal = calculateDistance(latitud, longitud, report.latitud, report.longitud);
-            const ratings = await Rating.findAll({ where: { reporteId: report.id } });
-            const averageRating = ratings.length > 0 
-                ? ratings.reduce((acc, rating) => acc + rating.valor, 0) / ratings.length 
-                : null; // Promedio de ratings
-
+            const reportJson = report.toJSON();
+            const { reportRating, ...reportData } = reportJson;
+            
             return {
-                ...report.toJSON(), // Convertir el reporte a JSON
+                ...reportData,
                 distanciaLineal,
-                rating: averageRating, // Incluir el promedio de ratings
+                ratingPromedio: reportRating?.ratingPromedio || 0,
+                cantidadRatings: reportRating?.cantidadRatings || 0
             };
-        }));
+        });
 
-        return res.status(200).json(reportsWithDistanceAndRating);
+        return res.status(200).json(reportsWithDistance);
     } catch (error) {
         return res.status(500).json({ message: 'Error al consultar reportes', error });
     }
@@ -102,23 +104,29 @@ const getReports = async (req, res) => {
 
 const getReportById = async (req, res) => {
     try {
-        const { id } = req.params; // ID del reporte
+        const { id } = req.params;
 
-        // Buscar el reporte por ID
-        const report = await Report.findByPk(id);
+        const report = await Report.findOne({
+            where: { id },
+            include: [{
+                model: ReportRating,
+                as: 'reportRating',
+                attributes: ['ratingPromedio', 'cantidadRatings'],
+                required: false
+            }]
+        });
+
         if (!report) {
             return res.status(404).json({ message: 'Reporte no encontrado' });
         }
 
-        // Obtener ratings para el reporte
-        const ratings = await Rating.findAll({ where: { reporteId: report.id } });
-        const averageRating = ratings.length > 0 
-            ? ratings.reduce((acc, rating) => acc + rating.valor, 0) / ratings.length 
-            : null; // Promedio de ratings
-
+        const reportJson = report.toJSON();
+        const { reportRating, ...reportData } = reportJson;
+        
         return res.status(200).json({
-            ...report.toJSON(), // Convertir el reporte a JSON
-            rating: averageRating, // Incluir el promedio de ratings
+            ...reportData,
+            ratingPromedio: reportRating?.ratingPromedio || 0,
+            cantidadRatings: reportRating?.cantidadRatings || 0
         });
     } catch (error) {
         return res.status(500).json({ message: 'Error al obtener el reporte', error });

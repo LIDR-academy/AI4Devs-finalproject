@@ -1,5 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../database/db'); // Asegúrate de importar la instancia de Sequelize
+const sequelize = require('../database/db');
+const ReportRating = require('./reportRatingModel');
 
 class Report extends Model {}
 
@@ -13,7 +14,7 @@ Report.init({
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'usuarios', // Nombre de la tabla de usuarios
+            model: 'usuarios',
             key: 'id',
         },
     },
@@ -50,8 +51,13 @@ Report.init({
 }, {
     sequelize,
     modelName: 'Report',
-    tableName: 'reportes', // Nombre de la tabla en la base de datos
-    timestamps: true, // Si no deseas que Sequelize maneje createdAt y updatedAt
+    tableName: 'reportes',
+    timestamps: true,
+});
+
+Report.hasOne(ReportRating, {
+    foreignKey: 'reporteId',
+    as: 'reportRating'
 });
 
 module.exports = Report;
