@@ -1,14 +1,32 @@
 const Rating = require('../models/ratingModel');
 const Report = require('../models/reportModel');
+const ReportRating = require('../models/reportRatingModel');
+const sequelize = require('../database/db');
+
+// Función auxiliar para actualizar el rating promedio
+const actualizarRatingPromedio = async (reporteId) => {
+    const ratings = await Rating.findAll({
+        where: { reporteId }
+    });
+
+    const cantidadRatings = ratings.length;
+    const ratingPromedio = cantidadRatings > 0
+        ? ratings.reduce((acc, rating) => acc + rating.valor, 0) / cantidadRatings
+        : 0;
+
+    await ReportRating.upsert({
+        reporteId,
+        ratingPromedio,
+        cantidadRatings
+    });
+};
 
 const createRating = async (req, res) => {
+    const transaction = await sequelize.transaction();
     try {
         const { reporteId, valor, comentario } = req.body;
-        const usuarioId = req.userId; // Asumiendo que el middleware de autenticación añade el id del usuario
-        
-        console.log(reporteId, valor, comentario, usuarioId);
+        const usuarioId = req.userId;
 
-        // Verificar si el reporte existe
         const report = await Report.findByPk(reporteId);
         if (!report) {
             return res.status(404).json({ message: 'Reporte no encontrado' });
@@ -19,10 +37,14 @@ const createRating = async (req, res) => {
             usuarioId,
             valor,
             comentario,
-        });
+        }, { transaction });
+
+        await actualizarRatingPromedio(reporteId);
+        await transaction.commit();
 
         return res.status(201).json(newRating);
     } catch (error) {
+        await transaction.rollback();
         return res.status(500).json({ message: 'Error al crear la calificación', error });
     }
 };
