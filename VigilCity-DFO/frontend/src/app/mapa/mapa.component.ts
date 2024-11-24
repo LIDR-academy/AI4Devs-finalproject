@@ -7,8 +7,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { HttpClientModule } from '../services/http-client.module';
 import { MarkerFormDialogComponent } from '../marker-form-dialog/marker-form-dialog.component';
 import { CommentsDialogComponent } from '../comments-dialog/comments-dialog.component';
+import { ReporteService } from '../services/reporte.service';
 
 // Definir el tipo de datos para los marcadores
 type Marker = {
@@ -31,7 +33,8 @@ type Marker = {
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    CommentsDialogComponent
+    CommentsDialogComponent,
+    HttpClientModule
   ],
   templateUrl: './mapa.component.html',
   styleUrls: ['./mapa.component.css'],
@@ -115,7 +118,7 @@ export class MapaComponent implements OnInit {
     animation: google.maps.Animation.DROP,
   };
 
-  constructor(private dialog: MatDialog) {
+  constructor(private dialog: MatDialog, private reporteService: ReporteService) {
     this.google = google;
   }
 
@@ -176,12 +179,21 @@ export class MapaComponent implements OnInit {
   }
 
   onSubmitForm() {
-    this.markers.push({
+    const newMarker: Marker = {
       lat: this.formData.lat,
       lng: this.formData.lng,
       description: this.formData.description,
       category: this.formData.category
+    };
+    
+    this.markers.push(newMarker);
+    
+    this.reporteService.grabarReporte(newMarker).subscribe(response => {
+      console.log('Reporte grabado:', response);
+    }, error => {
+      console.error('Error al grabar el reporte:', error);
     });
+
     this.resetForm();
   }
 
