@@ -22,6 +22,8 @@ type Marker = {
   description?: string;
   category?: string;
   isDeleting?: boolean;
+  ratingPromedio?: number;
+  cantidadRatings?: number;
 };
 
 // Agregar al inicio del archivo junto con los otros tipos
@@ -50,6 +52,23 @@ interface NuevoReporte {
   templateUrl: './mapa.component.html',
   styleUrls: ['./mapa.component.css'],
   styles: [`
+    :host {
+      display: block;
+      height: 95vh;  /* Esto hará que el componente ocupe el 95% de la altura de la ventana */
+    }
+
+    :host ::ng-deep .map-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+
+    :host ::ng-deep google-map {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
     :host ::ng-deep .info-window-content {
       padding: 10px;
       min-width: 250px;
@@ -230,7 +249,9 @@ export class MapaComponent implements OnInit {
               lat: Number(reporte.latitud),  // Convertir explícitamente a número
               lng: Number(reporte.longitud), // Convertir explícitamente a número
               description: reporte.descripcion,
-              category: reporte.categoria
+              category: reporte.categoria,
+              ratingPromedio: reporte.ratingPromedio,
+              cantidadRatings: reporte.cantidadRatings
             }));
             
             console.log('Marcadores convertidos:', marcadoresCercanos);
@@ -340,7 +361,9 @@ export class MapaComponent implements OnInit {
             category: marker.category,
             description: marker.description,
             lat: marker.lat,
-            lng: marker.lng
+            lng: marker.lng,
+            ratingPromedio: marker.ratingPromedio,
+            cantidadRatings: marker.cantidadRatings
           },
           onDelete: () => this.onDelete(marker)
         }

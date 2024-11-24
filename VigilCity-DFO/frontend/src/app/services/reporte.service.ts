@@ -15,6 +15,8 @@ interface NuevoReporte {
 // Interfaz para reportes existentes
 interface Reporte extends NuevoReporte {
   id: string;
+  ratingPromedio: number;
+  cantidadRatings: number;
 }
 
 @Injectable({

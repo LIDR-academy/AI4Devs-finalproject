@@ -27,7 +27,23 @@ interface Comment {
     MatIconModule
   ],
   template: `
-    <h2 mat-dialog-title>{{data.marker.category}}</h2>
+    <div mat-dialog-title class="title-container">
+      <span>{{data.marker.category}}</span>
+      <div class="rating-summary">
+        <div class="rating-count">
+          <span class="people-icon">👥</span>
+          {{data.marker.cantidadRatings}}
+        </div>
+        <div class="stars">
+          <span *ngFor="let star of [1,2,3,4,5]" 
+                class="star"
+                [class.active]="star <= (data.marker.ratingPromedio ? Math.round(data.marker.ratingPromedio) : 0)">
+            ★
+          </span>
+        </div>
+      </div>
+    </div>
+    
     <mat-dialog-content>
       <p class="description">{{data.marker.description}}</p>
 
@@ -72,6 +88,41 @@ interface Comment {
     </mat-dialog-actions>
   `,
   styles: [`
+    .title-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .rating-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rating-count {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .stars {
+      display: flex;
+      gap: 2px;
+    }
+
+    .star {
+      font-size: 16px;
+      color: #e0e0e0;
+    }
+
+    .star.active {
+      color: #ffd700;
+    }
+
     .description {
       margin-bottom: 20px;
       color: #666;
@@ -120,12 +171,18 @@ interface Comment {
       margin: 5px 0;
       color: #666;
     }
+
+    .people-icon {
+      font-size: 14px;
+      margin-right: 4px;
+    }
   `]
 })
 export class CommentsDialogComponent {
   newRating: number = 0;
   newComment: string = '';
   comments: Comment[] = [];
+  Math = Math;
 
   constructor(
     public dialogRef: MatDialogRef<CommentsDialogComponent>,
