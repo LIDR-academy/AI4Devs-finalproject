@@ -18,10 +18,7 @@
 
     <map-marker *ngIf="currentLocationMarker"
       [position]="{ lat: currentLocationMarker.lat, lng: currentLocationMarker.lng }"
-      [options]="{
-        icon: 'https://mapmarker.io/api/v3/font-awesome/v6/pin?icon=fa-solid%20fa-street-view&size=50&color=FAF0E6&background=00008B&hoffset=0&voffset=0',
-        title: 'Mi ubicación actual'
-      }">
+      [options]="markerCurrentLocationOptions">
     </map-marker>
   </google-map>
 </div>

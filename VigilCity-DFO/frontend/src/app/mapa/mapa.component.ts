@@ -24,6 +24,7 @@ type Marker = {
   isDeleting?: boolean;
   ratingPromedio?: number;
   cantidadRatings?: number;
+  options?: google.maps.MarkerOptions;
 };
 
 // Agregar al inicio del archivo junto con los otros tipos
@@ -151,6 +152,16 @@ export class MapaComponent implements OnInit {
   // Agregar una propiedad para mantener referencia a la ventana de información activa
   private activeInfoWindow: google.maps.InfoWindow | null = null;
 
+  // Definir las opciones por defecto para el marcador de ubicación actual
+  markerCurrentLocationOptions: google.maps.MarkerOptions = {
+    draggable: true,
+    animation: google.maps.Animation.DROP,
+    icon: {
+      url: 'https://mapmarker.io/api/v3/font-awesome/v6/pin?icon=fa-solid%20fa-street-view&size=50&color=FAF0E6&background=00008B&hoffset=0&voffset=0',
+      scaledSize: new google.maps.Size(50, 50)
+    }
+  };
+
   constructor(private dialog: MatDialog, private reporteService: ReporteService) {
     this.google = google;
   }
@@ -233,11 +244,23 @@ export class MapaComponent implements OnInit {
       navigator.geolocation.getCurrentPosition((position) => {
         this.lat = position.coords.latitude;
         this.lng = position.coords.longitude;
+        
+        // Crear el marcador de ubicación actual
         this.currentLocationMarker = {
           lat: this.lat,
           lng: this.lng,
           isCurrentLocation: true
         };
+
+        console.log('Current location marker created:', this.currentLocationMarker); // Debug
+
+        // Agregar el evento dragend para actualizar la posición
+        google.maps.event.addListener(this.currentLocationMarker, 'dragend', (event: any) => {
+          this.lat = event.latLng.lat();
+          this.lng = event.latLng.lng();
+          this.currentLocationMarker!.lat = this.lat;
+          this.currentLocationMarker!.lng = this.lng;
+        });
 
         // Consultar reportes cercanos una vez que tengamos la ubicación
         this.reporteService.consultarReportes(this.lat, this.lng).subscribe({
