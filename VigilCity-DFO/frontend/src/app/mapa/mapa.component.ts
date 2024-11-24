@@ -21,6 +21,14 @@ type Marker = {
   category?: string;
 };
 
+// Agregar al inicio del archivo junto con los otros tipos
+interface NuevoReporte {
+  descripcion: string;
+  latitud: number;
+  longitud: number;
+  categoria: string;
+}
+
 @Component({
   selector: 'app-mapa',
   standalone: true,
@@ -182,13 +190,20 @@ export class MapaComponent implements OnInit {
     const newMarker: Marker = {
       lat: this.formData.lat,
       lng: this.formData.lng,
-      description: this.formData.description,
-      category: this.formData.category
+      description: this.formData.description || '',
+      category: this.formData.category || ''
     };
     
     this.markers.push(newMarker);
     
-    this.reporteService.grabarReporte(newMarker).subscribe(response => {
+    const nuevoReporte: NuevoReporte = {
+      descripcion: newMarker.description || '',
+      latitud: newMarker.lat,
+      longitud: newMarker.lng,
+      categoria: newMarker.category || ''
+    };
+    
+    this.reporteService.grabarReporte(nuevoReporte).subscribe(response => {
       console.log('Reporte grabado:', response);
     }, error => {
       console.error('Error al grabar el reporte:', error);

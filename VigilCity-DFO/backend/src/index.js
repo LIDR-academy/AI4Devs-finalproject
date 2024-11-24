@@ -8,8 +8,16 @@ const authRoutes = require('./interfaces/http/authRoutes'); // Importar las ruta
 const reportRoutes = require('./interfaces/http/reportRoutes'); // Importar las rutas de reportes
 const errorMiddleware = require('./middleware/errorMiddleware'); // Importar el middleware de errores
 const ratingRoutes = require('./interfaces/http/ratingRoutes'); // Asegúrate de que la ruta sea correcta
+const cors = require('cors');
 
 app.use(express.json()); // Middleware para parsear JSON
+
+// Configurar CORS
+app.use(cors({
+  origin: 'http://localhost:4200', // URL de tu aplicación Angular
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Integrar las rutas de autenticación
 app.use('/api/auth', authRoutes);
