@@ -2,6 +2,8 @@ require('dotenv').config(); // Cargar variables de entorno desde el archivo .env
 
 const express = require('express');
 const app = express();
+// Primero cargar la configuración
+const config = require('../config/environment');
 const PORT = process.env.PORT || 3000;
 const userRoutes = require('./interfaces/http/userRoutes'); // Importar las rutas de usuario
 const authRoutes = require('./interfaces/http/authRoutes'); // Importar las rutas de autenticación
@@ -9,6 +11,14 @@ const reportRoutes = require('./interfaces/http/reportRoutes'); // Importar las 
 const errorMiddleware = require('./middleware/errorMiddleware'); // Importar el middleware de errores
 const ratingRoutes = require('./interfaces/http/ratingRoutes'); // Asegúrate de que la ruta sea correcta
 const cors = require('cors');
+const path = require('path');
+const dotenv = require('dotenv');
+
+
+console.log('=== ENVIRONMENT CONFIG ===');
+console.log('NODE_ENV:', config.NODE_ENV);
+console.log('DB_HOST:', config.DB_CONFIG.host);
+console.log('DB_NAME:', config.DB_CONFIG.database);
 
 app.use(express.json()); // Middleware para parsear JSON
 
