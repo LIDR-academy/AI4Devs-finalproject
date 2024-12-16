@@ -204,3 +204,9 @@ To ensure an accessible and intuitive user experience, the following elements sh
    - **User Onboarding**: A brief tutorial or “Getting Started” guide upon first login to help users understand VitaMind’s functionality.
    - **Visual Cues**: Employ color-coding for risks (e.g., red for high, green for optimal) and progress indicators during uploads or simulations to enhance usability.
    - **Feedback Mechanisms**: Integrate a “Give Feedback” button, allowing users to report issues or request new features easily.
+
+
+# Puedes ver el proyecto Completo Aqui -> **[Final-Project-JAA](https://github.com/eltonina/vitamind)** 🏁 🎉 😊
+  *(Solo usuarios autorizados 😢)*
+
+Pideme que te de acceso al repositorio :kissing_heart:
