@@ -23,7 +23,7 @@
    - VitaMind is an advanced AI-powered healthcare application designed to help users manage their health records, receive personalized health coaching, and use a digital twin to simulate lifestyle changes. Aimed at people with chronic illnesses and health-conscious individuals, VitaMind leverages artificial intelligence to provide tailored health insights, daily wellness recommendations, and proactive chronic disease management.
 
 ### **0.4. URL del proyecto:**
-   - **Pending!**
+   - **[VitaMind](https://d3hk98r9hh0f6m.cloudfront.net/)**
 
 ### 0.5. URL o archivo comprimido del repositorio
    - **[Final-Project-JAA](https://github.com/eltonina/vitamind)**
@@ -188,48 +188,16 @@ For an engaging and user-friendly experience, visual aids like wireframes, walkt
 #### **Mockups and Wireframes**
    - **Dashboard Wireframe**: Display the layout of main feature tiles, the navigation bar, and quick-access buttons.
    ![Dashboard1](/images/dashboard_main.png)
-   ![Dashboard2](/images/dashboard_health_Insight.png)
    ![Dashboard3](/images/dashboard_recent_activity.png)
+   ![HealthRecord8](/images/health_records8.png)
 
    - **Health Records Upload Screen**: Show file selection options, a step-by-step guide, and a secure upload indicator.
-   ![HealthRecord1](/images/health_records1.png)
-   ![HealthRecord2](/images/health_records2.png)
-   ![HealthRecord3](/images/health_records3.png)
-   ![HealthRecord4](/images/health_records4.png)
-   ![HealthRecord5](/images/health_records5.png)
-   ![HealthRecord6](/images/health_records6.png)
-   ![HealthRecord7](/images/health_records7.png)
-   ![HealthRecord8](/images/health_records8.png)
-   ![HealthRecord9](/images/health_records9.png)
 
    - **Health Coach Chat Interface**: Mockup of the chat window with sample prompts and a displayed AI response.
-   ![HealthCoach](/images/health_coach.png)
-   ![HealthCoach2](/images/health_coach2.png)
 
    - **Digital Twin Simulation Panel**: Interactive sliders for lifestyle adjustments and visualizations of simulated health outcomes.
-   ![DigitalTwin](/images/digital_twins.png)
 
-#### **Video Walkthrough Script**
-   - A short video walkthrough of the main features can help users get started and understand the app’s functionality.
 
-   - **Script Outline**:
-     1. **Intro Screen**: Display VitaMind’s logo with a tagline: “Your Personal Health Companion.”
-     2. **Dashboard Tour**: Briefly show each feature tile on the dashboard, highlighting the Health Records, Health Coach, and Digital Twin.
-     3. **Health Records Upload**:
-        - Narrate: “Let’s start by uploading a health record. Select the file type, follow the steps, and rest assured, all your data is securely encrypted.”
-        - Action: Show user selecting a file, confirming upload, and viewing the AI’s parsed output.
-     4. **Health Coach Interaction**:
-        - Narrate: “Got questions? Ask our Health Coach for advice. Just type in your question or choose from suggested prompts.”
-        - Action: Demonstrate a user typing a question about their risk for diabetes, receiving a response with risk analysis and recommendations.
-     5. **Digital Twin Simulation**:
-        - Narrate: “Curious about lifestyle changes? Use our Digital Twin to simulate different choices and see potential health impacts.”
-        - Action: Show user adjusting sliders for diet and exercise, with real-time visual feedback on projected health outcomes.
-     6. **Ending**: Close with a reminder about privacy: “VitaMind is here to support you. Remember to consult with your healthcare provider before making any health decisions.”
-
-#### **User Feedback Annotations**
-   - **Dashboard**: Annotations like “Access all features easily” or “Secure navigation.”
-   - **Health Records Upload**: “Upload files securely” or “AI summarizes medical terms.”
-   - **Digital Twin**: “Adjust settings to see potential impacts” or “Immediate feedback on risk factors.”
 
 ### **1.3.3 UI and UX Enhancements**
 
@@ -304,12 +272,12 @@ To ensure an accessible and intuitive user experience, the following elements sh
 Below is a description of the system architecture in a verbal format, outlining the interaction between major components:
 
 The system follows a **microservices-based architecture**. The main services include:
-1. **Frontend Service**: Web and mobile interfaces for user interaction.
-2. **Backend Service**: A RESTful API that handles business logic, user requests, and data processing.
-3. **AI/ML Service**: A dedicated microservice for managing AI-driven health insights, risk assessments, and digital twin simulations.
-4. **Data Storage Service**: Secure databases for user health data, encrypted medical records, and interaction logs.
-5. **Authentication & Authorization Service**: Manages user login, role-based access control, and token generation.
-6. **Logging and Monitoring Service**: Ensures system reliability, monitors activity, and provides real-time alerts.
+1. **Frontend**: Web and mobile interfaces for user interaction.
+2. **Backend**: A RESTful API that handles business logic, user requests, and data processing.
+3. **AI External API**: A dedicated external API for managing AI-driven health insights, risk assessments, and digital twin simulations.
+4. **Data Storage**: Secure databases for user health data, and interaction logs.
+5. **Authentication & Authorization**: Manages user login, role-based access control, and token generation externally using Supabase.
+6. **Logging and Monitoring**: Ensures system reliability, monitors activity, and provides real-time alerts.
 
 **Choice Rationale**:  
 The microservices pattern enables **scalability, modularity,** and **fault isolation**. Each service is isolated, making it easy to scale or update components independently without affecting other services. This architecture is well-suited for healthcare applications, where data security, reliability, and performance are critical. 
