@@ -434,43 +434,283 @@ please create a diagram given the following:
 ```
 
 **Prompt 2:**
+Act as thejest jest and frontend configurator, I want you check and scan the @frontend because the tests are failing for a bad configuration, please check all the settings we have ver precisse and consice, we need to consider all test pass and that are well configurated
 
 **Prompt 3:**
+Act as the best consultor, mentor and architect and developer in python and react. I want you help me apply good practices for @backend and @frontend . Don't do  anything now, just check what we have and let me know if you have any doubt and ask, if all is fine for you just say it's Ok, if you find things to improve let me know step by step; I don't want to create big changes due that this app is not bigger. consider the cost-benefit of the changes,be consise and precise to avoid bugs and crashes, so we need to valid the existance of valid tests cases
 
 ### **2.6. Tests**
 
 **Prompt 1:**
 ```markdown
-please create a diagram given the following:
-1. **Unit Testing**: Each microservice, especially the AI Service and backend endpoints, undergoes extensive unit testing to validate functionality.
-2. **Integration Testing**: Tests interactions between frontend, backend, and AI Service to ensure they communicate as expected.
-3. **End-to-End Testing**: Simulated user flows (e.g., health record upload, AI health recommendations) are tested to validate the entire system.
-4. **Security Testing**: Vulnerability scanning and penetration testing ensure that sensitive data remains secure and protected.
-
+Act as the best python tester and  configurator, I want you check and scan the @backend  because to create the test configuration and create more test , loook for a bad configuration, please check all the settings we have ver precisse and consice, we need to consider all test pass and that are well configurated
 ```
 
 **Prompt 2:**
+I want to create a test mocking the class AssistantManager, using @MockAssistantManager, the test should be for the method get_assistant_manager_creator, can you create it?
 
 **Prompt 3:**
+I am trying to fix this error in this test, please take a look and let me know what's going on, the test is checking @analyze_lab_results.py using a route as endpoint @__init__.py , the methos is get_assistant_manager_creator. The problem is that we need to use a mock version of AssistantManager class which is @MockAssistantManager , but when running the test is always running the real one consuming httl request, Can you please check and be consise resolving it
+
 
 ---
 
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+```markdown
+I want you elaborate the description of the datamodel in a markdown format, describe each entity model, tellme what they do and the main purpose, please check @__init__.py which is the place with the classes in python used to create the schema
+```
 
 **Prompt 2:**
+act the best github action configurator, I need you to help me implement the CI-CD for @backend and @frontend , consider the infrastructure created in @terraform , askme anything you need if you have doubts
 
 **Prompt 3:**
-
+there is a problem in the pipeline with the test becasue the  looks like using an in-memory database however when running in github action is not and it's running migrations. Can you let me know how to validate the flask migrations on local and then in github actions?
 ---
 
 ### 4. Especificación de la API
 
 **Prompt 1:**
+how can add and implemente OpenAPI in the @backend with python flask?
 
 **Prompt 2:**
+create  the documentation of the  API specification based on this JSON definition: // 20241216062358
+// http://localhost:5000/spec
 
+{
+  "definitions": {
+    
+  },
+  "info": {
+    "description": "API for the Vitamind project",
+    "title": "Vitamind API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/analyze-lab-results": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "content",
+            "required": true,
+            "schema": {
+              "properties": {
+                "content": {
+                  "description": "The lab results content to analyze",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lab results analyzed successfully",
+            "schema": {
+              "properties": {
+                "conclusion": {
+                  "description": "Overall conclusion from analysis",
+                  "type": "string"
+                },
+                "diagnosis": {
+                  "description": "Medical diagnosis if applicable",
+                  "type": "string"
+                },
+                "markdown_summary": {
+                  "description": "Formatted summary in markdown",
+                  "type": "string"
+                },
+                "record_id": {
+                  "description": "ID of the created health record",
+                  "type": "integer"
+                },
+                "risks": {
+                  "description": "Risk assessment results",
+                  "type": "object"
+                },
+                "summary": {
+                  "description": "Summary of the lab results",
+                  "type": "string"
+                },
+                "test_date": {
+                  "description": "Date when test was performed",
+                  "format": "date",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid input data",
+            "schema": {
+              "properties": {
+                "message": {
+                  "description": "Error message details",
+                  "type": "string"
+                },
+                "status": {
+                  "example": "error",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "summary": "Analyze lab results endpoint to analyze the results of a lab test.",
+        "tags": [
+          "Lab Results"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "API is healthy and operational",
+            "schema": {
+              "properties": {
+                "status": {
+                  "example": "healthy",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "API is not functioning properly",
+            "schema": {
+              "properties": {
+                "status": {
+                  "example": "unhealthy",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "summary": "Health check endpoint to verify API availability.",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/health-records-metrics": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "properties": {
+                "record_id": {
+                  "description": "ID of the health record to retrieve metrics for",
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Health record metrics retrieved successfully",
+            "schema": {
+              "properties": {
+                "findings": {
+                  "description": "List of findings and their metrics",
+                  "items": {
+                    "properties": {
+                      "max_value": {
+                        "description": "Maximum normal value",
+                        "type": "number"
+                      },
+                      "min_value": {
+                        "description": "Minimum normal value",
+                        "type": "number"
+                      },
+                      "name": {
+                        "description": "Name of the finding",
+                        "type": "string"
+                      },
+                      "risk_level": {
+                        "description": "Risk level assessment",
+                        "type": "string"
+                      },
+                      "unit": {
+                        "description": "Unit of measurement",
+                        "type": "string"
+                      },
+                      "value": {
+                        "description": "Measured value",
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "record_id": {
+                  "description": "ID of the health record",
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid record ID",
+            "schema": {
+              "properties": {
+                "message": {
+                  "description": "Error message details",
+                  "type": "string"
+                },
+                "status": {
+                  "example": "error",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "Health record not found",
+            "schema": {
+              "properties": {
+                "message": {
+                  "description": "Error message details",
+                  "type": "string"
+                },
+                "status": {
+                  "example": "error",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "summary": "Retrieve health record metrics endpoint to retrieve the metrics of a health record.",
+        "tags": [
+          "Health Records"
+        ]
+      }
+    }
+  },
+  "swagger": "2.0"
+}
+```
 **Prompt 3:**
 
 ---
