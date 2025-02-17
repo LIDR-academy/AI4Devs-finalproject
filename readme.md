@@ -52,8 +52,8 @@ Para instalar y poner en marcha el proyecto LIGENIA en local, sigue estos pasos:
 
 1. **Clonar el Repositorio:**
    ```bash
-   git clone https://github.com/usuario/LIGENIA.git
-   cd LIGENIA
+   git clone https://github.com/moncio/Ligenia.git
+   cd Ligenia
    ```
 
 2. **Configurar Variables de Entorno:**
@@ -160,7 +160,7 @@ Describe brevemente algunos de los tests realizados.
 ### **3.1. Diagrama del modelo de datos:**
 El modelo de datos de LIGENIA está diseñado para soportar la gestión de usuarios, ligas, torneos, equipos, partidos y estadísticas. Cada entidad está normalizada para asegurar la integridad de los datos y minimizar la redundancia. Las relaciones entre las entidades están claramente definidas para facilitar las consultas y operaciones comunes.
 
-![Diagrama del Modelo de Datos](https://github.com/moncio/Ligenia/blob/main/docs/Dise%C3%B1o%20del%20Sistema/modelo%20base%20de%20datos.md)
+![Diagrama del Modelo de Datos](https://github.com/moncio/Ligenia/blob/main/docs/Dise%C3%B1o%20del%20Sistema/diagramas/modelo%20base%20datos.png)
 
 ### **3.2. Descripción de entidades principales:**
 - **Usuarios:** Gestiona la información de registro, autenticación y roles de los usuarios en la plataforma.
@@ -174,11 +174,13 @@ El modelo de datos de LIGENIA está diseñado para soportar la gestión de usuar
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad.
+A continuación se describen los endpoints principales de la API:
 
-- **GET /api/leagues:** Obtiene la lista de ligas.
-- **POST /api/matches:** Crea un nuevo partido.
-- **GET /api/statistics:** Recupera estadísticas de un jugador.
+| Método | Endpoint          | Descripción                          |
+|--------|-------------------|--------------------------------------|
+| GET    | /api/leagues      | Obtiene la lista de ligas.           |
+| POST   | /api/matches      | Crea un nuevo partido.               |
+| GET    | /api/statistics   | Recupera estadísticas de un jugador. |
 
 ---
 
