@@ -33,7 +33,7 @@ https://github.com/moncio/Ligenia
 
 ## 1. Descripción general del producto
 
-> Describe en detalle los siguientes aspectos del producto:
+LIGENIA es una innovadora plataforma web que utiliza inteligencia artificial para mejorar la experiencia en el ámbito deportivo. El proyecto se centra en ofrecer una liga virtual con estadísticas en tiempo real, proporcionando análisis predictivo de rendimiento y generación automática de rankings basados en estadísticas avanzadas.
 
 ### **1.1. Objetivo:**
 El objetivo principal de LIGENIA es crear una aplicación web que asista a los usuarios en todos los pasos del proceso deportivo, desde el análisis y diseño inicial hasta el despliegue final.
