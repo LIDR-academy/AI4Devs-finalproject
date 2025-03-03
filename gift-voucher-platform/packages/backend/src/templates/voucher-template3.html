@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Voucher</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .voucher-container {
+            max-width: 700px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            color: white;
+        }
+        .header {
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .logo-container {
+            background-color: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .logo {
+            max-width: 80px;
+            max-height: 80px;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .gift-details {
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .field {
+            margin-bottom: 20px;
+        }
+        .field:last-child {
+            margin-bottom: 0;
+        }
+        .field-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+        .field-value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .message-section {
+            background-color: white;
+            color: #333;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .message-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #6e8efb;
+        }
+        .message-content {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .redemption-section {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 25px;
+        }
+        .qr-code {
+            flex: 0 0 150px;
+            margin-right: 25px;
+        }
+        .qr-code img {
+            width: 100%;
+            border-radius: 8px;
+            background-color: white;
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .redemption-info {
+            flex: 1;
+        }
+        .code-display {
+            font-family: monospace;
+            font-size: 20px;
+            background-color: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            letter-spacing: 2px;
+        }
+        .footer {
+            background-color: rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .contact-item {
+            margin: 5px 15px;
+            display: flex;
+            align-items: center;
+        }
+        .icon {
+            margin-right: 8px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="voucher-container">
+        <div class="header">
+            <div class="logo-container">
+                <img src="{{storeLogo}}" alt="{{storeName}}" class="logo">
+            </div>
+            <h1 class="title">Gift Voucher</h1>
+            <p class="subtitle">A special gift just for you</p>
+        </div>
+        
+        <div class="content">
+            <div class="gift-details">
+                <div class="field">
+                    <div class="field-label">From</div>
+                    <div class="field-value">{{sender_name}}</div>
+                </div>
+                
+                <div class="field">
+                    <div class="field-label">To</div>
+                    <div class="field-value">{{receiver_name}}</div>
+                </div>
+                
+                <div class="field">
+                    <div class="field-label">Gift</div>
+                    <div class="field-value">{{productName}}</div>
+                </div>
+                
+                <div class="field">
+                    <div class="field-label">Valid Until</div>
+                    <div class="field-value">{{expirationDate}}</div>
+                </div>
+            </div>
+            
+            <div class="message-section">
+                <div class="message-title">Personal Message</div>
+                <div class="message-content">{{message}}</div>
+            </div>
+            
+            <div class="redemption-section">
+                <div class="qr-code">
+                    <img src="{{qrCode}}" alt="Scan to redeem">
+                </div>
+                <div class="redemption-info">
+                    <div class="field-label">Redemption Code</div>
+                    <div class="code-display">{{code}}</div>
+                    <p>Scan the QR code or use this code to redeem your gift</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>{{storeName}} | {{storeAddress}}</div>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <span class="icon">✉️</span> {{storeEmail}}
+                </div>
+                <div class="contact-item">
+                    <span class="icon">📞</span> {{storePhone}}
+                </div>
+                <div class="contact-item">
+                    <span class="icon">📱</span> {{storeSocial}}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
