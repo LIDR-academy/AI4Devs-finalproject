@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Voucher</title>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .voucher-container {
+            max-width: 700px;
+            margin: 20px auto;
+            background-color: #fff;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            border-radius: 4px;
+        }
+        .header {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            color: white;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        .header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            background-image: radial-gradient(circle, #ffffff 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: 1;
+        }
+        .logo-container {
+            display: inline-block;
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .logo {
+            height: 40px;
+            display: block;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        .content {
+            padding: 30px;
+        }
+        .info-section {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+        .info-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .info-box-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #0072ff;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .info-box-value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .message-container {
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .message-label {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background-color: #0072ff;
+            color: white;
+            padding: 5px 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 20px;
+        }
+        .message-content {
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+        .redemption-container {
+            display: flex;
+            align-items: center;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .qr-code {
+            flex: 0 0 150px;
+            margin-right: 20px;
+        }
+        .qr-code img {
+            width: 100%;
+            border-radius: 4px;
+        }
+        .redemption-details {
+            flex: 1;
+        }
+        .code-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #0072ff;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .code-value {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            background-color: #e9f4ff;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #0072ff;
+            margin-bottom: 10px;
+        }
+        .redemption-instructions {
+            font-size: 14px;
+            color: #666;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            border-top: 1px solid #eee;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .store-info {
+            margin-bottom: 10px;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .contact-item {
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+        }
+        .contact-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+            fill: #0072ff;
+        }
+        .expiration-badge {
+            display: inline-block;
+            background-color: #ff6b6b;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="voucher-container">
+        <div class="header">
+            <div class="header-bg"></div>
+            <div class="header-content">
+                <div class="logo-container">
+                    <img src="{{storeLogo}}" alt="{{storeName}}" class="logo">
+                </div>
+                <h1 class="title">Gift Voucher</h1>
+                <p class="subtitle">A special treat awaits you!</p>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="info-section">
+                <div class="info-box">
+                    <div class="info-box-title">From</div>
+                    <div class="info-box-value">{{sender_name}}</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-box-title">To</div>
+                    <div class="info-box-value">{{receiver_name}}</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-box-title">Gift</div>
+                    <div class="info-box-value">{{productName}}</div>
+                    <div class="expiration-badge">Valid until {{expirationDate}}</div>
+                </div>
+            </div>
+            
+            <div class="message-container">
+                <div class="message-label">Personal Message</div>
+                <div class="message-content">{{message}}</div>
+            </div>
+            
+            <div class="redemption-container">
+                <div class="qr-code">
+                    <img src="{{qrCode}}" alt="Scan to redeem">
+                </div>
+                <div class="redemption-details">
+                    <div class="code-label">Redemption Code</div>
+                    <div class="code-value">{{code}}</div>
+                    <div class="redemption-instructions">
+                        To redeem your gift, present this voucher at the store or scan the QR code.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="store-info">{{storeName}} - {{storeAddress}}</div>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <svg class="contact-icon" viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    {{storeEmail}}
+                </div>
+                <div class="contact-item">
+                    <svg class="contact-icon" viewBox="0 0 24 24">
+                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                    </svg>
+                    {{storePhone}}
+                </div>
+                <div class="contact-item">
+                    <svg class="contact-icon" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                    </svg>
+                    {{storeSocial}}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Voucher</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .voucher-container {
+            max-width: 700px;
+            margin: 20px auto;
+            background-color: #fff;
+            border: 2px solid #d4af37;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .corner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-color: #d4af37;
+        }
+        .corner-top-left {
+            top: -50px;
+            left: -50px;
+            transform: rotate(45deg);
+        }
+        .corner-top-right {
+            top: -50px;
+            right: -50px;
+            transform: rotate(45deg);
+        }
+        .corner-bottom-left {
+            bottom: -50px;
+            left: -50px;
+            transform: rotate(45deg);
+        }
+        .corner-bottom-right {
+            bottom: -50px;
+            right: -50px;
+            transform: rotate(45deg);
+        }
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid #d4af37;
+            position: relative;
+        }
+        .logo {
+            max-width: 120px;
+            margin-bottom: 15px;
+        }
+        .title {
+            font-size: 32px;
+            color: #d4af37;
+            margin: 0;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            font-style: italic;
+            color: #666;
+            margin-top: 5px;
+        }
+        .content {
+            padding: 30px;
+            position: relative;
+        }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 120px;
+            color: rgba(212, 175, 55, 0.1);
+            font-weight: bold;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .field {
+            margin-bottom: 15px;
+        }
+        .field-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+            font-style: italic;
+        }
+        .field-value {
+            font-size: 18px;
+            color: #333;
+            border-bottom: 1px dotted #d4af37;
+            padding-bottom: 5px;
+        }
+        .message-box {
+            background-color: #f9f7f0;
+            border: 1px solid #d4af37;
+            padding: 20px;
+            margin: 30px 0;
+            position: relative;
+        }
+        .message-box:before {
+            content: '"';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 60px;
+            color: rgba(212, 175, 55, 0.2);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        .message-content {
+            font-style: italic;
+            line-height: 1.6;
+            padding-left: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        .redemption-section {
+            display: flex;
+            align-items: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f7f0;
+            border: 1px solid #d4af37;
+        }
+        .qr-code {
+            flex: 0 0 150px;
+            margin-right: 20px;
+        }
+        .qr-code img {
+            width: 100%;
+            border: 1px solid #d4af37;
+            padding: 5px;
+            background-color: white;
+        }
+        .redemption-info {
+            flex: 1;
+        }
+        .code-display {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            color: #d4af37;
+            letter-spacing: 2px;
+            margin: 10px 0;
+        }
+        .footer {
+            background-color: #f9f7f0;
+            border-top: 1px solid #d4af37;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #d4af37, transparent);
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="voucher-container">
+        <div class="corner corner-top-left"></div>
+        <div class="corner corner-top-right"></div>
+        <div class="corner corner-bottom-left"></div>
+        <div class="corner corner-bottom-right"></div>
+        
+        <div class="header">
+            <img src="{{storeLogo}}" alt="{{storeName}}" class="logo">
+            <h1 class="title">GIFT VOUCHER</h1>
+            <p class="subtitle">A token of appreciation</p>
+        </div>
+        
+        <div class="content">
+            <div class="watermark">GIFT</div>
+            
+            <div class="details-grid">
+                <div>
+                    <div class="field">
+                        <div class="field-label">From</div>
+                        <div class="field-value">{{sender_name}}</div>
+                    </div>
+                    
+                    <div class="field">
+                        <div class="field-label">Gift</div>
+                        <div class="field-value">{{productName}}</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="field">
+                        <div class="field-label">To</div>
+                        <div class="field-value">{{receiver_name}}</div>
+                    </div>
+                    
+                    <div class="field">
+                        <div class="field-label">Valid Until</div>
+                        <div class="field-value">{{expirationDate}}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="message-box">
+                <div class="message-content">{{message}}</div>
+            </div>
+            
+            <div class="redemption-section">
+                <div class="qr-code">
+                    <img src="{{qrCode}}" alt="Scan to redeem">
+                </div>
+                <div class="redemption-info">
+                    <div class="field-label">Redemption Code</div>
+                    <div class="code-display">{{code}}</div>
+                    <p>Present this voucher or scan the QR code to redeem your gift</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>{{storeName}}</div>
+            <div class="divider"></div>
+            <div>{{storeAddress}} | {{storeEmail}} | {{storePhone}}</div>
+            <div>{{storeSocial}}</div>
+        </div>
+    </div>
+</body>
+</html> 

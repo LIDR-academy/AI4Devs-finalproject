@@ -1,0 +1,49 @@
+# Environment variables - never commit these files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+
+# Build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Dependencies
+node_modules/
+
+# Coverage reports
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# MongoDB data directory
+data/
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+
+# Sensitive configuration files
+config/secrets.json
+**/config/*secrets*
+**/config/*credentials*
+
+# API keys and secrets
+*.p8
+api-keys.json
+credentials.json
+service-account.json
+
+# Local development files
+.vscode/
+.idea/
+*.code-workspace 

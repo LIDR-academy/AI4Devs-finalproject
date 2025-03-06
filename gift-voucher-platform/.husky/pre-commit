@@ -1,0 +1,16 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running security check before commit..."
+bash ./scripts/check-sensitive-info.sh
+
+# If the security check finds issues, it will display them but won't block the commit
+# Uncomment the following lines to make the pre-commit hook block commits with sensitive info
+# if [ $? -ne 0 ]; then
+#   echo "Security check failed. Please fix the issues before committing."
+#   exit 1
+# fi
+
+# Run linting
+echo "Running linting..."
+npx lint-staged 

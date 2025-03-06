@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Voucher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .voucher-container {
+            max-width: 700px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            background-color: #fff;
+        }
+        .left-panel {
+            width: 240px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-right: 1px solid #eee;
+        }
+        .right-panel {
+            flex: 1;
+            padding: 20px;
+            background-color: #000;
+            color: #fff;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            margin-top: 40px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .contact-info p {
+            margin: 5px 0;
+        }
+        .social-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        .field-label {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 5px;
+        }
+        .field-value {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .message-box {
+            margin: 30px 0;
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+        .expiration-date {
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .code {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: right;
+        }
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .qr-code img {
+            max-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="voucher-container">
+        <div class="left-panel">
+            <img src="{{storeLogo}}" alt="{{storeName}}" class="logo">
+            <div class="contact-info">
+                <p>{{storeAddress}}</p>
+                <p>{{storeEmail}}</p>
+                <p>{{storePhone}}</p>
+                <p>
+                    <span class="social-icon">📱</span>
+                    <span>{{storeSocial}}</span>
+                </p>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div>
+                <div class="field-label">FROM:</div>
+                <div class="field-value">{{sender_name}}</div>
+            </div>
+            <div>
+                <div class="field-label">TO:</div>
+                <div class="field-value">{{receiver_name}}</div>
+            </div>
+            <div>
+                <div class="field-label">PRODUCT:</div>
+                <div class="field-value">{{productName}}</div>
+            </div>
+            
+            <div class="message-box">
+                <div>Message: {{message}}</div>
+            </div>
+            
+            <div class="qr-code">
+                <img src="{{qrCode}}" alt="Scan to redeem">
+            </div>
+            
+            <div class="expiration-date">expiration date: {{expirationDate}}</div>
+            <div class="code">code: {{code}}</div>
+        </div>
+    </div>
+</body>
+</html> 
