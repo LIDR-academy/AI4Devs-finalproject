@@ -1,0 +1,21 @@
+<div class="web-viewer-container">
+    <!-- Sección de carga de URL -->
+    <div class="url-reader-container" *ngIf="!viewerState?.isLoaded">
+        <app-url-reader >
+        </app-url-reader>
+    </div>
+    
+  <!-- Sección del visor de contenido web -->
+  <div class="web-viewer-content" *ngIf="viewerState?.isLoaded">
+    <app-url-viewer></app-url-viewer>
+    <div class="web-viewer-close-button">
+      <button 
+        class="control-button" 
+        (click)="closeComponent()">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  
+</div> 

@@ -1,0 +1,157 @@
+<div class="control-section">
+  <div class="configuration-section">
+  </div>
+  <div class="control-section-voice-command">
+    <div class="control-section-message" *ngIf="micState !== micStates['onstart']">
+      {{ micState.message }}
+    </div>
+    <div class="control-section-message" *ngIf="isListening && micState === micStates['onstart']">
+      {{ feedbackState.message ? '' : micState.message }}
+      <span [style.color]="feedbackState.colorMessageLabel">{{ feedbackState.messageLabel }}</span> <span [style.color]="feedbackState.colorMessage">{{ feedbackState.message | uppercase }}</span>
+    </div>
+    <div class="control-section-voice-command-buttons">
+      <div>
+        <!--button class="control-button config-button" (click)="toggleInstructions()">
+          <i class="fas fa-cog"></i>
+        </button-->
+        <button class="control-button help-button" (click)="toggleCommandsList()">
+          <i class="fas fa-list"></i>
+        </button>
+      </div>
+      <button 
+        class="control-button" 
+        [ngClass]="{'default-state': micState === micStates['default'], 'onstart-state': micState === micStates['onstart']}" 
+        [style.backgroundColor]="micState.iconBackgroundColor" 
+        (click)="isListening ? abortListening() : startListening()">
+        <i [ngClass]="'fas ' + micState.iconClass" [style.color]="micState.iconColor"></i>
+      </button>
+      <div>
+        <button class="control-button change-reading-mode-button" (click)="changeReadingMode()">
+          <i class="fas fa-exchange-alt"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="help-section">
+  </div>
+</div>
+
+<!-- Modal para instrucciones usando ng-template -->
+<ng-template #instructionsModal>
+  <div class="voice-settings-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Basic Voice Commands</h3>
+        <button class="close-button" (click)="closeInstructions()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="instructions-content">
+          <p>To use voice commands:</p>
+          <ol>
+            <li>Click the microphone button</li>
+            <li>When the microphone turns green, say any of these commands:</li>
+          </ol>
+          <div class="commands-list">
+            <div class="command-item">
+              <span class="command">"Siguiente" o "Siguiente página"</span>
+              <span class="description">Go to the next page</span>
+            </div>
+            <div class="command-item">
+              <span class="command">"Anterior" o "Atrás"</span>
+              <span class="description">Go back to the previous page</span>
+            </div>
+            <div class="command-item">
+              <span class="command">"Arriba" o "Abajo"</span>
+              <span class="description">Scroll the page</span>
+            </div>
+          </div>
+          <p class="info-text">
+             Puedes ver todos los comandos disponibles presionando el botón   <i class="fas fa-list"></i>
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="primary-button" (click)="closeInstructions()">Understood</button>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Modal para lista de comandos -->
+<ng-template #commandsListModal>
+  <div class="voice-settings-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Available Voice Commands</h3>
+        <button class="close-button" (click)="closeCommandsList()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="instructions-content">
+          <div class="commands-list">
+            <!-- Navegación de páginas -->
+            <div class="command-group">
+              <h4 class="action-title">Page Navigation</h4>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('next').join(' / ') }}</span>
+                <span class="description">Go to next page</span>
+              </div>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('previous').join(' / ') }}</span>
+                <span class="description">Go to previous page</span>
+              </div>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('first').join(' / ') }}</span>
+                <span class="description">Go to first page</span>
+              </div>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('last').join(' / ') }}</span>
+                <span class="description">Go to last page</span>
+              </div>
+            </div>
+
+            <!-- Desplazamiento en página -->
+            <div class="command-group">
+              <h4 class="action-title">Page Scrolling</h4>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('up').join(' / ') }}</span>
+                <span class="description">Scroll up</span>
+              </div>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('down').join(' / ') }}</span>
+                <span class="description">Scroll down</span>
+              </div>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('top').join(' / ') }}</span>
+                <span class="description">Go to top of page</span>
+              </div>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('bottom').join(' / ') }}</span>
+                <span class="description">Go to bottom of page</span>
+              </div>
+            </div>
+
+            <!-- Comandos adicionales -->
+            <div class="command-group">
+              <h4 class="action-title">Additional Commands</h4>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('goTo').join(' / ') }}</span>
+                <span class="description">Go to specific page</span>
+              </div>
+              <div class="command-item">
+                <span class="command">{{ getCommandsArray('more').join(' / ') }}</span>
+                <span class="description">Continue previous action, only applies to scrolling commands</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="primary-button" (click)="closeCommandsList()">Understood</button>
+      </div>
+    </div>
+  </div>
+</ng-template>

@@ -1,0 +1,255 @@
+
+Commit History
+Commits on Mar 24, 2025
+docs(template): update template with de videos
+committed
+6 hours ago
+feat: chage reading mode
+committed
+11 hours ago
+Commits on Mar 23, 2025
+feat(voice-reader): automatic scroll
+committed
+12 hours ago
+feat: scroll to top in every event of page navigation
+committed
+13 hours ago
+feat: new favicon
+committed
+14 hours ago
+docs(template): update teample
+committed
+14 hours ago
+feature: web viewer version beta
+committed
+14 hours ago
+fix: dynamic acceleromer
+committed
+15 hours ago
+feat(reader-options): add manual to web
+committed
+16 hours ago
+feat(reading-options): text to speech disabled for Web content
+committed
+18 hours ago
+feat(login): login integration and user bar
+committed
+18 hours ago
+feat(auth): add auth page
+committed
+19 hours ago
+fix(voice-comand):legend traduction
+committed
+20 hours ago
+fix(voice-comand):legend traduction
+committed
+20 hours ago
+feat(voice-command): button setting disabled
+committed
+20 hours ago
+feat(reading-options): new style to disabled options
+committed
+20 hours ago
+feat(pdf-uploader): add close button
+committed
+20 hours ago
+feat: reading option disabled
+committed
+20 hours ago
+docs(template): update template with the las inforamation
+committed
+yesterday
+test (reading-options): add test
+committed
+yesterday
+test(pdf): add test to PDF components
+committed
+yesterday
+tests(voice reader): add voice reader test
+committed
+yesterday
+test (voice-comand): add unit test
+committed
+yesterday
+docs(template): updated
+committed
+yesterday
+docs(template): updated
+committed
+yesterday
+docs(template.md): add new information
+committed
+yesterday
+docs (PRD): update PRD
+committed
+yesterday
+feat: show commands list
+committed
+yesterday
+feat: add new buttons
+committed
+yesterday
+feat: add initial modal to voice command
+committed
+yesterday
+build: rename index.html
+committed
+yesterday
+fix: translate 0 in mobile
+committed
+2 days ago
+feat: add support to goTo
+committed
+2 days ago
+Commits on Mar 22, 2025
+reat: remove unused files
+committed
+2 days ago
+build: add firebase
+committed
+2 days ago
+
+
+
+Commit History
+Commits on Mar 22, 2025
+feat: add scroll down and up funcionality
+committed
+2 days ago
+feat: add top and bottom funcionality
+committed
+2 days ago
+Commits on Mar 21, 2025
+feat: style final to shake
+committed
+3 days ago
+feat: shake efect validations
+committed
+3 days ago
+feat: shake to page effect info
+committed
+3 days ago
+feat: support to fist and last page
+committed
+3 days ago
+feat: support to languages
+committed
+3 days ago
+feat: remove log
+committed
+3 days ago
+refactor: change handle command
+committed
+3 days ago
+feat: previous event
+committed
+3 days ago
+Commits on Mar 20, 2025
+feat: add information button
+committed
+4 days ago
+refactor: add all inside finalproject folder
+committed
+4 days ago
+feat: change reading option
+committed
+4 days ago
+feat: voive command detector
+committed
+4 days ago
+feat(voice-commad): new style
+committed
+4 days ago
+feat (voice-command): add custom styles for mic state
+committed
+4 days ago
+feature(voice-command): new style
+committed
+4 days ago
+Commits on Mar 19, 2025
+feat: new style voice command
+committed
+5 days ago
+feat: new style to voice commnad
+committed
+5 days ago
+docs: add prompts
+committed
+5 days ago
+feat: first version of voice command
+committed
+5 days ago
+refactor: rename voice to text to speech
+committed
+5 days ago
+docs: update prompts
+committed
+5 days ago
+feat: select and save voice
+committed
+5 days ago
+Commits on Mar 18, 2025
+feat: new style voice reader
+committed
+last week
+feat: reader control (voice integration)
+committed
+last week
+feat: add firs version of reader controls
+committed
+last week
+fix: revert color
+committed
+last week
+feat: new style to pdf content
+committed
+last week
+feat: new header style un pdf content
+committed
+last week
+feat: new style to controls of PDF
+committed
+last week
+feat: new pdf content
+committed
+last week
+Commits on Mar 17, 2025
+feat: add new styles
+committed
+last week
+feat: add home reader page
+committed
+last week
+feat: add voice option
+committed
+last week
+Commits on Mar 16, 2025
+feat: url reader and viewer
+committed
+last week
+feat: url reader styles
+committed
+last week
+feature: add web-reader
+committed
+last week
+fix: reajust style in mobile
+committed
+last week
+feat: pdf reader integration
+committed
+last week
+Commits on Mar 15, 2025
+feat: add next button
+committed
+last week
+feat(reader): separate pdf uploader and add reading option
+committed
+last week
+build: add host and ssl to ng serve
+committed
+last week
+build: add host and ssl to ng serve
+committed
+last week
+featture(fronted): feature reader pdf first version

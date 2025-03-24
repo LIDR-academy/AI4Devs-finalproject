@@ -1,0 +1,119 @@
+<div class="voice-reader-container">
+  <div class="voice-reader-controls">
+    <div class="status-indicator" 
+         [ngClass]="{
+           'active': isReading,
+           'reading': isReading && !isPaused,
+           'paused': isReading && isPaused,
+           'inactive': !isReading
+         }">
+      <div class="status-icon">
+        <i class="fas" 
+           [class.fa-volume-up]="isReading && !isPaused" 
+           [class.fa-volume-mute]="!isReading || isPaused"></i>
+      </div>
+      <div class="status-text">
+        {{ isReading ? (isPaused ? 'Reading paused' : 'Reading...') : 'Voice reader inactive' }}
+      </div>
+    </div> 
+    <div class="control-section">
+      <div class="button-group">
+        <button 
+          class="control-button play-pause-button" 
+          [ngClass]="{'active': isReading && !isPaused}"
+          (click)="playPause()"
+          title="Play/Pause">
+          <i class="fas" [ngClass]="{'fa-play': !isReading || isPaused, 'fa-pause': isReading && !isPaused}"></i>
+        </button>
+        
+        <button 
+          class="control-button" 
+          (click)="stopReading()"
+          [disabled]="!isReading">
+          <i class="fas fa-stop"></i>
+        </button>
+
+        <button class="control-button" (click)="toggleModal()">
+          <i class="fas fa-cog"></i>
+        </button>
+
+        <button class="control-button change-reading-mode-button" (click)="changeReadingMode()">
+          <i class="fas fa-exchange-alt"></i>
+        </button>
+      </div>
+    </div>
+    
+
+    
+    <!--div class="auto-page-info">
+      <p>When the reading is finished, it will automatically change to the next page</p>
+    </div>
+  </div>
+
+  <!-- Modal for voice settings -->
+  <ng-template #voiceSettingsModal>
+    <div class="voice-settings-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Voice Settings</h3>
+          <button class="close-button" (click)="closeModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Language Selector -->
+          <div class="settings-group">
+            <label for="language-select">Language:</label>
+            <select 
+              id="language-select" 
+              [(ngModel)]="currentLanguage"
+              (change)="onLanguageChange($event)">
+              <option *ngFor="let lang of availableLanguages" 
+                      [value]="lang.code">
+                {{ lang.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Voice Selector -->
+          <div class="settings-group">
+            <label for="voice-select">Voice:</label>
+            <select 
+              id="voice-select" 
+              [disabled]="filteredVoices.length === 0"
+              [(ngModel)]="currentVoice"
+              [compareWith]="compareVoices">
+              <option *ngFor="let voice of filteredVoices" 
+                      [ngValue]="voice">
+                {{ voice.name }} 
+                <span *ngIf="isPreferredVoice(voice)">⭐</span>
+              </option>
+            </select>
+            <small class="voice-hint" *ngIf="filteredVoices.length > 0">
+              ⭐ Recommended voices for better quality
+            </small>
+          </div>
+
+          <!-- Speed Control -->
+          <div class="settings-group">
+            <label for="speed-control">Speed:</label>
+            <div class="speed-control">
+              <input 
+                type="range" 
+                id="speed-control"
+                min="0.5"
+                max="2"
+                step="0.1"
+                [(ngModel)]="voiceSpeed">
+              <span class="speed-value">{{ voiceSpeed }}x</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary-button" (click)="closeModal()">Cancel</button>
+          <button class="primary-button" (click)="applyVoiceSettings()">Apply</button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div> 

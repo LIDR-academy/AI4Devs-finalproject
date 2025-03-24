@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "dist/easy-reader/browser",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

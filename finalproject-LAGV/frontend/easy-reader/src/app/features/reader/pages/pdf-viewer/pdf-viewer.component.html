@@ -1,0 +1,10 @@
+<div class="pdf-viewer-container">
+  <!-- Sección de carga de PDF -->
+  <app-pdf-uploader *ngIf="!viewerState?.isLoaded"></app-pdf-uploader>
+  
+  <app-reader-control *ngIf="viewerState?.isLoaded"></app-reader-control>
+  <!-- Sección del visor de PDF -->
+  <div class="pdf-viewer-content" *ngIf="viewerState?.isLoaded">
+    <app-pdf-content></app-pdf-content>
+  </div>
+</div>
