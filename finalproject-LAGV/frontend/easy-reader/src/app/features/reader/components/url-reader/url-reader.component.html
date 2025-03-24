@@ -1,0 +1,35 @@
+<div class="url-reader-container">
+  <div class="header">
+    <div class="icon">
+      <i class="fas fa-globe"></i>
+    </div>
+    <h2>Enter a website URL to start reading</h2>
+  </div>
+  
+  <form [formGroup]="urlForm">
+    <input 
+      type="url" 
+      formControlName="url" 
+      placeholder="https://example.com"
+      class="input"
+      (input)="onInputChange()"
+    >
+    
+    <div class="error" *ngIf="urlForm.get('url')?.invalid && urlForm.get('url')?.touched">
+      Please enter a valid URL
+    </div>
+    
+  </form>
+
+  <!-- Opciones de lectura -->
+  <app-reading-options 
+    *ngIf="showReadingOptions"
+    (readingModeSelected)="onReadingModeSelected($event)"
+  ></app-reading-options>
+
+  
+  <div class="info" *ngIf="!showReadingOptions">
+    <i class="fas fa-info-circle"></i>
+    <p>This feature loads the website in an iframe so you can read it with auto-scroll functions.</p>
+  </div>
+</div> 
