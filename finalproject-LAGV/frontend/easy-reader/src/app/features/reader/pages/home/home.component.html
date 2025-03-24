@@ -1,0 +1,33 @@
+<div class="home-container">
+  <div class="header">
+    <app-user-bar class="user-bar"></app-user-bar>
+  </div>
+  <div class="content-wrapper">
+    <div class="logo-container">
+      <h1 class="app-title">Easy Reader</h1>
+      <p class="app-slogan">Reading made effortlessly simple</p>
+    </div>
+    
+    <div class="options-container">
+      <div class="option-card" (click)="navigateToPdfViewer()">
+        <div class="option-icon">
+          <i class="fas fa-file-pdf"></i>
+        </div>
+        <h2 class="option-title">Read from PDF</h2>
+        <p class="option-description">
+          Upload a PDF file and read it with our smart reading tools
+        </p>
+      </div>
+      
+      <div class="option-card" (click)="navigateToWebViewer()">
+        <div class="option-icon">
+          <i class="fas fa-globe"></i>
+        </div>
+        <h2 class="option-title">Enter Web URL</h2>
+        <p class="option-description">
+          Read content from any website with our reading assistance
+        </p>
+      </div>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,135 @@
+:host {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+}
+
+.url-reader-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 50%;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+  @media (max-width: 700px) {
+    width: 90%;
+  }
+}
+  
+.header {
+  margin-bottom: 32px;
+  position: relative;
+  
+  .icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: #EEF2FF;
+    display: grid;
+    place-items: center;
+    
+    i {
+      font-size: 32px;
+      color: #6366F1;
+    }
+  }
+
+  h2 {
+    font-size: 24px;
+    color: #111827;
+    margin: 0;
+  }
+
+  .close-button {
+    color: #6B7280;
+    font-weight: bold;
+    background-color: transparent;
+    border: none;
+    text-align: right;
+    width: 100%;
+    cursor: pointer;
+
+    i {
+      font-size: 25px;
+      &:hover {
+        background-color: #E5E7EB;
+      }
+    }
+
+ 
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  
+  .input {
+    height: 52px;
+    padding: 0 16px;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    font-size: 16px;
+    
+    &:focus {
+      outline: none;
+      border-color: #6366F1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+  }
+  
+  .error {
+    color: #DC2626;
+    font-size: 14px;
+  }
+  
+  button {
+    height: 52px;
+    background: #6366F1;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    
+    &:hover:not(:disabled) {
+      background: #4F46E5;
+    }
+    
+    &:disabled {
+      background: #E5E7EB;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.info {
+  margin-top: 32px;
+  padding: 16px;
+  background: #F8F9FC;
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  text-align: left;
+  
+  i {
+    color: #6366F1;
+    margin-top: 3px;
+  }
+  
+  p {
+    color: #6B7280;
+    font-size: 14px;
+    margin: 0;
+    line-height: 1.5;
+  }
+}

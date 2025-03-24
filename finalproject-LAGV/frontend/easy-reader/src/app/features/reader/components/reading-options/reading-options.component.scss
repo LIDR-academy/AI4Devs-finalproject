@@ -1,0 +1,161 @@
+.reading-options {
+  text-align: left;
+  margin-top: 24px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  h3 {
+    margin: 0 0 16px;
+    color: #111827;
+    font-size: 18px;
+    font-weight: 500;
+    text-align: center;
+  }
+}
+
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #F9FAFB;
+    border-color: #6366F1;
+  }
+
+  input[type="radio"] {
+    margin-top: 4px;
+    margin-right: 12px;
+    cursor: pointer;
+
+    &:checked + .option-content {
+      .radio-label {
+        color: #6366F1;
+      }
+    }
+  }
+
+  .option-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .radio-label {
+    font-weight: 500;
+    color: #111827;
+    margin-bottom: 4px;
+    transition: color 0.2s ease;
+  }
+
+  .description {
+    color: #6B7280;
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px;
+
+    input[type="radio"] {
+      margin-top: 2px;
+    }
+
+    .radio-label {
+      font-size: 14px;
+    }
+
+    .description {
+      font-size: 12px;
+    }
+  }
+}
+
+.disabled-option {
+  opacity: 0.7;
+  cursor: not-allowed;
+
+  .radio-label,
+  .description {
+    color: #999;
+  }
+}
+
+.unsupported-message {
+  padding: 12px;
+  background-color: #FEF3F2;
+  border: 1px solid #FEE4E2;
+  border-radius: 8px;
+  
+  p {
+    color: #B42318;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px;
+    
+    p {
+      font-size: 12px;
+    }
+  }
+}
+
+.continue-button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background-color: #6366F1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #4F46E5;
+  }
+
+  &:disabled {
+    background-color: #E5E7EB;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+
+.in-development {
+  color: #059669;
+  font-size: 16px;
+  font-weight: 500;
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
+}
+
+.future-feature {
+  color: #fac000;
+  font-size: 16px;
+  font-weight: 500;
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
+}

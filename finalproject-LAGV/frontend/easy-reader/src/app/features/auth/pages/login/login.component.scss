@@ -1,0 +1,183 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: #F3F4F6;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.login-wrapper {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.logo-container {
+  margin-bottom: 32px;
+  
+  .app-title {
+    font-size: 72px;
+    font-weight: 400;
+    color: #6366F1;
+    margin: 0;
+    font-family: 'Dancing Script', 'Brush Script MT', cursive;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    
+    @media (max-width: 480px) {
+      font-size: 48px;
+      font-family: 'Pacifico', 'Brush Script MT', cursive;
+    }
+    
+    /* Específicamente para iOS */
+    @supports (-webkit-touch-callout: none) {
+      font-family: 'Pacifico', 'Brush Script MT', cursive;
+    }
+  }
+  
+  .app-slogan {
+    font-size: 18px;
+    color: #9CA3AF;
+    margin: 0;
+    font-style: italic;
+    
+    @media (max-width: 480px) {
+      font-size: 16px;
+    }
+  }
+}
+
+.login-box {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  
+  @media (max-width: 480px) {
+    padding: 24px;
+  }
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 24px;
+  text-align: center;
+}
+
+.login-form {
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4B5563;
+    margin-bottom: 6px;
+  }
+  
+  input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #1F2937;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: #6366F1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+  }
+  
+  .error-message {
+    color: #EF4444;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+}
+
+.login-button, .without-account-button {
+  width: 100%;
+  padding: 14px;
+  background-color: #6366F1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #4F46E5;
+  }
+  
+  &:disabled {
+    background-color: #9CA3AF;
+    cursor: not-allowed;
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 24px 0;
+  
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  
+  span {
+    padding: 0 10px;
+    color: #6B7280;
+    font-size: 14px;
+  }
+}
+
+.google-button {
+  width: 100%;
+  padding: 14px;
+  background-color: white;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #F9FAFB;
+  }
+  
+  .google-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+  }
+} 

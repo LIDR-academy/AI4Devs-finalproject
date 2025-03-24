@@ -1,0 +1,38 @@
+<div class="pdf-viewer">
+  <div class="pdf-controls">
+    <div class="control-section left">
+      <div class="document-title">
+        <div class="pdf-icon">
+          <i class="fas fa-file-pdf"></i>
+        </div>
+        <span>{{ documentTitle }}</span>
+      </div>
+    </div>
+    
+    <div class="control-section center">
+      <div class="controls-wrapper">
+        <button class="control-btn" (click)="previousPage()">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div #pageInfo class="page-info">
+          <span>{{ currentPage }} / {{ totalPages }}</span>
+        </div>
+        <button class="control-btn" (click)="nextPage()">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="control-section right">
+      <div class="close-button">
+        <button class="close-btn" (click)="closeDocument()">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div #pdfContainer class="pdf-container">
+    <canvas #pdfCanvas></canvas>
+  </div>
+</div> 
