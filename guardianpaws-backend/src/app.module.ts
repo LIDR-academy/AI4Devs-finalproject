@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import AppDataSource from './config/database.config';
 import { ReportModule } from './modules/report/report.module';
 import { MascotaModule } from './modules/mascota/mascota.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MascotaModule } from './modules/mascota/mascota.module';
     TypeOrmModule.forRoot(AppDataSource.options),
     MascotaModule,
     ReportModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
