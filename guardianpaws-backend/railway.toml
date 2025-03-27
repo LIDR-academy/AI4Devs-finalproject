@@ -1,6 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "./Dockerfile"
+dockerfilePath = "guardianpaws-backend/Dockerfile" 
 
 [deploy]
 startCommand = "npm run start:prod"
