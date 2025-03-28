@@ -25,7 +25,9 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
     sexo: '',
     color: '',
     ubicacion: '',
-    descripcion: ''
+    descripcion: '',
+    email: '',
+    telefono: ''
   });
   const [imagenes, setImagenes] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -146,6 +148,28 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
       return false;
     }
 
+    // Validación del email
+    if (!formData.email.trim()) {
+      setAlert({ message: 'El email es requerido', type: 'error' });
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setAlert({ message: 'El email no es válido', type: 'error' });
+      return false;
+    }
+
+    // Validación del teléfono
+    if (!formData.telefono.trim()) {
+      setAlert({ message: 'El teléfono es requerido', type: 'error' });
+      return false;
+    }
+    const phoneRegex = /^\+?[\d\s-]{8,}$/;
+    if (!phoneRegex.test(formData.telefono.trim())) {
+      setAlert({ message: 'El teléfono no es válido', type: 'error' });
+      return false;
+    }
+
     return true;
   };
 
@@ -211,6 +235,8 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
       // Agregar ubicación y descripción como campos separados
       formDataToSend.append('ubicacion', formData.ubicacion.trim());
       formDataToSend.append('descripcion', formData.descripcion.trim());
+      formDataToSend.append('email', formData.email.trim());
+      formDataToSend.append('telefono', formData.telefono.trim());
       
       // Agregar las imágenes
       imagenes.forEach((imagen) => {
@@ -230,7 +256,9 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
         sexo: '',
         color: '',
         ubicacion: '',
-        descripcion: ''
+        descripcion: '',
+        email: '',
+        telefono: ''
       });
       setImagenes([]);
       setPreviews([]);
@@ -365,6 +393,26 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
             value={formData.descripcion}
             onChange={handleInputChange}
             rows={4}
+            className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+            required
+          />
+
+          <input
+            type="email"
+            name="email"
+            placeholder="Email de contacto"
+            value={formData.email}
+            onChange={handleInputChange}
+            className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+            required
+          />
+
+          <input
+            type="tel"
+            name="telefono"
+            placeholder="Teléfono de contacto"
+            value={formData.telefono}
+            onChange={handleInputChange}
             className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
             required
           />

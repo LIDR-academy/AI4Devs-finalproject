@@ -51,6 +51,8 @@ export class InitialTables1742616117627 implements MigrationInterface {
                 "estado" estado_reporte NOT NULL DEFAULT 'abierto',
                 "fecha_cambio" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 "comentario" TEXT,
+                "email" VARCHAR(255) NOT NULL,
+                "telefono" VARCHAR(20) NOT NULL,
                 "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 CONSTRAINT "fk_reporte" FOREIGN KEY ("reporte_id") 

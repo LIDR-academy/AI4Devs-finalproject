@@ -1,10 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { ReportePerdida } from './reporte-perdida.entity';
-
-export enum EstadoReporte {
-    ABIERTO = 'abierto',
-    CERRADO = 'cerrado'
-}
+import { EstadoReporte } from '../enums/estado-reporte.enum';
 
 @Entity('historial_reporte')
 export class HistorialReporte {
@@ -25,6 +21,12 @@ export class HistorialReporte {
 
     @Column({ name: 'fecha_cambio', type: 'timestamp' })
     fechaCambio: Date;
+
+    @Column({ name: 'email' })
+    email: string;
+
+    @Column({ name: 'telefono' })
+    telefono: string;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

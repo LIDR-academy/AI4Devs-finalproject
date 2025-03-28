@@ -2,12 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReportePerdida } from '../entities/reporte-perdida.entity';
-import { HistorialReporte, EstadoReporte } from '../entities/historial-reporte.entity';
+import { HistorialReporte } from '../entities/historial-reporte.entity';
 import { CrearReporteDto } from '../dto/crear-reporte.dto';
 import { ActualizarReporteDto } from '../dto/actualizar-reporte.dto';
 import { Mascota } from '../../mascota/entities/mascota.entity';
 import { Imagen } from '../../image/entities/imagen.entity';
 import { ImagenService } from '../../image/services/imagen.service';
+import { EstadoReporte } from '../enums/estado-reporte.enum';
+
+
 
 @Injectable()
 export class ReporteService {
@@ -45,7 +48,9 @@ export class ReporteService {
             reporteId: reporteGuardado.id,
             estado: reporteGuardado.estado,
             comentario: 'Reporte creado inicialmente',
-            fechaCambio: new Date()
+            fechaCambio: new Date(),
+            email: crearReporteDto.email,
+            telefono: crearReporteDto.telefono
         });
 
         await this.historialRepository.save(historial);
@@ -97,7 +102,9 @@ export class ReporteService {
             reporteId: reporte.id,
             estado: reporte.estado,
             comentario: actualizarReporteDto.descripcion || 'Actualización del reporte',
-            fechaCambio: new Date()
+            fechaCambio: new Date(),
+            email: actualizarReporteDto.email,
+            telefono: actualizarReporteDto.telefono
         });
 
         await this.historialRepository.save(historial);

@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsBoolean, IsEnum } from 'class-validator';
-import { EstadoReporte } from '../entities/historial-reporte.entity';
+import { IsString, IsOptional, IsBoolean, IsEnum, IsEmail } from 'class-validator';
+import { EstadoReporte } from '../enums/estado-reporte.enum';
 
 export class ActualizarReporteDto {
     @IsString()
@@ -17,4 +17,12 @@ export class ActualizarReporteDto {
     @IsBoolean()
     @IsOptional()
     encontrada?: boolean;
+
+    @IsEmail()
+    @IsOptional()
+    email?: string;
+
+    @IsString()
+    @IsOptional()
+    telefono?: string;
 } 

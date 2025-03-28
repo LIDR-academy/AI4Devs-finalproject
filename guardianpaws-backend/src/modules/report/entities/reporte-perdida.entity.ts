@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, Up
 import { HistorialReporte } from './historial-reporte.entity';
 import { Imagen } from '../../image/entities/imagen.entity';
 import { Mascota } from '../../mascota/entities/mascota.entity';
-import { EstadoReporte } from './historial-reporte.entity';
+import { EstadoReporte } from '../enums/estado-reporte.enum';
 
 @Entity('reporte_perdida')
 export class ReportePerdida {

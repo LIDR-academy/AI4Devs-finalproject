@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { HistorialReporte, EstadoReporte } from '../entities/historial-reporte.entity';
+import { HistorialReporte } from '../entities/historial-reporte.entity';
 import { CrearHistorialDto } from '../dto/crear-historial.dto';
+import { EstadoReporte } from '../enums/estado-reporte.enum';
 
 @Injectable()
 export class HistorialReporteService {
