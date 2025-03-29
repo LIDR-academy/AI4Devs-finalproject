@@ -22,7 +22,8 @@ export class ReporteController {
             mascota: typeof body.mascota === 'string' ? JSON.parse(body.mascota) : body.mascota
         };
 
-        return await this.reporteService.crear(crearReporteDto, files?.imagenes || []);
+        const reporte = await this.reporteService.crear(crearReporteDto, files?.imagenes || []);
+        return { id: reporte.id };
     }
 
     @Get()

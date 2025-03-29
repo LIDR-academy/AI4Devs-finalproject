@@ -8,13 +8,13 @@ export default function ReportarPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (formData: FormData) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      await reporteService.crearReporte(formData);
-      // Aquí podrías agregar una notificación de éxito o redirección
-      console.log('Reporte creado exitosamente');
+      const response = await reporteService.crearReporte(formData);
+      return response;
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error al crear el reporte:', error);
+      throw error;
     } finally {
       setIsSubmitting(false);
     }

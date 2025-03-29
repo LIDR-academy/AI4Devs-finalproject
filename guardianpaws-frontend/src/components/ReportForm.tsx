@@ -11,7 +11,7 @@ interface AlertState {
 }
 
 interface ReportFormProps {
-  onSubmit: (formData: FormData) => Promise<void>;
+  onSubmit: (formData: FormData) => Promise<{ id: string }>;
   isSubmitting: boolean;
 }
 
@@ -32,6 +32,8 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
   const [imagenes, setImagenes] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [alert, setAlert] = useState<AlertState | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [reportId, setReportId] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -243,8 +245,14 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
         formDataToSend.append('imagenes', imagen);
       });
 
-      await onSubmit(formDataToSend);
-      setAlert({ message: 'Reporte creado exitosamente', type: 'success' });
+      const response = await onSubmit(formDataToSend);
+      
+      if (!response || !response.id) {
+        throw new Error('No se recibió un ID válido del servidor');
+      }
+
+      setReportId(response.id);
+      setShowSuccessModal(true);
       
       // Limpiar el formulario después de un envío exitoso
       setFormData({
@@ -267,7 +275,37 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
       }
     } catch (error) {
       console.error('Error al enviar el formulario:', error);
-      setAlert({ message: 'Error al crear el reporte. Por favor, intente nuevamente.', type: 'error' });
+      setAlert({ 
+        message: error instanceof Error 
+          ? error.message 
+          : 'Error al crear el reporte. Por favor, intente nuevamente.', 
+        type: 'error' 
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    if (!reportId) return;
+    
+    const shareUrl = `${window.location.origin}/reportes/${reportId}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Reporte de Animal Perdido',
+          text: 'Ayúdanos a encontrar a mi mascota perdida',
+          url: shareUrl
+        });
+      } catch (error) {
+        console.error('Error al compartir:', error);
+        // Fallback: copiar al portapapeles
+        navigator.clipboard.writeText(shareUrl);
+        setAlert({ message: 'Link copiado al portapapeles', type: 'success' });
+      }
+    } else {
+      // Fallback: copiar al portapapeles
+      navigator.clipboard.writeText(shareUrl);
+      setAlert({ message: 'Link copiado al portapapeles', type: 'success' });
     }
   };
 
@@ -279,6 +317,34 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
           type={alert.type}
           onClose={() => setAlert(null)}
         />
+      )}
+      
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#1a1a1a] p-6 rounded-xl max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">¡Gracias!</h2>
+              <p className="text-gray-300 mb-6">Buscaremos por ti y te avisaremos si hay coincidencias.</p>
+              <button
+                onClick={handleShare}
+                className="w-full bg-blue-600 text-white rounded-lg py-3 font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mb-4"
+              >
+                Compartir Reporte
+              </button>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       
       <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-[#1a1a1a] rounded-xl text-white">

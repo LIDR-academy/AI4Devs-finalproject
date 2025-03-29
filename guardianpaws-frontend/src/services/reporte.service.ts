@@ -12,7 +12,14 @@ export const reporteService = {
         throw new Error('Error al crear el reporte');
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Asegurarnos de que tenemos un ID válido
+      if (!data || !data.id) {
+        throw new Error('No se recibió un ID válido del servidor');
+      }
+
+      return { id: data.id };
     } catch (error) {
       console.error('Error en crearReporte:', error);
       throw error;
