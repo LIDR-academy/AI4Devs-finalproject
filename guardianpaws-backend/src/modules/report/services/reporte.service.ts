@@ -11,9 +11,12 @@ import { ImagenService } from '../../image/services/imagen.service';
 import { EstadoReporte } from '../enums/estado-reporte.enum';
 import { RekognitionService } from './rekognition.service';
 import { MailerService } from './mailer.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ReporteService {
+    private useRekognition: boolean;
+
     constructor(
         @InjectRepository(ReportePerdida)
         private reporteRepository: Repository<ReportePerdida>,
@@ -25,8 +28,11 @@ export class ReporteService {
         private imagenRepository: Repository<Imagen>,
         private imagenService: ImagenService,
         private rekognitionService: RekognitionService,
-        private mailerService: MailerService
-    ) {}
+        private mailerService: MailerService,
+        private configService: ConfigService
+    ) {
+        this.useRekognition = this.configService.get<string>('USE_REKOGNITION')?.toLowerCase() === 'true';
+    }
 
     async crear(crearReporteDto: CrearReporteDto, imagenes: Express.Multer.File[]): Promise<ReportePerdida> {
         // Crear la mascota primero
@@ -71,62 +77,67 @@ export class ReporteService {
             );
             reporteGuardado.imagenes = imagenesGuardadas;
 
-            // Si es un reporte de animal encontrado, buscar coincidencias con mascotas perdidas
-            if (reporteGuardado.estado === EstadoReporte.ANIMAL_ENCONTRADO) {
-                const reportesPerdidos = await this.reporteRepository.find({
-                    where: { estado: EstadoReporte.ABIERTO },
-                    relations: ['imagenes', 'mascota']
-                });
+            // Solo realizar comparaciones si Rekognition está habilitado
+            if (this.useRekognition) {
+                // Si es un reporte de animal encontrado, buscar coincidencias con mascotas perdidas
+                if (reporteGuardado.estado === EstadoReporte.ANIMAL_ENCONTRADO) {
+                    const reportesPerdidos = await this.reporteRepository.find({
+                        where: { estado: EstadoReporte.ABIERTO },
+                        relations: ['imagenes', 'mascota']
+                    });
 
-                for (const reportePerdido of reportesPerdidos) {
-                    for (const imagenEncontrada of imagenesGuardadas) {
-                        for (const imagenPerdida of reportePerdido.imagenes) {
-                            const similarity = await this.rekognitionService.comparePetImages(
-                                imagenEncontrada.key,
-                                imagenPerdida.key
-                            );
+                    for (const reportePerdido of reportesPerdidos) {
+                        for (const imagenEncontrada of imagenesGuardadas) {
+                            for (const imagenPerdida of reportePerdido.imagenes) {
+                                const similarity = await this.rekognitionService.comparePetImages(
+                                    imagenEncontrada.key,
+                                    imagenPerdida.key
+                                );
 
-                            if (similarity > 70) {
-                                // Enviar correo al dueño de la mascota perdida
-                                const historialPerdido = await this.historialRepository.findOne({
-                                    where: { reporteId: reportePerdido.id },
-                                    order: { fechaCambio: 'DESC' }
-                                });
+                                if (similarity > 70) {
+                                    // Enviar correo al dueño de la mascota perdida
+                                    const historialPerdido = await this.historialRepository.findOne({
+                                        where: { reporteId: reportePerdido.id },
+                                        order: { fechaCambio: 'DESC' }
+                                    });
 
-                                if (historialPerdido && historialPerdido.email) {
-                                    await this.mailerService.sendPotentialMatchEmail(
-                                        historialPerdido.email,
-                                        reportePerdido,
-                                        reporteGuardado,
-                                        similarity
-                                    );
+                                    if (historialPerdido && historialPerdido.email) {
+                                        await this.mailerService.sendPotentialMatchEmail(
+                                            historialPerdido.email,
+                                            reportePerdido,
+                                            reporteGuardado,
+                                            similarity
+                                        );
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-            // Si es un reporte de mascota perdida, buscar coincidencias con animales encontrados
-            else if (reporteGuardado.estado === EstadoReporte.ABIERTO) {
-                const coincidencias = await this.rekognitionService.findSimilarPets(reporteGuardado.id);
+                // Si es un reporte de mascota perdida, buscar coincidencias con animales encontrados
+                else if (reporteGuardado.estado === EstadoReporte.ABIERTO) {
+                    const coincidencias = await this.rekognitionService.findSimilarPets(reporteGuardado.id);
 
-                // Enviar correos para cada coincidencia encontrada
-                for (const coincidencia of coincidencias) {
-                    const reporteCoincidencia = await this.findOne(coincidencia.reporteId);
-                    const historialOriginal = await this.historialRepository.findOne({
-                        where: { reporteId: coincidencia.reporteId },
-                        order: { fechaCambio: 'DESC' }
-                    });
+                    // Enviar correos para cada coincidencia encontrada
+                    for (const coincidencia of coincidencias) {
+                        const reporteCoincidencia = await this.findOne(coincidencia.reporteId);
+                        const historialOriginal = await this.historialRepository.findOne({
+                            where: { reporteId: coincidencia.reporteId },
+                            order: { fechaCambio: 'DESC' }
+                        });
 
-                    if (historialOriginal && historialOriginal.email) {
-                        await this.mailerService.sendPotentialMatchEmail(
-                            historialOriginal.email,
-                            reporteCoincidencia,
-                            reporteGuardado,
-                            coincidencia.similarity
-                        );
+                        if (historialOriginal && historialOriginal.email) {
+                            await this.mailerService.sendPotentialMatchEmail(
+                                historialOriginal.email,
+                                reporteCoincidencia,
+                                reporteGuardado,
+                                coincidencia.similarity
+                            );
+                        }
                     }
                 }
+            } else {
+                console.log('Rekognition is disabled, skipping image comparison');
             }
         }
 
@@ -140,14 +151,28 @@ export class ReporteService {
     async findOne(id: string): Promise<ReportePerdida> {
         const reporte = await this.reporteRepository.findOne({
             where: { id },
-            relations: ['mascota', 'historiales']
+            relations: ['mascota', 'historiales', 'imagenes']
         });
 
         if (!reporte) {
             throw new NotFoundException(`Reporte con ID ${id} no encontrado`);
         }
 
-        return reporte;
+        // Obtener el último historial para tener la información de contacto más reciente
+        const ultimoHistorial = reporte.historiales[reporte.historiales.length - 1];
+        
+        // Crear un objeto con la estructura esperada por el frontend
+        const reporteFormateado = {
+            ...reporte,
+            email: ultimoHistorial?.email,
+            telefono: ultimoHistorial?.telefono,
+            mascota: {
+                ...reporte.mascota,
+                imagenes: reporte.imagenes || []
+            }
+        };
+
+        return reporteFormateado;
     }
 
     async actualizar(id: string, actualizarReporteDto: ActualizarReporteDto): Promise<ReportePerdida> {

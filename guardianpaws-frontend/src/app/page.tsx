@@ -14,7 +14,7 @@ export default function Home() {
         <SearchCategories />
 
         {/* Recent Listings */}
-        <RecentListings />
+        {/* <RecentListings /> */}
       </div>
     </main>
   );

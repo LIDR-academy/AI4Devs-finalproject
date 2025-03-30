@@ -33,7 +33,10 @@ export class ReporteController {
 
     @Get(':id')
     async obtenerPorId(@Param('id') id: string) {
-        return await this.reporteService.findOne(id);
+        const reporte = await this.reporteService.findOne(id);
+        
+        // La estructura ya está formateada en el servicio
+        return reporte;
     }
 
     @Put(':id')

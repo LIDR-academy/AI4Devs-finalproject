@@ -16,7 +16,7 @@ const PotentialMatch: React.FC<PotentialMatchProps> = ({
     onChatClick,
 }) => {
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden m-4 max-w-sm">
+        <div className="bg-[#121212] rounded-lg shadow-md overflow-hidden m-4 max-w-sm">
             <div className="relative h-48">
                 <img
                     src={petImage}
@@ -39,11 +39,11 @@ const PotentialMatch: React.FC<PotentialMatchProps> = ({
                             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                         />
                     </svg>
-                    <h3 className="text-xl font-semibold text-gray-800">
+                    <h3 className="text-xl font-semibold text-white">
                         ¡Podría ser tu mascota!
                     </h3>
                 </div>
-                <div className="space-y-2 text-gray-600">
+                <div className="space-y-2 text-gray-300">
                     <p className="text-sm">
                         Coincidencia: {similarity.toFixed(2)}%
                     </p>

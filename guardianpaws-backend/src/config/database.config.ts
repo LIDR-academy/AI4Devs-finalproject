@@ -6,7 +6,7 @@ import { join } from 'path';
 dotenv.config();
 
 // Validar variables de entorno requeridas
-const requiredEnvVars = ['DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_NAME'];
+const requiredEnvVars = ['DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_NAME', 'DB_ENVIRONMENT'];
 for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
         throw new Error(`Missing required environment variable: ${envVar}`);
@@ -24,14 +24,14 @@ const AppDataSource = new DataSource({
     migrations: [join(__dirname, '..', 'database', 'migrations', '*.{ts,js}')],
     synchronize: false,
     namingStrategy: new SnakeNamingStrategy(),
-    ssl: {
+    ssl: process.env.DB_ENVIRONMENT === 'aws' ? {
         rejectUnauthorized: false
-    },
-    extra: {
+    } : false,
+    extra: process.env.DB_ENVIRONMENT === 'aws' ? {
         ssl: {
             rejectUnauthorized: false
         }
-    }
+    } : {}
 });
 
 export default AppDataSource; 

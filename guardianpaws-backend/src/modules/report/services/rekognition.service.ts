@@ -13,6 +13,7 @@ import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3';
 export class RekognitionService {
     private rekognitionClient: RekognitionClient;
     private s3Client: S3Client;
+    private useRekognition: boolean;
 
     // Características relevantes para mascotas
     private readonly petCharacteristics = new Set([
@@ -40,6 +41,13 @@ export class RekognitionService {
         @InjectRepository(ReportePerdida)
         private reporteRepository: Repository<ReportePerdida>
     ) {
+        this.useRekognition = this.configService.get<string>('USE_REKOGNITION')?.toLowerCase() === 'true';
+        
+        if (!this.useRekognition) {
+            console.log('Rekognition service is disabled');
+            return;
+        }
+
         const region = this.configService.get<string>('AWS_REGION');
         const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
         const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
@@ -65,6 +73,8 @@ export class RekognitionService {
     }
 
     private async checkImageExists(key: string, bucketName: string): Promise<boolean> {
+        if (!this.useRekognition) return false;
+        
         try {
             // Limpiar la key de la imagen
             const cleanKey = key.startsWith('/') ? key.slice(1) : key;
@@ -84,6 +94,10 @@ export class RekognitionService {
     }
 
     private async getImageCharacteristics(imageKey: string, bucketName: string): Promise<{ type: string; characteristics: Set<string> }> {
+        if (!this.useRekognition) {
+            return { type: '', characteristics: new Set() };
+        }
+
         try {
             // Limpiar la key de la imagen
             const cleanKey = imageKey.startsWith('/') ? imageKey.slice(1) : imageKey;
@@ -146,6 +160,11 @@ export class RekognitionService {
     }
 
     async comparePetImages(sourceImageKey: string, targetImageKey: string): Promise<number> {
+        if (!this.useRekognition) {
+            console.log('Rekognition is disabled, returning 0 similarity');
+            return 0;
+        }
+
         try {
             const bucketName = this.configService.get<string>('S3_BUCKET_NAME');
             if (!bucketName) {
@@ -196,6 +215,11 @@ export class RekognitionService {
     }
 
     async findSimilarPets(reporteId: string): Promise<{ reporteId: string; similarity: number }[]> {
+        if (!this.useRekognition) {
+            console.log('Rekognition is disabled, returning empty matches');
+            return [];
+        }
+
         const reporte = await this.reporteRepository.findOne({
             where: { id: reporteId },
             relations: ['imagenes'],
