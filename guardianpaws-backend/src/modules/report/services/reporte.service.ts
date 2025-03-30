@@ -9,8 +9,8 @@ import { Mascota } from '../../mascota/entities/mascota.entity';
 import { Imagen } from '../../image/entities/imagen.entity';
 import { ImagenService } from '../../image/services/imagen.service';
 import { EstadoReporte } from '../enums/estado-reporte.enum';
-
-
+import { RekognitionService } from './rekognition.service';
+import { MailerService } from './mailer.service';
 
 @Injectable()
 export class ReporteService {
@@ -23,7 +23,9 @@ export class ReporteService {
         private mascotaRepository: Repository<Mascota>,
         @InjectRepository(Imagen)
         private imagenRepository: Repository<Imagen>,
-        private imagenService: ImagenService
+        private imagenService: ImagenService,
+        private rekognitionService: RekognitionService,
+        private mailerService: MailerService
     ) {}
 
     async crear(crearReporteDto: CrearReporteDto, imagenes: Express.Multer.File[]): Promise<ReportePerdida> {
@@ -68,6 +70,64 @@ export class ReporteService {
                 })
             );
             reporteGuardado.imagenes = imagenesGuardadas;
+
+            // Si es un reporte de animal encontrado, buscar coincidencias con mascotas perdidas
+            if (reporteGuardado.estado === EstadoReporte.ANIMAL_ENCONTRADO) {
+                const reportesPerdidos = await this.reporteRepository.find({
+                    where: { estado: EstadoReporte.ABIERTO },
+                    relations: ['imagenes', 'mascota']
+                });
+
+                for (const reportePerdido of reportesPerdidos) {
+                    for (const imagenEncontrada of imagenesGuardadas) {
+                        for (const imagenPerdida of reportePerdido.imagenes) {
+                            const similarity = await this.rekognitionService.comparePetImages(
+                                imagenEncontrada.key,
+                                imagenPerdida.key
+                            );
+
+                            if (similarity > 70) {
+                                // Enviar correo al dueño de la mascota perdida
+                                const historialPerdido = await this.historialRepository.findOne({
+                                    where: { reporteId: reportePerdido.id },
+                                    order: { fechaCambio: 'DESC' }
+                                });
+
+                                if (historialPerdido && historialPerdido.email) {
+                                    await this.mailerService.sendPotentialMatchEmail(
+                                        historialPerdido.email,
+                                        reportePerdido,
+                                        reporteGuardado,
+                                        similarity
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Si es un reporte de mascota perdida, buscar coincidencias con animales encontrados
+            else if (reporteGuardado.estado === EstadoReporte.ABIERTO) {
+                const coincidencias = await this.rekognitionService.findSimilarPets(reporteGuardado.id);
+
+                // Enviar correos para cada coincidencia encontrada
+                for (const coincidencia of coincidencias) {
+                    const reporteCoincidencia = await this.findOne(coincidencia.reporteId);
+                    const historialOriginal = await this.historialRepository.findOne({
+                        where: { reporteId: coincidencia.reporteId },
+                        order: { fechaCambio: 'DESC' }
+                    });
+
+                    if (historialOriginal && historialOriginal.email) {
+                        await this.mailerService.sendPotentialMatchEmail(
+                            historialOriginal.email,
+                            reporteCoincidencia,
+                            reporteGuardado,
+                            coincidencia.similarity
+                        );
+                    }
+                }
+            }
         }
 
         return reporteGuardado;
