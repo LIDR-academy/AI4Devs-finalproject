@@ -201,4 +201,30 @@ export class ReporteService {
         const reporte = await this.findOne(id);
         await this.reporteRepository.remove(reporte);
     }
+
+    async findByUserEmail(email: string): Promise<ReportePerdida[]> {
+        // Obtener los reportes que tienen historiales con el email especificado
+        const reportes = await this.reporteRepository
+            .createQueryBuilder('reporte')
+            .leftJoinAndSelect('reporte.historiales', 'historial')
+            .leftJoinAndSelect('reporte.mascota', 'mascota')
+            .leftJoinAndSelect('reporte.imagenes', 'imagenes')
+            .where('historial.email = :email', { email })
+            .orderBy('reporte.fechaReporte', 'DESC')
+            .getMany();
+
+        // Formatear cada reporte para incluir la información de contacto más reciente
+        return reportes.map(reporte => {
+            const ultimoHistorial = reporte.historiales[reporte.historiales.length - 1];
+            return {
+                ...reporte,
+                email: ultimoHistorial?.email,
+                telefono: ultimoHistorial?.telefono,
+                mascota: {
+                    ...reporte.mascota,
+                    imagenes: reporte.imagenes || []
+                }
+            };
+        });
+    }
 } 

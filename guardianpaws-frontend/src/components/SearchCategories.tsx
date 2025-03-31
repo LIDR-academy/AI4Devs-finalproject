@@ -37,7 +37,7 @@ const SearchCategories: React.FC = () => {
     },
     { 
       label: 'Mis Reportes', 
-      onClick: () => console.log('Ver mis reportes'),
+      onClick: () => router.push('/mis-reportes'),
       icon: '📋',
       // description: 'Ver mis reportes y respuestas'
     },

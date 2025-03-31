@@ -26,9 +26,13 @@ export const reporteService = {
     }
   },
 
-  async obtenerReportes() {
+  async obtenerReportes(email?: string) {
     try {
-      const response = await fetch(`${API_URL}/reportes-perdida`);
+      const url = email 
+        ? `${API_URL}/reportes-perdida/${encodeURIComponent(email)}`
+        : `${API_URL}/reportes-perdida`;
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('Error al obtener los reportes');

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpCode, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, HttpCode, UseInterceptors, UploadedFiles, Query } from '@nestjs/common';
 import { ReporteService } from '../services/reporte.service';
 import { CrearReporteDto } from '../dto/crear-reporte.dto';
 import { ActualizarReporteDto } from '../dto/actualizar-reporte.dto';
@@ -33,9 +33,12 @@ export class ReporteController {
 
     @Get(':id')
     async obtenerPorId(@Param('id') id: string) {
+        // Si el id contiene @, asumimos que es un email
+        if (id.includes('@')) {
+            return await this.reporteService.findByUserEmail(id);
+        }
+        // Si no, tratamos de obtener por ID
         const reporte = await this.reporteService.findOne(id);
-        
-        // La estructura ya está formateada en el servicio
         return reporte;
     }
 
@@ -52,4 +55,4 @@ export class ReporteController {
     async eliminar(@Param('id') id: string) {
         await this.reporteService.eliminar(id);
     }
-} 
+}

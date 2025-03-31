@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import PotentialMatch from '@/components/PotentialMatch';
 import { getReporteDetalle } from '@/services/api';
+import { useChat } from '@/hooks/useChat';
 
 interface Reporte {
     id: string;
@@ -45,16 +46,25 @@ interface Reporte {
 
 export default function ReporteDetalle() {
     const params = useParams();
+    const router = useRouter();
     const id = params?.id as string;
     const [reporte, setReporte] = useState<Reporte | null>(null);
+    const [currentUserEmail, setCurrentUserEmail] = useState('');
+    const { createOrGetChannel } = useChat(currentUserEmail);
+
+    useEffect(() => {
+        // Cargar el email guardado al iniciar el componente
+        const savedEmail = localStorage.getItem('currentUserEmail');
+        if (savedEmail) {
+            setCurrentUserEmail(savedEmail);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchReporte = async () => {
             if (id) {
                 try {
-                    console.log("Fetching reporte with ID:", id);
                     const data = await getReporteDetalle(id);
-                    console.log("Received data:", data);
                     setReporte(data);
                 } catch (error) {
                     console.error('Error fetching reporte:', error);
@@ -65,12 +75,43 @@ export default function ReporteDetalle() {
         fetchReporte();
     }, [id]);
 
-    const handleChatClick = () => {
-        // Esta funcionalidad se implementará más adelante
-        console.log('Chat functionality coming soon');
+    const handleChatClick = async () => {
+        if (!reporte?.email) {
+            alert('No hay información de contacto disponible para iniciar el chat.');
+            return;
+        }
+
+        let userEmail = currentUserEmail;
+        
+        if (!userEmail) {
+            const email = prompt('Por favor, ingresa tu correo electrónico para iniciar el chat:');
+            if (!email) return;
+            userEmail = email;
+            setCurrentUserEmail(email);
+            localStorage.setItem('currentUserEmail', email);
+        }
+
+        try {
+            // Verificar que el correo del reporte sea válido
+            if (!reporte.email.includes('@')) {
+                throw new Error('El correo electrónico del reporte no es válido');
+            }
+
+            // Esperar un momento para asegurar que el estado se actualice
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const channelId = await createOrGetChannel(reporte.email);
+            
+            // Esperar un momento para asegurar que el canal se haya creado
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            router.push('/chat');
+        } catch (error) {
+            console.error('Error detallado al iniciar el chat:', error);
+            alert(`Error al iniciar el chat: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+        }
     };
 
-    console.log("px ",reporte);
     if (!reporte) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -81,9 +122,17 @@ export default function ReporteDetalle() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold text-white-800 mb-8">
-                Detalles del Reporte
-            </h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold text-white-800">
+                    Detalles del Reporte
+                </h1>
+                <button
+                    onClick={handleChatClick}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                    Iniciar Chat
+                </button>
+            </div>
 
             <div className="bg-black rounded-lg shadow-md p-6 mb-8">
                 <div className="flex flex-col md:flex-row gap-6">

@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import { EmailProvider } from '@/contexts/EmailContext';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GuardianPaws - Find your furry friend",
-  description: "Find lost pets or help them find a new home",
+  title: "GuardianPaws - Encuentra tu mascota perdida",
+  description: "Plataforma para reportar y encontrar mascotas perdidas",
 };
 
 export default function RootLayout({
@@ -16,12 +17,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body className={inter.className}>
-        <div className="min-h-screen bg-[#121212]">
-          <Navigation />
-          {children}
-        </div>
+        <EmailProvider>
+          <div className="min-h-screen bg-[#121212]">
+            <Navigation />
+            {children}
+          </div>
+        </EmailProvider>
       </body>
     </html>
   );
