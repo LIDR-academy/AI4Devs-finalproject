@@ -105,7 +105,7 @@ export default function ReporteDetalle() {
             // Esperar un momento para asegurar que el canal se haya creado
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            router.push('/chat');
+            router.push(`/chat?reportEmail=${encodeURIComponent(reporte.email)}`);
         } catch (error) {
             console.error('Error detallado al iniciar el chat:', error);
             alert(`Error al iniciar el chat: ${error instanceof Error ? error.message : 'Error desconocido'}`);
@@ -126,12 +126,14 @@ export default function ReporteDetalle() {
                 <h1 className="text-3xl font-bold text-white-800">
                     Detalles del Reporte
                 </h1>
-                <button
-                    onClick={handleChatClick}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                    Iniciar Chat
-                </button>
+                {reporte.estado === 'animal_encontrado' && (
+                    <button
+                        onClick={handleChatClick}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                        Iniciar Chat
+                    </button>
+                )}
             </div>
 
             <div className="bg-black rounded-lg shadow-md p-6 mb-8">

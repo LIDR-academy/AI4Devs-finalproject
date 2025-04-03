@@ -21,7 +21,6 @@ export default function MyReportsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex flex-col">
-        <Navigation />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-gray-300">Cargando reportes...</div>
         </div>
@@ -32,7 +31,6 @@ export default function MyReportsPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-black flex flex-col">
-        <Navigation />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-red-500">Error al cargar los reportes: {error}</div>
         </div>
@@ -42,7 +40,6 @@ export default function MyReportsPage() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col">
-      <Navigation />
       <div className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">

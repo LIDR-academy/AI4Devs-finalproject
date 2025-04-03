@@ -25,6 +25,8 @@ export default function ChatPage() {
 
   useEffect(() => {
     const email = localStorage.getItem('currentUserEmail');
+    const searchParams = new URLSearchParams(window.location.search);
+    const reportEmail = searchParams.get('reportEmail');
     
     if (!email) {
       router.push('/');
@@ -33,23 +35,27 @@ export default function ChatPage() {
     setCurrentUserEmail(email);
   }, [router]);
 
-  const handleStartNewChat = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newChatEmail) return;
+  const handleStartNewChatWithEmail = async (email: string) => {
+    if (!email) return;
 
     try {
-      console.log('Intentando crear canal con:', {
-        currentUserEmail,
-        newChatEmail
-      });
-      const channelId = await createOrGetChannel(newChatEmail);
-      
+      const channelId = await createOrGetChannel(email);
       setShowNewChatForm(false);
       setNewChatEmail('');
       setShowChatList(false);
     } catch (error) {
-      
       alert(`Error al iniciar chat: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    }
+  };
+
+  const handleNewChatClick = () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const reportEmail = searchParams.get('reportEmail');
+    
+    if (reportEmail) {
+      handleStartNewChatWithEmail(reportEmail);
+    } else {
+      setShowNewChatForm(true);
     }
   };
 
@@ -83,7 +89,7 @@ export default function ChatPage() {
             <div className="p-4 border-b border-gray-800">
               <h2 className="text-lg font-semibold text-white text-center">Conversaciones</h2>
               <button
-                onClick={() => setShowNewChatForm(true)}
+                onClick={handleNewChatClick}
                 className="mt-2 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Nueva Conversación

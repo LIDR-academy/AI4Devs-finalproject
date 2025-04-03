@@ -27,7 +27,8 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
     ubicacion: '',
     descripcion: '',
     email: '',
-    telefono: ''
+    telefono: '',
+    estado: 'abierto'
   });
   const [imagenes, setImagenes] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -239,6 +240,7 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
       formDataToSend.append('descripcion', formData.descripcion.trim());
       formDataToSend.append('email', formData.email.trim());
       formDataToSend.append('telefono', formData.telefono.trim());
+      formDataToSend.append('estado', formData.estado);
       
       // Agregar las imágenes
       imagenes.forEach((imagen) => {
@@ -266,7 +268,8 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
         ubicacion: '',
         descripcion: '',
         email: '',
-        telefono: ''
+        telefono: '',
+        estado: 'abierto'
       });
       setImagenes([]);
       setPreviews([]);
@@ -482,6 +485,18 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
             className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
             required
           />
+
+          <select
+            name="estado"
+            value={formData.estado}
+            onChange={handleInputChange}
+            className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="abierto">Abierto</option>
+            <option value="cerrado">Cerrado</option>
+            <option value="animal_encontrado">Animal Encontrado</option>
+          </select>
 
           {/* Sección de imágenes con preview */}
           <div className="space-y-4">

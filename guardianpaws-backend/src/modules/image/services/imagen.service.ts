@@ -75,14 +75,7 @@ export class ImagenService implements OnModuleInit {
             // Generar URL firmada
             const url = this.getSignedUrl(key);
             
-            // Guardar en la base de datos
-            await this.imagenRepository.save({
-                url: `https://${this.bucketName}.s3.${this.configService.get('AWS_REGION')}.amazonaws.com/${key}`, // Guardamos la URL base
-                key,
-                reporteId
-            });
-
-            return { url, key }; // Devolvemos la URL firmada para uso inmediato
+            return { url, key };
         } catch (error) {
             throw new Error(`Error uploading file to S3: ${error.message}`);
         }
