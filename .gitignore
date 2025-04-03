@@ -1,1 +1,10 @@
 terraform.tfvars
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Backup files
+*.backup
