@@ -3,7 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "guardianpaws-backend/Dockerfile" 
 
 [deploy]
-startCommand = "sleep infinity"
+startCommand = "npm run start:prod"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
