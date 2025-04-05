@@ -9,63 +9,79 @@ interface CategoryProps {
   onClick: () => void;
   icon: string;
   description?: string;
+  disabled?: boolean;
 }
 
-const Category: React.FC<CategoryProps> = ({ label, onClick, icon, description }) => {
+interface CategoryItem extends CategoryProps {
+  disabled?: boolean;
+}
+
+const Category: React.FC<CategoryProps> = ({ label, onClick, icon, description, disabled }) => {
   return (
-    <button
-      onClick={onClick}
-      className="category-card flex flex-col items-center justify-center gap-2"
-    >
-      <div className="text-text-primary">
-        {icon}
-      </div>
-      <span className="text-sm text-text-secondary">{label}</span>
-      {description && <span className="text-xs text-text-secondary">{description}</span>}
-    </button>
+    <div className="flex flex-col">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`category-card flex flex-col items-center justify-center gap-2 ${disabled ? 'opacity-40 cursor-not-allowed bg-gray-800' : ''}`}
+      >
+        <div className="text-text-primary">
+          {icon}
+        </div>
+        <span className="text-sm text-text-secondary">{label}</span>
+        {description && <span className="text-xs text-text-secondary">{description}</span>}
+      </button>
+      {disabled && (
+        <span className="text-xs text-gray-400 mt-1 text-center font-medium">Próximamente</span>
+      )}
+    </div>
   );
 };
 
 const SearchCategories: React.FC = () => {
   const router = useRouter();
 
-  const categories = [
+  const categories: CategoryItem[] = [
     { 
       label: 'Reporta Animal Perdido', 
       onClick: () => router.push('/reportar'),
-      icon: '🔍'
+      icon: '🔍',
+      disabled: false
     },
     { 
       label: 'Mis Reportes', 
       onClick: () => router.push('/mis-reportes'),
       icon: '📋',
-      // description: 'Ver mis reportes y respuestas'
+      disabled: false
     },
     { 
       label: 'Explorar Reportes', 
-      onClick: () => console.log('Explorar reportes'),
+      onClick: () => {},
       icon: '🔎',
-      // description: 'Ver reportes de animales perdidos'
+      disabled: true
     },
     { 
       label: 'Adopta', 
-      onClick: () => console.log('Adoptar'),
-      icon: '🏠'
+      onClick: () => {},
+      icon: '🏠',
+      disabled: true
     },
     { 
       label: 'Sé Voluntario', 
-      onClick: () => console.log('Ser voluntario'),
-      icon: '🤝'
+      onClick: () => {},
+      icon: '🤝',
+      disabled: true
     },
     { 
       label: 'Chat de Ayuda', 
-      onClick: () => console.log('Chat de ayuda'),
-      icon: '💬'
+      onClick: () => {},
+      icon: '💬',
+      disabled: true
     },
     { 
       label: 'Dona', 
-      onClick: () => console.log('Donar'),
-      icon: '❤️'
+      onClick: () => {},
+      icon: '❤️',
+      disabled: true
     }
   ];
 
@@ -79,7 +95,7 @@ const SearchCategories: React.FC = () => {
             label={category.label}
             onClick={category.onClick}
             icon={category.icon}
-            // description={category.description}
+            disabled={category.disabled}
           />
         ))}
       </div>

@@ -411,6 +411,7 @@ El sistema notificará a los usuarios cuando haya coincidencias entre una mascot
     Add comprehensive project documentation for GuardianPaws MVP, readme, diagramas
 
 **Pull Request 2**
+  Pr2add scaffolding project
 
 **Pull Request 3**
-
+  Implement lost/found animal reporting functionality, AWS Rekognition integration, reports page, and live chat. Added corresponding unit tests

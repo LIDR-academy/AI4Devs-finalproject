@@ -98,9 +98,15 @@ export default function ChatPage() {
 
             {showNewChatForm && (
               <div className="p-4 border-b border-gray-800">
-                <form onSubmit={handleStartNewChat} className="space-y-2">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const email = formData.get('email') as string;
+                  handleStartNewChatWithEmail(email);
+                }} className="space-y-2">
                   <input
                     type="email"
+                    name="email"
                     value={newChatEmail}
                     onChange={(e) => setNewChatEmail(e.target.value)}
                     placeholder="Correo electrónico"
