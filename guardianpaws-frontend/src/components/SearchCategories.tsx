@@ -22,7 +22,7 @@ const Category: React.FC<CategoryProps> = ({ label, onClick, icon, description, 
       <button
         onClick={onClick}
         disabled={disabled}
-        className={`category-card flex flex-col items-center justify-center gap-2 ${disabled ? 'opacity-40 cursor-not-allowed bg-gray-800' : ''}`}
+        className={`category-card flex flex-col items-center justify-center gap-2 h-full ${disabled ? 'opacity-40 cursor-not-allowed bg-gray-800' : ''}`}
       >
         <div className="text-text-primary">
           {icon}
@@ -42,7 +42,7 @@ const SearchCategories: React.FC = () => {
 
   const categories: CategoryItem[] = [
     { 
-      label: 'Reporta Animal Perdido', 
+      label: 'Reporta Animal Perdido o Encontrado', 
       onClick: () => router.push('/reportar'),
       icon: '🔍',
       disabled: false

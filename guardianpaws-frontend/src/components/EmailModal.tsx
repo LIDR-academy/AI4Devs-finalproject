@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useEmail } from '@/contexts/EmailContext';
 
 interface EmailModalProps {
   onSubmit: (email: string) => void;
 }
 
 export default function EmailModal({ onSubmit }: EmailModalProps) {
+  const { setCurrentUserEmail } = useEmail();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
@@ -18,6 +20,10 @@ export default function EmailModal({ onSubmit }: EmailModalProps) {
       setError('Por favor, ingresa un correo electrónico válido');
       return;
     }
+    
+    // Use the context to set the email
+    setCurrentUserEmail(email);
+    
     onSubmit(email);
   };
 

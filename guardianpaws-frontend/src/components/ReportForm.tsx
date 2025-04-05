@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaCamera, FaTrash } from 'react-icons/fa';
 import Image from 'next/image';
 import Alert from './Alert';
+import { useRouter } from 'next/navigation';
+import { useEmail } from '@/contexts/EmailContext';
 
 interface AlertState {
   message: string;
@@ -16,6 +18,9 @@ interface ReportFormProps {
 }
 
 export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) {
+  const router = useRouter();
+  const { currentUserEmail } = useEmail();
+  
   const [formData, setFormData] = useState({
     nombre: '',
     tipo: '',
@@ -30,6 +35,17 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
     telefono: '',
     estado: 'abierto'
   });
+  
+  // Update formData.email when currentUserEmail changes
+  useEffect(() => {
+    if (currentUserEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: currentUserEmail
+      }));
+    }
+  }, [currentUserEmail]);
+  
   const [imagenes, setImagenes] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [alert, setAlert] = useState<AlertState | null>(null);
@@ -151,15 +167,17 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
       return false;
     }
 
-    // Validación del email
-    if (!formData.email.trim()) {
-      setAlert({ message: 'El email es requerido', type: 'error' });
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      setAlert({ message: 'El email no es válido', type: 'error' });
-      return false;
+    // Validación del email - solo si no está en el contexto
+    if (!currentUserEmail) {
+      if (!formData.email.trim()) {
+        setAlert({ message: 'El email es requerido', type: 'error' });
+        return false;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        setAlert({ message: 'El email no es válido', type: 'error' });
+        return false;
+      }
     }
 
     // Validación del teléfono
@@ -238,7 +256,7 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
       // Agregar ubicación y descripción como campos separados
       formDataToSend.append('ubicacion', formData.ubicacion.trim());
       formDataToSend.append('descripcion', formData.descripcion.trim());
-      formDataToSend.append('email', formData.email.trim());
+      formDataToSend.append('email', currentUserEmail || formData.email.trim());
       formDataToSend.append('telefono', formData.telefono.trim());
       formDataToSend.append('estado', formData.estado);
       
@@ -312,6 +330,11 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
     }
   };
 
+  const handleClose = () => {
+    setShowSuccessModal(false);
+    router.push('/');
+  };
+
   return (
     <>
       {alert && (
@@ -340,7 +363,7 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
                 Compartir Reporte
               </button>
               <button
-                onClick={() => setShowSuccessModal(false)}
+                onClick={handleClose}
                 className="text-gray-400 hover:text-white"
               >
                 Cerrar
@@ -466,15 +489,18 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
             required
           />
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email de contacto"
-            value={formData.email}
-            onChange={handleInputChange}
-            className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
-            required
-          />
+          {/* Only show email field if not in context */}
+          {!currentUserEmail && (
+            <input
+              type="email"
+              name="email"
+              placeholder="Email de contacto"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          )}
 
           <input
             type="tel"
