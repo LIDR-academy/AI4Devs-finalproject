@@ -18,7 +18,9 @@ export const useMyReports = (currentUserEmail: string) => {
         const userReports = await reporteService.obtenerReportes(currentUserEmail);
         
         // Ordenar por fecha de creación (más recientes primero)
-        const sortedReports = userReports.sort((a: Report, b: Report) => b.createdAt - a.createdAt);
+        const sortedReports = userReports.sort((a: Report, b: Report) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
         
         setReports(sortedReports);
       } catch (error) {
