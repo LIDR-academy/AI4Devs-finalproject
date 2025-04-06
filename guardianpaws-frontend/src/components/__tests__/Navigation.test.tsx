@@ -38,14 +38,14 @@ describe('Navigation Component', () => {
     render(<Navigation />)
 
     // Menu should be hidden initially
-    expect(screen.queryByText('Reportar Animal Perdido')).toBeNull()
+    expect(screen.queryByText('Reportar Peludo Perdido')).toBeNull()
 
     // Click menu button
     const menuButton = screen.getByRole('button')
     fireEvent.click(menuButton)
 
     // Menu should be visible
-    expect(screen.getByText('Reportar Animal Perdido')).toBeTruthy()
+    expect(screen.getByText('Reportar Peludo Perdido')).toBeTruthy()
     expect(screen.getByText('Mis Reportes')).toBeTruthy()
     expect(screen.getByText('Explorar Reportes')).toBeTruthy()
 
@@ -53,7 +53,7 @@ describe('Navigation Component', () => {
     fireEvent.click(menuButton)
 
     // Menu should be hidden
-    expect(screen.queryByText('Reportar Animal Perdido')).toBeNull()
+    expect(screen.queryByText('Reportar Peludo Perdido')).toBeNull()
   })
 
   it('renders menu links with correct hrefs', () => {
@@ -64,7 +64,7 @@ describe('Navigation Component', () => {
     fireEvent.click(menuButton)
 
     // Check hrefs
-    expect(screen.getByText('Reportar Animal Perdido').closest('a')?.getAttribute('href')).toBe('/reportar')
+    expect(screen.getByText('Reportar Peludo Perdido').closest('a')?.getAttribute('href')).toBe('/reportar')
     expect(screen.getByText('Mis Reportes').closest('a')?.getAttribute('href')).toBe('/mis-reportes')
     expect(screen.getByText('Explorar Reportes').closest('a')?.getAttribute('href')).toBe('/explorar')
   })

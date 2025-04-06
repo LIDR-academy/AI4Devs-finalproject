@@ -23,6 +23,9 @@ export class MailerService {
         reporteCoincidencia: ReportePerdida,
         similarity: number
     ): Promise<void> {
+        const encodedEmail = encodeURIComponent(ownerEmail);
+        const reportUrl = `${this.configService.get('FRONTEND_URL')}/reportes/${reporteCoincidencia.id}?email=${encodedEmail}`;
+
         const mailOptions = {
             from: this.configService.get('MAIL_USER'),
             to: ownerEmail,
@@ -41,7 +44,7 @@ export class MailerService {
                     <li>Ubicación: ${reporteCoincidencia.ubicacion}</li>
                 </ul>
                 <p>Por favor, ingresa a la plataforma para ver más detalles y contactar a la persona que reportó la mascota.</p>
-                <a href="${this.configService.get('FRONTEND_URL')}/reportes/${reporteCoincidencia.id}">
+                <a href="${reportUrl}">
                     Ver detalles del reporte
                 </a>
             `,

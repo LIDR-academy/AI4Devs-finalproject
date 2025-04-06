@@ -9,11 +9,18 @@
 }
 
 @layer components {
+  .hero-bg-mobile {
+    background-image: url('/images/hero-bg.jpg');
+  }
+
+  .hero-bg-desktop {
+    background-image: url('/images/hero-bg-desktop.jpg');
+  }
+
   .header-bg {
     background-image: url('/images/hero-bg.jpg');
     filter: "brightness(0.8)"
   }
-
 
   .header-bg::before {
     @apply content-[''] absolute inset-0 bg-gradient-to-b from-black/50 to-black/70;

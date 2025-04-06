@@ -313,7 +313,7 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Reporte de Animal Perdido',
+          title: 'Reporte de Peludo Perdido',
           text: 'Ayúdanos a encontrar a mi mascota perdida',
           url: shareUrl
         });
@@ -374,7 +374,7 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
       )}
       
       <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-[#1a1a1a] rounded-xl text-white">
-        <h1 className="text-2xl font-bold mb-6">Reportar Animal Perdido</h1>
+        <h1 className="text-2xl font-bold mb-6">Reportar Peludo Perdido</h1>
         
         <div className="space-y-4">
           {/* Imagen estática */}
@@ -388,12 +388,12 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
             />
           </div>
 
-          <p className="text-center text-sm text-gray-400 mb-6">Proporciona los detalles del animal</p>
+          <p className="text-center text-sm text-gray-400 mb-6">Proporciona los detalles del peludo</p>
 
           <input
             type="text"
             name="nombre"
-            placeholder="Nombre del animal"
+            placeholder="Nombre del peludo"
             value={formData.nombre}
             onChange={handleInputChange}
             className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
@@ -426,7 +426,7 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
           <input
             type="text"
             name="color"
-            placeholder="Color del animal"
+            placeholder="Color del peludo"
             value={formData.color}
             onChange={handleInputChange}
             className="w-full bg-[#2a2a2a] border-none rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
@@ -561,7 +561,7 @@ export default function ReportForm({ onSubmit, isSubmitting }: ReportFormProps) 
                   <FaCamera className="w-6 h-6 mx-auto text-gray-500 mb-2" />
                   <span className="text-sm text-gray-500">
                     {previews.length === 0
-                      ? "Agregar fotos del animal (máximo 3)"
+                      ? "Agregar fotos del peludo (máximo 3)"
                       : `Agregar más fotos (${3 - previews.length} restantes)`}
                   </span>
                 </div>

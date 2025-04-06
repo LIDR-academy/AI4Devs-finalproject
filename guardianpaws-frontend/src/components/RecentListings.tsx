@@ -88,7 +88,7 @@ const RecentListings: React.FC = () => {
       type: 'GuardianPaws',
       status: 'voluntaria',
       rating: 5,
-      description: 'Ayudando a los animales a encontrar hogar.',
+      description: 'Ayudando a los peludos a encontrar hogar.',
       images: [
         '/images/pet1.jpg',
         '/images/pet2.jpg',

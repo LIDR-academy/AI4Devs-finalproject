@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import PotentialMatch from '@/components/PotentialMatch';
 import { getReporteDetalle } from '@/services/api';
 import { useChat } from '@/hooks/useChat';
@@ -47,6 +47,7 @@ interface Reporte {
 export default function ReporteDetalle() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const id = params?.id as string;
     const [reporte, setReporte] = useState<Reporte | null>(null);
     const [currentUserEmail, setCurrentUserEmail] = useState('');
@@ -55,10 +56,16 @@ export default function ReporteDetalle() {
     useEffect(() => {
         // Cargar el email guardado al iniciar el componente
         const savedEmail = localStorage.getItem('currentUserEmail');
-        if (savedEmail) {
+        const emailFromUrl = searchParams?.get('email');
+
+        if (emailFromUrl && !savedEmail) {
+            // Si hay un email en la URL y no hay uno guardado, lo guardamos
+            localStorage.setItem('currentUserEmail', emailFromUrl);
+            setCurrentUserEmail(emailFromUrl);
+        } else if (savedEmail) {
             setCurrentUserEmail(savedEmail);
         }
-    }, []);
+    }, [searchParams]);
 
     useEffect(() => {
         const fetchReporte = async () => {

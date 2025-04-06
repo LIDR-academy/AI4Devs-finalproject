@@ -5,9 +5,8 @@ const Header = () => {
     <div className="relative h-[300px] w-full">
       {/* Imagen de Fondo */}
       <div 
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center hero-bg-mobile md:hero-bg-desktop"
         style={{
-          backgroundImage: "url('/images/hero-bg.jpg')",
           filter: "brightness(0.8)"
         }}
       />
@@ -23,7 +22,7 @@ const Header = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Buscar animales perdidos o en adopción"
+              placeholder="Buscar peludos perdidos o en adopción"
               className="w-full px-6 py-4 bg-black/70 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
             />
             <button className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-transparent">

@@ -22,7 +22,7 @@ describe('SearchCategories Component', () => {
     render(<SearchCategories />)
 
     // Check if all category labels are rendered
-    expect(screen.getByText('Reporta Animal Perdido o Encontrado')).toBeInTheDocument()
+    expect(screen.getByText('Reporta Peludo Perdido o Encontrado')).toBeInTheDocument()
     expect(screen.getByText('Mis Reportes')).toBeInTheDocument()
     expect(screen.getByText('Explorar Reportes')).toBeInTheDocument()
     expect(screen.getByText('Adopta')).toBeInTheDocument()
@@ -31,10 +31,10 @@ describe('SearchCategories Component', () => {
     expect(screen.getByText('Dona')).toBeInTheDocument()
   })
 
-  it('navigates to /reportar when clicking Reporta Animal Perdido', () => {
+  it('navigates to /reportar when clicking Reporta Peludo Perdido', () => {
     render(<SearchCategories />)
     
-    const reportButton = screen.getByText('Reporta Animal Perdido o Encontrado')
+    const reportButton = screen.getByText('Reporta Peludo Perdido o Encontrado')
     fireEvent.click(reportButton)
 
     expect(mockPush).toHaveBeenCalledWith('/reportar')

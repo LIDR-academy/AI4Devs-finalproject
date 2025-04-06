@@ -41,7 +41,7 @@ export default function Navigation() {
                 href="/reportar" 
                 className="block text-white hover:text-gray-300 py-2 transition-colors"
               >
-                Reportar Animal Perdido
+                Reportar Peludo Perdido
               </Link>
               <Link 
                 href="/mis-reportes" 

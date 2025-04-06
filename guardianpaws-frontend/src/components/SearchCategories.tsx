@@ -29,10 +29,10 @@ const Category: React.FC<CategoryProps> = ({ label, onClick, icon, description, 
         </div>
         <span className="text-sm text-text-secondary">{label}</span>
         {description && <span className="text-xs text-text-secondary">{description}</span>}
-      </button>
       {disabled && (
         <span className="text-xs text-gray-400 mt-1 text-center font-medium">Próximamente</span>
       )}
+      </button>
     </div>
   );
 };
@@ -42,7 +42,7 @@ const SearchCategories: React.FC = () => {
 
   const categories: CategoryItem[] = [
     { 
-      label: 'Reporta Animal Perdido o Encontrado', 
+      label: 'Reporta Peludo Perdido o Encontrado', 
       onClick: () => router.push('/reportar'),
       icon: '🔍',
       disabled: false
