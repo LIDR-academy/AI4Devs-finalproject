@@ -80,19 +80,93 @@ ahora teniendo en cuenta todo @Codebase , haz las elecciones adecuadas en cada c
 
 ### **2.5. Seguridad**
 
-**Prompt 1:**
+**Prompt 1: Implementación de middleware de autorización JWT**
+```
+Necesito implementar un middleware de autorización con JWT para Node.js (Express) que valide tokens, extraiga roles de usuario y aplique control de acceso basado en roles. El middleware debe:
+1. Verificar la validez y expiración del token JWT
+2. Extraer la información de usuario (id, role)
+3. Rechazar peticiones a rutas protegidas si no hay token válido
+4. Validar si el rol del usuario tiene permisos para acceder al recurso
+5. Integrarse con Supabase como proveedor de autenticación
 
-**Prompt 2:**
+Por favor, proporciona el código completo con manejo de errores y casos borde.
+```
 
-**Prompt 3:**
+**Prompt 2: Implementación de validación de datos de entrada**
+```
+Necesito crear validadores para la API de LIGENIA usando Zod que verifiquen y saniticen los datos de entrada. Específicamente necesito validadores para:
+1. Creación/actualización de torneos
+2. Registro de usuarios
+3. Creación de partidos
+4. Actualización de resultados
+
+Cada validador debe prevenir inyecciones SQL, XSS y asegurar tipos correctos. Muestra también cómo integrar estos validadores como middlewares en rutas Express.
+```
+
+**Prompt 3: Configuración de seguridad para producción**
+```
+Necesito configurar medidas de seguridad adicionales para el despliegue en producción de mi API Node.js/Express:
+1. Configuración de Helmet para encabezados de seguridad
+2. Implementación de rate limiting para prevenir ataques de fuerza bruta
+3. Configuración de CORS para permitir solo orígenes específicos
+4. Sanitización de parámetros de consulta y cuerpo de peticiones
+5. Configuración de timeouts de conexión
+6. Prevención de exposición de información sensible en errores
+
+Proporciona el código completo para implementar estas medidas.
+```
 
 ### **2.6. Tests**
 
-**Prompt 1:**
+**Prompt 1: Tests unitarios para servicios de la aplicación**
+```
+Necesito implementar tests unitarios con Jest para los siguientes servicios de LIGENIA:
+1. TournamentService (creación, actualización, consulta de torneos)
+2. MatchService (registro de partidos, actualización de resultados)
+3. StatisticsService (cálculo de estadísticas de jugador)
+4. RankingService (generación de rankings)
 
-**Prompt 2:**
+Para cada servicio, necesito tests que:
+- Cubran casos exitosos y de error
+- Utilicen mocks para dependencias externas
+- Verifiquen que se lancen las excepciones correctas
+- Confirmen que los datos se formatean según lo esperado
 
-**Prompt 3:**
+Proporciona el código completo para estos tests incluyendo configuración de Jest.
+```
+
+**Prompt 2: Tests de integración para endpoints de la API**
+```
+Necesito implementar tests de integración para los siguientes endpoints de la API de LIGENIA:
+1. POST /api/tournaments (creación de torneo)
+2. POST /api/tournaments/:id/register (registro en torneo)
+3. GET /api/rankings (obtención de rankings)
+4. POST /api/matches (creación de partido)
+5. PATCH /api/matches/:id/score (actualización de resultado)
+
+Cada test debe:
+- Configurar un entorno de test con una base de datos de prueba
+- Crear datos iniciales necesarios
+- Realizar la petición HTTP al endpoint
+- Verificar la respuesta y los cambios en la base de datos
+- Limpiar los datos después de cada test
+
+Usa supertest con Jest y proporciona el código completo.
+```
+
+**Prompt 3: Configuración de pruebas automatizadas en CI/CD**
+```
+Necesito configurar pruebas automatizadas en un pipeline de CI/CD para LIGENIA, usando GitHub Actions. El workflow debe:
+1. Configurar un entorno Node.js y PostgreSQL para pruebas
+2. Ejecutar migraciones de Prisma en una base de datos de prueba
+3. Ejecutar pruebas unitarias
+4. Ejecutar pruebas de integración
+5. Realizar análisis de cobertura de código
+6. Fallar si la cobertura está por debajo del 80%
+7. Correr pruebas end-to-end con Cypress (opcional)
+
+Proporciona el archivo de configuración completo de GitHub Actions y cualquier script adicional necesario para configurar el entorno de prueba.
+```
 
 ---
 
@@ -165,8 +239,4 @@ Eres un experto planificador de proyectos, toma como referencia el documento @ba
 
 ### 7. Pull Requests
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+```
