@@ -16,4 +16,6 @@ Aquí encontrarás enlaces directos a las áreas clave de nuestra documentación
 *   **[👤 Historias de Usuario (US)](./us/us-overview.md)**: Consulta las historias de usuario que guían nuestro desarrollo.
 *   **[🎫 Tickets Técnicos](./tasks/tasks-overview.md)**: Seguimiento de tareas técnicas específicas o subtareas.
 *   **[🏗️ Base de Datos](./db/db-overview.md)**: Explora la base de datos del proyecto.
+*   **[🔍 Plan General de Implementación (PGI)](./pgi/pgi-overview.md)**: Explora el plan general de implementación del proyecto.
+*   **[🔍 Plan de Pruebas (PP)](./pp/pp-overview.md)**: Explora el plan de pruebas del proyecto.
 ---
