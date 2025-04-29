@@ -15,5 +15,5 @@ Aquí encontrarás enlaces directos a las áreas clave de nuestra documentación
 *   **[✨ Features](./features/features-overview.md)**: Explora las funcionalidades principales del proyecto en detalle.
 *   **[👤 Historias de Usuario (US)](./us/us-overview.md)**: Consulta las historias de usuario que guían nuestro desarrollo.
 *   **[🎫 Tickets Técnicos](./tasks/tasks-overview.md)**: Seguimiento de tareas técnicas específicas o subtareas.
-
+*   **[🏗️ Base de Datos](./db/db-overview.md)**: Explora la base de datos del proyecto.
 ---
