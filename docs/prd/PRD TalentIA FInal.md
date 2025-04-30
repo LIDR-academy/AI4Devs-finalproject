@@ -9,18 +9,18 @@
   - [B. Componentes de la Plataforma TalentIA (Core AI)](#b-componentes-de-la-plataforma-talentia-core-ai)
 - [5. Modelo de Negocio (Lean Canvas Resumido - Fase 1)](#5-modelo-de-negocio-lean-canvas-resumido---fase-1)
 - [6. Grupos de Usuarios y Stakeholders](#6-grupos-de-usuarios-y-stakeholders)
-  - [1. Usuarios Primarios](#1-usuarios-primarios-interactúan-directamente-con-el-ats-mvp)
-  - [2. Usuarios Secundarios](#2-usuarios-secundarios-interactúan-indirectamente-o-se-benefician-del-sistema)
-  - [3. Stakeholders](#3-stakeholders-interesados-en-el-resultado-del-proyecto)
+  - [6.1. Usuarios Primarios (Interactúan directamente con el ATS MVP)](#61-usuarios-primarios-interactúan-directamente-con-el-ats-mvp)
+  - [6.2. Usuarios Secundarios (Interactúan indirectamente o se benefician del sistema)](#62-usuarios-secundarios-interactúan-indirectamente-o-se-benefician-del-sistema)
+  - [6.3. Stakeholders (Interesados en el resultado del proyecto)](#63-stakeholders-interesados-en-el-resultado-del-proyecto)
 - [7. Casos de Uso Principales (Fase 1)](#7-casos-de-uso-principales-fase-1)
-  - [1. Actores (Fase 1)](#1-actores-fase-1)
-  - [2. Listado de Casos de Uso Principales (Fase 1)](#2-listado-de-casos-de-uso-principales-fase-1)
-  - [3. Diagrama de Casos de Uso General](#3-diagrama-de-casos-de-uso-general-plantuml)
+  - [7.1. Actores (Fase 1)](#71-actores-fase-1)
+  - [7.2. Listado de Casos de Uso Principales (Fase 1)](#72-listado-de-casos-de-uso-principales-fase-1)
+  - [7.3. Diagrama de Casos de Uso General](#73-diagrama-de-casos-de-uso-general-plantuml)
 - [8. Requisitos Funcionales (Fase 1)](#8-requisitos-funcionales-fase-1)
-  - [1. Must Have (Imprescindible para el MVP)](#1-must-have-imprescindible-para-el-mvp)
-  - [2. Should Have (Debería Tener)](#2-should-have-debería-tener)
-  - [3. Could Have (Podría Tener)](#3-could-have-podría-tener)
-  - [4. Won't Have (No Tendrá - en Fase 1)](#4-wont-have-no-tendrá---en-fase-1)
+  - [8.1. Must Have (Imprescindible para el MVP)](#81-must-have-imprescindible-para-el-mvp)
+  - [8.2. Should Have (Debería Tener)](#82-should-have-debería-tener)
+  - [8.3. Could Have (Podría Tener)](#83-could-have-podría-tener)
+  - [8.4. Won't Have (No Tendrá - en Fase 1)](#84-wont-have-no-tendrá---en-fase-1)
 - [9. Requisitos No Funcionales (RNF)](#9-requisitos-no-funcionales-rnf)
   - [9.1. Rendimiento y Escalabilidad](#91-rendimiento-y-escalabilidad)
   - [9.2. Seguridad](#92-seguridad)
@@ -29,20 +29,28 @@
   - [9.5. Mantenibilidad y Extensibilidad](#95-mantenibilidad-y-extensibilidad)
   - [9.6. Cumplimiento Normativo (Protección de Datos)](#96-cumplimiento-normativo-protección-de-datos)
 - [10. Modelo y Flujo de Integración (Fase 1 y Futura)](#10-modelo-y-flujo-de-integración-fase-1-y-futura)
-  - [1. Modelo de Integración (Fase 1: ATS MVP <-> TalentIA Core AI)](#1-modelo-de-integración-fase-1-ats-mvp---talentia-core-ai)
-  - [2. Modelo de Integración (Futuro: Core AI <-> ATS Externo - ej. TeamTailor)](#2-modelo-de-integración-futuro-core-ai---ats-externo---ej-teamtailor)
-  - [3. Flujo Resumido de Datos (Fase 1: ATS MVP + Core AI)](#3-flujo-resumido-de-datos-fase-1-ats-mvp--core-ai)
+  - [10.1. Modelo de Integración (Fase 1: ATS MVP <-> TalentIA Core AI)](#101-modelo-de-integración-fase-1-ats-mvp---talentia-core-ai)
+  - [10.2. Modelo de Integración (Futuro: Core AI <-> ATS Externo - ej. TeamTailor)](#102-modelo-de-integración-futuro-core-ai---ats-externo---ej-teamtailor)
+  - [10.3. Flujo Resumido de Datos (Fase 1: ATS MVP + Core AI)](#103-flujo-resumido-de-datos-fase-1-ats-mvp--core-ai)
 - [11. Modelo de Datos (DDD y Alineación Futura)](#11-modelo-de-datos-ddd-y-alineación-futura)
-  - [1. Bounded Contexts (BCs)](#1-bounded-contexts-bcs)
-  - [2. Modelo de Datos para el ATS MVP](#2-modelo-de-datos-para-el-ats-mvp-gestión-de-reclutamiento-bc-principalmente)
-  - [3. Modelo de Datos para TalentIA Core AI](#3-modelo-de-datos-para-talentia-core-ai-bcs-de-ia---refinado)
-  - [4. Consideraciones Clave DDD, Técnicas y de Alineación TT](#4-consideraciones-clave-ddd-técnicas-y-de-alineación-tt)
+  - [11.1. Bounded Contexts (BCs)](#111-bounded-contexts-bcs)
+  - [11.2. Modelo de Datos para el ATS MVP](#112-modelo-de-datos-para-el-ats-mvp-gestión-de-reclutamiento-bc-principalmente)
+  - [11.3. Modelo de Datos para TalentIA Core AI](#113-modelo-de-datos-para-talentia-core-ai-bcs-de-ia---refinado)
+  - [11.4. Consideraciones Clave DDD, Técnicas y de Alineación TT](#114-consideraciones-clave-ddd-técnicas-y-de-alineación-tt)
 - [12. Arquitectura Técnica (Fase 1)](#12-arquitectura-técnica-fase-1)
-  - [1. Patrón Arquitectónico General](#1-patrón-arquitectónico-general)
-  - [2. Arquitectura del ATS MVP](#2-arquitectura-del-ats-mvp)
-  - [3. Arquitectura de TalentIA Core AI (Microservicios)](#3-arquitectura-de-talentia-core-ai-microservicios)
-  - [4. Interacción y Flujo de Datos](#4-interacción-y-flujo-de-datos)
-  - [5. Diagramas Arquitectónicos](#5-diagramas-arquitectónicos)
+  - [12.1. Patrón Arquitectónico General](#121-patrón-arquitectónico-general)
+  - [12.2. Arquitectura del ATS MVP](#122-arquitectura-del-ats-mvp)
+  - [12.3. Arquitectura de TalentIA Core AI (Microservicios)](#123-arquitectura-de-talentia-core-ai-microservicios)
+  - [12.4. Interacción y Flujo de Datos](#124-interacción-y-flujo-de-datos)
+  - [12.5. Diagramas Arquitectónicos](#125-diagramas-arquitectónicos)
+  - [12.6. Alineación con Requisitos No Funcionales](#126-alineación-con-requisitos-no-funcionales)
+- [13. Métricas de Éxito y Retroalimentación Continua (Fase 1)](#13-métricas-de-éxito-y-retroalimentación-continua-fase-1)
+  - [13.1. KPIs del Producto (Fase 1 - Validación MVP)](#131-kpis-del-producto-fase-1---validación-mvp)
+    - [13.1.1. Métricas de Adopción (Piloto)](#1311-métricas-de-adopción-piloto)
+    - [13.1.2. Métricas de Eficiencia (Piloto)](#1312-métricas-de-eficiencia-piloto)
+    - [13.1.3. Métricas de Calidad de IA (Piloto)](#1313-métricas-de-calidad-de-ia-piloto)
+    - [13.1.4. Métricas de Viabilidad / Impacto Potencial (Piloto)](#1314-métricas-de-viabilidad--impacto-potencial-piloto)
+  - [13.2. Retroalimentación Continua (Durante y Post-Piloto Fase 1)](#132-retroalimentación-continua-durante-y-post-piloto-fase-1)
 <!-- /TOC -->
 
 ## 1. Introducción y Alcance (Fase 1)
@@ -163,7 +171,7 @@ Este Lean Canvas resume el modelo de negocio enfocado en la validación y demost
 
 Identificamos los siguientes grupos de usuarios y stakeholders clave para la solución TalentIA (ATS MVP + Core AI) en su Fase 1:
 
-### 1. Usuarios Primarios (Interactúan directamente con el ATS MVP)
+### 6.1. Usuarios Primarios (Interactúan directamente con el ATS MVP)
 
 Son los usuarios principales que utilizarán la interfaz del ATS MVP en su día a día.
 
@@ -172,14 +180,14 @@ Son los usuarios principales que utilizarán la interfaz del ATS MVP en su día 
 | **Reclutadores** | Crear/gestionar vacantes, generar JDs asistidas por IA, revisar candidatos priorizados/evaluados por IA, gestionar pipeline, dar feedback a la IA. | Optimizar tiempo en tareas repetitivas (JDs, criba), contratar candidatos más adecuados de forma eficiente. |
 | **Hiring Managers** | Revisar perfiles de candidatos finalistas (pre-evaluados por IA), dar feedback específico sobre candidatos, validar decisiones clave del proceso. | Seleccionar al mejor talento para su equipo con información objetiva y relevante, participar eficientemente. |
 
-### 2. Usuarios Secundarios (Interactúan indirectamente o se benefician del sistema)
+### 6.2. Usuarios Secundarios (Interactúan indirectamente o se benefician del sistema)
 
 | Perfil                             | Necesidades Clave                                                                                             | Objetivos Principales                                                                 |
 | :--------------------------------- | :------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------ |
 | **Candidatos** | Proceso de aplicación sencillo y claro (a través del portal/formulario del ATS MVP), trato justo, feedback (si el proceso lo define). | Conseguir el puesto deseado, tener una experiencia de candidatura positiva y eficiente. |
 | **Administradores del Sistema (Potencial)** | Configurar ajustes básicos del ATS MVP, gestionar cuentas de usuario (Reclutadores/Managers), monitorizar estado del sistema. | Asegurar el correcto funcionamiento, seguridad y administración básica del ATS MVP.       |
 
-### 3. Stakeholders (Interesados en el resultado del proyecto)
+### 6.3. Stakeholders (Interesados en el resultado del proyecto)
 
 | Stakeholder                          | Interés Principal                                                                                                                      | Impacto / Relación con el Proyecto                                                                                             |
 | :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
@@ -193,7 +201,7 @@ Son los usuarios principales que utilizarán la interfaz del ATS MVP en su día 
 
 A continuación se describen los principales casos de uso que la solución TalentIA (ATS MVP + TalentIA Core AI) deberá soportar en la Fase 1. Definen las interacciones clave entre usuarios, la interfaz del ATS MVP, los componentes internos de IA (TalentIA Core AI) y los sistemas externos necesarios.
 
-### 1. Actores (Fase 1)
+### 7.1. Actores (Fase 1)
 
 * **Humanos:**
     * `Candidato`: Persona externa que aplica a las vacantes.
@@ -205,7 +213,7 @@ A continuación se describen los principales casos de uso que la solución Talen
     * `TalentIA Core AI`: Componentes/servicios internos de IA.
     * `Proveedor IA / LLM`: Servicio externo de IA/LLM.
 
-### 2. Listado de Casos de Uso Principales (Fase 1)
+### 7.2. Listado de Casos de Uso Principales (Fase 1)
 
 1.  **UC1: Gestionar Vacante y Generar Descripción (JD) con IA**
     * **Descripción Breve:** El Reclutador utiliza el ATS MVP para crear/editar una vacante. Al generar/editar la Descripción del Puesto (JD), puede definir parámetros clave para la evaluación posterior de candidatos por IA, como el score de corte y las etapas sugeridas. Opcionalmente, solicita la generación automática del contenido de la JD asistida por IA.
@@ -461,7 +469,7 @@ A continuación se describen los principales casos de uso que la solución Talen
 
 **Nota sobre Sincronización con TeamTailor:** Este caso de uso queda **explícitamente fuera del alcance de la Fase 1**, aunque la arquitectura del Motor de Integración Interno de TalentIA Core AI se diseñará pensando en facilitar este tipo de integraciones futuras.
 
-### 3. Diagrama de Casos de Uso General (PlantUML)
+### 7.3. Diagrama de Casos de Uso General (PlantUML)
 
 ```plantuml
 @startuml
@@ -531,7 +539,7 @@ end note
 
 A continuación se detallan los requisitos funcionales para la solución TalentIA (ATS MVP + TalentIA Core AI) en su Fase 1, priorizados según el método MoSCoW (Must Have, Should Have, Could Have, Won't Have).
 
-### 1. Must Have (Imprescindible para el MVP)
+### 8.1. Must Have (Imprescindible para el MVP)
 *Funcionalidades esenciales para que el ciclo básico de reclutamiento funcione con la asistencia de IA.*
 
 | ID     | Título del Requisito                     | Descripción                                                                                                                               | Casos de Uso Relacionados | Prioridad |
@@ -565,7 +573,7 @@ A continuación se detallan los requisitos funcionales para la solución TalentI
 | RF-21  | API Interna ATS MVP <-> Core AI          | Debe existir una API interna bien definida para la comunicación entre ambos componentes.                                       | Transversal               | Must Have |
 | RF-22  | Invocación Proveedor LLM (Core AI)       | TalentIA Core AI debe poder invocar la API de un proveedor LLM externo configurado para tareas NLP.                             | UC1, UC3                  | Must Have |
 
-### 2. Should Have (Debería Tener)
+### 8.2. Should Have (Debería Tener)
 *Funcionalidades importantes que añaden valor significativo, pero no bloquean el flujo esencial del MVP.*
 
 | ID     | Título del Requisito                     | Descripción                                                                                                                                | Casos de Uso Relacionados | Prioridad   |
@@ -580,7 +588,7 @@ A continuación se detallan los requisitos funcionales para la solución TalentI
 | RF-29  | Gestión Básica Usuarios (ATS MVP)        | El ATS MVP debería permitir a un Administrador crear/desactivar usuarios (Reclutador, Manager).                                    | UC6                       | Should Have |
 | RF-30  | Autenticación de Usuarios (ATS MVP)      | El ATS MVP debe requerir que los usuarios (Reclutador, Manager) se autentiquen para acceder.                                        | Transversal               | Should Have |
 
-### 3. Could Have (Podría Tener)
+### 8.3. Could Have (Podría Tener)
 *Funcionalidades deseables que mejorarían la experiencia o añadirían capacidades, pero pueden posponerse.*
 
 | ID     | Título del Requisito                     | Descripción                                                                                                 | Casos de Uso Relacionados | Prioridad  |
@@ -594,7 +602,7 @@ A continuación se detallan los requisitos funcionales para la solución TalentI
 | RF-36  | Considerar Soft Skills (Core AI)       | Intentar identificar/evaluar soft skills a partir del texto del CV (requiere NLP avanzado).         | UC3                       | Could Have |
 | RF-37  | Comparativa Candidatos (ATS MVP)       | Interfaz para comparar lado a lado las evaluaciones IA de varios candidatos.                      | UC4                       | Could Have |
 
-### 4. Won't Have (No Tendrá - en Fase 1)
+### 8.4. Won't Have (No Tendrá - en Fase 1)
 *Funcionalidades explícitamente fuera de alcance para esta fase inicial.*
 
 | ID     | Requisito Excluido                 | Justificación                                                                                   |
@@ -673,7 +681,7 @@ Estos requisitos definen los atributos de calidad, las restricciones operativas 
 
 Esta sección describe cómo interactúan los componentes del sistema TalentIA en la Fase 1 (ATS MVP y TalentIA Core AI) y cómo se prevé la integración con sistemas externos como TeamTailor en fases futuras.
 
-### 1. Modelo de Integración (Fase 1: ATS MVP <-> TalentIA Core AI)
+### 10.1. Modelo de Integración (Fase 1: ATS MVP <-> TalentIA Core AI)
 
 * **Naturaleza:** La integración en Fase 1 es **interna**, conectando los dos componentes principales desarrollados: la aplicación ATS MVP y los microservicios de TalentIA Core AI.
 * **Mecanismo:** La comunicación se realizará principalmente a través de **APIs RESTful internas síncronas**. El ATS MVP actuará como cliente, invocando los endpoints expuestos por los microservicios de TalentIA Core AI (posiblemente a través de un Gateway API interno, como se detalla en la Sección 12: Arquitectura Técnica).
@@ -693,7 +701,7 @@ Esta sección describe cómo interactúan los componentes del sistema TalentIA e
         * *Opcional:* Devolver la lista de IDs de otras candidaturas (`candidaturas_ids` de `CandidatoIA`).
 * **Contrato:** Se definirá un contrato de API interno (ej. especificación OpenAPI/Swagger) claro y versionado para esta comunicación, incluyendo los nuevos endpoints y estructuras de datos para `CandidatoIA` y parámetros de JD.
 
-### 2. Modelo de Integración (Futuro: Core AI <-> ATS Externo - ej. TeamTailor)
+### 10.2. Modelo de Integración (Futuro: Core AI <-> ATS Externo - ej. TeamTailor)
 
 * **Visión:** Tras la validación en Fase 1, la Plataforma TalentIA Core AI está diseñada para integrarse con ATS externos líderes del mercado, comenzando prioritariamente con TeamTailor.
 * **Mecanismo:** Se desarrollará o evolucionará un **`Servicio de Integración`** (o "API Bridge", potencialmente evolucionando desde el Gateway API interno) dentro de la arquitectura de TalentIA Core AI. Este servicio actuará como intermediario:
@@ -707,7 +715,7 @@ Esta sección describe cómo interactúan los componentes del sistema TalentIA e
 * **Adaptación:** El `Servicio de Integración` será responsable de **traducir y adaptar** los modelos de datos y flujos de trabajo entre el modelo interno de TalentIA Core AI (UUIDs, estructura propia) y el modelo específico de cada ATS externo (ej. IDs numéricos de TeamTailor, endpoints y formatos específicos).
 * **Core AI:** Los servicios centrales de IA (`Generación JD`, `Evaluación Candidatos`, `Feedback/Aprendimiento`, `Perfil Candidato`) permanecerán desacoplados de los detalles específicos de cada ATS externo, recibiendo y enviando datos a través del `Servicio de Integración`.
 
-### 3. Flujo Resumido de Datos (Fase 1: ATS MVP + Core AI)
+### 10.3. Flujo Resumido de Datos (Fase 1: ATS MVP + Core AI)
 
 1.  **Creación de Vacante (JD Asistida y Configuración IA):** *(Actualizado)*
     * `Reclutador` introduce datos básicos de vacante y **parámetros IA (`evaluacion_corte`, etapas pre)** en `ATS MVP`.
@@ -733,7 +741,7 @@ Esta sección describe cómo interactúan los componentes del sistema TalentIA e
 
 Este modelo de datos describe la estructura lógica de la información para la Fase 1 de TalentIA (ATS MVP + TalentIA Core AI). Aplica principios de Domain-Driven Design (DDD) y considera la necesidad de alinear conceptualmente las entidades principales con sistemas ATS estándar como TeamTailor para facilitar futuras integraciones, aunque manteniendo la separación arquitectónica decidida (ATS MVP vs. Core AI).
 
-### 1. Bounded Contexts (BCs)
+### 11.1. Bounded Contexts (BCs)
 
 Identificamos los siguientes contextos delimitados principales, cada uno con su propio modelo y lenguaje ubicuo. Esta separación conceptual guiará la posible distribución física de los datos (ej. bases de datos separadas para microservicios de Core AI).
 
@@ -759,7 +767,7 @@ Identificamos los siguientes contextos delimitados principales, cada uno con su 
     * **Agregados Clave:** `RegistroFeedbackIA`.
 
 
-### 2. Modelo de Datos para el ATS MVP (`Gestión de Reclutamiento` BC principalmente)
+### 11.2. Modelo de Datos para el ATS MVP (`Gestión de Reclutamiento` BC principalmente)
 
 Base de datos principal del ATS MVP (recomendado: Relacional - PostgreSQL/MySQL). Se enfoca en el workflow, datos básicos, referencias a datos de IA y la etapa sugerida por IA.
 
@@ -897,7 +905,7 @@ Base de datos principal del ATS MVP (recomendado: Relacional - PostgreSQL/MySQL)
     ```
 
 
-### 3. Modelo de Datos para TalentIA Core AI (BCs de IA) - Refinado
+### 11.3. Modelo de Datos para TalentIA Core AI (BCs de IA) - Refinado
 
 El modelo para Core AI se centra en los datos específicos de IA, vinculados por IDs al ATS MVP.
 
@@ -1005,7 +1013,7 @@ El modelo para Core AI se centra en los datos específicos de IA, vinculados por
         %% CANDIDATO (ATS) 1--1 CANDIDATO_IA (Core AI) via email
     ```
 
-### 4. Consideraciones Clave DDD, Técnicas y de Alineación TT
+### 11.4. Consideraciones Clave DDD, Técnicas y de Alineación TT
 
 * **Alineación Conceptual:** Se mantiene la alineación con conceptos de TeamTailor en el modelo del ATS MVP.
 * **Agregados Clarificados:** `CandidatoIA` es el agregado para el perfil unificado en Core AI. `DescripcionPuestoGenerada` incluye la configuración IA.
@@ -1031,7 +1039,7 @@ Esta sección describe la arquitectura técnica propuesta para la solución Tale
 * **Rendimiento/Escalabilidad:** El rendimiento es importante (RNF-01 a RNF-03), pero la optimización extrema no es el foco principal de la Fase 1 (prototipo). La escalabilidad (RNF-05) se aborda mediante el patrón de microservicios en Core AI para facilitar el futuro.
 * **Prototipo y Recursos:** Se busca una implementación eficiente en tiempo y coste, aprovechando la alta experiencia técnica del equipo dentro del marco arquitectónico elegido.
 
-### 1. Patrón Arquitectónico General
+### 12.1. Patrón Arquitectónico General
 
 Se propone un enfoque híbrido:
 
@@ -1044,7 +1052,7 @@ Se propone un enfoque híbrido:
     * Encapsulamiento claro de responsabilidades, incluyendo la nueva entidad `CandidatoIA` en un servicio dedicado.
     * Soporte para los NFRs críticos (seguridad por capas, consistencia vía APIs, cumplimiento GDPR en servicios específicos).
 
-### 2. Arquitectura del ATS MVP
+### 12.2. Arquitectura del ATS MVP
 
 * **Estilo:** Aplicación web estándar con una arquitectura por capas (ej. Presentación/UI, Lógica de Negocio/Servicios, Acceso a Datos/Repositorio) o un patrón MVC/MVVM.
 * **Tecnología Propuesta (Ejemplo - *Sujeto a decisión del equipo*):**
@@ -1058,7 +1066,7 @@ Se propone un enfoque híbrido:
     * **Módulo de Integración con Core AI:** Responsable de realizar las llamadas API a los servicios de TalentIA Core AI y manejar las respuestas.
 * **Despliegue:** Contenedor Docker único o despliegue directo en servidor/plataforma PaaS.
 
-### 3. Arquitectura de TalentIA Core AI (Microservicios)
+### 12.3. Arquitectura de TalentIA Core AI (Microservicios)
 
 * **Estilo:** Conjunto de servicios independientes, cada uno enfocado en una capacidad específica del dominio de IA para reclutamiento, comunicándose a través de APIs bien definidas.
 * **Tecnología Propuesta:**
@@ -1078,7 +1086,7 @@ Se propone un enfoque híbrido:
         * *Opción B (Recomendada):* Un Gateway API interno que expone una fachada unificada para el ATS MVP, enrutando las peticiones a los servicios correspondientes. Podría manejar autenticación/autorización interna. *Este mismo Gateway podría evolucionar para exponer la API "tipo TeamTailor" en el futuro.*
 * **Despliegue:** Contenedores **Docker** individuales para cada microservicio, orquestados mediante **Kubernetes** (o alternativa como AWS ECS, Google Cloud Run) para gestionar escalado, resiliencia y despliegues.
 
-### 4. Interacción y Flujo de Datos
+### 12.4. Interacción y Flujo de Datos
 
 1.  **Usuario interactúa con ATS MVP** (ej. crea vacante, mueve candidato).
 2.  **ATS MVP maneja lógica de workflow** y persiste datos en su BBDD relacional.
@@ -1094,7 +1102,7 @@ Se propone un enfoque híbrido:
     * Almacena referencias (IDs) o datos clave (score copiado) en su BBDD.
 7.  **Feedback:** El usuario da feedback en ATS MVP -> ATS MVP envía a Servicio de Feedback Core AI -> Core AI almacena para aprendizaje.
 
-### 5. Diagramas Arquitectónicos
+### 12.5. Diagramas Arquitectónicos
 
 * **Diagrama de Contexto (C1):**
     ```mermaid
@@ -1180,7 +1188,7 @@ Se propone un enfoque híbrido:
     ```
 * **(Opcional) Diagramas de Componentes (C3) y Código (C4):** Se pueden desarrollar ejemplos específicos para cada microservicio durante la fase de diseño detallado.
 
-### 6. Alineación con Requisitos No Funcionales
+### 12.6. Alineación con Requisitos No Funcionales
 * **Rendimiento/Escalabilidad:** Soportado por microservicios Core AI escalables horizontalmente e independientes del monolito MVP. Tiempos de respuesta dependen de la optimización de cada componente y llamadas externas.
 * **Seguridad:** Debe implementarse en cada capa: HTTPS, autenticación MVP, autorización básica, seguridad APIs internas/externas, cifrado BBDD, gestión secretos.
 * **Usabilidad:** Depende del diseño del frontend del ATS MVP.
@@ -1192,10 +1200,10 @@ Se propone un enfoque híbrido:
 
 Esta sección define los indicadores clave de rendimiento (KPIs) para evaluar el éxito de la Fase 1 (validación del ATS MVP + TalentIA Core AI) y los mecanismos para recoger feedback e impulsar la mejora continua.
 
-### 1. KPIs del Producto (Fase 1 - Validación MVP)
+### 13.1. KPIs del Producto (Fase 1 - Validación MVP)
 El objetivo principal de estas métricas en Fase 1 es **validar la viabilidad, eficiencia y calidad** de la solución integrada en un entorno controlado (piloto interno).
 
-#### 1.1. Métricas de Adopción (Piloto)
+#### 13.1.1. Métricas de Adopción (Piloto)
 *Evalúan si los usuarios piloto (Reclutadores/Managers) utilizan activamente el ATS MVP.*
 
 | Métrica                 | Descripción                                                      | Objetivo Piloto (Ejemplo) | Medición (Durante el Piloto)                                 |
@@ -1205,7 +1213,7 @@ El objetivo principal de estas métricas en Fase 1 es **validar la viabilidad, e
 | Uso de Funciones IA     | % de JDs generadas con IA, % de candidatos evaluados por IA.     | > 90%                     | Tracking de uso de funcionalidades específicas               |
 | Retención Piloto        | % de usuarios piloto que siguen usando el sistema al final del piloto. | > 90%                     | Usuarios activos último mes piloto / Usuarios activos primer mes |
 
-#### 1.2. Métricas de Eficiencia (Piloto)
+#### 13.1.2. Métricas de Eficiencia (Piloto)
 *Miden la mejora en tiempos y esfuerzo gracias a la solución integrada.*
 
 | Métrica                     | Descripción                                                                 | Objetivo Validación (Ejemplo) | Medición (Durante el Piloto)                                          |
@@ -1215,7 +1223,7 @@ El objetivo principal de estas métricas en Fase 1 es **validar la viabilidad, e
 | Ratio Feedback IA           | % de evaluaciones IA que reciben feedback explícito del usuario piloto.       | > 30%                         | Registros de feedback / Total evaluaciones IA realizadas              |
 | Ratio Ajuste Manual Score   | % de scores IA que son ajustados manualmente por usuarios piloto.            | < 25%                         | Nº scores ajustados / Total evaluaciones IA con feedback de ajuste |
 
-#### 1.3. Métricas de Calidad de IA (Piloto)
+#### 13.1.3. Métricas de Calidad de IA (Piloto)
 *Evalúan la precisión y utilidad de los componentes de TalentIA Core AI.*
 
 | Métrica                   | Descripción                                                                           | Objetivo Validación (Ejemplo) | Medición (Durante el Piloto)                                                                 |
@@ -1225,7 +1233,7 @@ El objetivo principal de estas métricas en Fase 1 es **validar la viabilidad, e
 | Satisfacción Usuarios (Piloto) | Nivel de satisfacción de los usuarios piloto con la usabilidad y utilidad del sistema. | NPS > 30 o Feedback Positivo | Encuestas cortas al final del piloto, entrevistas cualitativas                               |
 | Calidad Percibida (Piloto) | Percepción de los Hiring Managers piloto sobre la calidad de los candidatos pre-filtrados. | Mayoritariamente Positiva     | Encuestas/entrevistas a Hiring Managers participantes en el piloto                           |
 
-#### 1.4. Métricas de Viabilidad / Impacto Potencial (Piloto)
+#### 13.1.4. Métricas de Viabilidad / Impacto Potencial (Piloto)
 *Estiman el posible impacto en negocio si la solución se escalara, validando su potencial.*
 
 | Métrica               | Descripción                                                                       | Objetivo Validación (Ejemplo)          | Medición (Estimación Post-Piloto)                                                                  |
@@ -1235,7 +1243,7 @@ El objetivo principal de estas métricas en Fase 1 es **validar la viabilidad, e
 | Calidad del Funnel      | Ratio de conversión entre etapas clave dentro del ATS MVP (ej. Aplicación -> Entrevista). | Demostrar funnel saludable             | Datos del pipeline del ATS MVP durante el piloto                                                   |
 | Feedback General        | Recopilación cualitativa sobre si la solución justifica una inversión/despliegue mayor. | Mayoritariamente Positivo / Prometedor | Conclusiones de entrevistas con stakeholders y usuarios piloto clave al finalizar la Fase 1 |
 
-### 2. Retroalimentación Continua (Durante y Post-Piloto Fase 1)
+### 13.2. Retroalimentación Continua (Durante y Post-Piloto Fase 1)
 Se implementarán los siguientes mecanismos para asegurar la mejora constante basada en datos y experiencia real:
 
 1.  **Feedback Cuantitativo (Automático):**
