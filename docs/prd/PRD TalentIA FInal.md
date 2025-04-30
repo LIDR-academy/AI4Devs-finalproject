@@ -266,7 +266,7 @@ A continuación se describen los principales casos de uso que la solución Talen
     MVP -> MVP: Almacena/Actualiza Vacante en BBDD MVP
     @enduml
     ```
-![[UC-1] Gestionar Vacante y Configurar Parámetros IA para JD.png](/.attachments/[UC-1]%20Gestionar%20Vacante%20y%20Configurar%20Parámetros%20IA%20para%20JD-f70e05b3-5357-478c-b739-8cbc1db3b87a.png)
+![[UC-1] Gestionar Vacante y Configurar Parámetros IA para JD.png](../attachments/[UC-1]%20Gestionar%20Vacante%20y%20Configurar%20Parámetros%20IA%20para%20JD.png)
 
 2.  **UC2: Aplicar a Vacante**
 * **Descripción Breve:** Un Candidato visualiza una oferta de empleo en el portal público básico del ATS MVP y completa el formulario de solicitud, adjuntando su CV y proporcionando datos básicos.
@@ -357,7 +357,7 @@ A continuación se describen los principales casos de uso que la solución Talen
     MVP --> R: Notifica (opcional) nueva evaluación y sugerencia disponible
     @enduml
     ```
-![[UC3] Recepcionar y Evaluar Candidatura con IA.png](/.attachments/[UC3]%20Recepcionar%20y%20Evaluar%20Candidatura%20con%20IA-82947ca4-c539-45ec-bf9e-18c0b16cdfc7.png)
+![[UC3] Recepcionar y Evaluar Candidatura con IA.png](../attachments/[UC-3]%20Recepcionar%20y%20Evaluar%20Candidatura%20con%20IA.png)
 
 4.  **UC4: Revisar Candidatos y Gestionar Pipeline**
     * **Descripción Breve:** El Reclutador y/o Hiring Manager utilizan el ATS MVP para revisar candidatos de una vacante. Ven la evaluación IA, incluyendo la etapa inicial sugerida basada en el `evaluacion_corte`. Pueden ver información agregada del candidato (`CandidatoIA`), como otras postulaciones. Deciden mover candidatos entre etapas del pipeline, considerando (o ignorando) la sugerencia de IA.
@@ -413,7 +413,7 @@ A continuación se describen los principales casos de uso que la solución Talen
     MVP -> User: Confirma cambio / Actualiza UI
     @enduml
     ```
-![[UC4] Revisar Candidatos y Gestionar Pipeline.png](/.attachments/[UC4]%20Revisar%20Candidatos%20y%20Gestionar%20Pipeline-807583ed-3544-48e5-93cd-ba86331e42d1.png)
+![[UC4] Revisar Candidatos y Gestionar Pipeline.png](../attachments/[UC-4]%20Revisar%20Candidatos%20y%20Gestionar%20Pipeline.png)
 
 5.  **UC5: Proporcionar Feedback a IA**
     * **Descripción:** Durante la revisión de candidatos (UC4), los usuarios (Reclutador/Manager) pueden interactuar con la evaluación de IA mostrada en el ATS MVP para proporcionar retroalimentación. El ATS MVP captura este feedback y lo envía a `TalentIA Core AI` para el aprendizaje continuo.
@@ -450,7 +450,7 @@ A continuación se describen los principales casos de uso que la solución Talen
 
       @enduml
         ```
-![[UC5] Proporcionar Feedback a IA.png](/.attachments/[UC5]%20Proporcionar%20Feedback%20a%20IA-04e7a17c-8fb0-4445-a4ed-42f0b1239521.png)
+![[UC5] Proporcionar Feedback a IA.png](../attachments/[UC-5]%20Proporcionar%20Feedback%20a%20IA.png)
 
 
 6.  **UC6: Administrar Usuarios y Configuración Básica (Potencial)**
@@ -525,7 +525,7 @@ end note
 @enduml
 ```
 
-![Diagrama de Casos de Uso General.png](/.attachments/Diagrama%20de%20Casos%20de%20Uso%20General-e1fe6ff2-066b-49bd-b587-44b79d908bcf.png)
+![Diagrama de Casos de Uso General.png](../attachments/Diagrama%20de%20Casos%20de%20Uso%20General.png)
 
 ## 8. Requisitos Funcionales (Fase 1)
 
@@ -787,49 +787,114 @@ Base de datos principal del ATS MVP (recomendado: Relacional - PostgreSQL/MySQL)
 
     ```mermaid
     erDiagram
-        USUARIO { UUID id PK; string nombre; string email UK; enum rol; boolean activo; datetime fecha_creacion }
-        VACANTE { UUID id PK; string titulo; text descripcion_html; string resumen; string ubicacion_texto; string departamento; enum estado; array_string tags; datetime fecha_creacion; datetime fecha_actualizacion; datetime fecha_publicacion; datetime fecha_cierre; UUID recruiter_id FK; UUID hiring_manager_id FK; UUID referencia_jd_generada_id "NULLable"; string enlace_portal }
-        CANDIDATO { UUID id PK; string nombre_completo; string email UK; string telefono; array_string tags; datetime fecha_creacion; datetime fecha_actualizacion; boolean consentimiento_gdpr }
-        ARCHIVO_CANDIDATO { UUID id PK; UUID candidato_id FK; string nombre_archivo; enum tipo_archivo; string ruta_almacenamiento; datetime fecha_subida; UUID referencia_evaluacion_ia_id "NULLable" }
-        CANDIDATURA {
-            UUID id PK
-            UUID candidato_id FK
-            UUID vacante_id FK
-            datetime fecha_aplicacion
-            string fuente "NULLable"
-            UUID etapa_pipeline_actual_id FK
-            UUID motivo_rechazo_id "FK NULLable"
-            text comentario_rechazo "NULLable"
-            datetime fecha_ultimo_cambio_etapa
-            UUID referencia_evaluacion_ia_id "NULLable"
-            int puntuacion_ia_general "NULLable"
-            string etapa_sugerida "NULLable" %% <-- Campo Confirmado
-            array_string tags "NULLable"
-            "UK(candidato_id, vacante_id)"
-        }
-        ETAPA_PIPELINE { UUID id PK; string nombre; enum tipo_etapa; int orden }
-        MOTIVO_RECHAZO { UUID id PK; string nombre UK; text descripcion }
-        HISTORIAL_ETAPA { UUID id PK; UUID candidatura_id FK; UUID etapa_id FK; datetime fecha_cambio; UUID usuario_id; text comentario }
-        NOTA { UUID id PK; UUID candidatura_id FK; UUID usuario_id FK; text contenido; datetime fecha_creacion }
+    USUARIO {
+        UUID id PK
+        string nombre
+        string email UK
+        enum rol
+        boolean activo
+        datetime fecha_creacion
+    }
+    
+    VACANTE {
+        UUID id PK
+        string titulo
+        text descripcion_html
+        string resumen
+        string ubicacion_texto
+        string departamento
+        enum estado
+        array_string tags
+        datetime fecha_creacion
+        datetime fecha_actualizacion
+        datetime fecha_publicacion
+        datetime fecha_cierre
+        UUID recruiter_id FK
+        UUID hiring_manager_id FK
+        UUID referencia_jd_generada_id "NULLable"
+        string enlace_portal
+    }
+    
+    CANDIDATO {
+        UUID id PK
+        string nombre_completo
+        string email UK
+        string telefono
+        array_string tags
+        datetime fecha_creacion
+        datetime fecha_actualizacion
+        boolean consentimiento_gdpr
+    }
+    
+    ARCHIVO_CANDIDATO {
+        UUID id PK
+        UUID candidato_id FK
+        string nombre_archivo
+        enum tipo_archivo
+        string ruta_almacenamiento
+        datetime fecha_subida
+        UUID referencia_evaluacion_ia_id "NULLable"
+    }
+    
+    CANDIDATURA {
+        UUID id PK
+        UUID candidato_id FK
+        UUID vacante_id FK
+        datetime fecha_aplicacion
+        string fuente "NULLable"
+        UUID etapa_pipeline_actual_id FK
+        UUID motivo_rechazo_id "FK NULLable"
+        text comentario_rechazo "NULLable"
+        datetime fecha_ultimo_cambio_etapa
+        UUID referencia_evaluacion_ia_id "NULLable"
+        int puntuacion_ia_general "NULLable"
+        string etapa_sugerida "NULLable"
+        array_string tags "NULLable"
+    }
+    
+    ETAPA_PIPELINE {
+        UUID id PK
+        string nombre
+        enum tipo_etapa
+        int orden
+    }
+    
+    MOTIVO_RECHAZO {
+        UUID id PK
+        string nombre UK
+        text descripcion
+    }
+    
+    HISTORIAL_ETAPA {
+        UUID id PK
+        UUID candidatura_id FK
+        UUID etapa_id FK
+        datetime fecha_cambio
+        UUID usuario_id FK
+        text comentario
+    }
+    
+    NOTA {
+        UUID id PK
+        UUID candidatura_id FK
+        UUID usuario_id FK
+        text contenido
+        datetime fecha_creacion
+    }
 
-        USUARIO ||--o{ VACANTE : "es Recruiter"
-        USUARIO ||--o{ VACANTE : "es Manager"
-        CANDIDATO ||--o{ CANDIDATURA : "realiza"
-        VACANTE ||--o{ CANDIDATURA : "recibe"
-        ETAPA_PIPELINE ||--o{ CANDIDATURA : "está en"
-        MOTIVO_RECHAZO ||--o{ CANDIDATURA : "justifica rechazo"
-        CANDIDATURA ||--o{ HISTORIAL_ETAPA : "tiene historial"
-        ETAPA_PIPELINE ||--o{ HISTORIAL_ETAPA : "registra"
-        USUARIO ||--o{ HISTORIAL_ETAPA : "realiza"
-        CANDIDATURA ||--o{ NOTA : "tiene notas"
-        USUARIO ||--o{ NOTA : "es autor"
-        CANDIDATO ||--o{ ARCHIVO_CANDIDATO : "posee archivos"
-
+    USUARIO ||--o{ VACANTE : "es Recruiter"
+    USUARIO ||--o{ VACANTE : "es Manager"
+    CANDIDATO ||--o{ CANDIDATURA : "realiza"
+    VACANTE ||--o{ CANDIDATURA : "recibe"
+    ETAPA_PIPELINE ||--o{ CANDIDATURA : "está en"
+    MOTIVO_RECHAZO ||--o{ CANDIDATURA : "justifica rechazo"
+    CANDIDATURA ||--o{ HISTORIAL_ETAPA : "tiene historial"
+    ETAPA_PIPELINE ||--o{ HISTORIAL_ETAPA : "registra"
+    USUARIO ||--o{ HISTORIAL_ETAPA : "realiza"
+    CANDIDATURA ||--o{ NOTA : "tiene notas"
+    USUARIO ||--o{ NOTA : "es autor"
+    CANDIDATO ||--o{ ARCHIVO_CANDIDATO : "posee archivos"
     ```
-::: mermaid
- graph LR;
- A[Wiki supports Mermaid] --> B[Visit https://mermaidjs.github.io/ for Mermaid syntax];
-:::
 
 
 ### 3. Modelo de Datos para TalentIA Core AI (BCs de IA) - Refinado
