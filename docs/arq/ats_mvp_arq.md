@@ -341,44 +341,44 @@ Esta sección describe cómo se espera que el ATS MVP sea desplegado en los dife
 Los requisitos no funcionales (NFRs) definen las cualidades del sistema y las restricciones que impactan su arquitectura. Los NFRs completos para la Fase 1 se detallan en la [Sección 9 del PRD TalentIA FInal.md](../prd/PRD%20TalentIA%20FInal.md#9-requisitos-no-funcionales-rnf). A continuación, se resumen los NFRs clave con mayor relevancia directa para la arquitectura e implementación del ATS MVP:
 
 * **Rendimiento y Escalabilidad:**
-    * **RNF-01: Tiempos de Respuesta Interactivos (ATS MVP):** Las operaciones comunes de la interfaz de usuario deben completarse rápidamente (< 3 segundos) bajo carga moderada.
-    * **RNF-04: Concurrencia de Usuarios (ATS MVP):** El ATS MVP debe soportar hasta 20 usuarios concurrentes realizando operaciones típicas sin degradación significativa del rendimiento.
-    * Consulte la [Sección 9.1 del PRD](../prd/PRD%20TalentIA%20FInal.md#91-rendimiento-y-escalabilidad) para más detalles sobre Rendimiento y Escalabilidad.
+    * **RNF-01: Tiempos de Respuesta Interactivos (ATS MVP):** Las operaciones comunes de la interfaz de usuario deben completarse rápidamente (< 3 segundos) bajo carga moderada.
+    * **RNF-04: Concurrencia de Usuarios (ATS MVP):** El ATS MVP debe soportar hasta 20 usuarios concurrentes realizando operaciones típicas sin degradación significativa del rendimiento.
+    * Consulte la [Sección 9.1 del PRD](../prd/PRD%20TalentIA%20FInal.md#91-rendimiento-y-escalabilidad) para más detalles sobre Rendimiento y Escalabilidad.
 
 * **Seguridad:**
-    * **RNF-07: Autenticación Robusta:** Acceso al ATS MVP protegido por usuario y contraseña ([US-004](../us/us-04-autenticar-usuarios-ats.md)).
-    * **RNF-08: Autorización Basada en Roles:** Control de acceso restringido por roles definidos ([US-003](../us/us-03-gestionar-usuarios-basicos.md)).
-    * **RNF-09: Cifrado de Datos en Tránsito:** Toda la comunicación de red debe estar protegida (TLS).
-    * **RNF-10: Cifrado de Datos Sensibles en Reposo:** Datos personales y sensibles almacenados deben estar cifrados.
-    * **RNF-12: Mitigación de Vulnerabilidades Web Comunes:** Aplicar mejores prácticas de desarrollo seguro (OWASP Top 10).
-    * Consulte la [Sección 9.2 del PRD](../prd/PRD%20TalentIA%20FInal.md#92-seguridad) para más detalles sobre Seguridad.
+    * **RNF-07: Autenticación Robusta:** Acceso al ATS MVP protegido por usuario y contraseña ([US-004](../us/us-04-autenticar-usuarios-ats.md)).
+    * **RNF-08: Autorización Basada en Roles:** Control de acceso restringido por roles definidos ([US-003](../us/us-03-gestionar-usuarios-basicos.md)).
+    * **RNF-09: Cifrado de Datos en Tránsito:** Toda la comunicación de red debe estar protegida (TLS).
+    * **RNF-10: Cifrado de Datos Sensibles en Reposo:** Datos personales y sensibles almacenados deben estar cifrados.
+    * **RNF-12: Mitigación de Vulnerabilidades Web Comunes:** Aplicar mejores prácticas de desarrollo seguro (OWASP Top 10).
+    * Consulte la [Sección 9.2 del PRD](../prd/PRD%20TalentIA%20FInal.md#92-seguridad) para más detalles sobre Seguridad.
 
 * **Usabilidad y Accesibilidad:**
-    * **RNF-15: Intuitividad y Facilidad de Aprendizaje:** Interfaz de usuario del ATS MVP debe ser intuitiva y coherente ([Diseño UX/UI](../ux_ui/ux_ui_overview.md)).
-    * **RNF-16: Retroalimentación Clara al Usuario:** Proporcionar indicaciones visuales claras sobre el estado de las operaciones.
-    * **RNF-17: Transparencia de la IA:** Indicar claramente qué información proviene de la IA.
-    * **RNF-18: Diseño Adaptable Básico (Responsive):** Funcionalidad en resoluciones de escritorio comunes.
-    * **RNF-19: Cumplimiento Básico de Accesibilidad:** Seguir pautas WCAG 2.1 Nivel AA básicas.
-    * Consulte la [Sección 9.3 del PRD](../prd/PRD%20TalentIA%20FInal.md#93-usabilidad-y-accesibilidad) para más detalles sobre Usabilidad y Accesibilidad.
+    * **RNF-15: Intuitividad y Facilidad de Aprendizaje:** Interfaz de usuario del ATS MVP debe ser intuitiva y coherente ([Diseño UX/UI](../ux_ui/ux_ui_overview.md)).
+    * **RNF-16: Retroalimentación Clara al Usuario:** Proporcionar indicaciones visuales claras sobre el estado de las operaciones.
+    * **RNF-17: Transparencia de la IA:** Indicar claramente qué información proviene de la IA.
+    * **RNF-18: Diseño Adaptable Básico (Responsive):** Funcionalidad en resoluciones de escritorio comunes.
+    * **RNF-19: Cumplimiento Básico de Accesibilidad:** Seguir pautas WCAG 2.1 Nivel AA básicas.
+    * Consulte la [Sección 9.3 del PRD](../prd/PRD%20TalentIA%20FInal.md#93-usabilidad-y-accesibilidad) para más detalles sobre Usabilidad y Accesibilidad.
 
 * **Fiabilidad y Disponibilidad:**
-    * **RNF-20: Disponibilidad del Servicio (ATS MVP):** Alta disponibilidad durante horario laboral (99.5%).
-    * **RNF-21: Manejo Robusto de Errores:** Gestionar errores de forma controlada y predecible.
-    * **RNF-22: Política de Copias de Seguridad y Recuperación:** Implementar backups automáticos y un plan de recuperación para la BBDD del ATS MVP.
-    * **RNF-23B: Consistencia de Datos entre Componentes:** Mecanismos para garantizar la integridad y consistencia de datos con Core AI.
-    * Consulte la [Sección 9.4 del PRD](../prd/PRD%20TalentIA%20FInal.md#94-fiabilidad-y-disponibilidad) para más detalles sobre Fiabilidad y Disponibilidad.
+    * **RNF-20: Disponibilidad del Servicio (ATS MVP):** Alta disponibilidad durante horario laboral (99.5%).
+    * **RNF-21: Manejo Robusto de Errores:** Gestionar errores de forma controlada y predecible.
+    * **RNF-22: Política de Copias de Seguridad y Recuperación:** Implementar backups automáticos y un plan de recuperación para la BBDD del ATS MVP.
+    * **RNF-23B: Consistencia de Datos entre Componentes:** Mecanismos para garantizar la integridad y consistencia de datos con Core AI.
+    * Consulte la [Sección 9.4 del PRD](../prd/PRD%20TalentIA%20FInal.md#94-fiabilidad-y-disponibilidad) para más detalles sobre Fiabilidad y Disponibilidad.
 
 * **Mantenibilidad y Extensibilidad:**
-    * **RNF-24: Calidad y Documentación del Código:** Código modular, legible y documentado.
-    * **RNF-25: Arquitectura Modular y Desacoplada:** Facilidad de modificación y despliegue de partes del sistema.
-    * **RNF-26: Automatización de Despliegues (CI/CD):** Proceso automatizado de build, test y deploy.
-    * **RNF-27: Versionado y Contrato de API Interna:** API interna versionada y documentada ([TK-001](../tasks/tk-001-arq-definir-documentar-contrato-api-v1.md)).
-    * **RNF-28: Preparación para Integraciones Futuras:** Diseño que considere futuras integraciones con ATS externos.
-    * Consulte la [Sección 9.5 del PRD](../prd/PRD%20TalentIA%20FInal.md#95-mantenibilidad-y-extensibilidad) para más detalles sobre Mantenibilidad y Extensibilidad.
+    * **RNF-24: Calidad y Documentación del Código:** Código modular, legible y documentado.
+    * **RNF-25: Arquitectura Modular y Desacoplada:** Facilidad de modificación y despliegue de partes del sistema.
+    * **RNF-26: Automatización de Despliegues (CI/CD):** Proceso automatizado de build, test y deploy.
+    * **RNF-27: Versionado y Contrato de API Interna:** API interna versionada y documentada ([TK-001](../tasks/tk-001-arq-definir-documentar-contrato-api-v1.md)).
+    * **RNF-28: Preparación para Integraciones Futuras:** Diseño que considere futuras integraciones con ATS externos.
+    * Consulte la [Sección 9.5 del PRD](../prd/PRD%20TalentIA%20FInal.md#95-mantenibilidad-y-extensibilidad) para más detalles sobre Mantenibilidad y Extensibilidad.
 
 * **Cumplimiento Normativo (Protección de Datos):**
-    * **RNF-29: Cumplimiento GDPR/LOPDGDD:** Cumplimiento estricto con la normativa de protección de datos en diseño y operación.
-    * **RNF-30: Transparencia en el Uso de IA:** Explicar el uso de IA a los candidatos en políticas de privacidad.
-    * Consulte la [Sección 9.6 del PRD](../prd/PRD%20TalentIA%20FInal.md#96-cumplimiento-normativo-protección-de-datos) para más detalles sobre Cumplimiento Normativo.
+    * **RNF-29: Cumplimiento GDPR/LOPDGDD:** Cumplimiento estricto con la normativa de protección de datos en diseño y operación.
+    * **RNF-30: Transparencia en el Uso de IA:** Explicar el uso de IA a los candidatos en políticas de privacidad.
+    * Consulte la [Sección 9.6 del PRD](../prd/PRD%20TalentIA%20FInal.md#96-cumplimiento-normativo-protección-de-datos) para más detalles sobre Cumplimiento Normativo.
 
 ---
