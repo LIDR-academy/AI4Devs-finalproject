@@ -193,128 +193,128 @@ Base de datos relacional (PostgreSQL) para gestionar el flujo principal de reclu
 erDiagram
     USUARIOS {
         UUID id PK
-        VARCHAR(255) nombre_completo NOT_NULL
-        VARCHAR(255) email UNIQUE_NOT_NULL
-        VARCHAR(255) password_hash NOT_NULL
-        VARCHAR(50) rol CHECK_NOT_NULL
-        BOOLEAN activo NOT_NULL_DEFAULT_TRUE
-        TIMESTAMPZ fecha_creacion NOT_NULL
-        TIMESTAMPZ fecha_actualizacion NOT_NULL
+        VARCHAR(255) nombre_completo
+        VARCHAR(255) email
+        VARCHAR(255) password_hash
+        VARCHAR(50) rol
+        BOOLEAN activo
+        TIMESTAMPZ fecha_creacion
+        TIMESTAMPZ fecha_actualizacion
     }
 
     ETAPAS_PIPELINE {
         UUID id PK
-        VARCHAR(100) nombre NOT_NULL
-        INTEGER orden NOT_NULL
-        BOOLEAN seleccionable_ia NOT_NULL_DEFAULT_FALSE
-        VARCHAR(50) tipo_etapa NULLABLE
-        TIMESTAMPZ fecha_creacion NOT_NULL
-        TIMESTAMPZ fecha_actualizacion NOT_NULL
+        VARCHAR(100) nombre
+        INTEGER orden
+        BOOLEAN seleccionable_ia
+        VARCHAR(50) tipo_etapa
+        TIMESTAMPZ fecha_creacion
+        TIMESTAMPZ fecha_actualizacion
     }
 
     VACANTES {
         UUID id PK
-        VARCHAR(255) titulo NOT_NULL
-        VARCHAR(100) departamento NULLABLE
-        VARCHAR(255) ubicacion_texto NOT_NULL
-        TEXT requisitos_clave NULLABLE
-        TEXT descripcion_html NULLABLE
-        VARCHAR(50) estado CHECK_NOT_NULL_DEFAULT_BORRADOR
-        TEXT_ARRAY tags NULLABLE
-        TIMESTAMPZ fecha_creacion NOT_NULL
-        TIMESTAMPZ fecha_actualizacion NOT_NULL
-        TIMESTAMPZ fecha_publicacion NULLABLE
-        TIMESTAMPZ fecha_cierre NULLABLE
-        UUID recruiter_id FK_NULLABLE
-        UUID hiring_manager_id FK_NULLABLE
-        UUID referencia_jd_generada_id NULLABLE
-        VARCHAR(2048) enlace_portal NULLABLE
+        VARCHAR(255) titulo
+        VARCHAR(100) departamento
+        VARCHAR(255) ubicacion_texto
+        TEXT requisitos_clave
+        TEXT descripcion_html
+        VARCHAR(50) estado
+        TEXT_ARRAY tag
+        TIMESTAMPZ fecha_creacion
+        TIMESTAMPZ fecha_actualizacion
+        TIMESTAMPZ fecha_publicacion
+        TIMESTAMPZ fecha_cierre
+        UUID recruiter_id 
+        UUID hiring_manager_id
+        UUID referencia_jd_generada_id
+        VARCHAR(2048) enlace_portal
     }
 
     CANDIDATOS {
         UUID id PK
-        VARCHAR(255) nombre_completo NOT_NULL
-        VARCHAR(255) email UNIQUE_NOT_NULL
-        VARCHAR(50) telefono NULLABLE
-        TEXT_ARRAY tags NULLABLE
-        BOOLEAN consentimiento_gdpr NOT_NULL_DEFAULT_FALSE
-        TIMESTAMPZ fecha_creacion NOT_NULL
-        TIMESTAMPZ fecha_actualizacion NOT_NULL
+        VARCHAR(255) nombre_completo
+        VARCHAR(255) email
+        VARCHAR(50) telefono
+        TEXT_ARRAY tags
+        BOOLEAN consentimiento_gdpr
+        TIMESTAMPZ fecha_creacion
+        TIMESTAMPZ fecha_actualizacion
     }
 
     ARCHIVOS_CANDIDATO {
         UUID id PK
-        UUID candidato_id FK_NOT_NULL
-        VARCHAR(255) nombre_archivo_original NOT_NULL
-        VARCHAR(100) tipo_archivo NOT_NULL
-        VARCHAR(1024) ruta_almacenamiento NOT_NULL
-        TIMESTAMPZ fecha_subida NOT_NULL
+        UUID candidato_id
+        VARCHAR(255) nombre_archivo_original
+        VARCHAR(100) tipo_archivo
+        VARCHAR(1024) ruta_almacenamiento
+        TIMESTAMPZ fecha_subida
     }
 
     CANDIDATURAS {
         UUID id PK
-        UUID candidato_id FK_NOT_NULL
-        UUID vacante_id FK_NOT_NULL
-        UUID archivo_cv_id FK_NOT_NULL
-        TIMESTAMPZ fecha_aplicacion NOT_NULL
-        VARCHAR(100) fuente NULLABLE
-        UUID etapa_pipeline_actual_id FK_NOT_NULL
-        UUID motivo_rechazo_id FK_NULLABLE
-        TEXT comentario_rechazo NULLABLE
-        TIMESTAMPZ fecha_ultimo_cambio_etapa NOT_NULL
-        UUID referencia_evaluacion_ia_id NULLABLE
-        INTEGER puntuacion_ia_general NULLABLE
-        VARCHAR(100) etapa_sugerida NULLABLE
-        JSONB detected_skills NULLABLE
-        TEXT resumen_ia NULLABLE
-        TEXT_ARRAY tags NULLABLE
-        INTEGER calificacion_estrellas NULLABLE
+        UUID candidato_id
+        UUID vacante_id
+        UUID archivo_cv_id
+        TIMESTAMPZ fecha_aplicacion
+        VARCHAR(100) fuente
+        UUID etapa_pipeline_actual_id
+        UUID motivo_rechazo_id
+        TEXT comentario_rechazo
+        TIMESTAMPZ fecha_ultimo_cambio_etapa 
+        UUID referencia_evaluacion_ia_id
+        INTEGER puntuacion_ia_general
+        VARCHAR(100) etapa_sugerida
+        JSONB detected_skills
+        TEXT resumen_ia
+        TEXT_ARRAY tags
+        INTEGER calificacion_estrellas
         "UNIQUE (candidato_id, vacante_id)"
     }
 
     HISTORIAL_ETAPAS {
         UUID id PK
-        UUID candidatura_id FK_NOT_NULL
-        UUID etapa_id FK_NOT_NULL
-        TIMESTAMPZ fecha_cambio NOT_NULL
-        UUID usuario_id FK_NULLABLE
-        TEXT comentario NULLABLE
+        UUID candidatura_id
+        UUID etapa_id
+        TIMESTAMPZ fecha_cambio
+        UUID usuario_id
+        TEXT comentario
     }
 
     NOTAS {
         UUID id PK
-        UUID candidatura_id FK_NOT_NULL
-        UUID usuario_id FK_NOT_NULL
-        TEXT contenido NOT_NULL
-        TIMESTAMPZ fecha_creacion NOT_NULL
+        UUID candidatura_id
+        UUID usuario_id
+        TEXT contenido
+        TIMESTAMPZ fecha_creacion
     }
 
     MOTIVOS_RECHAZO {
         UUID id PK
-        VARCHAR(100) nombre UNIQUE_NOT_NULL
-        TEXT descripcion NULLABLE
+        VARCHAR(100) nombre
+        TEXT descripcion
     }
 
     VACANTE_PLANTILLAS {
         UUID id PK
-        VARCHAR(100) nombre UNIQUE_NOT_NULL
-        JSONB datos_vacante NOT_NULL
-        TIMESTAMPZ fecha_creacion NOT_NULL
+        VARCHAR(100) nombre
+        JSONB datos_vacante
+        TIMESTAMPZ fecha_creacion
     }
 
     SYSTEM_CONFIGURATIONS {
         VARCHAR(100) key PK
-        TEXT value NOT_NULL
-        TIMESTAMPZ fecha_actualizacion NOT_NULL
+        TEXT value
+        TIMESTAMPZ fecha_actualizacion
     }
 
     NOTIFICACIONES {
         UUID id PK
-        UUID user_id FK_NOT_NULL
-        TEXT mensaje NOT_NULL
-        VARCHAR(2048) link_url NULLABLE
-        BOOLEAN leida NOT_NULL_DEFAULT_FALSE
-        TIMESTAMPZ fecha_creacion NOT_NULL
+        UUID user_id
+        TEXT mensaje
+        VARCHAR(2048) link_url
+        BOOLEAN leida
+        TIMESTAMPZ fecha_creacion
     }
 
     USUARIOS ||--o{ VACANTES : "es Recruiter"
@@ -416,51 +416,51 @@ Se propone una base de datos que puede ser relacional (ej. PostgreSQL) o documen
 erDiagram
     DESCRIPCIONES_PUESTO_GENERADAS {
         UUID id PK
-        UUID vacante_ats_id NOT_NULL_IDX
-        JSONB parametros_entrada NULLABLE
-        TEXT contenido_generado NULLABLE
-        JSONB metadata_ia NULLABLE
-        TIMESTAMPZ fecha_generacion NOT_NULL
-        FLOAT evaluacion_corte NULLABLE
-        VARCHAR etapa_pre_aceptacion NULLABLE
-        VARCHAR etapa_pre_rechazo NULLABLE
+        UUID vacante_ats_id
+        JSONB parametros_entrada
+        TEXT contenido_generado 
+        JSONB metadata_ia
+        TIMESTAMPZ fecha_generacion
+        FLOAT evaluacion_corte
+        VARCHAR etapa_pre_aceptacion
+        VARCHAR etapa_pre_rechazo
     }
 
     CANDIDATOS_IA {
         UUID id PK
-        VARCHAR email UNIQUE_NOT_NULL_IDX
-        VARCHAR nombre_completo NULLABLE
-        VARCHAR telefono NULLABLE
-        UUID_ARRAY candidaturas_ids NOT_NULL_DEFAULT_EMPTY_ARRAY
-        TIMESTAMPZ fecha_creacion NOT_NULL
-        TIMESTAMPZ fecha_actualizacion NOT_NULL
-        TEXT_ARRAY tags_agregados NULLABLE
-        JSONB perfil_enriquecido NULLABLE
+        VARCHAR email
+        VARCHAR nombre_complet
+        VARCHAR telefono
+        UUID_ARRAY candidaturas_ids
+        TIMESTAMPZ fecha_creacion
+        TIMESTAMPZ fecha_actualizacion
+        TEXT_ARRAY tags_agregados
+        JSONB perfil_enriquecido
     }
 
     EVALUACIONES_CANDIDATO_IA {
         UUID id PK
-        UUID candidatura_ats_id NOT_NULL_IDX
-        UUID candidato_ia_id FK_NOT_NULL_IDX
-        UUID vacante_ats_id NOT_NULL_IDX
-        UUID archivo_candidato_ats_id NULLABLE_IDX
-        FLOAT score_valor_general NULLABLE_IDX
-        JSONB score_scores_parciales NULLABLE
-        TEXT score_justificacion_basica NULLABLE
-        TEXT resumen_generado NULLABLE
-        JSONB datos_extraidos_cv NULLABLE
-        JSONB metadata_ia NULLABLE
-        TIMESTAMPZ fecha_evaluacion NOT_NULL
+        UUID candidatura_ats_id
+        UUID candidato_ia_id
+        UUID vacante_ats_id
+        UUID archivo_candidato_ats_id
+        FLOAT score_valor_general
+        JSONB score_scores_parciale
+        TEXT score_justificacion_basica
+        TEXT resumen_generado
+        JSONB datos_extraidos_cv
+        JSONB metadata_ia
+        TIMESTAMPZ fecha_evaluacion
     }
 
     REGISTROS_FEEDBACK_IA {
         UUID id PK
-        UUID evaluacion_ia_id FK_NOT_NULL_IDX
-        UUID candidatura_ats_id NOT_NULL_IDX
-        UUID usuario_ats_id NOT_NULL_IDX
-        VARCHAR tipo_feedback NOT_NULL_IDX
-        JSONB datos_feedback NULLABLE
-        TIMESTAMPZ fecha_feedback NOT_NULL
+        UUID evaluacion_ia_id
+        UUID candidatura_ats_id
+        UUID usuario_ats_id
+        VARCHAR tipo_feedback
+        JSONB datos_feedback
+        TIMESTAMPZ fecha_feedback
     }
 
     CANDIDATOS_IA ||--|{ EVALUACIONES_CANDIDATO_IA : "tiene evaluaciones"
