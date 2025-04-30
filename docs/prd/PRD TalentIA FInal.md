@@ -1108,8 +1108,10 @@ Se propone un enfoque híbrido:
     ```mermaid
     graph LR
         Usuario["👤 Usuario (Reclutador, HM, Candidato)"]
-        SistemaTalentIA["Sistema TalentIA (Fase 1)\n[ATS MVP + Core AI]"]
-        ProveedorLLM["Proveedor IA / LLM\n(API Externa)"]
+        SistemaTalentIA["Sistema TalentIA (Fase 1)
+        [ATS MVP + Core AI]"]
+        ProveedorLLM["Proveedor IA / LLM
+        (API Externa)"]
 
         Usuario -- Interactúa con --> SistemaTalentIA
         SistemaTalentIA -- Invoca API --> ProveedorLLM
