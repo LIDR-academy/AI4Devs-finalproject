@@ -16,6 +16,11 @@ Aquí encontrarás enlaces directos a las áreas clave de nuestra documentación
 *   **[👤 Historias de Usuario (US)](./us/us-overview.md)**: Consulta las historias de usuario que guían nuestro desarrollo.
 *   **[🎫 Tickets Técnicos](./tasks/tasks-overview.md)**: Seguimiento de tareas técnicas específicas o subtareas.
 *   **[🏗️ Base de Datos](./db/db-overview.md)**: Explora la base de datos del proyecto.
-*   **[🔍 Plan General de Implementación (PGI)](./pgi/pgi-overview.md)**: Explora el plan general de implementación del proyecto.
-*   **[🔍 Plan de Pruebas (PP)](./pp/pp-overview.md)**: Explora el plan de pruebas del proyecto.
+*   **[🗺️ Plan General de Implementación (PGI)](./pgi/pgi-overview.md)**: Explora el plan general de implementación del proyecto.
+*   **[✅ Plan de Pruebas (PP)](./pp/pp-overview.md)**: Explora el plan de pruebas del proyecto.
+*   **[🏛️ Documentación de Arquitectura](./arq/arq_overview.md)**: Explora la documentación de arquitectura del proyecto.
+*   **[📚 Documentación Técnica](./doc_tec/doc_tec_overview.md)**: Explora la documentación técnica del proyecto.
+*   **[🎨 Documentación de Diseño UX/UI](./ux_ui/ux_ui_overview.md)**: Explora la documentación de diseño UX/UI del proyecto.
 ---
+
+*Este resumen proporciona una visión general de la documentación del proyecto TalentIA.*
