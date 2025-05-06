@@ -9,6 +9,7 @@ Este espacio está dedicado a documentar las decisiones, diagramas y principios 
 A continuación, encontrarás enlaces a los documentos específicos de arquitectura para los componentes del proyecto:
 
 *   **[Arquitectura ATS MVP](./ats_mvp_arq.md)**: Visión detallada de la arquitectura diseñada para el Applicant Tracking System (ATS) Minimum Viable Product (MVP) y su integración con el Core AI.
+*   **[Arquitectura Core AI](./arq_core_ia.md)**: Visión detallada de la arquitectura diseñada para el Core AI.
 
 ---
 

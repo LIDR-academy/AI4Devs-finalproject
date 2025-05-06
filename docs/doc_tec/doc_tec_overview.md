@@ -10,6 +10,7 @@ A continuación, encontrarás enlaces a la documentación técnica detallada par
 
 *   **[Backend (ATS MVP)](./doc_tec_ats_mvp_back.md)**: Detalles de implementación del backend del ATS MVP (FastAPI, SQLAlchemy, Celery, etc.).
 *   **[Frontend (ATS MVP)](./doc_tec_ats_mvp_front.md)**: Detalles de implementación del frontend del ATS MVP (React, Next.js, Tailwind CSS, etc.).
+*   **[Backend (Core AI)](./doc_tec_core_ia.md)**: Detalles de implementación del backend del Core AI (Spring Boot, PostgreSQL, etc.).
 
 ---
 
