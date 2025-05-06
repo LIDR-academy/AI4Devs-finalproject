@@ -21,6 +21,7 @@ Aquí encontrarás enlaces directos a las áreas clave de nuestra documentación
 *   **[🏛️ Documentación de Arquitectura](./arq/arq_overview.md)**: Explora la documentación de arquitectura del proyecto.
 *   **[📚 Documentación Técnica](./doc_tec/doc_tec_overview.md)**: Explora la documentación técnica del proyecto.
 *   **[🎨 Documentación de Diseño UX/UI](./ux_ui/ux_ui_overview.md)**: Explora la documentación de diseño UX/UI del proyecto.
+*   **[👍 Mejores Prácticas](./best_practices/bp_overview.md)**: Consulta las mejores prácticas del proyecto.
 ---
 
 *Este resumen proporciona una visión general de la documentación del proyecto TalentIA.*
