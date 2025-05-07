@@ -171,10 +171,10 @@ Dado que el ATS MVP se concibe como un monolito o monolito modular, la estructur
 
 * **Organización por Módulos/Dominios:** Estructurar el código en directorios o paquetes que correspondan a los módulos lógicos (ej. `vacantes`, `candidaturas`, `usuarios`, `pipeline`, `admin`, `integracion-core-ai`, `ui`).
 * **Arquitectura por Capas:** Dentro de cada módulo (especialmente en el backend), seguir un patrón por capas para separar responsabilidades:
-    * **Capa de Presentación/UI (Frontend):** Maneja la interfaz de usuario y la interacción directa con el usuario.
-    * **Capa de API/Controladores (Backend):** Expone los endpoints RESTful para el frontend y la comunicación interna (si aplica). Recibe y valida las peticiones.
-    * **Capa de Lógica de Negocio/Servicios:** Contiene la lógica principal de la aplicación, coordinando operaciones y aplicando las reglas de negocio. Interactúa con la capa de datos y el Módulo de Integración con Core AI.
-    * **Capa de Acceso a Datos/Repositorios:** Encapsula la lógica de interacción directa con la base de datos del ATS MVP, proporcionando una interfaz clara a la capa de servicios.
+    * **Capa de Presentación/UI (Frontend):** Maneja la interfaz de usuario y la interacción directa con el usuario.
+    * **Capa de API/Controladores (Backend):** Expone los endpoints RESTful para el frontend y la comunicación interna (si aplica). Recibe y valida las peticiones.
+    * **Capa de Lógica de Negocio/Servicios:** Contiene la lógica principal de la aplicación, coordinando operaciones y aplicando las reglas de negocio. Interactúa con la capa de datos y el Módulo de Integración con Core AI.
+    * **Capa de Acceso a Datos/Repositorios:** Encapsula la lógica de interacción directa con la base de datos del ATS MVP, proporcionando una interfaz clara a la capa de servicios.
 * **Separación Frontend/Backend:** El proyecto mantiene una separación clara entre el código del frontend (UI) y el código del backend (API, lógica de negocio, acceso a datos), comunicándose a través de APIs HTTP.
 
 
@@ -184,9 +184,9 @@ Se han tomado las siguientes decisiones tecnológicas para el ATS MVP:
 
 * **Backend:** Se utilizará **Node.js con el framework Express**. Esta elección aprovecha la familiaridad con JavaScript y un ecosistema amplio para el desarrollo rápido.
 * **Frontend:** Se utilizará **Vue.js**. Conocido por su facilidad de integración y desarrollo reactivo.
-    * **Gestión de Estado (Frontend):** Se utilizará **Pinia** para la gestión del estado de la aplicación en el frontend.
-    * **Framework CSS:** Se utilizará **Tailwind CSS** como framework utility-first CSS.
-    * **Librería de Componentes UI:** Se complementará con una **librería de componentes Headless UI** (ej. Headless UI) para componentes interactivos complejos.
+    * **Gestión de Estado:** Se utilizará **Pinia** para la gestión del estado de la aplicación en el frontend.
+    * **Framework CSS:** Se utilizará **Tailwind CSS** como framework utility-first CSS.
+    * **Librería de Componentes UI:** Se complementará con una **librería de componentes Headless UI** (ej. Headless UI) para componentes interactivos complejos.
 * **Base de Datos (ATS MVP):** Se utilizará **PostgreSQL**. Esta decisión se basa en el [soporte nativo de PostgreSQL para tipos de datos como UUID, JSONB y Arrays]((../db/db-overview.md#notas-generales)), que son relevantes para el esquema de base de datos definido en la documentación. Se seleccionará un ORM compatible con Node.js y PostgreSQL.
 * **Almacenamiento de Archivos (CVs):** Inicialmente se implementará el almacenamiento en **disco local seguro** en el servidor del ATS MVP. Se contempla la posibilidad de migrar a **AWS S3** en una fase posterior del desarrollo ([TK-043](../tasks/tk-043-BE-Implementar-Almacenamiento-CV.md)). Esta decisión inicial prioriza la simplicidad en las primeras etapas, aunque la migración futura deberá planificarse cuidadosamente.
 * **Seguridad (Autenticación):** Se implementará la autenticación utilizando **JWT** (JSON Web Tokens). Esto proporcionará un mecanismo stateless para asegurar la [API interna del ATS MVP]((../rfs/rf-21-api-interna-ats-mvp-core-ai.md)). Se utilizará una librería JWT estándar para Node.js. Se considera la gestión segura de la clave secreta y la potencial implementación de tokens de refresco. La integración futura con SSO se alinea bien con JWT.
