@@ -75,4 +75,13 @@ Implementar una estrategia de pruebas Frontend:
 - **Vite:** Utilizar como herramienta de build y servidor de desarrollo.
 - **ESLint y Prettier:** Configurar y usar para análisis estático y formato de código. Integrar con el IDE.
 
+## 11. Despliegue y Operaciones
+
+- **Compilación optimizada:** Usar las opciones de optimización de Vite para el build de producción.
+- **Gestión de entornos:** Usar variables de entorno en Vite (`.env.*`) para configurar APIs y servicios según el entorno.
+- **Static Web Apps:** Aprovechar las características de Azure Static Web Apps como rutas y reescrituras.
+- **Cache de recursos:** Configurar adecuadamente los encabezados de caché para recursos estáticos vs. dinámicos.
+- **CDN:** Utilizar la CDN integrada de Azure Static Web Apps para distribución global.
+- **Monitoreo:** Integrar Application Insights para seguimiento de rendimiento y errores en el cliente.
+
 Al seguir estas mejores prácticas, el equipo de Frontend podrá construir un ATS MVP robusto, mantenible y con una buena experiencia de usuario.

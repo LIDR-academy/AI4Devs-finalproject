@@ -147,6 +147,127 @@ Una estrategia de testing robusta es crucial para asegurar la calidad del fronte
     * **Herramientas:** Cypress.
     * **Enfoque:** Probar flujos de usuario completos en un navegador real contra el sistema desplegado (frontend + backend). Verificar la integración entre frontend y backend, la navegación entre páginas y la experiencia del usuario de principio a fin. Simular interacciones de usuario complejas (ej. drag-and-drop en Kanban).
 
+## 14. Despliegue en Azure Static Web Apps
+
+La solución frontend del ATS MVP se desplegará como una aplicación estática en Azure Static Web Apps, aprovechando su CDN integrada para una distribución global del contenido.
+
+### 14.1. Preparación para el despliegue
+* **Build de producción**: Configurar correctamente `vite.config.js` para optimizar el build de producción:
+  ```javascript
+  export default defineConfig({
+    plugins: [vue()],
+    build: {
+      // Opciones de optimización
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+        },
+      },
+    },
+  });
+  ```
+
+* **Variables de entorno**: Gestionar configuraciones específicas por entorno usando el sistema de variables de entorno de Vite:
+  ```
+  # .env.production
+  VITE_API_URL=https://api-production.talentia.com/api/v1
+  
+  # .env.staging
+  VITE_API_URL=https://api-staging.talentia.com/api/v1
+  ```
+
+### 14.2. Configuración de Azure Static Web Apps
+* **Archivo de configuración**: Crear un archivo `staticwebapp.config.json` en la raíz del proyecto:
+  ```json
+  {
+    "routes": [
+      {
+        "route": "/assets/*",
+        "headers": {
+          "cache-control": "public, max-age=31536000, immutable"
+        }
+      },
+      {
+        "route": "/*",
+        "serve": "/index.html",
+        "headers": {
+          "cache-control": "no-cache"
+        }
+      }
+    ],
+    "navigationFallback": {
+      "rewrite": "/index.html",
+      "exclude": ["/images/*.{png,jpg,gif}", "/css/*"]
+    },
+    "responseOverrides": {
+      "404": {
+        "rewrite": "/index.html",
+        "statusCode": 200
+      }
+    }
+  }
+  ```
+
+### 14.3. Configuración de CI/CD
+* **GitHub Actions**: Configurar el workflow automático para despliegue continuo:
+  ```yaml
+  name: Azure Static Web Apps CI/CD
+
+  on:
+    push:
+      branches:
+        - main
+    pull_request:
+      types: [opened, synchronize, reopened, closed]
+      branches:
+        - main
+
+  jobs:
+    build_and_deploy_job:
+      if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+      runs-on: ubuntu-latest
+      name: Build and Deploy Job
+      steps:
+        - uses: actions/checkout@v3
+        - name: Build And Deploy
+          id: builddeploy
+          uses: Azure/static-web-apps-deploy@v1
+          with:
+            azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            app_location: "/" 
+            api_location: ""
+            output_location: "dist"
+            app_build_command: "npm run build"
+  ```
+
+### 14.4. Comunicación con el backend
+* Configurar Axios para comunicarse con el backend desplegado en Azure Container Apps:
+  ```javascript
+  // src/services/api.js
+  import axios from 'axios';
+
+  const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    timeout: 30000,
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  // Interceptor para añadir token de autenticación
+  api.interceptors.request.use(config => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+
+  export default api;
+  ```
+
 Al incorporar estas mejores prácticas en su flujo de trabajo de desarrollo frontend, el equipo podrá construir una aplicación más robusta, mantenible, escalable y con una mejor experiencia de usuario.
 
 ---

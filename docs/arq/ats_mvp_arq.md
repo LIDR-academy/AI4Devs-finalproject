@@ -332,9 +332,31 @@ Se implementará un proceso de Integración Continua y Entrega Continua (CI/CD) 
 
 Esta sección describe cómo se espera que el ATS MVP sea desplegado en los diferentes entornos (desarrollo, staging, producción) y la infraestructura necesaria.
 
-**Nota:** A la espera de la definición final de la infraestructura de despliegue (ej. en AWS), esta sección se deja para completar con los detalles específicos de servidores, contenedores, orquestación, configuración de red y bases de datos en cada entorno.
+### 10.1. Despliegue del Frontend
 
-*A completar...*
+#### Plataforma de despliegue
+El frontend del ATS MVP, al ser una Single Page Application (SPA) desarrollada en Vue.js, será desplegada en **Azure Static Web Apps**. Esta elección proporciona:
+
+* **Hosting optimizado para contenido estático**: Ideal para aplicaciones SPA compiladas
+* **CDN global integrada**: Distribución global de contenido para mejorar tiempos de carga
+* **CI/CD nativo**: Integración automática con GitHub Actions
+* **Gestión de autenticación**: Capacidades opcionales de auth integrada
+* **Integración con el ecosistema Azure**: Consistencia con el resto de la infraestructura
+
+#### Proceso de despliegue
+1. Compilación de la aplicación Vue.js a archivos estáticos mediante Vite
+2. Configuración de GitHub Action para despliegue automático a Azure Static Web Apps
+3. Configuración de variables de entorno para cada entorno (desarrollo, staging, producción)
+
+#### Gestión de entornos
+* **Desarrollo**: Instancia de desarrollo para pruebas continuas
+* **Staging**: Para validación previa a producción
+* **Producción**: Entorno final para usuarios reales
+
+#### Consideraciones de seguridad
+* Configuración de encabezados de seguridad HTTP
+* Implementación de HTTPS forzado
+* Manejo seguro de claves de API mediante configuración de aplicación
 
 ## 11. Requisitos No Funcionales Clave (Resumen para ATS MVP)
 
