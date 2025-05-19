@@ -71,7 +71,7 @@ flowchart TD
     end
     subgraph Backend
         B[.NET Core 9 API]
-        C[Class Library (Domain, Repository, Services)]
+        C["Class Library (Domain, Repository, Services)"]
     end
     subgraph Infraestructura
         D[(SQL Server)]
