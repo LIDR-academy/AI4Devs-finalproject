@@ -1,0 +1,6 @@
+@ConsultCore31.WebAPI_HostAddress = http://localhost:5217
+
+GET {{ConsultCore31.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
