@@ -1,0 +1,351 @@
+# Archivos y carpetas específicos de .NET Core
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+nupkg/
+
+# Archivos de Visual Studio
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Archivos generados por Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Archivos de caché de Visual C++
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# Archivos de Visual Studio Profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# Archivos de caché de ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Archivos de caché de TeamCity
+_TeamCity*
+
+# Archivos de caché de DotCover
+*.dotCover
+
+# Archivos de caché de NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# Archivos de caché de MightyMoose
+*.mm.*
+AutoTest.Net/
+
+# Archivos de caché de Web workbench (sass)
+.sass-cache/
+
+# Carpeta de salida de Installshield
+[Ee]xpress/
+
+# DocProject es una herramienta de generación de documentación
+DocProject/buildhelp/
+DocProject/Help/*.HxT
+DocProject/Help/*.HxC
+DocProject/Help/*.hhc
+DocProject/Help/*.hhk
+DocProject/Help/*.hhp
+DocProject/Help/Html2
+DocProject/Help/html
+
+# Directorio de publicación de Click-Once
+publish/
+
+# Salida de publicación
+*.[Pp]ublish.xml
+*.azurePubxml
+# Nota: Comenta la siguiente línea si deseas verificar la configuración de implementación web
+# pero las cadenas de conexión de la base de datos (con posibles contraseñas) se cifrarán
+*.pubxml
+*.publishproj
+
+# Configuración de publicación de Microsoft Azure Web App
+# Nota: Comenta la siguiente línea si deseas verificar la configuración de Azure Web App
+# pero las cadenas de conexión de la base de datos (con posibles contraseñas) se cifrarán
+PublishScripts/
+
+# Paquetes NuGet
+*.nupkg
+# Paquetes de símbolos NuGet
+*.snupkg
+# La carpeta de paquetes se puede ignorar debido a Package Restore
+**/[Pp]ackages/*
+# excepto build/, que se usa como destino de MSBuild
+!**/[Pp]ackages/build/
+# Descomenta si es necesario, pero generalmente se regenerará cuando sea necesario
+#!**/[Pp]ackages/repositories.config
+# Los archivos project.json de NuGet v3 producen más archivos ignorables
+*.nuget.props
+*.nuget.targets
+
+# Salida de compilación de Microsoft Azure
+csx/
+*.build.csdef
+
+# Emulador de Microsoft Azure
+ecf/
+rcf/
+
+# Directorios y archivos de paquetes de aplicaciones de Windows Store
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxupload
+
+# Archivos de caché de Visual Studio
+# Los archivos que terminan en .cache pueden ignorarse
+*.[Cc]ache
+# pero mantén el directorio de track.txt
+!?*.[Cc]ache/
+
+# Otros
+ClientBin/
+~$*
+*~
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# Incluir archivos de nombre fuerte puede presentar un riesgo de seguridad
+# (https://github.com/github/gitignore/pull/2483#issue-259490424)
+#*.snk
+
+# Dado que hay múltiples flujos de trabajo, descomenta la siguiente línea para ignorar bower_components
+# (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
+#bower_components/
+
+# Proyectos RIA/Silverlight
+Generated_Code/
+
+# Copia de seguridad y archivos de informes de la conversión de un archivo de proyecto antiguo
+# a una versión más reciente de Visual Studio
+_UpgradeReport_Files/
+Backup*/
+UpgradeLog*.XML
+UpgradeLog*.htm
+ServiceFabricBackup/
+*.rptproj.bak
+
+# Archivos de SQL Server
+*.mdf
+*.ldf
+*.ndf
+
+# Proyectos de Business Intelligence
+*.rdl.data
+*.bim.layout
+*.bim_*.settings
+*.rptproj.rsuser
+*- [Bb]ackup.rdl
+*- [Bb]ackup ([0-9]).rdl
+*- [Bb]ackup ([0-9][0-9]).rdl
+
+# Falsificaciones de Microsoft
+FakesAssemblies/
+
+# Archivo de configuración del plugin GhostDoc
+*.GhostDoc.xml
+
+# Herramientas Node.js para Visual Studio
+.ntvs_analysis.dat
+node_modules/
+
+# Registro de compilación de Visual Studio 6
+*.plg
+
+# Archivo de opciones de espacio de trabajo de Visual Studio 6
+*.opt
+
+# Archivo de espacio de trabajo generado automáticamente por Visual Studio 6
+*.vbw
+
+# Archivo de proyecto generado automáticamente por Visual Studio LightSwitch
+**/*.HTMLClient/GeneratedArtifacts
+**/*.DesktopClient/GeneratedArtifacts
+**/*.DesktopClient/ModelManifest.xml
+**/*.Server/GeneratedArtifacts
+**/*.Server/ModelManifest.xml
+_Pvt_Extensions
+
+# Paket dependency manager
+.paket/paket.exe
+paket-files/
+
+# FAKE - F# Make
+.fake/
+
+# CodeRush configuración personal
+.cr/personal
+
+# Herramientas Python para Visual Studio (PTVS)
+__pycache__/
+*.pyc
+
+# Cake - Descomenta si lo usas
+# tools/**
+# !tools/packages.config
+
+# Tabs Studio
+*.tss
+
+# Configuración de JustMock de Telerik
+*.jmconfig
+
+# Salida de compilación de BizTalk
+*.btp.cs
+*.btm.cs
+*.odx.cs
+*.xsd.cs
+
+# Resultados de análisis de OpenCover UI
+OpenCover/
+
+# Salida de ejecución local de Azure Stream Analytics
+ASALocalRun/
+
+# Registro binario y estructurado de MSBuild
+*.binlog
+
+# Archivo de configuración del depurador de GPU NVidia Nsight
+*.nvuser
+
+# Carpeta de trabajo de MFractors (herramienta de productividad de Xamarin)
+.mfractor/
+
+# Historial local para Visual Studio
+.localhistory/
+
+# Archivos de historial de Visual Studio (VSHistory)
+.vshistory/
+
+# Base de datos temporal de verificación de estado de BeatPulse
+healthchecksdb
+
+# Carpeta de respaldo para la herramienta de conversión de referencia de paquetes en Visual Studio 2017
+MigrationBackup/
+
+# Carpeta de trabajo de Ionide (herramientas F# VS Code)
+.ionide/
+
+# Fody - esquema XML generado automáticamente
+FodyWeavers.xsd
+
+# Archivos de código VS para aquellos que trabajan con múltiples herramientas
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Historial local para Visual Studio Code
+.history/
+
+# Archivos de Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Carpeta de caché de Rider
+.idea/
+*.sln.iml
+
+# Carpetas específicas de compilación de .NET
+bin/
+obj/
+
+# Archivos de proyecto específicos de .NET
+*.csproj.user
+*.pubxml.user
+*.dbmdl
+*.jfm
+
+# Archivos de proyecto específicos de Entity Framework
+Migrations/
+*.edmx
+*.tt
+*.mdf
+*.ldf
+
+# Archivos de configuración local
+appsettings.Development.json
+appsettings.local.json
+appsettings.*.json
+!appsettings.json
+
+# Archivos de registro
+logs/
+*.log
+
+# Archivos temporales
+[Tt]emp/
+[Tt]mp/
+
+# Archivos de cobertura de código
+coverage/
+*.coverage
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# Archivos específicos del proyecto
+msbuild.log
+*.dswa.cache.json
+staticwebassets.*
+**/EndpointInfo/
