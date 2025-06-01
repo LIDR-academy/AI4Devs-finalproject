@@ -1,0 +1,102 @@
+Conectando a la base de datos...
+Conexión establecida correctamente.
+
+Verificando entidades con atributo Table:
+- Entidad: Acceso, Tabla: Accesos, Esquema: dbo
+  ✓ La tabla dbo.Accesos existe en la base de datos.
+  ✓ La tabla dbo.Accesos contiene 0 registros.
+- Entidad: ArchivoAdjunto, Tabla: ArchivosAdjuntos, Esquema: dbo
+  ✗ ERROR: La tabla dbo.ArchivosAdjuntos NO existe en la base de datos.
+- Entidad: AsignacionViatico, Tabla: AsignacionesViatico, Esquema: dbo
+  ✗ ERROR: La tabla dbo.AsignacionesViatico NO existe en la base de datos.
+- Entidad: CarpetaDocumento, Tabla: CarpetasDocumento, Esquema: dbo
+  ✗ ERROR: La tabla dbo.CarpetasDocumento NO existe en la base de datos.
+- Entidad: CategoriaGasto, Tabla: CategoriasGasto, Esquema: dbo
+  ✓ La tabla dbo.CategoriasGasto existe en la base de datos.
+  ✓ La tabla dbo.CategoriasGasto contiene 0 registros.
+- Entidad: Cliente, Tabla: Clientes, Esquema: dbo
+  ✗ ERROR: La tabla dbo.Clientes NO existe en la base de datos.
+- Entidad: ComentarioTarea, Tabla: ComentariosTarea, Esquema: dbo
+  ✗ ERROR: La tabla dbo.ComentariosTarea NO existe en la base de datos.
+- Entidad: ContactoCliente, Tabla: ContactosCliente, Esquema: dbo
+  ✗ ERROR: La tabla dbo.ContactosCliente NO existe en la base de datos.
+- Entidad: Documento, Tabla: Documentos, Esquema: dbo
+  ✗ ERROR: La tabla dbo.Documentos NO existe en la base de datos.
+- Entidad: Empleado, Tabla: Empleados, Esquema: dbo
+  ✗ ERROR: La tabla dbo.Empleados NO existe en la base de datos.
+- Entidad: EstadoAprobacion, Tabla: EstadosAprobacion, Esquema: dbo
+  ✓ La tabla dbo.EstadosAprobacion existe en la base de datos.
+  ✓ La tabla dbo.EstadosAprobacion contiene 0 registros.
+- Entidad: EstadoEtapa, Tabla: EstadosEtapa, Esquema: dbo
+  ✓ La tabla dbo.EstadosEtapa existe en la base de datos.
+  ✓ La tabla dbo.EstadosEtapa contiene 0 registros.
+- Entidad: EstadoProyecto, Tabla: EstadosProyecto, Esquema: dbo
+  ✓ La tabla dbo.EstadosProyecto existe en la base de datos.
+  ✓ La tabla dbo.EstadosProyecto contiene 0 registros.
+- Entidad: EstadoTarea, Tabla: EstadosTarea, Esquema: dbo
+  ✓ La tabla dbo.EstadosTarea existe en la base de datos.
+  ✓ La tabla dbo.EstadosTarea contiene 0 registros.
+- Entidad: EtapaProyecto, Tabla: EtapasProyecto, Esquema: dbo
+  ✗ ERROR: La tabla dbo.EtapasProyecto NO existe en la base de datos.
+- Entidad: FrecuenciaMedicion, Tabla: FrecuenciasMedicion, Esquema: dbo
+  ✓ La tabla dbo.FrecuenciasMedicion existe en la base de datos.
+  ✓ La tabla dbo.FrecuenciasMedicion contiene 0 registros.
+- Entidad: Gasto, Tabla: Gastos, Esquema: dbo
+  ✗ ERROR: La tabla dbo.Gastos NO existe en la base de datos.
+- Entidad: InformeSemanal, Tabla: InformesSemanales, Esquema: dbo
+  ✗ ERROR: La tabla dbo.InformesSemanales NO existe en la base de datos.
+- Entidad: KPI, Tabla: Kpis, Esquema: dbo
+  ✗ ERROR: La tabla dbo.Kpis NO existe en la base de datos.
+- Entidad: MedicionKPI, Tabla: MedicionesKpi, Esquema: dbo
+  ✗ ERROR: La tabla dbo.MedicionesKpi NO existe en la base de datos.
+- Entidad: Menu, Tabla: Menus, Esquema: dbo
+  ✓ La tabla dbo.Menus existe en la base de datos.
+  ✓ La tabla dbo.Menus contiene 0 registros.
+- Entidad: Moneda, Tabla: Monedas, Esquema: dbo
+  ✓ La tabla dbo.Monedas existe en la base de datos.
+  ✓ La tabla dbo.Monedas contiene 0 registros.
+- Entidad: MovimientoViatico, Tabla: MovimientosViatico, Esquema: dbo
+  ✗ ERROR: La tabla dbo.MovimientosViatico NO existe en la base de datos.
+- Entidad: Objeto, Tabla: Objetos, Esquema: dbo
+  ✓ La tabla dbo.Objetos existe en la base de datos.
+  ✓ La tabla dbo.Objetos contiene 0 registros.
+- Entidad: ObjetoTipo, Tabla: ObjetosTipo, Esquema: dbo
+  ✓ La tabla dbo.ObjetosTipo existe en la base de datos.
+  ✓ La tabla dbo.ObjetosTipo contiene 0 registros.
+- Entidad: Perfil, Tabla: Perfiles, Esquema: dbo
+  ✓ La tabla dbo.Perfiles existe en la base de datos.
+  ✓ La tabla dbo.Perfiles contiene 0 registros.
+- Entidad: PrioridadTarea, Tabla: PrioridadesTarea, Esquema: dbo
+  ✓ La tabla dbo.PrioridadesTarea existe en la base de datos.
+  ✓ La tabla dbo.PrioridadesTarea contiene 0 registros.
+- Entidad: Proyecto, Tabla: Proyectos, Esquema: dbo
+  ✓ La tabla dbo.Proyectos existe en la base de datos.
+  ✓ La tabla dbo.Proyectos contiene 0 registros.
+- Entidad: Puesto, Tabla: Puestos, Esquema: dbo
+  ✗ ERROR: La tabla dbo.Puestos NO existe en la base de datos.
+- Entidad: Tarea, Tabla: Tareas, Esquema: dbo
+  ✗ ERROR: La tabla dbo.Tareas NO existe en la base de datos.
+- Entidad: TipoDocumento, Tabla: TiposDocumento, Esquema: dbo
+  ✓ La tabla dbo.TiposDocumento existe en la base de datos.
+  ✓ La tabla dbo.TiposDocumento contiene 0 registros.
+- Entidad: TipoKPI, Tabla: TiposKpi, Esquema: dbo
+  ✓ La tabla dbo.TiposKpi existe en la base de datos.
+  ✓ La tabla dbo.TiposKpi contiene 0 registros.
+- Entidad: TipoMovimientoViatico, Tabla: TiposMovimientoViatico, Esquema: dbo
+  ✓ La tabla dbo.TiposMovimientoViatico existe en la base de datos.
+  ✓ La tabla dbo.TiposMovimientoViatico contiene 0 registros.
+- Entidad: TipoProyecto, Tabla: TiposProyecto, Esquema: dbo
+  ✓ La tabla dbo.TiposProyecto existe en la base de datos.
+  ✓ La tabla dbo.TiposProyecto contiene 0 registros.
+- Entidad: Usuario, Tabla: Usuarios, Esquema: dbo
+  ✗ ERROR: La tabla dbo.Usuarios NO existe en la base de datos.
+- Entidad: UsuarioToken, Tabla: UsuarioTokens, Esquema: dbo
+  ✓ La tabla dbo.UsuarioTokens existe en la base de datos.
+  ✓ La tabla dbo.UsuarioTokens contiene 0 registros.
+- Entidad: VersionDocumento, Tabla: VersionesDocumento, Esquema: dbo
+  ✗ ERROR: La tabla dbo.VersionesDocumento NO existe en la base de datos.
+- Entidad: RefreshToken, Tabla: RefreshTokens, Esquema: dbo
+  ✓ La tabla dbo.RefreshTokens existe en la base de datos.
+  ✓ La tabla dbo.RefreshTokens contiene 0 registros.
+
+Pruebas de integración completadas.

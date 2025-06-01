@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ConsultCore31.WebAPI.Controllers
 {
@@ -16,14 +17,15 @@ namespace ConsultCore31.WebAPI.Controllers
     public class ApiResponse
     {
         public int StatusCode { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
-        public ApiResponse(int statusCode, string message = null)
+        public ApiResponse(int statusCode, string? message = null)
         {
             StatusCode = statusCode;
-            Message = message ?? GetDefaultMessageForStatusCode(statusCode);
+            Message = message ?? GetDefaultMessageForStatusCode(statusCode) ?? "Operación completada";
         }
 
+        [return: NotNullIfNotNull(nameof(statusCode))]
         private static string GetDefaultMessageForStatusCode(int statusCode)
         {
             return statusCode switch
@@ -36,16 +38,17 @@ namespace ConsultCore31.WebAPI.Controllers
                 403 => "No tiene permisos para realizar esta acción",
                 404 => "Recurso no encontrado",
                 500 => "Error interno del servidor",
-                _ => null
+                _ => string.Empty
             };
         }
     }
 
     public class ApiResponse<T> : ApiResponse
     {
+        [MaybeNull, AllowNull]
         public T Data { get; set; }
 
-        public ApiResponse(int statusCode, T data, string message = null) 
+        public ApiResponse(int statusCode, [AllowNull] T data, string? message = null) 
             : base(statusCode, message)
         {
             Data = data;

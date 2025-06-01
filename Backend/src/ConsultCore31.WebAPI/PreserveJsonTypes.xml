@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<linker>
+  <assembly fullname="System.Private.CoreLib">
+    <type fullname="System.SystemException" preserve="all" />
+    <type fullname="System.Exception" preserve="all" />
+  </assembly>
+  <assembly fullname="System.Text.Json">
+    <type fullname="System.Text.Json.JsonSerializer" preserve="all" />
+  </assembly>
+  <assembly fullname="ConsultCore31.WebAPI">
+    <type fullname="ConsultCore31.WebAPI.Middleware.ApiException" preserve="all" />
+  </assembly>
+</linker>

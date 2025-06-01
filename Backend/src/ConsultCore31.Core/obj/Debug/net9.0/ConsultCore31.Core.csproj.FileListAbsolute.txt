@@ -1,6 +1,0 @@
-C:\ai4devs\AI4Devs-finalproject-finalproject-MRR\Backend\src\ConsultCore31.Core\obj\Debug\net9.0\ConsultCore31.Core.csproj.AssemblyReference.cache
-C:\ai4devs\AI4Devs-finalproject-finalproject-MRR\Backend\src\ConsultCore31.Core\obj\Debug\net9.0\ConsultCore31.Core.GeneratedMSBuildEditorConfig.editorconfig
-C:\ai4devs\AI4Devs-finalproject-finalproject-MRR\Backend\src\ConsultCore31.Core\obj\Debug\net9.0\ConsultCore31.Core.AssemblyInfoInputs.cache
-C:\ai4devs\AI4Devs-finalproject-finalproject-MRR\Backend\src\ConsultCore31.Core\obj\Debug\net9.0\ConsultCore31.Core.AssemblyInfo.cs
-C:\ai4devs\AI4Devs-finalproject-finalproject-MRR\Backend\src\ConsultCore31.Core\obj\Debug\net9.0\ConsultCore31.Core.csproj.CoreCompileInputs.cache
-C:\ai4devs\AI4Devs-finalproject-finalproject-MRR\Backend\src\ConsultCore31.Core\obj\Debug\net9.0\ConsultCore31.Core.sourcelink.json

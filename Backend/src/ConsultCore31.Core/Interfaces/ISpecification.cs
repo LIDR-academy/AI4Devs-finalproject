@@ -3,16 +3,12 @@ using System.Linq.Expressions;
 
 namespace ConsultCore31.Core.Interfaces
 {
-    public interface ISpecification<T>
+    /// <summary>
+    /// Interfaz base para especificaciones que hereda de Ardalis.Specification.ISpecification
+    /// </summary>
+    /// <typeparam name="T">Tipo de entidad</typeparam>
+    public interface ISpecification<T> : global::Ardalis.Specification.ISpecification<T> where T : class
     {
-        Expression<Func<T, bool>> Criteria { get; }
-        List<Expression<Func<T, object>>> Includes { get; }
-        List<string> IncludeStrings { get; }
-        Expression<Func<T, object>> OrderBy { get; }
-        Expression<Func<T, object>> OrderByDescending { get; }
-        Expression<Func<T, object>> GroupBy { get; }
-        int Take { get; }
-        int Skip { get; }
-        bool IsPagingEnabled { get; }
+        // Propiedades adicionales específicas de la aplicación pueden ir aquí
     }
 }

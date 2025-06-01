@@ -1,12 +1,8 @@
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Entities.Seguridad;
+
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace ConsultCore31.Infrastructure.Persistence.Context
 {
@@ -27,6 +23,40 @@ namespace ConsultCore31.Infrastructure.Persistence.Context
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Empleado> Empleados { get; set; }
         public DbSet<Puesto> Puestos { get; set; }
+
+        // Entidades de catálogos
+        public DbSet<EstadoProyecto> EstadosProyecto { get; set; }
+
+        public DbSet<EstadoEtapa> EstadosEtapa { get; set; }
+        public DbSet<EstadoTarea> EstadosTarea { get; set; }
+        public DbSet<PrioridadTarea> PrioridadesTarea { get; set; }
+        public DbSet<TipoProyecto> TiposProyecto { get; set; }
+        public DbSet<TipoDocumento> TiposDocumento { get; set; }
+        public DbSet<TipoKPI> TiposKPI { get; set; }
+        public DbSet<FrecuenciaMedicion> FrecuenciasMedicion { get; set; }
+        public DbSet<CategoriaGasto> CategoriasGasto { get; set; }
+        public DbSet<EstadoAprobacion> EstadosAprobacion { get; set; }
+        public DbSet<Moneda> Monedas { get; set; }
+        public DbSet<TipoMovimientoViatico> TiposMovimientoViatico { get; set; }
+
+        // Entidades principales
+        public DbSet<Proyecto> Proyectos { get; set; }
+
+        public DbSet<Cliente> Clientes { get; set; }
+        public DbSet<ContactoCliente> ContactosCliente { get; set; }
+        public DbSet<EtapaProyecto> EtapasProyecto { get; set; }
+        public DbSet<Tarea> Tareas { get; set; }
+        public DbSet<ComentarioTarea> ComentariosTarea { get; set; }
+        public DbSet<ArchivoAdjunto> ArchivosAdjuntos { get; set; }
+        public DbSet<Documento> Documentos { get; set; }
+        public DbSet<VersionDocumento> VersionesDocumento { get; set; }
+        public DbSet<CarpetaDocumento> CarpetasDocumento { get; set; }
+        public DbSet<KPI> KPIs { get; set; }
+        public DbSet<MedicionKPI> MedicionesKPI { get; set; }
+        public DbSet<Gasto> Gastos { get; set; }
+        public DbSet<AsignacionViatico> AsignacionesViatico { get; set; }
+        public DbSet<MovimientoViatico> MovimientosViatico { get; set; }
+        public DbSet<InformeSemanal> InformesSemanales { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -82,14 +112,13 @@ namespace ConsultCore31.Infrastructure.Persistence.Context
                     .IsRequired()
                     .HasDefaultValue(2);
 
-                entity.Property(u => u.UsuarioNombre)
+                entity.Property(u => u.UserName)
                     .IsRequired()
                     .HasMaxLength(200)
                     .HasDefaultValue("");
 
                 entity.Property(u => u.UsuarioNumero)
-                    .IsRequired()
-                    .ValueGeneratedOnAdd();
+                    .ValueGeneratedNever();
 
                 // Relaciones
                 entity.HasOne(u => u.Perfil)

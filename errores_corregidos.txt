@@ -1,0 +1,4 @@
+MSBUILD : error MSB1009: El archivo de proyecto no existe.
+Modificador: src\ConsultCore31.Application\ConsultCore31.Application.csproj
+
+Hay actualizaciones de carga de trabajo disponibles. Ejecute "dotnet workload list" para obtener más información.

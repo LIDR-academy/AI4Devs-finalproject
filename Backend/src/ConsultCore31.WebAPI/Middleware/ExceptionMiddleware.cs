@@ -1,9 +1,11 @@
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using System;
+using System.Text.Json.Serialization.Metadata;
 
 namespace ConsultCore31.WebAPI.Middleware
 {
@@ -36,25 +38,46 @@ namespace ConsultCore31.WebAPI.Middleware
                     ? new ApiException(context.Response.StatusCode, ex.Message, ex.StackTrace?.ToString())
                     : new ApiException(context.Response.StatusCode, "Internal Server Error");
 
-                var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-                var json = JsonSerializer.Serialize(response, options);
+                // Usar el contexto de serialización generado
+                var json = response switch
+                {
+                    ApiException apiEx => apiEx.ToJson(),
+                    _ => JsonSerializer.Serialize(response, response.GetType(), ApiExceptionContext.Options)
+                };
 
                 await context.Response.WriteAsync(json);
             }
         }
     }
 
+    [JsonSerializable(typeof(ApiException))]
+    [JsonSourceGenerationOptions(
+        GenerationMode = JsonSourceGenerationMode.Metadata,
+        PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = true)]
+    public partial class ApiExceptionContext : JsonSerializerContext 
+    {
+        public new static JsonSerializerOptions Options { get; } = new(JsonSerializerDefaults.Web)
+        {
+            TypeInfoResolver = new ApiExceptionContext()
+        };
+    }
+
     public class ApiException
     {
         public int StatusCode { get; set; }
-        public string Message { get; set; }
-        public string Details { get; set; }
+        public string? Message { get; set; }
+        public string? Details { get; set; }
 
-        public ApiException(int statusCode, string message = null, string details = null)
+        public ApiException(int statusCode, string? message = null, string? details = null)
         {
             StatusCode = statusCode;
-            Message = message;
+            Message = message ?? "An error occurred while processing your request.";
             Details = details;
         }
+        
+        // Método para serialización segura
+        public string ToJson() => JsonSerializer.Serialize(this, ApiExceptionContext.Default.ApiException);
     }
 }
