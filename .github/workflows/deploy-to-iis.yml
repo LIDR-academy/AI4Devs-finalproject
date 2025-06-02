@@ -1,0 +1,59 @@
+name: Despliegue a IIS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Permite ejecutar el workflow manualmente desde la interfaz de GitHub
+
+jobs:
+  build:
+    runs-on: windows-latest  # Usamos Windows ya que vamos a desplegar en IIS
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configurar .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'  # Versión de .NET que estás utilizando
+    
+    - name: Restaurar dependencias
+      run: dotnet restore Backend/ConsultCore31.sln
+    
+    - name: Compilar
+      run: dotnet build Backend/ConsultCore31.sln --configuration Release --no-restore
+    
+    - name: Ejecutar pruebas
+      run: dotnet test Backend/ConsultCore31.sln --configuration Release --no-build
+    
+    - name: Publicar
+      run: dotnet publish Backend/src/ConsultCore31.WebAPI/ConsultCore31.WebAPI.csproj -c Release -o ${{github.workspace}}/publish
+    
+    - name: Comprimir artefactos
+      uses: actions/upload-artifact@v3
+      with:
+        name: webapp
+        path: ${{github.workspace}}/publish
+
+  deploy:
+    needs: build
+    runs-on: windows-latest
+    
+    steps:
+    - name: Descargar artefacto
+      uses: actions/download-artifact@v3
+      with:
+        name: webapp
+        path: ${{github.workspace}}/publish
+    
+    - name: Desplegar en IIS
+      uses: ChristopheLav/iis-deploy@v1
+      with:
+        website-name: 'consultoriaAPI'  # Nombre del sitio web en IIS
+        msdeploy-service-url: ${{ secrets.IIS_SERVER_URL }}  # URL del servidor IIS (configurada en los secretos)
+        msdeploy-username: ${{ secrets.IIS_USERNAME }}  # Usuario para autenticación (configurado en los secretos)
+        msdeploy-password: ${{ secrets.IIS_PASSWORD }}  # Contraseña para autenticación (configurada en los secretos)
+        source-path: ${{github.workspace}}/publish
+        iis-app-path: 'https://rrdeveloper.sytes.net/consultoriaAPI'  # Ruta de la aplicación en IIS
