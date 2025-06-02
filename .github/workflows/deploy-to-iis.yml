@@ -12,10 +12,10 @@ jobs:
     runs-on: windows-latest  # Usamos Windows ya que vamos a desplegar en IIS
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Configurar .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'  # Versión de .NET que estás utilizando
     
@@ -32,7 +32,7 @@ jobs:
       run: dotnet publish Backend/src/ConsultCore31.WebAPI/ConsultCore31.WebAPI.csproj -c Release -o ${{github.workspace}}/publish
     
     - name: Comprimir artefactos
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: webapp
         path: ${{github.workspace}}/publish
@@ -43,7 +43,7 @@ jobs:
     
     steps:
     - name: Descargar artefacto
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: webapp
         path: ${{github.workspace}}/publish
@@ -56,4 +56,4 @@ jobs:
         msdeploy-username: ${{ secrets.IIS_USERNAME }}  # Usuario para autenticación (configurado en los secretos)
         msdeploy-password: ${{ secrets.IIS_PASSWORD }}  # Contraseña para autenticación (configurada en los secretos)
         source-path: ${{github.workspace}}/publish
-        iis-app-path: 'https://rrdeveloper.sytes.net/consultoriaAPI'  # Ruta de la aplicación en IIS
+        iis-app-path: 'consultoriaAPI'  # Ruta de la aplicación en IIS
