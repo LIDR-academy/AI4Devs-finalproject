@@ -388,7 +388,7 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/openapi/v1.json", "ConsultCore31 API V1");
         c.RoutePrefix = "swagger";
-        c.DocumentTitle = "ConsultCore31 API Documentation";
+        c.DocumentTitle = "ConsultCore3:1 API Documentation";
         c.DefaultModelsExpandDepth(-1); // Oculta los esquemas de modelos
         c.DisplayRequestDuration();
         c.EnableDeepLinking();
@@ -453,6 +453,9 @@ if (app.Environment.IsDevelopment())
 
 // Inicialización de la base de datos
 await InitializeDatabase(app);
+
+app.MapGet("/", () => Results.Redirect("/api-docs/v1"))
+   .ExcludeFromDescription();
 
 app.Run();
 
