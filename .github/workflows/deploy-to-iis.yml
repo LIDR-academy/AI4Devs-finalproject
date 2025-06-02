@@ -56,4 +56,4 @@ jobs:
         msdeploy-username: ${{ secrets.IIS_USERNAME }}  # Usuario para autenticación (configurado en los secretos)
         msdeploy-password: ${{ secrets.IIS_PASSWORD }}  # Contraseña para autenticación (configurada en los secretos)
         source-path: ${{github.workspace}}/publish
-        iis-app-path: 'https://rrdeveloper.sytes.net/consultoriaAPI'  # Ruta de la aplicación en IIS
+        iis-app-path: `${{secrets.IIS_SERVER_URL}}/consultoriaAPI`  # Ruta de la aplicación en IIS
