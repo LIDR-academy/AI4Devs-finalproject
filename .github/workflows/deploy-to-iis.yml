@@ -56,4 +56,4 @@ jobs:
         msdeploy-username: ${{ secrets.IIS_USERNAME }}  # Usuario para autenticación (configurado en los secretos)
         msdeploy-password: ${{ secrets.IIS_PASSWORD }}  # Contraseña para autenticación (configurada en los secretos)
         source-path: ${{github.workspace}}/publish
-        iis-app-path: 'consultoriaAPI'  # Ruta de la aplicación en IIS
+        skip-extra-files: false  # No omitir archivos extra en el servidor
