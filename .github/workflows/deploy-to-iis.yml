@@ -12,10 +12,10 @@ jobs:
     runs-on: windows-latest  # Usamos Windows ya que vamos a desplegar en IIS
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     
     - name: Configurar .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '9.0.x'  # Versión de .NET que estás utilizando
     
@@ -56,3 +56,11 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ${{github.workspace}}/publish/
         server-dir: ${{ secrets.FTP_TARGET_PATH }}/
+        protocol: ftps
+        port: 21
+        security: strict
+        timeout: 120000
+        log-level: verbose
+        dangerous-clean-slate: false
+        state-name: .ftp-deploy-sync-state.json
+        dry-run: false
