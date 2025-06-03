@@ -56,4 +56,3 @@ jobs:
         msdeploy-username: ${{ secrets.IIS_USERNAME }}  # Usuario para autenticación (configurado en los secretos)
         msdeploy-password: ${{ secrets.IIS_PASSWORD }}  # Contraseña para autenticación (configurada en los secretos)
         source-path: ${{github.workspace}}/publish
-        skip-extra-files: false  # No omitir archivos extra en el servidor
