@@ -56,11 +56,18 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ${{github.workspace}}/publish/
         server-dir: ${{ secrets.FTP_TARGET_PATH }}/
-        protocol: ftps
+        protocol: ftp
         port: 21
-        security: strict
-        timeout: 120000
+        security: loose
+        timeout: 600000
         log-level: verbose
         dangerous-clean-slate: false
         state-name: .ftp-deploy-sync-state.json
         dry-run: false
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.vs/**
+          **/obj/**
+          runtimes/**
