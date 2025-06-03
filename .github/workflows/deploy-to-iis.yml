@@ -56,7 +56,7 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ${{github.workspace}}/publish/
         server-dir: ${{ secrets.FTP_TARGET_PATH }}/
-        protocol: ftp
+        protocol: ftps
         port: 21
         security: loose
         timeout: 600000
