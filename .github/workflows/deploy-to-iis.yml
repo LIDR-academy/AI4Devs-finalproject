@@ -42,6 +42,9 @@ jobs:
     runs-on: windows-latest
     
     steps:
+    - name: Checkout del código
+      uses: actions/checkout@v4
+      
     - name: Descargar artefacto
       uses: actions/download-artifact@v4
       with:
@@ -51,4 +54,6 @@ jobs:
     - name: Desplegar en IIS usando script PowerShell
       shell: pwsh
       run: |
-        .github/scripts/deploy-to-iis.ps1 -sourcePath "${{github.workspace}}\publish" -destinationServer "${{ secrets.IIS_SERVER_URL }}" -siteName "consultoriaAPI" -username "${{ secrets.IIS_USERNAME }}" -password "${{ secrets.IIS_PASSWORD }}"
+        $scriptPath = Join-Path -Path $env:GITHUB_WORKSPACE -ChildPath ".github\scripts\deploy-to-iis.ps1"
+        Write-Host "Ejecutando script: $scriptPath"
+        & $scriptPath -sourcePath "${{github.workspace}}\publish" -destinationServer "${{ secrets.IIS_SERVER_URL }}" -siteName "consultoriaAPI" -username "${{ secrets.IIS_USERNAME }}" -password "${{ secrets.IIS_PASSWORD }}"
