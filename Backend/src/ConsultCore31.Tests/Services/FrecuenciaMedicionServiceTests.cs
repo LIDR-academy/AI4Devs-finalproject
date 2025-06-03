@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.FrecuenciaMedicion;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Xunit;
 
 namespace ConsultCore31.Tests.Services
@@ -29,14 +34,14 @@ namespace ConsultCore31.Tests.Services
         {
             _mockRepository = new Mock<IGenericRepository<FrecuenciaMedicion, int>>();
             _mockLogger = new Mock<ILogger<FrecuenciaMedicionService>>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<FrecuenciaMedicionProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new FrecuenciaMedicionService(_mockRepository.Object, _mapper, _mockLogger.Object);
         }
@@ -47,8 +52,8 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var frecuencias = new List<FrecuenciaMedicion>
             {
-                new FrecuenciaMedicion { Id = 1, Nombre = "Diaria", Descripcion = "Medición diaria", CreatedAt = DateTime.UtcNow },
-                new FrecuenciaMedicion { Id = 2, Nombre = "Semanal", Descripcion = "Medición semanal", CreatedAt = DateTime.UtcNow }
+                new FrecuenciaMedicion { Id = 1, Nombre = "Diaria", Descripcion = "Medición diaria", FechaCreacion = DateTime.UtcNow },
+                new FrecuenciaMedicion { Id = 2, Nombre = "Semanal", Descripcion = "Medición semanal", FechaCreacion = DateTime.UtcNow }
             };
 
             _mockRepository.Setup(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -69,11 +74,11 @@ namespace ConsultCore31.Tests.Services
         {
             // Arrange
             var frecuencia = new FrecuenciaMedicion
-            { 
-                Id = 1, 
-                Nombre = "Diaria", 
-                Descripcion = "Medición diaria", 
-                CreatedAt = DateTime.UtcNow 
+            {
+                Id = 1,
+                Nombre = "Diaria",
+                Descripcion = "Medición diaria",
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -118,8 +123,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 3,
                 Nombre = "Mensual",
                 Descripcion = "Medición mensual",
-                Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<FrecuenciaMedicion>(), It.IsAny<CancellationToken>()))
@@ -133,10 +137,9 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(3, result.Id);
             Assert.Equal("Mensual", result.Nombre);
             Assert.Equal("Medición mensual", result.Descripcion);
-            _mockRepository.Verify(repo => repo.AddAsync(It.Is<FrecuenciaMedicion>(t => 
-                t.Nombre == "Mensual" && 
-                t.Descripcion == "Medición mensual" && 
-                t.Activo), It.IsAny<CancellationToken>()), Times.Once);
+            _mockRepository.Verify(repo => repo.AddAsync(It.Is<FrecuenciaMedicion>(t =>
+                t.Nombre == "Mensual" &&
+                t.Descripcion == "Medición mensual"), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -148,7 +151,6 @@ namespace ConsultCore31.Tests.Services
                 Id = 1,
                 Nombre = "Diaria Actualizada",
                 Descripcion = "Descripción actualizada",
-                Activo = true
             };
 
             var existingEntity = new FrecuenciaMedicion
@@ -156,8 +158,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 1,
                 Nombre = "Diaria",
                 Descripcion = "Medición diaria",
-                Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -168,11 +169,10 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<FrecuenciaMedicion>(t => 
-                t.Id == 1 && 
-                t.Nombre == "Diaria Actualizada" && 
-                t.Descripcion == "Descripción actualizada" && 
-                t.Activo), It.IsAny<CancellationToken>()), Times.Once);
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<FrecuenciaMedicion>(t =>
+                t.Id == 1 &&
+                t.Nombre == "Diaria Actualizada" &&
+                t.Descripcion == "Descripción actualizada"), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -184,7 +184,6 @@ namespace ConsultCore31.Tests.Services
                 Id = 999,
                 Nombre = "Frecuencia Inexistente",
                 Descripcion = "Descripción inexistente",
-                Activo = true
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(999, It.IsAny<CancellationToken>()))

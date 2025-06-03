@@ -47,8 +47,8 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var tipos = new List<TipoMovimientoViatico>
             {
-                new TipoMovimientoViatico { Id = 1, Nombre = "Anticipo", Descripcion = "Anticipo de viáticos", EsEntrada = true, CreatedAt = DateTime.UtcNow },
-                new TipoMovimientoViatico { Id = 2, Nombre = "Gasto", Descripcion = "Gasto de viáticos", EsEntrada = false, CreatedAt = DateTime.UtcNow }
+                new TipoMovimientoViatico { Id = 1, Nombre = "Anticipo", Descripcion = "Anticipo de viáticos", Afectacion = 1, FechaCreacion = DateTime.UtcNow },
+                new TipoMovimientoViatico { Id = 2, Nombre = "Gasto", Descripcion = "Gasto de viáticos", Afectacion = -1, FechaCreacion = DateTime.UtcNow }
             };
 
             _mockRepository.Setup(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -73,8 +73,8 @@ namespace ConsultCore31.Tests.Services
                 Id = 1, 
                 Nombre = "Anticipo", 
                 Descripcion = "Anticipo de viáticos", 
-                EsEntrada = true, 
-                CreatedAt = DateTime.UtcNow 
+                Afectacion = 1, 
+                FechaCreacion = DateTime.UtcNow 
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -88,7 +88,7 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(1, result.Id);
             Assert.Equal("Anticipo", result.Nombre);
             Assert.Equal("Anticipo de viáticos", result.Descripcion);
-            Assert.True(result.EsEntrada);
+            Assert.Equal(1, result.Afectacion);
         }
 
         [Fact]
@@ -113,7 +113,7 @@ namespace ConsultCore31.Tests.Services
             {
                 Nombre = "Reembolso",
                 Descripcion = "Reembolso de viáticos",
-                EsEntrada = true,
+                Afectacion = 1,
                 Activo = true
             };
 
@@ -123,7 +123,7 @@ namespace ConsultCore31.Tests.Services
                 .Callback<TipoMovimientoViatico, CancellationToken>((entity, token) => 
                 {
                     entity.Id = 3;
-                    entity.CreatedAt = DateTime.UtcNow;
+                    entity.FechaCreacion = DateTime.UtcNow;
                     savedEntity = entity;
                 })
                 .ReturnsAsync((TipoMovimientoViatico entity, CancellationToken token) => entity);
@@ -136,7 +136,7 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(3, result.Id);
             Assert.Equal("Reembolso", result.Nombre);
             Assert.Equal("Reembolso de viáticos", result.Descripcion);
-            Assert.True(result.EsEntrada);
+            Assert.Equal(1, result.Afectacion);
             Assert.True(result.Activo);
 
             _mockRepository.Verify(repo => repo.AddAsync(It.IsAny<TipoMovimientoViatico>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -151,7 +151,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 1,
                 Nombre = "Anticipo Actualizado",
                 Descripcion = "Descripción actualizada",
-                EsEntrada = false,
+                Afectacion = -1,
                 Activo = true
             };
 
@@ -160,9 +160,9 @@ namespace ConsultCore31.Tests.Services
                 Id = 1,
                 Nombre = "Anticipo",
                 Descripcion = "Anticipo de viáticos",
-                EsEntrada = true,
+                Afectacion = 1,
                 Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -177,7 +177,7 @@ namespace ConsultCore31.Tests.Services
                 t.Id == 1 && 
                 t.Nombre == "Anticipo Actualizado" && 
                 t.Descripcion == "Descripción actualizada" && 
-                !t.EsEntrada && 
+                t.Afectacion == -1 && 
                 t.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -190,7 +190,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 999,
                 Nombre = "Tipo Inexistente",
                 Descripcion = "Descripción inexistente",
-                EsEntrada = true,
+                Afectacion = 1,
                 Activo = true
             };
 

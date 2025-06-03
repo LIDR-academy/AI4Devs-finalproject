@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using ConsultCore31.Application.DTOs.Puesto;
+using ConsultCore31.Application.DTOs.EstadoEtapa;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
 using Microsoft.AspNetCore.Mvc;
@@ -13,67 +13,66 @@ using Xunit;
 namespace ConsultCore31.Tests.Controllers
 {
     /// <summary>
-    /// Pruebas para el controlador de puestos
+    /// Pruebas para el controlador de estados de etapa
     /// </summary>
-    public class PuestosControllerTests
+    public class EstadosEtapaControllerTests
     {
-        private readonly Mock<IPuestoService> _mockService;
-        private readonly Mock<ILogger<PuestosController>> _mockLogger;
-        private readonly PuestosController _controller;
+        private readonly Mock<IEstadoEtapaService> _mockService;
+        private readonly Mock<ILogger<EstadosEtapaController>> _mockLogger;
+        private readonly EstadosEtapaController _controller;
 
-        public PuestosControllerTests()
+        public EstadosEtapaControllerTests()
         {
-            _mockService = new Mock<IPuestoService>();
-            _mockLogger = new Mock<ILogger<PuestosController>>();
-            _controller = new PuestosController(_mockService.Object, _mockLogger.Object);
+            _mockService = new Mock<IEstadoEtapaService>();
+            _mockLogger = new Mock<ILogger<EstadosEtapaController>>();
+            _controller = new EstadosEtapaController(_mockService.Object, _mockLogger.Object);
         }
 
         [Fact]
-        public async Task GetAll_DebeRetornarOkConListaDePuestos()
+        public async Task GetAll_DebeRetornarOkConListaDeEstados()
         {
             // Arrange
-            var puestos = new List<PuestoDto>
+            var estados = new List<EstadoEtapaDto>
             {
-                new PuestoDto { Id = 1, Nombre = "Gerente", Descripcion = "Gerente de departamento", FechaCreacion = DateTime.UtcNow },
-                new PuestoDto { Id = 2, Nombre = "Analista", Descripcion = "Analista de sistemas", FechaCreacion = DateTime.UtcNow }
+                new EstadoEtapaDto { Id = 1, Nombre = "Planificación", Descripcion = "Etapa de planificación", FechaCreacion = DateTime.UtcNow },
+                new EstadoEtapaDto { Id = 2, Nombre = "Ejecución", Descripcion = "Etapa de ejecución", FechaCreacion = DateTime.UtcNow }
             };
 
             _mockService.Setup(service => service.GetAllAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(puestos);
+                .ReturnsAsync(estados);
 
             // Act
             var result = await _controller.GetAll();
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<PuestoDto>>(okResult.Value);
-            Assert.Equal(2, ((List<PuestoDto>)returnValue).Count);
+            var returnValue = Assert.IsAssignableFrom<IEnumerable<EstadoEtapaDto>>(okResult.Value);
+            Assert.Equal(2, ((List<EstadoEtapaDto>)returnValue).Count);
         }
 
         [Fact]
-        public async Task GetById_ConIdExistente_DebeRetornarOkConPuesto()
+        public async Task GetById_ConIdExistente_DebeRetornarOkConEstado()
         {
             // Arrange
-            var puesto = new PuestoDto
+            var estado = new EstadoEtapaDto
             {
                 Id = 1,
-                Nombre = "Gerente",
-                Descripcion = "Gerente de departamento",
-
+                Nombre = "Planificación",
+                Descripcion = "Etapa de planificación",
                 FechaCreacion = DateTime.UtcNow
             };
 
             _mockService.Setup(service => service.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(puesto);
+                .ReturnsAsync(estado);
 
             // Act
             var result = await _controller.GetById(1);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<PuestoDto>(okResult.Value);
+            var returnValue = Assert.IsType<EstadoEtapaDto>(okResult.Value);
             Assert.Equal(1, returnValue.Id);
-            Assert.Equal("Gerente", returnValue.Nombre);
+            Assert.Equal("Planificación", returnValue.Nombre);
         }
 
         [Fact]
@@ -81,7 +80,7 @@ namespace ConsultCore31.Tests.Controllers
         {
             // Arrange
             _mockService.Setup(service => service.GetByIdAsync(999, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((PuestoDto)null);
+                .ReturnsAsync((EstadoEtapaDto)null);
 
             // Act
             var result = await _controller.GetById(999);
@@ -94,20 +93,18 @@ namespace ConsultCore31.Tests.Controllers
         public async Task Create_ConDatosValidos_DebeRetornarCreatedAtAction()
         {
             // Arrange
-            var createDto = new CreatePuestoDto
+            var createDto = new CreateEstadoEtapaDto
             {
-                Nombre = "Desarrollador",
-                Descripcion = "Desarrollador de software",
-                
+                Nombre = "Cierre",
+                Descripcion = "Etapa de cierre",
                 Activo = true
             };
 
-            var createdDto = new PuestoDto
+            var createdDto = new EstadoEtapaDto
             {
                 Id = 3,
-                Nombre = "Desarrollador",
-                Descripcion = "Desarrollador de software",
-                
+                Nombre = "Cierre",
+                Descripcion = "Etapa de cierre",
                 Activo = true,
                 FechaCreacion = DateTime.UtcNow
             };
@@ -120,23 +117,22 @@ namespace ConsultCore31.Tests.Controllers
 
             // Assert
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal(nameof(PuestosController.GetById), createdAtActionResult.ActionName);
+            Assert.Equal(nameof(EstadosEtapaController.GetById), createdAtActionResult.ActionName);
             Assert.Equal(3, createdAtActionResult.RouteValues["id"]);
-            var returnValue = Assert.IsType<PuestoDto>(createdAtActionResult.Value);
+            var returnValue = Assert.IsType<EstadoEtapaDto>(createdAtActionResult.Value);
             Assert.Equal(3, returnValue.Id);
-            Assert.Equal("Desarrollador", returnValue.Nombre);
+            Assert.Equal("Cierre", returnValue.Nombre);
         }
 
         [Fact]
         public async Task Update_ConIdYDtoValidos_DebeRetornarOk()
         {
             // Arrange
-            var updateDto = new UpdatePuestoDto
+            var updateDto = new UpdateEstadoEtapaDto
             {
                 Id = 1,
-                Nombre = "Gerente Senior",
-                Descripcion = "Gerente senior de departamento",
-
+                Nombre = "Planificación Actualizada",
+                Descripcion = "Descripción actualizada",
                 Activo = true
             };
 
@@ -154,12 +150,11 @@ namespace ConsultCore31.Tests.Controllers
         public async Task Update_ConIdNoCoincidente_DebeRetornarBadRequest()
         {
             // Arrange
-            var updateDto = new UpdatePuestoDto
+            var updateDto = new UpdateEstadoEtapaDto
             {
                 Id = 2,
-                Nombre = "Gerente Senior",
-                Descripcion = "Gerente senior de departamento",
-
+                Nombre = "Planificación Actualizada",
+                Descripcion = "Descripción actualizada",
                 Activo = true
             };
 
@@ -174,12 +169,11 @@ namespace ConsultCore31.Tests.Controllers
         public async Task Update_ConIdInexistente_DebeRetornarNotFound()
         {
             // Arrange
-            var updateDto = new UpdatePuestoDto
+            var updateDto = new UpdateEstadoEtapaDto
             {
                 Id = 999,
-                Nombre = "Puesto Inexistente",
+                Nombre = "Estado Inexistente",
                 Descripcion = "Descripción inexistente",
-                
                 Activo = true
             };
 

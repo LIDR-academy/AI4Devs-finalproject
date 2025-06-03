@@ -47,8 +47,8 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var puestos = new List<Puesto>
             {
-                new Puesto { Id = 1, Nombre = "Gerente", Descripcion = "Gerente de departamento", Nivel = 1, CreatedAt = DateTime.UtcNow },
-                new Puesto { Id = 2, Nombre = "Analista", Descripcion = "Analista de sistemas", Nivel = 3, CreatedAt = DateTime.UtcNow }
+                new Puesto { Id = 1, Nombre = "Gerente", Descripcion = "Gerente de departamento", FechaCreacion = DateTime.UtcNow },
+                new Puesto { Id = 2, Nombre = "Analista", Descripcion = "Analista de sistemas", FechaCreacion = DateTime.UtcNow }
             };
 
             _mockRepository.Setup(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -73,8 +73,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 1, 
                 Nombre = "Gerente", 
                 Descripcion = "Gerente de departamento", 
-                Nivel = 1, 
-                CreatedAt = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow 
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -88,7 +87,7 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(1, result.Id);
             Assert.Equal("Gerente", result.Nombre);
             Assert.Equal("Gerente de departamento", result.Descripcion);
-            Assert.Equal(1, result.Nivel);
+            
         }
 
         [Fact]
@@ -113,7 +112,7 @@ namespace ConsultCore31.Tests.Services
             {
                 Nombre = "Desarrollador",
                 Descripcion = "Desarrollador de software",
-                Nivel = 2,
+                
                 Activo = true
             };
 
@@ -123,7 +122,7 @@ namespace ConsultCore31.Tests.Services
                 .Callback<Puesto, CancellationToken>((entity, token) => 
                 {
                     entity.Id = 3;
-                    entity.CreatedAt = DateTime.UtcNow;
+                    entity.FechaCreacion = DateTime.UtcNow;
                     savedEntity = entity;
                 })
                 .ReturnsAsync((Puesto entity, CancellationToken token) => entity);
@@ -136,7 +135,7 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(3, result.Id);
             Assert.Equal("Desarrollador", result.Nombre);
             Assert.Equal("Desarrollador de software", result.Descripcion);
-            Assert.Equal(2, result.Nivel);
+            
             Assert.True(result.Activo);
 
             _mockRepository.Verify(repo => repo.AddAsync(It.IsAny<Puesto>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -151,7 +150,6 @@ namespace ConsultCore31.Tests.Services
                 Id = 1,
                 Nombre = "Gerente Senior",
                 Descripcion = "Gerente senior de departamento",
-                Nivel = 1,
                 Activo = true
             };
 
@@ -160,9 +158,8 @@ namespace ConsultCore31.Tests.Services
                 Id = 1,
                 Nombre = "Gerente",
                 Descripcion = "Gerente de departamento",
-                Nivel = 1,
                 Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -177,7 +174,6 @@ namespace ConsultCore31.Tests.Services
                 p.Id == 1 && 
                 p.Nombre == "Gerente Senior" && 
                 p.Descripcion == "Gerente senior de departamento" && 
-                p.Nivel == 1 && 
                 p.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -190,7 +186,6 @@ namespace ConsultCore31.Tests.Services
                 Id = 999,
                 Nombre = "Puesto Inexistente",
                 Descripcion = "Descripción inexistente",
-                Nivel = 5,
                 Activo = true
             };
 

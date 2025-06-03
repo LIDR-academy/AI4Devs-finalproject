@@ -152,7 +152,7 @@ namespace ConsultCore31.Tests.Services
                 FechaInicio = DateTime.UtcNow,
                 FechaFin = DateTime.UtcNow.AddMonths(1),
                 EstadoEtapaId = 1,
-                Activo = true,
+                Activa = true,
                 FechaCreacion = DateTime.UtcNow
             };
 
@@ -196,7 +196,7 @@ namespace ConsultCore31.Tests.Services
                 FechaInicio = DateTime.UtcNow.AddDays(-10),
                 FechaFin = DateTime.UtcNow.AddMonths(1),
                 EstadoEtapaId = 1,
-                Activo = true,
+                Activa = true,
                 FechaCreacion = DateTime.UtcNow.AddDays(-10)
             };
 

@@ -55,7 +55,7 @@ namespace ConsultCore31.Tests.Controllers
                 }
             };
 
-            _mockService.Setup(service => service.GetAllAsync())
+            _mockService.Setup(service => service.GetAllAsync(It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(empleados);
 
             // Act
@@ -82,7 +82,7 @@ namespace ConsultCore31.Tests.Controllers
                 FechaCreacion = DateTime.UtcNow
             };
 
-            _mockService.Setup(service => service.GetByIdAsync(1))
+            _mockService.Setup(service => service.GetByIdAsync(1, It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(empleado);
 
             // Act
@@ -100,7 +100,7 @@ namespace ConsultCore31.Tests.Controllers
         public async Task GetById_ConIdInexistente_DebeRetornarNotFound()
         {
             // Arrange
-            _mockService.Setup(service => service.GetByIdAsync(999))
+            _mockService.Setup(service => service.GetByIdAsync(999, It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync((EmpleadoDto)null);
 
             // Act
@@ -138,7 +138,7 @@ namespace ConsultCore31.Tests.Controllers
                 FechaCreacion = DateTime.UtcNow
             };
 
-            _mockService.Setup(service => service.CreateAsync(createDto))
+            _mockService.Setup(service => service.CreateAsync(createDto, It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(createdEmpleado);
 
             // Act
@@ -170,7 +170,7 @@ namespace ConsultCore31.Tests.Controllers
                 Genero = 2
             };
 
-            _mockService.Setup(service => service.UpdateAsync(updateDto))
+            _mockService.Setup(service => service.UpdateAsync(updateDto, It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -219,7 +219,7 @@ namespace ConsultCore31.Tests.Controllers
                 Genero = 2
             };
 
-            _mockService.Setup(service => service.UpdateAsync(updateDto))
+            _mockService.Setup(service => service.UpdateAsync(updateDto, It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(false);
 
             // Act
@@ -233,7 +233,7 @@ namespace ConsultCore31.Tests.Controllers
         public async Task Delete_ConIdExistente_DebeRetornarNoContent()
         {
             // Arrange
-            _mockService.Setup(service => service.DeleteAsync(1))
+            _mockService.Setup(service => service.DeleteAsync(1, It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -247,7 +247,7 @@ namespace ConsultCore31.Tests.Controllers
         public async Task Delete_ConIdInexistente_DebeRetornarNotFound()
         {
             // Arrange
-            _mockService.Setup(service => service.DeleteAsync(999))
+            _mockService.Setup(service => service.DeleteAsync(999, It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(false);
 
             // Act

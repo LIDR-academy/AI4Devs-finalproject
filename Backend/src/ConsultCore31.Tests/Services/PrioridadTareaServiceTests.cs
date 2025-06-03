@@ -47,8 +47,8 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var prioridades = new List<PrioridadTarea>
             {
-                new PrioridadTarea { Id = 1, Nombre = "Alta", Descripcion = "Prioridad alta", CreatedAt = DateTime.UtcNow },
-                new PrioridadTarea { Id = 2, Nombre = "Media", Descripcion = "Prioridad media", CreatedAt = DateTime.UtcNow }
+                new PrioridadTarea { Id = 1, Nombre = "Alta", Descripcion = "Prioridad alta", FechaCreacion = DateTime.UtcNow },
+                new PrioridadTarea { Id = 2, Nombre = "Media", Descripcion = "Prioridad media", FechaCreacion = DateTime.UtcNow }
             };
 
             _mockRepository.Setup(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -73,7 +73,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 1, 
                 Nombre = "Alta", 
                 Descripcion = "Prioridad alta", 
-                CreatedAt = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow 
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -118,8 +118,8 @@ namespace ConsultCore31.Tests.Services
                 Id = 3,
                 Nombre = "Baja",
                 Descripcion = "Prioridad baja",
-                Activo = true,
-                CreatedAt = DateTime.UtcNow
+                Activa = true,
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<PrioridadTarea>(), It.IsAny<CancellationToken>()))
@@ -136,7 +136,7 @@ namespace ConsultCore31.Tests.Services
             _mockRepository.Verify(repo => repo.AddAsync(It.Is<PrioridadTarea>(t => 
                 t.Nombre == "Baja" && 
                 t.Descripcion == "Prioridad baja" && 
-                t.Activo), It.IsAny<CancellationToken>()), Times.Once);
+                t.Activa), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -148,7 +148,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 1,
                 Nombre = "Alta Actualizada",
                 Descripcion = "Descripción actualizada",
-                Activo = true
+                Activa = true
             };
 
             var existingEntity = new PrioridadTarea
@@ -156,8 +156,8 @@ namespace ConsultCore31.Tests.Services
                 Id = 1,
                 Nombre = "Alta",
                 Descripcion = "Prioridad alta",
-                Activo = true,
-                CreatedAt = DateTime.UtcNow
+                Activa = true,
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -172,7 +172,7 @@ namespace ConsultCore31.Tests.Services
                 t.Id == 1 && 
                 t.Nombre == "Alta Actualizada" && 
                 t.Descripcion == "Descripción actualizada" && 
-                t.Activo), It.IsAny<CancellationToken>()), Times.Once);
+                t.Activa), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -184,7 +184,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 999,
                 Nombre = "Prioridad Inexistente",
                 Descripcion = "Descripción inexistente",
-                Activo = true
+                Activa = true
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(999, It.IsAny<CancellationToken>()))

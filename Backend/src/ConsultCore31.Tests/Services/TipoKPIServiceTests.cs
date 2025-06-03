@@ -47,8 +47,8 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var tipos = new List<TipoKPI>
             {
-                new TipoKPI { Id = 1, Nombre = "Financiero", Descripcion = "Indicadores financieros", CreatedAt = DateTime.UtcNow },
-                new TipoKPI { Id = 2, Nombre = "Operativo", Descripcion = "Indicadores operativos", CreatedAt = DateTime.UtcNow }
+                new TipoKPI { Id = 1, Nombre = "Financiero", Descripcion = "Indicadores financieros", FechaCreacion = DateTime.UtcNow },
+                new TipoKPI { Id = 2, Nombre = "Operativo", Descripcion = "Indicadores operativos", FechaCreacion = DateTime.UtcNow }
             };
 
             _mockRepository.Setup(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -73,7 +73,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 1, 
                 Nombre = "Financiero", 
                 Descripcion = "Indicadores financieros", 
-                CreatedAt = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow 
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -119,7 +119,7 @@ namespace ConsultCore31.Tests.Services
                 Nombre = "Estratégico",
                 Descripcion = "Indicadores estratégicos",
                 Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<TipoKPI>(), It.IsAny<CancellationToken>()))
@@ -157,7 +157,7 @@ namespace ConsultCore31.Tests.Services
                 Nombre = "Financiero",
                 Descripcion = "Indicadores financieros",
                 Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))

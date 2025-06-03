@@ -197,7 +197,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(estadoProyectoExistente);
 
             _mockRepository.Setup(repo => repo.UpdateAsync(It.IsAny<EstadoProyecto>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(estadoProyectoActualizado);
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _service.UpdateAsync(updateDto);
@@ -300,7 +300,7 @@ namespace ConsultCore31.Tests.Services
             Assert.True(result);
             
             _mockRepository.Verify(repo => repo.ExistsAsync(
-                It.IsAny<Expression<Func<EstadoProyecto, bool>>>(), 
+                estadoProyectoId,
                 It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -320,7 +320,7 @@ namespace ConsultCore31.Tests.Services
             Assert.False(result);
             
             _mockRepository.Verify(repo => repo.ExistsAsync(
-                It.IsAny<Expression<Func<EstadoProyecto, bool>>>(), 
+                estadoProyectoId,
                 It.IsAny<CancellationToken>()), Times.Once);
         }
     }

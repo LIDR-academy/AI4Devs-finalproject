@@ -29,14 +29,14 @@ namespace ConsultCore31.Tests.Services
         {
             _mockRepository = new Mock<IGenericRepository<Moneda, int>>();
             _mockLogger = new Mock<ILogger<MonedaService>>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<MonedaProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new MonedaService(_mockRepository.Object, _mapper, _mockLogger.Object);
         }
@@ -47,8 +47,8 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var monedas = new List<Moneda>
             {
-                new Moneda { Id = 1, Codigo = "USD", Nombre = "Dólar Estadounidense", Simbolo = "$", TasaCambio = 1, CreatedAt = DateTime.UtcNow },
-                new Moneda { Id = 2, Codigo = "EUR", Nombre = "Euro", Simbolo = "€", TasaCambio = 0.85m, CreatedAt = DateTime.UtcNow }
+                new Moneda { Id = 1, Codigo = "USD", Nombre = "Dólar Estadounidense", Simbolo = "$", TasaCambio = 1, FechaCreacion = DateTime.UtcNow },
+                new Moneda { Id = 2, Codigo = "EUR", Nombre = "Euro", Simbolo = "€", TasaCambio = 0.85m, FechaCreacion = DateTime.UtcNow }
             };
 
             _mockRepository.Setup(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -75,7 +75,7 @@ namespace ConsultCore31.Tests.Services
                 Nombre = "Dólar Estadounidense", 
                 Simbolo = "$", 
                 TasaCambio = 1, 
-                CreatedAt = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow 
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -125,7 +125,7 @@ namespace ConsultCore31.Tests.Services
                 .Callback<Moneda, CancellationToken>((entity, token) => 
                 {
                     entity.Id = 3;
-                    entity.CreatedAt = DateTime.UtcNow;
+                    entity.FechaCreacion = DateTime.UtcNow;
                     savedEntity = entity;
                 })
                 .ReturnsAsync((Moneda entity, CancellationToken token) => entity);
@@ -170,7 +170,7 @@ namespace ConsultCore31.Tests.Services
                 TasaCambio = 1,
                 EsPredeterminada = false,
                 Activa = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))

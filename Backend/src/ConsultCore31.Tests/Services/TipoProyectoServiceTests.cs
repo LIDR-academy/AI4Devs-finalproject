@@ -47,8 +47,8 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var tipos = new List<TipoProyecto>
             {
-                new TipoProyecto { Id = 1, Nombre = "Desarrollo", Descripcion = "Proyecto de desarrollo", CreatedAt = DateTime.UtcNow },
-                new TipoProyecto { Id = 2, Nombre = "Consultoría", Descripcion = "Proyecto de consultoría", CreatedAt = DateTime.UtcNow }
+                new TipoProyecto { Id = 1, Nombre = "Desarrollo", Descripcion = "Proyecto de desarrollo", FechaCreacion = DateTime.UtcNow },
+                new TipoProyecto { Id = 2, Nombre = "Consultoría", Descripcion = "Proyecto de consultoría", FechaCreacion = DateTime.UtcNow }
             };
 
             _mockRepository.Setup(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -73,7 +73,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 1, 
                 Nombre = "Desarrollo", 
                 Descripcion = "Proyecto de desarrollo", 
-                CreatedAt = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow 
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -119,7 +119,7 @@ namespace ConsultCore31.Tests.Services
                 Nombre = "Mantenimiento",
                 Descripcion = "Proyecto de mantenimiento",
                 Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<TipoProyecto>(), It.IsAny<CancellationToken>()))
@@ -157,7 +157,7 @@ namespace ConsultCore31.Tests.Services
                 Nombre = "Desarrollo",
                 Descripcion = "Proyecto de desarrollo",
                 Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))

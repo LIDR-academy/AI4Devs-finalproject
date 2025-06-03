@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using ConsultCore31.Application.DTOs.Puesto;
+using ConsultCore31.Application.DTOs.FrecuenciaMedicion;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
 using Microsoft.AspNetCore.Mvc;
@@ -13,67 +13,66 @@ using Xunit;
 namespace ConsultCore31.Tests.Controllers
 {
     /// <summary>
-    /// Pruebas para el controlador de puestos
+    /// Pruebas para el controlador de frecuencias de medición
     /// </summary>
-    public class PuestosControllerTests
+    public class FrecuenciasMedicionControllerTests
     {
-        private readonly Mock<IPuestoService> _mockService;
-        private readonly Mock<ILogger<PuestosController>> _mockLogger;
-        private readonly PuestosController _controller;
+        private readonly Mock<IFrecuenciaMedicionService> _mockService;
+        private readonly Mock<ILogger<FrecuenciasMedicionController>> _mockLogger;
+        private readonly FrecuenciasMedicionController _controller;
 
-        public PuestosControllerTests()
+        public FrecuenciasMedicionControllerTests()
         {
-            _mockService = new Mock<IPuestoService>();
-            _mockLogger = new Mock<ILogger<PuestosController>>();
-            _controller = new PuestosController(_mockService.Object, _mockLogger.Object);
+            _mockService = new Mock<IFrecuenciaMedicionService>();
+            _mockLogger = new Mock<ILogger<FrecuenciasMedicionController>>();
+            _controller = new FrecuenciasMedicionController(_mockService.Object, _mockLogger.Object);
         }
 
         [Fact]
-        public async Task GetAll_DebeRetornarOkConListaDePuestos()
+        public async Task GetAll_DebeRetornarOkConListaDeFrecuencias()
         {
             // Arrange
-            var puestos = new List<PuestoDto>
+            var frecuencias = new List<FrecuenciaMedicionDto>
             {
-                new PuestoDto { Id = 1, Nombre = "Gerente", Descripcion = "Gerente de departamento", FechaCreacion = DateTime.UtcNow },
-                new PuestoDto { Id = 2, Nombre = "Analista", Descripcion = "Analista de sistemas", FechaCreacion = DateTime.UtcNow }
+                new FrecuenciaMedicionDto { Id = 1, Nombre = "Diaria", Descripcion = "Medición diaria", FechaCreacion = DateTime.UtcNow },
+                new FrecuenciaMedicionDto { Id = 2, Nombre = "Semanal", Descripcion = "Medición semanal", FechaCreacion = DateTime.UtcNow }
             };
 
             _mockService.Setup(service => service.GetAllAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(puestos);
+                .ReturnsAsync(frecuencias);
 
             // Act
             var result = await _controller.GetAll();
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<PuestoDto>>(okResult.Value);
-            Assert.Equal(2, ((List<PuestoDto>)returnValue).Count);
+            var returnValue = Assert.IsAssignableFrom<IEnumerable<FrecuenciaMedicionDto>>(okResult.Value);
+            Assert.Equal(2, ((List<FrecuenciaMedicionDto>)returnValue).Count);
         }
 
         [Fact]
-        public async Task GetById_ConIdExistente_DebeRetornarOkConPuesto()
+        public async Task GetById_ConIdExistente_DebeRetornarOkConFrecuencia()
         {
             // Arrange
-            var puesto = new PuestoDto
+            var frecuencia = new FrecuenciaMedicionDto
             {
                 Id = 1,
-                Nombre = "Gerente",
-                Descripcion = "Gerente de departamento",
-
+                Nombre = "Diaria",
+                Descripcion = "Medición diaria",
                 FechaCreacion = DateTime.UtcNow
             };
 
             _mockService.Setup(service => service.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(puesto);
+                .ReturnsAsync(frecuencia);
 
             // Act
             var result = await _controller.GetById(1);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<PuestoDto>(okResult.Value);
+            var returnValue = Assert.IsType<FrecuenciaMedicionDto>(okResult.Value);
             Assert.Equal(1, returnValue.Id);
-            Assert.Equal("Gerente", returnValue.Nombre);
+            Assert.Equal("Diaria", returnValue.Nombre);
         }
 
         [Fact]
@@ -81,7 +80,7 @@ namespace ConsultCore31.Tests.Controllers
         {
             // Arrange
             _mockService.Setup(service => service.GetByIdAsync(999, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((PuestoDto)null);
+                .ReturnsAsync((FrecuenciaMedicionDto)null);
 
             // Act
             var result = await _controller.GetById(999);
@@ -94,21 +93,19 @@ namespace ConsultCore31.Tests.Controllers
         public async Task Create_ConDatosValidos_DebeRetornarCreatedAtAction()
         {
             // Arrange
-            var createDto = new CreatePuestoDto
+            var createDto = new CreateFrecuenciaMedicionDto
             {
-                Nombre = "Desarrollador",
-                Descripcion = "Desarrollador de software",
-                
-                Activo = true
+                Nombre = "Mensual",
+                Descripcion = "Medición mensual",
+                Activa = true
             };
 
-            var createdDto = new PuestoDto
+            var createdDto = new FrecuenciaMedicionDto
             {
                 Id = 3,
-                Nombre = "Desarrollador",
-                Descripcion = "Desarrollador de software",
-                
-                Activo = true,
+                Nombre = "Mensual",
+                Descripcion = "Medición mensual",
+                Activa = true,
                 FechaCreacion = DateTime.UtcNow
             };
 
@@ -120,24 +117,23 @@ namespace ConsultCore31.Tests.Controllers
 
             // Assert
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal(nameof(PuestosController.GetById), createdAtActionResult.ActionName);
+            Assert.Equal(nameof(FrecuenciasMedicionController.GetById), createdAtActionResult.ActionName);
             Assert.Equal(3, createdAtActionResult.RouteValues["id"]);
-            var returnValue = Assert.IsType<PuestoDto>(createdAtActionResult.Value);
+            var returnValue = Assert.IsType<FrecuenciaMedicionDto>(createdAtActionResult.Value);
             Assert.Equal(3, returnValue.Id);
-            Assert.Equal("Desarrollador", returnValue.Nombre);
+            Assert.Equal("Mensual", returnValue.Nombre);
         }
 
         [Fact]
         public async Task Update_ConIdYDtoValidos_DebeRetornarOk()
         {
             // Arrange
-            var updateDto = new UpdatePuestoDto
+            var updateDto = new UpdateFrecuenciaMedicionDto
             {
                 Id = 1,
-                Nombre = "Gerente Senior",
-                Descripcion = "Gerente senior de departamento",
-
-                Activo = true
+                Nombre = "Diaria Actualizada",
+                Descripcion = "Descripción actualizada",
+                Activa = true
             };
 
             _mockService.Setup(service => service.UpdateAsync(updateDto, It.IsAny<CancellationToken>()))
@@ -154,13 +150,12 @@ namespace ConsultCore31.Tests.Controllers
         public async Task Update_ConIdNoCoincidente_DebeRetornarBadRequest()
         {
             // Arrange
-            var updateDto = new UpdatePuestoDto
+            var updateDto = new UpdateFrecuenciaMedicionDto
             {
                 Id = 2,
-                Nombre = "Gerente Senior",
-                Descripcion = "Gerente senior de departamento",
-
-                Activo = true
+                Nombre = "Diaria Actualizada",
+                Descripcion = "Descripción actualizada",
+                Activa = true
             };
 
             // Act
@@ -174,13 +169,12 @@ namespace ConsultCore31.Tests.Controllers
         public async Task Update_ConIdInexistente_DebeRetornarNotFound()
         {
             // Arrange
-            var updateDto = new UpdatePuestoDto
+            var updateDto = new UpdateFrecuenciaMedicionDto
             {
                 Id = 999,
-                Nombre = "Puesto Inexistente",
+                Nombre = "Frecuencia Inexistente",
                 Descripcion = "Descripción inexistente",
-                
-                Activo = true
+                Activa = true
             };
 
             _mockService.Setup(service => service.UpdateAsync(updateDto, It.IsAny<CancellationToken>()))

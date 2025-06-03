@@ -148,7 +148,7 @@ namespace ConsultCore31.Tests.Services
                 EstadoTareaId = 1,
                 PrioridadTareaId = 1,
                 CreadoPorId = 1,
-                Activo = true,
+                Activa = true,
                 FechaCreacion = DateTime.UtcNow
             };
 
@@ -187,7 +187,7 @@ namespace ConsultCore31.Tests.Services
                 EstadoTareaId = 1,
                 PrioridadTareaId = 1,
                 CreadoPorId = 1,
-                Activo = true,
+                Activa = true,
                 FechaCreacion = DateTime.UtcNow.AddDays(-10)
             };
 

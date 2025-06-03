@@ -29,14 +29,14 @@ namespace ConsultCore31.Tests.Services
         {
             _mockRepository = new Mock<IGenericRepository<EstadoAprobacion, int>>();
             _mockLogger = new Mock<ILogger<EstadoAprobacionService>>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<EstadoAprobacionProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new EstadoAprobacionService(_mockRepository.Object, _mapper, _mockLogger.Object);
         }
@@ -47,8 +47,8 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var estados = new List<EstadoAprobacion>
             {
-                new EstadoAprobacion { Id = 1, Nombre = "Pendiente", Descripcion = "Pendiente de aprobación", CreatedAt = DateTime.UtcNow },
-                new EstadoAprobacion { Id = 2, Nombre = "Aprobado", Descripcion = "Aprobado por el supervisor", CreatedAt = DateTime.UtcNow }
+                new EstadoAprobacion { Id = 1, Nombre = "Pendiente", Descripcion = "Pendiente de aprobación", FechaCreacion = DateTime.UtcNow },
+                new EstadoAprobacion { Id = 2, Nombre = "Aprobado", Descripcion = "Aprobado por el supervisor", FechaCreacion = DateTime.UtcNow }
             };
 
             _mockRepository.Setup(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()))
@@ -73,7 +73,7 @@ namespace ConsultCore31.Tests.Services
                 Id = 1, 
                 Nombre = "Pendiente", 
                 Descripcion = "Pendiente de aprobación", 
-                CreatedAt = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow 
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -119,7 +119,7 @@ namespace ConsultCore31.Tests.Services
                 Nombre = "Rechazado",
                 Descripcion = "Rechazado por el supervisor",
                 Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<EstadoAprobacion>(), It.IsAny<CancellationToken>()))
@@ -157,7 +157,7 @@ namespace ConsultCore31.Tests.Services
                 Nombre = "Pendiente",
                 Descripcion = "Pendiente de aprobación",
                 Activo = true,
-                CreatedAt = DateTime.UtcNow
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
