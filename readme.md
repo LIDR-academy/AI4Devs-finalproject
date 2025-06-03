@@ -23,10 +23,10 @@ Sistema de Gestión Integral de Proyectos de Consultoría
 Plataforma digital integral para la gestión del ciclo de vida de proyectos de consultoría, centralizando cronogramas, tareas, KPIs, informes y gestión financiera, optimizando la eficiencia, transparencia y control bajo la metodología "Hombro a Hombro".
 
 ### **0.4. URL del proyecto:**
-- **Backend:** [http://localhost:5000/api](http://localhost:5000/api) (Desarrollo local)
-- **Frontend:** [http://localhost:3000](http://localhost:3000) (Desarrollo local)
+- **Backend:** [https://rrdeveloper.sytes.net/consultoriaAPI](https://rrdeveloper.sytes.net/consultoriaAPI)
+- **Frontend:** [https://rrdeveloper.sytes.net/consultoriamanagment](https://rrdeveloper.sytes.net/consultoriamanagment)
 
-> Nota: El despliegue en el servidor remoto (rrdeveloper.sytes.net) está en proceso de configuración. Actualmente el sistema puede ejecutarse localmente siguiendo las instrucciones de instalación.
+> Accesos disponibles bajo petición. Puedes contactar a [alvaro@lidr.co](mailto:alvaro@lidr.co) para más información.
 
 ### 0.5. URL o archivo comprimido del repositorio
 [Por completar]
@@ -57,91 +57,34 @@ Centralizar y digitalizar la gestión operativa y administrativa de los proyecto
 
 ### **1.4. Instrucciones de instalación:**
 
-#### Requisitos previos
+#### **Backend (.NET Core 9)**
 
+**Requisitos previos:**
 - .NET 9.0 SDK
-- SQL Server 2019 o posterior
-- Node.js 18.x o posterior
-- npm 9.x o posterior
+- SQL Server 2019 o superior
+- Visual Studio 2022 o superior (recomendado)
 
-#### Configuración del Backend (.NET 9.0)
+**Instalación local:**
+1. Clonar el repositorio: `git clone https://github.com/IrakuX/AI4Devs-finalproject-finalproject-MRR.git`
+2. Navegar a la carpeta Backend: `cd AI4Devs-finalproject-finalproject-MRR/Backend`
+3. Restaurar dependencias: `dotnet restore`
+4. Actualizar la base de datos: `dotnet ef database update`
+5. Ejecutar el proyecto: `dotnet run --project src/ConsultCore31.WebAPI`
 
-1. **Clonar el repositorio:**
-   ```bash
-   git clone https://github.com/IrakuX/AI4Devs-finalproject-finalproject-MRR.git
-   cd AI4Devs-finalproject-finalproject-MRR
-   ```
+**Despliegue automático:**
+El proyecto utiliza GitHub Actions para CI/CD con despliegue automático a IIS mediante FTP:
+1. El workflow se ejecuta automáticamente en cada push a la rama main
+2. Compila y publica la aplicación
+3. Despliega los archivos al servidor IIS mediante FTPS
 
-2. **Restaurar dependencias:**
-   ```bash
-   cd Backend
-   dotnet restore ConsultCore31.sln
-   ```
+#### **Frontend (pendiente de implementación)**
 
-3. **Configurar la base de datos:**
-   - Abrir el archivo `Backend/src/ConsultCore31.WebAPI/appsettings.json`
-   - Modificar la cadena de conexión `DefaultConnection` según tu entorno
+**Requisitos previos:**
+- Node.js 18 o superior
+- npm o yarn
 
-4. **Aplicar migraciones:**
-   ```bash
-   cd src/ConsultCore31.WebAPI
-   dotnet ef database update
-   ```
-
-5. **Ejecutar el proyecto:**
-   ```bash
-   dotnet run
-   ```
-   El API estará disponible en `http://localhost:5000/api`
-
-#### Configuración del Frontend (Vue.js/Nuxt)
-
-1. **Instalar dependencias:**
-   ```bash
-   cd Frontend
-   npm install
-   ```
-
-2. **Configurar variables de entorno:**
-   - Crear un archivo `.env` basado en `.env.example`
-   - Configurar la URL del backend: `API_URL=http://localhost:5000/api`
-
-3. **Ejecutar en modo desarrollo:**
-   ```bash
-   npm run dev
-   ```
-   La aplicación estará disponible en `http://localhost:3000`
-
-#### Ejecución de pruebas
-
-1. **Pruebas del backend:**
-   ```bash
-   cd Backend
-   dotnet test ConsultCore31.sln
-   ```
-
-2. **Pruebas del frontend:**
-   ```bash
-   cd Frontend
-   npm run test
-   ```
-
-#### Despliegue en producción
-
-El despliegue en producción se realiza mediante GitHub Actions. El flujo de trabajo está configurado en el archivo `.github/workflows/deploy-to-iis.yml`. Para configurar el despliegue en tu propio servidor:
-
-1. Configurar los siguientes secretos en GitHub:
-   - `IIS_SERVER_URL`: URL del servidor IIS con Web Deploy habilitado
-   - `IIS_USERNAME`: Usuario con permisos para desplegar en IIS
-   - `IIS_PASSWORD`: Contraseña del usuario
-
-2. Asegurarse de que Web Deploy esté instalado y configurado en el servidor IIS
-
-3. Crear un sitio web en IIS llamado "consultoriaAPI" apuntando al directorio donde se desplegará la aplicación
-
-4. Configurar el servicio de administración web (Web Management Service) para que esté en ejecución
-
-5. Permitir conexiones remotas en el firewall para el puerto 8172 (puerto por defecto de Web Deploy)
+**Instalación local:**
+1. [Instrucciones pendientes para el frontend]
 
 ---
 
