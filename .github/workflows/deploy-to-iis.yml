@@ -39,21 +39,20 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout del código
-      uses: actions/checkout@v4
-      
     - name: Descargar artefacto
       uses: actions/download-artifact@v4
       with:
         name: webapp
         path: ${{github.workspace}}/publish
     
-    - name: Desplegar en IIS usando script PowerShell
-      shell: pwsh
-      run: |
-        $scriptPath = Join-Path -Path $env:GITHUB_WORKSPACE -ChildPath ".github\scripts\deploy-to-iis.ps1"
-        Write-Host "Ejecutando script: $scriptPath"
-        & $scriptPath -sourcePath "${{github.workspace}}\publish" -destinationServer "${{ secrets.IIS_SERVER_URL }}" -siteName "consultoriaAPI" -username "${{ secrets.IIS_USERNAME }}" -password "${{ secrets.IIS_PASSWORD }}"
+    - name: Desplegar usando FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ${{github.workspace}}/publish/
+        server-dir: ${{ secrets.FTP_TARGET_PATH }}/
