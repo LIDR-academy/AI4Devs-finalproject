@@ -48,11 +48,18 @@ jobs:
         name: webapp
         path: ${{github.workspace}}/publish
     
-    - name: Desplegar en IIS
-      uses: ChristopheLav/iis-deploy@v1
-      with:
-        website-name: 'consultoriaAPI'  # Nombre del sitio web en IIS
-        msdeploy-service-url: ${{ secrets.IIS_SERVER_URL }}  # URL del servidor IIS (configurada en los secretos)
-        msdeploy-username: ${{ secrets.IIS_USERNAME }}  # Usuario para autenticación (configurado en los secretos)
-        msdeploy-password: ${{ secrets.IIS_PASSWORD }}  # Contraseña para autenticación (configurada en los secretos)
-        source-path: ${{github.workspace}}/publish
+    - name: Desplegar en IIS usando PowerShell
+      shell: pwsh
+      run: |
+        $sourcePath = "${{github.workspace}}\publish"
+        $destinationServer = "${{ secrets.IIS_SERVER_URL }}"
+        $siteName = "consultoriaAPI"
+        $username = "${{ secrets.IIS_USERNAME }}"
+        $password = "${{ secrets.IIS_PASSWORD }}"
+        
+        # Crear archivo de credenciales temporales
+        $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+        $credential = New-Object System.Management.Automation.PSCredential ($username, $securePassword)
+        
+        # Ejecutar MSDeploy directamente
+        & 'C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe' -verb:sync -source:contentPath="$sourcePath" -dest:contentPath="$siteName",computerName="$destinationServer",username="$username",password="$password",authType="Basic" -allowUntrusted -enableRule:DoNotDeleteRule
