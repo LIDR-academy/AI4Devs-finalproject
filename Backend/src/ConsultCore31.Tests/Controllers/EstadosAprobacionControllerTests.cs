@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.EstadoAprobacion;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Controllers
 {
@@ -17,15 +14,78 @@ namespace ConsultCore31.Tests.Controllers
     /// </summary>
     public class EstadosAprobacionControllerTests
     {
-        private readonly Mock<IEstadoAprobacionService> _mockService;
-        private readonly Mock<ILogger<EstadosAprobacionController>> _mockLogger;
         private readonly EstadosAprobacionController _controller;
+        private readonly Mock<ILogger<EstadosAprobacionController>> _mockLogger;
+        private readonly Mock<IEstadoAprobacionService> _mockService;
 
         public EstadosAprobacionControllerTests()
         {
             _mockService = new Mock<IEstadoAprobacionService>();
             _mockLogger = new Mock<ILogger<EstadosAprobacionController>>();
             _controller = new EstadosAprobacionController(_mockService.Object, _mockLogger.Object);
+        }
+
+        [Fact]
+        public async Task Create_ConDatosValidos_DebeRetornarCreatedAtAction()
+        {
+            // Arrange
+            var createDto = new CreateEstadoAprobacionDto
+            {
+                Nombre = "Rechazado",
+                Descripcion = "Solicitud rechazada",
+                Activo = true
+            };
+
+            var createdDto = new EstadoAprobacionDto
+            {
+                Id = 3,
+                Nombre = "Rechazado",
+                Descripcion = "Solicitud rechazada",
+                Activo = true,
+                FechaCreacion = DateTime.UtcNow
+            };
+
+            _mockService.Setup(service => service.CreateAsync(createDto, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(createdDto);
+
+            // Act
+            var result = await _controller.Create(createDto).ConfigureAwait(false);
+
+            // Assert
+            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
+            Assert.Equal(nameof(EstadosAprobacionController.GetById), createdAtActionResult.ActionName);
+            Assert.Equal(3, createdAtActionResult.RouteValues["id"]);
+            var returnValue = Assert.IsType<EstadoAprobacionDto>(createdAtActionResult.Value);
+            Assert.Equal(3, returnValue.Id);
+            Assert.Equal("Rechazado", returnValue.Nombre);
+        }
+
+        [Fact]
+        public async Task Delete_ConIdExistente_DebeRetornarNoContent()
+        {
+            // Arrange
+            _mockService.Setup(service => service.DeleteAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.Delete(1);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+        }
+
+        [Fact]
+        public async Task Delete_ConIdInexistente_DebeRetornarNotFound()
+        {
+            // Arrange
+            _mockService.Setup(service => service.DeleteAsync(999, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.Delete(999);
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result);
         }
 
         [Fact]
@@ -90,82 +150,6 @@ namespace ConsultCore31.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_ConDatosValidos_DebeRetornarCreatedAtAction()
-        {
-            // Arrange
-            var createDto = new CreateEstadoAprobacionDto
-            {
-                Nombre = "Rechazado",
-                Descripcion = "Solicitud rechazada",
-                Activo = true
-            };
-
-            var createdDto = new EstadoAprobacionDto
-            {
-                Id = 3,
-                Nombre = "Rechazado",
-                Descripcion = "Solicitud rechazada",
-                Activo = true,
-                FechaCreacion = DateTime.UtcNow
-            };
-
-            _mockService.Setup(service => service.CreateAsync(createDto, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(createdDto);
-
-            // Act
-            var result = await _controller.Create(createDto);
-
-            // Assert
-            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal(nameof(EstadosAprobacionController.GetById), createdAtActionResult.ActionName);
-            Assert.Equal(3, createdAtActionResult.RouteValues["id"]);
-            var returnValue = Assert.IsType<EstadoAprobacionDto>(createdAtActionResult.Value);
-            Assert.Equal(3, returnValue.Id);
-            Assert.Equal("Rechazado", returnValue.Nombre);
-        }
-
-        [Fact]
-        public async Task Update_ConIdYDtoValidos_DebeRetornarOk()
-        {
-            // Arrange
-            var updateDto = new UpdateEstadoAprobacionDto
-            {
-                Id = 1,
-                Nombre = "Pendiente Actualizado",
-                Descripcion = "Descripción actualizada",
-                Activo = true
-            };
-
-            _mockService.Setup(service => service.UpdateAsync(updateDto, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(true);
-
-            // Act
-            var result = await _controller.Update(1, updateDto);
-
-            // Assert
-            Assert.IsType<OkObjectResult>(result);
-        }
-
-        [Fact]
-        public async Task Update_ConIdNoCoincidente_DebeRetornarBadRequest()
-        {
-            // Arrange
-            var updateDto = new UpdateEstadoAprobacionDto
-            {
-                Id = 2,
-                Nombre = "Pendiente Actualizado",
-                Descripcion = "Descripción actualizada",
-                Activo = true
-            };
-
-            // Act
-            var result = await _controller.Update(1, updateDto);
-
-            // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
-        }
-
-        [Fact]
         public async Task Update_ConIdInexistente_DebeRetornarNotFound()
         {
             // Arrange
@@ -181,38 +165,51 @@ namespace ConsultCore31.Tests.Controllers
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _controller.Update(999, updateDto);
+            var result = await _controller.Update(999, updateDto).ConfigureAwait(true);
 
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);
         }
 
         [Fact]
-        public async Task Delete_ConIdExistente_DebeRetornarOk()
+        public async Task Update_ConIdNoCoincidente_DebeRetornarBadRequest()
         {
             // Arrange
-            _mockService.Setup(service => service.DeleteAsync(1, It.IsAny<CancellationToken>()))
+            var updateDto = new UpdateEstadoAprobacionDto
+            {
+                Id = 2,
+                Nombre = "Pendiente Actualizado",
+                Descripcion = "Descripción actualizada",
+                Activo = true
+            };
+
+            // Act
+            var result = await _controller.Update(1, updateDto).ConfigureAwait(true);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task Update_ConIdYDtoValidos_DebeRetornarNoContent()
+        {
+            // Arrange
+            var updateDto = new UpdateEstadoAprobacionDto
+            {
+                Id = 1,
+                Nombre = "Pendiente Actualizado",
+                Descripcion = "Descripción actualizada",
+                Activo = true
+            };
+
+            _mockService.Setup(service => service.UpdateAsync(updateDto, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _controller.Delete(1);
+            var result = await _controller.Update(1, updateDto).ConfigureAwait(true);
 
             // Assert
-            Assert.IsType<OkObjectResult>(result);
-        }
-
-        [Fact]
-        public async Task Delete_ConIdInexistente_DebeRetornarNotFound()
-        {
-            // Arrange
-            _mockService.Setup(service => service.DeleteAsync(999, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(false);
-
-            // Act
-            var result = await _controller.Delete(999);
-
-            // Assert
-            Assert.IsType<NotFoundObjectResult>(result);
+            Assert.IsType<NoContentResult>(result);
         }
     }
 }

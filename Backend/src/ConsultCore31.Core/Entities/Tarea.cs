@@ -75,7 +75,7 @@ public class Tarea : BaseEntity<int>
     [Required]
     [Column("tareaFechaCreacion")]
     [Description("Fecha de creación de la tarea")]
-    public DateTime FechaCreacion { get; set; } = DateTime.Now;
+    public new DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Obtiene o establece la fecha de vencimiento de la tarea.

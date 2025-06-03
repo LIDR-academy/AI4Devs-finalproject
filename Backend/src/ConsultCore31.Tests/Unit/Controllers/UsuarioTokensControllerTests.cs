@@ -43,6 +43,12 @@ namespace ConsultCore31.Tests.Unit.Controllers
             var usuarioId = "123";
             var motivo = "Cierre de sesión solicitado por el usuario";
 
+            _mockTokenService.Setup(s => s.InvalidateUserTokensAsync(
+                It.Is<int>(id => id == int.Parse(usuarioId)),
+                It.IsAny<string>(),
+                It.Is<string>(m => m == motivo)))
+                .Returns(Task.CompletedTask);
+
             // Act
             var result = await _controller.InvalidateUserTokens(usuarioId, motivo);
 
@@ -52,9 +58,15 @@ namespace ConsultCore31.Tests.Unit.Controllers
             
             var response = okResult.Value.Should().BeAssignableTo<object>().Subject;
             response.Should().NotBeNull();
-            response.GetType().GetProperty("Success").GetValue(response).Should().Be(true);
-            response.GetType().GetProperty("Message").GetValue(response).Should().NotBeNull();
-            response.GetType().GetProperty("UsuarioId").GetValue(response).Should().Be(int.Parse(usuarioId));
+            
+            // Usar null-conditional para evitar NullReferenceException
+            var successProp = response?.GetType().GetProperty("Success");
+            var messageProp = response?.GetType().GetProperty("Message");
+            var usuarioIdProp = response?.GetType().GetProperty("UsuarioId");
+            
+            successProp?.GetValue(response).Should().Be(true);
+            messageProp?.GetValue(response).Should().NotBeNull();
+            usuarioIdProp?.GetValue(response).Should().Be(int.Parse(usuarioId));
 
             _mockTokenService.Verify(s => s.InvalidateUserTokensAsync(
                 It.Is<int>(id => id == int.Parse(usuarioId)),

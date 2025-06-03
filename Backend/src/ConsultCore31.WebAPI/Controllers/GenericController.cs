@@ -111,7 +111,7 @@ namespace ConsultCore31.WebAPI.Controllers
         /// Actualiza una entidad existente
         /// </summary>
         [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -135,7 +135,7 @@ namespace ConsultCore31.WebAPI.Controllers
                     return NotFound(new { message = $"No se encontró el {_entityName} con ID: {id}" });
                 }
 
-                return Ok(new { message = $"{_entityName} actualizado correctamente" });
+                return NoContent();
             }
             catch (InvalidOperationException ex)
             {
@@ -152,7 +152,7 @@ namespace ConsultCore31.WebAPI.Controllers
         /// Elimina una entidad por su ID
         /// </summary>
         [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public virtual async Task<IActionResult> Delete(TKey id)
@@ -165,7 +165,7 @@ namespace ConsultCore31.WebAPI.Controllers
                     return NotFound(new { message = $"No se encontró el {_entityName} con ID: {id}" });
                 }
 
-                return Ok(new { message = $"{_entityName} eliminado correctamente" });
+                return NoContent();
             }
             catch (Exception ex)
             {

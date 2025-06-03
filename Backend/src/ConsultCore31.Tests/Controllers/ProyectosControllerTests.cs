@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.Proyecto;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Controllers
 {
@@ -34,29 +31,29 @@ namespace ConsultCore31.Tests.Controllers
             // Arrange
             var proyectos = new List<ProyectoDto>
             {
-                new ProyectoDto { 
-                    Id = 1, 
-                    Nombre = "Proyecto 1", 
-                    Codigo = "PRO-001", 
+                new ProyectoDto {
+                    Id = 1,
+                    Nombre = "Proyecto 1",
+                    Codigo = "PRO-001",
                     Descripcion = "Descripción del proyecto 1",
                     FechaInicio = DateTime.UtcNow,
                     FechaFinPlanificada = DateTime.UtcNow.AddMonths(3),
                     EstadoProyectoId = 1,
                     TipoProyectoId = 1,
                     ClienteId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 },
-                new ProyectoDto { 
-                    Id = 2, 
-                    Nombre = "Proyecto 2", 
-                    Codigo = "PRO-002", 
+                new ProyectoDto {
+                    Id = 2,
+                    Nombre = "Proyecto 2",
+                    Codigo = "PRO-002",
                     Descripcion = "Descripción del proyecto 2",
                     FechaInicio = DateTime.UtcNow,
                     FechaFinPlanificada = DateTime.UtcNow.AddMonths(6),
                     EstadoProyectoId = 1,
                     TipoProyectoId = 2,
                     ClienteId = 2,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 }
             };
 
@@ -64,7 +61,7 @@ namespace ConsultCore31.Tests.Controllers
                 .ReturnsAsync(proyectos);
 
             // Act
-            var result = await _controller.GetAll();
+            var result = await _controller.GetAll().ConfigureAwait(true);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -94,7 +91,7 @@ namespace ConsultCore31.Tests.Controllers
                 .ReturnsAsync(proyecto);
 
             // Act
-            var result = await _controller.GetById(1);
+            var result = await _controller.GetById(1).ConfigureAwait(true);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
@@ -112,7 +109,7 @@ namespace ConsultCore31.Tests.Controllers
                 .ReturnsAsync((ProyectoDto)null);
 
             // Act
-            var result = await _controller.GetById(999);
+            var result = await _controller.GetById(999).ConfigureAwait(true);
 
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);
@@ -165,7 +162,7 @@ namespace ConsultCore31.Tests.Controllers
         }
 
         [Fact]
-        public async Task Update_ConIdYDtoValidos_DebeRetornarOk()
+        public async Task Update_ConIdYDtoValidos_DebeRetornarNoContent()
         {
             // Arrange
             var updateDto = new UpdateProyectoDto
@@ -189,7 +186,7 @@ namespace ConsultCore31.Tests.Controllers
             var result = await _controller.Update(1, updateDto);
 
             // Assert
-            Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -210,7 +207,7 @@ namespace ConsultCore31.Tests.Controllers
             };
 
             // Act
-            var result = await _controller.Update(1, updateDto);
+            var result = await _controller.Update(1, updateDto).ConfigureAwait(true);
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
@@ -237,24 +234,24 @@ namespace ConsultCore31.Tests.Controllers
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _controller.Update(999, updateDto);
+            var result = await _controller.Update(999, updateDto).ConfigureAwait(true);
 
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);
         }
 
         [Fact]
-        public async Task Delete_ConIdExistente_DebeRetornarOk()
+        public async Task Delete_ConIdExistente_DebeRetornarNoContent()
         {
             // Arrange
             _mockService.Setup(service => service.DeleteAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _controller.Delete(1);
+            var result = await _controller.Delete(1).ConfigureAwait(true);
 
             // Assert
-            Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -265,7 +262,7 @@ namespace ConsultCore31.Tests.Controllers
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _controller.Delete(999);
+            var result = await _controller.Delete(999).ConfigureAwait(true);
 
             // Assert
             Assert.IsType<NotFoundObjectResult>(result);

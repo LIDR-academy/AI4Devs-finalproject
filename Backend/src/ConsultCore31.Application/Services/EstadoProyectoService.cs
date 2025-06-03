@@ -71,7 +71,7 @@ namespace ConsultCore31.Application.Services
             
             if (existingEntity == null)
             {
-                return false;
+                throw new KeyNotFoundException($"No se encontró el estado de proyecto con ID: {id}");
             }
 
             _mapper.Map(updateDto, existingEntity);
@@ -85,6 +85,13 @@ namespace ConsultCore31.Application.Services
         public override async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation($"Eliminando estado de proyecto con ID: {id}");
+            var existingEntity = await _repository.GetByIdAsync(id, cancellationToken);
+            
+            if (existingEntity == null)
+            {
+                throw new KeyNotFoundException($"No se encontró el estado de proyecto con ID: {id}");
+            }
+            
             return await _repository.SoftDeleteAsync(id, cancellationToken);
         }
 

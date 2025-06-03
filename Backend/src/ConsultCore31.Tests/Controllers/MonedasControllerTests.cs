@@ -133,7 +133,7 @@ namespace ConsultCore31.Tests.Controllers
         }
 
         [Fact]
-        public async Task Update_ConIdYDtoValidos_DebeRetornarOk()
+        public async Task Update_ConIdYDtoValidos_DebeRetornarNoContent()
         {
             // Arrange
             var updateDto = new UpdateMonedaDto
@@ -154,7 +154,7 @@ namespace ConsultCore31.Tests.Controllers
             var result = await _controller.Update(1, updateDto);
 
             // Assert
-            Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -205,7 +205,7 @@ namespace ConsultCore31.Tests.Controllers
         }
 
         [Fact]
-        public async Task Delete_ConIdExistente_DebeRetornarOk()
+        public async Task Delete_ConIdExistente_DebeRetornarNoContent()
         {
             // Arrange
             _mockService.Setup(service => service.DeleteAsync(1, It.IsAny<CancellationToken>()))
@@ -215,7 +215,7 @@ namespace ConsultCore31.Tests.Controllers
             var result = await _controller.Delete(1);
 
             // Assert
-            Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<NoContentResult>(result);
         }
 
         [Fact]
@@ -233,3 +233,5 @@ namespace ConsultCore31.Tests.Controllers
         }
     }
 }
+
+

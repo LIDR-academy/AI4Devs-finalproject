@@ -127,7 +127,7 @@ public class KPI : BaseEntity<int>
     [Required]
     [Column("kpiFechaCreacion")]
     [Description("Fecha de creación del KPI")]
-    public DateTime FechaCreacion { get; set; } = DateTime.Now;
+    public new DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Obtiene o establece un valor que indica si el KPI es operativo.

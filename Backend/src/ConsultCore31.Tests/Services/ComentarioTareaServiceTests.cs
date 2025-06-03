@@ -73,7 +73,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(comentarios);
 
             // Act
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllAsync(CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -100,7 +100,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(comentario);
 
             // Act
-            var result = await _service.GetByIdAsync(1);
+            var result = await _service.GetByIdAsync(1, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -117,7 +117,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync((ComentarioTarea)null);
 
             // Act
-            var result = await _service.GetByIdAsync(999);
+            var result = await _service.GetByIdAsync(999, CancellationToken.None);
 
             // Assert
             Assert.Null(result);
@@ -151,7 +151,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(createdEntity);
 
             // Act
-            var result = await _service.CreateAsync(createDto);
+            var result = await _service.CreateAsync(createDto, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -187,7 +187,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(existingEntity);
 
             // Act
-            var result = await _service.UpdateAsync(updateDto);
+            var result = await _service.UpdateAsync(updateDto, CancellationToken.None);
 
             // Assert
             Assert.True(result);
@@ -213,7 +213,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync((ComentarioTarea)null);
 
             // Act
-            var result = await _service.UpdateAsync(updateDto);
+            var result = await _service.UpdateAsync(updateDto, CancellationToken.None);
 
             // Assert
             Assert.False(result);
@@ -228,7 +228,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _service.DeleteAsync(1);
+            var result = await _service.DeleteAsync(1, CancellationToken.None);
 
             // Assert
             Assert.True(result);
@@ -243,7 +243,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _service.DeleteAsync(999);
+            var result = await _service.DeleteAsync(999, CancellationToken.None);
 
             // Assert
             Assert.False(result);
@@ -258,7 +258,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _service.ExistsAsync(1);
+            var result = await _service.ExistsAsync(1, CancellationToken.None);
 
             // Assert
             Assert.True(result);
@@ -272,7 +272,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _service.ExistsAsync(999);
+            var result = await _service.ExistsAsync(999, CancellationToken.None);
 
             // Assert
             Assert.False(result);

@@ -59,7 +59,7 @@ public class CarpetaDocumento : BaseEntity<int>
     [Required]
     [Column("carpetaDocumentoFechaCreacion")]
     [Description("Fecha de creación de la carpeta de documentos")]
-    public DateTime FechaCreacion { get; set; } = DateTime.Now;
+    public new DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Obtiene o establece el identificador del usuario que creó la carpeta de documentos.

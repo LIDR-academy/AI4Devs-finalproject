@@ -127,7 +127,7 @@ public class InformeSemanal : BaseEntity<int>
     [Required]
     [Column("informeSemanalFechaCreacion")]
     [Description("Fecha de creación del informe")]
-    public DateTime FechaCreacion { get; set; } = DateTime.Now;
+    public new DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Obtiene o establece el identificador del estado de aprobación del informe.

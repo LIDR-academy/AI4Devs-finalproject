@@ -59,7 +59,7 @@ public class VersionDocumento : BaseEntity<int>
     [Required]
     [Column("versionDocumentoFechaCreacion")]
     [Description("Fecha de creación de la versión del documento")]
-    public DateTime FechaCreacion { get; set; } = DateTime.Now;
+    public new DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Obtiene o establece el comentario sobre los cambios en la versión del documento.

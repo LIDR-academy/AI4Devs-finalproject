@@ -47,7 +47,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(estadosProyecto);
 
             // Act
-            var result = await _service.GetAllAsync();
+            var result = await _service.GetAllAsync(CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -79,7 +79,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(estadoProyecto);
 
             // Act
-            var result = await _service.GetByIdAsync(estadoProyectoId);
+            var result = await _service.GetByIdAsync(estadoProyectoId, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -104,7 +104,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync((EstadoProyecto)null);
 
             // Act
-            var result = await _service.GetByIdAsync(estadoProyectoId);
+            var result = await _service.GetByIdAsync(estadoProyectoId, CancellationToken.None);
 
             // Assert
             Assert.Null(result);
@@ -141,7 +141,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(estadoProyectoCreado);
 
             // Act
-            var result = await _service.CreateAsync(createDto);
+            var result = await _service.CreateAsync(createDto, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -200,7 +200,7 @@ namespace ConsultCore31.Tests.Services
                 .Returns(Task.CompletedTask);
 
             // Act
-            var result = await _service.UpdateAsync(updateDto);
+            var result = await _service.UpdateAsync(updateDto, CancellationToken.None);
 
             // Assert
             Assert.True(result);
@@ -228,7 +228,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync((EstadoProyecto)null);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.UpdateAsync(updateDto));
+            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.UpdateAsync(updateDto, CancellationToken.None));
             Assert.Contains("No se encontró el estado de proyecto", exception.Message);
             
             _mockRepository.Verify(repo => repo.GetByIdAsync(updateDto.Id, It.IsAny<CancellationToken>()), Times.Once);
@@ -258,7 +258,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _service.DeleteAsync(estadoProyectoId);
+            var result = await _service.DeleteAsync(estadoProyectoId, CancellationToken.None);
 
             // Assert
             Assert.True(result);
@@ -277,7 +277,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync((EstadoProyecto)null);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteAsync(estadoProyectoId));
+            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteAsync(estadoProyectoId, CancellationToken.None));
             Assert.Contains("No se encontró el estado de proyecto", exception.Message);
             
             _mockRepository.Verify(repo => repo.GetByIdAsync(estadoProyectoId, It.IsAny<CancellationToken>()), Times.Once);
@@ -294,7 +294,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(true);
 
             // Act
-            var result = await _service.ExistsAsync(estadoProyectoId);
+            var result = await _service.ExistsAsync(estadoProyectoId, CancellationToken.None);
 
             // Assert
             Assert.True(result);
@@ -314,7 +314,7 @@ namespace ConsultCore31.Tests.Services
                 .ReturnsAsync(false);
 
             // Act
-            var result = await _service.ExistsAsync(estadoProyectoId);
+            var result = await _service.ExistsAsync(estadoProyectoId, CancellationToken.None);
 
             // Assert
             Assert.False(result);
