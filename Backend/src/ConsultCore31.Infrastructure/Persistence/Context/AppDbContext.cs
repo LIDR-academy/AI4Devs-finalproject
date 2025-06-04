@@ -62,11 +62,12 @@ namespace ConsultCore31.Infrastructure.Persistence.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuración para la entidad Usuario
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
             modelBuilder.Entity<Usuario>(entity =>
             {
                 // Mapear la tabla
-                entity.ToTable("usuarios", "dbo");
+                entity.ToTable("Usuarios", "dbo");
 
                 // Configuración de la clave primaria
                 entity.HasKey(u => u.Id);
@@ -127,8 +128,8 @@ namespace ConsultCore31.Infrastructure.Persistence.Context
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(u => u.Empleado)
-                    .WithMany()
-                    .HasForeignKey(u => u.EmpleadoId)
+                    .WithOne(e => e.Usuario)
+                    .HasForeignKey<Usuario>(u => u.EmpleadoId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(u => u.Objeto)
@@ -466,27 +467,453 @@ namespace ConsultCore31.Infrastructure.Persistence.Context
                 entity.HasIndex(ut => ut.UsuarioId);
             });
 
-            // Configuración para la entidad RefreshToken
-            modelBuilder.Entity<RefreshToken>(entity =>
+            // Configuración para la entidad CategoriaGasto
+            modelBuilder.Entity<CategoriaGasto>(entity =>
             {
-                entity.HasKey(rt => rt.Id);
-                entity.Property(rt => rt.Token).IsRequired();
-                entity.Property(rt => rt.CreadoPorIp).IsRequired().HasMaxLength(50);
-                entity.Property(rt => rt.FechaExpiracion).IsRequired();
-                entity.Property(rt => rt.FechaRevocacion).IsRequired(false);
-                entity.Property(rt => rt.RazonRevocacion).HasMaxLength(500);
-                entity.Property(rt => rt.ReemplazadoPorToken).HasMaxLength(500);
-                entity.Property(rt => rt.FechaCreacion).IsRequired();
+                entity.ToTable("CategoriasGasto", "dbo");
+                entity.HasKey(c => c.Id);
 
-                // Relación con Usuario
-                entity.HasOne(rt => rt.Usuario)
-                    .WithMany(u => u.RefreshTokens)
-                    .HasForeignKey(rt => rt.UsuarioId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                // Configuración de propiedades
+                entity.Property(c => c.Id).HasColumnName("categoriaGastoId");
+                entity.Property(c => c.Nombre)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnName("categoriaGastoNombre");
+
+                entity.Property(c => c.Descripcion)
+                    .HasMaxLength(200)
+                    .HasColumnName("categoriaGastoDescripcion");
+
+                entity.Property(c => c.EsEstandar)
+                    .IsRequired()
+                    .HasColumnName("categoriaGastoEsEstandar")
+                    .HasDefaultValue(true);
+
+                entity.Property(c => c.RequiereComprobante)
+                    .IsRequired()
+                    .HasColumnName("categoriaGastoRequiereComprobante")
+                    .HasDefaultValue(true);
+
+                // Configuración específica para la propiedad decimal LimiteMaximo
+                entity.Property(c => c.LimiteMaximo)
+                    .HasColumnName("categoriaGastoLimiteMaximo")
+                    .HasPrecision(18, 2); // Especificamos precisión y escala
+
+                entity.Property(c => c.Activa)
+                    .IsRequired()
+                    .HasColumnName("categoriaGastoActiva")
+                    .HasDefaultValue(true);
+            });
+
+            // Configuración para la entidad Gasto
+            modelBuilder.Entity<Gasto>(entity =>
+            {
+                entity.ToTable("Gastos", "dbo");
+                entity.HasKey(g => g.Id);
+
+                // Configuración de propiedades
+                entity.Property(g => g.Id).HasColumnName("gastoId");
+                entity.Property(g => g.Concepto)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnName("gastoConcepto");
+
+                // Configuración específica para propiedades decimales
+                entity.Property(g => g.Monto)
+                    .IsRequired()
+                    .HasColumnName("gastoMonto")
+                    .HasPrecision(18, 2); // Especificamos precisión y escala
+
+                entity.Property(g => g.TipoCambio)
+                    .HasColumnName("gastoTipoCambio")
+                    .HasPrecision(18, 6); // Mayor precisión para tipos de cambio
+
+                // Resto de propiedades
+                entity.Property(g => g.Fecha)
+                    .IsRequired()
+                    .HasColumnName("gastoFecha");
+
+                entity.Property(g => g.ProyectoId)
+                    .IsRequired()
+                    .HasColumnName("proyectoId");
+
+                entity.Property(g => g.CategoriaGastoId)
+                    .IsRequired()
+                    .HasColumnName("categoriaGastoId");
+
+                entity.Property(g => g.EmpleadoId)
+                    .IsRequired()
+                    .HasColumnName("empleadoId");
+
+                entity.Property(g => g.MonedaId)
+                    .IsRequired()
+                    .HasColumnName("monedaId");
+
+                entity.Property(g => g.NumeroFactura)
+                    .HasMaxLength(50)
+                    .HasColumnName("gastoNumeroFactura");
+
+                entity.Property(g => g.Proveedor)
+                    .HasMaxLength(100)
+                    .HasColumnName("gastoProveedor");
+
+                entity.Property(g => g.ProveedorRFC)
+                    .HasMaxLength(13)
+                    .HasColumnName("gastoProveedorRFC");
+
+                entity.Property(g => g.RutaComprobante)
+                    .HasMaxLength(500)
+                    .HasColumnName("gastoRutaComprobante");
+
+                entity.Property(g => g.EstadoAprobacionId)
+                    .IsRequired()
+                    .HasColumnName("estadoAprobacionId");
+
+                entity.Property(g => g.AprobadoPorId)
+                    .HasColumnName("aprobadoPorId");
+
+                entity.Property(g => g.FechaAprobacion)
+                    .HasColumnName("gastoFechaAprobacion");
+
+                entity.Property(g => g.Comentarios)
+                    .HasMaxLength(500)
+                    .HasColumnName("gastoComentarios");
+
+                entity.Property(g => g.EsReembolsable)
+                    .IsRequired()
+                    .HasColumnName("gastoEsReembolsable");
+
+                entity.Property(g => g.Activo)
+                    .IsRequired()
+                    .HasColumnName("gastoActivo")
+                    .HasDefaultValue(true);
+
+                // Relaciones
+                entity.HasOne(g => g.Proyecto)
+                    .WithMany()
+                    .HasForeignKey(g => g.ProyectoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(g => g.CategoriaGasto)
+                    .WithMany()
+                    .HasForeignKey(g => g.CategoriaGastoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(g => g.Empleado)
+                    .WithMany()
+                    .HasForeignKey(g => g.EmpleadoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(g => g.Moneda)
+                    .WithMany()
+                    .HasForeignKey(g => g.MonedaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(g => g.EstadoAprobacion)
+                    .WithMany()
+                    .HasForeignKey(g => g.EstadoAprobacionId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configuración para la entidad AsignacionViatico
+            modelBuilder.Entity<AsignacionViatico>(entity =>
+            {
+                entity.ToTable("AsignacionesViatico", "dbo");
+                entity.HasKey(av => av.Id);
+
+                // Configuración de propiedades
+                entity.Property(av => av.Id).HasColumnName("asignacionViaticoId");
+                entity.Property(av => av.Concepto)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnName("asignacionViaticoConcepto");
+
+                // Configuración específica para propiedades decimales
+                entity.Property(av => av.MontoTotal)
+                    .IsRequired()
+                    .HasColumnName("asignacionViaticoMontoTotal")
+                    .HasPrecision(18, 2); // Especificamos precisión y escala
+
+                entity.Property(av => av.SaldoPendiente)
+                    .HasColumnName("asignacionViaticoSaldoPendiente")
+                    .HasPrecision(18, 2); // Especificamos precisión y escala
+
+                // Resto de propiedades
+                entity.Property(av => av.ProyectoId)
+                    .IsRequired()
+                    .HasColumnName("proyectoId");
+
+                entity.Property(av => av.EmpleadoId)
+                    .IsRequired()
+                    .HasColumnName("empleadoId");
+
+                entity.Property(av => av.MonedaId)
+                    .IsRequired()
+                    .HasColumnName("monedaId");
+
+                entity.Property(av => av.FechaInicio)
+                    .IsRequired()
+                    .HasColumnName("asignacionViaticoFechaInicio");
+
+                entity.Property(av => av.FechaFin)
+                    .IsRequired()
+                    .HasColumnName("asignacionViaticoFechaFin");
+
+                entity.Property(av => av.Destino)
+                    .HasMaxLength(100)
+                    .HasColumnName("asignacionViaticoDestino");
+
+                entity.Property(av => av.PropositoViaje)
+                    .HasMaxLength(500)
+                    .HasColumnName("asignacionViaticoPropositoViaje");
+
+                entity.Property(av => av.EstadoAprobacionId)
+                    .IsRequired()
+                    .HasColumnName("estadoAprobacionId");
+
+                entity.Property(av => av.AprobadoPorId)
+                    .HasColumnName("aprobadoPorId");
+
+                entity.Property(av => av.FechaAprobacion)
+                    .HasColumnName("asignacionViaticoFechaAprobacion");
+
+                entity.Property(av => av.EsLiquidada)
+                    .IsRequired()
+                    .HasColumnName("asignacionViaticoEsLiquidada");
+
+                entity.Property(av => av.FechaLiquidacion)
+                    .HasColumnName("asignacionViaticoFechaLiquidacion");
+
+                entity.Property(av => av.Comentarios)
+                    .HasMaxLength(500)
+                    .HasColumnName("asignacionViaticoComentarios");
+
+                // Relaciones
+                entity.HasOne(av => av.Proyecto)
+                    .WithMany()
+                    .HasForeignKey(av => av.ProyectoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(av => av.Empleado)
+                    .WithMany()
+                    .HasForeignKey(av => av.EmpleadoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(av => av.Moneda)
+                    .WithMany()
+                    .HasForeignKey(av => av.MonedaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(av => av.EstadoAprobacion)
+                    .WithMany()
+                    .HasForeignKey(av => av.EstadoAprobacionId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configuración para la entidad MovimientoViatico
+            modelBuilder.Entity<MovimientoViatico>(entity =>
+            {
+                entity.ToTable("MovimientosViatico", "dbo");
+                entity.HasKey(mv => mv.Id);
+
+                // Configuración de propiedades
+                entity.Property(mv => mv.Id).HasColumnName("movimientoViaticoId");
+                entity.Property(mv => mv.Concepto)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnName("movimientoViaticoConcepto");
+
+                // Configuración específica para propiedades decimales
+                entity.Property(mv => mv.Monto)
+                    .IsRequired()
+                    .HasColumnName("movimientoViaticoMonto")
+                    .HasPrecision(18, 2); // Especificamos precisión y escala
+
+                // Resto de propiedades
+                entity.Property(mv => mv.AsignacionViaticoId)
+                    .IsRequired()
+                    .HasColumnName("asignacionViaticoId");
+
+                entity.Property(mv => mv.TipoMovimientoViaticoId)
+                    .IsRequired()
+                    .HasColumnName("tipoMovimientoViaticoId");
+
+                entity.Property(mv => mv.Fecha)
+                    .IsRequired()
+                    .HasColumnName("movimientoViaticoFecha");
+
+                entity.Property(mv => mv.CategoriaGastoId)
+                    .HasColumnName("categoriaGastoId");
+
+                entity.Property(mv => mv.RutaComprobante)
+                    .HasMaxLength(500)
+                    .HasColumnName("movimientoViaticoRutaComprobante");
+
+                entity.Property(mv => mv.RegistradoPorId)
+                    .IsRequired()
+                    .HasColumnName("registradoPorId");
+
+                entity.Property(mv => mv.FechaRegistro)
+                    .IsRequired()
+                    .HasColumnName("movimientoViaticoFechaRegistro");
+
+                entity.Property(mv => mv.Comentarios)
+                    .HasMaxLength(500)
+                    .HasColumnName("movimientoViaticoComentarios");
+
+                entity.Property(mv => mv.Activo)
+                    .IsRequired()
+                    .HasColumnName("movimientoViaticoActivo")
+                    .HasDefaultValue(true);
+
+                // Relaciones
+                entity.HasOne(mv => mv.AsignacionViatico)
+                    .WithMany()
+                    .HasForeignKey(mv => mv.AsignacionViaticoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(mv => mv.TipoMovimientoViatico)
+                    .WithMany()
+                    .HasForeignKey(mv => mv.TipoMovimientoViaticoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(mv => mv.CategoriaGasto)
+                    .WithMany()
+                    .HasForeignKey(mv => mv.CategoriaGastoId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(mv => mv.RegistradoPor)
+                    .WithMany()
+                    .HasForeignKey(mv => mv.RegistradoPorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Configuración para la entidad Moneda
+            modelBuilder.Entity<Moneda>(entity =>
+            {
+                entity.ToTable("Monedas", "dbo");
+                entity.HasKey(m => m.Id);
+
+                // Configuración de propiedades
+                entity.Property(m => m.Id).HasColumnName("monedaId");
+                entity.Property(m => m.Codigo)
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasColumnName("monedaCodigo");
+
+                entity.Property(m => m.Nombre)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnName("monedaNombre");
+
+                entity.Property(m => m.Simbolo)
+                    .HasMaxLength(5)
+                    .HasColumnName("monedaSimbolo");
+
+                // Configuración específica para propiedades decimales
+                entity.Property(m => m.TasaCambio)
+                    .IsRequired()
+                    .HasColumnName("monedaTasaCambio")
+                    .HasPrecision(18, 6); // Mayor precisión para tasas de cambio
+
+                entity.Property(m => m.FechaActualizacion)
+                    .HasColumnName("monedaFechaActualizacion");
+
+                entity.Property(m => m.EsPredeterminada)
+                    .IsRequired()
+                    .HasColumnName("monedaEsPredeterminada");
+
+                entity.Property(m => m.Activa)
+                    .IsRequired()
+                    .HasColumnName("monedaActiva")
+                    .HasDefaultValue(true);
 
                 // Índices
-                entity.HasIndex(rt => rt.Token).IsUnique();
-                entity.HasIndex(rt => rt.UsuarioId);
+                entity.HasIndex(m => m.Codigo).IsUnique();
+            });
+
+            // Configuración para la entidad TipoDocumento
+            modelBuilder.Entity<TipoDocumento>(entity =>
+            {
+                entity.ToTable("TiposDocumento", "dbo");
+                entity.HasKey(td => td.Id);
+
+                // Configuración específica para propiedades decimales
+                entity.Property(td => td.TamanoMaximoMB)
+                    .HasColumnName("tipoDocumentoTamanoMaximoMB")
+                    .HasPrecision(10, 2); // Precisión adecuada para tamaños en MB
+            });
+
+            // Configuración para la entidad Proyecto
+            modelBuilder.Entity<Proyecto>(entity =>
+            {
+                // Configuración específica para propiedades decimales
+                entity.Property(p => p.Presupuesto)
+                    .HasColumnName("proyectoPresupuesto")
+                    .HasPrecision(18, 2);
+
+                entity.Property(p => p.RetornoInversionObjetivo)
+                    .HasColumnName("proyectoRetornoInversionObjetivo")
+                    .HasPrecision(10, 2);
+
+                entity.Property(p => p.PorcentajeAvance)
+                    .HasColumnName("proyectoPorcentajeAvance")
+                    .HasPrecision(5, 2); // Precisión para porcentajes
+            });
+
+            // Configuración para la entidad KPI
+            modelBuilder.Entity<KPI>(entity =>
+            {
+                // Configuración específica para propiedades decimales
+                entity.Property(k => k.ValorBase)
+                    .HasColumnName("kpiValorBase")
+                    .HasPrecision(18, 4); // Mayor precisión para valores de KPI
+
+                entity.Property(k => k.ValorObjetivo)
+                    .HasColumnName("kpiValorObjetivo")
+                    .HasPrecision(18, 4);
+
+                entity.Property(k => k.ValorMinimo)
+                    .HasColumnName("kpiValorMinimo")
+                    .HasPrecision(18, 4);
+            });
+
+            // Configuración para la entidad MedicionKPI
+            modelBuilder.Entity<MedicionKPI>(entity =>
+            {
+                // Configuración específica para propiedades decimales
+                entity.Property(m => m.Valor)
+                    .IsRequired()
+                    .HasColumnName("medicionKPIValor")
+                    .HasPrecision(18, 4); // Mayor precisión para valores de mediciones
+            });
+
+            // Configuración para la entidad EtapaProyecto
+            modelBuilder.Entity<EtapaProyecto>(entity =>
+            {
+                // Configuración específica para propiedades decimales
+                entity.Property(ep => ep.PorcentajeCompletado)
+                    .HasColumnName("etapaProyectoPorcentajeCompletado")
+                    .HasPrecision(5, 2); // Precisión para porcentajes
+            });
+
+            // Configuración para la entidad InformeSemanal
+            modelBuilder.Entity<InformeSemanal>(entity =>
+            {
+                // Configuración específica para propiedades decimales
+                entity.Property(i => i.PorcentajeAvance)
+                    .IsRequired()
+                    .HasColumnName("informeSemanalPorcentajeAvance")
+                    .HasPrecision(5, 2); // Precisión para porcentajes
+            });
+
+            // Configuración para la entidad Tarea
+            modelBuilder.Entity<Tarea>(entity =>
+            {
+                // Configuración específica para propiedades decimales
+                entity.Property(t => t.PorcentajeCompletado)
+                    .HasColumnName("tareaPorcentajeCompletado")
+                    .HasPrecision(5, 2); // Precisión para porcentajes
             });
 
             // Aplicar configuraciones de entidades
@@ -532,6 +959,73 @@ namespace ConsultCore31.Infrastructure.Persistence.Context
                 .WithMany(o => o.Accesos)
                 .HasForeignKey(a => a.ObjetoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuraciones explícitas para evitar FK en shadow state
+            modelBuilder.Entity<Gasto>()
+                .HasOne(g => g.Proyecto)
+                .WithMany(p => p.Gastos)
+                .HasForeignKey(g => g.ProyectoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Gasto>()
+                .HasOne(g => g.CategoriaGasto)
+                .WithMany(c => c.Gastos)
+                .HasForeignKey(g => g.CategoriaGastoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Gasto>()
+                .HasOne(g => g.EstadoAprobacion)
+                .WithMany(e => e.Gastos)
+                .HasForeignKey(g => g.EstadoAprobacionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Gasto>()
+                .HasOne(g => g.Moneda)
+                .WithMany(m => m.Gastos)
+                .HasForeignKey(g => g.MonedaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuración para evitar ProyectoId1 en shadow state
+            modelBuilder.Entity<AsignacionViatico>()
+                .HasOne(a => a.Proyecto)
+                .WithMany(p => p.AsignacionesViatico)
+                .HasForeignKey(a => a.ProyectoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AsignacionViatico>()
+                .HasOne(a => a.Empleado)
+                .WithMany()
+                .HasForeignKey(a => a.EmpleadoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AsignacionViatico>()
+                .HasOne(a => a.Moneda)
+                .WithMany()
+                .HasForeignKey(a => a.MonedaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuración para evitar AsignacionViaticoId1 en shadow state
+            modelBuilder.Entity<MovimientoViatico>()
+                .HasOne(m => m.AsignacionViatico)
+                .WithMany(a => a.MovimientosViatico)
+                .HasForeignKey(m => m.AsignacionViaticoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MovimientoViatico>()
+                .HasOne(m => m.TipoMovimientoViatico)
+                .WithMany(t => t.MovimientosViatico)
+                .HasForeignKey(m => m.TipoMovimientoViaticoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuración para CategoriaGastoId opcional en MovimientoViatico
+            modelBuilder.Entity<MovimientoViatico>()
+                .HasOne(m => m.CategoriaGasto)
+                .WithMany()
+                .HasForeignKey(m => m.CategoriaGastoId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // La configuración de la entidad Usuario ahora se maneja en UsuarioConfiguration.cs
 
             // Deshabilitar la eliminación en cascada para todas las relaciones
             foreach (var relationship in modelBuilder.Model.GetEntityTypes()
