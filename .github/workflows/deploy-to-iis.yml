@@ -56,14 +56,15 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ${{github.workspace}}/publish/
         server-dir: ${{ secrets.FTP_TARGET_PATH }}/
-        protocol: ftps
+        protocol: ftp        # Cambiado de ftps a ftp para evitar problemas de SSL
         port: 21
         security: loose
-        timeout: 600000
+        timeout: 1200000     # Aumentado a 20 minutos
         log-level: verbose
         dangerous-clean-slate: false
         state-name: .ftp-deploy-sync-state.json
         dry-run: false
+        max-concurrent-connections: 1  # Limitar a una conexión para evitar sobrecarga
         exclude: |
           **/.git*
           **/.git*/**
@@ -71,3 +72,4 @@ jobs:
           **/.vs/**
           **/obj/**
           runtimes/**
+          **/*.pdb           # Excluir archivos de depuración para reducir tamaño
