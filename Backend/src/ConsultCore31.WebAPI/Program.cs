@@ -49,7 +49,7 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{ApplicationName}] {Message:lj}{NewLine}{Exception}",
         theme: AnsiConsoleTheme.Code)
     .WriteTo.File(
-        path: Path.Combine("logs", "log-.txt"),
+        path: Path.Combine(Path.GetTempPath(), "ConsultCore31-Logs", "log-.txt"),
         rollingInterval: RollingInterval.Day,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{ApplicationName}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
