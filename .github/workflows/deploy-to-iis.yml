@@ -64,7 +64,6 @@ jobs:
           dangerous-clean-slate: false
           state-name: .ftp-deploy-sync-state.json
           dry-run: false
-          max-concurrent-connections: 1
           exclude: |
             **/.git*
             **/.git*/**
