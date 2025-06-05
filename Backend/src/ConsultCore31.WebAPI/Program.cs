@@ -49,7 +49,7 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{ApplicationName}] {Message:lj}{NewLine}{Exception}",
         theme: AnsiConsoleTheme.Code)
     .WriteTo.File(
-        path: Path.Combine(Path.GetTempPath(), "ConsultCore31-Logs", "log-.txt"),
+        path: Path.Combine("logs", "log-.txt"),
         rollingInterval: RollingInterval.Day,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{ApplicationName}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
@@ -286,40 +286,18 @@ try
     // Configuración de caché distribuido (puede ser Redis, SQL Server, etc.)
     builder.Services.AddDistributedMemoryCache();
 
-    // Configuración de DataProtection para persistir y cifrar claves
-    // Usamos una ubicación temporal para evitar problemas de permisos en IIS
-    var dataProtectionKeysPath = Path.Combine(Path.GetTempPath(), "ConsultCore31-DataProtection-Keys");
-    try
+    // Configuración simplificada de DataProtection para persistir y cifrar claves
+    var dataProtectionKeysPath = Path.Combine(AppContext.BaseDirectory, "DataProtection-Keys");
+    if (!Directory.Exists(dataProtectionKeysPath))
     {
-        if (!Directory.Exists(dataProtectionKeysPath))
-        {
-            Directory.CreateDirectory(dataProtectionKeysPath);
-        }
-        Log.Information("Directorio para claves de protección de datos creado en: {Path}", dataProtectionKeysPath);
-    }
-    catch (UnauthorizedAccessException ex)
-    {
-        // Si no podemos crear el directorio, usamos la memoria (no persistente)
-        Log.Warning(ex, "No se pudo crear el directorio para claves de protección de datos. Usando almacenamiento en memoria.");
-        dataProtectionKeysPath = null;
+        Directory.CreateDirectory(dataProtectionKeysPath);
     }
 
     // Configuración básica de DataProtection compatible con .NET Core 3.1
-    var dataProtectionBuilder = builder.Services.AddDataProtection()
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
         .SetApplicationName("ConsultCore31")
         .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
-        
-    // Solo persistimos las claves si pudimos crear el directorio
-    if (dataProtectionKeysPath != null)
-    {
-        dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
-        Log.Information("Claves de protección de datos configuradas para persistir en: {Path}", dataProtectionKeysPath);
-    }
-    else
-    {
-        // Si no hay directorio disponible, las claves se almacenarán en memoria (no persistentes)
-        Log.Warning("Las claves de protección de datos se almacenarán en memoria y no serán persistentes");
-    }
 
     // Configuración de respuesta comprimida
     builder.Services.AddResponseCompression(options =>
@@ -418,10 +396,25 @@ try
         try
         {
             var context = services.GetRequiredService<AppDbContext>();
-            await context.Database.MigrateAsync();
-
-            // Aquí puedes agregar la inicialización de datos si es necesario
-            // await DbInitializer.Initialize(context, services);
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            
+            // Solo aplicar migraciones automáticamente en entorno de desarrollo
+            if (app.Environment.IsDevelopment())
+            {
+                logger.LogInformation("Aplicando migraciones en entorno de desarrollo");
+                await context.Database.MigrateAsync();
+                
+                // Aquí puedes agregar la inicialización de datos si es necesario
+                // await DbInitializer.Initialize(context, services);
+            }
+            else
+            {
+                // En producción, solo verificar la conexión
+                logger.LogInformation("Verificando conexión a la base de datos en entorno de producción");
+                await context.Database.CanConnectAsync();
+            }
+            
+            logger.LogInformation("Conexión a la base de datos establecida correctamente");
         }
         catch (Exception ex)
         {
