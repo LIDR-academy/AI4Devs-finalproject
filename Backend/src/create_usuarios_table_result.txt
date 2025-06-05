@@ -1,0 +1,2 @@
+Msg 1934, Level 16, State 1, Server ALIENWARE, Line 33
+CREATE INDEX failed because the following SET options have incorrect settings: 'QUOTED_IDENTIFIER'. Verify that SET options are correct for use with indexed views and/or indexes on computed columns and/or filtered indexes and/or query notifications and/or XML data type methods and/or spatial index operations.

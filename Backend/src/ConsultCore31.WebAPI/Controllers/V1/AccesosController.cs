@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.Acceso;
 using ConsultCore31.Application.Interfaces;
+
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.WebAPI.Controllers.V1
 {
@@ -42,7 +38,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         public async Task<IActionResult> GetAll()
         {
             _logger.LogInformation("Obteniendo todos los accesos");
-            
+
             try
             {
                 var accesos = await _accesoService.GetAllAccesosAsync();
@@ -79,7 +75,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         public async Task<IActionResult> GetByIds(int perfilId, int objetoId)
         {
             _logger.LogInformation("Obteniendo acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}", perfilId, objetoId);
-            
+
             try
             {
                 var acceso = await _accesoService.GetAccesoByIdsAsync(perfilId, objetoId);
@@ -132,11 +128,11 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         public async Task<IActionResult> GetByPerfilId(int perfilId)
         {
             _logger.LogInformation("Obteniendo accesos activos para perfilId: {PerfilId}", perfilId);
-            
+
             try
             {
                 var accesos = await _accesoService.GetAccesosActivosByPerfilIdAsync(perfilId);
-                
+
                 if (accesos == null || !accesos.Any())
                 {
                     _logger.LogWarning("No se encontraron accesos activos para el perfilId: {PerfilId}", perfilId);
@@ -147,7 +143,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
                         Status = StatusCodes.Status404NotFound
                     });
                 }
-                
+
                 _logger.LogDebug("Se obtuvieron {Count} accesos activos para perfilId: {PerfilId}", accesos.Count(), perfilId);
                 return Ok(accesos);
             }
@@ -222,17 +218,17 @@ namespace ConsultCore31.WebAPI.Controllers.V1
 
                 // Llamar al servicio
                 var result = await _accesoService.CreateOrUpdateAccesoAsync(accesoDto);
-                
-                _logger.LogInformation("Acceso creado/actualizado exitosamente para perfilId: {PerfilId}, objetoId: {ObjetoId}", 
+
+                _logger.LogInformation("Acceso creado/actualizado exitosamente para perfilId: {PerfilId}, objetoId: {ObjetoId}",
                     dto.PerfilId, dto.ObjetoId);
-                    
+
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)
             {
-                _logger.LogWarning(ex, "Recurso no encontrado al crear/actualizar acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                _logger.LogWarning(ex, "Recurso no encontrado al crear/actualizar acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                     dto.PerfilId, dto.ObjetoId);
-                    
+
                 return NotFound(new ProblemDetails
                 {
                     Title = "Recurso no encontrado",
@@ -243,9 +239,9 @@ namespace ConsultCore31.WebAPI.Controllers.V1
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning(ex, "Argumento inválido al crear/actualizar acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                _logger.LogWarning(ex, "Argumento inválido al crear/actualizar acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                     dto.PerfilId, dto.ObjetoId);
-                    
+
                 return BadRequest(new ProblemDetails
                 {
                     Title = "Solicitud inválida",
@@ -256,9 +252,9 @@ namespace ConsultCore31.WebAPI.Controllers.V1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error inesperado al crear o actualizar el acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                _logger.LogError(ex, "Error inesperado al crear o actualizar el acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                     dto.PerfilId, dto.ObjetoId);
-                    
+
                 return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
                 {
                     Title = "Error interno del servidor",
@@ -287,16 +283,16 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> UpdateStatus(int perfilId, int objetoId, [FromBody] bool activo)
         {
-            _logger.LogInformation("Solicitud para actualizar estado de acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Nuevo estado: {Activo}", 
+            _logger.LogInformation("Solicitud para actualizar estado de acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Nuevo estado: {Activo}",
                 perfilId, objetoId, activo);
-                
+
             try
             {
                 // Verificar si el acceso existe
                 var accesoExistente = await _accesoService.GetAccesoByIdsAsync(perfilId, objetoId);
                 if (accesoExistente == null)
                 {
-                    _logger.LogWarning("Intento de actualizar estado de acceso no encontrado. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                    _logger.LogWarning("Intento de actualizar estado de acceso no encontrado. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                         perfilId, objetoId);
                     return NotFound(new ProblemDetails
                     {
@@ -310,7 +306,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
                 // Verificar si el estado actual es igual al nuevo estado
                 if (accesoExistente.Activo == activo)
                 {
-                    _logger.LogInformation("El acceso ya tiene el estado solicitado. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Estado actual: {Estado}", 
+                    _logger.LogInformation("El acceso ya tiene el estado solicitado. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Estado actual: {Estado}",
                         perfilId, objetoId, activo);
                     return Ok(accesoExistente);
                 }
@@ -319,7 +315,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
                 var resultado = await _accesoService.UpdateAccesoStatusAsync(perfilId, objetoId, activo);
                 if (!resultado)
                 {
-                    _logger.LogError("Error al actualizar el estado del acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                    _logger.LogError("Error al actualizar el estado del acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                         perfilId, objetoId);
                     return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
                     {
@@ -332,15 +328,15 @@ namespace ConsultCore31.WebAPI.Controllers.V1
 
                 // Obtener el acceso actualizado para devolverlo
                 var accesoActualizado = await _accesoService.GetAccesoByIdsAsync(perfilId, objetoId);
-                
-                _logger.LogInformation("Estado de acceso actualizado correctamente. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Nuevo estado: {Activo}", 
+
+                _logger.LogInformation("Estado de acceso actualizado correctamente. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Nuevo estado: {Activo}",
                     perfilId, objetoId, activo);
-                    
+
                 return Ok(accesoActualizado);
             }
             catch (KeyNotFoundException ex)
             {
-                _logger.LogWarning(ex, "Recurso no encontrado al actualizar estado de acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                _logger.LogWarning(ex, "Recurso no encontrado al actualizar estado de acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                     perfilId, objetoId);
                 return NotFound(new ProblemDetails
                 {
@@ -352,7 +348,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error inesperado al actualizar estado de acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                _logger.LogError(ex, "Error inesperado al actualizar estado de acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                     perfilId, objetoId);
                 return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
                 {
@@ -397,13 +393,13 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> VerificarAcceso(int perfilId, int objetoId)
         {
-            _logger.LogInformation("Verificando acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}", 
+            _logger.LogInformation("Verificando acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}",
                 perfilId, objetoId);
-                
+
             try
             {
                 var resultado = await _accesoService.VerificarAccesoAsync(perfilId, objetoId);
-                _logger.LogDebug("Resultado de verificación para perfilId: {PerfilId}, objetoId: {ObjetoId}: {@Resultado}", 
+                _logger.LogDebug("Resultado de verificación para perfilId: {PerfilId}, objetoId: {ObjetoId}: {@Resultado}",
                     perfilId, objetoId, resultado);
                 return Ok(resultado);
             }
@@ -419,7 +415,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al verificar el acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}", 
+                _logger.LogError(ex, "Error al verificar el acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}",
                     perfilId, objetoId);
                 return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
                 {
@@ -447,15 +443,15 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
         public async Task<IActionResult> Delete(int perfilId, int objetoId)
         {
-            _logger.LogInformation("Eliminando acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}", 
+            _logger.LogInformation("Eliminando acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}",
                 perfilId, objetoId);
-                
+
             try
             {
                 var resultado = await _accesoService.DeleteAccesoAsync(perfilId, objetoId);
                 if (!resultado)
                 {
-                    _logger.LogWarning("No se encontró el acceso para eliminar. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                    _logger.LogWarning("No se encontró el acceso para eliminar. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                         perfilId, objetoId);
                     return NotFound(new ProblemDetails
                     {
@@ -464,14 +460,14 @@ namespace ConsultCore31.WebAPI.Controllers.V1
                         Status = StatusCodes.Status404NotFound
                     });
                 }
-                
-                _logger.LogInformation("Acceso eliminado correctamente para perfilId: {PerfilId}, objetoId: {ObjetoId}", 
+
+                _logger.LogInformation("Acceso eliminado correctamente para perfilId: {PerfilId}, objetoId: {ObjetoId}",
                     perfilId, objetoId);
                 return Ok(true);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al eliminar el acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}", 
+                _logger.LogError(ex, "Error al eliminar el acceso para perfilId: {PerfilId}, objetoId: {ObjetoId}",
                     perfilId, objetoId);
                 return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails
                 {

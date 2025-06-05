@@ -1,10 +1,7 @@
-using System;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.CategoriaGasto;
 using ConsultCore31.Application.Interfaces;
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.WebAPI.Controllers.V1
 {
@@ -21,7 +18,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         /// </summary>
         public CategoriasGastoController(
             ICategoriaGastoService categoriaGastoService,
-            ILogger<CategoriasGastoController> logger) 
+            ILogger<CategoriasGastoController> logger)
             : base(categoriaGastoService, logger, "categoría de gasto")
         {
             _categoriaGastoService = categoriaGastoService;

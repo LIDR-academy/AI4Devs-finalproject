@@ -1,19 +1,45 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using System;
-using System.Text.Json.Serialization.Metadata;
 
 namespace ConsultCore31.WebAPI.Middleware
 {
+    public class ApiException
+    {
+        public ApiException(int statusCode, string? message = null, string? details = null)
+        {
+            StatusCode = statusCode;
+            Message = message ?? "An error occurred while processing your request.";
+            Details = details;
+        }
+
+        public string? Details { get; set; }
+        public string? Message { get; set; }
+        public int StatusCode { get; set; }
+
+        // Método para serialización segura
+        public string ToJson() => JsonSerializer.Serialize(this, ApiExceptionContext.Default.ApiException);
+    }
+
+    [JsonSerializable(typeof(ApiException))]
+    [JsonSourceGenerationOptions(
+        GenerationMode = JsonSourceGenerationMode.Metadata,
+        PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = true)]
+    public partial class ApiExceptionContext : JsonSerializerContext
+    {
+        public new static JsonSerializerOptions Options { get; } = new(JsonSerializerDefaults.Web)
+        {
+            TypeInfoResolver = new ApiExceptionContext()
+        };
+    }
+
     public class ExceptionMiddleware
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionMiddleware> _logger;
         private readonly IHostEnvironment _env;
+        private readonly ILogger<ExceptionMiddleware> _logger;
+        private readonly RequestDelegate _next;
 
         public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, IHostEnvironment env)
         {
@@ -48,36 +74,5 @@ namespace ConsultCore31.WebAPI.Middleware
                 await context.Response.WriteAsync(json);
             }
         }
-    }
-
-    [JsonSerializable(typeof(ApiException))]
-    [JsonSourceGenerationOptions(
-        GenerationMode = JsonSourceGenerationMode.Metadata,
-        PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        WriteIndented = true)]
-    public partial class ApiExceptionContext : JsonSerializerContext 
-    {
-        public new static JsonSerializerOptions Options { get; } = new(JsonSerializerDefaults.Web)
-        {
-            TypeInfoResolver = new ApiExceptionContext()
-        };
-    }
-
-    public class ApiException
-    {
-        public int StatusCode { get; set; }
-        public string? Message { get; set; }
-        public string? Details { get; set; }
-
-        public ApiException(int statusCode, string? message = null, string? details = null)
-        {
-            StatusCode = statusCode;
-            Message = message ?? "An error occurred while processing your request.";
-            Details = details;
-        }
-        
-        // Método para serialización segura
-        public string ToJson() => JsonSerializer.Serialize(this, ApiExceptionContext.Default.ApiException);
     }
 }

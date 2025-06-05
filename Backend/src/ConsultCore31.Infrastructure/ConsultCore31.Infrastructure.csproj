@@ -8,7 +8,8 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
-    <AnalysisLevel>9.0</AnalysisLevel>
+    <AnalysisLevel>preview</AnalysisLevel>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <Configurations>Debug;Release;Docker</Configurations>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>

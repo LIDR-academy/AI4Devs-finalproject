@@ -61,11 +61,17 @@ public class Objeto : BaseEntity<int>
 
     private readonly List<Acceso> _accesos = new List<Acceso>();
     private Menu? _menu;
+    private readonly List<Usuario> _usuarios = new List<Usuario>();
 
     /// <summary>
     /// Obtiene la colección de solo lectura de accesos asociados a este objeto.
     /// </summary>
     public virtual IReadOnlyCollection<Acceso> Accesos => _accesos.AsReadOnly();
+
+    /// <summary>
+    /// Obtiene la colección de usuarios asociados a este objeto.
+    /// </summary>
+    public virtual IReadOnlyCollection<Usuario> Usuarios => _usuarios.AsReadOnly();
 
     /// <summary>
     /// Obtiene o establece la navegación al menú relacionado.

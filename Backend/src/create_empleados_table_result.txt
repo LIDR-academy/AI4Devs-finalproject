@@ -1,0 +1,4 @@
+La tabla Empleados ya existe
+La relación entre Empleados y Objetos ya existe
+La tabla Puestos no existe, no se puede crear la relación
+La relación entre Usuarios y Empleados ya existe

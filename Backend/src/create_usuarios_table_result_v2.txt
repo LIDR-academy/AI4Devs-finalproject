@@ -1,0 +1,4 @@
+La tabla Usuarios ya existe
+La tabla Empleados no existe, no se puede crear la relación
+La relación entre Usuarios y Perfiles ya existe
+La relación entre Usuarios y Objetos ya existe
