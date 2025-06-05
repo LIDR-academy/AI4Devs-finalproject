@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -176,9 +178,13 @@ try
 
     // Configuración de OpenAPI para Swagger
     builder.Services.AddEndpointsApiExplorer();
+    
+    // Configurar la integración de Swagger con API Versioning
+    builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
+    
     builder.Services.AddSwaggerGen(c =>
     {
-        c.SwaggerDoc("v1", new OpenApiInfo { Title = "ConsultCore31 API", Version = "v1" });
+        // La configuración de SwaggerDoc ahora se maneja a través de ConfigureSwaggerOptions
 
         // Configuración de seguridad JWT en Swagger
         var securityScheme = new OpenApiSecurityScheme
@@ -323,6 +329,14 @@ try
         options.DefaultApiVersion = new ApiVersion(1, 0);
         options.AssumeDefaultVersionWhenUnspecified = true;
         options.ReportApiVersions = true;
+    })
+    .AddApiExplorer(options =>
+    {
+        // Formato de la versión en la URL
+        options.GroupNameFormat = "'v'VVV";
+        
+        // Asume la versión por defecto cuando no se especifica
+        options.SubstituteApiVersionInUrl = true;
     });
 
     var app = builder.Build();
@@ -339,12 +353,23 @@ try
         });
 
         // Configuración de Swagger UI
-        app.UseSwaggerUI(c =>
+        app.UseSwaggerUI(options =>
         {
-            c.SwaggerEndpoint("/openapi/v1.json", "ConsultCore31 API V1");
-            c.OAuthClientId("swagger-ui");
-            c.OAuthClientSecret("swagger-ui-secret");
-            c.OAuthUsePkce();
+            // Obtener todas las descripciones de versiones de API disponibles
+            var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+            
+            // Crear un endpoint de Swagger para cada versión de API
+            foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+            {
+                options.SwaggerEndpoint(
+                    $"/openapi/{description.GroupName}.json",
+                    $"ConsultCore31 API {description.GroupName.ToUpperInvariant()}");
+            }
+            
+            // Configuración de OAuth
+            options.OAuthClientId("swagger-ui");
+            options.OAuthClientSecret("swagger-ui-secret");
+            options.OAuthUsePkce();
         });
     }
 
@@ -449,17 +474,28 @@ try
             c.RouteTemplate = "openapi/{documentName}.json";
         });
 
-        app.UseSwaggerUI(c =>
+        app.UseSwaggerUI(options =>
         {
-            c.SwaggerEndpoint("/openapi/v1.json", "ConsultCore31 API V1");
-            c.RoutePrefix = "swagger";
-            c.DocumentTitle = "ConsultCore3:1 API Documentation";
-            c.DefaultModelsExpandDepth(-1); // Oculta los esquemas de modelos
-            c.DisplayRequestDuration();
-            c.EnableDeepLinking();
-            c.EnableFilter();
-            c.ShowExtensions();
-            c.EnableValidator();
+            // Obtener todas las descripciones de versiones de API disponibles
+            var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+            
+            // Crear un endpoint de Swagger para cada versión de API
+            foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+            {
+                options.SwaggerEndpoint(
+                    $"/openapi/{description.GroupName}.json",
+                    $"ConsultCore31 API {description.GroupName.ToUpperInvariant()}");
+            }
+            
+            // Configuración adicional
+            options.RoutePrefix = "swagger";
+            options.DocumentTitle = "ConsultCore31 API Documentation";
+            options.DefaultModelsExpandDepth(-1); // Oculta los esquemas de modelos
+            options.DisplayRequestDuration();
+            options.EnableDeepLinking();
+            options.EnableFilter();
+            options.ShowExtensions();
+            options.EnableValidator();
         });
 
         // Configuración de Scalar UI - Versión básica

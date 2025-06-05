@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics.CodeAnalysis;
+using Asp.Versioning;
 
 namespace ConsultCore31.WebAPI.Controllers
 {
