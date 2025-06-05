@@ -2,74 +2,72 @@ name: Despliegue a IIS
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:  # Permite ejecutar el workflow manualmente desde la interfaz de GitHub
+    branches: [main]
+  workflow_dispatch: # Permite ejecutar el workflow manualmente desde la interfaz de GitHub
 
 jobs:
   build:
-    runs-on: windows-latest  # Usamos Windows ya que vamos a desplegar en IIS
-    
+    runs-on: windows-latest # Usamos Windows ya que vamos a desplegar en IIS
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Configurar .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '9.0.x'  # Versión de .NET que estás utilizando
-    
-    - name: Restaurar dependencias
-      run: dotnet restore Backend/ConsultCore31.sln
-    
-    - name: Compilar
-      run: dotnet build Backend/ConsultCore31.sln --configuration Release --no-restore
-    
-    - name: Ejecutar pruebas
-      run: dotnet test Backend/ConsultCore31.sln --configuration Release --no-build
-    
-    - name: Publicar
-      run: dotnet publish Backend/src/ConsultCore31.WebAPI/ConsultCore31.WebAPI.csproj -c Release -o ${{github.workspace}}/publish
-    
-    - name: Comprimir artefactos
-      uses: actions/upload-artifact@v4
-      with:
-        name: webapp
-        path: ${{github.workspace}}/publish
+      - uses: actions/checkout@v3
+
+      - name: Configurar .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "9.0.x" # Versión de .NET que estás utilizando
+
+      - name: Restaurar dependencias
+        run: dotnet restore Backend/ConsultCore31.sln
+
+      - name: Compilar
+        run: dotnet build Backend/ConsultCore31.sln --configuration Release --no-restore
+
+      - name: Ejecutar pruebas
+        run: dotnet test Backend/ConsultCore31.sln --configuration Release --no-build
+
+      - name: Publicar
+        run: dotnet publish Backend/src/ConsultCore31.WebAPI/ConsultCore31.WebAPI.csproj -c Release -o ${{github.workspace}}/publish
+
+      - name: Comprimir artefactos
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          path: ${{github.workspace}}/publish
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Descargar artefacto
-      uses: actions/download-artifact@v4
-      with:
-        name: webapp
-        path: ${{github.workspace}}/publish
-    
-    - name: Desplegar usando FTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ${{github.workspace}}/publish/
-        server-dir: ${{ secrets.FTP_TARGET_PATH }}/
-        protocol: ftp        # Cambiado de ftps a ftp para evitar problemas de SSL
-        port: 21
-        security: loose
-        timeout: 1200000     # Aumentado a 20 minutos
-        log-level: verbose
-        dangerous-clean-slate: false
-        state-name: .ftp-deploy-sync-state.json
-        dry-run: false
-        max-concurrent-connections: 1  # Limitar a una conexión para evitar sobrecarga
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/node_modules/**
-          **/.vs/**
-          **/obj/**
-          runtimes/**
-          **/*.pdb           # Excluir archivos de depuración para reducir tamaño
+      - name: Descargar artefacto
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp
+          path: ${{github.workspace}}/publish
+
+      - name: Desplegar usando FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ${{github.workspace}}/publish/
+          server-dir: ${{ secrets.FTP_TARGET_PATH }}/
+          protocol: ftps
+          port: 21
+          security: loose
+          timeout: 600000
+          log-level: verbose
+          dangerous-clean-slate: false
+          state-name: .ftp-deploy-sync-state.json
+          dry-run: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.vs/**
+            **/obj/**
+            runtimes/**
