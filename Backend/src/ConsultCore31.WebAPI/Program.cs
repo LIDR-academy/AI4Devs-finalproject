@@ -286,18 +286,40 @@ try
     // Configuración de caché distribuido (puede ser Redis, SQL Server, etc.)
     builder.Services.AddDistributedMemoryCache();
 
-    // Configuración simplificada de DataProtection para persistir y cifrar claves
-    var dataProtectionKeysPath = Path.Combine(AppContext.BaseDirectory, "DataProtection-Keys");
-    if (!Directory.Exists(dataProtectionKeysPath))
+    // Configuración de DataProtection para persistir y cifrar claves
+    // Usamos una ubicación temporal para evitar problemas de permisos en IIS
+    var dataProtectionKeysPath = Path.Combine(Path.GetTempPath(), "ConsultCore31-DataProtection-Keys");
+    try
     {
-        Directory.CreateDirectory(dataProtectionKeysPath);
+        if (!Directory.Exists(dataProtectionKeysPath))
+        {
+            Directory.CreateDirectory(dataProtectionKeysPath);
+        }
+        Log.Information("Directorio para claves de protección de datos creado en: {Path}", dataProtectionKeysPath);
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        // Si no podemos crear el directorio, usamos la memoria (no persistente)
+        Log.Warning(ex, "No se pudo crear el directorio para claves de protección de datos. Usando almacenamiento en memoria.");
+        dataProtectionKeysPath = null;
     }
 
     // Configuración básica de DataProtection compatible con .NET Core 3.1
-    builder.Services.AddDataProtection()
-        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+    var dataProtectionBuilder = builder.Services.AddDataProtection()
         .SetApplicationName("ConsultCore31")
         .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
+        
+    // Solo persistimos las claves si pudimos crear el directorio
+    if (dataProtectionKeysPath != null)
+    {
+        dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+        Log.Information("Claves de protección de datos configuradas para persistir en: {Path}", dataProtectionKeysPath);
+    }
+    else
+    {
+        // Si no hay directorio disponible, las claves se almacenarán en memoria (no persistentes)
+        Log.Warning("Las claves de protección de datos se almacenarán en memoria y no serán persistentes");
+    }
 
     // Configuración de respuesta comprimida
     builder.Services.AddResponseCompression(options =>
