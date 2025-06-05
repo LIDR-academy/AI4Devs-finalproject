@@ -1,10 +1,7 @@
-using System;
-using System.Threading.Tasks;
+using Asp.Versioning;
+
 using ConsultCore31.Application.DTOs.Cliente;
 using ConsultCore31.Application.Interfaces;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.WebAPI.Controllers.V1
 {
@@ -21,7 +18,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         /// </summary>
         public ClientesController(
             IClienteService clienteService,
-            ILogger<ClientesController> logger) 
+            ILogger<ClientesController> logger)
             : base(clienteService, logger, "cliente")
         {
             _clienteService = clienteService;

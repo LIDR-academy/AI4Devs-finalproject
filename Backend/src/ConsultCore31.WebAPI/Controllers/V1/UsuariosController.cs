@@ -1,11 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Asp.Versioning;
+
 using ConsultCore31.Application.DTOs.Usuario;
 using ConsultCore31.Application.Interfaces;
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.WebAPI.Controllers.V1
 {

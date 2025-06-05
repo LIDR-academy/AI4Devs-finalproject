@@ -1,7 +1,7 @@
+using Asp.Versioning;
+
 using ConsultCore31.Application.DTOs.PrioridadTarea;
 using ConsultCore31.Application.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.WebAPI.Controllers.V1
 {

@@ -1,10 +1,7 @@
-using System;
-using System.Threading.Tasks;
+using Asp.Versioning;
+
 using ConsultCore31.Application.DTOs.Tarea;
 using ConsultCore31.Application.Interfaces;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.WebAPI.Controllers.V1
 {
@@ -21,7 +18,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         /// </summary>
         public TareasController(
             ITareaService tareaService,
-            ILogger<TareasController> logger) 
+            ILogger<TareasController> logger)
             : base(tareaService, logger, "tarea")
         {
             _tareaService = tareaService;

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+
 using System.Diagnostics.CodeAnalysis;
-using Asp.Versioning;
 
 namespace ConsultCore31.WebAPI.Controllers
 {
@@ -49,7 +49,7 @@ namespace ConsultCore31.WebAPI.Controllers
         [MaybeNull, AllowNull]
         public T Data { get; set; }
 
-        public ApiResponse(int statusCode, [AllowNull] T data, string? message = null) 
+        public ApiResponse(int statusCode, [AllowNull] T data, string? message = null)
             : base(statusCode, message)
         {
             Data = data;

@@ -1,8 +1,10 @@
 using ConsultCore31.Infrastructure.Persistence.Context;
 using ConsultCore31.WebAPI.Services;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using System.Diagnostics;
 using System.Text;
 
@@ -42,10 +44,10 @@ public class DiagnosticController : ControllerBase
         try
         {
             var healthStatuses = _healthService.GetHealthStatus();
-            
+
             // Verificar si algún componente está en estado no saludable
             var isHealthy = !healthStatuses.Any() || healthStatuses.All(s => s.Value.Status == "Healthy");
-            
+
             return Ok(new
             {
                 status = isHealthy ? "Healthy" : "Unhealthy",
@@ -69,18 +71,18 @@ public class DiagnosticController : ControllerBase
     public async Task<IActionResult> CheckDatabaseConnection()
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             // Verificar la conexión a la base de datos
             var canConnect = await _dbContext.Database.CanConnectAsync();
             stopwatch.Stop();
-            
+
             if (!canConnect)
             {
-                _logger.LogCritical("No se puede conectar a la base de datos. Tiempo: {ElapsedMs}ms", 
+                _logger.LogCritical("No se puede conectar a la base de datos. Tiempo: {ElapsedMs}ms",
                     stopwatch.ElapsedMilliseconds);
-                
+
                 return StatusCode(503, new
                 {
                     status = "Error",
@@ -88,16 +90,16 @@ public class DiagnosticController : ControllerBase
                     elapsedMs = stopwatch.ElapsedMilliseconds
                 });
             }
-            
+
             // Obtener información sobre la base de datos
             var connection = _dbContext.Database.GetDbConnection();
             var pendingMigrations = await _dbContext.Database.GetPendingMigrationsAsync();
             var appliedMigrations = await _dbContext.Database.GetAppliedMigrationsAsync();
-            
+
             _logger.LogInformation(
-                "Conexión a la base de datos exitosa. Tiempo: {ElapsedMs}ms", 
+                "Conexión a la base de datos exitosa. Tiempo: {ElapsedMs}ms",
                 stopwatch.ElapsedMilliseconds);
-            
+
             return Ok(new
             {
                 status = "Connected",
@@ -112,9 +114,9 @@ public class DiagnosticController : ControllerBase
         catch (Exception ex)
         {
             stopwatch.Stop();
-            
+
             _logger.LogCritical(ex, "Error al verificar la conexión a la base de datos");
-            
+
             return StatusCode(500, new
             {
                 status = "Error",
@@ -150,7 +152,7 @@ public class DiagnosticController : ControllerBase
                 serverTimeUtc = DateTime.UtcNow,
                 serverTimeZone = TimeZoneInfo.Local.DisplayName
             };
-            
+
             return Ok(systemInfo);
         }
         catch (Exception ex)
@@ -170,7 +172,7 @@ public class DiagnosticController : ControllerBase
         try
         {
             var sb = new StringBuilder();
-            
+
             // Información del sistema
             sb.AppendLine("=== INFORMACIÓN DEL SISTEMA ===");
             sb.AppendLine($"Entorno: {_environment.EnvironmentName}");
@@ -178,21 +180,21 @@ public class DiagnosticController : ControllerBase
             sb.AppendLine($"Sistema operativo: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}");
             sb.AppendLine($"Uso de memoria: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
             sb.AppendLine();
-            
+
             // Información de la base de datos
             sb.AppendLine("=== INFORMACIÓN DE LA BASE DE DATOS ===");
             try
             {
                 var canConnect = await _dbContext.Database.CanConnectAsync();
                 sb.AppendLine($"Conexión: {(canConnect ? "Exitosa" : "Fallida")}");
-                
+
                 if (canConnect)
                 {
                     var connection = _dbContext.Database.GetDbConnection();
                     sb.AppendLine($"Proveedor: {connection.GetType().Name}");
                     sb.AppendLine($"Servidor: {connection.DataSource}");
                     sb.AppendLine($"Base de datos: {connection.Database}");
-                    
+
                     var pendingMigrations = await _dbContext.Database.GetPendingMigrationsAsync();
                     sb.AppendLine($"Migraciones pendientes: {pendingMigrations.Count()}");
                     if (pendingMigrations.Any())
@@ -206,7 +208,7 @@ public class DiagnosticController : ControllerBase
                 sb.AppendLine($"Error al obtener información de la base de datos: {ex.Message}");
             }
             sb.AppendLine();
-            
+
             // Estadísticas de la aplicación
             sb.AppendLine("=== ESTADÍSTICAS DE LA APLICACIÓN ===");
             try
@@ -214,7 +216,7 @@ public class DiagnosticController : ControllerBase
                 var usuariosCount = await _dbContext.Set<ConsultCore31.Core.Entities.Usuario>().CountAsync();
                 var perfilesCount = await _dbContext.Set<ConsultCore31.Core.Entities.Perfil>().CountAsync();
                 var objetosCount = await _dbContext.Set<ConsultCore31.Core.Entities.Objeto>().CountAsync();
-                
+
                 sb.AppendLine($"Usuarios: {usuariosCount}");
                 sb.AppendLine($"Perfiles: {perfilesCount}");
                 sb.AppendLine($"Objetos: {objetosCount}");
@@ -223,7 +225,7 @@ public class DiagnosticController : ControllerBase
             {
                 sb.AppendLine($"Error al obtener estadísticas: {ex.Message}");
             }
-            
+
             return Ok(new
             {
                 timestamp = DateTime.UtcNow,

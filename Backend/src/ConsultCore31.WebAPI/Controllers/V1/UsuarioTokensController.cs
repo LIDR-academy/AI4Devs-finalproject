@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Asp.Versioning;
+
 using ConsultCore31.Application.DTOs.UsuarioToken;
 using ConsultCore31.Application.Interfaces;
+
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.WebAPI.Controllers.V1
 {
@@ -147,15 +145,15 @@ namespace ConsultCore31.WebAPI.Controllers.V1
             try
             {
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                _logger.LogInformation("Solicitud para invalidar tokens del usuario {UsuarioId} desde IP: {IpAddress}", 
+                _logger.LogInformation("Solicitud para invalidar tokens del usuario {UsuarioId} desde IP: {IpAddress}",
                     usuarioIdInt, ipAddress);
-                
+
                 await _usuarioTokenService.InvalidateUserTokensAsync(usuarioIdInt, ipAddress, motivo);
-                
+
                 _logger.LogInformation("Tokens invalidados exitosamente para el usuario: {UsuarioId}", usuarioIdInt);
-                
-                return Ok(new 
-                { 
+
+                return Ok(new
+                {
                     Success = true,
                     Message = "Todos los tokens del usuario han sido invalidados correctamente",
                     UsuarioId = usuarioIdInt
