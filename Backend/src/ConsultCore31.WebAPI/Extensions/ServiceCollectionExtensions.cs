@@ -1,6 +1,6 @@
+using ConsultCore31.Application.Common.Mappings;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Application.Mappings;
-using ConsultCore31.Application.Mappings.ObjetoTipo;
 using ConsultCore31.Application.Services;
 
 using System.Reflection;
@@ -14,18 +14,8 @@ namespace ConsultCore31.WebAPI.Extensions
         /// </summary>
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            // Registrar AutoMapper con todos los perfiles de mapeo
-            services.AddAutoMapper(cfg =>
-            {
-                cfg.AddProfile<UsuarioProfile>();
-                cfg.AddProfile<PerfilProfile>();
-                cfg.AddProfile<ObjetoProfile>();
-                cfg.AddProfile<ObjetoTipoProfile>();
-                cfg.AddProfile<UsuarioTokenProfile>();
-                cfg.AddProfile<AccesoProfile>();
-                // Agregar otros perfiles de mapeo aquí
-            },
-            Assembly.GetAssembly(typeof(UsuarioProfile)));
+            // Utilizar la configuración centralizada de AutoMapper
+            services.AddAutoMapperProfiles();
 
             // Registrar servicios de aplicación
             services.AddScoped<IUsuarioService, UsuarioService>();

@@ -1,3 +1,4 @@
+using ConsultCore31.Application.Common.Mappings;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Infrastructure;
 using ConsultCore31.Infrastructure.Persistence.Context;
@@ -314,7 +315,7 @@ try
     });
 
     // Configuración de AutoMapper
-    builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+    builder.Services.AddAutoMapperProfiles();
 
     // Configuración de la versión de la API
     builder.Services.AddApiVersioning(options =>

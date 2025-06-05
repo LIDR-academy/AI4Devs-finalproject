@@ -1,7 +1,7 @@
+using ConsultCore31.Application.Common.Mappings;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace ConsultCore31.Application.DependencyInjection
 {
@@ -15,8 +15,8 @@ namespace ConsultCore31.Application.DependencyInjection
         /// </summary>
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            // Registrar AutoMapper
-            services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            // Utilizar la configuración centralizada de AutoMapper
+            services.AddAutoMapperProfiles();
 
             // Registrar servicios específicos
             services.AddScoped<ICategoriaGastoService, CategoriaGastoService>();
