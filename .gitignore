@@ -1,0 +1,166 @@
+# ===================================
+# ShopMefy - AI4Devs Final Project
+# ===================================
+
+# ===== ENVIRONMENT & SECRETS =====
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# ===== NODE.JS =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===== BUILD OUTPUTS =====
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vite/
+.turbo/
+
+# ===== TESTING & COVERAGE =====
+coverage/
+.nyc_output/
+.coverage/
+*.lcov
+test-results/
+playwright-report/
+
+# ===== CYPRESS E2E =====
+/frontend/cypress/videos/
+/frontend/cypress/screenshots/
+/frontend/cypress/downloads/
+/frontend/cypress/fixtures/downloads/
+
+# ===== DATABASE =====
+# Prisma
+/backend/prisma/dev.db
+/backend/prisma/*.sqlite
+/backend/prisma/*.db
+/backend/prisma/migrations/
+# Keep sample documents for seeding
+!/backend/prisma/sample-documents/
+
+# PostgreSQL dumps
+*.sql
+*.dump
+
+# ===== UPLOADS & USER DATA =====
+/backend/uploads/
+/backend/temp/
+/backend/storage/
+/frontend/public/uploads/
+
+# ===== LOGS =====
+*.log
+logs/
+*.log.*
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ===== OPERATING SYSTEM =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ===== EDITORS & IDEs =====
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+.idea/
+*.swp
+*.swo
+*~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# ===== RUNTIME & CACHE =====
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# ===== TEMPORARY FILES =====
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# ===== DOCKER =====
+.dockerignore
+docker-compose.override.yml
+
+# ===== AI & ML =====
+# Model files
+*.model
+*.pkl
+*.joblib
+embeddings/
+vectors/
+
+# ===== TERRAFORM =====
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfstate.*.backup
+terraform/*.tfplan
+terraform/*.tfvars
+
+# ===== MISC =====
+.prettierrc
+*.tgz
+*.tar.gz
+.yarn-integrity
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz 

@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Decimal
+  category    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tagsJson    String   @default("[]")
+}
+
+model FAQ {
+  id        String     @id @default(uuid())
+  question  String
+  answer    String
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  chunks    FAQChunk[]
+}
+
+model FAQChunk {
+  id        String   @id @default(uuid())
+  content   String
+  faqId     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  embedding String?
+  faq       FAQ      @relation(fields: [faqId], references: [id], onDelete: Cascade)
+}
+
+model AgentConfig {
+  id          String   @id @default(uuid())
+  temperature Float    @default(0.7)
+  maxTokens   Int      @default(500)
+  topP        Float    @default(0.9)
+  model       String   @default("gpt-4-turbo")
+  prompt      String
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  firstName String?
+  lastName  String?
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  price       Decimal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true)
+  embedding   String?
+  chunks      ServiceChunk[]
+}
+
+model ServiceChunk {
+  id        String   @id @default(uuid())
+  content   String
+  serviceId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  embedding String?
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("service_chunks")
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  companyName String
+  logoUrl     String?
+  description String
+  phoneNumber String
+  website     String?
+  email       String
+  openingTime String
+  address     String
+  sector      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Document {
+  id           String          @id @default(uuid())
+  filename     String
+  originalName String
+  title        String?
+  mimeType     String
+  size         Int
+  uploadPath   String
+  status       String          @default("PROCESSING")
+  isActive     Boolean         @default(true)
+  userId       String?
+  metadata     String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  path         String?
+  chunks       DocumentChunk[]
+
+  @@map("documents")
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid())
+  content    String
+  pageNumber Int?
+  chunkIndex Int
+  documentId String
+  embedding  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_chunks")
+}

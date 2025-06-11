@@ -1,0 +1,307 @@
+name: 🧪 01 - CI - Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Start PostgreSQL with Docker Compose
+        run: |
+          echo "Starting PostgreSQL with Docker Compose..."
+          docker compose up -d db
+          echo "Waiting for PostgreSQL to be ready..."
+          timeout 60s bash -c 'until docker compose exec -T db pg_isready -U shopmefy; do sleep 2; done'
+          echo "PostgreSQL is ready!"
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: |
+          echo "Installing backend dependencies..."
+          npm ci --prefer-offline --no-audit --legacy-peer-deps
+          echo "Backend dependencies installed successfully"
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: |
+          echo "Installing frontend dependencies..."
+          npm ci --prefer-offline --no-audit --legacy-peer-deps
+          echo "Frontend dependencies installed successfully"
+
+      - name: Create backend .env file
+        working-directory: ./backend
+        run: |
+          echo "DATABASE_URL=postgresql://shopmefy:shopmefy@localhost:5434/shopmefy" > .env
+          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY || 'test-key' }}" >> .env
+          echo "NODE_ENV=test" >> .env
+          echo "JWT_SECRET=test-jwt-secret-for-ci" >> .env
+          echo "PORT=3001" >> .env
+
+      - name: Create frontend .env file
+        working-directory: ./frontend
+        run: |
+          echo "VITE_API_URL=http://localhost:3001" > .env
+
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: |
+          echo "Generating Prisma client..."
+          npx prisma generate
+
+      - name: Setup test database schema
+        working-directory: ./backend
+        run: |
+          echo "Setting up test database schema..."
+          npx prisma db push --accept-data-loss --force-reset
+          
+          echo "Seeding test database with data..."
+          npx prisma db seed
+
+      - name: Build backend
+        working-directory: ./backend
+        run: |
+          echo "Building backend..."
+          npm run build
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: |
+          echo "Building frontend..."
+          
+          # Create production .env for frontend build
+          echo "Creating production .env for frontend..."
+          cat > .env << EOF
+          VITE_API_URL=
+          VITE_APP_NAME=ShopMefy
+          VITE_APP_VERSION=1.0.0
+          VITE_DEV_MODE=false
+          EOF
+          
+          echo "Frontend .env created:"
+          cat .env
+          
+          npm run build
+
+      - name: Run backend unit tests
+        working-directory: ./backend
+        run: |
+          echo "Running unit tests..."
+          npm run test:unit
+
+      - name: Run frontend unit tests
+        working-directory: ./frontend
+        run: |
+          echo "Running frontend unit tests..."
+          npm run test:unit
+          
+      - name: Debug database state before integration tests
+        working-directory: ./backend
+        run: |
+          echo "=== DATABASE DEBUG INFO ==="
+          echo "Database URL: $DATABASE_URL"
+          echo "Node Environment: $NODE_ENV"
+          echo "Checking database connection..."
+          timeout 10s bash -c 'until docker compose exec -T db pg_isready -U shopmefy; do sleep 1; done' || echo "Database not ready"
+          
+          echo "=== DATABASE CONTENT CHECK ==="
+          docker compose exec -T db psql -U shopmefy -d shopmefy -c "SELECT COUNT(*) as product_count FROM \"Product\";" || echo "Failed to query products"
+          docker compose exec -T db psql -U shopmefy -d shopmefy -c "SELECT COUNT(*) as user_count FROM \"User\";" || echo "Failed to query users"
+          
+          echo "=== PRISMA CLIENT CHECK ==="
+          npx prisma db push --accept-data-loss --force-reset || echo "Prisma push failed"
+          npx prisma db seed || echo "Prisma seed failed"
+          
+          echo "=== POST-SEED DATABASE CHECK ==="
+          docker compose exec -T db psql -U shopmefy -d shopmefy -c "SELECT COUNT(*) as product_count FROM \"Product\";" || echo "Failed to query products after seed"
+
+      - name: Test single integration test first
+        working-directory: ./backend
+        run: |
+          echo "=== TESTING SINGLE INTEGRATION TEST ==="
+          echo "Running auth integration test only..."
+          npm run test:integration -- __tests__/integration/auth.integration.spec.ts --verbose || {
+            echo "Single test failed, checking error details..."
+            exit 1
+          }
+
+      - name: Run backend integration tests (with debug)
+        working-directory: ./backend
+        run: |
+          echo "Running integration tests with debug output..."
+          echo "Current working directory: $(pwd)"
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          
+          # Run tests with maximum verbosity and error details
+          npm run test:integration -- --verbose --detectOpenHandles --forceExit --runInBand --no-cache || {
+            echo "=== INTEGRATION TESTS FAILED ==="
+            echo "Exit code: $?"
+            echo "Checking for any remaining processes..."
+            ps aux | grep node || true
+            echo "Checking database connection after failure..."
+            docker compose exec -T db pg_isready -U shopmefy || true
+            exit 1
+          }
+
+      - name: Start backend for E2E tests
+        working-directory: ./backend
+        run: |
+          echo "Starting backend for E2E tests..."
+          npm run dev &
+          echo $! > backend.pid
+          
+          # Wait for backend to be ready with better error handling
+          echo "Waiting for backend to be ready..."
+          for i in {1..60}; do
+            if curl -s http://localhost:3001/api/health > /dev/null; then
+              echo "Backend is ready for E2E tests!"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "Backend failed to start within 60 seconds"
+              cat backend.pid | xargs kill || true
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Start frontend for E2E tests
+        working-directory: ./frontend
+        run: |
+          echo "Starting frontend for E2E tests..."
+          npm run dev &
+          echo $! > frontend.pid
+          
+          # Wait for frontend to be ready with better error handling
+          echo "Waiting for frontend to be ready..."
+          for i in {1..60}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "Frontend is ready for E2E tests!"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "Frontend failed to start within 60 seconds"
+              cat frontend.pid | xargs kill || true
+              cat ../backend/backend.pid | xargs kill || true
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Verify services are running
+        run: |
+          echo "=== VERIFYING SERVICES ==="
+          echo "Checking backend health..."
+          curl -f http://localhost:3001/api/health || {
+            echo "Backend health check failed"
+            echo "Backend logs:"
+            cat backend/backend.pid | xargs ps -p || echo "Backend process not found"
+            exit 1
+          }
+          
+          echo "Checking frontend..."
+          curl -f http://localhost:3000 || {
+            echo "Frontend check failed"
+            echo "Frontend logs:"
+            cat frontend/frontend.pid | xargs ps -p || echo "Frontend process not found"
+            exit 1
+          }
+          
+          echo "✅ All services are running!"
+
+      - name: Seed test data for E2E tests
+        working-directory: ./backend
+        run: |
+          echo "Seeding test data for E2E tests..."
+          curl -X POST http://localhost:3001/api/test/seed \
+            -H "Content-Type: application/json" \
+            -d '{}' || echo "Test seeding failed, continuing..."
+
+      - name: Verify agent configuration in database
+        working-directory: ./backend
+        run: |
+          echo "=== VERIFYING AGENT CONFIGURATION ==="
+          docker compose exec -T db psql -U shopmefy -d shopmefy -c "SELECT COUNT(*) as agent_config_count FROM \"AgentConfig\";" || echo "Failed to query agent config"
+          docker compose exec -T db psql -U shopmefy -d shopmefy -c "SELECT model, temperature, \"maxTokens\" FROM \"AgentConfig\" LIMIT 1;" || echo "Failed to query agent config details"
+          
+          echo "=== TESTING AGENT CONFIG API ==="
+          curl -f http://localhost:3001/api/agent/config/health || {
+            echo "Agent config health check failed - checking details..."
+            curl -v http://localhost:3001/api/agent/config/health || true
+            echo "Attempting to re-seed database..."
+            npx prisma db seed || echo "Re-seeding failed"
+            
+            echo "Testing agent config API after re-seed..."
+            curl -f http://localhost:3001/api/agent/config || echo "Agent config API still failing"
+          }
+
+      - name: Run E2E tests
+        working-directory: ./frontend
+        run: |
+          echo "Running E2E tests with Cypress..."
+          npx cypress run --config video=false,screenshotOnRunFailure=false
+
+      - name: Stop frontend and backend
+        if: always()
+        run: |
+          echo "Stopping frontend and backend servers..."
+          if [ -f frontend/frontend.pid ]; then
+            kill $(cat frontend/frontend.pid) || true
+            rm frontend/frontend.pid
+          fi
+          if [ -f backend/backend.pid ]; then
+            kill $(cat backend/backend.pid) || true
+            rm backend/backend.pid
+          fi
+
+      - name: Stop Docker Compos
+        if: always()
+        run: |
+          echo "Stopping Docker Compose services..."
+          docker compose down 
+
+      - name: 📦 Upload Backend Build Artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: |
+            backend/dist/
+            backend/package.json
+            backend/package-lock.json
+            backend/tsconfig.json
+            backend/prisma/schema.prisma
+            backend/prisma/seed.ts
+            backend/prisma/migrations/
+            backend/prisma/temp/
+          retention-days: 7
+
+      - name: 📦 Upload Frontend Build Artifacts  
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: |
+            frontend/dist/
+            frontend/package.json
+            frontend/package-lock.json
+          retention-days: 7 

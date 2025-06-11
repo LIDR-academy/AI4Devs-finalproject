@@ -1,0 +1,394 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    --shopmefy-50: #f0fdf4;
+    --shopmefy-100: #dcfce7;
+    --shopmefy-200: #bbf7d0;
+    --shopmefy-300: #86efac;
+    --shopmefy-400: #4ade80;
+    --shopmefy-500: #22c55e;
+    --shopmefy-600: #16a34a;
+    --shopmefy-700: #15803d;
+    --shopmefy-800: #166534;
+    --shopmefy-900: #14532d;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .shopmefy-section {
+    @apply p-6 rounded-lg bg-white shadow-sm border border-gray-100 animate-fade-in;
+  }
+
+  .shopmefy-title {
+    @apply text-2xl font-bold text-gray-800 mb-4;
+  }
+
+  .shopmefy-subtitle {
+    @apply text-lg font-semibold text-gray-700 mb-3;
+  }
+
+  .shopmefy-card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-100 p-4 transition-all hover:shadow-md;
+  }
+
+  .chat-bubble-user {
+    @apply bg-gradient-to-r from-softblue-200 to-softblue-300 text-gray-800 p-4 rounded-2xl rounded-br-md;
+  }
+
+  .chat-bubble-bot {
+    @apply bg-shopmefy-50 border border-shopmefy-200 text-gray-800 p-4 rounded-2xl rounded-bl-md;
+  }
+  
+  /* Markdown styling for chat messages */
+  .chat-bubble-bot h1 {
+    @apply text-xl font-bold border-b border-shopmefy-200 pb-1 mb-2;
+    color: #328a56;
+  }
+  
+  .chat-bubble-bot h2 {
+    @apply text-lg font-semibold mt-3 mb-1;
+    color: #328a56;
+  }
+  
+  .chat-bubble-bot strong {
+    @apply font-semibold;
+    color: #328a56;
+  }
+  
+  .chat-bubble-bot ul {
+    @apply pl-5 my-2;
+  }
+  
+  .chat-bubble-bot ol {
+    @apply pl-5 my-2;
+  }
+  
+  .chat-bubble-bot li {
+    @apply mb-1;
+  }
+  
+  /* Emoji styling */
+  .chat-bubble-bot span[role="img"] {
+    @apply text-lg;
+  }
+  
+  /* Image styles in chat */
+  .chat-image {
+    @apply rounded-md overflow-hidden border border-gray-200 bg-white;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .chat-image img {
+    @apply w-full h-auto object-cover;
+    max-height: 200px;
+    display: block;
+    background-color: #f7f7f7;
+    background-image: linear-gradient(90deg, #f0f0f0 0px, #f8f8f8 40px, #f0f0f0 80px);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+  .chat-image[data-status="loaded"] img {
+    background: none;
+    animation: none;
+  }
+  
+  .chat-image[data-status="error"] {
+    border-color: #ffcdd2;
+  }
+  
+  .chat-image-caption {
+    @apply text-xs text-center py-1 px-2 bg-gray-50 text-gray-700 border-t border-gray-200;
+    font-style: italic;
+  }
+  
+  .chat-image {
+    position: relative;
+  }
+  
+  .chat-image::before {
+    content: attr(data-status);
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 10px;
+    padding: 2px 4px;
+    z-index: 10;
+    display: none;
+  }
+  
+  .chat-bubble-bot .chat-image img {
+    display: block;
+    min-height: 100px;
+  }
+}
+
+/* Custom animations and improvements */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.8);
+  }
+  
+  .gradient-border {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(45deg, #4bc47d, #3ba968) border-box;
+    border: 2px solid transparent;
+  }
+
+  /* Custom slider styling */
+  .slider::-webkit-slider-thumb {
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4bc47d, #3ba968);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(75, 196, 125, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(75, 196, 125, 0.4);
+  }
+
+  .slider::-webkit-slider-track {
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, #e5e7eb 0%, #4bc47d var(--value, 50%), #e5e7eb var(--value, 50%));
+    outline: none;
+  }
+
+  .slider::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4bc47d, #3ba968);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(75, 196, 125, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(75, 196, 125, 0.4);
+  }
+
+  .slider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: #e5e7eb;
+    outline: none;
+    border: none;
+  }
+
+  .chat-bubble {
+    @apply bg-shopmefy-50 border border-shopmefy-200 text-gray-800 p-4 rounded-2xl rounded-bl-md;
+  }
+
+  .chat-bubble-header {
+    @apply text-xl font-bold border-b border-shopmefy-200 pb-1 mb-2;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Custom animations for page transitions */
+@keyframes fadeInLoader {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes progressBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.page-loader-enter {
+  animation: fadeInLoader 0.3s ease-out;
+}
+
+.progress-bar-animation {
+  animation: progressBar 1s ease-in-out infinite;
+}

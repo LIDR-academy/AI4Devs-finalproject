@@ -1,0 +1,213 @@
+# Cursor Rules for AI4Devs Final Project
+
+## 🧠 Core Development Rules
+
+ - Address me **by name (Andrea)** in chats and discussions (e.g., "Hello Andrea", "Andrea, what do you think?")
+ - contex: @/terraform @/backend @/frontend  @/scripts 
+- Focus **only** on code areas **relevant to the assigned task**
+- **DO NOT INVENT** anything outside of the assigned scope
+- **Keep solutions simple** and avoid unnecessary complexity
+- All code and comments must be **in English**
+- **NEVER** run `git push` — **only Andrea** can do this
+- Use **PostgreSQL** (not SQLite)
+- **OPENROUTER_API_KEY** is stored in the `.env` file of the backend (DO NOT TOUCH `.env`)
+- All **scripts** must be placed inside the `/script` folderç
+- If the request is not documenteted on the 02_PRD.md please alert the user
+
+- Maintain the existing **graphics and layout**; DO NOT make changes unless **explicit permission** is granted
+
+## 🔒 CRITICAL BACKUP RULE FOR .ENV FILES
+
+⚠️ **MANDATORY BACKUP BEFORE ANY .ENV INTERACTION:**
+- **BEFORE** reading, checking, or interacting with ANY `.env` file, **ALWAYS** create a backup first
+- **COMMAND TO RUN FIRST:** `cp .env .env.backup.$(date +%Y%m%d_%H%M%S)`
+- **NEVER** touch `.env` files without creating a timestamped backup
+- **IF .ENV IS LOST:** immediately restore from the most recent `.env.backup.*` file
+- **ALWAYS** inform Andrea when creating backups: "Andrea, I'm creating a backup of .env before proceeding"
+
+## 🚨 CRITICAL PDF FILE PROTECTION RULE
+
+⚠️ **NEVER DELETE OR MODIFY THE PDF FILE:**
+- **NEVER** delete, modify, or touch `backend/prisma/temp/international-transportation-law.pdf`
+- **NEVER** remove files from `backend/prisma/temp/` directory
+- **NEVER** modify the seed script to remove PDF file creation
+- **THIS FILE IS CRITICAL** for the system to work properly
+- **IF DELETED:** Andrea will be very angry and the system will break
+- **ALWAYS** preserve this file during any script or seed modifications
+
+## 🚨 CRITICAL DATABASE-ONLY CONFIGURATION RULE
+
+⚠️ **NEVER CREATE HARDCODED CONFIGURATION FALLBACKS:**
+- **NEVER** create hardcoded default prompts, models, or agent configurations
+- **NEVER** use fallback values like `DEFAULT_PROMPT` or `initialConfig` in frontend/backend
+- **ALL CONFIGURATION MUST COME FROM DATABASE** - no exceptions
+- **IF DATABASE CONFIG IS MISSING:** show proper error message to user, don't create fallbacks
+- **AGENT PROMPTS:** must always come from `agentConfig` table in database
+- **NO STATIC PROMPTS:** everything must be dynamic from database
+- **ERROR HANDLING:** if config not found, show error - don't invent default values
+- **FRONTEND:** if no config from API, show error state - don't use hardcoded defaults
+- **BACKEND:** if no agent config in DB, return error - don't use fallback prompts
+
+## ❌ Strict Prohibitions - What Never to Do
+
+### 🚫 NEVER HARDCODE DATA
+
+- **NEVER** create hardcoded responses or fallback data in controllers
+- **NEVER** return fake/mock data outside of test environments
+- **NEVER** use hardcoded product lists, prices, or inventory data
+- **NEVER** create static responses that bypass database queries
+- **ALWAYS** use dynamic database searches and fetch real data from **Prisma**
+- **NO** static text, prompts, or codes; **everything must come from the database**
+
+### 🚫 Additional Restrictions
+
+- DO NOT write any **catch blocks** with generic messages; **always provide the full error stack**
+- **NEVER create fake functions** – everything must reflect the real database and logic
+- **NEVER change the layout or graphics** without my **explicit permission**
+- **Update ONLY existing tasks** in the task list when completing work - **DO NOT add new tasks**
+
+## 🚫 Critical Restrictions
+
+- **NEVER** use hardcoded conditions like `lowerQuery.includes('vino') || lowerQuery.includes('export')`
+- **DO NOT USE OPENAI** - use **OPENROUTER** instead
+- **NEVER** use the word "hardcode" in the backend code
+- **NEVER** use the a static prompt the promtp hast to arrive from the database agent settings along with temperature, topP, token,model
+
+## 📚 Architecture Notes
+
+### LLM Workflow
+The user's input is processed through a two-stage LLM workflow:
+1. **First LLM**: Decides the target calling function
+2. **Second LLM**: Has history and formats the final user response
+
+> **Note**: This is the **only static point** in the workflow. If the flow **does not follow** this structure, we must discuss it or **modify the agent's prompt** inside the **SEED**.
+
+### Project Structure
+- Don't create `package.json` in root - use `backend` or `frontend` folders for installing packages
+- **DON'T CREATE any files IN ROOT** - use `temp` or use `/prompts` if needed
+
+## 📋 Task Management
+
+- Always update **ONLY the existing tasks** in `prompts/04_task-list.md` when completing tasks that are already present on the list
+- **DO NOT add new tasks** to the task list - only mark existing ones as completed or update their status
+- Keep track of progress and document changes properly
+- Get always the full context from @backend @frontend and @final
+- Get the context from the test unit, integration, integration for having a better understanding 
+- Keep swagger configuration always updated
+
+## 📚 Documentation References
+
+All project documentation is located under:
+- **Task List**: `prompts/04_task-list.md`
+- **PRD Document**: `prompts/docs/PRD.md`
+- **LangChain Documentation**: `prompts/docs/langchain.md`
+- **MetaPrompt**: `prompts/docs/metaprompt.md`
+- **OWASP Security**: `prompts/docs/owasp.md`
+- **Agent Prompt**: `prompts/docs/prompt_agent.md`
+- IF YOU WANT TO SEE WHAT WE HAVE IN THE DB USE FOR EXAMPLES:
+docker exec -it shopmefy-db psql -U shopmefy -d shopmefy -c "SELECT COUNT(*) FROM document_chunks;"
+- **DO NOT invent npm run commands!** 
+- mocks have to stay inside  __mocks__ folder inside unit or integration folder
+AI4Devs-finalproject/backend/__tests__/unit/mock
+AI4Devs-finalproject/backend/__tests__/integration/mock
+
+## 📁 Folder Structure Compliance
+
+- **ALWAYS** follow the folder structure defined below
+- **NEVER** create files outside the defined directory structure
+- **Test files** must be in `__tests__/` (backend) or `__test__/` (frontend) directories
+- **Mocks** must be in `__mocks__/` subdirectories within test folders
+- **Scripts** must be in `/scripts/` directory and be executable
+- **Configuration files** must be at the appropriate level (backend/frontend)
+- Use **kebab-case** for directories, **camelCase** for TypeScript files, **PascalCase** for React components
+
+### 🏗️ Root Project Structure
+```
+AI4Devs-finalproject/
+├── 📁 backend/                     # Backend Node.js application
+├── 📁 frontend/                    # Frontend React application  
+├── 📁 scripts/                     # Project automation scripts
+├── 📁 prompts/                     # Documentation and prompts
+├── 📄 docker-compose.yml           # Docker services configuration
+├── 📄 .gitignore                   # Git ignore rules
+└── 📄 README.md                    # Project overview
+```
+
+### 🔧 Backend Structure (`/backend/`)
+```
+backend/
+├── 📁 src/                         # Source code
+│   ├── 📁 controllers/             # API controllers (DDD Application Layer)
+│   ├── 📁 services/                # Business logic services (DDD Domain Layer)
+│   ├── 📁 repositories/            # Data access layer (DDD Infrastructure)
+│   ├── 📁 middleware/              # Express middleware
+│   ├── 📁 routes/                  # API route definitions
+│   ├── 📁 types/                   # TypeScript type definitions
+│   ├── 📁 utils/                   # Utility functions
+│   └── 📄 index.ts                 # Application entry point
+├── 📁 prisma/                      # Database schema and migrations
+│   ├── 📁 migrations/              # Database migration files
+│   ├── 📁 temp/                    # Temporary files for seeding
+│   ├── 📄 schema.prisma            # Database schema definition
+│   └── 📄 seed.ts                  # Database seeding script
+├── 📁 uploads/                     # File upload storage
+│   └── 📁 documents/               # Document storage directory
+├── 📁 __tests__/                   # Test files (MANDATORY structure)
+│   ├── 📁 unit/                    # Unit tests
+│   │   ├── 📁 __mocks__/           # Unit test mocks
+│   │   └── 📄 *.spec.ts            # Unit test files
+│   └── 📁 integration/             # Integration tests
+│       ├── 📁 __mocks__/           # Integration test mocks
+│       └── 📄 *.integration.spec.ts # Integration test files
+├── 📄 package.json                 # Dependencies and scripts
+├── 📄 jest.config.js               # Jest testing configuration
+├── 📄 tsconfig.json                # TypeScript configuration
+└── 📄 .env                         # Environment variables (DO NOT COMMIT)
+```
+
+### ⚛️ Frontend Structure (`/frontend/`)
+```
+frontend/
+├── 📁 src/                         # Source code
+│   ├── 📁 components/              # React components
+│   │   ├── 📁 ui/                  # Reusable UI components (shadcn/ui)
+│   │   └── 📁 layout/              # Layout components
+│   ├── 📁 pages/                   # Page components
+│   ├── 📁 hooks/                   # Custom React hooks
+│   ├── 📁 services/                # API service functions
+│   ├── 📁 types/                   # TypeScript type definitions
+│   ├── 📁 utils/                   # Utility functions
+│   ├── 📁 styles/                  # CSS and styling files
+│   └── 📄 main.tsx                 # Application entry point
+├── 📁 public/                      # Static assets
+├── 📁 __test__/                    # Test files (MANDATORY structure)
+│   ├── 📁 unit/                    # Unit tests
+│   │   └── 📄 *.{test,spec}.{js,ts,tsx} # Unit test files
+│   └── 📁 e2e/                     # End-to-end tests
+│       ├── 📁 support/             # Cypress support files
+│       │   ├── 📄 commands.js      # Custom Cypress commands
+│       │   └── 📄 e2e.js           # Cypress setup file
+│       └── 📄 *.cy.{js,ts,tsx}     # E2E test files
+├── 📄 package.json                 # Dependencies and scripts
+├── 📄 vite.config.ts               # Vite configuration
+├── 📄 vitest.config.ts             # Vitest testing configuration
+├── 📄 cypress.config.cjs           # Cypress E2E testing configuration
+├── 📄 tailwind.config.js           # Tailwind CSS configuration
+└── 📄 tsconfig.json                # TypeScript configuration
+```
+
+### 🚫 Forbidden Patterns
+**DO NOT CREATE:**
+- `package.json` in project root
+- Test files outside `__tests__/` or `__test__/` directories
+- `cypress/` directory in frontend (use `__test__/e2e/` instead)
+- Files directly in `src/` without proper subdirectories
+- Mixed naming conventions
+
+### ✅ Mandatory Naming Rules
+- **Directories**: kebab-case (`document-service`, `user-controller`)
+- **TypeScript files**: camelCase (`userService.ts`, `documentController.ts`)
+- **React components**: PascalCase (`UserProfile.tsx`, `DocumentList.tsx`)
+- **Test files**: `*.spec.ts` (unit), `*.integration.spec.ts` (integration), `*.cy.js` (E2E)
+- system has to be sync , swagger, seed code, test BE FE Readme prompts folder when you finish a job ask me do you need to update this section too ? 
+- when i say PRD you have to consider this file `/prompts/02_PRD.md`

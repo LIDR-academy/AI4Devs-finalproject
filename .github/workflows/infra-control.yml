@@ -1,0 +1,298 @@
+name: 🏗️  04 -Start/Stop AWS Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Infrastructure Action'
+        required: true
+        type: choice
+        options:
+          - start
+          - stop
+          - status
+          - start-and-deploy
+      include_database:
+        description: '🗄️ Include RDS Database (stop/start)'
+        required: false
+        default: false
+        type: boolean
+      force_action:
+        description: '⚠️ Force action (skip safety checks)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1
+  INSTANCE_ID: i-008b6c493b1f842a9
+  FIXED_EIP_ALLOCATION: eipalloc-057707935c2c32dbb
+  RDS_INSTANCE_ID: shopmefy-db-b070a7e8
+
+jobs:
+  safety-check:
+    name: 🛡️ Safety Pre-Check
+    runs-on: ubuntu-latest
+    environment: dev
+    if: github.event.inputs.force_action != 'true'
+    outputs:
+      can_proceed: ${{ steps.safety.outputs.CAN_PROCEED }}
+      warning_message: ${{ steps.safety.outputs.WARNING_MESSAGE }}
+    
+    steps:
+      - name: ⚙️ Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🛡️ Safety Checks
+        id: safety
+        run: |
+          echo "🛡️ Running safety checks..."
+          
+          # Check if this is a destructive action
+          if [ "${{ github.event.inputs.action }}" = "stop" ] && [ "${{ github.event.inputs.include_database }}" = "true" ]; then
+            echo "⚠️ WARNING: You are about to stop the RDS database!"
+            echo "⚠️ This will make the application completely unavailable!"
+            echo "⚠️ Database stop/start can take 5-10 minutes!"
+            echo "WARNING_MESSAGE=Database stop requested - application will be unavailable" >> $GITHUB_OUTPUT
+            echo "CAN_PROCEED=warning" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.action }}" = "stop" ]; then
+            echo "ℹ️ Stopping EC2 only - database will remain available"
+            echo "ℹ️ This is safe and will save ~$15/month"
+            echo "WARNING_MESSAGE=EC2 stop only - safe operation" >> $GITHUB_OUTPUT
+            echo "CAN_PROCEED=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Safe operation detected"
+            echo "CAN_PROCEED=true" >> $GITHUB_OUTPUT
+          fi
+
+  infra-control:
+    name: 🏗️ Infrastructure Control
+    needs: [safety-check]
+    runs-on: ubuntu-latest
+    environment: dev
+    if: always() && (needs.safety-check.outputs.can_proceed == 'true' || needs.safety-check.outputs.can_proceed == 'warning' || github.event.inputs.force_action == 'true')
+    
+    steps:
+      - name: ⚙️ Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔍 Check Current Status
+        id: status
+        run: |
+          echo "🔍 Checking current infrastructure status..."
+          
+          # EC2 Status
+          EC2_STATE=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].State.Name" --output text)
+          echo "EC2_STATE=$EC2_STATE" >> $GITHUB_OUTPUT
+          echo "EC2 Instance: $EC2_STATE"
+          
+          # EIP Status
+          EIP_STATUS=$(aws ec2 describe-addresses --allocation-ids $FIXED_EIP_ALLOCATION --query "Addresses[0].PublicIp" --output text 2>/dev/null || echo "Not found")
+          echo "EIP_STATUS=$EIP_STATUS" >> $GITHUB_OUTPUT
+          echo "Elastic IP: $EIP_STATUS"
+          
+          # RDS Status
+          RDS_STATE=$(aws rds describe-db-instances --db-instance-identifier $RDS_INSTANCE_ID --query "DBInstances[0].DBInstanceStatus" --output text 2>/dev/null || echo "not-found")
+          echo "RDS_STATE=$RDS_STATE" >> $GITHUB_OUTPUT
+          echo "RDS Database: $RDS_STATE"
+          
+          # Cost calculation
+          CURRENT_MONTHLY_COST=0
+          if [ "$EC2_STATE" = "running" ]; then
+            CURRENT_MONTHLY_COST=$((CURRENT_MONTHLY_COST + 15))
+          fi
+          if [ "$RDS_STATE" = "available" ]; then
+            CURRENT_MONTHLY_COST=$((CURRENT_MONTHLY_COST + 13))
+          fi
+          CURRENT_MONTHLY_COST=$((CURRENT_MONTHLY_COST + 4)) # EBS + S3 + EIP
+          echo "CURRENT_MONTHLY_COST=$CURRENT_MONTHLY_COST" >> $GITHUB_OUTPUT
+
+      - name: 📊 Status Report
+        if: github.event.inputs.action == 'status'
+        run: |
+          echo "## 🔍 Infrastructure Status Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🖥️ Current Status:" >> $GITHUB_STEP_SUMMARY
+          echo "- **EC2 Instance**: ${{ steps.status.outputs.EC2_STATE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **RDS Database**: ${{ steps.status.outputs.RDS_STATE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Elastic IP**: ${{ steps.status.outputs.EIP_STATUS }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 💰 Cost Analysis:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Current Monthly Cost**: ~$$${{ steps.status.outputs.CURRENT_MONTHLY_COST }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.status.outputs.EC2_STATE }}" = "running" ]; then
+            echo "### 🌐 Access URLs:" >> $GITHUB_STEP_SUMMARY
+            echo "- **Frontend**: http://${{ steps.status.outputs.EIP_STATUS }}/" >> $GITHUB_STEP_SUMMARY
+            echo "- **API**: http://${{ steps.status.outputs.EIP_STATUS }}/api" >> $GITHUB_STEP_SUMMARY
+            echo "- **Swagger**: http://${{ steps.status.outputs.EIP_STATUS }}/api-docs" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🚀 Start Infrastructure
+        if: github.event.inputs.action == 'start' || github.event.inputs.action == 'start-and-deploy'
+        run: |
+          echo "🚀 Starting infrastructure..."
+          
+          # Start RDS if requested and not available
+          if [ "${{ github.event.inputs.include_database }}" = "true" ] && [ "${{ steps.status.outputs.RDS_STATE }}" = "stopped" ]; then
+            echo "🗄️ Starting RDS database..."
+            aws rds start-db-instance --db-instance-identifier $RDS_INSTANCE_ID
+            echo "⏳ Waiting for RDS to be available (this may take 5-10 minutes)..."
+            aws rds wait db-instance-available --db-instance-identifier $RDS_INSTANCE_ID
+            echo "✅ RDS database started"
+          elif [ "${{ steps.status.outputs.RDS_STATE }}" = "available" ]; then
+            echo "✅ RDS database already available"
+          fi
+          
+          # Start EC2 if stopped
+          if [ "${{ steps.status.outputs.EC2_STATE }}" = "stopped" ]; then
+            echo "🖥️ Starting EC2 instance..."
+            aws ec2 start-instances --instance-ids $INSTANCE_ID
+            
+            echo "⏳ Waiting for instance to be running..."
+            aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+            echo "✅ EC2 instance started"
+          else
+            echo "✅ EC2 instance already running"
+          fi
+            
+          # Ensure EIP is associated
+          echo "🔗 Associating Elastic IP..."
+          aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id $FIXED_EIP_ALLOCATION
+          echo "✅ Elastic IP associated"
+            
+          # Wait for SSH to be ready
+          echo "⏳ Waiting for SSH to be ready..."
+          sleep 30
+          
+          FIXED_IP=$(aws ec2 describe-addresses --allocation-ids $FIXED_EIP_ALLOCATION --query "Addresses[0].PublicIp" --output text)
+          echo "🌐 Infrastructure ready at: http://$FIXED_IP"
+
+      - name: 🛑 Stop Infrastructure
+        if: github.event.inputs.action == 'stop'
+        run: |
+          echo "🛑 Stopping infrastructure..."
+          
+          # Stop RDS if requested and available
+          if [ "${{ github.event.inputs.include_database }}" = "true" ] && [ "${{ steps.status.outputs.RDS_STATE }}" = "available" ]; then
+            echo "🗄️ Stopping RDS database..."
+            echo "⚠️ This will make the application completely unavailable!"
+            aws rds stop-db-instance --db-instance-identifier $RDS_INSTANCE_ID
+            echo "⏳ Waiting for RDS to stop (this may take 5-10 minutes)..."
+            aws rds wait db-instance-stopped --db-instance-identifier $RDS_INSTANCE_ID
+            echo "✅ RDS database stopped"
+          elif [ "${{ github.event.inputs.include_database }}" = "true" ]; then
+            echo "ℹ️ RDS database already stopped"
+          else
+            echo "ℹ️ Skipping RDS database (not requested)"
+          fi
+          
+          # Stop EC2 if running
+          if [ "${{ steps.status.outputs.EC2_STATE }}" = "running" ]; then
+            echo "🔗 Disassociating Elastic IP (keeping it allocated)..."
+            ASSOCIATION_ID=$(aws ec2 describe-addresses --allocation-ids $FIXED_EIP_ALLOCATION --query "Addresses[0].AssociationId" --output text 2>/dev/null || echo "None")
+            if [ "$ASSOCIATION_ID" != "None" ] && [ "$ASSOCIATION_ID" != "null" ]; then
+              aws ec2 disassociate-address --association-id $ASSOCIATION_ID
+            fi
+            
+            echo "🖥️ Stopping EC2 instance..."
+            aws ec2 stop-instances --instance-ids $INSTANCE_ID
+            
+            echo "⏳ Waiting for instance to be stopped..."
+            aws ec2 wait instance-stopped --instance-ids $INSTANCE_ID
+            echo "✅ EC2 instance stopped"
+          else
+            echo "✅ EC2 instance already stopped"
+          fi
+
+      - name: 🚀 Trigger Deployment
+        if: github.event.inputs.action == 'start-and-deploy'
+        run: |
+          echo "🚀 Triggering deployment workflow..."
+          
+          # Wait a bit more for services to be fully ready
+          sleep 60
+          
+          # Trigger the deploy workflow
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/deploy.yml/dispatches \
+            -d '{"ref":"main","inputs":{"run_seed":"false"}}'
+          
+          echo "✅ Deployment workflow triggered"
+          echo "🔗 Check deployment progress: https://github.com/${{ github.repository }}/actions"
+
+      - name: 📊 Infrastructure Summary
+        if: always()
+        run: |
+          # Get final status
+          FINAL_EC2_STATE=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].State.Name" --output text)
+          FINAL_RDS_STATE=$(aws rds describe-db-instances --db-instance-identifier $RDS_INSTANCE_ID --query "DBInstances[0].DBInstanceStatus" --output text 2>/dev/null || echo "not-found")
+          FIXED_IP=$(aws ec2 describe-addresses --allocation-ids $FIXED_EIP_ALLOCATION --query "Addresses[0].PublicIp" --output text)
+          
+          # Calculate final cost
+          FINAL_MONTHLY_COST=0
+          if [ "$FINAL_EC2_STATE" = "running" ]; then
+            FINAL_MONTHLY_COST=$((FINAL_MONTHLY_COST + 15))
+          fi
+          if [ "$FINAL_RDS_STATE" = "available" ]; then
+            FINAL_MONTHLY_COST=$((FINAL_MONTHLY_COST + 13))
+          fi
+          FINAL_MONTHLY_COST=$((FINAL_MONTHLY_COST + 4)) # EBS + S3 + EIP
+          
+          # Calculate savings
+          INITIAL_COST=${{ steps.status.outputs.CURRENT_MONTHLY_COST }}
+          SAVINGS=$((INITIAL_COST - FINAL_MONTHLY_COST))
+          
+          echo "## 🏗️ Infrastructure Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Action Completed:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Action**: ${{ github.event.inputs.action }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Include Database**: ${{ github.event.inputs.include_database }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 Final Status:" >> $GITHUB_STEP_SUMMARY
+          echo "- **EC2 Instance**: $FINAL_EC2_STATE" >> $GITHUB_STEP_SUMMARY
+          echo "- **RDS Database**: $FINAL_RDS_STATE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Fixed IP**: $FIXED_IP" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 💰 Cost Analysis:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Monthly Cost**: ~$$$INITIAL_COST" >> $GITHUB_STEP_SUMMARY
+          echo "- **Current Monthly Cost**: ~$$$FINAL_MONTHLY_COST" >> $GITHUB_STEP_SUMMARY
+          if [ $SAVINGS -gt 0 ]; then
+            echo "- **Monthly Savings**: ~$$$SAVINGS 💰" >> $GITHUB_STEP_SUMMARY
+          elif [ $SAVINGS -lt 0 ]; then
+            echo "- **Additional Monthly Cost**: ~$$$((SAVINGS * -1)) 💸" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Cost Change**: No change" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$FINAL_EC2_STATE" = "running" ]; then
+            echo "### 🌐 Access URLs:" >> $GITHUB_STEP_SUMMARY
+            echo "- **Frontend**: http://$FIXED_IP/" >> $GITHUB_STEP_SUMMARY
+            echo "- **API**: http://$FIXED_IP/api" >> $GITHUB_STEP_SUMMARY
+            echo "- **Swagger**: http://$FIXED_IP/api-docs" >> $GITHUB_STEP_SUMMARY
+            echo "- **SSH**: \`ssh -i key.pem ubuntu@$FIXED_IP\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "### 📋 Cost Breakdown:" >> $GITHUB_STEP_SUMMARY
+          echo "- **EC2 t3.small**: $([ "$FINAL_EC2_STATE" = "running" ] && echo "~$15/month (running)" || echo "~$0/month (stopped)")" >> $GITHUB_STEP_SUMMARY
+          echo "- **RDS db.t3.micro**: $([ "$FINAL_RDS_STATE" = "available" ] && echo "~$13/month (running)" || echo "~$0/month (stopped)")" >> $GITHUB_STEP_SUMMARY
+          echo "- **EBS + S3 + EIP**: ~$4/month (always)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 💡 Cost Optimization Tips:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stop EC2 only**: Save ~$15/month, keep database available" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stop both EC2+RDS**: Save ~$28/month, full shutdown" >> $GITHUB_STEP_SUMMARY
+          echo "- **Quick restart**: Infrastructure ready in 2-3 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Database restart**: Takes 5-10 minutes when included" >> $GITHUB_STEP_SUMMARY
