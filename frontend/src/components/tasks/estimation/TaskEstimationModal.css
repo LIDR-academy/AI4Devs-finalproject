@@ -1,0 +1,126 @@
+.task-estimation-modal .modal-dialog {
+  max-width: 800px;
+}
+
+.task-estimation-modal .modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.task-estimation-modal .modal-title {
+  color: #495057;
+  font-weight: 600;
+}
+
+.task-estimation-modal .task-info-section {
+  border-left: 4px solid #007bff;
+  background-color: #f8f9fa !important;
+}
+
+.task-estimation-modal .task-meta small {
+  line-height: 1.4;
+}
+
+/* Estilos para los componentes de estimación */
+.sprint-estimation-input .btn-outline-primary.active {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.load-factor-input .btn-group {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+}
+
+.load-factor-input .btn-group .btn {
+  border-radius: 0;
+  flex: 1;
+}
+
+.load-factor-input .btn-group .btn:first-child {
+  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+}
+
+.load-factor-input .btn-group .btn:last-child {
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+/* Estilos para alerts */
+.task-estimation-modal .alert {
+  border-radius: 0.5rem;
+}
+
+.task-estimation-modal .alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.task-estimation-modal .alert-info {
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+}
+
+.task-estimation-modal .alert-warning {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+}
+
+/* Responsive ajustments */
+@media (max-width: 768px) {
+  .task-estimation-modal .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+  
+  .load-factor-input .btn-group {
+    flex-direction: column;
+  }
+  
+  .load-factor-input .btn-group .btn {
+    border-radius: 0.375rem !important;
+    margin-bottom: 0.25rem;
+  }
+  
+  .load-factor-input .btn-group .btn:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Animaciones */
+.task-estimation-modal .modal-content {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estados de carga */
+.task-estimation-modal .modal-content.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Estilos para formularios */
+.task-estimation-modal .form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.task-estimation-modal .form-control.is-invalid:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+} 

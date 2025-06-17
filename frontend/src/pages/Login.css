@@ -1,0 +1,24 @@
+.login-container {
+  height: 100vh;
+}
+
+.login-row {
+  height: 100%;
+}
+
+.login-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 10px;
+}
+
+.login-title {
+  color: #007bff;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+  color: #6c757d;
+  font-size: 1rem;
+} 

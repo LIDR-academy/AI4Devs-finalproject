@@ -1,0 +1,104 @@
+.recommendation-algorithm-explanation {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.algorithm-summary {
+  text-align: center;
+}
+
+.factor-mini {
+  background: white;
+  border-radius: 4px;
+  padding: 6px 4px;
+  text-align: center;
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease;
+}
+
+.factor-mini:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.factor-value {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 2px;
+  color: #495057;
+}
+
+.total-score-mini {
+  color: #0d6efd;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.algorithm-details-card {
+  border: 1px solid #dee2e6;
+  font-size: 0.85rem;
+}
+
+.algorithm-details-card .card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.algorithm-factor {
+  position: relative;
+}
+
+.factor-badge {
+  font-size: 0.7rem;
+  min-width: 45px;
+}
+
+.algorithm-total {
+  background: rgba(13, 110, 253, 0.05);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.algorithm-factor .progress {
+  margin-bottom: 2px;
+}
+
+/* Animaciones */
+.algorithm-factor {
+  opacity: 0;
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+.algorithm-factor:nth-child(1) { animation-delay: 0.1s; }
+.algorithm-factor:nth-child(2) { animation-delay: 0.2s; }
+.algorithm-factor:nth-child(3) { animation-delay: 0.3s; }
+.algorithm-factor:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .factor-mini {
+    padding: 4px 2px;
+  }
+  
+  .factor-value {
+    font-size: 0.7rem;
+  }
+  
+  .recommendation-algorithm-explanation {
+    padding: 8px;
+  }
+} 

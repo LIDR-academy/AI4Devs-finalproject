@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// LEO Aqui he tenido que indicar DIRECT_URL en vez de DATABASE_URL. Con DATABASE_URL no la cogía bien, siempre cogía la del pool y no debería.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Definición de modelos para TaskDistributor
+
+model TareaExtended {
+  id                    Int                   @id @default(autoincrement())
+  redmineTaskId         Int                   @unique @map("redmine_task_id")
+  ordenPrioridad        Int?                  @map("orden_prioridad")
+  factorCarga           Float                 @default(1.0) @map("factor_carga")
+  estimacionSprints     Int?                  @map("estimacion_sprints")
+  fechaInicioPlanificada DateTime?            @map("fecha_inicio_planificada") @db.Date
+  fechaFinPlanificada   DateTime?            @map("fecha_fin_planificada") @db.Date
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+  
+  asignaciones          Asignacion[]
+  historialEstimaciones HistorialEstimacion[]
+
+  @@index([redmineTaskId])
+  @@map("tareas_extended")
+}
+
+model Equipo {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @unique
+  tipo        TipoEquipo
+  capacidad   Float     @default(1.0)
+  activo      Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  asignaciones    Asignacion[]
+  matrizAfinidades MatrizAfinidad[]
+
+  @@map("equipos")
+}
+
+enum TipoEquipo {
+  INTERNO
+  EXTERNO
+  
+  @@map("tipo_equipo")
+}
+
+model Departamento {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @unique
+  descripcion String?
+  activo      Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  matrizAfinidades MatrizAfinidad[]
+
+  @@map("departamentos")
+}
+
+model MatrizAfinidad {
+  id              Int       @id @default(autoincrement())
+  equipoId        Int       @map("equipo_id")
+  departamentoId  Int       @map("departamento_id")
+  nivelAfinidad   Int       @default(1) @map("nivel_afinidad")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  equipo      Equipo       @relation(fields: [equipoId], references: [id])
+  departamento Departamento @relation(fields: [departamentoId], references: [id])
+
+  @@unique([equipoId, departamentoId])
+  @@index([equipoId])
+  @@index([departamentoId])
+  @@map("matriz_afinidad")
+}
+
+model Asignacion {
+  id              Int       @id @default(autoincrement())
+  tareaId         Int       @map("tarea_id")
+  equipoId        Int       @map("equipo_id")
+  fechaAsignacion DateTime  @map("fecha_asignacion")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  tarea           TareaExtended @relation(fields: [tareaId], references: [id])
+  equipo          Equipo        @relation(fields: [equipoId], references: [id])
+
+  @@index([tareaId])
+  @@index([equipoId])
+  @@index([fechaAsignacion])
+  @@map("asignaciones")
+}
+
+// Nota: Esta tabla se particionará por rango de fechas en el script SQL personalizado
+model HistorialEstimacion {
+  id                  Int       @id @default(autoincrement())
+  tareaId             Int       @map("tarea_id")
+  estimacionAnterior  Int?      @map("estimacion_anterior")
+  estimacionNueva     Int?      @map("estimacion_nueva")
+  factorCargaAnterior Float?    @map("factor_carga_anterior")
+  factorCargaNueva    Float?    @map("factor_carga_nueva")
+  usuarioId           Int       @map("usuario_id")
+  fechaCambio         DateTime  @map("fecha_cambio")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  
+  tarea               TareaExtended @relation(fields: [tareaId], references: [id])
+
+  @@index([tareaId])
+  @@index([usuarioId])
+  @@index([fechaCambio])
+  @@map("historial_estimaciones")
+}
+
+// Modelo para autenticación
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String   @db.VarChar(100)
+  email         String   @unique
+  password      String
+  role          UserRole @default(NEGOCIO)
+  resetPasswordToken String? @map("reset_password_token") @db.VarChar(255)
+  resetPasswordExpire DateTime? @map("reset_password_expire")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum UserRole {
+  NEGOCIO
+  TECNOLOGIA
+  ADMIN
+  
+  @@map("user_role")
+} 
