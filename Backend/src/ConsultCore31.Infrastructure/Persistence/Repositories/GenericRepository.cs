@@ -1,16 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Ardalis.Specification;
-
 using ConsultCore31.Core.Common;
 using ConsultCore31.Core.Interfaces;
 using ConsultCore31.Infrastructure.Persistence.Context;
-
-using Microsoft.EntityFrameworkCore;
 
 namespace ConsultCore31.Infrastructure.Persistence.Repositories
 {
@@ -49,7 +39,7 @@ namespace ConsultCore31.Infrastructure.Persistence.Repositories
         /// <summary>
         /// Obtiene todas las entidades no eliminadas
         /// </summary>
-        public async Task<IReadOnlyList<T>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+        public virtual async Task<IReadOnlyList<T>> GetAllActiveAsync(CancellationToken cancellationToken = default)
         {
             return await _dbSet.ToListAsync(cancellationToken);
         }
@@ -57,7 +47,7 @@ namespace ConsultCore31.Infrastructure.Persistence.Repositories
         /// <summary>
         /// Realiza un borrado lógico de la entidad
         /// </summary>
-        public async Task<bool> SoftDeleteAsync(TKey id, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> SoftDeleteAsync(TKey id, CancellationToken cancellationToken = default)
         {
             var entity = await _dbSet.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
             if (entity == null)
@@ -65,8 +55,6 @@ namespace ConsultCore31.Infrastructure.Persistence.Repositories
                 return false;
             }
 
-            // Como BaseEntity no tiene IsDeleted, actualizamos la fecha de modificación
-            entity.FechaModificacion = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
