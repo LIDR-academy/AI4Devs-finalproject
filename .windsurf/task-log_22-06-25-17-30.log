@@ -1,0 +1,29 @@
+GOAL: Implementar borrado lógico explícito en la entidad TipoDocumento y actualizar el repositorio para utilizar los nuevos campos.
+
+IMPLEMENTACIÓN:
+1. Se modificó el repositorio específico TipoDocumentoRepository para sobrescribir el método SoftDeleteAsync y utilizar los nuevos campos:
+   - Se establece Eliminado = true
+   - Se establece FechaEliminacion = DateTime.UtcNow
+   - Se mantiene la actualización de FechaModificacion
+
+2. Se sobrescribió el método GetAllActiveAsync en el repositorio para filtrar los documentos eliminados lógicamente:
+   - Se agregó un filtro Where(td => !td.Eliminado) para excluir los registros marcados como eliminados
+
+3. Se actualizó el DTO TipoDocumentoDto para incluir los nuevos campos:
+   - Se agregó la propiedad Eliminado (bool)
+   - Se agregó la propiedad FechaEliminacion (DateTime?)
+
+4. Se actualizó el perfil de mapeo TipoDocumentoProfile para mapear los nuevos campos:
+   - Se agregaron las configuraciones ForMember para Eliminado y FechaEliminacion
+
+5. Se creó un script de migración SQL para actualizar la estructura de la base de datos:
+   - Se agregó la columna tipoDocumentoEliminado (BIT NOT NULL DEFAULT 0)
+   - Se agregó la columna tipoDocumentoFechaEliminacion (DATETIME NULL)
+   - Se incluyó lógica para verificar si las columnas ya existen antes de crearlas
+   - Se actualizaron los registros existentes para asegurar valores consistentes
+
+6. Se creó un script PowerShell para ejecutar la migración SQL:
+   - El script permite especificar la cadena de conexión como parámetro
+   - Incluye manejo de errores y registro de resultados
+
+COMPLETADO: 22/06/2025 17:30
