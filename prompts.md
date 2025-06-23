@@ -45,7 +45,6 @@ El sistema debe permitir que:
 	•	El sistema también detecte coincidencias inversas: si alguien publica un inmueble que coincide con los filtros de algún buscador activo, se debe notificar un match automático inverso.
 
 **Prompt 2:**
-
 Actúa como un experto en branding y marketing digital con experiencia en naming de productos tecnológicos disruptivos. Tu tarea es hacer un benchmark y luego proponer una lista corta de nombres para un sistema digital inspirado en la mecánica de “Tinder”, pero aplicado al sector de bienes raíces (compra, venta o alquiler de propiedades).
 
 Descripcion del proyecto:
