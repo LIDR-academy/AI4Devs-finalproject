@@ -41,10 +41,10 @@
 Antonio Alejandro Moreno Martinez
 
 ### **0.2. Nombre del proyecto:**
-Nester
+Zonmatch
 
 ### **0.3. Descripción breve del proyecto:**
-Nester revoluciona la forma en que se descubren propiedades inmobiliarias, resolviendo una de las principales fricciones del mercado: la ineficiencia en el emparejamiento entre oferta y demanda. En un entorno donde los portales tradicionales requieren búsquedas manuales extensas y carecen de retroalimentación proactiva, los usuarios se enfrentan a una experiencia fragmentada y poco personalizada.
+Zonmatch revoluciona la forma en que se descubren propiedades inmobiliarias, resolviendo una de las principales fricciones del mercado: la ineficiencia en el emparejamiento entre oferta y demanda. En un entorno donde los portales tradicionales requieren búsquedas manuales extensas y carecen de retroalimentación proactiva, los usuarios se enfrentan a una experiencia fragmentada y poco personalizada.
 
 ### **0.4. URL del proyecto:**
 
@@ -60,14 +60,14 @@ Nester revoluciona la forma en que se descubren propiedades inmobiliarias, resol
 ## 1. Descripción general del producto
 Este sistema propone una solución tecnológica basada en una arquitectura moderna compuesta por ReactJS para una interfaz responsiva e intuitiva, Node.js y MySQL para una gestión robusta de datos, y un módulo de IA personalizado para matchmaking que analiza criterios y comportamientos para generar coincidencias automáticas entre inmuebles y buscadores. Los usuarios pueden definir zonas de interés mediante polígonos interactivos sobre el mapa, aplicar múltiples filtros (tipo de propiedad, amenidades, precio, etc.) y recibir notificaciones en tiempo real cuando una propiedad relevante aparece o se publica.
 
-A diferencia de los portales tradicionales, Nester no es solo una vitrina de propiedades, sino un sistema inteligente de conexión inmediata entre intereses complementarios, replicando la lógica de apps de emparejamiento social. Este enfoque dinámico y centrado en el usuario transforma el descubrimiento inmobiliario en una experiencia ágil, proactiva y placentera.
+A diferencia de los portales tradicionales, Zonmatch no es solo una vitrina de propiedades, sino un sistema inteligente de conexión inmediata entre intereses complementarios, replicando la lógica de apps de emparejamiento social. Este enfoque dinámico y centrado en el usuario transforma el descubrimiento inmobiliario en una experiencia ágil, proactiva y placentera.
 
-Diseñado para un público amplio y diverso, Nester ofrece funcionalidades especializadas tanto para usuarios individuales que buscan su nuevo hogar, como para agentes, inmobiliarias y constructoras que desean posicionar sus propiedades de forma más eficiente. Todos los actores pueden beneficiarse de algoritmos de coincidencia inversa, sugerencias automatizadas y analíticas en tiempo real para tomar decisiones más rápidas y precisas.
+Diseñado para un público amplio y diverso, Zonmatch ofrece funcionalidades especializadas tanto para usuarios individuales que buscan su nuevo hogar, como para agentes, inmobiliarias y constructoras que desean posicionar sus propiedades de forma más eficiente. Todos los actores pueden beneficiarse de algoritmos de coincidencia inversa, sugerencias automatizadas y analíticas en tiempo real para tomar decisiones más rápidas y precisas.
 
 ### **1.1. Objetivo:**
-Nester tiene como propósito transformar radicalmente la forma en que personas y empresas descubren, ofertan y conectan con propiedades inmobiliarias, eliminando la necesidad de búsquedas manuales complejas, resultados irrelevantes o interacciones pasivas.
+Zonmatch tiene como propósito transformar radicalmente la forma en que personas y empresas descubren, ofertan y conectan con propiedades inmobiliarias, eliminando la necesidad de búsquedas manuales complejas, resultados irrelevantes o interacciones pasivas.
 
-A diferencia de plataformas tradicionales, Nester no se basa en mecánicas visuales tipo "swipe", sino que utiliza una lógica de coincidencia automatizada mediante inteligencia artificial. Los usuarios pueden definir filtros detallados (tipo de propiedad, amenidades, presupuesto, etc.) y delimitar zonas de interés dibujando polígonos en el mapa, lo que permite encontrar propiedades relevantes de forma proactiva, sin búsquedas constantes.
+A diferencia de plataformas tradicionales, Zonmatch no se basa en mecánicas visuales tipo "swipe", sino que utiliza una lógica de coincidencia automatizada mediante inteligencia artificial. Los usuarios pueden definir filtros detallados (tipo de propiedad, amenidades, presupuesto, etc.) y delimitar zonas de interés dibujando polígonos en el mapa, lo que permite encontrar propiedades relevantes de forma proactiva, sin búsquedas constantes.
 
 El sistema también genera coincidencias inversas: si un nuevo inmueble publicado coincide con los filtros de un buscador activo, el sistema lo notifica automáticamente. Esta doble vía de emparejamiento acelera la conexión entre oferta y demanda.
 
@@ -88,10 +88,10 @@ El sistema también genera coincidencias inversas: si un nuevo inmueble publicad
 	•	Inmobiliarias y constructoras que manejan carteras extensas y buscan inteligencia comercial.
 
 ### **1.2. Características y funcionalidades principales:**
-A continuación se detallan las funcionalidades específicas de **Nester**, diseñadas para responder a las necesidades de los distintos perfiles de usuario (buscadores, agentes, inmobiliarias, constructoras) y resolver los principales desafíos del mercado inmobiliario tradicional.
+A continuación se detallan las funcionalidades específicas de **Zonmatch**, diseñadas para responder a las necesidades de los distintos perfiles de usuario (buscadores, agentes, inmobiliarias, constructoras) y resolver los principales desafíos del mercado inmobiliario tradicional.
 
 ### Lean Canvas:**
-![Lean Canvas de Nester](./diagramas/lean%20canvas.png)
+![Lean Canvas de Zonmatch](./diagramas/lean%20canvas.png)
 
 ---
 
@@ -180,7 +180,7 @@ A continuación se detallan las funcionalidades específicas de **Nester**, dise
 ---
 
 ### **1.3. Diseño y experiencia de usuario:**
-# Flujos de Usuario Detallados – Nester
+# Flujos de Usuario Detallados – Zonmatch
 Diseñados bajo principios de UX centrado en el usuario, accesibilidad y eficiencia. Cada flujo representa la experiencia ideal para web y móvil.
 
 ---
@@ -434,7 +434,7 @@ Facilitar la comunicación entre buscadores y publicadores, ofreciendo flexibili
 ### 1.3.5.1. Chat Interno (In-App Messaging)
 
 ### Objetivo:
-Mantener conversaciones dentro del entorno seguro de Nester, vinculadas a una propiedad específica.
+Mantener conversaciones dentro del entorno seguro de Zonmatch, vinculadas a una propiedad específica.
 
 ### 1.3.5.1.1. Pantalla: Chat In-App
 
@@ -489,14 +489,14 @@ Ofrecer una vía directa de contacto fuera de la plataforma, aprovechando una ap
   - Redirección inmediata vía `wa.me`
   - Mensaje prellenado con datos relevantes:
     ```
-    https://wa.me/52XXXXXXXXXX?text=Hola,%20vi%20tu%20propiedad%20en%20Nester%20y%20me%20interesa%20más%20información
+    https://wa.me/52XXXXXXXXXX?text=Hola,%20vi%20tu%20propiedad%20en%20Zonmatch%20y%20me%20interesa%20más%20información
     ```
 
 **Interacciones:**
 1. El usuario presiona "Contactar".
 2. Elige WhatsApp como canal.
 3. El sistema abre la app (en móvil) o WhatsApp Web (en desktop).
-4. La conversación continúa fuera del entorno Nester.
+4. La conversación continúa fuera del entorno Zonmatch.
 
 **Consideraciones Técnicas:**
 - Se registra solo el evento de salida (no los mensajes).
@@ -540,7 +540,7 @@ Ofrecer una vía directa de contacto fuera de la plataforma, aprovechando una ap
 
 ### Consideraciones de Privacidad:
 - El número telefónico del agente solo será visible si habilitó la opción de contacto externo.
-- Se informa al usuario que WhatsApp es un canal externo a Nester, sin cifrado controlado por la plataforma.
+- Se informa al usuario que WhatsApp es un canal externo a Zonmatch, sin cifrado controlado por la plataforma.
 
 ![Flujo de Chat](./flujos-usuario/diagramas/Chat.png)
 
@@ -643,7 +643,7 @@ stop
 
 ## 1.7. Principios de Diseño Centrado en el Usuario
 
-| Principio           | Aplicación en Nester                                            |
+| Principio           | Aplicación en Zonmatch                                            |
 |---------------------|-----------------------------------------------------------------|
 | **Usabilidad**      | Flujo guiado, botones claros, feedback inmediato                |
 | **Accesibilidad**   | Alto contraste, navegación por teclado, inputs legibles         |
