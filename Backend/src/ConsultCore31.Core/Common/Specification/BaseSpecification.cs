@@ -1,14 +1,15 @@
 using Ardalis.Specification;
-using System;
+
 using System.Linq.Expressions;
 
 namespace ConsultCore31.Core.Common.Specification
 {
     public abstract class BaseSpecification<T> : Specification<T>, ISpecification<T> where T : class
     {
-        protected BaseSpecification() { }
+        protected BaseSpecification()
+        { }
 
-        protected BaseSpecification(Expression<Func<T, bool>> criteria) 
+        protected BaseSpecification(Expression<Func<T, bool>> criteria)
         {
             Query.Where(criteria);
         }

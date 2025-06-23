@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Objeto;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.Application.Services
@@ -83,10 +82,10 @@ namespace ConsultCore31.Application.Services
 
                 var objeto = _mapper.Map<Objeto>(createObjetoDto);
                 var objetoCreado = await _objetoRepository.AddAsync(objeto);
-                
+
                 // Cargar la relación con ObjetoTipo para el mapeo
                 objetoCreado.ObjetoTipo = objetoTipo;
-                
+
                 return _mapper.Map<ObjetoDto>(objetoCreado);
             }
             catch (Exception ex)
@@ -119,7 +118,6 @@ namespace ConsultCore31.Application.Services
                 {
                     throw new InvalidOperationException("El tipo de objeto especificado no existe.");
                 }
-
 
                 // Actualizar propiedades
                 objetoExistente.ObjetoNombre = updateObjetoDto.Nombre;

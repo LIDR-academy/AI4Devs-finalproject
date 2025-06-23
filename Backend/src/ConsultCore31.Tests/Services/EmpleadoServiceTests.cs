@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Empleado;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -28,16 +25,16 @@ namespace ConsultCore31.Tests.Services
         public EmpleadoServiceTests()
         {
             _mockRepository = new Mock<IEmpleadoRepository>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<EmpleadoProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             _mockLogger = new Mock<ILogger<EmpleadoService>>();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new EmpleadoService(
                 _mockRepository.Object,
@@ -51,23 +48,23 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var empleados = new List<Empleado>
             {
-                new Empleado { 
-                    Id = 1, 
-                    Nombre = "Juan", 
-                    Apellidos = "Pérez", 
-                    Email = "juan.perez@example.com", 
-                    Telefono = "1234567890", 
-                    Movil = "0987654321", 
-                    FechaCreacion = DateTime.UtcNow 
+                new Empleado {
+                    Id = 1,
+                    Nombre = "Juan",
+                    Apellidos = "Pérez",
+                    Email = "juan.perez@example.com",
+                    Telefono = "1234567890",
+                    Movil = "0987654321",
+                    FechaCreacion = DateTime.UtcNow
                 },
-                new Empleado { 
-                    Id = 2, 
-                    Nombre = "María", 
-                    Apellidos = "González", 
-                    Email = "maria.gonzalez@example.com", 
-                    Telefono = "1234567891", 
-                    Movil = "0987654322", 
-                    FechaCreacion = DateTime.UtcNow 
+                new Empleado {
+                    Id = 2,
+                    Nombre = "María",
+                    Apellidos = "González",
+                    Email = "maria.gonzalez@example.com",
+                    Telefono = "1234567891",
+                    Movil = "0987654322",
+                    FechaCreacion = DateTime.UtcNow
                 }
             };
 
@@ -88,15 +85,15 @@ namespace ConsultCore31.Tests.Services
         public async Task GetByIdAsync_ConIdExistente_DebeRetornarEmpleado()
         {
             // Arrange
-            var empleado = new Empleado 
-            { 
-                Id = 1, 
-                Nombre = "Juan", 
-                Apellidos = "Pérez", 
-                Email = "juan.perez@example.com", 
-                Telefono = "1234567890", 
-                Movil = "0987654321", 
-                FechaCreacion = DateTime.UtcNow 
+            var empleado = new Empleado
+            {
+                Id = 1,
+                Nombre = "Juan",
+                Apellidos = "Pérez",
+                Email = "juan.perez@example.com",
+                Telefono = "1234567890",
+                Movil = "0987654321",
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -210,14 +207,14 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Empleado>(e => 
-                e.Id == 1 && 
-                e.Nombre == "Empleado" && 
-                e.Apellidos == "Actualizado" && 
-                e.Email == "empleado.actualizado@example.com" && 
-                e.Telefono == "9876543210" && 
-                e.Movil == "0123456789" && 
-                e.Activo && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Empleado>(e =>
+                e.Id == 1 &&
+                e.Nombre == "Empleado" &&
+                e.Apellidos == "Actualizado" &&
+                e.Email == "empleado.actualizado@example.com" &&
+                e.Telefono == "9876543210" &&
+                e.Movil == "0123456789" &&
+                e.Activo &&
                 e.Genero == 2), It.IsAny<CancellationToken>()), Times.Once);
         }
 

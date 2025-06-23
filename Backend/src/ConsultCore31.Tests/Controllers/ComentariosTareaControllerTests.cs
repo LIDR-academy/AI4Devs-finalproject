@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.ComentarioTarea;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Controllers
 {
@@ -34,17 +31,17 @@ namespace ConsultCore31.Tests.Controllers
             // Arrange
             var comentarios = new List<ComentarioTareaDto>
             {
-                new ComentarioTareaDto { 
-                    Id = 1, 
-                    TareaId = 1, 
+                new ComentarioTareaDto {
+                    Id = 1,
+                    TareaId = 1,
                     UsuarioId = 1,
                     Contenido = "Comentario 1",
                     FechaCreacion = DateTime.UtcNow,
                     Activo = true
                 },
-                new ComentarioTareaDto { 
-                    Id = 2, 
-                    TareaId = 1, 
+                new ComentarioTareaDto {
+                    Id = 2,
+                    TareaId = 1,
                     UsuarioId = 2,
                     Contenido = "Comentario 2",
                     FechaCreacion = DateTime.UtcNow,

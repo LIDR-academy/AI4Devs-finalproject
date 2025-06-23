@@ -1,6 +1,7 @@
 using ConsultCore31.Application.Common.Mappings;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Application.Services;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ConsultCore31.Application.DependencyInjection
@@ -38,7 +39,7 @@ namespace ConsultCore31.Application.DependencyInjection
             services.AddScoped<IEtapaProyectoService, EtapaProyectoService>();
             services.AddScoped<ITareaService, TareaService>();
             services.AddScoped<IComentarioTareaService, ComentarioTareaService>();
-            
+
             // Aquí se registrarán los demás servicios específicos
 
             return services;

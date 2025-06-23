@@ -1,5 +1,4 @@
 using ConsultCore31.Application.DTOs.TipoProyecto;
-using ConsultCore31.Core.Entities;
 
 namespace ConsultCore31.Application.Interfaces
 {

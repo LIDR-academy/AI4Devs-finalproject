@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 using AutoMapper;
 
 using ConsultCore31.Application.DTOs.Acceso;
@@ -12,6 +7,7 @@ using ConsultCore31.Core.Interfaces;
 using ConsultCore31.Core.Specifications;
 
 using Microsoft.Extensions.Logging;
+
 using VerificarAccesoDto = ConsultCore31.Application.DTOs.Acceso.VerificarAccesoDto;
 
 namespace ConsultCore31.Application.Services
@@ -215,7 +211,7 @@ namespace ConsultCore31.Application.Services
 
                 // Obtener todos los accesos activos para el perfil
                 var accesos = await _accesoRepository.ListAsync(new AccesosActivosByPerfilIdSpec(perfilId));
-                
+
                 // Mapear a DTOs y devolver
                 return _mapper.Map<IEnumerable<AccesoDto>>(accesos);
             }
@@ -230,7 +226,7 @@ namespace ConsultCore31.Application.Services
         {
             try
             {
-                _logger.LogInformation("Actualizando estado de acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Nuevo estado: {Activo}", 
+                _logger.LogInformation("Actualizando estado de acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Nuevo estado: {Activo}",
                     perfilId, objetoId, activo);
 
                 // Verificar si el perfil existe
@@ -240,7 +236,6 @@ namespace ConsultCore31.Application.Services
                     _logger.LogWarning("No se encontró el perfil con ID {PerfilId}", perfilId);
                     throw new KeyNotFoundException($"No se encontró el perfil con ID {perfilId}");
                 }
-
 
                 // Verificar si el objeto existe
                 var objeto = await _objetoRepository.GetByIdAsync(objetoId);
@@ -257,7 +252,7 @@ namespace ConsultCore31.Application.Services
 
                 if (acceso == null)
                 {
-                    _logger.LogWarning("No se encontró un acceso para el perfil {PerfilId} y objeto {ObjetoId}", 
+                    _logger.LogWarning("No se encontró un acceso para el perfil {PerfilId} y objeto {ObjetoId}",
                         perfilId, objetoId);
                     throw new KeyNotFoundException($"No se encontró un acceso para el perfil {perfilId} y objeto {objetoId}");
                 }
@@ -265,12 +260,12 @@ namespace ConsultCore31.Application.Services
                 // Actualizar el estado
                 acceso.Activo = activo;
                 acceso.FechaModificacion = DateTime.UtcNow;
-                
+
                 await _accesoRepository.UpdateAsync(acceso);
-                
-                _logger.LogInformation("Estado de acceso actualizado correctamente. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Nuevo estado: {Activo}", 
+
+                _logger.LogInformation("Estado de acceso actualizado correctamente. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}, Nuevo estado: {Activo}",
                     perfilId, objetoId, activo);
-                
+
                 return true;
             }
             catch (KeyNotFoundException)
@@ -280,7 +275,7 @@ namespace ConsultCore31.Application.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar el estado del acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}", 
+                _logger.LogError(ex, "Error al actualizar el estado del acceso. PerfilId: {PerfilId}, ObjetoId: {ObjetoId}",
                     perfilId, objetoId);
                 return false;
             }

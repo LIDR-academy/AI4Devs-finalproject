@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using ConsultCore31.Core.Interfaces;
 using ConsultCore31.Infrastructure.Persistence.Context;
 

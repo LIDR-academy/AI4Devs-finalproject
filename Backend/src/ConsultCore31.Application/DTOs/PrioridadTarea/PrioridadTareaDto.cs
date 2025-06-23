@@ -1,4 +1,5 @@
 using ConsultCore31.Application.DTOs.Common;
+
 using System.ComponentModel.DataAnnotations;
 
 namespace ConsultCore31.Application.DTOs.PrioridadTarea

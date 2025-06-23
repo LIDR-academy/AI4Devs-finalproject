@@ -1,0 +1,38 @@
+{
+  "name": "bga-business-system",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión Integral para BGA - Consultoría Estratégica",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "@nuxtjs/tailwindcss": "^6.12.1",
+    "@types/node": "^20.14.2",
+    "autoprefixer": "^10.4.21",
+    "daisyui": "^5.0.43",
+    "nuxt": "^3.12.2",
+    "postcss": "^8.5.6",
+    "postcss-import": "^16.1.1",
+    "tailwindcss": "3.4.3",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@headlessui/vue": "^1.7.22",
+    "@heroicons/vue": "^2.1.5",
+    "@nuxtjs/color-mode": "^3.4.2",
+    "@pinia/nuxt": "^0.5.1",
+    "@vueuse/core": "^10.11.0",
+    "@vueuse/nuxt": "^10.11.0",
+    "chart.js": "^4.4.3",
+    "dayjs": "^1.11.11",
+    "pinia": "^2.1.7",
+    "vue-chartjs": "^5.3.1",
+    "vue-toastification": "^2.0.0-rc.5"
+  }
+}

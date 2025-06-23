@@ -1,7 +1,4 @@
 using ConsultCore31.Core.Entities;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ConsultCore31.Core.Interfaces
 {

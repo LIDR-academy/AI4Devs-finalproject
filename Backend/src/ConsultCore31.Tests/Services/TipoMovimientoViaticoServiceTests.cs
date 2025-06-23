@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.TipoMovimientoViatico;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -29,14 +26,14 @@ namespace ConsultCore31.Tests.Services
         {
             _mockRepository = new Mock<IGenericRepository<TipoMovimientoViatico, int>>();
             _mockLogger = new Mock<ILogger<TipoMovimientoViaticoService>>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<TipoMovimientoViaticoProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new TipoMovimientoViaticoService(_mockRepository.Object, _mapper, _mockLogger.Object);
         }
@@ -69,12 +66,12 @@ namespace ConsultCore31.Tests.Services
         {
             // Arrange
             var tipo = new TipoMovimientoViatico
-            { 
-                Id = 1, 
-                Nombre = "Anticipo", 
-                Descripcion = "Anticipo de viáticos", 
-                Afectacion = 1, 
-                FechaCreacion = DateTime.UtcNow 
+            {
+                Id = 1,
+                Nombre = "Anticipo",
+                Descripcion = "Anticipo de viáticos",
+                Afectacion = 1,
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -120,7 +117,7 @@ namespace ConsultCore31.Tests.Services
             TipoMovimientoViatico savedEntity = null;
 
             _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<TipoMovimientoViatico>(), It.IsAny<CancellationToken>()))
-                .Callback<TipoMovimientoViatico, CancellationToken>((entity, token) => 
+                .Callback<TipoMovimientoViatico, CancellationToken>((entity, token) =>
                 {
                     entity.Id = 3;
                     entity.FechaCreacion = DateTime.UtcNow;
@@ -173,11 +170,11 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<TipoMovimientoViatico>(t => 
-                t.Id == 1 && 
-                t.Nombre == "Anticipo Actualizado" && 
-                t.Descripcion == "Descripción actualizada" && 
-                t.Afectacion == -1 && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<TipoMovimientoViatico>(t =>
+                t.Id == 1 &&
+                t.Nombre == "Anticipo Actualizado" &&
+                t.Descripcion == "Descripción actualizada" &&
+                t.Afectacion == -1 &&
                 t.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 

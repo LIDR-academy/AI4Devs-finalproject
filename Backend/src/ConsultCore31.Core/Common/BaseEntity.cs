@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsultCore31.Core.Common
 {
@@ -13,19 +10,6 @@ namespace ConsultCore31.Core.Common
     /// <typeparam name="TKey">Tipo de la clave primaria</typeparam>
     public abstract class BaseEntity<TKey> : IEntity<TKey>, IHasModificationTime where TKey : IEquatable<TKey>
     {
-        /// <summary>
-        /// Identificador único de la entidad
-        /// </summary>
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public TKey Id { get; set; }
-        
-        /// <summary>
-        /// Fecha de creación de la entidad.
-        /// </summary>
-        [Column("fechaCreacion")]
-        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
-
         private readonly List<BaseDomainEvent> _domainEvents = new List<BaseDomainEvent>();
 
         /// <summary>
@@ -35,10 +19,23 @@ namespace ConsultCore31.Core.Common
         public IReadOnlyCollection<BaseDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
         /// <summary>
+        /// Fecha de creación de la entidad.
+        /// </summary>
+        [Column("fechaCreacion")]
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
         /// Fecha de la última modificación de la entidad.
         /// </summary>
         [Column("fechaModificacion")]
         public DateTime? FechaModificacion { get; set; }
+
+        /// <summary>
+        /// Identificador único de la entidad
+        /// </summary>
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public virtual TKey Id { get; set; }
 
         /// <summary>
         /// Agrega un evento de dominio a la colección
@@ -50,20 +47,20 @@ namespace ConsultCore31.Core.Common
         }
 
         /// <summary>
+        /// Limpia todos los eventos de dominio pendientes
+        /// </summary>
+        public void ClearDomainEvents()
+        {
+            _domainEvents.Clear();
+        }
+
+        /// <summary>
         /// Elimina un evento de dominio de la colección
         /// </summary>
         /// <param name="eventItem">Evento a eliminar</param>
         public void RemoveDomainEvent(BaseDomainEvent eventItem)
         {
             _domainEvents.Remove(eventItem);
-        }
-
-        /// <summary>
-        /// Limpia todos los eventos de dominio pendientes
-        /// </summary>
-        public void ClearDomainEvents()
-        {
-            _domainEvents.Clear();
         }
     }
 

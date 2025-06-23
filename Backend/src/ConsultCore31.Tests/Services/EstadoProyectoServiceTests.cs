@@ -1,12 +1,14 @@
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.EstadoProyecto;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using System.Linq.Expressions;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -21,14 +23,14 @@ namespace ConsultCore31.Tests.Services
         {
             _mockRepository = new Mock<IGenericRepository<EstadoProyecto, int>>();
             _mockLogger = new Mock<ILogger<EstadoProyectoService>>();
-            
+
             // Configurar AutoMapper con el perfil de mapeo
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<EstadoProyectoProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             _service = new EstadoProyectoService(_mockRepository.Object, _mapper, _mockLogger.Object);
         }
 
@@ -55,7 +57,7 @@ namespace ConsultCore31.Tests.Services
             Assert.Contains(result, dto => dto.Nombre == "Iniciado");
             Assert.Contains(result, dto => dto.Nombre == "En Progreso");
             Assert.Contains(result, dto => dto.Nombre == "Finalizado");
-            
+
             _mockRepository.Verify(repo => repo.GetAllActiveAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -64,15 +66,15 @@ namespace ConsultCore31.Tests.Services
         {
             // Arrange
             int estadoProyectoId = 1;
-            var estadoProyecto = new EstadoProyecto 
-            { 
-                Id = estadoProyectoId, 
-                Nombre = "Iniciado", 
-                Descripcion = "Proyecto recién iniciado", 
-                Color = "#00FF00", 
-                Orden = 1, 
-                EsEstadoFinal = false, 
-                Activo = true 
+            var estadoProyecto = new EstadoProyecto
+            {
+                Id = estadoProyectoId,
+                Nombre = "Iniciado",
+                Descripcion = "Proyecto recién iniciado",
+                Color = "#00FF00",
+                Orden = 1,
+                EsEstadoFinal = false,
+                Activo = true
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(estadoProyectoId, It.IsAny<CancellationToken>()))
@@ -90,7 +92,7 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(1, result.Orden);
             Assert.False(result.EsEstadoFinal);
             Assert.True(result.Activo);
-            
+
             _mockRepository.Verify(repo => repo.GetByIdAsync(estadoProyectoId, It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -108,7 +110,7 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.Null(result);
-            
+
             _mockRepository.Verify(repo => repo.GetByIdAsync(estadoProyectoId, It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -152,7 +154,7 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(4, result.Orden);
             Assert.False(result.EsEstadoFinal);
             Assert.True(result.Activo);
-            
+
             _mockRepository.Verify(repo => repo.AddAsync(It.IsAny<EstadoProyecto>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -204,7 +206,7 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            
+
             _mockRepository.Verify(repo => repo.GetByIdAsync(updateDto.Id, It.IsAny<CancellationToken>()), Times.Once);
             _mockRepository.Verify(repo => repo.UpdateAsync(It.IsAny<EstadoProyecto>(), It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -230,7 +232,7 @@ namespace ConsultCore31.Tests.Services
             // Act & Assert
             var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.UpdateAsync(updateDto, CancellationToken.None));
             Assert.Contains("No se encontró el estado de proyecto", exception.Message);
-            
+
             _mockRepository.Verify(repo => repo.GetByIdAsync(updateDto.Id, It.IsAny<CancellationToken>()), Times.Once);
             _mockRepository.Verify(repo => repo.UpdateAsync(It.IsAny<EstadoProyecto>(), It.IsAny<CancellationToken>()), Times.Never);
         }
@@ -262,7 +264,7 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            
+
             _mockRepository.Verify(repo => repo.GetByIdAsync(estadoProyectoId, It.IsAny<CancellationToken>()), Times.Once);
             _mockRepository.Verify(repo => repo.SoftDeleteAsync(estadoProyectoId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -279,7 +281,7 @@ namespace ConsultCore31.Tests.Services
             // Act & Assert
             var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteAsync(estadoProyectoId, CancellationToken.None));
             Assert.Contains("No se encontró el estado de proyecto", exception.Message);
-            
+
             _mockRepository.Verify(repo => repo.GetByIdAsync(estadoProyectoId, It.IsAny<CancellationToken>()), Times.Once);
             _mockRepository.Verify(repo => repo.SoftDeleteAsync(estadoProyectoId, It.IsAny<CancellationToken>()), Times.Never);
         }
@@ -298,7 +300,7 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            
+
             _mockRepository.Verify(repo => repo.ExistsAsync(
                 estadoProyectoId,
                 It.IsAny<CancellationToken>()), Times.Once);
@@ -318,7 +320,7 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.False(result);
-            
+
             _mockRepository.Verify(repo => repo.ExistsAsync(
                 estadoProyectoId,
                 It.IsAny<CancellationToken>()), Times.Once);

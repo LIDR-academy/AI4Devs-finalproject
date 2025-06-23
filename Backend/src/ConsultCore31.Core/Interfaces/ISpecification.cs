@@ -1,6 +1,3 @@
-using System;
-using System.Linq.Expressions;
-
 namespace ConsultCore31.Core.Interfaces
 {
     /// <summary>

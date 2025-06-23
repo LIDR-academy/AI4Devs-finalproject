@@ -1,5 +1,7 @@
+using Asp.Versioning;
+
 using ConsultCore31.Infrastructure.Persistence.Context;
-using ConsultCore31.WebAPI.Services;
+using ConsultCore31.WebAPI.Services.Interfaces;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,53 +16,25 @@ namespace ConsultCore31.WebAPI.Controllers;
 /// Controlador para diagnóstico y monitoreo de la aplicación
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class DiagnosticController : ControllerBase
 {
-    private readonly ILogger<DiagnosticController> _logger;
     private readonly AppDbContext _dbContext;
     private readonly IWebHostEnvironment _environment;
-    private readonly ApplicationHealthService _healthService;
+    private readonly IApplicationHealthService _healthService;
+    private readonly ILogger<DiagnosticController> _logger;
 
     public DiagnosticController(
         ILogger<DiagnosticController> logger,
         AppDbContext dbContext,
         IWebHostEnvironment environment,
-        ApplicationHealthService healthService)
+        IApplicationHealthService healthService)
     {
         _logger = logger;
         _dbContext = dbContext;
         _environment = environment;
         _healthService = healthService;
-    }
-
-    /// <summary>
-    /// Endpoint para verificar el estado de salud de la aplicación
-    /// </summary>
-    [HttpGet("health")]
-    [AllowAnonymous]
-    public IActionResult GetHealthCheck()
-    {
-        try
-        {
-            var healthStatuses = _healthService.GetHealthStatus();
-
-            // Verificar si algún componente está en estado no saludable
-            var isHealthy = !healthStatuses.Any() || healthStatuses.All(s => s.Value.Status == "Healthy");
-
-            return Ok(new
-            {
-                status = isHealthy ? "Healthy" : "Unhealthy",
-                environment = _environment.EnvironmentName,
-                timestamp = DateTime.UtcNow,
-                components = healthStatuses
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener el estado de salud");
-            return StatusCode(500, new { status = "Error", message = "Error al verificar el estado de salud" });
-        }
     }
 
     /// <summary>
@@ -124,41 +98,6 @@ public class DiagnosticController : ControllerBase
                 error = ex.Message,
                 elapsedMs = stopwatch.ElapsedMilliseconds
             });
-        }
-    }
-
-    /// <summary>
-    /// Endpoint para obtener información del sistema
-    /// </summary>
-    [HttpGet("system")]
-    [Authorize(Roles = "Administrador")]
-    public IActionResult GetSystemInfo()
-    {
-        try
-        {
-            var systemInfo = new
-            {
-                environment = _environment.EnvironmentName,
-                applicationName = _environment.ApplicationName,
-                contentRootPath = _environment.ContentRootPath,
-                webRootPath = _environment.WebRootPath,
-                frameworkDescription = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
-                osDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
-                processArchitecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
-                osArchitecture = System.Runtime.InteropServices.RuntimeInformation.OSArchitecture.ToString(),
-                memoryUsage = GC.GetTotalMemory(false) / (1024 * 1024) + " MB",
-                processorCount = Environment.ProcessorCount,
-                serverTime = DateTime.Now,
-                serverTimeUtc = DateTime.UtcNow,
-                serverTimeZone = TimeZoneInfo.Local.DisplayName
-            };
-
-            return Ok(systemInfo);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener información del sistema");
-            return StatusCode(500, new { status = "Error", message = "Error al obtener información del sistema" });
         }
     }
 
@@ -236,6 +175,70 @@ public class DiagnosticController : ControllerBase
         {
             _logger.LogError(ex, "Error al generar diagnóstico detallado");
             return StatusCode(500, new { status = "Error", message = "Error al generar diagnóstico detallado" });
+        }
+    }
+
+    /// <summary>
+    /// Endpoint para verificar el estado de salud de la aplicación
+    /// </summary>
+    [HttpGet("health")]
+    [AllowAnonymous]
+    public IActionResult GetHealthCheck()
+    {
+        try
+        {
+            var healthStatuses = _healthService.GetHealthStatus();
+
+            // Verificar si algún componente está en estado no saludable
+            var isHealthy = !healthStatuses.Any() || healthStatuses.All(s => s.Value.Status == "Healthy");
+
+            return Ok(new
+            {
+                status = isHealthy ? "Healthy" : "Unhealthy",
+                environment = _environment.EnvironmentName,
+                timestamp = DateTime.UtcNow,
+                components = healthStatuses
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener el estado de salud");
+            return StatusCode(500, new { status = "Error", message = "Error al verificar el estado de salud" });
+        }
+    }
+
+    /// <summary>
+    /// Endpoint para obtener información del sistema
+    /// </summary>
+    [HttpGet("system")]
+    [Authorize(Roles = "Administrador")]
+    public IActionResult GetSystemInfo()
+    {
+        try
+        {
+            var systemInfo = new
+            {
+                environment = _environment.EnvironmentName,
+                applicationName = _environment.ApplicationName,
+                contentRootPath = _environment.ContentRootPath,
+                webRootPath = _environment.WebRootPath,
+                frameworkDescription = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+                osDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+                processArchitecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
+                osArchitecture = System.Runtime.InteropServices.RuntimeInformation.OSArchitecture.ToString(),
+                memoryUsage = GC.GetTotalMemory(false) / (1024 * 1024) + " MB",
+                processorCount = Environment.ProcessorCount,
+                serverTime = DateTime.Now,
+                serverTimeUtc = DateTime.UtcNow,
+                serverTimeZone = TimeZoneInfo.Local.DisplayName
+            };
+
+            return Ok(systemInfo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener información del sistema");
+            return StatusCode(500, new { status = "Error", message = "Error al obtener información del sistema" });
         }
     }
 }

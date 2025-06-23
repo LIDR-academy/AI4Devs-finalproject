@@ -1,9 +1,7 @@
 // Referencia removida ya que Usuario ahora está en el espacio de nombres ConsultCore31.Core.Entities
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 using ConsultCore31.Core.Common;
+
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsultCore31.Core.Entities
 {

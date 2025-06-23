@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 using AutoMapper;
 
 using ConsultCore31.Application.DTOs.FrecuenciaMedicion;
@@ -15,8 +9,6 @@ using ConsultCore31.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 using Moq;
-
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {

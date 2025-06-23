@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Cliente;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -28,16 +25,16 @@ namespace ConsultCore31.Tests.Services
         public ClienteServiceTests()
         {
             _mockRepository = new Mock<IClienteRepository>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<ClienteProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             _mockLogger = new Mock<ILogger<ClienteService>>();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new ClienteService(
                 _mockRepository.Object,
@@ -72,12 +69,12 @@ namespace ConsultCore31.Tests.Services
         public async Task GetByIdAsync_ConIdExistente_DebeRetornarCliente()
         {
             // Arrange
-            var cliente = new Cliente 
-            { 
-                Id = 1, 
-                Nombre = "Cliente Test", 
-                Email = "cliente@example.com", 
-                FechaCreacion = DateTime.UtcNow 
+            var cliente = new Cliente
+            {
+                Id = 1,
+                Nombre = "Cliente Test",
+                Email = "cliente@example.com",
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -175,11 +172,11 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Cliente>(c => 
-                c.Id == 1 && 
-                c.Nombre == "Cliente Actualizado" && 
-                c.Email == "actualizado@example.com" && 
-                c.Telefono == "9876543210" && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Cliente>(c =>
+                c.Id == 1 &&
+                c.Nombre == "Cliente Actualizado" &&
+                c.Email == "actualizado@example.com" &&
+                c.Telefono == "9876543210" &&
                 c.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 

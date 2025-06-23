@@ -1,7 +1,6 @@
 using AutoMapper;
-using System;
+
 using System.Reflection;
-using System.Linq;
 
 namespace ConsultCore31.Application.Common.Mappings
 {

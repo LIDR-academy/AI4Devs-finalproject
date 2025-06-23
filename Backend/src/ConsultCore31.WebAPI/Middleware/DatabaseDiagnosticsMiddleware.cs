@@ -1,5 +1,7 @@
 using ConsultCore31.Infrastructure.Persistence.Context;
+
 using Microsoft.EntityFrameworkCore;
+
 using System.Diagnostics;
 
 namespace ConsultCore31.WebAPI.Middleware;
@@ -26,36 +28,36 @@ public class DatabaseDiagnosticsMiddleware
     public async Task InvokeAsync(HttpContext context, AppDbContext dbContext)
     {
         // Solo ejecutar diagnóstico en la primera solicitud o periódicamente
-        if (context.Request.Path.StartsWithSegments("/api") || 
+        if (context.Request.Path.StartsWithSegments("/api") ||
             context.Request.Path.StartsWithSegments("/health"))
         {
             try
             {
                 var stopwatch = Stopwatch.StartNew();
-                
+
                 // Verificar la conexión a la base de datos
                 var canConnect = await dbContext.Database.CanConnectAsync();
-                
+
                 stopwatch.Stop();
-                
+
                 if (!canConnect)
                 {
                     _logger.LogCritical(
                         "No se puede conectar a la base de datos. Tiempo transcurrido: {ElapsedMs}ms",
                         stopwatch.ElapsedMilliseconds);
-                    
+
                     // Registrar información adicional sobre la conexión
-                    _logger.LogError("Cadena de conexión: {ConnectionString}", 
+                    _logger.LogError("Cadena de conexión: {ConnectionString}",
                         MaskConnectionString(dbContext.Database.GetConnectionString()));
-                    
+
                     // Si estamos en desarrollo, permitir que continúe pero con un error en el log
                     if (!_environment.IsDevelopment())
                     {
                         context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                        await context.Response.WriteAsJsonAsync(new 
-                        { 
-                            error = "Error de conexión a la base de datos", 
-                            timestamp = DateTime.UtcNow 
+                        await context.Response.WriteAsJsonAsync(new
+                        {
+                            error = "Error de conexión a la base de datos",
+                            timestamp = DateTime.UtcNow
                         });
                         return;
                     }
@@ -65,7 +67,7 @@ public class DatabaseDiagnosticsMiddleware
                     _logger.LogInformation(
                         "Conexión a la base de datos exitosa. Tiempo: {ElapsedMs}ms",
                         stopwatch.ElapsedMilliseconds);
-                    
+
                     // Registrar información sobre el proveedor y versión
                     try
                     {
@@ -73,11 +75,11 @@ public class DatabaseDiagnosticsMiddleware
                         _logger.LogDebug("Proveedor de base de datos: {Provider}, Servidor: {DataSource}",
                             connection.GetType().Name,
                             connection.DataSource);
-                        
+
                         // Verificar si hay migraciones pendientes
                         var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
                         var pendingCount = pendingMigrations.Count();
-                        
+
                         if (pendingCount > 0)
                         {
                             _logger.LogWarning("Hay {Count} migraciones pendientes: {Migrations}",
@@ -94,14 +96,14 @@ public class DatabaseDiagnosticsMiddleware
             catch (Exception ex)
             {
                 _logger.LogCritical(ex, "Error al verificar la conexión a la base de datos");
-                
+
                 if (!_environment.IsDevelopment())
                 {
                     context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                    await context.Response.WriteAsJsonAsync(new 
-                    { 
-                        error = "Error de conexión a la base de datos", 
-                        timestamp = DateTime.UtcNow 
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        error = "Error de conexión a la base de datos",
+                        timestamp = DateTime.UtcNow
                     });
                     return;
                 }

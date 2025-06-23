@@ -1,4 +1,5 @@
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Empleado;
 using ConsultCore31.Core.Entities;
 

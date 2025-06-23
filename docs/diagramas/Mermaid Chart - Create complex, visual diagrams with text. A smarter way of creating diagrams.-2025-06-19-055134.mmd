@@ -1,0 +1,50 @@
+%%{init: {'theme': 'neutral', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryTextColor': '#000', 'primaryBorderColor': '#777', 'lineColor': '#555', 'secondaryColor': '#e0e0e0', 'tertiaryColor': '#d0d0d0'}}}%%
+
+classDiagram
+    %% Tareas y Comentarios
+    class Tarea {
+        +int Id
+        +string Titulo
+        +string Descripcion
+        +int ProyectoId
+        +int? EtapaProyectoId
+        +int EstadoTareaId
+        +int PrioridadTareaId
+        +DateTime FechaCreacion
+        +DateTime FechaVencimiento
+        +DateTime FechaCompletada
+        +decimal PorcentajeCompletado
+        +List~ComentarioTarea~ Comentarios
+    }
+    
+    class EstadoTarea {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +bool Activo
+        +List~Tarea~ Tareas
+    }
+    
+    class PrioridadTarea {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +List~Tarea~ Tareas
+    }
+    
+    class ComentarioTarea {
+        +int Id
+        +string Contenido
+        +DateTime FechaCreacion
+        +int TareaId
+        +int UsuarioId
+    }
+    
+    %% Relaciones de Tareas
+    Tarea "muchos" --> "1" Proyecto
+    Tarea "muchos" --> "0..1" EtapaProyecto
+    Tarea "muchos" --> "1" EstadoTarea
+    Tarea "muchos" --> "1" PrioridadTarea
+    Tarea "1" <-- "muchos" ComentarioTarea
+    ComentarioTarea "muchos" --> "1" Usuario
+    EtapaProyecto "1" <-- "muchos" Tarea 

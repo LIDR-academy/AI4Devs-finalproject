@@ -1,0 +1,524 @@
+classDiagram
+    %% Sistema de Usuarios y Seguridad
+    class Usuario {
+        +int Id
+        +string UserName
+        +string UsuarioApellidos
+        +Guid? TokenUsuario
+        +bool UsuarioActivo
+        +string? UsuarioContrasenaRecuperacion
+        +int PerfilId
+        +int? EmpleadoId
+        +int ObjetoId
+    }
+    
+    class Perfil {
+        +int Id
+        +string PerfilNombre
+        +bool PerfilActivo
+        +int ObjetoId
+    }
+    
+    class Objeto {
+        +int Id
+        +string ObjetoNombre
+        +bool ObjetoActivo
+        +int ObjetoTipoId
+        +int? MenuId
+    }
+    
+    class ObjetoTipo {
+        +int Id
+        +string ObjetoTipoNombre
+        +bool ObjetoTipoActivo
+    }
+    
+    class Menu {
+        +int Id
+        +string MenuNombre
+    }
+    
+    class Acceso {
+        +int PerfilId
+        +int ObjetoId
+        +bool Activo
+    }
+    
+    class RefreshToken {
+        +int Id
+        +string Token
+        +DateTime FechaExpiracion
+        +bool Revocado
+        +int UsuarioId
+    }
+    
+    class UsuarioToken {
+        +int Id
+        +string Token
+        +DateTime FechaExpiracion
+        +bool EstaActivo
+        +int UsuarioId
+    }
+    
+    %% Gestión de Recursos Humanos
+    class Empleado {
+        +int Id
+        +string Nombre
+        +string Apellidos
+        +DateTime? FechaNacimiento
+        +string Email
+        +string Telefono
+        +string Movil
+        +int? PuestoId
+        +bool Activo
+        +int ObjetoId
+        +int Genero
+        +DateTime? FechaIngreso
+        +bool TieneLicencia
+    }
+    
+    class Puesto {
+        +int Id
+        +string Nombre
+        +string Descripcion
+    }
+    
+    %% Gestión de Proyectos
+    class Proyecto {
+        +int Id
+        +string Nombre
+        +string? Codigo
+        +string? Descripcion
+        +DateTime? FechaInicio
+        +DateTime? FechaFinPlanificada
+        +DateTime? FechaFinReal
+        +int EstadoProyectoId
+        +int TipoProyectoId
+        +int ClienteId
+        +int GerenteId
+        +decimal? Presupuesto
+        +decimal? RetornoInversionObjetivo
+        +decimal? PorcentajeAvance
+    }
+    
+    class EstadoProyecto {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +string? ColorHexadecimal
+    }
+    
+    class TipoProyecto {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+    }
+    
+    class EtapaProyecto {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +int ProyectoId
+        +int EstadoEtapaId
+        +int Orden
+        +DateTime? FechaInicio
+        +DateTime? FechaFinPlanificada
+        +DateTime? FechaFinReal
+        +decimal? PorcentajeCompletado
+    }
+    
+    class EstadoEtapa {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +string? ColorHexadecimal
+    }
+    
+    %% Gestión de Tareas
+    class Tarea {
+        +int Id
+        +string Titulo
+        +string? Descripcion
+        +int ProyectoId
+        +int? EtapaProyectoId
+        +int EstadoTareaId
+        +int PrioridadTareaId
+        +DateTime FechaCreacion
+        +DateTime? FechaVencimiento
+        +DateTime? FechaCompletada
+        +decimal? PorcentajeCompletado
+        +int? AsignadoAId
+        +int CreadoPorId
+    }
+    
+    class EstadoTarea {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +string? ColorHexadecimal
+    }
+    
+    class PrioridadTarea {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +int Nivel
+    }
+    
+    class ComentarioTarea {
+        +int Id
+        +string Contenido
+        +int TareaId
+        +int UsuarioId
+        +DateTime FechaCreacion
+    }
+    
+    %% Gestión de Clientes
+    class Cliente {
+        +int Id
+        +string Nombre
+        +string? RazonSocial
+        +string? RFC
+        +string? Direccion
+        +string? Ciudad
+        +string? Estado
+        +string? CodigoPostal
+        +string? Pais
+        +string? Telefono
+        +string? Email
+        +string? SitioWeb
+        +bool Activo
+    }
+    
+    class ContactoCliente {
+        +int Id
+        +string Nombre
+        +string? Apellidos
+        +string? Puesto
+        +string? Email
+        +string? Telefono
+        +string? Extension
+        +string? Movil
+        +int ClienteId
+        +bool EsPrincipal
+        +bool Activo
+    }
+    
+    %% Gestión de Documentos
+    class Documento {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +int ProyectoId
+        +int TipoDocumentoId
+        +int? CarpetaDocumentoId
+        +DateTime FechaCreacion
+        +int CreadoPorId
+        +bool Activo
+    }
+    
+    class VersionDocumento {
+        +int Id
+        +int DocumentoId
+        +string Version
+        +string? Descripcion
+        +string RutaArchivo
+        +DateTime FechaCreacion
+        +int CreadoPorId
+        +bool EsVersionActual
+    }
+    
+    class TipoDocumento {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +string? ExtensionesPermitidas
+        +decimal? TamanoMaximoMB
+        +bool Activo
+    }
+    
+    class CarpetaDocumento {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +int? CarpetaPadreId
+        +int ProyectoId
+        +DateTime FechaCreacion
+        +int CreadoPorId
+        +bool Activa
+    }
+    
+    class ArchivoAdjunto {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +string RutaArchivo
+        +string TipoContenido
+        +long TamanoBytes
+        +int? DocumentoId
+        +int? TareaId
+        +int? GastoId
+        +int? MovimientoViaticoId
+        +DateTime FechaCreacion
+        +int CreadoPorId
+    }
+    
+    %% Gestión Financiera
+    class Gasto {
+        +int Id
+        +string Concepto
+        +decimal Monto
+        +decimal? TipoCambio
+        +DateTime Fecha
+        +int ProyectoId
+        +int CategoriaGastoId
+        +int EmpleadoId
+        +int MonedaId
+        +string? NumeroFactura
+        +string? Proveedor
+        +string? ProveedorRFC
+        +string? RutaComprobante
+        +int EstadoAprobacionId
+        +int? AprobadoPorId
+        +DateTime? FechaAprobacion
+        +string? Comentarios
+        +bool EsReembolsable
+        +bool Activo
+    }
+    
+    class CategoriaGasto {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +bool EsEstandar
+        +bool RequiereComprobante
+        +decimal? LimiteMaximo
+        +bool Activa
+    }
+    
+    class EstadoAprobacion {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +string? ColorHexadecimal
+    }
+    
+    class Moneda {
+        +int Id
+        +string Codigo
+        +string Nombre
+        +string? Simbolo
+        +decimal TasaCambio
+        +DateTime? FechaActualizacion
+        +bool EsPredeterminada
+        +bool Activa
+    }
+    
+    class AsignacionViatico {
+        +int Id
+        +string Concepto
+        +decimal MontoTotal
+        +decimal? SaldoPendiente
+        +int ProyectoId
+        +int EmpleadoId
+        +int MonedaId
+        +DateTime FechaInicio
+        +DateTime FechaFin
+        +string? Destino
+        +string? PropositoViaje
+        +int EstadoAprobacionId
+        +int? AprobadoPorId
+        +DateTime? FechaAprobacion
+        +bool EsLiquidada
+        +DateTime? FechaLiquidacion
+        +string? Comentarios
+    }
+    
+    class MovimientoViatico {
+        +int Id
+        +string Concepto
+        +decimal Monto
+        +int AsignacionViaticoId
+        +int TipoMovimientoViaticoId
+        +DateTime Fecha
+        +int? CategoriaGastoId
+        +string? RutaComprobante
+        +int RegistradoPorId
+        +DateTime FechaRegistro
+        +string? Comentarios
+        +bool Activo
+    }
+    
+    class TipoMovimientoViatico {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +bool EsEntrada
+        +bool Activo
+    }
+    
+    %% Gestión de KPIs y Métricas
+    class KPI {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +int ProyectoId
+        +int TipoKPIId
+        +int FrecuenciaMedicionId
+        +decimal? ValorBase
+        +decimal? ValorObjetivo
+        +decimal? ValorMinimo
+        +string? UnidadMedida
+        +DateTime FechaInicio
+        +DateTime? FechaFin
+        +bool Activo
+    }
+    
+    class TipoKPI {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+        +bool Activo
+    }
+    
+    class FrecuenciaMedicion {
+        +int Id
+        +string Nombre
+        +string? Descripcion
+    }
+    
+    class MedicionKPI {
+        +int Id
+        +int KPIId
+        +decimal Valor
+        +DateTime FechaMedicion
+        +int RegistradoPorId
+        +string? Comentarios
+    }
+    
+    class InformeSemanal {
+        +int Id
+        +string Titulo
+        +string? Descripcion
+        +int ProyectoId
+        +int EmpleadoId
+        +DateTime FechaInicio
+        +DateTime FechaFin
+        +decimal PorcentajeAvance
+        +string? ActividadesRealizadas
+        +string? ActividadesPendientes
+        +string? Problemas
+        +string? Soluciones
+        +DateTime FechaCreacion
+    }
+    
+    %% Relaciones de Usuario y Seguridad
+    Usuario "1" --> "1" Perfil : tiene
+    Usuario "1" --> "0..1" Empleado : asociado a
+    Usuario "1" --> "1" Objeto : asociado a
+    Usuario "1" --> "*" RefreshToken : tiene
+    Perfil "1" --> "1" Objeto : asociado a
+    Perfil "1" --> "*" Usuario : tiene
+    Perfil "*" --> "*" Objeto : tiene acceso a
+    Acceso "*" --> "1" Perfil : pertenece a
+    Acceso "*" --> "1" Objeto : da acceso a
+    Objeto "1" --> "1" ObjetoTipo : es de tipo
+    Objeto "1" --> "0..1" Menu : pertenece a
+    Objeto "1" --> "*" Usuario : asociado a
+    Menu "1" --> "*" Objeto : contiene
+    
+    %% Relaciones de Recursos Humanos
+    Empleado "1" --> "0..1" Puesto : tiene
+    Empleado "1" --> "1" Objeto : asociado a
+    Empleado "1" --> "0..1" Usuario : tiene
+    Puesto "1" --> "*" Empleado : tiene
+    
+    %% Relaciones de Proyectos
+    Proyecto "1" --> "1" Cliente : pertenece a
+    Proyecto "1" --> "1" EstadoProyecto : tiene
+    Proyecto "1" --> "1" TipoProyecto : es de tipo
+    Proyecto "1" --> "1" Empleado : gerente
+    Proyecto "1" --> "*" EtapaProyecto : tiene
+    Proyecto "1" --> "*" Tarea : tiene
+    Proyecto "1" --> "*" Gasto : tiene
+    Proyecto "1" --> "*" AsignacionViatico : tiene
+    Proyecto "1" --> "*" KPI : tiene
+    Proyecto "1" --> "*" InformeSemanal : tiene
+    Proyecto "1" --> "*" Documento : tiene
+    Proyecto "1" --> "*" CarpetaDocumento : tiene
+    EtapaProyecto "1" --> "1" Proyecto : pertenece a
+    EtapaProyecto "1" --> "1" EstadoEtapa : tiene
+    EtapaProyecto "1" --> "*" Tarea : tiene
+    
+    %% Relaciones de Tareas
+    Tarea "1" --> "1" Proyecto : pertenece a
+    Tarea "1" --> "0..1" EtapaProyecto : pertenece a
+    Tarea "1" --> "1" EstadoTarea : tiene
+    Tarea "1" --> "1" PrioridadTarea : tiene
+    Tarea "1" --> "0..1" Empleado : asignada a
+    Tarea "1" --> "1" Usuario : creada por
+    Tarea "1" --> "*" ComentarioTarea : tiene
+    Tarea "1" --> "*" ArchivoAdjunto : tiene
+    ComentarioTarea "1" --> "1" Tarea : pertenece a
+    ComentarioTarea "1" --> "1" Usuario : creado por
+    
+    %% Relaciones de Clientes
+    Cliente "1" --> "*" ContactoCliente : tiene
+    Cliente "1" --> "*" Proyecto : tiene
+    ContactoCliente "1" --> "1" Cliente : pertenece a
+    
+    %% Relaciones de Documentos
+    Documento "1" --> "1" Proyecto : pertenece a
+    Documento "1" --> "1" TipoDocumento : es de tipo
+    Documento "1" --> "0..1" CarpetaDocumento : está en
+    Documento "1" --> "*" VersionDocumento : tiene
+    Documento "1" --> "1" Usuario : creado por
+    Documento "1" --> "*" ArchivoAdjunto : tiene
+    VersionDocumento "1" --> "1" Documento : pertenece a
+    VersionDocumento "1" --> "1" Usuario : creada por
+    CarpetaDocumento "1" --> "0..1" CarpetaDocumento : está en
+    CarpetaDocumento "1" --> "1" Proyecto : pertenece a
+    CarpetaDocumento "1" --> "1" Usuario : creada por
+    CarpetaDocumento "1" --> "*" Documento : contiene
+    ArchivoAdjunto "1" --> "0..1" Documento : asociado a
+    ArchivoAdjunto "1" --> "0..1" Tarea : asociado a
+    ArchivoAdjunto "1" --> "0..1" Gasto : asociado a
+    ArchivoAdjunto "1" --> "0..1" MovimientoViatico : asociado a
+    ArchivoAdjunto "1" --> "1" Usuario : creado por
+    
+    %% Relaciones Financieras
+    Gasto "1" --> "1" Proyecto : pertenece a
+    Gasto "1" --> "1" CategoriaGasto : es de tipo
+    Gasto "1" --> "1" Empleado : registrado por
+    Gasto "1" --> "1" Moneda : en
+    Gasto "1" --> "1" EstadoAprobacion : tiene
+    Gasto "1" --> "0..1" Usuario : aprobado por
+    Gasto "1" --> "*" ArchivoAdjunto : tiene
+    CategoriaGasto "1" --> "*" Gasto : tiene
+    CategoriaGasto "1" --> "*" MovimientoViatico : tiene
+    EstadoAprobacion "1" --> "*" Gasto : tiene
+    EstadoAprobacion "1" --> "*" AsignacionViatico : tiene
+    Moneda "1" --> "*" Gasto : utilizada en
+    Moneda "1" --> "*" AsignacionViatico : utilizada en
+    AsignacionViatico "1" --> "1" Proyecto : pertenece a
+    AsignacionViatico "1" --> "1" Empleado : asignada a
+    AsignacionViatico "1" --> "1" Moneda : en
+    AsignacionViatico "1" --> "1" EstadoAprobacion : tiene
+    AsignacionViatico "1" --> "0..1" Usuario : aprobada por
+    AsignacionViatico "1" --> "*" MovimientoViatico : tiene
+    MovimientoViatico "1" --> "1" AsignacionViatico : pertenece a
+    MovimientoViatico "1" --> "1" TipoMovimientoViatico : es de tipo
+    MovimientoViatico "1" --> "0..1" CategoriaGasto : categorizado como
+    MovimientoViatico "1" --> "1" Usuario : registrado por
+    MovimientoViatico "1" --> "*" ArchivoAdjunto : tiene
+    TipoMovimientoViatico "1" --> "*" MovimientoViatico : tiene
+    
+    %% Relaciones de KPIs y Métricas
+    KPI "1" --> "1" Proyecto : pertenece a
+    KPI "1" --> "1" TipoKPI : es de tipo
+    KPI "1" --> "1" FrecuenciaMedicion : tiene
+    KPI "1" --> "*" MedicionKPI : tiene
+    MedicionKPI "1" --> "1" KPI : pertenece a
+    MedicionKPI "1" --> "1" Usuario : registrada por
+    InformeSemanal "1" --> "1" Proyecto : pertenece a
+    InformeSemanal "1" --> "1" Empleado : creado por

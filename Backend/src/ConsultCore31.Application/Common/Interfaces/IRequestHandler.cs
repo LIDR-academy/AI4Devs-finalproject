@@ -1,6 +1,4 @@
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ConsultCore31.Application.Common.Interfaces
 {

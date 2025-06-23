@@ -118,7 +118,7 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> InvalidateUserTokens(string usuarioId, [FromQuery] string motivo = null)
+        public async Task<IActionResult> InvalidateUserTokens(string usuarioId, [FromQuery] string? motivo = null)
         {
             if (string.IsNullOrWhiteSpace(usuarioId))
             {
@@ -144,7 +144,8 @@ namespace ConsultCore31.WebAPI.Controllers.V1
 
             try
             {
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                // Obtener la dirección IP, si no está disponible, usar una cadena predeterminada
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "IP no disponible";
                 _logger.LogInformation("Solicitud para invalidar tokens del usuario {UsuarioId} desde IP: {IpAddress}",
                     usuarioIdInt, ipAddress);
 
@@ -198,11 +199,12 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         [HttpPost("mark-used/{token}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> MarkTokenAsUsed(Guid token, [FromQuery] string motivo = null)
+        public async Task<IActionResult> MarkTokenAsUsed(Guid token, [FromQuery] string? motivo = null)
         {
             try
             {
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                // Obtener la dirección IP, si no está disponible, usar una cadena predeterminada
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "IP no disponible";
                 await _usuarioTokenService.MarkAsUsedAsync(token, ipAddress, motivo);
                 return Ok(new { message = "El token ha sido marcado como utilizado" });
             }

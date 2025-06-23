@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.UsuarioToken;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.Application.Services
@@ -122,7 +121,7 @@ namespace ConsultCore31.Application.Services
             try
             {
                 var usuarioToken = await _usuarioTokenRepository.GetByTokenAsync(token);
-                
+
                 if (usuarioToken == null)
                 {
                     return new TokenValidationResultDto

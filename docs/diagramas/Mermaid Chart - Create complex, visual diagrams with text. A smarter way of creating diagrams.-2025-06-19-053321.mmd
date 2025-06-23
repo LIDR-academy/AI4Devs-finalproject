@@ -1,0 +1,103 @@
+%%{init: {'theme': 'neutral', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryTextColor': '#000', 'primaryBorderColor': '#777', 'lineColor': '#555', 'secondaryColor': '#e0e0e0', 'tertiaryColor': '#d0d0d0'}}}%%
+
+classDiagram
+    %% Sistema de Usuarios y Seguridad
+    class Usuario {
+        +int Id
+        +string UsuarioApellidos
+        +Guid TokenUsuario
+        +bool UsuarioActivo
+        +string UsuarioContrasenaRecuperacion
+        +int PerfilId
+        +int? EmpleadoId
+        +int ObjetoId
+        +List~RefreshToken~ RefreshTokens
+    }
+    
+    class Perfil {
+        +int Id
+        +string PerfilNombre
+        +bool PerfilActivo
+        +int ObjetoId
+        +List~Usuario~ Usuarios
+        +List~Acceso~ Accesos
+    }
+    
+    class Objeto {
+        +int Id
+        +string ObjetoNombre
+        +bool ObjetoActivo
+        +int ObjetoTipoId
+        +int? MenuId
+        +List~Usuario~ Usuarios
+        +List~Acceso~ Accesos
+    }
+    
+    class ObjetoTipo {
+        +int Id
+        +string ObjetoTipoNombre
+        +bool ObjetoTipoActivo
+        +List~Objeto~ Objetos
+    }
+    
+    class Menu {
+        +int Id
+        +string MenuNombre
+        +bool MenuActivo
+        +List~Objeto~ Objetos
+    }
+    
+    class Acceso {
+        +int PerfilId
+        +int ObjetoId
+        +bool Activo
+    }
+    
+    class RefreshToken {
+        +int Id
+        +string Token
+        +DateTime FechaExpiracion
+        +bool Revocado
+        +int UsuarioId
+    }
+    
+    class UsuarioToken {
+        +int Id
+        +string Token
+        +DateTime FechaExpiracion
+        +bool EstaActivo
+        +int UsuarioId
+    }
+    
+    class Empleado {
+        +int Id
+        +string Nombre
+        +string Apellidos
+        +string Email
+        +string Telefono
+        +int? PuestoId
+        +bool Activo
+        +int ObjetoId
+        +Usuario Usuario
+    }
+    
+    class Puesto {
+        +int Id
+        +string Nombre
+        +List~Empleado~ Empleados
+    }
+    
+    %% Relaciones de Usuario y Seguridad
+    Usuario "muchos" --> "1" Perfil
+    Usuario "1" --> "0..1" Empleado
+    Usuario "muchos" --> "1" Objeto
+    Usuario "1" <-- "muchos" RefreshToken
+    Usuario "1" <-- "muchos" UsuarioToken
+    Perfil "muchos" --> "1" Objeto
+    Perfil "muchos" <--> "muchos" Objeto : a través de Acceso
+    Objeto "muchos" --> "1" ObjetoTipo
+    Objeto "muchos" --> "0..1" Menu
+    Empleado "muchos" --> "0..1" Puesto
+    Empleado "muchos" --> "1" Objeto
+    Acceso "muchos" --> "1" Perfil
+    Acceso "muchos" --> "1" Objeto                          

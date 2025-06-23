@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.UsuarioToken;
 
 namespace ConsultCore31.Application.Interfaces
@@ -38,7 +36,7 @@ namespace ConsultCore31.Application.Interfaces
         /// <param name="motivo">Motivo de la invalidación (opcional)</param>
         /// <exception cref="ArgumentException">Se lanza cuando el usuarioId es nulo o vacío</exception>
         Task InvalidateUserTokensAsync(int usuarioId, string ipAddress, string? motivo = null);
-        
+
         /// <summary>
         /// Marca un token como utilizado
         /// </summary>

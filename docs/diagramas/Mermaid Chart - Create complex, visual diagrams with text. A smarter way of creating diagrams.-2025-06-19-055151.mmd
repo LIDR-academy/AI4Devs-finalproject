@@ -1,0 +1,86 @@
+%%{init: {'theme': 'neutral', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryTextColor': '#000', 'primaryBorderColor': '#777', 'lineColor': '#555', 'secondaryColor': '#e0e0e0', 'tertiaryColor': '#d0d0d0'}}}%%
+
+classDiagram
+    %% Gestión de Proyectos
+    class Proyecto {
+        +int Id
+        +string Nombre
+        +string Codigo
+        +string Descripcion
+        +DateTime FechaInicio
+        +DateTime FechaFinPlanificada
+        +DateTime FechaFinReal
+        +int EstadoProyectoId
+        +int TipoProyectoId
+        +int ClienteId
+        +int GerenteId
+        +decimal Presupuesto
+        +decimal PorcentajeAvance
+        +List~EtapaProyecto~ Etapas
+        +List~Tarea~ Tareas
+        +List~Gasto~ Gastos
+        +List~AsignacionViatico~ AsignacionesViatico
+    }
+    
+    class EstadoProyecto {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +bool Activo
+        +List~Proyecto~ Proyectos
+    }
+    
+    class TipoProyecto {
+        +int Id
+        +string Nombre
+        +List~Proyecto~ Proyectos
+    }
+    
+    class Cliente {
+        +int Id
+        +string Nombre
+        +string RFC
+        +bool Activo
+        +List~ContactoCliente~ Contactos
+        +List~Proyecto~ Proyectos
+    }
+    
+    class ContactoCliente {
+        +int Id
+        +string Nombre
+        +string Apellidos
+        +string Email
+        +string Telefono
+        +int ClienteId
+    }
+    
+    class EtapaProyecto {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +DateTime FechaInicio
+        +DateTime FechaFin
+        +int ProyectoId
+        +int EstadoEtapaId
+        +decimal PorcentajeCompletado
+        +List~Tarea~ Tareas
+    }
+    
+    class EstadoEtapa {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +bool Activo
+        +List~EtapaProyecto~ EtapasProyecto
+    }
+    
+    %% Relaciones de Gestión de Proyectos
+    Proyecto "muchos" --> "1" Cliente
+    Proyecto "muchos" --> "1" EstadoProyecto
+    Proyecto "muchos" --> "1" TipoProyecto
+    Proyecto "muchos" --> "1" Empleado : gerente
+    Proyecto "1" <-- "muchos" EtapaProyecto
+    Cliente "1" <-- "muchos" ContactoCliente
+    Cliente "1" <-- "muchos" Proyecto
+    EtapaProyecto "muchos" --> "1" Proyecto
+    EtapaProyecto "muchos" --> "1" EstadoEtapa

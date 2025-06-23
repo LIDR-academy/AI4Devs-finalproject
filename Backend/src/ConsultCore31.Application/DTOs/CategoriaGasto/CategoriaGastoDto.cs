@@ -1,5 +1,3 @@
-using System;
-using System.ComponentModel.DataAnnotations;
 using ConsultCore31.Application.DTOs.Common;
 
 namespace ConsultCore31.Application.DTOs.CategoriaGasto
@@ -38,7 +36,5 @@ namespace ConsultCore31.Application.DTOs.CategoriaGasto
         /// Indica si la categoría de gasto está activa
         /// </summary>
         public bool Activa { get; set; }
-
-
     }
 }

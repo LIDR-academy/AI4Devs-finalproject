@@ -1,5 +1,5 @@
 using ConsultCore31.Core.Entities;
-using Microsoft.EntityFrameworkCore;
+
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ConsultCore31.Infrastructure.Persistence.Configurations;
@@ -18,7 +18,7 @@ public class EmpleadoConfiguration : IEntityTypeConfiguration<Empleado>
         // Configuración de la clave primaria
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).HasColumnName("empleadoId");
-        
+
         // Configuración de la relación con Usuario (inversa)
         builder.HasOne(e => e.Usuario)
             .WithOne(u => u.Empleado)

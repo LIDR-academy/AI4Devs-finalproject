@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Proyecto;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -28,16 +25,16 @@ namespace ConsultCore31.Tests.Services
         public ProyectoServiceTests()
         {
             _mockRepository = new Mock<IProyectoRepository>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<ProyectoProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             _mockLogger = new Mock<ILogger<ProyectoService>>();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new ProyectoService(
                 _mockRepository.Object,
@@ -51,29 +48,29 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var proyectos = new List<Proyecto>
             {
-                new Proyecto { 
-                    Id = 1, 
-                    Nombre = "Proyecto 1", 
-                    Codigo = "PRO-001", 
+                new Proyecto {
+                    Id = 1,
+                    Nombre = "Proyecto 1",
+                    Codigo = "PRO-001",
                     Descripcion = "Descripción del proyecto 1",
                     FechaInicio = DateTime.UtcNow,
                     FechaFinPlanificada = DateTime.UtcNow.AddMonths(3),
                     EstadoProyectoId = 1,
                     TipoProyectoId = 1,
                     ClienteId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 },
-                new Proyecto { 
-                    Id = 2, 
-                    Nombre = "Proyecto 2", 
-                    Codigo = "PRO-002", 
+                new Proyecto {
+                    Id = 2,
+                    Nombre = "Proyecto 2",
+                    Codigo = "PRO-002",
                     Descripcion = "Descripción del proyecto 2",
                     FechaInicio = DateTime.UtcNow,
                     FechaFinPlanificada = DateTime.UtcNow.AddMonths(6),
                     EstadoProyectoId = 1,
                     TipoProyectoId = 2,
                     ClienteId = 2,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 }
             };
 
@@ -94,18 +91,18 @@ namespace ConsultCore31.Tests.Services
         public async Task GetByIdAsync_ConIdExistente_DebeRetornarProyecto()
         {
             // Arrange
-            var proyecto = new Proyecto 
-            { 
-                Id = 1, 
-                Nombre = "Proyecto Test", 
-                Codigo = "PRO-TEST", 
+            var proyecto = new Proyecto
+            {
+                Id = 1,
+                Nombre = "Proyecto Test",
+                Codigo = "PRO-TEST",
                 Descripcion = "Descripción del proyecto de prueba",
                 FechaInicio = DateTime.UtcNow,
                 FechaFinPlanificada = DateTime.UtcNow.AddMonths(3),
                 EstadoProyectoId = 1,
                 TipoProyectoId = 1,
                 ClienteId = 1,
-                FechaCreacion = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -218,11 +215,11 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Proyecto>(p => 
-                p.Id == 1 && 
-                p.Nombre == "Proyecto Actualizado" && 
-                p.Codigo == "PRO-ACT" && 
-                p.Descripcion == "Descripción del proyecto actualizado" && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Proyecto>(p =>
+                p.Id == 1 &&
+                p.Nombre == "Proyecto Actualizado" &&
+                p.Codigo == "PRO-ACT" &&
+                p.Descripcion == "Descripción del proyecto actualizado" &&
                 p.EstadoProyectoId == 2), It.IsAny<CancellationToken>()), Times.Once);
         }
 

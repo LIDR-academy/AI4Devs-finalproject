@@ -1,0 +1,69 @@
+%%{init: {'theme': 'neutral', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryTextColor': '#000', 'primaryBorderColor': '#777', 'lineColor': '#555', 'secondaryColor': '#e0e0e0', 'tertiaryColor': '#d0d0d0'}}}%%
+
+classDiagram
+    %% Gestión de Documentos
+    class Documento {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +int ProyectoId
+        +int TipoDocumentoId
+        +int CarpetaDocumentoId
+        +List~VersionDocumento~ Versiones
+    }
+    
+    class TipoDocumento {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +decimal TamanoMaximoMB
+        +bool Activo
+        +List~Documento~ Documentos
+    }
+    
+    class CarpetaDocumento {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +int? CarpetaPadreId
+        +int ProyectoId
+        +List~Documento~ Documentos
+        +List~CarpetaDocumento~ CarpetasHijas
+    }
+    
+    class VersionDocumento {
+        +int Id
+        +string Ruta
+        +string NombreArchivo
+        +int Version
+        +DateTime FechaCreacion
+        +int DocumentoId
+        +int UsuarioId
+    }
+    
+    class ArchivoAdjunto {
+        +int Id
+        +string Nombre
+        +string Ruta
+        +string Extension
+        +long Tamano
+        +DateTime FechaCreacion
+        +int? DocumentoId
+        +int? TareaId
+        +int UsuarioId
+    }
+    
+    %% Relaciones de Gestión de Documentos
+    Documento "muchos" --> "1" Proyecto
+    Documento "muchos" --> "1" TipoDocumento
+    Documento "muchos" --> "1" CarpetaDocumento
+    Documento "1" <-- "muchos" VersionDocumento
+    Documento "1" <-- "muchos" ArchivoAdjunto
+    CarpetaDocumento "muchos" --> "1" Proyecto
+    CarpetaDocumento "muchos" --> "0..1" CarpetaDocumento : carpetaPadre
+    CarpetaDocumento "1" <-- "muchos" CarpetaDocumento : carpetasHijas
+    VersionDocumento "muchos" --> "1" Documento
+    VersionDocumento "muchos" --> "1" Usuario
+    ArchivoAdjunto "muchos" --> "0..1" Documento
+    ArchivoAdjunto "muchos" --> "0..1" Tarea
+    ArchivoAdjunto "muchos" --> "1" Usuario

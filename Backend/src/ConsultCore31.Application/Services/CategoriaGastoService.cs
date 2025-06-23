@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
 
 using ConsultCore31.Application.DTOs.CategoriaGasto;
@@ -66,7 +63,7 @@ namespace ConsultCore31.Application.Services
         {
             var id = GetIdFromUpdateDto(updateDto);
             var existingEntity = await _categoriaGastoRepository.GetByIdAsync(id, cancellationToken);
-            
+
             if (existingEntity == null)
             {
                 return false;

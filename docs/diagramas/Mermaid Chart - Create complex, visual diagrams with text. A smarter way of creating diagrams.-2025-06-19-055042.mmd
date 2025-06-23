@@ -1,0 +1,67 @@
+%%{init: {'theme': 'neutral', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryTextColor': '#000', 'primaryBorderColor': '#777', 'lineColor': '#555', 'secondaryColor': '#e0e0e0', 'tertiaryColor': '#d0d0d0'}}}%%
+
+classDiagram
+    %% Gestión de KPIs y Métricas
+    class KPI {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +int ProyectoId
+        +int TipoKPIId
+        +decimal ValorBase
+        +decimal ValorObjetivo
+        +decimal ValorMinimo
+        +int FrecuenciaMedicionId
+        +bool Activo
+        +List~MedicionKPI~ Mediciones
+    }
+    
+    class TipoKPI {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +bool Activo
+        +List~KPI~ KPIs
+    }
+    
+    class FrecuenciaMedicion {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +int DiasIntervalo
+        +List~KPI~ KPIs
+    }
+    
+    class MedicionKPI {
+        +int Id
+        +decimal Valor
+        +DateTime FechaMedicion
+        +string Comentarios
+        +int KPIId
+        +int UsuarioId
+    }
+    
+    class InformeSemanal {
+        +int Id
+        +string Titulo
+        +string Contenido
+        +DateTime FechaInicio
+        +DateTime FechaFin
+        +int ProyectoId
+        +int EmpleadoId
+        +decimal PorcentajeAvance
+        +string LogrosDestacados
+        +string Dificultades
+        +string AccionesSiguientes
+        +DateTime FechaCreacion
+    }
+    
+    %% Relaciones de KPIs y Métricas
+    KPI "muchos" --> "1" Proyecto
+    KPI "muchos" --> "1" TipoKPI
+    KPI "muchos" --> "1" FrecuenciaMedicion
+    KPI "1" <-- "muchos" MedicionKPI
+    MedicionKPI "muchos" --> "1" KPI
+    MedicionKPI "muchos" --> "1" Usuario
+    InformeSemanal "muchos" --> "1" Proyecto
+    InformeSemanal "muchos" --> "1" Empleado

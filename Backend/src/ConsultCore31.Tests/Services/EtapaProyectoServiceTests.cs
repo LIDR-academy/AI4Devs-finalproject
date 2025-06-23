@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.EtapaProyecto;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -28,16 +25,16 @@ namespace ConsultCore31.Tests.Services
         public EtapaProyectoServiceTests()
         {
             _mockRepository = new Mock<IEtapaProyectoRepository>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<EtapaProyectoProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             _mockLogger = new Mock<ILogger<EtapaProyectoService>>();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new EtapaProyectoService(
                 _mockRepository.Object,
@@ -51,23 +48,23 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var etapasProyecto = new List<EtapaProyecto>
             {
-                new EtapaProyecto { 
-                    Id = 1, 
-                    Nombre = "Etapa 1", 
+                new EtapaProyecto {
+                    Id = 1,
+                    Nombre = "Etapa 1",
                     ProyectoId = 1,
                     Descripcion = "Descripción de la etapa 1",
                     Orden = 1,
                     EstadoEtapaId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 },
-                new EtapaProyecto { 
-                    Id = 2, 
-                    Nombre = "Etapa 2", 
+                new EtapaProyecto {
+                    Id = 2,
+                    Nombre = "Etapa 2",
                     ProyectoId = 1,
                     Descripcion = "Descripción de la etapa 2",
                     Orden = 2,
                     EstadoEtapaId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 }
             };
 
@@ -88,15 +85,15 @@ namespace ConsultCore31.Tests.Services
         public async Task GetByIdAsync_ConIdExistente_DebeRetornarEtapaProyecto()
         {
             // Arrange
-            var etapaProyecto = new EtapaProyecto 
-            { 
-                Id = 1, 
-                Nombre = "Etapa Test", 
+            var etapaProyecto = new EtapaProyecto
+            {
+                Id = 1,
+                Nombre = "Etapa Test",
                 ProyectoId = 1,
                 Descripcion = "Descripción de la etapa de prueba",
                 Orden = 1,
                 EstadoEtapaId = 1,
-                FechaCreacion = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -208,11 +205,11 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<EtapaProyecto>(e => 
-                e.Id == 1 && 
-                e.Nombre == "Etapa Actualizada" && 
-                e.Descripcion == "Descripción de la etapa actualizada" && 
-                e.Orden == 2 && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<EtapaProyecto>(e =>
+                e.Id == 1 &&
+                e.Nombre == "Etapa Actualizada" &&
+                e.Descripcion == "Descripción de la etapa actualizada" &&
+                e.Orden == 2 &&
                 e.EstadoEtapaId == 2), It.IsAny<CancellationToken>()), Times.Once);
         }
 

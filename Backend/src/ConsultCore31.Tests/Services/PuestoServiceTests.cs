@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Puesto;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -29,14 +26,14 @@ namespace ConsultCore31.Tests.Services
         {
             _mockRepository = new Mock<IGenericRepository<Puesto, int>>();
             _mockLogger = new Mock<ILogger<PuestoService>>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<PuestoProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new PuestoService(_mockRepository.Object, _mapper, _mockLogger.Object);
         }
@@ -69,11 +66,11 @@ namespace ConsultCore31.Tests.Services
         {
             // Arrange
             var puesto = new Puesto
-            { 
-                Id = 1, 
-                Nombre = "Gerente", 
-                Descripcion = "Gerente de departamento", 
-                FechaCreacion = DateTime.UtcNow 
+            {
+                Id = 1,
+                Nombre = "Gerente",
+                Descripcion = "Gerente de departamento",
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -87,7 +84,6 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(1, result.Id);
             Assert.Equal("Gerente", result.Nombre);
             Assert.Equal("Gerente de departamento", result.Descripcion);
-            
         }
 
         [Fact]
@@ -112,14 +108,14 @@ namespace ConsultCore31.Tests.Services
             {
                 Nombre = "Desarrollador",
                 Descripcion = "Desarrollador de software",
-                
+
                 Activo = true
             };
 
             Puesto savedEntity = null;
 
             _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<Puesto>(), It.IsAny<CancellationToken>()))
-                .Callback<Puesto, CancellationToken>((entity, token) => 
+                .Callback<Puesto, CancellationToken>((entity, token) =>
                 {
                     entity.Id = 3;
                     entity.FechaCreacion = DateTime.UtcNow;
@@ -135,7 +131,7 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(3, result.Id);
             Assert.Equal("Desarrollador", result.Nombre);
             Assert.Equal("Desarrollador de software", result.Descripcion);
-            
+
             Assert.True(result.Activo);
 
             _mockRepository.Verify(repo => repo.AddAsync(It.IsAny<Puesto>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -170,10 +166,10 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Puesto>(p => 
-                p.Id == 1 && 
-                p.Nombre == "Gerente Senior" && 
-                p.Descripcion == "Gerente senior de departamento" && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Puesto>(p =>
+                p.Id == 1 &&
+                p.Nombre == "Gerente Senior" &&
+                p.Descripcion == "Gerente senior de departamento" &&
                 p.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 

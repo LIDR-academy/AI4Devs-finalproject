@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.Puesto;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Controllers
 {
@@ -98,7 +95,7 @@ namespace ConsultCore31.Tests.Controllers
             {
                 Nombre = "Desarrollador",
                 Descripcion = "Desarrollador de software",
-                
+
                 Activo = true
             };
 
@@ -107,7 +104,7 @@ namespace ConsultCore31.Tests.Controllers
                 Id = 3,
                 Nombre = "Desarrollador",
                 Descripcion = "Desarrollador de software",
-                
+
                 Activo = true,
                 FechaCreacion = DateTime.UtcNow
             };
@@ -179,7 +176,7 @@ namespace ConsultCore31.Tests.Controllers
                 Id = 999,
                 Nombre = "Puesto Inexistente",
                 Descripcion = "Descripción inexistente",
-                
+
                 Activo = true
             };
 
@@ -222,5 +219,3 @@ namespace ConsultCore31.Tests.Controllers
         }
     }
 }
-
-

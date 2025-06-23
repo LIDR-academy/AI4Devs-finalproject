@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.ComentarioTarea;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -28,16 +25,16 @@ namespace ConsultCore31.Tests.Services
         public ComentarioTareaServiceTests()
         {
             _mockRepository = new Mock<IComentarioTareaRepository>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<ComentarioTareaProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             _mockLogger = new Mock<ILogger<ComentarioTareaService>>();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new ComentarioTareaService(
                 _mockRepository.Object,
@@ -51,17 +48,17 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var comentarios = new List<ComentarioTarea>
             {
-                new ComentarioTarea { 
-                    Id = 1, 
-                    TareaId = 1, 
+                new ComentarioTarea {
+                    Id = 1,
+                    TareaId = 1,
                     UsuarioId = 1,
                     Contenido = "Comentario 1",
                     FechaCreacion = DateTime.UtcNow,
                     Activo = true
                 },
-                new ComentarioTarea { 
-                    Id = 2, 
-                    TareaId = 1, 
+                new ComentarioTarea {
+                    Id = 2,
+                    TareaId = 1,
                     UsuarioId = 2,
                     Contenido = "Comentario 2",
                     FechaCreacion = DateTime.UtcNow,
@@ -86,10 +83,10 @@ namespace ConsultCore31.Tests.Services
         public async Task GetByIdAsync_ConIdExistente_DebeRetornarComentario()
         {
             // Arrange
-            var comentario = new ComentarioTarea 
-            { 
-                Id = 1, 
-                TareaId = 1, 
+            var comentario = new ComentarioTarea
+            {
+                Id = 1,
+                TareaId = 1,
                 UsuarioId = 1,
                 Contenido = "Comentario Test",
                 FechaCreacion = DateTime.UtcNow,
@@ -191,9 +188,9 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<ComentarioTarea>(e => 
-                e.Id == 1 && 
-                e.Contenido == "Comentario Actualizado" && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<ComentarioTarea>(e =>
+                e.Id == 1 &&
+                e.Contenido == "Comentario Actualizado" &&
                 e.TieneArchivosAdjuntos == true), It.IsAny<CancellationToken>()), Times.Once);
         }
 

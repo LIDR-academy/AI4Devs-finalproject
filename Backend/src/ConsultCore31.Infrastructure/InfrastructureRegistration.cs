@@ -2,10 +2,8 @@
 using ConsultCore31.Core.Interfaces;
 using ConsultCore31.Infrastructure.Persistence.Context;
 using ConsultCore31.Infrastructure.Persistence.Repositories;
-using Microsoft.EntityFrameworkCore;
+
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace ConsultCore31.Infrastructure
 {
@@ -27,7 +25,7 @@ namespace ConsultCore31.Infrastructure
             {
                 options.UseSqlServer(
                     connectionString,
-                    sqlServerOptions => 
+                    sqlServerOptions =>
                     {
                         sqlServerOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
                         sqlServerOptions.EnableRetryOnFailure(

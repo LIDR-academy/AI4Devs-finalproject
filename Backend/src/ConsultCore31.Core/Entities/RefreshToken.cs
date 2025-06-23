@@ -1,8 +1,6 @@
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using ConsultCore31.Core.Common;
-using ConsultCore31.Core.Entities;
+
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsultCore31.Core.Entities.Seguridad
 {
@@ -22,6 +20,7 @@ namespace ConsultCore31.Core.Entities.Seguridad
         [Column("id")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public new int Id { get; set; }
+
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="RefreshToken"/>.
         /// </summary>

@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.EstadoEtapa;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -29,14 +26,14 @@ namespace ConsultCore31.Tests.Services
         {
             _mockRepository = new Mock<IGenericRepository<EstadoEtapa, int>>();
             _mockLogger = new Mock<ILogger<EstadoEtapaService>>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<EstadoEtapaProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new EstadoEtapaService(_mockRepository.Object, _mapper, _mockLogger.Object);
         }
@@ -69,11 +66,11 @@ namespace ConsultCore31.Tests.Services
         {
             // Arrange
             var estado = new EstadoEtapa
-            { 
-                Id = 1, 
-                Nombre = "Planificación", 
-                Descripcion = "Etapa de planificación", 
-                FechaCreacion = DateTime.UtcNow 
+            {
+                Id = 1,
+                Nombre = "Planificación",
+                Descripcion = "Etapa de planificación",
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -133,9 +130,9 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(3, result.Id);
             Assert.Equal("Cierre", result.Nombre);
             Assert.Equal("Etapa de cierre", result.Descripcion);
-            _mockRepository.Verify(repo => repo.AddAsync(It.Is<EstadoEtapa>(t => 
-                t.Nombre == "Cierre" && 
-                t.Descripcion == "Etapa de cierre" && 
+            _mockRepository.Verify(repo => repo.AddAsync(It.Is<EstadoEtapa>(t =>
+                t.Nombre == "Cierre" &&
+                t.Descripcion == "Etapa de cierre" &&
                 t.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -168,10 +165,10 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<EstadoEtapa>(t => 
-                t.Id == 1 && 
-                t.Nombre == "Planificación Actualizada" && 
-                t.Descripcion == "Descripción actualizada" && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<EstadoEtapa>(t =>
+                t.Id == 1 &&
+                t.Nombre == "Planificación Actualizada" &&
+                t.Descripcion == "Descripción actualizada" &&
                 t.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 

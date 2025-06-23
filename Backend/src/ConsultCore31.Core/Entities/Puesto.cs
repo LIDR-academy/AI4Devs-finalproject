@@ -1,7 +1,7 @@
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using ConsultCore31.Core.Common;
+
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsultCore31.Core.Entities
 {

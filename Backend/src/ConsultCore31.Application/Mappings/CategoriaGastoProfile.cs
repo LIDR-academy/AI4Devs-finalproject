@@ -1,4 +1,5 @@
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.CategoriaGasto;
 using ConsultCore31.Core.Entities;
 

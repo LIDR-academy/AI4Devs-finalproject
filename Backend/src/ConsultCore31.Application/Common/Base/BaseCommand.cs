@@ -1,12 +1,9 @@
 using MediatR;
-using System;
 
 namespace ConsultCore31.Application.Common.Base
 {
     public abstract class BaseCommand<TResponse> : IRequest<TResponse>
     {
-        public Guid Id { get; }
-
         protected BaseCommand()
         {
             Id = Guid.NewGuid();
@@ -16,21 +13,28 @@ namespace ConsultCore31.Application.Common.Base
         {
             Id = id;
         }
+
+        public Guid Id { get; }
     }
 
     public abstract class BaseCommand : BaseCommand<Unit>
     {
-        protected BaseCommand() : base() { }
-        protected BaseCommand(Guid id) : base(id) { }
+        protected BaseCommand() : base()
+        {
+        }
+
+        protected BaseCommand(Guid id) : base(id)
+        {
+        }
     }
 
     public abstract class BaseQuery<TResponse> : IRequest<TResponse>
     {
-        public Guid Id { get; }
-
         protected BaseQuery()
         {
             Id = Guid.NewGuid();
         }
+
+        public Guid Id { get; }
     }
 }

@@ -1,5 +1,7 @@
 using AutoMapper;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using System.Reflection;
 
 namespace ConsultCore31.Application.Common.Mappings

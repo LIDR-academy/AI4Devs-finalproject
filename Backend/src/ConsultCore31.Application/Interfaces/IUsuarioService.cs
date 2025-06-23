@@ -1,7 +1,4 @@
 using ConsultCore31.Application.DTOs.Usuario;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ConsultCore31.Application.Interfaces
 {

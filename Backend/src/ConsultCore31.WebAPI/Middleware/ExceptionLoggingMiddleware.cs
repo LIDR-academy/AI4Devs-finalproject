@@ -29,7 +29,7 @@ public class ExceptionLoggingMiddleware
             // Generar un ID de correlación para seguimiento de solicitudes
             var correlationId = Guid.NewGuid().ToString();
             context.Response.Headers.Append("X-Correlation-ID", correlationId);
-            
+
             // Registrar información de la solicitud entrante
             _logger.LogInformation(
                 "Solicitud recibida: {Method} {Path} | CorrelationId: {CorrelationId} | IP: {IpAddress}",
@@ -40,12 +40,12 @@ public class ExceptionLoggingMiddleware
 
             // Medir el tiempo de respuesta
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            
+
             // Continuar con el pipeline
             await _next(context);
-            
+
             stopwatch.Stop();
-            
+
             // Registrar información de la respuesta
             _logger.LogInformation(
                 "Respuesta enviada: {StatusCode} | CorrelationId: {CorrelationId} | Duración: {ElapsedMs}ms",
@@ -62,7 +62,7 @@ public class ExceptionLoggingMiddleware
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var correlationId = context.Response.Headers["X-Correlation-ID"].FirstOrDefault() ?? Guid.NewGuid().ToString();
-        
+
         // Registrar la excepción con detalles completos
         _logger.LogError(
             exception,

@@ -1,19 +1,16 @@
-using ConsultCore31.Application.Common.Mappings;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Infrastructure;
+using ConsultCore31.Infrastructure.Extensions;
 using ConsultCore31.Infrastructure.Persistence.Context;
 using ConsultCore31.WebAPI.Configurations;
 using ConsultCore31.WebAPI.Extensions;
-using ConsultCore31.WebAPI.Middleware;
-using ConsultCore31.WebAPI.Services;
-using ConsultCore31.WebAPI.Services.Interfaces;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -104,22 +101,23 @@ try
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             options.JsonSerializerOptions.WriteIndented = true;
-
-            // Configuración para mejorar el rendimiento
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
 
-    // Configuración de servicios HTTP con compresión
+    // Configuración de Identity
+    builder.Services.AddIdentity<Usuario, IdentityRole<int>>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = true;
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+    // Configurar timeout para solicitudes HTTP
     double.TryParse(builder.Configuration["RequestTimeoutInMinutes"], out var requestTimeoutInMinutes);
 
     // Configurar cliente HTTP con políticas de reintento
     var httpClientBuilder = builder.Services.AddHttpClient("DefaultClient", client =>
     {
         client.Timeout = TimeSpan.FromMinutes(requestTimeoutInMinutes > 0 ? requestTimeoutInMinutes : 2);
-    })
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
     });
 
     // Configurar políticas de reintento
@@ -135,27 +133,8 @@ try
 
     // Aplicar políticas al cliente HTTP
     httpClientBuilder
-        .SetHandlerLifetime(TimeSpan.FromMinutes(5))
         .AddPolicyHandler(retryPolicy)
         .AddPolicyHandler(circuitBreakerPolicy);
-
-    // Configuración de la base de datos
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlServerOptions => sqlServerOptions.CommandTimeout(120)));
-
-    // Registrar servicios de aplicación
-    builder.Services.AddApplicationServices();
-
-    // Registrar servicios de diagnóstico
-    // NOTA: Comentado temporalmente para resolver errores de compilación en CI/CD
-    // builder.Services.AddSingleton<ApplicationHealthService>();
-    // builder.Services.AddHostedService(sp => sp.GetRequiredService<ApplicationHealthService>());
-
-    // Configuración de Identity
-    builder.Services.AddIdentity<Usuario, IdentityRole<int>>()
-        .AddEntityFrameworkStores<AppDbContext>()
-        .AddDefaultTokenProviders();
 
     // Configuración de las opciones de Identity
     builder.Services.Configure<IdentityOptions>(options =>
@@ -166,22 +145,20 @@ try
         options.Password.RequireUppercase = true;
         options.Password.RequireNonAlphanumeric = true;
         options.Password.RequiredLength = 8;
+        options.Password.RequiredUniqueChars = 1;
 
-        // Configuración de usuario
-        options.User.RequireUniqueEmail = true;
-
-        // Configuración de bloqueo de cuenta
+        // Configuración de bloqueo
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.AllowedForNewUsers = true;
     });
 
-    // Configuración de OpenAPI para Swagger
+    // Configuración de Swagger
     builder.Services.AddEndpointsApiExplorer();
-    
+
     // Configurar la integración de Swagger con API Versioning
     builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
-    
+
     builder.Services.AddSwaggerGen(c =>
     {
         // La configuración de SwaggerDoc ahora se maneja a través de ConfigureSwaggerOptions
@@ -189,35 +166,31 @@ try
         // Configuración de seguridad JWT en Swagger
         var securityScheme = new OpenApiSecurityScheme
         {
-            Name = "JWT Authentication",
-            Description = "Ingrese el token JWT de la siguiente forma: Bearer {token}",
+            Name = "Authorization",
+            Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.Http,
             Scheme = "bearer",
             BearerFormat = "JWT",
             Reference = new OpenApiReference
             {
-                Id = JwtBearerDefaults.AuthenticationScheme,
-                Type = ReferenceType.SecurityScheme
+                Type = ReferenceType.SecurityScheme,
+                Id = "Bearer"
             }
         };
 
-        c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
+        c.AddSecurityDefinition("Bearer", securityScheme);
+
         c.AddSecurityRequirement(new OpenApiSecurityRequirement
         {
-        { securityScheme, Array.Empty<string>() }
+            { securityScheme, Array.Empty<string>() }
         });
 
-        // Configuración adicional de Swagger
-        c.DescribeAllParametersInCamelCase();
-
-        // Configuración para generar documentación XML
+        // Incluir comentarios XML para mejorar la documentación
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
         c.IncludeXmlComments(xmlPath);
     });
-
-    // Configuración de Scalar - No se requiere configuración de servicios adicional en esta versión
 
     // Configuración de JWT
     var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
@@ -279,9 +252,11 @@ try
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
     builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection("Cors"));
 
-    // Registrar servicios de autenticación
-    builder.Services.AddScoped<ITokenService, TokenService>();
-    builder.Services.AddScoped<IAuthService, AuthService>();
+    // Registrar todos los repositorios de la capa de infraestructura
+    builder.Services.AddRepositories();
+
+    // Registrar todos los servicios de la aplicación de forma centralizada
+    builder.Services.AddApplicationServices();
 
     // Configuración de caché distribuido (puede ser Redis, SQL Server, etc.)
     builder.Services.AddDistributedMemoryCache();
@@ -293,7 +268,7 @@ try
         Directory.CreateDirectory(dataProtectionKeysPath);
     }
 
-    // Configuración básica de DataProtection compatible con .NET Core 3.1
+    // Configuración básica de DataProtection compatible con .NET Core
     builder.Services.AddDataProtection()
         .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
         .SetApplicationName("ConsultCore31")
@@ -320,8 +295,7 @@ try
         options.Level = System.IO.Compression.CompressionLevel.Optimal;
     });
 
-    // Configuración de AutoMapper
-    builder.Services.AddAutoMapperProfiles();
+    // La configuración de AutoMapper se realiza dentro de AddApplicationServices()
 
     // Configuración de la versión de la API
     builder.Services.AddApiVersioning(options =>
@@ -334,9 +308,28 @@ try
     {
         // Formato de la versión en la URL
         options.GroupNameFormat = "'v'VVV";
-        
+
         // Asume la versión por defecto cuando no se especifica
         options.SubstituteApiVersionInUrl = true;
+    });
+
+    // Configurar el prefijo de ruta base
+    builder.WebHost.ConfigureKestrel(serverOptions =>
+    {
+        serverOptions.AddServerHeader = false;
+    })
+    .ConfigureAppConfiguration((context, config) =>
+    {
+        config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+              .AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+    })
+    .ConfigureServices(services =>
+    {
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+                                      Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+        });
     });
 
     var app = builder.Build();
@@ -345,49 +338,10 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseDeveloperExceptionPage();
-
-        // Configuración de Swagger
-        app.UseSwagger(c =>
-        {
-            c.RouteTemplate = "openapi/{documentName}.json";
-        });
-
-        // Configuración de Swagger UI
-        app.UseSwaggerUI(options =>
-        {
-            // Obtener todas las descripciones de versiones de API disponibles
-            var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-            
-            // Crear un endpoint de Swagger para cada versión de API
-            foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
-            {
-                options.SwaggerEndpoint(
-                    $"/openapi/{description.GroupName}.json",
-                    $"ConsultCore31 API {description.GroupName.ToUpperInvariant()}");
-            }
-            
-            // Configuración de OAuth
-            options.OAuthClientId("swagger-ui");
-            options.OAuthClientSecret("swagger-ui-secret");
-            options.OAuthUsePkce();
-        });
     }
 
-    // Configuración de CORS
-    app.UseCors("CorsPolicy");
-
-    // Autenticación y Autorización
-    app.UseAuthentication();
-    app.UseAuthorization();
-
-    // Compresión de respuestas
-    app.UseResponseCompression();
-
-    // Mapeo de controladores
-    app.MapControllers();
-
-    // Health check endpoint
-    app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }));
+    // Configurar el manejo de encabezados HTTP
+    app.UseForwardedHeaders();
 
     // Inicialización de la base de datos
     using (var scope = app.Services.CreateScope())
@@ -397,13 +351,13 @@ try
         {
             var context = services.GetRequiredService<AppDbContext>();
             var logger = services.GetRequiredService<ILogger<Program>>();
-            
+
             // Solo aplicar migraciones automáticamente en entorno de desarrollo
             if (app.Environment.IsDevelopment())
             {
                 logger.LogInformation("Aplicando migraciones en entorno de desarrollo");
                 await context.Database.MigrateAsync();
-                
+
                 // Aquí puedes agregar la inicialización de datos si es necesario
                 // await DbInitializer.Initialize(context, services);
             }
@@ -413,7 +367,7 @@ try
                 logger.LogInformation("Verificando conexión a la base de datos en entorno de producción");
                 await context.Database.CanConnectAsync();
             }
-            
+
             logger.LogInformation("Conexión a la base de datos establecida correctamente");
         }
         catch (Exception ex)
@@ -473,114 +427,74 @@ try
     // Middleware personalizado para logging y diagnóstico
     // NOTA: Comentado temporalmente para resolver errores de compilación en CI/CD
     // app.UseExceptionLogging();
-    // app.UseDatabaseDiagnostics();
 
-    // Middleware personalizado para manejo de errores global
-    app.UseExceptionHandler("/error");
-
-    // Mapeo de controladores
-    app.MapControllers();
-
-    // Configuración de Swagger
-    if (app.Environment.IsDevelopment())
+    // Configurar Swagger para que use el path base
+    app.UseSwagger(c =>
     {
-        app.UseSwagger(c =>
+        c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
         {
-            c.RouteTemplate = "openapi/{documentName}.json";
+            //// Configurar el servidor con la URL base correcta
+            //var serverUrl = string.IsNullOrEmpty(pathBase)
+            //    ? $"{httpReq.Scheme}://{httpReq.Host.Value}"
+            //    : $"{httpReq.Scheme}://{httpReq.Host.Value}{pathBase}";
+
+            //swaggerDoc.Servers = new List<OpenApiServer>
+            //{
+            //    new OpenApiServer { Url = serverUrl }
+            //};
         });
+    });
 
-        app.UseSwaggerUI(options =>
+    string swaggerJsonUrl = string.Empty;
+
+    // Configuración de Swagger UI
+    app.UseSwaggerUI(options =>
+    {
+        // Obtener todas las descripciones de versiones de API disponibles
+        var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+        // Crear un endpoint de Swagger para cada versión de API
+        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
         {
-            // Obtener todas las descripciones de versiones de API disponibles
-            var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-            
-            // Crear un endpoint de Swagger para cada versión de API
-            foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
-            {
-                options.SwaggerEndpoint(
-                    $"/openapi/{description.GroupName}.json",
-                    $"ConsultCore31 API {description.GroupName.ToUpperInvariant()}");
-            }
-            
-            // Configuración adicional
-            options.RoutePrefix = "swagger";
-            options.DocumentTitle = "ConsultCore31 API Documentation";
-            options.DefaultModelsExpandDepth(-1); // Oculta los esquemas de modelos
-            options.DisplayRequestDuration();
-            options.EnableDeepLinking();
-            options.EnableFilter();
-            options.ShowExtensions();
-            options.EnableValidator();
-        });
-
-        // Configuración de Scalar UI - Versión básica
-        app.MapScalarApiReference(options =>
-        {
-            // Título de la documentación
-            options.Title = "ConsultCore31 API Documentation";
-
-            // Ruta del documento OpenAPI (coincide con la configuración de Swagger)
-            options.WithOpenApiRoutePattern("/openapi/{documentName}.json");
-
-            // Prefijo personalizado para la ruta de la documentación
-            // Debe incluir el marcador de posición {documentName}
-            options.WithEndpointPrefix("/api-docs/{documentName}");
-
-            // Mostrar la barra lateral
-            options.ShowSidebar = true;
-
-            // Habilitar modo oscuro
-            options.DarkMode = true;
-
-            // Configuración del tema (comentado hasta que se resuelva el tipo correcto)
-            // options.Theme = ScalarTheme.BluePlanet;
-        });
-
-        // Configuración de Swagger UI (opcional, solo para desarrollo)
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/openapi/v1.json", "ConsultCore31 API V1");
-                c.RoutePrefix = "swagger";
-                c.DocumentTitle = "ConsultCore31 API (Swagger UI)";
-            });
+            // Configurar el endpoint de Swagger para esta versión de la API
+            //            swaggerJsonUrl = string.IsNullOrEmpty(pathBase)
+            //                ? $"/swagger/{description.GroupName}/swagger.json"
+            //                : $"{pathBase}/swagger/{description.GroupName}/swagger.json";
+            swaggerJsonUrl = $"/swagger/{description.GroupName}/swagger.json";
+            options.SwaggerEndpoint(swaggerJsonUrl, $"ConsultCore31 API {description.GroupName.ToUpperInvariant()}");
         }
 
-        // Deshabilitamos temporalmente la migración automática para evitar conflictos
-        using (var scope = app.Services.CreateScope())
-        {
-            var services = scope.ServiceProvider;
-            try
-            {
-                var context = services.GetRequiredService<AppDbContext>();
-                // Comentamos la migración automática para evitar conflictos con tablas existentes
-                // if (context.Database.IsSqlServer())
-                // {
-                //     await context.Database.MigrateAsync();
-                // }
-                
-                // En su lugar, verificamos la conexión a la base de datos
-                var canConnect = await context.Database.CanConnectAsync();
-                if (canConnect)
-                {
-                    Log.Information("Conexión a la base de datos establecida correctamente");
-                }
-            }
-            catch (Exception ex)
-            {
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "An error occurred while checking database connection.");
-            }
-        }
-    }
+        // Configuración adicional
+        options.RoutePrefix = "swagger";
+        options.DocumentTitle = "ConsultCore31 API Documentation";
+        options.DefaultModelsExpandDepth(-1); // Oculta los esquemas de modelos
+        options.DisplayRequestDuration();
+        options.EnableDeepLinking();
+        options.EnableFilter();
+        options.ShowExtensions();
+        options.EnableValidator();
 
-    // Inicialización de la base de datos
-    await InitializeDatabase(app);
+        // Configuración de OAuth
+        options.OAuthClientId("swagger-ui");
+        options.OAuthClientSecret("swagger-ui-secret");
+        options.OAuthUsePkce();
+    });
 
-    //app.MapGet("/", () => Results.Redirect("/api-docs/v1"))
-    //   .ExcludeFromDescription();
+    // Configuración de Scalar UI
+    app.MapScalarApiReference(options =>
+    {
+        // Ruta del documento OpenAPI (coincide con la configuración de Swagger)
+        options.WithOpenApiRoutePattern(swaggerJsonUrl);
 
+        options
+        .WithTitle("ConsultCore3:1 API")
+        .WithTheme(ScalarTheme.Moon)
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.RestSharp);
+    });
+
+    // Redirección de la ruta raíz a Swagger
+    //app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
+    app.MapControllers();
     app.Run();
 }
 catch (Exception ex)
@@ -590,35 +504,4 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
-}
-
-// Método para inicializar la base de datos
-static async Task InitializeDatabase(WebApplication app)
-{
-    using var scope = app.Services.CreateScope();
-    var services = scope.ServiceProvider;
-
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        
-        // Deshabilitamos temporalmente la migración automática para evitar conflictos
-        // await context.Database.MigrateAsync();
-        
-        // En su lugar, verificamos que podemos conectarnos a la base de datos
-        var canConnect = await context.Database.CanConnectAsync();
-        if (canConnect)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("Conexión a la base de datos establecida correctamente");
-            
-            // Aquí puedes agregar la inicialización de datos si es necesario
-            // await DbInitializer.Initialize(context, services);
-        }
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al inicializar la base de datos");
-    }
 }

@@ -1,11 +1,10 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.EstadoEtapa;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.Application.Services
@@ -24,7 +23,7 @@ namespace ConsultCore31.Application.Services
         /// <param name="mapper">Instancia de AutoMapper</param>
         /// <param name="logger">Instancia del logger</param>
         public EstadoEtapaService(
-            IGenericRepository<EstadoEtapa, int> repository, 
+            IGenericRepository<EstadoEtapa, int> repository,
             IMapper mapper,
             ILogger<EstadoEtapaService> logger)
             : base(mapper, logger)
@@ -68,7 +67,7 @@ namespace ConsultCore31.Application.Services
         {
             var id = GetIdFromUpdateDto(updateDto);
             var existingEntity = await _repository.GetByIdAsync(id, cancellationToken);
-            
+
             if (existingEntity == null)
             {
                 return false;

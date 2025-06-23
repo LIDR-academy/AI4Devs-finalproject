@@ -1,4 +1,3 @@
-using System;
 using ConsultCore31.Application.DTOs.Common;
 
 namespace ConsultCore31.Application.DTOs.Proyecto

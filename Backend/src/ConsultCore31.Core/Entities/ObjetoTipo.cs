@@ -1,15 +1,14 @@
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using ConsultCore31.Core.Common;
+
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsultCore31.Core.Entities;
 
 /// <summary>
 /// Representa un tipo de objeto en el sistema.
 /// </summary>
-[Table("ObjetosTipo", Schema = "dbo")]
+[Table("ObjetoTipos", Schema = "dbo")]
 public class ObjetoTipo : BaseEntity<int>
 {
     /// <summary>

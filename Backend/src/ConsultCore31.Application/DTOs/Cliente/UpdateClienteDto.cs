@@ -1,6 +1,6 @@
-using System;
-using System.ComponentModel.DataAnnotations;
 using ConsultCore31.Application.DTOs.Common;
+
+using System.ComponentModel.DataAnnotations;
 
 namespace ConsultCore31.Application.DTOs.Cliente
 {
@@ -26,7 +26,7 @@ namespace ConsultCore31.Application.DTOs.Cliente
         /// RFC del cliente
         /// </summary>
         [StringLength(13, ErrorMessage = "El RFC no puede exceder los 13 caracteres")]
-        [RegularExpression(@"^([A-ZÑ&]{3,4})?([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1]))?([A-Z\d]{3})?$", 
+        [RegularExpression(@"^([A-ZÑ&]{3,4})?([0-9]{2}(0[1-9]|1[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1]))?([A-Z\d]{3})?$",
             ErrorMessage = "El formato del RFC no es válido")]
         public string? RFC { get; set; }
 

@@ -1,6 +1,4 @@
 // En Application/DTOs/Acceso/AccesoDto.cs
-using System.ComponentModel.DataAnnotations;
-
 namespace ConsultCore31.Application.DTOs.Acceso
 {
     public class AccesoDto

@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Moneda;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -69,13 +66,13 @@ namespace ConsultCore31.Tests.Services
         {
             // Arrange
             var moneda = new Moneda
-            { 
-                Id = 1, 
-                Codigo = "USD", 
-                Nombre = "Dólar Estadounidense", 
-                Simbolo = "$", 
-                TasaCambio = 1, 
-                FechaCreacion = DateTime.UtcNow 
+            {
+                Id = 1,
+                Codigo = "USD",
+                Nombre = "Dólar Estadounidense",
+                Simbolo = "$",
+                TasaCambio = 1,
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -122,7 +119,7 @@ namespace ConsultCore31.Tests.Services
             Moneda savedEntity = null;
 
             _mockRepository.Setup(repo => repo.AddAsync(It.IsAny<Moneda>(), It.IsAny<CancellationToken>()))
-                .Callback<Moneda, CancellationToken>((entity, token) => 
+                .Callback<Moneda, CancellationToken>((entity, token) =>
                 {
                     entity.Id = 3;
                     entity.FechaCreacion = DateTime.UtcNow;
@@ -181,12 +178,12 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Moneda>(m => 
-                m.Id == 1 && 
-                m.Codigo == "USD" && 
-                m.Nombre == "Dólar Actualizado" && 
-                m.TasaCambio == 1.05m && 
-                m.EsPredeterminada && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Moneda>(m =>
+                m.Id == 1 &&
+                m.Codigo == "USD" &&
+                m.Nombre == "Dólar Actualizado" &&
+                m.TasaCambio == 1.05m &&
+                m.EsPredeterminada &&
                 m.Activa), It.IsAny<CancellationToken>()), Times.Once);
         }
 

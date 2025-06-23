@@ -1,11 +1,10 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.EstadoProyecto;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.Application.Services
@@ -24,7 +23,7 @@ namespace ConsultCore31.Application.Services
         /// <param name="mapper">Instancia de AutoMapper</param>
         /// <param name="logger">Instancia del logger</param>
         public EstadoProyectoService(
-            IGenericRepository<EstadoProyecto, int> repository, 
+            IGenericRepository<EstadoProyecto, int> repository,
             IMapper mapper,
             ILogger<EstadoProyectoService> logger)
             : base(mapper, logger)
@@ -68,7 +67,7 @@ namespace ConsultCore31.Application.Services
         {
             var id = GetIdFromUpdateDto(updateDto);
             var existingEntity = await _repository.GetByIdAsync(id, cancellationToken);
-            
+
             if (existingEntity == null)
             {
                 throw new KeyNotFoundException($"No se encontró el estado de proyecto con ID: {id}");
@@ -86,12 +85,12 @@ namespace ConsultCore31.Application.Services
         {
             _logger.LogInformation($"Eliminando estado de proyecto con ID: {id}");
             var existingEntity = await _repository.GetByIdAsync(id, cancellationToken);
-            
+
             if (existingEntity == null)
             {
                 throw new KeyNotFoundException($"No se encontró el estado de proyecto con ID: {id}");
             }
-            
+
             return await _repository.SoftDeleteAsync(id, cancellationToken);
         }
 

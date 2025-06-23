@@ -1,6 +1,5 @@
 using ConsultCore31.Core.Interfaces;
 using ConsultCore31.Infrastructure.Persistence.Repositories;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ConsultCore31.Infrastructure.DependencyInjection
 {
@@ -34,7 +33,7 @@ namespace ConsultCore31.Infrastructure.DependencyInjection
             services.AddScoped<IEtapaProyectoRepository, EtapaProyectoRepository>();
             services.AddScoped<ITareaRepository, TareaRepository>();
             services.AddScoped<IComentarioTareaRepository, ComentarioTareaRepository>();
-            
+
             // Aquí se registrarán los demás repositorios específicos
 
             return services;

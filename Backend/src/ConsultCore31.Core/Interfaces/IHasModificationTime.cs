@@ -1,5 +1,3 @@
-using System;
-
 namespace ConsultCore31.Core.Interfaces
 {
     /// <summary>

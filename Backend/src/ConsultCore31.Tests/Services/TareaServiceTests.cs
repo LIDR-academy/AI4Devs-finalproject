@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Tarea;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -28,16 +25,16 @@ namespace ConsultCore31.Tests.Services
         public TareaServiceTests()
         {
             _mockRepository = new Mock<ITareaRepository>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<TareaProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             _mockLogger = new Mock<ILogger<TareaService>>();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new TareaService(
                 _mockRepository.Object,
@@ -51,23 +48,23 @@ namespace ConsultCore31.Tests.Services
             // Arrange
             var tareas = new List<Tarea>
             {
-                new Tarea { 
-                    Id = 1, 
-                    Titulo = "Tarea 1", 
+                new Tarea {
+                    Id = 1,
+                    Titulo = "Tarea 1",
                     ProyectoId = 1,
                     EstadoTareaId = 1,
                     PrioridadTareaId = 1,
                     CreadoPorId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 },
-                new Tarea { 
-                    Id = 2, 
-                    Titulo = "Tarea 2", 
+                new Tarea {
+                    Id = 2,
+                    Titulo = "Tarea 2",
                     ProyectoId = 1,
                     EstadoTareaId = 1,
                     PrioridadTareaId = 2,
                     CreadoPorId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 }
             };
 
@@ -88,15 +85,15 @@ namespace ConsultCore31.Tests.Services
         public async Task GetByIdAsync_ConIdExistente_DebeRetornarTarea()
         {
             // Arrange
-            var tarea = new Tarea 
-            { 
-                Id = 1, 
-                Titulo = "Tarea Test", 
+            var tarea = new Tarea
+            {
+                Id = 1,
+                Titulo = "Tarea Test",
                 ProyectoId = 1,
                 EstadoTareaId = 1,
                 PrioridadTareaId = 1,
                 CreadoPorId = 1,
-                FechaCreacion = DateTime.UtcNow 
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -199,10 +196,10 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Tarea>(e => 
-                e.Id == 1 && 
-                e.Titulo == "Tarea Actualizada" && 
-                e.EstadoTareaId == 2 && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<Tarea>(e =>
+                e.Id == 1 &&
+                e.Titulo == "Tarea Actualizada" &&
+                e.EstadoTareaId == 2 &&
                 e.PrioridadTareaId == 2), It.IsAny<CancellationToken>()), Times.Once);
         }
 

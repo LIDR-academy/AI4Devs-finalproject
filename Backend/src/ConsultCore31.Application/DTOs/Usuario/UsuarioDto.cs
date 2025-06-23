@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace ConsultCore31.Application.DTOs.Usuario
@@ -34,7 +33,6 @@ namespace ConsultCore31.Application.DTOs.Usuario
         [Required(ErrorMessage = "El ID de objeto es requerido")]
         public int ObjetoId { get; set; }
 
-
         public bool Activo { get; set; } = true;
     }
 
@@ -67,7 +65,7 @@ namespace ConsultCore31.Application.DTOs.Usuario
         public int PerfilId { get; set; }
 
         public int? EmpleadoId { get; set; }
-        
+
         [Required(ErrorMessage = "El ID de objeto es requerido")]
         public int ObjetoId { get; set; } = 2; // Valor por defecto
     }
@@ -100,10 +98,10 @@ namespace ConsultCore31.Application.DTOs.Usuario
         public int PerfilId { get; set; }
 
         public int? EmpleadoId { get; set; }
-        
+
         [Required(ErrorMessage = "El ID de objeto es requerido")]
         public int ObjetoId { get; set; }
-        
+
         public bool Activo { get; set; } = true;
     }
 }

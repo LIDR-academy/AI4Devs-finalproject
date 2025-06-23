@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.FrecuenciaMedicion;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Controllers
 {
@@ -216,5 +213,3 @@ namespace ConsultCore31.Tests.Controllers
         }
     }
 }
-
-

@@ -1,5 +1,6 @@
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Entities.Seguridad;
+using ConsultCore31.Infrastructure.Persistence.Configurations;
 
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -64,93 +65,7 @@ namespace ConsultCore31.Infrastructure.Persistence.Context
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-            modelBuilder.Entity<Usuario>(entity =>
-            {
-                // Mapear la tabla
-                entity.ToTable("Usuarios", "dbo");
-
-                // Configuración de la clave primaria
-                entity.HasKey(u => u.Id);
-
-                // Mapear propiedades de Identity
-                entity.Property(u => u.Id).HasColumnName("usuarioId");
-                entity.Property(u => u.UserName).HasColumnName("usuarioNombre").HasMaxLength(256);
-                entity.Property(u => u.NormalizedUserName).HasColumnName("normalizedUsuarioNombre").HasMaxLength(256);
-                entity.Property(u => u.Email).HasColumnName("usuarioEmail").HasMaxLength(256);
-                entity.Property(u => u.NormalizedEmail).HasColumnName("normalizedUsuarioEmail").HasMaxLength(256);
-                entity.Property(u => u.EmailConfirmed).HasColumnName("emailConfirmado").HasDefaultValue(false);
-                entity.Property(u => u.PasswordHash).HasColumnName("passwordHash");
-                entity.Property(u => u.SecurityStamp).HasColumnName("securityStamp");
-                entity.Property(u => u.ConcurrencyStamp).HasColumnName("concurrencyStamp");
-                entity.Property(u => u.PhoneNumber).HasColumnName("usuarioMovil").HasMaxLength(15);
-                entity.Property(u => u.PhoneNumberConfirmed).HasColumnName("phoneNumberConfirmed").HasDefaultValue(false);
-                entity.Property(u => u.TwoFactorEnabled).HasColumnName("twoFactorEnabled").HasDefaultValue(false);
-                entity.Property(u => u.LockoutEnd).HasColumnName("lockoutEnd");
-                entity.Property(u => u.LockoutEnabled).HasColumnName("lockoutEnabled").HasDefaultValue(true);
-                entity.Property(u => u.AccessFailedCount).HasColumnName("accessFailedCount").HasDefaultValue(0);
-
-                // Propiedades personalizadas
-                entity.Property(u => u.UsuarioApellidos)
-                    .IsRequired()
-                    .HasMaxLength(300)
-                    .HasDefaultValue("");
-
-                entity.Property(u => u.TokenUsuario)
-                    .IsRequired(false);
-
-                entity.Property(u => u.UsuarioActivo)
-                    .IsRequired()
-                    .HasDefaultValue(true);
-
-                entity.Property(u => u.PerfilId)
-                    .IsRequired()
-                    .HasDefaultValue(1);
-
-                entity.Property(u => u.EmpleadoId)
-                    .IsRequired(false);
-
-                entity.Property(u => u.ObjetoId)
-                    .IsRequired()
-                    .HasDefaultValue(2);
-
-                entity.Property(u => u.UserName)
-                    .IsRequired()
-                    .HasMaxLength(200)
-                    .HasDefaultValue("");
-
-                entity.Property(u => u.UsuarioNumero)
-                    .ValueGeneratedNever();
-
-                // Relaciones
-                entity.HasOne(u => u.Perfil)
-                    .WithMany()
-                    .HasForeignKey(u => u.PerfilId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(u => u.Empleado)
-                    .WithOne(e => e.Usuario)
-                    .HasForeignKey<Usuario>(u => u.EmpleadoId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(u => u.Objeto)
-                    .WithMany()
-                    .HasForeignKey(u => u.ObjetoId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                // Índices
-                entity.HasIndex(u => u.NormalizedEmail).HasDatabaseName("EmailIndex");
-                entity.HasIndex(u => u.NormalizedUserName).IsUnique().HasDatabaseName("UserNameIndex");
-                entity.HasIndex(u => u.PerfilId).HasDatabaseName("IX_Usuarios_PerfilId");
-                entity.HasIndex(u => u.EmpleadoId).HasDatabaseName("IX_Usuarios_EmpleadoId");
-                entity.HasIndex(u => u.ObjetoId).HasDatabaseName("IX_Usuarios_ObjetoId");
-
-                // Configuración de RefreshTokens
-                entity.HasMany(u => u.RefreshTokens)
-                    .WithOne(rt => rt.Usuario)
-                    .HasForeignKey(rt => rt.UsuarioId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
+            modelBuilder.ApplyConfiguration(new UsuarioConfiguration());
             // Configuración para la entidad RefreshToken
             modelBuilder.Entity<RefreshToken>(entity =>
             {
@@ -358,24 +273,31 @@ namespace ConsultCore31.Infrastructure.Persistence.Context
                     .IsRequired()
                     .HasColumnName("objetoTipoId");
 
+                // Configuración de la propiedad MenuId
+                entity.Property(o => o.MenuId)
+                    .IsRequired(false)
+                    .HasColumnName("menuId");
+
                 // Relación con ObjetoTipo
                 entity.HasOne(o => o.ObjetoTipo)
                     .WithMany(ot => ot.Objetos)
                     .HasForeignKey(o => o.ObjetoTipoId)
                     .OnDelete(DeleteBehavior.Restrict);
 
+                // Relación con Menu - Configuración explícita para evitar MenuId1
+                entity.HasOne(o => o.Menu)
+                    .WithMany(m => m.Objetos)  // Asegúrate de que la clase Menu tenga esta propiedad de navegación
+                    .HasForeignKey(o => o.MenuId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 // Índices
                 entity.HasIndex(o => o.ObjetoNombre).IsUnique();
                 entity.HasIndex(o => o.ObjetoTipoId);
-
-                // Verificar si la propiedad MenuId existe antes de crear el índice
-                var menuIdProperty = entity.Metadata.FindProperty("MenuId");
-                if (menuIdProperty != null)
-                {
-                    entity.Property("MenuId").HasColumnName("menuId");
-                    entity.HasIndex("MenuId").HasDatabaseName("IX_Objetos_MenuId");
-                }
+                entity.HasIndex(o => o.MenuId).HasDatabaseName("IX_Objetos_menuId");
             });
+
+            modelBuilder.Entity<Objeto>().Ignore("MenuId1");
 
             // Configuración para la entidad ObjetoTipo
             modelBuilder.Entity<ObjetoTipo>(entity =>

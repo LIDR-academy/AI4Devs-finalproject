@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.PrioridadTarea;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -29,14 +26,14 @@ namespace ConsultCore31.Tests.Services
         {
             _mockRepository = new Mock<IGenericRepository<PrioridadTarea, int>>();
             _mockLogger = new Mock<ILogger<PrioridadTareaService>>();
-            
+
             // Configurar AutoMapper
             var mapperConfig = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<PrioridadTareaProfile>();
             });
             _mapper = mapperConfig.CreateMapper();
-            
+
             // Crear el servicio con las dependencias mockeadas
             _service = new PrioridadTareaService(_mockRepository.Object, _mapper, _mockLogger.Object);
         }
@@ -69,11 +66,11 @@ namespace ConsultCore31.Tests.Services
         {
             // Arrange
             var prioridad = new PrioridadTarea
-            { 
-                Id = 1, 
-                Nombre = "Alta", 
-                Descripcion = "Prioridad alta", 
-                FechaCreacion = DateTime.UtcNow 
+            {
+                Id = 1,
+                Nombre = "Alta",
+                Descripcion = "Prioridad alta",
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -133,9 +130,9 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(3, result.Id);
             Assert.Equal("Baja", result.Nombre);
             Assert.Equal("Prioridad baja", result.Descripcion);
-            _mockRepository.Verify(repo => repo.AddAsync(It.Is<PrioridadTarea>(t => 
-                t.Nombre == "Baja" && 
-                t.Descripcion == "Prioridad baja" && 
+            _mockRepository.Verify(repo => repo.AddAsync(It.Is<PrioridadTarea>(t =>
+                t.Nombre == "Baja" &&
+                t.Descripcion == "Prioridad baja" &&
                 t.Activa), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -168,10 +165,10 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<PrioridadTarea>(t => 
-                t.Id == 1 && 
-                t.Nombre == "Alta Actualizada" && 
-                t.Descripcion == "Descripción actualizada" && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<PrioridadTarea>(t =>
+                t.Id == 1 &&
+                t.Nombre == "Alta Actualizada" &&
+                t.Descripcion == "Descripción actualizada" &&
                 t.Activa), It.IsAny<CancellationToken>()), Times.Once);
         }
 

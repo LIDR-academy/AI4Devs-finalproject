@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace ConsultCore31.Application.Interfaces
 {
     /// <summary>
@@ -18,27 +13,27 @@ namespace ConsultCore31.Application.Interfaces
         /// Obtiene todas las entidades activas
         /// </summary>
         Task<IEnumerable<TDto>> GetAllAsync(CancellationToken cancellationToken = default);
-        
+
         /// <summary>
         /// Obtiene una entidad por su ID
         /// </summary>
         Task<TDto> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
-        
+
         /// <summary>
         /// Crea una nueva entidad
         /// </summary>
         Task<TDto> CreateAsync(TCreateDto createDto, CancellationToken cancellationToken = default);
-        
+
         /// <summary>
         /// Actualiza una entidad existente
         /// </summary>
         Task<bool> UpdateAsync(TUpdateDto updateDto, CancellationToken cancellationToken = default);
-        
+
         /// <summary>
         /// Elimina una entidad por su ID (borrado lógico)
         /// </summary>
         Task<bool> DeleteAsync(TKey id, CancellationToken cancellationToken = default);
-        
+
         /// <summary>
         /// Verifica si existe una entidad con el ID especificado
         /// </summary>

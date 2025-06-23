@@ -1,15 +1,10 @@
 // UsuarioTokenRepository.cs
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Ardalis.Specification;
 using Ardalis.Specification.EntityFrameworkCore;
+
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
 using ConsultCore31.Infrastructure.Persistence.Context;
-using Microsoft.EntityFrameworkCore;
 
 namespace ConsultCore31.Infrastructure.Persistence.Repositories
 {
@@ -78,16 +73,16 @@ namespace ConsultCore31.Infrastructure.Persistence.Repositories
 
             tokenEntity.TokenUsado = true;
             tokenEntity.FechaUso = DateTime.UtcNow;
-            
+
             // Aseguramos que ipAddress no sea nulo
             tokenEntity.IpUso = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
-            
+
             // Motivo es opcional, por lo que puede ser nulo
             tokenEntity.MotivoUso = motivo;
-            
+
             // Actualizamos la fecha de modificación
             tokenEntity.FechaModificacion = DateTime.UtcNow;
-            
+
             await _context.SaveChangesAsync();
         }
 

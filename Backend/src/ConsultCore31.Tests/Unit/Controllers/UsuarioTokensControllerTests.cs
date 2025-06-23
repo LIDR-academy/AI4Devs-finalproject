@@ -1,17 +1,13 @@
-using System;
-using System.Net;
-using System.Threading.Tasks;
+using ConsultCore31.Application.Interfaces;
+using ConsultCore31.WebAPI.Controllers.V1;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
-using FluentAssertions;
-using ConsultCore31.WebAPI.Controllers.V1;
-using ConsultCore31.Application.Interfaces;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Primitives;
+
+using System.Net;
 
 namespace ConsultCore31.Tests.Unit.Controllers
 {
@@ -26,7 +22,7 @@ namespace ConsultCore31.Tests.Unit.Controllers
             _mockTokenService = new Mock<IUsuarioTokenService>();
             _mockLogger = new Mock<ILogger<UsuarioTokensController>>();
             _controller = new UsuarioTokensController(_mockTokenService.Object, _mockLogger.Object);
-            
+
             // Configurar el contexto HTTP con una IP de ejemplo
             var httpContext = new DefaultHttpContext();
             httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
@@ -55,15 +51,15 @@ namespace ConsultCore31.Tests.Unit.Controllers
             // Assert
             var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
             okResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-            
+
             var response = okResult.Value.Should().BeAssignableTo<object>().Subject;
             response.Should().NotBeNull();
-            
+
             // Usar null-conditional para evitar NullReferenceException
             var successProp = response?.GetType().GetProperty("Success");
             var messageProp = response?.GetType().GetProperty("Message");
             var usuarioIdProp = response?.GetType().GetProperty("UsuarioId");
-            
+
             successProp?.GetValue(response).Should().Be(true);
             messageProp?.GetValue(response).Should().NotBeNull();
             usuarioIdProp?.GetValue(response).Should().Be(int.Parse(usuarioId));
@@ -87,7 +83,7 @@ namespace ConsultCore31.Tests.Unit.Controllers
             // Assert
             var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
             badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            
+
             var problemDetails = badRequestResult.Value.Should().BeOfType<ProblemDetails>().Subject;
             problemDetails.Title.Should().Be("Solicitud inválida");
             problemDetails.Detail.Should().Be("El ID de usuario no puede estar vacío");
@@ -111,7 +107,7 @@ namespace ConsultCore31.Tests.Unit.Controllers
             // Assert
             var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
             badRequestResult.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            
+
             var problemDetails = badRequestResult.Value.Should().BeOfType<ProblemDetails>().Subject;
             problemDetails.Title.Should().Be("Solicitud inválida");
             problemDetails.Detail.Should().Be("El ID de usuario debe ser un número entero positivo");
@@ -129,10 +125,10 @@ namespace ConsultCore31.Tests.Unit.Controllers
             // Arrange
             var usuarioId = "999";
             var exception = new KeyNotFoundException("Usuario no encontrado");
-            
+
             _mockTokenService.Setup(s => s.InvalidateUserTokensAsync(
-                It.IsAny<int>(), 
-                It.IsAny<string>(), 
+                It.IsAny<int>(),
+                It.IsAny<string>(),
                 It.IsAny<string>()))
                 .ThrowsAsync(exception);
 
@@ -142,7 +138,7 @@ namespace ConsultCore31.Tests.Unit.Controllers
             // Assert
             var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
             notFoundResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
-            
+
             var problemDetails = notFoundResult.Value.Should().BeOfType<ProblemDetails>().Subject;
             problemDetails.Title.Should().Be("Usuario no encontrado");
             problemDetails.Detail.Should().Be($"No se encontró un usuario con el ID: {usuarioId}");
@@ -154,10 +150,10 @@ namespace ConsultCore31.Tests.Unit.Controllers
             // Arrange
             var usuarioId = "123";
             var exception = new InvalidOperationException("Error en el servicio");
-            
+
             _mockTokenService.Setup(s => s.InvalidateUserTokensAsync(
-                It.IsAny<int>(), 
-                It.IsAny<string>(), 
+                It.IsAny<int>(),
+                It.IsAny<string>(),
                 It.IsAny<string>()))
                 .ThrowsAsync(exception);
 
@@ -167,7 +163,7 @@ namespace ConsultCore31.Tests.Unit.Controllers
             // Assert
             var statusCodeResult = result.Should().BeOfType<ObjectResult>().Subject;
             statusCodeResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-            
+
             var problemDetails = statusCodeResult.Value.Should().BeOfType<ProblemDetails>().Subject;
             problemDetails.Title.Should().Be("Error interno del servidor");
             problemDetails.Status.Should().Be(StatusCodes.Status500InternalServerError);

@@ -1,11 +1,13 @@
+using ConsultCore31.WebAPI.Configurations;
+using ConsultCore31.WebAPI.Services.Interfaces;
+
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using ConsultCore31.WebAPI.Configurations;
-using ConsultCore31.WebAPI.Services.Interfaces;
 
 namespace ConsultCore31.WebAPI.Services;
 
@@ -55,8 +57,8 @@ public class TokenService : ITokenService
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-        
-        if (securityToken is not JwtSecurityToken jwtSecurityToken || 
+
+        if (securityToken is not JwtSecurityToken jwtSecurityToken ||
             !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
         {
             throw new SecurityTokenException("Token inválido");

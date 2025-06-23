@@ -1,5 +1,6 @@
 // En Core/Specifications/AccesoByIdsSpec.cs
 using Ardalis.Specification;
+
 using ConsultCore31.Core.Entities;
 
 namespace ConsultCore31.Core.Specifications

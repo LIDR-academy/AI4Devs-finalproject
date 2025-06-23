@@ -1,7 +1,6 @@
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using ConsultCore31.Core.Common;
+
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsultCore31.Core.Entities
 {
@@ -11,14 +10,6 @@ namespace ConsultCore31.Core.Entities
     [Table("Menus", Schema = "dbo")]
     public class Menu : BaseEntity<int>
     {
-        /// <summary>
-        /// Nombre del menú
-        /// </summary>
-        [Required]
-        [StringLength(100)]
-        [Column("menuNombre")]
-        public string MenuNombre { get; set; }
-
         /// <summary>
         /// Descripción del menú
         /// </summary>
@@ -33,25 +24,18 @@ namespace ConsultCore31.Core.Entities
         [Column("icono")]
         public string Icono { get; set; }
 
-        /// <summary>
-        /// Ruta del menú
-        /// </summary>
-        [StringLength(200)]
-        [Column("ruta")]
-        public string Ruta { get; set; }
+        [Key]
+        [Column("menuId")]  // Asegúrate de que esté mapeado a menuId
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public override int Id { get; set; }
 
         /// <summary>
-        /// Orden de visualización del menú
+        /// Nombre del menú
         /// </summary>
-        [Column("orden")]
-        public int Orden { get; set; }
-
-
-        /// <summary>
-        /// ID del menú padre (para submenús)
-        /// </summary>
-        [Column("menuPadreId")]
-        public int? MenuPadreId { get; set; }
+        [Required]
+        [StringLength(100)]
+        [Column("menuNombre")]
+        public string MenuNombre { get; set; }
 
         /// <summary>
         /// Menú padre
@@ -60,13 +44,32 @@ namespace ConsultCore31.Core.Entities
         public virtual Menu MenuPadre { get; set; }
 
         /// <summary>
-        /// Submenús
+        /// ID del menú padre (para submenús)
         /// </summary>
-        public virtual ICollection<Menu> SubMenus { get; set; } = new List<Menu>();
+        [Column("menuPadreId")]
+        public int? MenuPadreId { get; set; }
 
         /// <summary>
         /// Objetos asociados a este menú
         /// </summary>
         public virtual ICollection<Objeto> Objetos { get; set; } = new List<Objeto>();
+
+        /// <summary>
+        /// Orden de visualización del menú
+        /// </summary>
+        [Column("orden")]
+        public int Orden { get; set; }
+
+        /// <summary>
+        /// Ruta del menú
+        /// </summary>
+        [StringLength(200)]
+        [Column("ruta")]
+        public string Ruta { get; set; }
+
+        /// <summary>
+        /// Submenús
+        /// </summary>
+        public virtual ICollection<Menu> SubMenus { get; set; } = new List<Menu>();
     }
 }

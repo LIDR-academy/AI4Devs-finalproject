@@ -1,5 +1,8 @@
 using ConsultCore31.Infrastructure.Persistence.Context;
+using ConsultCore31.WebAPI.Services.Interfaces;
+
 using Microsoft.EntityFrameworkCore;
+
 using System.Collections.Concurrent;
 
 namespace ConsultCore31.WebAPI.Services;
@@ -7,7 +10,7 @@ namespace ConsultCore31.WebAPI.Services;
 /// <summary>
 /// Servicio que monitorea la salud de la aplicación y sus dependencias
 /// </summary>
-public class ApplicationHealthService : BackgroundService
+public class ApplicationHealthService : BackgroundService, IApplicationHealthService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ApplicationHealthService> _logger;
@@ -31,9 +34,9 @@ public class ApplicationHealthService : BackgroundService
             try
             {
                 await CheckDatabaseHealthAsync();
-                
+
                 // Aquí se pueden agregar más verificaciones de salud para otros servicios
-                
+
                 _logger.LogInformation("Verificación de salud completada. Próxima verificación en {Interval} minutos",
                     _checkInterval.TotalMinutes);
             }
@@ -53,12 +56,12 @@ public class ApplicationHealthService : BackgroundService
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            
+
             // Verificar la conexión a la base de datos
             var canConnect = await dbContext.Database.CanConnectAsync();
-            
+
             stopwatch.Stop();
-            
+
             if (canConnect)
             {
                 _healthStatuses["Database"] = new HealthStatus
@@ -68,18 +71,18 @@ public class ApplicationHealthService : BackgroundService
                     ResponseTime = stopwatch.ElapsedMilliseconds,
                     Details = "Conexión a la base de datos establecida correctamente"
                 };
-                
+
                 _logger.LogInformation(
                     "Verificación de salud de la base de datos: Saludable | Tiempo de respuesta: {ResponseTime}ms",
                     stopwatch.ElapsedMilliseconds);
-                
+
                 // Verificar estadísticas adicionales de la base de datos
                 try
                 {
                     // Obtener información sobre las tablas principales
                     var usuariosCount = await dbContext.Set<ConsultCore31.Core.Entities.Usuario>().CountAsync();
                     var perfilesCount = await dbContext.Set<ConsultCore31.Core.Entities.Perfil>().CountAsync();
-                    
+
                     _logger.LogDebug(
                         "Estadísticas de la base de datos: Usuarios: {UsuariosCount}, Perfiles: {PerfilesCount}",
                         usuariosCount,
@@ -99,7 +102,7 @@ public class ApplicationHealthService : BackgroundService
                     ResponseTime = stopwatch.ElapsedMilliseconds,
                     Details = "No se pudo establecer conexión con la base de datos"
                 };
-                
+
                 _logger.LogCritical(
                     "Verificación de salud de la base de datos: No saludable | Tiempo de respuesta: {ResponseTime}ms",
                     stopwatch.ElapsedMilliseconds);
@@ -114,7 +117,7 @@ public class ApplicationHealthService : BackgroundService
                 ResponseTime = -1,
                 Details = $"Error al verificar la salud de la base de datos: {ex.Message}"
             };
-            
+
             _logger.LogCritical(ex, "Error al verificar la salud de la base de datos");
         }
     }

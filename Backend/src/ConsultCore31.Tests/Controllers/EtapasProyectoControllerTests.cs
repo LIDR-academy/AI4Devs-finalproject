@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.EtapaProyecto;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Controllers
 {
@@ -34,23 +31,23 @@ namespace ConsultCore31.Tests.Controllers
             // Arrange
             var etapasProyecto = new List<EtapaProyectoDto>
             {
-                new EtapaProyectoDto { 
-                    Id = 1, 
-                    Nombre = "Etapa 1", 
+                new EtapaProyectoDto {
+                    Id = 1,
+                    Nombre = "Etapa 1",
                     ProyectoId = 1,
                     Descripcion = "Descripción de la etapa 1",
                     Orden = 1,
                     EstadoEtapaId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 },
-                new EtapaProyectoDto { 
-                    Id = 2, 
-                    Nombre = "Etapa 2", 
+                new EtapaProyectoDto {
+                    Id = 2,
+                    Nombre = "Etapa 2",
                     ProyectoId = 1,
                     Descripcion = "Descripción de la etapa 2",
                     Orden = 2,
                     EstadoEtapaId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 }
             };
 

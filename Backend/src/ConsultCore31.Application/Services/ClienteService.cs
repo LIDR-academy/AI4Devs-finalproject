@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.Cliente;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
 
 namespace ConsultCore31.Application.Services
@@ -66,7 +64,7 @@ namespace ConsultCore31.Application.Services
         {
             var id = GetIdFromUpdateDto(updateDto);
             var existingEntity = await _clienteRepository.GetByIdAsync(id, cancellationToken);
-            
+
             if (existingEntity == null)
             {
                 return false;

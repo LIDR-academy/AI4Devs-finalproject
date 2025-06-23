@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Builder;
 using ConsultCore31.WebAPI.Middleware;
 
 namespace ConsultCore31.WebAPI.Extensions

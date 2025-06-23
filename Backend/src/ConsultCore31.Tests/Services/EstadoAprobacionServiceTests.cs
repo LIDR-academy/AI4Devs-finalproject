@@ -1,17 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoMapper;
+
 using ConsultCore31.Application.DTOs.EstadoAprobacion;
 using ConsultCore31.Application.Mappings;
 using ConsultCore31.Application.Services;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Services
 {
@@ -69,11 +66,11 @@ namespace ConsultCore31.Tests.Services
         {
             // Arrange
             var estado = new EstadoAprobacion
-            { 
-                Id = 1, 
-                Nombre = "Pendiente", 
-                Descripcion = "Pendiente de aprobación", 
-                FechaCreacion = DateTime.UtcNow 
+            {
+                Id = 1,
+                Nombre = "Pendiente",
+                Descripcion = "Pendiente de aprobación",
+                FechaCreacion = DateTime.UtcNow
             };
 
             _mockRepository.Setup(repo => repo.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -133,9 +130,9 @@ namespace ConsultCore31.Tests.Services
             Assert.Equal(3, result.Id);
             Assert.Equal("Rechazado", result.Nombre);
             Assert.Equal("Rechazado por el supervisor", result.Descripcion);
-            _mockRepository.Verify(repo => repo.AddAsync(It.Is<EstadoAprobacion>(t => 
-                t.Nombre == "Rechazado" && 
-                t.Descripcion == "Rechazado por el supervisor" && 
+            _mockRepository.Verify(repo => repo.AddAsync(It.Is<EstadoAprobacion>(t =>
+                t.Nombre == "Rechazado" &&
+                t.Descripcion == "Rechazado por el supervisor" &&
                 t.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -168,10 +165,10 @@ namespace ConsultCore31.Tests.Services
 
             // Assert
             Assert.True(result);
-            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<EstadoAprobacion>(t => 
-                t.Id == 1 && 
-                t.Nombre == "Pendiente Actualizado" && 
-                t.Descripcion == "Descripción actualizada" && 
+            _mockRepository.Verify(repo => repo.UpdateAsync(It.Is<EstadoAprobacion>(t =>
+                t.Id == 1 &&
+                t.Nombre == "Pendiente Actualizado" &&
+                t.Descripcion == "Descripción actualizada" &&
                 t.Activo), It.IsAny<CancellationToken>()), Times.Once);
         }
 

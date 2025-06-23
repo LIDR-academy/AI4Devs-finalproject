@@ -1,14 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ConsultCore31.Application.DTOs.Tarea;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.WebAPI.Controllers.V1;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
-using Xunit;
 
 namespace ConsultCore31.Tests.Controllers
 {
@@ -34,21 +31,21 @@ namespace ConsultCore31.Tests.Controllers
             // Arrange
             var tareas = new List<TareaDto>
             {
-                new TareaDto { 
-                    Id = 1, 
-                    Titulo = "Tarea 1", 
+                new TareaDto {
+                    Id = 1,
+                    Titulo = "Tarea 1",
                     ProyectoId = 1,
                     EstadoTareaId = 1,
                     PrioridadTareaId = 1,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 },
-                new TareaDto { 
-                    Id = 2, 
-                    Titulo = "Tarea 2", 
+                new TareaDto {
+                    Id = 2,
+                    Titulo = "Tarea 2",
                     ProyectoId = 1,
                     EstadoTareaId = 1,
                     PrioridadTareaId = 2,
-                    FechaCreacion = DateTime.UtcNow 
+                    FechaCreacion = DateTime.UtcNow
                 }
             };
 

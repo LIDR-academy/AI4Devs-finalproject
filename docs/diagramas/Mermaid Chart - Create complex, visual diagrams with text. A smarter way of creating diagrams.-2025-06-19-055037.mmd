@@ -1,0 +1,116 @@
+%%{init: {'theme': 'neutral', 'themeVariables': { 'primaryColor': '#f0f0f0', 'primaryTextColor': '#000', 'primaryBorderColor': '#777', 'lineColor': '#555', 'secondaryColor': '#e0e0e0', 'tertiaryColor': '#d0d0d0'}}}%%
+
+classDiagram
+    %% Gestión Financiera
+    class Gasto {
+        +int Id
+        +string Concepto
+        +decimal Monto
+        +DateTime Fecha
+        +int ProyectoId
+        +int CategoriaGastoId
+        +int EmpleadoId
+        +int MonedaId
+        +string NumeroFactura
+        +string Proveedor
+        +string RutaComprobante
+        +int EstadoAprobacionId
+        +int? AprobadoPorId
+        +DateTime? FechaAprobacion
+        +bool EsReembolsable
+    }
+    
+    class CategoriaGasto {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +bool EsEstandar
+        +bool RequiereComprobante
+        +decimal LimiteMaximo
+        +bool Activa
+        +List~Gasto~ Gastos
+    }
+    
+    class Moneda {
+        +int Id
+        +string Codigo
+        +string Nombre
+        +string Simbolo
+        +decimal TasaCambio
+        +DateTime FechaActualizacion
+        +bool EsPredeterminada
+        +bool Activa
+        +List~Gasto~ Gastos
+    }
+    
+    class EstadoAprobacion {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +bool RequiereAprobacion
+        +bool EsAprobado
+        +bool EsRechazado
+        +bool Activo
+        +List~Gasto~ Gastos
+    }
+    
+    class AsignacionViatico {
+        +int Id
+        +string Concepto
+        +decimal MontoTotal
+        +decimal SaldoPendiente
+        +int ProyectoId
+        +int EmpleadoId
+        +int MonedaId
+        +DateTime FechaInicio
+        +DateTime FechaFin
+        +string Destino
+        +string PropositoViaje
+        +int EstadoAprobacionId
+        +int? AprobadoPorId
+        +DateTime? FechaAprobacion
+        +bool EsLiquidada
+        +DateTime? FechaLiquidacion
+        +List~MovimientoViatico~ MovimientosViatico
+    }
+    
+    class MovimientoViatico {
+        +int Id
+        +string Concepto
+        +decimal Monto
+        +int AsignacionViaticoId
+        +int TipoMovimientoViaticoId
+        +DateTime Fecha
+        +int? CategoriaGastoId
+        +string RutaComprobante
+        +int RegistradoPorId
+        +DateTime FechaRegistro
+    }
+    
+    class TipoMovimientoViatico {
+        +int Id
+        +string Nombre
+        +string Descripcion
+        +bool EsEntrada
+        +bool EsSalida
+        +bool Activo
+        +List~MovimientoViatico~ MovimientosViatico
+    }
+    
+    %% Relaciones de Gestión Financiera
+    Gasto "muchos" --> "1" Proyecto
+    Gasto "muchos" --> "1" CategoriaGasto
+    Gasto "muchos" --> "1" Empleado
+    Gasto "muchos" --> "1" Moneda
+    Gasto "muchos" --> "1" EstadoAprobacion
+    Gasto "muchos" --> "0..1" Usuario : aprobadoPor
+    AsignacionViatico "muchos" --> "1" Proyecto
+    AsignacionViatico "muchos" --> "1" Empleado
+    AsignacionViatico "muchos" --> "1" Moneda
+    AsignacionViatico "muchos" --> "1" EstadoAprobacion
+    AsignacionViatico "muchos" --> "0..1" Usuario : aprobadoPor
+    AsignacionViatico "1" <-- "muchos" MovimientoViatico
+    MovimientoViatico "muchos" --> "1" AsignacionViatico
+    MovimientoViatico "muchos" --> "1" TipoMovimientoViatico
+    MovimientoViatico "muchos" --> "0..1" CategoriaGasto
+    MovimientoViatico "muchos" --> "1" Usuario : registradoPor   
