@@ -246,6 +246,14 @@
               <DocumentIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
               Tipos de Documentos
             </NuxtLink>
+            <NuxtLink
+              to="/catalogs/tipos-kpi"
+              class="sidebar-item text-sm"
+              :class="{ 'active': $route.path === '/catalogs/tipos-kpi' }"
+            >
+              <ChartBarIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
+              Tipos de KPI
+            </NuxtLink>
           </div>
         </div>
 

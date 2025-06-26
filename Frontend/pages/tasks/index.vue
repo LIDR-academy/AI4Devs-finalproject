@@ -136,7 +136,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from "vue";
 import { useTaskStore } from "~/stores/tasks";
-import { useProjectStore } from "~/stores/project";
+import { useProjectStore } from "~/stores/projects";
 
 // Task form
 const taskForm = reactive({

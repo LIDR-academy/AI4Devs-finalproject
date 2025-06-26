@@ -19,19 +19,19 @@ namespace ConsultCore31.Application.DTOs.TipoKPI
         /// <summary>
         /// Descripción del tipo de KPI
         /// </summary>
-        [StringLength(200, ErrorMessage = "La descripción no puede exceder los 200 caracteres")]
+        [StringLength(1000, ErrorMessage = "La descripción no puede exceder los 1000 caracteres")]
         public string? Descripcion { get; set; }
 
         /// <summary>
-        /// Unidad de medida para este tipo de KPI
+        /// Unidad de medida del tipo de KPI
         /// </summary>
-        [StringLength(50, ErrorMessage = "La unidad no puede exceder los 50 caracteres")]
+        [StringLength(200, ErrorMessage = "La unidad de medida no puede exceder los 200 caracteres")]
         public string? Unidad { get; set; }
 
         /// <summary>
-        /// Formato de visualización para los valores de este tipo de KPI
+        /// Formato de visualización del tipo de KPI
         /// </summary>
-        [StringLength(50, ErrorMessage = "El formato no puede exceder los 50 caracteres")]
+        [StringLength(200, ErrorMessage = "El formato de visualización no puede exceder los 200 caracteres")]
         public string? Formato { get; set; }
 
         /// <summary>

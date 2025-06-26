@@ -165,7 +165,7 @@ import { useToast } from 'vue-toastification';
 import TipoDocumentoTable from '~/components/TipoDocumentoTable.vue';
 
 // Servicios
-import { getAll, create, update, remove } from '~/services/documentTypeService';
+import { documentTypeService } from '~/services/documentTypeService';
 
 // Estado
 const tiposDocumento = ref([]);
@@ -198,7 +198,7 @@ onMounted(async () => {
 
 const cargarTiposDocumento = async () => {
   try {
-    const data = await getAll();
+    const data = await documentTypeService.getAll();
     tiposDocumento.value = data;
     aplicarFiltros();
     calcularPaginacion();
@@ -280,10 +280,10 @@ const cerrarModalForm = () => {
 const guardarTipoDocumento = async () => {
   try {
     if (modoEdicion.value) {
-      await update(formTipoDocumento.value.id, formTipoDocumento.value);
+      await documentTypeService.update(formTipoDocumento.value.id, formTipoDocumento.value);
       toast.success(`Tipo de documento "${formTipoDocumento.value.nombre}" actualizado correctamente`);
     } else {
-      await create(formTipoDocumento.value);
+      await documentTypeService.create(formTipoDocumento.value);
       toast.success(`Tipo de documento "${formTipoDocumento.value.nombre}" creado correctamente`);
     }
     
@@ -297,7 +297,7 @@ const guardarTipoDocumento = async () => {
 
 const eliminarTipoDocumento = async (item) => {
   try {
-    await remove(item.id);
+    await documentTypeService.delete(item.id);
     await cargarTiposDocumento();
   } catch (error) {
     console.error('Error al eliminar tipo de documento:', error);

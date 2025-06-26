@@ -21,12 +21,12 @@ namespace ConsultCore31.Application.DTOs.TipoKPI
         public string? Descripcion { get; set; }
 
         /// <summary>
-        /// Unidad de medida para este tipo de KPI
+        /// Unidad de medida del tipo de KPI
         /// </summary>
         public string? Unidad { get; set; }
 
         /// <summary>
-        /// Formato de visualización para los valores de este tipo de KPI
+        /// Formato de visualización del tipo de KPI
         /// </summary>
         public string? Formato { get; set; }
 

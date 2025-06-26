@@ -1,6 +1,7 @@
 using ConsultCore31.Core.Common;
 
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsultCore31.Core.Entities;
@@ -32,25 +33,25 @@ public class TipoKPI : BaseEntity<int>
     /// <summary>
     /// Obtiene o establece la descripción del tipo de KPI.
     /// </summary>
-    [MaxLength(200)]
+    [MaxLength(1000)]
     [Column("tipoKPIDescripcion")]
     [Description("Descripción del tipo de KPI")]
     public string? Descripcion { get; set; }
 
     /// <summary>
-    /// Obtiene o establece la unidad de medida para este tipo de KPI.
+    /// Obtiene o establece la unidad de medida del tipo de KPI.
     /// </summary>
-    [MaxLength(50)]
+    [MaxLength(200)]
     [Column("tipoKPIUnidad")]
-    [Description("Unidad de medida para este tipo de KPI")]
+    [Description("Unidad de medida del tipo de KPI")]
     public string? Unidad { get; set; }
 
     /// <summary>
-    /// Obtiene o establece el formato de visualización para los valores de este tipo de KPI.
+    /// Obtiene o establece el formato de visualización del tipo de KPI.
     /// </summary>
-    [MaxLength(50)]
+    [MaxLength(200)]
     [Column("tipoKPIFormato")]
-    [Description("Formato de visualización para los valores de este tipo de KPI")]
+    [Description("Formato de visualización del tipo de KPI")]
     public string? Formato { get; set; }
 
     /// <summary>
