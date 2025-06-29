@@ -3,7 +3,7 @@
  */
 
 // URL base de la API - Obtener de variables de entorno o usar valor por defecto
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:5217/api";
+const API_BASE_URL = process.env.API_BASE_URL || "https://localhost:44378/api";
 
 // Clave para el token de autenticación
 const AUTH_TOKEN_KEY = process.env.AUTH_TOKEN_KEY || "auth-token";

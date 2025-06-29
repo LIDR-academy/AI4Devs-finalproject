@@ -1,6 +1,7 @@
 using AutoMapper;
 
 using ConsultCore31.Application.DTOs.Puesto;
+using ConsultCore31.Application.DTOs.TipoProyecto;
 using ConsultCore31.Application.Interfaces;
 using ConsultCore31.Core.Entities;
 using ConsultCore31.Core.Interfaces;
@@ -103,6 +104,21 @@ namespace ConsultCore31.Application.Services
         protected override int GetIdFromUpdateDto(UpdatePuestoDto updateDto)
         {
             return updateDto.Id;
+        }
+
+        /// <summary>
+        /// Obtiene todos los tipos de proyecto, incluyendo los inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de tipos de proyecto</returns>
+        public async Task<IEnumerable<PuestoDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default)
+        {
+            var entities = includeInactive
+                ? await _repository.GetAllAsync(cancellationToken)
+                : await _repository.GetAllActiveAsync(cancellationToken);
+
+            return _mapper.Map<IEnumerable<PuestoDto>>(entities);
         }
     }
 }

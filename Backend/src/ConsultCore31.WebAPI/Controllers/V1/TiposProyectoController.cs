@@ -3,12 +3,16 @@ using Asp.Versioning;
 using ConsultCore31.Application.DTOs.TipoProyecto;
 using ConsultCore31.Application.Interfaces;
 
+using Microsoft.AspNetCore.Mvc;
+
 namespace ConsultCore31.WebAPI.Controllers.V1
 {
     /// <summary>
     /// Controlador para gestionar los tipos de proyecto
     /// </summary>
     [ApiVersion("1.0")]
+    [Route("api/v1/[controller]")]
+    [ApiController]
     public class TiposProyectoController : GenericController<TipoProyectoDto, CreateTipoProyectoDto, UpdateTipoProyectoDto, int>
     {
         private readonly ITipoProyectoService _tipoProyectoService;
@@ -45,6 +49,23 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         protected override bool IsIdMatchingDto(int id, UpdateTipoProyectoDto updateDto)
         {
             return id == updateDto.Id;
+        }
+
+        /// <summary>
+        /// Obtiene todos los tipos de proyecto, con opción de incluir inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
+        /// <returns>Lista de tipos de proyecto</returns>
+        [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<TipoProyectoDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllWithInactive([FromQuery] bool includeInactive = false)
+        {
+            _logger.LogInformation($"GetAllWithInactive llamado con includeInactive={includeInactive}");
+            
+            var result = await ((ITipoProyectoService)_service).GetAllWithInactiveAsync(includeInactive);
+            _logger.LogInformation($"GetAllWithInactive devolvió {result.Count()} registros");
+            
+            return Ok(result);
         }
     }
 }

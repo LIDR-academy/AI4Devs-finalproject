@@ -1,73 +1,101 @@
 <template>
-  <aside 
-    class="fixed left-0 top-0 z-40 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out"
+  <aside
+    class="fixed top-0 left-0 z-40 h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out dark:bg-gray-800 dark:border-gray-700"
     :class="collapsed ? 'w-16' : 'w-64'"
   >
     <!-- Logo -->
-    <div class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
+    <div
+      class="flex justify-center items-center h-16 border-b border-gray-200 dark:border-gray-700"
+    >
       <div v-if="!collapsed" class="flex items-center space-x-2">
-        <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-          <span class="text-white font-bold text-sm">BGA</span>
+        <div
+          class="flex justify-center items-center w-8 h-8 bg-gradient-to-br rounded-lg from-primary-500 to-primary-600"
+        >
+          <span class="text-sm font-bold text-white">BGA</span>
         </div>
-        <span class="text-xl font-bold text-gray-900 dark:text-white">Business</span>
+        <span class="text-xl font-bold text-gray-900 dark:text-white"
+          >Business</span
+        >
       </div>
-      <div v-else class="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-        <span class="text-white font-bold text-sm">BGA</span>
+      <div
+        v-else
+        class="flex justify-center items-center w-8 h-8 bg-gradient-to-br rounded-lg from-primary-500 to-primary-600"
+      >
+        <span class="text-sm font-bold text-white">BGA</span>
       </div>
     </div>
 
     <!-- Navigation -->
-    <nav class="mt-6 px-3">
-      <div class="space-y-1">
+    <nav
+      class="overflow-y-auto px-3 mt-4"
+      :style="`max-height: calc(100vh - ${collapsed ? 120 : 180}px);`"
+    >
+      <div class="pb-4 space-y-2">
         <!-- Dashboard -->
         <NuxtLink
           to="/"
-          class="sidebar-item"
-          :class="{ 'active': $route.path === '/' }"
+          class="flex items-center sidebar-item"
+          :class="{ active: route && route.path === '/' }"
         >
-          <HomeIcon class="w-5 h-5 mr-3" />
+          <HomeIcon class="flex-shrink-0 mr-3 w-5 h-5" />
           <span v-if="!collapsed" class="font-medium">Dashboard</span>
         </NuxtLink>
 
+        <!-- Separador: Gestión de Proyectos -->
+        <div class="py-2">
+          <div class="flex items-center">
+            <div class="flex-grow mr-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <span
+              v-if="!collapsed"
+              class="text-xs font-medium text-gray-500 dark:text-gray-400"
+              >GESTIÓN</span
+            >
+            <div
+              v-if="!collapsed"
+              class="flex-grow ml-2 h-px bg-gray-200 dark:bg-gray-700"
+            ></div>
+          </div>
+        </div>
+
         <!-- Proyectos -->
         <div>
-          <button 
+          <button
             @click="toggleSection('projects')"
-            class="sidebar-item w-full justify-between"
+            class="flex justify-between items-center w-full sidebar-item"
           >
             <div class="flex items-center">
-              <FolderIcon class="w-5 h-5 mr-3" />
+              <FolderIcon class="flex-shrink-0 mr-3 w-5 h-5" />
               <span v-if="!collapsed" class="font-medium">Proyectos</span>
             </div>
-            <ChevronDownIcon 
+            <ChevronDownIcon
               v-if="!collapsed"
               class="w-4 h-4 transition-transform duration-200"
               :class="{ 'rotate-180': expandedSections.projects }"
             />
           </button>
-          
-          <div 
+
+          <div
             v-if="!collapsed && expandedSections.projects"
-            class="ml-8 mt-1 space-y-1"
+            class="mt-1 ml-8 space-y-1"
           >
             <NuxtLink
               to="/projects"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/projects' }"
+              class="text-sm sidebar-item"
+              :class="{ active: route && route.path === '/projects' }"
             >
               Lista de Proyectos
             </NuxtLink>
             <NuxtLink
               to="/projects/create"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/projects/create' }"
+              class="text-sm sidebar-item"
+              :class="{ active: route && route.path === '/projects/create' }"
             >
               Nuevo Proyecto
             </NuxtLink>
             <NuxtLink
               to="/projects/gantt"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/projects/gantt' }"
+              class="text-sm sidebar-item"
+              :class="{ active: route && route.path === '/projects/gantt' }"
             >
               Vista Gantt
             </NuxtLink>
@@ -77,55 +105,71 @@
         <!-- Tareas -->
         <NuxtLink
           to="/tasks"
-          class="sidebar-item"
-          :class="{ 'active': $route.path.startsWith('/tasks') }"
+          class="flex items-center sidebar-item"
+          :class="{ active: route && route.path && route.path.startsWith('/tasks') }"
         >
-          <SquaresPlusIcon class="w-5 h-5 mr-3" />
+          <SquaresPlusIcon class="flex-shrink-0 mr-3 w-5 h-5" />
           <span v-if="!collapsed" class="font-medium">Tareas</span>
         </NuxtLink>
 
         <!-- KPIs -->
         <NuxtLink
           to="/kpis"
-          class="sidebar-item"
-          :class="{ 'active': $route.path.startsWith('/kpis') }"
+          class="flex items-center sidebar-item"
+          :class="{ active: route && route.path && route.path.startsWith('/kpis') }"
         >
-          <ChartBarIcon class="w-5 h-5 mr-3" />
+          <ChartBarIcon class="flex-shrink-0 mr-3 w-5 h-5" />
           <span v-if="!collapsed" class="font-medium">KPIs</span>
         </NuxtLink>
 
+        <!-- Separador: Reportes y Finanzas -->
+        <div class="py-2">
+          <div class="flex items-center">
+            <div class="flex-grow mr-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <span
+              v-if="!collapsed"
+              class="text-xs font-medium text-gray-500 dark:text-gray-400"
+              >REPORTES</span
+            >
+            <div
+              v-if="!collapsed"
+              class="flex-grow ml-2 h-px bg-gray-200 dark:bg-gray-700"
+            ></div>
+          </div>
+        </div>
+
         <!-- Informes -->
         <div>
-          <button 
+          <button
             @click="toggleSection('reports')"
-            class="sidebar-item w-full justify-between"
+            class="flex justify-between items-center w-full sidebar-item"
           >
             <div class="flex items-center">
-              <DocumentTextIcon class="w-5 h-5 mr-3" />
+              <DocumentTextIcon class="flex-shrink-0 mr-3 w-5 h-5" />
               <span v-if="!collapsed" class="font-medium">Informes</span>
             </div>
-            <ChevronDownIcon 
+            <ChevronDownIcon
               v-if="!collapsed"
               class="w-4 h-4 transition-transform duration-200"
               :class="{ 'rotate-180': expandedSections.reports }"
             />
           </button>
-          
-          <div 
+
+          <div
             v-if="!collapsed && expandedSections.reports"
-            class="ml-8 mt-1 space-y-1"
+            class="mt-1 ml-8 space-y-1"
           >
             <NuxtLink
               to="/reports/weekly"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/reports/weekly' }"
+              class="text-sm sidebar-item"
+              :class="{ active: route && route.path === '/reports/weekly' }"
             >
               Informes Semanales
             </NuxtLink>
             <NuxtLink
               to="/reports/financial"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/reports/financial' }"
+              class="text-sm sidebar-item"
+              :class="{ active: route && route.path === '/reports/financial' }"
             >
               Reportes Financieros
             </NuxtLink>
@@ -134,172 +178,276 @@
 
         <!-- Finanzas -->
         <div>
-          <button 
+          <button
             @click="toggleSection('finance')"
-            class="sidebar-item w-full justify-between"
+            class="flex justify-between items-center w-full sidebar-item"
           >
             <div class="flex items-center">
-              <CurrencyDollarIcon class="w-5 h-5 mr-3" />
+              <CurrencyDollarIcon class="flex-shrink-0 mr-3 w-5 h-5" />
               <span v-if="!collapsed" class="font-medium">Finanzas</span>
             </div>
-            <ChevronDownIcon 
+            <ChevronDownIcon
               v-if="!collapsed"
               class="w-4 h-4 transition-transform duration-200"
               :class="{ 'rotate-180': expandedSections.finance }"
             />
           </button>
-          
-          <div 
+
+          <div
             v-if="!collapsed && expandedSections.finance"
-            class="ml-8 mt-1 space-y-1"
+            class="mt-1 ml-8 space-y-1"
           >
             <NuxtLink
               to="/finance/expenses"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/finance/expenses' }"
+              class="text-sm sidebar-item"
+              :class="{ active: route && route.path === '/finance/expenses' }"
             >
               Gastos
             </NuxtLink>
             <NuxtLink
               to="/finance/viatics"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/finance/viatics' }"
+              class="text-sm sidebar-item"
+              :class="{ active: $route.path === '/finance/viatics' }"
             >
               Viáticos
             </NuxtLink>
             <NuxtLink
               to="/finance/budget"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/finance/budget' }"
+              class="text-sm sidebar-item"
+              :class="{ active: route && route.path === '/finance/budget' }"
             >
               Presupuesto
             </NuxtLink>
           </div>
         </div>
 
+        <!-- Separador: Catálogos -->
+        <div class="py-2">
+          <div class="flex items-center">
+            <div class="flex-grow mr-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <span
+              v-if="!collapsed"
+              class="text-xs font-medium text-gray-500 dark:text-gray-400"
+              >CATÁLOGOS</span
+            >
+            <div
+              v-if="!collapsed"
+              class="flex-grow ml-2 h-px bg-gray-200 dark:bg-gray-700"
+            ></div>
+          </div>
+        </div>
+
         <!-- Catálogos -->
         <div>
-          <button 
+          <button
             @click="toggleSection('catalogs')"
-            class="sidebar-item w-full justify-between"
+            class="flex justify-between items-center w-full sidebar-item"
           >
             <div class="flex items-center">
-              <TagIcon class="w-5 h-5 mr-3" />
+              <TagIcon class="flex-shrink-0 mr-3 w-5 h-5" />
               <span v-if="!collapsed" class="font-medium">Catálogos</span>
             </div>
-            <ChevronDownIcon 
+            <ChevronDownIcon
               v-if="!collapsed"
               class="w-4 h-4 transition-transform duration-200"
               :class="{ 'rotate-180': expandedSections.catalogs }"
             />
           </button>
-          
-          <div 
+
+          <div
             v-if="!collapsed && expandedSections.catalogs"
-            class="ml-8 mt-1 space-y-1"
+            class="pb-2 mt-1 ml-8 space-y-1 sidebar-submenu"
+            style="max-height: 300px; overflow-y: auto"
           >
-            <NuxtLink
-              to="/catalogs/clients"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/catalogs/clients' }"
-            >
-              <UserGroupIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
-              Clientes
-            </NuxtLink>
-            <NuxtLink
-              to="/catalogs/providers"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/catalogs/providers' }"
-            >
-              <BuildingOfficeIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
-              Proveedores
-            </NuxtLink>
-            <NuxtLink
-              to="/catalogs/products"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/catalogs/products' }"
-            >
-              <ShoppingBagIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
-              Productos
-            </NuxtLink>
-            <NuxtLink
-              to="/catalogs/services"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/catalogs/services' }"
-            >
-              <WrenchScrewdriverIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
-              Servicios
-            </NuxtLink>
-            <NuxtLink
-              to="/catalogs/categories"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/catalogs/categories' }"
-            >
-              <TagIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
-              Categorías
-            </NuxtLink>
-            <NuxtLink
-              to="/catalogs/document-types"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/catalogs/document-types' }"
-            >
-              <DocumentIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
-              Tipos de Documentos
-            </NuxtLink>
-            <NuxtLink
-              to="/catalogs/tipos-kpi"
-              class="sidebar-item text-sm"
-              :class="{ 'active': $route.path === '/catalogs/tipos-kpi' }"
-            >
-              <ChartBarIcon class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
-              Tipos de KPI
-            </NuxtLink>
+            <!-- Grupo: Entidades -->
+            <div class="mb-3">
+              <div
+                class="px-1 mb-1 border-b border-gray-100 dark:border-gray-700"
+              >
+                <span
+                  class="text-xs font-semibold text-gray-500 dark:text-gray-400"
+                  >Entidades</span
+                >
+              </div>
+              <NuxtLink
+                to="/catalogs/clients"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/clients' }"
+              >
+                <UserGroupIcon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                Clientes
+              </NuxtLink>
+              <NuxtLink
+                to="/catalogs/companies"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/companies' }"
+              >
+                <BuildingOfficeIcon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                Empresas
+              </NuxtLink>
+              <NuxtLink
+                to="/catalogs/departments"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/departments' }"
+              >
+                <BuildingOffice2Icon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                Departamentos
+              </NuxtLink>
+              <NuxtLink
+                to="/catalogs/puestos"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/puestos' }"
+              >
+                <UserGroupIcon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                Puestos
+              </NuxtLink>
+            </div>
+
+            <!-- Grupo: Tipos -->
+            <div class="mb-3">
+              <div
+                class="px-1 mb-1 border-b border-gray-100 dark:border-gray-700"
+              >
+                <span
+                  class="text-xs font-semibold text-gray-500 dark:text-gray-400"
+                  >Tipos</span
+                >
+              </div>
+              <NuxtLink
+                to="/catalogs/document-types"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/document-types' }"
+              >
+                <DocumentIcon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                Documentos
+              </NuxtLink>
+              <NuxtLink
+                to="/catalogs/tipos-kpi"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/tipos-kpi' }"
+              >
+                <ChartBarIcon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                KPI
+              </NuxtLink>
+              <NuxtLink
+                to="/catalogs/tipos-movimiento-viatico"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/tipos-movimiento-viatico' }"
+              >
+                <CurrencyDollarIcon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                Movimiento de Viático
+              </NuxtLink>
+              <NuxtLink
+                to="/catalogs/tipos-proyecto"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/tipos-proyecto' }"
+              >
+                <FolderIcon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                Proyecto
+              </NuxtLink>
+            </div>
           </div>
         </div>
 
-        <!-- Documentos -->
-        <NuxtLink
-          to="/documents"
-          class="sidebar-item"
-          :class="{ 'active': $route.path.startsWith('/documents') }"
-        >
-          <FolderOpenIcon class="w-5 h-5 mr-3" />
-          <span v-if="!collapsed" class="font-medium">Documentos</span>
-        </NuxtLink>
+        <!-- Separador: Sistema -->
+        <div class="py-2">
+          <div class="flex items-center">
+            <div class="flex-grow mr-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <span
+              v-if="!collapsed"
+              class="text-xs font-semibold text-gray-500 dark:text-gray-400"
+              >SISTEMA</span
+            >
+            <div
+              v-if="!collapsed"
+              class="flex-grow ml-2 h-px bg-gray-200 dark:bg-gray-700"
+            ></div>
+          </div>
+        </div>
 
-        <!-- Usuarios -->
-        <NuxtLink
-          v-if="authStore.isAdmin || authStore.isManager"
-          to="/users"
-          class="sidebar-item"
-          :class="{ 'active': $route.path.startsWith('/users') }"
-        >
-          <UsersIcon class="w-5 h-5 mr-3" />
-          <span v-if="!collapsed" class="font-medium">Usuarios</span>
-        </NuxtLink>
+        <!-- Documentos y Usuarios -->
+        <div class="space-y-2">
+          <NuxtLink
+            to="/documents"
+            class="flex items-center sidebar-item"
+            :class="{ active: route && route.path && route.path.startsWith('/documents') }"
+          >
+            <FolderOpenIcon class="flex-shrink-0 mr-3 w-5 h-5" />
+            <span v-if="!collapsed" class="font-medium">Documentos</span>
+          </NuxtLink>
+
+          <!-- Usuarios -->
+          <NuxtLink
+            v-if="authStore.isAdmin || authStore.isManager"
+            to="/users"
+            class="flex items-center sidebar-item"
+            :class="{ active: route && route.path && route.path.startsWith('/users') }"
+          >
+            <UsersIcon class="flex-shrink-0 mr-3 w-5 h-5" />
+            <span v-if="!collapsed" class="font-medium">Usuarios</span>
+          </NuxtLink>
+        </div>
       </div>
     </nav>
 
     <!-- Bottom Actions -->
-    <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 dark:border-gray-700">
+    <div
+      class="absolute right-0 bottom-0 left-0 p-3 border-t border-gray-200 dark:border-gray-700"
+    >
       <div class="space-y-2">
+        <!-- Separador: Configuración -->
+        <div class="py-1">
+          <div class="flex items-center">
+            <div class="flex-grow mr-2 h-px bg-gray-200 dark:bg-gray-700"></div>
+            <span
+              v-if="!collapsed"
+              class="text-xs font-semibold text-gray-500 dark:text-gray-400"
+              >CONFIGURACIÓN</span
+            >
+            <div
+              v-if="!collapsed"
+              class="flex-grow ml-2 h-px bg-gray-200 dark:bg-gray-700"
+            ></div>
+          </div>
+        </div>
+
         <!-- Settings -->
         <NuxtLink
           to="/settings"
-          class="sidebar-item"
-          :class="{ 'active': $route.path === '/settings' }"
+          class="flex items-center sidebar-item"
+          :class="{ active: route && route.path === '/settings' }"
         >
-          <CogIcon class="w-5 h-5 mr-3" />
+          <CogIcon class="flex-shrink-0 mr-3 w-5 h-5" />
           <span v-if="!collapsed" class="font-medium">Configuración</span>
         </NuxtLink>
 
         <!-- Toggle Sidebar -->
         <button
           @click="$emit('toggle')"
-          class="sidebar-item w-full"
+          class="flex items-center pt-2 mt-2 w-full border-t border-gray-100 sidebar-item dark:border-gray-700"
         >
-          <Bars3Icon class="w-5 h-5 mr-3" />
-          <span v-if="!collapsed" class="font-medium">Contraer</span>
+          <Bars3Icon
+            class="flex-shrink-0 mr-3 w-5 h-5 text-gray-600 dark:text-gray-300"
+          />
+          <span v-if="!collapsed" class="font-medium">{{
+            collapsed ? "Expandir" : "Contraer"
+          }}</span>
         </button>
       </div>
     </div>
@@ -307,8 +455,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { useAuthStore } from '../stores/auth'
+import { reactive } from "vue";
+import { useAuthStore } from "../stores/auth";
+import { useRoute } from "vue-router";
 import {
   HomeIcon,
   FolderIcon,
@@ -324,31 +473,33 @@ import {
   ChevronDownIcon,
   UserGroupIcon,
   BuildingOfficeIcon,
+  BuildingOffice2Icon,
   ShoppingBagIcon,
   WrenchScrewdriverIcon,
-  TagIcon
-} from '@heroicons/vue/24/outline'
+  TagIcon,
+} from "@heroicons/vue/24/outline";
 
 interface Props {
-  collapsed: boolean
+  collapsed: boolean;
 }
 
-defineProps<Props>()
+defineProps<Props>();
 defineEmits<{
-  toggle: []
-}>()
+  toggle: [];
+}>();
 
-const authStore = useAuthStore()
+const authStore = useAuthStore();
+const route = useRoute();
 
 // Expanded sections
 const expandedSections = reactive({
-  projects: true,
+  projects: false,
   reports: false,
   finance: false,
-  catalogs: false
-})
+  catalogs: false,
+});
 
 const toggleSection = (section: keyof typeof expandedSections) => {
-  expandedSections[section] = !expandedSections[section]
-}
+  expandedSections[section] = !expandedSections[section];
+};
 </script>

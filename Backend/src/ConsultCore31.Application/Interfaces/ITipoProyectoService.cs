@@ -7,6 +7,12 @@ namespace ConsultCore31.Application.Interfaces
     /// </summary>
     public interface ITipoProyectoService : IGenericService<TipoProyectoDto, CreateTipoProyectoDto, UpdateTipoProyectoDto, int>
     {
-        // Métodos específicos para TipoProyecto si son necesarios
+        /// <summary>
+        /// Obtiene todos los tipos de proyecto, incluyendo los inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de tipos de proyecto</returns>
+        Task<IEnumerable<TipoProyectoDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default);
     }
 }

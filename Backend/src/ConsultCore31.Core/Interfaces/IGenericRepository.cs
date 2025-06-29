@@ -27,6 +27,11 @@ namespace ConsultCore31.Core.Interfaces
         Task<IReadOnlyList<T>> GetAllActiveAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Obtiene todas las entidades, tanto activas como inactivas
+        /// </summary>
+        Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Realiza un borrado lógico de la entidad
         /// </summary>
         Task<bool> SoftDeleteAsync(TKey id, CancellationToken cancellationToken = default);

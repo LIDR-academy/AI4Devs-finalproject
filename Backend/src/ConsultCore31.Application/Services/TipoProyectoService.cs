@@ -41,6 +41,21 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
+        /// Obtiene todos los tipos de proyecto, incluyendo los inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de tipos de proyecto</returns>
+        public async Task<IEnumerable<TipoProyectoDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default)
+        {
+            var entities = includeInactive
+                ? await _repository.GetAllAsync(cancellationToken)
+                : await _repository.GetAllActiveAsync(cancellationToken);
+                
+            return _mapper.Map<IEnumerable<TipoProyectoDto>>(entities);
+        }
+
+        /// <summary>
         /// Obtiene una entidad por su ID
         /// </summary>
         public override async Task<TipoProyectoDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)

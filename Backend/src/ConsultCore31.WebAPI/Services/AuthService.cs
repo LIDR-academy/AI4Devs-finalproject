@@ -425,19 +425,19 @@ public class AuthService : IAuthService
             // Lista para almacenar los roles del usuario
             List<string> roles = new List<string>();
             
-            try
-            {
-                // Intentar obtener los roles del usuario
-                roles = (await _userManager.GetRolesAsync(user)).ToList();
-            }
-            catch (Exception roleEx) when (roleEx.Message.Contains("AspNetUserRoles") || 
-                                          roleEx.InnerException?.Message?.Contains("AspNetUserRoles") == true)
-            {
-                // Si hay un error específico con la tabla AspNetUserRoles, lo manejamos
-                _logger.LogWarning(roleEx, "Error al obtener roles del usuario {UserId}. Usando rol por defecto.", userId);
-                // Asignamos un rol por defecto
-                roles = new List<string> { "User" };
-            }
+            // try
+            // {
+            //     // Intentar obtener los roles del usuario
+            //     roles = (await _userManager.GetRolesAsync(user)).ToList();
+            // }
+            // catch (Exception roleEx) when (roleEx.Message.Contains("AspNetUserRoles") || 
+            //                               roleEx.InnerException?.Message?.Contains("AspNetUserRoles") == true)
+            // {
+            //     // Si hay un error específico con la tabla AspNetUserRoles, lo manejamos
+            //     _logger.LogWarning(roleEx, "Error al obtener roles del usuario {UserId}. Usando rol por defecto.", userId);
+            //     // Asignamos un rol por defecto
+            //     roles = new List<string> { "User" };
+            // }
 
             // Obtener el perfil del usuario
             var perfil = await _perfilService.GetPerfilByIdAsync(user.PerfilId);
