@@ -1,7 +1,6 @@
 using Asp.Versioning;
 
 using ConsultCore31.Application.DTOs.Puesto;
-using ConsultCore31.Application.DTOs.TipoProyecto;
 using ConsultCore31.Application.Interfaces;
 
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +29,23 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         }
 
         /// <summary>
+        /// Obtiene todos los puestos, con opción de incluir inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
+        /// <returns>Lista de puestos</returns>
+        [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<PuestoDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllWithInactive([FromQuery] bool includeInactive = false)
+        {
+            _logger.LogInformation($"GetAllWithInactive llamado con includeInactive={includeInactive}");
+
+            var result = await ((IPuestoService)_service).GetAllWithInactiveAsync(includeInactive);
+            _logger.LogInformation($"GetAllWithInactive devolvió {result.Count()} registros");
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Obtiene el ID del DTO
         /// </summary>
         /// <param name="dto">DTO del puesto</param>
@@ -48,23 +64,6 @@ namespace ConsultCore31.WebAPI.Controllers.V1
         protected override bool IsIdMatchingDto(int id, UpdatePuestoDto updateDto)
         {
             return id == updateDto.Id;
-        }
-
-        /// <summary>
-        /// Obtiene todos los puestos, con opción de incluir inactivos
-        /// </summary>
-        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
-        /// <returns>Lista de puestos</returns>
-        [HttpGet("all")]
-        [ProducesResponseType(typeof(IEnumerable<PuestoDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllWithInactive([FromQuery] bool includeInactive = false)
-        {
-            _logger.LogInformation($"GetAllWithInactive llamado con includeInactive={includeInactive}");
-
-            var result = await ((IPuestoService)_service).GetAllWithInactiveAsync(includeInactive);
-            _logger.LogInformation($"GetAllWithInactive devolvió {result.Count()} registros");
-
-            return Ok(result);
         }
     }
 }

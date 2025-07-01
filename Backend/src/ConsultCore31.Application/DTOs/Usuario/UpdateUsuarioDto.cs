@@ -1,12 +1,13 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ConsultCore31.Application.DTOs.Usuario
 {
     /// <summary>
-    /// DTO para la entidad Usuario
+    /// DTO para la actualización de un usuario
     /// </summary>
-    public class UsuarioDto
+    public class UpdateUsuarioDto
     {
+        [Required(ErrorMessage = "El ID es requerido")]
         public int Id { get; set; }
 
         [Required(ErrorMessage = "El nombre es requerido")]

@@ -11,6 +11,29 @@ namespace ConsultCore31.Core.Entities;
 [Table("Perfiles", Schema = "dbo")]
 public class Perfil : BaseEntity<int>
 {
+    private readonly List<Acceso> _accesos = new List<Acceso>();
+
+    private readonly List<Usuario> _usuarios = new List<Usuario>();
+
+    /// <summary>
+    /// Obtiene la colección de accesos asociados a este perfil.
+    /// </summary>
+    public virtual IReadOnlyCollection<Acceso> Accesos => _accesos.AsReadOnly();
+
+    /// <summary>
+    /// Obtiene o establece la fecha de creación del perfil.
+    /// </summary>
+    [Column("fechaCreacion")]
+    [Description("Fecha de creación del perfil")]
+    public DateTime? FechaCreacion { get; set; }
+
+    /// <summary>
+    /// Obtiene o establece la fecha de modificación del perfil.
+    /// </summary>
+    [Column("fechaModificacion")]
+    [Description("Fecha de última modificación del perfil")]
+    public DateTime? FechaModificacion { get; set; }
+
     /// <summary>
     /// Obtiene o establece el identificador único del perfil.
     /// </summary>
@@ -21,21 +44,10 @@ public class Perfil : BaseEntity<int>
     public new int Id { get; set; }
 
     /// <summary>
-    /// Obtiene o establece el nombre del perfil.
+    /// Obtiene o establece la navegación al objeto asociado.
     /// </summary>
-    [Required]
-    [MaxLength(100)]
-    [Column("perfilNombre")]
-    [Description("Nombre del perfil")]
-    public string PerfilNombre { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Obtiene o establece un valor que indica si el perfil está activo.
-    /// </summary>
-    [Required]
-    [Column("perfilActivo")]
-    [Description("Indica si el perfil está activo")]
-    public bool PerfilActivo { get; set; } = true;
+    [ForeignKey("ObjetoId")]
+    public virtual Objeto? Objeto { get; set; }
 
     /// <summary>
     /// Obtiene o establece el identificador del objeto asociado al perfil.
@@ -46,18 +58,30 @@ public class Perfil : BaseEntity<int>
     public int ObjetoId { get; set; } = 1;
 
     /// <summary>
-    /// Obtiene o establece la navegación al objeto asociado.
+    /// Obtiene o establece un valor que indica si el perfil está activo.
     /// </summary>
-    [ForeignKey("ObjetoId")]
-    public virtual Objeto? Objeto { get; set; }
-
-    private readonly List<Acceso> _accesos = new List<Acceso>();
-    private readonly List<Usuario> _usuarios = new List<Usuario>();
+    [Required]
+    [Column("perfilActivo")]
+    [Description("Indica si el perfil está activo")]
+    public bool PerfilActivo { get; set; } = true;
 
     /// <summary>
-    /// Obtiene la colección de accesos asociados a este perfil.
+    /// Obtiene o establece la descripción del perfil.
     /// </summary>
-    public virtual IReadOnlyCollection<Acceso> Accesos => _accesos.AsReadOnly();
+    [Required]
+    [MaxLength(500)]
+    [Column("perfilDescripcion")]
+    [Description("Descripción del perfil")]
+    public string PerfilDescripcion { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Obtiene o establece el nombre del perfil.
+    /// </summary>
+    [Required]
+    [MaxLength(50)]
+    [Column("perfilNombre")]
+    [Description("Nombre del perfil")]
+    public string PerfilNombre { get; set; } = string.Empty;
 
     /// <summary>
     /// Obtiene la colección de usuarios asociados a este perfil.

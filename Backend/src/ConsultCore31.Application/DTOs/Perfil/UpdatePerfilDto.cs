@@ -1,12 +1,13 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ConsultCore31.Application.DTOs.Perfil
 {
     /// <summary>
-    /// DTO para la entidad Perfil
+    /// DTO para la actualización de un perfil
     /// </summary>
-    public class PerfilDto
+    public class UpdatePerfilDto
     {
+        [Required(ErrorMessage = "El ID es requerido")]
         public int Id { get; set; }
 
         [Required(ErrorMessage = "El nombre del perfil es requerido")]

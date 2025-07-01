@@ -5,7 +5,7 @@ using ConsultCore31.Infrastructure.Persistence.Context;
 
 namespace ConsultCore31.Infrastructure.Persistence.Repositories
 {
-    public class PerfilRepository : RepositoryBase<Perfil>, IPerfilRepository
+    public class PerfilRepository : GenericRepository<Perfil, int>, IPerfilRepository
     {
         private readonly AppDbContext _context;
 
@@ -14,7 +14,7 @@ namespace ConsultCore31.Infrastructure.Persistence.Repositories
             _context = context;
         }
 
-        public async Task<bool> ExistsByNombreAsync(string nombre, int? excludeId = null)
+        public async Task<bool> ExistsByNombreAsync(string nombre, int? excludeId = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new ArgumentException("El nombre no puede estar vacío", nameof(nombre));
@@ -27,31 +27,39 @@ namespace ConsultCore31.Infrastructure.Persistence.Repositories
                 query = query.Where(p => p.Id != excludeId.Value);
             }
 
-            return await query.AnyAsync();
+            return await query.AnyAsync(cancellationToken);
         }
 
-        public async Task<Perfil?> GetByNombreAsync(string nombre)
+        public async Task<Perfil?> GetByNombreAsync(string nombre, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new ArgumentException("El nombre no puede estar vacío", nameof(nombre));
 
             return await _context.Perfiles
-                .FirstOrDefaultAsync(p => EF.Functions.Like(p.PerfilNombre, nombre));
+                .FirstOrDefaultAsync(p => EF.Functions.Like(p.PerfilNombre, nombre), cancellationToken);
         }
 
-        public async Task<Perfil?> GetPerfilConRelacionesAsync(int id)
+        public async Task<Perfil?> GetPerfilConRelacionesAsync(int id, CancellationToken cancellationToken = default)
         {
             return await _context.Perfiles
                 .Include(p => p.Objeto)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
 
         // Implementación de métodos específicos de IPerfilRepository
-        public async Task<IEnumerable<Perfil>> GetPerfilesActivosAsync()
+        public async Task<IEnumerable<Perfil>> GetPerfilesActivosAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Perfiles
                 .Where(p => p.PerfilActivo)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
+        }
+        
+        // Sobrescribir el método GetAllActiveAsync para usar PerfilActivo en lugar de Activo
+        public override async Task<IReadOnlyList<Perfil>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.Perfiles
+                .Where(p => p.PerfilActivo)
+                .ToListAsync(cancellationToken);
         }
     }
 }

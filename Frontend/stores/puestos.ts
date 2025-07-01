@@ -1,215 +1,284 @@
 /**
- * Store para gestionar el estado de los puestos
+ * Store para la gestión de puestos
+ * Utiliza Pinia para manejar el estado global de los puestos
  */
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { Puesto, puestoService } from '~/services/puestoService';
+import { Puesto, puestoService } from '../services/puestoService';
+import { useToast } from 'vue-toastification';
 
+// Interfaz para los parámetros de filtrado y paginación
+interface PuestoParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  activo?: boolean;
+  includeInactive?: boolean;
+  sortBy?: string;
+  sortDirection?: string;
+}
+
+// Interfaz para la respuesta paginada
+interface PaginatedResponse<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+/**
+ * Store para la gestión de puestos
+ */
 export const usePuestosStore = defineStore('puestos', () => {
   // Estado
   const puestos = ref<Puesto[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const currentPuesto = ref<Puesto | null>(null);
-
+  const toast = useToast();
+  
+  // Estado de paginación
+  const paginationInfo = ref<{
+    pageNumber: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+  }>({
+    pageNumber: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 0,
+    hasPreviousPage: false,
+    hasNextPage: false
+  });
+  
   // Getters
   const getPuestoById = computed(() => {
     return (id: number) => puestos.value.find(p => p.puestoId === id) || null;
   });
-
+  
   const getPuestosActivos = computed(() => {
     return puestos.value.filter(p => p.puestoActivo);
   });
-
-  // Acciones
+  
   /**
-   * Carga todos los puestos desde la API
-   * @param forceRefresh - Si es true, fuerza una recarga desde la API ignorando la caché
+   * Obtiene la lista de puestos según los parámetros especificados
+   * @param params - Parámetros de filtrado y paginación
+   * @param forceRefresh - Indica si se debe forzar la recarga de datos
    */
-  async function fetchPuestos(forceRefresh = false) {
-    // Si ya estamos cargando, evitamos solicitudes duplicadas
-    if (isLoading.value && !forceRefresh) {
-      console.log('Ya hay una carga en progreso, ignorando solicitud duplicada');
-      return;
-    }
-    
-    isLoading.value = true;
-    error.value = null;
+  async function fetchPuestos(params?: PuestoParams, forceRefresh = false) {
+    // Si ya estamos cargando datos y no es una recarga forzada, no hacer nada
+    if (isLoading.value && !forceRefresh) return;
     
     try {
-      console.log('Iniciando carga de puestos...');
-      // Incluimos explícitamente los puestos inactivos
-      const respuestaPaginada = await puestoService.getAll({ 
-        page: 1, 
-        pageSize: 100,
-        sortBy: 'Id',
-        sortDirection: 'desc', // Más recientes primero
-        includeInactive: true // Importante: esto hace que se incluyan tanto activos como inactivos
-      });
+      isLoading.value = true;
+      error.value = null;
       
-      // Actualizar la lista de puestos
-      puestos.value = respuestaPaginada.items;
-      console.log(`Puestos cargados exitosamente: ${respuestaPaginada.items.length}`);
+      console.log('Ejecutando fetchPuestos con forceRefresh:', forceRefresh);
       
-      // Registrar IDs para depuración
-      const ids = respuestaPaginada.items.map(p => p.puestoId).join(', ');
-      console.log(`IDs de puestos cargados: ${ids}`);
+      // Obtener puestos del servicio
+      // Si forceRefresh es true, añadir un timestamp para evitar caché
+      const queryParams = { ...params };
+      if (forceRefresh) {
+        // Añadir timestamp para evitar caché
+        queryParams._ts = Date.now();
+      }
       
-      return respuestaPaginada;
+      const response = await puestoService.getAll(queryParams);
+      
+      console.log('Respuesta del servidor:', response);
+      
+      // Actualizar estado
+      puestos.value = response.items;
+      
+      // Actualizar información de paginación
+      paginationInfo.value = {
+        pageNumber: response.pageNumber,
+        pageSize: response.pageSize,
+        totalCount: response.totalCount,
+        totalPages: response.totalPages,
+        hasPreviousPage: response.hasPreviousPage,
+        hasNextPage: response.hasNextPage
+      };
+      
+      return response;
     } catch (err: any) {
-      console.error('Error al cargar puestos:', err);
       error.value = err.message || 'Error al cargar los puestos';
-      // No vaciamos el array de puestos para mantener datos anteriores si los hay
-      return null;
+      toast.error(error.value);
+      console.error('Error en fetchPuestos:', err);
+      throw err;
     } finally {
       isLoading.value = false;
     }
   }
-
+  
   /**
-   * Carga un puesto específico por su ID
-   * @param id - ID del puesto a cargar
+   * Obtiene un puesto por su ID
+   * @param id - ID del puesto
    */
   async function fetchPuestoById(id: number) {
-    isLoading.value = true;
-    error.value = null;
+    if (!id) return null;
     
     try {
-      const data = await puestoService.getById(id);
-      currentPuesto.value = data;
+      isLoading.value = true;
+      error.value = null;
       
-      // Actualizar también en la lista si existe
-      const index = puestos.value.findIndex(p => p.puestoId === id);
-      if (index !== -1) {
-        puestos.value[index] = data;
+      // Obtener puesto del servicio
+      const puesto = await puestoService.getById(id);
+      
+      // Actualizar puesto actual
+      if (puesto) {
+        currentPuesto.value = puesto;
+        
+        // Actualizar en la lista si ya existe
+        const index = puestos.value.findIndex(p => p.puestoId === id);
+        if (index !== -1) {
+          puestos.value[index] = puesto;
+        }
       }
       
-      return data;
+      return puesto;
     } catch (err: any) {
-      console.error(`Error al cargar puesto ID ${id}:`, err);
-      error.value = err.message || `Error al cargar el puesto con ID ${id}`;
-      return null;
+      error.value = err.message || `Error al obtener el puesto con ID ${id}`;
+      toast.error(error.value);
+      console.error(`Error en fetchPuestoById(${id}):`, err);
+      throw err;
     } finally {
       isLoading.value = false;
     }
   }
-
+  
   /**
    * Crea un nuevo puesto
-   * @param puesto - Datos del nuevo puesto
+   * @param puesto - Datos del puesto a crear
    */
   async function createPuesto(puesto: Puesto) {
-    isLoading.value = true;
-    error.value = null;
-    
     try {
-      const data = await puestoService.create(puesto);
+      isLoading.value = true;
+      error.value = null;
       
-      if (data) {
-        // Añadir el nuevo puesto al array y ordenar por ID descendente (más reciente primero)
-        puestos.value.push(data);
-        puestos.value.sort((a, b) => (b.puestoId || 0) - (a.puestoId || 0));
-        
-        // Actualizar el puesto actual si es necesario
-        currentPuesto.value = data;
-        
-        console.log('Puesto creado y añadido al store:', data);
-      }
+      // Crear puesto mediante el servicio
+      const nuevoPuesto = await puestoService.create(puesto);
       
-      return data;
+      // Añadir a la lista de puestos
+      puestos.value.push(nuevoPuesto);
+      
+      // Actualizar puesto actual
+      currentPuesto.value = nuevoPuesto;
+      
+      // Mostrar notificación de éxito
+      toast.success('Puesto creado correctamente');
+      
+      return nuevoPuesto;
     } catch (err: any) {
-      console.error('Error al crear puesto:', err);
       error.value = err.message || 'Error al crear el puesto';
-      return null;
+      toast.error(error.value);
+      console.error('Error en createPuesto:', err);
+      throw err;
     } finally {
       isLoading.value = false;
     }
   }
-
+  
   /**
    * Actualiza un puesto existente
    * @param id - ID del puesto a actualizar
    * @param puesto - Datos actualizados del puesto
    */
   async function updatePuesto(id: number, puesto: Puesto) {
-    isLoading.value = true;
-    error.value = null;
+    if (!id) {
+      error.value = 'Se requiere un ID válido para actualizar un puesto';
+      toast.error(error.value);
+      throw new Error(error.value);
+    }
     
     try {
-      const data = await puestoService.update(id, puesto);
+      isLoading.value = true;
+      error.value = null;
       
-      if (data) {
-        // Actualizar en la lista
-        const index = puestos.value.findIndex(p => p.puestoId === id);
-        if (index !== -1) {
-          puestos.value[index] = data;
-          console.log(`Puesto ID ${id} actualizado en el índice ${index}:`, data);
-        } else {
-          // Si no se encuentra en la lista, podría ser un problema de sincronización
-          // Añadirlo a la lista para mantener la coherencia
-          console.warn(`Puesto ID ${id} no encontrado en la lista local, añadiéndolo...`);
-          puestos.value.push(data);
-          puestos.value.sort((a, b) => (b.puestoId || 0) - (a.puestoId || 0));
-        }
-        
-        // Actualizar puesto actual si es el mismo
-        if (currentPuesto.value && currentPuesto.value.puestoId === id) {
-          currentPuesto.value = data;
-        }
+      console.log('Actualizando puesto con ID:', id, 'Datos:', puesto);
+      
+      // Actualizar puesto mediante el servicio
+      const puestoActualizado = await puestoService.update(id, puesto);
+      
+      console.log('Puesto actualizado recibido del servidor:', puestoActualizado);
+      
+      // Actualizar en la lista de manera segura
+      const index = puestos.value.findIndex(p => p.puestoId === id);
+      if (index !== -1) {
+        // Crear una nueva referencia para asegurar la reactividad
+        const nuevaLista = [...puestos.value];
+        nuevaLista[index] = { ...puestoActualizado };
+        puestos.value = nuevaLista;
+        console.log('Puesto actualizado en la lista local');
       } else {
-        console.warn(`La actualización del puesto ID ${id} devolvió datos nulos`);
+        console.warn('No se encontró el puesto en la lista local para actualizar');
       }
       
-      return data;
+      // Actualizar puesto actual con una nueva referencia
+      currentPuesto.value = { ...puestoActualizado };
+      
+      // Mostrar notificación de éxito
+      toast.success('Puesto actualizado correctamente');
+      
+      return puestoActualizado;
     } catch (err: any) {
-      console.error(`Error al actualizar puesto ID ${id}:`, err);
       error.value = err.message || `Error al actualizar el puesto con ID ${id}`;
-      return null;
+      toast.error(error.value);
+      console.error(`Error en updatePuesto(${id}):`, err);
+      throw err;
     } finally {
       isLoading.value = false;
     }
   }
-
+  
   /**
-   * Elimina un puesto
+   * Elimina un puesto por su ID
    * @param id - ID del puesto a eliminar
    */
   async function deletePuesto(id: number) {
-    isLoading.value = true;
-    error.value = null;
+    if (!id) {
+      error.value = 'Se requiere un ID válido para eliminar un puesto';
+      toast.error(error.value);
+      throw new Error(error.value);
+    }
     
     try {
-      const success = await puestoService.delete(id);
+      isLoading.value = true;
+      error.value = null;
       
-      if (success) {
-        console.log(`Eliminación exitosa del puesto ID ${id}, actualizando estado local`);
-        
-        // Eliminar del array
-        const puestoEliminado = puestos.value.find(p => p.puestoId === id);
+      // Eliminar puesto mediante el servicio
+      const resultado = await puestoService.delete(id);
+      
+      // Si se eliminó correctamente, quitar de la lista
+      if (resultado) {
         puestos.value = puestos.value.filter(p => p.puestoId !== id);
         
-        // Limpiar puesto actual si es el mismo
-        if (currentPuesto.value && currentPuesto.value.puestoId === id) {
+        // Si el puesto actual es el eliminado, resetear
+        if (currentPuesto.value?.puestoId === id) {
           currentPuesto.value = null;
         }
         
-        // Registrar para depuración
-        console.log(`Puesto ID ${id} eliminado del store. Nombre: ${puestoEliminado?.puestoNombre}`);
-        console.log(`Quedan ${puestos.value.length} puestos en el store`);
-      } else {
-        console.warn(`La operación de eliminación para el puesto ID ${id} no fue exitosa`);
+        // Mostrar notificación de éxito
+        toast.success('Puesto eliminado correctamente');
       }
       
-      return success;
+      return resultado;
     } catch (err: any) {
-      console.error(`Error al eliminar puesto ID ${id}:`, err);
       error.value = err.message || `Error al eliminar el puesto con ID ${id}`;
-      return false;
+      toast.error(error.value);
+      console.error(`Error en deletePuesto(${id}):`, err);
+      throw err;
     } finally {
       isLoading.value = false;
     }
   }
-
+  
   /**
    * Resetea el estado del store
    */
@@ -218,25 +287,35 @@ export const usePuestosStore = defineStore('puestos', () => {
     currentPuesto.value = null;
     error.value = null;
     isLoading.value = false;
+    paginationInfo.value = {
+      pageNumber: 1,
+      pageSize: 10,
+      totalCount: 0,
+      totalPages: 0,
+      hasPreviousPage: false,
+      hasNextPage: false
+    };
   }
-
-  return {
+  
+  // Exponer estado y métodos
+  return { 
     // Estado
-    puestos,
-    isLoading,
-    error,
+    puestos, 
+    isLoading, 
+    error, 
     currentPuesto,
+    paginationInfo,
     
     // Getters
-    getPuestoById,
+    getPuestoById, 
     getPuestosActivos,
     
     // Acciones
-    fetchPuestos,
-    fetchPuestoById,
-    createPuesto,
-    updatePuesto,
-    deletePuesto,
-    resetState
+    fetchPuestos, 
+    fetchPuestoById, 
+    createPuesto, 
+    updatePuesto, 
+    deletePuesto, 
+    resetState 
   };
 });

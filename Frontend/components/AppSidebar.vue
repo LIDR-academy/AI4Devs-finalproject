@@ -257,7 +257,6 @@
           <div
             v-if="!collapsed && expandedSections.catalogs"
             class="pb-2 mt-1 ml-8 space-y-1 sidebar-submenu"
-            style="max-height: 300px; overflow-y: auto"
           >
             <!-- Grupo: Entidades -->
             <div class="mb-3">
@@ -304,11 +303,22 @@
                 class="flex items-center text-sm sidebar-item"
                 :class="{ active: route && route.path === '/catalogs/puestos' }"
               >
-                <UserGroupIcon
+                <WrenchScrewdriverIcon
                   class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
                 />
                 Puestos
               </NuxtLink>
+              <NuxtLink
+                to="/catalogs/perfiles"
+                class="flex items-center text-sm sidebar-item"
+                :class="{ active: route && route.path === '/catalogs/perfiles' }"
+              >
+                <UserIcon
+                  class="mr-2 w-4 h-4 text-gray-500 dark:text-gray-400"
+                />
+                Perfiles
+              </NuxtLink>
+
             </div>
 
             <!-- Grupo: Tipos -->
@@ -394,7 +404,6 @@
 
           <!-- Usuarios -->
           <NuxtLink
-            v-if="authStore.isAdmin || authStore.isManager"
             to="/users"
             class="flex items-center sidebar-item"
             :class="{ active: route && route.path && route.path.startsWith('/users') }"
@@ -477,6 +486,7 @@ import {
   ShoppingBagIcon,
   WrenchScrewdriverIcon,
   TagIcon,
+  UserIcon,
 } from "@heroicons/vue/24/outline";
 
 interface Props {

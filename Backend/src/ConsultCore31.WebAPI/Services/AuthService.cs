@@ -13,8 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-using StackExchange.Redis;
-
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -424,13 +422,13 @@ public class AuthService : IAuthService
 
             // Lista para almacenar los roles del usuario
             List<string> roles = new List<string>();
-            
+
             // try
             // {
             //     // Intentar obtener los roles del usuario
             //     roles = (await _userManager.GetRolesAsync(user)).ToList();
             // }
-            // catch (Exception roleEx) when (roleEx.Message.Contains("AspNetUserRoles") || 
+            // catch (Exception roleEx) when (roleEx.Message.Contains("AspNetUserRoles") ||
             //                               roleEx.InnerException?.Message?.Contains("AspNetUserRoles") == true)
             // {
             //     // Si hay un error específico con la tabla AspNetUserRoles, lo manejamos

@@ -1,14 +1,12 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ConsultCore31.Application.DTOs.Perfil
 {
     /// <summary>
-    /// DTO para la entidad Perfil
+    /// DTO para la creación de un perfil
     /// </summary>
-    public class PerfilDto
+    public class CreatePerfilDto
     {
-        public int Id { get; set; }
-
         [Required(ErrorMessage = "El nombre del perfil es requerido")]
         [StringLength(100, ErrorMessage = "El nombre del perfil no puede exceder los 100 caracteres")]
         public string Nombre { get; set; } = string.Empty;

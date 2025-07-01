@@ -1,5 +1,6 @@
 /**
  * Servicio para gestionar los puestos
+ * Este servicio maneja todas las operaciones CRUD para la entidad Puesto
  */
 import { apiClient } from './api';
 
@@ -37,7 +38,7 @@ interface PuestoParams {
   pageSize?: number;
   search?: string;
   activo?: boolean;
-  includeInactive?: boolean; // Nuevo parámetro para incluir puestos inactivos
+  includeInactive?: boolean; // Parámetro para incluir puestos inactivos
   sortBy?: string;
   sortDirection?: string;
 }
@@ -60,26 +61,22 @@ export const puestoService = {
       };
     }
     
-    console.log('Datos originales de la API:', puestoAPI);
-    
     // Mapear propiedades del formato API al formato frontend
-    // Manejar posibles variaciones en la estructura de datos
     const puesto: Puesto = {
-      // Manejar tanto formato PascalCase como formato sin prefijo
+      // Manejar tanto formato PascalCase como camelCase
       puestoId: puestoAPI.puestoId || puestoAPI.PuestoId || puestoAPI.id || null,
       puestoNombre: puestoAPI.puestoNombre || puestoAPI.PuestoNombre || puestoAPI.nombre || '',
       puestoDescripcion: puestoAPI.puestoDescripcion || puestoAPI.PuestoDescripcion || puestoAPI.descripcion || '',
       puestoActivo: puestoAPI.puestoActivo !== undefined ? puestoAPI.puestoActivo : 
                    puestoAPI.PuestoActivo !== undefined ? puestoAPI.PuestoActivo :
                    puestoAPI.activo !== undefined ? puestoAPI.activo : true,
-      fechaCreacion: puestoAPI.fechaCreacion || puestoAPI.FechaCreacion || puestoAPI.fechaCreacion,
+      fechaCreacion: puestoAPI.fechaCreacion || puestoAPI.FechaCreacion || null,
       fechaModificacion: puestoAPI.fechaModificacion || puestoAPI.FechaModificacion || null
     };
     
     // Asegurar que puestoActivo sea booleano
     puesto.puestoActivo = Boolean(puesto.puestoActivo);
     
-    console.log('Puesto transformado a formato frontend:', puesto);
     return puesto;
   },
   
@@ -95,7 +92,7 @@ export const puestoService = {
       return {};
     }
     
-    // Mapear propiedades del formato frontend al formato API sin prefijo
+    // Mapear propiedades del formato frontend al formato API
     const puestoAPI = {
       id: puesto.puestoId,
       nombre: puesto.puestoNombre || '',
@@ -103,118 +100,120 @@ export const puestoService = {
       activo: Boolean(puesto.puestoActivo)
     };
     
-    console.log('Puesto transformado a formato API:', puestoAPI);
     return puestoAPI;
   },
+
   /**
    * Obtiene todos los puestos
    * @param params - Parámetros de filtrado y paginación
-   * @returns Lista de puestos
+   * @returns Lista de puestos paginada
    */
   async getAll(params?: PuestoParams): Promise<PaginatedResponse<Puesto>> {
     try {
-
-            let endpoint = params?.includeInactive ? '/v1/TiposProyecto/all' : '/v1/TiposProyecto';
-
-      console.log('Obteniendo todos los puestos con parámetros:', params);
+      // Usar el endpoint que devuelve todos los puestos
+      const endpoint = '/v1/Puestos/all';
       
-      // Construir query string para filtros
+      // Construir query string para filtros adicionales si es necesario
       const queryParams = new URLSearchParams();
+      
+      // Añadir el parámetro includeInactive siempre como true para obtener todos los puestos
+      queryParams.append('includeInactive', 'true');
+      
+      // Añadir timestamp para evitar caché
+      queryParams.append('_ts', Date.now().toString());
       
       if (params) {
         // Añadir parámetros de paginación
         if (params.page !== undefined) queryParams.append('page', params.page.toString());
         if (params.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
         
-        // Añadir parámetros de filtrado
+        // Añadir parámetros de búsqueda
         if (params.search) queryParams.append('search', params.search);
-        
-        // Importante: Solo añadir el parámetro activo si no queremos incluir inactivos
-        // Si params.includeInactive es true, no enviamos el parámetro activo para traer todos
-        if (params.activo !== undefined && !params.includeInactive) {
-          queryParams.append('activo', params.activo.toString());
-        }
         
         // Añadir parámetros de ordenación
         if (params.sortBy) queryParams.append('sortBy', params.sortBy);
         if (params.sortDirection) queryParams.append('sortDirection', params.sortDirection);
-      }
-      
-      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-      
-      const response = await apiClient.get<ApiResponse<Puesto[]> | Puesto[]>(`${endpoint}${queryString}`);
-      
-      console.log('Respuesta completa de getAll:', response);
-      
-      // Si la respuesta es null o undefined
-      if (!response) {
-        console.error('La respuesta de getAll es null o undefined');
-        throw new Error('No se pudieron obtener los puestos');
-      }
-      
-      // Determinar dónde están los datos en la respuesta
-      let datosRespuesta: any = null;
-      let items: any[] = [];
-      
-      console.log('Tipo de respuesta:', Array.isArray(response) ? 'Array' : typeof response);
-      
-      if (Array.isArray(response)) {
-        // La API devolvió un array directamente
-        console.log('La API devolvió un array directamente:', response);
-        items = response;
         
-        // Crear una estructura de respuesta paginada simulada
-        datosRespuesta = {
-          items: response,
-          pageNumber: 1,
-          pageSize: response.length,
-          totalCount: response.length,
-          totalPages: 1,
-          hasPreviousPage: false,
-          hasNextPage: false
-        };
-      } else if (response.items !== undefined) {
-        // Respuesta directa como lista paginada
-        datosRespuesta = response;
-        items = response.items;
-      } else if (response.data && response.data.items !== undefined) {
-        // Respuesta con estructura ApiResponse
-        datosRespuesta = response.data;
-        items = response.data.items;
-      } else if (response.data && response.data.data && response.data.data.items !== undefined) {
-        // Respuesta con estructura anidada
-        datosRespuesta = response.data.data;
-        items = response.data.data.items;
-      } else {
-        console.error('La respuesta de getAll tiene un formato inesperado:', response);
-        throw new Error('Formato de respuesta inesperado al obtener puestos');
+        // Si hay un parámetro _ts en params, usarlo (viene del store con forceRefresh)
+        if (params._ts) queryParams.append('_ts', params._ts.toString());
       }
       
-      // Transformar los items de la respuesta al formato del frontend
-      const itemsTransformados = items.map((item: any) => this.transformarPuestoAFormatoFrontend(item));
+      // Construir URL completa
+      const url = `${endpoint}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       
-      // Construir la respuesta paginada con los items transformados
-      const respuestaPaginada: PaginatedResponse<Puesto> = {
-        items: itemsTransformados,
-        pageNumber: datosRespuesta.pageNumber,
-        pageSize: datosRespuesta.pageSize,
-        totalCount: datosRespuesta.totalCount,
-        totalPages: datosRespuesta.totalPages,
-        hasPreviousPage: datosRespuesta.hasPreviousPage,
-        hasNextPage: datosRespuesta.hasNextPage
+      console.log('Realizando petición GET a:', url);
+      
+      // Realizar petición a la API con headers para evitar caché
+      const response = await apiClient.get<any>(url, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      // Verificar la estructura de la respuesta
+      console.log('Estructura de respuesta:', response);
+      
+      // Manejar diferentes estructuras de respuesta posibles
+      let items = [];
+      let paginationInfo = {
+        pageNumber: 1,
+        pageSize: 10,
+        totalCount: 0,
+        totalPages: 1,
+        hasPreviousPage: false,
+        hasNextPage: false
       };
       
-      console.log('Respuesta paginada transformada:', respuestaPaginada);
-      return respuestaPaginada;
-    } catch (error: any) {
-      // Propagar errores de autenticación (401)
-      if (error.response && error.response.status === 401) {
-        console.warn('Error de autenticación en puestoService.getAll');
-        throw error;
+      // Si la respuesta es un objeto con propiedad 'items'
+      if (response && response.items && Array.isArray(response.items)) {
+        items = response.items;
+        paginationInfo = {
+          pageNumber: response.pageNumber || 1,
+          pageSize: response.pageSize || 10,
+          totalCount: response.totalCount || 0,
+          totalPages: response.totalPages || 1,
+          hasPreviousPage: response.hasPreviousPage || false,
+          hasNextPage: response.hasNextPage || false
+        };
+      } 
+      // Si la respuesta es un objeto con propiedad 'data' que contiene los items
+      else if (response && response.data && Array.isArray(response.data)) {
+        items = response.data;
+        // Intentar extraer información de paginación si existe
+        if (response.pageNumber !== undefined) {
+          paginationInfo = {
+            pageNumber: response.pageNumber,
+            pageSize: response.pageSize || 10,
+            totalCount: response.totalCount || 0,
+            totalPages: response.totalPages || 1,
+            hasPreviousPage: response.hasPreviousPage || false,
+            hasNextPage: response.hasNextPage || false
+          };
+        }
+      }
+      // Si la respuesta es directamente un array
+      else if (Array.isArray(response)) {
+        items = response;
       }
       
-      console.error('Error al obtener todos los puestos:', error);
-      throw error; // Propagar el error para manejarlo en el componente
+      // Transformar datos recibidos al formato frontend
+      const puestos = items.map(item => this.transformarPuestoAFormatoFrontend(item));
+      
+      // Devolver respuesta paginada con los puestos transformados
+      return {
+        items: puestos,
+        pageNumber: paginationInfo.pageNumber,
+        pageSize: paginationInfo.pageSize,
+        totalCount: paginationInfo.totalCount,
+        totalPages: paginationInfo.totalPages,
+        hasPreviousPage: paginationInfo.hasPreviousPage,
+        hasNextPage: paginationInfo.hasNextPage
+      };
+    } catch (error) {
+      console.error('Error al obtener puestos:', error);
+      throw error;
     }
   },
 
@@ -225,26 +224,25 @@ export const puestoService = {
    */
   async getById(id: number): Promise<Puesto | null> {
     try {
-      console.log(`Obteniendo puesto con ID ${id}`);
+      if (!id) {
+        throw new Error('Se requiere un ID válido para obtener un puesto');
+      }
       
       const response = await apiClient.get<ApiResponse<any> | any>(`/v1/Puestos/${id}`);
       
-      console.log(`Respuesta completa para ID ${id}:`, response);
-      
-      // Si la respuesta es null o undefined
-      if (!response) {
-        console.error(`No se encontró puesto con ID ${id}`);
-        return null;
+      // Extraer datos según la estructura de la respuesta
+      let datosRespuesta;
+      if (response.data !== undefined) {
+        datosRespuesta = response.data;
+      } else {
+        datosRespuesta = response;
       }
       
-      // Transformar la respuesta del backend al formato del frontend
-      const puestoEncontrado = this.transformarPuestoAFormatoFrontend(response);
-      
-      console.log('Puesto transformado para el frontend:', puestoEncontrado);
-      return puestoEncontrado;
+      // Transformar a formato frontend
+      return this.transformarPuestoAFormatoFrontend(datosRespuesta);
     } catch (error) {
-      console.error(`Error al obtener puesto con ID ${id}:`, error);
-      throw error; // Propagar el error para manejarlo en el componente
+      console.error(`Error al obtener puesto ID ${id}:`, error);
+      throw error;
     }
   },
 
@@ -255,39 +253,36 @@ export const puestoService = {
    */
   async create(puesto: Puesto): Promise<Puesto> {
     try {
-      console.log('Creando puesto:', puesto);
-      const puestoAPI = this.transformarPuestoAFormatoAPI(puesto);
-      console.log('Datos enviados a la API:', puestoAPI);
+      console.log('Creando nuevo puesto:', puesto);
       
-      const response = await apiClient.post<ApiResponse<any> | any>('/v1/Puestos', puestoAPI);
-      console.log('Respuesta de la API (create):', response);
+      // Transformar a formato API
+      const puestoAPI = this.transformarPuestoAFormatoAPI(puesto);
+      
+      // Realizar petición a la API con headers para evitar caché
+      const response = await apiClient.post<ApiResponse<any> | any>(`/v1/Puestos?_ts=${Date.now()}`, puestoAPI, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      console.log('Respuesta de creación de puesto:', response);
       
       // Extraer datos según la estructura de la respuesta
       let datosRespuesta;
       if (response.data !== undefined) {
         datosRespuesta = response.data;
-        console.log('Usando response.data para obtener datos');
-      } else if (response.result !== undefined) {
-        datosRespuesta = response.result;
-        console.log('Usando response.result para obtener datos');
       } else {
         datosRespuesta = response;
-        console.log('Usando response directamente para obtener datos');
-      }
-      
-      // Verificar que tenemos datos válidos
-      if (!datosRespuesta) {
-        console.error('No se pudieron extraer datos de la respuesta:', response);
-        throw new Error('La respuesta de la API no contiene datos válidos');
       }
       
       // Transformar a formato frontend
-      const puestoCreado = this.transformarPuestoAFormatoFrontend(datosRespuesta);
-      console.log('Puesto creado (transformado):', puestoCreado);
-      
-      return puestoCreado;
+      const nuevoPuesto = this.transformarPuestoAFormatoFrontend(datosRespuesta);
+      console.log('Nuevo puesto transformado:', nuevoPuesto);
+      return nuevoPuesto;
     } catch (error) {
-      console.error('Error en puestoService.create:', error);
+      console.error('Error al crear puesto:', error);
       throw error;
     }
   },
@@ -305,39 +300,36 @@ export const puestoService = {
       }
       
       console.log(`Actualizando puesto ID ${id}:`, puesto);
-      const puestoAPI = this.transformarPuestoAFormatoAPI(puesto);
-      console.log('Datos enviados a la API:', puestoAPI);
       
-      const response = await apiClient.put<ApiResponse<any> | any>(`/v1/Puestos/${id}`, puestoAPI);
-      console.log('Respuesta de la API (update):', response);
+      // Transformar a formato API
+      const puestoAPI = this.transformarPuestoAFormatoAPI(puesto);
+      
+      // Realizar petición a la API con headers para evitar caché
+      const response = await apiClient.put<ApiResponse<any> | any>(`/v1/Puestos/${id}?_ts=${Date.now()}`, puestoAPI, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      console.log(`Respuesta de actualización para puesto ID ${id}:`, response);
       
       // Extraer datos según la estructura de la respuesta
       let datosRespuesta;
       if (response.data !== undefined) {
         datosRespuesta = response.data;
-        console.log('Usando response.data para obtener datos');
-      } else if (response.result !== undefined) {
-        datosRespuesta = response.result;
-        console.log('Usando response.result para obtener datos');
       } else {
         datosRespuesta = response;
-        console.log('Usando response directamente para obtener datos');
-      }
-      
-      // Verificar que tenemos datos válidos
-      if (!datosRespuesta) {
-        console.error('No se pudieron extraer datos de la respuesta:', response);
-        throw new Error('La respuesta de la API no contiene datos válidos');
       }
       
       // Transformar a formato frontend
       const puestoActualizado = this.transformarPuestoAFormatoFrontend(datosRespuesta);
-      console.log('Puesto actualizado (transformado):', puestoActualizado);
+      console.log('Puesto actualizado transformado:', puestoActualizado);
       return puestoActualizado;
-      
     } catch (error) {
-      console.error('Error al actualizar puesto:', error);
-      throw error; // Propagar el error para manejarlo en el componente
+      console.error(`Error al actualizar puesto ID ${id}:`, error);
+      throw error;
     }
   },
 
@@ -348,52 +340,18 @@ export const puestoService = {
    */
   async delete(id: number): Promise<boolean> {
     try {
-      console.log(`Eliminando puesto con ID ${id}`);
-      
-      // El backend espera el ID en el formato correcto
-      const response = await apiClient.delete<ApiResponse<boolean> | boolean>(`/v1/Puestos/${id}`);
-      
-      console.log(`Respuesta completa de eliminación para ID ${id}:`, response);
-      
-      // Si la respuesta es null o undefined, consideramos que la operación fue exitosa
-      // ya que muchas APIs devuelven 204 No Content para eliminaciones exitosas
-      if (!response || Object.keys(response).length === 0) {
-        console.log(`Eliminación exitosa (204 No Content) para ID ${id}`);
-        return true;
+      if (!id) {
+        throw new Error('Se requiere un ID válido para eliminar un puesto');
       }
       
-      // Si la respuesta es directamente un booleano
-      if (typeof response === 'boolean') {
-        console.log(`La API devolvió directamente un booleano para ID ${id}:`, response);
-        return response;
-      }
+      // Realizar petición a la API
+      await apiClient.delete<ApiResponse<boolean> | boolean>(`/v1/Puestos/${id}`);
       
-      // Si la respuesta tiene una propiedad data que es un booleano
-      if (response.data !== undefined && typeof response.data === 'boolean') {
-        console.log(`La API devolvió un objeto con propiedad data para ID ${id}:`, response.data);
-        return response.data;
-      }
-      
-      // Si la respuesta tiene una estructura anidada
-      if (response.data && response.data.data !== undefined && typeof response.data.data === 'boolean') {
-        console.log(`La API devolvió un objeto anidado para ID ${id}:`, response.data.data);
-        return response.data.data;
-      }
-      
-      // Si llegamos aquí, la respuesta tiene un formato inesperado pero consideramos que fue exitosa
-      console.warn(`La respuesta para ID ${id} tiene un formato inesperado, asumiendo éxito:`, response);
-      // Asumimos éxito por defecto para evitar falsos negativos
+      // Si no hay error, consideramos que la operación fue exitosa
       return true;
-    } catch (error: any) {
-      console.error(`Error al eliminar puesto con ID ${id}:`, error);
-      
-      // Si es un error 401, propagarlo para que sea manejado por el interceptor global
-      if (error.response && error.response.status === 401) {
-        throw error;
-      }
-      
-      // Para otros errores, lanzar una excepción con mensaje descriptivo
-      throw new Error(error.message || `Error al eliminar el puesto con ID ${id}`);
+    } catch (error) {
+      console.error(`Error al eliminar puesto ID ${id}:`, error);
+      throw error;
     }
   }
 };

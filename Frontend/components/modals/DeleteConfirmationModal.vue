@@ -6,7 +6,7 @@
           Confirmar eliminación
         </h2>
         <p class="mb-6 text-gray-700 dark:text-gray-300">
-          ¿Está seguro que desea eliminar el puesto "{{ itemName }}"? Esta acción no se puede deshacer.
+          ¿Está seguro que desea eliminar "{{ itemName }}"? Esta acción no se puede deshacer.
         </p>
         
         <div class="flex justify-end space-x-3">

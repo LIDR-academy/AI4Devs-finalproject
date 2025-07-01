@@ -116,7 +116,7 @@ public class Usuario : IdentityUser<int>
     public override string? Email { get; set; }
 
     [Column("usuarioMovil")]
-    [MaxLength(15)]
+    [MaxLength(20)]
     public override string? PhoneNumber { get; set; }
 
     [Column("passwordHash")]
@@ -136,6 +136,23 @@ public class Usuario : IdentityUser<int>
 
     [Column("accessFailedCount")]
     public override int AccessFailedCount { get; set; }
+
+    [Column("NormalizedUserName")]
+    [MaxLength(200)]
+    public override string? NormalizedUserName { get; set; }
+
+    [Column("NormalizedEmail")]
+    [MaxLength(200)]
+    public override string? NormalizedEmail { get; set; }
+
+    [Column("EmailConfirmed")]
+    public override bool EmailConfirmed { get; set; }
+
+    [Column("PhoneNumberConfirmed")]
+    public override bool PhoneNumberConfirmed { get; set; }
+
+    [Column("TwoFactorEnabled")]
+    public override bool TwoFactorEnabled { get; set; }
 
     #endregion Propiedades de Identity mapeadas a columnas personalizadas
 
