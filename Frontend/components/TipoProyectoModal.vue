@@ -135,7 +135,7 @@
 
 <script setup>
 import { ref, reactive, watch } from 'vue';
-import { useToast } from '@/composables/useToast';
+import { useToast } from '../composables/useToast';
 
 // Props
 const props = defineProps({

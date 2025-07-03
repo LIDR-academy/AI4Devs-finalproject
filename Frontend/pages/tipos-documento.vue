@@ -161,7 +161,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../composables/useToast';
 import TipoDocumentoTable from '~/components/TipoDocumentoTable.vue';
 
 // Servicios

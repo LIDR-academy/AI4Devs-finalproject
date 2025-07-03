@@ -314,7 +314,7 @@ import { ref, computed, onMounted } from "vue";
 import { usePuestosStore } from "../../stores/puestos";
 import PuestoModal from "../../components/PuestoModal.vue";
 import DeleteConfirmationModal from "../../components/modals/DeleteConfirmationModal.vue";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 
 // Composables
 const puestosStore = usePuestosStore();

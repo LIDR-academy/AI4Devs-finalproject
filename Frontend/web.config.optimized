@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <system.webServer>
+    <!-- Eliminar tipos MIME duplicados -->
+    <remove fileExtension=".json" />
+    <remove fileExtension=".woff" />
+    <remove fileExtension=".woff2" />
+    
+    <!-- Configurar tipos MIME -->
+    <staticContent>
+      <mimeMap fileExtension=".json" mimeType="application/json" />
+      <mimeMap fileExtension=".woff" mimeType="application/font-woff" />
+      <mimeMap fileExtension=".woff2" mimeType="application/font-woff2" />
+    </staticContent>
+    
+    <!-- Reglas de reescritura para SPA -->
+    <rewrite>
+      <rules>
+        <!-- No reescribir solicitudes a archivos o carpetas existentes -->
+        <rule name="StaticContent" stopProcessing="true">
+          <match url="^(.*)$" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="false" />
+          </conditions>
+          <action type="None" />
+        </rule>
+        
+        <!-- No reescribir solicitudes a la carpeta _nuxt -->
+        <rule name="NuxtStatic" stopProcessing="true">
+          <match url="^_nuxt/(.*)$" />
+          <action type="None" />
+        </rule>
+        
+        <!-- Reescribir todas las demás solicitudes a index.html -->
+        <rule name="SPA" stopProcessing="true">
+          <match url="^(.*)$" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="index.html" />
+        </rule>
+      </rules>
+      
+      <!-- Configuración de salida para asegurar que las URLs se muestren correctamente -->
+      <outboundRules>
+        <rule name="AdjustHtml" preCondition="IsHtml" stopProcessing="false">
+          <match filterByTags="None" pattern="/_nuxt/" />
+          <action type="Rewrite" value="/consultcore/_nuxt/" />
+        </rule>
+        <preConditions>
+          <preCondition name="IsHtml">
+            <add input="{RESPONSE_CONTENT_TYPE}" pattern="^text/html" />
+          </preCondition>
+        </preConditions>
+      </outboundRules>
+    </rewrite>
+    
+    <!-- Configuración de errores personalizados -->
+    <httpErrors errorMode="Custom" existingResponse="Replace">
+      <remove statusCode="404" />
+      <error statusCode="404" path="/consultcore/index.html" responseMode="ExecuteURL" />
+    </httpErrors>
+  </system.webServer>
+</configuration>

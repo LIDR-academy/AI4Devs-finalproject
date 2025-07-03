@@ -5,7 +5,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { Puesto, puestoService } from '../services/puestoService';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../composables/useToast';
 
 // Interfaz para los parámetros de filtrado y paginación
 interface PuestoParams {

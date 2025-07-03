@@ -344,7 +344,7 @@ import {
   PlusIcon,
   ChartBarIcon,
 } from "@heroicons/vue/24/outline";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 import { tipoKPIService } from "~/services/tipoKPIService.ts";
 import TipoKPIModal from "~/components/TipoKPIModal.vue";
 import DeleteConfirmationModal from "~/components/DeleteConfirmationModal.vue";

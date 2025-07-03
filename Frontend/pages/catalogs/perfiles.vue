@@ -276,7 +276,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch, nextTick } from "vue";
 import { usePerfilesStore } from "../../stores/perfiles";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 import PerfilModal from "../../components/PerfilModal.vue";
 import ConfirmDeleteModal from "../../components/ConfirmDeleteModal.vue";
 

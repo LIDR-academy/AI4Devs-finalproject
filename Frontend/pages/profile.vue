@@ -293,7 +293,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../composables/useToast';
 import { useAuthStore } from '~/stores/auth';
 import { useSettingsStore } from '~/stores/settings';
 import {

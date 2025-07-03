@@ -38,7 +38,7 @@
 // Importaciones
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import { useToast } from 'vue-toastification'
+import { useToast } from '../composables/useToast';
 
 // Definir metadatos de la página
 definePageMeta({

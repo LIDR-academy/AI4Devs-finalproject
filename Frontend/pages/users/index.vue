@@ -796,7 +796,7 @@ import {
   CreateUsuarioDto,
   UpdateUsuarioDto,
 } from "../../services/usuarioService";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 import { useRouter } from "vue-router";
 
 // Stores y servicios

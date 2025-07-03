@@ -1,7 +1,11 @@
 <template>
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+  <div>
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
+    <!-- Componente de notificaciones Notivue -->
+    <NotivueWrapper />
+  </div>
 </template>
 
 <script setup>

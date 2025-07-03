@@ -352,7 +352,7 @@ import {
   PlusIcon,
   DocumentIcon,
 } from "@heroicons/vue/24/outline";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 // Importación directa para evitar problemas de compilación
 import { documentTypeService } from "~/services/documentTypeService.ts";
 import DocumentTypeModal from "~/components/DocumentTypeModal.vue";

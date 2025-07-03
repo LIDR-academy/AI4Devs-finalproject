@@ -3,7 +3,7 @@
  */
 import { defineStore } from 'pinia';
 import { usuarioService, UsuarioDto, CreateUsuarioDto, UpdateUsuarioDto } from '../services/usuarioService';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../composables/useToast';
 
 // Interfaz para el estado del store
 interface UsuariosState {
@@ -78,12 +78,14 @@ export const useUsuariosStore = defineStore('usuarios', {
         else {
           console.error('Estructura de respuesta inesperada:', response);
           this.error = 'Error al cargar usuarios: Estructura de respuesta inesperada';
+          const toast = useToast();
           toast.error('Error al cargar la lista de usuarios');
           return [];
         }
       } catch (error) {
         console.error('Error al cargar usuarios:', error);
         this.error = `Error al cargar usuarios: ${error instanceof Error ? error.message : 'Error desconocido'}`;
+        const toast = useToast();
         toast.error('Error al cargar la lista de usuarios');
         return [];
       } finally {
@@ -151,11 +153,12 @@ export const useUsuariosStore = defineStore('usuarios', {
             this.usuarios.push(response.data);
             return response.data;
           } 
-          // Si la respuesta tiene la estructura esperada con data.data
-          else if (response.data.data) {
+          // Si la respuesta tiene una estructura anidada (data dentro de data)
+          else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
             // Añadir el nuevo usuario a la lista
-            this.usuarios.push(response.data.data);
-            return response.data.data;
+            const usuarioData = response.data.data as UsuarioDto;
+            this.usuarios.push(usuarioData);
+            return usuarioData;
           } 
           else {
             console.error('Estructura de respuesta inesperada:', response);
@@ -209,20 +212,21 @@ export const useUsuariosStore = defineStore('usuarios', {
             
             return response.data;
           } 
-          // Si la respuesta tiene la estructura esperada con data.data
-          else if (response.data.data) {
+          // Si la respuesta tiene una estructura anidada (data dentro de data)
+          else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
             // Actualizar el usuario en la lista
+            const usuarioData = response.data.data as UsuarioDto;
             const index = this.usuarios.findIndex(u => u.id === id);
             if (index !== -1) {
-              this.usuarios[index] = response.data.data;
+              this.usuarios[index] = usuarioData;
             }
             
             // Actualizar el usuario actual si es el mismo
             if (this.usuarioActual && this.usuarioActual.id === id) {
-              this.usuarioActual = response.data.data;
+              this.usuarioActual = usuarioData;
             }
             
-            return response.data.data;
+            return usuarioData;
           } 
           else {
             console.error('Estructura de respuesta inesperada:', response);
@@ -325,7 +329,7 @@ export const useUsuariosStore = defineStore('usuarios', {
           const response = await usuarioService.updateUsuario(id, updateData);
           
           // Verificar si la respuesta tiene la estructura esperada
-          if (response) {
+          if (response && response.data) {
             // Actualizar el estado del usuario en la lista
             const index = this.usuarios.findIndex(u => u.id === id);
             if (index !== -1) {
@@ -338,8 +342,7 @@ export const useUsuariosStore = defineStore('usuarios', {
               this.usuarioActual.activo = activo;
             }
             
-            const mensaje = activo ? 'Usuario activado correctamente' : 'Usuario desactivado correctamente';
-            toast.success(mensaje);
+            toast.success(activo ? 'Usuario activado correctamente' : 'Usuario desactivado correctamente');
             mensajeMostrado = true;
             return true;
           }

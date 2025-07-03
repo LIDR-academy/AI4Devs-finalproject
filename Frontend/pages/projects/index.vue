@@ -382,7 +382,7 @@ import {
   TrashIcon,
 } from "@heroicons/vue/24/outline";
 import { useProjectStore } from "~/stores/projects";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 
 const toast = useToast();
 const projectStore = useProjectStore();

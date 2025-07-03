@@ -1,7 +1,7 @@
 // perfiles.ts
 import { defineStore } from 'pinia';
 import perfilService, { PerfilDto, PerfilFilterParams, PaginatedResponse, CreatePerfilDto, UpdatePerfilDto } from '../services/perfilService';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../composables/useToast';
 
 const toast = useToast();
 

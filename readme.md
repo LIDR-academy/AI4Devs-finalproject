@@ -783,3 +783,50 @@ Este PR establece la arquitectura base del proyecto, incluyendo la estructura de
 
 **Pull Request 3**
 
+---
+
+## 8. Pendientes de implementación
+
+### **8.1. Backend**
+
+- [ ] Implementar endpoints para gestión de cronogramas y visualización Gantt
+- [ ] Desarrollar algoritmo de cálculo de ruta crítica para proyectos
+- [ ] Crear sistema de notificaciones para tareas próximas a vencer
+- [ ] Implementar validación de dependencias entre tareas
+- [ ] Desarrollar endpoints para generación automática de informes semanales
+- [ ] Implementar procedimientos almacenados para reportes financieros
+- [ ] Crear triggers para auditoría de cambios en aprobaciones de gastos
+- [ ] Completar pruebas unitarias para servicios y repositorios
+- [ ] Implementar pruebas de integración para endpoints
+- [ ] Actualizar documentación Swagger para todos los endpoints
+
+### **8.2. Frontend**
+
+- [ ] Desarrollar componente Vue para visualización Gantt interactiva
+- [ ] Implementar interfaz Kanban para gestión de tareas con drag-and-drop
+- [ ] Crear vista de calendario con tareas asignadas
+- [ ] Desarrollar dashboard personalizado para consultores
+- [ ] Implementar sistema de notificaciones para tareas y aprobaciones
+- [ ] Crear vista simplificada de cronogramas para clientes
+- [ ] Desarrollar interfaz para registro y seguimiento de gastos
+- [ ] Implementar generación de reportes y exportación a Excel
+- [ ] Crear dashboard con KPIs clave y visualización de tendencias
+- [ ] Completar pruebas unitarias y E2E para componentes principales
+
+### **8.3. Infraestructura**
+
+- [ ] Configurar Docker para desarrollo y producción
+- [ ] Implementar pipeline CI/CD con GitHub Actions
+- [ ] Configurar sistema de copias de seguridad automáticas
+- [ ] Implementar monitoreo de rendimiento y disponibilidad
+- [ ] Configurar entorno de pruebas automatizadas
+- [ ] Implementar sistema de logs centralizado
+
+### **8.4. Documentación**
+
+- [ ] Completar sección de diseño y experiencia de usuario
+- [ ] Añadir diagramas, capturas de pantalla y wireframes
+- [ ] Crear videotutoriales para funcionalidades principales
+- [ ] Desarrollar manual de usuario para clientes y consultores
+- [ ] Documentar procedimientos de instalación y despliegue
+- [ ] Completar URL o archivo comprimido del repositorio

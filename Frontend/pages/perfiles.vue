@@ -322,7 +322,7 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { usePerfilesStore } from "../stores/perfiles";
 import { useRoute } from "vue-router";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 import PerfilModal from "../components/PerfilModal.vue";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal.vue";
 

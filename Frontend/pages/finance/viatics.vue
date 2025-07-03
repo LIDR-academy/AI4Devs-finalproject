@@ -186,7 +186,7 @@ import {
 import { useFinanceStore } from "~/stores/finance";
 import { useProjectStore } from "~/stores/projects";
 import { useAuthStore } from "~/stores/auth";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 
 const financeStore = useFinanceStore();
 const projectStore = useProjectStore();

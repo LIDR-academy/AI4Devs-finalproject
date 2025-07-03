@@ -362,7 +362,7 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
 } from "@heroicons/vue/24/outline";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 import TipoMovimientoViaticoModal from "~/components/TipoMovimientoViaticoModal.vue";
 import ConfirmDeleteModal from "~/components/ConfirmDeleteModal.vue";
 import { tipoMovimientoViaticoService } from "~/services/tipoMovimientoViaticoService";

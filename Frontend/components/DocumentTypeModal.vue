@@ -256,7 +256,7 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../composables/useToast';
 import { documentTypeService } from '~/services/documentTypeService';
 
 // Props

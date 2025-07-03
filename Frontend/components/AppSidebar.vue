@@ -11,17 +11,17 @@
         <div
           class="flex justify-center items-center w-8 h-8 bg-gradient-to-br rounded-lg from-primary-500 to-primary-600"
         >
-          <span class="text-sm font-bold text-white">BGA</span>
+          <span class="text-sm font-bold text-white">3.1</span>
         </div>
         <span class="text-xl font-bold text-gray-900 dark:text-white"
-          >Business</span
+          >ConsultCore</span
         >
       </div>
       <div
         v-else
         class="flex justify-center items-center w-8 h-8 bg-gradient-to-br rounded-lg from-primary-500 to-primary-600"
       >
-        <span class="text-sm font-bold text-white">BGA</span>
+        <span class="text-sm font-bold text-white">CC</span>
       </div>
     </div>
 

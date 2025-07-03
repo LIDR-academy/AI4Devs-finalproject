@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 import { useProjectStore } from "~/stores/projects";
 
 // ✅ Definir todas las variables necesarias

@@ -370,7 +370,7 @@ import { useVuelidate } from "@vuelidate/core";
 import { required, email, maxLength, helpers } from "@vuelidate/validators";
 import { useUsuariosStore } from "../stores/usuarios";
 import { usePerfilesStore } from "../stores/perfiles";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 
 // Props
 const props = defineProps({

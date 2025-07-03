@@ -200,7 +200,7 @@
 
 <script setup>
 import { ref, reactive, watch, computed } from "vue";
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 
 // Props
 const props = defineProps({

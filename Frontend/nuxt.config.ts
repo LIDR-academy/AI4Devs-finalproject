@@ -1,32 +1,11 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+import { defineNuxtConfig } from 'nuxt/config';
+
 export default defineNuxtConfig({
-  experimental: {
-    // Deshabilitamos oxc-parser que está causando problemas
-    typescriptBundlerResolution: false
-  },
-  devtools: { enabled: true },
-  modules: [
-    "@nuxtjs/tailwindcss",
-    "@pinia/nuxt",
-    "@vueuse/nuxt",
-    "@nuxtjs/color-mode",
-  ],
-  css: [
-    "~/assets/css/main.css",
-    "vue-toastification/dist/index.css", // ← Línea 11 reescrita
-  ],
-  plugins: ["~/plugins/toastification.client.js"],
-  colorMode: {
-    preference: "light",
-    fallback: "light",
-    hid: "nuxt-color-mode-script",
-    globalName: "__NUXT_COLOR_MODE__",
-    componentName: "ColorScheme",
-    classPrefix: "",
-    classSuffix: "",
-    storageKey: "nuxt-color-mode",
-  },
+  compatibilityDate: '2025-07-01', // ✅ Movido al nivel raíz
   app: {
+    baseURL: '/consultcore/',
+    buildAssetsDir: '_nuxt/',
+    cdnURL: 'https://rrdeveloper.sytes.net/consultcore',
     head: {
       title: "ConsultCore 3:1",
       meta: [
@@ -52,15 +31,60 @@ export default defineNuxtConfig({
       ],
     },
   },
+  ssr: false,
+  nitro: {
+    // compatibilityDate removido de aquí
+    prerender: {
+      crawlLinks: true,
+      routes: [
+        '/',
+        '/login',
+        '/logout'
+      ]
+    },
+    publicAssets: [
+      {
+        baseURL: 'consultcore/_nuxt',
+        dir: '.nuxt/dist/client'
+      }
+    ]
+  },
+  experimental: {
+    typescriptBundlerResolution: false
+  },
+  devtools: { enabled: true },
+  modules: [
+    "@nuxtjs/tailwindcss",
+    "@pinia/nuxt",
+    "@vueuse/nuxt",
+    "@nuxtjs/color-mode",
+  ],
+  css: [
+    "~/assets/css/main.css",
+    "notivue/notification.css", // Estilos para el componente <Notification />
+    "notivue/animations.css", // Animaciones predeterminadas
+  ],
+  plugins: ["~/plugins/notivue.client.ts"],
+  colorMode: {
+    preference: "light",
+    fallback: "light",
+    hid: "nuxt-color-mode-script",
+    globalName: "__NUXT_COLOR_MODE__",
+    componentName: "ColorScheme",
+    classPrefix: "",
+    classSuffix: "",
+    storageKey: "nuxt-color-mode",
+  },  
   runtimeConfig: {
     public: {
-      apiBase: process.env.API_BASE || "/api",
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'https://rrdeveloper.sytes.net/consultoriaAPI/api',
+      authTokenKey: process.env.NUXT_PUBLIC_AUTH_TOKEN_KEY || 'auth-token',
     },
   },
-  
-  // Configuración para aplicar middleware de autenticación globalmente
+  // Las reglas de ruta deben configurarse de otra manera, ya que 'middleware' no es una propiedad válida en routeRules
+  // Configuración alternativa usando router middleware en app/router.options.ts
   routeRules: {
-    '/**': { middleware: ['auth'] },
-    '/login': { middleware: [] } // Excluir la página de login del middleware de autenticación
+    '/**': { },
+    '/login': { }
   },
 });

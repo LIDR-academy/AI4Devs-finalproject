@@ -196,7 +196,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { useToast } from 'vue-toastification'
+import { useToast } from '../composables/useToast';
 import { tipoKPIService } from '~/services/tipoKPIService.ts'
 
 // Props

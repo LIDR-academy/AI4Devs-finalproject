@@ -80,7 +80,7 @@
                   <li>El servidor backend está en ejecución</li>
                   <li>
                     La URL del servidor es correcta
-                    (http://localhost:5217/api)
+                    ({{ apiBaseUrl }})
                   </li>
                   <li>No hay problemas de red o firewall</li>
                 </ul>
@@ -312,11 +312,16 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useRuntimeConfig } from '#app';
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
 import TipoProyectoModal from '@/components/TipoProyectoModal.vue';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal.vue';
-import { useToast } from '@/composables/useToast';
+import { useToast } from '../composables/useToast';
 import { tipoProyectoService } from '@/services/tipoProyectoService';
+
+// Obtener configuración de runtime
+const config = useRuntimeConfig();
+const apiBaseUrl = config.public.apiUrl;
 
 // Toast para notificaciones
 const toast = useToast();
@@ -472,16 +477,35 @@ const fetchTiposProyecto = async (forceRefresh = false) => {
   connectionError.value = false;
   
   try {
+    console.log('Iniciando fetchTiposProyecto con URL base:', apiBaseUrl);
+    
+    // Verificar que el servicio existe y tiene el método getAll
+    if (!tipoProyectoService || typeof tipoProyectoService.getAll !== 'function') {
+      throw new Error('El servicio tipoProyectoService no está disponible o no tiene el método getAll');
+    }
+    
     // Obtener todos los tipos de proyecto (activos e inactivos) con opción de forzar actualización
     const data = await tipoProyectoService.getAll(forceRefresh, true);
     
+    // Verificar que data es un array
+    if (!Array.isArray(data)) {
+      console.warn('La respuesta no es un array:', data);
+      tiposProyecto.value = [];
+      return;
+    }
+    
     // Mapear los datos recibidos al formato esperado por el componente
-    tiposProyecto.value = data.map(item => ({
-      id: item.id,
-      nombre: item.tipoProyectoNombre || item.nombre,
-      descripcion: item.tipoProyectoDescripcion || item.descripcion,
-      activo: item.tipoProyectoActivo !== undefined ? item.tipoProyectoActivo : item.activo
-    }));
+    tiposProyecto.value = data.map(item => {
+      // Verificar que item no es null o undefined
+      if (!item) return null;
+      
+      return {
+        id: item.id,
+        nombre: item.tipoProyectoNombre || item.nombre || 'Sin nombre',
+        descripcion: item.tipoProyectoDescripcion || item.descripcion || '',
+        activo: item.tipoProyectoActivo !== undefined ? item.tipoProyectoActivo : (item.activo || false)
+      };
+    }).filter(Boolean); // Eliminar elementos null
     
     console.log(`Se obtuvieron ${tiposProyecto.value.length} tipos de proyecto`);
     const activos = tiposProyecto.value.filter(t => t.activo).length;
@@ -489,7 +513,8 @@ const fetchTiposProyecto = async (forceRefresh = false) => {
     console.log(`Activos: ${activos}, Inactivos: ${inactivos}`);
     
     // Resetear a la primera página si es necesario
-    if (paginatedTiposProyecto.value.length === 0 && currentPage.value > 1) {
+    if (paginatedTiposProyecto && paginatedTiposProyecto.value && 
+        paginatedTiposProyecto.value.length === 0 && currentPage.value > 1) {
       currentPage.value = 1;
     }
     
@@ -498,21 +523,36 @@ const fetchTiposProyecto = async (forceRefresh = false) => {
   } catch (error) {
     console.error('Error al obtener tipos de proyecto:', error);
     
-    // Manejar específicamente errores de conexión
-    if (error.name === 'AbortError' || 
-        error.message && (
-          error.message.includes('Failed to fetch') ||
-          error.message.includes('NetworkError') ||
-          error.message.includes('Network Error') ||
-          error.message.includes('ERR_CONNECTION_REFUSED')
-        )
+    // Asegurarse de que error es un objeto con mensaje
+    const errorObj = error || {};
+    const errorMessage = errorObj.message || String(error) || 'Error desconocido';
+    
+    console.log('Tipo de error:', typeof error);
+    console.log('Mensaje de error completo:', errorMessage);
+    
+    // Detectar si es un error de conexión
+    if (
+      errorMessage.includes('Failed to fetch') ||
+      errorMessage.includes('NetworkError') ||
+      errorMessage.includes('Network Error') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ETIMEDOUT') ||
+      errorMessage.includes('is not a function') // Capturar el error específico 'pe is not a function'
     ) {
+      console.warn('Se detectó un error de conexión o inicialización');
       connectionError.value = true;
-      toast.error('No se pudo conectar con el servidor. Por favor, verifica que el backend esté en ejecución.');
+      
+      // Si es el error específico 'is not a function', mostrar un mensaje más descriptivo
+      if (errorMessage.includes('is not a function')) {
+        toast.error('Error de inicialización. Por favor, recarga la página o contacta al soporte técnico.');
+      }
     } else {
-      // Para otros tipos de errores, mostrar mensaje genérico
-      toast.error(`Error al cargar tipos de proyecto: ${error.message || 'Error desconocido'}`);
+      // Para otro tipo de errores, mostrar notificación
+      toast.error(`Error al cargar tipos de proyecto: ${errorMessage}`);
     }
+    
+    // Inicializar el array como vacío para evitar errores en la UI
+    tiposProyecto.value = [];
   } finally {
     loading.value = false;
   }
@@ -565,62 +605,90 @@ const deleteTipoProyecto = async (id) => {
   }
 };
 
-// Función para intentar reconectar automáticamente
-const retryConnection = async () => {
-  if (reconnecting.value) return;
-  
-  reconnecting.value = true;
-  reconnectAttempts.value = 0;
-  
-  // Limpiar cualquier intervalo existente
-  if (reconnectInterval.value) {
-    clearInterval(reconnectInterval.value);
+// Reconexión automática cuando hay error de conexión
+let reconnectionInterval = null;
+const reconnectionAttempts = ref(0);
+const maxReconnectionAttempts = 5;
+const reconnectionDelay = 5000; // 5 segundos
+
+watch(connectionError, (newValue) => {
+  if (newValue === true) {
+    // Si hay error de conexión, iniciar intentos de reconexión
+    startReconnection();
+  } else {
+    // Si se resolvió el error, detener intentos de reconexión
+    stopReconnection();
+  }
+});
+
+const startReconnection = () => {
+  if (reconnectionInterval) {
+    // Ya está intentando reconectar, no iniciar otro intervalo
+    console.log('Ya existe un intervalo de reconexión activo');
+    return;
   }
   
-  // Crear un nuevo intervalo para intentos de reconexión
-  reconnectInterval.value = setInterval(async () => {
-    if (reconnectAttempts.value >= maxReconnectAttempts) {
+  reconnectionAttempts.value = 0;
+  console.log(`Iniciando reconexión automática. URL API: ${apiBaseUrl}`);
+  
+  reconnectionInterval = setInterval(async () => {
+    if (reconnectionAttempts.value >= maxReconnectionAttempts) {
       stopReconnection();
-      toast.error('No se pudo establecer conexión después de múltiples intentos. Por favor, verifica el estado del servidor.');
+      toast.error('No se pudo restablecer la conexión después de varios intentos. Por favor, recarga la página.');
       return;
     }
     
-    reconnectAttempts.value++;
-    console.log(`Intento de reconexión ${reconnectAttempts.value}/${maxReconnectAttempts}...`);
+    reconnectionAttempts.value++;
+    console.log(`Intento de reconexión ${reconnectionAttempts.value} de ${maxReconnectionAttempts}...`);
+    toast.info(`Intentando reconectar (${reconnectionAttempts.value}/${maxReconnectionAttempts})...`);
     
     try {
-      // Intentar obtener datos
-      await fetchTiposProyecto();
+      // Verificar que el servicio existe antes de intentar usarlo
+      if (!tipoProyectoService || typeof tipoProyectoService.getAll !== 'function') {
+        throw new Error('El servicio tipoProyectoService no está disponible');
+      }
       
-      // Si llegamos aquí, la conexión fue exitosa
+      // Intentar reconectar con forzar actualización
+      await fetchTiposProyecto(true);
+      
+      // Verificar si la reconexión fue exitosa
       if (!connectionError.value) {
         stopReconnection();
-        toast.success('Conexión restablecida correctamente');
+        toast.success('¡Conexión restablecida!');
       }
     } catch (error) {
-      console.warn(`Intento de reconexión ${reconnectAttempts.value} fallido:`, error);
-      // El error ya será manejado por fetchTiposProyecto
+      console.error('Error en intento de reconexión:', error);
+      // No mostrar toast aquí para evitar múltiples notificaciones
     }
-  }, 5000); // Intentar cada 5 segundos
+  }, reconnectionDelay);
 };
 
-// Función para detener los intentos de reconexión
 const stopReconnection = () => {
-  if (reconnectInterval.value) {
-    clearInterval(reconnectInterval.value);
-    reconnectInterval.value = null;
+  if (reconnectionInterval) {
+    console.log('Deteniendo intentos de reconexión');
+    clearInterval(reconnectionInterval);
+    reconnectionInterval = null;
+    reconnectionAttempts.value = 0;
   }
-  reconnecting.value = false;
-  reconnectAttempts.value = 0;
 };
 
 // Cargar datos al montar el componente
 onMounted(() => {
-  fetchTiposProyecto();
+  try {
+    fetchTiposProyecto();
+  } catch (error) {
+    console.error('Error al cargar datos en onMounted:', error);
+    toast.error('Error al inicializar la página. Por favor, recarga la página.');
+  }
 });
 
 // Limpiar al desmontar
 onBeforeUnmount(() => {
+  // Limpiar cualquier intervalo de reconexión
+  if (reconnectionInterval) {
+    clearInterval(reconnectionInterval);
+    reconnectionInterval = null;
+  }
   stopReconnection(); // Asegurarse de limpiar el intervalo al desmontar
 });
 </script>

@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../composables/useToast';
 
 // Propiedades
 const props = defineProps({

@@ -1,0 +1,37 @@
+import { defineNuxtPlugin } from "#app";
+// Importación correcta para vue-toastification v2.0.0-rc.5
+import Toast from "vue-toastification";
+
+export default defineNuxtPlugin((nuxtApp) => {
+  // Registramos el plugin
+  nuxtApp.vueApp.use(Toast, {
+    position: "top-right", // Valor directo en lugar de POSITION.TOP_RIGHT
+    timeout: 5000,
+    closeOnClick: true,
+    pauseOnFocusLoss: true,
+    pauseOnHover: true,
+    draggable: true,
+    draggablePercent: 0.6,
+    showCloseButtonOnHover: false,
+    hideProgressBar: false,
+    closeButton: "button",
+    icon: true,
+    rtl: false,
+    transition: "Vue-Toastification__bounce",
+    maxToasts: 20,
+    newestOnTop: true,
+  });
+  
+  // Proporcionamos el método toast directamente a través de nuxtApp
+  // Accedemos a los métodos desde la instancia global
+  const toast = {
+    success: (message, options) => Toast.success(message, options),
+    error: (message, options) => Toast.error(message, options),
+    info: (message, options) => Toast.info(message, options),
+    warning: (message, options) => Toast.warning(message, options),
+    clear: () => Toast.clear()
+  };
+  
+  // Proporcionamos la instancia de toast a través de nuxtApp
+  nuxtApp.provide('toast', toast);
+});

@@ -95,7 +95,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useToast } from '../composables/useToast';
 import { usePuestosStore } from '../stores/puestos';
 
 // Props

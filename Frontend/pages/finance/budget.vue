@@ -184,7 +184,7 @@ import {
   TrashIcon,
 } from "@heroicons/vue/24/outline";
 
-import { useToast } from "vue-toastification";
+import { useToast } from '../composables/useToast';
 import { useFinanceStore } from "~/stores/finance";
 import { useProjectStore } from "~/stores/projects";
 import { useAuthStore } from "~/stores/auth";

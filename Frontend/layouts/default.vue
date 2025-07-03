@@ -20,8 +20,10 @@
       </main>
     </div>
 
-    <!-- Toast Notifications -->
-    <AppToast />
+    <!-- Sistema de notificaciones personalizado -->
+    <ClientOnly>
+      <NotivueWrapper />
+    </ClientOnly>
 
     <!-- Loading Overlay -->
     <AppLoading v-if="isLoading" />
@@ -35,7 +37,7 @@ import { useAuthStore } from '../stores/auth'
 import { useRoute, useRouter, navigateTo } from '#imports'
 
 // Clave para el token de autenticación (debe coincidir con la del store de auth)
-const AUTH_TOKEN_KEY = process.env.AUTH_TOKEN_KEY || 'auth-token'
+const AUTH_TOKEN_KEY = process.env.NUXT_PUBLIC_AUTH_TOKEN_KEY || 'auth-token'
 
 const settingsStore = useSettingsStore()
 const authStore = useAuthStore()
