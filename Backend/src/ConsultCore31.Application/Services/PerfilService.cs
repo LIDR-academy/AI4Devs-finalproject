@@ -22,11 +22,7 @@ namespace ConsultCore31.Application.Services
         /// <param name="perfilRepository">Repositorio de perfiles</param>
         /// <param name="mapper">Instancia de AutoMapper</param>
         /// <param name="logger">Instancia del logger</param>
-        public PerfilService(
-            IPerfilRepository perfilRepository,
-            IMapper mapper,
-            ILogger<PerfilService> logger)
-            : base(mapper, logger)
+        public PerfilService(IPerfilRepository perfilRepository, IMapper mapper, ILogger<PerfilService> logger) : base(mapper, logger)
         {
             _perfilRepository = perfilRepository ?? throw new ArgumentNullException(nameof(perfilRepository));
         }

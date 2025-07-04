@@ -19,15 +19,27 @@ namespace ConsultCore31.Application.Services
         /// <summary>
         /// Constructor
         /// </summary>
-        public ProyectoService(
-            IProyectoRepository proyectoRepository,
-            IMapper mapper,
-            ILogger<ProyectoService> logger)
-            : base(mapper, logger)
+        public ProyectoService(IProyectoRepository proyectoRepository, IMapper mapper, ILogger<ProyectoService> logger) : base(mapper, logger)
         {
             _proyectoRepository = proyectoRepository;
         }
 
+        
+        /// <summary>
+        /// Obtiene todos los proyectos, incluyendo los inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los proyectos inactivos</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de proyectos</returns>
+        public async Task<IEnumerable<ProyectoDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default)
+        {
+            var entities = includeInactive
+                ? await _proyectoRepository.GetAllAsync(cancellationToken)
+                : await _proyectoRepository.GetAllActiveAsync(cancellationToken);
+                
+            return _mapper.Map<IEnumerable<ProyectoDto>>(entities);
+        }
+        
         /// <summary>
         /// Obtiene todas las entidades activas
         /// </summary>

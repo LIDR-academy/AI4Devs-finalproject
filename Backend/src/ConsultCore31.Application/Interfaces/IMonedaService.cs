@@ -7,6 +7,12 @@ namespace ConsultCore31.Application.Interfaces
     /// </summary>
     public interface IMonedaService : IGenericService<MonedaDto, CreateMonedaDto, UpdateMonedaDto, int>
     {
-        // Métodos específicos para Moneda si son necesarios
+        /// <summary>
+        /// Obtiene todos las monedas, incluyendo las inactivas
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también las monedas inactivas</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de monedas</returns>
+        Task<IEnumerable<MonedaDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default);
     }
 }

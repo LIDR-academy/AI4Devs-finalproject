@@ -7,6 +7,12 @@ namespace ConsultCore31.Application.Interfaces
     /// </summary>
     public interface ITipoKPIService : IGenericService<TipoKPIDto, CreateTipoKPIDto, UpdateTipoKPIDto, int>
     {
-        // Métodos específicos para TipoKPI si son necesarios
+        /// <summary>
+        /// Obtiene todos los tipos de KPI, incluyendo los inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de tipos de KPI</returns>
+        Task<IEnumerable<TipoKPIDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default);
     }
 }

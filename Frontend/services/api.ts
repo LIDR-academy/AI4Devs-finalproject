@@ -38,12 +38,10 @@ export const apiClient = {
       const token = localStorage.getItem(AUTH_TOKEN_KEY)
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
-        console.log(`Enviando solicitud autenticada a: ${endpoint}`)
-        console.log(
-          `Token (primeros 20 caracteres): ${token.substring(0, 20)}...`
-        )
-      } else {
-        console.warn(`Solicitud sin token a: ${endpoint}`)
+        // Solo log en desarrollo para requests autenticados
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Request autenticado: ${endpoint}`)
+        }
       }
     }
 
@@ -56,13 +54,12 @@ export const apiClient = {
 
     // Realizar la petición
     try {
-      console.log(`Enviando solicitud a: ${url}`, {
-        method: options.method || 'GET'
-      })
       const response = await fetch(url, requestOptions)
-      console.log(
-        `Respuesta recibida de ${endpoint}: Status ${response.status}`
-      )
+      
+      // Log solo respuestas exitosas importantes
+      if (process.env.NODE_ENV === 'development' && response.ok) {
+        console.log(`✓ ${endpoint}: ${response.status}`)
+      }
 
       // Verificar si la respuesta es correcta
       if (!response.ok) {
@@ -167,7 +164,7 @@ export const apiClient = {
         data = await response.json()
       }
 
-      console.log(`Datos recibidos de ${endpoint}:`, data)
+      // Datos procesados exitosamente
       return data
     } catch (error) {
       console.error(`Error en solicitud a ${endpoint}:`, error)

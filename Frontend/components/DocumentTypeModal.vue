@@ -374,8 +374,6 @@ const initForm = () => {
   
   // Resetear errores
   errors.value = {};
-  
-  console.log('Formulario inicializado:', form.value);
 };
 
 // Watch para cambios en el tipo de documento
@@ -483,7 +481,7 @@ const validateForm = () => {
     form.value.tamanoMaximoMB = null;
   }
   
-  console.log('Validación del formulario:', { errores: errors.value, hayErrores: Object.keys(errors.value).length > 0 });
+  // Validación completada
   return Object.keys(errors.value).length === 0;
 };
 
@@ -510,8 +508,6 @@ const saveDocumentType = async () => {
         : parseFloat(form.value.tamanoMaximoMB)
     };
     
-    console.log('Datos a guardar:', documentTypeData);
-    
     let result;
     let success = false;
     
@@ -519,28 +515,12 @@ const saveDocumentType = async () => {
     const datosOriginales = { ...documentTypeData };
     
     try {
-      // Establecer un timeout para la operación
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Tiempo de espera agotado')), 10000);
-      });
-      
       if (props.isEditing) {
-        console.log(`Actualizando tipo de documento con ID ${documentTypeData.id}`);
-        result = await Promise.race([
-          documentTypeService.update(documentTypeData.id, documentTypeData),
-          timeoutPromise
-        ]);
-        console.log('Resultado de la actualización:', result);
-        success = true;
+        result = await documentTypeService.update(documentTypeData.id, documentTypeData);
       } else {
-        console.log('Creando nuevo tipo de documento');
-        result = await Promise.race([
-          documentTypeService.create(documentTypeData),
-          timeoutPromise
-        ]);
-        console.log('Resultado de la creación:', result);
-        success = true;
+        result = await documentTypeService.create(documentTypeData);
       }
+      success = true;
     } catch (apiError) {
       console.error('Error en llamada a la API:', apiError);
       
@@ -551,54 +531,32 @@ const saveDocumentType = async () => {
         errorMessage.includes('network') ||
         errorMessage.includes('connection') ||
         errorMessage.includes('refused') ||
-        errorMessage.includes('tiempo de espera') ||
         apiError.code === 'ERR_CONNECTION_REFUSED' ||
         apiError.code === 'ECONNREFUSED';
       
       if (isConnectionError) {
-        console.warn('Error de conexión detectado');
         localConnectionError.value = true;
         emit('connectionError', true);
         throw new Error('No se pudo conectar con el servidor. Por favor, verifique su conexión.');
       }
       
-      // Si es un error de autenticación, no intentamos recuperarnos
-      if (apiError.response && apiError.response.status === 401) {
-        throw apiError; // Propagar el error de autenticación
-      }
-      
-      // Para otros errores, intentamos usar los datos originales
-      console.warn('Usando datos originales como respuesta debido al error');
-      result = datosOriginales;
+      // Para cualquier otro error, propagar sin simular éxito
+      throw apiError;
     }
     
-    // Asegurarnos de tener un resultado válido para emitir
-    if (result) {
-      // Si no tiene ID pero estamos editando, asegurarnos de incluirlo
-      if (props.isEditing && !result.id && documentTypeData.id) {
-        result.id = documentTypeData.id;
-      }
+    // Si llegamos aquí, la operación fue exitosa
+    if (result && success) {
+      // Mostrar mensaje de éxito
+      const mensaje = props.isEditing 
+        ? 'Tipo de documento actualizado correctamente' 
+        : 'Tipo de documento creado correctamente';
+      toast.success(mensaje);
       
-      console.log('Emitiendo evento saved con datos:', result);
+      // Emitir el evento de guardado exitoso
+      emit('saved', result);
       
-      // Crear una copia profunda para evitar problemas de reactividad
-      const resultadoFinal = JSON.parse(JSON.stringify(result));
-      
-      // Mostrar mensaje de éxito antes de cerrar el modal
-      if (success) {
-        const mensaje = props.isEditing 
-          ? 'Tipo de documento actualizado correctamente' 
-          : 'Tipo de documento creado correctamente';
-        toast.success(mensaje);
-      }
-      
-      // Emitir el evento antes de cerrar el modal
-      emit('saved', resultadoFinal);
-      
-      // Forzar el cierre del modal llamando directamente a emit('close')
-      console.log('Cerrando modal después de guardar');
+      // Cerrar el modal
       emit('close');
-      
     } else {
       console.error('No se pudo obtener un resultado válido después de guardar');
       toast.error('Error al procesar los datos. Por favor, inténtelo de nuevo.');
@@ -606,13 +564,13 @@ const saveDocumentType = async () => {
   } catch (error) {
     console.error('Error al guardar tipo de documento:', error);
     
-    // Si es un error de conexión, no cerramos el modal automáticamente
+    // Si es un error de conexión, mantener el modal abierto
     if (localConnectionError.value) {
       toast.error('Error de conexión. Por favor, verifica que el servidor esté disponible e inténtalo de nuevo.');
+      // No cerrar el modal para permitir reintento
     } else {
+      // Para otros errores, mostrar mensaje y cerrar modal
       toast.error(error.message || 'Error al guardar el tipo de documento');
-      // Forzar el cierre del modal para errores que no son de conexión
-      console.log('Cerrando modal después de error');
       emit('close');
     }
   } finally {

@@ -22,17 +22,36 @@ namespace ConsultCore31.Application.Services
         /// <param name="repository">Repositorio genérico para PrioridadTarea</param>
         /// <param name="mapper">Instancia de AutoMapper</param>
         /// <param name="logger">Instancia del logger</param>
-        public PrioridadTareaService(
-            IGenericRepository<PrioridadTarea, int> repository,
-            IMapper mapper,
-            ILogger<PrioridadTareaService> logger)
-            : base(mapper, logger)
+        public PrioridadTareaService(IGenericRepository<PrioridadTarea, int> repository, IMapper mapper, ILogger<PrioridadTareaService> logger) : base(mapper, logger)
         {
             _repository = repository;
         }
 
         /// <summary>
-        /// Obtiene todas las entidades activas
+        /// Obtiene todos los prioridades de tarea, con opción de incluir inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los prioridades de tarea inactivos</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de prioridades de tarea</returns>
+        public async Task<IEnumerable<PrioridadTareaDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var prioridadesTarea = includeInactive
+                    ? await _repository.GetAllAsync(cancellationToken)
+                    : await _repository.GetAllActiveAsync(cancellationToken);
+                    
+                return _mapper.Map<IEnumerable<PrioridadTareaDto>>(prioridadesTarea);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener prioridades de tarea con includeInactive={includeInactive}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene todas las prioridades de tarea activas
         /// </summary>
         public override async Task<IEnumerable<PrioridadTareaDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
@@ -41,7 +60,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Obtiene una entidad por su ID
+        /// Obtiene una prioridad de tarea por su ID
         /// </summary>
         public override async Task<PrioridadTareaDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
@@ -51,7 +70,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Crea una nueva entidad
+        /// Crea una nueva prioridad de tarea
         /// </summary>
         public override async Task<PrioridadTareaDto> CreateAsync(CreatePrioridadTareaDto createDto, CancellationToken cancellationToken = default)
         {
@@ -61,7 +80,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Actualiza una entidad existente
+        /// Actualiza una prioridad de tarea existente
         /// </summary>
         public override async Task<bool> UpdateAsync(UpdatePrioridadTareaDto updateDto, CancellationToken cancellationToken = default)
         {
@@ -79,7 +98,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Elimina una entidad por su ID (borrado lógico)
+        /// Elimina una prioridad de tarea por su ID (borrado lógico)
         /// </summary>
         public override async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
@@ -88,7 +107,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Verifica si existe una entidad con el ID especificado
+        /// Verifica si existe una prioridad de tarea con el ID especificado
         /// </summary>
         public override async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
         {

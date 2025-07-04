@@ -51,12 +51,8 @@ const isAuthenticating = ref(true) // Nuevo estado para indicar que estamos veri
 
 // Middleware de autenticación para rutas protegidas
 const handleAuthentication = async () => {
-  // Registrar la ruta actual para depuración
-  console.log('Verificando autenticación en ruta:', route.path)
   
-  // Si ya estamos en login o logout, no hacemos nada
   if (route.path === '/login' || route.path === '/logout') {
-    console.log('Estamos en login/logout, no verificamos autenticación')
     isAuthenticating.value = false
     return
   }
@@ -68,7 +64,6 @@ const handleAuthentication = async () => {
     const hasUser = localStorage.getItem('user')
     
     if (hasToken && hasUser) {
-      console.log('Estamos en el índice con token local, confiando en autenticación local')
       // Asegurarnos de que el store tenga los datos cargados
       if (!authStore.isAuthenticated) {
         await authStore.checkAuth()
@@ -83,25 +78,17 @@ const handleAuthentication = async () => {
     }
   }
 
-  // Si ya completamos la verificación y no estamos autenticados, redirigir al login
   if (authCheckComplete.value && !authStore.isAuthenticated) {
-    console.log('Verificación completada, no autenticado, redirigiendo a login')
     navigateTo('/login')
     return
   }
 
-  // Si aún no hemos verificado la autenticación, hacerlo ahora
   if (!authCheckComplete.value) {
-    console.log('Primera verificación de autenticación')
     isLoading.value = true
     try {
-      // Verificar autenticación
       const isAuthenticated = await authStore.checkAuth()
-      console.log('Resultado de verificación:', isAuthenticated ? 'autenticado' : 'no autenticado')
 
-      // Si no estamos autenticados después de verificar, redirigir al login
       if (!isAuthenticated && typeof window !== 'undefined') {
-        console.log('No autenticado, redirigiendo a login')
         navigateTo('/login')
         return
       }

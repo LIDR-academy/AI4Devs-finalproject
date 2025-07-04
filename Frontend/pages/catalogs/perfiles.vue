@@ -109,7 +109,7 @@
                   <li>El servidor backend está en ejecución</li>
                   <li>
                     La URL del servidor es correcta
-                    (https://localhost:44378/api)
+                    ({{ config.public.apiUrl }})
                   </li>
                   <li>No hay problemas de red o firewall</li>
                 </ul>
@@ -279,6 +279,9 @@ import { usePerfilesStore } from "../../stores/perfiles";
 import { useToast } from '../composables/useToast';
 import PerfilModal from "../../components/PerfilModal.vue";
 import ConfirmDeleteModal from "../../components/ConfirmDeleteModal.vue";
+
+// Configuración para acceder a variables de entorno
+const config = useRuntimeConfig();
 
 // Configuración de la página - Accesible para cualquier usuario autenticado
 definePageMeta({

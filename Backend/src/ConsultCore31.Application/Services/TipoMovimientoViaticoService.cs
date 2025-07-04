@@ -22,11 +22,7 @@ namespace ConsultCore31.Application.Services
         /// <param name="repository">Repositorio genérico para TipoMovimientoViatico</param>
         /// <param name="mapper">Instancia de AutoMapper</param>
         /// <param name="logger">Instancia del logger</param>
-        public TipoMovimientoViaticoService(
-            IGenericRepository<TipoMovimientoViatico, int> repository,
-            IMapper mapper,
-            ILogger<TipoMovimientoViaticoService> logger)
-            : base(mapper, logger)
+        public TipoMovimientoViaticoService(IGenericRepository<TipoMovimientoViatico, int> repository, IMapper mapper, ILogger<TipoMovimientoViaticoService> logger) : base(mapper, logger)
         {
             _repository = repository;
         }
@@ -103,6 +99,21 @@ namespace ConsultCore31.Application.Services
         protected override int GetIdFromUpdateDto(UpdateTipoMovimientoViaticoDto updateDto)
         {
             return updateDto.Id;
+        }
+
+        /// <summary>
+        /// Obtiene todos los tipos de movimiento de viático, incluyendo los inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de tipos de movimiento de viático</returns>
+        public async Task<IEnumerable<TipoMovimientoViaticoDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default)
+        {
+            var entities = includeInactive
+                ? await _repository.GetAllAsync(cancellationToken)
+                : await _repository.GetAllActiveAsync(cancellationToken);
+
+            return _mapper.Map<IEnumerable<TipoMovimientoViaticoDto>>(entities);
         }
     }
 }

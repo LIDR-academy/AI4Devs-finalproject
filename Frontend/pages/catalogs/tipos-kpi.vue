@@ -80,7 +80,7 @@
                   <li>El servidor backend está en ejecución</li>
                   <li>
                     La URL del servidor es correcta
-                    (https://localhost:44378/api)
+                    ({{ config.public.apiUrl }})
                   </li>
                   <li>No hay problemas de red o firewall</li>
                 </ul>
@@ -351,6 +351,9 @@ import DeleteConfirmationModal from "~/components/DeleteConfirmationModal.vue";
 
 // Toast para notificaciones
 const toast = useToast();
+
+// Configuración para acceder a variables de entorno
+const config = useRuntimeConfig();
 
 // Estado
 const tiposKPI = ref([]);

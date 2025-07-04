@@ -57,14 +57,13 @@ export default defineNuxtConfig({
     "@nuxtjs/tailwindcss",
     "@pinia/nuxt",
     "@vueuse/nuxt",
-    "@nuxtjs/color-mode",
+    "@nuxtjs/color-mode"
   ],
   css: [
     "~/assets/css/main.css",
     "notivue/notification.css", // Estilos para el componente <Notification />
     "notivue/animations.css", // Animaciones predeterminadas
   ],
-  plugins: ["~/plugins/notivue.client.ts"],
   colorMode: {
     preference: "light",
     fallback: "light",

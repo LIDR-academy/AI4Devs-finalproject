@@ -40,29 +40,17 @@ export const documentTypeService = {
         ? `/v1/TiposDocumento?_nocache=${new Date().getTime()}` 
         : '/v1/TiposDocumento';
       
-      console.log(`Llamando a la API para obtener tipos de documento desde: ${endpoint}`);
-      
       const response = await apiClient.get<ApiResponse<TipoDocumento[]> | TipoDocumento[]>(endpoint);
       
-      // Imprimir la respuesta completa para depuración
-      console.log('Respuesta completa de la API:', response);
-      
-      // Si response es undefined o null
       if (!response) {
-        console.log('La respuesta de la API es undefined o null, devolviendo array vacío');
         return [];
       }
       
-      // La API está devolviendo los datos directamente sin estar en una propiedad 'data'
-      // según los logs de la consola
       if (Array.isArray(response)) {
-        console.log('La API devolvió un array directamente:', response);
         return response;
       }
       
-      // Si response tiene una propiedad data que es un array
       if (response.data && Array.isArray(response.data)) {
-        console.log('La API devolvió un objeto con propiedad data que es un array:', response.data);
         return response.data;
       }
       
@@ -106,14 +94,9 @@ export const documentTypeService = {
    */
   async getById(id: number): Promise<TipoDocumento> {
     try {
-      console.log(`Obteniendo tipo de documento con ID ${id}`);
       const response = await apiClient.get<ApiResponse<TipoDocumento> | TipoDocumento>(`/v1/TiposDocumento/${id}`);
       
-      console.log(`Respuesta completa para tipo de documento ID ${id}:`, response);
-      
-      // Si la respuesta es directamente el objeto esperado
       if (response && typeof response === 'object' && !Array.isArray(response) && response.id) {
-        console.log(`Respuesta directa con ID ${id}:`, response);
         return response as TipoDocumento;
       }
       
@@ -122,21 +105,16 @@ export const documentTypeService = {
         // Caso 1: La API devuelve un objeto con propiedad data
         if (response.data && typeof response.data === 'object') {
           if (response.data.id) {
-            console.log(`Respuesta con data.id ${id}:`, response.data);
             return response.data as TipoDocumento;
           } else if (Array.isArray(response.data) && response.data.length > 0) {
-            // Si data es un array, buscar el elemento con el ID correcto
             const item = response.data.find(item => item.id === id);
             if (item) {
-              console.log(`Encontrado elemento con ID ${id} en array:`, item);
               return item as TipoDocumento;
             }
           }
         }
         
-        // Caso 2: La respuesta es el objeto directo pero sin wrapper
         if (response.id === id) {
-          console.log(`Respuesta directa con ID ${id}:`, response);
           return response as TipoDocumento;
         }
       }

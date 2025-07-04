@@ -27,12 +27,14 @@
     "@heroicons/vue": "^2.1.5",
     "@nuxtjs/color-mode": "^3.4.2",
     "@pinia/nuxt": "^0.5.1",
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4",
     "@vueuse/core": "^10.11.0",
     "@vueuse/nuxt": "^10.11.0",
     "chart.js": "^4.4.3",
     "dayjs": "^1.11.11",
+    "notivue": "^2.4.5",
     "pinia": "^2.1.7",
-    "vue-chartjs": "^5.3.1",
-    "vue-toastification": "^2.0.0-rc.5"
+    "vue-chartjs": "^5.3.1"
   }
 }

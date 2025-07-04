@@ -22,11 +22,7 @@ namespace ConsultCore31.Application.Services
         /// <param name="repository">Repositorio genérico para TipoProyecto</param>
         /// <param name="mapper">Instancia de AutoMapper</param>
         /// <param name="logger">Instancia del logger</param>
-        public TipoProyectoService(
-            IGenericRepository<TipoProyecto, int> repository,
-            IMapper mapper,
-            ILogger<TipoProyectoService> logger)
-            : base(mapper, logger)
+        public TipoProyectoService(IGenericRepository<TipoProyecto, int> repository, IMapper mapper, ILogger<TipoProyectoService> logger) : base(mapper, logger)
         {
             _repository = repository;
         }
@@ -118,6 +114,6 @@ namespace ConsultCore31.Application.Services
         protected override int GetIdFromUpdateDto(UpdateTipoProyectoDto updateDto)
         {
             return updateDto.Id;
-        }
+        }        
     }
 }

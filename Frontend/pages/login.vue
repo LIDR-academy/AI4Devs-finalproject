@@ -94,6 +94,7 @@
             Usar credenciales de demo
           </button>
         </div>
+
       </div>
 
       <!-- Footer -->
@@ -109,7 +110,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // Importaciones
 import { ref, reactive, onMounted } from 'vue'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
@@ -130,10 +131,17 @@ definePageMeta({
 const authStore = useAuthStore()
 const toast = useToast()
 
+// Interfaces TypeScript
+interface LoginForm {
+  email: string
+  password: string
+  rememberMe: boolean
+}
+
 // Reactive state
-const loading = ref(false)
-const showPassword = ref(false)
-const form = reactive({
+const loading = ref<boolean>(false)
+const showPassword = ref<boolean>(false)
+const form = reactive<LoginForm>({
   email: '',
   password: '',
   rememberMe: false
@@ -154,7 +162,7 @@ onMounted(() => {
 })
 
 // Methods
-const handleLogin = async () => {
+const handleLogin = async (): Promise<void> => {
   loading.value = true
   
   // Guardar preferencia de recordar usuario
@@ -195,7 +203,7 @@ const handleLogin = async () => {
         toast.error(errorMessage);
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error inesperado durante el login:', error);
     
     // Manejar diferentes tipos de errores
@@ -229,10 +237,11 @@ const handleLogin = async () => {
   }
 }
 
-const fillDemoCredentials = () => {
+const fillDemoCredentials = (): void => {
   form.email = 'admin@rrdeveloper.com'
   form.password = 'admin123'
 }
+
 
 // Redirigir si el usuario ya está autenticado
 onMounted(() => {

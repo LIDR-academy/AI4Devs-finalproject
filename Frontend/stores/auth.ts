@@ -268,23 +268,20 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async checkAuth(): Promise<boolean> {
-      console.log('Iniciando verificación de autenticación...')
-      
       if (typeof window === 'undefined') {
-        console.log('No estamos en el navegador, no se puede verificar autenticación')
         return false
       }
 
-      // Usar el getter para obtener la clave del token
       const authTokenKey = this.authTokenKey
       const token = localStorage.getItem(authTokenKey)
       const storedUser = localStorage.getItem('user')
       
-      console.log('Clave usada para recuperar el token:', authTokenKey)
-      console.log('Token encontrado en localStorage:', token ? `${token.substring(0, 15)}...` : 'null')
+      // Solo log en desarrollo
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Verificando autenticación...', { hasToken: !!token, hasUser: !!storedUser })
+      }
       
       if (!token || !storedUser) {
-        console.log('No se encontró token o usuario en localStorage')
         return false
       }
 
@@ -301,22 +298,18 @@ export const useAuthStore = defineStore("auth", {
           const fiveMinutes = 5 * 60 * 1000
           
           if (now - lastVerificationTime < fiveMinutes) {
-            console.log('Usando verificación de token reciente')
             return true
           }
         }
         
-        console.log('Token encontrado en localStorage, verificando con el servidor...')
+        // Verificar con el servidor si es necesario
       } catch (e) {
         console.warn('Error al parsear usuario almacenado:', e)
         return false
       }
       
       try {
-        console.log('Verificando token con el servidor...')
         const apiResponse = await authService.verifyToken()
-        
-        console.log('Respuesta recibida del servidor:', apiResponse)
         
         if (!apiResponse || typeof apiResponse !== 'object' || !apiResponse.data) {
           console.error('Estructura de respuesta inesperada:', apiResponse)
@@ -353,7 +346,6 @@ export const useAuthStore = defineStore("auth", {
         localStorage.setItem('user', JSON.stringify(this.user))
         localStorage.setItem('last_token_verification', Date.now().toString())
         
-        console.log('Verificación de token exitosa')
         return true
       } catch (error: unknown) {
         const err = error as ApiError
@@ -370,12 +362,11 @@ export const useAuthStore = defineStore("auth", {
         }
         
         if (err.response?.status === 401 || err.response?.status === 403) {
-          console.warn('Error de autenticación detectado, cerrando sesión')
           await this.logout()
           return false
         }
         
-        console.warn('Error de red al verificar token, manteniendo sesión local')
+        // Error de red, mantener sesión local
         return true
       }
     },

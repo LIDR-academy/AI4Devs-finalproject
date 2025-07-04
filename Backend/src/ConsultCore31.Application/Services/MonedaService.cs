@@ -22,17 +22,36 @@ namespace ConsultCore31.Application.Services
         /// <param name="repository">Repositorio genérico para Moneda</param>
         /// <param name="mapper">Instancia de AutoMapper</param>
         /// <param name="logger">Instancia del logger</param>
-        public MonedaService(
-            IGenericRepository<Moneda, int> repository,
-            IMapper mapper,
-            ILogger<MonedaService> logger)
-            : base(mapper, logger)
+        public MonedaService(IGenericRepository<Moneda, int> repository, IMapper mapper, ILogger<MonedaService> logger) : base(mapper, logger)
         {
             _repository = repository;
         }
 
         /// <summary>
-        /// Obtiene todas las entidades activas
+        /// Obtiene todos los monedas, con opción de incluir inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los monedas inactivos</param>
+        /// <param name="cancellationToken">Token de cancelación</param>
+        /// <returns>Lista de monedas</returns>
+        public async Task<IEnumerable<MonedaDto>> GetAllWithInactiveAsync(bool includeInactive = false, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var monedas = includeInactive
+                    ? await _repository.GetAllAsync(cancellationToken)
+                    : await _repository.GetAllActiveAsync(cancellationToken);
+                    
+                return _mapper.Map<IEnumerable<MonedaDto>>(monedas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener monedas con includeInactive={includeInactive}");
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// Obtiene todas las monedas activas
         /// </summary>
         public override async Task<IEnumerable<MonedaDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
@@ -41,7 +60,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Obtiene una entidad por su ID
+        /// Obtiene una moneda por su ID
         /// </summary>
         public override async Task<MonedaDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
@@ -51,7 +70,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Crea una nueva entidad
+        /// Crea una nueva moneda
         /// </summary>
         public override async Task<MonedaDto> CreateAsync(CreateMonedaDto createDto, CancellationToken cancellationToken = default)
         {
@@ -61,7 +80,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Actualiza una entidad existente
+        /// Actualiza una moneda existente
         /// </summary>
         public override async Task<bool> UpdateAsync(UpdateMonedaDto updateDto, CancellationToken cancellationToken = default)
         {
@@ -79,7 +98,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Elimina una entidad por su ID (borrado lógico)
+        /// Elimina una moneda por su ID (borrado lógico)
         /// </summary>
         public override async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
@@ -88,7 +107,7 @@ namespace ConsultCore31.Application.Services
         }
 
         /// <summary>
-        /// Verifica si existe una entidad con el ID especificado
+        /// Verifica si existe una moneda con el ID especificado
         /// </summary>
         public override async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
         {

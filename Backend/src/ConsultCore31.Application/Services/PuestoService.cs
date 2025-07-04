@@ -23,11 +23,7 @@ namespace ConsultCore31.Application.Services
         /// <param name="repository">Repositorio genérico para Puesto</param>
         /// <param name="mapper">Instancia de AutoMapper</param>
         /// <param name="logger">Instancia del logger</param>
-        public PuestoService(
-            IGenericRepository<Puesto, int> repository,
-            IMapper mapper,
-            ILogger<PuestoService> logger)
-            : base(mapper, logger)
+        public PuestoService(IGenericRepository<Puesto, int> repository,IMapper mapper,ILogger<PuestoService> logger) : base(mapper, logger)
         {
             _repository = repository;
         }
