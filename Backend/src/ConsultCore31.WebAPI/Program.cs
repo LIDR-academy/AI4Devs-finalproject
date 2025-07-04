@@ -309,8 +309,8 @@ try
         // Formato de la versión en la URL
         options.GroupNameFormat = "'v'VVV";
 
-        // Asume la versión por defecto cuando no se especifica
-        options.SubstituteApiVersionInUrl = true;
+        // Cambiar a false para evitar conflictos con rutas personalizadas
+        options.SubstituteApiVersionInUrl = false;
     });
 
     // Configurar el prefijo de ruta base

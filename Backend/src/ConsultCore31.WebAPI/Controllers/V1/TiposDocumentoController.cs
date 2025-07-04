@@ -3,6 +3,8 @@ using Asp.Versioning;
 using ConsultCore31.Application.DTOs.TipoDocumento;
 using ConsultCore31.Application.Interfaces;
 
+using Microsoft.AspNetCore.Mvc;
+
 namespace ConsultCore31.WebAPI.Controllers.V1
 {
     /// <summary>
@@ -24,6 +26,23 @@ namespace ConsultCore31.WebAPI.Controllers.V1
             : base(tipoDocumentoService, logger, "tipo de documento")
         {
             _tipoDocumentoService = tipoDocumentoService;
+        }
+
+        /// <summary>
+        /// Obtiene todos los tipos de documento, con opción de incluir inactivos
+        /// </summary>
+        /// <param name="includeInactive">Si es true, incluye también los tipos inactivos</param>
+        /// <returns>Lista de tipos de documento</returns>
+        [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<TipoDocumentoDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllWithInactive([FromQuery] bool includeInactive = false)
+        {
+            _logger.LogInformation($"GetAllWithInactive llamado con includeInactive={includeInactive}");
+
+            var result = await ((ITipoDocumentoService)_service).GetAllWithInactiveAsync(includeInactive);
+            _logger.LogInformation($"GetAllWithInactive devolvió {result.Count()} registros");
+
+            return Ok(result);
         }
 
         /// <summary>
