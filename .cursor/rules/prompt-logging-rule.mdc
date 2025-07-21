@@ -9,7 +9,6 @@ Esta regla define el procedimiento para que el agente registre automáticamente 
 
 ## Ejecución Automática
 - El agente debe decidir automáticamente si un prompt es relevante para el proceso.
-- Si la fecha del sistema no es correcta, el usuario debe setearla manualmente antes de registrar prompts.
 
 ## Categorización de Prompts
 Cada prompt registrado debe ser clasificado en una de las siguientes categorías, cada una con su emoji único:
@@ -34,13 +33,11 @@ Cada prompt registrado debe ser clasificado en una de las siguientes categorías
   - Categoría (con emoji)
   - El texto completo del prompt.
   - El modelo LLM y la versión utilizada.
-  - La fecha y hora de ejecución en formato `dd-MM-yyyy hh:mm:ss`.
 
 ## Instrucciones
 1. Los prompts se almacenan en `/docs/prompts-AMP.md`.
 2. El agente debe registrar automáticamente cada prompt relevante en dicho archivo, siguiendo el formato especificado y asignando la categoría correspondiente.
 3. Se deben omitir prompts triviales o que no aporten valor.
-4. Antes de registrar, verificar que la fecha del sistema sea correcta; si no lo es, solicitar al usuario que la configure.
 
 ## Ejemplo de Registro
 
@@ -48,13 +45,11 @@ Prompt 1:
 - **Categoría:** 📦 Descripción general del producto
 - **Prompt:** ¿Cómo puedo implementar autenticación JWT en Node.js?
 - **LLM:** GPT-4.1
-- **Fecha:** 10-06-2024 15:23:10
 
 Prompt 2:
 - **Categoría:** 🏗️ Arquitectura del sistema
 - **Prompt:** Genera un diagrama de arquitectura para el backend.
 - **LLM:** GPT-4.1
-- **Fecha:** 10-06-2024 15:25:42
 
 *...Continúa enumerando los prompts relevantes.*
 
