@@ -266,6 +266,68 @@ para que las respuestas sean cada vez más precisas y relevantes.
 
 ---
 
+## Épica EP-005: Plataforma y Operación Técnica
+
+### HDU-015: Monitoreo y Alertas del Sistema
+Como responsable técnico,
+quiero que el sistema cuente con monitoreo y alertas automáticas,
+para detectar caídas, errores y anomalías en tiempo real.
+
+**Criterios de Aceptación:**
+- El sistema reporta caídas y errores críticos automáticamente.
+- Se generan alertas ante anomalías de uso o rendimiento.
+- El equipo recibe notificaciones en tiempo real.
+
+**Notas Adicionales:**
+- Integrar con servicios como Sentry, Datadog o similar.
+
+**Tareas:**
+- Configurar monitoreo de logs y métricas.
+- Implementar alertas automáticas por email/Slack.
+- Documentar procedimientos de respuesta ante incidentes.
+
+---
+
+### HDU-016: Logging Centralizado y Auditoría
+Como responsable de seguridad,
+quiero que todas las acciones relevantes del sistema queden registradas en logs centralizados,
+para facilitar auditoría, trazabilidad y análisis forense.
+
+**Criterios de Aceptación:**
+- Todas las acciones críticas quedan registradas con timestamp y usuario.
+- Los logs se almacenan de forma segura y centralizada.
+- Se pueden consultar y filtrar logs por tipo de evento.
+
+**Notas Adicionales:**
+- Cumplir con normativas de privacidad y retención de datos.
+
+**Tareas:**
+- Implementar logging estructurado en backend y frontend.
+- Configurar almacenamiento seguro de logs.
+- Crear panel de consulta de logs para admins.
+
+---
+
+### HDU-017: Fallback Inteligente para IA
+Como usuario del chatbot,
+quiero que el sistema tenga un mecanismo de fallback cuando la IA no pueda responder,
+para que siempre reciba una respuesta útil o una notificación clara.
+
+**Criterios de Aceptación:**
+- Si la IA no puede generar respuesta, se muestra un mensaje amigable al usuario.
+- El sistema registra los fallos de la IA para análisis posterior.
+- Se sugiere al usuario opciones alternativas o contacto humano si es necesario.
+
+**Notas Adicionales:**
+- El fallback debe ser transparente y no afectar la experiencia general.
+
+**Tareas:**
+- Implementar lógica de fallback en el pipeline de IA.
+- Registrar todos los casos de fallback para análisis.
+- Validar la experiencia de usuario en estos casos.
+
+---
+
 # Backlog de Producto
 
 A continuación se presenta el backlog priorizado utilizando la metodología MoSCoW, junto con la estimación de impacto, urgencia, complejidad, riesgos y esfuerzo para cada historia de usuario.

@@ -66,6 +66,27 @@ sequenceDiagram
    - Buscando colaboraciones en proyectos
    - Explorando oportunidades de aprendizaje mutuo
 
+### 1.2.1 Integración Trello y Feedback
+
+El sistema se integra con Trello mediante un servidor MCP personalizado, permitiendo la sincronización automática de tickets, tareas y su estado en el tablero Kanban del equipo. Esta integración facilita la gestión ágil, la trazabilidad y la automatización de flujos de trabajo entre el chatbot, el backend y la gestión de proyectos.
+
+- Los tickets generados en el sistema se reflejan automáticamente en Trello.
+- El avance de los tickets y cambios de estado se sincronizan en tiempo real.
+- El feedback de usuarios y métricas relevantes pueden generar tareas o alertas en Trello para su seguimiento.
+- El flujo de feedback del chatbot alimenta el sistema de análisis y puede derivar en la creación de nuevas tareas o mejoras en el backlog.
+
+**Diagrama de integración (Mermaid):**
+```mermaid
+graph LR
+    A[Chatbot IA] -- Genera ticket --> B[Trello MCP Server]
+    B -- Crea/Actualiza --> C[Trello Board]
+    C -- Estado/Comentarios --> B
+    B -- Sincroniza --> D[Backend API]
+    D -- Feedback/Métricas --> E[Análisis y Mejora Continua]
+    E -- Nueva tarea/alerta --> B
+```
+[Imagen: /diagramas/integracion_trello.png]
+
 ## 2. Características del Producto
 
 ### 2.1 Funcionalidades Core

@@ -32,55 +32,61 @@
 
 ---
 
-## 3. Tablero Kanban (Exportable a Trello)
+## 4. Detalle de Sprints
 
-### Columnas sugeridas:
-- **Backlog**
-- **Por hacer**
-- **En progreso**
-- **En revisión**
-- **Hecho**
+### Cantidad de Sprints y Duración
 
-### Ejemplo de tarjetas (formato Markdown/Trello)
-
-#### IC-001: Implementar botón/widget de acceso al Chatbot
-```
-**Título:** Implementar botón/widget de acceso al Chatbot
-**Descripción:** Permitir a los usuarios acceder fácilmente al chatbot desde cualquier sección del portfolio.
-**Checklist:**
-- [ ] Diseño del widget
-- [ ] Implementación en frontend
-- [ ] Pruebas en desktop y móvil
-**Prioridad:** Must
-**Sprint:** 1
-**Estimación:** 1.5 hh
-**Enlaces:** [User Story HDU-001](./UserStories.md) | [PRD](./PRD.md)
-```
-
-#### IC-002: Desarrollar interfaz de chat profesional
-```
-**Título:** Desarrollar interfaz de chat profesional
-**Descripción:** Crear una interfaz de chat clara, profesional y responsiva.
-**Checklist:**
-- [ ] Diseño UI/UX
-- [ ] Implementación frontend
-- [ ] Pruebas de accesibilidad
-**Prioridad:** Must
-**Sprint:** 1
-**Estimación:** 3.5 hh
-**Enlaces:** [User Story HDU-002](./UserStories.md) | [PRD](./PRD.md)
-```
-
-> Repite este formato para todos los tickets IC-XXX.
+- **Total de sprints:** 3
+- **Duración de cada sprint:** 2 semanas (aprox. 14 días)
+- **Sprint 1:** Del 2 de septiembre al 16 de septiembre de 2025 (Documentación técnica)
+- **Sprint 2:** Del 17 de septiembre al 14 de octubre de 2025 (Código funcional)
+- **Sprint 3:** Del 15 de octubre al 28 de octubre de 2025 (Entrega final y mejoras)
 
 ---
 
-## 4. Observaciones y Recomendaciones
-- Ajustar la carga de trabajo semanalmente según avance real y feedback.
-- Usar el tablero Kanban para seguimiento diario y reuniones de revisión.
-- Priorizar los tickets Must y Should para asegurar entregables clave.
-- Documentar cambios y bloqueos en cada tarjeta del tablero.
+### Sprint 1: Documentación técnica y base funcional
+
+**Duración:** 2 semanas  
+**Fechas:** 2/09/2025 – 16/09/2025  
+**Objetivo:** Sentar las bases del proyecto, asegurar la disponibilidad y accesibilidad del chatbot, y cumplir con los requisitos legales y de seguridad.
+
+**Tickets abordados:**
+- IC-001: Implementar botón/widget de acceso al Chatbot
+- IC-002: Desarrollar interfaz de chat profesional
+- IC-005: Garantizar disponibilidad 24/7 del chatbot
+- IC-013: Cumplimiento de privacidad y seguridad
 
 ---
 
-**¡Listo para exportar y comenzar el seguimiento en Trello u otra herramienta ágil!**
+### Sprint 2: Funcionalidad avanzada y análisis
+
+**Duración:** 4 semanas  
+**Fechas:** 17/09/2025 – 14/10/2025  
+**Objetivo:** Implementar la inteligencia del chatbot, soporte multiidioma, sugerencias inteligentes y sistemas de análisis.
+
+**Tickets abordados:**
+- IC-003: Integrar modelo de lenguaje natural
+- IC-004: Implementar soporte multiidioma
+- IC-006: Redirección a recursos relevantes
+- IC-007: Registrar y analizar preguntas frecuentes
+
+---
+
+### Sprint 3: Medición, optimización y entrega final
+
+**Duración:** 2 semanas  
+**Fechas:** 15/10/2025 – 28/10/2025  
+**Objetivo:** Medir la satisfacción y el impacto, optimizar el sistema, analizar resultados y preparar la entrega final.
+
+**Buffer reservado:** 3 días para pruebas finales de carga, seguridad, backup y hardening antes de la entrega final.
+
+**Tickets abordados:**
+- IC-008: Medir satisfacción del usuario
+- IC-009: Identificar temas con baja satisfacción
+- IC-010: Analizar recursos más consultados
+- IC-011: Analizar stack tecnológico y rubros de interés
+- IC-012: Medir métricas de conversión y leads
+- IC-014: Actualización y mejora continua del chatbot
+- IC-015: Pruebas de carga y rendimiento del sistema
+- IC-016: Pruebas de seguridad y vulnerabilidades
+- IC-017: Estrategia y pruebas de backup y recuperación

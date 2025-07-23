@@ -26,6 +26,8 @@ Restricciones: Debe ser responsive y no interferir con otros elementos de navega
 
 **Asignación:** Equipo de Frontend
 
+**Sprint:** 1
+
 **Etiquetas:** UI, Frontend, Accesibilidad, Sprint 1
 
 **Comentarios y Notas:**
@@ -64,6 +66,8 @@ Restricciones: Cumplir con estándares de accesibilidad y diseño responsive.
 
 **Asignación:** Equipo de Frontend
 
+**Sprint:** 1
+
 **Etiquetas:** UI, Frontend, Chat, Accesibilidad, Sprint 1
 
 **Comentarios y Notas:**
@@ -101,7 +105,9 @@ Restricciones: Cumplir con políticas de privacidad y no exponer datos sensibles
 
 **Asignación:** Equipo de Backend / IA
 
-**Etiquetas:** Backend, IA, NLP, RAG, Sprint 1
+**Sprint:** 2
+
+**Etiquetas:** Backend, IA, NLP, RAG, Sprint 2
 
 **Comentarios y Notas:**
 - Revisar integración con fuentes de datos (LinkedIn, GitHub, etc).
@@ -137,6 +143,8 @@ Restricciones: Mantener coherencia y calidad en traducciones.
 **Estimación de Esfuerzo:** 8 puntos de historia (L)
 
 **Asignación:** Equipo de Backend / IA
+
+**Sprint:** 2
 
 **Etiquetas:** Backend, IA, Multiidioma, Sprint 2
 
@@ -175,6 +183,8 @@ Restricciones: El sistema debe ser tolerante a fallos y recuperarse automáticam
 
 **Asignación:** Equipo de DevOps / Backend
 
+**Sprint:** 1
+
 **Etiquetas:** Infraestructura, Backend, Disponibilidad, Sprint 1
 
 **Comentarios y Notas:**
@@ -212,6 +222,8 @@ Restricciones: Los enlaces deben ser actualizados y contextuales.
 
 **Asignación:** Equipo de Backend / Frontend
 
+**Sprint:** 2
+
 **Etiquetas:** Backend, Frontend, UX, Sugerencias, Sprint 2
 
 **Comentarios y Notas:**
@@ -247,6 +259,8 @@ Restricciones: Cumplir con normativas de privacidad de datos.
 **Estimación de Esfuerzo:** 5 puntos de historia (M)
 
 **Asignación:** Equipo de Backend / Data
+
+**Sprint:** 2
 
 **Etiquetas:** Backend, Data, Análisis, Estadísticas, Sprint 2
 
@@ -284,6 +298,8 @@ Restricciones: El feedback debe ser fácil de proporcionar y anónimo.
 
 **Asignación:** Equipo de Backend / Data
 
+**Sprint:** 2
+
 **Etiquetas:** Backend, Data, Feedback, UX, Sprint 2
 
 **Comentarios y Notas:**
@@ -319,6 +335,8 @@ Restricciones: Mantener anonimato y privacidad de los usuarios.
 **Estimación de Esfuerzo:** 2 puntos de historia (S)
 
 **Asignación:** Equipo de Backend / Data
+
+**Sprint:** 3
 
 **Etiquetas:** Backend, Data, Feedback, Mejora Continua, Sprint 3
 
@@ -356,6 +374,8 @@ Restricciones: Cumplir con normativas de privacidad.
 
 **Asignación:** Equipo de Backend / Data
 
+**Sprint:** 3
+
 **Etiquetas:** Backend, Data, UX, Estadísticas, Sprint 3
 
 **Comentarios y Notas:**
@@ -392,6 +412,8 @@ Restricciones: Mantener privacidad de los datos.
 
 **Asignación:** Equipo de Backend / Data
 
+**Sprint:** 3
+
 **Etiquetas:** Backend, Data, Estadísticas, Tendencias, Sprint 3
 
 **Comentarios y Notas:**
@@ -427,6 +449,8 @@ Restricciones: Cumplir con normativas de privacidad y protección de datos.
 **Estimación de Esfuerzo:** 5 puntos de historia (M)
 
 **Asignación:** Equipo de Backend / Data
+
+**Sprint:** 3
 
 **Etiquetas:** Backend, Data, Leads, Conversión, Sprint 3
 
@@ -465,6 +489,8 @@ Restricciones: Cumplimiento legal obligatorio.
 
 **Asignación:** Equipo de Backend / Legal / DevOps
 
+**Sprint:** 1
+
 **Etiquetas:** Seguridad, Legal, Backend, Privacidad, Sprint 1
 
 **Comentarios y Notas:**
@@ -502,7 +528,9 @@ Restricciones: Mantener la calidad y coherencia de las respuestas tras cada actu
 
 **Asignación:** Equipo de Backend / IA / DevOps
 
-**Etiquetas:** Backend, IA, DevOps, Mejora Continua, Sprint 4
+**Sprint:** 3
+
+**Etiquetas:** Backend, IA, DevOps, Mejora Continua, Sprint 3
 
 **Comentarios y Notas:**
 - Incluir mecanismos de rollback y backup.
@@ -510,6 +538,123 @@ Restricciones: Mantener la calidad y coherencia de las respuestas tras cada actu
 **Enlaces o Referencias:**
 - [HDU-014 en UserStories.md](./UserStories.md)
 - [PRD.md sección Mejora Continua](./PRD.md)
+
+**Historial de Cambios:**
+- 21/07/2025: Creado por IA
+
+---
+
+**IC-015**
+
+**Título:** Pruebas de carga y rendimiento del sistema
+
+**Descripción:**
+Propósito: Validar que el sistema soporte la carga esperada de usuarios y consultas simultáneas sin degradar la experiencia.
+Detalles: Realizar pruebas de estrés sobre el backend, chatbot y base de datos. Identificar cuellos de botella y optimizar recursos.
+Restricciones: Las pruebas deben realizarse en un entorno controlado y no afectar a usuarios reales.
+
+**Criterios de Aceptación:**
+- El sistema soporta el número objetivo de usuarios concurrentes.
+- Se identifican y documentan los límites de rendimiento.
+- Se proponen y aplican optimizaciones si es necesario.
+
+**Pruebas de Validación:**
+- Simulación de carga con herramientas como k6, JMeter o Artillery.
+- Monitoreo de recursos y tiempos de respuesta.
+
+**Prioridad:** Must
+
+**Estimación de Esfuerzo:** 3 puntos de historia (M)
+
+**Asignación:** Equipo de Backend / DevOps
+
+**Sprint:** 3
+
+**Etiquetas:** Backend, DevOps, Testing, Rendimiento, Sprint 3
+
+**Comentarios y Notas:**
+- Documentar resultados y acciones tomadas.
+
+**Enlaces o Referencias:**
+- [PRD.md sección Métricas de Éxito](./PRD.md)
+
+**Historial de Cambios:**
+- 21/07/2025: Creado por IA
+
+---
+
+**IC-016**
+
+**Título:** Pruebas de seguridad y vulnerabilidades
+
+**Descripción:**
+Propósito: Garantizar que el sistema es seguro frente a ataques comunes y protege los datos de los usuarios.
+Detalles: Realizar pruebas de penetración, revisión de OWASP Top 10 y validación de políticas de acceso.
+Restricciones: Las pruebas deben ser éticas y no comprometer datos reales.
+
+**Criterios de Aceptación:**
+- No se detectan vulnerabilidades críticas en el sistema.
+- Se documentan y corrigen hallazgos de seguridad.
+- El sistema cumple con las normativas de privacidad.
+
+**Pruebas de Validación:**
+- Escaneo de vulnerabilidades con herramientas como OWASP ZAP, Snyk o similares.
+- Pruebas manuales de acceso y roles.
+
+**Prioridad:** Must
+
+**Estimación de Esfuerzo:** 3 puntos de historia (M)
+
+**Asignación:** Equipo de Backend / Seguridad
+
+**Sprint:** 3
+
+**Etiquetas:** Backend, Seguridad, Testing, Sprint 3
+
+**Comentarios y Notas:**
+- Incluir pruebas de inyección, XSS, CSRF, etc.
+
+**Enlaces o Referencias:**
+- [PRD.md sección Privacidad y Seguridad](./PRD.md)
+
+**Historial de Cambios:**
+- 21/07/2025: Creado por IA
+
+---
+
+**IC-017**
+
+**Título:** Estrategia y pruebas de backup y recuperación
+
+**Descripción:**
+Propósito: Asegurar que toda la información crítica del sistema puede ser respaldada y restaurada ante fallos o incidentes.
+Detalles: Definir y probar procedimientos de backup automático de base de datos, logs y configuraciones clave.
+Restricciones: Los backups deben ser cifrados y almacenados de forma segura.
+
+**Criterios de Aceptación:**
+- Se realizan backups automáticos periódicos.
+- Se valida la restauración exitosa de un backup.
+- Los backups cumplen con normativas de privacidad.
+
+**Pruebas de Validación:**
+- Simulación de pérdida de datos y recuperación.
+- Revisión de logs de backup y restauración.
+
+**Prioridad:** Must
+
+**Estimación de Esfuerzo:** 2 puntos de historia (S)
+
+**Asignación:** Equipo de Backend / DevOps
+
+**Sprint:** 3
+
+**Etiquetas:** Backend, DevOps, Backup, Seguridad, Sprint 3
+
+**Comentarios y Notas:**
+- Documentar la política de retención y restauración.
+
+**Enlaces o Referencias:**
+- [PRD.md sección Mantenimiento](./PRD.md)
 
 **Historial de Cambios:**
 - 21/07/2025: Creado por IA
