@@ -27,6 +27,22 @@
      - [1.9.9. Recibir notificaciones de coincidencias](#caso-de-uso-199-recibir-notificaciones-de-coincidencias)
      - [1.9.10. Cerrar sesión y limpiar sesión segura](#caso-de-uso-1910-cerrar-sesión-y-limpiar-sesión-segura)
 2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
+   - [2.1. Diagrama de arquitectura](#21-diagrama-de-arquitectura)
+   - [2.1.2. Tecnologías por Componente](#212-tecnologías-por-componente)
+   - [2.1.3. Patrón Arquitectónico: MVC Monolítico Modular](#213-patrón-arquitectónico-mvc-monolítico-modular)
+   - [2.2. Descripción de componentes principales](#22-descripción-de-componentes-principales)
+     - [2.2.1. Frontend (Cliente)](#221-frontend-cliente)
+     - [2.2.2. Backend (Servidor de Negocio)](#222-backend-servidor-de-negocio)
+     - [2.2.3. Base de Datos](#223-base-de-datos)
+     - [2.2.4. Sistema de Notificaciones](#224-sistema-de-notificaciones)
+     - [2.2.5. Módulo de IA para Coincidencias](#225-módulo-de-ia-para-coincidencias)
+     - [2.2.6. Servicios Externos / Integraciones](#226-servicios-externos--integraciones)
+     - [2.2.7. Middleware y Seguridad](#227-middleware-y-seguridad)
+     - [2.2.8. Infraestructura / Orquestación](#228-infraestructura--orquestación)
+   - [2.3. Descripción de alto nivel del proyecto y estructura de ficheros](#23-descripción-de-alto-nivel-del-proyecto-y-estructura-de-ficheros)
+   - [2.4. Infraestructura y despliegue](#24-infraestructura-y-despliegue)
+   - [2.5. Seguridad](#25-seguridad)
+   - [2.6. Tests](#26-tests)
 3. [Modelo de datos](#3-modelo-de-datos)
 4. [Especificación de la API](#4-especificación-de-la-api)
 5. [Historias de usuario](#5-historias-de-usuario)
@@ -91,7 +107,7 @@ El sistema también genera coincidencias inversas: si un nuevo inmueble publicad
 A continuación se detallan las funcionalidades específicas de **Zonmatch**, diseñadas para responder a las necesidades de los distintos perfiles de usuario (buscadores, agentes, inmobiliarias, constructoras) y resolver los principales desafíos del mercado inmobiliario tradicional.
 
 ### Lean Canvas:**
-![Lean Canvas de Zonmatch](./diagramas/lean%20canvas.png)
+![Lean Canvas de Zonmatch](./docs/diagramas/lean%20canvas.png)
 
 ---
 
@@ -231,7 +247,7 @@ Capturar el perfil del usuario e intenciones desde el primer uso.
 - Cookie `HttpOnly` y `Secure` para evitar accesos vía JS.
 - Enlace de recuperación con token temporal no reutilizable.
 
-![Flujo de Autenticación](./flujos-usuario/diagramas/Login-Registro.png)
+![Flujo de Autenticación](./docs/flujos-usuario/diagramas/Login-Registro.png)
 
 @startuml
 start
@@ -277,7 +293,7 @@ stop
 
 **IA aplicada:** Crea el perfil base para el sistema de coincidencias automáticas.
 
-![Flujo de Onboarding](./flujos-usuario/diagramas/Onboarding.png)
+![Flujo de Onboarding](./docs/flujos-usuario/diagramas/Onboarding.png)
 
 @startuml
 start
@@ -330,7 +346,7 @@ Permitir al usuario encontrar propiedades relevantes rápida y precisamente.
 - Ordenamiento por relevancia
 - Sugerencias si no hay resultados exactos
 
-![Flujo de Búsqueda](./flujos-usuario/diagramas/Busqueda.png)
+![Flujo de Búsqueda](./docs/flujos-usuario/diagramas/Busqueda.png)
 
 @startuml
 start
@@ -362,7 +378,7 @@ Alertar automáticamente de oportunidades relevantes.
 - Disparador: búsqueda activa coincide con una nueva publicación
 - Para el publicador: vista con detalles del perfil del buscador
 
-![Flujo de Coincidencias](./flujos-usuario/diagramas/Match.png)
+![Flujo de Coincidencias](./docs/flujos-usuario/diagramas/Match.png)
 
 @startuml
 start
@@ -397,7 +413,7 @@ Presentar la propiedad clara y atractivamente.
 **IA aplicada:**
 - Propiedades similares al final del detalle
 
-![Flujo de Visualización](./flujos-usuario/diagramas/Visualizacion.png)
+![Flujo de Visualización](./docs/flujos-usuario/diagramas/Visualizacion.png)
 
 @startuml
 start
@@ -542,7 +558,7 @@ Ofrecer una vía directa de contacto fuera de la plataforma, aprovechando una ap
 - El número telefónico del agente solo será visible si habilitó la opción de contacto externo.
 - Se informa al usuario que WhatsApp es un canal externo a Zonmatch, sin cifrado controlado por la plataforma.
 
-![Flujo de Chat](./flujos-usuario/diagramas/Chat.png)
+![Flujo de Chat](./docs/flujos-usuario/diagramas/Chat.png)
 
 @startuml
 start
@@ -588,7 +604,7 @@ Gestionar publicaciones y evaluar rendimiento.
 - Alertas de búsqueda activa coincidente
 - Recomendaciones para optimizar publicaciones
 
-![Flujo del Panel de Control](./flujos-usuario/diagramas/Panel%20de%20control.png)
+![Flujo del Panel de Control](./docs/flujos-usuario/diagramas/Panel%20de%20control.png)
 
 @startuml
 start
@@ -616,7 +632,7 @@ Organizar decisiones del usuario de forma clara.
 - Modo de comparación en tabla
 - Botón: "¿Aún disponible?" para seguimiento
 
-![Flujo de Favoritos](./flujos-usuario/diagramas/Favoritos.png)
+![Flujo de Favoritos](./docs/flujos-usuario/diagramas/Favoritos.png)
 
 @startuml
 start
@@ -672,7 +688,7 @@ stop
 5. Si es buscador, se solicitan preferencias iniciales (tipo de propiedad, zona, filtros).
 6. Se redirige al dashboard correspondiente.
 
-![Registrarse y configurar perfil](./casos-uso/diagramas/Registro.png)
+![Registrarse y configurar perfil](./docs/casos-uso/diagramas/Registro.png)
 
 @startuml
 left to right direction
@@ -701,7 +717,7 @@ L --> P : Si es buscador
 5. Se activa el motor de coincidencias inversas.
 6. La propiedad queda visible en el mapa para buscadores compatibles.
 
-![Publicar una propiedad](./casos-uso/diagramas/Publicacion.png)
+![Publicar una propiedad](./docs/casos-uso/diagramas/Publicacion.png)
 
 @startuml
 actor Publicador
@@ -732,7 +748,7 @@ Publicador --> (Iniciar publicación)
 4. El sistema devuelve propiedades compatibles visualmente.
 5. El usuario puede guardar la búsqueda o seleccionar una propiedad para ver más.
 
-![Buscar propiedades en el mapa](./casos-uso/diagramas/Busqueda.png)
+![Buscar propiedades en el mapa](./docs/casos-uso/diagramas/Busqueda.png)
 
 @startuml
 actor Buscador
@@ -762,7 +778,7 @@ Buscador --> (Guardar búsqueda)
    - Se notifica a las partes involucradas (buscador o publicador).
 4. Se almacena el resultado para historial y visualización futura.
 
-![Generar coincidencias automáticas](./casos-uso/diagramas/Match.png)
+![Generar coincidencias automáticas](./docs/casos-uso/diagramas/Match.png)
 
 @startuml
 actor Sistema
@@ -793,7 +809,7 @@ Sistema --> (Detectar coincidencia)
    - Se redirige a `wa.me` con un mensaje predefinido.
    - El agente recibe la notificación en su app de WhatsApp.
 
-![Contactar al publicador](./casos-uso/diagramas/Chat.png)
+![Contactar al publicador](./docs/casos-uso/diagramas/Chat.png)
 
 @startuml
 actor Buscador
@@ -824,7 +840,7 @@ Buscador --> (Ver propiedad)
    - Consultar métricas (vistas, contactos).
 4. El sistema actualiza la base de datos y aplica validaciones.
 
-![Administrar mis propiedades](./casos-uso/diagramas/Administracion.png)
+![Administrar mis propiedades](./docs/casos-uso/diagramas/Administracion.png)
 
 @startuml
 actor Publicador
@@ -853,7 +869,7 @@ Publicador --> (Ver mis propiedades)
 4. Selecciona múltiples propiedades y hace clic en "Comparar".
 5. El sistema presenta una tabla comparativa de atributos.
 
-![Guardar y comparar propiedades favoritas](./casos-uso/diagramas/Favoritos.png)
+![Guardar y comparar propiedades favoritas](./docs/casos-uso/diagramas/Favoritos.png)
 
 @startuml
 actor Buscador
@@ -881,7 +897,7 @@ Buscador --> (Acceder a favoritos)
 5. El usuario accede al enlace y define una nueva contraseña.
 6. El sistema actualiza el hash en la base de datos.
 
-![Recuperar contraseña](./casos-uso/diagramas/Seguridad.png)
+![Recuperar contraseña](./docs/casos-uso/diagramas/Seguridad.png)
 
 @startuml
 actor Usuario
@@ -912,7 +928,7 @@ Usuario --> (Solicitar recuperación)
 4. La notificación aparece en el panel o se envía por correo/app.
 5. El usuario puede acceder al detalle del match desde su historial.
 
-![Recibir notificaciones de coincidencias](./casos-uso/diagramas/Notificacion.png)
+![Recibir notificaciones de coincidencias](./docs/casos-uso/diagramas/Notificacion.png)
 
 @startuml
 actor Sistema
@@ -939,7 +955,7 @@ Sistema --> (Detectar coincidencia)
 4. El usuario es redirigido a la página de login.
 5. Se eliminan cookies seguras y se cierra el contexto de sesión.
 
-![Cerrar sesión y limpiar sesión segura](./casos-uso/diagramas/Limpieza.png)
+![Cerrar sesión y limpiar sesión segura](./docs/casos-uso/diagramas/Limpieza.png)
 
 @startuml
 actor Usuario
@@ -958,20 +974,1159 @@ Usuario --> (Cerrar sesión)
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+El sistema sigue una arquitectura MVC (Modelo-Vista-Controlador) con una capa de servicios para la lógica de negocio y una capa de datos para la persistencia.
+
+![Arquitectura del Sistema](./docs/architecture/Arquitectura.png)
+
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[React.js App - Web Only]
+    end
+    
+    subgraph "Backend MVC"
+        B[Express.js Server]
+        
+        subgraph "Controllers Layer"
+            C1[UserController]
+            C2[PropertyController]
+            C3[MatchingController]
+            C4[NotificationController]
+            C5[ChatController]
+        end
+        
+        subgraph "Models Layer"
+            M1[User Model]
+            M2[Property Model]
+            M3[Matching Model]
+            M4[Notification Model]
+            M5[Chat Model]
+        end
+        
+        subgraph "Services Layer"
+            S1[UserService]
+            S2[PropertyService]
+            S3[MatchingService]
+            S4[NotificationService]
+            S5[ChatService]
+        end
+    end
+    
+    subgraph "AI Module"
+        I[OpenAI Integration]
+        J[Matching Algorithm]
+    end
+    
+    subgraph "External Services"
+        K[Google Maps API]
+        L[Firebase Push]
+        M[WhatsApp Business API]
+    end
+    
+    subgraph "Data Layer"
+        N[MySQL Database]
+        O[Redis Cache]
+    end
+    
+    A --> B
+    B --> C1
+    B --> C2
+    B --> C3
+    B --> C4
+    B --> C5
+    
+    C1 --> S1
+    C2 --> S2
+    C3 --> S3
+    C4 --> S4
+    C5 --> S5
+    
+    S1 --> M1
+    S2 --> M2
+    S3 --> M3
+    S4 --> M4
+    S5 --> M5
+    
+    S3 --> I
+    S3 --> J
+    
+    S4 --> L
+    S4 --> M
+    
+    S2 --> K
+    
+    M1 --> N
+    M2 --> N
+    M3 --> N
+    M4 --> N
+    M5 --> N
+    
+    N --> O
+```
+
+## 2.1.2. Tecnologías por Componente
+
+| Componente | Tecnología | Justificación |
+|------------|------------|---------------|
+| **Frontend** | React.js + TypeScript | Componentes reutilizables, tipado fuerte, PWA capabilities |
+| **Backend Framework** | Express.js | Framework minimalista y flexible para Node.js |
+| **Patrón Backend** | MVC (Model-View-Controller) | Separación clara de responsabilidades |
+| **Base de Datos** | MySQL | ACID, transaccional, maduro y confiable |
+| **Cache** | Redis | Sesiones, datos temporales, alta velocidad |
+| **IA** | OpenAI API | Matching inteligente sin infraestructura propia |
+| **Mapas** | Google Maps API | Mejor cobertura y precisión para México |
+| **Notificaciones** | Firebase + WhatsApp Business | Push notifications + mensajería externa |
+| **Autenticación** | JWT + OAuth2 | Estándar seguro y flexible |
+| **Hosting** | AWS EC2 + S3 | Escalabilidad y redundancia |
+| **CI/CD** | GitHub Actions | Integración continua y despliegue automático |
+
+## 2.1.3. Patrón Arquitectónico: MVC Monolítico Modular
+
+**Justificación de la elección:**
+- **Escalabilidad moderada**: Miles de usuarios no requieren microservicios complejos
+- **Presupuesto limitado**: Arquitectura monolítica reduce costos de infraestructura
+- **Separación de dominios**: Facilita mantenimiento y evolución independiente
+- **Patrón MVC**: Estructura clara y probada para aplicaciones web
+
+**Beneficios principales:**
+- Menor latencia en comunicaciones internas
+- Despliegue simplificado
+- Debugging más sencillo
+- Menor overhead de infraestructura
+- Separación clara de responsabilidades por capa
+
+**Sacrificios o déficits:**
+- Acoplamiento entre módulos
+- Escalabilidad horizontal limitada
+- Posible cuello de botella en un solo servicio
+- Curva de aprendizaje para el patrón MVC 
 
 
 ### **2.2. Descripción de componentes principales:**
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+#### Índice de Componentes Principales
+
+1. **[Frontend (Cliente)](#221-frontend-cliente)**
+   - [React.js Application](#2211-reactjs-application)
+   - [Componentes Especializados](#2212-componentes-especializados)
+
+2. **[Backend (Servidor de Negocio)](#222-backend-servidor-de-negocio)**
+   - [Express.js Server](#2221-expressjs-server)
+   - [Controladores (Controllers)](#2222-controladores-controllers)
+
+3. **[Base de Datos](#223-base-de-datos)**
+   - [MySQL Database](#2231-mysql-database)
+   - [Redis Cache](#2232-redis-cache)
+
+4. **[Sistema de Notificaciones](#224-sistema-de-notificaciones)**
+   - [NotificationService](#2241-notificationservice)
+   - [Canales de Notificación](#2242-canales-de-notificación)
+
+5. **[Módulo de IA para Coincidencias](#225-módulo-de-ia-para-coincidencias)**
+   - [MatchingService](#2251-matchingservice)
+   - [Algoritmo de Matching](#2252-algoritmo-de-matching)
+
+6. **[Servicios Externos / Integraciones](#226-servicios-externos--integraciones)**
+   - [Google Maps API](#2261-google-maps-api)
+   - [OpenAI Integration](#2262-openai-integration)
+
+7. **[Middleware y Seguridad](#227-middleware-y-seguridad)**
+   - [Authentication Middleware](#2271-authentication-middleware)
+   - [Security Middleware](#2272-security-middleware)
+
+8. **[Infraestructura / Orquestación](#228-infraestructura--orquestación)**
+   - [Servidor de Aplicación](#2281-servidor-de-aplicación)
+   - [Monitoreo y Logging](#2282-monitoreo-y-logging)
+
+---
+
+## 2.2.1. Frontend (Cliente)
+
+### **2.2.1.1. React.js Application**
+**Propósito funcional:** Interfaz de usuario responsiva que permite a los usuarios interactuar con todas las funcionalidades de Zonmatch.
+
+**Tecnología utilizada:**
+- **Framework:** React.js 18+ con TypeScript
+- **Estado global:** Redux Toolkit para gestión de estado
+- **Routing:** React Router v6 para navegación SPA
+- **UI Components:** Material-UI (MUI) para componentes base
+- **Mapas:** React Google Maps para integración con Google Maps API
+- **Formularios:** React Hook Form con validación Yup
+- **HTTP Client:** Axios para comunicación con backend
+
+**Comunicación e interacciones:**
+- **APIs REST:** Comunicación síncrona con backend mediante endpoints RESTful
+- **WebSocket:** Para notificaciones en tiempo real y chat interno
+- **Local Storage:** Persistencia de preferencias de usuario y sesión
+- **Service Workers:** Para funcionalidades PWA y cache offline
+
+**Buenas prácticas aplicadas:**
+- **Componentes funcionales:** Uso de hooks para estado y efectos
+- **Separación de responsabilidades:** Componentes presentacionales vs contenedores
+- **Lazy loading:** Carga diferida de componentes pesados
+- **Error boundaries:** Manejo de errores por componentes
+- **Responsive design:** Mobile-first approach
+
+### **2.2.1.2. Componentes Especializados**
+
+#### **Mapa Interactivo**
+**Propósito:** Visualización y selección geográfica de propiedades
+**Tecnología:** React Google Maps + Drawing Manager
+**Interacciones:** Integración con Google Maps API para geolocalización y dibujo de polígonos
+
+#### **Sistema de Filtros**
+**Propósito:** Búsqueda avanzada con múltiples criterios
+**Tecnología:** React Hook Form + Yup validation
+**Interacciones:** Comunicación con PropertyService para búsquedas dinámicas
+
+## 2.2.2. Backend (Servidor de Negocio)
+
+### **2.2.2.1. Express.js Server**
+**Propósito funcional:** Servidor principal que orquesta todas las operaciones de negocio y gestiona las peticiones HTTP.
+
+**Tecnología utilizada:**
+- **Framework:** Express.js 4.x
+- **Middleware:** CORS, helmet, compression, morgan
+- **Validación:** Joi para validación de esquemas
+- **Autenticación:** Passport.js con estrategias JWT
+- **Logging:** Winston para logging estructurado
+- **Testing:** Jest + Supertest para testing de APIs
+
+**Comunicación e interacciones:**
+- **APIs REST:** Endpoints RESTful para todas las operaciones CRUD
+- **WebSocket:** Socket.io para comunicación en tiempo real
+- **Base de datos:** Sequelize ORM para operaciones de persistencia
+- **Cache:** Redis para almacenamiento temporal y sesiones
+
+**Buenas prácticas aplicadas:**
+- **Patrón MVC:** Separación clara entre controladores, modelos y servicios
+- **Middleware pattern:** Reutilización de lógica común
+- **Error handling:** Manejo centralizado de errores
+- **Rate limiting:** Protección contra ataques de fuerza bruta
+- **CORS configuration:** Seguridad en comunicación cross-origin
+
+### **2.2.2.2. Controladores (Controllers)**
+
+#### **UserController**
+**Propósito:** Gestión de autenticación, registro y perfiles de usuario
+**Tecnología:** Express.js + JWT + bcrypt
+**Interacciones:** 
+- Comunicación con UserService para lógica de negocio
+- Integración con Redis para sesiones
+- Validación con Joi schemas
+
+#### **PropertyController**
+**Propósito:** CRUD de propiedades y búsquedas avanzadas
+**Tecnología:** Express.js + Sequelize + Google Maps API
+**Interacciones:**
+- Comunicación con PropertyService
+- Integración con Google Maps para validación de direcciones
+- Filtros dinámicos con consultas SQL optimizadas
+
+#### **MatchingController**
+**Propósito:** Gestión de coincidencias automáticas y algoritmos de matching
+**Tecnología:** Express.js + OpenAI API + algoritmos personalizados
+**Interacciones:**
+- Comunicación con MatchingService
+- Integración con OpenAI para análisis de preferencias
+- Notificaciones automáticas a usuarios
+
+## 2.2.3. Base de Datos
+
+### **2.2.3.1. MySQL Database**
+**Propósito funcional:** Almacenamiento persistente de todos los datos del sistema con garantías ACID.
+
+**Tecnología utilizada:**
+- **SGBD:** MySQL 8.0
+- **ORM:** Sequelize para mapeo objeto-relacional
+- **Migraciones:** Sequelize CLI para versionado de esquema
+- **Seeding:** Datos de prueba y configuración inicial
+- **Backup:** mysqldump con encriptación
+
+**Comunicación e interacciones:**
+- **Conexión directa:** Sequelize ORM para operaciones CRUD
+- **Transacciones:** Para operaciones que requieren consistencia
+- **Índices:** Optimización de consultas frecuentes
+- **Replicación:** Para alta disponibilidad (futuro)
+
+**Buenas prácticas aplicadas:**
+- **Normalización:** Estructura normalizada para evitar redundancias
+- **Índices estratégicos:** Para consultas de búsqueda y filtros
+- **Constraints:** Restricciones de integridad referencial
+- **Prepared statements:** Prevención de SQL injection
+- **Connection pooling:** Optimización de conexiones
+
+### **2.2.3.2. Redis Cache**
+**Propósito funcional:** Almacenamiento temporal de datos frecuentemente accedidos y sesiones de usuario.
+
+**Tecnología utilizada:**
+- **Cache:** Redis 6.x
+- **Cliente:** node-redis para Node.js
+- **Serialización:** JSON para objetos complejos
+- **TTL:** Expiración automática de datos
+
+**Comunicación e interacciones:**
+- **Sesiones:** Almacenamiento de sesiones de usuario
+- **Cache de consultas:** Resultados de búsquedas frecuentes
+- **Rate limiting:** Control de intentos de acceso
+- **Notificaciones:** Cola temporal de notificaciones
+
+## 2.2.4. Sistema de Notificaciones
+
+### **2.2.4.1. NotificationService**
+**Propósito funcional:** Gestión centralizada de todos los tipos de notificaciones del sistema.
+
+**Tecnología utilizada:**
+- **Framework:** Node.js con patrones de diseño
+- **Firebase:** Firebase Cloud Messaging para push notifications
+- **WhatsApp:** WhatsApp Business API para mensajería externa
+- **Email:** Nodemailer para notificaciones por correo
+- **WebSocket:** Socket.io para notificaciones en tiempo real
+
+**Comunicación e interacciones:**
+- **Eventos asíncronos:** Procesamiento de notificaciones en background
+- **Colas de mensajes:** Redis para gestión de colas
+- **APIs externas:** Integración con servicios de terceros
+- **Base de datos:** Registro de historial de notificaciones
+
+**Buenas prácticas aplicadas:**
+- **Patrón Observer:** Suscripción a eventos de notificación
+- **Retry logic:** Reintentos automáticos en caso de fallo
+- **Rate limiting:** Control de frecuencia de notificaciones
+- **Templates:** Plantillas reutilizables para diferentes tipos
+
+### **2.2.4.2. Canales de Notificación**
+
+#### **Push Notifications (Firebase)**
+**Propósito:** Notificaciones instantáneas en navegador
+**Tecnología:** Firebase Cloud Messaging
+**Interacciones:** Service Workers en frontend para recepción
+
+#### **WhatsApp Business API**
+**Propósito:** Contacto directo entre usuarios y agentes
+**Tecnología:** WhatsApp Business API + templates
+**Interacciones:** Integración con sistema de chat interno
+
+## 2.2.5. Módulo de IA para Coincidencias
+
+### **2.2.5.1. MatchingService**
+**Propósito funcional:** Algoritmo inteligente que genera coincidencias automáticas entre propiedades y buscadores.
+
+**Tecnología utilizada:**
+- **OpenAI API:** GPT-4 para análisis de preferencias
+- **Algoritmos personalizados:** Lógica de matching basada en criterios múltiples
+- **Machine Learning:** Análisis de patrones de comportamiento
+- **Geolocalización:** Cálculo de distancias y zonas de interés
+
+**Comunicación e interacciones:**
+- **APIs externas:** OpenAI para análisis de texto y preferencias
+- **Base de datos:** Consulta de propiedades y perfiles de usuario
+- **Sistema de notificaciones:** Activación automática de alertas
+- **Cache:** Almacenamiento de resultados de matching
+
+**Buenas prácticas aplicadas:**
+- **Patrón Strategy:** Diferentes algoritmos de matching
+- **Caching inteligente:** Resultados de matching en Redis
+- **Fallback mechanisms:** Algoritmos de respaldo si OpenAI falla
+- **Métricas:** Tracking de efectividad de coincidencias
+
+### **2.2.5.2. Algoritmo de Matching**
+**Propósito:** Evaluación de compatibilidad entre propiedades y buscadores
+**Tecnología:** Algoritmos personalizados + OpenAI embeddings
+**Criterios de evaluación:**
+- Precio (40% del peso)
+- Ubicación geográfica (30% del peso)
+- Características de la propiedad (20% del peso)
+- Preferencias del usuario (10% del peso)
+
+## 2.2.6. Servicios Externos / Integraciones
+
+### **2.2.6.1. Google Maps API**
+**Propósito funcional:** Servicios de geolocalización, validación de direcciones y visualización de mapas.
+
+**Tecnología utilizada:**
+- **APIs:** Google Maps JavaScript API, Geocoding API, Places API
+- **Cliente:** @googlemaps/js-api-loader
+- **Funcionalidades:** Geocoding, reverse geocoding, autocompletado
+
+**Comunicación e interacciones:**
+- **Frontend:** Integración directa con React Google Maps
+- **Backend:** Validación de direcciones en creación de propiedades
+- **Cache:** Almacenamiento de resultados de geocoding
+
+### **2.2.6.2. OpenAI Integration**
+**Propósito funcional:** Análisis inteligente de preferencias y generación de sugerencias personalizadas.
+
+**Tecnología utilizada:**
+- **API:** OpenAI GPT-4
+- **Cliente:** openai Node.js library
+- **Funcionalidades:** Análisis de texto, embeddings, generación de sugerencias
+
+**Comunicación e interacciones:**
+- **MatchingService:** Análisis de preferencias de usuario
+- **PropertyService:** Generación de descripciones optimizadas
+- **Cache:** Almacenamiento de embeddings para optimización
+
+## 2.2.7. Middleware y Seguridad
+
+### **2.2.7.1. Authentication Middleware**
+**Propósito funcional:** Verificación de identidad y autorización de usuarios.
+
+**Tecnología utilizada:**
+- **JWT:** JSON Web Tokens para autenticación stateless
+- **bcrypt:** Hashing seguro de contraseñas
+- **Passport.js:** Estrategias de autenticación
+- **Rate limiting:** Express-rate-limit
+
+**Comunicación e interacciones:**
+- **Headers:** Verificación de tokens en headers de autorización
+- **Redis:** Blacklist de tokens invalidados
+- **Base de datos:** Verificación de usuarios activos
+
+### **2.2.7.2. Security Middleware**
+**Propósito funcional:** Protección contra ataques comunes y vulnerabilidades.
+
+**Tecnología utilizada:**
+- **Helmet:** Headers de seguridad HTTP
+- **CORS:** Configuración de Cross-Origin Resource Sharing
+- **Input validation:** Sanitización de datos de entrada
+- **SQL injection protection:** Prepared statements
+
+**Buenas prácticas aplicadas:**
+- **Defense in depth:** Múltiples capas de seguridad
+- **Principle of least privilege:** Acceso mínimo necesario
+- **Input sanitization:** Limpieza de datos de entrada
+- **HTTPS enforcement:** Redirección automática a HTTPS
+
+## 2.2.8. Infraestructura / Orquestación
+
+### **2.2.8.1. Servidor de Aplicación**
+**Propósito funcional:** Hosting y ejecución del servidor Node.js.
+
+**Tecnología utilizada:**
+- **Runtime:** Node.js 18+ LTS
+- **Process manager:** PM2 para gestión de procesos
+- **Load balancing:** Nginx como reverse proxy
+- **SSL/TLS:** Certificados Let's Encrypt
+
+**Comunicación e interacciones:**
+- **Reverse proxy:** Nginx para balanceo de carga
+- **SSL termination:** Terminación de conexiones HTTPS
+- **Static files:** Servido de archivos estáticos
+- **Health checks:** Monitoreo de estado del servidor
+
+### **2.2.8.2. Monitoreo y Logging**
+**Propósito funcional:** Observabilidad del sistema y detección de problemas.
+
+**Tecnología utilizada:**
+- **Logging:** Winston para logs estructurados
+- **Monitoring:** Prometheus + Grafana (futuro)
+- **Error tracking:** Sentry para captura de errores
+- **Performance:** New Relic para métricas de rendimiento
+
+**Buenas prácticas aplicadas:**
+- **Structured logging:** Logs en formato JSON
+- **Log levels:** Diferentes niveles de detalle
+- **Centralized logging:** Agregación de logs en un punto
+- **Alerting:** Notificaciones automáticas de problemas críticos 
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+#### **Visión Técnica General del Sistema**
 
-### **2.4. Infraestructura y despliegue**
+**Zonmatch** es una aplicación web full-stack que implementa una plataforma de matchmaking inmobiliario inteligente. El sistema está diseñado como una **Single Page Application (SPA)** con arquitectura cliente-servidor, donde el frontend se comunica con el backend a través de APIs RESTful y WebSockets para funcionalidades en tiempo real.
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+**Naturaleza del Proyecto:**
+- **Tipo:** Aplicación web full-stack
+- **Arquitectura:** Cliente-servidor con SPA
+- **Patrón:** MVC (Model-View-Controller) en backend
+- **Comunicación:** APIs REST + WebSockets
+- **Base de datos:** Relacional (MySQL) + Cache (Redis)
+
+**Tecnologías Predominantes:**
+- **Frontend:** React.js 18+ con TypeScript
+- **Backend:** Node.js con Express.js
+- **Base de datos:** MySQL 8.0 con Sequelize ORM
+- **Cache:** Redis para sesiones y datos temporales
+- **IA:** OpenAI API para análisis de preferencias
+- **Mapas:** Google Maps API para geolocalización
+- **Notificaciones:** Firebase + WhatsApp Business API
+
+#### **Estructura del Repositorio**
+
+```
+zonmatch/
+├── 📁 backend/                     # Servidor Node.js + TypeScript + Sequelize
+│   ├── 📁 src/
+│   │   ├── 📁 controllers/        # Capa de Controladores (MVC)
+│   │   │   ├── 📄 authController.ts     # Autenticación y autorización
+│   │   │   ├── 📄 propertyController.ts # Gestión de propiedades
+│   │   │   ├── 📄 searchController.ts   # Búsquedas y filtros
+│   │   │   ├── 📄 matchController.ts    # Sistema de coincidencias
+│   │   │   ├── 📄 chatController.ts     # Chat interno
+│   │   │   └── 📄 userController.ts     # Gestión de usuarios
+│   │   ├── 📁 models/             # Capa de Modelos (MVC)
+│   │   │   ├── 📄 index.ts              # Configuración de Sequelize
+│   │   │   ├── 📄 User.ts               # Usuario con roles
+│   │   │   ├── 📄 Property.ts           # Propiedades inmobiliarias
+│   │   │   ├── 📄 Search.ts             # Búsquedas guardadas
+│   │   │   ├── 📄 Match.ts              # Coincidencias generadas
+│   │   │   ├── 📄 Favorite.ts           # Propiedades favoritas
+│   │   │   ├── 📄 Message.ts            # Mensajes del chat
+│   │   │   └── 📄 Polygon.ts            # Polígonos de zonas de interés
+│   │   ├── 📁 services/           # Capa de Servicios (Lógica de negocio)
+│   │   │   ├── 📄 matchService.ts       # Algoritmo de coincidencias
+│   │   │   ├── 📄 notificationService.ts # Notificaciones
+│   │   │   ├── 📄 emailService.ts       # Envío de emails
+│   │   │   ├── 📄 mapService.ts         # Servicios de geolocalización
+│   │   │   ├── 📄 openAIService.ts      # Integración OpenAI
+│   │   │   └── 📄 whatsAppService.ts    # Integración WhatsApp
+│   │   ├── 📁 routes/             # Definición de rutas API
+│   │   │   ├── 📄 auth.ts               # Rutas de autenticación
+│   │   │   ├── 📄 properties.ts         # Rutas de propiedades
+│   │   │   ├── 📄 search.ts             # Rutas de búsqueda
+│   │   │   ├── 📄 matches.ts            # Rutas de coincidencias
+│   │   │   ├── 📄 chat.ts               # Rutas de chat
+│   │   │   └── 📄 users.ts              # Rutas de usuarios
+│   │   ├── 📁 middleware/         # Middleware de Express
+│   │   │   ├── 📄 auth.ts               # Verificación JWT
+│   │   │   ├── 📄 roleAuth.ts           # Autorización por roles
+│   │   │   ├── 📄 rateLimit.ts          # Límite de intentos
+│   │   │   └── 📄 validation.ts         # Validación de datos
+│   │   ├── 📁 utils/              # Utilidades compartidas
+│   │   │   ├── 📄 jwt.ts                # Manejo de JWT
+│   │   │   ├── 📄 bcrypt.ts             # Encriptación
+│   │   │   ├── 📄 validation.ts         # Validaciones
+│   │   │   └── 📄 helpers.ts            # Funciones auxiliares
+│   │   ├── 📁 config/             # Configuraciones
+│   │   │   ├── 📄 database.ts           # Configuración MySQL
+│   │   │   ├── 📄 jwt.ts                # Configuración JWT
+│   │   │   ├── 📄 email.ts              # Configuración email
+│   │   │   └── 📄 redis.ts              # Configuración Redis
+│   │   ├── 📁 types/              # Tipos TypeScript
+│   │   │   ├── 📄 auth.ts               # Tipos de autenticación
+│   │   │   ├── 📄 property.ts           # Tipos de propiedades
+│   │   │   ├── 📄 user.ts               # Tipos de usuario
+│   │   │   └── 📄 api.ts                # Tipos de API
+│   │   └── 📄 app.ts              # Punto de entrada
+│   ├── 📁 database/
+│   │   ├── 📁 migrations/         # Migraciones Sequelize
+│   │   │   ├── 📄 001-create-users.ts
+│   │   │   ├── 📄 002-create-properties.ts
+│   │   │   ├── 📄 003-create-searches.ts
+│   │   │   ├── 📄 004-create-matches.ts
+│   │   │   ├── 📄 005-create-favorites.ts
+│   │   │   ├── 📄 006-create-messages.ts
+│   │   │   └── 📄 007-create-polygons.ts
+│   │   ├── 📁 seeders/            # Datos de prueba
+│   │   │   ├── 📄 001-demo-users.ts
+│   │   │   ├── 📄 002-demo-properties.ts
+│   │   │   └── 📄 003-demo-searches.ts
+│   │   └── 📁 config/             # Configuración de base de datos
+│   │       └── 📄 database.js
+│   ├── 📁 tests/                  # Tests del backend
+│   │   ├── 📁 unit/
+│   │   ├── 📁 integration/
+│   │   └── 📁 e2e/
+│   ├── 📁 docker/                 # Configuración Docker
+│   │   ├── 📄 Dockerfile
+│   │   └── 📄 docker-compose.yml
+│   ├── 📄 package.json
+│   ├── 📄 tsconfig.json
+│   ├── 📄 .env.example
+│   └── 📄 .gitignore
+├── 📁 frontend/                    # Aplicación React + TypeScript + Vite
+│   ├── 📁 src/
+│   │   ├── 📁 components/         # Componentes reutilizables
+│   │   │   ├── 📁 common/         # Componentes base
+│   │   │   │   ├── 📁 Button/
+│   │   │   │   ├── 📁 Input/
+│   │   │   │   ├── 📁 Modal/
+│   │   │   │   ├── 📁 Card/
+│   │   │   │   └── 📁 Loading/
+│   │   │   ├── 📁 layout/         # Componentes de layout
+│   │   │   │   ├── 📁 Header/
+│   │   │   │   ├── 📁 Footer/
+│   │   │   │   ├── 📁 Sidebar/
+│   │   │   │   └── 📁 Navigation/
+│   │   │   └── 📁 features/       # Componentes específicos
+│   │   │       ├── 📁 auth/       # Autenticación
+│   │   │       ├── 📁 properties/ # Propiedades
+│   │   │       ├── 📁 search/     # Búsqueda y filtros
+│   │   │       ├── 📁 map/        # Mapa y geolocalización
+│   │   │       ├── 📁 chat/       # Chat interno
+│   │   │       ├── 📁 favorites/  # Favoritos
+│   │   │       └── 📁 dashboard/  # Panel de control
+│   │   ├── 📁 pages/              # Páginas principales
+│   │   │   ├── 📁 Home/
+│   │   │   ├── 📁 Login/
+│   │   │   ├── 📁 Register/
+│   │   │   ├── 📁 Search/
+│   │   │   ├── 📁 PropertyDetail/
+│   │   │   ├── 📁 Dashboard/
+│   │   │   ├── 📁 Favorites/
+│   │   │   └── 📁 Chat/
+│   │   ├── 📁 hooks/              # Custom hooks
+│   │   │   ├── 📄 useAuth.ts      # Hook de autenticación
+│   │   │   ├── 📄 useProperties.ts # Hook de propiedades
+│   │   │   ├── 📄 useSearch.ts    # Hook de búsqueda
+│   │   │   ├── 📄 useMap.ts       # Hook de mapa
+│   │   │   └── 📄 useChat.ts      # Hook de chat
+│   │   ├── 📁 services/           # Llamadas a la API
+│   │   │   ├── 📄 api.ts          # Configuración base
+│   │   │   ├── 📄 authService.ts  # Servicios de auth
+│   │   │   ├── 📄 propertyService.ts # Servicios de propiedades
+│   │   │   ├── 📄 searchService.ts # Servicios de búsqueda
+│   │   │   └── 📄 chatService.ts  # Servicios de chat
+│   │   ├── 📁 store/              # Estado global con Zustand
+│   │   │   ├── 📄 authStore.ts    # Estado de autenticación
+│   │   │   ├── 📄 propertyStore.ts # Estado de propiedades
+│   │   │   ├── 📄 searchStore.ts  # Estado de búsqueda
+│   │   │   ├── 📄 favoriteStore.ts # Estado de favoritos
+│   │   │   └── 📄 index.ts        # Store principal
+│   │   ├── 📁 utils/              # Utilidades del frontend
+│   │   │   ├── 📄 constants.ts    # Constantes
+│   │   │   ├── 📄 helpers.ts      # Funciones auxiliares
+│   │   │   ├── 📄 validation.ts   # Validaciones
+│   │   │   └── 📄 formatters.ts   # Formateadores
+│   │   ├── 📁 types/              # Tipos TypeScript
+│   │   │   ├── 📄 auth.ts         # Tipos de autenticación
+│   │   │   ├── 📄 property.ts     # Tipos de propiedades
+│   │   │   ├── 📄 user.ts         # Tipos de usuario
+│   │   │   └── 📄 api.ts          # Tipos de API
+│   │   ├── 📁 styles/             # Estilos globales
+│   │   │   ├── 📄 globals.css
+│   │   │   ├── 📄 variables.css
+│   │   │   └── 📄 components.css
+│   │   ├── 📄 App.tsx
+│   │   └── 📄 main.tsx
+│   ├── 📁 public/
+│   │   ├── 📄 index.html
+│   │   └── 📁 assets/
+│   ├── 📄 package.json
+│   ├── 📄 tsconfig.json
+│   ├── 📄 vite.config.ts          # Configuración Vite
+│   ├── 📄 .env.example
+│   └── 📄 .gitignore
+├── 📁 shared/                      # Código compartido
+│   ├── 📁 types/                   # Tipos compartidos
+│   │   ├── 📄 common.ts            # Tipos comunes
+│   │   ├── 📄 api.ts               # Tipos de API compartidos
+│   │   └── 📄 validation.ts        # Esquemas de validación
+│   └── 📁 constants/               # Constantes compartidas
+│       ├── 📄 roles.ts             # Roles del sistema
+│       ├── 📄 propertyTypes.ts     # Tipos de propiedad
+│       └── 📄 apiEndpoints.ts      # Endpoints de la API
+├── 📁 docs/                        # Documentación técnica
+│   ├── 📁 casos-uso/              # Diagramas de casos de uso
+│   ├── 📁 flujos-usuario/         # Flujos de usuario
+│   ├── 📁 diagramas/              # Diagramas técnicos
+│   ├── 📁 api/                     # Documentación de la API
+│   ├── 📁 deployment/              # Guías de despliegue
+│   └── 📁 architecture/            # Documentación de arquitectura
+├── 📁 scripts/                     # Scripts de automatización
+│   ├── 📄 setup.sh                 # Script de configuración inicial
+│   ├── 📄 deploy.sh                # Script de despliegue
+│   ├── 📄 backup.sh                # Script de backup
+│   └── 📁 docker/                  # Scripts de Docker
+├── 📄 docker-compose.yml           # Docker Compose principal
+├── 📄 .env.example                 # Variables de entorno ejemplo
+├── 📄 .gitignore
+└── 📄 README.md                    # Documentación principal
+```
+
+#### **Descripción de Carpetas y Archivos Principales**
+
+##### **Backend (`/backend/`)**
+- **`controllers/`**: Capa de controladores MVC - manejo de peticiones HTTP
+  - `authController.ts`: Autenticación, registro, gestión de perfiles
+  - `propertyController.ts`: CRUD de propiedades, búsquedas avanzadas
+  - `searchController.ts`: Búsquedas y filtros dinámicos
+  - `matchController.ts`: Algoritmos de coincidencias, matches automáticos
+  - `chatController.ts`: Sistema de mensajería en tiempo real
+  - `userController.ts`: Gestión de usuarios y perfiles
+
+- **`models/`**: Capa de modelos MVC - representación de entidades de base de datos
+  - `User.ts`: Modelo de usuario con roles y autenticación
+  - `Property.ts`: Modelo de propiedad con relaciones y geolocalización
+  - `Search.ts`: Modelo de búsquedas guardadas y filtros
+  - `Match.ts`: Modelo de coincidencias generadas automáticamente
+  - `Favorite.ts`: Modelo de propiedades favoritas del usuario
+  - `Message.ts`: Modelo de mensajes del chat interno
+  - `Polygon.ts`: Modelo de polígonos de zonas de interés
+
+- **`services/`**: Capa de servicios - lógica de negocio y integraciones
+  - `matchService.ts`: Algoritmos de matching con OpenAI
+  - `notificationService.ts`: Envío de notificaciones multi-canal
+  - `emailService.ts`: Servicio de envío de emails
+  - `mapService.ts`: Servicios de geolocalización y mapas
+  - `openAIService.ts`: Integración con OpenAI API
+  - `whatsAppService.ts`: Integración con WhatsApp Business API
+
+- **`routes/`**: Definición de endpoints RESTful organizados por dominio
+- **`middleware/`**: Middleware de Express para autenticación, validación, etc.
+- **`config/`**: Configuraciones de base de datos, JWT, email, Redis
+- **`utils/`**: Utilidades compartidas (JWT, bcrypt, validaciones)
+- **`types/`**: Definiciones TypeScript para tipado fuerte
+- **`database/`**: Migraciones y seeders de Sequelize
+
+##### **Frontend (`/frontend/`)**
+- **`components/`**: Componentes React reutilizables organizados por dominio funcional
+  - `common/`: Componentes base reutilizables (Button, Input, Modal, Card, Loading)
+  - `layout/`: Componentes de layout (Header, Footer, Sidebar, Navigation)
+  - `features/`: Componentes específicos por funcionalidad
+    - `auth/`: Formularios de login, registro, recuperación de contraseña
+    - `properties/`: Cards de propiedades, formularios de publicación, galerías
+    - `search/`: Filtros avanzados, mapa interactivo, resultados de búsqueda
+    - `map/`: Mapa y geolocalización con herramientas de dibujo
+    - `chat/`: Sistema de mensajería interna, conversaciones
+    - `favorites/`: Gestión de propiedades favoritas
+    - `dashboard/`: Paneles de control para usuarios y agentes
+
+- **`pages/`**: Páginas principales de la aplicación (Home, Login, Register, Search, etc.)
+- **`hooks/`**: Custom hooks para lógica reutilizable (useAuth, useProperties, etc.)
+- **`services/`**: Cliente HTTP (Axios), servicios de mapas, notificaciones
+- **`store/`**: Estado global con Zustand (authStore, propertyStore, etc.)
+- **`utils/`**: Utilidades del frontend (constantes, helpers, validaciones)
+- **`types/`**: Definiciones TypeScript para tipado fuerte
+- **`styles/`**: CSS/SCSS, temas, variables de diseño
+
+##### **Shared (`/shared/`)**
+- **`types/`**: Tipos compartidos entre frontend y backend
+  - `common.ts`: Tipos comunes utilizados en toda la aplicación
+  - `api.ts`: Tipos de API compartidos para consistencia
+  - `validation.ts`: Esquemas de validación compartidos
+- **`constants/`**: Constantes compartidas
+  - `roles.ts`: Roles del sistema (user, agent, admin)
+  - `propertyTypes.ts`: Tipos de propiedad inmobiliaria
+  - `apiEndpoints.ts`: Endpoints de la API centralizados
+
+##### **Documentación (`/docs/`)**
+- **`casos-uso/`**: Diagramas PlantUML de casos de uso del sistema
+- **`flujos-usuario/`**: Diagramas de flujos de usuario y experiencia
+- **`diagramas/`**: Diagramas técnicos (arquitectura, base de datos)
+- **`api/`**: Documentación de la API con ejemplos
+- **`deployment/`**: Guías de despliegue y configuración
+- **`arquitectura/`**: Documentación de arquitectura detalla
+
+##### **Scripts (`/scripts/`)**
+- **`setup.sh`**: Automatización de instalación y configuración inicial
+- **`deploy.sh`**: Script de despliegue automatizado
+- **`backup.sh`**: Script de backup de base de datos
+- **`docker/`**: Scripts específicos para Docker
+
+#### **Patrón Arquitectónico: MVC con Separación de Dominios**
+
+**Organización del Proyecto:**
+El proyecto sigue una **arquitectura híbrida** que combina múltiples patrones:
+
+1. **Patrón MVC** en el backend para separación clara de responsabilidades
+2. **Feature-based Architecture** en el frontend con separación por dominios funcionales
+3. **Clean Architecture** con capas bien definidas
+4. **Shared Kernel** para código compartido entre frontend y backend
+5. **Repository Pattern** implementado a través de Sequelize models
+6. **Service Layer Pattern** para lógica de negocio encapsulada
+
+**Patrones Arquitectónicos Identificados:**
+
+**Backend:**
+- **MVC (Model-View-Controller)**: Separación clara entre controladores, modelos y servicios
+- **Repository Pattern**: Acceso a datos a través de modelos Sequelize
+- **Service Layer**: Lógica de negocio encapsulada en servicios especializados
+- **Middleware Pattern**: Funciones intermedias reutilizables
+
+**Frontend:**
+- **Component-Based Architecture**: Componentes React reutilizables
+- **Feature-based Organization**: Organización por funcionalidades de negocio
+- **Store Pattern**: Estado global con Zustand
+- **Custom Hooks Pattern**: Lógica reutilizable encapsulada en hooks
+
+**Compartido:**
+- **Shared Kernel**: Tipos y constantes compartidos entre frontend y backend
+- **Domain-Driven Design (DDD)**: Organización por dominios de negocio
+
+**Justificación de la Estructura:**
+
+**Mantenibilidad:**
+- **Separación clara de responsabilidades**: Controladores manejan HTTP, modelos gestionan datos, servicios contienen lógica de negocio
+- **Organización por dominio**: Cada funcionalidad (auth, properties, matching) tiene su propia carpeta
+- **Componentes reutilizables**: Frontend organizado en componentes modulares
+- **Tipado fuerte**: TypeScript en ambos lados para detectar errores temprano
+
+**Escalabilidad:**
+- **Servicios desacoplados**: Cada servicio puede evolucionar independientemente
+- **APIs RESTful**: Facilita la integración con otros sistemas
+- **Base de datos normalizada**: Estructura optimizada para consultas complejas
+- **Microservicios ready**: Estructura preparada para futura migración a microservicios
+
+**Claridad del Código:**
+- **Nomenclatura consistente**: Convenciones claras para archivos y carpetas
+- **Documentación integrada**: README y documentación técnica en `/docs/`
+- **Testing facilitado**: Separación clara permite tests unitarios y de integración
+- **Onboarding rápido**: Estructura intuitiva para nuevos desarrolladores
+
+**Beneficios de esta Organización:**
+- **Desarrollo eficiente**: Cambios localizados en componentes específicos
+- **Deployment simplificado**: Scripts automatizados para instalación y despliegue
+- **Reutilización de código**: Componentes y servicios compartidos
+- **Despliegue independiente**: Backend y frontend pueden desplegarse por separado
+- **Testing comprehensivo**: Cada capa puede ser testeada independientemente
+
+### **2.4. Infraestructura y Despliegue**
+
+#### **Arquitectura de Infraestructura**
+
+Zonmatch utiliza una infraestructura cloud moderna optimizada para costos, distribuida entre múltiples servicios especializados que garantizan alta disponibilidad, escalabilidad y facilidad de mantenimiento.
+
+**Stack Tecnológico de Infraestructura:**
+
+| Componente | Servicio | Propósito | Costo Mensual |
+|------------|----------|-----------|----------------|
+| **Frontend** | Vercel | Hosting de React SPA | $0 (Hobby Plan) |
+| **Backend** | Railway | API Node.js + Express | Incluido en Railway |
+| **Base de Datos** | Railway MySQL | Persistencia de datos | Incluido en Railway |
+| **Cache** | Railway Redis | Sesiones y cache | Incluido en Railway |
+| **Almacenamiento** | Cloudinary | Imágenes de propiedades | $0 (Free Tier) |
+| **CI/CD** | Vercel + Railway | Despliegue automático | $0 (incluido) |
+| **SSL/TLS** | Let's Encrypt | Certificados SSL | $0 |
+| **CDN** | Vercel + Cloudinary | Distribución de contenido | $0 |
+
+**Costos Totales Estimados: $5-20/mes**
+
+#### **Diagrama de Infraestructura**
+![Diagrama de Infraestructura](docs/infraestructura/infraestructura.png)
+
+```mermaid
+graph TB
+    subgraph "Desarrollo Local"
+        DEV[Desarrollador]
+        DOCKER[Docker Compose]
+        DEV --> DOCKER
+    end
+    
+    subgraph "GitHub"
+        REPO[Repositorio]
+        REPO --> VERCEL
+        REPO --> RAILWAY
+    end
+    
+    subgraph "Frontend - Vercel"
+        VERCEL[Vercel Platform]
+        CDN[CDN Global]
+        VERCEL --> CDN
+    end
+    
+    subgraph "Backend - Railway"
+        RAILWAY[Railway Platform]
+        API[Node.js API]
+        DB[(MySQL Database)]
+        REDIS[(Redis Cache)]
+        RAILWAY --> API
+        API --> DB
+        API --> REDIS
+    end
+    
+    subgraph "Servicios Externos"
+        CLOUDINARY[Cloudinary]
+        OPENAI[OpenAI API]
+        MAPS[Google Maps API]
+        FIREBASE[Firebase Push]
+        WHATSAPP[WhatsApp Business API]
+    end
+    
+    subgraph "Monitoreo"
+        LOGS[Railway Logs]
+        METRICS[Vercel Analytics]
+    end
+    
+    DEV --> REPO
+    API --> CLOUDINARY
+    API --> OPENAI
+    API --> MAPS
+    API --> FIREBASE
+    API --> WHATSAPP
+    RAILWAY --> LOGS
+    VERCEL --> METRICS
+    
+    style VERCEL fill:#000,color:#fff
+    style RAILWAY fill:#0066ff,color:#fff
+    style CLOUDINARY fill:#ff6b35,color:#fff
+    style REPO fill:#333,color:#fff
+```
+
+#### **Servicios y Configuración**
+
+##### **1. Frontend - Vercel**
+**Configuración:**
+- **Framework:** React + Vite
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Node Version:** 18.x
+- **Environment Variables:** Configuradas desde dashboard
+
+**Características:**
+- Despliegue automático desde GitHub
+- SSL/TLS automático
+- CDN global automático
+- Preview deployments por PR
+- Analytics integrado
+
+##### **2. Backend - Railway**
+**Configuración:**
+- **Runtime:** Node.js 18.x
+- **Start Command:** `npm start`
+- **Port:** `process.env.PORT`
+- **Environment Variables:** Configuradas desde dashboard
+
+**Servicios Incluidos:**
+- **MySQL Database:** Instancia dedicada con backups automáticos
+- **Redis Cache:** Instancia dedicada para sesiones y cache
+- **Logs:** Logs centralizados y accesibles
+- **Metrics:** Monitoreo básico incluido
+
+##### **3. Almacenamiento - Cloudinary**
+**Configuración:**
+- **Cloud Name:** Configurado en variables de entorno
+- **API Key/Secret:** Configurados en backend
+- **Transformations:** Optimización automática de imágenes
+
+**Características:**
+- 25GB de almacenamiento gratuito
+- Optimización automática de imágenes
+- CDN global incluido
+- Transformaciones on-the-fly
+
+##### **4. CI/CD - Despliegue Automático**
+
+**Configuración de Despliegue Automático:**
+
+**Vercel (Frontend):**
+- **Trigger:** Push a rama `main`
+- **Configuración:** Conectado directamente al repositorio GitHub
+- **Automatización:** Despliegue automático al hacer merge a main
+- **Preview:** URLs automáticas por Pull Request
+
+**Railway (Backend):**
+- **Trigger:** Push a rama `main`
+- **Configuración:** Conectado directamente al repositorio GitHub
+- **Automatización:** Despliegue automático al hacer merge a main
+- **Variables de entorno:** Configuradas desde dashboard de Railway
+
+**Proceso Simplificado:**
+1. **Desarrollo en feature branch**
+2. **Crear Pull Request**
+3. **Code review y aprobación**
+4. **Merge a main** → **Despliegue automático**
+
+**Configuración en Vercel:**
+```bash
+# Conectar repositorio en Vercel Dashboard
+# Framework Preset: Vite
+# Build Command: npm run build
+# Output Directory: dist
+# Install Command: npm install
+# Root Directory: frontend
+```
+
+**Configuración en Railway:**
+```bash
+# Conectar repositorio en Railway Dashboard
+# Service Type: Node.js
+# Start Command: npm start
+# Root Directory: backend
+# Environment Variables: Configuradas en dashboard
+```
+
+#### **Proceso de Despliegue**
+
+##### **Entornos Configurados:**
+
+1. **Desarrollo Local**
+   - Docker Compose para servicios locales
+   - Base de datos local con datos de prueba
+   - Hot reload para desarrollo
+
+2. **Staging (Preview)**
+   - Despliegue automático por Pull Request
+   - URL única por PR para testing
+   - Base de datos separada para testing
+
+3. **Producción**
+   - Despliegue automático desde `main` branch
+   - Base de datos de producción
+   - SSL y dominio configurado
+
+##### **Flujo de Despliegue:**
+![Flujo de Despliegue](docs/despliegue/despliegue.png)
+
+```mermaid
+graph LR
+    A[Desarrollo Local] --> B[Push a Feature Branch]
+    B --> C[Crear Pull Request]
+    C --> D[Preview Automático]
+    D --> E[Code Review]
+    E --> F[Merge a Main]
+    F --> G[Deploy Automático a Producción]
+    
+    style A fill:#e1f5fe
+    style D fill:#fff3e0
+    style G fill:#e8f5e8
+```
+
+##### **Pasos del Proceso:**
+
+1. **Desarrollo Local:**
+   ```bash
+   # Clonar repositorio
+   git clone https://github.com/usuario/zonmatch.git
+   cd zonmatch
+   
+   # Configurar variables de entorno
+   cp .env.example .env
+   # Editar .env con valores locales
+   
+   # Ejecutar con Docker
+   docker-compose up -d
+   ```
+
+2. **Crear Feature Branch:**
+   ```bash
+   git checkout -b feature/nueva-funcionalidad
+   # Desarrollar cambios
+   git add .
+   git commit -m "feat: nueva funcionalidad"
+   git push origin feature/nueva-funcionalidad
+   ```
+
+3. **Pull Request:**
+   - Crear PR en GitHub
+   - Se genera preview deployment automáticamente
+   - Code review y aprobación
+
+4. **Merge a Main:**
+   - Al hacer merge, se dispara deploy automático
+   - Frontend se despliega en Vercel automáticamente
+   - Backend se despliega en Railway automáticamente
+
+5. **Verificación Post-Deploy:**
+   - Verificar endpoints de API
+   - Verificar funcionalidades críticas
+   - Monitorear logs por errores
+
+##### **Scripts de Automatización:**
+
+**`scripts/deploy.sh`:**
+```bash
+#!/bin/bash
+set -e
+
+echo "🚀 Iniciando despliegue..."
+
+# Verificar que estamos en main
+if [[ $(git branch --show-current) != "main" ]]; then
+    echo "❌ Error: Debes estar en la rama main"
+    exit 1
+fi
+
+# Ejecutar tests
+echo "🧪 Ejecutando tests..."
+npm run test
+
+# Build del frontend
+echo "🏗️ Build del frontend..."
+cd frontend && npm run build && cd ..
+
+# Deploy automático via GitHub Actions
+echo "📤 Push a main para trigger de deploy..."
+git push origin main
+
+echo "✅ Despliegue iniciado. Revisar GitHub Actions para progreso."
+```
+
+**`scripts/rollback.sh`:**
+```bash
+#!/bin/bash
+set -e
+
+echo "🔄 Iniciando rollback..."
+
+# Obtener commit anterior
+PREVIOUS_COMMIT=$(git log --oneline -2 | tail -1 | cut -d' ' -f1)
+
+echo "⏪ Revertiendo a commit: $PREVIOUS_COMMIT"
+git revert --no-edit HEAD
+git push origin main
+
+echo "✅ Rollback completado. Revisar GitHub Actions."
+```
+
+#### **Configuración de Seguridad**
+
+##### **SSL/TLS:**
+- **Vercel:** SSL automático con Let's Encrypt
+- **Railway:** SSL automático incluido
+- **Cloudinary:** HTTPS obligatorio
+
+##### **Variables de Entorno:**
+```bash
+# Frontend (Vercel)
+REACT_APP_API_URL=https://api.zonmatch.com
+REACT_APP_CLOUDINARY_CLOUD_NAME=zonmatch
+REACT_APP_GOOGLE_MAPS_API_KEY=xxx
+
+# Backend (Railway)
+DATABASE_URL=mysql://user:pass@host:port/db
+REDIS_URL=redis://host:port
+JWT_SECRET=xxx
+OPENAI_API_KEY=xxx
+CLOUDINARY_API_KEY=xxx
+CLOUDINARY_API_SECRET=xxx
+```
+
+#### **Monitoreo y Logs**
+
+##### **Railway Logs:**
+- Logs centralizados accesibles desde dashboard
+- Filtros por servicio y nivel
+- Retención de 30 días
+
+##### **Vercel Analytics:**
+- Métricas de rendimiento automáticas
+- Análisis de usuarios
+- Core Web Vitals
+
+##### **Health Checks:**
+```javascript
+// Endpoint de health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    version: process.env.APP_VERSION || '1.0.0'
+  });
+});
+```
+
+#### **Escalabilidad Futura**
+
+**Fase 1 (Actual):**
+- Railway plan básico ($5-20/mes)
+- Vercel hobby plan (gratis)
+- Cloudinary free tier
+
+**Fase 2 (Crecimiento):**
+- Railway plan pro ($50/mes)
+- Vercel pro plan ($20/mes)
+- Cloudinary paid plan ($89/mes)
+- Implementar auto-scaling
+
+**Fase 3 (Escala):**
+- Migración a AWS/GCP
+- Kubernetes para orquestación
+- Microservicios
+- Load balancers
+
+Esta infraestructura proporciona una base sólida y económica para el desarrollo inicial de Zonmatch, con capacidad de escalar según el crecimiento del proyecto.
 
 ### **2.5. Seguridad**
 

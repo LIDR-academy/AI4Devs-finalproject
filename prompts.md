@@ -87,34 +87,81 @@ El objetivo es producir un desglose completo de la experiencia de usuario ideal 
 ### **2.1. Diagrama de arquitectura:**
 
 **Prompt 1:**
+A partir de la documentación técnica y funcional del sistema Zonmatch, diseña una propuesta detallada de arquitectura de software.
+	1.	Utiliza el formato visual y/o textual más adecuado (por ejemplo: diagramas en PlantUML, Mermaid, tablas o descripciones) para representar los componentes principales de la aplicación, incluyendo:
+	•	Frontend
+	•	Backend
+	•	Base de datos
+	•	Módulo de IA
+	•	Servicios de notificaciones
+	•	Infraestructura y despliegue
+	2.	Especifica las tecnologías utilizadas en cada capa o componente (por ejemplo: React, Node.js, MySQL, etc.) y su interacción.
+	3.	Indica si la arquitectura sigue algún patrón predefinido (ej. MVC, hexagonal, microservicios) y justifica su elección en relación al contexto de Zonmatch (tipo de usuarios, funcionalidades clave, escalabilidad esperada, etc.).
+	4.	Expón de forma clara:
+	•	Los beneficios técnicos y de negocio que esta arquitectura aporta.
+	•	Los sacrificios o limitaciones que se han asumido (por ejemplo, acoplamientos, costos, complejidad).
+	•	Alternativas consideradas, si aplica, y por qué se descartaron.
+	5.	Incluye una breve explicación de la estructura de carpetas del proyecto si sigue un patrón organizativo (por dominios, por capas, etc.).
+	6.	Finalmente, resume las prácticas de seguridad aplicadas en los distintos niveles del sistema (autenticación, roles, cifrado, protección de endpoints, etc.).
 
-**Prompt 2:**
-
-**Prompt 3:**
+no realices nada aun, primero haz las preguntas necesarias para aclarar tus dudas e iremos avanzando por puntos
 
 ### **2.2. Descripción de componentes principales:**
 
 **Prompt 1:**
+Continuemos con la segunda sección: Descripción de componentes principales.
 
-**Prompt 2:**
+Detalla cada uno de los componentes fundamentales que conforman la arquitectura del sistema. Para cada componente:
+	1.	Describe su propósito funcional dentro del sistema (qué responsabilidad tiene).
+	2.	Especifica la tecnología utilizada (frameworks, lenguajes, librerías relevantes).
+	3.	Indica cómo se comunica o interactúa con otros componentes (por ejemplo, APIs REST, colas de mensajes, bases de datos, eventos, etc.).
+	4.	Si aplica, menciona buenas prácticas, patrones o principios que se hayan seguido (ej. separación de responsabilidades, uso de servicios desacoplados, etc.).
 
-**Prompt 3:**
+Organiza la descripción por capas o bloques lógicos, tales como:
+	•	Frontend (cliente)
+	•	Backend (servidor de negocio)
+	•	Base de datos
+	•	Sistema de notificaciones
+	•	Módulo de IA para coincidencias
+	•	Servicios externos / integraciones
+	•	Middleware y seguridad
+	•	Infraestructura / orquestación
+
+no crees nada aun primero validaremos la infromacion
+
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 **Prompt 1:**
+Continuamos con el paso 3: Descripción de alto nivel del proyecto y estructura de carpetas.
 
-**Prompt 2:**
+Se debe presentar una visión técnica general del sistema, incluyendo su propósito, naturaleza (por ejemplo, aplicación web full stack) y tecnologías predominantes.
 
-**Prompt 3:**
+A continuación, se debe representar la estructura del repositorio en formato de árbol o bloque de carpetas. Esta estructura debe reflejar las principales áreas funcionales del proyecto.
+
+Para cada carpeta o archivo relevante, se debe explicar de manera concisa su función dentro del sistema y el tipo de contenido que alberga (por ejemplo: controladores, modelos, vistas, hooks, servicios, middleware, assets, pruebas, configuraciones).
+
+Finalmente, se debe indicar si la organización del proyecto sigue un patrón arquitectónico reconocido (como MVC, Clean Architecture, DDD o separación por capas), justificando brevemente cómo esta estructura apoya los objetivos de mantenibilidad, escalabilidad y claridad del código.
+
+no crees nada aun primero validaremos la infromacion
+
 
 ### **2.4. Infraestructura y despliegue**
 
 **Prompt 1:**
+Continuamos con la sección de Infraestructura y Despliegue.
 
-**Prompt 2:**
+Se debe describir con claridad la infraestructura tecnológica que soporta el sistema, incluyendo servicios utilizados (por ejemplo, servidores, bases de datos, almacenamiento, balanceadores de carga, CDN, etc.), herramientas de orquestación o automatización (como Docker, Kubernetes, CI/CD), y entornos configurados (desarrollo, staging, producción).
 
-**Prompt 3:**
+Acompañar esta descripción con un diagrama arquitectónico en el formato que se considere más adecuado (por ejemplo: PlantUML, Mermaid, draw.io), representando visualmente los componentes desplegados, su relación e interacción.
+
+A continuación, se debe explicar paso a paso el proceso de despliegue, detallando:
+	•	Herramientas y scripts utilizados.
+	•	Repositorios implicados.
+	•	Automatismos de integración o entrega continua.
+	•	Flujo de publicación desde desarrollo hasta producción.
+
+Si existen políticas de rollback, redundancia o escalado automático, también deben ser mencionadas.
 
 ### **2.5. Seguridad**
 
