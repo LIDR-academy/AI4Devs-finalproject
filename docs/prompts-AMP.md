@@ -30,13 +30,13 @@
 | ☁️ Infraestructura y despliegue         | 7        | Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 13, Prompt 14, Prompt 16 |
 | 🛡️ Seguridad                           | 1        | Prompt 13                                |
 | 🧪 Tests                                | 1        | Prompt 12                                |
-| 🗃️ Modelo de datos                     | 0        |                                          |
-| 🔌 Especificación de la API             | 0        |                                          |
-| 👤 Historias de usuario                 | 2        | Prompt 3, Prompt 4                       |
-| 🎟️ Tickets de trabajo                  | 10       | Prompt 4, Prompt 5, Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 10, Prompt 12, Prompt 8, Prompt 9 |
-| 🔀 Pull request                         | 0        |                                          |
+| 🗃️ Modelo de datos                     | 1        | Prompt 18                                |
+| 🔌 Especificación de la API             | 1        | Prompt 18                                |
+| 👤 Historias de usuario                 | 3        | Prompt 3, Prompt 4, Prompt 18            |
+| 🎟️ Tickets de trabajo                  | 11       | Prompt 4, Prompt 5, Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 10, Prompt 12, Prompt 8, Prompt 9, Prompt 18 |
+| 🔀 Pull request                         | 1        | Prompt 18                                |
 
-**Total de prompts:** 17
+**Total de prompts:** 18
 
 ---
 
@@ -126,5 +126,10 @@
 - **Categoría:** `🗂️ Descripción de alto nivel del proyecto y estructura de ficheros` `🧩 Descripción de componentes principales` `🏗️ Arquitectura del sistema`
 - **Prompt:** "actualiza @tech-solution.md indicando que el repo donde se trabajará es @https://github.com/aandmaldonado/my-resume-react/tree/feature-init-prototype en ese repo ya existe toda la parte front y se debe agregar la parte del chatbot, actualiza la estructura de ficheros considerando la del repo y agregando los nuevos componentes que se crearan\nno olvidea actualizar @prompts-AMP.md"
 - **LLM:** GPT-4.1
+
+**Prompt 18:**
+- **Categoría:** `🏗️ Arquitectura del sistema` `🎟️ Tickets de trabajo` `🗂️ Descripción de alto nivel del proyecto y estructura de ficheros`
+- **Prompt:** "Eres un experto en planificacion de proyectos y Necesito que reorganices la informacion del proyecto y su planificación guiate por lo que se necesita entregar @init.md @readme.md Redefine las epicas para que sean relevantes y abarquen todo el proyecto desde el analisis hasta el despliegue y monitoreo. Los hitos serán las fechas de entrega descritas en @init.md cualquier diagrama que generes adicional hazlo en formato mermaid (asegurate de que no tenga error de sintaxis). Modifica toda la referencia a trabajar con trello y cambiala por la implementacion de un MCP para trabajar con suite Atlassian (JIRA y confluence) para la gestion del proyecto. crea los archivos necesarios en formato markdown para documentar por separado lo siguiente: - Ficha del proyecto - Descripción general del producto - Arquitectura del sistema - Modelo de datos - Especificación de la API - Historias de usuario - Tickets de trabajo - Pull requests genera un archivo por cada punto en la carpeta @docs/"
+- **LLM:** Claude-3-Sonnet-20240229
 
 ## Conclusiones 🏁
