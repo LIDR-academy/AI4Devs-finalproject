@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+
+- Code should be modular
+- Follow DDD-style
+- Avoid refactoring without tests
+- Start with the simplest solution and refactor to improve it
+- Follow best practices such as SOLID, DRY, KISS, YAGNI, etc.
+- All code should be covered by tests, primarily integration tests
