@@ -1,0 +1,3 @@
+[submodule "backend"]
+    path = backend
+    url = git@github.com:mvcds/AI4Devs-finalproject-backend.git
