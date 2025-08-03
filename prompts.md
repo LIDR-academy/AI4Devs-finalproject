@@ -81,7 +81,7 @@ Focus on:
 
 Context: the project is a web app, possibly with a mobile version
 
-**Prompt 2:**
+**Prompt 2:** Create diagrams in mermaid following the C4 model
 
 **Prompt 3:**
 
