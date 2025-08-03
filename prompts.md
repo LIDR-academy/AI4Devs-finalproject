@@ -83,7 +83,7 @@ Context: the project is a web app, possibly with a mobile version
 
 **Prompt 2:** Create diagrams in mermaid following the C4 model
 
-**Prompt 3:**
+**Prompt 3:** Create the code diagram from the C4 model for the user module
 
 ### **2.2. Descripción de componentes principales:**
 
