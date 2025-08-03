@@ -65,7 +65,21 @@ Feel free to ask me any question before begin
 
 ### **2.1. Diagrama de arquitectura:**
 
-**Prompt 1:**
+**Prompt 1:** Role you're a software engineer with a lot of experience in
+creating software architectures
+
+Task: Create a diagram of the software architecture of the project on mermaid,
+focusing only on the first milestone.
+
+For the moment, ignore that the project needs a user that needs to login.
+
+Focus on:
+
+- Budgeting transactions (incomes and expenses)
+- Allowing the user to add frequencies, categories and currencies
+- Allowing the user to group transactions to compose into another transaction
+
+Context: the project is a web app, possibly with a mobile version
 
 **Prompt 2:**
 
