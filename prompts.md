@@ -17,7 +17,8 @@
 
 ---
 
-I'll use ChatGPT 4o to generate the prompts, except when specified otherwise
+I'll use ChatGPT 4o to generate the prompts, except when specified otherwise.
+For code and diagrams, cursor will be used in "auto".
 
 ## 1. Descripción general del producto
 
