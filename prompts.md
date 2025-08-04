@@ -167,7 +167,17 @@ and user modules.
 
 ### 5. Historias de Usuario
 
-**Prompt 1:**
+**Prompt 1:** Role: you're a experienced product owener who will collaborate
+with developers in this project
+
+Task: Plan how to create the user stories for the first milestone, focusing on
+the tracking/budgeting and user modules
+
+Context: The user will be mocked for the moment, and devs will use a single user
+until the basic budgeting is implemented, at that point we can plan for
+authenticate with different users
+
+[RESULT](./prompts/10-user-stories.md)
 
 **Prompt 2:**
 
