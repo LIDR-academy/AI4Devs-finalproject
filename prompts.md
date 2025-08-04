@@ -81,17 +81,33 @@ Focus on:
 
 Context: the project is a web app, possibly with a mobile version
 
+[RESULT](./prompts/5-architecture-diagram.md)
+
 **Prompt 2:** Create diagrams in mermaid following the C4 model
 
+[RESULT](./prompts/6.1-context-diagram.md)
+
+[RESULT](./prompts/6.2-container-diagram.md)
+
+[RESULT](./prompts/6.3-component-diagram.md)
+
+[RESULT](./prompts/6.4-code-diagram-transaction-module.md)
+
 **Prompt 3:** Create the code diagram from the C4 model for the user module
+
+[RESULT](./prompts/7-code-diagra-user-module.md)
 
 ### **2.2. Descripción de componentes principales:**
 
 **Prompt 1:** Based on @prompts/ what do you think would be the main components
 of this system?
 
+[RESULT](./prompts/8-main-components.md)
+
 **Prompt 2:** Following DDD, suggest some of the aggregate roots of transaction
 and user modules.
+
+[RESULT](./prompts/9-aggregate-roots.md)
 
 **Prompt 3:**
 
