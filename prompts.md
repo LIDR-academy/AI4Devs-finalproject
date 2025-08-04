@@ -87,9 +87,11 @@ Context: the project is a web app, possibly with a mobile version
 
 ### **2.2. Descripción de componentes principales:**
 
-**Prompt 1:** Based on @prompts/ what do you think would be the main components of this system? 
+**Prompt 1:** Based on @prompts/ what do you think would be the main components
+of this system?
 
-**Prompt 2:**
+**Prompt 2:** Following DDD, suggest some of the aggregate roots of transaction
+and user modules.
 
 **Prompt 3:**
 
