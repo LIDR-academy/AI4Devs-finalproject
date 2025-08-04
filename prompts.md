@@ -184,8 +184,23 @@ Si existen políticas de rollback, redundancia o escalado automático, también 
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+Continuamos con la sección del Modelo de Datos.
+
+A partir de la documentación del sistema, se debe representar el modelo de datos utilizando sintaxis Mermaid, incorporando todos los parámetros que ofrece este lenguaje para reflejar con máximo detalle la estructura y relaciones entre entidades.
+
+El diagrama debe incluir:
+	•	Nombres de entidades.
+	•	Atributos por entidad con su tipo de dato.
+	•	Indicadores de claves primarias (PK) y claves foráneas (FK).
+	•	Relaciones entre tablas con cardinalidades claras (1--*, 1--1, *--*).
+	•	Restricciones relevantes (NOT NULL, UNIQUE, etc.).
+
+El objetivo es ofrecer una representación completa y legible de la estructura relacional del sistema, útil tanto para desarrollo como para validación de integridad de datos.
+
+no realices ningun cambio aun vamos a analizar primero y despues avanzamos paso a paso
 
 **Prompt 2:**
+te puedes basar en algo como arb&b para los atributos tamb hacen falta cosas como amenidades, hay que agregar todo lo que pueda ser relevante para el sistema
 
 **Prompt 3:**
 

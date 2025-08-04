@@ -2140,14 +2140,521 @@ Esta infraestructura proporciona una base sólida y económica para el desarroll
 
 ## 3. Modelo de Datos
 
-### **3.1. Diagrama del modelo de datos:**
+### **3.1. Diagrama del Modelo de Datos**
+![Diagrama del Modelo de Datos](docs/modelo-datos/modelo%20de%20datos.png)
+```mermaid
+erDiagram
+    User {
+        int id PK
+        varchar email UK
+        varchar password_hash
+        enum role
+        varchar first_name
+        varchar last_name
+        varchar phone
+        varchar profile_picture
+        text bio
+        json preferences
+        json notification_settings
+        enum verification_status
+        datetime last_login
+        boolean is_active
+        datetime created_at
+        datetime updated_at
+    }
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+    Property {
+        int id PK
+        int user_id FK
+        varchar title
+        text description
+        enum property_type
+        enum operation_type
+        decimal price
+        varchar currency
+        decimal price_per_sqm
+        int bedrooms
+        int bathrooms
+        int total_bathrooms
+        decimal sq_meters
+        decimal sq_meters_land
+        int floors
+        int floor_number
+        int parking_spaces
+        int year_built
+        enum condition
+        varchar address
+        varchar neighborhood
+        varchar city
+        varchar state
+        varchar zip_code
+        decimal latitude
+        decimal longitude
+        varchar location_accuracy
+        json amenities
+        enum status
+        boolean featured
+        int views_count
+        int contact_count
+        datetime last_updated
+        datetime created_at
+        datetime updated_at
+    }
+
+    PropertyImage {
+        int id PK
+        int property_id FK
+        varchar url
+        varchar cloudinary_id
+        boolean is_primary
+        int order_index
+        varchar alt_text
+        datetime created_at
+    }
+
+    Amenity {
+        int id PK
+        varchar name
+        varchar category
+        varchar icon
+        boolean is_active
+        datetime created_at
+    }
+
+    PropertyAmenity {
+        int id PK
+        int property_id FK
+        int amenity_id FK
+        datetime created_at
+    }
+
+    Search {
+        int id PK
+        int user_id FK
+        varchar name
+        enum property_type
+        enum operation_type
+        decimal price_min
+        decimal price_max
+        int bedrooms_min
+        int bathrooms_min
+        decimal sq_meters_min
+        decimal sq_meters_max
+        json amenities
+        json neighborhoods
+        boolean is_active
+        enum notification_frequency
+        datetime created_at
+        datetime updated_at
+    }
+
+    Polygon {
+        int id PK
+        int user_id FK
+        int search_id FK
+        varchar name
+        json coordinates
+        varchar color
+        boolean is_active
+        datetime created_at
+    }
+
+    Match {
+        int id PK
+        int user_id FK
+        int property_id FK
+        int search_id FK
+        decimal match_percentage
+        json match_criteria
+        enum status
+        datetime notified_at
+        datetime created_at
+    }
+
+    Favorite {
+        int id PK
+        int user_id FK
+        int property_id FK
+        text notes
+        datetime created_at
+    }
+
+    Message {
+        int id PK
+        int sender_id FK
+        int receiver_id FK
+        int property_id FK
+        text content
+        enum message_type
+        datetime read_at
+        boolean is_deleted
+        datetime created_at
+    }
+
+    Notification {
+        int id PK
+        int user_id FK
+        enum type
+        varchar title
+        text content
+        json data
+        datetime read_at
+        datetime sent_at
+        datetime created_at
+    }
+
+    PropertyView {
+        int id PK
+        int property_id FK
+        int user_id FK
+        varchar ip_address
+        text user_agent
+        datetime viewed_at
+    }
+
+    User ||--o{ Property : "publishes"
+    User ||--o{ Search : "creates"
+    User ||--o{ Polygon : "defines"
+    User ||--o{ Match : "receives"
+    User ||--o{ Favorite : "saves"
+    User ||--o{ Message : "sends"
+    User ||--o{ Message : "receives"
+    User ||--o{ Notification : "receives"
+    Property ||--o{ PropertyImage : "has"
+    Property ||--o{ PropertyAmenity : "has"
+    Property ||--o{ Match : "matched_in"
+    Property ||--o{ Favorite : "favorited_in"
+    Property ||--o{ Message : "discussed_in"
+    Property ||--o{ PropertyView : "viewed_in"
+    Amenity ||--o{ PropertyAmenity : "belongs_to"
+    Search ||--o{ Polygon : "has"
+    Search ||--o{ Match : "generates"
+    User ||--o{ PropertyView : "views"
+```
 
 
-### **3.2. Descripción de entidades principales:**
+### **3.2. Descripción de Entidades Principales**
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+#### **1. User (Usuarios)**
+**Propósito:** Gestión de usuarios del sistema con diferentes roles y perfiles.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+
+**Atributos Principales:**
+- `email` (VARCHAR, UNIQUE, NOT NULL): Correo electrónico del usuario
+- `password_hash` (VARCHAR, NOT NULL): Hash de la contraseña (bcrypt)
+- `role` (ENUM, NOT NULL): Rol del usuario (user, agent, admin)
+- `first_name` (VARCHAR, NOT NULL): Nombre del usuario
+- `last_name` (VARCHAR, NOT NULL): Apellido del usuario
+- `phone` (VARCHAR, UNIQUE): Número telefónico opcional
+- `profile_picture` (VARCHAR): URL de la foto de perfil
+- `bio` (TEXT): Descripción personal del usuario
+- `preferences` (JSON): Preferencias de búsqueda guardadas
+- `notification_settings` (JSON): Configuración de notificaciones
+- `verification_status` (ENUM): Estado de verificación (email, phone, id, verified)
+- `last_login` (DATETIME): Último acceso al sistema
+- `is_active` (BOOLEAN, DEFAULT true): Estado activo/inactivo
+
+**Relaciones:**
+- **1:N** con Property (un usuario puede publicar múltiples propiedades)
+- **1:N** con Search (un usuario puede tener múltiples búsquedas guardadas)
+- **1:N** con Polygon (un usuario puede definir múltiples zonas de interés)
+- **1:N** con Match (un usuario puede recibir múltiples coincidencias)
+- **1:N** con Favorite (un usuario puede guardar múltiples favoritos)
+- **1:N** con Message (como sender y receiver)
+- **1:N** con Notification (un usuario puede recibir múltiples notificaciones)
+
+**Índices:**
+- `idx_email` (email)
+- `idx_role` (role)
+- `idx_is_active` (is_active)
+
+#### **2. Property (Propiedades)**
+**Propósito:** Almacenamiento de todas las propiedades inmobiliarias del sistema.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+
+**Atributos Básicos:**
+- `title` (VARCHAR, NOT NULL): Título de la propiedad
+- `description` (TEXT): Descripción detallada
+- `property_type` (ENUM, NOT NULL): Tipo de propiedad (house, apartment, office, land, commercial)
+- `operation_type` (ENUM, NOT NULL): Tipo de operación (sale, rent, transfer)
+- `price` (DECIMAL, NOT NULL): Precio de la propiedad
+- `currency` (VARCHAR, DEFAULT 'MXN'): Moneda del precio
+
+**Características Físicas:**
+- `bedrooms` (INT, DEFAULT 0): Número de habitaciones
+- `bathrooms` (INT, DEFAULT 0): Número de baños completos
+- `total_bathrooms` (INT, DEFAULT 0): Total de baños (completos + medios)
+- `sq_meters` (DECIMAL): Metros cuadrados construidos
+- `sq_meters_land` (DECIMAL): Metros cuadrados de terreno
+- `floors` (INT, DEFAULT 1): Número de pisos
+- `floor_number` (INT): Piso específico (para departamentos)
+- `parking_spaces` (INT, DEFAULT 0): Espacios de estacionamiento
+- `year_built` (INT): Año de construcción
+- `condition` (ENUM): Estado (new, used, construction)
+
+**Ubicación:**
+- `address` (VARCHAR, NOT NULL): Dirección completa
+- `neighborhood` (VARCHAR): Colonia/barrio
+- `city` (VARCHAR, NOT NULL): Ciudad
+- `state` (VARCHAR, NOT NULL): Estado
+- `zip_code` (VARCHAR): Código postal
+- `latitude` (DECIMAL): Latitud para geolocalización
+- `longitude` (DECIMAL): Longitud para geolocalización
+- `location_accuracy` (VARCHAR): Precisión de la ubicación
+
+**Estado y Métricas:**
+- `status` (ENUM): Estado (active, inactive, sold, rented)
+- `featured` (BOOLEAN, DEFAULT false): Propiedad destacada
+- `views_count` (INT, DEFAULT 0): Número de vistas
+- `contact_count` (INT, DEFAULT 0): Número de contactos
+- `last_updated` (DATETIME): Última actualización
+
+**Relaciones:**
+- **N:1** con User (muchas propiedades pertenecen a un usuario)
+- **1:N** con PropertyImage (una propiedad tiene múltiples imágenes)
+- **1:N** con PropertyAmenity (una propiedad tiene múltiples amenidades)
+- **1:N** con Match (una propiedad puede aparecer en múltiples coincidencias)
+- **1:N** con Favorite (una propiedad puede ser favorita de múltiples usuarios)
+- **1:N** con Message (una propiedad puede ser discutida en múltiples mensajes)
+- **1:N** con PropertyView (una propiedad puede ser vista múltiples veces)
+
+**Índices:**
+- `idx_user_id` (user_id)
+- `idx_property_type` (property_type)
+- `idx_operation_type` (operation_type)
+- `idx_price` (price)
+- `idx_status` (status)
+- `idx_location` (latitude, longitude)
+- `idx_featured` (featured)
+
+#### **3. PropertyImage (Imágenes de Propiedades)**
+**Propósito:** Gestión de imágenes asociadas a las propiedades.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+
+**Atributos:**
+- `url` (VARCHAR, NOT NULL): URL de la imagen
+- `cloudinary_id` (VARCHAR): ID en Cloudinary para gestión
+- `is_primary` (BOOLEAN, DEFAULT false): Indica si es la imagen principal
+- `order_index` (INT, DEFAULT 0): Orden de las imágenes
+- `alt_text` (VARCHAR): Texto alternativo para accesibilidad
+
+**Relaciones:**
+- **N:1** con Property (múltiples imágenes pertenecen a una propiedad)
+
+**Índices:**
+- `idx_property_id` (property_id)
+- `idx_is_primary` (is_primary)
+- `idx_order_index` (order_index)
+
+#### **4. Amenity (Amenidades)**
+**Propósito:** Catálogo de amenidades disponibles para las propiedades.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+
+**Atributos:**
+- `name` (VARCHAR, NOT NULL): Nombre de la amenidad
+- `category` (VARCHAR, NOT NULL): Categoría (básicas, lujo, accesibilidad, etc.)
+- `icon` (VARCHAR): Ícono para la interfaz de usuario
+- `is_active` (BOOLEAN, DEFAULT true): Estado activo/inactivo
+
+**Relaciones:**
+- **1:N** con PropertyAmenity (una amenidad puede estar en múltiples propiedades)
+
+**Índices:**
+- `idx_category` (category)
+- `idx_is_active` (is_active)
+
+#### **5. PropertyAmenity (Relación Propiedad-Amenidad)**
+**Propósito:** Tabla de relación N:N entre propiedades y amenidades.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+**Clave Foránea:** `amenity_id` (INT, NOT NULL) → Amenity.id
+
+**Restricciones:**
+- `UNIQUE(property_id, amenity_id)`: Evita duplicados
+
+**Índices:**
+- `idx_property_amenity` (property_id, amenity_id)
+
+#### **6. Search (Búsquedas Guardadas)**
+**Propósito:** Almacenamiento de búsquedas guardadas por los usuarios.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+
+**Atributos de Filtros:**
+- `name` (VARCHAR, NOT NULL): Nombre de la búsqueda guardada
+- `property_type` (ENUM): Tipo de propiedad buscada
+- `operation_type` (ENUM): Tipo de operación
+- `price_min` (DECIMAL): Precio mínimo
+- `price_max` (DECIMAL): Precio máximo
+- `bedrooms_min` (INT): Habitaciones mínimas
+- `bathrooms_min` (INT): Baños mínimos
+- `sq_meters_min` (DECIMAL): Metros cuadrados mínimos
+- `sq_meters_max` (DECIMAL): Metros cuadrados máximos
+- `amenities` (JSON): Amenidades requeridas
+- `neighborhoods` (JSON): Colonias de interés
+- `is_active` (BOOLEAN, DEFAULT true): Búsqueda activa
+- `notification_frequency` (ENUM): Frecuencia de notificaciones
+
+**Relaciones:**
+- **N:1** con User (múltiples búsquedas pertenecen a un usuario)
+- **1:N** con Polygon (una búsqueda puede tener múltiples polígonos)
+- **1:N** con Match (una búsqueda puede generar múltiples coincidencias)
+
+**Índices:**
+- `idx_user_id` (user_id)
+- `idx_is_active` (is_active)
+
+#### **7. Polygon (Polígonos de Zonas de Interés)**
+**Propósito:** Definición de zonas geográficas de interés para búsquedas.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+**Clave Foránea:** `search_id` (INT) → Search.id (opcional)
+
+**Atributos:**
+- `name` (VARCHAR, NOT NULL): Nombre del polígono
+- `coordinates` (JSON, NOT NULL): Coordenadas del polígono
+- `color` (VARCHAR, DEFAULT '#FF0000'): Color para la interfaz
+- `is_active` (BOOLEAN, DEFAULT true): Polígono activo
+
+**Relaciones:**
+- **N:1** con User (múltiples polígonos pertenecen a un usuario)
+- **N:1** con Search (múltiples polígonos pueden pertenecer a una búsqueda)
+
+**Índices:**
+- `idx_user_id` (user_id)
+- `idx_search_id` (search_id)
+
+#### **8. Match (Coincidencias)**
+**Propósito:** Registro de coincidencias automáticas entre búsquedas y propiedades.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+**Clave Foránea:** `search_id` (INT) → Search.id (opcional)
+
+**Atributos:**
+- `match_percentage` (DECIMAL, NOT NULL): Porcentaje de coincidencia
+- `match_criteria` (JSON): Criterios que coincidieron
+- `status` (ENUM): Estado (new, viewed, contacted, ignored)
+- `notified_at` (DATETIME): Cuándo se notificó al usuario
+
+**Relaciones:**
+- **N:1** con User (múltiples coincidencias pertenecen a un usuario)
+- **N:1** con Property (múltiples coincidencias pueden referir a una propiedad)
+- **N:1** con Search (múltiples coincidencias pueden pertenecer a una búsqueda)
+
+**Índices:**
+- `idx_user_id` (user_id)
+- `idx_property_id` (property_id)
+- `idx_search_id` (search_id)
+- `idx_status` (status)
+- `idx_match_percentage` (match_percentage)
+
+#### **9. Favorite (Favoritos)**
+**Propósito:** Propiedades guardadas como favoritas por los usuarios.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+
+**Atributos:**
+- `notes` (TEXT): Notas del usuario sobre la propiedad
+
+**Restricciones:**
+- `UNIQUE(user_id, property_id)`: Un usuario solo puede favoritear una propiedad una vez
+
+**Relaciones:**
+- **N:1** con User (múltiples favoritos pertenecen a un usuario)
+- **N:1** con Property (múltiples usuarios pueden favoritear una propiedad)
+
+**Índices:**
+- `idx_user_property` (user_id, property_id)
+
+#### **10. Message (Mensajes)**
+**Propósito:** Sistema de mensajería interna entre usuarios.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `sender_id` (INT, NOT NULL) → User.id
+**Clave Foránea:** `receiver_id` (INT, NOT NULL) → User.id
+**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+
+**Atributos:**
+- `content` (TEXT, NOT NULL): Contenido del mensaje
+- `message_type` (ENUM): Tipo de mensaje (text, image, file)
+- `read_at` (DATETIME): Cuándo se leyó el mensaje
+- `is_deleted` (BOOLEAN, DEFAULT false): Mensaje eliminado
+
+**Relaciones:**
+- **N:1** con User como sender (múltiples mensajes enviados por un usuario)
+- **N:1** con User como receiver (múltiples mensajes recibidos por un usuario)
+- **N:1** con Property (múltiples mensajes pueden referir a una propiedad)
+
+**Índices:**
+- `idx_sender_id` (sender_id)
+- `idx_receiver_id` (receiver_id)
+- `idx_property_id` (property_id)
+- `idx_read_at` (read_at)
+
+#### **11. Notification (Notificaciones)**
+**Propósito:** Sistema de notificaciones del usuario.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+
+**Atributos:**
+- `type` (ENUM): Tipo de notificación (match, message, system, property_update)
+- `title` (VARCHAR, NOT NULL): Título de la notificación
+- `content` (TEXT, NOT NULL): Contenido de la notificación
+- `data` (JSON): Datos adicionales de la notificación
+- `read_at` (DATETIME): Cuándo se leyó la notificación
+- `sent_at` (DATETIME, NOT NULL): Cuándo se envió la notificación
+
+**Relaciones:**
+- **N:1** con User (múltiples notificaciones pertenecen a un usuario)
+
+**Índices:**
+- `idx_user_id` (user_id)
+- `idx_type` (type)
+- `idx_read_at` (read_at)
+
+#### **12. PropertyView (Vistas de Propiedades)**
+**Propósito:** Tracking de vistas de propiedades para analytics.
+
+**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+**Clave Foránea:** `user_id` (INT) → User.id (opcional, para usuarios no registrados)
+
+**Atributos:**
+- `ip_address` (VARCHAR): IP del visitante
+- `user_agent` (TEXT): User agent del navegador
+- `viewed_at` (DATETIME, NOT NULL): Cuándo se vio la propiedad
+
+**Relaciones:**
+- **N:1** con Property (múltiples vistas pertenecen a una propiedad)
+- **N:1** con User (múltiples vistas pueden pertenecer a un usuario)
+
+**Índices:**
+- `idx_property_id` (property_id)
+- `idx_user_id` (user_id)
+- `idx_viewed_at` (viewed_at)
+
+#### **Restricciones Globales del Sistema:**
+
+1. **Integridad Referencial:** Todas las claves foráneas tienen CASCADE DELETE donde es apropiado
+2. **Índices Geoespaciales:** Para búsquedas por ubicación en Property
+3. **Índices de Texto:** Para búsquedas full-text en Property.title y Property.description
+4. **Soft Deletes:** Implementados en User y Property para mantener historial
+5. **Timestamps:** Todas las entidades principales tienen created_at y updated_at
+6. **Validaciones:** Implementadas a nivel de aplicación y base de datos
 
 ---
 
