@@ -87,7 +87,7 @@ Context: the project is a web app, possibly with a mobile version
 
 ### **2.2. Descripción de componentes principales:**
 
-**Prompt 1:**
+**Prompt 1:** Based on @prompts/ what do you think would be the main components of this system? 
 
 **Prompt 2:**
 
