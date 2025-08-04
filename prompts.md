@@ -179,7 +179,14 @@ authenticate with different users
 
 [RESULT](./prompts/10-user-stories.md)
 
-**Prompt 2:**
+**Prompt 2:** Use @10-user-stories.md to create the user stories following the
+gerkhin format:
+
+"Given [backgroun] When [action] Then [result]"
+
+Add everything on @11-bdd.md
+
+[RESULT](./prompts/11-bdd.md)
 
 **Prompt 3:**
 
