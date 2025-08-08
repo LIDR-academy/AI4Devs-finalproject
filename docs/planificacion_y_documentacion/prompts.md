@@ -1,0 +1,672 @@
+Eres un experto en producto, con experiencia en sistemas de busqueda de especialidades medicas y profesionales de la salud.
+¿Qué funcionalidades básicas tiene un sistema de busqueda especialistas medicos y profesionales de la salud?
+Descríbemelas en un listado, ordenado de mayor a menor prioridad
+
+
+¿Qué beneficios obtiene el cliente de un sistemas de busqueda de especialidades medicas y profesionales de la salud para considerar su uso?
+
+¿Qué alternativas tiene a usar un sistemas de busqueda de especialidades medicas y profesionales de la salud y cuando pueden ser relevantes?
+
+¿Cómo es el customer journey normal de un cliente que usa un sistema de busqueda de especialidades medicas y profesionales de la salud? Descríbeme paso a paso todas las interacciones
+
+¿Qué sistemas de busqueda de especialidades medicas y profesionales de la salud son más conocidos en México y Latino America?
+
+¿Qué sistemas de busqueda de especialidades medicas y profesionales de la salud comerciales son más conocidos en México y Latino America? Compáralos en función de reputación, precio, popularidad, accesibilidad y valora cuál sería mejor opción
+
+Genera un resumen de la información recompilada hasta el momento.
+Tus pautas para generar el contenido son:
+
+Generar un archivo llamado "etapa1_investigacion_analisis.md" dentro de la carpeta #file:investigación
+Generar el contenido del archivo en formato Markdown para archivos .md
+Revisa mis instrucciones, ¿tienes alguna pregunta antes de ejecutar la tarea?
+Realiza pregunta si es necesario.
+
+
+
+Eres un analista de software experto. Estoy construyendo un sistema de busqueda de especialidades medicas y profesionales de la salud. Enumera y describe brevemente los casos de uso más importantes a implementar para lograr una funcionalidad básica.
+Representa estos casos de uso en el tipo de diagrama más adecuado usando el formato mermaid. Diferencia entre los diferentes usuarios que podría haber, de momento se identifican los siguientes: Medico Especialista, Paciente, Administrador del sistema. Acorde a la sintaxis y buenas prácticas UML, define y describe lo que sea necesario.
+Antes de realizar la tarea ¿tienes alguna pregunta?
+De lo contrario ejecuta la tarea.
+
+
+Tomando en cuenta la información generada, el sistema de búsqueda de especialidades médicas y profesionales de la salud tiene la posibilidad de mostrar cierta información sin la necesidad de que el paciente inicie sesión y/o se inscriba. Tomando en cuenta esta información ¿debe haber algun cambio en los casos de uso?
+
+
+
+Genera un resumen de la información recompilada hasta el momento.
+Tus pautas para generar el contenido son:
+* Generar un archivo llamado "etapa2_casos_de_uso.md" dentro de la carpeta [[]]
+* Generar el contenido del archivo en formato Markdown para archivos .md
+* No incluyas ningun diagrama en este archivo generado, ese lo incluiré manualmente
+
+Revisa mis instrucciones, ¿tienes alguna pregunta antes de ejecutar la tarea?
+Realiza pregunta si es necesario.
+
+
+Eres un arquitecto de software experto. ¿Cuáles son las entidades minimas necesarias de modelo de datos en un sistema de busqueda de especialidades medicas y profesionales de la salud? Dame los campos esenciales de cada una y cómo se relacionan entre si
+
+
+Cómo un experto arquitecto de software. Eres capaz de diseñar, explicar y diagramar los diferentes aspectos de un ssistema de busqueda de especialidades medicas y profesionales de la salud.
+
+
+
+Genera el diagrama entidad relación del modelo de datos del sistema de busqueda de especialidades medicas y profesionales de la salud.
+Tus pautas para generar el contenido son:
+* Incluye los campos esenciales
+* Incluye las relaciones
+* Genera el contenido del diagrama en formato mermaid
+
+Revisa mis instrucciones, ¿hay algo que me este faltando por cosiderar?
+Realiza preguntas si tienes dudas.
+
+
+Qué otras entidades del modelo de datos se pueden considerar en un sistema de busqueda de especialidades medicas y profesionales de la salu? Dame los campos más importantes de cada una y cómo se relacionan entre entidades.
+
+Genera un resumen de la información recompilada hasta el momento.
+Tus pautas para generar el contenido son:
+* Generar un archivo llamado "etapa3_modelado_datos.md" dentro de la carpeta [[]]
+* Generar el contenido del archivo en formato Markdown para archivos .md
+* No incluyas ningun diagrama en este archivo generado, ese lo incluiré manualmente, para ello incluye una sección para que yo pueda agregarlo
+
+Revisa mis instrucciones, ¿tienes alguna pregunta antes de ejecutar la tarea?
+Realiza pregunta si es necesario.
+
+
+
+Eres un experto en ingenieria de prompts, diseño de sistemas y arquitectura de software
+# Contexto inicial
+Me encuentro diseñando un sistema de busqueda de especialidades medicas y profesionales de la salud, actualmente cuanto con 3 etapas de analisis:
+- Investigación del producto, donde se han analizado los siguientes puntos: Funcionalidades básicas, Beneficios para el cliente, Alternativas al uso de estos sistemas, Customer Journey típico, Plataformas comerciales más conocidas en México y Latinoamérica, analisis y recomendaciones
+- Casos de uso, donde se detallan los principales casos de uso y los diagramas de casos de uso
+- Modelado de datos, con las entidades principales, el diagrama entidad relación, las relaciones principaes y extensiones futuras
+
+# Instrucciones Generales
+El objetivo es crear un prompt para Copilot (ChatGPT 4.1) que ayude a definir el diseño del sistema y la arquitectura de alto nivel cumpliendo los siguientes requerimientos
+
+# Requerimientos 
+1. Un listado de posibles tecnologias para implementar el backend que cumplan los siguientes criterios:
+    * Rapido de implementar
+    * Curva de aprendizaje baja
+    * Buena documentación
+    * Buenas practicas de seguridad 
+    * Que tengan un patron de arquitectura definido
+    * Compatible con diferentes ORMs
+2. Un listado de posibles frameworks para implementar el frontend
+    * Rapido de implementar
+    * Curva de aprendizaje baja
+    * Buena documentación
+    * Buenas practicas de seguridad 
+    * Que tengan un patron de arquitectura definido
+    * Que cuenten con plantillas para acelerar el desarrollo
+3. Un listado de posibles de tecnologias para la BBDD
+    * Sin costo
+    * Facil de instalar y configurar
+    * Curva de aprendizaje baja
+    * Buena documentación
+    * Compatible con multiples ORMs
+    * Soporte para el uso de UUID o Hashes para los PKs y FKs en lugar de indices basados en numeros enteros
+3. Considerar los siguientes patrones de arquitectura: Hexagonal, SOA, MVC
+4. Tomar en cuenta los siguientes lenguajes: Javascript, PHP y Python
+
+# Mejores Practicas
+1. Considerar tecnologias con soporte prolongado
+2. Que incluye el rol con el que el chatbot deberá ejecutar la tarea
+
+# Consideraciones adicionales
+1. Para ejecutar el prompt el asistente dispondrá de la documentación que se detalla en el contexto inicial
+
+# Pautas para generar el contenido
+1. El prompt resultante deberá estar en formato Markdown para archivos .md
+
+Antes de generar el prompt revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+# Prompt para Definición de Diseño de Sistema y Arquitectura de Alto Nivel
+
+## Rol del Asistente
+
+Actúa como **arquitecto de software y consultor técnico** experto en sistemas de búsqueda y gestión de especialidades médicas y profesionales de la salud. Utiliza la documentación proporcionada en el contexto inicial para fundamentar tus recomendaciones.
+
+## Objetivo
+
+Ayudar a definir el diseño del sistema y la arquitectura de alto nivel para una plataforma de búsqueda y gestión de especialidades médicas y profesionales de la salud, considerando autenticación de usuarios, despliegue en la nube, soporte multilenguaje, búsqueda avanzada (texto, ubicación, filtros), y priorizando tecnologías open source con comunidades activas.
+
+---
+
+## Instrucciones
+
+1. **Backend**  
+   Proporciona una tabla comparativa de tecnologías backend que cumplan con los siguientes criterios:
+   - Rápidas de implementar
+   - Curva de aprendizaje baja
+   - Buena documentación
+   - Buenas prácticas de seguridad
+   - Patrón de arquitectura definido (Hexagonal, SOA, MVC)
+   - Compatibles con diferentes ORMs
+   - Licencia open source y comunidad activa
+   - Compatibles con despliegue en la nube
+   - Lenguajes a considerar: Javascript, PHP, Python
+
+2. **Frontend**  
+   Proporciona una tabla comparativa de frameworks frontend que cumplan con los siguientes criterios:
+   - Rápidos de implementar
+   - Curva de aprendizaje baja
+   - Buena documentación
+   - Buenas prácticas de seguridad
+   - Patrón de arquitectura definido
+   - Disponibilidad de plantillas y/o UI Kits para acelerar el desarrollo
+   - Soporte multilenguaje
+   - Licencia open source y comunidad activa
+
+3. **Base de Datos**  
+   Proporciona una tabla comparativa de tecnologías de bases de datos que cumplan con los siguientes criterios:
+   - Sin costo
+   - Fácil de instalar y configurar
+   - Curva de aprendizaje baja
+   - Buena documentación
+   - Compatibles con múltiples ORMs
+   - Soporte para UUID o Hashes como PKs y FKs
+   - Licencia open source y comunidad activa
+
+4. **Patrones de Arquitectura**  
+   Explica brevemente cómo se pueden aplicar los patrones Hexagonal, SOA y MVC en el contexto de este sistema, indicando ventajas y posibles retos de cada uno.
+
+5. **Recomendaciones**  
+   Basado en el análisis anterior, sugiere una combinación de tecnologías para backend, frontend y base de datos que maximicen la rapidez de desarrollo, seguridad, escalabilidad y facilidad de mantenimiento.
+
+---
+
+## Formato de Respuesta
+
+- Utiliza tablas comparativas para los puntos 1, 2 y 3.
+- Usa listas y texto conciso para los puntos 4 y 5.
+- Justifica brevemente cada recomendación.
+- Cita fuentes o documentación oficial cuando sea relevante.
+
+---
+
+## Consideraciones Adicionales
+
+- El sistema debe ser escalable y fácil de mantener.
+- Prioriza tecnologías con soporte prolongado.
+- No incluyas tecnologías propietarias o de licencia restrictiva.
+- Si existen alternativas relevantes no mencionadas en el contexto, inclúyelas y justifica
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+Eres un experto en diseño de sistemas, arquitectura de software y documentador técnico.
+Dime que información debe contener un documento que informe sobre el diseño de un sistema su arquitectura de alto nivel.
+Hasta el momento tengo lo siguiente:
+- Tabla comparativas de:
+   * Frameworks Backend
+   * Frameworks Frontend
+   * Tecnologias de Base de Datos
+- Información sobre algunos patrones de arquitectura de como se deberia llevar a cabo
+- Recomendaciones
+El objetivo es saber que debe debe cubrir mi documentación en ese aspecto antes de generar un PRD (Product Requirement Document).
+El contenido va dirigido para un desarrollador de software que tiene que generar un  proyecto desde cero.
+Tus pautas para generar el contenido son:
+- Generar la información en forma de lista
+- Que preguntas debe responder cada elemento de la lista para considerarlo completo
+- Un checklist de cosas que mi documento debe contener
+
+Antes de ejecutar esta tarea ¿hay algo que me este faltando considerar?
+Realiza preguntas si es necesario
+
+
+
+
+
+
+Eres un experto en ingenieria de prompts, arquitectura de software y analista de negocio.
+# Contexto inicial
+Me encuentro diseñando un sistema de busqueda de especialidades medicas y profesionales de la salud, actualmente cuanto con 3 etapas de analisis:
+- Investigación del producto, donde se han analizado los siguientes puntos: Funcionalidades básicas, Beneficios para el cliente, Alternativas al uso de estos sistemas, Customer Journey típico, Plataformas comerciales más conocidas en México y Latinoamérica, analisis y recomendaciones
+- Casos de uso, donde se detallan los principales casos de uso y los diagramas de casos de uso
+- Modelado de datos, con las entidades principales, el diagrama entidad relación, las relaciones principaes y extensiones futuras
+- Posibles tecnologias a usar en backend, frontend, base de datos y la justificación, del cual se ha decidido utilizar lo siguiente:
+    * El Backend será desarrollador en Express.js con Prisma para el ORM
+    * El frontend será desarrollador en Vue.js 3 con Vuetify 3.9.3
+    * La base de datos con PostgreSQL
+    * La arquitectura tanto para Backend como para Frontend sea Hexagonal (Ports & Adapters)
+
+
+# Instrucciones Generales
+El objetivo es crear un prompt para Copilot (ChatGPT 4.1) que ayude a determinar el diseño de un sistema y arquitectura de alto nivel con los siguientes requerimientos
+
+# Requerimientos
+1. Arquitectura de alto nivel
+    * Detallar los principales componente/modulos del sistema
+    * Como interactuan entre si
+2. Diagrama de la arquitectura
+    * Diagrama visual que muestre los componentes y sus relaciones
+    * Se identifiquen los limites y responsabilidades de cada compoente
+3. Patrones de diseño y buenas practicas
+    * ¿que patrones de doiseño se recomiendan aplicar y por qué?
+    * ¿Qué convenciones de codificación y buenas prácticas se deben seguir?
+4. Riesgos: ¿Qué riesgos o desafíos se anticipan?
+5. Consideraciones de despliegue y operación
+    * Opciones para desplegar el sistema
+    * Opciones para herramientas CI/CD 
+    * Recomendaciones de monitoreo y loggin
+6. Seguridad
+    * ¿Qué medidas de seguridad se deben implementar para un sistema de este tipo?
+    * ¿Cómo se gestionará la autenticación y autorización tomando en cuenta la arquitectura y tecnologias propuestas?
+
+# Consideraciones adicionales
+1. Se debe considerar con la legición mexicana y cumplir la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)
+2. Considerar que hay un tiempo limitado de 30 a 50hrs de trabajo para presentar un MVP
+3. El sistema podrá integrarse con otros sistemas, aunque en el MVP no haya integración alguna por el momento
+4. El sistema soportará Español Latinoamericano e Inglés
+5. Para ejecutar el prompt el asistente dispondrá de la documentación que se detalla en el contexto inicial
+
+# Mejores Practicas
+1. Que incluye el rol con el que el chatbot deberá ejecutar la tarea
+
+# Pautas para generar el contenido
+1. El prompt resultante deberá estar en formato Markdown para archivos .md
+
+Antes de generar el prompt revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+# Prompt para Definición de Arquitectura de Alto Nivel y Diseño de Sistema
+
+## Rol del Asistente
+
+Actúa como **arquitecto de software y analista de negocio** experto en sistemas de salud, arquitectura hexagonal y cumplimiento normativo mexicano. Utiliza la documentación proporcionada en el contexto inicial para fundamentar tus recomendaciones.
+
+---
+
+## Objetivo
+
+Ayudar a determinar el diseño de un sistema y arquitectura de alto nivel para un MVP de una plataforma de búsqueda y gestión de especialidades médicas y profesionales de la salud, considerando las tecnologías seleccionadas (Express.js + Prisma, Vue.js 3 + Vuetify, PostgreSQL, arquitectura hexagonal), el cumplimiento de la LFPDPPP, soporte multilenguaje (Español Latinoamericano e Inglés), y un tiempo de desarrollo limitado (30-50 horas).
+
+---
+
+## Instrucciones
+
+1. **Arquitectura de alto nivel**
+    - Detalla los principales componentes/módulos del sistema necesarios para un MVP, considerando la documentación de las etapas 1, 2 y 3.
+    - Explica cómo interactúan entre sí, siguiendo el enfoque de arquitectura hexagonal (Ports & Adapters).
+
+2. **Diagrama de la arquitectura**
+    - Proporciona un diagrama visual en formato Mermaid que muestre los componentes y sus relaciones.
+    - Identifica los límites y responsabilidades de cada componente.
+
+3. **Patrones de diseño y buenas prácticas**
+    - Indica qué patrones de diseño se recomiendan aplicar y por qué, considerando las tecnologías y arquitectura seleccionadas.
+    - Especifica convenciones de codificación y buenas prácticas a seguir, incluyendo recomendaciones para pruebas automatizadas (unitarias, integración, e2e) y su integración en CI/CD.
+
+4. **Riesgos**
+    - Enumera los principales riesgos o desafíos que se anticipan para el desarrollo y operación del MVP.
+
+5. **Consideraciones de despliegue y operación**
+    - Sugiere opciones para desplegar el sistema en la nube.
+    - Propón herramientas para CI/CD acordes a las tecnologías seleccionadas.
+    - Recomienda soluciones para monitoreo y logging.
+    - Incluye recomendaciones para la gestión de configuración y secretos.
+
+6. **Seguridad**
+    - Detalla las medidas de seguridad que se deben implementar para un sistema de este tipo, considerando la LFPDPPP.
+    - Explica cómo se gestionará la autenticación y autorización, tomando en cuenta la arquitectura y tecnologías propuestas.
+
+---
+
+## Formato de Respuesta
+
+- Usa listas, tablas y texto conciso para cada sección.
+- El diagrama debe estar en formato Mermaid.
+- Justifica brevemente cada recomendación.
+- Cita fuentes o documentación oficial cuando sea relevante.
+
+---
+
+## Consideraciones Adicionales
+
+- El sistema debe ser escalable y fácil de mantener.
+- Prioriza el cumplimiento normativo mexicano (LFPDPPP).
+- Limítate a los módulos mínimos necesarios para un MVP, considerando el tiempo de 30 a 50 hrs de trabajo.
+- El sistema debe estar preparado para integraciones futuras.
+- Si existen alternativas relevantes no mencionadas en el contexto, inclúyelas y justifica su inclusión.
+
+---
+
+# Pautas para generar el contenido:
+- Genera una lista de pasos para ejecutar la tarea
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente despues de mostrar la información
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+Genera un resumen de la información recompilada hasta el momento y ademas aborde los siguientes temas:
+* Tablas comparativas
+* Patrones de arquitectura investigados
+* Recomendaciones
+* Las tecnologias y aquitectura seleccionada
+* Arquitectura de alto nivel
+* Diagrama de la arquitectura
+    * No incluyas el diagrama, genera una sección donde yo pueda agregarlo manualmente
+* Patrones de diseño y buenas prácticas
+* Riesgos
+* Consideraciones de despliegue y operación
+* Seguridad
+* Información que hayamos abordado en la conversación pero que este olvidando
+
+
+Tus pautas para generar el contenido son:
+* Generar un archivo llamado "etapa4_diseño_del_sistema_y_arquitectura.md" dentro de la carpeta [[]]
+* Generar el contenido del archivo en formato Markdown para archivos .md
+
+Revisa mis instrucciones, ¿tienes alguna pregunta antes de ejecutar la tarea?
+Realiza preguntas si es necesario.
+
+
+
+Eres un experto en ingenieria de prompts, en levantamiento de requerimientos y analista de negocio
+# Contexto inicial
+Me encuentro diseñando un sistema de busqueda de especialidades medicas y profesionales de la salud y cuento con 4 etapas de analisis del producto:
+- Investigación del producto, donde se han analizado los siguientes puntos: Funcionalidades básicas, Beneficios para el cliente, Alternativas al uso de estos sistemas, Customer Journey típico, Plataformas comerciales más conocidas en México y Latinoamérica, analisis y recomendaciones
+- Casos de uso, donde se detallan los principales casos de uso y los diagramas de casos de uso
+- Modelado de datos, con las entidades principales, el diagrama entidad relación, las relaciones principaes y extensiones futuras
+- Diseño del sistema y arquitectura, en donde se detallan las tecnologias a usar, así como la arquitectura y diagrama de alto nivel del sistema
+
+# Instrucciones Generales
+El objetivo es crear un prompt para Copilot (ChatGPT 4.1) que ayude a generar un PRD (Product Requiremente Documento) inicial que cumpla con los siguientes requisitos
+
+# Requerimientos
+1. Introducción y objetivos: resumen del producto, propósito, objetivos y metas que se esperan alcanzar
+2. Stakeholders: Identifica a todas las partes interesadas, usuarios, compradores e instancias reguladoras
+3. Historias de usuario: describe como los usuarios interactuan con el producto para entender sus necesidades.
+4. Componentes principales y sitemaps: estructura y organizacion del producto, sus componentes principales y como se realacionan entre si.
+5. Características y funcionalidades: de manera enumerada y descrita para satisfacer las necesidades identificadas.
+6. Una sección sin contenido para diseño y experiencia de usuario, esta información será agregada manualmente
+7. Requisitos técnicos: especificaciones tecnicas para el desarrollo, incluye hardware, software, interactividad, personalizacion y normativas
+8. Planificación del proyecto: proporciona plazos, hitos y dependencias, para planificar y gestionar el proyecto.
+9. Criterios de aceptación: estandares y condiciones para que el producto sea acceptable
+10. Apendices y Recursos adicionales: glosarios, recursos extenros y documentos que apoyen el desarrollo
+
+# Consideraciones adicionales
+1. Considerar que hay un tiempo limitado de 30 a 50hrs de trabajo para presentar un MVP
+2. Para ejecutar el prompt el asistente dispondrá de la documentación que se detalla en el contexto inicial
+
+# Mejores Practicas
+1. Que incluya el rol con el que el chatbot deberá ejecutar la tarea
+2. Que no agregue información fuera de la documentación del contexto o invente información, si falta información indicarlo en el documento
+
+# Pautas para generar el contenido
+1. El prompt resultante deberá estar en formato Markdown para archivos .md
+
+Antes de generar el prompt revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+que se enfoque en el MVP pero que no sea necesariamente breve, no se debe omitir información imporante
+El formato planteado es correcto
+Si, tomar en cuenta LFPDPPP
+desde un inicio, con el criterio de que quizas no salga como parte del MVP
+Sin herramientas para gestión del proyecto
+¿tienes alguna otra pregunta?
+
+
+
+
+# Prompt para Generación de PRD (Product Requirement Document) Inicial
+
+## Rol del Asistente
+
+Actúa como **analista de negocio y experto en levantamiento de requerimientos** para sistemas de búsqueda de especialidades médicas y profesionales de la salud. Utiliza la documentación proporcionada en el contexto inicial para fundamentar tus respuestas y recomendaciones.
+
+---
+
+## Objetivo
+
+Genera un PRD (Product Requirement Document) inicial para un sistema de búsqueda de especialidades médicas y profesionales de la salud, enfocado en el MVP pero sin omitir información importante. Considera el cumplimiento de la LFPDPPP, soporte multilenguaje desde el inicio, y un tiempo de desarrollo limitado (30-50 horas).
+
+---
+
+## Instrucciones
+
+Estructura el PRD siguiendo los siguientes apartados:
+
+1. **Introducción y objetivos**  
+   - Resume el producto, su propósito, objetivos y metas que se esperan alcanzar.
+
+2. **Stakeholders**  
+   - Identifica todas las partes interesadas, usuarios, compradores e instancias reguladoras relevantes.
+
+3. **Historias de usuario**  
+   - Describe cómo los usuarios interactúan con el producto utilizando el formato:  
+     “Como [rol], quiero [acción], para [beneficio]”.
+
+4. **Componentes principales y sitemaps**  
+   - Expón la estructura y organización del producto, sus componentes principales y cómo se relacionan entre sí.
+
+5. **Características y funcionalidades**  
+   - Enumera y describe las características y funcionalidades necesarias para satisfacer las necesidades identificadas.
+
+6. **Diseño y experiencia de usuario**  
+   - Deja esta sección sin contenido para ser completada manualmente posteriormente.
+
+7. **Requisitos técnicos**  
+   - Especifica los requisitos técnicos para el desarrollo, incluyendo hardware, software, interactividad, personalización, soporte multilenguaje y normativas (enfatizando la LFPDPPP).
+
+8. **Planificación del proyecto**  
+   - Proporciona plazos, hitos y dependencias para planificar y gestionar el proyecto, considerando el tiempo limitado para el MVP.
+
+9. **Criterios de aceptación**  
+   - Define los estándares y condiciones que debe cumplir el producto para ser aceptable, incluyendo cumplimiento normativo y funcional.
+
+10. **Apendices y recursos adicionales**  
+    - Incluye glosarios, recursos externos y documentos que apoyen el desarrollo.  
+    - Agrega posibles referencias si están disponibles.
+
+---
+
+## Formato de Respuesta
+
+- Usa listas, tablas y texto conciso para cada sección.
+- Mantén el enfoque en el MVP, pero no omitas información relevante para el producto.
+- Si existen extensiones futuras importantes, menciónalas brevemente donde corresponda.
+- Incluye referencias en la sección de apéndices si están disponibles.
+
+---
+
+## Consideraciones Adicionales
+
+- El sistema debe estar preparado para soporte multilenguaje desde el inicio.
+- Prioriza el cumplimiento de la LFPDPPP en todo el documento.
+- Limítate a los módulos y funcionalidades mínimos necesarios para un MVP, considerando el tiempo disponible.
+- El asistente dispondrá de la documentación detallada en el contexto inicial.
+
+---
+
+
+
+
+
+# Prompt para Generación de PRD (Product Requirement Document) para MVP
+
+## Rol del Asistente
+
+Actúa como **analista de negocio y experto en levantamiento de requerimientos**. Utiliza únicamente la información proporcionada en la documentación del contexto inicial. **No inventes información ni completes secciones con supuestos; si falta información, indícalo explícitamente en el documento.**
+
+---
+
+## Objetivo
+
+Generar un PRD (Product Requirement Document) inicial para el MVP de un sistema de búsqueda de especialidades médicas y profesionales de la salud, siguiendo las mejores prácticas y considerando la documentación de las etapas de análisis del producto.
+
+---
+
+## Instrucciones
+
+El PRD debe estar estructurado en las siguientes secciones:
+
+1. **Introducción y objetivos**  
+   - Resume el producto, su propósito, los objetivos y metas que se esperan alcanzar.
+
+2. **Stakeholders**  
+   - Identifica todas las partes interesadas, usuarios, compradores e instancias reguladoras relevantes.
+
+3. **Historias de usuario**  
+   - Describe cómo los usuarios interactúan con el producto usando el formato:  
+     _Como [rol], quiero [acción], para [beneficio]._  
+   - Incluye solo historias respaldadas por la documentación.
+
+4. **Componentes principales y sitemaps**  
+   - Expón la estructura y organización del producto, sus componentes principales y cómo se relacionan entre sí.
+
+5. **Características y funcionalidades**  
+   - Enumera y describe las características y funcionalidades necesarias para satisfacer las necesidades identificadas.
+
+6. **Diseño y experiencia de usuario**  
+   - **Deja esta sección sin contenido** para ser completada manualmente posteriormente.
+
+7. **Requisitos técnicos**  
+   - Especifica los requisitos técnicos para el desarrollo, incluyendo software, interactividad, personalización y normativas aplicables (incluyendo LFPDPPP).
+
+8. **Planificación del proyecto**  
+   - Proporciona los plazos, hitos principales y dependencias para planificar y gestionar el proyecto, considerando el límite de 30 a 50 horas para el MVP.
+
+9. **Criterios de aceptación**  
+   - Define los estándares y condiciones que debe cumplir el producto para ser aceptable.
+
+10. **Apéndices y recursos adicionales**  
+    - Incluye glosarios, recursos externos y documentos de apoyo, cada uno con una breve descripción así como referencias cuando sea posible.
+
+---
+
+## Consideraciones adicionales
+
+- El PRD debe enfocarse en el MVP, pero no debe omitir información importante.
+- Si alguna sección carece de información suficiente en la documentación, **indícalo explícitamente** en el documento.
+- El documento debe estar redactado en español.
+- No agregues información fuera de la documentación del contexto.
+
+---
+
+## Formato de Respuesta
+
+- Utiliza encabezados y listas para estructurar el documento.
+- Sé claro y conciso en cada sección.
+- Si falta información, escribe:  
+  _"Falta información en la documentación para completar esta sección."_
+
+---
+
+# Pautas para generar el contenido:
+- Genera una lista de pasos para ejecutar la tarea
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente despues de mostrar la información
+
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+Eres un experto en ingenieria de prompts, en diseño de sistemas y proyectos web
+# Contexto inicial
+Me encuentro diseñando un sistema de busqueda de especialidades medicas y profesionales de la salud y cuento con 4 etapas de analisis del producto:
+- Investigación del producto, donde se han analizado los siguientes puntos: Funcionalidades básicas, Beneficios para el cliente, Alternativas al uso de estos sistemas, Customer Journey típico, Plataformas comerciales más conocidas en México y Latinoamérica, analisis y recomendaciones
+- Casos de uso, donde se detallan los principales casos de uso y los diagramas de casos de uso
+- Modelado de datos, con las entidades principales, el diagrama entidad relación, las relaciones principaes y extensiones futuras
+- Diseño del sistema y arquitectura, en donde se detallan las tecnologias a usar, así como la arquitectura y diagrama de alto nivel del sistema
+Actualmente me encuentro redactando el product requirement document (PRD)
+
+# Instrucciones Generales
+El objetivo es crear un prompt para Copilot (ChatGPT 4.1) que me ayude a generar un sitemap de mi proyecto cumpliendo las siguientes instrucciones
+
+# Instrucciones
+1. El Sitemap tiene que estar basada en la información que describo en la contexto inicial
+   * Tendras acceso a la documentación de esta sección para generar el sitemap
+
+# Mejores Practicas
+1. Que incluya el rol con el que el chatbot deberá ejecutar la tarea
+2. El sitemap debe estar basado solo en la información de la documentación del contexto, no debe inventar o agregar información de fuentes externas.
+
+# Pautas para generar el contenido
+1. El prompt resultante deberá estar en formato Markdown para archivos .md
+
+Antes de generar el prompt revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+# Prompt para Generación de Sitemap en Formato Tabla
+
+## Rol del Asistente
+
+Actúa como **experto en diseño de sistemas y proyectos web**. Utiliza únicamente la información proporcionada en la documentación del contexto inicial. **No inventes información ni completes secciones con supuestos; si falta información, indícalo explícitamente en el sitemap.**
+
+---
+
+## Objetivo
+
+Generar un sitemap detallado en formato de tabla para el sistema de búsqueda de especialidades médicas y profesionales de la salud, basado exclusivamente en la información de la documentación de las etapas de análisis del producto.
+
+---
+
+## Instrucciones
+
+- El sitemap debe incluir páginas principales, subpáginas/secciones internas y los enlaces entre ellas.
+- Presenta el sitemap en una tabla con las siguientes columnas:
+  - **Página Principal**
+  - **Subpáginas / Secciones**
+  - **Enlaces Relacionados**
+- Si falta información en la documentación para completar alguna sección, indícalo explícitamente en la tabla con el texto:  
+  _"Falta información en la documentación para completar esta sección."_
+- No agregues información de fuentes externas ni inventes contenido.
+
+---
+
+## Formato de Respuesta
+
+- Utiliza una tabla Markdown para presentar el sitemap.
+- Sé claro y conciso en cada sección.
+- No omitas ninguna página principal o subpágina relevante según la documentación.
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+Vamos a complementar el sitemap con la información faltante y reorganizar el sitio:
+* Home / Página de inicio: Landingpage con la información del sitio, inicio de sesión y registro, un buscador inicial que lleve a resultados de busqueda, misión y visión de la empresa, enlaces a las páginas donde todos los usuarios tienen acceso
+* Fusionar "Buscar especialistas" y "Resultados de búsqueda", quitar los filtros de seguro, género e idioma. Considerar un campo de texto para la busqueda del nombre del especialista
+* Notificaciones y recordatorios: Seria un modal que despliegue una lista de notificacion y recordatorios una vez que el paciente/medico tiene sesión
+* Panel de administración: los enlaces relacionados podrian ser aquellos donde todos los usuarios tienen acceso
+* Monitoreo de actividad: vamos a omitir esta página por el momento
+* Registro / Iniciar sesión: enlaces a las páginas donde todos los usuarios tienen acceso
+* Perfil de usuario: considera los elementos de "Read" y "Update" de cada usuario
+* "Aviso de privacidad" y "Términos y condiciones":
+   * Su contenido implica texto plano donde se detalla la información perninete, algo así como un contrato
+   * Enlaces relacionados: enlaces a las páginas donde todos los usuarios tienen acceso
+
+Revisa mis modificaciónes y actualiza el sitemap, si es necesario adapata mi información para un mejor entendimiento y se apegue al formato inicial.
+Antes de realizar esta tarea ¿tienes alguna pregunta? 
+
+
+Eres un experto en leyes mexicanas, en la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) y levantamiento de requerimientos. Dime que criterios debe considerar el diseño de mi sistema para cumplir con la normativa y sus leyes secundarias. El objetivo es saber que cosas se deben considerar desde la etapa del diseño hasta la implementación para cumplir con la normativa mencionada. El contenido es para un ingeniero de software. Tus pautas para generar el contenido es que lo presentes en forma de lista. Antes de realizar esta tarea ¿tienes alguna pregunta?
+
+Cómo experto en leyes mexicanas ¿que norma regula o reglamenta que los medicos y profesionales de la salud deben informar sobre cedula profesional y certificado de estudios para ejercer su profesion?
+
+Eres un experto en UX/UX, diseño web y en psicologia del color.
+Dame una lista de pasos a seguir para determinar una paleta de colores para un sitio web y sus multiples páginas.
+El objetivo es generar al menos 3 variantes de paleta de colores para un sistema de búsqueda de especialidades médicas y profesionales de la salud. El contenido es para un ingeniero de software que no sabe nada acerca del tema. Tus pautas para generar el contenido es en forma de lista.
+Antes de ejecutar la tarea revisa mis instrucciones y realiza preguntas para abordar el problema de mejor manera.

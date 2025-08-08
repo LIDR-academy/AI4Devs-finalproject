@@ -1,0 +1,402 @@
+# 1. Introducción y objetivos
+
+El sistema de búsqueda de especialidades médicas y profesionales de la salud es una plataforma diseñada para facilitar la localización, comparación y contacto con especialistas médicos. El propósito principal es optimizar la experiencia de búsqueda y agendamiento de citas tanto para pacientes como para médicos, proporcionando información transparente y herramientas que permitan tomar decisiones informadas.
+
+## Objetivos y metas
+
+- Permitir a los usuarios buscar especialistas por especialidad, ubicación y otros filtros relevantes.
+- Facilitar la visualización de perfiles profesionales detallados.
+- Ofrecer un proceso sencillo y eficiente para el agendamiento de citas.
+- Integrar valoraciones y opiniones de pacientes para fomentar la confianza.
+- Proveer notificaciones y recordatorios automáticos sobre citas y eventos importantes.
+- Brindar herramientas de gestión para médicos y administradores del sistema.
+- Garantizar una experiencia de usuario accesible y multiplataforma.
+
+**Referencia:**
+etapa1_investigacion_analisis.md, etapa2_casos_de_uso.md
+
+# 2. Stakeholders
+
+A continuación se identifican las partes interesadas y usuarios principales del sistema:
+
+- **Visitante (no autenticado):** Persona que accede al sistema para buscar especialistas y consultar perfiles sin necesidad de registro.
+- **Paciente (usuario registrado):** Usuario que puede buscar especialistas, agendar citas, valorar médicos y recibir notificaciones.
+- **Médico Especialista:** Profesional de la salud que administra su perfil, agenda y recibe valoraciones de pacientes.
+- **Administrador del sistema:** Responsable de la gestión de usuarios, especialidades, filtros y monitoreo de la actividad general del sistema.
+
+**Referencia:**
+etapa2_casos_de_uso.md
+
+# 3. Historias de usuario
+
+- Como **visitante**, quiero buscar especialistas por especialidad y ubicación, para encontrar médicos adecuados a mis necesidades sin necesidad de registrarme.
+- Como **visitante**, quiero ver el perfil de un especialista, para conocer su información profesional antes de decidirme a agendar una cita.
+- Como **paciente**, quiero buscar especialistas y ver sus perfiles, para comparar opciones y tomar decisiones informadas.
+- Como **paciente**, quiero agendar una cita con un especialista, para reservar una consulta de manera sencilla.
+- Como **paciente**, quiero valorar a un especialista después de una consulta, para compartir mi experiencia y ayudar a otros usuarios.
+- Como **paciente**, quiero recibir notificaciones y recordatorios sobre mis citas, para no olvidar mis compromisos médicos.
+- Como **médico especialista**, quiero gestionar mi agenda y disponibilidad, para organizar mis consultas y confirmar o rechazar citas.
+- Como **médico especialista**, quiero ver el listado de mis próximas citas, para planificar mi día de trabajo.
+- Como **administrador**, quiero gestionar usuarios (crear, editar o eliminar cuentas), para mantener el sistema actualizado y seguro.
+- Como **administrador**, quiero gestionar el catálogo de especialidades y filtros, para asegurar que la información esté vigente.
+- Como **administrador**, quiero monitorear la actividad del sistema, para supervisar el funcionamiento general y detectar incidencias.
+
+**Referencia:**
+etapa2_casos_de_uso.md
+
+# 4. Componentes principales y sitemaps
+
+## Componentes principales del sistema (MVP)
+
+- **Core de Dominio:**
+  Entidades principales (Usuario, Médico, Paciente, Especialidad, Cita, Valoración) y lógica de negocio para búsqueda, agendamiento, gestión de usuarios y especialidades.
+- **Aplicación (Casos de Uso):**
+  Orquestadores para buscar especialistas, agendar cita, gestionar agenda, valorar especialista y gestionar usuarios/especialidades.
+- **Adapters de Entrada:**
+  API REST (Express.js) con endpoints para frontend público, pacientes, médicos y administración.
+- **Adapters de Salida:**
+  Persistencia (Prisma + PostgreSQL) y almacenamiento de archivos (Firebase Storage) para fotos de perfil.
+- **Frontend (Vue.js + Vuetify):**
+  Portal público (búsqueda, perfiles, registro/login) y panel de administración (gestión de usuarios, especialidades, monitoreo básico).
+- **Internacionalización:**
+  Soporte multilenguaje con vue-i18n en frontend y estructura preparada en backend.
+
+## Relación entre componentes
+
+- El core de dominio es independiente de frameworks y detalles de infraestructura.
+- Los casos de uso exponen interfaces invocadas por los adaptadores de entrada (API REST).
+- Los adaptadores de salida implementan interfaces para persistencia y almacenamiento, desacoplando el core de la tecnología específica.
+- El frontend consume la API y gestiona la experiencia de usuario, incluyendo internacionalización.
+
+### Diagrama de arquitectura del sistema y componentes principales
+
+```mermaid
+flowchart TD
+    subgraph "Frontend (Vue.js + Vuetify)"
+        F1[Portal Público]
+        F2[Portal Paciente]
+        F3[Portal Médico]
+        F4[Panel Administración]
+    end
+
+    subgraph "Adapters de Entrada (Express.js)"
+        API[API REST]
+        AUTH[Autenticación]
+    end
+
+    subgraph "Aplicación (Casos de Uso)"
+        CU1[Buscar especialistas]
+        CU2[Agendar cita]
+        CU3[Gestionar agenda]
+        CU4[Valorar especialista]
+        CU5[Gestión usuarios/especialidades]
+    end
+
+    subgraph "Core de Dominio"
+        ENT[Entidades y Servicios de Dominio]
+    end
+
+    subgraph "Adapters de Salida"
+        DB[(Prisma + PostgreSQL)]
+        EMAIL["Email (Nodemailer/SendGrid)"]
+        STORAGE[Firebase Storage]
+    end
+
+    subgraph "Otros"
+        I18N["Internacionalización (vue-i18n/backend)"]
+        OAUTH["OAuth2 (Google/Outlook)"]
+    end
+
+    %% Relaciones
+    F1-->|HTTP|API
+    F2-->|HTTP|API
+    F3-->|HTTP|API
+    F4-->|HTTP|API
+
+    API-->|Invoca|AUTH
+    AUTH-->|JWT/OAuth2|API
+    API-->|Invoca casos de uso|CU1
+    API-->|Invoca casos de uso|CU2
+    API-->|Invoca casos de uso|CU3
+    API-->|Invoca casos de uso|CU4
+    API-->|Invoca casos de uso|CU5
+
+    AUTH-->|OAuth2|OAUTH
+
+    CU1-->|Usa|ENT
+    CU2-->|Usa|ENT
+    CU3-->|Usa|ENT
+    CU4-->|Usa|ENT
+    CU5-->|Usa|ENT
+
+    ENT-->|Repositorios|DB
+    ENT-->|Notificaciones|EMAIL
+    ENT-->|Archivos|STORAGE
+
+    F1-->|Traducción|I18N
+    F2-->|Traducción|I18N
+    F3-->|Traducción|I18N
+    F4-->|Traducción|I18N
+```
+
+## Sitemaps
+
+
+| Página / Sección                             | Subpáginas / Secciones                                                                                                                                                                              | Enlaces Relacionados                                                                                    | Usuarios con acceso              |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Home / Página de inicio                       | Landingpage, información del sitio, misión y visión, buscador inicial, inicio de sesión                                                                                                          | Buscar especialistas / Resultados de búsqueda, Mi perfil, Aviso de privacidad, Términos y condiciones | Todos los usuarios               |
+| Registro / Login                               | Formulario de registro e inicio de sesión                                                                                                                                                           | Home, Mi perfil, Aviso de privacidad, Términos y condiciones                                           | Todos los usuarios               |
+| Buscar especialistas / Resultados de búsqueda | Campo de texto para búsqueda por nombre, filtro para listado de especialistas, ubicación y valoración, acceso a perfil                                                                            | Home, Mi perfil, Aviso de privacidad, Términos y condiciones                                           | Todos los usuarios               |
+| Mi perfil                                      | Visualización y edición de datos personales.<br> Paciente: listado de citas, valoración de especialistas. <br> Médico: agenda, gestión de disponibilidad. <br> Administrador: datos personales. | Home, Buscar especialistas / Resultados de búsqueda, Aviso de privacidad, Términos y condiciones      | Paciente, Médico, Administrador |
+| Mis citas                                      | Listado de citas agendadas, cancelar cita                                                                                                                                                            | Mi perfil                                                                                               | Paciente                         |
+| Valorar especialista                           | Formulario de valoración tras consulta                                                                                                                                                              | Mi perfil, Buscar especialistas / Resultados de búsqueda                                               | Paciente                         |
+| Agenda del médico                             | Gestión de disponibilidad, confirmación/rechazo de citas                                                                                                                                           | Mi perfil                                                                                               | Médico                          |
+| Notificaciones y recordatorios (modal)         | Lista de notificaciones y recordatorios (modal tras inicio de sesión)                                                                                                                               | Mi perfil                                                                                               | Paciente, Médico                |
+| Panel de administración                       | Gestión de usuarios, gestión de especialidades y filtros                                                                                                                                           | Gestión de usuarios, Gestión de especialidades y filtros                                              | Administrador                    |
+| Gestión de usuarios                           | Crear, editar, eliminar cuentas                                                                                                                                                                      | Panel de administración                                                                                | Administrador                    |
+| Gestión de especialidades y filtros           | Actualización de catálogo de especialidades y filtros                                                                                                                                              | Panel de administración                                                                                | Administrador                    |
+| Aviso de privacidad                            | Texto plano con detalles legales y de privacidad                                                                                                                                                     | Home, Buscar especialistas / Resultados de búsqueda, Mi perfil, Términos y condiciones                | Todos los usuarios               |
+| Términos y condiciones                        | Texto plano con condiciones de uso                                                                                                                                                                   | Home, Buscar especialistas / Resultados de búsqueda, Mi perfil, Aviso de privacidad                    | Todos los usuarios               |
+
+**Referencia:**
+etapa4_diseño_del_sistema_y_arquitectura.md
+
+# 5. Características y funcionalidades
+
+- **Búsqueda de especialistas:** Permite localizar médicos por especialidad, ubicación y otros filtros relevantes.
+- **Visualización de perfiles profesionales:** Muestra información detallada de los médicos, incluyendo datos de contacto, biografía y foto de perfil.
+- **Agendamiento de citas:** Los pacientes pueden reservar consultas con especialistas seleccionados.
+- **Valoraciones y opiniones:** Los pacientes pueden dejar opiniones y calificar a los médicos tras una consulta.
+- **Notificaciones y recordatorios:** El sistema envía avisos automáticos a pacientes y médicos sobre citas y eventos importantes.
+- **Gestión de agenda para médicos:** Los médicos pueden administrar su disponibilidad, confirmar o rechazar citas y ver el listado de próximas consultas.
+- **Gestión de usuarios:** El administrador puede crear, editar o eliminar cuentas de médicos y pacientes.
+- **Gestión de especialidades y filtros:** El administrador mantiene actualizado el catálogo de especialidades, ubicaciones y otros filtros.
+- **Monitoreo de actividad:** El administrador supervisa el funcionamiento general y la actividad relevante del sistema.
+- **Soporte multilenguaje:** El sistema está preparado para operar en varios idiomas.
+
+**Referencia:**
+etapa1_investigacion_analisis.md, etapa2_casos_de_uso.md, etapa4_diseño_del_sistema_y_arquitectura.md
+
+# 6. Diseño y experiencia de usuario
+
+Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a los requerimientos descritos en este documento
+
+## Diseños
+
+### Home / Página de inicio
+
+**Vuetify Landing Page**
+
+[URL Proyecto](https://store.vuetifyjs.com/products/landing-theme-free)
+
+![](assets/landing_page.png)
+
+### Layout principal
+
+*Constrained*
+[URL Proyecto](https://github.com/vuetifyjs/vuetify/blob/master/packages/docs/src/examples/wireframes/constrained.vue)
+
+![](assets/constrained.png)
+
+### Registro y Login
+
+[URL Proyecto](https://nicepage.com/t/1473906/login-form-with-image-template)
+
+![](assets/login.png)
+
+### Buscador
+
+![](assets/buscador_ejemplo.png)
+
+## Resultados de busqueda, Mis Citas y Agenda del médico
+
+![](assets/resultados_busqueda_ejemplo.png.png)
+
+### Mi Perfil
+
+#### Perfil Médico
+
+[URL Proyecto](https://www.w3schools.com/w3css/tryw3css_templates_cv.htm)
+
+![](assets/perfil_medico.png)
+
+#### Perfil de Paciente
+
+[URL Proyecto](https://nicepage.com/h5/1362604/creative-designer-profile-html5-template)
+![](assets/perfil_paciente.png)
+
+### Valorar Especialista
+
+![](assets/valorar_especialista.png)
+
+### Notificaciones y Recordatorios
+
+![](assets/notificaciones.png)
+
+### Panel de administración
+
+#### Gestión de usuarios
+
+##### Listado de usuarios
+
+![](assets/resultados_busqueda_ejemplo.png.png)
+
+##### Perfil Médico
+
+[URL Proyecto](https://www.w3schools.com/w3css/tryw3css_templates_cv.htm)
+
+![](assets/perfil_medico.png)
+
+##### Perfil de Paciente
+
+[URL Proyecto](https://nicepage.com/h5/1362604/creative-designer-profile-html5-template)
+![](assets/perfil_paciente.png)
+
+### Gestión de especialidades y filtros
+
+##### Listado de especialidades
+
+![](assets/resultados_busqueda_ejemplo.png.png)
+
+### Aviso de privacidad, Términos y condiciones
+
+[URL Proyecto](https://nicepage.com/st/6543609/enterprise-level-privacy-protection-website-template)
+
+![](assets/aviso_privacidad_terminos.png)
+
+## Fuentes y paleta de colores
+
+### Colores CSS
+```css
+--federal-blue: #03045eff;
+--honolulu-blue: #0077b6ff;
+--pacific-cyan: #00b4d8ff;
+--non-photo-blue: #90e0efff;
+--light-cyan: #caf0f8ff;
+```
+
+[URL Paleta](https://coolors.co/palette/03045e-0077b6-00b4d8-90e0ef-caf0f8)
+
+### Fuente 
+
+**Roboto**
+[URL Fuente](https://fonts.google.com/specimen/Roboto)
+
+# 7. Requisitos técnicos
+
+- **Backend:**
+
+  - Node.js con Express.js para la API REST.
+  - Arquitectura hexagonal para desacoplar lógica de negocio y adaptadores.
+  - Prisma como ORM y PostgreSQL como base de datos principal.
+  - Almacenamiento de archivos en Firebase Storage (fotos de perfil).
+  - Estructura preparada para internacionalización de mensajes y validaciones.
+- **Frontend:**
+
+  - Vue.js con Vuetify para la interfaz de usuario.
+  - Consumo de la API REST para todas las operaciones.
+  - Soporte multilenguaje mediante vue-i18n.
+- **Interactividad y personalización:**
+
+  - Filtros de búsqueda personalizables (especialidad, ubicación, etc.).
+  - Gestión de agenda y notificaciones en tiempo real.
+
+## Normativas aplicables
+
+### LFPDPPP
+
+Para cumplir con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) y sus leyes secundarias, el sistema debe considerar los siguientes criterios y buenas prácticas desde el diseño hasta la implementación:
+
+1. **Identificación de datos personales y sensibles:**
+   Clasificar los datos que se recopilan (personales, sensibles, financieros, de salud, etc.) y limitar la recolección a lo estrictamente necesario.
+2. **Aviso de privacidad:**
+   Mostrar y registrar el consentimiento del usuario respecto al aviso de privacidad, asegurando que sea claro, accesible y esté disponible antes de recabar datos.
+3. **Consentimiento explícito:**
+   Implementar mecanismos para obtener y registrar el consentimiento informado, especialmente para datos sensibles, y permitir al usuario retirar su consentimiento fácilmente.
+4. **Finalidad y uso de los datos:**
+   Definir y documentar las finalidades para las que se recaban los datos, limitando su uso exclusivamente a las finalidades informadas.
+5. **Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición):**
+   Proporcionar interfaces para que los usuarios puedan ejercer sus derechos ARCO e implementar procesos para atender estas solicitudes.
+6. **Seguridad de la información:**
+   Aplicar medidas técnicas y organizacionales para proteger los datos (encriptación, control de acceso, registros de actividad, etc.) y realizar pruebas de seguridad periódicas.
+7. **Transferencia de datos:**
+   Documentar y controlar cualquier transferencia de datos a terceros, asegurando el cumplimiento de la LFPDPPP e informando y solicitando consentimiento para transferencias internacionales.
+8. **Conservación y eliminación de datos:**
+   Definir políticas de retención y eliminación segura de datos personales, implementando borrado lógico y físico según lo requiera la ley.
+9. **Responsable y encargado:**
+   Designar y documentar al responsable del tratamiento de datos personales, así como establecer contratos y controles con encargados externos (proveedores, servicios en la nube).
+10. **Registro y trazabilidad:**
+    Mantener registros de actividades de tratamiento de datos y accesos, e implementar trazabilidad para auditorías y cumplimiento.
+
+### Normativas sobre ejercicio profesional en salud
+
+De acuerdo con la legislación mexicana, el sistema debe cumplir con los siguientes requisitos relacionados con la acreditación y exhibición de la cédula profesional y certificados de estudios de médicos y profesionales de la salud:
+
+1. **Ley General de Salud**
+
+   - El sistema debe requerir y validar que los médicos y profesionales de la salud cuenten con título profesional y cédula expedida por la autoridad educativa competente, conforme al Artículo 79.
+2. **Ley Reglamentaria del Artículo 5° Constitucional, relativa al ejercicio de las profesiones en la Ciudad de México**
+
+   - El sistema debe permitir que los profesionales exhiban su título y cédula profesional en su perfil, y proporcionar estos datos cuando sean requeridos por los usuarios, conforme a los Artículos 12 y 13.
+
+Estas disposiciones garantizan que los profesionales registrados en la plataforma acrediten su formación y autorización legal para ejercer, fortaleciendo la
+
+**Referencia:**
+etapa4_diseño_del_sistema_y_arquitectura.md, etapa1_investigacion_analisis.md
+
+# 8. Planificación del proyecto
+
+- **Duración estimada del MVP:** 30 a 50 horas.
+- **Hitos principales:**
+
+  - Definición y validación de requerimientos.
+  - Diseño y configuración de la arquitectura base (backend y frontend).
+  - Implementación de módulos principales: búsqueda, perfiles, agendamiento y gestión de usuarios.
+  - Integración de notificaciones y valoraciones.
+  - Pruebas funcionales y ajustes.
+  - Despliegue inicial y retroalimentación.
+- **Dependencias:**
+
+  - Disponibilidad de recursos técnicos (desarrolladores backend y frontend).
+  - Acceso a infraestructura de base de datos y almacenamiento.
+  - Definición de catálogos de especialidades y filtros.
+  - Validación de cumplimiento normativo (LFPDPPP).
+
+**Referencia:**
+etapa4_diseño_del_sistema_y_arquitectura.md
+
+# 9. Criterios de aceptación
+
+- El sistema permite buscar especialistas por especialidad y ubicación desde el frontend.
+- Los usuarios pueden visualizar perfiles profesionales completos de los médicos.
+- Los pacientes pueden agendar citas y recibir confirmación.
+- Los pacientes pueden dejar valoraciones y opiniones tras una consulta.
+- Los médicos pueden gestionar su agenda y confirmar/rechazar citas.
+- El administrador puede gestionar usuarios, especialidades y filtros.
+- El sistema envía notificaciones y recordatorios automáticos sobre citas.
+- El sistema soporta al menos dos idiomas en la interfaz.
+- El sistema almacena de forma segura los datos personales conforme a la LFPDPPP.
+- Todas las funcionalidades principales están cubiertas por pruebas funcionales básicas.
+
+**Referencia:**
+etapa2_casos_de_uso.md, etapa4_diseño_del_sistema_y_arquitectura.md
+
+# 10. Apéndices y recursos adicionales
+
+## Glosario
+
+- **Especialidad médica:** Rama de la medicina en la que un médico se ha especializado.
+- **Paciente:** Usuario registrado que busca y agenda citas con especialistas.
+- **Médico especialista:** Profesional de la salud registrado en la plataforma.
+- **Administrador:** Usuario encargado de la gestión y supervisión del sistema.
+- **LFPDPPP:** Ley Federal de Protección de Datos Personales en Posesión de los Particulares (México).
+
+## Recursos externos y documentos de apoyo
+
+- **etapa1_investigacion_analisis.md:** Documento con análisis de funcionalidades y beneficios para el cliente.
+- **etapa2_casos_de_uso.md:** Documento con casos de uso y descripción de usuarios.
+- **etapa3_modelado_datos.md:** Documento con el modelo de datos y entidades principales.
+- **etapa4_diseño_del_sistema_y_arquitectura.md:** Documento con la arquitectura de alto nivel y componentes del sistema.
+
+**Referencia:**
+etapa1_investigacion_analisis.md, etapa2_casos_de_uso.md, etapa3_modelado_datos.md, etapa4_diseño_del_sistema_y_arquitectura.md
