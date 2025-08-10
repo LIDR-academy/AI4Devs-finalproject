@@ -16,7 +16,7 @@ erDiagram
         int id PK,FK "required"
         string license_number "required"
         string phone "optional"
-        string location "required"
+        int location_id FK "required"
         string biography "optional"
         string photo_url "optional"
         boolean active "required, default: true"
@@ -28,7 +28,7 @@ erDiagram
         string phone "optional"
         date birth_date "optional"
         string gender "optional"
-        string address "optional"
+        int location_id FK "required"
         datetime created_at "required, default: now()"
         datetime updated_at "required, default: now()"
     }
@@ -77,6 +77,28 @@ erDiagram
         datetime created_at "required, default: now()"
         datetime updated_at "required, default: now()"
     }
+    LOCATION {
+        int id PK "required"
+        string address "required"
+        string exterior_number "required"
+        string interior_number "optional"
+        string neighborhood "required"
+        string postal_code "required"
+        int city_id FK "required"
+        int state_id FK "required"
+        string google_maps_url "optional"
+        date created_at "required, default: now()"
+        date updated_at "required, default: now()"
+    }
+    CITY {
+        int id PK "required"
+        string name "required" 
+        int state_id FK "required"
+    }
+    STATE {
+        int id PK "required"
+        string name "required"
+    }
 
     USER ||--o| DOCTOR : has
     USER ||--o| PATIENT : has
@@ -88,4 +110,9 @@ erDiagram
     PATIENT ||--o{ RATING : writes
     DOCTOR ||--o{ RATING : receives
     USER ||--o{ NOTIFICATION : receives
+    DOCTOR ||--|| LOCATION : has
+    PATIENT ||--|| LOCATION : has
+    LOCATION }o--|| CITY : "belongs to"
+    LOCATION }o--|| STATE : "belongs to"
+    CITY }o--|| STATE : "belongs to"
 ```

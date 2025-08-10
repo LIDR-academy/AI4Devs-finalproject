@@ -6,7 +6,9 @@ El sistema de búsqueda de especialidades médicas y profesionales de la salud e
 
 ### Casos de uso principales
 
-- **Buscar especialistas:** Permite a visitantes y pacientes localizar médicos por especialidad, ubicación y otros filtros.
+- **Registrar un perfil:** Permite a los visitantes crear una cuenta para ofrecer sus servicios medicos (Médico) o para buscar especialistas, revisar su información completa
+y angedar citas (Pacientes)
+- **Buscar especialistas:** Permite a visitantes y pacientes localizar médicos por especialidad, ubicación (ciudad, estado) y otros filtros.
 - **Ver perfil de especialista:** Permite consultar información detallada de los médicos, accesible tanto para visitantes como para pacientes.
 - **Agendar cita:** Los pacientes pueden reservar una consulta con el especialista seleccionado.
 - **Valorar especialista:** Tras la consulta, los pacientes pueden dejar opiniones y valoraciones.
@@ -32,37 +34,41 @@ flowchart TD
     Paciente((Paciente))
     Medico((Médico Especialista))
     Admin((Administrador))
-    
-    UC1[Buscar especialistas]
-    UC2[Ver perfil de especialista]
-    UC3[Agendar cita]
-    UC4[Valorar especialista]
-    UC5[Recibir notificaciones y recordatorios]
-    UC6[Gestionar agenda]
-    UC7[Ver citas agendadas]
-    UC8[Gestionar usuarios]
-    UC9[Gestionar especialidades y filtros]
-    UC10[Monitorear actividad del sistema]
-    
+
+    UC1[Registrar un perfil]
+    UC2[Buscar especialistas]
+    UC3[Ver perfil de especialista]
+    UC4[Agendar cita]
+    UC5[Valorar especialista]
+    UC6[Recibir notificaciones y recordatorios]
+    UC7[Gestionar agenda]
+    UC8[Ver citas agendadas]
+    UC9[Gestionar usuarios]
+    UC10[Gestionar especialidades y filtros]
+    UC11[Monitorear actividad del sistema]
+
     Visitante --> UC1
     Visitante --> UC2
+    Visitante --> UC3
 
     Paciente --> UC1
     Paciente --> UC2
     Paciente --> UC3
     Paciente --> UC4
     Paciente --> UC5
-    
-    Medico --> UC6
+    Paciente --> UC6
+
+    Medico --> UC1
     Medico --> UC7
-    Medico --> UC5
-    
-    Admin --> UC8
+    Medico --> UC8
+    Medico --> UC6
+
     Admin --> UC9
     Admin --> UC10
-    
-    UC1 -.-> |<<include>>| UC2
+    Admin --> UC11
+
     UC2 -.-> |<<include>>| UC3
+    UC3 -.-> |<<include>>| UC4
 ```
 
 ---

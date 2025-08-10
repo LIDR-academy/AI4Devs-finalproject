@@ -33,7 +33,7 @@ Contiene información específica de los profesionales de la salud.
 - **id**: Identificador único del médico (PK, FK a USER)
 - **license_number**: Número de cédula profesional
 - **phone**: Teléfono de contacto
-- **location**: Ubicación principal
+- **location_id**: Referencia a la entidad LOCATION (FK)
 - **biography**: Descripción profesional
 - **photo_url**: URL de la foto de perfil
 - **active**: Indica si el perfil está activo
@@ -48,7 +48,7 @@ Almacena información específica de los pacientes registrados.
 - **phone**: Teléfono de contacto
 - **birth_date**: Fecha de nacimiento
 - **gender**: Género
-- **address**: Dirección
+- **location_id**: Referencia a la entidad LOCATION (FK)
 - **created_at**: Fecha de creación
 - **updated_at**: Fecha de última actualización
 
@@ -112,6 +112,37 @@ Gestiona las notificaciones enviadas a los usuarios.
 - **created_at**: Fecha de creación
 - **updated_at**: Fecha de última actualización
 
+### 2.9. LOCATION (Ubicación)
+Almacena la información detallada de la ubicación de médicos y pacientes.
+
+**Campos principales:**
+- **id**: Identificador único de la ubicación (PK)
+- **address**: Calle y nombre de la dirección principal
+- **exterior_number**: Número exterior
+- **interior_number**: Número interior (opcional)
+- **neighborhood**: Colonia
+- **postal_code**: Código postal
+- **city_id**: Referencia a la entidad CITY (FK)
+- **state_id**: Referencia a la entidad STATE (FK)
+- **google_maps_url**: URL de Google Maps (opcional)
+- **created_at**: Fecha de creación
+- **updated_at**: Fecha de última actualización
+
+### 2.10. CITY (Ciudad)
+Catálogo de ciudades de México.
+
+**Campos principales:**
+- **id**: Identificador único de la ciudad (PK)
+- **name**: Nombre de la ciudad
+- **state_id**: Referencia a la entidad STATE (FK)
+
+### 2.11. STATE (Estado)
+Catálogo de estados de México.
+
+**Campos principales:**
+- **id**: Identificador único del estado (PK)
+- **name**: Nombre del estado
+
 ---
 
 ## 3. Diagrama de Entidad-Relación
@@ -134,7 +165,7 @@ erDiagram
         int id PK,FK "required"
         string license_number "required"
         string phone "optional"
-        string location "required"
+        int location_id FK "required"
         string biography "optional"
         string photo_url "optional"
         boolean active "required, default: true"
@@ -146,7 +177,7 @@ erDiagram
         string phone "optional"
         date birth_date "optional"
         string gender "optional"
-        string address "optional"
+        int location_id FK "required"
         datetime created_at "required, default: now()"
         datetime updated_at "required, default: now()"
     }
@@ -195,6 +226,28 @@ erDiagram
         datetime created_at "required, default: now()"
         datetime updated_at "required, default: now()"
     }
+    LOCATION {
+        int id PK "required"
+        string address "required"
+        string exterior_number "required"
+        string interior_number "optional"
+        string neighborhood "required"
+        string postal_code "required"
+        int city_id FK "required"
+        int state_id FK "required"
+        string google_maps_url "optional"
+        date created_at "required, default: now()"
+        date updated_at "required, default: now()"
+    }
+    CITY {
+        int id PK "required"
+        string name "required" 
+        int state_id FK "required"
+    }
+    STATE {
+        int id PK "required"
+        string name "required"
+    }
 
     USER ||--o| DOCTOR : has
     USER ||--o| PATIENT : has
@@ -206,6 +259,12 @@ erDiagram
     PATIENT ||--o{ RATING : writes
     DOCTOR ||--o{ RATING : receives
     USER ||--o{ NOTIFICATION : receives
+    DOCTOR ||--|| LOCATION : has
+    PATIENT ||--|| LOCATION : has
+    LOCATION }o--|| CITY : "belongs to"
+    LOCATION }o--|| STATE : "belongs to"
+    CITY }o--|| STATE : "belongs to"
+
 ```
 
 ---
@@ -217,6 +276,10 @@ erDiagram
 - **DOCTOR ↔ PATIENT**: Relación muchos a muchos a través de APPOINTMENT. Un médico puede atender a múltiples pacientes, y un paciente puede consultar a múltiples médicos.
 - **APPOINTMENT → RATING**: Relación uno a muchos. Una cita puede generar múltiples valoraciones.
 - **USER ← NOTIFICATION**: Relación uno a muchos. Un usuario puede recibir múltiples notificaciones.
+- Cada **DOCTOR** y **PATIENT** tiene una relación uno a uno con una **LOCATION**.
+- Cada **LOCATION** referencia una **CITY** y un **STATE**.
+- Cada **CITY** pertenece a un **STATE**.
+- Los catálogos de **CITY** y **STATE** permiten mantener la consistencia y facilitar el filtrado por ubicación.
 
 ---
 
@@ -296,6 +359,10 @@ Gestiona los pagos asociados a las citas.
 - **Soft Delete**: Las entidades principales implementan borrado lógico mediante el campo active.
 - **Escalabilidad**: El modelo permite añadir nuevas entidades y relaciones sin afectar la estructura base.
 - **Integridad referencial**: Se mantiene mediante claves foráneas y restricciones.
+- El modelo permite registrar una sola ubicación por médico y paciente en el MVP.
+- Los datos de ubicación solo pueden ser vistos por usuarios registrados.
+- El uso de catálogos para ciudad y estado facilita la integración de filtros y la consistencia de datos.
+- La estructura es flexible para futuras expansiones, como permitir múltiples ubicaciones por usuario o agregar validaciones específicas.
 
 ---
 

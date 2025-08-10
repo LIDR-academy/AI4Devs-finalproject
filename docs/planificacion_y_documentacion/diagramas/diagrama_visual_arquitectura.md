@@ -18,10 +18,15 @@ flowchart TD
         CU3[Gestionar agenda]
         CU4[Valorar especialista]
         CU5[Gestión usuarios/especialidades]
+        CU6["Editar perfil (incluye dirección)"]
     end
 
     subgraph "Core de Dominio"
-        ENT[Entidades y Servicios de Dominio]
+        ENT["Entidades y Servicios de Dominio
+            (Usuarios, Médicos, Pacientes,
+            Especialidades, Citas, Valoraciones,
+            Notificaciones, Ubicaciones,
+            Catálogos de ciudades y estados)"]
     end
 
     subgraph "Adapters de Salida"
@@ -48,6 +53,7 @@ flowchart TD
     API-->|Invoca casos de uso|CU3
     API-->|Invoca casos de uso|CU4
     API-->|Invoca casos de uso|CU5
+    API-->|Invoca casos de uso|CU6
 
     AUTH-->|OAuth2|OAUTH
 
@@ -56,6 +62,7 @@ flowchart TD
     CU3-->|Usa|ENT
     CU4-->|Usa|ENT
     CU5-->|Usa|ENT
+    CU6-->|Usa|ENT
 
     ENT-->|Repositorios|DB
     ENT-->|Notificaciones|EMAIL

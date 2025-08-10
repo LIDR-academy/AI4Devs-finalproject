@@ -1,15 +1,16 @@
 # 1. Introducción y objetivos
 
 El sistema de búsqueda de especialidades médicas y profesionales de la salud es una plataforma diseñada para facilitar la localización, comparación y contacto con especialistas médicos. El propósito principal es optimizar la experiencia de búsqueda y agendamiento de citas tanto para pacientes como para médicos, proporcionando información transparente y herramientas que permitan tomar decisiones informadas.
+Además, el sistema gestiona direcciones detalladas de pacientes y médicos mediante las entidades LOCATION, CITY y STATE, permitiendo búsquedas y filtrados más precisos por ubicación.
 
 ## Objetivos y metas
 
-- Permitir a los usuarios buscar especialistas por especialidad, ubicación y otros filtros relevantes.
-- Facilitar la visualización de perfiles profesionales detallados.
+- Permitir a los usuarios buscar especialistas por especialidad, ubicación (dirección, ciudad y estado) y otros filtros relevantes.
+- Facilitar la visualización de perfiles profesionales detallados, incluyendo información de ubicación.
 - Ofrecer un proceso sencillo y eficiente para el agendamiento de citas.
 - Integrar valoraciones y opiniones de pacientes para fomentar la confianza.
 - Proveer notificaciones y recordatorios automáticos sobre citas y eventos importantes.
-- Brindar herramientas de gestión para médicos y administradores del sistema.
+- Brindar herramientas de gestión para médicos y administradores del sistema, incluyendo la administración de direcciones.
 - Garantizar una experiencia de usuario accesible y multiplataforma.
 
 **Referencia:**
@@ -19,18 +20,19 @@ etapa1_investigacion_analisis.md, etapa2_casos_de_uso.md
 
 A continuación se identifican las partes interesadas y usuarios principales del sistema:
 
-- **Visitante (no autenticado):** Persona que accede al sistema para buscar especialistas y consultar perfiles sin necesidad de registro.
+- **Visitante (no autenticado):** Persona que accede al sistema para buscar especialistas y consultar perfiles sin necesidad de registro. Puede visualizar información general de ubicación (ciudad y estado) de los especialistas.
 - **Paciente (usuario registrado):** Usuario que puede buscar especialistas, agendar citas, valorar médicos y recibir notificaciones.
-- **Médico Especialista:** Profesional de la salud que administra su perfil, agenda y recibe valoraciones de pacientes.
-- **Administrador del sistema:** Responsable de la gestión de usuarios, especialidades, filtros y monitoreo de la actividad general del sistema.
+- **Médico Especialista:** Profesional de la salud que administra su perfil, agenda y recibe valoraciones de pacientes. Su información de ubicación (dirección, ciudad y estado), y es visible según los permisos definidos en el sistema.
+- **Administrador del sistema:** Responsable de la gestión de usuarios, especialidades, filtros, direcciones, ciudades y estados, así como el monitoreo de la actividad general del sistema.
 
 **Referencia:**
 etapa2_casos_de_uso.md
 
 # 3. Historias de usuario
 
-- Como **visitante**, quiero buscar especialistas por especialidad y ubicación, para encontrar médicos adecuados a mis necesidades sin necesidad de registrarme.
-- Como **visitante**, quiero ver el perfil de un especialista, para conocer su información profesional antes de decidirme a agendar una cita.
+- Como **visitante**, quiero buscar especialistas por especialidad y ubicación (ciudad y estado), para encontrar médicos adecuados a mis necesidades sin necesidad de registrarme.
+- Como **visitante**, quiero ver el perfil de un especialista, para conocer su información profesional y ubicación general antes de decidirme a agendar una cita.
+- Como **paciente**, quiero que mi dirección esté registrada y protegida, para que solo usuarios autorizados puedan verla.
 - Como **paciente**, quiero buscar especialistas y ver sus perfiles, para comparar opciones y tomar decisiones informadas.
 - Como **paciente**, quiero agendar una cita con un especialista, para reservar una consulta de manera sencilla.
 - Como **paciente**, quiero valorar a un especialista después de una consulta, para compartir mi experiencia y ayudar a otros usuarios.
@@ -38,7 +40,9 @@ etapa2_casos_de_uso.md
 - Como **médico especialista**, quiero gestionar mi agenda y disponibilidad, para organizar mis consultas y confirmar o rechazar citas.
 - Como **médico especialista**, quiero ver el listado de mis próximas citas, para planificar mi día de trabajo.
 - Como **administrador**, quiero gestionar usuarios (crear, editar o eliminar cuentas), para mantener el sistema actualizado y seguro.
+- Como **médico especialista**, quiero gestionar mi dirección profesional en mi perfil, para que los pacientes puedan encontrarme y contactarme según mi ubicación.
 - Como **administrador**, quiero gestionar el catálogo de especialidades y filtros, para asegurar que la información esté vigente.
+- Como **administrador**, quiero poder gestionar las direcciones, ciudades y estados de los usuarios, para mantener la información actualizada y precisa en el sistema.
 - Como **administrador**, quiero monitorear la actividad del sistema, para supervisar el funcionamiento general y detectar incidencias.
 
 **Referencia:**
@@ -49,17 +53,14 @@ etapa2_casos_de_uso.md
 ## Componentes principales del sistema (MVP)
 
 - **Core de Dominio:**
-  Entidades principales (Usuario, Médico, Paciente, Especialidad, Cita, Valoración) y lógica de negocio para búsqueda, agendamiento, gestión de usuarios y especialidades.
-- **Aplicación (Casos de Uso):**
-  Orquestadores para buscar especialistas, agendar cita, gestionar agenda, valorar especialista y gestionar usuarios/especialidades.
-- **Adapters de Entrada:**
-  API REST (Express.js) con endpoints para frontend público, pacientes, médicos y administración.
-- **Adapters de Salida:**
-  Persistencia (Prisma + PostgreSQL) y almacenamiento de archivos (Firebase Storage) para fotos de perfil.
-- **Frontend (Vue.js + Vuetify):**
-  Portal público (búsqueda, perfiles, registro/login) y panel de administración (gestión de usuarios, especialidades, monitoreo básico).
-- **Internacionalización:**
-  Soporte multilenguaje con vue-i18n en frontend y estructura preparada en backend.
+  - Gestión de usuarios, médicos y pacientes.
+  - Administración de especialidades, filtros y direcciones.
+  - Lógica de negocio para búsqueda, agendamiento y valoración, considerando la ubicación detallada de los usuarios.
+- **Frontend:** Panel de administración, búsqueda de especialistas, perfiles, agendamiento de citas, visualización y edición de direcciones en los perfiles de usuario.
+- **Backend:** API REST, autenticación, orquestadores de casos de uso, endpoints para la gestión de direcciones.
+- **Almacenamiento:** Base de datos de usuarios, médicos, especialidades, citas, valoraciones y direcciones (LOCATION, CITY, STATE).
+- **Internacionalización:** Soporte multilenguaje.
+- **Ubicación:** Integración con módulos de búsqueda y filtrado, gestión y visualización de direcciones.
 
 ## Relación entre componentes
 
@@ -90,10 +91,15 @@ flowchart TD
         CU3[Gestionar agenda]
         CU4[Valorar especialista]
         CU5[Gestión usuarios/especialidades]
+        CU6["Editar perfil (incluye dirección)"]
     end
 
     subgraph "Core de Dominio"
-        ENT[Entidades y Servicios de Dominio]
+        ENT["Entidades y Servicios de Dominio
+            (Usuarios, Médicos, Pacientes,
+            Especialidades, Citas, Valoraciones,
+            Notificaciones, Ubicaciones,
+            Catálogos de ciudades y estados)"]
     end
 
     subgraph "Adapters de Salida"
@@ -120,6 +126,7 @@ flowchart TD
     API-->|Invoca casos de uso|CU3
     API-->|Invoca casos de uso|CU4
     API-->|Invoca casos de uso|CU5
+    API-->|Invoca casos de uso|CU6
 
     AUTH-->|OAuth2|OAUTH
 
@@ -128,6 +135,7 @@ flowchart TD
     CU3-->|Usa|ENT
     CU4-->|Usa|ENT
     CU5-->|Usa|ENT
+    CU6-->|Usa|ENT
 
     ENT-->|Repositorios|DB
     ENT-->|Notificaciones|EMAIL
@@ -146,7 +154,7 @@ flowchart TD
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ---------------------------------- |
 | Home / Página de inicio                       | Landingpage, información del sitio, misión y visión, buscador inicial, inicio de sesión                                                                                                          | Buscar especialistas / Resultados de búsqueda, Mi perfil, Aviso de privacidad, Términos y condiciones | Todos los usuarios               |
 | Registro / Login                               | Formulario de registro e inicio de sesión                                                                                                                                                           | Home, Mi perfil, Aviso de privacidad, Términos y condiciones                                           | Todos los usuarios               |
-| Buscar especialistas / Resultados de búsqueda | Campo de texto para búsqueda por nombre, filtro para listado de especialistas, ubicación y valoración, acceso a perfil                                                                            | Home, Mi perfil, Aviso de privacidad, Términos y condiciones                                           | Todos los usuarios               |
+| Buscar especialistas / Resultados de búsqueda | Campo de texto para búsqueda por nombre, filtro para listado de especialistas, ubicación (ciudad y estado) y valoración, acceso a perfil                                                          | Home, Mi perfil, Aviso de privacidad, Términos y condiciones                                           | Todos los usuarios               |
 | Mi perfil                                      | Visualización y edición de datos personales.<br> Paciente: listado de citas, valoración de especialistas. <br> Médico: agenda, gestión de disponibilidad. <br> Administrador: datos personales. | Home, Buscar especialistas / Resultados de búsqueda, Aviso de privacidad, Términos y condiciones      | Paciente, Médico, Administrador |
 | Mis citas                                      | Listado de citas agendadas, cancelar cita                                                                                                                                                            | Mi perfil                                                                                               | Paciente                         |
 | Valorar especialista                           | Formulario de valoración tras consulta                                                                                                                                                              | Mi perfil, Buscar especialistas / Resultados de búsqueda                                               | Paciente                         |
@@ -155,6 +163,7 @@ flowchart TD
 | Panel de administración                       | Gestión de usuarios, gestión de especialidades y filtros                                                                                                                                           | Gestión de usuarios, Gestión de especialidades y filtros                                              | Administrador                    |
 | Gestión de usuarios                           | Crear, editar, eliminar cuentas                                                                                                                                                                      | Panel de administración                                                                                | Administrador                    |
 | Gestión de especialidades y filtros           | Actualización de catálogo de especialidades y filtros                                                                                                                                              | Panel de administración                                                                                | Administrador                    |
+| Gestión de direcciones, ciudades y estados    | Crear, editar, eliminar ciudades y estados                                                                                                                                                           | Panel de administración                                                                                | Administrador                    |
 | Aviso de privacidad                            | Texto plano con detalles legales y de privacidad                                                                                                                                                     | Home, Buscar especialistas / Resultados de búsqueda, Mi perfil, Términos y condiciones                | Todos los usuarios               |
 | Términos y condiciones                        | Texto plano con condiciones de uso                                                                                                                                                                   | Home, Buscar especialistas / Resultados de búsqueda, Mi perfil, Aviso de privacidad                    | Todos los usuarios               |
 
@@ -254,7 +263,7 @@ Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a lo
 
 ### Gestión de especialidades y filtros
 
-##### Listado de especialidades
+##### Listado de especialidades, ciudades y estados
 
 ![](assets/resultados_busqueda_ejemplo.png.png)
 
@@ -267,6 +276,7 @@ Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a lo
 ## Fuentes y paleta de colores
 
 ### Colores CSS
+
 ```css
 --federal-blue: #03045eff;
 --honolulu-blue: #0077b6ff;
@@ -277,7 +287,7 @@ Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a lo
 
 [URL Paleta](https://coolors.co/palette/03045e-0077b6-00b4d8-90e0ef-caf0f8)
 
-### Fuente 
+### Fuente
 
 **Roboto**
 [URL Fuente](https://fonts.google.com/specimen/Roboto)

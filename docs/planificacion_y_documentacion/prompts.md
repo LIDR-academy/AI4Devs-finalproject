@@ -670,3 +670,253 @@ Eres un experto en UX/UX, diseño web y en psicologia del color.
 Dame una lista de pasos a seguir para determinar una paleta de colores para un sitio web y sus multiples páginas.
 El objetivo es generar al menos 3 variantes de paleta de colores para un sistema de búsqueda de especialidades médicas y profesionales de la salud. El contenido es para un ingeniero de software que no sabe nada acerca del tema. Tus pautas para generar el contenido es en forma de lista.
 Antes de ejecutar la tarea revisa mis instrucciones y realiza preguntas para abordar el problema de mejor manera.
+
+
+
+Eres un experto en Ingenieria de Prompts, en diseño de sistemas y modelado de datos.
+# Contexto Inicial
+Me encuentro diseñando un sistema de busqueda de especialidades medicas y profesionales de la salud y cuento con 4 etapas de analisis del producto:
+- Investigación del producto, donde se han analizado los siguientes puntos: Funcionalidades básicas, Beneficios para el cliente, Alternativas al uso de estos sistemas, Customer Journey típico, Plataformas comerciales más conocidas en México y Latinoamérica, analisis y recomendaciones
+- Casos de uso, donde se detallan los principales casos de uso y los diagramas de casos de uso
+- Modelado de datos, con las entidades principales, el diagrama entidad relación, las relaciones principaes y extensiones futuras
+- Diseño del sistema y arquitectura, en donde se detallan las tecnologias a usar, así como la arquitectura y diagrama de alto nivel del sistema
+- Tengo un product requirement document (PRD) previo listo para trabajar
+Sin embargo durante el diseño el equipo de ha dado cuenta qué las ubicaciones (locations y address) de los medicos y pacientes no se estan manejando adecuadamente.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a mejorar el diseño para el manejo de ubicaciones cumpliendo con los siguientes requerimientos
+
+# Requerimientos
+1. Crear una propuesta para el manejo de ubicaciones, tanto para para médicos como para pacientes, en donde consideremos la ciudad y el estado de la republica, asume que de momento todas las ubicaciones pertenecen a México
+2. Una vez que yo acepte la propuesta me ayudes a actualizar los siguientes documentos
+   * [[ETAPA 2]]:
+      * Casos de uso principales
+      * Diagrama de casos de uso
+   * [[ETAPA 3]]: Es posible que tengamos que agregar nuevas tablas
+      * Entidades principales
+      * Diagrama de Entidad-Relación
+      * Relaciones principales
+      * COnsideraciones de diseño
+   * [[ETAPA 4]]: 
+      * Componentes/Módulos principales
+      * Diagrama de la arquitectura
+      * Modelo RBAC
+      * Información adicional relevante
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis requerimientos ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+# Prompt para Mejorar el Diseño y Manejo de Ubicaciones en el Sistema
+
+## Rol del Asistente
+
+Actúa como **experto en diseño de sistemas y modelado de datos**. Utiliza únicamente la información proporcionada en la documentación del contexto y responde en formato Markdown para archivos .md.
+
+---
+
+## Objetivo
+
+Ayudar a mejorar el diseño para el manejo de ubicaciones (dirección, número interior, número exterior, colonia, código postal, ciudad, estado y URL de Google Maps) tanto para médicos como para pacientes, considerando que todas las ubicaciones pertenecen a México y utilizando un catálogo predefinido de ciudades y estados. Los datos de ubicación solo pueden ser vistos por usuarios registrados.
+
+---
+
+## Instrucciones
+
+1. **Propuesta de modelo de ubicaciones**
+   - Propón un diseño de modelo de datos para manejar la ubicación de médicos y pacientes, incluyendo los siguientes campos: dirección, número interior, número exterior, colonia, código postal, ciudad, estado y URL de Google Maps.
+   - Considera que cada médico y paciente solo puede tener una ubicación registrada.
+   - Utiliza un catálogo predefinido para ciudad y estado.
+
+2. **Actualización de documentos**
+   - Una vez que la propuesta sea aceptada, ayuda a actualizar los siguientes documentos:
+     - **Etapa 2: Casos de uso principales y diagrama de casos de uso**
+     - **Etapa 3: Entidades principales, diagrama de entidad-relación, relaciones principales y consideraciones de diseño**
+     - **Etapa 4: Componentes/Módulos principales, diagrama de la arquitectura, modelo RBAC e información adicional relevante**
+   - Realiza las actualizaciones solo en el diseño de los modelos y la documentación relacionada, sin incluir validaciones ni normalización de datos.
+
+---
+
+## Consideraciones
+
+- Los documentos de las etapas están disponibles en el contexto.
+- No inventes información ni agregues datos fuera de la documentación.
+- Si falta información para completar alguna sección, indícalo explícitamente.
+
+---
+
+## Formato de Respuesta
+
+- El contenido debe estar en formato Markdown para archivos .md.
+- Estructura la propuesta y las actualizaciones de manera clara y concisa.
+- Indica explícitamente si falta información en alguna sección.
+
+---
+
+# Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a modificar e incluye la informacion que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+Eres un experto en Ingenieria de Prompts, en levantamiento de requerimientos, diseño de sistemas y documentación técnica
+# Contexto Inicial
+Tengo el diseño final de un sistema de busqueda de especialidades medicas y profesionales de la salud, para ello realice 4 etapas de analisis del producto:
+- Investigación del producto, donde se han analizado los siguientes puntos: Funcionalidades básicas, Beneficios para el cliente, Alternativas al uso de estos sistemas, Customer Journey típico, Plataformas comerciales más conocidas en México y Latinoamérica, analisis y recomendaciones
+- Casos de uso, donde se detallan los principales casos de uso y los diagramas de casos de uso
+- Modelado de datos, con las entidades principales, el diagrama entidad relación, las relaciones principaes y extensiones futuras
+- Diseño del sistema y arquitectura, en donde se detallan las tecnologias a usar, así como la arquitectura y diagrama de alto nivel del sistema
+Recientemente se actualizó la información para agregar la dirección de los pacientes y médicos mediante la entidad "LOCATION"
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a actualizar mi product requirement document (PRD) y cumpla con las siguientes instrucciones
+
+# Instrucciones
+1. Que revise sección por sección del PRD y determine que información falta agregar
+2. Que muestre el antes y despues de las modificaciones sugeridas para actualizar el documento
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para Actualización del PRD con la Entidad LOCATION
+
+## Rol del Asistente
+
+Actúa como **experto en documentación técnica, levantamiento de requerimientos y diseño de sistemas**. Utiliza la información proporcionada en el PRD original y en la documentación de las 4 etapas de análisis del producto para identificar y proponer actualizaciones relacionadas con la nueva entidad "LOCATION".
+
+---
+
+## Objetivo
+
+Revisar exhaustivamente el PRD actual e identificar todas las secciones que requieren ser actualizadas para reflejar correctamente la adición de la entidad "LOCATION" para el manejo de direcciones de pacientes y médicos.
+
+---
+
+## Instrucciones
+
+1. **Revisión integral del documento**
+   - Examina cada sección del PRD y determina si necesita actualizarse para incorporar la información sobre la entidad "LOCATION".
+   - Incluso si una sección no requiere cambios, menciona explícitamente que fue revisada y justifica brevemente por qué no necesita actualización.
+
+2. **Presentación de modificaciones**
+   - Para cada sección que requiera actualización:
+     - Muestra el contenido original bajo un encabezado "**Antes:**"
+     - Muestra el contenido actualizado bajo un encabezado "**Después:**"
+   - Resalta claramente qué aspectos específicos se han modificado.
+
+3. **Tipos de actualizaciones**
+   - Enfócate en aspectos técnicos (modelos de datos, requisitos técnicos, etc.)
+   - Asegúrate de que la terminología sea consistente en todo el documento.
+   - Considera el impacto en interfaces, APIs o integraciones.
+
+---
+
+## Consideraciones
+
+- Utiliza únicamente la información disponible en la documentación proporcionada.
+- No inventes requerimientos o características que no estén respaldados por la documentación.
+- Si falta información crítica para realizar alguna actualización, indícalo explícitamente.
+
+---
+
+## Formato de Respuesta
+
+Estructura tu respuesta de la siguiente manera para cada sección del PRD:
+```markdown
+[Nombre de la sección del PRD]
+Evaluación
+[Explicación breve sobre si la sección requiere actualizaciones y por qué]
+
+Modificaciones
+[Si requiere cambios]:
+
+Antes: [Contenido original]
+
+Después: [Contenido actualizado]
+
+Justificación: [Breve explicación de los cambios realizados]
+```
+
+Si una sección no requiere cambios:
+```markdown
+[Nombre de la sección del PRD]
+Evaluación
+Esta sección fue revisada y no requiere actualizaciones porque [justificación].
+```
+
+---
+
+# Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a modificar e incluye la informacion que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+
+Eres un experto en ingenieria de prompts, en diseño de sistemas y lenvantamiento de requerimientos.
+# Contexto inicial
+Me encuentro diseñando un sistema de busqueda de especialidades medicas y profesionales de la salud y cuento con 4 etapas de analisis del producto:
+- Investigación del producto, donde se han analizado los siguientes puntos: Funcionalidades básicas, Beneficios para el cliente, Alternativas al uso de estos sistemas, Customer Journey típico, Plataformas comerciales más conocidas en México y Latinoamérica, analisis y recomendaciones
+- Casos de uso, donde se detallan los principales casos de uso y los diagramas de casos de uso
+- Modelado de datos, con las entidades principales, el diagrama entidad relación, las relaciones principaes y extensiones futuras
+- Diseño del sistema y arquitectura, en donde se detallan las tecnologias a usar, así como la arquitectura y diagrama de alto nivel del sistema
+- Tengo un product requirement document (PRD) previo listo para trabajar
+Sin embargo durante el diseño el equipo de ha dado cuenta que no se ha considerado la funcionalidad para que los pacientes puedan agendar citas de acuerdo a la disponibilidad de horario del médico.
+
+# Instrucciones Generales
+El objetivo es crear un prompt para Copilot (ChatGPT 4.1) que me ayude a resolver el problema realizando las siguientes tareas
+
+# Tareas
+1. 
+n.
+n+1.
+
+# Requerimientos tecnicos
+1.
+n.
+n+1.
+
+# Requerimientos de interfaz (UI/UX)
+1.
+n.
+n+1.
+
+# Mejores Practicas
+1.
+n.
+n+1.
+
+# Pautas para generar el contenido
+1.
+n. 
+n+1.
+
+Antes de generar el prompt revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
