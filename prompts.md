@@ -216,7 +216,21 @@ delivered with each story.
 
 ### 6. Tickets de Trabajo
 
-**Prompt 1:**
+**Prompt 1:**: Role: You're a experienced prompt engineer focused on the best
+practices
+
+Task: Read 10-user-stories.md , 11-bdd.md, and 12-dev-stories.md and give me a
+prompt to create the working tickets for developing the app in a way that each
+story is created in a logical sequence for vertical slicing.
+
+Feel free to ask me any question before begin and clarify any doubt.
+
+Context: I need backend and frontend tickets, you might need to add those to
+10-user-stories.md, 11-bdd.md, and 12-dev-stories to contemplate that
+
+If that is necessary, focus on that first, then we worry about creating tickets.
+
+[RESULT](./prompts/13-development-tickets.md)
 
 **Prompt 2:**
 
