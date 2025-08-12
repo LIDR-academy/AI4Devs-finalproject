@@ -188,7 +188,29 @@ Add everything on @11-bdd.md
 
 [RESULT](./prompts/11-bdd.md)
 
-**Prompt 3:**
+**Prompt 3:** Role: You're a senior softwer engineer who need to think of
+developer stories, that is, enabling stories that will allow us to implement
+user stories.
+
+Track the dependencies between user stories and developer stories.
+
+Context: We want to develop the app in vertical slices, for example, only when
+working on the authentication flow (user story about authentication) I will
+create user table and user-related code
+
+We will mock user login until the last minute, that is, seed the user-related
+stories to the end of the backlog
+
+coding will be done without them as if there was no users until we manually add
+them
+
+Task: Rewrite the "tasks" focusing on the user stories (user-story centric),
+while laying out each dev story associated with that
+
+Remember to apply tdd principles, that is, tests and bdd specs have to be
+delivered with each story.
+
+[RESULT](./prompts/12-developer-stories.md)
 
 ---
 
