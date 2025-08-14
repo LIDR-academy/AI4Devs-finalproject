@@ -113,7 +113,25 @@ and user modules.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-**Prompt 1:**
+**Prompt 1:** Role: you're a senior software engineer
+
+Context: you're using nextjs (SPA) for frontend and nestjs for backend
+
+Task: create a high-level description of the project, and layout the folder structure for each submodule
+
+Instructions:
+
+- You can clarify any questions before starting
+- Follow the stack's best practices
+- Create a "instructions.md" file that will explain how to handle submodules
+- Prefer following DDD principles, and layering correctly
+- Each component might be tested individually, with test file the closest as possible
+- Create modular code, that is, a folder might have a "public" file and inside that folder have supporting files that won't be used outside of the folder
+
+Output: markdown file
+
+[RESULT 1](./prompts/14-project-description.md)
+[RESULT 2](./contributions.md)
 
 **Prompt 2:**
 
