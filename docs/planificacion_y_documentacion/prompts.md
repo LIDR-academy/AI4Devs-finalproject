@@ -875,48 +875,300 @@ Hazme preguntas si necesitas más información.
 
 
 
+Actua como un project manager con experiencia y experto en diseño de product backlogs. 
+Actualmente tengo lo siguiente:
+- 3 etapas de analisis del producto: casos de uso, modelado de datos, arquitectura y diseño del sistema a alto nivel 
+- El product requeriment document (PRD)
+Dime los pasos a seguir crear un product backlog a partir del analisis de producto y un product requerement document (PRD) cubriendo los siguientes aspectos:
+- Orden y priorización de historias de usuario tomando en cuenta la urgencia, impacto y recursos disponibles
+   - Considerar aquellas historias de usuario que aportan mayor valor al negocio y usuarios finales
+- Definir las funcionalidades principales para un MVP
+   - Dando prioridad a quellas caracteristicas más urgentes en terminos de necesidades de los stakeholders y el tiempo disponible
+- Reconocer y priorizar tareas que dependen de otras
+- Costo de la implementación: esfuerzo, recursos y tiempo para cada tarea, priorizando la mejor relación costo-beneficio
+- La evaluación de cada historia de usuario y su impacto del proyecto.
+
+El objetivo es saber como empezar y que debo de hacer para generar un product backlog efectivo para posteriormente generar los tickets de trabajo.
+El contenido es para un ingeniero de software.
+Tus pautas para generar el contenido son:
+- Genera el contenido en forma de lista
+
+Antes de realizar esta tarea revisa mis indicaciones, ¿hay algo que me este faltando considerar?
+Realiza preguntas si lo consideras necesario.
 
 
 
-
-
-Eres un experto en ingenieria de prompts, en diseño de sistemas y lenvantamiento de requerimientos.
-# Contexto inicial
-Me encuentro diseñando un sistema de busqueda de especialidades medicas y profesionales de la salud y cuento con 4 etapas de analisis del producto:
-- Investigación del producto, donde se han analizado los siguientes puntos: Funcionalidades básicas, Beneficios para el cliente, Alternativas al uso de estos sistemas, Customer Journey típico, Plataformas comerciales más conocidas en México y Latinoamérica, analisis y recomendaciones
+Eres un experto en Ingenieria de Prompts, en diseño y creación de backlogs y con experiencia como Project Manager
+# Contexto Inicial
+Se va iniciar la implementación de un sistema de busqueda de especialidades medicas y profesionales de la salud, la cual tiene disponible la siguiente documentación:
 - Casos de uso, donde se detallan los principales casos de uso y los diagramas de casos de uso
 - Modelado de datos, con las entidades principales, el diagrama entidad relación, las relaciones principaes y extensiones futuras
 - Diseño del sistema y arquitectura, en donde se detallan las tecnologias a usar, así como la arquitectura y diagrama de alto nivel del sistema
-- Tengo un product requirement document (PRD) previo listo para trabajar
-Sin embargo durante el diseño el equipo de ha dado cuenta que no se ha considerado la funcionalidad para que los pacientes puedan agendar citas de acuerdo a la disponibilidad de horario del médico.
+- Tengo un product requirement document (PRD) listo para trabajar
 
-# Instrucciones Generales
-El objetivo es crear un prompt para Copilot (ChatGPT 4.1) que me ayude a resolver el problema realizando las siguientes tareas
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGpt 4.1) que me ayude a generar un Product Backlog implementando las siguientes etapas
 
-# Tareas
-1. 
-n.
-n+1.
+# Etapas
+1. Revisión y descomposición del PRD
+   - Se Analiza el PRD y divide los requerimientos en historias de usuario claras y comprensibles.
+   - Se Segura de que cada historia represente una necesidad o funcionalidad desde la perspectiva del usuario final.
+2. Definición de criterios de aceptación
+   - Para cada historia de usuario, se define criterios de aceptación específicos y medibles.
+      - Ejemplo: “El usuario puede recibir un correo de confirmación tras registrarse correctamente.”
+   - Identificación de funcionalidades principales para el MVP
+3. Selección de las historias de usuario que cubren las funcionalidades mínimas necesarias para que el producto sea útil y funcional.
+   - Se priorizan aquellas que resuelven las necesidades más urgentes de los stakeholders.
+   - Priorización de historias de usuario
+4. Ordenamiento de las historias según urgencia, impacto en el negocio y valor para el usuario final.
+   - Utiliza técnicas como MoSCoW (Must have, Should have, Could have, Won’t have) o priorización por valor/esfuerzo.
 
-# Requerimientos tecnicos
-1.
-n.
-n+1.
+5. Reconocimiento y gestión de dependencias
+   - Identifica historias o tareas que dependen de la finalización de otras.
+   - Se marca y organiza el backlog para que las dependencias sean evidentes y se respeten en la planificación.
+6. Estimación de esfuerzo y recursos
+   - Se estima el tiempo y recursos necesarios para cada historia/tarea (utilizar horas para este criterio).
+   - Considera la integración de correo electrónico como una tarea específica y estima su esfuerzo.
+7. Evaluación de costo-beneficio
+   - Se priorizan historias que aporten mayor valor con menor esfuerzo.
+   - Se revisa si alguna tarea puede ser simplificada o postergada para optimizar el uso del tiempo disponible.
+8. Inclusión de tareas técnicas y opcionales
+   - Se añaden tareas técnicas (refactorización, mejoras, deuda técnica) como “nice to have” y se priorizan al final del backlog.
+   - Solo se abordarán si el tiempo lo permite tras completar el MVP.
+9. Preparación para la generación de tickets
+   - Se asegura de que cada historia/tarea tenga una descripción clara, criterios de aceptación y estimación de esfuerzo.
+   - Se dividen historias grandes en tareas más pequeñas y manejables para facilitar la creación de tickets.
 
-# Requerimientos de interfaz (UI/UX)
-1.
-n.
-n+1.
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
 
-# Mejores Practicas
-1.
-n.
-n+1.
+# Consideraciones adicionales
+- Se tendra acceso a los documentos del contexto para ejecutar el prompt
 
 # Pautas para generar el contenido
-1.
-n. 
-n+1.
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
 
-Antes de generar el prompt revisa mis instrucciones ¿hay algo que me este faltando considerar?
-Hazme preguntas si necesitas más información.
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para Chatbot: Generación de Product Backlog para Sistema de Búsqueda de Especialidades Médicas
+
+## Rol del chatbot
+Actúa como Project Manager y en diseño y creación de backlogs.
+
+## Objetivo
+Generar un Product Backlog en formato Markdown (.md) para el sistema de búsqueda de especialidades médicas y profesionales de la salud, utilizando los documentos disponibles (PRD, casos de uso, modelado de datos, diseño y arquitectura).
+
+## Etapas del proceso
+
+1. **Revisión y descomposición del PRD**
+   - Analiza el PRD y divide los requerimientos en historias de usuario claras y comprensibles.
+   - Asegúrate de que cada historia represente una necesidad o funcionalidad desde la perspectiva del usuario final (paciente, médico, administrador).
+
+2. **Definición de criterios de aceptación**
+   - Para cada historia de usuario, define criterios de aceptación específicos y medibles en formato de lista de chequeo.
+
+3. **Identificación de funcionalidades principales para el MVP**
+   - Selecciona las historias de usuario que cubren las funcionalidades mínimas necesarias para que el producto sea útil y funcional.
+   - Prioriza aquellas que resuelven las necesidades más urgentes de los stakeholders.
+
+4. **Priorización de historias de usuario**
+   - Ordena las historias según urgencia, impacto en el negocio y valor para el usuario final.
+   - Utiliza técnicas como MoSCoW (Must have, Should have, Could have, Won’t have) o priorización por valor/esfuerzo.
+
+5. **Reconocimiento y gestión de dependencias**
+   - Identifica historias o tareas que dependen de la finalización de otras.
+   - Marca y organiza el backlog para que las dependencias sean evidentes y se respeten en la planificación.
+
+6. **Estimación de esfuerzo y recursos**
+   - Indica la estimación de esfuerzo en horas para cada historia/tarea.
+   - Considera la integración de correo electrónico como una tarea específica y estima su esfuerzo.
+
+7. **Evaluación de costo-beneficio**
+   - Prioriza historias que aporten mayor valor con menor esfuerzo.
+   - Revisa si alguna tarea puede ser simplificada o postergada para optimizar el uso del tiempo disponible.
+
+8. **Inclusión de tareas técnicas y opcionales**
+   - Añade tareas técnicas (refactorización, mejoras, deuda técnica) como “nice to have” y priorízalas al final del backlog.
+   - Solo se abordarán si el tiempo lo permite tras completar el MVP.
+
+9. **Preparación para la generación de tickets**
+   - Asegúrate de que cada historia/tarea tenga una descripción clara, criterios de aceptación y estimación de esfuerzo.
+   - Divide historias grandes en tareas más pequeñas y manejables para facilitar la creación de tickets.
+
+## Formato de salida
+- El resultado debe ser un archivo en formato Markdown (.md).
+- Estructura el backlog en secciones sugeridas, sin especificar ni guiar sobre cómo editarlas posteriormente.
+- Presenta los criterios de aceptación como listas de chequeo.
+- No incluyas recomendaciones ni ejemplos adicionales.
+
+## Consideraciones adicionales
+- Utiliza los documentos del contexto para extraer y analizar la información necesaria.
+- Solo incluye nuevas funcionalidades, no soporte ni mantenimiento.
+- No utilices gestor de tickets; toda la información debe estar en el archivo
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+Eres un experto en Ingenieria de Prompts con experiencia como Project Manager
+# Contexto Inicial
+Me encuentro diseñando un sistema de búsqueda de especialidades médicas y profesionales de la salud, hasta el momento se tiene un product requirement documento (PRD) definido, así como un Product Backlog con todas las historias de usuario y aquellas caracterteristicas del producto que van a formar parte de un MVP.
+Actualmente el proyecto solo cuenta con la documentación, por lo que aún no se ha programado nada y no hay una base en la que se pueda realizar la implementación, hay que crear el proyecto desde cero.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que genere los tickets de trabajo para implementar aquellas historias de usuario que formaran parte del MVP y cumpla con los siguientes requerimientos
+
+# Requerimientos
+1. Ademas del trabajo designado por las historias de usuario del MVP agregar las siguientes tareas para inicar el proyecto:
+   * crear las carpetas de backend y frontend
+   * inicializar el proyecto de cada carpeta utilizando npm
+   * instalar las dependencias necesarias en cada carpeta
+   * montar la base de datos
+   * generar la migración de la base de datos para su ejecución
+2. Los tickets de trabajo deben cumplir con las siguientes caracteristicas
+   - Un título claro y conciso*: resumen breve que refleja la esencia de la tarea, cualquier miembro del equipo la entiende al leerla
+   - Descripción detallada*: 
+      - Propósito: por qué es necesaria la tarea y el problema que resuelve
+      - Detalle específico: Información adicional sobre requerimientos específicos, restricciones, o condiciones necesarias para la realización de la tarea.
+   - Criterios de aceptación: 
+      - Expectativas claras: lista detallada de condiciones a cumplirse
+      - Pruebas de validación: pruebas específicas que verifican que las tareas se han completado
+   - Prioridad*: nivel de urgencia, detalla la importancia y urgencia de la tarea, ayuda a determinar el orden que las tareas deben ser abordadas
+   - Estimación de tiempo o esfuerzo requerido*: mediante puntos de historia o tiempo estimado determina cuánto se requiere para completar el ticket. esencial en la planificación y gestión del tiempo del equipo.
+   - Etiquetas o Tags: categorización mediante etiquetas que ayudan a clasificar el ticket
+      - Tipo: Feature, Tarea Técnica, Bug/Error, Mejora o Investigación (Spike)
+      - Caracteristica del producto: UI/UX, Backend, Frontend, Documentación, Configuración
+   - Comentarios y Notas: el equipo agregan información relevante, hacen preguntas o proporcionan actualizaciones en la ejecución de la tarea
+   - Enlaces o Referencias: documentación, diseños, especificaciones o tickets relacionados para contexto adicional que ayuda a completar la tarea
+   - Historial de cambios: trazabilidad de modificaciónes, cambios, actualizaciones de estado, reasignación o prioridades
+3. Debe haber un orden logico en los tickets 
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto inicial.
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis requerimientos ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para Chatbot (ChatGPT 4.1) - Generación de Tickets de Trabajo para Buscadoc
+
+## Rol
+Actúa como **Project Manager** bajo la metodología **Scrum**.
+
+## Contexto
+Estás gestionando el proyecto **Buscadoc**, un sistema de búsqueda de especialidades médicas y profesionales de la salud. Tienes acceso al **Product Requirement Document (PRD)**, al **Product Backlog** y al **Modelo de Datos**, donde se encuentran todas las historias de usuario y características del MVP, así como detalles técnicos (stack, base de datos, dependencias, restricciones, etc.).
+
+## Instrucción
+
+Genera una **lista de tickets de trabajo** en formato **Markdown (.md)** para implementar las historias de usuario del MVP y las tareas iniciales del proyecto.  
+Los tickets deben estar **ordenados por prioridad y dependencia lógica**.
+
+### Tareas iniciales obligatorias (agrega antes de las historias de usuario):
+- Crear las carpetas de backend y frontend.
+- Inicializar el proyecto en cada carpeta utilizando npm.
+- Instalar las dependencias necesarias en cada carpeta (según stack definido en el PRD).
+- Montar la base de datos (según lo definido en el PRD).
+- Generar la migración de la base de datos para su ejecución.
+
+### Formato de cada ticket
+
+Cada ticket debe incluir las siguientes secciones:
+
+- **Título claro y conciso**  
+  Breve resumen que refleje la esencia de la tarea.
+
+- **Descripción detallada**  
+  - Propósito: Explica por qué es necesaria la tarea y el problema que resuelve.  
+  - Detalle específico: Información adicional sobre requerimientos, restricciones o condiciones necesarias.
+
+- **Criterios de aceptación**  
+  - Expectativas claras: Lista detallada de condiciones a cumplirse.  
+  - Pruebas de validación: Pruebas específicas para verificar la tarea.
+
+- **Prioridad**  
+  Indica el nivel de urgencia e importancia.
+
+- **Estimación de tiempo**  
+  Tiempo estimado en horas para completar la tarea.
+
+- **Etiquetas o Tags**  
+  - Tipo: Feature, Tarea Técnica, Bug/Error, Mejora, Investigación (Spike)  
+  - Característica del producto: UI/UX, Backend, Frontend, Documentación, Configuración
+
+- **Comentarios y Notas**  
+  Espacio para que el equipo agregue información relevante, preguntas o actualizaciones.
+
+- **Enlaces o Referencias**  
+  Documentación, diseños, especificaciones o tickets relacionados.
+
+- **Historial de cambios**  
+  Sección editable para registrar fecha, autor y descripción de modificaciones, actualizaciones de estado, reasignación o cambios de prioridad.
+
+---
+
+## Ejemplo de estructura de ticket en Markdown
+
+```markdown
+### [Título del ticket]
+
+**Descripción detallada:**  
+- **Propósito:**  
+- **Detalle específico:**  
+
+**Criterios de aceptación:**  
+-  
+-  
+- **Pruebas de validación:**  
+-  
+
+**Prioridad:**  
+**Estimación de tiempo:**  
+**Etiquetas o Tags:**  
+- Tipo:  
+- Característica del producto:  
+
+**Comentarios y Notas:**  
+
+**Enlaces o Referencias:**  
+
+**Historial de cambios:**  
+- [Fecha] [Autor] [Descripción del cambio]
+```
+
+---
+
+## Consideraciones
+
+- Utiliza la información del PRD y Product Backlog para detallar los tickets.
+- Mantén el orden lógico y de prioridad en la lista.
+- El archivo debe ser legible y útil para cualquier miembro del equipo.
+
+---
+
+**Genera la lista de tickets siguiendo estas instrucciones y estructura.**
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- Antes de iniciar muestrame la lista de pasos a ejecutar
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

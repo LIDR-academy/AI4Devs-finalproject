@@ -295,21 +295,23 @@ Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a lo
 # 7. Requisitos técnicos
 
 - **Backend:**
-
   - Node.js con Express.js para la API REST.
   - Arquitectura hexagonal para desacoplar lógica de negocio y adaptadores.
   - Prisma como ORM y PostgreSQL como base de datos principal.
   - Almacenamiento de archivos en Firebase Storage (fotos de perfil).
   - Estructura preparada para internacionalización de mensajes y validaciones.
-- **Frontend:**
 
+- **Frontend:**
   - Vue.js con Vuetify para la interfaz de usuario.
   - Consumo de la API REST para todas las operaciones.
   - Soporte multilenguaje mediante vue-i18n.
-- **Interactividad y personalización:**
 
+- **Interactividad y personalización:**
   - Filtros de búsqueda personalizables (especialidad, ubicación, etc.).
   - Gestión de agenda y notificaciones en tiempo real.
+
+- **Autenticación**
+   - Utilizar Auth.js
 
 ## Normativas aplicables
 
