@@ -250,7 +250,22 @@ If that is necessary, focus on that first, then we worry about creating tickets.
 
 [RESULT](./prompts/13-development-tickets.md)
 
-**Prompt 2:**
+**Prompt 2:** 
+
+[ADD THEM TO CONTEXT]
+- ./prompts/10-user-stories.md
+- ./prompts/11-bdd.md
+- ./prompts/12-dev-stories.md
+- ./prompts/13-development-tickets.md
+
+Amongst those files, there are many things to do, is there any contradiction between them?
+
+Instructions:
+
+- When you detect a contradiction, ask me how to solve it, one at a time. Ask me before moving on to next contradiction.
+- Let's start solving small contradictions first.
+- Change all the files so they all align in what they say.
+- Review checkboxes, centralizing them on ./prompts/13-development-tickets.md
 
 **Prompt 3:**
 

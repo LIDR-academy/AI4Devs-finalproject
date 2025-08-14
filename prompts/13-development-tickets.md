@@ -4,7 +4,8 @@
 
 This document contains comprehensive development tickets for both backend and
 frontend development, designed for vertical slicing (complete features from
-database to UI) and following a logical development sequence.
+database to UI) and following a logical development sequence. Each ticket focuses
+on delivering business value and user outcomes.
 
 **Technology Stack:**
 
@@ -12,6 +13,334 @@ database to UI) and following a logical development sequence.
 - **Frontend**: Next.js (as SPA), React Query, Tailwind CSS
 - **Deployment**: Railway for both frontend and backend
 - **Development Approach**: TDD + BDD with vertical slicing
+
+**Tracking Structure**:
+- **User Story**: The "key" part of development that delivers business value
+- **Development Stories (DS)**: Technical tasks associated with each user story
+- **User Story Deliverables**: Business outcomes and features for each user story
+- **Acceptance Criteria**: Technical requirements for development stories
+
+---
+
+### **Epic 1: User Module (Mock Implementation) - Week 5**
+
+#### **User Story 1.1: Basic User Setup**
+**Goal**: Implement real user authentication and profile management system
+
+**Development Stories & Progress:**
+- [ ] **DS-29: User Database Schema** - Create User and UserProfile entities
+- [ ] **DS-30: User Value Objects** - Implement Email, Currency, Timezone value objects
+- [ ] **DS-31: User Repository Layer** - Create UserRepository and UserProfileRepository
+- [ ] **DS-32: User Service Implementation** - Implement user registration, authentication, and profile management
+- [ ] **DS-33: User Controller and DTOs** - Create user API endpoints with proper validation
+- [ ] **DS-34: Authentication Middleware** - Implement JWT strategy, guards, and RBAC
+- [ ] **DS-35: User Integration Tests** - Complete user functionality testing
+
+**User Story Deliverables:**
+- [ ] Real user registration and authentication system
+- [ ] User has basic settings (timezone, currency, language)
+- [ ] User profile includes financial preferences (hourly rate, income frequency)
+- [ ] System supports multiple real users
+- [ ] JWT-based authentication with password hashing
+- [ ] Role-based access control implementation
+- [ ] Session management and security
+- [ ] All authentication endpoints documented and tested
+
+#### **User Story 1.2: User Profile Management**
+**Goal**: Enable users to manage their personal and financial preferences
+
+**Development Stories & Progress:**
+- [ ] **DS-29: User Database Schema** - UserProfile entity with extended information
+- [ ] **DS-30: User Value Objects** - Validation for all user input fields
+- [ ] **DS-31: User Repository Layer** - Profile management operations
+- [ ] **DS-32: User Service Implementation** - Profile update and validation logic
+- [ ] **DS-33: User Controller and DTOs** - Profile management endpoints
+- [ ] **DS-34: Authentication Middleware** - Secure profile access
+- [ ] **DS-35: User Integration Tests** - Profile management testing
+
+**User Story Deliverables:**
+- [ ] View current profile information
+- [ ] Edit personal details (name, timezone, currency)
+- [ ] Set financial preferences (hourly rate, employment status)
+- [ ] Validate all input fields with helpful error messages
+- [ ] Save changes to profile securely
+- [ ] Secure profile data with authentication
+- [ ] Profile update confirmation and feedback
+- [ ] Input validation and error handling
+
+---
+
+### **Epic 2: Transaction Module (Core Functionality) - Weeks 1-3**
+
+#### **User Story 2.1: Basic Transaction Creation (Week 1-2)**
+**Goal**: Implement complete transaction module with basic CRUD operations using mock user
+
+**Development Stories & Progress:**
+- [ ] **DS-1: Project Foundation Setup** - Basic project structure and Docker environment
+- [ ] **DS-2: Transaction Database Schema** - Transaction and Category entities
+- [ ] **DS-3: Transaction Value Objects** - Money and TransactionType implementation
+- [ ] **DS-4: Transaction Repository Layer** - Repository interfaces and implementations
+- [ ] **DS-5: Mock User Service (Simple)** - Hardcoded user ID for development
+- [ ] **DS-6: Transaction Service Implementation** - CRUD operations and business logic
+- [ ] **DS-7: Transaction Controller and DTOs** - API endpoints and validation
+
+**User Story Deliverables:**
+- [ ] Create income transactions (positive amounts)
+- [ ] Create expense transactions (negative amounts)
+- [ ] Set transaction date and description
+- [ ] Choose from predefined categories
+- [ ] Validate transaction data with helpful errors
+- [ ] Store transaction in database reliably
+- [ ] View transaction list with filtering and sorting
+- [ ] Edit existing transactions through interface
+- [ ] Delete transactions with confirmation
+- [ ] Interface works on mobile and desktop
+- [ ] Form validation provides helpful error messages
+- [ ] Loading states and optimistic updates
+
+#### **User Story 2.2: Transaction Categories (Week 3)**
+**Goal**: Implement category management system for organizing transactions
+
+**Development Stories & Progress:**
+- [ ] **DS-8: Category Service Implementation** - Category CRUD operations and hierarchy
+- [ ] **DS-9: Category Controller and DTOs** - Category management API endpoints
+
+**User Story Deliverables:**
+- [ ] View list of available categories with names and colors
+- [ ] Create custom categories with name and color
+- [ ] Assign categories to transactions
+- [ ] Edit existing category names and colors
+- [ ] Delete unused categories safely
+- [ ] Hierarchical category support
+- [ ] Default categories seeder
+- [ ] Category validation and error handling
+
+#### **User Story 2.3: Transaction Frequency (Week 3)**
+**Goal**: Implement recurring transaction system with cron-based scheduling
+
+**Development Stories & Progress:**
+- [ ] **DS-10: Frequency Value Object Enhancement** - Cron expression support and validation
+- [ ] **DS-11: Recurrence Handler Service** - Recurrence logic and cron validation
+- [ ] **DS-12: Recurring Transaction Service** - Scheduled job support and management
+
+**User Story Deliverables:**
+- [ ] Set one-time transactions
+- [ ] Set recurring transactions (daily, weekly, monthly, yearly)
+- [ ] View upcoming recurring transactions
+- [ ] Edit or cancel recurring transactions
+- [ ] System generates next occurrences automatically
+- [ ] Cron expression validation
+- [ ] Recurrence pattern validation
+- [ ] Scheduled job processing
+
+#### **User Story 2.4: Transaction Composition (Week 3)**
+**Goal**: Implement complex transaction calculations with mathematical expressions
+
+**Development Stories & Progress:**
+- [ ] **DS-13: Calculation Parser Service** - Mathematical expression parsing and validation
+- [ ] **DS-14: Transaction Calculator Service** - Complex calculations and tax support
+- [ ] **DS-15: Composition Validation Service** - Circular reference detection and validation
+
+**User Story Deliverables:**
+- [ ] Create composed transactions (e.g., salary + bonus + overtime)
+- [ ] Reference existing transactions in calculations
+- [ ] View breakdown of composed transactions
+- [ ] Validate calculation expressions
+- [ ] Calculate totals automatically
+- [ ] Circular reference detection
+- [ ] Mathematical expression validation
+- [ ] Transaction ID resolution
+
+#### **User Story 2.5: Bank Account Integration (Week 3)**
+**Goal**: Implement bank account management and linking with transactions
+
+**Development Stories & Progress:**
+- [ ] **DS-16: Bank Account Database Schema** - BankAccount entity and relationships
+- [ ] **DS-17: Bank Account Service Implementation** - Account operations and balance calculation
+- [ ] **DS-18: Bank Account Controller** - Account management API endpoints
+
+**User Story Deliverables:**
+- [ ] Create bank accounts with name, type, and currency
+- [ ] Link transactions to specific accounts
+- [ ] View account balances accurately
+- [ ] Track account-specific transactions
+- [ ] Support multiple account types (checking, savings, credit)
+- [ ] Account balance calculations
+- [ ] Transaction-account linking
+- [ ] Account validation and error handling
+
+---
+
+### **Epic 3: Basic Reporting - Week 4**
+
+#### **User Story 3.1: Transaction Overview**
+**Goal**: Implement basic reporting and transaction overview functionality
+
+**Development Stories & Progress:**
+- [ ] **DS-19: Transaction Query Service** - Filtering, sorting, and pagination
+- [ ] **DS-20: Transaction Aggregation Service** - Income, expense, and net calculations
+- [ ] **DS-21: Transaction Overview Controller** - Overview and summary endpoints
+
+**User Story Deliverables:**
+- [ ] View total income and expenses for a period
+- [ ] See net income/expense calculations
+- [ ] Filter transactions by date range
+- [ ] Filter by transaction type (income/expense)
+- [ ] Sort transactions by date, amount, or category
+- [ ] Date range aggregation calculations
+- [ ] Optimized database queries
+- [ ] Input validation and error handling
+
+#### **User Story 3.2: Category Analysis**
+**Goal**: Implement advanced reporting with category-based insights
+
+**Development Stories & Progress:**
+- [ ] **DS-22: Category Analysis Service** - Category totals, percentages, and trends
+- [ ] **DS-23: Category Analysis Controller** - Analysis and trends endpoints
+
+**User Story Deliverables:**
+- [ ] View total spending per category
+- [ ] See percentage breakdown by category
+- [ ] Filter by date range
+- [ ] Sort categories by amount
+- [ ] View transaction count per category
+- [ ] Category trend calculations
+- [ ] Percentage calculations
+- [ ] Optimized analysis queries
+
+---
+
+### **Epic 4: Dashboard & Visualization - Week 4**
+
+#### **User Story 3.3: Interactive Dashboard**
+**Goal**: Provide users with visual financial insights and interactive reports
+
+**User Story Deliverables:**
+- [ ] View key financial metrics clearly displayed
+- [ ] Interact with financial charts for detailed information
+- [ ] Change date range for reports with immediate updates
+- [ ] Export financial data in multiple formats
+- [ ] Interactive and informative charts
+- [ ] Keyboard navigation accessibility
+- [ ] Responsive design for all screen sizes
+- [ ] Real-time data updates
+
+---
+
+### **Epic 5: User Authentication & Security - Week 5**
+
+#### **User Story 1.3: Secure Access**
+**Goal**: Implement comprehensive security measures for user data protection
+
+**User Story Deliverables:**
+- [ ] User registration and login with secure account creation
+- [ ] Password security with strength validation and hashing
+- [ ] Session management with persistence and secure termination
+- [ ] JWT-based authentication strategy
+- [ ] Role-based access control implementation
+- [ ] Secure password reset functionality
+- [ ] Session security and protection
+
+---
+
+### **Epic 6: System Integration & Quality - Week 6**
+
+#### **User Story 4.1: End-to-End Workflows**
+**Goal**: Ensure all features work together seamlessly for complete user workflows
+
+**User Story Deliverables:**
+- [ ] Complete financial management workflow without errors
+- [ ] Cross-browser compatibility and consistent functionality
+- [ ] Mobile responsiveness and touch interaction
+- [ ] System performance within acceptable response times
+- [ ] Security measures protecting user data
+- [ ] Accessibility compliance and keyboard navigation
+- [ ] Error handling and user guidance
+- [ ] Performance optimization and monitoring
+
+---
+
+### **Infrastructure & Quality (Parallel Development)**
+
+#### **DS-24: Docker Production Configuration**
+**Goal**: Production-ready Docker configuration for consistent deployment
+
+**Acceptance Criteria:**
+- [ ] Create production Dockerfile
+- [ ] Set up production docker-compose.yml
+- [ ] Configure environment-specific settings
+- [ ] Add Docker security best practices
+- [ ] Create Docker deployment scripts
+- [ ] Document production deployment process
+
+#### **DS-25: Error Handling Middleware**
+**Goal**: Comprehensive error handling for meaningful user feedback
+
+**Acceptance Criteria:**
+- [ ] Create global exception filter
+- [ ] Handle validation errors with clear messages
+- [ ] Handle database errors gracefully
+- [ ] Handle business logic errors appropriately
+- [ ] Add proper HTTP status codes
+- [ ] Write middleware tests
+
+#### **DS-26: Logging Service**
+**Goal**: Structured logging for debugging and monitoring
+
+**Acceptance Criteria:**
+- [ ] Create LoggingService with info, warn, error methods
+- [ ] Implement structured logging
+- [ ] Add request logging middleware
+- [ ] Write service tests
+- [ ] Add integration test coverage
+
+#### **DS-27: Integration Test Suite**
+**Goal**: Comprehensive testing for system reliability
+
+**Acceptance Criteria:**
+- [ ] Create test database setup
+- [ ] Write transaction module integration tests
+- [ ] Write category module integration tests
+- [ ] Write bank account module integration tests
+- [ ] Achieve >80% code coverage
+- [ ] Cover all BDD scenarios
+
+#### **DS-28: API Documentation**
+**Goal**: Comprehensive API documentation for developers and users
+
+**Acceptance Criteria:**
+- [ ] Configure Swagger/OpenAPI
+- [ ] Document all endpoints
+- [ ] Add request/response examples
+- [ ] Add error response documentation
+- [ ] Generate API documentation
+- [ ] Verify documentation with e2e tests
+
+---
+
+## 📊 OVERALL PROGRESS SUMMARY
+
+### **Epic Completion Status**
+- [ ] **Epic 1: User Module** - 0/2 User Stories (0% Complete)
+- [ ] **Epic 2: Transaction Module** - 0/5 User Stories (0% Complete)  
+- [ ] **Epic 3: Basic Reporting** - 0/2 User Stories (0% Complete)
+- [ ] **Epic 4: Dashboard & Visualization** - 0/1 User Stories (0% Complete)
+- [ ] **Epic 5: User Authentication & Security** - 0/1 User Stories (0% Complete)
+- [ ] **Epic 6: System Integration & Quality** - 0/1 User Stories (0% Complete)
+
+### **Development Stories Progress**
+- [ ] **Week 1-2**: DS-1 through DS-7 (Transaction Foundation) - 0/7 Complete
+- [ ] **Week 3**: DS-8 through DS-18 (Advanced Features) - 0/11 Complete
+- [ ] **Week 4**: DS-19 through DS-23 (Reporting & Analytics) - 0/5 Complete
+- [ ] **Week 5**: DS-29 through DS-35 (User Management) - 0/7 Complete
+- [ ] **Parallel**: DS-24 through DS-28 (Infrastructure & Quality) - 0/5 Complete
+
+### **Total Progress**
+- **User Stories**: 0/12 Complete (0%)
+- **Development Stories**: 0/35 Complete (0%)
+- **Infrastructure Tasks**: 0/5 Complete (0%)
+
+**Next Priority**: Start with Epic 2 (Transaction Module) - DS-1: Project Foundation Setup
 
 ---
 
@@ -27,16 +356,18 @@ All tickets must comply with the TDD + BDD Working Agreement:
 
 **Development Priority Order:**
 
-1. **Foundation & Environment Setup**
-2. **Backend API Foundation (Transactions)**
-3. **Frontend UI Foundation (Transaction Management)**
-4. **Backend Advanced Features (Categories, Recurring, Composition)**
-5. **Frontend Advanced Features (Category Management, Advanced Forms)**
-6. **Backend Reporting & Analytics**
-7. **Frontend Dashboard & Reports**
-8. **Backend Authentication & User Management**
-9. **Frontend Authentication & User Interface**
-10. **Integration & End-to-End Testing**
+1. **Foundation & Environment Setup** → Users can access a working application
+2. **Backend API Foundation (Transactions)** → Users can create and manage transactions
+3. **Frontend UI Foundation (Transaction Management)** → Users can interact with transactions through a beautiful interface
+4. **Backend Advanced Features (Categories, Recurring, Composition)** → Users can organize and automate their finances
+5. **Frontend Advanced Features (Category Management, Advanced Forms)** → Users can easily manage categories and set up recurring transactions
+6. **Backend Reporting & Analytics** → Users can understand their spending patterns
+7. **Frontend Dashboard & Reports** → Users can visualize their financial data
+8. **Backend Authentication & User Management** → Users can securely access their personal data
+9. **Frontend Authentication & User Interface** → Users can log in and manage their profiles
+10. **Integration & End-to-End Testing** → Users can complete full workflows without issues
+
+**Note**: User authentication (tickets 8-9) is implemented last after all transaction functionality is working
 
 ---
 
@@ -46,6 +377,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: Critical  
 **Estimate**: 2 days  
 **Dependencies**: None
+
+**Business Value**: Users can access a working personal finance application with a consistent, reliable experience.
 
 **Acceptance Criteria**:
 
@@ -74,13 +407,21 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Frontend: Component rendering tests
 - [ ] Both: Environment configuration validation
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] Both applications start with single command
-- [ ] Hot reloading works in both environments
-- [ ] Database connection verified
-- [ ] All linting and type checks pass
-- [ ] Railway deployment configuration ready
+```
+Given the application is deployed
+When a user visits the application
+Then the application should load successfully
+And the user should see a working interface
+And the backend should respond to health checks
+And the database connection should be established
+```
+
+**Business Outcomes**:
+- Users can access a working application
+- Development team has a consistent environment
+- Application is ready for feature development
 
 ---
 
@@ -90,6 +431,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: Critical  
 **Estimate**: 1.5 days  
 **Dependencies**: Ticket 1
+
+**Business Value**: Users can create, read, update, and delete financial transactions through a reliable API.
 
 **Acceptance Criteria**:
 
@@ -121,13 +464,22 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Integration tests for API endpoints
 - [ ] E2E tests for complete transaction flow
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] All API endpoints return proper HTTP status codes
-- [ ] Validation errors are user-friendly
-- [ ] Swagger documentation is complete
-- [ ] Test coverage > 80%
-- [ ] Mock user service returns consistent user ID
+```
+Given a user wants to manage their transactions
+When they create a new transaction
+Then the transaction should be saved successfully
+And they should receive a confirmation response
+When they retrieve their transactions
+Then they should see all their transactions
+And the data should be accurate and complete
+```
+
+**Business Outcomes**:
+- Users can manage their financial transactions
+- Data is stored securely and reliably
+- API provides consistent, validated responses
 
 ---
 
@@ -137,6 +489,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: High  
 **Estimate**: 2 days  
 **Dependencies**: Ticket 2
+
+**Business Value**: Users can interact with their transactions through an intuitive, responsive interface that works on all devices.
 
 **Acceptance Criteria**:
 
@@ -167,12 +521,21 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Accessibility tests with jest-axe
 - [ ] Responsive design tests
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] All components render correctly on mobile and desktop
-- [ ] Form validation works in both languages
-- [ ] Accessibility score > 90%
-- [ ] Components integrate with backend API
+```
+Given a user wants to manage their transactions
+When they open the transaction management interface
+Then they should see a clean, organized list of transactions
+And they should be able to create new transactions easily
+And the interface should work smoothly on both mobile and desktop
+And all form validations should provide helpful error messages
+```
+
+**Business Outcomes**:
+- Users can easily manage transactions through a beautiful interface
+- Interface works consistently across all devices
+- Users receive clear feedback for all actions
 
 ---
 
@@ -182,6 +545,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: High  
 **Estimate**: 2 days  
 **Dependencies**: Ticket 2
+
+**Business Value**: Users can organize their finances with categories, set up recurring transactions, and create complex financial calculations.
 
 **Acceptance Criteria**:
 
@@ -210,13 +575,22 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Integration tests for complex workflows
 - [ ] Performance tests for recurring transactions
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] All business logic is covered by tests
-- [ ] Recurring transactions generate correctly
-- [ ] Composition calculations are accurate
-- [ ] API response times < 500ms
-- [ ] Redis caching improves performance
+```
+Given a user wants to organize their finances
+When they create a new category
+Then the category should be available for transaction assignment
+When they set up a recurring transaction
+Then the system should generate future occurrences automatically
+When they create a composed transaction
+Then the calculation should be accurate and validated
+```
+
+**Business Outcomes**:
+- Users can organize transactions by meaningful categories
+- Recurring transactions reduce manual data entry
+- Complex financial calculations are handled automatically
 
 ---
 
@@ -226,6 +600,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: High  
 **Estimate**: 2 days  
 **Dependencies**: Ticket 4
+
+**Business Value**: Users can easily manage categories, set up recurring transactions, and use advanced financial tools through an intuitive interface.
 
 **Acceptance Criteria**:
 
@@ -253,12 +629,23 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Real-time update tests
 - [ ] Accessibility tests
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] All advanced features work correctly
-- [ ] Real-time updates function properly
-- [ ] User experience is smooth and intuitive
-- [ ] All components are accessible
+```
+Given a user wants to set up recurring transactions
+When they use the recurring transaction form
+Then they should be able to select frequency easily
+And the form should validate their input
+And they should see a preview of upcoming occurrences
+When they manage categories
+Then they should be able to organize them hierarchically
+And the interface should be intuitive and responsive
+```
+
+**Business Outcomes**:
+- Users can automate their financial management
+- Categories help users understand their spending patterns
+- Advanced features are accessible and easy to use
 
 ---
 
@@ -268,6 +655,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: Medium  
 **Estimate**: 1.5 days  
 **Dependencies**: Ticket 4
+
+**Business Value**: Users can gain insights into their financial patterns and make informed decisions based on comprehensive reports.
 
 **Acceptance Criteria**:
 
@@ -295,12 +684,22 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Integration tests for reporting endpoints
 - [ ] Performance tests for large datasets
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] All reports generate correctly
-- [ ] Caching improves performance by >50%
-- [ ] Export functionality works for all formats
-- [ ] API response times < 200ms for cached data
+```
+Given a user wants to understand their spending
+When they request a spending report
+Then they should receive accurate totals and percentages
+And the data should be filtered by their selected date range
+When they export their data
+Then they should receive a properly formatted file
+And all calculations should be mathematically correct
+```
+
+**Business Outcomes**:
+- Users can understand their financial patterns
+- Data export enables external analysis
+- Reports help users make better financial decisions
 
 ---
 
@@ -310,6 +709,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: Medium  
 **Estimate**: 2 days  
 **Dependencies**: Ticket 6
+
+**Business Value**: Users can visualize their financial data through interactive charts and dashboards that provide actionable insights.
 
 **Acceptance Criteria**:
 
@@ -337,12 +738,22 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Export functionality tests
 - [ ] Accessibility tests for charts
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] Dashboard loads all metrics correctly
-- [ ] Charts are interactive and accessible
-- [ ] Export functionality works in all browsers
-- [ ] Mobile experience is optimized
+```
+Given a user wants to understand their financial health
+When they view the dashboard
+Then they should see key metrics clearly displayed
+And the charts should be interactive and informative
+When they change the date range
+Then the data should update immediately
+And all visualizations should remain accessible
+```
+
+**Business Outcomes**:
+- Users can quickly assess their financial situation
+- Visual data helps users identify trends and patterns
+- Dashboard provides actionable financial insights
 
 ---
 
@@ -352,6 +763,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: Low (implemented last)  
 **Estimate**: 2 days  
 **Dependencies**: Ticket 7
+
+**Business Value**: Users can securely access their personal financial data and manage their profiles with confidence.
 
 **Acceptance Criteria**:
 
@@ -364,7 +777,7 @@ All tickets must comply with the TDD + BDD Working Agreement:
 
 **Technical Tasks**:
 
-- [ ] Implement DS-28 through DS-34 from dev stories
+- [ ] Implement DS-29 through DS-35 from dev stories
 - [ ] Add authentication endpoints:
   - `POST /api/auth/register` - User registration
   - `POST /api/auth/login` - User login
@@ -380,12 +793,22 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Security tests for password handling
 - [ ] Authorization tests for protected endpoints
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] All authentication flows work correctly
-- [ ] Security best practices are implemented
-- [ ] Protected endpoints are properly secured
-- [ ] Test coverage > 90%
+```
+Given a user wants to access their financial data
+When they register for an account
+Then their account should be created securely
+And they should receive confirmation
+When they log in
+Then they should access their personal data
+And their session should be maintained securely
+```
+
+**Business Outcomes**:
+- Users can securely access their personal financial data
+- Multiple users can use the system independently
+- User data is protected and private
 
 ---
 
@@ -395,6 +818,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: Low (implemented last)  
 **Estimate**: 1.5 days  
 **Dependencies**: Ticket 8
+
+**Business Value**: Users can securely log in, manage their profiles, and access their financial data through a trusted interface.
 
 **Acceptance Criteria**:
 
@@ -422,12 +847,22 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Protected route tests
 - [ ] Accessibility tests
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] All authentication flows work correctly
-- [ ] Protected routes redirect properly
-- [ ] User sessions persist correctly
-- [ ] All forms are accessible
+```
+Given a user wants to manage their account
+When they log in through the interface
+Then they should be redirected to their dashboard
+And their session should persist across page refreshes
+When they update their profile
+Then the changes should be saved successfully
+And they should see confirmation of the update
+```
+
+**Business Outcomes**:
+- Users can securely access their accounts
+- Profile management is intuitive and reliable
+- Authentication provides peace of mind for financial data
 
 ---
 
@@ -437,6 +872,8 @@ All tickets must comply with the TDD + BDD Working Agreement:
 **Priority**: High  
 **Estimate**: 1 day  
 **Dependencies**: All previous tickets
+
+**Business Value**: Users can complete full financial management workflows without encountering bugs or issues.
 
 **Acceptance Criteria**:
 
@@ -465,13 +902,21 @@ All tickets must comply with the TDD + BDD Working Agreement:
 - [ ] Security vulnerability scan
 - [ ] Accessibility compliance check
 
-**Definition of Done**:
+**Definition of Done (BDD Test)**:
 
-- [ ] All user journeys pass E2E tests
-- [ ] Performance meets requirements
-- [ ] No critical security vulnerabilities
-- [ ] Accessibility compliance verified
-- [ ] Railway deployment successful
+```
+Given a user wants to complete a full financial workflow
+When they create transactions, manage categories, and view reports
+Then all features should work together seamlessly
+And the user should complete their tasks without errors
+And the system should perform within acceptable response times
+And all security measures should protect user data
+```
+
+**Business Outcomes**:
+- Users can rely on the system for their financial management
+- All features work together as expected
+- System performance meets user expectations
 
 ---
 
@@ -533,13 +978,16 @@ NEXT_PUBLIC_APP_NAME="Personal Finance Manager"
 
 ## 📅 Development Timeline
 
-**Week 1**: Tickets 1-2 (Foundation + Backend API) **Week 2**: Tickets 3-4
-(Frontend UI + Backend Features) **Week 3**: Tickets 5-6 (Advanced Features +
-Reporting) **Week 4**: Tickets 7-8 (Dashboard + Authentication) **Week 5**:
-Tickets 9-10 (Frontend Auth + Integration)
+**Week 1**: Tickets 1-2 (Foundation + Backend API)
+**Week 2**: Tickets 3-4 (Frontend UI + Backend Features)
+**Week 3**: Tickets 5-6 (Advanced Features + Reporting)
+**Week 4**: Tickets 7 (Dashboard & Reports)
+**Week 5**: Tickets 8-9 (Authentication + User Management)
+**Week 6**: Ticket 10 (Integration & End-to-End Testing)
 
-**Total Estimated Effort**: 16.5 days (3.5 weeks for core features + 1.5 weeks
-for user management)
+**Note**: Authentication is intentionally delayed until Week 5 to ensure core transaction functionality works first
+
+**Total Estimated Effort**: 21 days (5 weeks for core features + 1 week for user management)
 
 ---
 
@@ -573,6 +1021,7 @@ for user management)
 5. **Quality Focus**: TDD/BDD approach ensures reliability
 6. **Railway Integration**: Seamless deployment and scaling
 7. **SPA Architecture**: Simple, fast, and maintainable frontend
+8. **Business Focus**: Each ticket emphasizes user value and outcomes
 
 ---
 
@@ -599,6 +1048,13 @@ for user management)
 - [ ] Accessibility compliance achieved
 - [ ] Multi-language support working
 
+### Business Value Metrics
+
+- [ ] Users can complete financial management tasks successfully
+- [ ] System provides actionable financial insights
+- [ ] Users feel confident managing their finances
+- [ ] Application meets user expectations for reliability
+
 ---
 
 ## 📝 Notes
@@ -611,6 +1067,116 @@ for user management)
 - **Performance**: Monitor and optimize throughout development
 - **Railway**: Leverage automatic deployments and scaling
 - **SPA**: Keep frontend simple and performant
+- **Business Focus**: Every feature delivers clear user value
+
+---
+
+## 📋 Comprehensive Development Checklist
+
+### **Phase 1: Foundation & Core Transactions (Weeks 1-2)**
+
+#### **Infrastructure & Setup**
+- [ ] Backend Docker environment with PostgreSQL, Redis, and NestJS app
+- [ ] Frontend Next.js project with TypeScript, ESLint, and Prettier
+- [ ] Shared development environment with hot reloading
+- [ ] Environment configuration for development/staging/production
+- [ ] Health check endpoints and monitoring setup
+- [ ] Railway deployment configuration for both services
+
+#### **Backend Transaction Foundation**
+- [ ] Transaction entity with TypeORM decorators and validation
+- [ ] Category entity with hierarchical support
+- [ ] Basic CRUD API endpoints for transactions
+- [ ] Request/response DTOs with validation
+- [ ] Swagger/OpenAPI documentation
+- [ ] Integration tests for all endpoints
+- [ ] Mock user service for development
+- [ ] Money value object implementation
+- [ ] Transaction type validation
+
+#### **Frontend Transaction UI**
+- [ ] Transaction list component with filtering and sorting
+- [ ] Transaction form component (create/edit)
+- [ ] Transaction detail view component
+- [ ] Responsive design for mobile and desktop
+- [ ] Form validation with error handling
+- [ ] Loading states and optimistic updates
+- [ ] Accessibility support (ARIA labels, keyboard navigation)
+- [ ] Internationalization (English/Spanish)
+
+### **Phase 2: Advanced Features (Week 3)**
+
+#### **Backend Advanced Features**
+- [ ] Category CRUD operations with hierarchical support
+- [ ] Transaction frequency and recurring transactions
+- [ ] Transaction composition with mathematical expressions
+- [ ] Bank account integration
+- [ ] All features covered by integration tests
+
+#### **Frontend Advanced Features**
+- [ ] Category management interface (CRUD operations)
+- [ ] Recurring transaction setup form
+- [ ] Transaction composition calculator interface
+- [ ] Bank account management interface
+- [ ] Advanced filtering and search capabilities
+- [ ] Real-time updates for recurring transactions
+
+### **Phase 3: Reporting & Analytics (Week 4)**
+
+#### **Backend Reporting Engine**
+- [ ] Transaction overview with date range filtering
+- [ ] Category analysis with percentage breakdowns
+- [ ] Spending trends and patterns
+- [ ] Export functionality (CSV, JSON)
+- [ ] Caching for performance optimization
+
+#### **Frontend Dashboard & Reports**
+- [ ] Interactive dashboard with key metrics
+- [ ] Charts and graphs for financial data visualization
+- [ ] Date range picker for reports
+- [ ] Export functionality for reports
+- [ ] Responsive design for all screen sizes
+- [ ] Accessibility for screen readers
+
+### **Phase 4: Authentication & User Management (Week 5)**
+
+#### **Backend Authentication**
+- [ ] JWT-based authentication system
+- [ ] User registration and login endpoints
+- [ ] User profile management
+- [ ] Role-based access control
+- [ ] Password reset functionality
+- [ ] Session management
+
+#### **Frontend Authentication**
+- [ ] Login and registration forms
+- [ ] User profile management interface
+- [ ] Password reset flow
+- [ ] Protected route handling
+- [ ] Session persistence
+- [ ] Multi-language support for auth forms
+
+### **Phase 5: Integration & Testing (Week 6)**
+
+#### **End-to-End Testing**
+- [ ] Complete user journey tests
+- [ ] API contract validation
+- [ ] Performance testing
+- [ ] Security testing
+- [ ] Accessibility testing
+- [ ] Cross-browser compatibility
+- [ ] Railway deployment verification
+
+#### **Quality Assurance**
+- [ ] All user stories implemented and tested
+- [ ] Test coverage > 80% for backend, > 70% for frontend
+- [ ] Zero critical bugs in production
+- [ ] All accessibility requirements met
+- [ ] Performance requirements met (< 500ms API, < 2s frontend)
+- [ ] Security best practices implemented
+
+---
 
 This ticket system ensures systematic development with clear deliverables,
-proper testing, and seamless deployment on Railway.
+proper testing, and seamless deployment on Railway, while maintaining a strong
+focus on business value and user outcomes.

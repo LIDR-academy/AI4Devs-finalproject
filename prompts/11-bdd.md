@@ -3,11 +3,11 @@
 ## Personal Finance Management System
 
 This document contains Gherkin scenarios for the user stories defined in the
-Personal Finance Management System.
+Personal Finance Management System, aligned with the 6-week development timeline.
 
 ---
 
-## Epic 1: User Module (Mock Implementation)
+## Epic 1: User Module (Mock Implementation) - Week 5
 
 ### User Story 1.1: Basic User Setup
 
@@ -87,9 +87,9 @@ And the changes should not be saved
 
 ---
 
-## Epic 2: Transaction Module (Core Functionality)
+## Epic 2: Transaction Module (Core Functionality) - Weeks 1-3
 
-### User Story 2.1: Basic Transaction Creation
+### User Story 2.1: Basic Transaction Creation (Week 1-2)
 
 **Scenario: Create income transaction**
 
@@ -122,7 +122,27 @@ Then the system should return validation errors
 And the transaction should not be created
 ```
 
-### User Story 2.2: Transaction Categories
+**Scenario: View transaction list (Frontend - Week 2)**
+
+```
+Given transactions exist in the system
+When the user opens the transaction management interface
+Then they should see a clean, organized list of transactions
+And the list should be sortable by date, amount, and category
+And the interface should work smoothly on both mobile and desktop
+```
+
+**Scenario: Edit transaction through interface**
+
+```
+Given a transaction exists in the system
+When the user edits the transaction through the interface
+Then the changes should be saved successfully
+And the user should see confirmation of the update
+And the updated transaction should be displayed in the list
+```
+
+### User Story 2.2: Transaction Categories (Week 3)
 
 **Scenario: View list of available categories**
 
@@ -170,7 +190,7 @@ When the user deletes the category
 Then the category should be removed from the system
 ```
 
-### User Story 2.3: Transaction Frequency
+### User Story 2.3: Transaction Frequency (Week 3)
 
 **Scenario: Set one-time transaction**
 
@@ -248,7 +268,7 @@ Then no new instances should be generated
 And existing future instances should be removed
 ```
 
-### User Story 2.4: Transaction Composition
+### User Story 2.4: Transaction Composition (Week 3)
 
 **Scenario: Create composed transaction with salary and bonus**
 
@@ -296,7 +316,7 @@ Then the total amount should be recalculated automatically
 And the updated total should be reflected in the composed transaction
 ```
 
-### User Story 2.5: Bank Account Integration
+### User Story 2.5: Bank Account Integration (Week 3)
 
 **Scenario: Create bank account**
 
@@ -348,7 +368,7 @@ And the system should support different features for each account type
 
 ---
 
-## Epic 3: Basic Reporting
+## Epic 3: Basic Reporting - Week 4
 
 ### User Story 3.1: Transaction Overview
 
@@ -447,6 +467,129 @@ And the count should reflect the actual number of transactions
 
 ---
 
+## Epic 4: Dashboard & Visualization - Week 4
+
+### User Story 3.3: Interactive Dashboard
+
+**Scenario: View key financial metrics**
+
+```
+Given financial data exists in the system
+When the user opens the dashboard
+Then they should see key metrics clearly displayed
+And the metrics should include total income, expenses, and net amount
+And the data should be current and accurate
+```
+
+**Scenario: Interact with financial charts**
+
+```
+Given financial data exists in the system
+When the user views the spending charts
+Then the charts should be interactive and informative
+And the user should be able to hover for detailed information
+And the charts should be accessible via keyboard navigation
+```
+
+**Scenario: Change date range for reports**
+
+```
+Given financial data exists in the system
+When the user changes the date range picker
+Then the data should update immediately
+And all visualizations should reflect the new date range
+And the charts should remain accessible and responsive
+```
+
+**Scenario: Export financial data**
+
+```
+Given financial data exists in the system
+When the user requests to export their data
+Then they should receive a properly formatted file
+And the export should include all requested data
+And the file should be downloadable in multiple formats
+```
+
+---
+
+## Epic 5: User Authentication & Security - Week 5
+
+### User Story 1.3: Secure Access
+
+**Scenario: User registration and login**
+
+```
+Given a new user wants to access the system
+When they register for an account
+Then their account should be created securely
+And they should receive confirmation
+When they log in with valid credentials
+Then they should access their personal data
+And their session should be maintained securely
+```
+
+**Scenario: Password security**
+
+```
+Given a user is setting up their account
+When they create a password
+Then the password should meet security requirements
+And the password should be hashed securely
+And the system should validate password strength
+```
+
+**Scenario: Session management**
+
+```
+Given a user is logged into the system
+When they perform actions
+Then their session should persist across page refreshes
+And their authentication should remain valid
+When they log out
+Then their session should be terminated
+And they should be redirected to the login page
+```
+
+---
+
+## Epic 6: System Integration & Quality - Week 6
+
+### User Story 4.1: End-to-End Workflows
+
+**Scenario: Complete financial management workflow**
+
+```
+Given a user wants to complete a full financial workflow
+When they create transactions, manage categories, and view reports
+Then all features should work together seamlessly
+And the user should complete their tasks without errors
+And the system should perform within acceptable response times
+And all security measures should protect user data
+```
+
+**Scenario: Cross-browser compatibility**
+
+```
+Given a user accesses the system from different browsers
+When they perform the same actions
+Then the functionality should work consistently
+And the user experience should be similar
+And all features should be accessible
+```
+
+**Scenario: Mobile responsiveness**
+
+```
+Given a user accesses the system from a mobile device
+When they navigate through the application
+Then the interface should adapt to the screen size
+And all functionality should be accessible
+And the touch interactions should be intuitive
+```
+
+---
+
 ## Additional Scenarios
 
 ### Error Handling Scenarios
@@ -499,12 +642,42 @@ Then all transactions should be created successfully
 And no data should be lost or corrupted
 ```
 
+### Accessibility Scenarios
+
+**Scenario: Screen reader compatibility**
+
+```
+Given a user with a screen reader accesses the system
+When they navigate through the interface
+Then all elements should have proper ARIA labels
+And the navigation should be logical and accessible
+And all functionality should be available via keyboard
+```
+
+**Scenario: Keyboard navigation**
+
+```
+Given a user navigates using only the keyboard
+When they move through the interface
+Then all interactive elements should be reachable
+And the focus should be clearly visible
+And the tab order should be logical
+```
+
 ---
 
 ## Notes
 
-- All scenarios assume a mock user approach until authentication is implemented
+- All scenarios assume a mock user approach until Week 5 (authentication implementation)
+- **Implementation Order**: Epic 2 (Transactions) first, then Epic 3 (Reporting), then Epic 1 (User Authentication)
+- **Week 1**: Backend transaction foundation
+- **Week 2**: Frontend transaction interface
+- **Week 3**: Advanced transaction features
+- **Week 4**: Reporting and dashboard
+- **Week 5**: User authentication and security
+- **Week 6**: Integration testing and quality assurance
 - Database operations should be atomic
 - All scenarios should be covered by integration tests
 - Error handling should be comprehensive and user-friendly
 - Performance requirements: < 500ms response time for all operations
+- Accessibility requirements: WCAG 2.1 AA compliance
