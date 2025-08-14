@@ -5,10 +5,10 @@
 A comprehensive personal finance management application designed to help individuals track income, manage expenses, create budgets, and achieve financial goals. The application follows Domain-Driven Design (DDD) principles and is built with a modern tech stack for scalability and maintainability.
 
 ### Tech Stack
-- **Frontend**: Next.js (SPA) with TypeScript
+- **Frontend**: Next.js configured as SPA with TypeScript
 - **Backend**: NestJS with TypeScript
-- **Database**: Firestore (Firebase)
-- **Authentication**: Firebase Auth
+- **Database**: PostgreSQL with TypeORM
+- **Authentication**: JWT-based authentication
 - **Deployment**: Docker containers with docker-compose
 
 

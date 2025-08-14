@@ -1,240 +1,299 @@
-# User Stories Plan
+# User Stories - Ideation Approach
 
 ## Personal Finance Management System
 
 ### Context
 
-This document outlines the user stories for the first milestone of the personal
-finance management system, focusing on **tracking/budgeting** and **user
-modules**. The system will use a **mock user approach** until basic budgeting is
-implemented, at which point we can plan for authentication with different users.
+This document outlines the user stories for implementing the personal finance management system using the ideation methodology. The system addresses the core opportunity of helping individuals take control of their personal finances through systematic tracking, categorization, and insights.
 
 ---
 
-## Epic Overview
+## **Opportunity Refinement**
 
-### **Epic 1: User Module (Mock Implementation)**
+### **Problem Statement**
+Individuals struggle to effectively manage their personal finances due to scattered financial information, lack of systematic tracking, and difficulty in understanding spending patterns.
 
-- **User Story 1.1**: Basic User Setup
-- **User Story 1.2**: User Profile Management
+### **Target Audience**
+- **Primary**: Working professionals and freelancers seeking better financial control
+- **Secondary**: Families managing household finances and recurring bills
+- **Tertiary**: Individuals looking to understand and improve spending habits
 
-### **Epic 2: Transaction Module (Core Functionality)**
+### **Solution Approach**
+A web-based personal finance management system with transaction tracking, budgeting, goal setting, and financial analytics, built with modern architecture principles for reliability and scalability.
 
+---
+
+## **Capability Mapping**
+
+### **Epic 1: Transaction Management (Core Capability)**
+**Description**: Core system for recording, categorizing, and managing all financial transactions with support for complex scenarios.
+
+**Business Value**: Foundation for all financial analysis and planning activities.
+
+**User Stories**:
 - **User Story 2.1**: Basic Transaction Creation
 - **User Story 2.2**: Transaction Categories
 - **User Story 2.3**: Transaction Frequency
 - **User Story 2.4**: Transaction Composition
 - **User Story 2.5**: Bank Account Integration
 
-### **Epic 3: Basic Reporting**
+### **Epic 2: Financial Analytics & Reporting**
+**Description**: Comprehensive financial insights through data visualization, trend analysis, and customizable reports.
 
+**Business Value**: Enables informed financial decision-making and goal achievement.
+
+**User Stories**:
 - **User Story 3.1**: Transaction Overview
 - **User Story 3.2**: Category Analysis
+- **User Story 3.3**: Interactive Dashboard
+
+### **Epic 3: User Management & Security**
+**Description**: Secure user authentication, profile management, and data protection.
+
+**Business Value**: Builds user trust and enables multi-user support.
+
+**User Stories**:
+- **User Story 1.1**: Basic User Setup
+- **User Story 1.2**: User Profile Management
+- **User Story 1.3**: Secure Access
 
 ---
 
-## 🗓️ Phase-by-Phase Implementation Plan
+## **Feature Details & Use Cases**
 
-### **Phase 1: Foundation & Core Transactions (Week 1)**
+### **User Story 2.1: Basic Transaction Creation**
+**Goal**: Implement complete transaction module with basic CRUD operations using mock user
 
-**Goal**: Set up project structure and implement core transaction functionality
+**Capability**: Transaction Management
+**Feature**: Basic Transaction Operations
 
-#### **User Stories to Complete:**
+**Main User Activity Use Case**:
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant UI as Transaction Form
+    participant API as Transaction API
+    participant DB as Database
+    
+    U->>UI: Opens transaction form
+    UI->>UI: Loads categories and accounts
+    U->>UI: Fills transaction details
+    UI->>UI: Validates input
+    U->>UI: Submits transaction
+    UI->>API: Sends transaction data
+    API->>API: Validates business rules
+    API->>DB: Stores transaction
+    DB->>API: Confirms storage
+    API->>UI: Returns success response
+    UI->>U: Shows confirmation
+```
 
-**User Story 2.1: Basic Transaction Creation**
+**Activity Variations Table**:
 
-- Create income transactions (positive amounts)
-- Create expense transactions (negative amounts)
-- Set transaction date and description
-- Choose from predefined categories
-- Validate transaction data
-- Store transaction in database
+| Activity | Core Variation | Minor Variations | Implementation Priority |
+|----------|----------------|------------------|------------------------|
+| **Create Transaction** | Basic income/expense entry | • Transaction composition<br>• Recurring setup<br>• Attachment upload | Must (Core) |
+| **Edit Transaction** | Modify existing transaction | • Bulk editing<br>• History tracking<br>• Approval workflow | Must (Core) |
+| **Delete Transaction** | Remove transaction with confirmation | • Soft delete<br>• Archive option<br>• Bulk deletion | Must (Core) |
+| **View Transactions** | List with basic filtering | • Advanced filtering<br>• Sorting options<br>• Pagination<br>• Search functionality | Must (Core) |
 
-#### **Technical Deliverables:**
+**Development Stories**:
+- **DS-1**: Project Foundation Setup
+- **DS-2**: Transaction Database Schema
+- **DS-3**: Transaction Value Objects
+- **DS-4**: Transaction Repository Layer
+- **DS-5**: Mock User Service (Simple)
+- **DS-6**: Transaction Service Implementation
+- **DS-7**: Transaction Controller and DTOs
 
-- Set up DDD module structure (Transaction modules)
-- Implement `Transaction` aggregate root
-- Create basic database schema
-- Set up repositories and basic CRUD operations
-- Implement `Money` value object
-- Add basic validation rules
-- Create MockUserService for development
-- Set up mock user ID for all operations
-
----
-
-### **Phase 2: Frontend UI Foundation (Week 2)**
-
-**Goal**: Implement user interface for transaction management
-
-#### **User Stories to Complete:**
-
-**User Story 2.1: Basic Transaction Creation (Frontend)**
-
-- Users can view transaction list
-- Users can create new transactions through forms
-- Users can edit existing transactions
-- Users can delete transactions with confirmation
-- Interface works on mobile and desktop
-- Form validation provides helpful error messages
-
-#### **Technical Deliverables:**
-
-- Transaction list component with filtering and sorting
-- Transaction form component (create/edit)
-- Transaction detail view component
-- Responsive design implementation
-- Form validation with error handling
-- Loading states and optimistic updates
-
----
-
-### **Phase 3: Advanced Features (Week 3)**
-
-**Goal**: Implement advanced transaction features and bank account integration
-
-#### **User Stories to Complete:**
-
-**User Story 2.2: Transaction Categories**
-
-- View list of available categories
-- Create custom categories with name and color
-- Assign categories to transactions
-- Edit existing categories
-- Delete unused categories
-
-**User Story 2.3: Transaction Frequency**
-
-- Set one-time transactions
-- Set recurring transactions (daily, weekly, monthly, yearly)
-- View upcoming recurring transactions
-- Edit or cancel recurring transactions
-- System generates next occurrences automatically
-
-**User Story 2.4: Transaction Composition**
-
-- Create composed transactions (e.g., salary + bonus + overtime)
-- Reference existing transactions in calculations
-- View breakdown of composed transactions
-- Validate calculation expressions
-- Calculate totals automatically
-
-**User Story 2.5: Bank Account Integration**
-
-- Create bank accounts with name, type, and currency
-- Link transactions to specific accounts
-- View account balances
-- Track account-specific transactions
-- Support multiple account types (checking, savings, credit)
-
-#### **Technical Deliverables:**
-
-- Create `Category` entity with default categories
-- Implement `Frequency` value object with cron expressions
-- Add `RecurrenceHandler` domain service
-- Create category management endpoints
-- Implement recurring transaction logic
-- Implement `Calculation` type for mathematical expressions
-- Add `TransactionCalculator` domain service
-- Create `BankAccount` entity
-- Implement account balance calculations
-- Add composition validation (circular references)
-- Create bank account management endpoints
-- Implement transaction-account linking
+**User Story Deliverables**:
+- [ ] Create income transactions (positive amounts)
+- [ ] Create expense transactions (negative amounts)
+- [ ] Set transaction date and description
+- [ ] Choose from predefined categories
+- [ ] Validate transaction data with helpful errors
+- [ ] Store transaction in database reliably
+- [ ] View transaction list with filtering and sorting
+- [ ] Edit existing transactions through interface
+- [ ] Delete transactions with confirmation
+- [ ] Interface works on mobile and desktop
+- [ ] Form validation provides helpful error messages
+- [ ] Loading states and optimistic updates
 
 ---
 
-### **Phase 4: Reporting & Analytics (Week 4)**
+### **User Story 2.2: Transaction Categories**
+**Goal**: Implement category management system for organizing transactions
 
+**Capability**: Transaction Management
+**Feature**: Transaction Categorization
+
+**Main User Activity Use Case**:
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant UI as Category Manager
+    participant API as Category API
+    participant DB as Database
+    
+    U->>UI: Opens category manager
+    UI->>API: Fetches existing categories
+    API->>DB: Retrieves categories
+    DB->>API: Returns category data
+    API->>UI: Provides categories
+    U->>UI: Creates new category
+    UI->>UI: Validates category input
+    U->>UI: Submits category
+    UI->>API: Sends category data
+    API->>DB: Stores new category
+    DB->>API: Confirms storage
+    API->>UI: Returns success
+    UI->>U: Shows new category
+```
+
+**Activity Variations Table**:
+
+| Activity | Core Variation | Minor Variations | Implementation Priority |
+|----------|----------------|------------------|------------------------|
+| **Create Category** | Basic category with name and color | • Hierarchical categories<br>• Category icons<br>• Category rules | Should (Week 3) |
+| **Edit Category** | Modify name and color | • Bulk editing<br>• Category merging<br>• Usage statistics | Should (Week 3) |
+| **Delete Category** | Remove unused category | • Safe deletion checks<br>• Category reassignment<br>• Archive option | Should (Week 3) |
+| **Assign Categories** | Link category to transaction | • Auto-categorization<br>• Smart suggestions<br>• Bulk assignment | Should (Week 3) |
+
+**Development Stories**:
+- **DS-8**: Category Service Implementation
+- **DS-9**: Category Controller and DTOs
+
+**User Story Deliverables**:
+- [ ] View list of available categories with names and colors
+- [ ] Create custom categories with name and color
+- [ ] Assign categories to transactions
+- [ ] Edit existing category names and colors
+- [ ] Delete unused categories safely
+- [ ] Hierarchical category support
+- [ ] Default categories seeder
+- [ ] Category validation and error handling
+
+---
+
+### **User Story 3.1: Transaction Overview**
 **Goal**: Implement basic reporting and transaction overview functionality
 
-#### **User Stories to Complete:**
+**Capability**: Financial Analytics & Reporting
+**Feature**: Transaction Overview
 
-**User Story 3.1: Transaction Overview**
+**Main User Activity Use Case**:
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant UI as Dashboard
+    participant API as Analytics API
+    participant DB as Database
+    
+    U->>UI: Opens dashboard
+    UI->>API: Requests financial summary
+    API->>DB: Queries transaction data
+    DB->>API: Returns aggregated data
+    API->>UI: Provides financial metrics
+    UI->>U: Displays summary charts
+    U->>UI: Changes date range
+    UI->>API: Requests filtered data
+    API->>DB: Queries filtered data
+    DB->>API: Returns filtered results
+    API->>UI: Updates dashboard
+    UI->>U: Shows updated charts
+```
 
-- View total income and expenses for a period
-- See net income/expense
-- Filter transactions by date range
-- Filter by transaction type (income/expense)
-- Sort transactions by date, amount, or category
+**Activity Variations Table**:
 
-**User Story 3.2: Category Analysis**
+| Activity | Core Variation | Minor Variations | Implementation Priority |
+|----------|----------------|------------------|------------------------|
+| **View Financial Summary** | Basic income/expense totals | • Net worth tracking<br>• Cash flow analysis<br>• Budget vs actual | Must (Week 4) |
+| **Filter Reports** | Date range selection | • Category filtering<br>• Account filtering<br>• Custom date ranges | Must (Week 4) |
+| **Export Data** | CSV download | • PDF reports<br>• Email summaries<br>• API access | Should (Week 4) |
+| **Interactive Charts** | Basic bar/line charts | • Drill-down capabilities<br>• Chart customization<br>• Real-time updates | Should (Week 4) |
 
-- View total spending per category
-- See percentage breakdown by category
-- Filter by date range
-- Sort categories by amount
-- View transaction count per category
+**Development Stories**:
+- **DS-19**: Transaction Query Service
+- **DS-20**: Transaction Aggregation Service
+- **DS-21**: Transaction Overview Controller
 
-#### **Technical Deliverables:**
-
-- Implement transaction query endpoints with filtering
-- Add date range aggregation calculations
-- Create category analysis endpoints
-- Implement percentage calculations
-- Write comprehensive integration tests
-- Add input validation and error handling
-- Optimize database queries
-- Document API endpoints
+**User Story Deliverables**:
+- [ ] View total income and expenses for a period
+- [ ] See net income/expense calculations
+- [ ] Filter transactions by date range
+- [ ] Filter by transaction type (income/expense)
+- [ ] Sort transactions by date, amount, or category
+- [ ] Date range aggregation calculations
+- [ ] Optimized database queries
+- [ ] Input validation and error handling
 
 ---
 
-### **Phase 5: User Authentication & Management (Week 5)**
+## **Implementation Phases**
 
+### **Phase 1: Foundation & Core Transactions (Week 1-2)**
+**Goal**: Set up project structure and implement core transaction functionality
+
+**Focus**: Basic CRUD operations, simple categorization, essential validation
+**Simplifications**: Mock user, basic categories, simple forms
+**Deliverables**: Working transaction system with basic UI
+
+**User Stories to Complete**:
+- **User Story 2.1**: Basic Transaction Creation (Backend & Frontend)
+
+### **Phase 2: Advanced Features (Week 3)**
+**Goal**: Implement advanced transaction features and category management
+
+**Focus**: Recurring transactions, composition, category management
+**Simplifications**: Basic recurrence patterns, simple composition rules
+**Deliverables**: Complete transaction management system
+
+**User Stories to Complete**:
+- **User Story 2.2**: Transaction Categories
+- **User Story 2.3**: Transaction Frequency
+- **User Story 2.4**: Transaction Composition
+- **User Story 2.5**: Bank Account Integration
+
+### **Phase 3: Reporting & Analytics (Week 4)**
+**Goal**: Implement basic reporting and transaction overview functionality
+
+**Focus**: Financial summaries, category analysis, basic charts
+**Simplifications**: Basic reporting, simple charts, essential exports
+**Deliverables**: Complete reporting system with interactive dashboards
+
+**User Stories to Complete**:
+- **User Story 3.1**: Transaction Overview
+- **User Story 3.2**: Category Analysis
+- **User Story 3.3**: Interactive Dashboard
+
+### **Phase 4: User Authentication & Security (Week 5)**
 **Goal**: Implement real user authentication and profile management
 
-#### **User Stories to Complete:**
+**Focus**: User registration, authentication, profile management
+**Simplifications**: Basic RBAC, essential security measures
+**Deliverables**: Multi-user system with security
 
-**User Story 1.1: Basic User Setup**
+**User Stories to Complete**:
+- **User Story 1.1**: Basic User Setup
+- **User Story 1.2**: User Profile Management
+- **User Story 1.3**: Secure Access
 
-- Real user registration and authentication system
-- User has basic settings (timezone, currency, language)
-- User profile includes financial preferences (hourly rate, income frequency)
-- System supports multiple real users
-
-**User Story 1.2: User Profile Management**
-
-- View current profile information
-- Edit personal details (name, timezone, currency)
-- Set financial preferences (hourly rate, employment status)
-- Validate all input fields
-- Save changes to profile
-- Secure profile data with authentication
-
-#### **Technical Deliverables:**
-
-- Implement JWT-based authentication
-- Create User and UserProfile entities
-- Add password hashing and validation
-- Implement role-based access control
-- Secure all existing endpoints
-- Write authentication integration tests
-- Add session management
-- Document authentication endpoints
-
----
-
-### **Phase 6: Integration & Testing (Week 6)**
-
+### **Phase 5: Integration & Testing (Week 6)**
 **Goal**: Complete system integration and comprehensive testing
 
-#### **Technical Deliverables:**
+**Focus**: End-to-end testing, performance optimization, security validation
+**Simplifications**: Focus on core functionality reliability
+**Deliverables**: Production-ready system
 
-- End-to-end testing for all user journeys
-- API contract validation
-- Performance testing and optimization
-- Security testing and vulnerability assessment
-- Accessibility testing and compliance
-- Cross-browser compatibility testing
-- Railway deployment verification
-- Final code review and documentation
+**User Stories to Complete**:
+- **User Story 4.1**: End-to-End Workflows
 
 ---
 
-## ✅ Success Criteria
+## **Success Criteria**
 
-### **Functional Requirements:**
-
+### **Functional Requirements**
 - Mock user can create and manage transactions
 - All basic CRUD operations work correctly
 - Recurring transactions generate automatically
@@ -243,8 +302,7 @@ implemented, at which point we can plan for authentication with different users.
 - Basic reporting provides accurate summaries
 - Category analysis shows meaningful insights
 
-### **Technical Requirements:**
-
+### **Technical Requirements**
 - All features are covered by integration tests
 - API is well-documented and consistent
 - Database queries are optimized
@@ -252,16 +310,14 @@ implemented, at which point we can plan for authentication with different users.
 - Code follows DDD principles
 - Type safety is maintained throughout
 
-### **Quality Requirements:**
-
+### **Quality Requirements**
 - Code coverage > 80%
 - All endpoints return proper HTTP status codes
 - Validation errors are user-friendly
 - Performance meets requirements (< 500ms response time)
 - Database transactions are atomic
 
-### **Business Value Requirements:**
-
+### **Business Value Requirements**
 - Users can complete financial management tasks successfully
 - System provides actionable financial insights
 - Users feel confident managing their finances
@@ -269,7 +325,7 @@ implemented, at which point we can plan for authentication with different users.
 
 ---
 
-### **Key Dependencies:**
+## **Key Dependencies**
 
 - **Database**: PostgreSQL with TypeORM
 - **Validation**: class-validator
@@ -279,7 +335,7 @@ implemented, at which point we can plan for authentication with different users.
 
 ---
 
-## 🚀 Next Steps After Milestone 1
+## **Next Steps After Milestone 1**
 
 1. **User Authentication**: Implement real user authentication and profile management
 2. **Budget Module**: Add budget planning and tracking
@@ -290,7 +346,7 @@ implemented, at which point we can plan for authentication with different users.
 
 ---
 
-## 📝 Notes
+## **Notes**
 
 - **Mock User**: Single hardcoded user for development until Week 5
 - **DDD Principles**: Strict adherence to domain boundaries
@@ -299,8 +355,6 @@ implemented, at which point we can plan for authentication with different users.
 - **Performance**: Monitor and optimize database queries
 - **Development Order**: Transactions first, then reporting, then authentication
 - **Business Focus**: Every feature delivers clear user value and outcomes
+- **Ideation Approach**: Following opportunity → capability → feature → activity → variation mapping
 
-This plan provides a clear roadmap for implementing the first milestone with
-specific user stories assigned to each phase, ensuring systematic development
-and proper testing throughout the process, while maintaining focus on business
-value and user outcomes.
+This plan provides a clear roadmap for implementing the first milestone with specific user stories assigned to each phase, ensuring systematic development and proper testing throughout the process, while maintaining focus on business value and user outcomes following the ideation methodology.

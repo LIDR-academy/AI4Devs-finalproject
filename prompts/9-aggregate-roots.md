@@ -4,11 +4,11 @@
 
 This document organizes the Domain-Driven Design (DDD) structure by modules,
 showing all aggregates, value objects, and domain services for each module. The
-focus is on the **Transaction (Budgeting)** and **User** modules.
+focus is on the **Transaction** and **User** modules.
 
 ---
 
-## �� Transaction Module
+##  Transaction Module
 
 ### **Aggregates**
 

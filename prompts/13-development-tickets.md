@@ -10,8 +10,8 @@ on delivering business value and user outcomes.
 **Technology Stack:**
 
 - **Backend**: NestJS with TypeORM, PostgreSQL, Redis
-- **Frontend**: Next.js (as SPA), React Query, Tailwind CSS
-- **Deployment**: Railway for both frontend and backend
+- **Frontend**: Next.js configured as SPA, React Query, Tailwind CSS
+- **Deployment**: Docker containers with docker-compose
 - **Development Approach**: TDD + BDD with vertical slicing
 
 **Tracking Structure**:
@@ -22,57 +22,9 @@ on delivering business value and user outcomes.
 
 ---
 
-### **Epic 1: User Module (Mock Implementation) - Week 5**
+### **Epic 1: Transaction Module (Core Functionality) - Weeks 1-3**
 
-#### **User Story 1.1: Basic User Setup**
-**Goal**: Implement real user authentication and profile management system
-
-**Development Stories & Progress:**
-- [ ] **DS-29: User Database Schema** - Create User and UserProfile entities
-- [ ] **DS-30: User Value Objects** - Implement Email, Currency, Timezone value objects
-- [ ] **DS-31: User Repository Layer** - Create UserRepository and UserProfileRepository
-- [ ] **DS-32: User Service Implementation** - Implement user registration, authentication, and profile management
-- [ ] **DS-33: User Controller and DTOs** - Create user API endpoints with proper validation
-- [ ] **DS-34: Authentication Middleware** - Implement JWT strategy, guards, and RBAC
-- [ ] **DS-35: User Integration Tests** - Complete user functionality testing
-
-**User Story Deliverables:**
-- [ ] Real user registration and authentication system
-- [ ] User has basic settings (timezone, currency, language)
-- [ ] User profile includes financial preferences (hourly rate, income frequency)
-- [ ] System supports multiple real users
-- [ ] JWT-based authentication with password hashing
-- [ ] Role-based access control implementation
-- [ ] Session management and security
-- [ ] All authentication endpoints documented and tested
-
-#### **User Story 1.2: User Profile Management**
-**Goal**: Enable users to manage their personal and financial preferences
-
-**Development Stories & Progress:**
-- [ ] **DS-29: User Database Schema** - UserProfile entity with extended information
-- [ ] **DS-30: User Value Objects** - Validation for all user input fields
-- [ ] **DS-31: User Repository Layer** - Profile management operations
-- [ ] **DS-32: User Service Implementation** - Profile update and validation logic
-- [ ] **DS-33: User Controller and DTOs** - Profile management endpoints
-- [ ] **DS-34: Authentication Middleware** - Secure profile access
-- [ ] **DS-35: User Integration Tests** - Profile management testing
-
-**User Story Deliverables:**
-- [ ] View current profile information
-- [ ] Edit personal details (name, timezone, currency)
-- [ ] Set financial preferences (hourly rate, employment status)
-- [ ] Validate all input fields with helpful error messages
-- [ ] Save changes to profile securely
-- [ ] Secure profile data with authentication
-- [ ] Profile update confirmation and feedback
-- [ ] Input validation and error handling
-
----
-
-### **Epic 2: Transaction Module (Core Functionality) - Weeks 1-3**
-
-#### **User Story 2.1: Basic Transaction Creation (Week 1-2)**
+#### **User Story 1.1: Basic Transaction Creation (Week 1-2)**
 **Goal**: Implement complete transaction module with basic CRUD operations using mock user
 
 **Development Stories & Progress:**
@@ -98,7 +50,7 @@ on delivering business value and user outcomes.
 - [ ] Form validation provides helpful error messages
 - [ ] Loading states and optimistic updates
 
-#### **User Story 2.2: Transaction Categories (Week 3)**
+#### **User Story 1.2: Transaction Categories (Week 3)**
 **Goal**: Implement category management system for organizing transactions
 
 **Development Stories & Progress:**
@@ -115,7 +67,7 @@ on delivering business value and user outcomes.
 - [ ] Default categories seeder
 - [ ] Category validation and error handling
 
-#### **User Story 2.3: Transaction Frequency (Week 3)**
+#### **User Story 1.3: Transaction Frequency (Week 3)**
 **Goal**: Implement recurring transaction system with cron-based scheduling
 
 **Development Stories & Progress:**
@@ -133,7 +85,7 @@ on delivering business value and user outcomes.
 - [ ] Recurrence pattern validation
 - [ ] Scheduled job processing
 
-#### **User Story 2.4: Transaction Composition (Week 3)**
+#### **User Story 1.4: Transaction Composition (Week 3)**
 **Goal**: Implement complex transaction calculations with mathematical expressions
 
 **Development Stories & Progress:**
@@ -151,7 +103,7 @@ on delivering business value and user outcomes.
 - [ ] Mathematical expression validation
 - [ ] Transaction ID resolution
 
-#### **User Story 2.5: Bank Account Integration (Week 3)**
+#### **User Story 1.5: Bank Account Integration (Week 3)**
 **Goal**: Implement bank account management and linking with transactions
 
 **Development Stories & Progress:**
@@ -171,9 +123,9 @@ on delivering business value and user outcomes.
 
 ---
 
-### **Epic 3: Basic Reporting - Week 4**
+### **Epic 2: Basic Reporting - Week 4**
 
-#### **User Story 3.1: Transaction Overview**
+#### **User Story 2.1: Transaction Overview**
 **Goal**: Implement basic reporting and transaction overview functionality
 
 **Development Stories & Progress:**
@@ -191,7 +143,7 @@ on delivering business value and user outcomes.
 - [ ] Optimized database queries
 - [ ] Input validation and error handling
 
-#### **User Story 3.2: Category Analysis**
+#### **User Story 2.2: Category Analysis**
 **Goal**: Implement advanced reporting with category-based insights
 
 **Development Stories & Progress:**
@@ -210,9 +162,9 @@ on delivering business value and user outcomes.
 
 ---
 
-### **Epic 4: Dashboard & Visualization - Week 4**
+### **Epic 3: Dashboard & Visualization - Week 4**
 
-#### **User Story 3.3: Interactive Dashboard**
+#### **User Story 3.1: Interactive Dashboard**
 **Goal**: Provide users with visual financial insights and interactive reports
 
 **User Story Deliverables:**
@@ -227,9 +179,9 @@ on delivering business value and user outcomes.
 
 ---
 
-### **Epic 5: User Authentication & Security - Week 5**
+### **Epic 4: User Authentication & Security - Week 5**
 
-#### **User Story 1.3: Secure Access**
+#### **User Story 1.1: Secure Access**
 **Goal**: Implement comprehensive security measures for user data protection
 
 **User Story Deliverables:**
@@ -243,9 +195,9 @@ on delivering business value and user outcomes.
 
 ---
 
-### **Epic 6: System Integration & Quality - Week 6**
+### **Epic 5: System Integration & Quality - Week 6**
 
-#### **User Story 4.1: End-to-End Workflows**
+#### **User Story 5.1: End-to-End Workflows**
 **Goal**: Ensure all features work together seamlessly for complete user workflows
 
 **User Story Deliverables:**
@@ -321,12 +273,12 @@ on delivering business value and user outcomes.
 ## 📊 OVERALL PROGRESS SUMMARY
 
 ### **Epic Completion Status**
-- [ ] **Epic 1: User Module** - 0/2 User Stories (0% Complete)
-- [ ] **Epic 2: Transaction Module** - 0/5 User Stories (0% Complete)  
-- [ ] **Epic 3: Basic Reporting** - 0/2 User Stories (0% Complete)
-- [ ] **Epic 4: Dashboard & Visualization** - 0/1 User Stories (0% Complete)
-- [ ] **Epic 5: User Authentication & Security** - 0/1 User Stories (0% Complete)
-- [ ] **Epic 6: System Integration & Quality** - 0/1 User Stories (0% Complete)
+- [ ] **Epic 1: Transaction Module** - 0/5 User Stories (0% Complete)
+- [ ] **Epic 2: Basic Reporting** - 0/2 User Stories (0% Complete)
+- [ ] **Epic 3: Dashboard & Visualization** - 0/1 User Stories (0% Complete)
+- [ ] **Epic 4: User Authentication & Security** - 0/1 User Stories (0% Complete)
+- [ ] **Epic 5: System Integration & Quality** - 0/1 User Stories (0% Complete)
+- [ ] **Epic 6: Infrastructure & Quality** - 0/5 Complete
 
 ### **Development Stories Progress**
 - [ ] **Week 1-2**: DS-1 through DS-7 (Transaction Foundation) - 0/7 Complete

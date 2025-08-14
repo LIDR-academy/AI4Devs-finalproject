@@ -7,9 +7,92 @@ Personal Finance Management System, aligned with the 6-week development timeline
 
 ---
 
-## Epic 1: User Module (Mock Implementation) - Week 5
+## Epic 1: Transaction Module (Core Functionality) - Weeks 1-3
 
-### User Story 1.1: Basic User Setup
+### User Story 1.1: Basic Transaction Creation (Week 1-2)
+
+**Scenario: Create income transaction**
+
+```
+Given a mock user exists in the system
+When the user creates a new transaction with positive amount
+And the user sets transaction date and description
+And the user chooses a predefined category
+Then the transaction should be saved successfully
+And the transaction should appear in the transaction list
+And the transaction should show as income type
+```
+
+**Scenario: Create expense transaction**
+
+```
+Given a mock user exists in the system
+When the user creates a new transaction with negative amount
+And the user sets transaction date and description
+And the user chooses a predefined category
+Then the transaction should be saved successfully
+And the transaction should appear in the transaction list
+And the transaction should show as expense type
+```
+
+**Scenario: Validate transaction data**
+
+```
+Given a mock user exists in the system
+When the user tries to create a transaction with invalid data
+Then the system should show validation errors
+And the transaction should not be saved
+And helpful error messages should be displayed
+```
+
+### User Story 1.2: Transaction Categories (Week 3)
+
+**Scenario: View predefined categories**
+
+```
+Given a mock user exists in the system
+When the user accesses the category list
+Then the system should display predefined categories
+And each category should have a name and color
+And categories should be organized logically
+```
+
+**Scenario: Create custom category**
+
+```
+Given a mock user exists in the system
+When the user creates a new custom category
+And the user sets category name and color
+Then the category should be saved successfully
+And the category should appear in the category list
+And the category should be available for transactions
+```
+
+---
+
+## Epic 4: User Authentication & Security - Week 5
+
+### User Story 4.1: Secure Access
+
+**Scenario: User registration**
+
+```
+Given the system is initialized
+When a new user registers with valid information
+Then a user account should be created
+And the user should receive email verification
+And the user should be able to log in after verification
+```
+
+**Scenario: User login**
+
+```
+Given a verified user exists in the system
+When the user logs in with correct credentials
+Then the user should be authenticated successfully
+And the user should receive a JWT token
+And the user should be redirected to the dashboard
+```
 
 **Scenario: Mock user is created with default profile**
 
@@ -22,175 +105,9 @@ And the user profile should include financial preferences (hourly rate, income f
 And the system should use single mock user for all operations
 ```
 
-**Scenario: User has basic settings configured**
-
-```
-Given a mock user exists in the system
-When the user profile is accessed
-Then the user should have timezone set to default
-And the user should have currency set to default
-And the user should have language set to default
-```
-
-**Scenario: User profile includes financial preferences**
-
-```
-Given a mock user exists in the system
-When the user profile is viewed
-Then the profile should display hourly rate
-And the profile should display income frequency
-And the profile should display employment status
-```
-
-### User Story 1.2: User Profile Management
-
-**Scenario: View current profile information**
-
-```
-Given a mock user exists in the system
-When the user requests their profile information
-Then the system should return the user's personal details
-And the system should return the user's financial preferences
-And the system should return the user's basic settings
-```
-
-**Scenario: Edit personal details**
-
-```
-Given a mock user exists in the system
-When the user updates their name
-And the user updates their timezone
-And the user updates their currency
-Then the changes should be saved to the profile
-And the updated information should be returned
-```
-
-**Scenario: Set financial preferences**
-
-```
-Given a mock user exists in the system
-When the user sets their hourly rate
-And the user sets their employment status
-And the user sets their income frequency
-Then the financial preferences should be saved
-And the updated preferences should be returned
-```
-
-**Scenario: Validate input fields**
-
-```
-Given a mock user exists in the system
-When the user enters invalid data for any field
-Then the system should return validation errors
-And the changes should not be saved
-```
-
 ---
 
-## Epic 2: Transaction Module (Core Functionality) - Weeks 1-3
-
-### User Story 2.1: Basic Transaction Creation (Week 1-2)
-
-**Scenario: Create income transaction**
-
-```
-Given a mock user exists in the system
-When the user creates a new transaction with positive amount
-And the user sets transaction date and description
-And the user chooses a predefined category
-Then the income transaction should be created successfully
-And the transaction should be stored in the database
-```
-
-**Scenario: Create expense transaction**
-
-```
-Given a mock user exists in the system
-When the user creates a new transaction with negative amount
-And the user sets transaction date and description
-And the user chooses a predefined category
-Then the expense transaction should be created successfully
-And the transaction should be stored in the database
-```
-
-**Scenario: Validate transaction data**
-
-```
-Given a mock user exists in the system
-When the user attempts to create a transaction with invalid data
-Then the system should return validation errors
-And the transaction should not be created
-```
-
-**Scenario: View transaction list (Frontend - Week 2)**
-
-```
-Given transactions exist in the system
-When the user opens the transaction management interface
-Then they should see a clean, organized list of transactions
-And the list should be sortable by date, amount, and category
-And the interface should work smoothly on both mobile and desktop
-```
-
-**Scenario: Edit transaction through interface**
-
-```
-Given a transaction exists in the system
-When the user edits the transaction through the interface
-Then the changes should be saved successfully
-And the user should see confirmation of the update
-And the updated transaction should be displayed in the list
-```
-
-### User Story 2.2: Transaction Categories (Week 3)
-
-**Scenario: View list of available categories**
-
-```
-Given categories exist in the system
-When the user requests the list of categories
-Then the system should return all available categories
-And each category should have a name and color
-```
-
-**Scenario: Create custom category**
-
-```
-Given a mock user exists in the system
-When the user creates a new custom category
-And the user provides a name and color for the category
-Then the custom category should be created successfully
-And the category should be available for transaction assignment
-```
-
-**Scenario: Assign category to transaction**
-
-```
-Given a transaction exists in the system
-And categories are available
-When the user assigns a category to the transaction
-Then the transaction should be updated with the selected category
-```
-
-**Scenario: Edit existing category**
-
-```
-Given a category exists in the system
-When the user edits the category name or color
-Then the category should be updated successfully
-And all transactions using this category should reflect the changes
-```
-
-**Scenario: Delete unused category**
-
-```
-Given a category exists in the system
-And no transactions are using this category
-When the user deletes the category
-Then the category should be removed from the system
-```
-
-### User Story 2.3: Transaction Frequency (Week 3)
+## Epic 2: Transaction Frequency (Week 3)
 
 **Scenario: Set one-time transaction**
 

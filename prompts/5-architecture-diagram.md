@@ -2,7 +2,7 @@
 graph TB
     %% Frontend Layer
     subgraph "Frontend Layer"
-        Web["Web App (React/Next.js)"]
+        Web["Web App (Next.js SPA)"]
         Mobile["Mobile App (React Native)"]
     end
 
@@ -19,7 +19,7 @@ graph TB
             UserRepository["User Repository"]
         end
 
-        subgraph "Transactions Module"
+        subgraph "Transaction Module"
             TransactionEntity["Transaction Entity"]
             CategoryEntity["Category Entity"]
             FrequencyEntity["Frequency Entity"]
@@ -34,8 +34,8 @@ graph TB
 
     %% Infrastructure Layer
     subgraph "Infrastructure Layer"
-        Database["Database (Firestore)"]
-        AuthService["Auth Service"]
+        Database["Database (PostgreSQL)"]
+        AuthService["JWT Auth Service"]
         Storage["Cloud Storage"]
     end
 
@@ -93,4 +93,3 @@ graph TB
     class UserEntity,UserService,UserRepository,TransactionEntity,CategoryEntity,FrequencyEntity,CurrencyEntity,BankAccountEntity,CompositionEntity,TransactionService,TransactionRepository backend
     class Database,AuthService,Storage infrastructure
     class CurrencyAPI,BankAPI external
-```

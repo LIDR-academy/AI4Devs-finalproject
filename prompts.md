@@ -269,7 +269,7 @@ Instructions:
 
 RESULT: `git show b7dd28c`
 
-**Prompt 3:**
+**Prompt 3:** review the docs in @prompts/ using @ideation.mdc 
 
 ---
 
