@@ -1,34 +1,34 @@
 # 🐛 Known Bugs & Issues
 
 ## 🔴 High Priority
-- [ ] **BUG-001**: Create transaction does not show category right away
+- [ ] **BUG-001**: Transaction list does not show category after creating transaction
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
   - **Impact**: Users can't immediately see which category was selected after creating a transaction
   - **Steps to reproduce**: 
     1. Create a new transaction with a category
     2. Submit the form
     3. Transaction appears in list but category is not visible
-  - **Expected behavior**: Transaction should display with the selected category name/color
-  - **Actual behavior**: Category information is missing or not displayed
-  - **Environment**: Frontend transaction creation flow
+  - **Expected behavior**: Transaction should display with the selected category name/color in the list
+  - **Actual behavior**: Category information is missing or not displayed in the transaction list
+  - **Environment**: Frontend transaction list display
   - **Priority**: High
-  - **Component**: TransactionForm, TransactionList
+  - **Component**: TransactionList, state management
 
 - [x] **BUG-002**: Get a fail message when deleting a transaction but database works
 
-- [ ] **BUG-003**: When change a transaction's category, it does not show right away
+- [ ] **BUG-003**: Transaction list does not show category change immediately after editing
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
   - **Impact**: Users can't immediately see category changes, requiring page refresh
   - **Steps to reproduce**:
     1. Edit an existing transaction
     2. Change the category
     3. Save the changes
-    4. Category change is not reflected in the UI
+    4. Category change is not reflected in the transaction list
   - **Expected behavior**: Category change should be immediately visible in the transaction list
-  - **Actual behavior**: Old category still shows until page refresh
-  - **Environment**: Frontend transaction editing flow
+  - **Actual behavior**: Old category still shows in the list until page refresh
+  - **Environment**: Frontend transaction list display
   - **Priority**: High
-  - **Component**: TransactionForm, TransactionList, state management
+  - **Component**: TransactionList, state management
 
 - [ ] **BUG-004**: Dashboard cards not connected to database or wrong user data
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
