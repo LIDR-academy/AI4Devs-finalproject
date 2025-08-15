@@ -141,6 +141,8 @@ Context: change @./contributions.md to add the following con  tent before "Modul
 - How to work with submodules: contributors should be able to run the project from root but also from the subrepositories individually
 - Development guidelines: include archteture, testing, and make the module structre part of it
 
+RESULT: `git show cbc0c47`
+
 ### **2.4. Infraestructura y despliegue**
 
 **Prompt 1:**
