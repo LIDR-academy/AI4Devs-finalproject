@@ -60,19 +60,7 @@ When an issue is solved, change [ ] to [x], also remove details of the issue, ju
 
 - [x] **BUG-006**: Users cannot filter transactions by category and frequency
 
-- [ ] **BUG-007**: Transaction duplication when switching between edit and create modes
-  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
-  - **Impact**: Users see duplicate transactions in the list, causing data confusion and potential financial tracking errors
-  - **Steps to reproduce**:
-    1. Click to edit an existing transaction
-    2. Click on "create new transaction" button
-    3. Fill out and save the new transaction
-    4. The previously opened transaction gets duplicated in the list
-  - **Expected behavior**: Creating a new transaction should not affect existing transactions
-  - **Actual behavior**: The transaction that was open for editing gets duplicated
-  - **Environment**: Frontend transaction creation and editing flow
-  - **Priority**: High
-  - **Component**: TransactionForm, TransactionList, state management
+- [x] **BUG-007**: Transaction duplication when switching between edit and create modes
 
 - [ ] **BUG-008**: Dashboard amounts not normalized by frequency for monthly view
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
@@ -93,10 +81,10 @@ When an issue is solved, change [ ] to [x], also remove details of the issue, ju
 ## 📊 Bug Statistics
 - **Total Bugs**: 9
 - **Critical**: 0
-- **High**: 6
+- **High**: 5
 - **Medium**: 0
 - **Low**: 0
-- **Fixed**: 3
+- **Fixed**: 4
 
 ## 🔍 **Common Patterns**
 These bugs appear to be related to **state management** and **UI synchronization** issues:
