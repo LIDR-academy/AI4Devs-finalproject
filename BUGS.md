@@ -1,5 +1,7 @@
 # 🐛 Known Bugs & Issues
 
+When an issue is solved, change [ ] to [x], also remove details of the issue, just the overview/title
+
 ## 🔴 High Priority
 - [ ] **BUG-001**: Transaction list does not show category after creating transaction
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
@@ -86,27 +88,15 @@
   - **Priority**: High
   - **Component**: Dashboard cards, transaction aggregation logic, frequency calculation
 
-- [ ] **BUG-009**: Overview cards disappear when transaction panel opens
-  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
-  - **Impact**: Users lose visibility of financial overview (total expenses, total income, net amount) when adding/editing transactions
-  - **Steps to reproduce**:
-    1. View dashboard with overview cards showing totals
-    2. Click to add new transaction or edit existing one
-    3. Transaction panel opens
-    4. Overview cards disappear from view
-  - **Expected behavior**: Overview cards should remain visible or accessible while transaction panel is open
-  - **Actual behavior**: Overview cards completely disappear when transaction panel opens
-  - **Environment**: Frontend transaction panel and dashboard layout
-  - **Priority**: High
-  - **Component**: TransactionForm, dashboard layout, component visibility logic
+- [x] **BUG-009**: Overview cards disappear when transaction panel opens
 
 ## 📊 Bug Statistics
 - **Total Bugs**: 9
 - **Critical**: 0
-- **High**: 7
+- **High**: 6
 - **Medium**: 0
 - **Low**: 0
-- **Fixed**: 2
+- **Fixed**: 3
 
 ## 🔍 **Common Patterns**
 These bugs appear to be related to **state management** and **UI synchronization** issues:
