@@ -47,6 +47,47 @@ docker compose down
 
 ## Working with Submodules
 
+Git submodules allow you to keep a Git repository as a subdirectory of another Git repository. This lets you clone another repository into your project and keep your commits separate.
+
+### Adding a New Submodule
+```bash
+git submodule add <repository-url> <path>
+git submodule init
+git submodule update
+```
+
+### Updating Submodules from Origin
+```bash
+# Update all submodules to their latest commits
+git submodule update --remote
+
+# Update a specific submodule
+git submodule update --remote <submodule-name>
+```
+
+### Pushing Root Changes with Submodules
+
+You can work on many submodules simultaneously using everyday git commands
+
+```bash
+# If you have to work on a feature in a submodule
+cd <submodule-directory>
+# Do the changes
+git add .
+git cm -m "feat: work is done"
+git push origin main
+```
+
+The root module in origin also needs to be pushed
+
+```bash
+# The root repository needs to have the changes of the submodules added
+cd .. #go back to the root
+git add <submodule-directory-1>  <submodule-directory-2> 
+git commit -m "Update submodules"
+git push origin main
+```
+
 ### Repository Structure
 - **Root**: Contains main docker compose and project documentation
 - **Backend**: NestJS API service with domain-driven design
