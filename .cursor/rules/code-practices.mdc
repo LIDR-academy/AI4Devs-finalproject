@@ -14,3 +14,4 @@ alwaysApply: true
 - Start with the simplest solution and refactor to improve it
 - Follow best practices such as SOLID, DRY, KISS, YAGNI, etc.
 - All code should be covered by tests, primarily integration tests
+- **Always** do changes following the vertical slice practices, that is, changes should affect the following when convinient: frontend, backend, database and documentation
