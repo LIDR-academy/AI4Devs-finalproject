@@ -2,34 +2,39 @@ version: "3.8"
 
 services:
   db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=salary_tracker
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    extends:
+      file: ./backend/docker-compose.yml
+      service: db
+
+  redis:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: redis
 
   backend:
     extends:
       file: ./backend/docker-compose.yml
       service: app
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://user:password@db:5432/salary_tracker
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
-    command: npm run start:dev
+
+  frontend:
+    extends:
+      file: ./frontend/docker-compose.yml
+      service: app
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
 
 volumes:
   postgres_data:
+  redis_data:
