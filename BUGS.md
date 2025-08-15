@@ -14,18 +14,7 @@
   - **Priority**: High
   - **Component**: TransactionForm, TransactionList
 
-- [ ] **BUG-002**: Get a fail message when deleting a transaction but database works
-  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
-  - **Impact**: Users see error messages even when operations succeed, causing confusion
-  - **Steps to reproduce**:
-    1. Delete a transaction
-    2. See error message about deletion failure
-    3. Refresh page - transaction is actually gone from database
-  - **Expected behavior**: Success message when transaction is deleted, or clear error if deletion fails
-  - **Actual behavior**: Error message shown despite successful deletion
-  - **Environment**: Frontend transaction deletion flow
-  - **Priority**: High
-  - **Component**: TransactionList, API service
+- [x] **BUG-002**: Get a fail message when deleting a transaction but database works
 
 - [ ] **BUG-003**: When change a transaction's category, it does not show right away
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
@@ -125,10 +114,10 @@
 ## 📊 Bug Statistics
 - **Total Bugs**: 9
 - **Critical**: 0
-- **High**: 9
+- **High**: 8
 - **Medium**: 0
 - **Low**: 0
-- **Fixed**: 0
+- **Fixed**: 1
 
 ## 🔍 **Common Patterns**
 These bugs appear to be related to **state management** and **UI synchronization** issues:
