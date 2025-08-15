@@ -133,7 +133,13 @@ Output: markdown file
 [RESULT 1](./prompts/14-project-description.md)
 [RESULT 2](./contributions.md)
 
-**Prompt 2:**
+**Prompt 2:** Role: you're a software architect documenting how to run the project
+
+Context: change @./contributions.md to add the following content before "Module Structure"
+
+- Setup: what install and in which order
+- How to work with submodules: contributors should be able to run the project from root but also from the subrepositories individually
+- Development guidelines: include archteture, testing, and make the module structre part of it
 
 **Prompt 3:**
 
@@ -155,7 +161,7 @@ Output: markdown file
 
 ### **2.6. Tests**
 
-**Prompt 1:**
+**Prompt 1:** 
 
 **Prompt 2:**
 
