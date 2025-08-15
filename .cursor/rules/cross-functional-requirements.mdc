@@ -1,0 +1,64 @@
+---
+alwaysApply: true
+---
+
+# Cross-Functional Requirements
+
+## Overview
+Cross-functional requirements are requirements that span across different functional areas of the software, ensuring the system is robust, secure, scalable, and provides a consistent user experience.
+
+## Performance Requirements
+- **API Response Time**: < 500ms for 95% of requests
+- **Frontend Load Time**: < 2 seconds for page loads
+- **Database Query Performance**: Optimized queries with caching (hit rate > 80%)
+- **Concurrent Operations**: Handle multiple users creating transactions simultaneously
+
+## Security Requirements
+- **Data Encryption**: All sensitive financial data encrypted
+- **Authentication**: JWT-based authentication with secure session management
+- **Access Control**: Role-based access control (RBAC) implementation
+- **Password Security**: Strength validation, hashing, and secure reset functionality
+- **Session Security**: Protection against session hijacking and secure termination
+
+## Scalability Requirements
+- **Multi-User Support**: Handle multiple users with isolated data
+- **Database Scaling**: Scalable data management
+- **Caching Strategy**: Caching implementation for expensive operations
+- **Vertical Slicing Architecture**: Modular design for easy feature expansion
+
+## Maintainability Requirements
+- **Code Coverage**: > 80% for backend, > 70% for frontend
+- **DDD Principles**: Strict adherence to domain boundaries
+- **Testing Strategy**: TDD + BDD with comprehensive integration tests
+- **Documentation**: API documentation (Swagger/OpenAPI) for all endpoints
+- **Modular Architecture**: Clear separation of concerns and business domains
+
+## Quality Requirements
+- **Zero Critical Bugs**: No critical bugs in production
+- **Comprehensive Error Handling**: User-friendly error messages and validation
+- **Database Transactions**: Atomic operations for data integrity
+- **Input Validation**: Comprehensive validation at boundaries using DTOs
+
+## Accessibility Requirements
+- **WCAG 2.1 AA Compliance**: Full accessibility standards
+- **Screen Reader Support**: Proper ARIA labels and logical navigation
+- **Keyboard Navigation**: All functionality accessible via keyboard
+- **Mobile Responsiveness**: Touch-friendly interface across all devices
+
+## Cross-Platform Requirements
+- **Browser Compatibility**: Consistent functionality across different browsers
+- **Device Support**: Responsive design for mobile, tablet, and desktop
+- **Offline Support**: Maintain functionality without internet connection
+- **Multi-Device Sync**: Real-time data synchronization across devices
+
+## Internationalization Requirements
+- **Multi-Language Support**: English and Spanish language support
+- **Currency Support**: Multiple currency handling (USD, EUR, GBP, etc.)
+- **Localized Formats**: Date, number, and currency formatting per locale
+
+## Implementation Notes
+- These requirements apply to all development phases and user stories
+- Must be considered during vertical slicing implementation
+- Testing should validate compliance with these requirements
+- Performance and security requirements are non-negotiable
+- Accessibility requirements ensure inclusive user experience
