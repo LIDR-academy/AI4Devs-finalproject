@@ -56,18 +56,7 @@
   - **Priority**: High
   - **Component**: TransactionList, API service, filtering logic
 
-- [ ] **BUG-006**: Users cannot filter transactions by category and frequency
-  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
-  - **Impact**: Users cannot effectively organize and find transactions by category or recurring frequency
-  - **Steps to reproduce**:
-    1. Navigate to transaction list
-    2. Try to filter by category (e.g., "Food", "Transport")
-    3. Try to filter by frequency (e.g., "Monthly", "Weekly", "One-time")
-  - **Expected behavior**: Users should be able to filter transactions by both category and frequency
-  - **Actual behavior**: No filtering options available for category or frequency
-  - **Environment**: Frontend transaction filtering
-  - **Priority**: High
-  - **Component**: TransactionList, filtering UI, API service
+- [x] **BUG-006**: Users cannot filter transactions by category and frequency
 
 - [ ] **BUG-007**: Transaction duplication when switching between edit and create modes
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
@@ -114,10 +103,10 @@
 ## 📊 Bug Statistics
 - **Total Bugs**: 9
 - **Critical**: 0
-- **High**: 8
+- **High**: 7
 - **Medium**: 0
 - **Low**: 0
-- **Fixed**: 1
+- **Fixed**: 2
 
 ## 🔍 **Common Patterns**
 These bugs appear to be related to **state management** and **UI synchronization** issues:
