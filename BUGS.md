@@ -1,36 +1,40 @@
 # 🐛 Known Bugs & Issues
 
-When an issue is solved, change [ ] to [x], also remove details of the issue, just the overview/title
+Follow this template:
+
+- [ ] **BUG-XXX**: Title
+  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
+  - **Impact**: LOREM
+  - **Steps to reproduce**:
+    1. LOREM
+    2. IMPSUM
+  - **Expected behavior**: LOREM
+  - **Actual behavior**: LOREM
+  - **Environment**: LOREM
+  - **Priority**: High/Medium/Low
+  - **Component**: LOREM
+
+When an issue is solved, change [ ] to [x] and remove everything from the template but the title
 
 ## 🔴 High Priority
-- [ ] **BUG-001**: Transaction list does not show category after creating transaction
+- [ ] **BUG-010**: Missing end-to-end tests for critical user flows
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
-  - **Impact**: Users can't immediately see which category was selected after creating a transaction
-  - **Steps to reproduce**: 
-    1. Create a new transaction with a category
-    2. Submit the form
-    3. Transaction appears in list but category is not visible
-  - **Expected behavior**: Transaction should display with the selected category name/color in the list
-  - **Actual behavior**: Category information is missing or not displayed in the transaction list
-  - **Environment**: Frontend transaction list display
+  - **Impact**: No confidence that user journeys work correctly across frontend, backend, and database layers
+  - **Steps to reproduce**:
+    1. Run test suite
+    2. Notice only unit and integration tests exist
+    3. No end-to-end tests covering complete user workflows
+  - **Expected behavior**: End-to-end tests should cover critical user flows like transaction creation, editing, deletion, and dashboard updates
+  - **Actual behavior**: Missing end-to-end tests for complete user journeys
+  - **Environment**: Test suite and CI/CD pipeline
   - **Priority**: High
-  - **Component**: TransactionList, state management
+  - **Component**: Test infrastructure, user workflow validation
+
+- [x] **BUG-001**: Transaction list does not show category after creating transaction
 
 - [x] **BUG-002**: Get a fail message when deleting a transaction but database works
 
-- [ ] **BUG-003**: Transaction list does not show category change immediately after editing
-  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
-  - **Impact**: Users can't immediately see category changes, requiring page refresh
-  - **Steps to reproduce**:
-    1. Edit an existing transaction
-    2. Change the category
-    3. Save the changes
-    4. Category change is not reflected in the transaction list
-  - **Expected behavior**: Category change should be immediately visible in the transaction list
-  - **Actual behavior**: Old category still shows in the list until page refresh
-  - **Environment**: Frontend transaction list display
-  - **Priority**: High
-  - **Component**: TransactionList, state management
+- [x] **BUG-003**: Transaction list does not show category change immediately after editing
 
 - [ ] **BUG-004**: Dashboard cards not connected to database or wrong user data
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
@@ -81,10 +85,10 @@ When an issue is solved, change [ ] to [x], also remove details of the issue, ju
 ## 📊 Bug Statistics
 - **Total Bugs**: 9
 - **Critical**: 0
-- **High**: 5
+- **High**: 4
 - **Medium**: 0
 - **Low**: 0
-- **Fixed**: 4
+- **Fixed**: 6
 
 ## 🔍 **Common Patterns**
 These bugs appear to be related to **state management** and **UI synchronization** issues:
