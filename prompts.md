@@ -161,7 +161,31 @@ RESULT: `git show cbc0c47`
 
 ### **2.6. Tests**
 
-**Prompt 1:** 
+**Prompt 1:** Role: you're a full-stack engineer with focus on keeping the system working holistically
+
+Task: create instructions on how to setup tests, the instructions will be given to an AI agent, so use the best practices of prompt engineering
+
+Context: we need to setup end-to-end and integration tests to be able to practice TDD while developing the app
+
+Instructions:
+
+- We need a setup that will work for using TDD + BDD (with gherkin) and submodules
+  - Integration and E2E tests live on the root project, not submodule, so we can test all points of the app
+  - Submodules might have their own tests but they will be mostly unit tests, maybe some component testing
+- Integration tests are reserved for
+  - Happy flow (use real FE, BE, and database, mocking or hard-code fake useful result is okay for external services)
+  - Unhappy flow (we mock the database result)
+    - Generic error: for non-specified, unknown or unexpected errors
+    - Specific error: for business cases and common technical issues i.e. invalid user input
+- E2E tests are reserved for happy flows that meet  the following condition
+  - cheap to run
+  - give consistent results
+- E2E takes precedence over integration test when those conditions are met
+- Specify the stack used in the project
+
+Output: markdown file to be used in tools like ChatGPT
+
+[RESULT](./prompts/15-testing-strategy.md)
 
 **Prompt 2:**
 
