@@ -23,11 +23,10 @@ git submodule update --init --recursive
 
 ### 2. Environment Configuration
 
-Create `.env` files in the submodule directories, we suggest just copy the examples with the commands velow
+Environment variables are configured in Docker Compose files to avoid configuration issues. You can optionally create `.env` files to override defaults. A good start is copying the provided examples:
 
 ```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+cp .env.example .env
 ```
 
 ### 3. Running the Project

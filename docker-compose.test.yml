@@ -1,22 +1,20 @@
-
-
 services:
   test-backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    env_file:
-      - .env.test
-    environment:
-      DATABASE_URL: postgresql://test_user:test_password@test-db:5432/finance_test
     ports:
-      - "${BACKEND_PORT}:3001"
+      - "${BACKEND_PORT:-3005}:${BACKEND_PORT:-3005}"
+    environment:
+      NODE_ENV: test
+      BACKEND_PORT: ${BACKEND_PORT:-3005}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@test-db:5432/${POSTGRES_DB:-salary_tracker}
     volumes:
       - ./backend:/app
       - /app/node_modules
     command: npm run start:dev
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${BACKEND_PORT:-3005}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -24,34 +22,57 @@ services:
     depends_on:
       test-db:
         condition: service_healthy
+    networks:
+      - test-network
 
   test-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    env_file:
-      - .env.test
     ports:
-      - "${FRONTEND_PORT}:3002"
+      - "${FRONTEND_PORT:-3007}:${FRONTEND_PORT:-3007}"
+    environment:
+      NODE_ENV: test
+      FRONTEND_PORT: ${FRONTEND_PORT:-3007}
+      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-3005}
     volumes:
       - ./frontend:/app
       - /app/node_modules
     command: npm run dev
     depends_on:
       - test-backend
+    networks:
+      - test-network
 
   test-db:
-    extends:
-      file: ./docker-compose.yml
-      service: db
-    env_file:
-      - .env.test
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-salary_tracker}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5433}
     ports:
-      - "${POSTGRES_EXTERNAL_PORT}:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - test_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-salary_tracker}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    networks:
+      - test-network
 
-
+networks:
+  test-network:
+    name: ai4devs-test-network
+    driver: bridge
 
 volumes:
   test_postgres_data:

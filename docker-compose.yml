@@ -1,15 +1,10 @@
-version: "3.8"
-
 services:
   db:
     extends:
       file: ./backend/docker-compose.yml
       service: db
-
-  redis:
-    extends:
-      file: ./backend/docker-compose.yml
-      service: redis
+    networks:
+      - salary-tracker-network
 
   backend:
     extends:
@@ -18,11 +13,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
+    networks:
+      - salary-tracker-network
 
   frontend:
     extends:
@@ -34,7 +29,13 @@ services:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
+    networks:
+      - salary-tracker-network
+
+networks:
+  salary-tracker-network:
+    name: ai4devs-salary-tracker-network
+    driver: bridge
 
 volumes:
   postgres_data:
-  redis_data:
