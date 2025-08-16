@@ -191,7 +191,13 @@ Output: markdown file to be used in tools like ChatGPT
 
 RESULT: `git show 03cf4d6`
 
-**Prompt 3:**
+**Prompt 3:**  create a testing rule in @.cursor/ based on
+
+- @15-testing-strategy.md 
+- @ideation.mdc 
+- best testing practices
+
+[RESULT](./.cursor/rules/testing.mdc)
 
 ---
 

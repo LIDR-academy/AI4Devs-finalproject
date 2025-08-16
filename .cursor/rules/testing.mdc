@@ -1,0 +1,196 @@
+---
+description: Comprehensive testing approach integrating TDD+BDD practices with vertical slice development and ideation methodology
+alwaysApply: true
+---
+
+# Core Principles
+
+**Testing is NOT an afterthought**, it's integrated into every vertical slice from ideation to delivery. Every feature must have comprehensive test coverage before implementation.
+
+# Testing Strategy Hierarchy
+
+## 1. Integration Tests (Highest Priority)
+- **Location**: `/test/integration/tests/` at project root
+- **Scope**: Full user journey testing for specific activity/variation
+- **Database**: Real PostgreSQL in Docker containers
+- **Coverage**: Happy flows (no mocking) + unhappy flows (mocking when necessary)
+- **Execution**: Against Docker containers, < 30s per test
+- **Why**: Validates system holistically, catches integration issues early
+
+## 2. E2E Tests (Medium Priority)
+- **Location**: `/test/e2e/tests/` at project root
+- **Scope**: Complete user workflows, UI interactions
+- **Database**: Real PostgreSQL in Docker containers
+- **Coverage**: Happy flows + smoke tests crawling through app pages
+- **Execution**: Against Docker containers, < 2min per test
+- **Why**: Use when conditions are cheap to run + consistent results
+
+## 3. Unit Tests (Lowest Priority)
+- **Location**: Close to code in each submodule
+- **Scope**: Single function/class testing
+- **Database**: Mocked
+- **Coverage**: Individual component behavior and edge cases
+- **Why**: For complementing code that integration and E2E could not cover
+
+# Test Organization Structure
+
+Follow the capability/feature/activity/variation hierarchy:
+
+```
+test/
+├── tests/
+│   ├── capability-name/
+│   │   └── feature-name/
+│   │       └── activity-name/
+│   │           ├── 1-happy-flow.int.spec.ts
+│   │           ├── 2-some-variation.int.spec.ts
+│   │           └── 3-different-variation.e2e.spec.ts
+```
+
+# Test Naming Convention
+
+- **Integration Tests**: `*.int.spec.ts`
+- **E2E Tests**: `*.e2e.spec.ts`
+- **Unit Tests**: `*.spec.ts` (in submodules)
+
+# Test Structure & BDD Implementation
+
+```typescript
+describe('Capability Name', () => {
+  describe('Feature Name', () => {
+    describe('Activity Name', () => {
+      describe('Given [context]', () => {
+        describe('When [action]', () => {
+          describe('Then [expected result]', () => {
+            it('happy flow variation', async () => {
+              // Arrange: Setup test data using builders
+              // Act: Execute the activity
+              // Assert: Verify business outcomes
+            });
+          });
+        });
+      });
+      describe('Given [slightly different context]', () => {
+        describe('When [same action]', () => {
+          describe('Then [other result]', () => {            
+            it('unhappy flow variation', async () => {
+              // Test error scenarios and edge cases
+            });
+            
+            it('edge case variation', async () => {
+              // Test boundary conditions
+            });
+          });
+        });
+      });
+    });
+  });
+});
+```
+
+# Test Data Management
+
+## Use Test Builders
+- **Location**: `/test/builders/`
+- **Purpose**: Create consistent, realistic test data based on the business rules and contexts
+- **Pattern**: Fluent builder methods returning `this`
+- **Example**:
+```typescript
+const transaction = new TransactionBuilder()
+  .asIncome()
+  .withDescription('Salary')
+  .onDate(new Date())
+  .create();
+```
+
+## Data Cleanup
+- Reset database state between test runs
+- Use database transactions for test isolation
+- Ensure business data consistency
+
+# Vertical Slice Testing Requirements
+
+## Before Implementation
+1. **Identify each test variations** based on task at hand
+2. **Define acceptance criteria for each of them** in BDD style (Given/When/Then)
+3. **Create test structure** following capability/feature/activity hierarchy
+4. **Design test data** using appropriate builders
+
+## During Implementation
+1. **Write tests first** (TDD approach)
+2. **Implement minimal code** to pass tests
+3. **Refactor** while maintaining test coverage, untill all test passes
+    1. **Check** with me if we should continue refactoring, and if so, what we should aim to
+4. **Ensure business rules** are properly tested
+
+## After Implementation
+1. **Verify test coverage** > 80% backend, > 70% frontend
+2. **Run integration tests** against Docker containers
+3. **Validate business outcomes** not just technical implementation
+4. **Document test scenarios** for future reference
+
+# Testing Guidelines
+
+## Business-Focused Testing
+- **Test business logic**, not implementation details
+- **Cover business rules** defined in acceptance criteria
+- **Validate user workflows** end-to-end
+- **Test data integrity** and business constraints
+
+## Error Handling
+- **Happy path**: Core functionality works correctly, each activity must have one test covering its happy path
+- **Unhappy paths**: Error scenarios handled gracefully
+- **Edge cases**: Boundary conditions and unusual inputs, those can go to unit tests
+- **Critical failures**: System remains stable under stress
+
+## Performance & Reliability
+- **Fast execution**: Integration < 30s, E2E < 2min
+- **Consistent results**: Tests should be non-deterministic, using the builder correctly should be enough to create an illusion of tests being deterministic e.g. TransactionBuilder.asIncome method will randomly create positive amount for the transactionm as the important part here is that the income is positive
+- **Parallel execution**: Tests can run independently, use transactions to make sure that they don't interfere with each other
+- **Docker management**: Clean up containers after test runs
+
+# Cross-Functional Requirements Integration
+
+## Security Testing
+- **Authentication**: JWT validation and session management
+- **Authorization**: Role-based access control
+- **Data protection**: Sensitive data encryption and validation
+
+## Performance Testing
+- **API response time**: < 500ms for 95% of requests
+- **Database performance**: Optimized queries with caching
+- **Concurrent operations**: Multiple users simultaneously
+
+## Accessibility Testing
+- **WCAG 2.1 AA compliance**: Screen reader support
+- **Keyboard navigation**: All functionality accessible
+- **Mobile responsiveness**: Touch-friendly interface
+
+# Test Execution Commands
+
+```bash
+# Start Docker test environment
+npm run test:docker:up
+
+# Run integration tests
+npm run test:integration
+
+# Run E2E tests
+npm run test:e2e
+
+# Run with coverage
+npm run test:coverage
+
+# Clean up
+npm run test:docker:down
+```
+
+# When to Apply This Rule
+
+**ALWAYS** apply when:
+- Creating new features or capabilities
+- Implementing vertical slices
+- Writing user stories
+- Defining acceptance criteria
+- Refactoring existing code
+- Planning test coverage
