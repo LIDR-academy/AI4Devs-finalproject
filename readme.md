@@ -125,6 +125,43 @@ simple, flexible way
 
 > Describe brevemente algunos de los tests realizados
 
+#### Testing Strategy
+Our project follows a comprehensive **TDD + BDD approach** with **vertical slicing** development:
+
+- **E2E Tests**: Highest priority for happy flows, covering complete user workflows
+- **Integration Tests**: For costly/unreliable scenarios and multi-activity user journeys
+- **Unit Tests**: For individual component behavior and edge cases
+
+#### Test Organization
+Tests are organized by capability/feature/activity hierarchy:
+```
+test/tests/
+├── capability-name/
+│   ├── feature-name/
+│   │   └── activity-name/
+│   │       ├── 1-happy-flow.e2e.spec.ts
+│   │       └── 2-error-scenarios.int.spec.ts
+│   └── user-journeys/
+│       └── complete-workflow.int.spec.ts
+```
+
+#### Bug Fix Testing
+- **Regression Prevention**: Every bug fix includes a test that reproduces the bug
+- **Test First**: Write failing test before implementing the fix
+- **BUGS.md Update**: Mark bugs as resolved after tests pass
+- **Test Verification**: Ensure test fails before fix and passes after
+
+#### User Journey Testing
+- **Multi-Activity Flows**: Test complete workflows spanning multiple activities
+- **Integration Tests**: Use `.int.spec.ts` for complex user journeys
+- **Real Database**: PostgreSQL in Docker containers for realistic testing
+- **Business Logic**: Validate complex business rules across multiple features
+
+#### Test Coverage
+- **Backend**: > 80% coverage required
+- **Frontend**: > 70% coverage required
+- **Execution**: Integration tests < 30s, E2E tests < 2min
+
 ---
 
 ## 3. Modelo de Datos

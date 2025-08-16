@@ -71,14 +71,17 @@ test/
 ├── tests/
 │   ├── smoke-test.e2e.spec.ts
 │   └── capability-name/
-│       └── feature-name/
-│           └── activity-name/
-│               ├── 1-happy-flow.e2e.spec.ts
-│               ├── 2-invalid-user-input.int.spec.ts
-│               ├── 3-mailing-integration.int.spec.ts # the email service is expensive so it's an integration test rather than e2e
-│               ├── 4-empty-list.int.spec.ts
-│               ├── 5-another-happy-flow.e2e.spec.ts # happy flows default to E2E tests
-│               └── 6-critical-error-handling.int.spec.ts
+│       ├── feature-name/
+│       │   └── activity-name/
+│       │       ├── 1-happy-flow.e2e.spec.ts
+│       │       ├── 2-invalid-user-input.int.spec.ts
+│       │       ├── 3-mailing-integration.int.spec.ts # the email service is expensive so it's an integration test rather than e2e
+│       │       ├── 4-empty-list.int.spec.ts
+│       │       ├── 5-another-happy-flow.e2e.spec.ts # happy flows default to E2E tests
+│       │       └── 6-critical-error-handling.int.spec.ts
+│       └── user-journeys/
+│           ├── complete-budgeting-workflow.int.spec.ts
+│           └── end-to-end-financial-tracking.int.spec.ts
 ├── jest-integration.json
 ├── jest-e2e.json
 └── test-setup.ts
@@ -434,6 +437,57 @@ npm run test:docker:down
 ```
 
 **Note**: E2E tests should be run first as they cover happy flows by default. Integration tests are for scenarios where E2E would be costly or unreliable.
+
+## Bug Fix Testing Requirements
+
+### Regression Prevention
+- **Test First Approach**: Every bug fix must include a test that reproduces the bug
+- **Failing Test**: Write the failing test before implementing the fix
+- **Coverage**: Ensure the specific scenario that caused the bug is covered
+- **Documentation**: Document the bug scenario in test comments for future reference
+- **BUGS.md Update**: After test passes, update BUGS.md to mark the bug as resolved [x]
+- **Test Verification**: Ensure the test fails before the fix and passes after implementation
+
+### Bug Fix Workflow
+1. **Identify Bug**: Document in BUGS.md with clear reproduction steps
+2. **Write Failing Test**: Create test that reproduces the bug scenario
+3. **Implement Fix**: Write minimal code to make the test pass
+4. **Verify Fix**: Ensure test passes and bug is resolved
+5. **Update BUGS.md**: Mark bug as resolved [x]
+6. **Run Test Suite**: Ensure no regressions were introduced
+
+## Multi-Activity User Journey Testing
+
+### Cross-Activity Flows
+- **Complete Workflows**: Test user journeys spanning multiple activities
+- **Integration Points**: Verify data consistency between different activities
+- **State Management**: Test how system state changes across activity boundaries
+- **Business Rules**: Validate complex business logic across multiple features
+
+### Test Organization
+- **Location**: Place in dedicated files under `capability-name/user-journeys/`
+- **Naming**: Use descriptive names like `complete-budgeting-workflow.int.spec.ts`
+- **Test Type**: Use integration tests (`.int.spec.ts`) for multi-activity flows
+- **Scope**: Focus on critical user paths that involve multiple features working together
+
+### Why Integration Tests for User Journeys
+- **Complexity**: Multi-activity flows are complex and benefit from real database state
+- **Performance**: Faster execution than E2E tests for complex scenarios
+- **Reliability**: More stable than E2E tests for multi-step workflows
+- **Database State**: Real database interactions ensure data consistency across activities
+
+### Example User Journey Tests
+```typescript
+describe('User Journeys', () => {
+  describe('Complete Budgeting Workflow', () => {
+    it('should complete full budgeting cycle', async () => {
+      // Arrange: Setup complete test scenario
+      // Act: Execute multi-step workflow
+      // Assert: Verify end-to-end business outcomes
+    });
+  });
+});
+```
 
 ## Best Practices
 

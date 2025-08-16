@@ -42,12 +42,15 @@ Follow the capability/feature/activity/variation hierarchy:
 test/
 ├── tests/
 │   ├── capability-name/
-│   │   └── feature-name/
-│   │       └── activity-name/
-│   │           ├── 1-happy-flow.e2e.spec.ts
-│   │           ├── 2-some-variation.e2e.spec.ts
-│   │           ├── 3-costly-integration.int.spec.ts
-│   │           └── 4-invalid-input.int.spec.ts
+│   │   ├── feature-name/
+│   │   │   └── activity-name/
+│   │   │       ├── 1-happy-flow.e2e.spec.ts
+│   │   │       ├── 2-some-variation.e2e.spec.ts
+│   │   │       ├── 3-costly-integration.int.spec.ts
+│   │   │       └── 4-invalid-input.int.spec.ts
+│   │   └── user-journeys/
+│   │       ├── complete-budgeting-workflow.int.spec.ts
+│   │       └── end-to-end-financial-tracking.int.spec.ts
 ```
 
 # Test Naming Convention
@@ -146,6 +149,24 @@ const transaction = new TransactionBuilder()
 - **Cover business rules** defined in acceptance criteria
 - **Validate user workflows** end-to-end
 - **Test data integrity** and business constraints
+
+## Bug Fix Testing Requirements
+- **Regression Prevention**: Every bug fix must include a test that reproduces the bug
+- **Test First Approach**: Write the failing test before implementing the fix
+- **Coverage**: Ensure the specific scenario that caused the bug is covered
+- **Documentation**: Document the bug scenario in test comments for future reference
+- **BUGS.md Update**: After test passes, update BUGS.md to mark the bug as resolved [x]
+- **Test Verification**: Ensure the test fails before the fix and passes after implementation
+
+## Multi-Activity User Journey Testing
+- **Cross-Activity Flows**: Test complete user workflows spanning multiple activities
+- **Integration Points**: Verify data consistency between different activities
+- **State Management**: Test how system state changes across activity boundaries
+- **Location**: Place in dedicated files under `capability-name/user-journeys/`
+- **Naming**: Use descriptive names like `complete-budgeting-workflow.int.spec.ts`
+- **Test Type**: Use integration tests (`.int.spec.ts`) for multi-activity flows
+- **Scope**: Focus on critical user paths that involve multiple features working together
+- **Why Integration**: Multi-activity flows are complex and benefit from real database state
 
 ## Error Handling
 - **Happy path**: Core functionality works correctly, each activity must have one test covering its happy path
