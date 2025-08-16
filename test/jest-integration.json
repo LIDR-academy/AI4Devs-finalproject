@@ -18,6 +18,7 @@
   ],
   "coverageDirectory": "../coverage",
   "testTimeout": 30000,
+  "maxWorkers": 1,
   "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/../$1",
