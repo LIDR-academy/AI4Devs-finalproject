@@ -189,6 +189,8 @@ Output: markdown file to be used in tools like ChatGPT
 
 **Prompt 2:** setup the tests according to @15-testing-strategy.md 
 
+RESULT: `git show 03cf4d6`
+
 **Prompt 3:**
 
 ---
