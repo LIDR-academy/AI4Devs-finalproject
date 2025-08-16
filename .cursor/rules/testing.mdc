@@ -145,7 +145,7 @@ const transaction = new TransactionBuilder()
 
 ## Performance & Reliability
 - **Fast execution**: Integration < 30s, E2E < 2min
-- **Consistent results**: Tests should be non-deterministic, using the builder correctly should be enough to create an illusion of tests being deterministic e.g. TransactionBuilder.asIncome method will randomly create positive amount for the transactionm as the important part here is that the income is positive
+- **Consistent results**: Tests should be non-deterministic, using the builder correctly should be enough to create an illusion of tests being deterministic e.g. TransactionBuilder.asIncome method will randomly create positive amount for the transaction as the important part here is that the income is positive
 - **Parallel execution**: Tests can run independently, use transactions to make sure that they don't interfere with each other
 - **Docker management**: Clean up containers after test runs
 

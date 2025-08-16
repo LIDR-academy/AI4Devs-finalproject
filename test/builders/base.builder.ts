@@ -1,24 +1,24 @@
+import { Factory } from 'rosie';
+
+type BuilderFactory<T> = ReturnType<typeof Factory.define<T>>
+
 export abstract class BaseBuilder<T> {
-  protected abstract defaultData: Partial<T>;
-  protected currentData: Partial<T> = {};
+  private defaultData: Partial<T>;
+  protected options: Partial<T> = {};
   
-  constructor() {
-    this.reset();
+  constructor(protected readonly factory: BuilderFactory<T>) {
+    this.defaultData = this.factory.build();
   }
   
-  protected reset(): void {
-    this.currentData = { ...this.defaultData };
+  reset(): void {
+    this.options = { ...this.defaultData };
   }
   
-  create(data: Partial<T> = {}): T {
-    const result = { ...this.currentData, ...data } as T;
-    this.reset();
-    return result;
+  create(): T {
+    return this.factory.build(this.options);
   }
   
-  createMany(count: number, data: Partial<T> = {}): T[] {
-    const result = Array.from({ length: count }, () => this.create(data));
-    this.reset();
-    return result;
+  createMany(count: number): T[] {
+    return this.factory.buildList(count, this.options)
   }
 }
