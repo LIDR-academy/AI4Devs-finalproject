@@ -3,3 +3,4 @@ node_modules
 coverage
 playwright-report/index.html
 test-results/.last-run.json
+.DS_Store

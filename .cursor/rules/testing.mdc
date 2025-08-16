@@ -9,21 +9,23 @@ alwaysApply: true
 
 # Testing Strategy Hierarchy
 
-## 1. Integration Tests (Highest Priority)
-- **Location**: `/test/integration/tests/` at project root
-- **Scope**: Full user journey testing for specific activity/variation
-- **Database**: Real PostgreSQL in Docker containers
-- **Coverage**: Happy flows (no mocking) + unhappy flows (mocking when necessary)
-- **Execution**: Against Docker containers, < 30s per test
-- **Why**: Validates system holistically, catches integration issues early
-
-## 2. E2E Tests (Medium Priority)
+## 1. E2E Tests (Highest Priority for Happy Flows)
 - **Location**: `/test/e2e/tests/` at project root
-- **Scope**: Complete user workflows, UI interactions
+- **Scope**: Complete user workflows, UI interactions, happy flow variations
 - **Database**: Real PostgreSQL in Docker containers
 - **Coverage**: Happy flows + smoke tests crawling through app pages
 - **Execution**: Against Docker containers, < 2min per test
-- **Why**: Use when conditions are cheap to run + consistent results
+- **Why**: Happy flow variations should be tested E2E by default, except when integration is costly/unreliable
+- **Exception**: Use integration tests when external services are expensive, unreliable, or when mocking is necessary
+
+## 2. Integration Tests (For Costly/Unreliable Scenarios)
+- **Location**: `/test/integration/tests/` at project root
+- **Scope**: Full user journey testing for specific activity/variation
+- **Database**: Real PostgreSQL in Docker containers
+- **Coverage**: Happy flows (when E2E is not suitable) + unhappy flows (mocking when necessary)
+- **Execution**: Against Docker containers, < 30s per test
+- **Why**: Use when E2E tests are not suitable due to costly/unreliable integrations
+- **When to use**: External services that are expensive, unreliable, or require complex mocking
 
 ## 3. Unit Tests (Lowest Priority)
 - **Location**: Close to code in each submodule
@@ -42,9 +44,10 @@ test/
 │   ├── capability-name/
 │   │   └── feature-name/
 │   │       └── activity-name/
-│   │           ├── 1-happy-flow.int.spec.ts
-│   │           ├── 2-some-variation.int.spec.ts
-│   │           └── 3-different-variation.e2e.spec.ts
+│   │           ├── 1-happy-flow.e2e.spec.ts
+│   │           ├── 2-some-variation.e2e.spec.ts
+│   │           ├── 3-costly-integration.int.spec.ts
+│   │           └── 4-invalid-input.int.spec.ts
 ```
 
 # Test Naming Convention
@@ -88,6 +91,11 @@ describe('Capability Name', () => {
 });
 ```
 
+**Note**: Happy flow variations should be E2E tests default. Use integration tests only when:
+- External services are expensive or unreliable
+- Complex mocking is required
+- E2E tests would be too slow or flaky
+
 # Test Data Management
 
 ## Use Test Builders
@@ -115,6 +123,7 @@ const transaction = new TransactionBuilder()
 2. **Define acceptance criteria for each of them** in BDD style (Given/When/Then)
 3. **Create test structure** following capability/feature/activity hierarchy
 4. **Design test data** using appropriate builders
+5. **Choose test type**: Happy flows → E2E tests, Costly integrations → Integration tests
 
 ## During Implementation
 1. **Write tests first** (TDD approach)
@@ -125,9 +134,10 @@ const transaction = new TransactionBuilder()
 
 ## After Implementation
 1. **Verify test coverage** > 80% backend, > 70% frontend
-2. **Run integration tests** against Docker containers
-3. **Validate business outcomes** not just technical implementation
-4. **Document test scenarios** for future reference
+2. **Run E2E tests first** for happy flows (against Docker containers)
+3. **Run integration tests** for costly/unreliable scenarios
+4. **Validate business outcomes** not just technical implementation
+5. **Document test scenarios** for future reference
 
 # Testing Guidelines
 
@@ -139,7 +149,9 @@ const transaction = new TransactionBuilder()
 
 ## Error Handling
 - **Happy path**: Core functionality works correctly, each activity must have one test covering its happy path
-- **Unhappy paths**: Error scenarios handled gracefully
+  - **Default**: Use E2E tests for happy flows
+  - **Exception**: Use integration tests only when E2E would be costly/unreliable
+- **Unhappy paths**: Error scenarios handled gracefully (use integration tests)
 - **Edge cases**: Boundary conditions and unusual inputs, those can go to unit tests
 - **Critical failures**: System remains stable under stress
 
@@ -172,11 +184,11 @@ const transaction = new TransactionBuilder()
 # Start Docker test environment
 npm run test:docker:up
 
-# Run integration tests
-npm run test:integration
-
-# Run E2E tests
+# Run E2E tests first (happy flows)
 npm run test:e2e
+
+# Run integration tests (costly/unreliable scenarios)
+npm run test:integration
 
 # Run with coverage
 npm run test:coverage
@@ -191,6 +203,9 @@ npm run test:docker:down
 - Creating new features or capabilities
 - Implementing vertical slices
 - Writing user stories
+- Defining acceptance criteria
+- Refactoring existing code
+- Planning test coverage
 - Defining acceptance criteria
 - Refactoring existing code
 - Planning test coverage

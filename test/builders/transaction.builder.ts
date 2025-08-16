@@ -10,7 +10,7 @@ const factory = Factory.define<Transaction>('transaction')
   .attrs({
     id: () => faker.string.uuid(),
     description: () => faker.commerce.productName(),
-    amount: () => faker.number.float({ min: 0.01, precision: 0.01 }),
+    amount: () => faker.number.float({ min: 0.01, multipleOf: 0.01 }),
     date: () => faker.date.recent({ days: 30 }),
     userId: () => faker.string.uuid(),
     categoryId: () => faker.string.uuid(),

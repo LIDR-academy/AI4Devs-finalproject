@@ -1,0 +1,22 @@
+{
+  "extends": "../backend/tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "backend/*": ["../backend/src/*"],
+      "frontend/*": ["../frontend/src/*"],
+      "@builders/*": ["builders/*"],
+
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "../backend/src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -180,7 +180,8 @@ Instructions:
 - E2E tests are reserved for happy flows that meet  the following condition
   - cheap to run
   - give consistent results
-- E2E takes precedence over integration test when those conditions are met
+- **E2E tests take precedence over integration tests for happy flows by default**
+- **Integration tests are used for happy flows only when E2E would be costly/unreliable**
 - Specify the stack used in the project
 
 Output: markdown file to be used in tools like ChatGPT

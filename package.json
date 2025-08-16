@@ -11,7 +11,7 @@
     "test:docker:up": "docker-compose -f docker-compose.test.yml up -d",
     "test:docker:down": "docker-compose -f docker-compose.test.yml down",
     "test:docker:logs": "docker-compose -f docker-compose.test.yml logs -f",
-    "test:full": "npm run test:docker:up && npm run test:integration && npm run test:e2e && npm run test:docker:down"
+    "test:full": "npm run test:docker:up && npm run test:integration && npm run test:e2e:playwright && npm run test:docker:down"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",

@@ -31,10 +31,11 @@ Integration tests are priority because they indicate how health a system is, uni
 - **Scope**: Full user journey testing for specific activity or variation of such activity
 - **Database**: PostgreSQL running in Docker container
 - **External Services**: Mock with hard-coded responses
-- **Coverage**: Happy flows (no mocking) + unhappy flows (mocking database results)
+- **Coverage**: Happy flows (when E2E is not suitable) + unhappy flows (mocking database results)
 - **Execution**: Runs against Docker containers
 - **Criteria**: End-to-end functionality works correctly, data flows properly
-- **Priority**: Highest: as it validates the system holistically
+- **Priority**: **Medium**: Use when E2E tests are not suitable due to costly/unreliable integrations
+- **When to use**: External services that are expensive, unreliable, or require complex mocking
 
 #### E2E Tests (Root Project)
 - **Location**: `/test/e2e/tests/` (at project root)
@@ -43,8 +44,9 @@ Integration tests are priority because they indicate how health a system is, uni
 - **External Services**: Mocked if they are neither cheap to run or inconsistent/unreliable
 - **Coverage**: Complete user workflows, UI interactions, cross-browser compatibility
 - **Execution**: Runs against Docker containers, slower execution
-- **Criteria**: Cheap to run + consistent results, user can complete full workflows
-- **Priority**: Low: takes precedence over integration tests when conditions met
+- **Criteria**: Happy flows should be tested E2E by default, except when integration is costly/unreliable
+- **Priority**: **Highest for Happy Flows**: E2E tests are the default choice for happy flow variations
+- **Exception**: Use integration tests when external services are expensive, unreliable, or require complex mocking
 
 ## Setup Instructions
 
@@ -71,12 +73,12 @@ test/
 │   └── capability-name/
 │       └── feature-name/
 │           └── activity-name/
-│               ├── 1-happy-flow.int.spec.ts
+│               ├── 1-happy-flow.e2e.spec.ts
 │               ├── 2-invalid-user-input.int.spec.ts
 │               ├── 3-mailing-integration.int.spec.ts # the email service is expensive so it's an integration test rather than e2e
 │               ├── 4-empty-list.int.spec.ts
-│               ├── 5-happy-flow.e2e.spec.ts # once in a while we can afford to pay for the email service
-│               └── 6-critical-error-handling.e2e.spec.ts
+│               ├── 5-another-happy-flow.e2e.spec.ts # happy flows default to E2E tests
+│               └── 6-critical-error-handling.int.spec.ts
 ├── jest-integration.json
 ├── jest-e2e.json
 └── test-setup.ts
@@ -84,8 +86,10 @@ test/
 
 ### 2. Docker Test Environment
 
-#### Create Test Environment File
-```env:.env.test
+#### Test Environment Variables
+The test environment uses the following environment variables that should be set in your system or CI environment:
+
+```bash
 # Test Database
 POSTGRES_DB=finance_test
 POSTGRES_USER=test_user
@@ -113,8 +117,6 @@ version: "3.8"
 services:
   test-backend:
     build: ./backend
-    env_file:
-      - .env.test
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     ports:
@@ -128,8 +130,6 @@ services:
 
   test-frontend:
     build: ./frontend
-    env_file:
-      - .env.test
     ports:
       - "${FRONTEND_PORT}:3000"
     depends_on:
@@ -140,8 +140,6 @@ services:
 
   test-db:
     image: postgres:15-alpine
-    env_file:
-      - .env.test
     ports:
       - "${POSTGRES_EXTERNAL_PORT}:5432"
     volumes:
@@ -413,11 +411,11 @@ describe('Transaction Creation', () => {
 # Start Docker test environment
 npm run test:docker:up
 
-# Run integration tests
-npm run test:integration:watch
-
-# Run E2E tests with Playwright
+# Run E2E tests first (happy flows)
 npm run test:e2e:playwright
+
+# Run integration tests (costly/unreliable scenarios)
+npm run test:integration:watch
 
 # Stop Docker test environment
 npm run test:docker:down
@@ -430,10 +428,12 @@ npm run test:full
 
 # Or step by step
 npm run test:docker:up
-npm run test:integration
 npm run test:e2e
+npm run test:integration
 npm run test:docker:down
 ```
+
+**Note**: E2E tests should be run first as they cover happy flows by default. Integration tests are for scenarios where E2E would be costly or unreliable.
 
 ## Best Practices
 
@@ -442,9 +442,11 @@ npm run test:docker:down
 3. **Realistic Data**: Use builders that create realistic test scenarios consistent with business rules
 4. **Business Rules**: Test business logic, not implementation details
 5. **Error Scenarios**: Cover both happy and unhappy paths
-6. **Database Cleanup**: Ensure consistent and valid business data for each test, unless the test is about handling inconsistent/invalid data
-7. **Docker Management**: Always clean up containers after test runs
-8. **Test Organization**: Follow the test directory structure for clear test organization
+6. **Happy Flow Priority**: **Happy flows should be E2E tests by default**
+7. **Integration Test Exception**: Use integration tests for happy flows only when E2E would be costly/unreliable
+8. **Database Cleanup**: Ensure consistent and valid business data for each test, unless the test is about handling inconsistent/invalid data
+9. **Docker Management**: Always clean up containers after test runs
+10. **Test Organization**: Follow the test directory structure for clear test organization
 
 ## Troubleshooting
 
@@ -454,7 +456,7 @@ npm run test:docker:down
 - **Test Data**: Verify builder data matches entity requirements, and that they are business consistent
 - **Async Operations**: Use proper async/await patterns
 - **Container Health**: Wait for database health check before running tests
-- **Environment Variables**: Ensure `.env.test` file exists and contains all required variables
+- **Environment Variables**: Ensure all required test environment variables are set in your system or CI environment
 
 ### Debug Mode
 ```bash
