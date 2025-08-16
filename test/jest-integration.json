@@ -1,0 +1,20 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".int.spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "collectCoverageFrom": [
+    "**/*.(t|j)s"
+  ],
+  "coverageDirectory": "../coverage",
+  "testTimeout": 30000,
+  "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/../$1",
+    "^backend/(.*)$": "<rootDir>/../backend/src/$1",
+    "^frontend/(.*)$": "<rootDir>/../frontend/src/$1"
+  }
+}

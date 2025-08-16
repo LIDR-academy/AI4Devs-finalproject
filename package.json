@@ -1,0 +1,26 @@
+{
+  "name": "ai4devs-finalproject",
+  "version": "1.0.0",
+  "description": "Personal Finance Management Application",
+  "scripts": {
+    "test:integration": "jest --config ./test/jest-integration.json",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e:playwright": "playwright test",
+    "test:integration:watch": "jest --config ./test/jest-integration.json --watch",
+    "test:coverage": "jest --config ./test/jest-integration.json --coverage",
+    "test:docker:up": "docker-compose -f docker-compose.test.yml up -d",
+    "test:docker:down": "docker-compose -f docker-compose.test.yml down",
+    "test:docker:logs": "docker-compose -f docker-compose.test.yml logs -f",
+    "test:full": "npm run test:docker:up && npm run test:integration && npm run test:e2e && npm run test:docker:down"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.0.0",
+    "supertest": "^6.3.3",
+    "@faker-js/faker": "^8.3.1",
+    "@playwright/test": "^1.40.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "@types/jest": "^29.5.8",
+    "typescript": "^5.2.2"
+  }
+}

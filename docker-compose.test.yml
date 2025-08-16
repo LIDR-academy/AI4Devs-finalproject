@@ -1,0 +1,57 @@
+
+
+services:
+  test-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env.test
+    environment:
+      DATABASE_URL: postgresql://test_user:test_password@test-db:5432/finance_test
+    ports:
+      - "${BACKEND_PORT}:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run start:dev
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      test-db:
+        condition: service_healthy
+
+  test-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    env_file:
+      - .env.test
+    ports:
+      - "${FRONTEND_PORT}:3002"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+    depends_on:
+      - test-backend
+
+  test-db:
+    extends:
+      file: ./docker-compose.yml
+      service: db
+    env_file:
+      - .env.test
+    ports:
+      - "${POSTGRES_EXTERNAL_PORT}:5432"
+    volumes:
+      - test_postgres_data:/var/lib/postgresql/data
+
+
+
+volumes:
+  test_postgres_data:
