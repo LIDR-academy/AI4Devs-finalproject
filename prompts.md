@@ -214,7 +214,17 @@ RESULT: `git show 03cf4d6`
 
 ### 4. Especificación de la API
 
-**Prompt 1:**
+**Prompt 1:** Role: you're a backend developer expert on OpenAPI
+
+Context: the backend code already uses OpenAPI (Swagger) to document the endpoints
+
+Task: create a implementation plan to have codegen based on endpoints
+
+The generated code will be used by the front-end and the integration tests
+
+Output: a markdown file documenting the plan, and explaining how OpenAPI and codegen works
+
+[RESULT](./prompts/16-codegen.md)
 
 **Prompt 2:**
 
