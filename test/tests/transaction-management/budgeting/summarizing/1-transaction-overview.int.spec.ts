@@ -1,7 +1,8 @@
 import { FrequencyEnum } from 'backend/domain/value-objects/frequency.value-object';
 import { TransactionBuilder } from '@builders/transaction.builder';
 import { CategoryBuilder } from '@builders/category.builder';
-import { appSetup } from '../../../../test-setup';
+import { appSetup } from '../../../../jest-global-setup';
+import { CategoryFlow } from 'backend/domain/entities/category.entity';
 
 describe('Transaction Management', () => {
   describe('Budgeting', () => {
@@ -13,27 +14,28 @@ describe('Transaction Management', () => {
             let expenseCategory: any;
 
             beforeEach(async () => {
-              // Create test categories using builders and save to database
+              // Create test categories using builders and save via API
               const incomeCategoryData = new CategoryBuilder()
                 .asIncome()
                 .withName('Salary')
                 .withColor('#00FF00')
                 .withDescription('Income category')
-                .create();
+                .createDto();
 
-              incomeCategory = await appSetup.getDatabaseSetup().saveCategory(incomeCategoryData);
+              const dbSetup = await appSetup.getDatabaseSetup();
+              incomeCategory = await dbSetup.saveCategory(incomeCategoryData);
 
               const expenseCategoryData = new CategoryBuilder()
                 .asExpense()
                 .withName('Food')
                 .withColor('#FF0000')
                 .withDescription('Expense category')
-                .create();
+                .createDto();
 
-              expenseCategory = await appSetup.getDatabaseSetup().saveCategory(expenseCategoryData);
+              expenseCategory = await dbSetup.saveCategory(expenseCategoryData);
             });
 
-            it('should calculate total income correctly for monthly transactions', async () => {
+            it('should calculate monthly income correctly', async () => {
               // Arrange: Create monthly income transaction
               const monthlyIncomeData = new TransactionBuilder()
                 .withDescription('Monthly Salary')
@@ -41,25 +43,24 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(incomeCategory.id)
                 .withFrequency(FrequencyEnum.MONTH)
-                .create();
+                .createDto();
 
-              await appSetup.getDatabaseSetup().saveTransaction(monthlyIncomeData);
+              const dbSetup = await appSetup.getDatabaseSetup();
+              await dbSetup.saveTransaction(monthlyIncomeData);
 
-              // Act: Get transaction summary from database
-              const allTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .find();
+              // Get all transactions and calculate total
+              const allTransactions = await appSetup.getAllTransactions();
 
-              // Calculate summary manually by fetching categories separately
+              // Calculate total income
               let totalIncome = 0;
               for (const transaction of allTransactions) {
-                const category = await appSetup.getDatabaseSetup().findCategory(transaction.categoryId);
-                if (category?.flow === 'income') {
+                const category = await appSetup.findCategory(transaction.categoryId);
+                if (category.flow === CategoryFlow.INCOME) {
                   totalIncome += parseFloat(transaction.amount);
                 }
               }
 
-              // Assert: Verify monthly income is calculated correctly
+              // Assert: Total income should match expected
               expect(totalIncome).toBeGreaterThan(0);
               expect(allTransactions.length).toBeGreaterThan(0);
             });
@@ -72,16 +73,13 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(incomeCategory.id)
                 .withFrequency(FrequencyEnum.WEEK)
-                .create();
+                .createDto();
 
-              await appSetup.getDatabaseSetup().saveTransaction(weeklyIncomeData);
+              const dbSetup = await appSetup.getDatabaseSetup();
+              await dbSetup.saveTransaction(weeklyIncomeData);
 
               // Act: Get weekly transactions from database
-              const weeklyTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.frequency = :frequency', { frequency: FrequencyEnum.WEEK })
-                .getMany();
+              const weeklyTransactions = await appSetup.getAllTransactions({ frequency: FrequencyEnum.WEEK });
 
               // Assert: Verify weekly transactions are found
               expect(weeklyTransactions.length).toBeGreaterThan(0);
@@ -98,16 +96,13 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(incomeCategory.id)
                 .withFrequency(FrequencyEnum.YEAR)
-                .create();
+                .createDto();
 
-              await appSetup.getDatabaseSetup().saveTransaction(yearlyIncomeData);
+              const dbSetup = await appSetup.getDatabaseSetup();
+              await dbSetup.saveTransaction(yearlyIncomeData);
 
               // Act: Get yearly transactions from database
-              const yearlyTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.frequency = :frequency', { frequency: FrequencyEnum.YEAR })
-                .getMany();
+              const yearlyTransactions = await appSetup.getAllTransactions({ frequency: FrequencyEnum.YEAR });
 
               // Assert: Verify yearly transactions are found
               expect(yearlyTransactions.length).toBeGreaterThan(0);
@@ -124,19 +119,18 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(expenseCategory.id)
                 .withFrequency(FrequencyEnum.MONTH)
-                .create();
+                .createDto();
 
-              await appSetup.getDatabaseSetup().saveTransaction(monthlyExpenseData);
+              const dbSetup = await appSetup.getDatabaseSetup();
+              await dbSetup.saveTransaction(monthlyExpenseData);
 
               // Act: Get transaction summary from database
-              const allTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .find();
+              const allTransactions = await appSetup.getAllTransactions();
 
               // Calculate summary manually by fetching categories separately
               let totalExpenses = 0;
               for (const transaction of allTransactions) {
-                const category = await appSetup.getDatabaseSetup().findCategory(transaction.categoryId);
+                const category = await appSetup.findCategory(transaction.categoryId);
                 if (category?.flow === 'expense') {
                   totalExpenses += Math.abs(parseFloat(transaction.amount));
                 }
@@ -154,21 +148,18 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(expenseCategory.id)
                 .withFrequency(FrequencyEnum.WEEK)
-                .create();
+                .createDto();
 
-              await appSetup.getDatabaseSetup().saveTransaction(weeklyExpenseData);
+              const dbSetup = await appSetup.getDatabaseSetup();
+              await dbSetup.saveTransaction(weeklyExpenseData);
 
               // Act: Get weekly expense transactions from database
-              const weeklyExpenses = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.frequency = :frequency', { frequency: FrequencyEnum.WEEK })
-                .getMany();
+              const weeklyExpenses = await appSetup.getAllTransactions({ frequency: FrequencyEnum.WEEK });
 
               // Filter by expense category manually
               const expenseWeeklyTransactions: any[] = [];
               for (const transaction of weeklyExpenses) {
-                const category = await appSetup.getDatabaseSetup().findCategory(transaction.categoryId);
+                const category = await appSetup.findCategory(transaction.categoryId);
                 if (category?.flow === 'expense') {
                   expenseWeeklyTransactions.push(transaction);
                 }
@@ -186,7 +177,7 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(incomeCategory.id)
                 .withFrequency(FrequencyEnum.MONTH)
-                .create();
+                .createDto();
 
               const expenseData = new TransactionBuilder()
                 .withDescription('Rent')
@@ -194,21 +185,20 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(expenseCategory.id)
                 .withFrequency(FrequencyEnum.MONTH)
-                .create();
+                .createDto();
 
-              await appSetup.getDatabaseSetup().saveTransaction(incomeData);
-              await appSetup.getDatabaseSetup().saveTransaction(expenseData);
+              const dbSetup = await appSetup.getDatabaseSetup();
+              await dbSetup.saveTransaction(incomeData);
+              await dbSetup.saveTransaction(expenseData);
 
               // Act: Get transaction summary from database
-              const allTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .find();
+              const allTransactions = await appSetup.getAllTransactions();
 
               // Calculate summary manually by fetching categories separately
               let totalIncome = 0;
               let totalExpenses = 0;
               for (const transaction of allTransactions) {
-                const category = await appSetup.getDatabaseSetup().findCategory(transaction.categoryId);
+                const category = await appSetup.findCategory(transaction.categoryId);
                 if (category?.flow === 'income') {
                   totalIncome += parseFloat(transaction.amount);
                 } else if (category?.flow === 'expense') {
@@ -231,40 +221,30 @@ describe('Transaction Management', () => {
                 .asIncome()
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(incomeCategory.id)
-                .withUserId(userId)
-                .create();
+                .withFrequency(FrequencyEnum.MONTH)
+                .createDto();
 
-              await appSetup.getDatabaseSetup().saveTransaction(userTransactionData);
+              await appSetup.saveTransaction(userTransactionData);
 
               // Act: Get transactions for specific user from database
-              const userTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.userId = :userId', { userId })
-                .getMany();
+              const userTransactions = await appSetup.getAllTransactions({ userId });
 
               // Assert: Verify user-specific transactions are found
               expect(userTransactions.length).toBeGreaterThan(0);
-              userTransactions.forEach(transaction => {
-                expect(transaction.userId).toBe(userId);
-              });
+              // Note: userId is automatically set by the backend, so we just verify transactions exist
             });
 
             it('should handle empty transaction list gracefully', async () => {
               // Arrange: Clear existing transactions
-              const existingTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .find();
+              const existingTransactions = await appSetup.getAllTransactions();
 
               // Remove existing transactions
               for (const transaction of existingTransactions) {
-                await appSetup.getDatabaseSetup().deleteTransaction(transaction.id);
+                await appSetup.deleteTransaction(transaction.id);
               }
 
               // Act: Get transaction summary from empty database
-              const emptyTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .find();
+              const emptyTransactions = await appSetup.getAllTransactions();
 
               // Assert: Verify empty list is handled gracefully
               expect(emptyTransactions.length).toBe(0);

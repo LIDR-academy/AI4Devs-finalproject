@@ -21,4 +21,8 @@ export abstract class BaseBuilder<T> {
   createMany(count: number): T[] {
     return this.factory.buildList(count, this.options)
   }
+
+  createDto(): any {
+    return { ...this.options };
+  }
 }

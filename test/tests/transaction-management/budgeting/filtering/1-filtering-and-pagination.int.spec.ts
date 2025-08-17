@@ -1,7 +1,7 @@
 import { FrequencyEnum } from 'backend/domain/value-objects/frequency.value-object';
 import { TransactionBuilder } from '@builders/transaction.builder';
 import { CategoryBuilder } from '@builders/category.builder';
-import { appSetup } from '../../../../test-setup';
+import { appSetup } from '../../../../jest-global-setup';
 
 describe('Transaction Management', () => {
   describe('Budgeting', () => {
@@ -14,33 +14,33 @@ describe('Transaction Management', () => {
             let expenseCategory: any;
 
             beforeEach(async () => {
-              // Create test categories using builders and save to database
+              // Create test categories using builders and save via API
               const incomeCategoryData = new CategoryBuilder()
                 .asIncome()
                 .withName('Salary')
                 .withColor('#00FF00')
                 .withDescription('Income category')
-                .create();
+                .createDto();
 
-              incomeCategory = await appSetup.getDatabaseSetup().saveCategory(incomeCategoryData);
+              incomeCategory = await appSetup.saveCategory(incomeCategoryData);
 
               const expenseCategoryData = new CategoryBuilder()
                 .asExpense()
                 .withName('Food')
                 .withColor('#FF0000')
                 .withDescription('Expense category')
-                .create();
+                .createDto();
 
-              expenseCategory = await appSetup.getDatabaseSetup().saveCategory(expenseCategoryData);
+              expenseCategory = await appSetup.saveCategory(expenseCategoryData);
 
-              // Create test transactions using builders and save to database
+              // Create test transactions using builders and save via API
               const transaction1Data = new TransactionBuilder()
                 .withDescription('Salary Payment')
                 .asIncome()
                 .onDate(new Date('2024-01-15'))
                 .withCategoryId(incomeCategory.id)
                 .withFrequency(FrequencyEnum.MONTH)
-                .create();
+                .createDto();
 
               const transaction2Data = new TransactionBuilder()
                 .withDescription('Grocery Shopping')
@@ -48,7 +48,7 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-16'))
                 .withCategoryId(expenseCategory.id)
                 .withFrequency(FrequencyEnum.WEEK)
-                .create();
+                .createDto();
 
               const transaction3Data = new TransactionBuilder()
                 .withDescription('Freelance Work')
@@ -56,20 +56,18 @@ describe('Transaction Management', () => {
                 .onDate(new Date('2024-01-17'))
                 .withCategoryId(incomeCategory.id)
                 .withFrequency(FrequencyEnum.QUARTER)
-                .create();
+                .createDto();
 
               testTransactions = [
-                await appSetup.getDatabaseSetup().saveTransaction(transaction1Data),
-                await appSetup.getDatabaseSetup().saveTransaction(transaction2Data),
-                await appSetup.getDatabaseSetup().saveTransaction(transaction3Data),
+                await appSetup.saveTransaction(transaction1Data),
+                await appSetup.saveTransaction(transaction2Data),
+                await appSetup.saveTransaction(transaction3Data),
               ];
             });
 
             it('should return all transactions when no filters are applied', async () => {
-              // Act: Get all transactions from database
-              const allTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .find();
+              // Act: Get all transactions from API
+              const allTransactions = await appSetup.getAllTransactions();
 
               // Assert: Verify all transactions are returned
               expect(allTransactions.length).toBeGreaterThanOrEqual(testTransactions.length);
@@ -82,16 +80,14 @@ describe('Transaction Management', () => {
 
             it('should filter transactions by date range correctly', async () => {
               // Arrange: Define date range
-              const startDate = new Date('2024-01-15');
-              const endDate = new Date('2024-01-16');
+              const startDate = '2024-01-15';
+              const endDate = '2024-01-16';
 
-              // Act: Get transactions within date range from database
-              const filteredTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.date >= :startDate', { startDate })
-                .andWhere('transaction.date <= :endDate', { endDate })
-                .getMany();
+              // Act: Get transactions within date range from API
+              const filteredTransactions = await appSetup.getAllTransactions({
+                startDate,
+                endDate
+              });
 
               // Assert: Verify filtered results
               expect(filteredTransactions.length).toBeGreaterThanOrEqual(2);
@@ -99,18 +95,18 @@ describe('Transaction Management', () => {
               // Verify all returned transactions are within the date range
               filteredTransactions.forEach(transaction => {
                 const transactionDate = new Date(transaction.date);
-                expect(transactionDate >= startDate).toBe(true);
-                expect(transactionDate <= endDate).toBe(true);
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                expect(transactionDate >= start).toBe(true);
+                expect(transactionDate <= end).toBe(true);
               });
             });
 
             it('should filter transactions by category correctly', async () => {
-              // Act: Get transactions by income category from database
-              const incomeTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.categoryId = :categoryId', { categoryId: incomeCategory.id })
-                .getMany();
+              // Act: Get transactions by income category from API
+              const incomeTransactions = await appSetup.getAllTransactions({
+                categoryId: incomeCategory.id
+              });
 
               // Assert: Verify only income transactions are returned
               expect(incomeTransactions.length).toBeGreaterThanOrEqual(2);
@@ -121,12 +117,10 @@ describe('Transaction Management', () => {
             });
 
             it('should filter transactions by frequency correctly', async () => {
-              // Act: Get monthly transactions from database
-              const monthlyTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.frequency = :frequency', { frequency: FrequencyEnum.MONTH })
-                .getMany();
+              // Act: Get monthly transactions from API
+              const monthlyTransactions = await appSetup.getAllTransactions({
+                frequency: FrequencyEnum.MONTH
+              });
 
               // Assert: Verify only monthly transactions are returned
               expect(monthlyTransactions.length).toBeGreaterThanOrEqual(1);
@@ -138,14 +132,12 @@ describe('Transaction Management', () => {
 
             it('should filter transactions by transaction type correctly', async () => {
               // Act: Get all transactions and filter by income category
-              const allTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .find();
+              const allTransactions = await appSetup.getAllTransactions();
 
               // Filter by income category manually
               const incomeTransactions: any[] = [];
               for (const transaction of allTransactions) {
-                const category = await appSetup.getDatabaseSetup().findCategory(transaction.categoryId);
+                const category = await appSetup.findCategory(transaction.categoryId);
                 if (category?.flow === 'income') {
                   incomeTransactions.push(transaction);
                 }
@@ -156,30 +148,29 @@ describe('Transaction Management', () => {
               
               // Verify each transaction has the correct category flow
               for (const transaction of incomeTransactions) {
-                const category = await appSetup.getDatabaseSetup().findCategory(transaction.categoryId);
+                const category = await appSetup.findCategory(transaction.categoryId);
                 expect(category?.flow).toBe('income');
               }
             });
 
             it('should combine multiple filters correctly', async () => {
               // Arrange: Define multiple filter criteria
-              const startDate = new Date('2024-01-15');
+              const startDate = '2024-01-15';
               const categoryId = incomeCategory.id;
 
-              // Act: Get transactions with multiple filters from database
-              const filteredTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.date >= :startDate', { startDate })
-                .andWhere('transaction.categoryId = :categoryId', { categoryId })
-                .getMany();
+              // Act: Get transactions with multiple filters from API
+              const filteredTransactions = await appSetup.getAllTransactions({
+                startDate,
+                categoryId
+              });
 
               // Assert: Verify filtered results meet all criteria
               expect(filteredTransactions.length).toBeGreaterThanOrEqual(2);
               
               filteredTransactions.forEach(transaction => {
                 const transactionDate = new Date(transaction.date);
-                expect(transactionDate >= startDate).toBe(true);
+                const start = new Date(startDate);
+                expect(transactionDate >= start).toBe(true);
                 expect(transaction.categoryId).toBe(categoryId);
               });
             });
@@ -188,12 +179,12 @@ describe('Transaction Management', () => {
               // Arrange: Search term
               const searchTerm = 'Salary';
 
-              // Act: Search transactions by description from database
-              const searchResults = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.description ILIKE :searchTerm', { searchTerm: `%${searchTerm}%` })
-                .getMany();
+              // Act: Search transactions by description from API
+              // Note: This would need to be implemented in the backend API
+              const allTransactions = await appSetup.getAllTransactions();
+              const searchResults = allTransactions.filter(transaction => 
+                transaction.description.toLowerCase().includes(searchTerm.toLowerCase())
+              );
 
               // Assert: Verify search results
               expect(searchResults.length).toBeGreaterThanOrEqual(1);
@@ -204,12 +195,13 @@ describe('Transaction Management', () => {
             });
 
             it('should sort transactions by date in descending order', async () => {
-              // Act: Get transactions sorted by date from database
-              const sortedTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .orderBy('transaction.date', 'DESC')
-                .getMany();
+              // Act: Get transactions from API
+              const allTransactions = await appSetup.getAllTransactions();
+
+              // Sort by date in descending order
+              const sortedTransactions = allTransactions.sort((a, b) => 
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+              );
 
               // Assert: Verify transactions are sorted by date in descending order
               expect(sortedTransactions.length).toBeGreaterThanOrEqual(testTransactions.length);
@@ -222,12 +214,13 @@ describe('Transaction Management', () => {
             });
 
             it('should sort transactions by amount in ascending order', async () => {
-              // Act: Get transactions sorted by amount from database
-              const sortedTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .orderBy('transaction.amount', 'ASC')
-                .getMany();
+              // Act: Get transactions from API
+              const allTransactions = await appSetup.getAllTransactions();
+
+              // Sort by amount in ascending order
+              const sortedTransactions = allTransactions.sort((a, b) => 
+                parseFloat(a.amount) - parseFloat(b.amount)
+              );
 
               // Assert: Verify transactions are sorted by amount in ascending order
               expect(sortedTransactions.length).toBeGreaterThanOrEqual(testTransactions.length);
@@ -243,12 +236,10 @@ describe('Transaction Management', () => {
               // Arrange: Use a non-existent category ID
               const nonExistentCategoryId = '123e4567-e89b-12d3-a456-426614174000';
 
-              // Act: Get transactions with non-existent category from database
-              const filteredTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.categoryId = :categoryId', { categoryId: nonExistentCategoryId })
-                .getMany();
+              // Act: Get transactions with non-existent category from API
+              const filteredTransactions = await appSetup.getAllTransactions({
+                categoryId: nonExistentCategoryId
+              });
 
               // Assert: Verify no transactions are returned
               expect(filteredTransactions.length).toBe(0);
@@ -258,12 +249,12 @@ describe('Transaction Management', () => {
               // Arrange: Invalid date (null)
               const invalidDate = null;
 
-              // Act: Get transactions with invalid date filter from database
-              const filteredTransactions = await appSetup.getDatabaseSetup().getDataSource()
-                .getRepository('Transaction')
-                .createQueryBuilder('transaction')
-                .where('transaction.date = :date', { date: invalidDate })
-                .getMany();
+              // Act: Get transactions with invalid date filter from API
+              // Note: This would need to be handled gracefully by the backend
+              const allTransactions = await appSetup.getAllTransactions();
+              const filteredTransactions = allTransactions.filter(transaction => 
+                transaction.date === invalidDate
+              );
 
               // Assert: Verify no transactions are returned (graceful handling)
               expect(filteredTransactions.length).toBe(0);

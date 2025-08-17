@@ -31,12 +31,12 @@ export class TransactionBuilder extends BaseBuilder<Transaction> {
   }
   
   asIncome(): this {
-    const randomAmount = faker.number.float({ min: 0.01, precision: 0.01 });
+    const randomAmount = faker.number.float({ min: 0.01, multipleOf: 0.01 });
     return this.withAmount(randomAmount);
   }
   
   asExpense(): this {
-    const randomAmount = faker.number.float({ min: 0.01, precision: 0.01 });
+    const randomAmount = faker.number.float({ min: 0.01, multipleOf: 0.01 });
     return this.withAmount(-randomAmount);
   }
   
@@ -76,7 +76,7 @@ export class TransactionBuilder extends BaseBuilder<Transaction> {
   }
   
   withRandomAmount(): this {
-    this.options.amount = faker.number.float({ min: 0.01, precision: 0.01 });
+    this.options.amount = faker.number.float({ min: 0.01, multipleOf: 0.01 });
     return this;
   }
   
@@ -93,5 +93,20 @@ export class TransactionBuilder extends BaseBuilder<Transaction> {
   withRandomNotes(): this {
     this.options.notes = faker.datatype.boolean() ? faker.lorem.sentence() : undefined;
     return this;
+  }
+
+  create(): Transaction {
+    return this.factory.build(this.options);
+  }
+
+  createDto(): any {
+    const dto: any = {};
+    if (this.options.description) dto.description = this.options.description;
+    if (this.options.amount) dto.amount = this.options.amount;
+    if (this.options.date) dto.date = this.options.date instanceof Date ? this.options.date.toISOString().split('T')[0] : this.options.date;
+    if (this.options.categoryId) dto.categoryId = this.options.categoryId;
+    if (this.options.notes) dto.notes = this.options.notes;
+    if (this.options.frequency) dto.frequency = this.options.frequency;
+    return dto;
   }
 }

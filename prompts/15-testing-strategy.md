@@ -83,7 +83,7 @@ test/
 │           ├── complete-budgeting-workflow.int.spec.ts
 │           └── end-to-end-financial-tracking.int.spec.ts
 ├── jest-integration.json
-├── jest-e2e.json
+
 └── test-setup.ts
 ```
 
@@ -172,26 +172,6 @@ volumes:
   ],
   "coverageDirectory": "../coverage",
   "testTimeout": 30000,
-  "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
-  "moduleNameMapping": {
-    "^@/(.*)$": "<rootDir>/../$1",
-    "^backend/(.*)$": "<rootDir>/../backend/src/$1",
-    "^frontend/(.*)$": "<rootDir>/../frontend/src/$1"
-  }
-}
-```
-
-### 4. Root Jest E2E Config
-```json:test/jest-e2e.json
-{
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
-  "testEnvironment": "node",
-  "testRegex": ".e2e.spec.ts$",
-  "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  },
-  "testTimeout": 60000,
   "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
   "moduleNameMapping": {
     "^@/(.*)$": "<rootDir>/../$1",
@@ -296,12 +276,12 @@ export class TransactionBuilder extends BaseBuilder<Transaction> {
   }
   
   asIncome(): this {
-    const randomAmount = faker.number.float({ min: 0.01, precision: 0.01 });
+    const randomAmount = faker.number.float({ min: 0.01, multipleOf: 0.01 });
     return this.withAmount(randomAmount, this.currentData.amount?.currency);
   }
   
   asExpense(): this {
-    const randomAmount = faker.number.float({ min: 0, precision: 0.01 });
+    const randomAmount = faker.number.float({ min: 0, multipleOf: 0.01 });
     return this.withAmount(randomAmount, this.currentData.amount?.currency);
   }
   
@@ -344,7 +324,7 @@ export class TransactionBuilder extends BaseBuilder<Transaction> {
 {
   "scripts": {
     "test:integration": "jest --config ./test/jest-integration.json",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "playwright test --reporter=null",
     "test:e2e:playwright": "playwright test",
     "test:integration:watch": "jest --config ./test/jest-integration.json --watch",
     "test:coverage": "jest --config ./test/jest-integration.json --coverage",

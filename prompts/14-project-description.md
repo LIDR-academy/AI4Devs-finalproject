@@ -110,7 +110,6 @@ AI4Devs-finalproject/
 │   │       ├── seeds/
 │   │       └── connection.ts
 │   ├── test/                         # Test configuration
-│   │   ├── jest-e2e.json
 │   │   └── setup.ts
 │   ├── Dockerfile
 │   ├── docker-compose.yml

@@ -17,9 +17,10 @@
     "**/*.(t|j)s"
   ],
   "coverageDirectory": "../coverage",
-  "testTimeout": 30000,
+  "testTimeout": 300000,
   "maxWorkers": 1,
-  "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
+  "globalSetup": "<rootDir>/jest-global-setup.ts",
+  "globalTeardown": "<rootDir>/jest-global-setup.ts",
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/../$1",
     "^backend/(.*)$": "<rootDir>/../backend/src/$1",

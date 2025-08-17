@@ -18,4 +18,6 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  globalSetup: './test/playwright-global-setup.ts',
+  globalTeardown: './test/playwright-global-teardown.ts',
 });
