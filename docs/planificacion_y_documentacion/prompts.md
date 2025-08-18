@@ -1172,3 +1172,254 @@ Cada ticket debe incluir las siguientes secciones:
 
 Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+
+Vamos a generar los tickets del paso 10 con las siguientes consideraciones
+
+
+1. Un historia de usuario representa un conjuto de tickets que deben de completarse para decir que se ha completado
+2. El conjuto de tickets perteneciente a una historia de usuario debe tener un orden logico y de prioridad en la lista
+
+# Pautas para generar el contenido:
+- Genera una lista de pasos para realizar los tickets por cada historia de usuario
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- Antes de iniciar muestrame la lista de pasos a ejecutar
+
+Antes de ejecutar la tareas de este paso revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+Al inicio de esta conversación definimos una lista inicial de pasos para crear tickets de trabajos a partir de un Product Requirement Documento y un Product Backlog la cual es la siguiente:
+1. Crear la carpeta backend e inicializar el proyecto con npm.
+2. Montar la base de datos PostgreSQL según lo definido en el PRD.
+3. Generar la migración de la base de datos para su ejecución (usando Prisma).
+4. Instalar las dependencias necesarias en backend (Node.js, Express.js, Prisma, Auth.js, etc.).
+5. Configurar el entorno de desarrollo para backend (variables de entorno, archivo .env).
+6. Implementar las historias de usuario del backend según el Product Backlog y Modelo de Datos.
+7. Crear la carpeta frontend e inicializar el proyecto con npm.
+8. Instalar las dependencias necesarias en frontend (Vue.js, Vuetify, vue-i18n, etc.).
+9. Configurar el entorno de desarrollo para frontend (variables de entorno, archivo .env).
+10. Implementar las historias de usuario del frontend según el Product Backlog y PRD.
+11. Crear pruebas unitarias básicas para backend y frontend (baja prioridad).
+12. Configurar y documentar el proceso de despliegue inicial del sistema.
+
+Ya hemos completado del paso 1 al 10, faltan el 11 y el 12.
+Tu tarea es generar los tickets de los pasos faltantes.
+
+Antes de comenzar ¿tienes alguna pregunta?
+
+
+
+
+Eres un experto en Ingenieria de Prompts, en documentación tecnica y muy bueno generando graficas de gantt en mermaid
+# Contexto Inicial
+Tengo una lista de tickets de trabajo definida.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a colocar los tickets en una grafica de Gantt en formato mermaid cumpliendo con los siguientes requerimientos
+
+# Requerimientos
+1. Tenemos un ticket como el siguiente ejemplo
+```markdown
+## 1. Crear carpeta backend e inicializar proyecto con npm
+
+**Descripción detallada:**  
+- **Propósito:**  
+Establecer la estructura base del backend para el sistema Buscadoc, permitiendo la gestión independiente del código y dependencias del servidor.
+- **Detalle específico:**  
+Crear la carpeta `backend` en el directorio raíz del proyecto y ejecutar la inicialización de npm para generar el archivo `package.json`. No se instalarán dependencias en este ticket.
+
+**Criterios de aceptación:**  
+- Se crea la carpeta `backend` en la raíz del proyecto.
+- Se ejecuta `npm init` dentro de la carpeta y se genera el archivo `package.json`.
+- El comando se ejecuta sin errores y el archivo queda listo para instalar dependencias.
+- **Pruebas de validación:**  
+  - Verificar que la carpeta existe y contiene el archivo `package.json`.
+  - Ejecutar `npm install` (sin paquetes) y confirmar que no hay errores.
+
+**Prioridad:**  
+Alta
+
+**Estimación de tiempo:**  
+0.5 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Tarea Técnica  
+- Característica del producto: Backend, Configuración
+
+**Comentarios y Notas:**  
+Este ticket es el primer paso para la configuración del backend. No incluye instalación de dependencias ni configuración adicional.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+
+**Historial de cambios:**  
+- [14/08/2025] [GitHub Copilot] Ticket creado para inicialización de backend.
+```
+2. Requerimos que en la gráfica generada se tomen en cuenta los siguientes datos del ticket:
+   * Titulo del ticket
+   * Prioridad
+   * Estimación
+   * Estado: Pendiente, Activa, Completada
+3. Para determinar las secciones de la grafica considerar:
+   * Los tickets con el titulo "##" tienen su propia seccion
+   * Los tickets con el titulo "###" representan tareas de una sección
+4. Se puede utilizar el siguiente ejemplo para la grafica de gantt
+```mermaid
+gantt
+    dateFormat  YYYY-MM-DD
+    title       Adding GANTT diagram functionality to mermaid
+    excludes    weekends
+    %% (`excludes` accepts specific dates in YYYY-MM-DD format, days of the week ("sunday") or "weekends", but not the word "weekdays".)
+
+    section A section
+    Completed task            :done,    des1, 2014-01-06,2014-01-08
+    Active task               :active,  des2, 2014-01-09, 3d
+    Future task               :         des3, after des2, 5d
+    Future task2              :         des4, after des3, 5d
+
+    section Critical tasks
+    Completed task in the critical line :crit, done, 2014-01-06,24h
+    Implement parser and jison          :crit, done, after des1, 2d
+    Create tests for parser             :crit, active, 3d
+    Future task in critical line        :crit, 5d
+    Create tests for renderer           :2d
+    Add to mermaid                      :until isadded
+    Functionality added                 :milestone, isadded, 2014-01-25, 0d
+
+    section Documentation
+    Describe gantt syntax               :active, a1, after des1, 3d
+    Add gantt diagram to demo page      :after a1  , 20h
+    Add another diagram to demo page    :doc1, after a1  , 48h
+
+    section Last section
+    Describe gantt syntax               :after doc1, 3d
+    Add gantt diagram to demo page      :20h
+    Add another diagram to demo page    :48h
+```
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso al documento de tickets
+- El documento donde se encuentra los tickets es demasiado largo para contexto del chatbot por lo que iremos actualizando la grafica conforme vayamos seleccionando tickets
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis requerimientos ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+# Prompt para ChatGPT 4.1: Generación de gráfica de Gantt en Mermaid para tickets de trabajo
+
+## Rol del chatbot
+Actúa como un **ingeniero de prompts experto en documentación técnica y visualización de proyectos**. Tu tarea es recibir tickets de trabajo en formato Markdown y generar secciones para una gráfica de Gantt en formato Mermaid, siguiendo las reglas y requerimientos especificados.
+
+## Reglas y requerimientos
+
+1. **Formato de entrada:**  
+   Los tickets siempre estarán en formato Markdown, siguiendo la estructura mostrada en el ejemplo.
+
+2. **Datos a considerar:**  
+   Para cada ticket, extrae:
+   - Título del ticket
+   - Prioridad
+   - Estimación (en horas)
+   - Estado (Pendiente, Activa, Completada)
+   - Etiquetas/Tags
+
+3. **Ejecución en cascada:**  
+   Los tickets se ejecutan uno tras otro, comenzando el primero el **2025-08-19**.  
+   Los tickets de prioridad "Muy Alta" o "Alta" se colocan primero, seguidos por los demás.
+
+4. **Secciones y tareas:**  
+   - Los tickets con título "##" son secciones principales en la gráfica.
+   - Los tickets con título "###" son tareas dentro de la sección principal y tienen su propia estimación.
+
+5. **Estado visual:**  
+   El estado del ticket se refleja en la gráfica usando los estilos Mermaid:  
+   - `:done` para "Completada"
+   - `:active` para "Activa"
+   - Sin estilo para "Pendiente"
+
+6. **Etiquetas:**  
+   Incluye las etiquetas/tags como comentarios en el bloque Mermaid.
+
+7. **Título de la gráfica:**  
+   El título de la gráfica debe ser **"Buscadoc"**.
+
+8. **Formato de salida:**  
+   Genera el contenido en formato Markdown para archivos `.md`, incluyendo el bloque Mermaid.
+
+9. **Actualización incremental:**  
+   Solo genera la sección correspondiente a los tickets que se te proporcionen en cada interacción.
+
+## Ejemplo de entrada
+
+```markdown
+## 1. Crear carpeta backend e inicializar proyecto con npm
+
+**Descripción detallada:**  
+- **Propósito:**  
+Establecer la estructura base del backend para el sistema Buscadoc, permitiendo la gestión independiente del código y dependencias del servidor.
+- **Detalle específico:**  
+Crear la carpeta `backend` en el directorio raíz del proyecto y ejecutar la inicialización de npm para generar el archivo `package.json`. No se instalarán dependencias en este ticket.
+
+**Criterios de aceptación:**  
+- Se crea la carpeta `backend` en la raíz del proyecto.
+- Se ejecuta `npm init` dentro de la carpeta y se genera el archivo `package.json`.
+- El comando se ejecuta sin errores y el archivo queda listo para instalar dependencias.
+- **Pruebas de validación:**  
+  - Verificar que la carpeta existe y contiene el archivo `package.json`.
+  - Ejecutar `npm install` (sin paquetes) y confirmar que no hay errores.
+
+**Prioridad:**  
+Alta
+
+**Estimación de tiempo:**  
+0.5 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Tarea Técnica  
+- Característica del producto: Backend, Configuración
+
+**Comentarios y Notas:**  
+Este ticket es el primer paso para la configuración del backend. No incluye instalación de dependencias ni configuración adicional.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+
+**Historial de cambios:**  
+- [14/08/2025] [GitHub Copilot] Ticket creado para inicialización de backend.
+```
+
+## Ejemplo de salida
+
+```mermaid
+gantt
+    dateFormat  YYYY-MM-DD
+    title       Buscadoc
+    excludes    weekends
+
+    %% Etiquetas: Tipo: Tarea Técnica, Característica del producto: Backend, Configuración
+
+    section 1. Crear carpeta backend e inicializar proyecto con npm
+    Crear carpeta backend e inicializar proyecto con npm : des1, 2025-08-19, 0.5h
+```
+
+## Instrucciones para el chatbot
+
+- Espera recibir tickets en el formato especificado.
+- Por cada ticket recibido, genera la sección correspondiente en la gráfica de Gantt en formato Mermaid, siguiendo las reglas anteriores.
+- Si el ticket es una tarea ("###"), agrégala como tarea dentro de la sección principal correspondiente.
+- Actualiza las fechas de inicio y fin en cascada, considerando la duración en horas y el orden de prioridad.
+- Incluye las etiquetas como comentarios en el bloque Mermaid.
+- Mantén el formato Markdown
+
+Antes de ejecutar la tarea revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
