@@ -97,6 +97,8 @@ git push origin main
 2. **Service Level**: Use for focused development and testing of individual services
 3. **Cross-Service**: Implement vertical slices affecting multiple services simultaneously
 
+**⚠️ Important**: When working on backend API changes, the OpenAPI client will be automatically regenerated during CI/CD pipeline. For local development, manually regenerate the client to keep frontend and tests in sync. See the [OpenAPI Code Generation](#openapi-code-generation) section below.
+
 ### Submodule Independence
 Each service can run independently (change ports accordingly)
 
@@ -161,6 +163,71 @@ Each service can run independently (change ports accordingly)
 - **Category**: Transaction classification
 - **User**: System user with authentication
 - **Value Objects**: Money, Frequency, TransactionType
+
+## OpenAPI Code Generation
+
+When working on the backend, any changes to API endpoints, DTOs, or controllers will require regenerating the API client for frontend and tests to stay in sync.
+
+### Backend API Changes
+
+After modifying any of the following in the backend:
+- Controllers
+- DTOs
+- API endpoints or route
+- Swagger decorators
+
+**Regenerate and publish the OpenAPI client:**
+
+```bash
+cd backend
+
+# Generate OpenAPI spec, build package, and publish locally
+npm run register:publish
+
+# This will:
+# 1. Start the backend to expose /api-json
+# 2. Generate openapi.json
+# 3. Generate TypeScript client in src/generated/
+# 4. Build the NPM package in dist/
+# 5. Publish to local verdaccio store
+```
+
+### Frontend/Test Updates
+
+After backend changes, update the consuming applications:
+
+```bash
+npm run register:update       # Frontend
+```
+
+**Note**: The `ai4devs-api-client` package is marked as optional, so Docker builds will succeed even when the package isn't available. The package will be added via verdaccio at runtime. The code has no fallbacks - it will fail cleanly if the package isn't available.
+
+### Docker Container Workflow
+
+The backend automatically publishes the API client to verdaccio on docker startup:
+
+**Auto-Publish Behavior:**
+- Backend automatically runs `npm run verdaccio:publish` on startup
+- Frontend waits for backend to be healthy before starting
+- Shared verdaccio store volume ensures packages are available across containers
+- No manual publishing needed for basic container startup
+
+### Why This Matters
+
+- **Type Safety**: Generated clients provide exact TypeScript types matching backend
+- **Consistency**: Frontend and tests always use the latest API structure
+- **Automation**: No manual maintenance of API setup files
+- **Documentation**: OpenAPI spec serves as living API documentation
+- **Local Development**: verdaccio simulates NPM publishing locally
+
+### Generated Files (Never Commit)
+
+The following files are automatically generated and should **never** be committed:
+- `**/src/generated/` - Generated TypeScript clients
+- `**/openapi.json` - OpenAPI specification
+- `**/dist/` - Built packages
+
+These need to be configured in `.gitignore` files across all submodules but consume the api.
 
 ## Development Commands
 

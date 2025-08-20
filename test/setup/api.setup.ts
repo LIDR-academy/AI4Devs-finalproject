@@ -1,69 +1,66 @@
-import axios, { AxiosInstance } from 'axios';
+import { createTestApiClient, TestApiClient } from './api-client.setup';
 
 export class ApiSetup {
-  private api: AxiosInstance;
+  private api: TestApiClient;
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.BACKEND_URL || 'http://localhost:3001';
-    this.api = axios.create({
-      baseURL: this.baseUrl,
-      timeout: 10000,
-    });
+    this.baseUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    this.api = createTestApiClient(this.baseUrl);
   }
 
   // Category endpoints
   async saveCategory(categoryData: any): Promise<any> {
-    const response = await this.api.post('/api/categories', categoryData);
-    return response.data;
+    const response = await this.api.categories.categoryControllerCreate({ createCategoryDto: categoryData });
+    return response;
   }
 
   async findCategory(id: string): Promise<any> {
-    const response = await this.api.get(`/api/categories/${id}`);
-    return response.data;
+    const response = await this.api.categories.categoryControllerFindOne({ id });
+    return response;
   }
 
   async updateCategory(id: string, categoryData: any): Promise<any> {
-    const response = await this.api.patch(`/api/categories/${id}`, categoryData);
-    return response.data;
+    const response = await this.api.categories.categoryControllerUpdate({ id, updateCategoryDto: categoryData });
+    return response;
   }
 
   async deleteCategory(id: string): Promise<void> {
-    await this.api.delete(`/api/categories/${id}`);
+    await this.api.categories.categoryControllerRemove({ id });
   }
 
   async getAllCategories(): Promise<any[]> {
-    const response = await this.api.get('/api/categories');
-    return response.data;
+    const response = await this.api.categories.categoryControllerFindAll();
+    return response;
   }
 
   // Transaction endpoints
   async saveTransaction(transactionData: any): Promise<any> {
-    const response = await this.api.post('/api/transactions', transactionData);
-    return response.data;
+    const response = await this.api.transactions.transactionControllerCreate({ createTransactionDto: transactionData });
+    return response;
   }
 
   async findTransaction(id: string): Promise<any> {
-    const response = await this.api.get(`/api/transactions/${id}`);
-    return response.data;
+    const response = await this.api.transactions.transactionControllerFindOne({ id });
+    return response;
   }
 
   async updateTransaction(id: string, transactionData: any): Promise<any> {
-    const response = await this.api.patch(`/api/transactions/${id}`, transactionData);
-    return response.data;
+    const response = await this.api.transactions.transactionControllerUpdate({ id, updateTransactionDto: transactionData });
+    return response;
   }
 
   async deleteTransaction(id: string): Promise<void> {
-    await this.api.delete(`/api/transactions/${id}`);
+    await this.api.transactions.transactionControllerRemove({ id });
   }
 
   async getAllTransactions(queryParams?: any): Promise<any> {
     // Set a high limit to get all transactions by default
     const params = { ...queryParams, limit: 1000 };
-    const response = await this.api.get('/api/transactions', { params });
+    const response = await this.api.transactions.transactionControllerFindAll(params);
     // The backend returns a paginated response with { transactions: [], total: number, page: number, limit: number }
     // Extract just the transactions array for backward compatibility
-    return response.data.transactions || response.data;
+    return response.transactions || response;
   }
 
   async getTransactionSummary(startDate?: string, endDate?: string): Promise<any> {
@@ -71,8 +68,8 @@ export class ApiSetup {
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
     
-    const response = await this.api.get('/api/transactions/summary', { params });
-    return response.data;
+    const response = await this.api.transactions.transactionControllerGetSummary(params);
+    return response;
   }
 
   // Utility methods
@@ -80,7 +77,7 @@ export class ApiSetup {
     return this.baseUrl;
   }
 
-  getApiInstance(): AxiosInstance {
+  getApiInstance(): TestApiClient {
     return this.api;
   }
 }

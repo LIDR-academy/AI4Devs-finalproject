@@ -4,37 +4,81 @@ services:
       file: ./backend/docker-compose.yml
       service: db
     networks:
-      - test-network
+      - ai4devs-finalproject
+
+  verdaccio:
+    image: verdaccio/verdaccio:5
+    ports:
+      - "${VERDACCIO_PORT:-4873}:4873"
+    volumes:
+      - verdaccio_storage:/verdaccio/storage
+      - ./verdaccio-config.yaml:/verdaccio/conf/config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:4873/-/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ai4devs-finalproject
 
   backend:
     extends:
       file: ./backend/docker-compose.yml
       service: app
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: backend
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - ai4devs-finalproject
+
+  backend-publisher:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: publisher
+    command: npm run publish:client
+    depends_on:
+      verdaccio:
+        condition: service_healthy
+    environment:
+      - NPM_REGISTRY=${NPM_REGISTRY:-http://verdaccio:4873}
+      - NPM_AUTH_TOKEN=${NPM_AUTH_TOKEN:-dummy-token}
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - ./.npmrc:/root/.npmrc:ro
+    working_dir: /app
     networks:
-      - test-network
+      - ai4devs-finalproject
 
   frontend:
     extends:
       file: ./frontend/docker-compose.yml
       service: app
     depends_on:
-      - backend
+      backend-publisher:
+        condition: service_completed_successfully
+      verdaccio:
+        condition: service_healthy
+    environment:
+      - NPM_REGISTRY=${NPM_REGISTRY:-http://verdaccio:4873}
+      - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-3000}
     volumes:
       - ./frontend:/app
-      - /app/node_modules
       - /app/.next
+      - ./.npmrc:/root/.npmrc:ro
     networks:
-      - test-network
+      - ai4devs-finalproject
 
 networks:
-  test-network:
+  ai4devs-finalproject:
     driver: bridge
 
 volumes:
   postgres_data:
+  verdaccio_storage:

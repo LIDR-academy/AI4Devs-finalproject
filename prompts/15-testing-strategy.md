@@ -107,7 +107,7 @@ JWT_SECRET=test_secret
 
 # Test Frontend
 FRONTEND_PORT=3002
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:3000
 
 # Test Database External Port (for host access)
 POSTGRES_EXTERNAL_PORT=5433
