@@ -9,7 +9,11 @@
       "backend/*": ["../backend/src/*"],
       "frontend/*": ["../frontend/src/*"],
       "@builders/*": ["builders/*"],
-
+      "@setup/*": ["setup/*"],
+      "@jest-global-setup": ["jest-global-setup"],
+      "@value-objects/*": ["../backend/src/domain/value-objects/*"],
+      "@entities/*": ["../backend/src/domain/entities/*"],
+      "@services/*": ["../backend/src/domain/services/*"]
     }
   },
   "include": [

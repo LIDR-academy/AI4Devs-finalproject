@@ -1,6 +1,6 @@
 import { Factory } from 'rosie';
 import { BaseBuilder } from './base.builder';
-import { Category, CategoryFlow } from '../../backend/src/domain/entities/category.entity';
+import { Category, CategoryFlow } from '@entities/category.entity';
 import { faker } from '@faker-js/faker';
 
 const factory = Factory.define<Category>('category')

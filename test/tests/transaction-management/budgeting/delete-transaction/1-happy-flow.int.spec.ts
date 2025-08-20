@@ -1,7 +1,7 @@
 import { TransactionBuilder } from '@builders/transaction.builder';
 import { CategoryBuilder } from '@builders/category.builder';
-import { FrequencyEnum } from 'backend/domain/value-objects/frequency.value-object';
-import { appSetup } from '../../../../jest-global-setup';
+import { FrequencyEnum } from '@value-objects/frequency.value-object';
+import { createTestApiClient } from '@setup/api-client.setup';
 
 describe('Transaction Management', () => {
   describe('Budgeting', () => {
@@ -14,6 +14,8 @@ describe('Transaction Management', () => {
             let testTransaction: any;
 
             beforeEach(async () => {
+              const apiClient = createTestApiClient();
+              
               // Create test category using builder and save to database
               const categoryData = new CategoryBuilder()
                 .asIncome()
@@ -22,7 +24,7 @@ describe('Transaction Management', () => {
                 .withDescription('Salary category')
                 .createDto();
 
-              testCategory = await appSetup.saveCategory(categoryData);
+              testCategory = await apiClient.categories.categoryControllerCreate({ createCategoryDto: categoryData });
 
               // Create test transaction using builder and save to database
               const transactionData = new TransactionBuilder()
@@ -34,19 +36,21 @@ describe('Transaction Management', () => {
                 .withFrequency(FrequencyEnum.MONTH)
                 .createDto();
 
-              testTransaction = await appSetup.saveTransaction(transactionData);
+              testTransaction = await apiClient.transactions.transactionControllerCreate({ createTransactionDto: transactionData });
             });
 
             it('should delete an existing transaction', async () => {
+              const apiClient = createTestApiClient();
+              
               // Arrange: Verify transaction exists
-              const existingTransaction = await appSetup.findTransaction(testTransaction.id);
+              const existingTransaction = await apiClient.transactions.transactionControllerFindOne({ id: testTransaction.id });
               expect(existingTransaction).toBeDefined();
 
               // Act: Delete transaction
-              await appSetup.deleteTransaction(testTransaction.id);
+              await apiClient.transactions.transactionControllerRemove({ id: testTransaction.id });
 
               // Assert: Verify transaction was deleted
-              await expect(appSetup.findTransaction(testTransaction.id)).rejects.toMatchObject({
+              await expect(apiClient.transactions.transactionControllerFindOne({ id: testTransaction.id })).rejects.toMatchObject({
                 name: 'ResponseError',
                 response: expect.objectContaining({
                   status: 404
@@ -55,11 +59,13 @@ describe('Transaction Management', () => {
             });
 
             it('should handle deleting non-existent transaction gracefully', async () => {
+              const apiClient = createTestApiClient();
+              
               // Arrange: Use a non-existent ID
               const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
 
               // Act & Assert: Should throw 404 error for non-existent transaction
-              await expect(appSetup.deleteTransaction(nonExistentId)).rejects.toMatchObject({
+              await expect(apiClient.transactions.transactionControllerRemove({ id: nonExistentId })).rejects.toMatchObject({
                 name: 'ResponseError',
                 response: expect.objectContaining({
                   status: 404
@@ -68,6 +74,8 @@ describe('Transaction Management', () => {
             });
 
             it('should maintain data integrity after deletion', async () => {
+              const apiClient = createTestApiClient();
+              
               // Arrange: Create another transaction
               const anotherTransactionData = new TransactionBuilder()
                 .withDescription('Another Transaction')
@@ -78,13 +86,13 @@ describe('Transaction Management', () => {
                 .withFrequency(FrequencyEnum.WEEK)
                 .createDto();
 
-              const createdTransaction = await appSetup.saveTransaction(anotherTransactionData);
+              const createdTransaction = await apiClient.transactions.transactionControllerCreate({ createTransactionDto: anotherTransactionData });
 
               // Act: Delete the original transaction
-              await appSetup.deleteTransaction(testTransaction.id);
+              await apiClient.transactions.transactionControllerRemove({ id: testTransaction.id });
 
               // Assert: Other transactions remain intact
-              const remainingTransaction = await appSetup.findTransaction(createdTransaction.id);
+              const remainingTransaction = await apiClient.transactions.transactionControllerFindOne({ id: createdTransaction.id });
               expect(remainingTransaction).toBeDefined();
               expect(remainingTransaction.description).toBe('Another Transaction');
             });

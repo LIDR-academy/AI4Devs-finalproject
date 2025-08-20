@@ -25,7 +25,12 @@
     "^@/(.*)$": "<rootDir>/../$1",
     "^backend/(.*)$": "<rootDir>/../backend/src/$1",
     "^frontend/(.*)$": "<rootDir>/../frontend/src/$1",
-    "^@builders/(.*)$": "<rootDir>/builders/$1"
+    "^@builders/(.*)$": "<rootDir>/builders/$1",
+    "^@setup/(.*)$": "<rootDir>/setup/$1",
+    "^@jest-global-setup$": "<rootDir>/jest-global-setup",
+    "^@value-objects/(.*)$": "<rootDir>/../backend/src/domain/value-objects/$1",
+    "^@entities/(.*)$": "<rootDir>/../backend/src/domain/entities/$1",
+    "^@services/(.*)$": "<rootDir>/../backend/src/domain/services/$1"
   },
   "modulePaths": ["<rootDir>"],
   "moduleDirectories": ["node_modules", "<rootDir>"]

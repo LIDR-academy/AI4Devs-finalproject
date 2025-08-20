@@ -1,8 +1,8 @@
 import { Factory } from 'rosie';
 import { BaseBuilder } from './base.builder';
-import { Transaction } from '../../backend/src/domain/entities/transaction.entity';
-import { Category } from '../../backend/src/domain/entities/category.entity';
-import { FrequencyEnum } from '../../backend/src/domain/value-objects/frequency.value-object';
+import { Transaction } from '@entities/transaction.entity';
+import { Category } from '@entities/category.entity';
+import { FrequencyEnum } from '@value-objects/frequency.value-object';
 import { faker } from '@faker-js/faker';
 
 // Define the Rosie factory with functions for random generation
