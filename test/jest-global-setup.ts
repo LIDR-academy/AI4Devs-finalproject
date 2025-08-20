@@ -14,8 +14,14 @@ async function ensureTestSetup(): Promise<TestSetup> {
 // Jest global setup - this runs before all tests
 export default async function globalSetup() {
   console.log('Jest global setup starting...');
-  await ensureTestSetup();
-  console.log('Jest global setup completed');
+  try {
+    await ensureTestSetup();
+    console.log('Jest global setup completed');
+  } catch (error) {
+    console.error('Jest global setup failed:', error);
+    // Don't throw here - let Jest handle the failure gracefully
+    process.exit(1);
+  }
 }
 
 // Jest global teardown - this runs after all tests

@@ -11,11 +11,14 @@ export class TestSetup {
   }
 
   async initialize(): Promise<void> {
-    await this.containerSetup.startContainers();
-    
-    await this.containerSetup.waitForService('db');
-    await this.containerSetup.waitForService('backend');
-    await this.containerSetup.waitForService('frontend');
+    try {
+      await this.containerSetup.up();
+      
+      console.log('All services are ready');
+    } catch (error) {
+      console.error('Failed to initialize test environment:', error);
+      throw error;
+    }
   }
 
   async cleanup(): Promise<void> {
@@ -23,7 +26,7 @@ export class TestSetup {
   }
 
   async close(): Promise<void> {
-    // Don't stop containers - they're managed globally
+    await this.containerSetup.down();
   }
 
   getApiSetup(): ApiSetup {

@@ -120,6 +120,25 @@ Each service can run independently (change ports accordingly)
 - **Integration Tests**: Primary testing approach for business logic
 - **Code Coverage**: >80% backend, >70% frontend
 
+#### Test Container Management
+Integration and E2E tests should leverage existing Docker containers:
+
+```bash
+# assume PROJECT_NAME=stable-env on .env.test
+
+# Start containers manually
+docker compose --env-file .env.test -p stable-env up
+
+# Run tests against existing containers
+PROJECT_NAME=stable-env npm run test:integration
+PROJECT_NAME=stable-env npm run test:e2e
+```
+
+This approach provides:
+- **Faster test execution** (no container initialization overhead)
+- **Better debugging** (direct access to running containers)
+- **Stable test environment** (consistent container state across test runs)
+
 ### Code Quality Standards
 - **ESLint**: Consistent code style and best practices
 - **TypeScript**: Strict type checking enabled
