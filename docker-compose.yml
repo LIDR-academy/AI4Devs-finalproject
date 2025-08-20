@@ -46,7 +46,7 @@ services:
       verdaccio:
         condition: service_healthy
     environment:
-      - NPM_REGISTRY=${NPM_REGISTRY:-http://verdaccio:4873}
+      - VERDACCIO_REGISTER=${VERDACCIO_REGISTER:-http://verdaccio:4873}
       - NPM_AUTH_TOKEN=${NPM_AUTH_TOKEN:-dummy-token}
     volumes:
       - ./backend:/app
@@ -66,7 +66,7 @@ services:
       verdaccio:
         condition: service_healthy
     environment:
-      - NPM_REGISTRY=${NPM_REGISTRY:-http://verdaccio:4873}
+      - VERDACCIO_REGISTER=${VERDACCIO_REGISTER:-http://verdaccio:4873}
       - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-3000}
     volumes:
       - ./frontend:/app

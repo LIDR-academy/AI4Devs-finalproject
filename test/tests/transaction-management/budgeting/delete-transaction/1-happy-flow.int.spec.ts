@@ -46,7 +46,12 @@ describe('Transaction Management', () => {
               await appSetup.deleteTransaction(testTransaction.id);
 
               // Assert: Verify transaction was deleted
-              await expect(appSetup.findTransaction(testTransaction.id)).rejects.toThrow('Request failed with status code 404');
+              await expect(appSetup.findTransaction(testTransaction.id)).rejects.toMatchObject({
+                name: 'ResponseError',
+                response: expect.objectContaining({
+                  status: 404
+                })
+              });
             });
 
             it('should handle deleting non-existent transaction gracefully', async () => {
@@ -54,7 +59,12 @@ describe('Transaction Management', () => {
               const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
 
               // Act & Assert: Should throw 404 error for non-existent transaction
-              await expect(appSetup.deleteTransaction(nonExistentId)).rejects.toThrow('Request failed with status code 404');
+              await expect(appSetup.deleteTransaction(nonExistentId)).rejects.toMatchObject({
+                name: 'ResponseError',
+                response: expect.objectContaining({
+                  status: 404
+                })
+              });
             });
 
             it('should maintain data integrity after deletion', async () => {

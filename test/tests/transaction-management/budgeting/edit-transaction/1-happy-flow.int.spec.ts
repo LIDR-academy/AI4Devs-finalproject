@@ -157,7 +157,12 @@ describe('Transaction Management', () => {
 
               // Act & Assert: Should throw 404 error for non-existent transaction
               await expect(appSetup.updateTransaction(nonExistentId, { description: 'This should not work' }))
-                .rejects.toThrow('Request failed with status code 404');
+                .rejects.toMatchObject({
+                  name: 'ResponseError',
+                  response: expect.objectContaining({
+                    status: 404
+                  })
+                });
             });
           });
         });
