@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- MODELOS ---
+
+model User {
+  id               Int       @id @default(autoincrement())
+  first_name       String
+  last_name        String
+  email            String    @unique
+  password_hash    String
+  role             String    @default("patient")
+  registration_date DateTime @default(now())
+  active           Boolean   @default(true)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  doctor           Doctor?
+  patient          Patient?
+  notifications    Notification[]
+}
+
+model Doctor {
+  id           Int      @id
+  license_number String
+  phone        String?
+  location_id  Int
+  biography    String?
+  photo_url    String?
+  active       Boolean   @default(true)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  user         User      @relation(fields: [id], references: [id])
+  location     Location  @relation(fields: [location_id], references: [id])
+  specialties  DoctorSpecialty[]
+  appointments Appointment[]
+  ratings      Rating[]
+}
+
+model Patient {
+  id           Int      @id
+  phone        String?
+  birth_date   DateTime?
+  gender       String?
+  location_id  Int
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  user         User      @relation(fields: [id], references: [id])
+  location     Location  @relation(fields: [location_id], references: [id])
+  appointments Appointment[]
+  ratings      Rating[]
+}
+
+model Specialty {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  doctorSpecialties DoctorSpecialty[]
+}
+
+model DoctorSpecialty {
+  id           Int      @id @default(autoincrement())
+  doctor_id    Int
+  specialty_id Int
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  doctor       Doctor   @relation(fields: [doctor_id], references: [id])
+  specialty    Specialty @relation(fields: [specialty_id], references: [id])
+}
+
+model Appointment {
+  id               Int      @id @default(autoincrement())
+  patient_id       Int
+  doctor_id        Int
+  appointment_date DateTime
+  status           String   @default("pending")
+  reason           String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  patient          Patient  @relation(fields: [patient_id], references: [id])
+  doctor           Doctor   @relation(fields: [doctor_id], references: [id])
+  ratings          Rating[]
+}
+
+model Rating {
+  id           Int      @id @default(autoincrement())
+  patient_id   Int
+  doctor_id    Int
+  appointment_id Int
+  score        Int
+  comment      String?
+  anonymous    Boolean  @default(false)
+  rating_date  DateTime @default(now())
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  patient      Patient  @relation(fields: [patient_id], references: [id])
+  doctor       Doctor   @relation(fields: [doctor_id], references: [id])
+  appointment  Appointment @relation(fields: [appointment_id], references: [id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  message    String
+  status     String   @default("not_sent")
+  sent_at    DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model Location {
+  id              Int      @id @default(autoincrement())
+  address         String
+  exterior_number String
+  interior_number String?
+  neighborhood    String
+  postal_code     String
+  city_id         Int
+  state_id        Int
+  google_maps_url String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  city            City     @relation(fields: [city_id], references: [id])
+  state           State    @relation(fields: [state_id], references: [id])
+  doctors         Doctor[]
+  patients        Patient[]
+}
+
+model City {
+  id       Int      @id @default(autoincrement())
+  name     String
+  state_id Int
+
+  state    State    @relation(fields: [state_id], references: [id])
+  locations Location[]
+}
+
+model State {
+  id       Int      @id @default(autoincrement())
+  name     String
+
+  cities   City[]
+  locations Location[]
+}

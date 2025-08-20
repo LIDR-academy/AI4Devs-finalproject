@@ -412,3 +412,40 @@ etapa2_casos_de_uso.md, etapa4_diseño_del_sistema_y_arquitectura.md
 
 **Referencia:**
 etapa1_investigacion_analisis.md, etapa2_casos_de_uso.md, etapa3_modelado_datos.md, etapa4_diseño_del_sistema_y_arquitectura.md
+
+# 11. Dependencias y convenciones actuales
+
+## Backend
+
+- **Dependencias principales instaladas:**
+  - `express@4.18.2`: Framework para la API REST.
+  - `prisma@5.10.1` y `@prisma/client@5.10.1`: ORM y cliente para PostgreSQL.
+  - `pg@8.11.3`: Driver para PostgreSQL.
+  - `dotenv@16.4.5`: Manejo de variables de entorno.
+  - `cors@2.8.5`: Middleware para CORS.
+  - `nodemailer@6.9.8`: Envío de correos electrónicos.
+  - `jsonwebtoken@9.0.2`: Implementación de autenticación JWT.
+  - `bcryptjs@2.4.3`: Hash y verificación de contraseñas (sin dependencias nativas).
+
+- **Convenciones de autenticación:**
+  - Por compatibilidad y facilidad de integración, la autenticación se implementa inicialmente con JWT (`jsonwebtoken`) y hash de contraseñas con `bcryptjs`.
+  - La integración con Auth.js y OAuth2 se realizará en tickets futuros, conforme a la arquitectura hexagonal.
+
+- **Estructura hexagonal recomendada:**
+  - `/src/domain`: Entidades y servicios de dominio.
+  - `/src/application`: Casos de uso.
+  - `/src/adapters/in`: Adaptadores de entrada (API REST, controladores).
+  - `/src/adapters/out`: Adaptadores de salida (persistencia, email, storage).
+  - `/src/config`: Configuración y utilidades.
+  - `/prisma`: Archivos de modelo y migraciones.
+
+- **Internacionalización:**
+  - El backend está preparado para mensajes multilenguaje, siguiendo las convenciones de internacionalización.
+  - La integración de dependencias específicas para i18n se realizará en tickets futuros.
+
+- **Seguridad y cumplimiento:**
+  - Todas las credenciales y datos sensibles se gestionan mediante variables de entorno y archivos `.env` (excluidos del control de versiones).
+  - El sistema cumple con la LFPDPPP y las normativas mexicanas de protección de datos personales.
+
+**Referencia:**  
+etapa4_diseño_del_sistema_y_arquitectura.md, etapa1_investigacion_analisis.md, arquitectura hexagonal, convenciones de seguridad e internacionalización.

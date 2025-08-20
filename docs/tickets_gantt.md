@@ -6,19 +6,19 @@ gantt
     title       Buscadoc
 
     section 1. Crear carpeta backend e inicializar proyecto con npm
-    ... :active, des1, 2025-08-19, 0.5h
+    ... :done, des1, 2025-08-19, 0.5h
 
     section 2. Montar la base de datos PostgreSQL según lo definido en el PRD
-    ... :des2, 2025-08-19, 1h
+    ... :done, 2025-08-19, 1h
 
     section 3. Generar la migración de la base de datos para su ejecución (usando Prisma)
-    ... :des3, 2025-08-20, 2h
+    ... :done, 2025-08-20, 2h
 
     section 4. Instalar las dependencias necesarias en backend (Node.js, Express.js, Prisma, Auth.js, etc.)
-    ... :des4, 2025-08-21, 1h
+    ... :done, 2025-08-21, 1h
 
     section 5. Configurar el entorno de desarrollo para backend (variables de entorno, archivo .env)
-    ... :des5, 2025-08-21, 1h
+    ... :done, 2025-08-21, 1h
 
     section 6. Tickets Buscar especialistas por especialidad y ubicación [US-1]
     Diseñar el endpoint de búsqueda de especialistas :des6.1, 2025-08-22, 1h
