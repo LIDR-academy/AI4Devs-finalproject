@@ -83,6 +83,18 @@ test.describe('Transaction Management E2E', () => {
 
               console.log('Updated values after transaction:', { updatedIncome, updatedExpenses, updatedNet });
 
+              // Debug: Check the actual API response by looking at network requests
+              console.log('Checking if transaction was created with correct amount and frequency...');
+              
+              // Wait a bit more for any async updates
+              await page.waitForTimeout(1000);
+              
+              // Check the transaction list to see if our transaction appears
+              const transactionRow = page.locator('text=Weekly Income Test').first();
+              await expect(transactionRow).toBeVisible();
+              
+
+
               // Parse amounts
               const initialIncomeAmount = parseFloat(initialIncome?.replace('$', '') || '0');
               const updatedIncomeAmount = parseFloat(updatedIncome?.replace('$', '') || '0');
@@ -99,12 +111,14 @@ test.describe('Transaction Management E2E', () => {
               expect(actualIncrease).toBeGreaterThanOrEqual(0);
               
               // Verify the transaction appears in the list with correct frequency
-              const transactionRow = page.locator('text=Weekly Income Test').first();
-              await expect(transactionRow).toBeVisible();
+              const weeklyTransactionRow = page.locator('text=Weekly Income Test').first();
+              await expect(weeklyTransactionRow).toBeVisible();
               
               // Check if the transaction shows the correct frequency (this validates the backend is working)
               // The dashboard total might not change if there are other transactions affecting the total
               console.log('Transaction created successfully with weekly frequency');
+              
+
             });
 
             test('should handle multiple frequency types correctly', async ({ page }) => {
@@ -168,8 +182,8 @@ test.describe('Transaction Management E2E', () => {
               expect(actualIncrease).toBeGreaterThanOrEqual(0);
               
               // Verify the transaction appears in the list with correct frequency
-              const transactionRow = page.locator('text=Yearly Income Test').first();
-              await expect(transactionRow).toBeVisible();
+              const yearlyTransactionRow = page.locator('text=Yearly Income Test').first();
+              await expect(yearlyTransactionRow).toBeVisible();
               
               console.log('Transaction created successfully with yearly frequency');
             });
