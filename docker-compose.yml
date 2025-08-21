@@ -81,4 +81,5 @@ networks:
 
 volumes:
   postgres_data:
+  postgres_test_data:
   verdaccio_storage:
