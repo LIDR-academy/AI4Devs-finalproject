@@ -36,18 +36,7 @@ When an issue is solved, change [ ] to [x] and remove everything from the templa
 
 - [x] **BUG-003**: Transaction list does not show category change immediately after editing
 
-- [ ] **BUG-004**: Dashboard cards not connected to database or wrong user data
-  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
-  - **Impact**: Users see incorrect financial summaries that don't reflect actual transaction data
-  - **Steps to reproduce**:
-    1. View dashboard with total income, total expenses, and net amount cards
-    2. Create/delete transactions
-    3. Dashboard cards don't update or show wrong user's data
-  - **Expected behavior**: Dashboard cards should always reflect all transactions respecting current filters
-  - **Actual behavior**: Cards show stale data, wrong user data, or don't update with transactions
-  - **Environment**: Frontend dashboard display
-  - **Priority**: High
-  - **Component**: Dashboard cards, transaction aggregation logic
+- [x] **BUG-004**: Dashboard cards not connected to database or wrong user data
 
 - [ ] **BUG-005**: Frontend not pulling all transactions respecting filters
   - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
@@ -66,29 +55,17 @@ When an issue is solved, change [ ] to [x] and remove everything from the templa
 
 - [x] **BUG-007**: Transaction duplication when switching between edit and create modes
 
-- [ ] **BUG-008**: Dashboard amounts not normalized by frequency for monthly view
-  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
-  - **Impact**: Dashboard shows incorrect monthly totals by not accounting for transaction frequency, leading to misleading financial summaries
-  - **Steps to reproduce**:
-    1. Create a weekly transaction of $100
-    2. Create a monthly transaction of $500
-    3. View dashboard total income/expenses
-    4. Weekly transaction shows as $100 instead of $400 (4 weeks × $100)
-  - **Expected behavior**: Dashboard should normalize all amounts to monthly view (weekly × 4, yearly ÷ 12, etc.)
-  - **Actual behavior**: Dashboard shows raw transaction amounts without frequency normalization
-  - **Environment**: Frontend dashboard calculation
-  - **Priority**: High
-  - **Component**: Dashboard cards, transaction aggregation logic, frequency calculation
+- [x] **BUG-008**: Dashboard amounts not normalized by frequency for monthly view
 
 - [x] **BUG-009**: Overview cards disappear when transaction panel opens
 
 ## 📊 Bug Statistics
 - **Total Bugs**: 9
 - **Critical**: 0
-- **High**: 4
+- **High**: 2
 - **Medium**: 0
 - **Low**: 0
-- **Fixed**: 6
+- **Fixed**: 7
 
 ## 🔍 **Common Patterns**
 These bugs appear to be related to **state management** and **UI synchronization** issues:

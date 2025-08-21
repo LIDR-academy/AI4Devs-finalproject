@@ -4,6 +4,7 @@ coverage
 playwright-report/index.html
 test-results/.last-run.json
 .DS_Store
+test-results/
 
 # OpenAPI generated files
 **/generated/
