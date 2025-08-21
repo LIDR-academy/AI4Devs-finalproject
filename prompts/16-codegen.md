@@ -75,7 +75,7 @@ Add to `backend/package.json`:
 ```json
 {
   "scripts": {
-    "swagger:generate": "npm run start --watch=false & sleep 5 && curl http://localhost:${BACKEND_PORT:-3000}/api-json > openapi.json && pkill -f 'npm run start'"
+    "swagger:generate": "npm run start --watch=false & sleep 5 && curl http://backend:3000/api-json > openapi.json && pkill -f 'npm run start'"
   }
 }
 ```
@@ -185,7 +185,7 @@ Replace `frontend/src/services/api.ts` with generated client:
 import { Configuration, TransactionsApi, CategoriesApi } from 'ai4devs-api-client';
 
 const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+  basePath: process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.BACKEND.PORT ?? 3000}`'
 });
 
 export const transactionsApi = new TransactionsApi(config);
@@ -228,7 +228,7 @@ export interface TestApiClient {
 
 export const createTestApiClient = (baseUrl?: string): TestApiClient => {
   const config = new Configuration({ 
-    basePath: baseUrl || process.env.BACKEND_URL || 'http://localhost:3001',
+    basePath: baseUrl || `http://localhost:${process.env.BACKEND_PORT ?? 3000}`,
     headers: {
       'Content-Type': 'application/json',
     }
@@ -329,7 +329,6 @@ project/
 The system respects environment variables for configuration:
 
 - `NEXT_PUBLIC_API_URL` - Frontend API base URL
-- `BACKEND_URL` - Backend API base URL (fallback)
 - `BACKEND_PORT` - Backend port for OpenAPI generation (defaults to 3000)
 
 ## Risks and Mitigation

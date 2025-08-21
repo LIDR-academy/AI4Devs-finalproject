@@ -8,8 +8,7 @@ test.describe('Transaction Management E2E', () => {
           test.describe('Then they should see accurate financial summaries including category information', () => {
             test('should display transactions with correct structure in the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for transaction list or summary elements
@@ -31,8 +30,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should display transaction details correctly in the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for transaction details
@@ -57,8 +55,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should show frequency filtering options in the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for frequency filter controls
@@ -80,8 +77,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should filter transactions by frequency through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for frequency filter
@@ -101,8 +97,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should display summary information in the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for summary elements
@@ -121,8 +116,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should handle empty transaction lists gracefully in the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for empty state or no transactions message
@@ -139,8 +133,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should maintain UI consistency across different views', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Verify page structure remains consistent

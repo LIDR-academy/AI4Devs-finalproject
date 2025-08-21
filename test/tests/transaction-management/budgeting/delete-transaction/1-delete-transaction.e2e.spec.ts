@@ -8,8 +8,7 @@ test.describe('Transaction Management E2E', () => {
           test.describe('Then the transaction should be deleted successfully while preserving category information', () => {
             test('should delete an existing transaction through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for an existing transaction to delete
@@ -40,8 +39,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should handle delete confirmation through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for delete functionality
@@ -77,8 +75,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should show appropriate feedback after deletion', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for delete functionality
@@ -109,8 +106,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should maintain UI consistency after deletion', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for delete functionality

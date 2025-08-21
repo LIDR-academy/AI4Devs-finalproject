@@ -8,7 +8,7 @@ export interface TestApiClient {
 
 export const createTestApiClient = (baseUrl?: string): TestApiClient => {
   const config = new Configuration({ 
-    basePath: baseUrl || process.env.BACKEND_URL || 'http://localhost:3000',
+    basePath: baseUrl || 'http://backend:3000',
     headers: {
       'Content-Type': 'application/json',
     }

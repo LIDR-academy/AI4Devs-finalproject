@@ -8,8 +8,7 @@ test.describe('Transaction Management', () => {
           test.describe('Then all amounts should be normalized to monthly equivalents', () => {
             test('should normalize multiple frequency types to monthly view', async ({ page }) => {
               // Arrange: Navigate to the application
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Wait for dashboard to be visible

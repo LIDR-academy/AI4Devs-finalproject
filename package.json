@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "description": "Personal Finance Management Application",
   "scripts": {
+    "test": "npm run test:unit && npm run test:social",
     "test:unit": "git submodule foreach --recursive 'npm run test'",
     "test:integration": "jest --config ./test/jest-integration.json --passWithNoTests",
     "test:integration:watch": "npm run test:integration --watch",
     "test:integration:coverage": "npm run test:integration --coverage",
     "test:e2e": "playwright test --reporter=null",
-    "test:e2e:watch": "playwright test"
+    "test:e2e:watch": "playwright test",
+    "test:social": "npm run test:integration && npm run test:e2e",
+    "test:run": "npm run test:run:down && npm run test:run:up",
+    "test:run:up": "docker compose --env-file .env.test -p ${PROJECT_NAME-test} up -d",
+    "test:run:down": "docker compose -p ${PROJECT_NAME-test} down"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",

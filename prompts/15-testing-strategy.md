@@ -107,7 +107,7 @@ JWT_SECRET=test_secret
 
 # Test Frontend
 FRONTEND_PORT=3002
-NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-BACKEND_PORT}$
 
 # Test Database External Port (for host access)
 POSTGRES_EXTERNAL_PORT=5433
@@ -211,7 +211,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: process.env.FRONTEND_URL || 'http://localhost:3002',
+    baseURL: process.env.FRONTEND_URL || `http://localhost:${process.env.FRONTEND_PORT ?? 3001}`,
     trace: 'on-first-retry',
   },
   projects: [
@@ -222,7 +222,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'docker-compose -f docker-compose.test.yml up test-frontend test-backend test-db',
-    url: process.env.FRONTEND_URL || 'http://localhost:3002',
+    url: process.env.FRONTEND_URL || `http://localhost:${process.env.FRONTEND_PORT ?? 3001}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },

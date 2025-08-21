@@ -43,11 +43,14 @@ services:
       target: publisher
     command: npm run publish:client
     depends_on:
+      backend:
+        condition: service_healthy
       verdaccio:
         condition: service_healthy
     environment:
-      - VERDACCIO_REGISTER=${VERDACCIO_REGISTER:-http://verdaccio:4873}
+      - VERDACCIO_REGISTER=http://verdaccio:4873
       - NPM_AUTH_TOKEN=${NPM_AUTH_TOKEN:-dummy-token}
+      - BACKEND_PORT=${BACKEND_PORT:-3000}
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -66,8 +69,7 @@ services:
       verdaccio:
         condition: service_healthy
     environment:
-      - VERDACCIO_REGISTER=${VERDACCIO_REGISTER:-http://verdaccio:4873}
-      - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-3000}
+      - VERDACCIO_REGISTER=http://verdaccio:4873
     volumes:
       - ./frontend:/app
       - /app/.next

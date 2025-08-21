@@ -102,9 +102,9 @@ git push origin main
 ### Submodule Independence
 Each service can run independently (change ports accordingly)
 
-- Backend: `http://localhost:3001`
-- Frontend: `http://localhost:3000`
-- Database: `localhost:5432`
+- Backend: `http://backend:3000`
+- Frontend: `http://frontend:3001`
+- Database: `http://db:5432`
 
 ## Development Guidelines
 

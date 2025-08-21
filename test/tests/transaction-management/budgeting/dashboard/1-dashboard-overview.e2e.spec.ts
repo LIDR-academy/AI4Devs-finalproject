@@ -8,8 +8,7 @@ test.describe('Transaction Management E2E', () => {
           test.describe('Then they should see transaction summaries and metrics', () => {
             test('should view dashboard and see transaction summaries', async ({ page }) => {
               // Arrange: Navigate to the application
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for dashboard and specific summary cards

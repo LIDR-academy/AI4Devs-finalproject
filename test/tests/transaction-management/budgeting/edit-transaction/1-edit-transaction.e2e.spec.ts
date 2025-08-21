@@ -8,8 +8,7 @@ test.describe('Transaction Management E2E', () => {
           test.describe('Then the transaction should be updated successfully including category changes', () => {
             test('should update transaction description through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for an existing transaction to edit
@@ -43,8 +42,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should update transaction amount through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for an existing transaction to edit
@@ -78,8 +76,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should update transaction date through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for an existing transaction to edit
@@ -111,8 +108,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should update transaction notes through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for an existing transaction to edit
@@ -145,8 +141,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should update transaction category through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for an existing transaction to edit
@@ -180,8 +175,7 @@ test.describe('Transaction Management E2E', () => {
 
             test('should update transaction frequency through the UI', async ({ page }) => {
               // Arrange: Navigate to the transactions page
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Look for an existing transaction to edit

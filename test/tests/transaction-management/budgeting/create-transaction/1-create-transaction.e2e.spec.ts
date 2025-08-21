@@ -6,9 +6,8 @@ test.describe('Transaction Management E2E', () => {
       test.describe('When they submit a valid income transaction through the UI', () => {
         test.describe('Then the transaction should be created successfully', () => {
           test('should create an income transaction through the UI form', async ({ page }) => {
-            // Arrange: Navigate to the transactions page
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-            await page.goto(frontendUrl);
+            // Arrange: Navigate to the transactions page            
+            await page.goto('/');
             
             // Wait for the page to load
             await page.waitForLoadState('networkidle');
@@ -58,9 +57,8 @@ test.describe('Transaction Management E2E', () => {
           });
 
           test('should display all transactions in the UI list', async ({ page }) => {
-            // Arrange: Navigate to the transactions page
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-            await page.goto(frontendUrl);
+            // Arrange: Navigate to the transactions page            
+            await page.goto('/');
             
             // Wait for the page to load
             await page.waitForLoadState('networkidle');
@@ -76,9 +74,8 @@ test.describe('Transaction Management E2E', () => {
           test('should navigate through the complete transaction workflow', async ({ page }) => {
             // This test demonstrates the complete user journey
             
-            // 1. Navigate to home page
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-            await page.goto(frontendUrl);
+            // 1. Navigate to home page            
+            await page.goto('/');
             await page.waitForLoadState('networkidle');
             
             // 2. Verify the page loads with transaction functionality

@@ -8,8 +8,7 @@ test.describe('Transaction Management E2E', () => {
           test.describe('Then the system should handle validation and errors gracefully', () => {
             test('should handle form validation and error states gracefully', async ({ page }) => {
               // Arrange: Navigate to the application
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
                                       // Test that the transaction form loads and has proper structure

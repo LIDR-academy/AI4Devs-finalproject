@@ -7,10 +7,8 @@ test.describe('Transaction Management E2E', () => {
         test.describe('When viewing the dashboard', () => {
           test.describe('Then amounts should be normalized to monthly equivalents', () => {
             test('should display frequency-normalized monthly totals', async ({ page }) => {
-              // Arrange: Navigate to the application
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              
-              await page.goto(frontendUrl);
+              // Arrange: Navigate to the application              
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Wait for dashboard to be visible
@@ -122,9 +120,8 @@ test.describe('Transaction Management E2E', () => {
             });
 
             test('should handle multiple frequency types correctly', async ({ page }) => {
-              // Arrange: Navigate to the application
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              // Arrange: Navigate to the application              
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Wait for dashboard to be visible
@@ -189,9 +186,8 @@ test.describe('Transaction Management E2E', () => {
             });
 
             test('should handle expense transactions with frequency normalization', async ({ page }) => {
-              // Arrange: Navigate to the application
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              // Arrange: Navigate to the application              
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Wait for dashboard to be visible
@@ -261,8 +257,8 @@ test.describe('Transaction Management E2E', () => {
 
             test('should aggregate multiple transactions with different frequencies', async ({ page }) => {
               // Arrange: Navigate to the application
-              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3007';
-              await page.goto(frontendUrl);
+              
+              await page.goto('/');
               await page.waitForLoadState('networkidle');
 
               // Wait for dashboard to be visible
