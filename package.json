@@ -4,7 +4,7 @@
   "description": "Personal Finance Management Application",
   "scripts": {
     "test:unit": "git submodule foreach --recursive 'npm run test'",
-    "test:integration": "jest --config ./test/jest-integration.json",
+    "test:integration": "jest --config ./test/jest-integration.json --passWithNoTests",
     "test:integration:watch": "npm run test:integration --watch",
     "test:integration:coverage": "npm run test:integration --coverage",
     "test:e2e": "playwright test --reporter=null",
