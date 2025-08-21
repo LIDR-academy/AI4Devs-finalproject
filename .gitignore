@@ -5,6 +5,7 @@ playwright-report/index.html
 test-results/.last-run.json
 .DS_Store
 test-results/
+session.md
 
 # OpenAPI generated files
 **/generated/
