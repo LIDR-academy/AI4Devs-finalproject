@@ -1,11 +1,39 @@
 ---
 description: Comprehensive testing approach integrating TDD+BDD practices with vertical slice development and ideation methodology
-alwaysApply: true
+alwaysApply: false
 ---
-
 # Core Principles
 
 **Testing is NOT an afterthought**, it's integrated into every vertical slice from ideation to delivery. Every feature must have comprehensive test coverage before implementation.
+
+**CRITICAL**: **No test should ever be left red**. All tests must pass before considering any change complete.
+
+# Validation of Work - Test Execution Order
+
+## Mandatory Test Validation
+**Every change requires validation through relevant tests in this specific order, based on what has been changed:**
+
+1. **Unit Tests** - Validate individual components work correctly
+2. **Integration Tests** - Validate components work together with real dependencies
+3. **E2E Tests** - Validate complete user workflows end-to-end
+
+## What to Run During Development
+- **Don't run all tests** - only run tests relevant to your current change
+- **CI will handle full test suite** to catch any eventual breakage
+- **Focus on relevant tests** to validate your specific implementation
+
+## Test Execution Commands for Development
+
+```bash
+# Run only relevant integration tests  
+npm run test:integration -- --testPathPattern="path/to/your/feature"
+
+# Run only relevant E2E tests
+npm run test:e2e -- --grep="your specific test pattern"
+
+# For comprehensive validation (run all relevant tests in order)
+npm run test:validate:feature --feature="your-feature-name"
+```
 
 # Testing Strategy Hierarchy
 
@@ -44,7 +72,7 @@ test/
 │   ├── capability-name/
 │   │   ├── feature-name/
 │   │   │   └── activity-name/
-│   │   │       ├── 1-happy-flow.e2e.spec.ts
+│   │   │       ├── 1-activity-name.e2e.spec.ts
 │   │   │       ├── 2-some-variation.e2e.spec.ts
 │   │   │       ├── 3-costly-integration.int.spec.ts
 │   │   │       └── 4-invalid-input.int.spec.ts
@@ -95,9 +123,12 @@ describe('Capability Name', () => {
 ```
 
 **Note**: Happy flow variations should be E2E tests default. Use integration tests only when:
+
 - External services are expensive or unreliable
 - Complex mocking is required
 - E2E tests would be too slow or flaky
+
+**Note**: A happy flow test should be named after the variation, not "happy flow"
 
 # Test Data Management
 
@@ -131,16 +162,20 @@ const transaction = new TransactionBuilder()
 ## During Implementation
 1. **Write tests first** (TDD approach)
 2. **Implement minimal code** to pass tests
-3. **Refactor** while maintaining test coverage, untill all test passes
-    1. **Check** with me if we should continue refactoring, and if so, what we should aim to
+3. **Refactor** while maintaining test coverage, **until ALL tests pass**
+    1. **Check** with me if we should continue refactoring, 
+    and if so, what we should aim to
 4. **Ensure business rules** are properly tested
+4. **Validate work** by running relevant tests in unit → integration → e2e order
+5. **Ensure business rules** are properly tested
 
 ## After Implementation
 1. **Verify test coverage** > 80% backend, > 70% frontend
-2. **Run E2E tests first** for happy flows (against Docker containers)
-3. **Run integration tests** for costly/unreliable scenarios
-4. **Validate business outcomes** not just technical implementation
-5. **Document test scenarios** for future reference
+2. **Run relevant unit tests** first - all must pass
+3. **Run relevant integration tests** - all must pass  
+4. **Run relevant E2E tests** - all must pass
+5. **Validate business outcomes** not just technical implementation
+6. **Document test scenarios** for future reference
 
 # Testing Guidelines
 
@@ -151,12 +186,15 @@ const transaction = new TransactionBuilder()
 - **Test data integrity** and business constraints
 
 ## Bug Fix Testing Requirements
-- **Regression Prevention**: Every bug fix must include a test that reproduces the bug
-- **Test First Approach**: Write the failing test before implementing the fix
+- **E2E Test First**: Every bug fix starts by adding an E2E test that reproduces the bug exactly as reported
+- **Reproduce the Bug**: The E2E test must fail initially, demonstrating the bug exists
+- **Test First Approach**: Write the failing E2E test before implementing any fix
+- **Regression Prevention**: The E2E test ensures the bug won't return
 - **Coverage**: Ensure the specific scenario that caused the bug is covered
 - **Documentation**: Document the bug scenario in test comments for future reference
 - **BUGS.md Update**: After test passes, update BUGS.md to mark the bug as resolved [x]
-- **Test Verification**: Ensure the test fails before the fix and passes after implementation
+- **Test Verification**: Ensure the E2E test fails before the fix and passes after implementation
+- **Validation Required**: Run relevant tests in unit → integration → e2e order to ensure fix is complete
 
 ## Multi-Activity User Journey Testing
 - **Cross-Activity Flows**: Test complete user workflows spanning multiple activities
@@ -205,6 +243,9 @@ const transaction = new TransactionBuilder()
 # Start Docker test environment
 npm run test:docker:up
 
+# Run relevant tests in proper order (development workflow)
+npm run test:validate:feature --feature="feature-name"
+
 # Run E2E tests first (happy flows)
 npm run test:e2e
 
@@ -218,6 +259,55 @@ npm run test:coverage
 npm run test:docker:down
 ```
 
+# Quality Gates
+
+## Before Marking Any Change Complete
+1. **All relevant unit tests pass** ✅
+2. **All relevant integration tests pass** ✅  
+3. **All relevant E2E tests pass** ✅
+4. **No red tests remain** - this is non-negotiable
+5. **Business logic validated** through test outcomes
+6. **Code coverage meets requirements** (>80% backend, >70% frontend)
+
+## Red Test Policy
+- **Red tests block completion** - fix them before proceeding
+- **Red tests indicate incomplete work** - don't commit with failing tests
+- **Red tests require immediate attention** - they represent broken functionality
+- **CI will catch red tests** but local validation is mandatory
+
+## Troubleshooting Service Dependencies
+
+When encountering errors, **always check the service dependency order** using the docker compose file as a reference:
+
+### Service Dependency Chain (Example)
+
+```
+Frontend → Backend → Database
+```
+
+Each service also depends indirecly on Docker or the dev's local environment.
+
+### Example: Frontend Failing to Fetch Data
+
+If the frontend is failing to fetch data, the issue might be on:
+
+1. **Frontend** such as network issue, API endpoint, etc, check first **Backend**'s logs to see if the problem's root cause is FE or BE
+2. In case the problem originated on the FE's dependency, we know **Backend** might be having its own errors or a dependency might be failing. The **Database** is a BE's dependency, so we might check there for the problem's root cause.
+3. If **Database** has an issue, we might need to understand if it's a service problem or environmental problem.
+
+### Troubleshooting Steps
+
+1. **Check docker-compose.yml** to understand service dependencies
+2. **Start from the service where error happens** and move up the dependency chain reading each log to understand where the problem begins.
+  - If log is not available like for FE, move up the dependency chain direcly
+3. **Verify each layer** independently before moving up the chain
+
+### Common Dependency Issues
+- **Database down** → Backend fails → Frontend shows errors
+- **Backend API errors** → Frontend receives error responses
+- **Network connectivity** → Services can't communicate
+- **Resource constraints** → Services crash or become unresponsive
+
 # When to Apply This Rule
 
 **ALWAYS** apply when:
@@ -229,4 +319,6 @@ npm run test:docker:down
 - Planning test coverage
 - Defining acceptance criteria
 - Refactoring existing code
+- Validating any code changes
+- Fixing bugs or issues
 - Planning test coverage
