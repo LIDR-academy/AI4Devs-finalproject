@@ -204,7 +204,27 @@ RESULT: `git show 03cf4d6`
 
 ### 3. Modelo de Datos
 
-**Prompt 1:**
+**Prompt 1:** Role: you're a senior software architect with expertize in nestjs
+
+Task: Set up a plan for modeling data according to the best practices on the project and our stack
+
+Context: all of the below have to work
+
+- the backend submodule needs to be self-sustainable i.e. if a dev runs only it, it should worl
+- the root project uses docker compose
+  - to run the project as a "development" environment
+  - to run integration and e2e tests as a "test" environment
+- migrations should always
+  - Be idempotent
+  - Allow as much rollback as possible
+  - Not break schema at once
+  - Be production-ready
+  - Handle edge cases
+  - Allow multople devs to run migrations
+
+Outpu: Create a markdown file containing the plan
+
+[RESULT](./prompts/17-data-modeling.md)
 
 **Prompt 2:**
 
