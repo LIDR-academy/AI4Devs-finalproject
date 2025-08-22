@@ -65,7 +65,7 @@ almapi-portfolio/                    # Repositorio del portfolio desplegado
 
 #### Repositorio Backend (nuevo a crear)
 ```
-almapi-chatbot-backend/             # Nuevo repositorio para el backend
+ai-resume-agent/             # Nuevo repositorio para el backend
 ├── src/
 │   ├── main.py                     # Entry point FastAPI
 │   ├── api/
@@ -593,7 +593,7 @@ graph TB
 #### 3.12.1 Estructura de Código Backend
 
 ```
-almapi-chatbot-backend/
+ai-resume-agent/
 ├── src/
 │   ├── api/
 │   │   ├── routes/
@@ -1986,7 +1986,7 @@ flowchart LR
     end
     
     subgraph "Repositorio Backend"
-        A2["Push a almapi-chatbot-backend"] --> B2["Tests/Lint Backend"]
+        A2["Push a ai-resume-agent"] --> B2["Tests/Lint Backend"]
         B2 --> C2["Build Backend"]
         C2 --> D2["Deploy a GCP"]
     end

@@ -17,7 +17,7 @@ Sistema de chatbot inteligente basado en IA que actúa como representante virtua
 ## 0.5. URL del repositorio
 **Repositorio Frontend:** https://github.com/aandmaldonado/almapi-portfolio (ya desplegado en almapi.dev)
 
-**Repositorio Backend:** https://github.com/aandmaldonado/almapi-chatbot-backend (nuevo a crear)
+**Repositorio Backend:** https://github.com/aandmaldonado/ai-resume-agent (nuevo a crear)
 
 ## 0.6. Información técnica del proyecto
 

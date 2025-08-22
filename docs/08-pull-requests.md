@@ -3,7 +3,7 @@
 ## Información General
 
 - **Repositorio Frontend:** https://github.com/aandmaldonado/almapi-portfolio (ya desplegado en almapi.dev)
-- **Repositorio Backend:** https://github.com/aandmaldonado/almapi-chatbot-backend (nuevo a crear)
+- **Repositorio Backend:** https://github.com/aandmaldonado/ai-resume-agent (nuevo a crear)
 - **Branch Principal:** main
 - **Branch de Desarrollo:** develop
 - **Convención de Branches:** feature/IC-XXX-description
@@ -21,7 +21,7 @@
 - **Ticket Relacionado:** IC-005
 - **Tipo:** Feature
 - **Prioridad:** Alta
-- **Repositorio:** almapi-chatbot-backend
+- **Repositorio:** ai-resume-agent
 
 ### Descripción
 Configuración inicial del proyecto backend usando FastAPI, incluyendo estructura de directorios, dependencias básicas y configuración de desarrollo.
@@ -90,7 +90,7 @@ frontend/
 - **Ticket Relacionado:** IC-005
 - **Tipo:** Feature
 - **Prioridad:** Alta
-- **Repositorio:** almapi-chatbot-backend
+- **Repositorio:** ai-resume-agent
 
 ### Descripción
 Implementación de los endpoints principales del chat, incluyendo WebSocket para comunicación en tiempo real y endpoints REST para gestión de conversaciones.

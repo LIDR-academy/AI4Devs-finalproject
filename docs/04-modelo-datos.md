@@ -102,7 +102,7 @@ erDiagram
 
 ### Notas de Implementación
 
-**Repositorio:** Este modelo de datos será implementado en el nuevo repositorio `almapi-chatbot-backend` que contendrá toda la lógica de base de datos y persistencia.
+**Repositorio:** Este modelo de datos será implementado en el nuevo repositorio `ai-resume-agent` que contendrá toda la lógica de base de datos y persistencia.
 
 **Base de Datos:** Se utilizará Google Cloud SQL (PostgreSQL) para las tablas relacionales y Vertex AI Vector Search para los embeddings.
 
