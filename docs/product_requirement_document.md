@@ -311,7 +311,7 @@ Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a lo
   - Gestión de agenda y notificaciones en tiempo real.
 
 - **Autenticación**
-   - Utilizar Auth.js
+   - Utilizar JWT (`jsonwebtoken`) y hash de contraseñas con `bcryptjs`.
 
 ## Normativas aplicables
 

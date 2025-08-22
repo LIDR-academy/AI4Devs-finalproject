@@ -21,12 +21,12 @@ gantt
     ... :done, 2025-08-21, 1h
 
     section 6. Tickets Buscar especialistas por especialidad y ubicación [US-1]
-    Diseñar el endpoint de búsqueda de especialistas :des6.1, 2025-08-22, 1h
-    Implementar la lógica de consulta para búsqueda de especialistas :des6.2, 2025-08-22, 2h
-    Agregar validaciones de entrada para filtros :des6.3, 2025-08-23, 1h
-    Configurar paginación y tiempos óptimos :des6.4, 2025-08-23, 1h
-    Documentar el endpoint de búsqueda :des6.5, 2025-08-24, 1h
-    Crear pruebas unitarias endpoint búsqueda :des6.6, 2025-08-24, 1h
+    Diseñar el endpoint de búsqueda de especialistas :done, des6.1, 2025-08-22, 1h
+    Implementar la lógica de consulta para búsqueda de especialistas :done, des6.2, 2025-08-22, 2h
+    Agregar validaciones de entrada para filtros :done, des6.3, 2025-08-23, 1h
+    Configurar paginación y tiempos óptimos :done, des6.4, 2025-08-23, 1h
+    Documentar el endpoint de búsqueda :done, des6.5, 2025-08-24, 1h
+    Crear pruebas unitarias endpoint búsqueda :done, des6.6, 2025-08-24, 1h
 
     section 7. Ver perfil de especialista [US-2]
     Diseñar el endpoint para consultar el perfil de especialista :des7.1, 2025-08-25, 1h

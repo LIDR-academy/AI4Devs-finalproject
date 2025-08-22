@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Buscadoc API",
+    "version": "1.0.0",
+    "description": "API para búsqueda de especialistas médicos por especialidad y ubicación"
+  },
+  "paths": {
+    "/api/doctors/search": {
+      "get": {
+        "tags": [
+          "Doctors"
+        ],
+        "summary": "Buscar especialistas por especialidad y ubicación",
+        "description": "Permite buscar especialistas médicos filtrando por especialidad, ciudad y estado. Accesible sin autenticación.",
+        "parameters": [
+          {
+            "name": "specialty_id",
+            "in": "query",
+            "description": "ID de la especialidad",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "city_id",
+            "in": "query",
+            "description": "ID de la ciudad",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "state_id",
+            "in": "query",
+            "description": "ID del estado",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página (por defecto 1)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Resultados por página (por defecto 10)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de especialistas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "specialty": {
+                            "type": "string"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "photo": {
+                            "type": "string"
+                          },
+                          "biography": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Respuesta exitosa",
+                    "value": {
+                      "results": [
+                        {
+                          "id": 1,
+                          "name": "Dr. Juan Pérez",
+                          "specialty": "Cardiología",
+                          "city": "Ciudad de México",
+                          "state": "CDMX",
+                          "photo": "https://ejemplo.com/foto.jpg",
+                          "biography": "Especialista en cardiología..."
+                        }
+                      ],
+                      "pagination": {
+                        "total": 1,
+                        "page": 1,
+                        "limit": 10,
+                        "totalPages": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación de parámetros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Error de validación",
+                    "value": {
+                      "error": {
+                        "type": "ValidationError",
+                        "message": "Parámetros de consulta inválidos",
+                        "details": [
+                          "limit must be a positive number"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {}
+}

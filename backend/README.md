@@ -12,6 +12,9 @@ Este backend implementa la arquitectura hexagonal (puertos y adaptadores) para d
 - `nodemailer@6.9.8` - Envío de correos electrónicos
 - `jsonwebtoken@9.0.2` - Autenticación JWT
 - `bcryptjs@2.4.3` - Hash de contraseñas
+- `swagger-ui-express@5.0.1` - Documentación Swagger para la API
+- `jest@30.0.5` - Pruebas unitarias
+- `supertest@7.1.4` - Pruebas de integración para endpoints REST
 
 ## Estructura recomendada (hexagonal)
 
@@ -146,11 +149,58 @@ CORS_ORIGIN=http://localhost:8080
 
 ## Ejecución del servidor
 
-Para iniciar el servidor de desarrollo:
+Para iniciar el servidor en modo producción:
 
 ```sh
 npm start
 ```
+
+### Ejecución en modo desarrollo con nodemon
+
+Para evitar reiniciar manualmente el servidor cada vez que realices cambios en el código, puedes usar **nodemon**.  
+Sigue estos pasos:
+
+1. **Instalación**  
+   Nodemon ya está incluido como dependencia de desarrollo en este proyecto (`devDependencies`).
+
+2. **Script de desarrollo**  
+   El archivo `package.json` incluye el siguiente script:
+   ```json
+   "dev": "nodemon server.js"
+   ```
+
+3. **Iniciar el servidor en modo desarrollo**  
+   Ejecuta el siguiente comando en la terminal:
+   ```sh
+   npm run dev
+   ```
+
+Nodemon monitorea los archivos del proyecto y reinicia automáticamente el servidor al detectar cambios, facilitando el flujo de trabajo en desarrollo.
+
+## Pruebas unitarias e integración
+
+Las pruebas de integración para los endpoints REST se encuentran en la carpeta `__tests__` en la raíz del proyecto.  
+Se utilizan **Jest** y **Supertest** para simular peticiones HTTP y validar la estructura de las respuestas, empleando mocks para el core de dominio y la persistencia.
+
+### Ejecutar pruebas
+
+```sh
+npm test
+```
+
+Esto ejecutará todos los archivos de prueba ubicados en `backend/__tests__`.
+
+---
+
+## Documentación Swagger
+
+La documentación interactiva de la API está disponible en:
+
+```
+http://localhost:3000/api-docs
+```
+
+Aquí puedes consultar la estructura de los endpoints, parámetros, ejemplos de petición/respuesta
 
 ## Referencias
 
