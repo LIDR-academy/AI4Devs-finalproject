@@ -19,8 +19,8 @@ test.describe('Transaction Management E2E', () => {
 
               // Fill in the transaction form
               await page.fill('input[name="description"], input[placeholder*="description"], textarea[name="description"]', 'Monthly Salary');
-              await page.fill('input[name="amount"], input[placeholder*="amount"]', '1500.00');
-              await page.fill('input[name="date"], input[type="date"]', '2024-01-15');
+              await page.fill('input[name="expression"], input[placeholder*="amount"]', '1500.00');
+              // Date field removed for recurring transactions
               
               // Select category (assuming there's a dropdown or select element)
               const categorySelect = page.locator('select[name="categoryId"], [data-testid="category-select"]');

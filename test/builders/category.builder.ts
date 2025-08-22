@@ -25,18 +25,8 @@ export class CategoryBuilder extends BaseBuilder<Category> {
     return this;
   }
   
-  asIncome(): this {
-    this.options.flow = CategoryFlow.INCOME;
-    return this;
-  }
-  
-  asExpense(): this {
-    this.options.flow = CategoryFlow.EXPENSE;
-    return this;
-  }
-  
-  asSavingsAndInvestments(): this {
-    this.options.flow = CategoryFlow.SAVINGS_AND_INVESTMENTS;
+  withFlow(flow: CategoryFlow): this {
+    this.options.flow = flow
     return this;
   }
   
@@ -72,28 +62,6 @@ export class CategoryBuilder extends BaseBuilder<Category> {
   
   asChildOf(parent: Category): this {
     this.options.parentId = parent.id;
-    return this;
-  }
-  
-  withRandomName(): this {
-    const names = ['Groceries', 'Transport', 'Entertainment', 'Utilities', 'Salary', 'Freelance', 'Investment'];
-    this.options.name = faker.helpers.arrayElement(names);
-    return this;
-  }
-  
-  withRandomColor(): this {
-    const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500'];
-    this.options.color = faker.helpers.arrayElement(colors);
-    return this;
-  }
-  
-  withRandomFlow(): this {
-    this.options.flow = faker.helpers.arrayElement(Object.values(CategoryFlow));
-    return this;
-  }
-  
-  withRandomDescription(): this {
-    this.options.description = faker.lorem.sentence();
     return this;
   }
 }

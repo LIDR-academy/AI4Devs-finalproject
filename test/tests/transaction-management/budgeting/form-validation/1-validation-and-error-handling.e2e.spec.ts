@@ -18,8 +18,8 @@ test.describe('Transaction Management E2E', () => {
 
               // Verify form elements are present
               await expect(page.locator('[data-testid="description-input"]')).toBeVisible();
-              await expect(page.locator('[data-testid="amount-input"]')).toBeVisible();
-              await expect(page.locator('[data-testid="date-input"]')).toBeVisible();
+              await expect(page.locator('[data-testid="expression-input"]')).toBeVisible();
+              await expect(page.locator('[data-testid="frequency-select"]')).toBeVisible();
               await expect(page.locator('[data-testid="category-select"]')).toBeVisible();
               await expect(page.locator('[data-testid="frequency-select"]')).toBeVisible();
               await expect(page.locator('[data-testid="notes-input"]')).toBeVisible();

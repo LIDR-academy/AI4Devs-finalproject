@@ -54,7 +54,7 @@ test.describe('Transaction Management E2E', () => {
                 await page.waitForLoadState('networkidle');
 
                 // Update the amount
-                const amountInput = page.locator('input[name="amount"], input[placeholder*="amount"]');
+                const amountInput = page.locator('input[name="expression"], input[placeholder*="amount"]');
                 await amountInput.clear();
                 await amountInput.fill('1500.00');
 
@@ -87,9 +87,8 @@ test.describe('Transaction Management E2E', () => {
                 // Wait for edit form to appear
                 await page.waitForLoadState('networkidle');
 
-                // Update the date
-                const dateInput = page.locator('input[name="date"], input[type="date"]');
-                await dateInput.fill('2024-02-15');
+                // Update frequency
+                await page.locator('select[name="frequency"]').selectOption('month');
 
                 // Submit the form
                 const submitButton = page.locator('button[type="submit"], button:has-text("Save"), button:has-text("Update")');

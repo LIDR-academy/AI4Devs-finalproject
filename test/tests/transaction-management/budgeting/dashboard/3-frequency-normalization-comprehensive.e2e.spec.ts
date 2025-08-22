@@ -38,7 +38,7 @@ test.describe('Transaction Management', () => {
                 
                 // Wait for form to be visible
                 await page.waitForSelector('input[name="description"]');
-                await page.waitForSelector('input[name="amount"]');
+                await page.waitForSelector('input[name="expression"]');
                 await page.locator('select[name="categoryId"]').waitFor({ state: 'visible' });
 
                 // Wait for categories to load
@@ -46,10 +46,10 @@ test.describe('Transaction Management', () => {
 
                 // Fill transaction form
                 await page.locator('input[name="description"]').fill(transaction.description);
-                await page.locator('input[name="amount"]').fill(transaction.amount);
+                await page.locator('input[name="expression"]').fill(transaction.amount);
                 await page.locator('select[name="frequency"]').selectOption(transaction.frequency);
                 await page.locator('select[name="categoryId"]').selectOption(transaction.category);
-                await page.locator('input[name="date"]').fill('2024-01-01');
+                // Date field removed for recurring transactions
 
                 // Wait for form to be valid
                 await page.waitForSelector('[data-testid="submit-button"]:not([disabled])');

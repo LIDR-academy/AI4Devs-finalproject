@@ -31,7 +31,7 @@ test.describe('Transaction Management E2E', () => {
               
               // Wait for the form to be visible
               await page.waitForSelector('input[name="description"]');
-              await page.waitForSelector('input[name="amount"]');
+              await page.waitForSelector('input[name="expression"]');
               await page.waitForSelector('select[name="categoryId"]');
 
               // Wait for categories to load and debug what's available
@@ -51,10 +51,10 @@ test.describe('Transaction Management E2E', () => {
 
               // Fill transaction form
               await page.locator('input[name="description"]').fill('Weekly Income Test');
-              await page.locator('input[name="amount"]').fill('100');
+              await page.locator('input[name="expression"]').fill('100');
               await page.locator('select[name="frequency"]').selectOption('week');
               await page.locator('select[name="categoryId"]').selectOption('Salary');
-              await page.locator('input[name="date"]').fill('2024-01-01');
+              // Date field removed for recurring transactions
 
               // Wait for form to be valid
               await page.waitForSelector('[data-testid="submit-button"]:not([disabled])');
@@ -137,7 +137,7 @@ test.describe('Transaction Management E2E', () => {
               
               // Wait for the form to be visible
               await page.waitForSelector('input[name="description"]');
-              await page.waitForSelector('input[name="amount"]');
+              await page.waitForSelector('input[name="expression"]');
               await page.waitForSelector('select[name="categoryId"]');
 
               // Wait for categories to load
@@ -145,10 +145,10 @@ test.describe('Transaction Management E2E', () => {
 
               // Fill transaction form
               await page.locator('input[name="description"]').fill('Yearly Income Test');
-              await page.locator('input[name="amount"]').fill('1200');
+              await page.locator('input[name="expression"]').fill('1200');
               await page.locator('select[name="frequency"]').selectOption('year');
               await page.locator('select[name="categoryId"]').selectOption('Salary');
-              await page.locator('input[name="date"]').fill('2024-01-01');
+              // Date field removed for recurring transactions
 
               // Wait for form to be valid
               await page.waitForSelector('[data-testid="submit-button"]:not([disabled])');
@@ -203,7 +203,7 @@ test.describe('Transaction Management E2E', () => {
               
               // Wait for the form to be visible
               await page.waitForSelector('input[name="description"]');
-              await page.waitForSelector('input[name="amount"]');
+              await page.waitForSelector('input[name="expression"]');
               await page.waitForSelector('select[name="categoryId"]');
 
               // Wait for categories to load
@@ -211,10 +211,10 @@ test.describe('Transaction Management E2E', () => {
 
               // Fill transaction form
               await page.locator('input[name="description"]').fill('Fortnightly Expense Test');
-              await page.locator('input[name="amount"]').fill('-200'); // Negative for expense
+              await page.locator('input[name="expression"]').fill('-200'); // Negative for expense
               await page.locator('select[name="frequency"]').selectOption('fortnight');
               await page.locator('select[name="categoryId"]').selectOption('Groceries');
-              await page.locator('input[name="date"]').fill('2024-01-01');
+              // Date field removed for recurring transactions
 
               // Wait for form to be valid
               await page.waitForSelector('[data-testid="submit-button"]:not([disabled])');
@@ -282,7 +282,7 @@ test.describe('Transaction Management E2E', () => {
                 
                 // Wait for the form to be visible
                 await page.waitForSelector('input[name="description"]');
-                await page.waitForSelector('input[name="amount"]');
+                await page.waitForSelector('input[name="expression"]');
                 await page.waitForSelector('select[name="categoryId"]');
 
                 // Wait for categories to load
@@ -290,10 +290,10 @@ test.describe('Transaction Management E2E', () => {
 
                 // Fill transaction form
                 await page.locator('input[name="description"]').fill(transaction.description);
-                await page.locator('input[name="amount"]').fill(transaction.amount);
+                await page.locator('input[name="expression"]').fill(transaction.amount);
                 await page.locator('select[name="frequency"]').selectOption(transaction.frequency);
                 await page.locator('select[name="categoryId"]').selectOption(transaction.category);
-                await page.locator('input[name="date"]').fill('2024-01-01');
+                // Date field removed for recurring transactions
 
                 // Wait for form to be valid
                 await page.waitForSelector('[data-testid="submit-button"]:not([disabled])');
