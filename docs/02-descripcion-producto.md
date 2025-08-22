@@ -2,7 +2,7 @@
 
 ## 1.1. Objetivo
 
-El **AI-Powered Professional Avatar** es un sistema de chatbot inteligente que actúa como representante virtual profesional 24/7. Su propósito es revolucionar la manera en que los reclutadores y potenciales clientes interactúan con el perfil profesional, proporcionando información precisa, contextualizada y en tiempo real sobre la trayectoria, habilidades y experiencia del desarrollador.
+El **AI Resume Agent: Your 24/7 Professional Interview** es un sistema de chatbot inteligente que actúa como representante virtual profesional 24/7. Su propósito es revolucionar la manera en que los reclutadores y potenciales clientes interactúan con el perfil profesional, proporcionando información precisa, contextualizada y en tiempo real sobre la trayectoria, habilidades y experiencia del desarrollador.
 
 ### Valor que aporta:
 - **Disponibilidad 24/7:** Acceso inmediato a información profesional sin restricciones horarias
@@ -47,7 +47,9 @@ El **AI-Powered Professional Avatar** es un sistema de chatbot inteligente que a
 - **Industrias de interés:** Rubros y sectores que generan mayor engagement
 
 #### 🔗 Integración con Portfolio
-- Widget no intrusivo integrado en el portfolio existente
+- Widget no intrusivo integrado en el portfolio existente en [almapi.dev](https://almapi.dev/)
+- **Primera entrega:** Prototipo funcional mediante Streamlit para cumplir con el hito
+- **Objetivo secundario:** Integración directa en almapi.dev si queda tiempo disponible
 - Diseño consistente con la identidad visual
 - Acceso desde cualquier sección del sitio
 - Experiencia fluida sin recargas de página
@@ -58,6 +60,20 @@ El **AI-Powered Professional Avatar** es un sistema de chatbot inteligente que a
 - Autenticación y autorización robusta
 - Monitoreo de seguridad en tiempo real
 
+#### 🛡️ Ciberseguridad Avanzada
+- **Cloud Armor:** Protección DDoS y WAF rules automáticas
+- **Threat Detection:** Detección en tiempo real de ataques y amenazas
+- **Prompt Injection Protection:** Protección contra inyección de prompts maliciosos
+- **Rate Limiting:** Protección contra abuso de API y ataques de fuerza bruta
+- **Security Command Center:** Monitoreo centralizado de amenazas de seguridad
+
+#### 💰 Control de Costos y Optimización
+- **Budget Management:** Presupuesto mensual configurable con alertas automáticas
+- **Resource Quotas:** Límites estrictos por servicio para evitar gastos excesivos
+- **Emergency Mode:** Activación automática de modo de emergencia al exceder presupuesto
+- **Cost Monitoring:** Dashboard en tiempo real de gastos y métricas de costos
+- **Auto-scaling Limits:** Control inteligente del escalado automático
+
 ## 1.3. Diseño y experiencia de usuario
 
 ### Flujo de Usuario Principal
@@ -66,7 +82,7 @@ El **AI-Powered Professional Avatar** es un sistema de chatbot inteligente que a
 journey
     title Experiencia de Usuario del Chatbot Profesional
     section Descubrimiento
-      Usuario visita portfolio: 5: Usuario
+      Usuario visita almapi.dev: 5: Usuario
       Usuario navega por secciones: 4: Usuario
       Usuario identifica widget de chat: 5: Usuario
     section Interacción
@@ -95,81 +111,6 @@ journey
 ## 1.4. Instrucciones de instalación
 
 ### Prerrequisitos
-- Node.js 18+ (para el frontend existente)
-- Python 3.11+ (para el backend)
-- Google Cloud Platform account
-- GitHub account
-
-### Instalación del Frontend (Portfolio existente)
-```bash
-# Clonar el repositorio
-git clone https://github.com/aandmaldonado/my-resume-react.git
-cd my-resume-react
-git checkout feature-init-prototype
-
-# Instalar dependencias
-npm install
-
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con las configuraciones del backend
-
-# Ejecutar en desarrollo
-npm start
-```
-
-### Instalación del Backend (Nuevo desarrollo)
-```bash
-# Crear entorno virtual
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Configurar variables de entorno
-cp .env.example .env
-# Configurar credenciales de GCP y Vertex AI
-
-# Ejecutar en desarrollo
-uvicorn main:app --reload
-```
-
-### Configuración de Base de Datos
-```bash
-# Configurar Google Cloud SQL
-gcloud sql instances create chatbot-db \
-    --database-version=POSTGRES_14 \
-    --tier=db-f1-micro \
-    --region=us-central1
-
-# Configurar Vector Search
-gcloud ai index-endpoints create \
-    --region=us-central1 \
-    --display-name=chatbot-vectors
-```
-
-### Despliegue en GCP
-```bash
-# Configurar Cloud Run para el backend
-gcloud run deploy chatbot-backend \
-    --source . \
-    --platform managed \
-    --region us-central1 \
-    --allow-unauthenticated
-
-# Configurar Cloud Storage para el frontend
-gsutil mb gs://chatbot-portfolio
-gsutil -m cp -r build/* gs://chatbot-portfolio/
-```
-
-### Configuración de CI/CD
-- Configurar GitHub Actions para despliegue automático
-- Configurar secretos en GitHub para credenciales de GCP
-- Configurar monitoreo con Cloud Monitoring
-
-### Verificación de instalación
-1. Verificar que el frontend responde en http://localhost:3000
-2. Verificar que el backend responde en http://localhost:8000/docs
-3. Probar la integración del chatbot en el portfolio
-4. Verificar métricas en Google Cloud Console 
+- Node.js 18+ (para el frontend ya desplegado en almapi.dev)
+- Python 3.11+ (para el backend - nuevo repositorio)
+- Google Cloud Platform account 

@@ -1,15 +1,15 @@
-# AI-Powered Professional Avatar: Tu Gemelo Digital Profesional 🤖
+# AI Resume Agent: Your 24/7 Professional Interview
 
 ## 1. Visión del Producto
 
 ### 1.1 Resumen Ejecutivo
-El proyecto consiste en crear un gemelo digital profesional mediante un avanzado chatbot basado en IA que actuará como tu representante virtual 24/7. Este asistente inteligente utiliza tecnología RAG (Retrieval Augmented Generation) para proporcionar información precisa y contextualizada sobre tu trayectoria profesional, habilidades y experiencia, revolucionando la manera en que los reclutadores y potenciales clientes interactúan con tu perfil profesional.
+El proyecto consiste en crear un agente de CV inteligente mediante un avanzado chatbot basado en IA que actuará como tu representante virtual 24/7. Este asistente inteligente utiliza tecnología RAG (Retrieval Augmented Generation) para proporcionar información precisa y contextualizada sobre tu trayectoria profesional, habilidades y experiencia, revolucionando la manera en que los reclutadores y potenciales clientes interactúan con tu perfil profesional.
 
 ### 1.2 Arquitectura del Sistema
 #### Diagrama de Arquitectura General
 ```mermaid
 graph TD
-    A[Usuario] -->|Visita| B[Portfolio Web]
+    A[Usuario] -->|Visita| B[Portfolio Web - almapi.dev]
     B --> C{ChatBot IA}
     C -->|Consulta| D[Sistema RAG]
     D -->|Recupera| E[Base de Conocimiento]
@@ -66,26 +66,26 @@ sequenceDiagram
    - Buscando colaboraciones en proyectos
    - Explorando oportunidades de aprendizaje mutuo
 
-### 1.2.1 Integración Trello y Feedback
+### 1.2.1 Integración Atlassian y Feedback
 
-El sistema se integra con Trello mediante un servidor MCP personalizado, permitiendo la sincronización automática de tickets, tareas y su estado en el tablero Kanban del equipo. Esta integración facilita la gestión ágil, la trazabilidad y la automatización de flujos de trabajo entre el chatbot, el backend y la gestión de proyectos.
+El sistema se integra con la suite Atlassian (JIRA + Confluence) para la gestión de proyectos, permitiendo la sincronización automática de tickets, tareas y su estado en el tablero Kanban del equipo. Esta integración facilita la gestión ágil, la trazabilidad y la automatización de flujos de trabajo entre el chatbot, el backend y la gestión de proyectos.
 
-- Los tickets generados en el sistema se reflejan automáticamente en Trello.
+- Los tickets generados en el sistema se reflejan automáticamente en JIRA.
 - El avance de los tickets y cambios de estado se sincronizan en tiempo real.
-- El feedback de usuarios y métricas relevantes pueden generar tareas o alertas en Trello para su seguimiento.
+- El feedback de usuarios y métricas relevantes pueden generar tareas o alertas en JIRA para su seguimiento.
 - El flujo de feedback del chatbot alimenta el sistema de análisis y puede derivar en la creación de nuevas tareas o mejoras en el backlog.
 
 **Diagrama de integración (Mermaid):**
 ```mermaid
 graph LR
-    A[Chatbot IA] -- Genera ticket --> B[Trello MCP Server]
-    B -- Crea/Actualiza --> C[Trello Board]
+    A[Chatbot IA] -- Genera ticket --> B[JIRA API]
+    B -- Crea/Actualiza --> C[JIRA Board]
     C -- Estado/Comentarios --> B
     B -- Sincroniza --> D[Backend API]
     D -- Feedback/Métricas --> E[Análisis y Mejora Continua]
     E -- Nueva tarea/alerta --> B
 ```
-[Imagen: /diagramas/integracion_trello.png]
+[Imagen: /diagramas/integracion_atlassian.png]
 
 ## 2. Características del Producto
 
@@ -193,7 +193,7 @@ graph LR
 ## 3. Experiencia de Usuario
 
 ### 3.1 Flujo de Interacción
-1. Usuario visita el portfolio
+1. Usuario visita el portfolio ya desplegado en almapi.dev
 2. Accede al chat mediante un botón/widget visible
 3. Puede realizar preguntas en lenguaje natural
 4. Recibe respuestas contextualizadas y relevantes
@@ -236,31 +236,82 @@ graph LR
 - Protección de información sensible
 - Políticas claras de uso y privacidad
 
-### 5.2 Mantenimiento
+#### 5.1.1 Ciberseguridad Avanzada
+- **OWASP Top 10 for LLM Compliance:** Implementación completa de todas las mitigaciones
+- **Cloud Armor:** Protección DDoS y WAF rules automáticas
+- **Threat Detection:** Detección en tiempo real de ataques y amenazas
+- **Prompt Injection Protection:** Protección contra inyección de prompts maliciosos
+- **Rate Limiting:** Protección contra abuso de API y ataques de fuerza bruta
+- **Security Command Center:** Monitoreo centralizado de amenazas de seguridad
+
+#### 5.1.2 Medidas de Seguridad Específicas
+- **Input Validation:** Validación estricta y sanitización de todas las entradas
+- **Output Filtering:** Filtrado de respuestas del LLM para prevenir fugas de información
+- **Audit Logging:** Registro completo de todas las interacciones para auditoría
+- **Access Control:** Control de acceso basado en roles y autenticación robusta
+- **Data Encryption:** Cifrado en reposo y en tránsito para todos los datos sensibles
+
+### 5.2 Control de Costos y Optimización
+- **Budget Management:** Presupuesto mensual configurable con alertas automáticas
+- **Resource Quotas:** Límites estrictos por servicio para evitar gastos excesivos
+- **Emergency Mode:** Activación automática de modo de emergencia al exceder presupuesto
+- **Cost Monitoring:** Dashboard en tiempo real de gastos y métricas de costos
+- **Auto-scaling Limits:** Control inteligente del escalado automático
+
+#### 5.2.1 Límites de Recursos por Servicio
+- **Vertex AI:** 10,000 requests/día, 1,000 tokens/request máximo
+- **Vector Search:** 10GB máximo de índice, 1,000 queries/minuto
+- **Cloud Run:** 10 instancias máximo, 2 CPU y 4GB RAM por instancia
+- **Cloud Storage:** 100GB máximo con políticas de lifecycle automático
+- **BigQuery:** $5.0 máximo por query, 50GB máximo de storage
+
+#### 5.2.2 Sistema de Alertas de Costos
+- **50% del presupuesto:** Alerta informativa
+- **80% del presupuesto:** Alerta de advertencia
+- **100% del presupuesto:** Activación automática de modo de emergencia
+- **Notificaciones:** Pub/Sub, email y Slack para alertas críticas
+
+### 5.3 Mantenimiento
 - Actualizaciones regulares de la base de conocimiento
 - Monitoreo de calidad de respuestas
 - Mejora continua del modelo
 - Backup y recuperación de datos
 
+#### 5.3.1 Mantenimiento de Seguridad
+- Auditorías de seguridad trimestrales
+- Actualizaciones de dependencias de seguridad
+- Monitoreo continuo de amenazas
+- Testing de penetración anual
+- Revisión y actualización de políticas de seguridad
+
+#### 5.3.2 Mantenimiento de Costos
+- Revisión mensual de presupuestos y gastos
+- Optimización continua de recursos
+- Análisis de tendencias de costos
+- Ajuste de cuotas y límites según necesidades
+- Reportes de eficiencia de costos
+
 ## 6. Fases de Implementación
 
 ### 6.1 Fase 1: Preparación
 - Recopilación y estructuración de datos
-- Diseño de la interfaz de usuario
+- Diseño de la interfaz de usuario del chatbot
 - Configuración inicial del sistema RAG
 
 ### 6.2 Fase 2: Desarrollo Base
-- Implementación del backend
-- Integración con el portfolio existente
+- Implementación del backend en nuevo repositorio
+- **Desarrollo del prototipo Streamlit:** Primera entrega funcional para cumplir con el hito
+- Integración del chatbot con el portfolio ya desplegado en almapi.dev (objetivo secundario)
 - Desarrollo del sistema de chat
 
 ### 6.3 Fase 3: Mejoras y Optimización
 - Afinamiento del modelo
+- **Integración en almapi.dev:** Si queda tiempo disponible
 - Mejoras en UX basadas en feedback
 - Expansión de la base de conocimiento
 
 ### 6.4 Fase 4: Lanzamiento y Monitoreo
-- Despliegue en producción
+- Despliegue del backend en producción
 - Monitoreo de rendimiento
 - Recopilación de feedback
 - Ajustes basados en uso real
@@ -283,7 +334,7 @@ graph LR
 
 ### 8.1 Mínimo Producto Viable (MVP)
 - Chatbot funcional con información básica
-- Integración completa con el portfolio
+- Integración completa con el portfolio ya desplegado en almapi.dev
 - Soporte para español e inglés
 - Sistema de feedback básico
 

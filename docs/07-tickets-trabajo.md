@@ -2,11 +2,13 @@
 
 ## Información General
 
-- **Proyecto:** AI-Powered Professional Avatar
+- **Proyecto:** AI Resume Agent: Your 24/7 Professional Interview
 - **Gestión:** Atlassian Suite (JIRA + Confluence)
 - **Metodología:** Agile/Scrum
 - **Duración:** 30 horas totales
 - **Sprints:** 3 sprints de 2 semanas cada uno
+- **Frontend:** Ya desplegado en [almapi.dev](https://almapi.dev/)
+- **Backend:** Nuevo repositorio a crear
 
 ---
 
@@ -346,16 +348,15 @@ Restricciones: Debe ser escalable y optimizada para las consultas frecuentes.
 
 **Descripción:**
 Propósito: Desarrollar el widget de chatbot que permita a los usuarios interactuar de forma intuitiva con el sistema.
-Detalles: Diseñar interfaz del widget, implementar componente React, integrar WebSockets, implementar manejo de estados y añadir animaciones.
-Restricciones: Debe mantener consistencia visual con el portfolio existente.
+Detalles: Crear una interfaz de chat profesional, responsive y accesible que se integre con el backend. **Primera entrega mediante Streamlit para cumplir con el hito, desarrollo del widget React como objetivo secundario.**
+Restricciones: Debe ser responsive, accesible y seguir las mejores prácticas de UX/UI.
 
 **Criterios de Aceptación:**
-- Widget de chatbot completamente funcional
-- Interfaz responsive y accesible
-- Integración con WebSockets para tiempo real
-- Manejo de estados implementado
-- Animaciones y transiciones suaves
-- Consistencia visual con portfolio
+- **Prototipo Streamlit:** Aplicación funcional con interfaz de chat profesional
+- **Interfaz Responsive:** Adaptación perfecta a dispositivos móviles y desktop
+- **Integración Backend:** Comunicación completa con la API del backend
+- **Experiencia de Usuario:** Interfaz intuitiva y atractiva
+- **Widget React (Objetivo Secundario):** Si queda tiempo, desarrollo del widget para almapi.dev
 
 **Pruebas de Validación:**
 - Tests de componente React
@@ -644,6 +645,11 @@ Restricciones: Debe cumplir con OWASP Top 10 for LLM.
 - Logging de seguridad implementado
 - Alertas de seguridad configuradas
 - Penetration testing completado
+- Cloud Armor configurado con políticas de seguridad
+- Threat detection implementado y funcionando
+- Prompt injection protection activa
+- Security Command Center configurado
+- OWASP Top 10 for LLM compliance verificado
 
 **Pruebas de Validación:**
 - Tests de seguridad automatizados
@@ -724,44 +730,47 @@ Restricciones: Debe tener cobertura >90% y ejecutarse en CI/CD.
 
 ---
 
-### IC-016: Aseguramiento de Calidad
+### IC-016: Implementación de Control de Costos y Budgets
 
-**Título:** Establecimiento de procesos de aseguramiento de calidad
+**Título:** Implementación de sistema de control de costos y gestión de presupuesto
 
 **Descripción:**
-Propósito: Establecer procesos de aseguramiento de calidad que aseguren que el software entregado cumpla con estándares de calidad.
-Detalles: Definir estándares de calidad, configurar code review, implementar linting automático y establecer proceso de release.
-Restricciones: Debe ser consistente y medible.
+Propósito: Implementar sistema robusto de control de costos para prevenir gastos excesivos y optimizar recursos en GCP.
+Detalles: Configurar budgets mensuales, implementar alertas automáticas, configurar cuotas de recursos, implementar modo de emergencia y dashboard de monitoreo de costos.
+Restricciones: Debe integrarse con GCP Billing API y proporcionar alertas en tiempo real.
 
 **Criterios de Aceptación:**
-- Estándares de calidad definidos y documentados
-- Code review obligatorio implementado
-- Linting automático configurado
-- Métricas de calidad establecidas
-- Proceso de release documentado
-- Testing de regresión configurado
-- Procesos de QA documentados
+- Budget mensual configurado con alertas en 50%, 80% y 100%
+- Sistema de alertas automáticas implementado (Pub/Sub, email, Slack)
+- Cuotas de recursos configuradas por servicio
+- Modo de emergencia automático al exceder 100% del presupuesto
+- Dashboard de monitoreo de costos en tiempo real
+- Rate limiting basado en costos implementado
+- Notificaciones de emergencia configuradas
 
 **Pruebas de Validación:**
-- Verificación de cumplimiento de estándares
-- Validación de proceso de code review
-- Revisión de métricas de calidad
+- Simulación de exceso de presupuesto
+- Validación de alertas automáticas
+- Testing de modo de emergencia
+- Verificación de cuotas de recursos
+- Validación de dashboard de costos
 
-**Prioridad:** Should
+**Prioridad:** Must
 
-**Estimación de Esfuerzo:** 3 puntos de historia (M)
+**Estimación de Esfuerzo:** 6 puntos de historia (M)
 
-**Asignación:** QA Lead
+**Asignación:** DevOps Engineer
 
 **Sprint:** 3
 
 **Épica:** EP-005
 
-**Etiquetas:** Calidad, Procesos, Sprint 3
+**Etiquetas:** Costos, GCP, Budget, Sprint 3
 
 **Comentarios y Notas:**
-- Implementar code review obligatorio
-- Configurar métricas de calidad automáticas
+- Integrar con GCP Billing API
+- Configurar notificaciones de emergencia
+- Implementar métricas de eficiencia de costos
 
 **Enlaces o Referencias:**
 - [HDU-016 en UserStories.md](./06-historias-usuario.md)
@@ -772,30 +781,29 @@ Restricciones: Debe ser consistente y medible.
 
 ---
 
-## EP-006: Despliegue, Monitoreo y Operaciones
-
 ### IC-017: Configuración de CI/CD Pipeline
 
-**Título:** Configuración de pipeline de CI/CD robusto y automatizado
+**Título:** Configuración completa del pipeline de CI/CD para el proyecto
 
 **Descripción:**
-Propósito: Configurar un pipeline de CI/CD que automatice el proceso de build, testing y despliegue de forma segura y confiable.
-Detalles: Configurar GitHub Actions, implementar build automatizado, testing automático, security scanning y despliegue automático.
-Restricciones: Debe incluir escaneo de vulnerabilidades y rollback automático.
+Propósito: Configurar pipeline automatizado de integración continua y despliegue continuo para el backend.
+Detalles: Configurar GitHub Actions, implementar build automatizado, testing automático, security scanning y despliegue automático a GCP.
+Restricciones: Debe incluir security scanning obligatorio y testing automático.
 
 **Criterios de Aceptación:**
 - GitHub Actions configurado y funcionando
 - Build automatizado implementado
-- Testing automático en pipeline
+- Testing automático configurado
 - Security scanning integrado
-- Despliegue automático configurado
-- Rollback automático implementado
-- Notificaciones configuradas
+- Despliegue automático a staging
+- Despliegue manual a producción
+- Rollback automático en caso de fallo
 
 **Pruebas de Validación:**
-- Ejecución completa del pipeline
+- Verificación de pipeline completo
+- Testing de rollback automático
 - Verificación de security scanning
-- Validación de rollback automático
+- Validación de despliegue a staging
 
 **Prioridad:** Must
 
@@ -805,13 +813,14 @@ Restricciones: Debe incluir escaneo de vulnerabilidades y rollback automático.
 
 **Sprint:** 3
 
-**Épica:** EP-006
+**Épica:** EP-005
 
-**Etiquetas:** CI/CD, GitHub Actions, Sprint 3
+**Etiquetas:** CI/CD, DevOps, GitHub Actions, Sprint 3
 
 **Comentarios y Notas:**
-- Usar GitHub Actions para automatización
 - Implementar security scanning obligatorio
+- Configurar notificaciones de build
+- Implementar rollback automático
 
 **Enlaces o Referencias:**
 - [HDU-017 en UserStories.md](./06-historias-usuario.md)
@@ -1011,7 +1020,7 @@ Restricciones: Debe minimizar downtime y ser escalable.
 ### Integración con Atlassian Suite
 
 #### Configuración de JIRA
-- **Proyecto:** AI-Powered Professional Avatar
+- **Proyecto:** AI Resume Agent: Your 24/7 Professional Interview
 - **Issue Types:** Epic, Story, Task, Bug, Sub-task
 - **Workflows:** Custom workflow para desarrollo ágil
 - **Fields:** Épica, Sprint, Estimación, Prioridad, Asignación

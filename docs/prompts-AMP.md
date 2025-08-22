@@ -22,11 +22,11 @@
 
 | Categoría                               | Cantidad | Prompts                                 |
 |-----------------------------------------|----------|------------------------------------------|
-| 📦 Descripción general del producto     | 3        | Prompt 1, Prompt 3, Prompt 11            |
-| 🏗️ Arquitectura del sistema            | 12       | Prompt 2, Prompt 4, Prompt 5, Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 10, Prompt 11, Prompt 12, Prompt 13, Prompt 17 |
-| 🗺️ Diagrama de arquitectura            | 3        | Prompt 2, Prompt 15, Prompt 16           |
-| 🧩 Descripción de componentes principales| 11       | Prompt 1, Prompt 2, Prompt 3, Prompt 5, Prompt 10, Prompt 11, Prompt 12, Prompt 14, Prompt 15, Prompt 16, Prompt 17 |
-| 🗂️ Descripción de alto nivel del proyecto y estructura de ficheros | 3 | Prompt 1, Prompt 15, Prompt 17 |
+| 📦 Descripción general del producto     | 5        | Prompt 1, Prompt 3, Prompt 11, Prompt 20, Prompt 22            |
+| 🏗️ Arquitectura del sistema            | 16       | Prompt 2, Prompt 4, Prompt 5, Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 10, Prompt 11, Prompt 12, Prompt 13, Prompt 17, Prompt 19, Prompt 20, Prompt 21, Prompt 22 |
+| 🗺️ Diagrama de arquitectura            | 4        | Prompt 2, Prompt 15, Prompt 16, Prompt 21           |
+| 🧩 Descripción de componentes principales| 15       | Prompt 1, Prompt 2, Prompt 3, Prompt 5, Prompt 10, Prompt 11, Prompt 12, Prompt 14, Prompt 15, Prompt 16, Prompt 17, Prompt 19, Prompt 20, Prompt 21, Prompt 22 |
+| 🗂️ Descripción de alto nivel del proyecto y estructura de ficheros | 4 | Prompt 1, Prompt 15, Prompt 17, Prompt 19 |
 | ☁️ Infraestructura y despliegue         | 7        | Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 13, Prompt 14, Prompt 16 |
 | 🛡️ Seguridad                           | 1        | Prompt 13                                |
 | 🧪 Tests                                | 1        | Prompt 12                                |
@@ -36,7 +36,7 @@
 | 🎟️ Tickets de trabajo                  | 11       | Prompt 4, Prompt 5, Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 10, Prompt 12, Prompt 8, Prompt 9, Prompt 18 |
 | 🔀 Pull request                         | 1        | Prompt 18                                |
 
-**Total de prompts:** 18
+**Total de prompts:** 22
 
 ---
 
@@ -54,7 +54,7 @@
 
 **Prompt 3:**
 - **Categoría:** `👤 Historias de usuario` `📦 Descripción general del producto` `🧩 Descripción de componentes principales`
-- **Prompt:** "analiza @PRD.md y genera todas las historias de usuario necesarias para abarcar las funcionalidades del proyecto. guiate por la siguiente informacion y ejemplos: Estructura basica de una User Story Formato estándar: 'Como [tipo de usuario], quiero [realizar una acción] para [obtener un beneficio]'. Descripción: Una descripción concisa y en lenguaje natural de la funcionalidad que el usuario desea. Criterios de Aceptación: Condiciones específicas que deben cumplirse para considerar la User Story como 'terminada', éstos deberian de seguir un formato similar a “Dado que” [contexto inicial], 'cuando” [acción realizada], “entonces” [resultado esperado]. Notas adicionales:  Notas que puedan ayudar al desarrollo de la historia Tareas: Lista de tareas y subtareas para que esta historia pueda ser completada Ejemplos de User Story Desarrollo de Productos:'Como gerente de producto, quiero una manera en que los miembros del equipo puedan entender cómo las tareas individuales contribuyen a los objetivos, para que puedan priorizar mejor su trabajo.' Experiencia del Cliente:'Como cliente recurrente, espero que mi información quede guardada para crear una experiencia de pago más fluida, para que pueda completar mis compras de manera rápida y sencilla.' Aplicación Móvil:'Como usuario frecuente de la aplicación, quiero una forma de simplificar la información relevante de la manera más rápida posible, para poder acceder a la información que necesito de manera eficiente.' Estos ejemplos muestran cómo las User Stories se enfocan en las necesidades y objetivos de los usuarios finales, en lugar de en las funcionalidades técnicas. La estructura simple y el lenguaje natural ayudan a que todos los miembros del equipo, incluyendo stakeholders no técnicos, puedan entender y colaborar en el desarrollo del producto. Ejemplo completo: Título de la Historia de Usuario:  Como [rol del usuario], quiero [acción que desea realizar el usuario], para que [beneficio que espera obtener el usuario]. Criterios de Aceptación: [Detalle específico de funcionalidad] [Detalle específico de funcionalidad] [Detalle específico de funcionalidad] Notas Adicionales: [Cualquier consideración adicional] Historias de Usuario Relacionadas: [Relaciones con otras historias de usuario] cada user story debe tener un codigo de identificacion para facilitar el seguimiento formato HDU-XXX por ejemplo HDU-001 la parte numerica del codigo debe ser incremental y secuencial en la medida que se van creando las HDU agrupa las HDU dentro de epicas, las epicas deben tener un nombre representativo y una codificacion EP-XXX ejemplo EP-001, debe ser secuencial e incremental a medida q se van creando tanto la epica como la hdu deben tener un titulo descriptivo claro y conciso sin ambiguedades documenta todo en @UserStories.md "
+- **Prompt:** "analiza @PRD.md y genera todas las historias de usuario necesarias para abarcar las funcionalidades del proyecto. guiate por la siguiente informacion y ejemplos: Estructura basica de una User Story Formato estándar: 'Como [tipo de usuario], quiero [realizar una acción] para [obtener un beneficio]'. Descripción: Una descripción concisa y en lenguaje natural de la funcionalidad que el usuario desea. Criterios de Aceptación: Condiciones específicas que deben cumplirse para considerar la User Story como 'terminada', éstos deberian de seguir un formato similar a "Dado que" [contexto inicial], 'cuando" [acción realizada], "entonces" [resultado esperado]. Notas adicionales:  Notas que puedan ayudar al desarrollo de la historia Tareas: Lista de tareas y subtareas para que esta historia pueda ser completada Ejemplos de User Story Desarrollo de Productos:'Como gerente de producto, quiero una manera en que los miembros del equipo puedan entender cómo las tareas individuales contribuyen a los objetivos, para que puedan priorizar mejor su trabajo.' Experiencia del Cliente:'Como cliente recurrente, espero que mi información quede guardada para crear una experiencia de pago más fluida, para que pueda completar mis compras de manera rápida y sencilla.' Aplicación Móvil:'Como usuario frecuente de la aplicación, quiero una forma de simplificar la información relevante de la manera más rápida posible, para poder acceder a la información que necesito de manera eficiente.' Estos ejemplos muestran cómo las User Stories se enfocan en las necesidades y objetivos de los usuarios finales, en lugar de en las funcionalidades técnicas. La estructura simple y el lenguaje natural ayudan a que todos los miembros del equipo, incluyendo stakeholders no técnicos, puedan entender y colaborar en el desarrollo del producto. Ejemplo completo: Título de la Historia de Usuario:  Como [rol del usuario], quiero [acción que desea realizar el usuario], para que [beneficio que espera obtener el usuario]. Criterios de Aceptación: [Detalle específico de funcionalidad] [Detalle específico de funcionalidad] [Detalle específico de funcionalidad] Notas Adicionales: [Cualquier consideración adicional] Historias de Usuario Relacionadas: [Relaciones con otras historias de usuario] cada user story debe tener un codigo de identificacion para facilitar el seguimiento formato HDU-XXX por ejemplo HDU-001 la parte numerica del codigo debe ser incremental y secuencial en la medida que se van creando las HDU agrupa las HDU dentro de epicas, las epicas deben tener un nombre representativo y una codificacion EP-XXX ejemplo EP-001, debe ser secuencial e incremental en la medida q se van creando tanto la epica como la hdu deben tener un titulo descriptivo claro y conciso sin ambiguedades documenta todo en @UserStories.md "
 - **LLM:** GPT-4.1
 
 **Prompt 4:**
@@ -130,6 +130,26 @@
 **Prompt 18:**
 - **Categoría:** `🏗️ Arquitectura del sistema` `🎟️ Tickets de trabajo` `🗂️ Descripción de alto nivel del proyecto y estructura de ficheros`
 - **Prompt:** "Eres un experto en planificacion de proyectos y Necesito que reorganices la informacion del proyecto y su planificación guiate por lo que se necesita entregar @init.md @readme.md Redefine las epicas para que sean relevantes y abarquen todo el proyecto desde el analisis hasta el despliegue y monitoreo. Los hitos serán las fechas de entrega descritas en @init.md cualquier diagrama que generes adicional hazlo en formato mermaid (asegurate de que no tenga error de sintaxis). Modifica toda la referencia a trabajar con trello y cambiala por la implementacion de un MCP para trabajar con suite Atlassian (JIRA y confluence) para la gestion del proyecto. crea los archivos necesarios en formato markdown para documentar por separado lo siguiente: - Ficha del proyecto - Descripción general del producto - Arquitectura del sistema - Modelo de datos - Especificación de la API - Historias de usuario - Tickets de trabajo - Pull requests genera un archivo por cada punto en la carpeta @docs/"
+- **LLM:** Claude-3-Sonnet-20240229
+
+**Prompt 19:**
+- **Categoría:** `🏗️ Arquitectura del sistema` `🗂️ Descripción de alto nivel del proyecto y estructura de ficheros` `🧩 Descripción de componentes principales`
+- **Prompt:** "@docs/ Eres un líder tecnico con años de experiencia, necesitas cambiar algunas cosas del proyecto ya definido, te detallo a continuacion los cambios: el repo ya no es mono repo, el repo actual solo contiene el frontend y éste ya está desplegado en produccion @https://almapi.dev/ para el backend se creara un nuevo repo (aun no se crea, deja un placeholder en la documentacion) actualiza todos los documentos y diagramas necesarios para reflejar estos cambios."
+- **LLM:** Claude-3-Sonnet-20240229
+
+**Prompt 20:**
+- **Categoría:** `📦 Descripción general del producto` `🏗️ Arquitectura del sistema` `🧩 Descripción de componentes principales`
+- **Prompt:** "Eres un product owner, necesito que me ayudes a cambiar el nombre del proyecto el actual no me convencé: **AI-Powered Professional Avatar: Tu Gemelo Digital Profesional 🤖** de preferencia tiene q ser en ingles, llamativo y que genere impacto, conciso pero descriptivo. la principal caracteristica de este bot o agente, es que cualquier reclutador o persona q desee trabajar conmigo se haga una idea de mi perfil profesional chateando de manera natural 'supuestamente conmigo' asi tiene un aproach sin la necesidad de una primera entrevista o llamada telefonica. al implementar un sistema RAG tambien demuestro mis habilidades en IA q es hacia donde apunto laboralmente."
+- **LLM:** Claude-3-Sonnet-20240229
+
+**Prompt 21:**
+- **Categoría:** `🏗️ Arquitectura del sistema` `🧩 Descripción de componentes principales` `🗺️ Diagrama de arquitectura`
+- **Prompt:** "Eres un arquitecto de IA experto en implementacion de sistemas RAG. necesito que analices toda la documentacion de @docs/ y verifiques este todo correcto o si es necesario algo mas para completar el proyecto con exito, si hace falta detallar algo modifica todo lo necesario o incluye mas diagramas que ayuden a los desarrolladores en la etapa de desarrollo y testing. no olvides considerar medidas para evitar ciberataques y generacion de costos excesivos en GCP"
+- **LLM:** Claude-3-Sonnet-20240229
+
+**Prompt 22:**
+- **Categoría:** `📦 Descripción general del producto` `🏗️ Arquitectura del sistema` `🧩 Descripción de componentes principales`
+- **Prompt:** "necesito que detalles, en toda la documentacion que sea necesaria, que la entrega primero será mediante streamlit para cumplir con el hito y si queda tiempo se probará directamente en @https://almapi.dev"
 - **LLM:** Claude-3-Sonnet-20240229
 
 ## Conclusiones 🏁

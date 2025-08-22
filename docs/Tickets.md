@@ -7,7 +7,7 @@
 **Título:** Implementar botón/widget de acceso al Chatbot en el Portfolio
 
 **Descripción:**
-Propósito: Permitir a los usuarios acceder fácilmente al chatbot desde cualquier sección del portfolio, mejorando la experiencia de usuario y facilitando la interacción inmediata.
+Propósito: Permitir a los usuarios acceder fácilmente al chatbot desde cualquier sección del portfolio ya desplegado en almapi.dev, mejorando la experiencia de usuario y facilitando la interacción inmediata.
 Detalles: El botón/widget debe ser visible, no intrusivo y estar presente en todas las páginas del portfolio. Debe abrir la ventana de chat sin recargar la página. Seguir la línea visual del portfolio.
 Restricciones: Debe ser responsive y no interferir con otros elementos de navegación.
 
@@ -32,6 +32,7 @@ Restricciones: Debe ser responsive y no interferir con otros elementos de navega
 
 **Comentarios y Notas:**
 - Consultar con UX/UI para validar la ubicación óptima.
+- El portfolio ya está desplegado en almapi.dev, solo se requiere integrar el widget del chatbot.
 
 **Enlaces o Referencias:**
 - [HDU-001 en UserStories.md](./UserStories.md)
@@ -47,9 +48,9 @@ Restricciones: Debe ser responsive y no interferir con otros elementos de navega
 **Título:** Desarrollar interfaz de chat profesional y responsiva
 
 **Descripción:**
-Propósito: Ofrecer una experiencia de chat clara, profesional y consistente con el portfolio, facilitando la interacción usuario-chatbot.
-Detalles: La interfaz debe ser intuitiva, soportar mensajes en tiempo real y adaptarse a dispositivos móviles y desktop. Debe integrarse con el widget de acceso.
-Restricciones: Cumplir con estándares de accesibilidad y diseño responsive.
+Propósito: Implementar la interfaz de usuario del chatbot para permitir la interacción con los usuarios.
+Detalles: Desarrollar una interfaz de chat profesional y atractiva que se integre con el backend. **Primera entrega mediante Streamlit para cumplir con el hito, integración en almapi.dev como objetivo secundario.**
+Restricciones: Debe ser responsive, accesible y seguir las mejores prácticas de UX/UI.
 
 **Criterios de Aceptación:**
 - La interfaz de chat mantiene la identidad visual del portfolio.
@@ -72,6 +73,7 @@ Restricciones: Cumplir con estándares de accesibilidad y diseño responsive.
 
 **Comentarios y Notas:**
 - Revisar buenas prácticas de diseño conversacional.
+- La interfaz se integrará con el portfolio ya desplegado en almapi.dev.
 
 **Enlaces o Referencias:**
 - [HDU-002 en UserStories.md](./UserStories.md)
@@ -596,6 +598,11 @@ Restricciones: Las pruebas deben ser éticas y no comprometer datos reales.
 - No se detectan vulnerabilidades críticas en el sistema.
 - Se documentan y corrigen hallazgos de seguridad.
 - El sistema cumple con las normativas de privacidad.
+- Cloud Armor está configurado y funcionando correctamente.
+- Threat detection system detecta amenazas en tiempo real.
+- Prompt injection protection está activa y funcionando.
+- Security Command Center está configurado y monitoreando.
+- OWASP Top 10 for LLM compliance está verificado.
 
 **Pruebas de Validación:**
 - Escaneo de vulnerabilidades con herramientas como OWASP ZAP, Snyk o similares.
@@ -655,6 +662,54 @@ Restricciones: Los backups deben ser cifrados y almacenados de forma segura.
 
 **Enlaces o Referencias:**
 - [PRD.md sección Mantenimiento](./PRD.md)
+
+**Historial de Cambios:**
+- 21/07/2025: Creado por IA
+
+---
+
+**IC-018**
+
+**Título:** Implementación de control de costos y gestión de presupuesto
+
+**Descripción:**
+Propósito: Implementar sistema robusto de control de costos para prevenir gastos excesivos y optimizar recursos en GCP.
+Detalles: Configurar budgets mensuales, implementar alertas automáticas, configurar cuotas de recursos, implementar modo de emergencia y dashboard de monitoreo de costos.
+Restricciones: Debe integrarse con GCP Billing API y proporcionar alertas en tiempo real.
+
+**Criterios de Aceptación:**
+- Budget mensual configurado con alertas en 50%, 80% y 100%.
+- Sistema de alertas automáticas implementado (Pub/Sub, email, Slack).
+- Cuotas de recursos configuradas por servicio.
+- Modo de emergencia automático al exceder 100% del presupuesto.
+- Dashboard de monitoreo de costos en tiempo real.
+- Rate limiting basado en costos implementado.
+- Notificaciones de emergencia configuradas.
+
+**Pruebas de Validación:**
+- Simulación de exceso de presupuesto.
+- Validación de alertas automáticas.
+- Testing de modo de emergencia.
+- Verificación de cuotas de recursos.
+- Validación de dashboard de costos.
+
+**Prioridad:** Must
+
+**Estimación de Esfuerzo:** 6 puntos de historia (M)
+
+**Asignación:** DevOps Engineer
+
+**Sprint:** 2
+
+**Etiquetas:** DevOps, GCP, Costos, Budget, Sprint 2
+
+**Comentarios y Notas:**
+- Integrar con GCP Billing API.
+- Configurar notificaciones de emergencia.
+- Implementar métricas de eficiencia de costos.
+
+**Enlaces o Referencias:**
+- [tech-solution.md sección Control de Costos](./tech-solution.md)
 
 **Historial de Cambios:**
 - 21/07/2025: Creado por IA

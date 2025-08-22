@@ -2,102 +2,69 @@
 
 ## 2.1. Diagrama de arquitectura
 
-### Arquitectura General del Sistema
+### 2.1. Arquitectura General del Sistema
+
+El sistema se compone de dos componentes principales:
+
+1. **Backend API (Python FastAPI):** Servidor que maneja la lógica de negocio, RAG, y comunicación con Vertex AI
+2. **Frontend de Interfaz:**
+   - **Primera entrega:** Prototipo funcional mediante Streamlit para cumplir con el hito
+   - **Objetivo secundario:** Widget integrado en el portfolio existente en almapi.dev
+3. **Base de Datos:** PostgreSQL para datos relacionales y Vertex AI Vector Search para embeddings
+4. **Servicios de IA:** Vertex AI con Gemini para generación de respuestas
 
 ```mermaid
 graph TB
-    subgraph "Frontend (Portfolio React)"
-        A[Usuario] --> B[Portfolio Web]
-        B --> C[Widget Chatbot]
-        C --> D[Chat Interface]
+    subgraph "Frontend - Primera Entrega"
+        A[Usuario] --> B[Prototipo Streamlit]
+        B --> C[Chat Interface]
     end
     
-    subgraph "Backend (Python FastAPI)"
-        E[API Gateway] --> F[Chat Service]
-        F --> G[RAG Engine]
-        G --> H[Vector Search]
-        G --> I[LLM Service]
-        F --> J[Analytics Service]
-        J --> K[Metrics DB]
+    subgraph "Frontend - Objetivo Secundario"
+        D[Usuario] --> E[Portfolio almapi.dev]
+        E --> F[Widget Chatbot]
+        F --> G[Chat Interface]
+    end
+    
+    subgraph "Backend (Python FastAPI - Repo separado)"
+        H[API Gateway] --> I[Chat Service]
+        I --> J[RAG Engine]
+        J --> K[Vector Search]
+        J --> L[LLM Service]
+        I --> M[Analytics Service]
+        M --> N[Metrics DB]
     end
     
     subgraph "Google Cloud Platform"
-        L[Cloud SQL PostgreSQL] --> M[User Data]
-        N[Vector Search] --> O[Embeddings]
-        P[Vertex AI] --> Q[Gemini Model]
-        R[Cloud Storage] --> S[Static Assets]
-        T[Cloud Run] --> U[Backend API]
-        V[Cloud Monitoring] --> W[Logs & Metrics]
+        O[Cloud SQL PostgreSQL] --> P[User Data]
+        Q[Vector Search] --> R[Embeddings]
+        S[Vertex AI] --> T[Gemini Model]
+        U[Cloud Storage] --> V[Static Assets]
+        W[Cloud Run] --> X[Backend API]
+        Y[Cloud Monitoring] --> Z[Logs & Metrics]
     end
     
     subgraph "External Services"
-        X[LinkedIn API] --> Y[Professional Data]
-        Z[GitHub API] --> AA[Project Data]
-        BB[Atlassian JIRA] --> CC[Project Management]
+        AA[LinkedIn API] --> BB[Professional Data]
+        CC[GitHub API] --> DD[Project Data]
+        EE[Atlassian JIRA] --> FF[Project Management]
     end
     
-    D --> E
-    H --> N
-    I --> P
-    K --> L
-    G --> X
-    G --> Z
-    J --> BB
-```
-
-### Arquitectura de Componentes
-
-```mermaid
-graph LR
-    subgraph "Presentation Layer"
-        A[React Portfolio] --> B[Chat Widget]
-        B --> C[WebSocket Client]
-    end
-    
-    subgraph "API Layer"
-        D[FastAPI Gateway] --> E[Chat Controller]
-        D --> F[Analytics Controller]
-        D --> G[Admin Controller]
-    end
-    
-    subgraph "Business Logic Layer"
-        H[Chat Service] --> I[RAG Service]
-        H --> J[LLM Service]
-        H --> K[Analytics Service]
-        I --> L[Vector Search Service]
-        I --> M[Knowledge Base Service]
-    end
-    
-    subgraph "Data Layer"
-        N[PostgreSQL] --> O[User Data]
-        N --> P[Analytics Data]
-        Q[Vector DB] --> R[Embeddings]
-        S[Cloud Storage] --> T[Static Files]
-    end
-    
-    subgraph "External Services"
-        U[Vertex AI] --> V[Gemini Model]
-        W[LinkedIn API] --> X[Professional Data]
-        Y[GitHub API] --> Z[Project Data]
-    end
-    
-    C --> D
-    E --> H
-    F --> K
-    G --> K
-    I --> U
-    I --> W
-    I --> Y
-    K --> N
-    L --> Q
-    M --> S
+    C --> H
+    G --> H
+    K --> Q
+    L --> S
+    N --> O
+    J --> AA
+    J --> CC
+    M --> EE
 ```
 
 ## 2.2. Descripción de componentes principales
 
-### Frontend Components
+### Frontend Components (Ya implementado y desplegado)
 
-#### Portfolio React (Existente)
+#### Portfolio React (Existente en almapi.dev)
 - **Tecnología:** React 18 con TypeScript
 - **Propósito:** Portfolio web principal con integración del chatbot
 - **Responsabilidades:** Presentación del contenido profesional, navegación, integración del widget de chat
@@ -359,6 +326,20 @@ graph LR
 - **Encryption:** Datos en reposo y tránsito
 - **Secrets Manager:** Gestión segura de secretos
 
+#### Medidas de Ciberseguridad Avanzadas
+- **Cloud Armor:** Protección DDoS y WAF rules
+- **Security Command Center:** Monitoreo centralizado de amenazas
+- **Threat Detection:** Detección en tiempo real de ataques
+- **Rate Limiting:** Protección contra abuso de API
+- **Geo-blocking:** Bloqueo de regiones sospechosas
+
+#### Control de Costos y Budgets
+- **Budget Alerts:** Alertas automáticas en 50%, 80% y 100%
+- **Resource Quotas:** Límites estrictos por servicio
+- **Cost Monitoring:** Dashboard en tiempo real de gastos
+- **Emergency Mode:** Activación automática al exceder presupuesto
+- **Auto-scaling Limits:** Control de escalado automático
+
 ## 2.5. Seguridad
 
 ### OWASP Top 10 for LLM Compliance
@@ -388,6 +369,31 @@ graph LR
 - **Implementación:** Escaneo de vulnerabilidades
 - **Monitoreo:** Actualizaciones de seguridad
 
+#### LLM-06: Sensitive Information Disclosure
+- **Mitigación:** Clasificación y protección de datos
+- **Implementación:** Data masking y access controls
+- **Monitoreo:** Auditoría de acceso a datos sensibles
+
+#### LLM-07: Insecure Plugin Design
+- **Mitigación:** Validación estricta de plugins
+- **Implementación:** Sandboxing y permission model
+- **Monitoreo:** Análisis de comportamiento de plugins
+
+#### LLM-08: Excessive Agency
+- **Mitigación:** Validación de acciones del LLM
+- **Implementación:** Confirmation flows y escalation procedures
+- **Monitoreo:** Logging de todas las acciones del modelo
+
+#### LLM-09: Overreliance
+- **Mitigación:** Confidence scoring y human oversight
+- **Implementación:** Fallback mechanisms y validación humana
+- **Monitoreo:** Métricas de confiabilidad del modelo
+
+#### LLM-10: Model Theft
+- **Mitigación:** Protección del modelo y acceso
+- **Implementación:** Encryption y access monitoring
+- **Monitoreo:** Detección de acceso no autorizado
+
 ### Medidas de Seguridad Implementadas
 
 #### Autenticación y Autorización
@@ -407,7 +413,54 @@ graph LR
 - **XSS Prevention:** Escape de contenido dinámico
 - **CSRF Protection:** Tokens CSRF en formularios
 
-## 2.6. Tests
+## 2.6. Control de Costos y Monitoreo
+
+### Gestión de Presupuesto
+
+#### Budget Configuration
+- **Presupuesto Mensual:** $100 USD (configurable)
+- **Alertas Automáticas:** 50%, 80% y 100% del presupuesto
+- **Notificaciones:** Pub/Sub, email y Slack
+- **Acciones Automáticas:** Modo de emergencia al exceder 100%
+
+#### Resource Quotas por Servicio
+- **Vertex AI:** 10,000 requests/día, 1,000 tokens/request
+- **Vector Search:** 10GB max, 1,000 queries/minuto
+- **Cloud Run:** 10 instancias max, 2 CPU, 4GB RAM
+- **Cloud Storage:** 100GB max con lifecycle de 30 días
+- **BigQuery:** $5.0 max por query, 50GB storage
+
+### Modo de Emergencia
+
+#### Activación Automática
+- **Trigger:** Al exceder 100% del presupuesto
+- **Acciones:**
+  - Reducción de auto-scaling a 2 instancias
+  - Activación de rate limiting estricto (50% del normal)
+  - Deshabilitación de servicios no esenciales
+  - Notificaciones de emergencia al equipo
+
+#### Monitoreo de Costos
+- **Dashboard en Tiempo Real:** Gasto por servicio y período
+- **Métricas Clave:** Costo por interacción, eficiencia de recursos
+- **Alertas Inteligentes:** Detección de anomalías en costos
+- **Reportes Automáticos:** Resúmenes diarios y semanales
+
+### Monitoreo y Observabilidad
+
+#### Security Monitoring
+- **Security Command Center:** Dashboard centralizado de amenazas
+- **Threat Detection:** Detección en tiempo real de ataques
+- **Security Logging:** Logging estructurado de eventos de seguridad
+- **Incident Response:** Plan de respuesta automática a incidentes
+
+#### Performance Monitoring
+- **Cloud Monitoring:** Métricas de performance y disponibilidad
+- **Custom Metrics:** Métricas específicas de RAG y LLM
+- **Alerting:** Alertas automáticas para problemas de performance
+- **Tracing:** Distributed tracing para debugging
+
+## 2.7. Tests
 
 ### Estrategia de Testing
 
@@ -456,6 +509,14 @@ graph LR
 - **Penetration Testing:** Vulnerabilidades conocidas
 - **OWASP Compliance:** Verificación de mitigaciones
 - **Data Protection:** Cumplimiento de privacidad
+- **Prompt Injection Testing:** Validación de protección RAG
+- **Rate Limiting Testing:** Verificación de límites de uso
+
+#### Tests de Control de Costos
+- **Budget Alerts:** Validación de alertas automáticas
+- **Emergency Mode:** Testing de modo de emergencia
+- **Resource Quotas:** Verificación de límites de recursos
+- **Cost Monitoring:** Validación de métricas de costos
 
 ### Automatización de Tests
 
@@ -479,6 +540,7 @@ graph LR
 #### Herramientas de Testing
 - **Python:** pytest, pytest-asyncio, pytest-cov
 - **JavaScript:** Jest, React Testing Library
-- **Security:** OWASP ZAP, Bandit
+- **Security:** OWASP ZAP, Bandit, Security Headers
 - **Performance:** Locust, Artillery
-- **Monitoring:** Test observability con OpenTelemetry 
+- **Monitoring:** Test observability con OpenTelemetry
+- **Cost Testing:** Simulación de presupuesto y alertas 

@@ -2,11 +2,45 @@
 
 ## 4.1. Información General
 
-- **Base URL:** `https://api.chatbot-portfolio.com/v1`
+- **Base URL:** `https://api.chatbot-portfolio.com/v1` (Backend - Repo separado)
 - **Versión:** 1.0.0
 - **Formato:** JSON
 - **Autenticación:** JWT Bearer Token (para endpoints protegidos)
 - **Rate Limiting:** 100 requests por minuto por IP
+- **Frontend:** Ya desplegado en [almapi.dev](https://almapi.dev/)
+- **Integración:** El frontend se comunicará con este backend a través de APIs REST y WebSocket
+
+## 4.1.1 Seguridad y Ciberseguridad
+
+### Autenticación y Autorización
+- **JWT Tokens:** Tokens JWT con expiración configurable (default: 24 horas)
+- **Refresh Tokens:** Sistema de renovación automática de tokens
+- **Role-Based Access Control:** Diferentes niveles de acceso según el rol del usuario
+- **API Keys:** Claves de API para integraciones de terceros (con rate limiting estricto)
+
+### Protección contra Ataques
+- **Rate Limiting:** 100 requests por minuto por IP, 30 requests por minuto por usuario autenticado
+- **Input Validation:** Validación estricta de todos los inputs con sanitización automática
+- **SQL Injection Prevention:** Uso de ORM con parámetros preparados
+- **XSS Prevention:** Escape automático de contenido dinámico
+- **CSRF Protection:** Tokens CSRF en todos los endpoints que modifican estado
+
+### Headers de Seguridad
+```
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+```
+
+### Monitoreo de Seguridad
+- **Security Logging:** Logging estructurado de todos los eventos de seguridad
+- **Threat Detection:** Detección automática de patrones sospechosos
+- **Audit Trail:** Registro completo de todas las operaciones para auditoría
+- **Alerting:** Alertas automáticas para amenazas de seguridad críticas
 
 ## 4.2. Endpoints Principales
 

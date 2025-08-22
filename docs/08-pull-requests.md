@@ -2,7 +2,8 @@
 
 ## Información General
 
-- **Repositorio:** https://github.com/aandmaldonado/my-resume-react
+- **Repositorio Frontend:** https://github.com/aandmaldonado/almapi-portfolio (ya desplegado en almapi.dev)
+- **Repositorio Backend:** https://github.com/aandmaldonado/almapi-chatbot-backend (nuevo a crear)
 - **Branch Principal:** main
 - **Branch de Desarrollo:** develop
 - **Convención de Branches:** feature/IC-XXX-description
@@ -20,39 +21,36 @@
 - **Ticket Relacionado:** IC-005
 - **Tipo:** Feature
 - **Prioridad:** Alta
+- **Repositorio:** almapi-chatbot-backend
 
 ### Descripción
 Configuración inicial del proyecto backend usando FastAPI, incluyendo estructura de directorios, dependencias básicas y configuración de desarrollo.
 
 ### Cambios Realizados
-```diff
-+ backend/
-+ ├── app/
-+ │   ├── __init__.py
-+ │   ├── main.py
-+ │   ├── api/
-+ │   │   ├── __init__.py
-+ │   │   └── v1/
-+ │   │       ├── __init__.py
-+ │   │       └── endpoints/
-+ │   ├── core/
-+ │   │   ├── __init__.py
-+ │   │   ├── config.py
-+ │   │   └── security.py
-+ │   ├── models/
-+ │   │   └── __init__.py
-+ │   └── services/
-+ │       └── __init__.py
-+ ├── requirements.txt
-+ ├── Dockerfile
-+ └── .env.example
+```python
+# Frontend - Primera Entrega
+streamlit_app/
+├── main.py                 # Aplicación principal Streamlit
+├── pages/
+│   ├── chat.py            # Página de chat
+│   └── analytics.py       # Página de analytics
+└── components/
+    ├── chat_interface.py  # Componente de chat
+    └── sidebar.py         # Barra lateral
+
+# Frontend - Objetivo Secundario (almapi.dev)
+frontend/
+├── components/
+│   └── ChatbotWidget.jsx  # Widget para portfolio
+└── pages/
+    └── chat.js            # Página de chat
 ```
 
 ### Archivos Modificados
-- `backend/requirements.txt` - Dependencias del proyecto
-- `backend/app/main.py` - Configuración principal de FastAPI
-- `backend/app/core/config.py` - Configuración de variables de entorno
-- `backend/Dockerfile` - Configuración de contenedor Docker
+- `src/requirements.txt` - Dependencias del proyecto
+- `src/app/main.py` - Configuración principal de FastAPI
+- `src/app/core/config.py` - Configuración de variables de entorno
+- `src/Dockerfile` - Configuración de contenedor Docker
 
 ### Tests Incluidos
 - [x] Test de configuración de FastAPI
@@ -92,6 +90,7 @@ Configuración inicial del proyecto backend usando FastAPI, incluyendo estructur
 - **Ticket Relacionado:** IC-005
 - **Tipo:** Feature
 - **Prioridad:** Alta
+- **Repositorio:** almapi-chatbot-backend
 
 ### Descripción
 Implementación de los endpoints principales del chat, incluyendo WebSocket para comunicación en tiempo real y endpoints REST para gestión de conversaciones.
@@ -419,6 +418,11 @@ pytest.ini
 - **Input Validation**
 - **CORS Configuration**
 - **OWASP Top 10 for LLM Compliance**
+- **Cloud Armor Integration**
+- **Threat Detection System**
+- **Prompt Injection Protection**
+- **Security Command Center**
+- **Advanced Security Headers**
 
 ### Suite de Testing
 - **Unit Tests:** 95% cobertura
@@ -533,6 +537,75 @@ infrastructure/terraform/outputs.tf
 - **Status:** ✅ Merged
 - **Fecha de Merge:** 2025-10-25
 - **Commit Hash:** c3d4e5f6g7h8
+
+---
+
+## PR-008: Implementación de Control de Costos y Budgets
+
+### Información del PR
+- **Título:** feat: Sistema de control de costos y gestión de presupuesto
+- **Branch:** feature/IC-016-cost-control
+- **Ticket Relacionado:** IC-016
+- **Tipo:** DevOps & Cost Management
+- **Prioridad:** Alta
+
+### Descripción
+Implementación de sistema robusto de control de costos para prevenir gastos excesivos y optimizar recursos en GCP, incluyendo budgets automáticos, alertas y modo de emergencia.
+
+### Cambios Realizados
+```python
+# Cost Control Service
+app/services/cost_control.py
+app/services/budget_manager.py
+app/services/emergency_mode.py
+
+# Configuration
+config/cost_control.yaml
+config/budgets.yaml
+config/resource_quotas.yaml
+
+# Monitoring
+app/monitoring/cost_dashboard.py
+app/monitoring/cost_metrics.py
+```
+
+### Funcionalidades Implementadas
+- **Budget Management:** Presupuesto mensual configurable con alertas automáticas
+- **Resource Quotas:** Límites estrictos por servicio (Vertex AI, Vector Search, Cloud Run)
+- **Emergency Mode:** Activación automática al exceder 100% del presupuesto
+- **Cost Monitoring:** Dashboard en tiempo real de gastos y métricas
+- **Rate Limiting por Costos:** Control inteligente basado en presupuesto disponible
+
+### Integración GCP
+- **GCP Billing API:** Integración completa para monitoreo de costos
+- **Cloud Monitoring:** Métricas personalizadas de costos
+- **Pub/Sub:** Sistema de alertas automáticas
+- **Cloud Functions:** Automatización de acciones de emergencia
+
+### Checklist
+- [x] Budget mensual configurado con alertas en 50%, 80% y 100%
+- [x] Sistema de alertas automáticas implementado
+- [x] Cuotas de recursos configuradas por servicio
+- [x] Modo de emergencia automático implementado
+- [x] Dashboard de monitoreo de costos funcional
+- [x] Rate limiting basado en costos activo
+- [x] Notificaciones de emergencia configuradas
+
+### Comentarios del Reviewer
+> **Reviewer:** @devops-engineer
+> 
+> ✅ Excelente implementación de control de costos
+> ✅ Integración robusta con GCP
+> ✅ Sistema de emergencia bien diseñado
+> 
+> **Sugerencias:**
+> - Considerar implementar cost optimization automático
+> - Agregar métricas de eficiencia de recursos
+
+### Estado
+- **Status:** ✅ Aprobado
+- **Fecha de Aprobación:** 2025-10-22
+- **Pendiente:** Merge después de testing de emergencia
 
 ---
 

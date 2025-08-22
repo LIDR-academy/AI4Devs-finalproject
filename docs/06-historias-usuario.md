@@ -6,10 +6,10 @@
 **Descripción:** Actividades de análisis de requerimientos, planificación técnica y definición de arquitectura del sistema.
 
 ### EP-002: Desarrollo de Infraestructura y Backend
-**Descripción:** Implementación del backend, base de datos, servicios de IA y APIs del sistema.
+**Descripción:** Implementación del backend, base de datos, servicios de IA y APIs del sistema en un nuevo repositorio.
 
-### EP-003: Desarrollo Frontend e Integración
-**Descripción:** Desarrollo del widget de chatbot, integración con el portfolio existente y experiencia de usuario.
+### EP-003: Integración Frontend e Implementación del Widget
+**Descripción:** Desarrollo del widget de chatbot e integración con el portfolio ya desplegado en almapi.dev.
 
 ### EP-004: Sistema de Analytics y Métricas
 **Descripción:** Implementación del sistema de análisis, métricas y feedback para mejora continua.
@@ -18,31 +18,33 @@
 **Descripción:** Implementación de medidas de seguridad, suite de pruebas y aseguramiento de calidad.
 
 ### EP-006: Despliegue, Monitoreo y Operaciones
-**Descripción:** Despliegue en producción, configuración de monitoreo y operaciones del sistema.
+**Descripción:** Despliegue del backend en producción, configuración de monitoreo y operaciones del sistema.
 
 ---
 
 ## EP-001: Análisis y Planificación del Proyecto
 
-### HDU-001: Análisis de Requerimientos del Sistema
-Como Product Owner,
-quiero analizar y documentar todos los requerimientos funcionales y no funcionales del sistema,
-para que el equipo de desarrollo tenga una comprensión clara de lo que se debe construir.
+### HDU-001: Acceso al Chatbot desde el Portfolio
+Como visitante del portfolio,
+quiero acceder fácilmente al chatbot para obtener información profesional,
+para que pueda conocer la experiencia y habilidades sin necesidad de contacto directo.
 
 **Criterios de Aceptación:**
-- Dado que se realiza el análisis de requerimientos, cuando se complete la documentación, entonces debe incluir todos los casos de uso del chatbot.
-- Dado que se definen los requerimientos no funcionales, cuando se documenten, entonces deben incluir performance, seguridad y escalabilidad.
-- Dado que se identifican las integraciones, cuando se documenten, entonces deben incluir LinkedIn, GitHub, Vertex AI y Atlassian.
+- Dado que visito el portfolio, cuando busque el chatbot, entonces debo encontrarlo fácilmente.
+- Dado que accedo al chatbot, cuando lo active, entonces debo poder interactuar de forma natural.
+- Dado que uso el chatbot, cuando haga preguntas, entonces debo recibir respuestas relevantes y profesionales.
 
 **Notas Adicionales:**
-- Documentar en Confluence para trazabilidad.
+- **Primera entrega:** Prototipo funcional mediante Streamlit para cumplir con el hito.
+- **Objetivo secundario:** Integración directa en almapi.dev si queda tiempo disponible.
+- El chatbot debe ser accesible desde cualquier sección del portfolio.
 
 **Tareas:**
-- Realizar entrevistas con stakeholders
-- Documentar casos de uso principales
-- Definir requerimientos no funcionales
-- Identificar integraciones necesarias
-- Crear documento de requerimientos
+- **Desarrollar prototipo Streamlit:** Crear aplicación funcional con interfaz de chat
+- **Diseñar interfaz de chat:** Crear diseño profesional y responsive
+- **Integrar con backend:** Conectar la interfaz con la API del backend
+- **Testing de funcionalidad:** Validar que el chat funcione correctamente
+- **Integración en almapi.dev (Objetivo Secundario):** Si queda tiempo, desarrollar widget React
 
 ---
 
@@ -508,12 +510,38 @@ para que el sistema funcione de forma confiable y eficiente.
 
 ---
 
+### HDU-021: Sistema de Control de Costos y Budgets
+Como DevOps Engineer,
+quiero implementar un sistema robusto de control de costos,
+para que podamos prevenir gastos excesivos y optimizar recursos en GCP.
+
+**Criterios de Aceptación:**
+- Dado que se configuran los budgets, cuando estén activos, entonces deben alertar en 50%, 80% y 100% del presupuesto.
+- Dado que se implementan las cuotas de recursos, cuando estén configuradas, entonces deben limitar el uso por servicio.
+- Dado que se activa el modo de emergencia, cuando se exceda el presupuesto, entonces debe reducir automáticamente los recursos.
+- Dado que se monitorean los costos, cuando esté funcionando, entonces debe proporcionar métricas en tiempo real.
+
+**Notas Adicionales:**
+- Integrar con GCP Billing API para alertas automáticas.
+- Implementar dashboard de costos para visibilidad completa.
+
+**Tareas:**
+- Configurar budget mensual con alertas automáticas
+- Implementar sistema de alertas (Pub/Sub, email, Slack)
+- Configurar cuotas de recursos por servicio
+- Implementar modo de emergencia automático
+- Crear dashboard de monitoreo de costos
+- Configurar rate limiting basado en costos
+- Implementar métricas de eficiencia de recursos
+
+---
+
 ## Resumen de Épicas y Hitos
 
 ### Hitos del Proyecto
 ```mermaid
 gantt
-    title Hitos del Proyecto AI-Powered Professional Avatar
+    title Hitos del Proyecto AI Resume Agent: Your 24/7 Professional Interview
     dateFormat  YYYY-MM-DD
     section Hitos
     Documentación Técnica    :milestone, doc, 2025-09-16, 0d

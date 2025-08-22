@@ -3,7 +3,7 @@
 ## Épica EP-001: Interfaz y Experiencia de Usuario del Portfolio
 
 ### HDU-001: Acceso al Chatbot desde el Portfolio
-Como visitante del portfolio,
+Como visitante del portfolio ya desplegado en almapi.dev,
 quiero acceder fácilmente al chatbot desde cualquier sección del sitio,
 para que pueda interactuar y obtener información relevante de manera inmediata.
 
@@ -13,6 +13,7 @@ para que pueda interactuar y obtener información relevante de manera inmediata.
 
 **Notas Adicionales:**
 - El acceso debe ser intuitivo y no intrusivo.
+- El portfolio ya está funcionando en almapi.dev, solo se requiere integrar el widget del chatbot.
 
 **Tareas:**
 - Diseñar el botón/widget de acceso.
@@ -32,6 +33,7 @@ para que la experiencia de interacción sea agradable y eficiente.
 
 **Notas Adicionales:**
 - Debe ser responsive y accesible.
+- La interfaz se integrará con el portfolio ya desplegado en almapi.dev.
 
 **Tareas:**
 - Diseñar la interfaz de chat.
@@ -86,14 +88,15 @@ quiero que el chatbot esté disponible en cualquier momento,
 para que pueda obtener información sin restricciones horarias.
 
 **Criterios de Aceptación:**
-- Dado que el usuario accede al portfolio, cuando abre el chat, entonces el chatbot debe estar operativo.
+- Dado que el usuario accede al portfolio ya desplegado en almapi.dev, cuando abre el chat, entonces el chatbot debe estar operativo.
 - Dado que el sistema detecta una caída, cuando se restablece el servicio, entonces debe notificar al usuario si hubo una interrupción.
 
 **Notas Adicionales:**
 - Considerar mensajes de mantenimiento o indisponibilidad.
+- El frontend ya está desplegado, la disponibilidad 24/7 se refiere principalmente al backend del chatbot.
 
 **Tareas:**
-- Configurar monitoreo de disponibilidad.
+- Configurar monitoreo de disponibilidad del backend.
 - Implementar mensajes automáticos de estado.
 
 ---
@@ -104,14 +107,15 @@ quiero recibir enlaces a recursos del portfolio relacionados con mis preguntas,
 para que pueda profundizar en la información de interés.
 
 **Criterios de Aceptación:**
-- Dado que el usuario pregunta por un proyecto, cuando el chatbot responde, entonces debe incluir un enlace directo a la sección correspondiente del portfolio.
+- Dado que el usuario pregunta por un proyecto, cuando el chatbot responde, entonces debe incluir un enlace directo a la sección correspondiente del portfolio ya desplegado en almapi.dev.
 - Dado que el usuario solicita información adicional, cuando el chatbot responde, entonces debe sugerir recursos relevantes.
 
 **Notas Adicionales:**
 - Los enlaces deben ser contextuales y actualizados.
+- El portfolio ya está funcionando en almapi.dev, solo se requiere mapear los recursos existentes.
 
 **Tareas:**
-- Mapear recursos del portfolio.
+- Mapear recursos del portfolio ya desplegado.
 - Integrar sugerencias automáticas en respuestas.
 
 ---
@@ -174,7 +178,7 @@ para que pueda mejorar la información y el modelo en esas áreas.
 
 ### HDU-010: Análisis de Secciones y Recursos Más Consultados
 Como administrador del sistema,
-quiero conocer qué secciones y recursos del portfolio son los más consultados a través del chatbot,
+quiero conocer qué secciones y recursos del portfolio ya desplegado en almapi.dev son los más consultados a través del chatbot,
 para que pueda optimizar el contenido y la navegación.
 
 **Criterios de Aceptación:**
@@ -182,10 +186,11 @@ para que pueda optimizar el contenido y la navegación.
 - Dado que el administrador revisa las estadísticas, cuando accede al panel, entonces puede ver un ranking de recursos y secciones más visitados.
 
 **Notas Adicionales:**
-- Ayuda a mejorar la estructura del portfolio.
+- Ayuda a mejorar la estructura del portfolio ya desplegado.
+- Los recursos ya existen en almapi.dev, solo se requiere implementar el tracking.
 
 **Tareas:**
-- Implementar tracking de clics en enlaces.
+- Implementar tracking de clics en enlaces del portfolio existente.
 - Desarrollar visualización de recursos más consultados.
 
 ---
@@ -328,13 +333,39 @@ para que siempre reciba una respuesta útil o una notificación clara.
 
 ---
 
+### HDU-018: Sistema de Control de Costos y Budgets
+Como DevOps Engineer,
+quiero implementar un sistema robusto de control de costos,
+para que podamos prevenir gastos excesivos y optimizar recursos en GCP.
+
+**Criterios de Aceptación:**
+- Dado que se configuran los budgets, cuando estén activos, entonces deben alertar en 50%, 80% y 100% del presupuesto.
+- Dado que se implementan las cuotas de recursos, cuando estén configuradas, entonces deben limitar el uso por servicio.
+- Dado que se activa el modo de emergencia, cuando se exceda el presupuesto, entonces debe reducir automáticamente los recursos.
+- Dado que se monitorean los costos, cuando esté funcionando, entonces debe proporcionar métricas en tiempo real.
+
+**Notas Adicionales:**
+- Integrar con GCP Billing API para alertas automáticas.
+- Implementar dashboard de costos para visibilidad completa.
+
+**Tareas:**
+- Configurar budget mensual con alertas automáticas.
+- Implementar sistema de alertas (Pub/Sub, email, Slack).
+- Configurar cuotas de recursos por servicio.
+- Implementar modo de emergencia automático.
+- Crear dashboard de monitoreo de costos.
+- Configurar rate limiting basado en costos.
+- Implementar métricas de eficiencia de recursos.
+
+---
+
 # Backlog de Producto
 
 A continuación se presenta el backlog priorizado utilizando la metodología MoSCoW, junto con la estimación de impacto, urgencia, complejidad, riesgos y esfuerzo para cada historia de usuario.
 
 | Código | Épica | Título | MoSCoW | Impacto/Valor | Urgencia | Complejidad | Riesgos/Dependencias | Talla | Puntos |
 |--------|-------|--------|--------|--------------|----------|-------------|---------------------|-------|--------|
-| HDU-001 | EP-001 | Acceso al Chatbot desde el Portfolio | Must | Alto | Alta | S | Baja (depende de diseño UI) | S | 2 |
+| HDU-001 | EP-001 | Acceso al Chatbot (Streamlit + almapi.dev) | Must | Alto | Alta | S | Baja (depende de diseño UI) | S | 2 |
 | HDU-002 | EP-001 | Interfaz de Chat Intuitiva | Must | Alto | Alta | M | Media (depende de HDU-001) | M | 5 |
 | HDU-003 | EP-002 | Respuestas en Lenguaje Natural sobre Experiencia Profesional | Must | Muy Alto | Muy Alta | L | Alta (NLP, calidad datos) | L | 8 |
 | HDU-004 | EP-002 | Soporte Multiidioma | Should | Alto | Media | L | Media (depende de HDU-003) | L | 8 |
