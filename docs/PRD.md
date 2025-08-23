@@ -266,12 +266,210 @@ graph LR
 - **BigQuery:** $5.0 máximo por query, 50GB máximo de storage
 
 #### 5.2.2 Sistema de Alertas de Costos
-- **50% del presupuesto:** Alerta informativa
-- **80% del presupuesto:** Alerta de advertencia
-- **100% del presupuesto:** Activación automática de modo de emergencia
-- **Notificaciones:** Pub/Sub, email y Slack para alertas críticas
+- **Umbrales de Alerta:**
+  - **50% del budget:** Notificación por email
+  - **80% del budget:** Notificación por Slack + email
+  - **100% del budget:** Alerta crítica + activación de modo de emergencia
+- **Canales de Notificación:**
+  - Email: admin@almapi.dev
+  - Slack: #cost-alerts
+  - Telegram: Bot de alertas
+  - PagerDuty: Para alertas críticas
 
-### 5.3 Mantenimiento
+### 5.2.3 Estrategia Integral de Reducción de Costos para MVP 🚀
+
+#### **🎯 Objetivos de Optimización**
+- **Reducir costos mensuales en un 60-80%** vs implementación estándar
+- **Mantener funcionalidad completa** del sistema RAG
+- **Implementar estrategias escalables** para crecimiento futuro
+- **Garantizar ROI positivo** desde el primer mes de operación
+
+#### **🤖 Modelos LLM Optimizados por Costo**
+
+##### **🥇 Opción 1: Google Gemini 1.5 Flash (Recomendada)**
+- **Modelo:** `gemini-1.5-flash`
+- **Costo:** $0.075 por 1K tokens (vs $0.15 de Gemini Pro)
+- **Ahorro:** **50%** vs modelo estándar
+- **Límites:** 1024 tokens máximo por request
+- **Fallback:** Gemini 1.0 Pro para casos críticos
+
+##### **🥈 Opción 2: Ollama Local (GRATIS)**
+- **Modelos:** Llama 3.1 (8B), Mistral (7B), CodeLlama (7B)
+- **Costo:** $0.00 (completamente GRATIS)
+- **Performance:** Buena para queries simples
+- **Uso:** Fallback cuando no hay conexión a internet
+
+##### **🥉 Opción 3: OpenAI GPT-3.5-turbo (Económico)**
+- **Modelo:** `gpt-3.5-turbo-0125`
+- **Costo:** $0.50 por 1K tokens
+- **Límites:** 512 tokens máximo por request
+- **Uso:** Alternativa cuando Gemini no esté disponible
+
+#### **🔧 Optimización Avanzada de Prompts**
+- **Templates Optimizados:**
+  - **Resumen profesional:** Máximo 150 tokens
+  - **Verificación de skills:** Máximo 100 tokens
+  - **Detalle de experiencia:** Máximo 200 tokens
+- **Eliminación de Palabras Innecesarias:**
+  - Remover "por favor", "please", "me gustaría"
+  - Limitar contexto histórico a 200 caracteres
+  - Usar abreviaciones cuando sea posible
+
+#### **🗄️ Sistema de Cache Multi-Nivel**
+- **Nivel 1: Redis en Memoria**
+  - Cache de queries frecuentes
+  - TTL adaptativo por frecuencia de uso
+  - Costo: ~$0.01/mes
+- **Nivel 2: Cloud Storage (GRATIS)**
+  - Cache persistente de respuestas
+  - Sin límites de almacenamiento
+  - Acceso rápido desde cualquier región
+- **Nivel 3: Base de Datos Local (SQLite)**
+  - Cache completamente GRATIS
+  - Para queries muy frecuentes
+  - Sin latencia de red
+
+#### **🔍 Embeddings Optimizados por Costo**
+- **Modelo Principal:** `text-embedding-3-small` (OpenAI)
+  - Costo: $0.02 por 1K tokens
+  - Dimensiones: 1536
+  - Performance: Alta
+- **Modelo Económico:** `text-embedding-ada-002` (OpenAI)
+  - Costo: $0.10 por 1K tokens
+  - Dimensiones: 1536
+  - Performance: Media
+- **Modelo GRATIS:** `all-MiniLM-L6-v2` (Hugging Face)
+  - Costo: $0.00
+  - Dimensiones: 384
+  - Performance: Buena para textos cortos
+
+#### **📊 Vector Search Optimizado**
+- **Estrategia Híbrida:**
+  - Cache primero (GRATIS)
+  - Búsqueda aproximada (más barata)
+  - Búsqueda exacta solo cuando sea necesario
+- **Límites de Resultados:**
+  - Máximo 5 resultados por query
+  - Priorización por relevancia
+  - Cache de resultados frecuentes
+
+#### **📈 Monitoreo y Control de Costos en Tiempo Real**
+- **Dashboard de Costos:**
+  - Métricas en tiempo real
+  - Alertas automáticas por umbrales
+  - Recomendaciones de optimización
+- **Sistema de Alertas:**
+  - **Diario:** $2 máximo
+  - **Semanal:** $10 máximo
+  - **Mensual:** $35 máximo
+- **Modo de Emergencia:**
+  - Activación automática al exceder límites
+  - Desactivación de servicios no esenciales
+  - Notificación inmediata al equipo
+
+#### **🚀 Estrategia de Escalabilidad Gradual**
+
+##### **Fase 1: MVP (0-100 usuarios/mes)**
+- **Costo Objetivo:** $40/mes
+- **Estrategia:** Cache local completo + modelos baratos
+- **Optimizaciones:** Prompts mínimos, límites estrictos
+
+##### **Fase 2: Crecimiento (100-500 usuarios/mes)**
+- **Costo Objetivo:** $60/mes
+- **Estrategia:** Cache híbrido + balance costo/performance
+- **Optimizaciones:** Rate limiting, monitoreo avanzado
+
+##### **Fase 3: Escala (500+ usuarios/mes)**
+- **Costo Objetivo:** $80/mes
+- **Estrategia:** Cache distribuido + modelos avanzados
+- **Optimizaciones:** Auto-scaling, infraestructura optimizada
+
+#### **💰 Resumen de Ahorros Esperados**
+
+| Componente | Estándar | Optimizada | Ahorro |
+|------------|----------|------------|---------|
+| **LLM (Gemini Pro)** | $45/mes | $15/mes | **67%** |
+| **Embeddings** | $25/mes | $8/mes | **68%** |
+| **Vector Search** | $30/mes | $12/mes | **60%** |
+| **Infraestructura** | $20/mes | $5/mes | **75%** |
+| **Total Mensual** | **$120/mes** | **$40/mes** | **67%** |
+
+#### **✅ Checklist de Implementación**
+- [ ] Configuración de modelos LLM baratos
+- [ ] Sistema de cache multi-nivel
+- [ ] Optimización de prompts
+- [ ] Monitoreo de costos en tiempo real
+- [ ] Sistema de alertas automáticas
+- [ ] Plan de escalabilidad gradual
+- [ ] Testing de optimizaciones
+- [ ] Documentación de estrategias
+
+#### **🎯 Métricas de Éxito**
+- **Costo mensual:** < $40
+- **Cache hit rate:** > 80%
+- **Tiempo de respuesta:** < 2 segundos
+- **Precisión del RAG:** > 90%
+- **ROI:** Positivo desde el primer mes
+
+#### **⚠️ Riesgos y Mitigaciones**
+- **Riesgo:** Calidad de respuestas con modelos más baratos
+  - **Mitigación:** Fallback automático + testing exhaustivo
+- **Riesgo:** Cache miss en queries complejas
+  - **Mitigación:** Estrategia híbrida + búsqueda inteligente
+- **Riesgo:** Escalabilidad de costos
+  - **Mitigación:** Monitoreo en tiempo real + alertas automáticas
+- **Riesgo:** Ataques de prompt injection
+  - **Mitigación:** Testing adversarial + validación de entrada
+- **Riesgo:** Escalado automático sin límites de presupuesto
+  - **Mitigación:** Circuit breakers + límites estrictos de auto-scaling
+- **Riesgo:** Degradación de performance en producción
+  - **Mitigación:** Testing de carga + alertas proactivas de calidad
+
+### 5.2.4 Mejoras Críticas Implementadas
+
+#### **🛡️ Circuit Breakers para Control de Costos**
+- Implementación de patrones circuit breaker en todos los servicios de IA
+- Límites estrictos de auto-scaling y budget alerts automáticos
+- Protección contra escalado automático sin límites de presupuesto
+
+#### **🔥 Cache Warming Inteligente**
+- Precarga inteligente basada en patrones de uso y frecuencia de queries
+- Análisis de frecuencia y precomputación de respuestas
+- Reducción significativa de cache miss en queries frecuentes
+
+#### **🧪 Testing de Adversarios para Seguridad**
+- Testing exhaustivo con prompts maliciosos y patrones de ataque
+- Validación de protección contra prompt injection
+- Verificación de respuestas seguras y bloqueo de contenido sensible
+
+#### **⚡ Testing de Performance Bajo Carga**
+- Testing con usuarios concurrentes (hasta 50 simultáneos)
+- Validación de throughput y tiempo de respuesta bajo carga
+- Monitoreo de uso de memoria y recursos del sistema
+
+#### **📊 Alertas Proactivas de Calidad**
+- Monitoreo en tiempo real de métricas de calidad
+- Alertas automáticas por múltiples canales (email, Slack, Telegram, PagerDuty)
+- Thresholds configurables para respuesta, precisión y satisfacción
+
+#### **🌍 Geo-blocking Específico**
+- Bloqueo automático de regiones de alto riesgo
+- Configuración de listas de regiones permitidas
+- Protección contra ataques geográficamente distribuidos
+
+#### **🔐 Rotación Automática de Claves**
+- Rotación automática cada 30 días
+- Notificaciones previas y claves de fallback
+- Gestión segura de credenciales y API keys
+
+#### **🔍 Integración de Testing de Seguridad en CI/CD**
+- Pipeline automatizado con testing de adversarios
+- Validación de headers de seguridad y geo-blocking
+- Testing de circuit breakers y validación de presupuesto
+
+---
+
+## 5.3 Mantenimiento
 - Actualizaciones regulares de la base de conocimiento
 - Monitoreo de calidad de respuestas
 - Mejora continua del modelo

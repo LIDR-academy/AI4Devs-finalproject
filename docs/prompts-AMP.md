@@ -16,6 +16,7 @@
 - 🎟️ Tickets de trabajo
 - 🔀 Pull request
 
+
 ---
 
 ## Estadísticas 📈
@@ -23,20 +24,21 @@
 | Categoría                               | Cantidad | Prompts                                 |
 |-----------------------------------------|----------|------------------------------------------|
 | 📦 Descripción general del producto     | 5        | Prompt 1, Prompt 3, Prompt 11, Prompt 20, Prompt 22            |
-| 🏗️ Arquitectura del sistema            | 16       | Prompt 2, Prompt 4, Prompt 5, Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 10, Prompt 11, Prompt 12, Prompt 13, Prompt 17, Prompt 19, Prompt 20, Prompt 21, Prompt 22 |
+| 🏗️ Arquitectura del sistema            | 19       | Prompt 2, Prompt 4, Prompt 5, Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 10, Prompt 11, Prompt 12, Prompt 13, Prompt 17, Prompt 19, Prompt 20, Prompt 21, Prompt 22, Prompt 23, Prompt 24, Prompt 25 |
 | 🗺️ Diagrama de arquitectura            | 4        | Prompt 2, Prompt 15, Prompt 16, Prompt 21           |
-| 🧩 Descripción de componentes principales| 15       | Prompt 1, Prompt 2, Prompt 3, Prompt 5, Prompt 10, Prompt 11, Prompt 12, Prompt 14, Prompt 15, Prompt 16, Prompt 17, Prompt 19, Prompt 20, Prompt 21, Prompt 22 |
+| 🧩 Descripción de componentes principales| 16       | Prompt 1, Prompt 2, Prompt 3, Prompt 5, Prompt 10, Prompt 11, Prompt 12, Prompt 14, Prompt 15, Prompt 16, Prompt 17, Prompt 19, Prompt 20, Prompt 21, Prompt 22, Prompt 23 |
 | 🗂️ Descripción de alto nivel del proyecto y estructura de ficheros | 4 | Prompt 1, Prompt 15, Prompt 17, Prompt 19 |
-| ☁️ Infraestructura y despliegue         | 7        | Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 13, Prompt 14, Prompt 16 |
-| 🛡️ Seguridad                           | 1        | Prompt 13                                |
-| 🧪 Tests                                | 1        | Prompt 12                                |
+| ☁️ Infraestructura y despliegue         | 9        | Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 13, Prompt 14, Prompt 16, Prompt 23, Prompt 24 |
+| 🛡️ Seguridad                           | 2        | Prompt 13, Prompt 25                     |
+| 🧪 Tests                                | 3        | Prompt 12, Prompt 24, Prompt 25          |
 | 🗃️ Modelo de datos                     | 1        | Prompt 18                                |
 | 🔌 Especificación de la API             | 1        | Prompt 18                                |
 | 👤 Historias de usuario                 | 3        | Prompt 3, Prompt 4, Prompt 18            |
 | 🎟️ Tickets de trabajo                  | 11       | Prompt 4, Prompt 5, Prompt 6, Prompt 7, Prompt 8, Prompt 9, Prompt 10, Prompt 12, Prompt 8, Prompt 9, Prompt 18 |
 | 🔀 Pull request                         | 1        | Prompt 18                                |
 
-**Total de prompts:** 22
+
+**Total de prompts:** 25
 
 ---
 
@@ -79,12 +81,12 @@
 
 **Prompt 8:**
 - **Categoría:** `🎟️ Tickets de trabajo` `☁️ Infraestructura y despliegue` `🏗️ Arquitectura del sistema`
-- **Prompt:** "ayudame a configurar el mcp de trello"
+- **Prompt:** "ayudame a configurar el mcp de JIRA"
 - **LLM:** Gemini 2.5 Pro
 
 **Prompt 9:**
 - **Categoría:** `🎟️ Tickets de trabajo` `☁️ Infraestructura y despliegue` `🏗️ Arquitectura del sistema`
-- **Prompt:** "analiza @Tickets.md y @Planning.md y genera las tarjetas en Trello: Las columnas del tablero de Trello son: Backlog, Por hacer, En progreso, En revisión, Hecho. Crealas todas en backlog. Crealas automaticamente."
+- **Prompt:** "analiza @Tickets.md y @Planning.md y genera las tarjetas en JIRA: Las columnas del tablero de JIRA son: Backlog, To Do, In Progress, In Review, Done. Crealas todas en backlog. Crealas automaticamente."
 - **LLM:** Gemini 2.5 Pro
 
 **Prompt 10:**
@@ -150,6 +152,21 @@
 **Prompt 22:**
 - **Categoría:** `📦 Descripción general del producto` `🏗️ Arquitectura del sistema` `🧩 Descripción de componentes principales`
 - **Prompt:** "necesito que detalles, en toda la documentacion que sea necesaria, que la entrega primero será mediante streamlit para cumplir con el hito y si queda tiempo se probará directamente en @https://almapi.dev"
+- **LLM:** Claude-3-Sonnet-20240229
+
+**Prompt 23:**
+- **Categoría:** `🏗️ Arquitectura del sistema` `☁️ Infraestructura y despliegue` `🧩 Descripción de componentes principales`
+- **Prompt:** "como arquitecto IA especialista en RAG, implementa un plan de reduccion de costos en la planificacion e implementacion del proyecto, considera que el uso en el MVP será acotado y no quiero generar grandes gastos, utiliza modelos mas baratos, optimizacion de prompts, cache, etc. Modifica todos los documentos necesarios."
+- **LLM:** Claude-3-Sonnet-20240229
+
+**Prompt 24:**
+- **Categoría:** `🏗️ Arquitectura del sistema` `☁️ Infraestructura y despliegue` `🧪 Tests`
+- **Prompt:** "Eres un Professional Machine Learning Engineer experto en GCP certificado por Google. necesito que revises en detalle y profundidad la documentacion @docs/ del proyecto aun en fase de analisis y diseño, toda la documentacion ha sido redactada por PO, TL y un ARQ IA, como la solucion se implementara en GCP necesito la vision de un experto como tu, principalmente, enfocate en optimizacion de costos, seguridad y calidad del producto. antes de hacer cualquier modificacion entregame un reporte completo con tu revision y punto de vista. para ellos genera un nuevo archivo .md"
+- **LLM:** Claude-3-Sonnet-20240229
+
+**Prompt 25:**
+- **Categoría:** `🏗️ Arquitectura del sistema` `🧪 Tests` `🛡️ Seguridad`
+- **Prompt:** "modifica la documentacion actual y agrega todas las mejoras identificadas"
 - **LLM:** Claude-3-Sonnet-20240229
 
 ## Conclusiones 🏁

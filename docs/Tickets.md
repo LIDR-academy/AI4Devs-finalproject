@@ -668,50 +668,217 @@ Restricciones: Los backups deben ser cifrados y almacenados de forma segura.
 
 ---
 
-**IC-018**
+### IC-018: Implementación de control de costos y gestión de presupuesto
 
-**Título:** Implementación de control de costos y gestión de presupuesto
-
-**Descripción:**
-Propósito: Implementar sistema robusto de control de costos para prevenir gastos excesivos y optimizar recursos en GCP.
-Detalles: Configurar budgets mensuales, implementar alertas automáticas, configurar cuotas de recursos, implementar modo de emergencia y dashboard de monitoreo de costos.
-Restricciones: Debe integrarse con GCP Billing API y proporcionar alertas en tiempo real.
+**Propósito:** Implementar un sistema integral de control de costos para mantener el presupuesto mensual bajo $40 USD y optimizar el uso de recursos GCP.
 
 **Criterios de Aceptación:**
-- Budget mensual configurado con alertas en 50%, 80% y 100%.
-- Sistema de alertas automáticas implementado (Pub/Sub, email, Slack).
-- Cuotas de recursos configuradas por servicio.
-- Modo de emergencia automático al exceder 100% del presupuesto.
-- Dashboard de monitoreo de costos en tiempo real.
-- Rate limiting basado en costos implementado.
-- Notificaciones de emergencia configuradas.
+- Sistema de monitoreo de costos en tiempo real implementado
+- Alertas automáticas configuradas para umbrales de 50%, 80% y 100%
+- Modo de emergencia funcional para control de costos excesivos
+- Dashboard de métricas de uso y costos operativo
+- Límites de recursos configurados para todos los servicios
+- Sistema de cache multi-nivel implementado y funcional
+- Optimización de prompts para reducir tokens por request
+- Configuración de modelos LLM más económicos (Gemini Flash)
+- Embeddings locales implementados como alternativa GRATIS
+- Vector search optimizado con estrategia híbrida
 
-**Pruebas de Validación:**
-- Simulación de exceso de presupuesto.
-- Validación de alertas automáticas.
-- Testing de modo de emergencia.
-- Verificación de cuotas de recursos.
-- Validación de dashboard de costos.
+**Validación:**
+- Costos mensuales mantenidos bajo $40 USD
+- Cache hit rate superior al 80%
+- Alertas funcionando correctamente en todos los umbrales
+- Modo de emergencia activándose automáticamente
+- Tiempo de respuesta promedio bajo 2 segundos
+- Precisión del RAG mantenida superior al 90%
 
-**Prioridad:** Must
-
-**Estimación de Esfuerzo:** 6 puntos de historia (M)
-
-**Asignación:** DevOps Engineer
-
-**Sprint:** 2
-
-**Etiquetas:** DevOps, GCP, Costos, Budget, Sprint 2
-
-**Comentarios y Notas:**
-- Integrar con GCP Billing API.
-- Configurar notificaciones de emergencia.
-- Implementar métricas de eficiencia de costos.
-
-**Enlaces o Referencias:**
-- [tech-solution.md sección Control de Costos](./tech-solution.md)
-
-**Historial de Cambios:**
-- 21/07/2025: Creado por IA
+**Prioridad:** Alta
+**Estimación:** 13 puntos (L)
+**Asignado a:** Equipo de Backend + DevOps
+**Etiquetas:** Costos, Optimización, MVP, GCP, Cache, LLM
 
 ---
+
+### IC-019: Implementación de estrategias de cache inteligente
+
+**Propósito:** Desarrollar un sistema de cache multi-nivel que reduzca significativamente los costos de API y mejore el tiempo de respuesta del sistema RAG.
+
+**Criterios de Aceptación:**
+- Cache Redis en memoria configurado y funcional
+- Cache en Cloud Storage implementado para persistencia
+- Base de datos local SQLite para cache de queries frecuentes
+- Estrategia de TTL adaptativo por frecuencia de uso
+- Sistema de priorización de cache por tipo de query
+- Cache de embeddings implementado para evitar regeneración
+- Cache de resultados de vector search funcional
+- Métricas de cache hit rate implementadas
+- Sistema de invalidación de cache inteligente
+- Cache warming para queries más frecuentes
+
+**Validación:**
+- Cache hit rate superior al 80% en queries normales
+- Reducción de costos de API en al menos 60%
+- Tiempo de respuesta promedio bajo 1 segundo para queries cacheadas
+- Cache funcionando correctamente en todos los niveles
+- Métricas de cache visibles en dashboard de monitoreo
+
+**Prioridad:** Alta
+**Estimación:** 8 puntos (L)
+**Asignado a:** Equipo de Backend
+**Etiquetas:** Cache, Performance, Costos, Redis, Cloud Storage
+
+---
+
+### IC-020: Optimización de modelos LLM y prompts
+
+**Propósito:** Implementar modelos LLM más económicos y optimizar prompts para reducir significativamente los costos de generación de texto.
+
+**Criterios de Aceptación:**
+- Gemini 1.5 Flash configurado como modelo principal
+- Ollama local implementado como fallback GRATIS
+- Sistema de fallback automático entre modelos funcional
+- Templates de prompts optimizados implementados
+- Límites estrictos de tokens por tipo de query configurados
+- Remoción automática de palabras innecesarias en prompts
+- Contexto histórico limitado a 200 caracteres máximo
+- Sistema de priorización de modelos por costo/performance
+- Métricas de tokens utilizados por request implementadas
+- Testing de calidad de respuestas con modelos económicos
+
+**Validación:**
+- Costos de LLM reducidos en al menos 50%
+- Calidad de respuestas mantenida superior al 90%
+- Promedio de tokens por request bajo 150
+- Sistema de fallback funcionando correctamente
+- Métricas de uso de tokens visibles en dashboard
+
+**Prioridad:** Alta
+**Estimación:** 8 puntos (L)
+**Asignado a:** Equipo de Backend + AI/ML
+**Etiquetas:** LLM, Optimización, Costos, Gemini, Ollama, Prompts
+
+---
+
+### IC-021: Implementación de embeddings locales y optimización de vector search
+
+**Propósito:** Implementar embeddings locales GRATIS y optimizar el vector search para reducir costos de procesamiento de texto.
+
+**Criterios de Aceptación:**
+- Modelo Hugging Face all-MiniLM-L6-v2 implementado localmente
+- Cache de embeddings implementado y funcional
+- Estrategia híbrida de vector search implementada
+- Búsqueda aproximada configurada para queries normales
+- Búsqueda exacta solo para queries críticas
+- Límite de resultados configurado a máximo 5 por query
+- Priorización de resultados por relevancia implementada
+- Cache de resultados de búsqueda funcional
+- Métricas de performance de embeddings implementadas
+- Testing de precisión de embeddings locales vs cloud
+
+**Validación:**
+- Costos de embeddings reducidos en al menos 70%
+- Precisión de búsqueda mantenida superior al 95%
+- Tiempo de generación de embeddings bajo 100ms
+- Vector search funcionando con estrategia híbrida
+- Cache de embeddings reduciendo regeneraciones en 80%
+
+**Prioridad:** Media
+**Estimación:** 5 puntos (M)
+**Asignado a:** Equipo de AI/ML + Backend
+**Etiquetas:** Embeddings, Vector Search, Hugging Face, Cache, Optimización
+
+---
+
+### IC-022: Sistema de monitoreo y alertas de costos
+
+**Propósito:** Implementar un sistema completo de monitoreo de costos en tiempo real con alertas automáticas y dashboard de métricas.
+
+**Criterios de Aceptación:**
+- Dashboard de costos en tiempo real implementado
+- Métricas de uso por servicio configuradas
+- Alertas automáticas por umbrales de costo implementadas
+- Notificaciones por email, Slack y Telegram configuradas
+- Modo de emergencia automático funcional
+- Métricas de cache hit rate visibles
+- Análisis de patrones de uso implementado
+- Recomendaciones de optimización automáticas
+- Historial de costos y tendencias implementado
+- Integración con Cloud Monitoring y Logging
+
+**Validación:**
+- Dashboard mostrando métricas en tiempo real
+- Alertas funcionando correctamente en todos los umbrales
+- Notificaciones llegando por todos los canales configurados
+- Modo de emergencia activándose automáticamente
+- Métricas históricas disponibles para análisis
+- Recomendaciones de optimización siendo generadas
+
+**Prioridad:** Media
+**Estimación:** 5 puntos (M)
+**Asignado a:** Equipo de DevOps + Backend
+**Etiquetas:** Monitoreo, Alertas, Costos, Dashboard, GCP
+
+---
+
+### IC-023: Testing y validación de optimizaciones de costo
+
+**Propósito:** Implementar un plan completo de testing para validar que todas las optimizaciones de costo funcionen correctamente sin comprometer la calidad del sistema.
+
+**Criterios de Aceptación:**
+- Tests unitarios para todos los servicios de optimización implementados
+- Tests de integración para cache multi-nivel implementados
+- Tests de performance para modelos LLM económicos implementados
+- Tests de precisión para embeddings locales implementados
+- Tests de escalabilidad para sistema de cache implementados
+- Tests de fallback entre modelos LLM implementados
+- Tests de límites de costo y alertas implementados
+- Tests de modo de emergencia implementados
+- Tests de calidad de respuestas con prompts optimizados
+- Tests de stress para validar límites de costo
+
+**Validación:**
+- Todos los tests pasando exitosamente
+- Coverage de código superior al 90%
+- Performance del sistema mantenida o mejorada
+- Calidad de respuestas no degradada
+- Límites de costo respetados en todos los escenarios
+- Sistema funcionando correctamente bajo carga
+
+**Prioridad:** Media
+**Estimación:** 5 puntos (M)
+**Asignado a:** Equipo de QA + Backend
+**Etiquetas:** Testing, Validación, Calidad, Performance, Costos
+
+---
+
+### IC-024: Documentación y capacitación en optimización de costos
+
+**Propósito:** Crear documentación completa y capacitar al equipo en las estrategias de optimización de costos implementadas.
+
+**Criterios de Aceptación:**
+- Documentación técnica de todas las optimizaciones implementadas
+- Guías de usuario para monitoreo de costos creadas
+- Manual de troubleshooting para problemas de costo creado
+- Documentación de configuración de límites y alertas creada
+- Guías de escalabilidad y crecimiento de costos creadas
+- Capacitación del equipo en uso del dashboard de costos
+- Documentación de mejores prácticas para desarrollo
+- Guías de optimización continua de costos creadas
+- Documentación de incidentes y resoluciones creada
+- Wiki interno con toda la información de costos actualizada
+
+**Validación:**
+- Documentación completa y actualizada
+- Equipo capacitado en uso de herramientas de monitoreo
+- Guías de troubleshooting siendo utilizadas efectivamente
+- Mejores prácticas siendo aplicadas en desarrollo
+- Wiki interno siendo mantenido y actualizado regularmente
+
+**Prioridad:** Baja
+**Estimación:** 3 puntos (S)
+**Asignado a:** Equipo de Documentación + Tech Lead
+**Etiquetas:** Documentación, Capacitación, Conocimiento, Costos
+
+---
+
+## 4. Priorización y Planificación

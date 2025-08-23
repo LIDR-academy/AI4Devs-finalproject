@@ -56,7 +56,7 @@ Restricciones: Debe completarse antes del inicio del desarrollo técnico.
 - [PRD.md](./02-descripcion-producto.md)
 
 **Historial de Cambios:**
-- 15/01/2025: Creado por IA
+- 15/09/2025: Creado por IA
 
 ---
 

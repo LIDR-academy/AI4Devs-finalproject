@@ -511,12 +511,22 @@ graph LR
 - **Data Protection:** Cumplimiento de privacidad
 - **Prompt Injection Testing:** Validación de protección RAG
 - **Rate Limiting Testing:** Verificación de límites de uso
+- **Adversarial Testing:** Tests con prompts maliciosos y patrones de ataque
+- **Geo-blocking Testing:** Validación de bloqueo por regiones
+- **Authentication Bypass Testing:** Verificación de seguridad de acceso
+- **Security Headers Testing:** Validación de headers de seguridad
+- **Key Rotation Testing:** Verificación de rotación automática de claves
+- **Threat Detection Testing:** Validación de detección de amenazas
 
 #### Tests de Control de Costos
 - **Budget Alerts:** Validación de alertas automáticas
 - **Emergency Mode:** Testing de modo de emergencia
 - **Resource Quotas:** Verificación de límites de recursos
 - **Cost Monitoring:** Validación de métricas de costos
+- **Circuit Breaker Testing:** Validación de circuit breakers para costos
+- **Cache Warming Testing:** Verificación de precarga inteligente de cache
+- **Performance Under Load Testing:** Testing con usuarios concurrentes
+- **Quality Metrics Testing:** Validación de alertas proactivas de calidad
 
 ### Automatización de Tests
 
@@ -525,22 +535,36 @@ graph LR
 graph LR
     A[Code Push] --> B[Unit Tests]
     B --> C[Integration Tests]
-    C --> D[Security Scan]
-    D --> E[E2E Tests]
-    E --> F[Deploy Staging]
-    F --> G[Manual Testing]
-    G --> H[Deploy Production]
+    C --> D[Security Tests]
+    D --> E[Adversarial Testing]
+    E --> F[Performance Tests]
+    F --> G[Vulnerability Scan]
+    G --> H[E2E Tests]
+    H --> I[Deploy Staging]
+    I --> J[Quality Validation]
+    J --> K[Security Validation]
+    K --> L[Deploy Production]
     
-    B -->|Fail| I[Block PR]
-    C -->|Fail| I
-    D -->|Fail| I
-    E -->|Fail| I
+    B -->|Fail| M[Block PR]
+    C -->|Fail| M
+    D -->|Fail| M
+    E -->|Fail| M
+    F -->|Fail| M
+    G -->|Fail| M
+    H -->|Fail| M
+    J -->|Fail| M
+    K -->|Fail| M
 ```
 
 #### Herramientas de Testing
 - **Python:** pytest, pytest-asyncio, pytest-cov
 - **JavaScript:** Jest, React Testing Library
 - **Security:** OWASP ZAP, Bandit, Security Headers
-- **Performance:** Locust, Artillery
+- **Adversarial Testing:** Custom prompts maliciosos, pattern detection
+- **Performance:** Locust, Artillery, concurrent testing
+- **Geo-blocking:** GeoIP testing, region validation
+- **Circuit Breakers:** Budget simulation, cost threshold testing
+- **Cache Testing:** Redis performance, cache warming validation
+- **Quality Monitoring:** Custom quality metrics, proactive alerting
 - **Monitoring:** Test observability con OpenTelemetry
 - **Cost Testing:** Simulación de presupuesto y alertas 
