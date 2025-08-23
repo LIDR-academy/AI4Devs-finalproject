@@ -158,6 +158,7 @@ const transaction = new TransactionBuilder()
 3. **Create test structure** following capability/feature/activity hierarchy
 4. **Design test data** using appropriate builders
 5. **Choose test type**: Happy flows → E2E tests, Costly integrations → Integration tests
+6. **Regenerate API client** if backend controllers changed (run backend-publisher container)
 
 ## During Implementation
 1. **Write tests first** (TDD approach)
@@ -243,6 +244,11 @@ const transaction = new TransactionBuilder()
 # Start Docker test environment
 npm run test:docker:up
 
+# IMPORTANT: After Backend Controller Changes
+# Run backend-publisher container to regenerate API client code
+# This is REQUIRED before running integration/E2E tests
+docker-compose up backend-publisher
+
 # Run relevant tests in proper order (development workflow)
 npm run test:validate:feature --feature="feature-name"
 
@@ -307,6 +313,7 @@ If the frontend is failing to fetch data, the issue might be on:
 - **Backend API errors** → Frontend receives error responses
 - **Network connectivity** → Services can't communicate
 - **Resource constraints** → Services crash or become unresponsive
+- **Outdated API client** → Integration/E2E tests fail after backend controllers/endpoints change (we need to run the backend-publisher container)
 
 # When to Apply This Rule
 
