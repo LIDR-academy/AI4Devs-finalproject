@@ -116,7 +116,7 @@ Add to `backend/package.json`:
   }
 }
 ```
-    "build:package": "tsc -p tsconfig.package.json",
+    "build:package": "tsc -p tsconfig.client.json",
     "prepublishOnly": "npm run codegen:package"
   }
 }
@@ -258,7 +258,7 @@ project/
 ├── backend/
 │   ├── openapi.json              # Generated OpenAPI spec
 │   ├── package.client.json       # Client package configuration
-│   ├── tsconfig.package.json     # Package build configuration
+│   ├── tsconfig.client.json     # Package build configuration
 │   ├── src/generated/            # Generated TypeScript client
 │   ├── dist/                     # Built NPM package
 │   └── package.json              # Swagger generation script

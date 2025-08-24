@@ -41,7 +41,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: publisher
-    command: npm run publish:client
+    command: npm run local:publish
     depends_on:
       backend:
         condition: service_healthy
