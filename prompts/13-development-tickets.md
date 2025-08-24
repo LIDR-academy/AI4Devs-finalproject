@@ -89,7 +89,7 @@ on delivering business value and user outcomes.
 
 **Development Stories & Progress:**
 - [ ] **DS-13: Calculation Parser Service** - Mathematical expression parsing and validation
-- [ ] **DS-14: Transaction Calculator Service** - Complex calculations
+- [ ] **DS-14: Transaction Calculator Service** - Complex calculations (refering to other transactions)
 - [ ] **DS-15: Composition Validation Service** - Circular reference detection and validation
 
 **User Story Deliverables:**

@@ -246,7 +246,8 @@ test.describe('Transaction Management E2E', () => {
               
               // Since there's existing data, we need to check if the transaction was created correctly
               // rather than just the dashboard totals
-              expect(actualIncrease).toBeGreaterThanOrEqual(0);
+              // For expenses, the increase should be negative (<= 0) since expenses are negative values
+              expect(actualIncrease).toBeLessThanOrEqual(0);
               
               // Verify the transaction appears in the list with correct frequency
               const transactionRow = page.locator('text=Fortnightly Expense Test').first();

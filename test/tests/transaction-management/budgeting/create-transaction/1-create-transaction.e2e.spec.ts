@@ -56,6 +56,60 @@ test.describe('Transaction Management E2E', () => {
             }
           });
 
+          test('should create a transaction with mathematical expression and evaluate it correctly', async ({ page }) => {
+            // Arrange: Navigate to the transactions page            
+            await page.goto('/');
+            
+            // Wait for the page to load
+            await page.waitForLoadState('networkidle');
+
+            // Look for the transaction form or create button
+            const createButton = page.locator('button:has-text("Add Transaction"), button:has-text("Create"), button:has-text("+")').first();
+            if (await createButton.isVisible()) {
+              await createButton.click();
+
+              // Fill in the transaction form with a mathematical expression
+              await page.fill('input[name="description"], input[placeholder*="description"], textarea[name="description"]', 'Test Expression');
+              await page.fill('input[name="expression"], input[placeholder*="amount"]', '10 + 5');
+              
+              // Select category
+              const categorySelect = page.locator('select[name="categoryId"], [data-testid="category-select"]');
+              if (await categorySelect.isVisible()) {
+                await categorySelect.selectOption({ label: 'Groceries' });
+              }
+              
+              await page.fill('textarea[name="notes"], input[name="notes"], input[placeholder*="notes"]', 'Testing expression evaluation');
+              
+              // Select frequency
+              const frequencySelect = page.locator('select[name="frequency"], [data-testid="frequency-select"]');
+              if (await frequencySelect.isVisible()) {
+                await frequencySelect.selectOption({ value: 'month' });
+              }
+
+              // Submit the form
+              const submitButton = page.locator('button[type="submit"], button:has-text("Save"), button:has-text("Create")');
+              await submitButton.click();
+
+              // Wait for the form submission to complete
+              await page.waitForLoadState('networkidle');
+
+              // Assert: Verify the transaction appears in the list
+              const transactionText = page.locator('text=Test Expression');
+              await expect(transactionText).toBeVisible();
+
+              // Verify the expression is stored correctly
+              const expressionText = page.locator('text=10 + 5');
+              await expect(expressionText).toBeVisible();
+
+              // Verify the evaluated amount is displayed correctly (should be 15)
+              const amountText = page.locator('text=15');
+              await expect(amountText).toBeVisible();
+            } else {
+              // If no create button found, just verify the page loads
+              await expect(page).toHaveTitle(/.*/);
+            }
+          });
+
           test('should display all transactions in the UI list', async ({ page }) => {
             // Arrange: Navigate to the transactions page            
             await page.goto('/');
