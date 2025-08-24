@@ -38,6 +38,10 @@
 - `docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md`: Modelo de base de datos
 - `docs/planificacion_y_documentacion/diagramas/diagrama_visual_arquitectura.md`: Diagrama de arquitectura del sistema
 - `docs/planificacion_y_documentacion/diagramas/diagrama_casos_de_uso.md`: Diagrama de casos de uso
+
+## Consideraciones para tareas en especifico:
+- Cuando se pida generar documentación (API, Readme, ect...) tomar en cuenta el idioma en el que se encuentra el archivo a complementar, generalmente es en español
+- Cuando se pieda realizar un archivo de pruebas unitarias siempre utilizar Mocks
 ---
 
 Asegúrate de seguir los patrones hexagonales y las convenciones de internacionalización y seguridad. Si tienes dudas sobre la estructura, consulta los diagramas y documentación en la carpeta `docs/`.

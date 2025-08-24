@@ -577,3 +577,105 @@ Para adaptar y personalizar las paletas de colores propuestas, se recomiendan la
 - El sistema está preparado para futuras integraciones (telemedicina, pagos, historial médico).
 - Se recomienda revisión legal y de seguridad periódica.
 - El diseño y arquitectura permiten escalar y adaptar el sistema conforme crezcan los
+
+## 14. Formato estándar de respuesta de la API REST
+
+Todos los endpoints de la API REST responden bajo un formato estructurado y consistente, facilitando la integración y el manejo de errores en el frontend y otros consumidores. Este formato se aplica tanto a respuestas exitosas como a errores, y está alineado con las mejores prácticas de APIs modernas y la arquitectura hexagonal del sistema.
+
+### Estructura general de la respuesta
+
+```json
+{
+  "code": "Código HTTP (200, 400, 404, 500, etc.)",
+  "message": "Mensaje sobre el resultado de la operación (en inglés)",
+  "payload": {
+    // Datos de la operación o errores
+  }
+}
+```
+
+#### Ejemplo de respuesta exitosa (búsqueda de especialistas)
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "payload": {
+    "results": [
+      {
+        "id": 4,
+        "name": "Dr. Juan Pérez",
+        "specialty": "Cardiología, Dermatología",
+        "city": "Coyoacán",
+        "state": "Ciudad de México",
+        "photo": "",
+        "biography": "Cardiólogo con 10 años de experiencia."
+      }
+    ],
+    "pagination": {
+      "total": 1,
+      "page": 1,
+      "limit": 5,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+#### Ejemplo de respuesta exitosa (perfil de especialista)
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "payload": {
+    "id": 4,
+    "name": "Dr. Juan Pérez",
+    "specialty": "Cardiología",
+    "biography": "Cardiólogo con 10 años de experiencia.",
+    "photo": "",
+    "licenseNumber": "MED12345",
+    "title": "Cardiología",
+    "city": "Coyoacán",
+    "state": "Ciudad de México"
+  }
+}
+```
+
+#### Ejemplo de respuesta de error (validación)
+
+```json
+{
+  "code": 400,
+  "message": "Bad Request",
+  "payload": {
+    "error": [
+      "limit must be a positive number"
+    ]
+  }
+}
+```
+
+#### Ejemplo de respuesta de error (no encontrado)
+
+```json
+{
+  "code": 404,
+  "message": "Doctor not found",
+  "payload": {
+    "error": [
+      "Doctor with specified ID does not exist"
+    ]
+  }
+}
+```
+
+### Consideraciones técnicas
+
+- El formato es gestionado por middlewares globales en Express, desacoplados del core de dominio.
+- Los mensajes siempre se entregan en inglés para facilitar la internacionalización en el frontend.
+- Los datos de la operación se incluyen directamente en el campo `payload`, sin envoltorios adicionales.
+- Los errores se entregan como un arreglo en `payload.error`, permitiendo mostrar múltiples mensajes de validación o sistema.
+- Este estándar facilita la integración con el frontend (Vue.js + vue-i18n) y otros sistemas externos.
+
+---

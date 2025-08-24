@@ -676,3 +676,236 @@ Genera un archivo `seed.js` que inserte datos de prueba en la base de datos del 
 
 Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+
+
+
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para una historia de usuario denominada "Ver perfil de especialista" y empezaremos con su implementación.
+En cuanto el proyecto ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Adicionalmente se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a implementar la historia de usuario y sus serie de tickets 
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para ChatGPT 4.1: Implementación de la historia "Ver perfil de especialista" en Backend Buscadoc
+
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Convenciones:** camelCase para variables, funciones y clases  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **Internacionalización:** Omitida, respuestas en inglés  
+> **Swagger:** Actualizar documentación del endpoint
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Antes de implementar, revisa el modelo de datos y el código fuente para ubicar la ruta y controlador correctos.
+   - Asegúrate de seguir la arquitectura hexagonal:  
+     - Lógica de negocio en servicios de dominio  
+     - Controladores gestionan entrada/salida  
+     - Adaptadores de entrada (API REST) invocan casos de uso  
+     - Adaptadores de salida gestionan persistencia con Prisma
+
+2. **Diseño del endpoint para consultar el perfil de especialista**
+   - Implementa el endpoint REST `GET /api/doctors/:id` para consultar el perfil profesional y ubicación general de un especialista.
+   - El endpoint debe recibir el identificador del especialista y retornar:
+     - Información profesional: nombre, especialidad, biografía, foto, cédula profesional, título
+     - Ubicación general: ciudad y estado
+     - Oculta datos personales sensibles (correo, teléfono, dirección exacta) si el usuario no está autenticado
+   - Valida que el especialista esté activo antes de mostrar el perfil.
+   - Actualiza la documentación en Swagger.
+
+3. **Implementación de la lógica de consulta**
+   - Consulta las entidades DOCTOR, USER, DOCTOR_SPECIALTY, SPECIALTY, LOCATION, CITY y STATE usando Prisma.
+   - Aplica validaciones de entrada con Yup.
+   - Si el usuario no está autenticado, excluye los datos sensibles de la respuesta.
+   - Maneja errores con middleware global y clases customizadas.
+
+4. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para el endpoint usando Jest y Supertest.
+   - Prueba los siguientes casos:
+     - Acceso con usuario no autenticado (verifica que no se muestran datos sensibles)
+     - Acceso a perfil de especialista activo
+     - Acceso a perfil de especialista inactivo (no debe mostrarse)
+
+5. **Convenciones y patrones**
+   - Mantén la lógica de negocio fuera de los controladores y adáptala en servicios de dominio.
+   - Usa camelCase en todo el código.
+   - Cumple con la LFPDPPP y buenas prácticas de seguridad.
+   - Documenta el endpoint en Swagger.
+
+---
+
+## Ejemplo de estructura base para el endpoint
+
+```js
+// ...existing code...
+// backend/routes/doctors.js
+router.get('/:id', doctorsController.getDoctorProfile);
+// ...existing code...
+
+// backend/controllers/doctorsController.js
+const getDoctorProfile = async (req, res, next) => {
+  // Validación con Yup
+  // Consulta de datos con Prisma
+  // Ocultación de datos sensibles si no hay autenticación
+  // Manejo de errores con clases customizadas
+  // Respuesta en inglés
+};
+// ...existing code...
+```
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Diagrama de arquitectura](docs/planificacion_y_documentacion/diagramas/diagrama_visual_arquitectura.md)
+- [Diagrama de casos de uso](docs/planificacion_y_documentacion/diagramas/diagrama_casos_de_uso.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas y tickets
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- Antes de iniciar muestrame la lista de pasos a ejecutar
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+TODO: Implementar respuestas de endpoint como: {code, message, payload}
+
+Eres un experto en Ingenieria de Prompts, en NodeJs, en Express y construyendo REST APIs
+# Contexto Inicial
+Tengo un proyecto el cual se encuentra bajo construcción y del cual ya tenemos los primeros metodos, pero requerimos hacer algunos ajustes.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a cambiar la respuesta de mi API cumpliedo con los siguientes requerimientos
+
+# Requerimientos
+1. Las respuestas de las APIs deben tener la siguiente respuesta:
+```json
+{
+   "code": "codigo http de la respuesta: 2xx, 4xx, 5xx, etc",
+   "message": "un mensaje referente al resultado de la operación, ejemplo: success",
+   "payload": {
+      "objeto": "contenido generado al consultar el API, puede ser un objeto o un arreglo de errores en caso de fallo"
+   }
+}
+```
+2. Para las respuestas con codigo "2xx" agregar el "message" correspondiente
+   * En el payload deben contener el contenido que genera la consulta de un metodo
+3. Para las respuestas con codigo "4xx" o "5xx" considerar los siguientes casos:
+   * 400: codigos de error genericos o aquellos en donde el los valores enviados no cumplen con el tipo de dato que espera el metodo
+   * Considerar los codigos comunes como: 401, 403, 404, 500, 503, etc...
+   * el campo "message" debe reflejar un texto de acuerdo al codigo de error generado
+   * el campo "paylod" debe contener un objeto "error" que alberga un arreglo con los errores encontrados en la invocación del metodo
+4. Implementar estos requisitos en los metodos existentes
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso al codigo fuente para implementar los requerimientos
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis  requerimeintos ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para ChatGPT 4.1: Estandarización de Respuestas en API REST (Node.js + Express)
+
+## Rol
+Actúa como un experto en Node.js, Express y arquitectura hexagonal. Tendrás acceso al código fuente del proyecto y deberás seguir las convenciones y patrones definidos en la documentación del sistema.
+
+## Objetivo
+Tu tarea es modificar los métodos existentes de la API REST para que todas las respuestas sigan el siguiente formato estándar:
+
+```json
+{
+   "code": "HTTP status code (2xx, 4xx, 5xx, etc)",
+   "message": "A message about the result of the operation, e.g., success",
+   "payload": {
+      "objeto": "Content generated by the API method, can be an object or an array of errors in case of failure"
+   }
+}
+```
+
+### Requisitos Específicos
+
+1. **Respuestas exitosas (2xx):**
+   - El campo `message` debe indicar el resultado (ejemplo: "success", "created", etc.).
+   - El campo `payload.objeto` debe contener el resultado de la consulta o acción realizada.
+
+2. **Respuestas de error (4xx, 5xx):**
+   - El campo `message` debe reflejar el tipo de error (ejemplo: "Bad Request", "Unauthorized", "Not Found", "Internal Server Error", etc.).
+   - El campo `payload` debe contener un objeto `error` con un arreglo de los errores encontrados.
+   - Considera los códigos comunes: 400, 401, 403, 404, 500, 503, etc.
+
+3. **Middleware de estandarización:**
+   - Implementa un middleware en Express que gestione tanto respuestas exitosas como errores, asegurando que todas las respuestas sigan el formato estándar.
+   - El middleware debe integrarse en los adaptadores de entrada (controladores REST), respetando la arquitectura hexagonal.
+   - El core de dominio debe permanecer desacoplado de la lógica de respuesta HTTP.
+
+4. **Internacionalización:**
+   - Los mensajes deben estar en inglés.
+
+5. **Manejo de errores inesperados:**
+   - El middleware debe capturar y formatear errores no previstos para mantener la consistencia en las respuestas.
+
+6. **Formato único:**
+   - Todos los endpoints deben responder bajo este formato, sin excepciones.
+
+7. **Estructura del campo `objeto`:**
+   - No hay convenciones específicas; coloca el resultado del método en este campo.
+
+8. **No usar paquetes externos para manejo de errores.**
+
+9. **Seguir patrones hexagonales:**
+   - Mantén la lógica de negocio fuera de los controladores y adáptala en servicios de dominio.
+   - Los controladores solo deben orquestar la llamada a los casos de uso y delegar la respuesta al middleware.
+
+## Ejemplo de implementación
+
+- Sugiere cómo modificar un controlador y cómo integrar el middleware.
+- Respeta la arquitectura hexagonal y las convenciones del proyecto.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de los requerimientos
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso dime que archivo se a modificar o agregar, muestrame el codigo a agregar o reemplazar y dime en donde lo debo colocar
+- Antes de iniciar muestrame la lista de pasos a ejecutar
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

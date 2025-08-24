@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
 const path = require('path');
+const responseFormatter = require('./src/adapters/in/responseFormatter'); // Importa el middleware
 const errorHandler = require('./src/adapters/in/errorHandler'); // Middleware global
 const fs = require('fs');
 
@@ -34,6 +35,7 @@ if (fs.existsSync(swaggerFile)) {
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.use(responseFormatter); // Aplica el middleware de estandarización de respuestas
 // Rutas principales (se agregará /api/doctors en el siguiente paso)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

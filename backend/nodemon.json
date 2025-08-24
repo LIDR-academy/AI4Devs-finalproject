@@ -1,0 +1,6 @@
+{
+  "watch": ["src", "adapters", "domain", "server.js", "docs/swagger.json"],
+  "ext": "js,json",
+  "ignore": ["node_modules", "prisma"],
+  "exec": "node server.js"
+}

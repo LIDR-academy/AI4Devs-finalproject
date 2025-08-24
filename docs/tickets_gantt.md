@@ -29,11 +29,11 @@ gantt
     Crear pruebas unitarias endpoint búsqueda :done, des6.6, 2025-08-24, 1h
 
     section 7. Ver perfil de especialista [US-2]
-    Diseñar el endpoint para consultar el perfil de especialista :des7.1, 2025-08-25, 1h
-    Implementar la lógica de consulta del perfil de especialista :des7.2, 2025-08-25, 2h
-    Agregar validaciones para ocultar datos personales sensibles :des7.3, 2025-08-26, 1h
-    Documentar el endpoint de perfil de especialista :des7.4, 2025-08-26, 1h
-    Crear pruebas unitarias para el endpoint de perfil de especialista :des7.5, 2025-08-27, 1h
+    Diseñar el endpoint para consultar el perfil de especialista :done, des7.1, 2025-08-25, 1h
+    Implementar la lógica de consulta del perfil de especialista :done, des7.2, 2025-08-25, 2h
+    Agregar validaciones para ocultar datos personales sensibles :done, des7.3, 2025-08-26, 1h
+    Documentar el endpoint de perfil de especialista :done, des7.4, 2025-08-26, 1h
+    Crear pruebas unitarias para el endpoint de perfil de especialista :done, des7.5, 2025-08-27, 1h
 
     section 8. Buscar especialistas y ver perfiles [US-4]
     Diseñar el endpoint de búsqueda de especialistas para pacientes :des8.1, 2025-08-27, 1h

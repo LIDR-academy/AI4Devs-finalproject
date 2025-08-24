@@ -70,49 +70,62 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "results": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "specialty": {
-                            "type": "string"
-                          },
-                          "city": {
-                            "type": "string"
-                          },
-                          "state": {
-                            "type": "string"
-                          },
-                          "photo": {
-                            "type": "string"
-                          },
-                          "biography": {
-                            "type": "string"
-                          }
-                        }
-                      }
+                    "code": {
+                      "type": "integer",
+                      "example": 200
                     },
-                    "pagination": {
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "payload": {
                       "type": "object",
                       "properties": {
-                        "total": {
-                          "type": "integer"
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "specialty": {
+                                "type": "string"
+                              },
+                              "city": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string"
+                              },
+                              "photo": {
+                                "type": "string"
+                              },
+                              "biography": {
+                                "type": "string"
+                              }
+                            }
+                          }
                         },
-                        "page": {
-                          "type": "integer"
-                        },
-                        "limit": {
-                          "type": "integer"
-                        },
-                        "totalPages": {
-                          "type": "integer"
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer"
+                            },
+                            "page": {
+                              "type": "integer"
+                            },
+                            "limit": {
+                              "type": "integer"
+                            },
+                            "totalPages": {
+                              "type": "integer"
+                            }
+                          }
                         }
                       }
                     }
@@ -122,22 +135,26 @@
                   "success": {
                     "summary": "Respuesta exitosa",
                     "value": {
-                      "results": [
-                        {
-                          "id": 1,
-                          "name": "Dr. Juan Pérez",
-                          "specialty": "Cardiología",
-                          "city": "Ciudad de México",
-                          "state": "CDMX",
-                          "photo": "https://ejemplo.com/foto.jpg",
-                          "biography": "Especialista en cardiología..."
+                      "code": 200,
+                      "message": "success",
+                      "payload": {
+                        "results": [
+                          {
+                            "id": 4,
+                            "name": "Dr. Juan Pérez",
+                            "specialty": "Cardiología, Dermatología",
+                            "city": "Coyoacán",
+                            "state": "Ciudad de México",
+                            "photo": "",
+                            "biography": "Cardiólogo con 10 años de experiencia."
+                          }
+                        ],
+                        "pagination": {
+                          "total": 1,
+                          "page": 1,
+                          "limit": 5,
+                          "totalPages": 1
                         }
-                      ],
-                      "pagination": {
-                        "total": 1,
-                        "page": 1,
-                        "limit": 10,
-                        "totalPages": 1
                       }
                     }
                   }
@@ -152,16 +169,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    },
+                    "payload": {
                       "type": "object",
                       "properties": {
-                        "type": {
-                          "type": "string"
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "details": {
+                        "error": {
                           "type": "array",
                           "items": {
                             "type": "string"
@@ -175,11 +194,195 @@
                   "validationError": {
                     "summary": "Error de validación",
                     "value": {
-                      "error": {
-                        "type": "ValidationError",
-                        "message": "Parámetros de consulta inválidos",
-                        "details": [
+                      "code": 400,
+                      "message": "Bad Request",
+                      "payload": {
+                        "error": [
                           "limit must be a positive number"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/doctors/{id}": {
+      "get": {
+        "tags": [
+          "Doctors"
+        ],
+        "summary": "Consultar perfil profesional y ubicación de un especialista.",
+        "description": "Obtiene el perfil profesional y ubicación general de un especialista por su ID. Oculta datos personales sensibles para usuarios no autenticados.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID del especialista",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil profesional y ubicación del especialista",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "specialty": {
+                          "type": "string"
+                        },
+                        "biography": {
+                          "type": "string"
+                        },
+                        "photo": {
+                          "type": "string"
+                        },
+                        "licenseNumber": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Respuesta exitosa",
+                    "value": {
+                      "code": 200,
+                      "message": "success",
+                      "payload": {
+                        "id": 4,
+                        "name": "Dr. Juan Pérez",
+                        "specialty": "Cardiología",
+                        "biography": "Cardiólogo con 10 años de experiencia.",
+                        "photo": "",
+                        "licenseNumber": "MED12345",
+                        "title": "Cardiología",
+                        "city": "Coyoacán",
+                        "state": "Ciudad de México"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación de parámetros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Error de validación",
+                    "value": {
+                      "code": 400,
+                      "message": "Bad Request",
+                      "payload": {
+                        "error": [
+                          "Doctor id is required"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Especialista no encontrado o inactivo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Doctor not found"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "notFound": {
+                    "summary": "Especialista no encontrado",
+                    "value": {
+                      "code": 404,
+                      "message": "Doctor not found",
+                      "payload": {
+                        "error": [
+                          "Doctor with specified ID does not exist"
                         ]
                       }
                     }
