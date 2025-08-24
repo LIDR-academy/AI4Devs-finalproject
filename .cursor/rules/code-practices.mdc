@@ -11,7 +11,7 @@ alwaysApply: true
 - Code should be modular
 - Follow DDD-style
 - Avoid refactoring without tests
-- Start with the simplest solution and refactor to improve it
+- Start with the simplest solution and refactor to improve it, do not create things that are not used right away
 - Follow best practices such as SOLID, DRY, KISS, YAGNI, etc.
 - All code should be covered by tests, primarily integration tests
 - **Always** do changes following the vertical slice practices, that is, changes should affect the following when convinient: frontend, backend, database and documentation
