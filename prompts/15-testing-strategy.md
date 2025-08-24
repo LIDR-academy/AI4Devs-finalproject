@@ -16,6 +16,18 @@ This document provides comprehensive instructions for setting up a testing infra
 
 Integration tests are priority because they indicate how health a system is, unit tests can be used to cover remaining business code.
 
+#### Contract Tests (Frontend API Integration)
+- **Location**: `/frontend/src/services/api/(sub-api)`
+- **Scope**: Frontend integration with ai4devs-api-client
+- **Backend**: Mocked server responses
+- **External Services**: Mocked
+- **Coverage**: API contract validation, error handling, data transformation
+- **Execution**: Fast execution, < 10s per test
+- **Criteria**: Frontend correctly integrates with API client, handles responses and errors
+- **Priority**: High: Validate frontend-API integration without full backend dependency
+- **When to use**: Test API client integration, error scenarios, and data contracts
+- **Organization**: Each operation (fetch, create, edit, delete) has its own test file for better maintainability inside the sub-api folder
+
 #### Unit Tests (Submodules)
 - **Location**: Close to the code they are testing (in `backend/` and `frontend/` submodules)
 - **Scope**: Single function/class testing
@@ -342,6 +354,7 @@ export class TransactionBuilder extends BaseBuilder<Transaction> {
 - **Unit Tests**: `*.spec.ts` (in submodules)
 - **Integration Tests**: `*.int.spec.ts` (at root)
 - **E2E Tests**: `*.e2e.spec.ts` (at root)
+- **Contract Tests**: `*.contract.spec.ts` (in frontend submodule)
 
 ### 2. Test Structure
 ```typescript
@@ -472,15 +485,16 @@ describe('User Journeys', () => {
 ## Best Practices
 
 1. **Test Isolation**: Each test should be independent, we can run them in parallel
-2. **Fast Execution**: Integration tests < 30s, E2E tests < 2min
+2. **Fast Execution**: Contract tests < 10s, Integration tests < 30s, E2E tests < 2min
 3. **Realistic Data**: Use builders that create realistic test scenarios consistent with business rules
 4. **Business Rules**: Test business logic, not implementation details
 5. **Error Scenarios**: Cover both happy and unhappy paths
 6. **Happy Flow Priority**: **Happy flows should be E2E tests by default**
 7. **Integration Test Exception**: Use integration tests for happy flows only when E2E would be costly/unreliable
-8. **Database Cleanup**: Ensure consistent and valid business data for each test, unless the test is about handling inconsistent/invalid data
-9. **Docker Management**: Always clean up containers after test runs
-10. **Test Organization**: Follow the test directory structure for clear test organization
+8. **Contract Test Priority**: Use contract tests to validate frontend-API integration before running full integration tests
+9. **Database Cleanup**: Ensure consistent and valid business data for each test, unless the test is about handling inconsistent/invalid data
+10. **Docker Management**: Always clean up containers after test runs
+11. **Test Organization**: Follow the test directory structure for clear test organization
 
 ## Troubleshooting
 

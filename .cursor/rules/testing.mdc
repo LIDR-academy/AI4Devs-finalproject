@@ -55,7 +55,17 @@ npm run test:validate:feature --feature="your-feature-name"
 - **Why**: Use when E2E tests are not suitable due to costly/unreliable integrations
 - **When to use**: External services that are expensive, unreliable, or require complex mocking
 
-## 3. Unit Tests (Lowest Priority)
+## 3. Contract Tests (Frontend API Integration)
+- **Location**: `/frontend/src/services/api/(sub-api)`
+- **Scope**: Frontend integration with ai4devs-api-client
+- **Backend**: Mocked server responses
+- **Coverage**: API contract validation, error handling, data transformation
+- **Execution**: Fast, < 10s per test
+- **Why**: Validate frontend-API integration without full backend dependency
+- **When to use**: Test API client integration, error scenarios, and data contracts
+- **Organization**: Each operation (fetch, create, edit, delete) has its own test file for better maintainability inside the sub-api folder
+
+## 4. Unit Tests (Lowest Priority)
 - **Location**: Close to code in each submodule
 - **Scope**: Single function/class testing
 - **Database**: Mocked
@@ -85,6 +95,7 @@ test/
 
 - **Integration Tests**: `*.int.spec.ts`
 - **E2E Tests**: `*.e2e.spec.ts`
+- **Contract Tests**: `*.contract.spec.ts`
 - **Unit Tests**: `*.spec.ts` (in submodules)
 
 # Test Structure & BDD Implementation
