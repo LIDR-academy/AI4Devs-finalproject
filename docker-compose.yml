@@ -76,6 +76,7 @@ services:
       - ./.npmrc:/root/.npmrc:ro
     networks:
       - ai4devs-finalproject
+    command: sh -c "npm install ai4devs-api-client --no-fund --no-audit --registry=http://verdaccio:4873 && npm run dev"
 
 networks:
   ai4devs-finalproject:
