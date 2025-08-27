@@ -1,7 +1,7 @@
 .env*
 node_modules
 coverage
-playwright-report/index.html
+playwright-report
 test-results/.last-run.json
 .DS_Store
 test-results/
