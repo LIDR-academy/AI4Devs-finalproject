@@ -40,6 +40,7 @@ app.use(responseFormatter); // Aplica el middleware de estandarización de respu
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+app.use('/api/auth', require('./src/adapters/in/authRoutes'));
 app.use('/api/doctors', require('./src/adapters/in/doctorRoutes'));
 
 // Manejo global de errores

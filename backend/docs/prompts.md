@@ -909,3 +909,312 @@ Tu tarea es modificar los métodos existentes de la API REST para que todas las 
 
 Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para las historias de usuario denomidadas "Registro de paciente" y "Registro de médico especialista", empezaremos con su implementación.
+En cuanto el proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Adicionalmente se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a configurar JWT (`jsonwebtoken`) en el proyecto e implementar las historia de usuario y sus series de tickets
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+# Prompt para ChatGPT 4.1: Implementación de endpoints de registro de paciente y médico especialista + configuración JWT
+
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Convenciones:** camelCase para variables, funciones y clases  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest (usar mocks)  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **JWT:** Usar jsonwebtoken, configuración en servicio y variables en `.env`  
+> **Swagger:** Documentar ambos endpoints y el esquema de autenticación
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Revisa el modelo de datos y el código fuente para ubicar la ruta y controlador correctos.
+   - Sigue la arquitectura hexagonal:  
+     - Lógica de negocio en servicios de dominio  
+     - Controladores gestionan entrada/salida  
+     - Adaptadores de entrada (API REST) invocan casos de uso  
+     - Adaptadores de salida gestionan persistencia con Prisma
+
+2. **Configuración de JWT**
+   - Crea un servicio de dominio para la gestión de JWT
+   - Usa la librería `jsonwebtoken`.
+   - Configura el secreto y expiración en el archivo `.env`:
+     ```
+     JWT_SECRET=your_secret_key
+     JWT_EXPIRES_IN=1d
+     ```
+   - El servicio debe incluir funciones para generar y validar tokens.
+   - Documenta el esquema de autenticación en el README.
+
+3. **Implementación del servicio de registro compartido**
+   - Crea un servicio de dominio (por ejemplo, `backend/services/registerService.js`) que gestione el registro tanto de pacientes como de médicos especialistas.
+   - El servicio debe:
+     - Validar los datos de entrada con Yup.
+     - Verificar unicidad de email y, para médicos, de `license_number`.
+     - Validar la fortaleza de la contraseña.
+     - Hashear la contraseña con bcryptjs.
+     - Crear los registros en las tablas de acuerdo al modelo de datos
+     - Retornar una respuesta estándar de éxito o error.
+     - No generar JWT en el registro, solo crear el usuario.
+
+4. **Endpoints REST**
+   - Implementa los endpoints:
+     - `POST /api/auth/register/patient`
+     - `POST /api/auth/register/doctor`
+   - Los controladores deben delegar la lógica al servicio de registro.
+   - Los mensajes de error deben estar en inglés y seguir el formato estándar de la API.
+
+5. **Validaciones y manejo de errores**
+   - Usa Yup para validaciones de datos.
+   - Devuelve mensajes claros y específicos (ejemplo: "Email already exists", "Password too weak", "License number required").
+   - Implementa manejo de errores con middleware global y clases customizadas.
+
+6. **Documentación Swagger**
+   - Documenta ambos endpoints en Swagger:
+     - Descripción de funcionalidad.
+     - Campos requeridos y ejemplos de petición/respuesta.
+     - Estructura de datos retornados.
+     - Posibles errores y mensajes de validación.
+     - Esquema de autenticación JWT.
+
+7. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para ambos endpoints usando Jest y Supertest.
+   - Usa mocks para dependencias externas.
+   - Casos a cubrir:
+     - Registro exitoso con datos válidos.
+     - Error por email duplicado.
+     - Error por license_number faltante o duplicado (médico).
+     - Error por contraseña débil.
+     - Error por campos faltantes o inválidos.
+     - Validación de almacenamiento seguro de la contraseña (hash).
+     - Validación de JWT (generación y verificación).
+
+---
+
+## Ejemplo de estructura base para el servicio y endpoints
+
+```js
+// filepath: backend/services/registerService.js
+const bcrypt = require('bcryptjs');
+const yup = require('yup');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const registerPatient = async (data) => {
+  // Validación con Yup
+  // Verificar email único
+  // Validar contraseña
+  // Hashear contraseña
+  // Crear USER y PATIENT
+  // Retornar respuesta estándar
+};
+
+const registerDoctor = async (data) => {
+  // Validación con Yup
+  // Verificar email y license_number únicos
+  // Validar contraseña
+  // Hashear contraseña
+  // Crear USER y DOCTOR
+  // Retornar respuesta estándar
+};
+
+module.exports = { registerPatient, registerDoctor };
+```
+
+```js
+// filepath: backend/services/jwtService.js
+const jwt = require('jsonwebtoken');
+
+const generateToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+};
+
+const verifyToken = (token) => {
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
+module.exports = { generateToken, verifyToken };
+```
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Diagrama de arquitectura](docs/planificacion_y_documentacion/diagramas/diagrama_visual_arquitectura.md)
+- [Diagrama de casos de uso](docs/planificacion_y_documentacion/diagramas/diagrama_casos_de_uso.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de los requerimientos
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso dime que archivo se a modificar o agregar, muestrame el codigo a agregar o reemplazar y dime en donde lo debo colocar
+- Muestrame la lista de pasos a ejecutar antes de realizar la implementación
+
+Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para las historias de usuario denomidadas "Login de paciente" y "Login de médico especialista", empezaremos con su implementación.
+En cuanto al proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código, así mismo ya se tiene la parte del registro de pacientes y medicos implementada.
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a implementar las historia de usuario y sus series de tickets para el inicio de sesión de pacientes y medicos
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para ChatGPT 4.1: Implementación de endpoints de login para paciente y médico especialista
+
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Convenciones:** camelCase para variables, funciones y clases  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest (usar mocks)  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **JWT:** Usar jsonwebtoken, incluir id, tipo de usuario y email  
+> **Swagger:** Documentar ambos endpoints y ejemplos de respuesta  
+> **Internacionalización:** Respuestas en inglés
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Revisa el modelo de datos y el código fuente para ubicar la ruta y controlador correctos, siguiendo la arquitectura hexagonal.
+   - Los controladores solo orquestan la llamada a los casos de uso y manejan la respuesta estándar.
+   - La lógica de negocio debe estar en servicios de dominio.
+
+2. **Implementación de endpoints REST**
+   - Implementa los endpoints:
+     - `POST /api/auth/login/patient`
+     - `POST /api/auth/login/doctor`
+   - Ambos deben recibir los campos: email y contraseña.
+   - Valida los datos de entrada con Yup.
+   - Verifica que el email exista y la contraseña coincida usando bcryptjs.
+   - Si la autenticación es exitosa, genera y devuelve un JWT válido con los campos: id, tipo de usuario y email.
+   - El endpoint responde siguiendo el formato estándar de la API (consultar PRD).
+   - Los errores de autenticación y validación se devuelven en inglés y en el formato estándar.
+
+3. **Validaciones y manejo de errores**
+   - Usa Yup para validaciones de datos.
+   - Devuelve mensajes claros y específicos (ejemplo: "Invalid credentials", "User not found").
+   - Implementa manejo de errores con middleware global y clases customizadas.
+
+4. **Documentación Swagger**
+   - Documenta ambos endpoints en Swagger:
+     - Descripción de funcionalidad.
+     - Campos requeridos y ejemplos de petición/respuesta.
+     - Estructura de los datos retornados (JWT, id, email, tipo de usuario).
+     - Posibles errores y mensajes de validación.
+
+5. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para ambos endpoints usando Jest y Supertest.
+   - Usa mocks para dependencias externas.
+   - Casos a cubrir:
+     - Login exitoso con credenciales válidas.
+     - Error por usuario no encontrado.
+     - Error por contraseña incorrecta.
+     - Error por campos faltantes o inválidos.
+     - Validación de generación y formato del JWT.
+
+---
+
+## Ejemplo de estructura base para el servicio y endpoints
+
+```js
+// backend/services/authService.js
+const bcrypt = require('bcryptjs');
+const yup = require('yup');
+const { PrismaClient } = require('@prisma/client');
+const jwtService = require('./jwtService');
+const prisma = new PrismaClient();
+
+const loginUser = async (data, userType) => {
+  // Validación con Yup
+  // Buscar usuario por email y tipo
+  // Verificar contraseña con bcryptjs
+  // Si es válido, generar JWT con id, email y tipo de usuario
+  // Retornar respuesta estándar
+};
+
+module.exports = { loginUser };
+```
+
+```js
+// backend/services/jwtService.js
+const jwt = require('jsonwebtoken');
+
+const generateToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+};
+
+module.exports = { generateToken };
+```
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Diagrama de arquitectura](docs/planificacion_y_documentacion/diagramas/diagrama_visual_arquitectura.md)
+- [Diagrama de casos de uso](docs/planificacion_y_documentacion/diagramas/diagrama_casos_de_uso.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de los requerimientos
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso dime que archivo se a modificar o agregar, muestrame el codigo a agregar o reemplazar y dime en donde lo debo colocar
+- Muestrame la lista de pasos a ejecutar antes de realizar la implementación
+
+Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

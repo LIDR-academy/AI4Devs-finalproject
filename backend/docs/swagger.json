@@ -6,6 +6,343 @@
     "description": "API para búsqueda de especialistas médicos por especialidad y ubicación"
   },
   "paths": {
+    "/api/auth/register/patient": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Registro de paciente",
+        "description": "Permite registrar un nuevo paciente. Valida los campos requeridos, almacena la contraseña como hash y crea las entidades USER y PATIENT.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": { "type": "string", "example": "Ana" },
+                  "email": { "type": "string", "format": "email", "example": "ana.garcia@example.com" },
+                  "password": { "type": "string", "example": "StrongPass1!" },
+                  "confirmPassword": { "type": "string", "example": "StrongPass1!" },
+                  "lastName": { "type": "string", "example": "García" },
+                  "phone": { "type": "string", "example": "5551234567" }
+                },
+                "required": ["firstName", "email", "password", "confirmPassword"]
+              },
+              "examples": {
+                "registroPaciente": {
+                  "summary": "Ejemplo de registro de paciente",
+                  "value": {
+                    "firstName": "Ana",
+                    "email": "ana.garcia@example.com",
+                    "password": "StrongPass1!",
+                    "confirmPassword": "StrongPass1!",
+                    "lastName": "García",
+                    "phone": "5551234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Paciente registrado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "integer", "example": 201 },
+                    "message": { "type": "string", "example": "Patient registered successfully" },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "firstName": { "type": "string", "example": "Ana" },
+                        "email": { "type": "string", "example": "ana.garcia@example.com" }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Registro exitoso",
+                    "value": {
+                      "code": 201,
+                      "message": "Patient registered successfully",
+                      "payload": {
+                        "firstName": "Ana",
+                        "email": "ana.garcia@example.com"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación o email duplicado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "integer", "example": 400 },
+                    "message": { "type": "string", "example": "Validation error" },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "emailDuplicado": {
+                    "summary": "Email ya registrado",
+                    "value": {
+                      "code": 400,
+                      "message": "Patient already exists",
+                      "payload": {
+                        "error": ["Patient already exists"]
+                      }
+                    }
+                  },
+                  "validacion": {
+                    "summary": "Error de validación",
+                    "value": {
+                      "code": 400,
+                      "message": "Validation error",
+                      "payload": {
+                        "error": [
+                          "Password too weak",
+                          "Passwords do not match"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "integer", "example": 500 },
+                    "message": { "type": "string", "example": "Internal server error" },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "errorInterno": {
+                    "summary": "Error inesperado",
+                    "value": {
+                      "code": 500,
+                      "message": "Internal server error",
+                      "payload": {
+                        "error": ["An unexpected error occurred. Please try again later."]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register/doctor": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Registro de médico especialista",
+        "description": "Permite registrar un nuevo médico especialista. Valida los campos requeridos, almacena la contraseña como hash y crea las entidades USER y DOCTOR.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": { "type": "string", "example": "Luis" },
+                  "lastName": { "type": "string", "example": "Pérez" },
+                  "email": { "type": "string", "format": "email", "example": "luis.perez@example.com" },
+                  "password": { "type": "string", "example": "StrongPass2!" },
+                  "confirmPassword": { "type": "string", "example": "StrongPass2!" },
+                  "licenseNumber": { "type": "string", "example": "MED1234567" },
+                  "phone": { "type": "string", "example": "5559876543" }
+                },
+                "required": [
+                  "firstName",
+                  "lastName",
+                  "email",
+                  "password",
+                  "confirmPassword",
+                  "licenseNumber",
+                  "phone"
+                ]
+              },
+              "examples": {
+                "registroMedico": {
+                  "summary": "Ejemplo de registro de médico especialista",
+                  "value": {
+                    "firstName": "Luis",
+                    "lastName": "Pérez",
+                    "email": "luis.perez@example.com",
+                    "password": "StrongPass2!",
+                    "confirmPassword": "StrongPass2!",
+                    "licenseNumber": "MED1234567",
+                    "phone": "5559876543"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Médico registrado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "integer", "example": 201 },
+                    "message": { "type": "string", "example": "Doctor registered successfully" },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "firstName": { "type": "string", "example": "Luis" },
+                        "email": { "type": "string", "example": "luis.perez@example.com" }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Registro exitoso",
+                    "value": {
+                      "code": 201,
+                      "message": "Doctor registered successfully",
+                      "payload": {
+                        "firstName": "Luis",
+                        "email": "luis.perez@example.com"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación, email o license_number duplicado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "integer", "example": 400 },
+                    "message": { "type": "string", "example": "Validation error" },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "emailDuplicado": {
+                    "summary": "Email ya registrado",
+                    "value": {
+                      "code": 400,
+                      "message": "Doctor already exists",
+                      "payload": {
+                        "error": ["Doctor already exists"]
+                      }
+                    }
+                  },
+                  "licenseDuplicado": {
+                    "summary": "License number ya registrado",
+                    "value": {
+                      "code": 400,
+                      "message": "Doctor already exists",
+                      "payload": {
+                        "error": ["Doctor already exists"]
+                      }
+                    }
+                  },
+                  "validacion": {
+                    "summary": "Error de validación",
+                    "value": {
+                      "code": 400,
+                      "message": "Validation error",
+                      "payload": {
+                        "error": [
+                          "Password too weak",
+                          "Passwords do not match",
+                          "License number required"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "integer", "example": 500 },
+                    "message": { "type": "string", "example": "Internal server error" },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "errorInterno": {
+                    "summary": "Error inesperado",
+                    "value": {
+                      "code": 500,
+                      "message": "Internal server error",
+                      "payload": {
+                        "error": ["An unexpected error occurred. Please try again later."]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/doctors/search": {
       "get": {
         "tags": [
