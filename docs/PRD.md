@@ -1,543 +1,558 @@
-# AI Resume Agent: Your 24/7 Professional Interview
+# PRD: Chatbot de Portfolio Profesional - almapi.dev
 
-## 1. Visión del Producto
+## 🎯 Resumen Ejecutivo
 
-### 1.1 Resumen Ejecutivo
-El proyecto consiste en crear un agente de CV inteligente mediante un avanzado chatbot basado en IA que actuará como tu representante virtual 24/7. Este asistente inteligente utiliza tecnología RAG (Retrieval Augmented Generation) para proporcionar información precisa y contextualizada sobre tu trayectoria profesional, habilidades y experiencia, revolucionando la manera en que los reclutadores y potenciales clientes interactúan con tu perfil profesional.
+### Visión del Producto
+Crear un chatbot inteligente integrado en el portfolio web personal (almapi.dev) que simule la presencia profesional del propietario, permitiendo a visitantes, reclutadores y potenciales clientes obtener información detallada sobre su experiencia laboral, estudios académicos, conceptos técnicos aprendidos y trayectoria profesional a través de conversaciones naturales en cualquier idioma y horario.
 
-### 1.2 Arquitectura del Sistema
-#### Diagrama de Arquitectura General
-```mermaid
-graph TD
-    A[Usuario] -->|Visita| B[Portfolio Web - almapi.dev]
-    B --> C{ChatBot IA}
-    C -->|Consulta| D[Sistema RAG]
-    D -->|Recupera| E[Base de Conocimiento]
-    E -->|1| F[LinkedIn Data]
-    E -->|2| G[GitHub Repos]
-    E -->|3| H[Proyectos]
-    E -->|4| I[Certificaciones]
-    D -->|Procesa| J[LLM]
-    J -->|Genera| K[Respuesta Contextual]
-    K -->|Responde| C
-    C -->|Analítica| L[Sistema de Estadísticas]
-    L -->|1| M[Frecuencia Preguntas]
-    L -->|2| N[Satisfacción Usuario]
-    L -->|3| O[Áreas de Interés]
-    L -->|4| P[Tecnologías Consultadas]
-    L -->|5| Q[Industrias Relevantes]
-```
-[Imagen: /diagramas/arquitectura_general.png]
+### Objetivo Principal
+Transformar el portfolio estático en una experiencia interactiva y personalizada que demuestre competencias en IA, aumente el engagement de visitantes y genere más oportunidades de contacto profesional.
 
-#### Flujo de Interacción
-```mermaid
-sequenceDiagram
-    participant U as Usuario
-    participant C as ChatBot IA
-    participant R as Sistema RAG
-    participant A as Análisis
-    participant B as Base Conocimiento
-    
-    U->>C: Realiza consulta
-    C->>R: Procesa pregunta
-    R->>B: Recupera información
-    B-->>R: Devuelve contexto
-    R->>C: Genera respuesta
-    C->>U: Responde al usuario
-    C->>A: Registra interacción
-    A->>A: Analiza métricas
-    Note over A: - Frecuencia preguntas<br/>- Satisfacción usuario<br/>- Áreas de interés<br/>- Stack tecnológico<br/>- Industrias relevantes
-```
-[Imagen: /diagramas/flujo_interaccion.png]
-
-### 1.3 Público Objetivo
-1. **Reclutadores Técnicos**
-   - Necesitan evaluar competencias técnicas
-   - Buscan candidatos con experiencia específica
-   - Valoran la innovación y conocimientos en IA
-
-2. **Potenciales Clientes**
-   - Empresas buscando servicios de desarrollo/consultoría
-   - Startups interesadas en soluciones tecnológicas
-   - Empresas en proceso de transformación digital
-
-3. **Colegas y Profesionales del Sector**
-   - Interesados en networking
-   - Buscando colaboraciones en proyectos
-   - Explorando oportunidades de aprendizaje mutuo
-
-### 1.2.1 Integración Atlassian y Feedback
-
-El sistema se integra con la suite Atlassian (JIRA + Confluence) para la gestión de proyectos, permitiendo la sincronización automática de tickets, tareas y su estado en el tablero Kanban del equipo. Esta integración facilita la gestión ágil, la trazabilidad y la automatización de flujos de trabajo entre el chatbot, el backend y la gestión de proyectos.
-
-- Los tickets generados en el sistema se reflejan automáticamente en JIRA.
-- El avance de los tickets y cambios de estado se sincronizan en tiempo real.
-- El feedback de usuarios y métricas relevantes pueden generar tareas o alertas en JIRA para su seguimiento.
-- El flujo de feedback del chatbot alimenta el sistema de análisis y puede derivar en la creación de nuevas tareas o mejoras en el backlog.
-
-**Diagrama de integración (Mermaid):**
-```mermaid
-graph LR
-    A[Chatbot IA] -- Genera ticket --> B[JIRA API]
-    B -- Crea/Actualiza --> C[JIRA Board]
-    C -- Estado/Comentarios --> B
-    B -- Sincroniza --> D[Backend API]
-    D -- Feedback/Métricas --> E[Análisis y Mejora Continua]
-    E -- Nueva tarea/alerta --> B
-```
-[Imagen: /diagramas/integracion_atlassian.png]
-
-## 2. Características del Producto
-
-### 2.1 Funcionalidades Core
-
-#### ChatBot IA Personalizado
-- Respuestas en lenguaje natural sobre experiencia profesional
-- Soporte multiidioma
-- Disponibilidad 24/7
-- Capacidad de proporcionar ejemplos específicos de proyectos
-- Redirección a recursos relevantes del portfolio
-- Sistema de retroalimentación integrado para mejora continua
-
-#### Sistema de Análisis y Estadísticas
-```mermaid
-graph LR
-    subgraph Análisis de Datos
-    A[Recopilación] --> B[Procesamiento]
-    B --> C[Visualización]
-    end
-    
-    subgraph Métricas Clave
-    D[Preguntas Frecuentes]
-    E[Satisfacción]
-    F[Áreas de Interés]
-    G[Stack Tecnológico]
-    H[Industrias]
-    I[Tiempo Respuesta]
-    J[Tasa Conversión]
-    end
-    
-    C --> D & E & F & G & H & I & J
-    
-    subgraph Mejora Continua
-    K[Identificación Gaps]
-    L[Actualización KB]
-    M[Optimización Modelo]
-    end
-    
-    D & E & F & G & H & I & J --> K
-    K --> L
-    L --> M
-```
-[Imagen: /diagramas/sistema_analisis.png]
-
-##### Métricas y KPIs
-1. **Análisis de Preguntas**
-   - Ranking de preguntas más frecuentes
-   - Patrones de consulta por hora/día/semana
-   - Tiempo promedio de respuesta
-   - Tasa de preguntas sin respuesta satisfactoria
-
-2. **Satisfacción del Usuario**
-   - Índice de satisfacción por respuesta
-   - Tasa de repreguntas sobre el mismo tema
-   - Duración de las conversaciones
-   - Tasa de abandono
-
-3. **Análisis de Contenido**
-   - Secciones más consultadas del perfil
-   - Proyectos que generan mayor interés
-   - Habilidades más valoradas
-   - Tecnologías más consultadas
-
-4. **Análisis de Industria**
-   - Sectores que muestran mayor interés
-   - Tipos de empresas (startup, enterprise, etc.)
-   - Regiones geográficas de consulta
-   - Patrones de interés por industria
-
-5. **Métricas de Conversión**
-   - Tasa de contactos posteriores
-   - Conversión a oportunidades laborales
-   - Tasa de recomendaciones
-   - Efectividad en generación de leads
-
-6. **Análisis Técnico**
-   - Stack tecnológico más demandado
-   - Tendencias en requisitos técnicos
-   - Gaps en habilidades técnicas
-   - Nuevas tecnologías emergentes de interés
-
-7. **Optimización del Sistema**
-   - Precisión de las respuestas
-   - Velocidad de respuesta
-   - Uso de recursos del sistema
-   - Efectividad del sistema RAG
-
-### 2.2 Fuentes de Información
-- Perfil de LinkedIn
-- Descripción detallada de proyectos
-- Certificaciones y formación académica
-- Publicaciones y contenido técnico
-- Repositorios de código (GitHub)
-- Experiencia laboral detallada
-
-### 2.3 Capacidades del ChatBot
-- Responder preguntas sobre experiencia laboral
-- Proporcionar detalles de proyectos específicos
-- Explicar habilidades técnicas y competencias
-- Compartir logros y reconocimientos
-- Proporcionar enlaces relevantes a trabajos/proyectos
-- Mantener un tono profesional y consistente
-
-## 3. Experiencia de Usuario
-
-### 3.1 Flujo de Interacción
-1. Usuario visita el portfolio ya desplegado en almapi.dev
-2. Accede al chat mediante un botón/widget visible
-3. Puede realizar preguntas en lenguaje natural
-4. Recibe respuestas contextualizadas y relevantes
-5. Puede solicitar más detalles o aclaraciones
-6. Tiene acceso a recursos relacionados
-
-### 3.2 Ejemplos de Interacción
-- "¿Cuál es tu experiencia en desarrollo backend?"
-- "¿Qué proyectos has realizado con IA?"
-- "¿Cuáles son tus principales habilidades técnicas?"
-- "¿Puedes contarme sobre tu experiencia en [empresa]?"
-- "¿Qué certificaciones tienes en cloud computing?"
-
-### 3.3 Limitaciones y Alcance
-- El chatbot se limitará a información profesional
-- No compartirá información personal o confidencial
-- Indicará claramente que es un asistente IA
-- Proporcionará medios de contacto directo cuando sea necesario
-
-## 4. Métricas de Éxito
-
-### 4.1 KPIs Principales
-- Número de interacciones con el chatbot
-- Duración promedio de las conversaciones
-- Tasa de preguntas respondidas satisfactoriamente
-- Número de contactos/leads generados
-- Feedback positivo de usuarios
-
-### 4.2 Objetivos Cualitativos
-- Mejora en la calidad de leads generados
-- Reducción en tiempo de screening inicial
-- Aumento en la visibilidad profesional
-- Demostración práctica de habilidades en IA
-
-## 5. Consideraciones Técnicas y de Privacidad
-
-### 5.1 Privacidad y Seguridad
-- Cumplimiento con GDPR/CCPA
-- Transparencia en el uso de datos
-- Protección de información sensible
-- Políticas claras de uso y privacidad
-
-#### 5.1.1 Ciberseguridad Avanzada
-- **OWASP Top 10 for LLM Compliance:** Implementación completa de todas las mitigaciones
-- **Cloud Armor:** Protección DDoS y WAF rules automáticas
-- **Threat Detection:** Detección en tiempo real de ataques y amenazas
-- **Prompt Injection Protection:** Protección contra inyección de prompts maliciosos
-- **Rate Limiting:** Protección contra abuso de API y ataques de fuerza bruta
-- **Security Command Center:** Monitoreo centralizado de amenazas de seguridad
-
-#### 5.1.2 Medidas de Seguridad Específicas
-- **Input Validation:** Validación estricta y sanitización de todas las entradas
-- **Output Filtering:** Filtrado de respuestas del LLM para prevenir fugas de información
-- **Audit Logging:** Registro completo de todas las interacciones para auditoría
-- **Access Control:** Control de acceso basado en roles y autenticación robusta
-- **Data Encryption:** Cifrado en reposo y en tránsito para todos los datos sensibles
-
-### 5.2 Control de Costos y Optimización
-- **Budget Management:** Presupuesto mensual configurable con alertas automáticas
-- **Resource Quotas:** Límites estrictos por servicio para evitar gastos excesivos
-- **Emergency Mode:** Activación automática de modo de emergencia al exceder presupuesto
-- **Cost Monitoring:** Dashboard en tiempo real de gastos y métricas de costos
-- **Auto-scaling Limits:** Control inteligente del escalado automático
-
-#### 5.2.1 Límites de Recursos por Servicio
-- **Vertex AI:** 10,000 requests/día, 1,000 tokens/request máximo
-- **Vector Search:** 10GB máximo de índice, 1,000 queries/minuto
-- **Cloud Run:** 10 instancias máximo, 2 CPU y 4GB RAM por instancia
-- **Cloud Storage:** 100GB máximo con políticas de lifecycle automático
-- **BigQuery:** $5.0 máximo por query, 50GB máximo de storage
-
-#### 5.2.2 Sistema de Alertas de Costos
-- **Umbrales de Alerta:**
-  - **50% del budget:** Notificación por email
-  - **80% del budget:** Notificación por Slack + email
-  - **100% del budget:** Alerta crítica + activación de modo de emergencia
-- **Canales de Notificación:**
-  - Email: admin@almapi.dev
-  - Slack: #cost-alerts
-  - Telegram: Bot de alertas
-  - PagerDuty: Para alertas críticas
-
-### 5.2.3 Estrategia Integral de Reducción de Costos para MVP 🚀
-
-#### **🎯 Objetivos de Optimización**
-- **Reducir costos mensuales en un 60-80%** vs implementación estándar
-- **Mantener funcionalidad completa** del sistema RAG
-- **Implementar estrategias escalables** para crecimiento futuro
-- **Garantizar ROI positivo** desde el primer mes de operación
-
-#### **🤖 Modelos LLM Optimizados por Costo**
-
-##### **🥇 Opción 1: Google Gemini 1.5 Flash (Recomendada)**
-- **Modelo:** `gemini-1.5-flash`
-- **Costo:** $0.075 por 1K tokens (vs $0.15 de Gemini Pro)
-- **Ahorro:** **50%** vs modelo estándar
-- **Límites:** 1024 tokens máximo por request
-- **Fallback:** Gemini 1.0 Pro para casos críticos
-
-##### **🥈 Opción 2: Ollama Local (GRATIS)**
-- **Modelos:** Llama 3.1 (8B), Mistral (7B), CodeLlama (7B)
-- **Costo:** $0.00 (completamente GRATIS)
-- **Performance:** Buena para queries simples
-- **Uso:** Fallback cuando no hay conexión a internet
-
-##### **🥉 Opción 3: OpenAI GPT-3.5-turbo (Económico)**
-- **Modelo:** `gpt-3.5-turbo-0125`
-- **Costo:** $0.50 por 1K tokens
-- **Límites:** 512 tokens máximo por request
-- **Uso:** Alternativa cuando Gemini no esté disponible
-
-#### **🔧 Optimización Avanzada de Prompts**
-- **Templates Optimizados:**
-  - **Resumen profesional:** Máximo 150 tokens
-  - **Verificación de skills:** Máximo 100 tokens
-  - **Detalle de experiencia:** Máximo 200 tokens
-- **Eliminación de Palabras Innecesarias:**
-  - Remover "por favor", "please", "me gustaría"
-  - Limitar contexto histórico a 200 caracteres
-  - Usar abreviaciones cuando sea posible
-
-#### **🗄️ Sistema de Cache Multi-Nivel**
-- **Nivel 1: Redis en Memoria**
-  - Cache de queries frecuentes
-  - TTL adaptativo por frecuencia de uso
-  - Costo: ~$0.01/mes
-- **Nivel 2: Cloud Storage (GRATIS)**
-  - Cache persistente de respuestas
-  - Sin límites de almacenamiento
-  - Acceso rápido desde cualquier región
-- **Nivel 3: Base de Datos Local (SQLite)**
-  - Cache completamente GRATIS
-  - Para queries muy frecuentes
-  - Sin latencia de red
-
-#### **🔍 Embeddings Optimizados por Costo**
-- **Modelo Principal:** `text-embedding-3-small` (OpenAI)
-  - Costo: $0.02 por 1K tokens
-  - Dimensiones: 1536
-  - Performance: Alta
-- **Modelo Económico:** `text-embedding-ada-002` (OpenAI)
-  - Costo: $0.10 por 1K tokens
-  - Dimensiones: 1536
-  - Performance: Media
-- **Modelo GRATIS:** `all-MiniLM-L6-v2` (Hugging Face)
-  - Costo: $0.00
-  - Dimensiones: 384
-  - Performance: Buena para textos cortos
-
-#### **📊 Vector Search Optimizado**
-- **Estrategia Híbrida:**
-  - Cache primero (GRATIS)
-  - Búsqueda aproximada (más barata)
-  - Búsqueda exacta solo cuando sea necesario
-- **Límites de Resultados:**
-  - Máximo 5 resultados por query
-  - Priorización por relevancia
-  - Cache de resultados frecuentes
-
-#### **📈 Monitoreo y Control de Costos en Tiempo Real**
-- **Dashboard de Costos:**
-  - Métricas en tiempo real
-  - Alertas automáticas por umbrales
-  - Recomendaciones de optimización
-- **Sistema de Alertas:**
-  - **Diario:** $2 máximo
-  - **Semanal:** $10 máximo
-  - **Mensual:** $35 máximo
-- **Modo de Emergencia:**
-  - Activación automática al exceder límites
-  - Desactivación de servicios no esenciales
-  - Notificación inmediata al equipo
-
-#### **🚀 Estrategia de Escalabilidad Gradual**
-
-##### **Fase 1: MVP (0-100 usuarios/mes)**
-- **Costo Objetivo:** $40/mes
-- **Estrategia:** Cache local completo + modelos baratos
-- **Optimizaciones:** Prompts mínimos, límites estrictos
-
-##### **Fase 2: Crecimiento (100-500 usuarios/mes)**
-- **Costo Objetivo:** $60/mes
-- **Estrategia:** Cache híbrido + balance costo/performance
-- **Optimizaciones:** Rate limiting, monitoreo avanzado
-
-##### **Fase 3: Escala (500+ usuarios/mes)**
-- **Costo Objetivo:** $80/mes
-- **Estrategia:** Cache distribuido + modelos avanzados
-- **Optimizaciones:** Auto-scaling, infraestructura optimizada
-
-#### **💰 Resumen de Ahorros Esperados**
-
-| Componente | Estándar | Optimizada | Ahorro |
-|------------|----------|------------|---------|
-| **LLM (Gemini Pro)** | $45/mes | $15/mes | **67%** |
-| **Embeddings** | $25/mes | $8/mes | **68%** |
-| **Vector Search** | $30/mes | $12/mes | **60%** |
-| **Infraestructura** | $20/mes | $5/mes | **75%** |
-| **Total Mensual** | **$120/mes** | **$40/mes** | **67%** |
-
-#### **✅ Checklist de Implementación**
-- [ ] Configuración de modelos LLM baratos
-- [ ] Sistema de cache multi-nivel
-- [ ] Optimización de prompts
-- [ ] Monitoreo de costos en tiempo real
-- [ ] Sistema de alertas automáticas
-- [ ] Plan de escalabilidad gradual
-- [ ] Testing de optimizaciones
-- [ ] Documentación de estrategias
-
-#### **🎯 Métricas de Éxito**
-- **Costo mensual:** < $40
-- **Cache hit rate:** > 80%
-- **Tiempo de respuesta:** < 2 segundos
-- **Precisión del RAG:** > 90%
-- **ROI:** Positivo desde el primer mes
-
-#### **⚠️ Riesgos y Mitigaciones**
-- **Riesgo:** Calidad de respuestas con modelos más baratos
-  - **Mitigación:** Fallback automático + testing exhaustivo
-- **Riesgo:** Cache miss en queries complejas
-  - **Mitigación:** Estrategia híbrida + búsqueda inteligente
-- **Riesgo:** Escalabilidad de costos
-  - **Mitigación:** Monitoreo en tiempo real + alertas automáticas
-- **Riesgo:** Ataques de prompt injection
-  - **Mitigación:** Testing adversarial + validación de entrada
-- **Riesgo:** Escalado automático sin límites de presupuesto
-  - **Mitigación:** Circuit breakers + límites estrictos de auto-scaling
-- **Riesgo:** Degradación de performance en producción
-  - **Mitigación:** Testing de carga + alertas proactivas de calidad
-
-### 5.2.4 Mejoras Críticas Implementadas
-
-#### **🛡️ Circuit Breakers para Control de Costos**
-- Implementación de patrones circuit breaker en todos los servicios de IA
-- Límites estrictos de auto-scaling y budget alerts automáticos
-- Protección contra escalado automático sin límites de presupuesto
-
-#### **🔥 Cache Warming Inteligente**
-- Precarga inteligente basada en patrones de uso y frecuencia de queries
-- Análisis de frecuencia y precomputación de respuestas
-- Reducción significativa de cache miss en queries frecuentes
-
-#### **🧪 Testing de Adversarios para Seguridad**
-- Testing exhaustivo con prompts maliciosos y patrones de ataque
-- Validación de protección contra prompt injection
-- Verificación de respuestas seguras y bloqueo de contenido sensible
-
-#### **⚡ Testing de Performance Bajo Carga**
-- Testing con usuarios concurrentes (hasta 50 simultáneos)
-- Validación de throughput y tiempo de respuesta bajo carga
-- Monitoreo de uso de memoria y recursos del sistema
-
-#### **📊 Alertas Proactivas de Calidad**
-- Monitoreo en tiempo real de métricas de calidad
-- Alertas automáticas por múltiples canales (email, Slack, Telegram, PagerDuty)
-- Thresholds configurables para respuesta, precisión y satisfacción
-
-#### **🌍 Geo-blocking Específico**
-- Bloqueo automático de regiones de alto riesgo
-- Configuración de listas de regiones permitidas
-- Protección contra ataques geográficamente distribuidos
-
-#### **🔐 Rotación Automática de Claves**
-- Rotación automática cada 30 días
-- Notificaciones previas y claves de fallback
-- Gestión segura de credenciales y API keys
-
-#### **🔍 Integración de Testing de Seguridad en CI/CD**
-- Pipeline automatizado con testing de adversarios
-- Validación de headers de seguridad y geo-blocking
-- Testing de circuit breakers y validación de presupuesto
+### Valor Agregado
+- **Para visitantes:** Acceso inmediato a información personalizada sobre el perfil profesional
+- **Para reclutadores:** Evaluación directa de habilidades técnicas y experiencia
+- **Para el propietario:** Demostración práctica de competencias en IA y diferenciación competitiva
 
 ---
 
-## 5.3 Mantenimiento
-- Actualizaciones regulares de la base de conocimiento
-- Monitoreo de calidad de respuestas
-- Mejora continua del modelo
-- Backup y recuperación de datos
+## 🎯 Objetivos del Producto
 
-#### 5.3.1 Mantenimiento de Seguridad
-- Auditorías de seguridad trimestrales
-- Actualizaciones de dependencias de seguridad
-- Monitoreo continuo de amenazas
-- Testing de penetración anual
-- Revisión y actualización de políticas de seguridad
+### Objetivos Primarios
+1. **Aumentar el engagement** del portfolio mediante interacciones conversacionales
+2. **Generar más contactos** profesionales que resulten en oportunidades laborales
+3. **Demostrar competencias en IA** de manera práctica y tangible
+4. **Expandir la presencia digital** más allá de LinkedIn
 
-#### 5.3.2 Mantenimiento de Costos
-- Revisión mensual de presupuestos y gastos
-- Optimización continua de recursos
-- Análisis de tendencias de costos
-- Ajuste de cuotas y límites según necesidades
-- Reportes de eficiencia de costos
+### Objetivos Secundarios
+1. **Mejorar la experiencia del usuario** con interacciones naturales
+2. **Recopilar insights** sobre qué información buscan los visitantes
+3. **Optimizar la conversión** de visitantes a contactos profesionales
+4. **Establecer diferenciación** en el mercado de portfolios de desarrolladores
 
-## 6. Fases de Implementación
+### Métricas de Éxito (KPIs)
+- **Engagement:** Tiempo promedio de sesión en el portfolio
+- **Conversión:** Porcentaje de visitantes que inician conversación con el chatbot
+- **Satisfacción:** Rating de satisfacción del usuario (1-5 estrellas)
+- **Contactos:** Número de contactos profesionales generados mensualmente
+- **Retención:** Porcentaje de visitantes que regresan al portfolio
 
-### 6.1 Fase 1: Preparación
-- Recopilación y estructuración de datos
-- Diseño de la interfaz de usuario del chatbot
-- Configuración inicial del sistema RAG
+---
 
-### 6.2 Fase 2: Desarrollo Base
-- Implementación del backend en nuevo repositorio
-- **Desarrollo del prototipo Streamlit:** Primera entrega funcional para cumplir con el hito
-- Integración del chatbot con el portfolio ya desplegado en almapi.dev (objetivo secundario)
-- Desarrollo del sistema de chat
+## 👥 Personas y Usuarios Objetivo
 
-### 6.3 Fase 3: Mejoras y Optimización
-- Afinamiento del modelo
-- **Integración en almapi.dev:** Si queda tiempo disponible
-- Mejoras en UX basadas en feedback
-- Expansión de la base de conocimiento
+### Persona Principal: Reclutadores de Tecnología
+- **Demografía:** 25-45 años, profesionales de RRHH o talent acquisition
+- **Necesidades:** Evaluar rápidamente candidatos, verificar habilidades técnicas
+- **Motivaciones:** Encontrar talento calificado, optimizar tiempo de screening
+- **Frustraciones:** Portfolios estáticos, falta de información detallada
+- **Comportamiento:** Navegación rápida, búsqueda de información específica
 
-### 6.4 Fase 4: Lanzamiento y Monitoreo
-- Despliegue del backend en producción
-- Monitoreo de rendimiento
-- Recopilación de feedback
-- Ajustes basados en uso real
+### Persona Secundaria: Clientes Potenciales
+- **Demografía:** 30-50 años, empresarios o managers de proyectos
+- **Necesidades:** Evaluar capacidades técnicas para proyectos específicos
+- **Motivaciones:** Encontrar desarrolladores calificados, verificar experiencia
+- **Frustraciones:** Dificultad para evaluar competencias técnicas
+- **Comportamiento:** Análisis detallado, comparación de candidatos
 
-## 7. Riesgos y Mitigaciones
+### Persona Terciaria: Otros Desarrolladores
+- **Demografía:** 20-40 años, profesionales del desarrollo de software
+- **Necesidades:** Networking profesional, aprendizaje de mejores prácticas
+- **Motivaciones:** Conectar con colegas, compartir conocimiento
+- **Frustraciones:** Falta de interacción en portfolios tradicionales
+- **Comportamiento:** Exploración técnica, búsqueda de colaboraciones
 
-### 7.1 Riesgos Identificados
-1. Respuestas imprecisas del chatbot
-2. Problemas de disponibilidad
-3. Costos de operación elevados
-4. Limitaciones técnicas
+---
 
-### 7.2 Estrategias de Mitigación
-1. Sistema de verificación de respuestas
-2. Arquitectura robusta y escalable
-3. Optimización de costos y caching
-4. Monitoreo continuo y mejoras
+## 🚀 Casos de Uso Principales
 
-## 8. Criterios de Éxito
+### Caso de Uso 1: Consulta de Experiencia Laboral y Estudios
+**Actor:** Reclutador o cliente potencial  
+**Trigger:** Usuario pregunta sobre experiencia en tecnologías específicas o formación académica  
+**Flujo:**
+1. Usuario pregunta: "¿Tienes experiencia con React y Node.js?" o "¿Qué estudiaste?"
+2. Chatbot responde con experiencia relevante, proyectos específicos y formación académica
+3. Usuario puede hacer preguntas de seguimiento sobre conceptos técnicos
+4. Chatbot ofrece información adicional, ejemplos de código o explicaciones de conceptos
 
-### 8.1 Mínimo Producto Viable (MVP)
-- Chatbot funcional con información básica
-- Integración completa con el portfolio ya desplegado en almapi.dev
-- Soporte para español e inglés
-- Sistema de feedback básico
+**Resultado:** Usuario obtiene información detallada y contextualizada sobre experiencia y formación
 
-### 8.2 Producto Final
-- Base de conocimiento completa y precisa
-- Soporte multiidioma amplio
-- Analytics y métricas detalladas
-- Sistema de mejora continua
+### Caso de Uso 2: Evaluación de Habilidades Técnicas y Conceptos
+**Actor:** Reclutador técnico  
+**Trigger:** Usuario solicita detalles sobre competencias específicas o conceptos técnicos  
+**Flujo:**
+1. Usuario pregunta: "¿Cuál es tu nivel en Python?" o "¿Puedes explicar machine learning?"
+2. Chatbot proporciona nivel de experiencia, proyectos, certificaciones y explicaciones de conceptos
+3. Usuario puede solicitar ejemplos de código, proyectos o profundizar en conceptos
+4. Chatbot comparte enlaces a repositorios, demos o recursos educativos
+
+**Resultado:** Evaluación técnica completa y verificable, incluyendo comprensión de conceptos
+
+### Caso de Uso 3: Consulta de Disponibilidad y Contacto
+**Actor:** Cliente potencial o reclutador  
+**Trigger:** Usuario pregunta sobre disponibilidad para proyectos  
+**Flujo:**
+1. Usuario pregunta: "¿Estás disponible para proyectos freelance?"
+2. Chatbot informa sobre disponibilidad actual y preferencias
+3. Usuario puede consultar sobre tarifas o modalidades de trabajo
+4. Chatbot proporciona información de contacto y próximos pasos
+
+**Resultado:** Información clara sobre disponibilidad y proceso de contacto
+
+---
+
+## 🔍 Análisis de la Competencia
+
+### Competidores Directos
+- **Portfolios estáticos tradicionales** (GitHub Pages, WordPress)
+- **Plataformas de portfolio** (Behance, Dribbble para desarrolladores)
+- **LinkedIn** (como fuente principal de información profesional)
+
+### Ventajas Competitivas
+1. **Interactividad:** Chatbot vs. información estática
+2. **Disponibilidad 24/7:** Respuestas inmediatas en cualquier horario
+3. **Personalización:** Respuestas adaptadas a preguntas específicas
+4. **Demostración de IA:** Prueba práctica de competencias técnicas
+5. **Multilingüe:** Acceso global sin barreras de idioma
+
+### Oportunidades de Diferenciación
+- **Experiencia conversacional** única en portfolios de desarrolladores
+- **Integración con portfolio existente** (almapi.dev)
+- **Enfoque en demostración de habilidades** en lugar de solo listarlas
+- **Análisis de comportamiento** de visitantes para optimización continua
+
+---
+
+## 📊 Requisitos Funcionales
+
+### RF001: Funcionalidad de Chat
+- El chatbot debe permitir conversaciones en lenguaje natural
+- Debe responder a preguntas sobre experiencia laboral y habilidades técnicas
+- Debe mantener contexto de la conversación durante la sesión
+
+### RF002: Base de Conocimiento Profesional
+- Debe converger toda la información profesional, académica y técnica en un único documento consolidado
+- Debe incluir detalles de proyectos, tecnologías, experiencias laborales, estudios y conceptos técnicos
+- Debe permitir respuestas contextuales y detalladas basadas en el documento consolidado
+
+### RF003: Soporte Multilingüe
+- Debe detectar automáticamente el idioma del usuario
+- Debe responder en el idioma del usuario
+- Debe soportar al menos español e inglés
+
+### RF004: Integración con Portfolio
+- Debe estar integrado visualmente con el diseño del portfolio
+- Debe ser accesible desde cualquier página del portfolio
+- Debe mantener la identidad visual de la marca personal
+
+### RF005: Gestión de Sesiones
+- Debe mantener el historial de conversación durante la sesión
+- Debe permitir al usuario descargar o compartir la conversación
+- Debe ofrecer opciones de reinicio de conversación
+
+### RF006: Captura de Datos de Usuario
+- Debe solicitar información mínima no invasiva del usuario
+- Debe capturar: nombre, apellido, correo electrónico, perfil de LinkedIn y propósito principal
+- Debe permitir contacto posterior para seguimiento profesional
+
+### RF007: Sistema de Estadísticas y Analytics
+- Debe generar estadísticas sobre preguntas más frecuentes
+- Debe identificar temas donde el usuario no queda conforme con las respuestas
+- Debe analizar secciones de mayor interés para los usuarios
+- Debe rastrear tecnologías y stack tecnológico más consultados
+- Debe identificar industrias o rubros de mayor interés
+- Debe proporcionar insights para mejorar áreas débiles del sistema
+
+---
+
+## 📋 Requisitos No Funcionales
+
+### RNF001: Rendimiento
+- **Tiempo de respuesta:** Máximo 2 segundos para respuestas del chatbot
+- **Disponibilidad:** 99.9% de uptime
+- **Escalabilidad:** Soporte para hasta 100 usuarios concurrentes
+
+### RNF002: Usabilidad
+- **Facilidad de uso:** Usuarios deben poder usar el chatbot sin instrucciones
+- **Accesibilidad:** Cumplir con estándares WCAG 2.1 AA
+- **Responsividad:** Funcionar correctamente en dispositivos móviles y desktop
+
+### RNF003: Seguridad
+- **Protección de datos:** No almacenar información personal de usuarios
+- **Prevención de abuso:** Implementar límites de uso para prevenir spam
+- **Privacidad:** Cumplir con regulaciones de protección de datos
+
+### RNF004: Mantenibilidad
+- **Actualización de contenido:** Fácil actualización de información profesional
+- **Monitoreo:** Sistema de logs y métricas para análisis continuo
+- **Backup:** Respaldo automático de conversaciones y configuraciones
+
+---
+
+## 🏗️ Arquitectura del Sistema
+
+### Características del Sistema
+- **Chatbot Inteligente:** Conversaciones en lenguaje natural con IA
+- **Soporte Multilingüe:** Español e inglés con detección automática
+- **Base de Conocimiento Consolidada:** Documento único con toda la información profesional y académica
+- **Captura de Datos de Usuario:** Sistema no invasivo para generar leads
+- **Sistema de Estadísticas:** Análisis continuo para mejora del sistema
+- **Integración con Portfolio:** Componente nativo de almapi.dev
+- **Escalabilidad:** Arquitectura modular para futuras expansiones
+
+### Diagrama de Alto Nivel
+
+```mermaid
+graph TB
+    A[Usuario del Portfolio] --> B[Portfolio Web - almapi.dev]
+    B --> C[Chatbot UI Component]
+    C --> D[Chatbot Backend Service]
+    D --> E[Documento Consolidado de Vida Profesional y Académica]
+    D --> F[Servicio de IA/LLM]
+    D --> G[Sistema de Logs y Métricas]
+    
+    H[LinkedIn] --> I[Proceso de Consolidación de Datos]
+    J[Otras Fuentes] --> I
+    I --> E
+    
+    K[Captura de Datos de Usuario] --> L[Base de Contactos]
+    G --> L
+```
+
+### Componentes del Sistema
+
+```mermaid
+graph LR
+    subgraph "Frontend"
+        A[Portfolio React App]
+        B[Chatbot Component]
+        C[Chat Interface]
+    end
+    
+    subgraph "Backend"
+        D[API Gateway]
+        E[Chatbot Service]
+        F[Knowledge Base Service]
+        G[LLM Integration Service]
+    end
+    
+    subgraph "Data Layer"
+        H[Documento Consolidado de Vida Profesional y Académica]
+        I[Conversation Logs]
+        J[User Contact Database]
+        O[Analytics & Statistics Engine]
+    end
+    
+    subgraph "External Services"
+        K[LLM Provider]
+        L[LinkedIn Data]
+        M[Translation Service]
+        N[Email Service]
+    end
+    
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    E --> G
+    F --> H
+    G --> K
+    E --> I
+    E --> J
+    E --> N
+    E --> O
+```
+
+---
+
+## 📱 Experiencia del Usuario
+
+### Flujo de Usuario Principal
+
+```mermaid
+journey
+    title Experiencia del Usuario con el Chatbot
+    section Llegada al Portfolio
+      Usuario visita almapi.dev: 5: Usuario
+      Usuario navega por el portfolio: 4: Usuario
+      Usuario ve el chatbot: 5: Usuario
+    section Inicio de Conversación
+      Usuario hace clic en el chatbot: 4: Usuario
+      Chatbot se abre con mensaje de bienvenida: 5: Usuario
+      Usuario escribe su primera pregunta: 5: Usuario
+    section Interacción
+      Chatbot responde de manera relevante: 5: Usuario
+      Usuario hace preguntas de seguimiento: 4: Usuario
+      Chatbot proporciona información detallada: 5: Usuario
+    section Cierre
+      Usuario obtiene la información que buscaba: 5: Usuario
+      Usuario considera contactar al propietario: 4: Usuario
+      Usuario comparte o guarda la conversación: 3: Usuario
+```
+
+### Estados de la Interfaz
+
+```mermaid
+stateDiagram-v2
+    [*] --> Minimized
+    Minimized --> Expanded: User clicks
+    Expanded --> Minimized: User minimizes
+    Expanded --> Typing: User types
+    Typing --> Waiting: User sends message
+    Waiting --> Responding: Chatbot processes
+    Responding --> Expanded: Chatbot responds
+    Expanded --> [*]: User leaves page
+```
+
+---
+
+## 📊 Modelo de Datos
+
+### Entidades Principales
+
+```mermaid
+erDiagram
+    USER_SESSION {
+        string session_id PK
+        string user_ip
+        timestamp created_at
+        timestamp last_activity
+        string user_language
+        string user_agent
+    }
+    
+    CONVERSATION {
+        string conversation_id PK
+        string session_id FK
+        timestamp started_at
+        timestamp ended_at
+        int message_count
+        string conversation_summary
+    }
+    
+    MESSAGE {
+        string message_id PK
+        string conversation_id FK
+        string content
+        string sender_type
+        timestamp sent_at
+        string language
+    }
+    
+    USER_CONTACT {
+        string contact_id PK
+        string session_id FK
+        string first_name
+        string last_name
+        string email
+        string linkedin_profile
+        string primary_purpose
+        timestamp created_at
+        boolean contact_permission
+    }
+    
+    PROFESSIONAL_DOCUMENT {
+        string document_id PK
+        string content
+        string version
+        timestamp last_updated
+        string source
+        string academic_background
+        string technical_concepts
+        string work_experience
+        string skills_and_technologies
+    }
+    
+    ANALYTICS_DATA {
+        string analytics_id PK
+        string session_id FK
+        string question_type
+        string topic_category
+        string technology_stack
+        string industry_sector
+        int satisfaction_rating
+        boolean response_helpful
+        timestamp created_at
+        string user_feedback
+    }
+    
+    USER_SESSION ||--o{ CONVERSATION : has
+    USER_SESSION ||--o{ USER_CONTACT : has
+    USER_SESSION ||--o{ ANALYTICS_DATA : generates
+    CONVERSATION ||--o{ MESSAGE : contains
+    PROFESSIONAL_DOCUMENT ||--o{ MESSAGE : referenced_in
+```
+
+---
+
+## 🔄 Flujos de Proceso
+
+### Proceso de Consolidación de Datos Profesionales y Académicos
+
+```mermaid
+flowchart TD
+    A[Inicio del Proceso] --> B[Extraer datos de LinkedIn]
+    B --> C[Extraer datos de otras fuentes]
+    C --> D[Procesar y limpiar datos]
+    D --> E[Consolidar en documento único incluyendo estudios y conceptos]
+    E --> F[Validar calidad y completitud del documento]
+    F --> G[Crear y almacenar documento consolidado]
+    G --> H[Entrenar modelo con documento]
+    H --> I[Verificar funcionamiento del chatbot]
+    I --> J[Fin del proceso]
+    
+    F -->|Datos inválidos| K[Revisar y corregir]
+    K --> D
+    I -->|Error| L[Notificar y reintentar]
+    L --> I
+```
+
+### Proceso de Respuesta del Chatbot
+
+```mermaid
+flowchart TD
+    A[Usuario envía mensaje] --> B[Preprocesar mensaje]
+    B --> C[Detectar idioma]
+    C --> D[Analizar intención del usuario]
+    D --> E[Buscar en documento consolidado]
+    E --> F[Generar respuesta con LLM]
+    F --> G[Validar respuesta]
+    G --> H[Formatear respuesta]
+    H --> I[Enviar respuesta al usuario]
+    I --> J[Registrar interacción]
+    J --> K[Capturar datos de usuario si es primera vez]
+    K --> L[Actualizar base de contactos]
+    L --> M[Generar datos de analytics]
+    M --> N[Analizar satisfacción del usuario]
+    
+    G -->|Respuesta inválida| O[Regenerar respuesta]
+    O --> F
+```
+
+### Proceso de Generación de Estadísticas y Analytics
+
+```mermaid
+flowchart TD
+    A[Interacción del Usuario] --> B[Captura de Datos de Conversación]
+    B --> C[Análisis de Contenido]
+    C --> D[Clasificación de Temas]
+    D --> E[Identificación de Tecnologías]
+    E --> F[Análisis de Satisfacción]
+    F --> G[Generación de Estadísticas]
+    G --> H[Dashboard de Analytics]
+    H --> I[Identificación de Áreas Débiles]
+    I --> J[Plan de Mejoras]
+    J --> K[Actualización del Sistema]
+    
+    C --> L[Preguntas Frecuentes]
+    C --> M[Temas de Interés]
+    C --> N[Stack Tecnológico]
+    C --> O[Industrias/Rubros]
+    
+    F --> P[Feedback del Usuario]
+    P --> Q[Análisis de Sentimientos]
+    Q --> I
+```
+
+---
+
+## 📈 Roadmap del Producto
+
+### Fase 1: MVP (Semanas 1-2)
+- **Objetivo:** Chatbot funcional básico con información profesional y académica consolidada
+- **Entregables:**
+  - Integración básica del chatbot en el portfolio
+  - **Creación del documento consolidado** de vida profesional y académica
+  - Funcionalidad de chat en español e inglés
+  - Sistema de captura de datos de usuario
+  - Sistema de logs básico
+
+### Fase 2: Funcionalidades Completas (Semanas 3-4)
+- **Objetivo:** Completar funcionalidades core y optimización
+- **Entregables:**
+  - Soporte multilingüe completo
+  - Mejoras en la interfaz del chat
+  - Sistema de gestión de contactos
+  - Sistema de estadísticas y analytics
+  - Optimización de respuestas del LLM
+  - Testing y validación completa
+
+### Fase 3: Lanzamiento y Monitoreo (Semana 5)
+- **Objetivo:** Lanzamiento productivo y monitoreo inicial
+- **Entregables:**
+  - Despliegue en producción
+  - Monitoreo de métricas clave y analytics
+  - Dashboard de estadísticas del sistema
+  - Documentación de usuario final
+  - Plan de mantenimiento y actualizaciones
+
+---
+
+## 🎯 Criterios de Aceptación
+
+### Criterios Funcionales
+- [ ] El chatbot responde correctamente a preguntas sobre experiencia laboral
+- [ ] El chatbot responde correctamente a preguntas sobre estudios y conceptos técnicos
+- [ ] El chatbot detecta y responde en el idioma del usuario
+- [ ] El chatbot mantiene contexto durante la conversación
+- [ ] El chatbot utiliza el documento consolidado de vida profesional y académica
+- [ ] El chatbot captura datos de usuario de forma no invasiva
+- [ ] El chatbot permite descargar conversaciones
+- [ ] El sistema genera estadísticas y analytics para mejora continua
+
+### Criterios de Rendimiento
+- [ ] Tiempo de respuesta promedio < 2 segundos
+- [ ] Disponibilidad > 99.9%
+- [ ] Soporte para 100+ usuarios concurrentes
+- [ ] Carga de página < 3 segundos
+
+### Criterios de Usabilidad
+- [ ] Usuarios pueden usar el chatbot sin instrucciones
+- [ ] Interfaz responsive en dispositivos móviles
+- [ ] Cumplimiento de estándares de accesibilidad
+- [ ] Satisfacción del usuario > 4.5/5 estrellas
+
+---
+
+## ⚠️ Riesgos y Mitigaciones
+
+### Riesgos Técnicos
+| Riesgo | Probabilidad | Impacto | Mitigación |
+|--------|--------------|---------|------------|
+| Fallos en el servicio LLM | Media | Alto | Implementar fallback a respuestas predefinidas |
+| Problemas de rendimiento | Baja | Medio | Monitoreo continuo y escalabilidad automática |
+| Pérdida de datos | Baja | Alto | Backup automático y redundancia |
+
+### Riesgos de Negocio
+| Riesgo | Probabilidad | Impacto | Mitigación |
+|--------|--------------|---------|------------|
+| Baja adopción inicial | Media | Medio | Campaña de marketing y feedback temprano |
+| Competencia de soluciones similares | Alta | Medio | Diferenciación continua y mejora de UX |
+| Dependencia de proveedores externos | Media | Medio | Múltiples proveedores y contratos de SLA |
+
+---
+
+## 📋 Próximos Pasos
+
+### Inmediatos (Semanas 1-2)
+1. **Validación del concepto** con stakeholders clave
+2. **Definición técnica** de la arquitectura del sistema
+3. **Selección de proveedores** de LLM y servicios
+4. **Planificación detallada** del desarrollo
+5. **Creación del documento consolidado** de vida profesional y académica
+
+### Corto Plazo (Semanas 3-4)
+1. **Desarrollo del MVP** del chatbot
+2. **Integración** con el portfolio existente
+3. **Implementación** del sistema de estadísticas y analytics
+4. **Testing** con usuarios reales
+5. **Preparación** para lanzamiento
+
+### Lanzamiento (Semana 5)
+1. **Despliegue** en producción
+2. **Monitoreo** inicial y ajustes
+3. **Análisis** de estadísticas y métricas iniciales
+4. **Documentación** final del usuario
+5. **Plan de mantenimiento** y próximas iteraciones
+
+---
