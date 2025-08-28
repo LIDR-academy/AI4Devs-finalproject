@@ -11,9 +11,9 @@
     "test:e2e": "playwright test --reporter=null",
     "test:e2e:watch": "playwright test",
     "test:social": "npm run test:integration && npm run test:e2e",
-    "test:run": "npm run test:run:down && npm run test:run:up",
-    "test:run:up": "docker compose --env-file .env.test -p ${PROJECT_NAME-test} up -d",
-    "test:run:down": "docker compose -p ${PROJECT_NAME-test} down"
+    "env": "npm run env:down && npm run env:up",
+    "env:up": "docker compose --env-file ${PROJECT_CONFIG_FILE:-.env.test} -p ${PROJECT_NAME:-test} up -d",
+    "env:down": "docker compose -p ${PROJECT_NAME-test} down"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",

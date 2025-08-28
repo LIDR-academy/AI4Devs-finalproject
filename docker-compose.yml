@@ -41,7 +41,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: publisher
-    command: npm run local:publish
+    command: sh -c "npm run local:publish || tail -f /dev/null"
     depends_on:
       backend:
         condition: service_healthy
@@ -76,7 +76,12 @@ services:
       - ./.npmrc:/root/.npmrc:ro
     networks:
       - ai4devs-finalproject
-    command: sh -c "npm install ai4devs-api-client --no-fund --no-audit --registry=http://verdaccio:4873 && npm run dev"
+    command: sh -c "
+      npm uninstall ai4devs-api-client &&
+      npm cache clean --force &&
+      npm install ai4devs-api-client --no-fund --no-audit --registry=http://verdaccio:4873 &&
+      npm run dev
+      "
 
 networks:
   ai4devs-finalproject:
