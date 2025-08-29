@@ -79,7 +79,7 @@ services:
     command: sh -c "
       npm uninstall ai4devs-api-client &&
       npm cache clean --force &&
-      npm install ai4devs-api-client --no-fund --no-audit --registry=http://verdaccio:4873 &&
+      npm install ai4devs-api-client --save-optional --no-fund --no-audit --registry=http://verdaccio:4873 &&
       npm run dev
       "
 
