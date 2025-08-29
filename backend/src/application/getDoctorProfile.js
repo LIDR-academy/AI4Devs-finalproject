@@ -39,8 +39,10 @@ async function getDoctorProfile(doctorId) {
     licenseNumber: doctor.license_number,
     title: mainSpecialty ? mainSpecialty.name : null,
     city: doctor.location.city.name,
-    state: doctor.location.state.name
-    // Los datos sensibles se filtran en el controlador según autenticación
+    state: doctor.location.state.name,
+    email: doctor.user.email || null,
+    phone: doctor.phone || null,
+    address: doctor.location.address || null
   };
 }
 

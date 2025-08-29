@@ -1143,7 +1143,7 @@
           "Doctors"
         ],
         "summary": "Consultar perfil profesional y ubicación de un especialista.",
-        "description": "Obtiene el perfil profesional y ubicación general de un especialista por su ID. Oculta datos personales sensibles para usuarios no autenticados.",
+        "description": "Obtiene el perfil profesional y ubicación general de un especialista por su ID. Si el usuario está autenticado, se muestran datos personales sensibles (correo, teléfono, dirección). Si no está autenticado, estos datos se ocultan.",
         "parameters": [
           {
             "name": "id",
@@ -1153,6 +1153,11 @@
             "schema": {
               "type": "integer"
             }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
           }
         ],
         "responses": {
@@ -1200,27 +1205,60 @@
                         },
                         "state": {
                           "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "phone": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "address": {
+                          "type": "string",
+                          "nullable": true
                         }
                       }
                     }
                   }
                 },
                 "examples": {
-                  "success": {
-                    "summary": "Respuesta exitosa",
+                  "public": {
+                    "summary": "Respuesta para visitante (sin autenticación)",
                     "value": {
                       "code": 200,
                       "message": "success",
                       "payload": {
-                        "id": 4,
-                        "name": "Dr. Juan Pérez",
+                        "id": 11,
+                        "name": "Luis Pérez",
                         "specialty": "Cardiología",
-                        "biography": "Cardiólogo con 10 años de experiencia.",
-                        "photo": "",
-                        "licenseNumber": "MED12345",
+                        "biography": "Especialista en cardiología.",
+                        "photo": "https://example.com/photo.jpg",
+                        "licenseNumber": "MED123457",
                         "title": "Cardiología",
-                        "city": "Coyoacán",
-                        "state": "Ciudad de México"
+                        "city": "Guadalajara",
+                        "state": "Jalisco"
+                      }
+                    }
+                  },
+                  "authenticated": {
+                    "summary": "Respuesta para usuario autenticado",
+                    "value": {
+                      "code": 200,
+                      "message": "success",
+                      "payload": {
+                        "id": 11,
+                        "name": "Luis Pérez",
+                        "specialty": "Cardiología",
+                        "biography": "Especialista en cardiología.",
+                        "photo": "https://example.com/photo.jpg",
+                        "licenseNumber": "MED123457",
+                        "title": "Cardiología",
+                        "city": "Guadalajara",
+                        "state": "Jalisco",
+                        "email": "luis.perez@ejemplo.com",
+                        "phone": "5559876543",
+                        "address": "Av. México 123, Guadalajara"
                       }
                     }
                   }
@@ -1322,5 +1360,14 @@
       }
     }
   },
-  "components": {}
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Agrega el token JWT en el header Authorization: Bearer <token>"
+      }
+    }
+  }
 }

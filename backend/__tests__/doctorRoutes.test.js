@@ -1,9 +1,28 @@
+jest.mock('../src/domain/jwtService', () => ({
+  verifyToken: jest.fn(() => ({
+    id: 99,
+    email: 'test@mock.com',
+    role: 'patient'
+  })),
+  generateToken: jest.fn()
+}));
+
 const request = require('supertest');
 jest.mock('../src/domain/doctorService'); // Mock del servicio de dominio
 jest.mock('../src/application/getDoctorProfile'); // Mock del caso de uso
 const { searchDoctors } = require('../src/domain/doctorService');
 const { getDoctorProfile } = require('../src/application/getDoctorProfile');
 const app = require('../server');
+
+
+jest.mock('../src/domain/jwtService', () => ({
+  verifyToken: jest.fn(() => ({
+    id: 99,
+    email: 'test@mock.com',
+    role: 'patient'
+  })),
+  generateToken: jest.fn()
+}));
 
 describe('GET /api/doctors/search', () => {
   beforeEach(() => {
@@ -90,7 +109,6 @@ describe('GET /api/doctors/:id', () => {
     jest.clearAllMocks();
   });
 
-
   it('Debe regresar un perfil publico para un doctor activo (criterio 7.1)', async () => {
     getDoctorProfile.mockResolvedValue({
       id: 1,
@@ -101,7 +119,10 @@ describe('GET /api/doctors/:id', () => {
       licenseNumber: '123456',
       title: 'Cardiología',
       city: 'Ciudad de México',
-      state: 'CDMX'
+      state: 'CDMX',
+      email: 'juan.perez@ejemplo.com',
+      phone: '555-1234',
+      address: 'Av. Reforma 123, Ciudad de México'
     });
 
     const res = await request(app).get('/api/doctors/1');
@@ -118,12 +139,39 @@ describe('GET /api/doctors/:id', () => {
     expect(res.body.payload).toHaveProperty('title');
     expect(res.body.payload).toHaveProperty('city');
     expect(res.body.payload).toHaveProperty('state');
-    // No debe incluir datos sensibles
+    // No debe incluir datos sensibles para visitante
     expect(res.body.payload).not.toHaveProperty('email');
     expect(res.body.payload).not.toHaveProperty('phone');
     expect(res.body.payload).not.toHaveProperty('address');
   });
 
+  it('Debe regresar un perfil completo para usuario autenticado', async () => {
+    getDoctorProfile.mockResolvedValue({
+      id: 2,
+      name: 'Dra. Ana López',
+      specialty: 'Dermatología',
+      biography: 'Especialista en dermatología...',
+      photo: 'https://ejemplo.com/foto2.jpg',
+      licenseNumber: '654321',
+      title: 'Dermatología',
+      city: 'Guadalajara',
+      state: 'Jalisco',
+      email: 'ana.lopez@ejemplo.com',
+      phone: '555-5678',
+      address: 'Av. Juárez 456, Guadalajara'
+    });
+
+    // Simula autenticación agregando un token válido
+    const token = 'Bearer mock.jwt.token';
+    const res = await request(app)
+      .get('/api/doctors/2')
+      .set('Authorization', token);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.payload).toHaveProperty('email', 'ana.lopez@ejemplo.com');
+    expect(res.body.payload).toHaveProperty('phone', '555-5678');
+    expect(res.body.payload).toHaveProperty('address', 'Av. Juárez 456, Guadalajara');
+  });
 
   it('Debe regresar un código 404 para un doctor inactivo (criterio 7.2)', async () => {
     getDoctorProfile.mockResolvedValue(null);
@@ -147,5 +195,4 @@ describe('GET /api/doctors/:id', () => {
     expect(res.body.payload.error[0]).toMatch(/id/i);
     expect(res.body.payload.error[0]).toMatch(/number/i);
   });
-
 });

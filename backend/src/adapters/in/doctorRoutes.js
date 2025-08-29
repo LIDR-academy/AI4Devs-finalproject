@@ -60,25 +60,20 @@ router.get('/:id', async (req, res, next) => {
     // Validación de parámetro id
     const validated = await doctorIdSchema.validate({ id: Number(req.params.id) }, { abortEarly: false });
 
-    // Aquí se debe implementar la lógica de autenticación en el futuro
-    // const isAuthenticated = false; // <-- Implementar autenticación
-
     const profile = await getDoctorProfile(validated.id);
 
     if (!profile) {
-      const error = new Error('Doctor not found');
-      error.statusCode = 404;
-      error.errors = ['Doctor with specified ID does not exist'];
-      return next(error);
+      return res.status(404).json({
+        code: 404,
+        message: 'Doctor not found',
+        payload: {
+          error: ['Doctor with specified ID does not exist']
+        }
+      });
     }
 
-    // Ocultar datos sensibles si el usuario no está autenticado
-    // if (!isAuthenticated) {
-    //   // No incluir correo, teléfono, dirección exacta
-    // }
-
-    // Solo incluir los campos permitidos para visitantes
-    const publicProfile = {
+    // Mostrar datos sensibles solo si el usuario está autenticado
+    let responseProfile = {
       id: profile.id,
       name: profile.name,
       specialty: profile.specialty,
@@ -90,17 +85,27 @@ router.get('/:id', async (req, res, next) => {
       state: profile.state
     };
 
-    res.locals.message = 'success';
-    res.json(publicProfile);
+    // Si el usuario está autenticado, agregar datos sensibles si existen
+    if (req.user) {
+      responseProfile.email = profile.email || null;
+      responseProfile.phone = profile.phone || null;
+      responseProfile.address = profile.address || null;
+    }
+
+    res.json(responseProfile);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      err.statusCode = 400;
-      err.errors = err.errors || ['Invalid doctor id'];
-      err.message = 'Bad Request';
-      return next(err);
+      return res.status(400).json({
+        code: 400,
+        message: 'Invalid doctor id',
+        payload: {
+          error: err.errors
+        }
+      });
     }
     next(err);
   }
 });
+
 
 module.exports = router;

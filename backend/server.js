@@ -35,6 +35,9 @@ if (fs.existsSync(swaggerFile)) {
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+const authMiddleware = require('./src/adapters/in/authMiddleware'); // Importa el middleware
+app.use(authMiddleware); // Aplica el middleware global de autenticación
+
 app.use(responseFormatter); // Aplica el middleware de estandarización de respuestas
 // Rutas principales (se agregará /api/doctors en el siguiente paso)
 app.get('/api/health', (req, res) => {
