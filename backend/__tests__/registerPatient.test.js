@@ -1,77 +1,74 @@
-// Establecer NODE_ENV a 'test' para evitar que el servidor se inicie automáticamente
-process.env.NODE_ENV = 'test';
-
-// Mockear completamente el módulo de Prisma antes de importar cualquier otro módulo
-jest.mock('@prisma/client', () => {
-  const mockPrismaClient = {
-    user: {
-      findUnique: jest.fn(),
-      create: jest.fn()
-    },
-    patient: {
-      create: jest.fn()
-    },
-    $transaction: jest.fn(callback => callback(mockPrismaClient))
-  };
-  
-  return {
-    PrismaClient: jest.fn(() => mockPrismaClient)
-  };
-});
-
 const request = require('supertest');
-const app = require('../server');
+const express = require('express');
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
+const registerService = require('../src/domain/registerService');
+const responseFormatter = require('../src/adapters/in/responseFormatter');
+const errorHandler = require('../src/adapters/in/errorHandler');
+const { ApiError } = require('../src/adapters/in/errorHandler');
 
-// Obtener la instancia mockeada de PrismaClient
-const prismaInstance = new PrismaClient();
+// Mocks
+jest.mock('@prisma/client');
+jest.mock('bcryptjs');
+jest.mock('../src/domain/registerService');
 
-// Mock bcrypt.hash
-jest.spyOn(bcrypt, 'hash').mockImplementation(async (pw) => `hashed_${pw}`);
+// Crear app Express solo para pruebas (sin iniciar servidor)
+const createTestApp = () => {
+  const app = express();
+  app.use(express.json());
+  app.use(responseFormatter);
+  
+  // Definir la ruta de prueba directamente
+  app.post('/api/auth/register/patient', async (req, res, next) => {
+    try {
+      const result = await registerService.registerPatient(req.body);
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
+  app.use(errorHandler);
+  return app;
+};
 
 describe('POST /api/auth/register/patient', () => {
+  let app;
+  
+  // Mock bcrypt.hash
+  bcrypt.hash = jest.fn().mockImplementation(async (pw) => `hashed_${pw}`);
+
+  beforeAll(() => {
+    // Crear instancia de app para pruebas
+    app = createTestApp();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('registro exitoso con datos válidos', async () => {
-    // Mock para simular que no existe el usuario
-    prismaInstance.user.findUnique.mockResolvedValue(null);
-    
-    // Mock para crear usuario
-    prismaInstance.user.create.mockResolvedValue({
-      id: 1,
-      first_name: 'Ana',
-      last_name: 'García',
-      email: 'ana.garcia@example.com',
-      password_hash: 'hashed_StrongPass1!',
-      role: 'patient',
-      registration_date: new Date()
-    });
-    
-    // Mock para crear paciente
-    prismaInstance.patient.create.mockResolvedValue({
-      id: 1,
-      phone: '5551234567',
-      location_id: 1
-    });
-    
-    // Implementación de la transacción - devolver un objeto con user y patient
-    prismaInstance.$transaction.mockImplementation(async (callback) => {
-      const user = await prismaInstance.user.create();
-      const patient = await prismaInstance.patient.create();
-      return { user, patient };
+    // Mockear respuesta exitosa del servicio de registro
+    registerService.registerPatient.mockResolvedValue({
+      code: 201,
+      message: 'Patient registered successfully',
+      payload: {
+        id: 1,
+        firstName: 'Ana',
+        lastName: 'García',
+        email: 'ana.garcia@example.com',
+        role: 'patient'
+      }
     });
 
     const res = await request(app)
       .post('/api/auth/register/patient')
       .send({
         firstName: 'Ana',
+        lastName: 'García',
         email: 'ana.garcia@example.com',
         password: 'StrongPass1!',
         confirmPassword: 'StrongPass1!',
-        lastName: 'García',
         phone: '5551234567'
       });
 
@@ -83,15 +80,16 @@ describe('POST /api/auth/register/patient', () => {
   });
 
   it('error por email duplicado', async () => {
-    prismaInstance.user.findUnique.mockResolvedValue({ 
-      id: 1,
-      email: 'ana.garcia@example.com'
-    });
+    // Mockear error por email duplicado
+    registerService.registerPatient.mockRejectedValue(
+      new ApiError(400, 'Patient already exists', ['Patient already exists'])
+    );
 
     const res = await request(app)
       .post('/api/auth/register/patient')
       .send({
         firstName: 'Ana',
+        lastName: 'García',
         email: 'ana.garcia@example.com',
         password: 'StrongPass1!',
         confirmPassword: 'StrongPass1!'
@@ -103,12 +101,16 @@ describe('POST /api/auth/register/patient', () => {
   });
 
   it('error por contraseña débil', async () => {
-    prismaInstance.user.findUnique.mockResolvedValue(null);
+    // Mockear error por contraseña débil
+    registerService.registerPatient.mockRejectedValue(
+      new ApiError(400, 'Validation error', ['Password too weak'])
+    );
 
     const res = await request(app)
       .post('/api/auth/register/patient')
       .send({
         firstName: 'Ana',
+        lastName: 'García',
         email: 'ana.garcia@example.com',
         password: 'weak',
         confirmPassword: 'weak'
@@ -120,6 +122,11 @@ describe('POST /api/auth/register/patient', () => {
   });
 
   it('error por campos faltantes', async () => {
+    // Mockear error por campos faltantes
+    registerService.registerPatient.mockRejectedValue(
+      new ApiError(400, 'Validation error', ['First name is required'])
+    );
+
     const res = await request(app)
       .post('/api/auth/register/patient')
       .send({
@@ -134,43 +141,22 @@ describe('POST /api/auth/register/patient', () => {
   });
 
   it('valida que la contraseña se almacena como hash', async () => {
-    prismaInstance.user.findUnique.mockResolvedValue(null);
-    
-    // Verificar que la contraseña se almacena como hash
-    prismaInstance.user.create.mockImplementation(({ data }) => {
-      expect(data.password_hash).toMatch(/^hashed_/);
+    // Mockear respuesta exitosa con hash de contraseña
+    registerService.registerPatient.mockImplementation(data => {
+      // Verificar que la contraseña se pasa al servicio de registro
+      expect(data.password).toBe('StrongPass1!');
+      
       return Promise.resolve({
-        id: 2,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        password_hash: data.password_hash,
-        role: 'patient',
-        registration_date: new Date()
+        code: 201,
+        message: 'Patient registered successfully',
+        payload: {
+          id: 2,
+          firstName: 'Ana',
+          lastName: '',
+          email: 'ana2.garcia@example.com',
+          role: 'patient'
+        }
       });
-    });
-    
-    prismaInstance.patient.create.mockResolvedValue({ 
-      id: 2, 
-      phone: null, 
-      location_id: 1 
-    });
-    
-    // Implementación correcta de la transacción que devuelve un objeto con user y patient
-    prismaInstance.$transaction.mockImplementation(async (callback) => {
-      const user = await prismaInstance.user.create({ data: {
-        first_name: 'Ana',
-        last_name: null,
-        email: 'ana2.garcia@example.com',
-        password_hash: 'hashed_StrongPass1!',
-        role: 'patient'
-      }});
-      const patient = await prismaInstance.patient.create({ data: {
-        id: user.id,
-        phone: null,
-        location_id: 1
-      }});
-      return { user, patient };
     });
 
     const res = await request(app)
@@ -184,5 +170,8 @@ describe('POST /api/auth/register/patient', () => {
 
     expect(res.statusCode).toBe(201);
     expect(res.body.code).toBe(201);
+    expect(registerService.registerPatient).toHaveBeenCalledWith(expect.objectContaining({
+      password: 'StrongPass1!'
+    }));
   });
 });

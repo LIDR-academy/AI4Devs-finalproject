@@ -44,14 +44,14 @@ gantt
     Validaciones y mensajes de error registro médico (Backend) :done, des8.6, 2025-08-29, 1h
     Documentar endpoint registro médico especialista (Backend) :done, des8.7, 2025-08-29, 1h
     Pruebas unitarias endpoint registro médico especialista (Backend) :done, des8.8, 2025-08-29, 1h
-    Crear endpoint de login paciente (Backend) :des8.9, 2025-08-30, 2h
-    Validaciones y mensajes de error login paciente (Backend) :des8.10, 2025-08-30, 1h
-    Documentar endpoint login paciente (Backend) :des8.11, 2025-08-30, 1h
-    Pruebas unitarias endpoint login paciente (Backend) :des8.12, 2025-08-31, 1h
-    Crear endpoint de login médico especialista (Backend) :des8.13, 2025-08-31, 2h
-    Validaciones y mensajes de error login médico (Backend) :des8.14, 2025-08-31, 1h
-    Documentar endpoint login médico especialista (Backend) :des8.15, 2025-09-01, 1h
-    Pruebas unitarias endpoint login médico especialista (Backend) :des8.16, 2025-09-01, 1h
+    Crear endpoint de login paciente (Backend) :done, des8.9, 2025-08-30, 2h
+    Validaciones y mensajes de error login paciente (Backend) :done, des8.10, 2025-08-30, 1h
+    Documentar endpoint login paciente (Backend) :done, des8.11, 2025-08-30, 1h
+    Pruebas unitarias endpoint login paciente (Backend) :done, des8.12, 2025-08-31, 1h
+    Crear endpoint de login médico especialista (Backend) :done, des8.13, 2025-08-31, 2h
+    Validaciones y mensajes de error login médico (Backend) :done, des8.14, 2025-08-31, 1h
+    Documentar endpoint login médico especialista (Backend) :done, des8.15, 2025-09-01, 1h
+    Pruebas unitarias endpoint login médico especialista (Backend) :done, des8.16, 2025-09-01, 1h
 
     section 9. Buscar especialistas y ver perfiles [US-4]
     Diseñar el endpoint de búsqueda de especialistas para pacientes :des9.1, 2025-09-01, 1h

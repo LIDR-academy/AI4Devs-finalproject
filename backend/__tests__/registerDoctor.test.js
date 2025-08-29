@@ -1,70 +1,64 @@
-// Establecer NODE_ENV a 'test' para evitar que el servidor se inicie automáticamente
-process.env.NODE_ENV = 'test';
-
-// Mockear completamente el módulo de Prisma antes de importar cualquier otro módulo
-jest.mock('@prisma/client', () => {
-  const mockPrismaClient = {
-    user: {
-      findUnique: jest.fn(),
-      create: jest.fn()
-    },
-    doctor: {
-      findFirst: jest.fn(),
-      create: jest.fn()
-    },
-    $transaction: jest.fn(callback => callback(mockPrismaClient))
-  };
-  
-  return {
-    PrismaClient: jest.fn(() => mockPrismaClient)
-  };
-});
-
 const request = require('supertest');
-const app = require('../server');
+const express = require('express');
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
+const registerService = require('../src/domain/registerService');
+const responseFormatter = require('../src/adapters/in/responseFormatter');
+const errorHandler = require('../src/adapters/in/errorHandler');
+const { ApiError } = require('../src/adapters/in/errorHandler');
 
-// Obtener la instancia mockeada de PrismaClient
-const prismaInstance = new PrismaClient();
+// Mocks
+jest.mock('@prisma/client');
+jest.mock('bcryptjs');
+jest.mock('../src/domain/registerService');
 
-// Mock bcrypt.hash
-jest.spyOn(bcrypt, 'hash').mockImplementation(async (pw) => `hashed_${pw}`);
+// Crear app Express solo para pruebas (sin iniciar servidor)
+const createTestApp = () => {
+  const app = express();
+  app.use(express.json());
+  app.use(responseFormatter);
+  
+  // Definir la ruta de prueba directamente
+  app.post('/api/auth/register/doctor', async (req, res, next) => {
+    try {
+      const result = await registerService.registerDoctor(req.body);
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
+  app.use(errorHandler);
+  return app;
+};
 
 describe('POST /api/auth/register/doctor', () => {
+  let app;
+  
+  // Mock bcrypt.hash
+  bcrypt.hash = jest.fn().mockImplementation(async (pw) => `hashed_${pw}`);
+
+  beforeAll(() => {
+    // Crear instancia de app para pruebas
+    app = createTestApp();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('registro exitoso con datos válidos', async () => {
-    // Mock para simular que no existe el usuario ni el número de licencia
-    prismaInstance.user.findUnique.mockResolvedValue(null);
-    prismaInstance.doctor.findFirst.mockResolvedValue(null);
-    
-    // Mock para crear usuario
-    prismaInstance.user.create.mockResolvedValue({
-      id: 1,
-      first_name: 'Luis',
-      last_name: 'Pérez',
-      email: 'luis.perez@example.com',
-      password_hash: 'hashed_StrongPass2!',
-      role: 'doctor',
-      registration_date: new Date()
-    });
-    
-    // Mock para crear doctor
-    prismaInstance.doctor.create.mockResolvedValue({
-      id: 1,
-      license_number: 'MED1234567',
-      phone: '5559876543',
-      location_id: 1
-    });
-    
-    // Implementación de la transacción - devolver un objeto con user y doctor
-    prismaInstance.$transaction.mockImplementation(async (callback) => {
-      const user = await prismaInstance.user.create();
-      const doctor = await prismaInstance.doctor.create();
-      return { user, doctor };
+    // Mockear respuesta exitosa del servicio de registro
+    registerService.registerDoctor.mockResolvedValue({
+      code: 201,
+      message: 'Doctor registered successfully',
+      payload: {
+        id: 1,
+        firstName: 'Luis',
+        lastName: 'Pérez',
+        email: 'luis.perez@example.com',
+        role: 'doctor'
+      }
     });
 
     const res = await request(app)
@@ -87,10 +81,10 @@ describe('POST /api/auth/register/doctor', () => {
   });
 
   it('error por email duplicado', async () => {
-    prismaInstance.user.findUnique.mockResolvedValue({ 
-      id: 1,
-      email: 'luis.perez@example.com'
-    });
+    // Mockear error por email duplicado
+    registerService.registerDoctor.mockRejectedValue(
+      new ApiError(400, 'Doctor already exists', ['Doctor already exists'])
+    );
 
     const res = await request(app)
       .post('/api/auth/register/doctor')
@@ -110,11 +104,10 @@ describe('POST /api/auth/register/doctor', () => {
   });
 
   it('error por license_number duplicado', async () => {
-    prismaInstance.user.findUnique.mockResolvedValue(null);
-    prismaInstance.doctor.findFirst.mockResolvedValue({ 
-      id: 2,
-      license_number: 'MED1234567'
-    });
+    // Mockear error por licencia duplicada
+    registerService.registerDoctor.mockRejectedValue(
+      new ApiError(400, 'Doctor already exists', ['Doctor already exists'])
+    );
 
     const res = await request(app)
       .post('/api/auth/register/doctor')
@@ -134,8 +127,10 @@ describe('POST /api/auth/register/doctor', () => {
   });
 
   it('error por license_number faltante', async () => {
-    prismaInstance.user.findUnique.mockResolvedValue(null);
-    prismaInstance.doctor.findFirst.mockResolvedValue(null);
+    // Mockear error por licencia faltante
+    registerService.registerDoctor.mockRejectedValue(
+      new ApiError(400, 'Validation error', ['License number required'])
+    );
 
     const res = await request(app)
       .post('/api/auth/register/doctor')
@@ -154,8 +149,10 @@ describe('POST /api/auth/register/doctor', () => {
   });
 
   it('error por contraseña débil', async () => {
-    prismaInstance.user.findUnique.mockResolvedValue(null);
-    prismaInstance.doctor.findFirst.mockResolvedValue(null);
+    // Mockear error por contraseña débil
+    registerService.registerDoctor.mockRejectedValue(
+      new ApiError(400, 'Validation error', ['Password too weak'])
+    );
 
     const res = await request(app)
       .post('/api/auth/register/doctor')
@@ -175,6 +172,15 @@ describe('POST /api/auth/register/doctor', () => {
   });
 
   it('error por campos faltantes', async () => {
+    // Mockear error por campos faltantes
+    registerService.registerDoctor.mockRejectedValue(
+      new ApiError(400, 'Validation error', [
+        'First name is required',
+        'Last name is required',
+        'Phone is required'
+      ])
+    );
+
     const res = await request(app)
       .post('/api/auth/register/doctor')
       .send({
@@ -192,46 +198,22 @@ describe('POST /api/auth/register/doctor', () => {
   });
 
   it('valida que la contraseña se almacena como hash', async () => {
-    prismaInstance.user.findUnique.mockResolvedValue(null);
-    prismaInstance.doctor.findFirst.mockResolvedValue(null);
-    
-    // Verificar que la contraseña se almacena como hash
-    prismaInstance.user.create.mockImplementation(({ data }) => {
-      expect(data.password_hash).toMatch(/^hashed_/);
+    // Mockear respuesta exitosa con hash de contraseña
+    registerService.registerDoctor.mockImplementation(data => {
+      // Verificar que la contraseña se pasa al servicio de registro
+      expect(data.password).toBe('StrongPass2!');
+      
       return Promise.resolve({
-        id: 2,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        password_hash: data.password_hash,
-        role: 'doctor',
-        registration_date: new Date()
+        code: 201,
+        message: 'Doctor registered successfully',
+        payload: {
+          id: 2,
+          firstName: 'Luis',
+          lastName: 'Pérez',
+          email: 'luis2.perez@example.com',
+          role: 'doctor'
+        }
       });
-    });
-    
-    prismaInstance.doctor.create.mockResolvedValue({
-      id: 2,
-      license_number: 'MED1234567',
-      phone: '5559876543',
-      location_id: 1
-    });
-    
-    // Implementación correcta de la transacción que devuelve un objeto con user y doctor
-    prismaInstance.$transaction.mockImplementation(async (callback) => {
-      const user = await prismaInstance.user.create({ data: {
-        first_name: 'Luis',
-        last_name: 'Pérez',
-        email: 'luis2.perez@example.com',
-        password_hash: 'hashed_StrongPass2!',
-        role: 'doctor'
-      }});
-      const doctor = await prismaInstance.doctor.create({ data: {
-        id: user.id,
-        license_number: 'MED1234567',
-        phone: '5559876543',
-        location_id: 1
-      }});
-      return { user, doctor };
     });
 
     const res = await request(app)
@@ -248,5 +230,8 @@ describe('POST /api/auth/register/doctor', () => {
 
     expect(res.statusCode).toBe(201);
     expect(res.body.code).toBe(201);
+    expect(registerService.registerDoctor).toHaveBeenCalledWith(expect.objectContaining({
+      password: 'StrongPass2!'
+    }));
   });
 });

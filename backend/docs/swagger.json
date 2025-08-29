@@ -8,7 +8,9 @@
   "paths": {
     "/api/auth/register/patient": {
       "post": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Registro de paciente",
         "description": "Permite registrar un nuevo paciente. Valida los campos requeridos, almacena la contraseña como hash y crea las entidades USER y PATIENT.",
         "requestBody": {
@@ -18,14 +20,38 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "firstName": { "type": "string", "example": "Ana" },
-                  "email": { "type": "string", "format": "email", "example": "ana.garcia@example.com" },
-                  "password": { "type": "string", "example": "StrongPass1!" },
-                  "confirmPassword": { "type": "string", "example": "StrongPass1!" },
-                  "lastName": { "type": "string", "example": "García" },
-                  "phone": { "type": "string", "example": "5551234567" }
+                  "firstName": {
+                    "type": "string",
+                    "example": "Ana"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "ana.garcia@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "StrongPass1!"
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "example": "StrongPass1!"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "García"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "5551234567"
+                  }
                 },
-                "required": ["firstName", "email", "password", "confirmPassword"]
+                "required": [
+                  "firstName",
+                  "email",
+                  "password",
+                  "confirmPassword"
+                ]
               },
               "examples": {
                 "registroPaciente": {
@@ -51,13 +77,25 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "example": 201 },
-                    "message": { "type": "string", "example": "Patient registered successfully" },
+                    "code": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Patient registered successfully"
+                    },
                     "payload": {
                       "type": "object",
                       "properties": {
-                        "firstName": { "type": "string", "example": "Ana" },
-                        "email": { "type": "string", "example": "ana.garcia@example.com" }
+                        "firstName": {
+                          "type": "string",
+                          "example": "Ana"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "ana.garcia@example.com"
+                        }
                       }
                     }
                   }
@@ -85,14 +123,22 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "example": 400 },
-                    "message": { "type": "string", "example": "Validation error" },
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Validation error"
+                    },
                     "payload": {
                       "type": "object",
                       "properties": {
                         "error": {
                           "type": "array",
-                          "items": { "type": "string" }
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       }
                     }
@@ -105,7 +151,9 @@
                       "code": 400,
                       "message": "Patient already exists",
                       "payload": {
-                        "error": ["Patient already exists"]
+                        "error": [
+                          "Patient already exists"
+                        ]
                       }
                     }
                   },
@@ -133,14 +181,22 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "example": 500 },
-                    "message": { "type": "string", "example": "Internal server error" },
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    },
                     "payload": {
                       "type": "object",
                       "properties": {
                         "error": {
                           "type": "array",
-                          "items": { "type": "string" }
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       }
                     }
@@ -153,7 +209,9 @@
                       "code": 500,
                       "message": "Internal server error",
                       "payload": {
-                        "error": ["An unexpected error occurred. Please try again later."]
+                        "error": [
+                          "An unexpected error occurred. Please try again later."
+                        ]
                       }
                     }
                   }
@@ -166,7 +224,9 @@
     },
     "/api/auth/register/doctor": {
       "post": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Registro de médico especialista",
         "description": "Permite registrar un nuevo médico especialista. Valida los campos requeridos, almacena la contraseña como hash y crea las entidades USER y DOCTOR.",
         "requestBody": {
@@ -176,13 +236,35 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "firstName": { "type": "string", "example": "Luis" },
-                  "lastName": { "type": "string", "example": "Pérez" },
-                  "email": { "type": "string", "format": "email", "example": "luis.perez@example.com" },
-                  "password": { "type": "string", "example": "StrongPass2!" },
-                  "confirmPassword": { "type": "string", "example": "StrongPass2!" },
-                  "licenseNumber": { "type": "string", "example": "MED1234567" },
-                  "phone": { "type": "string", "example": "5559876543" }
+                  "firstName": {
+                    "type": "string",
+                    "example": "Luis"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "Pérez"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "luis.perez@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "StrongPass2!"
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "example": "StrongPass2!"
+                  },
+                  "licenseNumber": {
+                    "type": "string",
+                    "example": "MED1234567"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "5559876543"
+                  }
                 },
                 "required": [
                   "firstName",
@@ -219,13 +301,25 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "example": 201 },
-                    "message": { "type": "string", "example": "Doctor registered successfully" },
+                    "code": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Doctor registered successfully"
+                    },
                     "payload": {
                       "type": "object",
                       "properties": {
-                        "firstName": { "type": "string", "example": "Luis" },
-                        "email": { "type": "string", "example": "luis.perez@example.com" }
+                        "firstName": {
+                          "type": "string",
+                          "example": "Luis"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "luis.perez@example.com"
+                        }
                       }
                     }
                   }
@@ -253,14 +347,22 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "example": 400 },
-                    "message": { "type": "string", "example": "Validation error" },
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Validation error"
+                    },
                     "payload": {
                       "type": "object",
                       "properties": {
                         "error": {
                           "type": "array",
-                          "items": { "type": "string" }
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       }
                     }
@@ -273,7 +375,9 @@
                       "code": 400,
                       "message": "Doctor already exists",
                       "payload": {
-                        "error": ["Doctor already exists"]
+                        "error": [
+                          "Doctor already exists"
+                        ]
                       }
                     }
                   },
@@ -283,7 +387,9 @@
                       "code": 400,
                       "message": "Doctor already exists",
                       "payload": {
-                        "error": ["Doctor already exists"]
+                        "error": [
+                          "Doctor already exists"
+                        ]
                       }
                     }
                   },
@@ -312,14 +418,22 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "code": { "type": "integer", "example": 500 },
-                    "message": { "type": "string", "example": "Internal server error" },
+                    "code": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    },
                     "payload": {
                       "type": "object",
                       "properties": {
                         "error": {
                           "type": "array",
-                          "items": { "type": "string" }
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       }
                     }
@@ -332,7 +446,483 @@
                       "code": 500,
                       "message": "Internal server error",
                       "payload": {
-                        "error": ["An unexpected error occurred. Please try again later."]
+                        "error": [
+                          "An unexpected error occurred. Please try again later."
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login/patient": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login de paciente",
+        "description": "Permite a un paciente autenticarse con email y contraseña. Devuelve un JWT válido y los datos principales del usuario.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "ana.garcia@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "StrongPass1!"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              },
+              "examples": {
+                "loginPaciente": {
+                  "summary": "Ejemplo de login de paciente",
+                  "value": {
+                    "email": "ana.garcia@example.com",
+                    "password": "StrongPass1!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Login successful"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "example": "jwt_token_aqui"
+                        },
+                        "id": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "ana.garcia@example.com"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "example": "patient"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Login exitoso",
+                    "value": {
+                      "code": 200,
+                      "message": "Login successful",
+                      "payload": {
+                        "token": "jwt_token_aqui",
+                        "id": 1,
+                        "email": "ana.garcia@example.com",
+                        "userType": "patient"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Validation error"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "validacion": {
+                    "summary": "Error de validación",
+                    "value": {
+                      "code": 400,
+                      "message": "Validation error",
+                      "payload": {
+                        "error": [
+                          "Email is required",
+                          "Password is required"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciales inválidas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid credentials"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "credencialesInvalidas": {
+                    "summary": "Credenciales inválidas",
+                    "value": {
+                      "code": 401,
+                      "message": "Invalid credentials",
+                      "payload": {
+                        "error": [
+                          "Invalid credentials"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User not found"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "usuarioNoEncontrado": {
+                    "summary": "Usuario no encontrado",
+                    "value": {
+                      "code": 404,
+                      "message": "User not found",
+                      "payload": {
+                        "error": [
+                          "User not found"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login/doctor": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login de médico especialista",
+        "description": "Permite a un médico especialista autenticarse con email y contraseña. Devuelve un JWT válido y los datos principales del usuario.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "luis.perez@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "StrongPass2!"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              },
+              "examples": {
+                "loginMedico": {
+                  "summary": "Ejemplo de login de médico especialista",
+                  "value": {
+                    "email": "luis.perez@example.com",
+                    "password": "StrongPass2!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Login successful"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "example": "jwt_token_aqui"
+                        },
+                        "id": {
+                          "type": "integer",
+                          "example": 2
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "luis.perez@example.com"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "example": "doctor"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Login exitoso",
+                    "value": {
+                      "code": 200,
+                      "message": "Login successful",
+                      "payload": {
+                        "token": "jwt_token_aqui",
+                        "id": 2,
+                        "email": "luis.perez@example.com",
+                        "userType": "doctor"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Validation error"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "validacion": {
+                    "summary": "Error de validación",
+                    "value": {
+                      "code": 400,
+                      "message": "Validation error",
+                      "payload": {
+                        "error": [
+                          "Email is required",
+                          "Password is required"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciales inválidas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid credentials"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "credencialesInvalidas": {
+                    "summary": "Credenciales inválidas",
+                    "value": {
+                      "code": 401,
+                      "message": "Invalid credentials",
+                      "payload": {
+                        "error": [
+                          "Invalid credentials"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User not found"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "usuarioNoEncontrado": {
+                    "summary": "Usuario no encontrado",
+                    "value": {
+                      "code": 404,
+                      "message": "User not found",
+                      "payload": {
+                        "error": [
+                          "User not found"
+                        ]
                       }
                     }
                   }
