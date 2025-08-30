@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: zonmatch_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: zonmatch
+      MYSQL_USER: zonmatch_user
+      MYSQL_PASSWORD: zonmatch_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database/init:/docker-entrypoint-initdb.d
+    networks:
+      - zonmatch_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Cache Redis
+  redis:
+    image: redis:7-alpine
+    container_name: zonmatch_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - zonmatch_network
+    command: redis-server --appendonly yes
+
+  # Backend Node.js
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zonmatch_backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=mysql://zonmatch_user:zonmatch_pass@mysql:3306/zonmatch
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - CORS_ORIGIN=http://localhost:3000
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - zonmatch_network
+    command: npm run dev
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: zonmatch_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+      - VITE_APP_NAME=Zonmatch
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - zonmatch_network
+    command: npm run dev
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  zonmatch_network:
+    driver: bridge
