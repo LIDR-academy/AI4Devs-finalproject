@@ -200,7 +200,7 @@ El objetivo es ofrecer una representación completa y legible de la estructura r
 no realices ningun cambio aun vamos a analizar primero y despues avanzamos paso a paso
 
 **Prompt 2:**
-te puedes basar en algo como arb&b para los atributos tamb hacen falta cosas como amenidades, hay que agregar todo lo que pueda ser relevante para el sistema
+te puedes basar en algo como arb&b para los atributos tambien hacen falta cosas como amenidades, hay que agregar todo lo que pueda ser relevante para el sistema
 
 **Prompt 3:**
 
