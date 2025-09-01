@@ -11,12 +11,11 @@ Esta regla establece el protocolo obligatorio para que el agente de IA registre 
 - **Obligatoriedad:** Este proceso es obligatorio para todos los prompts, independientemente de su contenido o complejidad.
 
 ## Sistema de Categorización
-Cada prompt debe ser clasificado en **una o más categorías** (máximo 3) utilizando las siguientes opciones predefinidas con sus emojis correspondientes:
+Cada prompt debe ser clasificado en **una categoría específica** utilizando las siguientes opciones predefinidas con sus emojis correspondientes:
 
 ### Categorías Disponibles:
 - 📦 **Descripción general del producto** - Información sobre funcionalidades y características del producto
-- 🏗️ **Arquitectura del sistema** - Estructura técnica, patrones de diseño y decisiones arquitectónicas
-- 🗺️ **Diagrama de arquitectura** - Visualizaciones y representaciones gráficas del sistema
+- 🏗️ **Diagrama de arquitectura** - Visualizaciones y representaciones gráficas del sistema
 - 🧩 **Descripción de componentes principales** - Módulos, servicios y elementos clave del sistema
 - 🗂️ **Descripción de alto nivel del proyecto y estructura de ficheros** - Organización general y estructura del proyecto
 - ☁️ **Infraestructura y despliegue** - Configuración de servidores, contenedores y procesos de deployment
@@ -26,13 +25,12 @@ Cada prompt debe ser clasificado en **una o más categorías** (máximo 3) utili
 - 🔌 **Especificación de la API** - Endpoints, parámetros, respuestas y documentación de APIs
 - 👤 **Historias de usuario** - Requisitos funcionales y casos de uso del sistema
 - 🎟️ **Tickets de trabajo** - Tareas, bugs y mejoras del proyecto
-- 🔀 **Pull request** - Cambios de código, revisiones y merge de funcionalidades
 
 ## Estructura del Registro
 Cada entrada debe seguir este formato estandarizado:
 
 ### Prompt [Número]:
-- **Categoría:** `[Emoji] [Nombre categoría]` `[Emoji] [Nombre categoría]` (máximo 3)
+- **Categoría:** `[Emoji] [Nombre categoría]`
 - **Prompt:** 
     ```
     [Texto completo del prompt del usuario]
@@ -42,14 +40,14 @@ Cada entrada debe seguir este formato estandarizado:
 ## Instrucciones de Implementación
 1. **Ubicación:** Todos los prompts se almacenan en el archivo `/docs/prompts-AMP.md`
 2. **Numeración:** Los prompts se registran secuencialmente (Prompt 1, Prompt 2, Prompt N)
-3. **Categorización:** Asignar las categorías más relevantes basándose en el contenido del prompt
+3. **Categorización:** Asignar la categoría más relevante basándose en el contenido del prompt
 4. **Formato:** Mantener la estructura y formato especificados para consistencia
 5. **Inmediatez:** Realizar el registro inmediatamente después de recibir cada prompt
 
 ## Ejemplos de Registro
 
 ### Prompt 1:
-- **Categoría:** `📦 Descripción general del producto` `🏗️ Arquitectura del sistema`
+- **Categoría:** `📦 Descripción general del producto`
 - **Prompt:** 
     ```
     ¿Cómo puedo implementar autenticación JWT en Node.js?
@@ -57,7 +55,7 @@ Cada entrada debe seguir este formato estandarizado:
 - **LLM:** GPT-4.1
 
 ### Prompt 2:
-- **Categoría:** `🏗️ Arquitectura del sistema`
+- **Categoría:** `🏗️ Diagrama de arquitectura`
 - **Prompt:** 
     ```
     Genera un diagrama de arquitectura para el backend.
@@ -65,7 +63,7 @@ Cada entrada debe seguir este formato estandarizado:
 - **LLM:** GPT-4.1
 
 ### Prompt 3:
-- **Categoría:** `🔌 Especificación de la API` `🗃️ Modelo de datos`
+- **Categoría:** `🔌 Especificación de la API`
 - **Prompt:** 
     ```
     Diseña la estructura de la API REST para el sistema de usuarios.

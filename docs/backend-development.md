@@ -18,70 +18,787 @@ Guía técnica completa para implementar el backend del chatbot de portfolio pro
 
 ---
 
-## 🏗️ Arquitectura del Backend
+## 🚀 Stack Tecnológico
 
-### Estructura del Proyecto
+### **Backend Principal:**
+- **Framework:** FastAPI (Python 3.11+)
+- **Base de Datos:** PostgreSQL (Cloud SQL)
+- **Cache:** Redis (Memorystore)
+- **ORM:** SQLAlchemy + Alembic
+- **Autenticación:** JWT + OAuth2
+- **Documentación:** Swagger/OpenAPI
 
+### **Integración de IA:**
+- **Arquitectura Híbrida:** Dialogflow ES (Free Tier) + Vertex AI
+- **Detección de Intenciones:** Dialogflow ES para intents simples
+- **Generación de Respuestas:** Vertex AI para casos complejos
+- **Smart Context Filtering:** Optimización de tokens y contexto
+- **Cache Inteligente:** Sistema multinivel para optimización de costos
+
+### **Infraestructura GCP:**
+- **Deployment:** Cloud Run (Free Tier)
+- **Base de Datos:** Cloud SQL (Free Tier)
+- **Cache:** Memorystore (Free Tier)
+- **Storage:** Cloud Storage
+- **Monitoring:** Cloud Monitoring + Cloud Logging
+
+### **Desarrollo y Testing:**
+- **Package Manager:** Poetry
+- **Testing:** pytest + pytest-asyncio
+- **Linting:** flake8 + black
+- **Type Checking:** mypy
+- **CI/CD:** GitHub Actions + Cloud Build
+
+---
+
+## 🔄 Integración con Dialogflow ES y Vertex AI
+
+### **🎯 Arquitectura Híbrida Implementada**
+
+El backend implementa una **arquitectura híbrida inteligente** que combina **Dialogflow ES (Free Tier)** para detección de intenciones y **Vertex AI** para generación de respuestas avanzadas.
+
+```python
+# app/services/hybrid_routing_service.py
+from app.services.dialogflow_service import DialogflowService
+from app.services.vertex_ai_service import VertexAIService
+from app.services.cost_optimization_service import CostOptimizationService
+from app.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+class HybridRoutingService:
+    """Servicio de routing inteligente entre Dialogflow y Vertex AI"""
+    
+    def __init__(self):
+        self.dialogflow_service = DialogflowService()
+        self.vertex_ai_service = VertexAIService()
+        self.cost_optimizer = CostOptimizationService()
+        
+        # Configuración de routing
+        self.simple_intent_threshold = 0.8
+        self.simple_intents = [
+            "greeting", "goodbye", "thanks", "help_request",
+            "basic_info", "contact_info", "schedule_info"
+        ]
+    
+    async def route_message(self, message: str, session_id: str) -> dict:
+        """Rutea mensaje a Dialogflow o Vertex AI según complejidad"""
+        try:
+            # 1. Detección de intención con Dialogflow (Free)
+            dialogflow_result = await self.dialogflow_service.detect_intent(
+                session_id, message
+            )
+            
+            # 2. Evaluar si Dialogflow puede manejar la respuesta
+            if self._can_dialogflow_handle(dialogflow_result):
+                return await self._handle_with_dialogflow(dialogflow_result)
+            
+            # 3. Si no, usar Vertex AI con contexto optimizado
+            return await self._handle_with_vertex_ai(message, dialogflow_result)
+            
+        except Exception as e:
+            logger.error(f"Error en routing híbrido: {e}")
+            # Fallback a Vertex AI
+            return await self._fallback_to_vertex_ai(message)
+    
+    def _can_dialogflow_handle(self, dialogflow_result: dict) -> bool:
+        """Determina si Dialogflow puede manejar la respuesta"""
+        return (
+            dialogflow_result.get("intent") in self.simple_intents and
+            dialogflow_result.get("confidence", 0) > self.simple_intent_threshold and
+            dialogflow_result.get("fulfillment_text") and
+            len(dialogflow_result["fulfillment_text"]) > 10
+        )
+    
+    async def _handle_with_dialogflow(self, dialogflow_result: dict) -> dict:
+        """Maneja respuesta usando solo Dialogflow"""
+        try:
+            # Registrar métricas de costos
+            await self.cost_optimizer.record_dialogflow_usage(
+                dialogflow_result.get("session_id"),
+                dialogflow_result.get("intent"),
+                "success"
+            )
+            
+            return {
+                "response": dialogflow_result["fulfillment_text"],
+                "intent": dialogflow_result["intent"],
+                "confidence": dialogflow_result["confidence"],
+                "entities": dialogflow_result.get("entities", []),
+                "source": "dialogflow_es",
+                "cost_optimization": {
+                    "dialogflow_requests": 1,
+                    "vertex_ai_tokens": 0,
+                    "cost_savings": "100% (Free tier)",
+                    "response_time": "<200ms"
+                },
+                "metadata": {
+                    "session_id": dialogflow_result.get("session_id"),
+                    "timestamp": dialogflow_result.get("timestamp"),
+                    "fallback_used": False
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error manejando respuesta de Dialogflow: {e}")
+            raise
+    
+    async def _handle_with_vertex_ai(self, message: str, dialogflow_result: dict) -> dict:
+        """Maneja respuesta usando Vertex AI con contexto optimizado"""
+        try:
+            # Usar intención detectada por Dialogflow para optimizar contexto
+            optimized_context = await self.vertex_ai_service.get_optimized_context(
+                message, 
+                dialogflow_result.get("intent"), 
+                dialogflow_result.get("entities", [])
+            )
+            
+            # Generar respuesta con Vertex AI
+            vertex_response = await self.vertex_ai_service.generate_response(
+                message, optimized_context
+            )
+            
+            # Registrar métricas de costos
+            await self.cost_optimizer.record_vertex_ai_usage(
+                dialogflow_result.get("session_id"),
+                dialogflow_result.get("intent"),
+                vertex_response.get("tokens_consumed", 0),
+                "success"
+            )
+            
+            return {
+                "response": vertex_response["content"],
+                "intent": dialogflow_result["intent"],
+                "confidence": dialogflow_result["confidence"],
+                "entities": dialogflow_result.get("entities", []),
+                "source": "vertex_ai_optimized",
+                "context_used": optimized_context.get("sections", []),
+                "cost_optimization": {
+                    "dialogflow_requests": 1,
+                    "vertex_ai_tokens": vertex_response.get("tokens_consumed", 0),
+                    "context_optimization": "40-60% reducción en tokens",
+                    "response_time": "<2s"
+                },
+                "metadata": {
+                    "session_id": dialogflow_result.get("session_id"),
+                    "timestamp": dialogflow_result.get("timestamp"),
+                    "fallback_used": False,
+                    "context_sections": len(optimized_context.get("sections", []))
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error manejando respuesta de Vertex AI: {e}")
+            raise
+    
+    async def _fallback_to_vertex_ai(self, message: str) -> dict:
+        """Fallback a Vertex AI si Dialogflow falla"""
+        try:
+            logger.warning("Usando fallback a Vertex AI")
+            
+            # Respuesta directa con Vertex AI
+            vertex_response = await self.vertex_ai_service.generate_response(
+                message, {}
+            )
+            
+            return {
+                "response": vertex_response["content"],
+                "intent": "fallback",
+                "confidence": 0.5,
+                "entities": [],
+                "source": "vertex_ai_fallback",
+                "context_used": [],
+                "cost_optimization": {
+                    "dialogflow_requests": 0,
+                    "vertex_ai_tokens": vertex_response.get("tokens_consumed", 0),
+                    "context_optimization": "0% (fallback)",
+                    "response_time": "<3s"
+                },
+                "metadata": {
+                    "session_id": "fallback",
+                    "timestamp": "now",
+                    "fallback_used": True,
+                    "error_reason": "Dialogflow service unavailable"
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error en fallback a Vertex AI: {e}")
+            # Respuesta de emergencia
+            return {
+                "response": "Lo siento, estoy teniendo problemas técnicos. Por favor, intenta de nuevo en unos momentos.",
+                "intent": "error",
+                "confidence": 0.0,
+                "entities": [],
+                "source": "emergency_fallback",
+                "context_used": [],
+                "cost_optimization": {
+                    "dialogflow_requests": 0,
+                    "vertex_ai_tokens": 0,
+                    "context_optimization": "0% (emergency)",
+                    "response_time": "<100ms"
+                },
+                "metadata": {
+                    "session_id": "emergency",
+                    "timestamp": "now",
+                    "fallback_used": True,
+                    "error_reason": "All services unavailable"
+                }
+            }
 ```
-ai-resume-agent/
-├── app/
-│   ├── main.py                 # FastAPI application entry point
-│   ├── api/
-│   │   └── v1/
-│   │       ├── endpoints/      # API endpoints
-│   │       ├── dependencies.py # FastAPI dependencies
-│   │       └── middleware.py   # Custom middleware
-│   ├── core/
-│   │   ├── config.py           # Configuration management
-│   │   ├── security.py         # Security utilities
-│   │   ├── database.py         # Database configuration
-│   │   └── logging.py          # Logging configuration
-│   ├── models/                 # SQLAlchemy models
-│   ├── services/               # Business logic services
-│   ├── utils/                  # Utility functions
-│   └── schemas/                # Pydantic schemas
-├── tests/                      # Test suite
-├── alembic/                    # Database migrations
-├── docker/                     # Docker configuration
-├── .github/                    # GitHub Actions
-├── pyproject.toml              # Poetry configuration
-└── README.md                   # Project documentation
+
+### **🔧 Servicio de Integración Dialogflow**
+
+```python
+# app/services/dialogflow_service.py
+from google.cloud import dialogflow_v2
+from app.core.config import settings
+from app.services.cache_service import CacheService
+import logging
+import json
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+class DialogflowService:
+    """Servicio de integración con Dialogflow ES"""
+    
+    def __init__(self):
+        self.project_id = settings.GCP_PROJECT_ID
+        self.session_client = dialogflow_v2.SessionsClient()
+        self.intents_client = dialogflow_v2.IntentsClient()
+        self.cache_service = CacheService()
+        
+        # Configuración para free tier
+        self.language_code = "es"
+        self.use_audio = False  # Solo texto para optimizar costos
+        self.cache_ttl = 3600  # 1 hora para cache de intents
+    
+    async def detect_intent(self, session_id: str, text: str) -> dict:
+        """Detecta la intención del usuario usando Dialogflow ES"""
+        try:
+            # Verificar cache primero
+            cache_key = f"dialogflow_intent:{session_id}:{hash(text)}"
+            cached_result = await self.cache_service.get(cache_key)
+            
+            if cached_result:
+                logger.info(f"Intent encontrado en cache para session {session_id}")
+                return json.loads(cached_result)
+            
+            # Detección de intención con Dialogflow
+            session_path = self.session_client.session_path(
+                self.project_id, session_id
+            )
+            
+            text_input = dialogflow_v2.TextInput(
+                text=text, language_code=self.language_code
+            )
+            
+            query_input = dialogflow_v2.QueryInput(text=text_input)
+            
+            request = dialogflow_v2.DetectIntentRequest(
+                session=session_path, query_input=query_input
+            )
+            
+            response = self.session_client.detect_intent(request=request)
+            
+            # Procesar respuesta
+            result = {
+                "intent": response.query_result.intent.display_name,
+                "confidence": response.query_result.intent_detection_confidence,
+                "entities": self._extract_entities(response.query_result.parameters),
+                "fulfillment_text": response.query_result.fulfillment_text,
+                "contexts": self._extract_contexts(response.query_result.output_contexts),
+                "action": response.query_result.action,
+                "parameters": response.query_result.parameters,
+                "source": "dialogflow_es",
+                "session_id": session_id,
+                "timestamp": datetime.utcnow().isoformat(),
+                "query_text": text
+            }
+            
+            # Almacenar en cache
+            await self.cache_service.set(
+                cache_key, 
+                json.dumps(result), 
+                self.cache_ttl
+            )
+            
+            logger.info(f"Intent detectado: {result['intent']} con confianza {result['confidence']}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error en Dialogflow: {e}")
+            # Fallback a Vertex AI
+            return await self._fallback_to_vertex_ai(text, session_id)
+    
+    async def _extract_entities(self, parameters) -> list:
+        """Extrae entidades de los parámetros de Dialogflow"""
+        entities = []
+        if parameters:
+            for key, value in parameters.items():
+                if value:
+                    entities.append({
+                        "type": key,
+                        "value": value,
+                        "confidence": 0.95,  # Dialogflow ES confidence
+                        "source": "dialogflow_es"
+                    })
+        return entities
+    
+    async def _extract_contexts(self, output_contexts) -> list:
+        """Extrae contextos de salida de Dialogflow"""
+        contexts = []
+        for context in output_contexts:
+            contexts.append({
+                "name": context.name,
+                "lifespan_count": context.lifespan_count,
+                "parameters": dict(context.parameters)
+            })
+        return contexts
+    
+    async def _fallback_to_vertex_ai(self, text: str, session_id: str) -> dict:
+        """Fallback a Vertex AI si Dialogflow falla"""
+        try:
+            from app.services.vertex_ai_service import VertexAIService
+            
+            vertex_service = VertexAIService()
+            vertex_response = await vertex_service.generate_response(text, {})
+            
+            return {
+                "intent": "fallback",
+                "confidence": 0.5,
+                "entities": [],
+                "fulfillment_text": vertex_response.get("content", ""),
+                "contexts": [],
+                "action": "fallback",
+                "parameters": {},
+                "source": "vertex_ai_fallback",
+                "session_id": session_id,
+                "timestamp": datetime.utcnow().isoformat(),
+                "query_text": text,
+                "fallback_reason": "Dialogflow service error"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error en fallback a Vertex AI: {e}")
+            return {
+                "intent": "error",
+                "confidence": 0.0,
+                "entities": [],
+                "fulfillment_text": "Lo siento, estoy teniendo problemas técnicos.",
+                "contexts": [],
+                "action": "error",
+                "parameters": {},
+                "source": "error_fallback",
+                "session_id": session_id,
+                "timestamp": datetime.utcnow().isoformat(),
+                "query_text": text,
+                "fallback_reason": "All services unavailable"
+            }
+    
+    async def get_intent_statistics(self) -> dict:
+        """Obtiene estadísticas de uso de intents"""
+        try:
+            # Implementar lógica para obtener estadísticas
+            # Esto podría incluir métricas de uso, accuracy, etc.
+            return {
+                "total_requests": 0,
+                "intent_distribution": {},
+                "average_confidence": 0.0,
+                "fallback_rate": 0.0
+            }
+        except Exception as e:
+            logger.error(f"Error obteniendo estadísticas: {e}")
+            return {}
 ```
 
-### Arquitectura de Servicios
+### **📊 Servicio de Monitoreo Híbrido**
 
-```mermaid
-graph TB
-    subgraph "FastAPI Application"
-        A[Main App]
-        B[API Router]
-        C[Middleware Stack]
-    end
+```python
+# app/services/hybrid_monitoring_service.py
+from app.services.dialogflow_service import DialogflowService
+from app.services.vertex_ai_service import VertexAIService
+from app.services.cost_optimization_service import CostOptimizationService
+from app.services.cache_service import CacheService
+import logging
+from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
+
+class HybridMonitoringService:
+    """Servicio de monitoreo para arquitectura híbrida"""
     
-    subgraph "Core Services"
-        D[Chatbot Service]
-        E[LLM Service]
-        F[Security Service]
-        G[Analytics Service]
-        H[Context Service]
-    end
+    def __init__(self):
+        self.dialogflow_service = DialogflowService()
+        self.vertex_ai_service = VertexAIService()
+        self.cost_optimizer = CostOptimizationService()
+        self.cache_service = CacheService()
     
-    subgraph "Data Layer"
-        I[PostgreSQL]
-        J[Redis Cache]
-        K[Document Store]
-    end
+    async def get_hybrid_metrics(self, time_range: str = "24h") -> dict:
+        """Obtiene métricas completas de la arquitectura híbrida"""
+        try:
+            # Calcular rango de tiempo
+            end_time = datetime.utcnow()
+            if time_range == "24h":
+                start_time = end_time - timedelta(hours=24)
+            elif time_range == "7d":
+                start_time = end_time - timedelta(days=7)
+            elif time_range == "30d":
+                start_time = end_time - timedelta(days=30)
+            else:
+                start_time = end_time - timedelta(hours=24)
+            
+            # Métricas de Dialogflow
+            dialogflow_metrics = await self._get_dialogflow_metrics(start_time, end_time)
+            
+            # Métricas de Vertex AI
+            vertex_ai_metrics = await self._get_vertex_ai_metrics(start_time, end_time)
+            
+            # Métricas de costos
+            cost_metrics = await self._get_cost_metrics(start_time, end_time)
+            
+            # Métricas de performance
+            performance_metrics = await self._get_performance_metrics(start_time, end_time)
+            
+            # Métricas de cache
+            cache_metrics = await self._get_cache_metrics(start_time, end_time)
+            
+            return {
+                "time_range": time_range,
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "dialogflow": dialogflow_metrics,
+                "vertex_ai": vertex_ai_metrics,
+                "costs": cost_metrics,
+                "performance": performance_metrics,
+                "cache": cache_metrics,
+                "hybrid_efficiency": await self._calculate_hybrid_efficiency(
+                    dialogflow_metrics, vertex_ai_metrics, cost_metrics
+                ),
+                "recommendations": await self._generate_optimization_recommendations(
+                    dialogflow_metrics, vertex_ai_metrics, cost_metrics, cache_metrics
+                )
+            }
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo métricas híbridas: {e}")
+            return {}
     
-    A --> B
-    B --> C
-    C --> D
-    C --> E
-    C --> F
-    C --> G
-    C --> H
-    D --> I
-    D --> J
-    H --> K
+    async def _get_dialogflow_metrics(self, start_time: datetime, end_time: datetime) -> dict:
+        """Obtiene métricas de Dialogflow"""
+        try:
+            # Implementar lógica para obtener métricas de Dialogflow
+            # Esto podría incluir logs, métricas de Cloud Monitoring, etc.
+            return {
+                "total_requests": 0,
+                "successful_requests": 0,
+                "failed_requests": 0,
+                "average_response_time": 0.0,
+                "intent_distribution": {},
+                "average_confidence": 0.0,
+                "fallback_rate": 0.0,
+                "free_tier_utilization": 0.0
+            }
+        except Exception as e:
+            logger.error(f"Error obteniendo métricas de Dialogflow: {e}")
+            return {}
+    
+    async def _get_vertex_ai_metrics(self, start_time: datetime, end_time: datetime) -> dict:
+        """Obtiene métricas de Vertex AI"""
+        try:
+            # Implementar lógica para obtener métricas de Vertex AI
+            return {
+                "total_requests": 0,
+                "successful_requests": 0,
+                "failed_requests": 0,
+                "total_tokens_consumed": 0,
+                "average_tokens_per_request": 0.0,
+                "average_response_time": 0.0,
+                "context_optimization_rate": 0.0,
+                "cache_hit_rate": 0.0
+            }
+        except Exception as e:
+            logger.error(f"Error obteniendo métricas de Vertex AI: {e}")
+            return {}
+    
+    async def _get_cost_metrics(self, start_time: datetime, end_time: datetime) -> dict:
+        """Obtiene métricas de costos"""
+        try:
+            return await self.cost_optimizer.get_cost_metrics(start_time, end_time)
+        except Exception as e:
+            logger.error(f"Error obteniendo métricas de costos: {e}")
+            return {}
+    
+    async def _get_performance_metrics(self, start_time: datetime, end_time: datetime) -> dict:
+        """Obtiene métricas de performance"""
+        try:
+            # Implementar lógica para obtener métricas de performance
+            return {
+                "average_total_response_time": 0.0,
+                "p95_response_time": 0.0,
+                "p99_response_time": 0.0,
+                "error_rate": 0.0,
+                "throughput": 0.0
+            }
+        except Exception as e:
+            logger.error(f"Error obteniendo métricas de performance: {e}")
+            return {}
+    
+    async def _get_cache_metrics(self, start_time: datetime, end_time: datetime) -> dict:
+        """Obtiene métricas de cache"""
+        try:
+            return await self.cache_service.get_metrics(start_time, end_time)
+        except Exception as e:
+            logger.error(f"Error obteniendo métricas de cache: {e}")
+            return {}
+    
+    async def _calculate_hybrid_efficiency(self, dialogflow: dict, vertex_ai: dict, costs: dict) -> dict:
+        """Calcula la eficiencia de la arquitectura híbrida"""
+        try:
+            total_requests = (
+                dialogflow.get("total_requests", 0) + 
+                vertex_ai.get("total_requests", 0)
+            )
+            
+            if total_requests == 0:
+                return {
+                    "dialogflow_usage_percentage": 0.0,
+                    "vertex_ai_usage_percentage": 0.0,
+                    "cost_per_request": 0.0,
+                    "efficiency_score": 0.0,
+                    "optimization_recommendations": []
+                }
+            
+            dialogflow_percentage = (
+                dialogflow.get("total_requests", 0) / total_requests * 100
+            )
+            vertex_ai_percentage = (
+                vertex_ai.get("total_requests", 0) / total_requests * 100
+            )
+            
+            cost_per_request = costs.get("total_cost", 0) / total_requests
+            
+            # Calcular score de eficiencia (0-100)
+            efficiency_score = self._calculate_efficiency_score(
+                dialogflow, vertex_ai, costs
+            )
+            
+            return {
+                "dialogflow_usage_percentage": round(dialogflow_percentage, 2),
+                "vertex_ai_usage_percentage": round(vertex_ai_percentage, 2),
+                "cost_per_request": round(cost_per_request, 6),
+                "efficiency_score": round(efficiency_score, 2),
+                "total_requests": total_requests,
+                "cost_optimization_achieved": costs.get("cost_savings_percentage", 0)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error calculando eficiencia híbrida: {e}")
+            return {}
+    
+    def _calculate_efficiency_score(self, dialogflow: dict, vertex_ai: dict, costs: dict) -> float:
+        """Calcula un score de eficiencia (0-100)"""
+        try:
+            # Factores para el score
+            dialogflow_efficiency = min(
+                dialogflow.get("successful_requests", 0) / 
+                max(dialogflow.get("total_requests", 1), 1) * 100, 100
+            )
+            
+            vertex_ai_efficiency = min(
+                vertex_ai.get("successful_requests", 0) / 
+                max(vertex_ai.get("total_requests", 1), 1) * 100, 100
+            )
+            
+            cost_efficiency = min(
+                costs.get("cost_savings_percentage", 0), 100
+            )
+            
+            # Ponderación: Dialogflow 40%, Vertex AI 30%, Costos 30%
+            weighted_score = (
+                dialogflow_efficiency * 0.4 +
+                vertex_ai_efficiency * 0.3 +
+                cost_efficiency * 0.3
+            )
+            
+            return weighted_score
+            
+        except Exception as e:
+            logger.error(f"Error calculando score de eficiencia: {e}")
+            return 0.0
+    
+    async def _generate_optimization_recommendations(
+        self, dialogflow: dict, vertex_ai: dict, costs: dict, cache: dict
+    ) -> list:
+        """Genera recomendaciones de optimización"""
+        recommendations = []
+        
+        try:
+            # Recomendaciones basadas en Dialogflow
+            if dialogflow.get("fallback_rate", 0) > 0.1:
+                recommendations.append({
+                    "category": "dialogflow",
+                    "priority": "high",
+                    "title": "Alta tasa de fallback en Dialogflow",
+                    "description": f"El {dialogflow['fallback_rate']*100:.1f}% de las consultas están fallando en Dialogflow",
+                    "action": "Revisar configuración de intents y entidades",
+                    "expected_impact": "Reducir fallbacks y mejorar experiencia del usuario"
+                })
+            
+            # Recomendaciones basadas en Vertex AI
+            if vertex_ai.get("cache_hit_rate", 0) < 0.7:
+                recommendations.append({
+                    "category": "cache",
+                    "priority": "medium",
+                    "title": "Baja tasa de cache hit",
+                    "description": f"Solo el {vertex_ai['cache_hit_rate']*100:.1f}% de las consultas están usando cache",
+                    "action": "Optimizar estrategia de cache y TTL",
+                    "expected_impact": "Reducir costos y mejorar performance"
+                })
+            
+            # Recomendaciones basadas en costos
+            if costs.get("cost_savings_percentage", 0) < 70:
+                recommendations.append({
+                    "category": "costs",
+                    "priority": "high",
+                    "title": "Optimización de costos por debajo del objetivo",
+                    "description": f"Solo se están ahorrando {costs['cost_savings_percentage']:.1f}% de los costos",
+                    "action": "Revisar routing híbrido y optimizar Smart Context Filtering",
+                    "expected_impact": "Aumentar ahorro de costos al 70-85% objetivo"
+                })
+            
+            # Recomendaciones basadas en performance
+            if cache.get("average_response_time", 0) > 1000:
+                recommendations.append({
+                    "category": "performance",
+                    "priority": "medium",
+                    "title": "Tiempo de respuesta de cache alto",
+                    "description": f"El cache está respondiendo en {cache['average_response_time']:.0f}ms",
+                    "action": "Optimizar configuración de Redis y estrategia de cache",
+                    "expected_impact": "Reducir latencia y mejorar experiencia del usuario"
+                })
+            
+            return recommendations
+            
+        except Exception as e:
+            logger.error(f"Error generando recomendaciones: {e}")
+            return []
+```
+
+### **🔌 Endpoint de Chat Actualizado para Arquitectura Híbrida**
+
+```python
+# app/api/v1/chat.py
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from app.schemas.chat import ChatMessageRequest, ChatMessageResponse, ChatHistoryResponse
+from app.services.hybrid_routing_service import HybridRoutingService
+from app.services.session_service import SessionService
+from app.services.analytics_service import AnalyticsService
+from app.core.security import get_current_user
+from app.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/chat", tags=["Chat"])
+
+@router.post("/send", response_model=ChatMessageResponse, summary="Enviar mensaje al chatbot")
+async def send_message(
+    request: ChatMessageRequest,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
+    session_service: SessionService = Depends(),
+    hybrid_router: HybridRoutingService = Depends(),
+    analytics_service: AnalyticsService = Depends()
+):
+    """
+    Envía un mensaje al chatbot usando la arquitectura híbrida Dialogflow + Vertex AI.
+    
+    El sistema detecta automáticamente si el mensaje puede ser manejado por Dialogflow ES
+    (intents simples) o requiere Vertex AI (casos complejos).
+    """
+    try:
+        # Validar sesión
+        session = await session_service.get_or_create_session(
+            user_id=current_user["id"],
+            session_id=request.session_id
+        )
+        
+        # Procesar mensaje con routing híbrido
+        response = await hybrid_router.route_message(
+            message=request.message,
+            session_id=session["id"]
+        )
+        
+        # Tareas en background
+        background_tasks.add_task(
+            analytics_service.record_chat_interaction,
+            user_id=current_user["id"],
+            session_id=session["id"],
+            message=request.message,
+            response=response,
+            metadata=response.get("metadata", {})
+        )
+        
+        # Registrar métricas de costos
+        background_tasks.add_task(
+            analytics_service.record_cost_metrics,
+            session_id=session["id"],
+            cost_data=response.get("cost_optimization", {}),
+            source=response.get("source", "unknown")
+        )
+        
+        return ChatMessageResponse(
+            message_id=f"msg_{session['id']}_{datetime.utcnow().timestamp()}",
+            session_id=session["id"],
+            response=response["response"],
+            intent=response["intent"],
+            confidence=response["confidence"],
+            entities=response.get("entities", []),
+            source=response["source"],
+            cost_optimization=response.get("cost_optimization", {}),
+            metadata=response.get("metadata", {}),
+            timestamp=datetime.utcnow().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error procesando mensaje: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno del servidor al procesar el mensaje"
+        )
+
+@router.get("/metrics/hybrid", summary="Obtener métricas de la arquitectura híbrida")
+async def get_hybrid_metrics(
+    time_range: str = "24h",
+    current_user: dict = Depends(get_current_user),
+    monitoring_service: HybridMonitoringService = Depends()
+):
+    """
+    Obtiene métricas completas de la arquitectura híbrida Dialogflow + Vertex AI.
+    
+    Incluye:
+    - Métricas de Dialogflow ES
+    - Métricas de Vertex AI
+    - Análisis de costos y optimizaciones
+    - Recomendaciones de mejora
+    """
+    try:
+        metrics = await monitoring_service.get_hybrid_metrics(time_range)
+        return {
+            "success": True,
+            "data": metrics,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error obteniendo métricas híbridas: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error obteniendo métricas de la arquitectura híbrida"
+        )
 ```
 
 ---
@@ -2661,3 +3378,2353 @@ class PerformanceMonitoringService:
 ---
 
 *Este documento proporciona las guías técnicas completas para implementar el backend del chatbot siguiendo las mejores prácticas de desarrollo, clean code, desarrollo seguro y optimización de costos con GCP y Vertex AI.*
+
+## Esquema de Base de Datos Optimizado
+
+### Diseño de la Base de Datos
+
+El sistema utiliza PostgreSQL como base de datos principal, optimizada para el manejo de datos de chatbot y analytics en tiempo real.
+
+#### **Diagrama del Esquema de Base de Datos**
+
+```mermaid
+erDiagram
+    USERS {
+        uuid id PK
+        string email UK
+        string linkedin_profile
+        string name
+        string role
+        string company
+        string industry
+        timestamp created_at
+        timestamp updated_at
+        boolean is_active
+        jsonb preferences
+    }
+    
+    CONVERSATIONS {
+        uuid id PK
+        uuid user_id FK
+        string session_id
+        string title
+        timestamp started_at
+        timestamp last_activity
+        integer message_count
+        string status
+        jsonb metadata
+    }
+    
+    MESSAGES {
+        uuid id PK
+        uuid conversation_id FK
+        uuid user_id FK
+        text content
+        string message_type
+        timestamp sent_at
+        integer token_count
+        jsonb llm_metadata
+        boolean is_user_message
+    }
+    
+    ANALYTICS {
+        uuid id PK
+        uuid user_id FK
+        uuid conversation_id FK
+        string event_type
+        timestamp event_time
+        jsonb event_data
+        string user_agent
+        string ip_address
+        jsonb context
+    }
+    
+    KNOWLEDGE_BASE {
+        uuid id PK
+        string category
+        string title
+        text content
+        jsonb metadata
+        timestamp created_at
+        timestamp updated_at
+        boolean is_active
+        integer priority
+    }
+    
+    SYSTEM_CONFIG {
+        uuid id PK
+        string config_key UK
+        text config_value
+        string description
+        timestamp updated_at
+        string updated_by
+    }
+    
+    USERS ||--o{ CONVERSATIONS : "has"
+    USERS ||--o{ ANALYTICS : "generates"
+    CONVERSATIONS ||--o{ MESSAGES : "contains"
+    CONVERSATIONS ||--o{ ANALYTICS : "tracks"
+    MESSAGES ||--o{ ANALYTICS : "analyzes"
+```
+
+### **Tablas Principales**
+
+#### **1. USERS - Gestión de Usuarios**
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    linkedin_profile VARCHAR(500),
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(100),
+    company VARCHAR(255),
+    industry VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    is_active BOOLEAN DEFAULT TRUE,
+    preferences JSONB DEFAULT '{}',
+    
+    -- Índices para optimización
+    CONSTRAINT users_email_check CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+);
+
+-- Índices optimizados
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_linkedin ON users(linkedin_profile);
+CREATE INDEX idx_users_industry ON users(industry);
+CREATE INDEX idx_users_created_at ON users(created_at);
+CREATE INDEX idx_users_active ON users(is_active) WHERE is_active = TRUE;
+```
+
+#### **2. CONVERSATIONS - Gestión de Conversaciones**
+```sql
+CREATE TABLE conversations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_id VARCHAR(255) NOT NULL,
+    title VARCHAR(500),
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_activity TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    message_count INTEGER DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'active',
+    metadata JSONB DEFAULT '{}',
+    
+    -- Índices para optimización
+    CONSTRAINT conversations_status_check CHECK (status IN ('active', 'paused', 'ended', 'archived'))
+);
+
+-- Índices optimizados
+CREATE INDEX idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX idx_conversations_session_id ON conversations(session_id);
+CREATE INDEX idx_conversations_started_at ON conversations(started_at);
+CREATE INDEX idx_conversations_last_activity ON conversations(last_activity);
+CREATE INDEX idx_conversations_status ON conversations(status);
+CREATE INDEX idx_conversations_user_status ON conversations(user_id, status);
+```
+
+#### **3. MESSAGES - Almacenamiento de Mensajes**
+```sql
+CREATE TABLE messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    message_type VARCHAR(50) DEFAULT 'text',
+    sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    token_count INTEGER DEFAULT 0,
+    llm_metadata JSONB DEFAULT '{}',
+    is_user_message BOOLEAN NOT NULL,
+    
+    -- Índices para optimización
+    CONSTRAINT messages_type_check CHECK (message_type IN ('text', 'image', 'file', 'system'))
+);
+
+-- Índices optimizados
+CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
+CREATE INDEX idx_messages_user_id ON messages(user_id);
+CREATE INDEX idx_messages_sent_at ON messages(sent_at);
+CREATE INDEX idx_messages_conversation_sent ON messages(conversation_id, sent_at);
+CREATE INDEX idx_messages_user_sent ON messages(user_id, sent_at);
+CREATE INDEX idx_messages_type ON messages(message_type);
+```
+
+#### **4. ANALYTICS - Datos de Analytics**
+```sql
+CREATE TABLE analytics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    conversation_id UUID REFERENCES conversations(id) ON DELETE SET NULL,
+    event_type VARCHAR(100) NOT NULL,
+    event_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    event_data JSONB DEFAULT '{}',
+    user_agent TEXT,
+    ip_address INET,
+    context JSONB DEFAULT '{}',
+    
+    -- Índices para optimización
+    CONSTRAINT analytics_event_type_check CHECK (event_type IN ('conversation_start', 'message_sent', 'message_received', 'conversation_end', 'error', 'feedback'))
+);
+
+-- Índices optimizados
+CREATE INDEX idx_analytics_user_id ON analytics(user_id);
+CREATE INDEX idx_analytics_conversation_id ON analytics(conversation_id);
+CREATE INDEX idx_analytics_event_type ON analytics(event_type);
+CREATE INDEX idx_analytics_event_time ON analytics(event_time);
+CREATE INDEX idx_analytics_user_event ON analytics(user_id, event_type);
+CREATE INDEX idx_analytics_time_range ON analytics(event_time) WHERE event_time >= NOW() - INTERVAL '30 days';
+```
+
+#### **5. KNOWLEDGE_BASE - Base de Conocimiento**
+```sql
+CREATE TABLE knowledge_base (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category VARCHAR(100) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    content TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    is_active BOOLEAN DEFAULT TRUE,
+    priority INTEGER DEFAULT 0,
+    
+    -- Índices para optimización
+    CONSTRAINT knowledge_priority_check CHECK (priority >= 0 AND priority <= 10)
+);
+
+-- Índices optimizados
+CREATE INDEX idx_knowledge_category ON knowledge_base(category);
+CREATE INDEX idx_knowledge_active ON knowledge_base(is_active) WHERE is_active = TRUE;
+CREATE INDEX idx_knowledge_priority ON knowledge_base(priority);
+CREATE INDEX idx_knowledge_category_active ON knowledge_base(category, is_active);
+CREATE INDEX idx_knowledge_search ON knowledge_base USING gin(to_tsvector('english', title || ' ' || content));
+```
+
+#### **6. SYSTEM_CONFIG - Configuración del Sistema**
+```sql
+CREATE TABLE system_config (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    config_key VARCHAR(255) UNIQUE NOT NULL,
+    config_value TEXT,
+    description TEXT,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_by VARCHAR(255)
+);
+
+-- Índices optimizados
+CREATE INDEX idx_system_config_key ON system_config(config_key);
+```
+
+### **Estrategias de Particionamiento**
+
+#### **Particionamiento por Fecha para Analytics**
+```sql
+-- Crear particiones mensuales para analytics
+CREATE TABLE analytics_y2024m01 PARTITION OF analytics
+    FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+
+CREATE TABLE analytics_y2024m02 PARTITION OF analytics
+    FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');
+
+-- Función para crear particiones automáticamente
+CREATE OR REPLACE FUNCTION create_analytics_partition(partition_date DATE)
+RETURNS VOID AS $$
+DECLARE
+    partition_name TEXT;
+    start_date DATE;
+    end_date DATE;
+BEGIN
+    partition_name := 'analytics_y' || TO_CHAR(partition_date, 'YYYY') || 'm' || TO_CHAR(partition_date, 'MM');
+    start_date := DATE_TRUNC('month', partition_date);
+    end_date := start_date + INTERVAL '1 month';
+    
+    EXECUTE format('CREATE TABLE IF NOT EXISTS %I PARTITION OF analytics
+                    FOR VALUES FROM (%L) TO (%L)',
+                    partition_name, start_date, end_date);
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### **Políticas de Backup y Retención**
+
+#### **Estrategia de Backup**
+```sql
+-- Configuración de backup automático
+-- 1. Backup completo diario (retención: 30 días)
+-- 2. Backup incremental cada 4 horas (retención: 7 días)
+-- 3. Backup de transacciones cada 15 minutos (retención: 24 horas)
+
+-- Configuración en postgresql.conf
+-- archive_mode = on
+-- archive_command = 'gsutil cp %p gs://chatbot-backups/$(date +%Y%m%d)/%f'
+-- wal_keep_size = 1GB
+```
+
+#### **Política de Retención de Datos**
+```sql
+-- Función para limpiar datos antiguos
+CREATE OR REPLACE FUNCTION cleanup_old_data()
+RETURNS VOID AS $$
+BEGIN
+    -- Eliminar conversaciones inactivas de más de 1 año
+    DELETE FROM conversations 
+    WHERE last_activity < NOW() - INTERVAL '1 year' 
+    AND status = 'ended';
+    
+    -- Eliminar analytics de más de 2 años
+    DELETE FROM analytics 
+    WHERE event_time < NOW() - INTERVAL '2 years';
+    
+    -- Eliminar mensajes de conversaciones eliminadas
+    DELETE FROM messages 
+    WHERE conversation_id NOT IN (SELECT id FROM conversations);
+    
+    -- Vacuum y analyze para optimizar
+    VACUUM ANALYZE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Programar limpieza automática (ejecutar diariamente a las 2 AM)
+-- SELECT cron.schedule('cleanup-old-data', '0 2 * * *', 'SELECT cleanup_old_data();');
+```
+
+### **Migraciones y Seeds de Datos**
+
+#### **Script de Migración Principal**
+```sql
+-- migrations/001_initial_schema.sql
+BEGIN;
+
+-- Crear extensiones necesarias
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- Crear tablas
+-- (Aquí van todas las CREATE TABLE statements)
+
+-- Crear índices
+-- (Aquí van todos los CREATE INDEX statements)
+
+-- Crear funciones
+-- (Aquí van todas las CREATE FUNCTION statements)
+
+COMMIT;
+```
+
+#### **Script de Seed de Datos**
+```sql
+-- seeds/001_initial_data.sql
+BEGIN;
+
+-- Insertar configuración inicial del sistema
+INSERT INTO system_config (config_key, config_value, description) VALUES
+('chatbot_name', 'Portfolio Assistant', 'Nombre del chatbot'),
+('max_message_length', '1000', 'Longitud máxima de mensajes'),
+('session_timeout_minutes', '30', 'Timeout de sesión en minutos'),
+('rate_limit_requests_per_minute', '10', 'Límite de requests por minuto'),
+('enable_analytics', 'true', 'Habilitar recolección de analytics');
+
+-- Insertar categorías de conocimiento base
+INSERT INTO knowledge_base (category, title, content, priority) VALUES
+('experience', 'Desarrollo Full Stack', 'Experiencia en desarrollo web completo...', 9),
+('skills', 'Python y FastAPI', 'Dominio avanzado de Python y FastAPI...', 8),
+('projects', 'Portfolio Chatbot', 'Proyecto de chatbot inteligente...', 10);
+
+COMMIT;
+```
+
+### **Optimizaciones de Rendimiento**
+
+#### **Configuración de PostgreSQL**
+```sql
+-- postgresql.conf optimizaciones
+-- Memoria
+shared_buffers = 256MB
+effective_cache_size = 1GB
+work_mem = 4MB
+maintenance_work_mem = 64MB
+
+-- WAL y Checkpoints
+wal_buffers = 16MB
+checkpoint_completion_target = 0.9
+checkpoint_timeout = 5min
+
+-- Query Planner
+random_page_cost = 1.1
+effective_io_concurrency = 200
+```
+
+#### **Estadísticas y Monitoreo**
+```sql
+-- Habilitar estadísticas de queries
+ALTER SYSTEM SET track_activities = on;
+ALTER SYSTEM SET track_counts = on;
+ALTER SYSTEM SET track_io_timing = on;
+
+-- Crear vistas para monitoreo
+CREATE VIEW table_stats AS
+SELECT 
+    schemaname,
+    tablename,
+    attname,
+    n_distinct,
+    correlation
+FROM pg_stats
+WHERE schemaname = 'public';
+
+-- Función para analizar rendimiento
+CREATE OR REPLACE FUNCTION analyze_performance()
+RETURNS TABLE(table_name TEXT, index_usage NUMERIC, table_size TEXT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        t.table_name::TEXT,
+        COALESCE(SUM(s.idx_scan) / NULLIF(SUM(s.seq_scan), 0), 0)::NUMERIC as index_usage,
+        pg_size_pretty(pg_total_relation_size(t.table_name))::TEXT as table_size
+    FROM information_schema.tables t
+    LEFT JOIN pg_stat_user_tables s ON t.table_name = s.relname
+    WHERE t.table_schema = 'public'
+    GROUP BY t.table_name;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### **Seguridad de la Base de Datos**
+
+#### **Roles y Permisos**
+```sql
+-- Crear roles específicos
+CREATE ROLE chatbot_app WITH LOGIN PASSWORD 'secure_password';
+CREATE ROLE chatbot_readonly WITH LOGIN PASSWORD 'readonly_password';
+
+-- Asignar permisos
+GRANT CONNECT ON DATABASE chatbot_db TO chatbot_app;
+GRANT USAGE ON SCHEMA public TO chatbot_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO chatbot_app;
+
+-- Solo lectura para analytics
+GRANT CONNECT ON DATABASE chatbot_db TO chatbot_readonly;
+GRANT USAGE ON SCHEMA public TO chatbot_readonly;
+GRANT SELECT ON analytics TO chatbot_readonly;
+```
+
+#### **Encriptación de Datos Sensibles**
+```sql
+-- Habilitar encriptación de columnas
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Función para encriptar datos sensibles
+CREATE OR REPLACE FUNCTION encrypt_sensitive_data(data TEXT, key TEXT)
+RETURNS BYTEA AS $$
+BEGIN
+    RETURN pgp_sym_encrypt(data, key);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Función para desencriptar
+CREATE OR REPLACE FUNCTION decrypt_sensitive_data(encrypted_data BYTEA, key TEXT)
+RETURNS TEXT AS $$
+BEGIN
+    RETURN pgp_sym_decrypt(encrypted_data, key);
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### **Monitoreo y Alertas**
+
+#### **Vistas de Monitoreo**
+```sql
+-- Vista de métricas de rendimiento
+CREATE VIEW performance_metrics AS
+SELECT 
+    schemaname,
+    tablename,
+    n_tup_ins as inserts,
+    n_tup_upd as updates,
+    n_tup_del as deletes,
+    n_live_tup as live_tuples,
+    n_dead_tup as dead_tuples,
+    last_vacuum,
+    last_autovacuum,
+    last_analyze,
+    last_autoanalyze
+FROM pg_stat_user_tables;
+
+-- Vista de uso de índices
+CREATE VIEW index_usage AS
+SELECT 
+    schemaname,
+    tablename,
+    indexname,
+    idx_scan,
+    idx_tup_read,
+    idx_tup_fetch
+FROM pg_stat_user_indexes;
+```
+
+#### **Funciones de Alertas**
+```sql
+-- Función para detectar tablas que necesitan VACUUM
+CREATE OR REPLACE FUNCTION check_vacuum_needed()
+RETURNS TABLE(table_name TEXT, dead_tuples_ratio NUMERIC) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        s.relname::TEXT,
+        (s.n_dead_tup::NUMERIC / NULLIF(s.n_live_tup, 0) * 100)::NUMERIC as dead_tuples_ratio
+    FROM pg_stat_user_tables s
+    WHERE s.n_dead_tup > 0 
+    AND (s.n_dead_tup::NUMERIC / NULLIF(s.n_live_tup, 0) * 100) > 20;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+Este esquema de base de datos proporciona una base sólida y escalable para el chatbot de portfolio, con optimizaciones específicas para el manejo de conversaciones, analytics y conocimiento base.
+
+## Data Warehouse para Analytics Avanzados
+
+### Diseño del Data Warehouse
+
+El data warehouse está diseñado para proporcionar insights detallados sobre el comportamiento del chatbot, permitiendo análisis temporal, geográfico y de usuario para optimización continua.
+
+#### **Diagrama del Data Warehouse**
+
+```mermaid
+erDiagram
+    FACT_CONVERSATIONS {
+        uuid id PK
+        uuid user_id FK
+        uuid conversation_id FK
+        date_id FK
+        time_id FK
+        location_id FK
+        device_id FK
+        integer message_count
+        integer total_tokens
+        integer duration_seconds
+        string conversation_status
+        decimal satisfaction_score
+        jsonb metadata
+    }
+    
+    DIM_DATE {
+        date_id PK
+        date full_date
+        integer year
+        integer month
+        integer day
+        string day_name
+        string month_name
+        boolean is_weekend
+        integer week_of_year
+        string quarter
+    }
+    
+    DIM_TIME {
+        time_id PK
+        time full_time
+        integer hour
+        integer minute
+        string period_of_day
+        string time_slot
+    }
+    
+    DIM_LOCATION {
+        location_id PK
+        string country
+        string region
+        string city
+        string timezone
+        decimal latitude
+        decimal longitude
+    }
+    
+    DIM_DEVICE {
+        device_id PK
+        string device_type
+        string browser
+        string os
+        string screen_resolution
+        boolean is_mobile
+    }
+    
+    DIM_USERS {
+        user_id PK
+        string user_segment
+        string industry
+        string company_size
+        string role_level
+        string engagement_level
+        timestamp first_interaction
+        timestamp last_interaction
+    }
+    
+    FACT_MESSAGE_ANALYTICS {
+        uuid id PK
+        uuid message_id FK
+        uuid conversation_id FK
+        uuid user_id FK
+        date_id FK
+        time_id FK
+        integer token_count
+        integer response_time_ms
+        string message_type
+        string sentiment
+        jsonb content_analysis
+        boolean is_user_message
+    }
+    
+    FACT_USER_BEHAVIOR {
+        uuid id PK
+        uuid user_id FK
+        date_id FK
+        integer sessions_count
+        integer total_messages
+        integer total_tokens
+        integer avg_session_duration
+        string preferred_topics
+        string preferred_technologies
+        decimal engagement_score
+    }
+    
+    FACT_KNOWLEDGE_USAGE {
+        uuid id PK
+        uuid knowledge_id FK
+        date_id FK
+        integer access_count
+        integer relevance_score
+        string search_terms
+        string user_feedback
+        boolean was_helpful
+    }
+    
+    FACT_CONVERSATIONS ||--o{ DIM_DATE : "occurs_on"
+    FACT_CONVERSATIONS ||--o{ DIM_TIME : "occurs_at"
+    FACT_CONVERSATIONS ||--o{ DIM_LOCATION : "originates_from"
+    FACT_CONVERSATIONS ||--o{ DIM_DEVICE : "accessed_via"
+    FACT_CONVERSATIONS ||--o{ DIM_USERS : "belongs_to"
+    FACT_MESSAGE_ANALYTICS ||--o{ DIM_DATE : "sent_on"
+    FACT_MESSAGE_ANALYTICS ||--o{ DIM_TIME : "sent_at"
+    FACT_USER_BEHAVIOR ||--o{ DIM_DATE : "tracked_on"
+    FACT_USER_BEHAVIOR ||--o{ DIM_USERS : "describes"
+    FACT_KNOWLEDGE_USAGE ||--o{ DIM_DATE : "accessed_on"
+```
+
+### **Tablas de Hechos (Fact Tables)**
+
+#### **1. FACT_CONVERSATIONS - Métricas de Conversación**
+```sql
+CREATE TABLE fact_conversations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    conversation_id UUID NOT NULL,
+    date_id INTEGER NOT NULL,
+    time_id INTEGER NOT NULL,
+    location_id INTEGER NOT NULL,
+    device_id INTEGER NOT NULL,
+    message_count INTEGER DEFAULT 0,
+    total_tokens INTEGER DEFAULT 0,
+    duration_seconds INTEGER DEFAULT 0,
+    conversation_status VARCHAR(50) NOT NULL,
+    satisfaction_score DECIMAL(3,2),
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT fk_fact_conv_date FOREIGN KEY (date_id) REFERENCES dim_date(date_id),
+    CONSTRAINT fk_fact_conv_time FOREIGN KEY (time_id) REFERENCES dim_time(time_id),
+    CONSTRAINT fk_fact_conv_location FOREIGN KEY (location_id) REFERENCES dim_location(location_id),
+    CONSTRAINT fk_fact_conv_device FOREIGN KEY (device_id) REFERENCES dim_device(device_id),
+    CONSTRAINT fk_fact_conv_user FOREIGN KEY (user_id) REFERENCES dim_users(user_id),
+    CONSTRAINT check_satisfaction_score CHECK (satisfaction_score >= 0 AND satisfaction_score <= 5)
+);
+
+-- Índices para optimización
+CREATE INDEX idx_fact_conv_date ON fact_conversations(date_id);
+CREATE INDEX idx_fact_conv_user ON fact_conversations(user_id);
+CREATE INDEX idx_fact_conv_status ON fact_conversations(conversation_status);
+CREATE INDEX idx_fact_conv_date_status ON fact_conversations(date_id, conversation_status);
+CREATE INDEX idx_fact_conv_user_date ON fact_conversations(user_id, date_id);
+```
+
+#### **2. FACT_MESSAGE_ANALYTICS - Análisis de Mensajes**
+```sql
+CREATE TABLE fact_message_analytics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL,
+    conversation_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    date_id INTEGER NOT NULL,
+    time_id INTEGER NOT NULL,
+    token_count INTEGER DEFAULT 0,
+    response_time_ms INTEGER DEFAULT 0,
+    message_type VARCHAR(50) NOT NULL,
+    sentiment VARCHAR(20),
+    content_analysis JSONB DEFAULT '{}',
+    is_user_message BOOLEAN NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT fk_fact_msg_date FOREIGN KEY (date_id) REFERENCES dim_date(date_id),
+    CONSTRAINT fk_fact_msg_time FOREIGN KEY (time_id) REFERENCES dim_time(time_id),
+    CONSTRAINT fk_fact_msg_user FOREIGN KEY (user_id) REFERENCES dim_users(user_id),
+    CONSTRAINT check_sentiment CHECK (sentiment IN ('positive', 'negative', 'neutral', 'mixed')),
+    CONSTRAINT check_message_type CHECK (message_type IN ('text', 'image', 'file', 'system', 'error'))
+);
+
+-- Índices para optimización
+CREATE INDEX idx_fact_msg_date ON fact_message_analytics(date_id);
+CREATE INDEX idx_fact_msg_user ON fact_message_analytics(user_id);
+CREATE INDEX idx_fact_msg_type ON fact_message_analytics(message_type);
+CREATE INDEX idx_fact_msg_sentiment ON fact_message_analytics(sentiment);
+CREATE INDEX idx_fact_msg_user_date ON fact_message_analytics(user_id, date_id);
+```
+
+#### **3. FACT_USER_BEHAVIOR - Comportamiento del Usuario**
+```sql
+CREATE TABLE fact_user_behavior (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    date_id INTEGER NOT NULL,
+    sessions_count INTEGER DEFAULT 0,
+    total_messages INTEGER DEFAULT 0,
+    total_tokens INTEGER DEFAULT 0,
+    avg_session_duration INTEGER DEFAULT 0,
+    preferred_topics TEXT[],
+    preferred_technologies TEXT[],
+    engagement_score DECIMAL(3,2),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT fk_fact_behavior_date FOREIGN KEY (date_id) REFERENCES dim_date(date_id),
+    CONSTRAINT fk_fact_behavior_user FOREIGN KEY (user_id) REFERENCES dim_users(user_id),
+    CONSTRAINT check_engagement_score CHECK (engagement_score >= 0 AND engagement_score <= 10)
+);
+
+-- Índices para optimización
+CREATE INDEX idx_fact_behavior_user ON fact_user_behavior(user_id);
+CREATE INDEX idx_fact_behavior_date ON fact_user_behavior(date_id);
+CREATE INDEX idx_fact_behavior_engagement ON fact_user_behavior(engagement_score);
+CREATE INDEX idx_fact_behavior_user_date ON fact_user_behavior(user_id, date_id);
+```
+
+#### **4. FACT_KNOWLEDGE_USAGE - Uso de Base de Conocimiento**
+```sql
+CREATE TABLE fact_knowledge_usage (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_id UUID NOT NULL,
+    date_id INTEGER NOT NULL,
+    access_count INTEGER DEFAULT 0,
+    relevance_score DECIMAL(3,2),
+    search_terms TEXT[],
+    user_feedback TEXT,
+    was_helpful BOOLEAN,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Constraints
+    CONSTRAINT fk_fact_knowledge_date FOREIGN KEY (date_id) REFERENCES dim_date(date_id),
+    CONSTRAINT check_relevance_score CHECK (relevance_score >= 0 AND relevance_score <= 5)
+);
+
+-- Índices para optimización
+CREATE INDEX idx_fact_knowledge_date ON fact_knowledge_usage(date_id);
+CREATE INDEX idx_fact_knowledge_relevance ON fact_knowledge_usage(relevance_score);
+CREATE INDEX idx_fact_knowledge_helpful ON fact_knowledge_usage(was_helpful);
+```
+
+### **Tablas de Dimensiones (Dimension Tables)**
+
+#### **1. DIM_DATE - Dimensión de Fecha**
+```sql
+CREATE TABLE dim_date (
+    date_id INTEGER PRIMARY KEY,
+    full_date DATE NOT NULL UNIQUE,
+    year INTEGER NOT NULL,
+    month INTEGER NOT NULL,
+    day INTEGER NOT NULL,
+    day_name VARCHAR(10) NOT NULL,
+    month_name VARCHAR(10) NOT NULL,
+    is_weekend BOOLEAN NOT NULL,
+    week_of_year INTEGER NOT NULL,
+    quarter VARCHAR(2) NOT NULL,
+    
+    -- Constraints
+    CONSTRAINT check_year CHECK (year >= 2020 AND year <= 2030),
+    CONSTRAINT check_month CHECK (month >= 1 AND month <= 12),
+    CONSTRAINT check_day CHECK (day >= 1 AND day <= 31)
+);
+
+-- Función para poblar la dimensión de fecha
+CREATE OR REPLACE FUNCTION populate_date_dimension(start_date DATE, end_date DATE)
+RETURNS VOID AS $$
+DECLARE
+    current_date DATE := start_date;
+BEGIN
+    WHILE current_date <= end_date LOOP
+        INSERT INTO dim_date (
+            date_id, full_date, year, month, day, day_name, month_name,
+            is_weekend, week_of_year, quarter
+        ) VALUES (
+            EXTRACT(YEAR FROM current_date) * 10000 + 
+            EXTRACT(MONTH FROM current_date) * 100 + 
+            EXTRACT(DAY FROM current_date),
+            current_date,
+            EXTRACT(YEAR FROM current_date),
+            EXTRACT(MONTH FROM current_date),
+            EXTRACT(DAY FROM current_date),
+            TO_CHAR(current_date, 'Day'),
+            TO_CHAR(current_date, 'Month'),
+            EXTRACT(DOW FROM current_date) IN (0, 6),
+            EXTRACT(WEEK FROM current_date),
+            'Q' || EXTRACT(QUARTER FROM current_date)
+        ) ON CONFLICT (date_id) DO NOTHING;
+        
+        current_date := current_date + INTERVAL '1 day';
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Poblar para los próximos 2 años
+SELECT populate_date_dimension(CURRENT_DATE, CURRENT_DATE + INTERVAL '2 years');
+```
+
+#### **2. DIM_TIME - Dimensión de Tiempo**
+```sql
+CREATE TABLE dim_time (
+    time_id INTEGER PRIMARY KEY,
+    full_time TIME NOT NULL UNIQUE,
+    hour INTEGER NOT NULL,
+    minute INTEGER NOT NULL,
+    period_of_day VARCHAR(20) NOT NULL,
+    time_slot VARCHAR(20) NOT NULL,
+    
+    -- Constraints
+    CONSTRAINT check_hour CHECK (hour >= 0 AND hour <= 23),
+    CONSTRAINT check_minute CHECK (minute >= 0 AND minute <= 59)
+);
+
+-- Función para poblar la dimensión de tiempo
+CREATE OR REPLACE FUNCTION populate_time_dimension()
+RETURNS VOID AS $$
+DECLARE
+    current_time TIME := '00:00:00';
+    time_id_val INTEGER;
+    period_of_day VARCHAR(20);
+    time_slot VARCHAR(20);
+BEGIN
+    WHILE current_time < '24:00:00' LOOP
+        time_id_val := EXTRACT(HOUR FROM current_time) * 100 + EXTRACT(MINUTE FROM current_time);
+        
+        -- Determinar período del día
+        IF EXTRACT(HOUR FROM current_time) BETWEEN 6 AND 11 THEN
+            period_of_day := 'Morning';
+        ELSIF EXTRACT(HOUR FROM current_time) BETWEEN 12 AND 16 THEN
+            period_of_day := 'Afternoon';
+        ELSIF EXTRACT(HOUR FROM current_time) BETWEEN 17 AND 20 THEN
+            period_of_day := 'Evening';
+        ELSE
+            period_of_day := 'Night';
+        END IF;
+        
+        -- Determinar slot de tiempo
+        IF EXTRACT(HOUR FROM current_time) BETWEEN 9 AND 17 THEN
+            time_slot := 'Business Hours';
+        ELSIF EXTRACT(HOUR FROM current_time) BETWEEN 18 AND 22 THEN
+            time_slot := 'Evening';
+        ELSE
+            time_slot := 'Off Hours';
+        END IF;
+        
+        INSERT INTO dim_time (
+            time_id, full_time, hour, minute, period_of_day, time_slot
+        ) VALUES (
+            time_id_val, current_time, EXTRACT(HOUR FROM current_time),
+            EXTRACT(MINUTE FROM current_time), period_of_day, time_slot
+        ) ON CONFLICT (time_id) DO NOTHING;
+        
+        current_time := current_time + INTERVAL '1 minute';
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Poblar la dimensión de tiempo
+SELECT populate_time_dimension();
+```
+
+#### **3. DIM_LOCATION - Dimensión de Ubicación**
+```sql
+CREATE TABLE dim_location (
+    location_id SERIAL PRIMARY KEY,
+    country VARCHAR(100),
+    region VARCHAR(100),
+    city VARCHAR(100),
+    timezone VARCHAR(50),
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para optimización
+CREATE INDEX idx_dim_location_country ON dim_location(country);
+CREATE INDEX idx_dim_location_region ON dim_location(region);
+CREATE INDEX idx_dim_location_city ON dim_location(city);
+CREATE INDEX idx_dim_location_coords ON dim_location(latitude, longitude);
+```
+
+#### **4. DIM_DEVICE - Dimensión de Dispositivo**
+```sql
+CREATE TABLE dim_device (
+    device_id SERIAL PRIMARY KEY,
+    device_type VARCHAR(50) NOT NULL,
+    browser VARCHAR(100),
+    os VARCHAR(100),
+    screen_resolution VARCHAR(50),
+    is_mobile BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para optimización
+CREATE INDEX idx_dim_device_type ON dim_device(device_type);
+CREATE INDEX idx_dim_device_browser ON dim_device(browser);
+CREATE INDEX idx_dim_device_os ON dim_device(os);
+CREATE INDEX idx_dim_device_mobile ON dim_device(is_mobile);
+```
+
+#### **5. DIM_USERS - Dimensión de Usuarios**
+```sql
+CREATE TABLE dim_users (
+    user_id UUID PRIMARY KEY,
+    user_segment VARCHAR(50),
+    industry VARCHAR(100),
+    company_size VARCHAR(50),
+    role_level VARCHAR(50),
+    engagement_level VARCHAR(50),
+    first_interaction TIMESTAMP WITH TIME ZONE,
+    last_interaction TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Índices para optimización
+CREATE INDEX idx_dim_users_segment ON dim_users(user_segment);
+CREATE INDEX idx_dim_users_industry ON dim_users(industry);
+CREATE INDEX idx_dim_users_engagement ON dim_users(engagement_level);
+CREATE INDEX idx_dim_users_first_interaction ON dim_users(first_interaction);
+```
+
+### **ETL Pipelines para Procesamiento de Datos**
+
+#### **Pipeline Principal de ETL**
+```python
+# etl/main_pipeline.py
+import pandas as pd
+from sqlalchemy import create_engine
+from datetime import datetime, timedelta
+import logging
+
+class ChatbotETLPipeline:
+    def __init__(self, source_db_url, warehouse_db_url):
+        self.source_engine = create_engine(source_db_url)
+        self.warehouse_engine = create_engine(warehouse_db_url)
+        self.logger = logging.getLogger(__name__)
+    
+    def extract_conversations(self, date_from, date_to):
+        """Extraer datos de conversaciones del sistema operacional"""
+        query = """
+        SELECT 
+            c.id as conversation_id,
+            c.user_id,
+            c.session_id,
+            c.title,
+            c.started_at,
+            c.last_activity,
+            c.message_count,
+            c.status,
+            c.metadata,
+            u.email,
+            u.linkedin_profile,
+            u.name,
+            u.role,
+            u.company,
+            u.industry
+        FROM conversations c
+        JOIN users u ON c.user_id = u.id
+        WHERE c.started_at BETWEEN %s AND %s
+        """
+        
+        df = pd.read_sql(query, self.source_engine, params=[date_from, date_to])
+        self.logger.info(f"Extracted {len(df)} conversations")
+        return df
+    
+    def transform_conversations(self, df):
+        """Transformar datos de conversaciones para el warehouse"""
+        # Calcular duración de conversación
+        df['duration_seconds'] = (
+            pd.to_datetime(df['last_activity']) - 
+            pd.to_datetime(df['started_at'])
+        ).dt.total_seconds()
+        
+        # Calcular total de tokens (simulado)
+        df['total_tokens'] = df['message_count'] * 50  # Estimación
+        
+        # Mapear a dimensiones
+        df['date_id'] = pd.to_datetime(df['started_at']).dt.strftime('%Y%m%d').astype(int)
+        df['time_id'] = pd.to_datetime(df['started_at']).dt.strftime('%H%M').astype(int)
+        
+        # Agregar dimensiones de ubicación y dispositivo (simulado)
+        df['location_id'] = 1  # Default location
+        df['device_id'] = 1    # Default device
+        
+        # Calcular score de satisfacción (simulado)
+        df['satisfaction_score'] = df['message_count'].apply(
+            lambda x: min(5.0, max(1.0, x * 0.5))
+        )
+        
+        return df
+    
+    def load_conversations(self, df):
+        """Cargar datos transformados al warehouse"""
+        # Insertar en fact_conversations
+        df_fact = df[[
+            'user_id', 'conversation_id', 'date_id', 'time_id', 'location_id',
+            'device_id', 'message_count', 'total_tokens', 'duration_seconds',
+            'conversation_status', 'satisfaction_score', 'metadata'
+        ]].copy()
+        
+        df_fact.to_sql('fact_conversations', self.warehouse_engine, 
+                       if_exists='append', index=False)
+        
+        self.logger.info(f"Loaded {len(df_fact)} conversation facts")
+    
+    def run_daily_pipeline(self):
+        """Ejecutar pipeline diario"""
+        yesterday = datetime.now() - timedelta(days=1)
+        date_from = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+        date_to = yesterday.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        try:
+            # Extract
+            df = self.extract_conversations(date_from, date_to)
+            
+            if not df.empty:
+                # Transform
+                df_transformed = self.transform_conversations(df)
+                
+                # Load
+                self.load_conversations(df_transformed)
+                
+                self.logger.info("Daily ETL pipeline completed successfully")
+            else:
+                self.logger.info("No data to process for yesterday")
+                
+        except Exception as e:
+            self.logger.error(f"ETL pipeline failed: {str(e)}")
+            raise
+```
+
+#### **Pipeline de Analytics de Mensajes**
+```python
+# etl/message_analytics_pipeline.py
+class MessageAnalyticsPipeline:
+    def __init__(self, source_db_url, warehouse_db_url):
+        self.source_engine = create_engine(source_db_url)
+        self.warehouse_engine = create_engine(warehouse_db_url)
+    
+    def extract_messages(self, date_from, date_to):
+        """Extraer datos de mensajes"""
+        query = """
+        SELECT 
+            m.id as message_id,
+            m.conversation_id,
+            m.user_id,
+            m.content,
+            m.message_type,
+            m.sent_at,
+            m.token_count,
+            m.is_user_message,
+            c.started_at as conversation_start
+        FROM messages m
+        JOIN conversations c ON m.conversation_id = c.id
+        WHERE m.sent_at BETWEEN %s AND %s
+        """
+        
+        return pd.read_sql(query, self.source_engine, params=[date_from, date_to])
+    
+    def analyze_sentiment(self, content):
+        """Análisis básico de sentimiento (simulado)"""
+        positive_words = ['excelente', 'bueno', 'genial', 'perfecto', 'me gusta']
+        negative_words = ['malo', 'terrible', 'horrible', 'no me gusta', 'problema']
+        
+        content_lower = content.lower()
+        positive_count = sum(1 for word in positive_words if word in content_lower)
+        negative_count = sum(1 for word in negative_words if word in content_lower)
+        
+        if positive_count > negative_count:
+            return 'positive'
+        elif negative_count > positive_count:
+            return 'negative'
+        else:
+            return 'neutral'
+    
+    def transform_messages(self, df):
+        """Transformar datos de mensajes"""
+        # Análisis de sentimiento
+        df['sentiment'] = df['content'].apply(self.analyze_sentiment)
+        
+        # Calcular tiempo de respuesta (simulado)
+        df['response_time_ms'] = df.groupby('conversation_id')['sent_at'].diff().dt.total_seconds() * 1000
+        
+        # Mapear a dimensiones
+        df['date_id'] = pd.to_datetime(df['sent_at']).dt.strftime('%Y%m%d').astype(int)
+        df['time_id'] = pd.to_datetime(df['sent_at']).dt.strftime('%H%M').astype(int)
+        
+        # Análisis de contenido
+        df['content_analysis'] = df['content'].apply(lambda x: {
+            'length': len(x),
+            'word_count': len(x.split()),
+            'has_question': '?' in x,
+            'has_link': 'http' in x.lower()
+        })
+        
+        return df
+    
+    def load_messages(self, df):
+        """Cargar analytics de mensajes"""
+        df_fact = df[[
+            'message_id', 'conversation_id', 'user_id', 'date_id', 'time_id',
+            'token_count', 'response_time_ms', 'message_type', 'sentiment',
+            'content_analysis', 'is_user_message'
+        ]].copy()
+        
+        df_fact.to_sql('fact_message_analytics', self.warehouse_engine, 
+                       if_exists='append', index=False)
+```
+
+### **Agregaciones Pre-calculadas para Reportes**
+
+#### **Vistas Materializadas para Reportes**
+```sql
+-- Vista materializada para métricas diarias de conversaciones
+CREATE MATERIALIZED VIEW mv_daily_conversation_metrics AS
+SELECT 
+    d.date_id,
+    d.full_date,
+    COUNT(DISTINCT fc.conversation_id) as total_conversations,
+    COUNT(DISTINCT fc.user_id) as unique_users,
+    AVG(fc.message_count) as avg_messages_per_conversation,
+    AVG(fc.total_tokens) as avg_tokens_per_conversation,
+    AVG(fc.duration_seconds) as avg_duration_seconds,
+    AVG(fc.satisfaction_score) as avg_satisfaction_score,
+    COUNT(CASE WHEN fc.conversation_status = 'ended' THEN 1 END) as completed_conversations,
+    COUNT(CASE WHEN fc.conversation_status = 'active' THEN 1 END) as active_conversations
+FROM dim_date d
+LEFT JOIN fact_conversations fc ON d.date_id = fc.date_id
+GROUP BY d.date_id, d.full_date
+ORDER BY d.date_id;
+
+-- Vista materializada para métricas de usuario por industria
+CREATE MATERIALIZED VIEW mv_user_industry_metrics AS
+SELECT 
+    du.industry,
+    COUNT(DISTINCT du.user_id) as total_users,
+    AVG(fub.engagement_score) as avg_engagement_score,
+    AVG(fub.avg_session_duration) as avg_session_duration,
+    SUM(fub.total_messages) as total_messages,
+    SUM(fub.total_tokens) as total_tokens
+FROM dim_users du
+LEFT JOIN fact_user_behavior fub ON du.user_id = fub.user_id
+WHERE du.industry IS NOT NULL
+GROUP BY du.industry
+ORDER BY total_users DESC;
+
+-- Vista materializada para análisis de sentimiento por período
+CREATE MATERIALIZED VIEW mv_sentiment_analysis AS
+SELECT 
+    d.date_id,
+    d.full_date,
+    dt.period_of_day,
+    fma.sentiment,
+    COUNT(*) as message_count,
+    AVG(fma.response_time_ms) as avg_response_time_ms,
+    AVG(fma.token_count) as avg_token_count
+FROM dim_date d
+JOIN fact_message_analytics fma ON d.date_id = fma.date_id
+JOIN dim_time dt ON fma.time_id = dt.time_id
+GROUP BY d.date_id, d.full_date, dt.period_of_day, fma.sentiment
+ORDER BY d.date_id, dt.period_of_day, fma.sentiment;
+
+-- Índices para las vistas materializadas
+CREATE INDEX idx_mv_daily_conv_date ON mv_daily_conversation_metrics(date_id);
+CREATE INDEX idx_mv_user_industry_ind ON mv_user_industry_metrics(industry);
+CREATE INDEX idx_mv_sentiment_date ON mv_sentiment_analysis(date_id, period_of_day);
+```
+
+#### **Función de Actualización de Vistas Materializadas**
+```sql
+-- Función para actualizar todas las vistas materializadas
+CREATE OR REPLACE FUNCTION refresh_materialized_views()
+RETURNS VOID AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_conversation_metrics;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY mv_user_industry_metrics;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY mv_sentiment_analysis;
+    
+    RAISE NOTICE 'All materialized views refreshed successfully';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Programar actualización automática (ejecutar cada hora)
+-- SELECT cron.schedule('refresh-mv', '0 * * * *', 'SELECT refresh_materialized_views();');
+```
+
+### **Estrategias de Optimización para Consultas Complejas**
+
+#### **Configuración de PostgreSQL para Data Warehouse**
+```sql
+-- Configuraciones específicas para data warehouse
+ALTER SYSTEM SET work_mem = '256MB';  -- Más memoria para operaciones complejas
+ALTER SYSTEM SET maintenance_work_mem = '1GB';  -- Más memoria para mantenimiento
+ALTER SYSTEM SET effective_cache_size = '4GB';  -- Cache efectivo más grande
+ALTER SYSTEM SET random_page_cost = 1.1;  -- Optimizado para SSD
+ALTER SYSTEM SET effective_io_concurrency = 200;  -- Más concurrencia I/O
+
+-- Configuraciones para queries complejas
+ALTER SYSTEM SET enable_hashjoin = on;
+ALTER SYSTEM SET enable_mergejoin = on;
+ALTER SYSTEM SET enable_nestloop = on;
+ALTER SYSTEM SET enable_indexscan = on;
+ALTER SYSTEM SET enable_indexonlyscan = on;
+```
+
+#### **Optimización de Consultas con Particionamiento**
+```sql
+-- Particionamiento por fecha para fact tables
+CREATE TABLE fact_conversations_y2024m01 PARTITION OF fact_conversations
+    FOR VALUES FROM (20240101) TO (20240201);
+
+CREATE TABLE fact_conversations_y2024m02 PARTITION OF fact_conversations
+    FOR VALUES FROM (20240201) TO (20240301);
+
+-- Función para crear particiones automáticamente
+CREATE OR REPLACE FUNCTION create_fact_partitions(partition_date DATE)
+RETURNS VOID AS $$
+DECLARE
+    partition_name TEXT;
+    start_date_id INTEGER;
+    end_date_id INTEGER;
+BEGIN
+    partition_name := 'fact_conversations_y' || TO_CHAR(partition_date, 'YYYY') || 'm' || TO_CHAR(partition_date, 'MM');
+    start_date_id := TO_CHAR(partition_date, 'YYYYMMDD')::INTEGER;
+    end_date_id := TO_CHAR(partition_date + INTERVAL '1 month', 'YYYYMMDD')::INTEGER;
+    
+    EXECUTE format('CREATE TABLE IF NOT EXISTS %I PARTITION OF fact_conversations
+                    FOR VALUES FROM (%L) TO (%L)',
+                    partition_name, start_date_id, end_date_id);
+END;
+$$ LANGUAGE plpgsql;
+```
+
+#### **Consultas Optimizadas para Reportes**
+```sql
+-- Reporte de rendimiento del chatbot por día
+CREATE OR REPLACE FUNCTION get_chatbot_performance_report(
+    start_date DATE DEFAULT CURRENT_DATE - INTERVAL '30 days',
+    end_date DATE DEFAULT CURRENT_DATE
+)
+RETURNS TABLE(
+    date DATE,
+    total_conversations BIGINT,
+    unique_users BIGINT,
+    avg_satisfaction DECIMAL(5,2),
+    avg_response_time_ms INTEGER,
+    total_tokens BIGINT,
+    completion_rate DECIMAL(5,2)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        d.full_date::DATE,
+        COUNT(DISTINCT fc.conversation_id)::BIGINT as total_conversations,
+        COUNT(DISTINCT fc.user_id)::BIGINT as unique_users,
+        ROUND(AVG(fc.satisfaction_score), 2)::DECIMAL(5,2) as avg_satisfaction,
+        ROUND(AVG(fma.response_time_ms))::INTEGER as avg_response_time_ms,
+        SUM(fc.total_tokens)::BIGINT as total_tokens,
+        ROUND(
+            COUNT(CASE WHEN fc.conversation_status = 'ended' THEN 1 END)::DECIMAL / 
+            COUNT(*)::DECIMAL * 100, 2
+        )::DECIMAL(5,2) as completion_rate
+    FROM dim_date d
+    LEFT JOIN fact_conversations fc ON d.date_id = fc.date_id
+    LEFT JOIN fact_message_analytics fma ON fc.conversation_id = fma.conversation_id
+    WHERE d.full_date BETWEEN start_date AND end_date
+    GROUP BY d.date_id, d.full_date
+    ORDER BY d.full_date;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Reporte de análisis de usuarios por industria
+CREATE OR REPLACE FUNCTION get_user_industry_analysis()
+RETURNS TABLE(
+    industry VARCHAR(100),
+    user_count BIGINT,
+    avg_engagement DECIMAL(5,2),
+    avg_session_duration INTEGER,
+    preferred_topics TEXT,
+    satisfaction_score DECIMAL(5,2)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        du.industry,
+        COUNT(DISTINCT du.user_id)::BIGINT as user_count,
+        ROUND(AVG(fub.engagement_score), 2)::DECIMAL(5,2) as avg_engagement,
+        ROUND(AVG(fub.avg_session_duration))::INTEGER as avg_session_duration,
+        STRING_AGG(DISTINCT fub.preferred_topics::TEXT, ', ') as preferred_topics,
+        ROUND(AVG(fc.satisfaction_score), 2)::DECIMAL(5,2) as satisfaction_score
+    FROM dim_users du
+    LEFT JOIN fact_user_behavior fub ON du.user_id = fub.user_id
+    LEFT JOIN fact_conversations fc ON du.user_id = fc.user_id
+    WHERE du.industry IS NOT NULL
+    GROUP BY du.industry
+    ORDER BY user_count DESC;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+Este data warehouse proporciona una base sólida para análisis avanzados del comportamiento del chatbot, permitiendo insights detallados sobre usuarios, conversaciones y rendimiento del sistema.
+
+## Estándares de API RESTful
+
+### Convenciones y Mejores Prácticas
+
+La API del chatbot de portfolio sigue estrictamente los estándares RESTful y las mejores prácticas de diseño de APIs para garantizar consistencia, escalabilidad y facilidad de uso.
+
+#### **1. Convenciones de Nomenclatura para Endpoints**
+
+##### **Estructura de URLs**
+```
+Base URL: https://api.almapi.dev/v1
+
+# Recursos principales
+GET    /users                    # Listar usuarios
+POST   /users                    # Crear usuario
+GET    /users/{id}              # Obtener usuario específico
+PUT    /users/{id}              # Actualizar usuario completo
+PATCH  /users/{id}              # Actualizar usuario parcialmente
+DELETE /users/{id}              # Eliminar usuario
+
+# Sub-recursos
+GET    /users/{id}/conversations    # Conversaciones del usuario
+GET    /users/{id}/analytics        # Analytics del usuario
+POST   /users/{id}/preferences      # Actualizar preferencias
+
+# Acciones específicas
+POST   /chat                      # Enviar mensaje al chatbot
+POST   /conversations             # Crear conversación
+GET    /conversations             # Listar conversaciones
+GET    /conversations/{id}        # Obtener conversación
+PUT    /conversations/{id}        # Actualizar conversación
+DELETE /conversations/{id}        # Eliminar conversación
+
+# Analytics y métricas
+GET    /analytics                 # Obtener analytics generales
+GET    /analytics/conversations   # Analytics de conversaciones
+GET    /analytics/users           # Analytics de usuarios
+GET    /analytics/performance     # Métricas de rendimiento
+
+# Sistema y monitoreo
+GET    /health                    # Health check
+GET    /metrics                   # Métricas del sistema
+GET    /status                    # Estado del servicio
+```
+
+##### **Reglas de Nomenclatura**
+```python
+# ✅ CORRECTO - Nombres en plural para colecciones
+GET /users
+GET /conversations
+GET /analytics
+
+# ❌ INCORRECTO - Nombres en singular
+GET /user
+GET /conversation
+GET /analytic
+
+# ✅ CORRECTO - Nombres descriptivos y claros
+GET /users/{id}/recent-conversations
+GET /analytics/conversations/by-date
+POST /chat/message
+
+# ❌ INCORRECTO - Nombres ambiguos o abreviados
+GET /u/{id}/conv
+GET /analytics/conv/date
+POST /chat/msg
+
+# ✅ CORRECTO - Verbos para acciones específicas
+POST /users/{id}/activate
+POST /conversations/{id}/archive
+POST /chat/stream
+
+# ❌ INCORRECTO - Verbos en URLs de recursos
+POST /activate-user
+POST /archive-conversation
+POST /stream-chat
+```
+
+#### **2. Estructura de Respuestas y Manejo de Errores**
+
+##### **Formato Estándar de Respuesta Exitosa**
+```json
+{
+  "success": true,
+  "data": {
+    // Datos de la respuesta
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "request_id": "req_abc123",
+    "version": "1.0.0"
+  }
+}
+```
+
+##### **Formato Estándar de Respuesta de Error**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Los datos proporcionados no son válidos",
+    "details": [
+      {
+        "field": "email",
+        "message": "El formato del email no es válido",
+        "value": "invalid-email"
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00Z",
+    "request_id": "req_abc123",
+    "version": "1.0.0",
+    "trace_id": "trace_xyz789"
+  }
+}
+```
+
+##### **Códigos de Estado HTTP Estándar**
+```python
+# Respuestas exitosas
+200 OK                    # Request exitoso
+201 Created              # Recurso creado exitosamente
+202 Accepted             # Request aceptado para procesamiento
+204 No Content           # Request exitoso sin contenido
+
+# Errores del cliente
+400 Bad Request          # Request mal formado
+401 Unauthorized         # No autenticado
+403 Forbidden            # No autorizado
+404 Not Found            # Recurso no encontrado
+409 Conflict             # Conflicto con estado actual
+422 Unprocessable Entity # Datos válidos pero no procesables
+429 Too Many Requests    # Rate limit excedido
+
+# Errores del servidor
+500 Internal Server Error # Error interno del servidor
+502 Bad Gateway          # Error de servicio externo
+503 Service Unavailable  # Servicio temporalmente no disponible
+504 Gateway Timeout      # Timeout de servicio externo
+```
+
+##### **Implementación de Respuestas Estándar**
+```python
+# utils/response_formatter.py
+from typing import Any, Dict, Optional, List
+from datetime import datetime
+import uuid
+from fastapi import HTTPException, status
+
+class ResponseFormatter:
+    @staticmethod
+    def success_response(
+        data: Any,
+        message: str = "Operación exitosa",
+        status_code: int = 200
+    ) -> Dict[str, Any]:
+        """Formatear respuesta exitosa estándar"""
+        return {
+            "success": True,
+            "data": data,
+            "message": message,
+            "meta": {
+                "timestamp": datetime.utcnow().isoformat(),
+                "request_id": str(uuid.uuid4()),
+                "version": "1.0.0"
+            }
+        }
+    
+    @staticmethod
+    def error_response(
+        error_code: str,
+        message: str,
+        details: Optional[List[Dict[str, Any]]] = None,
+        status_code: int = 400
+    ) -> Dict[str, Any]:
+        """Formatear respuesta de error estándar"""
+        error_response = {
+            "success": False,
+            "error": {
+                "code": error_code,
+                "message": message
+            },
+            "meta": {
+                "timestamp": datetime.utcnow().isoformat(),
+                "request_id": str(uuid.uuid4()),
+                "version": "1.0.0"
+            }
+        }
+        
+        if details:
+            error_response["error"]["details"] = details
+        
+        return error_response
+    
+    @staticmethod
+    def paginated_response(
+        data: List[Any],
+        total_count: int,
+        page: int,
+        page_size: int,
+        message: str = "Datos obtenidos exitosamente"
+    ) -> Dict[str, Any]:
+        """Formatear respuesta paginada estándar"""
+        total_pages = (total_count + page_size - 1) // page_size
+        
+        return {
+            "success": True,
+            "data": data,
+            "message": message,
+            "meta": {
+                "timestamp": datetime.utcnow().isoformat(),
+                "request_id": str(uuid.uuid4()),
+                "version": "1.0.0",
+                "pagination": {
+                    "page": page,
+                    "page_size": page_size,
+                    "total_count": total_count,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_previous": page > 1
+                }
+            }
+        }
+
+class APIException(HTTPException):
+    """Excepción personalizada para errores de API"""
+    def __init__(
+        self,
+        error_code: str,
+        message: str,
+        status_code: int = 400,
+        details: Optional[List[Dict[str, Any]]] = None
+    ):
+        self.error_code = error_code
+        self.details = details
+        
+        super().__init__(
+            status_code=status_code,
+            detail=ResponseFormatter.error_response(
+                error_code=error_code,
+                message=message,
+                details=details,
+                status_code=status_code
+            )
+        )
+
+# Excepciones predefinidas
+class ValidationError(APIException):
+    def __init__(self, message: str = "Error de validación", details: Optional[List[Dict[str, Any]]] = None):
+        super().__init__(
+            error_code="VALIDATION_ERROR",
+            message=message,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            details=details
+        )
+
+class ResourceNotFoundError(APIException):
+    def __init__(self, resource: str, resource_id: str):
+        super().__init__(
+            error_code="RESOURCE_NOT_FOUND",
+            message=f"{resource} con ID '{resource_id}' no encontrado",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+class UnauthorizedError(APIException):
+    def __init__(self, message: str = "No autorizado"):
+        super().__init__(
+            error_code="UNAUTHORIZED",
+            message=message,
+            status_code=status.HTTP_401_UNAUTHORIZED
+        )
+
+class RateLimitError(APIException):
+    def __init__(self, retry_after: int = 60):
+        super().__init__(
+            error_code="RATE_LIMIT_EXCEEDED",
+            message="Has excedido el límite de requests",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            details=[{"retry_after": retry_after}]
+        )
+```
+
+#### **3. Versionado de API y Estrategias de Backward Compatibility**
+
+##### **Estrategia de Versionado**
+```python
+# config/api_versioning.py
+from enum import Enum
+from typing import Optional
+from fastapi import Request, HTTPException, status
+
+class APIVersion(str, Enum):
+    V1 = "v1"
+    V2 = "v2"
+    V3 = "v3"
+
+class VersioningStrategy:
+    """Estrategia de versionado de API"""
+    
+    def __init__(self):
+        self.current_version = APIVersion.V1
+        self.deprecated_versions = []
+        self.supported_versions = [APIVersion.V1, APIVersion.V2]
+        
+        # Configuración de compatibilidad
+        self.backward_compatibility = {
+            APIVersion.V2: {
+                "deprecation_date": "2024-06-01",
+                "sunset_date": "2024-12-01",
+                "migration_guide": "https://docs.almapi.dev/migration-v2"
+            }
+        }
+    
+    def extract_version(self, request: Request) -> Optional[APIVersion]:
+        """Extraer versión de la API del request"""
+        # Prioridad 1: Header X-API-Version
+        version_header = request.headers.get("X-API-Version")
+        if version_header:
+            try:
+                return APIVersion(version_header)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Versión de API no válida"
+                )
+        
+        # Prioridad 2: Query parameter version
+        version_param = request.query_params.get("version")
+        if version_param:
+            try:
+                return APIVersion(version_param)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Versión de API no válida"
+                )
+        
+        # Prioridad 3: URL path
+        path_parts = request.url.path.split("/")
+        if len(path_parts) > 1 and path_parts[1].startswith("v"):
+            try:
+                return APIVersion(path_parts[1])
+            except ValueError:
+                pass
+        
+        # Default: versión actual
+        return self.current_version
+    
+    def validate_version(self, version: APIVersion) -> bool:
+        """Validar si la versión es soportada"""
+        if version not in self.supported_versions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Versión {version} no soportada. Versiones soportadas: {', '.join(self.supported_versions)}"
+            )
+        
+        # Verificar si es una versión deprecada
+        if version in self.deprecated_versions:
+            self._add_deprecation_warning(version)
+        
+        return True
+    
+    def _add_deprecation_warning(self, version: APIVersion):
+        """Agregar warning de deprecación"""
+        # En una implementación real, se agregaría un header de warning
+        pass
+
+# Middleware de versionado
+async def versioning_middleware(request: Request, call_next):
+    """Middleware para manejar versionado de API"""
+    versioning = VersioningStrategy()
+    
+    # Extraer y validar versión
+    version = versioning.extract_version(request)
+    versioning.validate_version(version)
+    
+    # Agregar versión al request state
+    request.state.api_version = version
+    
+    # Continuar con el request
+    response = await call_next(request)
+    
+    # Agregar headers de versión
+    response.headers["X-API-Version"] = str(version)
+    response.headers["X-API-Current-Version"] = str(versioning.current_version)
+    
+    return response
+```
+
+##### **Implementación de Endpoints Versionados**
+```python
+# routers/v1/chat.py
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List
+from models.chat import ChatMessageRequest, ChatMessageResponse
+from services.chat_service import ChatService
+from utils.response_formatter import ResponseFormatter, APIException
+
+router = APIRouter(prefix="/v1/chat", tags=["Chat V1"])
+
+@router.post("/", response_model=ChatMessageResponse)
+async def send_message_v1(
+    request: ChatMessageRequest,
+    chat_service: ChatService = Depends()
+):
+    """Endpoint V1 para enviar mensaje al chatbot"""
+    try:
+        response = await chat_service.process_message_v1(request)
+        return ResponseFormatter.success_response(
+            data=response,
+            message="Mensaje procesado exitosamente"
+        )
+    except Exception as e:
+        raise APIException(
+            error_code="CHAT_PROCESSING_ERROR",
+            message="Error al procesar el mensaje",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+# routers/v2/chat.py
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List
+from models.chat_v2 import ChatMessageRequestV2, ChatMessageResponseV2
+from services.chat_service_v2 import ChatServiceV2
+from utils.response_formatter import ResponseFormatter, APIException
+
+router = APIRouter(prefix="/v2/chat", tags=["Chat V2"])
+
+@router.post("/", response_model=ChatMessageResponseV2)
+async def send_message_v2(
+    request: ChatMessageRequestV2,
+    chat_service: ChatServiceV2 = Depends()
+):
+    """Endpoint V2 para enviar mensaje al chatbot con mejoras"""
+    try:
+        response = await chat_service.process_message_v2(request)
+        return ResponseFormatter.success_response(
+            data=response,
+            message="Mensaje procesado exitosamente con V2"
+        )
+    except Exception as e:
+        raise APIException(
+            error_code="CHAT_PROCESSING_ERROR_V2",
+            message="Error al procesar el mensaje con V2",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+# Configuración de routers versionados
+def include_versioned_routers(app):
+    """Incluir routers para todas las versiones soportadas"""
+    from routers.v1 import chat as chat_v1, users as users_v1, conversations as conv_v1
+    from routers.v2 import chat as chat_v2, users as users_v2, conversations as conv_v2
+    
+    # V1 - Versión estable
+    app.include_router(chat_v1.router, prefix="/v1")
+    app.include_router(users_v1.router, prefix="/v1")
+    app.include_router(conv_v1.router, prefix="/v1")
+    
+    # V2 - Nueva versión con mejoras
+    app.include_router(chat_v2.router, prefix="/v2")
+    app.include_router(users_v2.router, prefix="/v2")
+    app.include_router(conv_v2.router, prefix="/v2")
+```
+
+#### **4. Documentación con Swagger/OpenAPI**
+
+##### **Configuración Avanzada de Swagger**
+```python
+# config/swagger_config.py
+from fastapi.openapi.utils import get_openapi
+from fastapi import FastAPI
+
+def custom_openapi_config(app: FastAPI):
+    """Configuración personalizada de OpenAPI/Swagger"""
+    
+    def custom_openapi():
+        if app.openapi_schema:
+            return app.openapi_schema
+        
+        openapi_schema = get_openapi(
+            title="Portfolio Chatbot API",
+            version="1.0.0",
+            description="""
+            # Portfolio Chatbot API
+            
+            API completa para el chatbot inteligente de portfolio profesional.
+            
+            ## Características Principales
+            
+            - **Chat Inteligente**: Interacción natural con el portfolio
+            - **Gestión de Usuarios**: Perfiles y preferencias personalizadas
+            - **Analytics Avanzados**: Métricas de uso y rendimiento
+            - **Seguridad Robusta**: Autenticación y autorización
+            - **Escalabilidad**: Arquitectura cloud-native
+            
+            ## Autenticación
+            
+            La API soporta dos métodos de autenticación:
+            
+            1. **API Key**: Header `X-API-Key`
+            2. **JWT Bearer**: Header `Authorization: Bearer <token>`
+            
+            ## Rate Limiting
+            
+            - **Usuarios**: 10 requests por minuto
+            - **Global**: 100 requests por minuto
+            
+            ## Versionado
+            
+            - **V1**: Versión estable actual
+            - **V2**: Nueva versión con mejoras (beta)
+            
+            ## Soporte
+            
+            - **Documentación**: [docs.almapi.dev](https://docs.almapi.dev)
+            - **Email**: support@almapi.dev
+            - **GitHub**: [github.com/almapi/chatbot-api](https://github.com/almapi/chatbot-api)
+            """,
+            routes=app.routes,
+        )
+        
+        # Personalizar esquema OpenAPI
+        openapi_schema["info"]["x-logo"] = {
+            "url": "https://almapi.dev/logo.png",
+            "altText": "Portfolio Chatbot Logo"
+        }
+        
+        # Agregar información de contacto
+        openapi_schema["info"]["contact"] = {
+            "name": "Portfolio Chatbot Team",
+            "email": "support@almapi.dev",
+            "url": "https://almapi.dev/support"
+        }
+        
+        # Agregar información de licencia
+        openapi_schema["info"]["license"] = {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
+        
+        # Agregar tags personalizados con documentación
+        openapi_schema["tags"] = [
+            {
+                "name": "Chat",
+                "description": "Endpoints para interacción con el chatbot",
+                "externalDocs": {
+                    "description": "Guía completa del chatbot",
+                    "url": "https://docs.almapi.dev/chatbot-guide"
+                }
+            },
+            {
+                "name": "Conversations",
+                "description": "Gestión de conversaciones y sesiones",
+                "externalDocs": {
+                    "description": "Guía de conversaciones",
+                    "url": "https://docs.almapi.dev/conversations-guide"
+                }
+            },
+            {
+                "name": "Users",
+                "description": "Gestión de usuarios y perfiles",
+                "externalDocs": {
+                    "description": "Guía de usuarios",
+                    "url": "https://docs.almapi.dev/users-guide"
+                }
+            },
+            {
+                "name": "Analytics",
+                "description": "Métricas y estadísticas del sistema",
+                "externalDocs": {
+                    "description": "Guía de analytics",
+                    "url": "https://docs.almapi.dev/analytics-guide"
+                }
+            },
+            {
+                "name": "System",
+                "description": "Endpoints del sistema y monitoreo",
+                "externalDocs": {
+                    "description": "Guía del sistema",
+                    "url": "https://docs.almapi.dev/system-guide"
+                }
+            }
+        ]
+        
+        # Agregar extensiones personalizadas
+        openapi_schema["x-tagGroups"] = [
+            {
+                "name": "Core Features",
+                "tags": ["Chat", "Conversations", "Users"]
+            },
+            {
+                "name": "Monitoring",
+                "tags": ["Analytics", "System"]
+            }
+        ]
+        
+        # Agregar información de servidores
+        openapi_schema["servers"] = [
+            {
+                "url": "https://api.almapi.dev/v1",
+                "description": "Production server",
+                "variables": {
+                    "version": {
+                        "default": "v1",
+                        "enum": ["v1", "v2"]
+                    }
+                }
+            },
+            {
+                "url": "https://staging-api.almapi.dev/v1",
+                "description": "Staging server"
+            },
+            {
+                "url": "http://localhost:8000/v1",
+                "description": "Local development server"
+            }
+        ]
+        
+        app.openapi_schema = openapi_schema
+        return app.openapi_schema
+    
+    app.openapi = custom_openapi
+```
+
+#### **5. Testing de API con Postman/Newman**
+
+##### **Colección de Postman**
+```json
+{
+  "info": {
+    "name": "Portfolio Chatbot API",
+    "description": "Colección completa para testing de la API del chatbot",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.almapi.dev",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "your_api_key_here",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "session_123456",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "X-API-Key",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"¿Cuál es tu experiencia en Python?\",\n  \"user_id\": \"{{user_id}}\",\n  \"session_id\": \"{{session_id}}\",\n  \"context\": {\n    \"user_preferences\": {\n      \"language\": \"es\",\n      \"detail_level\": \"high\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/chat",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "chat"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Create Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"title\": \"Consulta sobre experiencia\",\n  \"preferences\": {\n    \"language\": \"es\",\n    \"technical_level\": \"intermediate\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/conversations",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "conversations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/conversations?user_id={{user_id}}&limit=10&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "conversations"],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "{{user_id}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"name\": \"Juan Pérez\",\n  \"role\": \"Software Engineer\",\n  \"company\": \"Tech Corp\",\n  \"industry\": \"Technology\",\n  \"preferences\": {\n    \"language\": \"es\",\n    \"detail_level\": \"medium\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/analytics?start_date=2024-01-01&end_date=2024-01-15&metrics=conversations,users&group_by=day",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "analytics"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-01-15"
+                },
+                {
+                  "key": "metrics",
+                  "value": "conversations,users"
+                },
+                {
+                  "key": "group_by",
+                  "value": "day"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/health",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+```
+
+##### **Scripts de Testing con Newman**
+```bash
+#!/bin/bash
+# test-api.sh - Script para testing automatizado de la API
+
+# Configuración
+COLLECTION_FILE="portfolio-chatbot-api.postman_collection.json"
+ENVIRONMENT_FILE="production.postman_environment.json"
+REPORTS_DIR="./test-reports"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# Crear directorio de reportes
+mkdir -p $REPORTS_DIR
+
+echo "🚀 Iniciando testing de la API del Portfolio Chatbot..."
+echo "📅 Timestamp: $TIMESTAMP"
+echo "📁 Colección: $COLLECTION_FILE"
+echo "🌍 Ambiente: $ENVIRONMENT_FILE"
+
+# Ejecutar tests con Newman
+newman run $COLLECTION_FILE \
+  --environment $ENVIRONMENT_FILE \
+  --reporters cli,json,htmlextra \
+  --reporter-json-export "$REPORTS_DIR/api-test-results-$TIMESTAMP.json" \
+  --reporter-htmlextra-export "$REPORTS_DIR/api-test-report-$TIMESTAMP.html" \
+  --bail \
+  --timeout-request 30000 \
+  --timeout-script 30000
+
+# Verificar resultado
+if [ $? -eq 0 ]; then
+    echo "✅ Todos los tests pasaron exitosamente!"
+    echo "📊 Reporte HTML: $REPORTS_DIR/api-test-report-$TIMESTAMP.html"
+    echo "📋 Reporte JSON: $REPORTS_DIR/api-test-results-$TIMESTAMP.json"
+else
+    echo "❌ Algunos tests fallaron. Revisar reportes para más detalles."
+    exit 1
+fi
+
+# Generar resumen ejecutivo
+echo ""
+echo "📈 RESUMEN DE TESTING"
+echo "====================="
+echo "✅ Tests exitosos: $(grep -c 'PASS' $REPORTS_DIR/api-test-results-$TIMESTAMP.json || echo 'N/A')"
+echo "❌ Tests fallidos: $(grep -c 'FAIL' $REPORTS_DIR/api-test-results-$TIMESTAMP.json || echo 'N/A')"
+echo "⏱️  Tiempo total: $(grep -o '"totalTime":[0-9]*' $REPORTS_DIR/api-test-results-$TIMESTAMP.json | cut -d':' -f2 || echo 'N/A') ms"
+echo "📊 Cobertura: $(grep -o '"totalRequests":[0-9]*' $REPORTS_DIR/api-test-results-$TIMESTAMP.json | cut -d':' -f2 || echo 'N/A') endpoints probados"
+```
+
+#### **6. Monitoreo y Métricas de API**
+
+##### **Middleware de Monitoreo**
+```python
+# middleware/monitoring.py
+import time
+import logging
+from typing import Callable
+from fastapi import Request, Response
+from starlette.middleware.base import BaseHTTPMiddleware
+from prometheus_client import Counter, Histogram, Gauge
+import psutil
+
+# Métricas Prometheus
+REQUEST_COUNT = Counter(
+    'http_requests_total',
+    'Total de requests HTTP',
+    ['method', 'endpoint', 'status_code', 'version']
+)
+
+REQUEST_DURATION = Histogram(
+    'http_request_duration_seconds',
+    'Duración de requests HTTP',
+    ['method', 'endpoint', 'version']
+)
+
+ACTIVE_REQUESTS = Gauge(
+    'http_active_requests',
+    'Requests HTTP activos',
+    ['method', 'endpoint']
+)
+
+ERROR_COUNT = Counter(
+    'http_errors_total',
+    'Total de errores HTTP',
+    ['method', 'endpoint', 'error_type', 'version']
+)
+
+class MonitoringMiddleware(BaseHTTPMiddleware):
+    """Middleware para monitoreo y métricas de la API"""
+    
+    def __init__(self, app):
+        super().__init__(app)
+        self.logger = logging.getLogger(__name__)
+    
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        start_time = time.time()
+        
+        # Extraer información del request
+        method = request.method
+        endpoint = request.url.path
+        version = self._extract_api_version(request)
+        
+        # Incrementar contador de requests activos
+        ACTIVE_REQUESTS.labels(method=method, endpoint=endpoint).inc()
+        
+        try:
+            # Procesar request
+            response = await call_next(request)
+            
+            # Registrar métricas de éxito
+            REQUEST_COUNT.labels(
+                method=method,
+                endpoint=endpoint,
+                status_code=response.status_code,
+                version=version
+            ).inc()
+            
+            # Registrar duración
+            duration = time.time() - start_time
+            REQUEST_DURATION.labels(
+                method=method,
+                endpoint=endpoint,
+                version=version
+            ).observe(duration)
+            
+            # Log de request exitoso
+            self.logger.info(
+                f"Request {method} {endpoint} completado en {duration:.3f}s - "
+                f"Status: {response.status_code}"
+            )
+            
+            return response
+            
+        except Exception as e:
+            # Registrar métricas de error
+            ERROR_COUNT.labels(
+                method=method,
+                endpoint=endpoint,
+                error_type=type(e).__name__,
+                version=version
+            ).inc()
+            
+            # Log de error
+            self.logger.error(
+                f"Error en request {method} {endpoint}: {str(e)}"
+            )
+            
+            raise
+        finally:
+            # Decrementar contador de requests activos
+            ACTIVE_REQUESTS.labels(method=method, endpoint=endpoint).dec()
+    
+    def _extract_api_version(self, request: Request) -> str:
+        """Extraer versión de la API del request"""
+        path_parts = request.url.path.split("/")
+        if len(path_parts) > 1 and path_parts[1].startswith("v"):
+            return path_parts[1]
+        return "v1"
+
+# Endpoint para métricas de Prometheus
+@app.get("/metrics", tags=["System"])
+async def get_metrics():
+    """Endpoint para métricas de Prometheus"""
+    from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+    
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST
+    )
+
+# Endpoint para health check detallado
+@app.get("/health/detailed", tags=["System"])
+async def detailed_health_check():
+    """Health check detallado con métricas del sistema"""
+    import psutil
+    
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0",
+        "uptime": time.time() - start_time,
+        "system": {
+            "cpu_percent": psutil.cpu_percent(interval=1),
+            "memory_percent": psutil.virtual_memory().percent,
+            "disk_percent": psutil.disk_usage('/').percent
+        },
+        "dependencies": {
+            "database": "healthy",
+            "llm_service": "healthy",
+            "external_apis": "healthy"
+        },
+        "metrics": {
+            "total_requests": REQUEST_COUNT._value.sum(),
+            "active_requests": ACTIVE_REQUESTS._value.sum(),
+            "total_errors": ERROR_COUNT._value.sum()
+        }
+    }
+```
+
+Estos estándares de API RESTful proporcionan una base sólida para el desarrollo, testing y monitoreo de la API del chatbot, asegurando consistencia, escalabilidad y facilidad de mantenimiento.

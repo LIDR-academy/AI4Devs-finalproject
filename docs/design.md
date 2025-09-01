@@ -15,87 +15,617 @@ Este documento detalla el diseño técnico completo para implementar el chatbot 
 
 ## 🏗️ Arquitectura del Sistema de Implementación
 
-### Arquitectura de Alto Nivel
+### **🎯 Arquitectura Híbrida Dialogflow + Vertex AI**
+
+El sistema implementa una **arquitectura híbrida inteligente** que combina **Dialogflow ES (Free Tier)** para detección de intenciones y **Vertex AI** para generación de respuestas avanzadas, maximizando eficiencia y minimizando costos.
 
 ```mermaid
 graph TB
-    subgraph "Frontend - my-resume-react"
-        A[Portfolio React App]
-        B[Chatbot Component]
-        C[Chat Interface]
-        D[User Management]
+    subgraph "Frontend - React Portfolio"
+        A[Usuario escribe mensaje]
+        B[Validación y sanitización]
+        C[Rate limiting]
     end
     
-    subgraph "Backend - ai-resume-agent"
-        E[FastAPI Application]
-        F[Chatbot Service]
-        G[Smart Context Filtering]
-        H[LLM Integration]
-        I[Security Service]
-        J[Analytics Service]
+    subgraph "Backend - FastAPI"
+        D[API Gateway]
+        E[Security Middleware]
+        F[Session Management]
+        G[Hybrid Routing Service]
     end
     
-    subgraph "Infraestructura GCP"
-        K[Cloud Run - Website (Free Tier)]
-        L[Cloud Run - Chatbot API (Free Tier)]
-        M[Cloud SQL - PostgreSQL (Free Tier)]
-        N[Memorystore - Redis (Free Tier)]
-        O[Cloud Monitoring]
-        T[Vertex AI Platform]
-        U[Cloud Storage - Cache]
+    subgraph "Dialogflow ES (Free Tier)"
+        H[Intent Detection]
+        I[Entity Extraction]
+        J[Context Management]
+        K[Conversation Flow]
+        L[Basic Responses]
     end
     
-    subgraph "Servicios Externos"
-        P[OpenAI API]
-        Q[Claude API]
-        R[Email Service]
+    subgraph "Vertex AI (Optimizado)"
+        M[Smart Context Filtering]
+        N[Document Retrieval]
+        O[Advanced Response Generation]
+        P[Cost Optimization]
+    end
+    
+    subgraph "Cache Inteligente Multinivel"
+        Q[Redis Cache - Fastest]
+        R[Cloud Storage - Persistent]
+        S[Database - Analytics]
+    end
+    
+    subgraph "Document Store"
+        T[Professional YAML Document]
+        U[Version Control]
+        V[Translation System]
+    end
+    
+    subgraph "Analytics & Monitoring"
+        W[User Analytics]
+        X[Cost Metrics]
+        Y[Performance Monitoring]
+        Z[Security Logging]
     end
     
     A --> B
     B --> C
-    C --> L
-    L --> E
+    C --> D
+    D --> E
     E --> F
     F --> G
+    
     G --> H
-    H --> P
-    H --> Q
-    F --> I
-    F --> J
-    E --> M
-    E --> N
-    L --> O
-    J --> R
+    H --> I
+    I --> J
+    J --> K
+    
+    K --> L
+    K --> M
+    
+    M --> N
+    N --> O
+    O --> P
+    
+    L --> Q
+    O --> Q
+    Q --> R
+    R --> S
+    
+    N --> T
+    T --> U
+    U --> V
+    
+    H --> W
+    O --> W
+    W --> X
+    X --> Y
+    Y --> Z
 ```
 
-### Flujo de Datos del Sistema
+### **🔀 Flujo de Procesamiento Híbrido**
 
 ```mermaid
 sequenceDiagram
     participant U as Usuario
-    participant F as Frontend React
-    participant B as Backend FastAPI
-    participant SCF as Smart Context Filtering
-    participant LLM as LLM Service
-    participant DB as PostgreSQL
-    participant Cache as Redis
-    participant Analytics as Analytics Service
+    participant F as Frontend
+    participant B as Backend
+    participant G as Hybrid Router
+    participant D as Dialogflow ES
+    participant V as Vertex AI
+    participant C as Cache
+    participant S as Document Store
     
-    U->>F: Visita portfolio
-    F->>F: Carga componente chatbot
-    U->>F: Inicia conversación
-    F->>B: POST /api/v1/chat
-    B->>B: Validación de seguridad
-    B->>SCF: Analiza intención
-    SCF->>DB: Extrae contexto relevante
-    DB->>SCF: Retorna información filtrada
-    SCF->>LLM: Envía contexto + pregunta
-    LLM->>B: Respuesta generada
-    B->>B: Sanitización de respuesta
-    B->>Cache: Almacena conversación
-    B->>Analytics: Registra interacción
-    B->>F: Respuesta al usuario
-    F->>U: Muestra respuesta
+    U->>F: Escribe mensaje
+    F->>B: Envía mensaje validado
+    B->>G: Solicita routing inteligente
+    
+    G->>D: Detecta intención
+    
+    alt Intención Simple (Greeting, Goodbye, Help)
+        D->>G: Respuesta directa
+        G->>B: Respuesta del chatbot
+        B->>F: Respuesta del chatbot
+        F->>U: Muestra respuesta
+    else Intención Compleja (Experiencia, Skills, Projects)
+        D->>G: Intención + Entidades
+        G->>V: Solicita respuesta avanzada
+        V->>S: Obtiene contexto relevante
+        S->>V: Contexto optimizado
+        V->>G: Respuesta generada
+        G->>C: Almacena en cache
+        G->>B: Respuesta del chatbot
+        B->>F: Respuesta del chatbot
+        F->>U: Muestra respuesta
+    end
+    
+    G->>B: Registra analytics
+    B->>B: Actualiza métricas de costos
+```
+
+### **💰 Optimización de Costos con Arquitectura Híbrida**
+
+#### **Distribución de Costos:**
+```yaml
+# Análisis de costos por arquitectura
+cost_analysis:
+  dialogflow_es:
+    requests_per_month: "15,000 (Free tier)"
+    cost_per_month: "$0 (Free)"
+    intent_detection: "95% accuracy"
+    basic_responses: "Simple intents"
+  
+  vertex_ai:
+    requests_per_month: "5,000 (Reducido por Dialogflow)"
+    cost_per_month: "$25-50 (60-80% reducción)"
+    advanced_generation: "Complex intents"
+    smart_context: "Optimizado"
+  
+  total_monthly:
+    original_vertex_ai_only: "$150-300"
+    hybrid_architecture: "$25-50"
+    savings: "70-85% reducción"
+    roi_improvement: "3-4x mejor"
+```
+
+#### **Estrategia de Routing Inteligente:**
+```python
+# app/services/hybrid_routing_service.py
+class HybridRoutingService:
+    """Servicio de routing inteligente entre Dialogflow y Vertex AI"""
+    
+    def __init__(self):
+        self.dialogflow_service = DialogflowService()
+        self.vertex_ai_service = VertexAIService()
+        self.cost_optimizer = CostOptimizationService()
+    
+    async def route_message(self, message: str, session_id: str) -> dict:
+        """Rutea mensaje a Dialogflow o Vertex AI según complejidad"""
+        
+        # 1. Detección de intención con Dialogflow (Free)
+        dialogflow_result = await self.dialogflow_service.detect_intent(
+            session_id, message
+        )
+        
+        # 2. Evaluar si Dialogflow puede manejar la respuesta
+        if self._can_dialogflow_handle(dialogflow_result):
+            return await self._handle_with_dialogflow(dialogflow_result)
+        
+        # 3. Si no, usar Vertex AI con contexto optimizado
+        return await self._handle_with_vertex_ai(message, dialogflow_result)
+    
+    def _can_dialogflow_handle(self, dialogflow_result: dict) -> bool:
+        """Determina si Dialogflow puede manejar la respuesta"""
+        simple_intents = [
+            "greeting", "goodbye", "thanks", "help_request",
+            "basic_info", "contact_info", "schedule_info"
+        ]
+        
+        return (
+            dialogflow_result["intent"] in simple_intents and
+            dialogflow_result["confidence"] > 0.8 and
+            dialogflow_result["fulfillment_text"] and
+            len(dialogflow_result["fulfillment_text"]) > 10
+        )
+```
+
+### **🎯 Configuración de Dialogflow ES**
+
+#### **Intents Principales Configurados:**
+```yaml
+# Configuración de intents en Dialogflow ES
+dialogflow_intents:
+  greeting:
+    training_phrases:
+      - "Hola"
+      - "Buenos días"
+      - "¿Cómo estás?"
+      - "Hola, ¿cómo va?"
+    responses:
+      - "¡Hola! Soy el asistente virtual de Álvaro Maldonado. ¿En qué puedo ayudarte hoy?"
+      - "¡Hola! Bienvenido a mi portfolio. ¿Qué te gustaría saber sobre mi experiencia profesional?"
+  
+  goodbye:
+    training_phrases:
+      - "Adiós"
+      - "Hasta luego"
+      - "Gracias, eso es todo"
+      - "Chao"
+    responses:
+      - "¡Ha sido un placer ayudarte! Si tienes más preguntas, aquí estaré."
+      - "¡Hasta luego! Espero que la información te haya sido útil."
+  
+  help_request:
+    training_phrases:
+      - "¿Puedes ayudarme?"
+      - "¿Qué puedes hacer?"
+      - "¿Cómo funciona esto?"
+      - "Ayuda"
+    responses:
+      - "¡Por supuesto! Puedo ayudarte con información sobre mi experiencia laboral, tecnologías que manejo, proyectos realizados, formación académica y más. ¿Qué te interesa saber?"
+  
+  basic_info:
+    training_phrases:
+      - "¿Quién eres?"
+      - "¿Qué haces?"
+      - "Cuéntame de ti"
+      - "¿A qué te dedicas?"
+    responses:
+      - "Soy Álvaro Maldonado, un Software Engineer especializado en desarrollo web y aplicaciones móviles. Tengo experiencia en React, Node.js, Python y tecnologías cloud. ¿Te gustaría que profundice en algún área específica?"
+  
+  contact_info:
+    training_phrases:
+      - "¿Cómo te contacto?"
+      - "¿Tienes LinkedIn?"
+      - "¿Cuál es tu email?"
+      - "¿Dónde trabajas?"
+    responses:
+      - "Puedes contactarme a través de LinkedIn: [linkedin.com/in/almaldonado](https://linkedin.com/in/almaldonado), o por email: alvaro@almapi.dev. También puedes visitar mi portfolio en almapi.dev para más información."
+  
+  schedule_info:
+    training_phrases:
+      - "¿Estás disponible?"
+      - "¿Tienes tiempo para proyectos?"
+      - "¿Cuándo puedes empezar?"
+      - "¿Estás buscando trabajo?"
+    responses:
+      - "Actualmente estoy evaluando nuevas oportunidades. Mi disponibilidad depende del proyecto y la modalidad de trabajo. ¿Te gustaría que conversemos sobre tu proyecto específico?"
+```
+
+#### **Entidades Configuradas:**
+```yaml
+# Entidades para extracción automática
+dialogflow_entities:
+  technology:
+    entries:
+      - value: "Python"
+        synonyms: ["python", "py", "python3", "django", "flask"]
+      - value: "React"
+        synonyms: ["react", "reactjs", "react.js", "jsx", "hooks"]
+      - value: "Node.js"
+        synonyms: ["node", "nodejs", "node.js", "express", "npm"]
+      - value: "JavaScript"
+        synonyms: ["javascript", "js", "es6", "typescript", "ts"]
+      - value: "TypeScript"
+        synonyms: ["typescript", "ts", "typed js"]
+      - value: "PostgreSQL"
+        synonyms: ["postgresql", "postgres", "sql", "database"]
+      - value: "MongoDB"
+        synonyms: ["mongodb", "mongo", "nosql", "document db"]
+      - value: "Docker"
+        synonyms: ["docker", "containerization", "kubernetes", "k8s"]
+      - value: "AWS"
+        synonyms: ["aws", "amazon web services", "cloud", "ec2", "s3"]
+      - value: "Google Cloud"
+        synonyms: ["gcp", "google cloud", "cloud run", "cloud sql"]
+  
+  company:
+    entries:
+      - value: "Empresa Actual"
+        synonyms: ["mi empresa", "donde trabajo", "actualmente"]
+      - value: "Empresa Anterior"
+        synonyms: ["empresa pasada", "antes trabajaba", "anteriormente"]
+  
+  role:
+    entries:
+      - value: "Software Engineer"
+        synonyms: ["desarrollador", "programador", "engineer", "dev"]
+      - value: "Full Stack Developer"
+        synonyms: ["fullstack", "full stack", "desarrollador completo"]
+      - value: "Backend Developer"
+        synonyms: ["backend", "servidor", "api developer"]
+      - value: "Frontend Developer"
+        synonyms: ["frontend", "cliente", "ui developer"]
+      - value: "DevOps Engineer"
+        synonyms: ["devops", "infraestructura", "cloud engineer"]
+  
+  project_type:
+    entries:
+      - value: "Web Application"
+        synonyms: ["aplicación web", "sitio web", "web app", "website"]
+      - value: "Mobile App"
+        synonyms: ["app móvil", "aplicación móvil", "mobile application"]
+      - value: "API"
+        synonyms: ["api", "rest api", "servicio web", "backend"]
+      - value: "Database"
+        synonyms: ["base de datos", "database", "sql", "nosql"]
+      - value: "Cloud Infrastructure"
+        synonyms: ["infraestructura cloud", "cloud", "servidores", "deployment"]
+```
+
+### **🔧 Integración Técnica Dialogflow + FastAPI**
+
+#### **Servicio de Integración:**
+```python
+# app/services/dialogflow_integration_service.py
+from google.cloud import dialogflow_v2
+from app.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+class DialogflowIntegrationService:
+    """Servicio de integración con Dialogflow ES"""
+    
+    def __init__(self):
+        self.project_id = settings.GCP_PROJECT_ID
+        self.session_client = dialogflow_v2.SessionsClient()
+        self.intents_client = dialogflow_v2.IntentsClient()
+        
+        # Configuración para free tier
+        self.language_code = "es"
+        self.use_audio = False  # Solo texto para optimizar costos
+    
+    async def detect_intent(self, session_id: str, text: str) -> dict:
+        """Detecta la intención del usuario usando Dialogflow ES"""
+        try:
+            session_path = self.session_client.session_path(
+                self.project_id, session_id
+            )
+            
+            text_input = dialogflow_v2.TextInput(
+                text=text, language_code=self.language_code
+            )
+            
+            query_input = dialogflow_v2.QueryInput(text=text_input)
+            
+            request = dialogflow_v2.DetectIntentRequest(
+                session=session_path, query_input=query_input
+            )
+            
+            response = self.session_client.detect_intent(request=request)
+            
+            return {
+                "intent": response.query_result.intent.display_name,
+                "confidence": response.query_result.intent_detection_confidence,
+                "entities": self._extract_entities(response.query_result.parameters),
+                "fulfillment_text": response.query_result.fulfillment_text,
+                "contexts": self._extract_contexts(response.query_result.output_contexts),
+                "action": response.query_result.action,
+                "parameters": response.query_result.parameters,
+                "source": "dialogflow_es"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error en Dialogflow: {e}")
+            # Fallback a Vertex AI
+            return await self._fallback_to_vertex_ai(text)
+    
+    async def _extract_entities(self, parameters) -> list:
+        """Extrae entidades de los parámetros de Dialogflow"""
+        entities = []
+        if parameters:
+            for key, value in parameters.items():
+                if value:
+                    entities.append({
+                        "type": key,
+                        "value": value,
+                        "confidence": 0.95,  # Dialogflow ES confidence
+                        "source": "dialogflow_es"
+                    })
+        return entities
+    
+    async def _extract_contexts(self, output_contexts) -> list:
+        """Extrae contextos de salida de Dialogflow"""
+        contexts = []
+        for context in output_contexts:
+            contexts.append({
+                "name": context.name,
+                "lifespan_count": context.lifespan_count,
+                "parameters": dict(context.parameters)
+            })
+        return contexts
+    
+    async def _fallback_to_vertex_ai(self, text: str) -> dict:
+        """Fallback a Vertex AI si Dialogflow falla"""
+        # Implementar fallback a Vertex AI
+        from app.services.vertex_ai_service import VertexAIService
+        
+        vertex_service = VertexAIService()
+        return await vertex_service.generate_response(text, {})
+```
+
+### **📊 Métricas y Monitoreo de la Arquitectura Híbrida**
+
+#### **KPIs de Performance:**
+```yaml
+# Métricas clave de la arquitectura híbrida
+hybrid_architecture_metrics:
+  dialogflow_performance:
+    intent_accuracy: ">95%"
+    response_time: "<200ms"
+    free_tier_utilization: "<80%"
+    fallback_rate: "<5%"
+  
+  vertex_ai_optimization:
+    token_reduction: "40-60%"
+    context_optimization: ">85%"
+    cost_per_response: "<$0.001"
+    cache_hit_rate: ">70%"
+  
+  overall_system:
+    total_response_time: "<2s"
+    user_satisfaction: ">4.5/5"
+    cost_per_conversation: "<$0.005"
+    system_uptime: ">99.9%"
+```
+
+#### **Dashboard de Monitoreo:**
+```python
+# app/services/hybrid_monitoring_service.py
+class HybridMonitoringService:
+    """Servicio de monitoreo para arquitectura híbrida"""
+    
+    async def get_hybrid_metrics(self) -> dict:
+        """Obtiene métricas completas de la arquitectura híbrida"""
+        try:
+            # Métricas de Dialogflow
+            dialogflow_metrics = await self._get_dialogflow_metrics()
+            
+            # Métricas de Vertex AI
+            vertex_ai_metrics = await self._get_vertex_ai_metrics()
+            
+            # Métricas de costos
+            cost_metrics = await self._get_cost_metrics()
+            
+            # Métricas de performance
+            performance_metrics = await self._get_performance_metrics()
+            
+            return {
+                "dialogflow": dialogflow_metrics,
+                "vertex_ai": vertex_ai_metrics,
+                "costs": cost_metrics,
+                "performance": performance_metrics,
+                "hybrid_efficiency": self._calculate_hybrid_efficiency(
+                    dialogflow_metrics, vertex_ai_metrics, cost_metrics
+                )
+            }
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo métricas híbridas: {e}")
+            return {}
+    
+    def _calculate_hybrid_efficiency(self, dialogflow: dict, vertex_ai: dict, costs: dict) -> dict:
+        """Calcula la eficiencia de la arquitectura híbrida"""
+        total_requests = dialogflow.get("total_requests", 0) + vertex_ai.get("total_requests", 0)
+        dialogflow_percentage = (dialogflow.get("total_requests", 0) / total_requests * 100) if total_requests > 0 else 0
+        vertex_ai_percentage = (vertex_ai.get("total_requests", 0) / total_requests * 100) if total_requests > 0 else 0
+        
+        cost_per_request = costs.get("total_cost", 0) / total_requests if total_requests > 0 else 0
+        
+        return {
+            "dialogflow_usage_percentage": round(dialogflow_percentage, 2),
+            "vertex_ai_usage_percentage": round(vertex_ai_percentage, 2),
+            "cost_per_request": round(cost_per_request, 6),
+            "efficiency_score": self._calculate_efficiency_score(dialogflow, vertex_ai, costs),
+            "optimization_recommendations": self._generate_optimization_recommendations(
+                dialogflow, vertex_ai, costs
+            )
+        }
+```
+
+### **🚀 Beneficios de la Arquitectura Híbrida**
+
+#### **Ventajas Técnicas:**
+```yaml
+# Beneficios técnicos de la arquitectura híbrida
+technical_benefits:
+  performance:
+    - "Respuestas instantáneas para intents simples (Dialogflow)"
+    - "Respuestas contextuales avanzadas para casos complejos (Vertex AI)"
+    - "Reducción de latencia general del sistema"
+    - "Mejor experiencia de usuario"
+  
+  scalability:
+    - "Dialogflow maneja picos de tráfico (Free tier)"
+    - "Vertex AI se enfoca en casos complejos"
+    - "Distribución inteligente de carga"
+    - "Escalado automático según demanda"
+  
+  reliability:
+    - "Fallback automático entre servicios"
+    - "Redundancia en detección de intenciones"
+    - "Mejor manejo de errores"
+    - "Sistema más robusto"
+```
+
+#### **Ventajas de Negocio:**
+```yaml
+# Beneficios de negocio de la arquitectura híbrida
+business_benefits:
+  cost_optimization:
+    - "70-85% reducción en costos totales"
+    - "Aprovechamiento completo de capas gratuitas"
+    - "ROI mejorado del proyecto"
+    - "Presupuesto optimizado para escalamiento"
+  
+  time_to_market:
+    - "Desarrollo 60-80% más rápido"
+    - "Intents básicos funcionando en días"
+    - "Funcionalidades complejas en semanas"
+    - "Lanzamiento más rápido al mercado"
+  
+  user_experience:
+    - "Respuestas más precisas y contextuales"
+    - "Mejor manejo de conversaciones complejas"
+    - "Soporte multilingüe nativo"
+    - "Experiencia más natural y fluida"
+```
+
+### **📋 Plan de Implementación Dialogflow**
+
+#### **Fase 1: Configuración Básica (Semana 1)**
+```yaml
+# Configuración inicial de Dialogflow ES
+phase_1_setup:
+  dialogflow_project:
+    - "Crear proyecto en GCP"
+    - "Configurar Dialogflow ES"
+    - "Configurar idioma español"
+    - "Crear agente básico"
+  
+  intents_basic:
+    - "Configurar intents de saludo"
+    - "Configurar intents de despedida"
+    - "Configurar intents de ayuda"
+    - "Configurar intents básicos de información"
+  
+  entities_basic:
+    - "Configurar entidad de tecnologías"
+    - "Configurar entidad de empresas"
+    - "Configurar entidad de roles"
+    - "Configurar entidad de tipos de proyecto"
+```
+
+#### **Fase 2: Integración Técnica (Semana 2)**
+```yaml
+# Integración con el backend
+phase_2_integration:
+  backend_integration:
+    - "Implementar DialogflowIntegrationService"
+    - "Configurar routing híbrido"
+    - "Implementar fallback a Vertex AI"
+    - "Configurar manejo de errores"
+  
+  api_endpoints:
+    - "Actualizar endpoint de chat"
+    - "Implementar detección de intención"
+    - "Configurar routing inteligente"
+    - "Implementar métricas híbridas"
+```
+
+#### **Fase 3: Testing y Optimización (Semana 3)**
+```yaml
+# Testing y optimización
+phase_3_optimization:
+  testing:
+    - "Testing de intents básicos"
+    - "Testing de routing híbrido"
+    - "Testing de fallback"
+    - "Testing de performance"
+  
+  optimization:
+    - "Ajustar thresholds de routing"
+    - "Optimizar entidades"
+    - "Mejorar respuestas de Dialogflow"
+    - "Ajustar configuración de cache"
+```
+
+#### **Fase 4: Lanzamiento y Monitoreo (Semana 4)**
+```yaml
+# Lanzamiento y monitoreo
+phase_4_launch:
+  launch:
+    - "Despliegue a producción"
+    - "Configuración de monitoreo"
+    - "Configuración de alertas"
+    - "Documentación para usuarios"
+  
+  monitoring:
+    - "Dashboard de métricas híbridas"
+    - "Alertas de performance"
+    - "Monitoreo de costos"
+    - "Análisis de uso y satisfacción"
 ```
 
 ---
@@ -2680,3 +3210,2108 @@ jobs:
 - ✅ **Optimización de Costos:** 60-80% reducción en costos de LLM
 - ✅ **ROI Anual:** > 1,400% con capas gratuitas GCP
 - ✅ **Ahorro Mensual:** $0/mes primer año, $31-52/mes post-free tier
+
+## Pipeline de Desarrollo
+
+### Diagrama de Flujo de Desarrollo
+
+```mermaid
+flowchart TD
+    subgraph "Desarrollo Local"
+        A[Desarrollador]
+        B[IDE - VSCode]
+        C[Git Local]
+        D[Tests Unitarios]
+    end
+    
+    subgraph "Control de Versiones"
+        E[GitHub Repository]
+        F[Feature Branch]
+        G[Pull Request]
+        H[Code Review]
+    end
+    
+    subgraph "CI/CD Pipeline"
+        I[GitHub Actions]
+        J[Build & Test]
+        K[Security Scan]
+        L[Docker Build]
+        M[Push to Registry]
+    end
+    
+    subgraph "Testing"
+        N[Staging Environment]
+        O[Integration Tests]
+        P[Performance Tests]
+        Q[Security Tests]
+        R[User Acceptance Tests]
+    end
+    
+    subgraph "Producción"
+        S[Production Environment]
+        T[GCP Cloud Run]
+        U[Load Balancer]
+        V[Monitoring & Logging]
+        W[Error Reporting]
+    end
+    
+    subgraph "Monitoreo & Rollback"
+        X[Cloud Monitoring]
+        Y[Alertas]
+        Z[Rollback Strategy]
+        AA[Disaster Recovery]
+    end
+    
+    A --> B
+    B --> C
+    C --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    I --> J
+    J --> K
+    K --> L
+    L --> M
+    M --> N
+    N --> O
+    O --> P
+    P --> Q
+    Q --> R
+    R --> S
+    S --> T
+    T --> U
+    U --> V
+    V --> W
+    W --> X
+    X --> Y
+    Y --> Z
+    Z --> AA
+```
+
+### Descripción del Pipeline
+
+#### **1. Desarrollo Local**
+- **IDE:** VSCode con extensiones para Python y React
+- **Git:** Control de versiones local
+- **Tests:** Ejecución de tests unitarios antes del commit
+
+#### **2. Control de Versiones**
+- **Repository:** GitHub con branching strategy
+- **Feature Branch:** Desarrollo de funcionalidades
+- **Pull Request:** Revisión de código obligatoria
+- **Code Review:** Aprobación por al menos un reviewer
+
+#### **3. CI/CD Pipeline**
+- **GitHub Actions:** Automatización del pipeline
+- **Build & Test:** Compilación y ejecución de tests
+- **Security Scan:** Análisis de vulnerabilidades
+- **Docker Build:** Creación de imagen containerizada
+- **Registry:** Push a Google Container Registry
+
+#### **4. Testing**
+- **Staging Environment:** Entorno de pruebas idéntico a producción
+- **Integration Tests:** Pruebas de integración entre componentes
+- **Performance Tests:** Pruebas de rendimiento y carga
+- **Security Tests:** Pruebas de seguridad automatizadas
+- **UAT:** Pruebas de aceptación por usuarios
+
+#### **5. Producción**
+- **Production Environment:** Entorno de producción en GCP
+- **Cloud Run:** Servicio serverless escalable
+- **Load Balancer:** Distribución de carga
+- **Monitoring:** Monitoreo en tiempo real
+- **Logging:** Registro de eventos y errores
+
+#### **6. Monitoreo & Rollback**
+- **Cloud Monitoring:** Métricas y alertas
+- **Alertas:** Notificaciones automáticas
+- **Rollback Strategy:** Estrategia de reversión rápida
+- **Disaster Recovery:** Plan de recuperación ante desastres
+
+### Herramientas del Pipeline
+
+| Fase | Herramienta | Propósito |
+|------|-------------|-----------|
+| **Desarrollo** | VSCode, Git | Codificación y control de versiones |
+| **CI/CD** | GitHub Actions | Automatización del pipeline |
+| **Testing** | Jest, Pytest, Postman | Ejecución de pruebas |
+| **Containerización** | Docker | Empaquetado de aplicaciones |
+| **Despliegue** | Cloud Run | Ejecución serverless |
+| **Monitoreo** | Cloud Monitoring | Observabilidad del sistema |
+
+## 🚀 **Arquitectura de Deployment**
+
+### **Estrategia de Deployment Multi-Ambiente**
+
+La arquitectura de deployment está diseñada para proporcionar un pipeline de CI/CD robusto, escalabilidad automática y alta disponibilidad en Google Cloud Platform.
+
+#### **1. Pipeline de CI/CD con GitHub Actions**
+
+##### **Flujo de Deployment Automatizado**
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to GCP
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  SERVICE_NAME: portfolio-chatbot
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Run tests
+        run: |
+          pytest tests/ --cov=app --cov-report=xml
+          coverage-badge -o coverage-badge.svg
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run security scan
+        uses: snyk/actions/python@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+      
+      - name: Run dependency check
+        run: |
+          pip install safety
+          safety check --json --output safety-report.json
+      
+      - name: Upload security report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: safety-report.json
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Log in to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+            gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: staging
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Cloud Run (Staging)
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }}-staging \
+            --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars ENVIRONMENT=staging \
+            --set-env-vars VERSION=${{ github.sha }}
+      
+      - name: Run integration tests
+        run: |
+          pip install pytest requests
+          pytest tests/integration/ --url https://${{ env.SERVICE_NAME }}-staging-${{ env.REGION }}-${{ env.PROJECT_ID }}.run.app
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Cloud Run (Production)
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars ENVIRONMENT=production \
+            --set-env-vars VERSION=${{ github.sha }}
+      
+      - name: Run smoke tests
+        run: |
+          pip install pytest requests
+          pytest tests/smoke/ --url https://${{ env.SERVICE_NAME }}-${{ env.REGION }}-${{ env.PROJECT_ID }}.run.app
+      
+      - name: Notify deployment
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
+            -H 'Content-type: application/json' \
+            -d '{"text":"🚀 Production deployment successful! Version: ${{ github.sha }}"}'
+```
+
+#### **2. Arquitectura de Infraestructura en GCP**
+
+##### **Componentes de Infraestructura**
+```yaml
+# infrastructure/terraform/main.tf
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 4.0"
+    }
+  }
+  
+  backend "gcs" {
+    bucket = "portfolio-chatbot-terraform-state"
+    prefix = "terraform/state"
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+# VPC y Networking
+resource "google_compute_network" "main" {
+  name                    = "portfolio-chatbot-vpc"
+  auto_create_subnetworks = false
+  routing_mode           = "REGIONAL"
+}
+
+resource "google_compute_subnetwork" "main" {
+  name          = "portfolio-chatbot-subnet"
+  ip_cidr_range = "10.0.0.0/24"
+  network       = google_compute_network.main.id
+  region        = var.region
+  
+  private_ip_google_access = true
+}
+
+# Cloud SQL (PostgreSQL)
+resource "google_sql_database_instance" "main" {
+  name             = "portfolio-chatbot-db"
+  database_version = "POSTGRES_14"
+  region           = var.region
+  
+  settings {
+    tier = "db-f1-micro"
+    
+    backup_configuration {
+      enabled    = true
+      start_time = "02:00"
+      location  = "US"
+      
+      backup_retention_settings {
+        retained_backups = 7
+      }
+    }
+    
+    maintenance_window {
+      day          = 7
+      hour         = 2
+      update_track = "stable"
+    }
+    
+    ip_configuration {
+      ipv4_enabled    = false
+      private_network = google_compute_network.main.id
+    }
+  }
+  
+  deletion_protection = false
+}
+
+resource "google_sql_database" "main" {
+  name     = "portfolio_chatbot"
+  instance = google_sql_database_instance.main.name
+}
+
+resource "google_sql_user" "main" {
+  name     = "portfolio_chatbot_user"
+  instance = google_sql_database_instance.main.name
+  password = var.db_password
+}
+
+# Memorystore (Redis)
+resource "google_redis_instance" "main" {
+  name           = "portfolio-chatbot-cache"
+  tier           = "BASIC"
+  memory_size_gb = 1
+  region         = var.region
+  
+  authorized_network = google_compute_network.main.id
+  
+  redis_version = "REDIS_6_X"
+  display_name  = "Portfolio Chatbot Cache"
+}
+
+# Cloud Run Service
+resource "google_cloud_run_service" "main" {
+  name     = "portfolio-chatbot"
+  location = var.region
+  
+  template {
+    spec {
+      containers {
+        image = "gcr.io/${var.project_id}/portfolio-chatbot:latest"
+        
+        resources {
+          limits = {
+            cpu    = "1000m"
+            memory = "512Mi"
+          }
+        }
+        
+        env {
+          name  = "DATABASE_URL"
+          value = "postgresql://${google_sql_user.main.name}:${var.db_password}@${google_sql_database_instance.main.private_ip_address}:5432/${google_sql_database.main.name}"
+        }
+        
+        env {
+          name  = "REDIS_URL"
+          value = "redis://${google_redis_instance.main.host}:${google_redis_instance.main.port}"
+        }
+        
+        env {
+          name  = "ENVIRONMENT"
+          value = var.environment
+        }
+        
+        env {
+          name  = "PROJECT_ID"
+          value = var.project_id
+        }
+      }
+      
+      service_account_name = google_service_account.main.email
+    }
+    
+    metadata {
+      annotations = {
+        "autoscaling.knative.dev/minScale" = "1"
+        "autoscaling.knative.dev/maxScale" = "10"
+        "run.googleapis.com/ingress"       = "all"
+      }
+    }
+  }
+  
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
+}
+
+# Service Account
+resource "google_service_account" "main" {
+  account_id   = "portfolio-chatbot-sa"
+  display_name = "Portfolio Chatbot Service Account"
+}
+
+resource "google_project_iam_member" "main" {
+  project = var.project_id
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.main.email}"
+}
+
+# Load Balancer
+resource "google_compute_global_address" "main" {
+  name = "portfolio-chatbot-ip"
+}
+
+resource "google_compute_global_forwarding_rule" "main" {
+  name       = "portfolio-chatbot-lb"
+  target    = google_compute_target_https_proxy.main.id
+  port_range = "443"
+  ip_address = google_compute_global_address.main.address
+}
+
+resource "google_compute_target_https_proxy" "main" {
+  name             = "portfolio-chatbot-https-proxy"
+  url_map          = google_compute_url_map.main.id
+  ssl_certificates = [google_compute_managed_ssl_certificate.main.id]
+}
+
+resource "google_compute_url_map" "main" {
+  name            = "portfolio-chatbot-url-map"
+  default_service = google_compute_backend_service.main.id
+}
+
+resource "google_compute_backend_service" "main" {
+  name        = "portfolio-chatbot-backend"
+  protocol    = "HTTP"
+  port_name   = "http"
+  timeout_sec = 30
+  
+  backend {
+    group = google_compute_region_network_endpoint_group.main.id
+  }
+  
+  health_checks = [google_compute_health_check.main.id]
+}
+
+resource "google_compute_region_network_endpoint_group" "main" {
+  name                  = "portfolio-chatbot-neg"
+  network               = google_compute_network.main.id
+  subnetwork           = google_compute_subnetwork.main.id
+  region               = var.region
+  cloud_run {
+    service = google_cloud_run_service.main.name
+  }
+}
+
+resource "google_compute_health_check" "main" {
+  name = "portfolio-chatbot-health-check"
+  
+  http_health_check {
+    port = 8080
+    path = "/health"
+  }
+}
+
+resource "google_compute_managed_ssl_certificate" "main" {
+  name = "portfolio-chatbot-ssl"
+  
+  managed {
+    domains = [var.domain_name]
+  }
+}
+
+# Cloud Armor (Security)
+resource "google_compute_security_policy" "main" {
+  name = "portfolio-chatbot-security-policy"
+  
+  rule {
+    action   = "deny(403)"
+    priority = "1000"
+    match {
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = ["*"]
+      }
+    }
+    description = "Deny access by default"
+  }
+  
+  rule {
+    action   = "allow"
+    priority = "2000"
+    match {
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = ["0.0.0.0/0"]
+      }
+    }
+    description = "Allow access from all IPs"
+  }
+  
+  rule {
+    action   = "deny(403)"
+    priority = "3000"
+    match {
+      expr {
+        expression = "evaluatePreconfiguredExpr('sqli-stable')"
+      }
+    }
+    description = "Block SQL injection attacks"
+  }
+  
+  rule {
+    action   = "deny(403)"
+    priority = "4000"
+    match {
+      expr {
+        expression = "evaluatePreconfiguredExpr('xss-stable')"
+      }
+    }
+    description = "Block XSS attacks"
+  }
+}
+```
+
+#### **3. Estrategia de Deployment Blue-Green**
+
+##### **Implementación de Deployment Blue-Green**
+```yaml
+# deployment/blue-green-deployment.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: portfolio-chatbot-blue
+  labels:
+    version: blue
+    environment: production
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+    spec:
+      containers:
+      - image: gcr.io/PROJECT_ID/portfolio-chatbot:blue-v1.2.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: VERSION
+          value: "blue-v1.2.0"
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: portfolio-chatbot-green
+  labels:
+    version: green
+    environment: production
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "0"
+    spec:
+      containers:
+      - image: gcr.io/PROJECT_ID/portfolio-chatbot:green-v1.2.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: VERSION
+          value: "green-v1.2.1"
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portfolio-chatbot-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "portfolio-chatbot-ip"
+    networking.gke.io/managed-certificates: "portfolio-chatbot-ssl"
+spec:
+  rules:
+  - host: api.portfoliochatbot.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portfolio-chatbot-blue
+            port:
+              number: 80
+```
+
+##### **Script de Deployment Blue-Green**
+```bash
+#!/bin/bash
+# scripts/deploy-blue-green.sh
+
+set -e
+
+# Variables
+PROJECT_ID="your-project-id"
+REGION="us-central1"
+BLUE_SERVICE="portfolio-chatbot-blue"
+GREEN_SERVICE="portfolio-chatbot-green"
+NEW_VERSION="v1.2.1"
+NEW_IMAGE="gcr.io/${PROJECT_ID}/portfolio-chatbot:${NEW_VERSION}"
+
+echo "🚀 Iniciando deployment Blue-Green para versión ${NEW_VERSION}"
+
+# 1. Construir nueva imagen
+echo "📦 Construyendo nueva imagen Docker..."
+docker build -t ${NEW_IMAGE} .
+docker push ${NEW_IMAGE}
+
+# 2. Determinar qué servicio está activo
+ACTIVE_SERVICE=$(gcloud run services list --platform managed --region ${REGION} --filter="metadata.name~portfolio-chatbot" --format="value(metadata.name)" | grep -E "(blue|green)" | head -1)
+
+if [[ "${ACTIVE_SERVICE}" == *"blue"* ]]; then
+    TARGET_SERVICE=${GREEN_SERVICE}
+    CURRENT_SERVICE=${BLUE_SERVICE}
+    echo "🎯 Servicio activo: ${BLUE_SERVICE}, desplegando en: ${GREEN_SERVICE}"
+else
+    TARGET_SERVICE=${BLUE_SERVICE}
+    CURRENT_SERVICE=${GREEN_SERVICE}
+    echo "🎯 Servicio activo: ${GREEN_SERVICE}, desplegando en: ${BLUE_SERVICE}"
+fi
+
+# 3. Desplegar nueva versión en servicio inactivo
+echo "🔧 Desplegando nueva versión en ${TARGET_SERVICE}..."
+gcloud run services replace deployment/${TARGET_SERVICE}.yaml --region ${REGION}
+
+# 4. Escalar servicio inactivo a 1 réplica
+echo "📈 Escalando ${TARGET_SERVICE} a 1 réplica..."
+gcloud run services update ${TARGET_SERVICE} --region ${REGION} --min-instances=1 --max-instances=10
+
+# 5. Esperar a que el servicio esté listo
+echo "⏳ Esperando a que ${TARGET_SERVICE} esté listo..."
+kubectl wait --for=condition=ready pod -l serving.knative.dev/service=${TARGET_SERVICE} --timeout=300s
+
+# 6. Ejecutar tests de smoke
+echo "🧪 Ejecutando tests de smoke..."
+SMOKE_TESTS_PASSED=true
+for i in {1..5}; do
+    if curl -f "https://${TARGET_SERVICE}-${REGION}-${PROJECT_ID}.run.app/health" > /dev/null 2>&1; then
+        echo "✅ Test ${i} pasado"
+    else
+        echo "❌ Test ${i} falló"
+        SMOKE_TESTS_PASSED=false
+        break
+    fi
+    sleep 2
+done
+
+if [ "$SMOKE_TESTS_PASSED" = false ]; then
+    echo "🚨 Tests de smoke fallaron. Rollback automático..."
+    
+    # Rollback: escalar servicio inactivo a 0
+    gcloud run services update ${TARGET_SERVICE} --region ${REGION} --min-instances=0 --max-instances=0
+    
+    echo "❌ Deployment falló. Rollback completado."
+    exit 1
+fi
+
+# 7. Ejecutar tests de integración
+echo "🔗 Ejecutando tests de integración..."
+if pytest tests/integration/ --url "https://${TARGET_SERVICE}-${REGION}-${PROJECT_ID}.run.app"; then
+    echo "✅ Tests de integración pasaron"
+else
+    echo "❌ Tests de integración fallaron. Rollback automático..."
+    
+    # Rollback
+    gcloud run services update ${TARGET_SERVICE} --region ${REGION} --min-instances=0 --max-instances=0
+    
+    echo "❌ Deployment falló. Rollback completado."
+    exit 1
+fi
+
+# 8. Cambiar tráfico al nuevo servicio
+echo "🔄 Cambiando tráfico a ${TARGET_SERVICE}..."
+gcloud run services update-traffic ${TARGET_SERVICE} --to-latest --region ${REGION}
+
+# 9. Escalar servicio anterior a 0 réplicas
+echo "📉 Escalando ${CURRENT_SERVICE} a 0 réplicas..."
+gcloud run services update ${CURRENT_SERVICE} --region ${REGION} --min-instances=0 --max-instances=0
+
+# 10. Verificar deployment exitoso
+echo "✅ Verificando deployment exitoso..."
+sleep 30
+
+if curl -f "https://${TARGET_SERVICE}-${REGION}-${PROJECT_ID}.run.app/health" > /dev/null 2>&1; then
+    echo "🎉 Deployment Blue-Green completado exitosamente!"
+    echo "📊 Nueva versión ${NEW_VERSION} está activa en ${TARGET_SERVICE}"
+    echo "🔗 URL: https://${TARGET_SERVICE}-${REGION}-${PROJECT_ID}.run.app"
+else
+    echo "❌ Verificación final falló"
+    exit 1
+fi
+```
+
+#### **4. Monitoreo y Observabilidad**
+
+##### **Configuración de Monitoreo**
+```yaml
+# monitoring/cloud-monitoring.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-config
+  namespace: default
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    scrape_configs:
+      - job_name: 'portfolio-chatbot'
+        static_configs:
+          - targets: ['localhost:8080']
+        metrics_path: '/metrics'
+        scrape_interval: 5s
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: config
+          mountPath: /etc/prometheus
+        - name: storage
+          mountPath: /prometheus
+      volumes:
+      - name: config
+        configMap:
+          name: monitoring-config
+      - name: storage
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  selector:
+    app: prometheus
+  ports:
+  - port: 9090
+    targetPort: 9090
+  type: ClusterIP
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: portfolio-chatbot-monitor
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: portfolio-chatbot
+  endpoints:
+  - port: metrics
+    interval: 15s
+    path: /metrics
+```
+
+##### **Dashboard de Grafana**
+```json
+// monitoring/grafana-dashboard.json
+{
+  "dashboard": {
+    "id": null,
+    "title": "Portfolio Chatbot - Production Dashboard",
+    "tags": ["portfolio", "chatbot", "production"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{route}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95 Response Time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+            "legendFormat": "5xx Errors"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Active Users",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(active_users_total)",
+            "legendFormat": "Active Users"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 8
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "5s"
+  }
+}
+```
+
+#### **5. Estrategia de Rollback y Disaster Recovery**
+
+##### **Plan de Rollback Automático**
+```yaml
+# deployment/rollback-policy.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: portfolio-chatbot
+  annotations:
+    autoscaling.knative.dev/minScale: "1"
+    autoscaling.knative.dev/maxScale: "10"
+    # Política de rollback automático
+    serving.knative.dev/rollback: "true"
+    serving.knative.dev/rollbackWindow: "5m"
+spec:
+  template:
+    metadata:
+      annotations:
+        # Health check más agresivo para detección temprana de problemas
+        autoscaling.knative.dev/scaleDownDelay: "30s"
+        autoscaling.knative.dev/scaleToZeroPodRetentionPeriod: "5m"
+    spec:
+      containers:
+      - image: gcr.io/PROJECT_ID/portfolio-chatbot:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: VERSION
+          value: "latest"
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+        # Health checks más estrictos
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        # Startup probe para evitar reinicios innecesarios
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 10
+```
+
+##### **Script de Disaster Recovery**
+```bash
+#!/bin/bash
+# scripts/disaster-recovery.sh
+
+set -e
+
+# Variables
+PROJECT_ID="your-project-id"
+REGION="us-central1"
+BACKUP_REGION="us-east1"
+SERVICE_NAME="portfolio-chatbot"
+BACKUP_SERVICE_NAME="portfolio-chatbot-backup"
+
+echo "🚨 Iniciando procedimiento de Disaster Recovery..."
+
+# 1. Verificar estado del servicio principal
+echo "🔍 Verificando estado del servicio principal..."
+if gcloud run services describe ${SERVICE_NAME} --region ${REGION} --format="value(status.conditions[0].status)" | grep -q "True"; then
+    echo "✅ Servicio principal está funcionando correctamente"
+    exit 0
+else
+    echo "❌ Servicio principal no está funcionando. Iniciando DR..."
+fi
+
+# 2. Activar servicio de backup
+echo "🔄 Activando servicio de backup en ${BACKUP_REGION}..."
+gcloud run services update ${BACKUP_SERVICE_NAME} --region ${BACKUP_REGION} --min-instances=1 --max-instances=10
+
+# 3. Verificar que el servicio de backup esté funcionando
+echo "⏳ Esperando a que el servicio de backup esté listo..."
+sleep 30
+
+if gcloud run services describe ${BACKUP_SERVICE_NAME} --region ${BACKUP_REGION} --format="value(status.conditions[0].status)" | grep -q "True"; then
+    echo "✅ Servicio de backup está funcionando"
+else
+    echo "❌ Servicio de backup no está funcionando"
+    exit 1
+fi
+
+# 4. Ejecutar tests de funcionalidad
+echo "🧪 Ejecutando tests de funcionalidad en backup..."
+if pytest tests/smoke/ --url "https://${BACKUP_SERVICE_NAME}-${BACKUP_REGION}-${PROJECT_ID}.run.app"; then
+    echo "✅ Tests de funcionalidad pasaron en backup"
+else
+    echo "❌ Tests de funcionalidad fallaron en backup"
+    exit 1
+fi
+
+# 5. Actualizar DNS para apuntar al backup
+echo "🌐 Actualizando DNS para apuntar al servicio de backup..."
+# Aquí iría la lógica para actualizar DNS o Load Balancer
+
+# 6. Notificar al equipo
+echo "📢 Notificando al equipo sobre el DR..."
+curl -X POST ${SLACK_WEBHOOK} \
+  -H 'Content-type: application/json' \
+  -d '{"text":"🚨 DISASTER RECOVERY ACTIVADO! Servicio principal en ${REGION} no responde. Usando backup en ${BACKUP_REGION}."}'
+
+# 7. Monitorear servicio de backup
+echo "📊 Monitoreando servicio de backup..."
+while true; do
+    if gcloud run services describe ${BACKUP_SERVICE_NAME} --region ${BACKUP_REGION} --format="value(status.conditions[0].status)" | grep -q "True"; then
+        echo "✅ Servicio de backup funcionando correctamente"
+    else
+        echo "❌ Servicio de backup falló"
+        exit 1
+    fi
+    
+    # Verificar cada 5 minutos
+    sleep 300
+done
+```
+
+Esta arquitectura de deployment proporciona un sistema robusto, escalable y altamente disponible para el chatbot de portfolio profesional, con capacidades de CI/CD automatizado, deployment blue-green, monitoreo completo y disaster recovery.
+
+## 🧩 **Diseño de Componentes Microservicios**
+
+### **Arquitectura de Microservicios para Escalabilidad**
+
+La arquitectura de microservicios está diseñada para proporcionar escalabilidad horizontal, resiliencia y mantenibilidad del sistema, permitiendo que cada componente evolucione independientemente.
+
+#### **1. Mapa de Microservicios**
+
+##### **Estructura de Microservicios**
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[React SPA] --> B[API Gateway]
+        A --> C[WebSocket Gateway]
+    end
+    
+    subgraph "API Gateway Layer"
+        B --> D[Authentication Service]
+        B --> E[Rate Limiting Service]
+        B --> F[Load Balancer]
+    end
+    
+    subgraph "Core Services"
+        G[Chat Service] --> H[Dialogflow Integration]
+        G --> I[Vertex AI Service]
+        G --> J[Context Management]
+        
+        K[User Service] --> L[Profile Management]
+        K --> M[Preferences Service]
+        
+        N[Conversation Service] --> O[Message Storage]
+        N --> P[Session Management]
+        
+        Q[Analytics Service] --> R[Data Collection]
+        Q --> S[Reporting Engine]
+    end
+    
+    subgraph "Data Layer"
+        T[PostgreSQL Primary] --> U[PostgreSQL Replica]
+        V[Redis Cache] --> W[Redis Cluster]
+        X[Data Warehouse] --> Y[ETL Pipeline]
+    end
+    
+    subgraph "External Integrations"
+        Z[GitHub Integration] --> AA[LinkedIn Integration]
+        BB[Email Service] --> CC[Notification Service]
+        DD[Payment Gateway] --> EE[Billing Service]
+    end
+    
+    subgraph "Infrastructure"
+        FF[Service Discovery] --> GG[Config Management]
+        HH[Logging Service] --> II[Monitoring Service]
+        JJ[Health Check] --> KK[Circuit Breaker]
+    end
+    
+    B --> G
+    B --> K
+    B --> N
+    B --> Q
+    G --> T
+    K --> T
+    N --> T
+    Q --> X
+```
+
+#### **2. Especificación de Microservicios**
+
+##### **1. Chat Service (Core)**
+```yaml
+# services/chat-service/service.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: chat-service
+  labels:
+    app: portfolio-chatbot
+    service: chat
+    version: v1.0
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "2"
+        autoscaling.knative.dev/maxScale: "20"
+        autoscaling.knative.dev/target: "100"
+    spec:
+      containers:
+      - image: gcr.io/PROJECT_ID/chat-service:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SERVICE_NAME
+          value: "chat-service"
+        - name: VERSION
+          value: "v1.0"
+        - name: DIALOGFLOW_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: dialogflow-secrets
+              key: project_id
+        - name: VERTEX_AI_LOCATION
+          value: "us-central1"
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 10
+```
+
+##### **2. User Service**
+```yaml
+# services/user-service/service.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: user-service
+  labels:
+    app: portfolio-chatbot
+    service: user
+    version: v1.0
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+        autoscaling.knative.dev/target: "50"
+    spec:
+      containers:
+      - image: gcr.io/PROJECT_ID/user-service:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SERVICE_NAME
+          value: "user-service"
+        - name: VERSION
+          value: "v1.0"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-secrets
+              key: url
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+```
+
+##### **3. Conversation Service**
+```yaml
+# services/conversation-service/service.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: conversation-service
+  labels:
+    app: portfolio-chatbot
+    service: conversation
+    version: v1.0
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "15"
+        autoscaling.knative.dev/target: "75"
+    spec:
+      containers:
+      - image: gcr.io/PROJECT_ID/conversation-service:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SERVICE_NAME
+          value: "conversation-service"
+        - name: VERSION
+          value: "v1.0"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-secrets
+              key: url
+        resources:
+          limits:
+            cpu: "750m"
+            memory: "768Mi"
+          requests:
+            cpu: "375m"
+            memory: "384Mi"
+```
+
+##### **4. Analytics Service**
+```yaml
+# services/analytics-service/service.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: analytics-service
+  labels:
+    app: portfolio-chatbot
+    service: analytics
+    version: v1.0
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "8"
+        autoscaling.knative.dev/target: "40"
+    spec:
+      containers:
+      - image: gcr.io/PROJECT_ID/analytics-service:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SERVICE_NAME
+          value: "analytics-service"
+        - name: VERSION
+          value: "v1.0"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: url
+        - name: DATA_WAREHOUSE_URL
+          valueFrom:
+            secretKeyRef:
+              name: data-warehouse-secrets
+              key: url
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+```
+
+#### **3. API Gateway y Service Mesh**
+
+##### **Configuración de API Gateway**
+```yaml
+# gateway/api-gateway.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: portfolio-chatbot-gateway
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "api.portfoliochatbot.com"
+    - "*.portfoliochatbot.com"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: portfolio-chatbot-tls
+    hosts:
+    - "api.portfoliochatbot.com"
+    - "*.portfoliochatbot.com"
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: portfolio-chatbot-vs
+  namespace: default
+spec:
+  hosts:
+  - "api.portfoliochatbot.com"
+  - "*.portfoliochatbot.com"
+  gateways:
+  - portfolio-chatbot-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/v1/chat"
+    route:
+    - destination:
+        host: chat-service
+        port:
+          number: 8080
+      weight: 100
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+    timeout: 30s
+    cors:
+      allowOrigin:
+      - "*"
+      allowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+      allowHeaders:
+      - "Content-Type"
+      - "Authorization"
+      - "X-API-Key"
+  
+  - match:
+    - uri:
+        prefix: "/v1/users"
+    route:
+    - destination:
+        host: user-service
+        port:
+          number: 8080
+      weight: 100
+    retries:
+      attempts: 2
+      perTryTimeout: 1s
+    timeout: 10s
+  
+  - match:
+    - uri:
+        prefix: "/v1/conversations"
+    route:
+    - destination:
+        host: conversation-service
+        port:
+          number: 8080
+      weight: 100
+    retries:
+      attempts: 2
+      perTryTimeout: 1s
+    timeout: 15s
+  
+  - match:
+    - uri:
+        prefix: "/v1/analytics"
+    route:
+    - destination:
+        host: analytics-service
+        port:
+          number: 8080
+      weight: 100
+    retries:
+      attempts: 2
+      perTryTimeout: 3s
+    timeout: 60s
+  
+  - match:
+    - uri:
+        prefix: "/health"
+    route:
+    - destination:
+        host: health-check-service
+        port:
+          number: 8080
+      weight: 100
+```
+
+##### **Configuración de Service Mesh (Istio)**
+```yaml
+# service-mesh/destination-rules.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: chat-service-dr
+  namespace: default
+spec:
+  host: chat-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30ms
+      http:
+        http1MaxPendingRequests: 1000
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 10
+  subsets:
+  - name: v1
+    labels:
+      version: v1.0
+    trafficPolicy:
+      loadBalancer:
+        simple: ROUND_ROBIN
+  - name: v2
+    labels:
+      version: v2.0
+    trafficPolicy:
+      loadBalancer:
+        simple: ROUND_ROBIN
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: user-service-dr
+  namespace: default
+spec:
+  host: user-service
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 50
+        connectTimeout: 20ms
+      http:
+        http1MaxPendingRequests: 500
+        maxRequestsPerConnection: 5
+        maxRetries: 2
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 15s
+      baseEjectionTime: 45s
+      maxEjectionPercent: 5
+```
+
+#### **4. Circuit Breaker y Resiliencia**
+
+##### **Implementación de Circuit Breaker**
+```python
+# services/chat-service/circuit_breaker.py
+import asyncio
+import time
+from enum import Enum
+from typing import Any, Callable, Optional
+import logging
+
+logger = logging.getLogger(__name__)
+
+class CircuitState(Enum):
+    CLOSED = "CLOSED"      # Funcionando normalmente
+    OPEN = "OPEN"          # Fallando, no permitir requests
+    HALF_OPEN = "HALF_OPEN"  # Probando si se recuperó
+
+class CircuitBreaker:
+    """Implementación de Circuit Breaker para microservicios"""
+    
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: int = 60,
+        expected_exception: type = Exception,
+        name: str = "default"
+    ):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.expected_exception = expected_exception
+        self.name = name
+        
+        self.state = CircuitState.CLOSED
+        self.failure_count = 0
+        self.last_failure_time = 0
+        self.success_count = 0
+        
+        logger.info(f"Circuit Breaker '{self.name}' inicializado")
+    
+    async def call(self, func: Callable, *args, **kwargs) -> Any:
+        """Ejecuta función con protección de circuit breaker"""
+        
+        if self.state == CircuitState.OPEN:
+            if self._should_attempt_reset():
+                logger.info(f"Circuit Breaker '{self.name}' cambiando a HALF_OPEN")
+                self.state = CircuitState.HALF_OPEN
+            else:
+                raise Exception(f"Circuit Breaker '{self.name}' está OPEN")
+        
+        try:
+            result = await func(*args, **kwargs)
+            self._on_success()
+            return result
+            
+        except self.expected_exception as e:
+            self._on_failure()
+            raise e
+    
+    def _on_success(self):
+        """Maneja éxito de la operación"""
+        self.failure_count = 0
+        self.success_count += 1
+        
+        if self.state == CircuitState.HALF_OPEN:
+            if self.success_count >= self.failure_threshold // 2:
+                logger.info(f"Circuit Breaker '{self.name}' cambiando a CLOSED")
+                self.state = CircuitState.CLOSED
+                self.success_count = 0
+    
+    def _on_failure(self):
+        """Maneja fallo de la operación"""
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        
+        if self.failure_count >= self.failure_threshold:
+            logger.warning(f"Circuit Breaker '{self.name}' cambiando a OPEN")
+            self.state = CircuitState.OPEN
+    
+    def _should_attempt_reset(self) -> bool:
+        """Determina si se debe intentar reset del circuit breaker"""
+        return time.time() - self.last_failure_time >= self.recovery_timeout
+    
+    def get_status(self) -> dict:
+        """Retorna estado actual del circuit breaker"""
+        return {
+            "name": self.name,
+            "state": self.state.value,
+            "failure_count": self.failure_count,
+            "success_count": self.success_count,
+            "last_failure_time": self.last_failure_time,
+            "failure_threshold": self.failure_threshold,
+            "recovery_timeout": self.recovery_timeout
+        }
+
+# Uso en servicios
+class ChatServiceCircuitBreaker:
+    """Circuit Breaker específico para el Chat Service"""
+    
+    def __init__(self):
+        self.dialogflow_cb = CircuitBreaker(
+            failure_threshold=3,
+            recovery_timeout=30,
+            expected_exception=Exception,
+            name="dialogflow-service"
+        )
+        
+        self.vertex_ai_cb = CircuitBreaker(
+            failure_threshold=5,
+            recovery_timeout=60,
+            expected_exception=Exception,
+            name="vertex-ai-service"
+        )
+    
+    async def call_dialogflow(self, func, *args, **kwargs):
+        """Ejecuta llamada a Dialogflow con circuit breaker"""
+        return await self.dialogflow_cb.call(func, *args, **kwargs)
+    
+    async def call_vertex_ai(self, func, *args, **kwargs):
+        """Ejecuta llamada a Vertex AI con circuit breaker"""
+        return await self.vertex_ai_cb.call(func, *args, **kwargs)
+    
+    def get_status(self) -> dict:
+        """Retorna estado de todos los circuit breakers"""
+        return {
+            "dialogflow": self.dialogflow_cb.get_status(),
+            "vertex_ai": self.vertex_ai_cb.get_status()
+        }
+```
+
+#### **5. Service Discovery y Configuración**
+
+##### **Configuración de Service Discovery**
+```yaml
+# service-discovery/service-registry.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-registry
+  namespace: default
+data:
+  services.yaml: |
+    services:
+      chat-service:
+        host: chat-service.default.svc.cluster.local
+        port: 8080
+        health_check: /health
+        circuit_breaker:
+          failure_threshold: 5
+          recovery_timeout: 60
+        retry_policy:
+          max_attempts: 3
+          backoff_multiplier: 2
+          initial_delay: 100ms
+      
+      user-service:
+        host: user-service.default.svc.cluster.local
+        port: 8080
+        health_check: /health
+        circuit_breaker:
+          failure_threshold: 3
+          recovery_timeout: 30
+        retry_policy:
+          max_attempts: 2
+          backoff_multiplier: 1.5
+          initial_delay: 50ms
+      
+      conversation-service:
+        host: conversation-service.default.svc.cluster.local
+        port: 8080
+        health_check: /health
+        circuit_breaker:
+          failure_threshold: 4
+          recovery_timeout: 45
+        retry_policy:
+          max_attempts: 2
+          backoff_multiplier: 1.5
+          initial_delay: 75ms
+      
+      analytics-service:
+        host: analytics-service.default.svc.cluster.local
+        port: 8080
+        health_check: /health
+        circuit_breaker:
+          failure_threshold: 6
+          recovery_timeout: 90
+        retry_policy:
+          max_attempts: 3
+          backoff_multiplier: 2
+          initial_delay: 200ms
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-registry
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: service-registry
+  template:
+    metadata:
+      labels:
+        app: service-registry
+    spec:
+      containers:
+      - name: service-registry
+        image: gcr.io/PROJECT_ID/service-registry:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REGISTRY_CONFIG_PATH
+          value: "/etc/registry/services.yaml"
+        volumeMounts:
+        - name: registry-config
+          mountPath: /etc/registry
+        resources:
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+          requests:
+            cpu: "125m"
+            memory: "128Mi"
+      volumes:
+      - name: registry-config
+        configMap:
+          name: service-registry
+```
+
+##### **Configuración Centralizada**
+```yaml
+# config/centralized-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: default
+data:
+  app.yaml: |
+    app:
+      name: "Portfolio Chatbot"
+      version: "v1.0"
+      environment: "production"
+    
+    services:
+      chat:
+        timeout: 30
+        max_retries: 3
+        circuit_breaker:
+          failure_threshold: 5
+          recovery_timeout: 60
+        rate_limiting:
+          requests_per_minute: 100
+          burst_size: 20
+      
+      user:
+        timeout: 10
+        max_retries: 2
+        circuit_breaker:
+          failure_threshold: 3
+          recovery_timeout: 30
+        rate_limiting:
+          requests_per_minute: 200
+          burst_size: 50
+      
+      conversation:
+        timeout: 15
+        max_retries: 2
+        circuit_breaker:
+          failure_threshold: 4
+          recovery_timeout: 45
+        rate_limiting:
+          requests_per_minute: 150
+          burst_size: 30
+      
+      analytics:
+        timeout: 60
+        max_retries: 3
+        circuit_breaker:
+          failure_threshold: 6
+          recovery_timeout: 90
+        rate_limiting:
+          requests_per_minute: 50
+          burst_size: 10
+    
+    database:
+      connection_pool:
+        min_size: 5
+        max_size: 20
+        max_queries: 50000
+        max_inactive_connection_lifetime: 300
+      
+      retry_policy:
+        max_attempts: 3
+        initial_delay: 1000
+        max_delay: 10000
+        backoff_multiplier: 2
+    
+    cache:
+      redis:
+        connection_pool:
+          min_size: 2
+          max_size: 10
+        key_prefix: "portfolio:"
+        default_ttl: 3600
+        max_ttl: 86400
+    
+    monitoring:
+      metrics:
+        enabled: true
+        interval: 15
+        retention_days: 30
+      
+      logging:
+        level: "INFO"
+        format: "json"
+        output: "stdout"
+      
+      tracing:
+        enabled: true
+        sampler_rate: 0.1
+        jaeger_endpoint: "http://jaeger:14268/api/traces"
+    
+    security:
+      rate_limiting:
+        enabled: true
+        default_limit: 100
+        default_window: 60
+      
+      authentication:
+        jwt_secret: "${JWT_SECRET}"
+        token_expiry: 3600
+        refresh_token_expiry: 86400
+      
+      cors:
+        allowed_origins:
+          - "https://portfoliochatbot.com"
+          - "https://*.portfoliochatbot.com"
+        allowed_methods:
+          - "GET"
+          - "POST"
+          - "PUT"
+          - "DELETE"
+          - "OPTIONS"
+        allowed_headers:
+          - "Content-Type"
+          - "Authorization"
+          - "X-API-Key"
+```
+
+#### **6. Implementación de Health Checks**
+
+##### **Health Check Service**
+```python
+# services/health-check-service/health_check.py
+import asyncio
+import aiohttp
+import psycopg2
+import redis
+from typing import Dict, List, Any
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+class HealthCheckService:
+    """Servicio de health check para microservicios"""
+    
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config
+        self.services = config.get('services', {})
+        self.health_status = {}
+    
+    async def check_all_services(self) -> Dict[str, Any]:
+        """Verifica la salud de todos los servicios"""
+        tasks = []
+        
+        for service_name, service_config in self.services.items():
+            task = self.check_service_health(service_name, service_config)
+            tasks.append(task)
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Procesar resultados
+        for i, (service_name, _) in enumerate(self.services.items()):
+            if isinstance(results[i], Exception):
+                self.health_status[service_name] = {
+                    "status": "unhealthy",
+                    "error": str(results[i]),
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            else:
+                self.health_status[service_name] = results[i]
+        
+        return self.health_status
+    
+    async def check_service_health(self, service_name: str, service_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Verifica la salud de un servicio específico"""
+        try:
+            host = service_config['host']
+            port = service_config['port']
+            health_endpoint = service_config.get('health_check', '/health')
+            
+            url = f"http://{host}:{port}{health_endpoint}"
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return {
+                            "status": "healthy",
+                            "response_time": response.headers.get('X-Response-Time', 'N/A'),
+                            "version": data.get('version', 'N/A'),
+                            "timestamp": datetime.utcnow().isoformat()
+                        }
+                    else:
+                        return {
+                            "status": "unhealthy",
+                            "http_status": response.status,
+                            "error": f"HTTP {response.status}",
+                            "timestamp": datetime.utcnow().isoformat()
+                        }
+                        
+        except asyncio.TimeoutError:
+            return {
+                "status": "unhealthy",
+                "error": "Timeout",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+    
+    async def check_database_health(self) -> Dict[str, Any]:
+        """Verifica la salud de la base de datos"""
+        try:
+            db_config = self.config.get('database', {})
+            conn = psycopg2.connect(
+                host=db_config.get('host'),
+                port=db_config.get('port', 5432),
+                database=db_config.get('name'),
+                user=db_config.get('user'),
+                password=db_config.get('password')
+            )
+            
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            result = cursor.fetchone()
+            
+            cursor.close()
+            conn.close()
+            
+            if result and result[0] == 1:
+                return {
+                    "status": "healthy",
+                    "type": "postgresql",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            else:
+                return {
+                    "status": "unhealthy",
+                    "error": "Database query failed",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+    
+    async def check_cache_health(self) -> Dict[str, Any]:
+        """Verifica la salud del cache"""
+        try:
+            cache_config = self.config.get('cache', {}).get('redis', {})
+            r = redis.Redis(
+                host=cache_config.get('host'),
+                port=cache_config.get('port', 6379),
+                db=cache_config.get('db', 0),
+                password=cache_config.get('password'),
+                socket_timeout=5
+            )
+            
+            # Test de ping
+            pong = r.ping()
+            
+            if pong:
+                return {
+                    "status": "healthy",
+                    "type": "redis",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            else:
+                return {
+                    "status": "unhealthy",
+                    "error": "Redis ping failed",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+    
+    def get_overall_health(self) -> Dict[str, Any]:
+        """Retorna el estado general de salud del sistema"""
+        healthy_services = sum(1 for status in self.health_status.values() if status.get('status') == 'healthy')
+        total_services = len(self.health_status)
+        
+        overall_status = "healthy" if healthy_services == total_services else "degraded"
+        if healthy_services == 0:
+            overall_status = "unhealthy"
+        
+        return {
+            "status": overall_status,
+            "healthy_services": healthy_services,
+            "total_services": total_services,
+            "health_percentage": (healthy_services / total_services) * 100 if total_services > 0 else 0,
+            "timestamp": datetime.utcnow().isoformat(),
+            "services": self.health_status
+        }
+```
+
+Esta arquitectura de microservicios proporciona un sistema escalable, resiliente y mantenible, con capacidades de circuit breaker, service discovery, configuración centralizada y monitoreo completo de la salud del sistema.

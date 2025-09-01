@@ -5,16 +5,817 @@
 ### Objetivo del Documento
 Guía técnica completa para implementar el componente chatbot en el portfolio React existente siguiendo las mejores prácticas de desarrollo, clean code y desarrollo seguro.
 
-### Stack Tecnológico
-- **Framework:** Next.js 14 con App Router
-- **Language:** TypeScript 5.0+
-- **Styling:** Tailwind CSS 3.0+
-- **State Management:** React Context + Custom Hooks
-- **Security:** DOMPurify, Input Validation
+## 🚀 Stack Tecnológico
+
+### **Frontend Principal:**
+- **Framework:** React 18+ con TypeScript
+- **Styling:** Tailwind CSS + CSS Modules
+- **State Management:** React Hooks + Context API
+- **Routing:** React Router v6
+- **Build Tool:** Vite + SWC
 - **Testing:** Jest + React Testing Library
-- **Deployment:** Google Cloud Run
+
+### **Integración con Backend:**
 - **Backend Integration:** FastAPI + Vertex AI + Cache Inteligente
+- **Arquitectura Híbrida:** Dialogflow ES (Free Tier) + Vertex AI
+- **API Communication:** Axios + React Query
+- **Real-time Updates:** WebSocket (opcional)
 - **Cost Optimization:** Monitoreo de costos en tiempo real
+
+### **UI/UX Components:**
+- **Component Library:** Headless UI + Radix UI
+- **Icons:** Heroicons + Lucide React
+- **Animations:** Framer Motion
+- **Charts:** Recharts + Chart.js
+- **Forms:** React Hook Form + Zod validation
+
+### **Development Tools:**
+- **Linting:** ESLint + Prettier
+- **Type Checking:** TypeScript strict mode
+- **Testing:** Vitest + Testing Library
+- **Bundle Analysis:** Bundle Analyzer
+- **Performance:** Lighthouse CI
+
+## 🔄 Integración con Arquitectura Híbrida Dialogflow + Vertex AI
+
+### **🎯 Beneficios de la Integración con Arquitectura Híbrida**
+
+El frontend se beneficia de la **arquitectura híbrida inteligente** que combina **Dialogflow ES (Free Tier)** para intents simples y **Vertex AI** para casos complejos.
+
+```typescript
+// Beneficios de la arquitectura híbrida
+const hybridArchitectureBenefits = {
+  performance: {
+    instantResponses: "Respuestas instantáneas para saludos y preguntas básicas",
+    contextualResponses: "Respuestas avanzadas para consultas complejas",
+    reducedLatency: "Menor latencia general del sistema",
+    betterUX: "Experiencia de usuario más fluida"
+  },
+  costOptimization: {
+    freeTierUsage: "Aprovechamiento completo de capas gratuitas",
+    intelligentRouting: "Routing automático según complejidad",
+    costSavings: "70-85% reducción en costos totales",
+    roiImprovement: "ROI mejorado del proyecto"
+  },
+  reliability: {
+    automaticFallback: "Fallback automático entre servicios",
+    redundancy: "Redundancia en detección de intenciones",
+    errorHandling: "Mejor manejo de errores",
+    robustSystem: "Sistema más robusto y confiable"
+  }
+};
+```
+
+### **🔗 Servicio de API Híbrido**
+
+```typescript
+// services/HybridChatbotService.ts
+import { ChatbotAPIService } from './ChatbotAPIService';
+import { DialogflowService } from './DialogflowService';
+import { CostTracker } from './CostTracker';
+
+export class HybridChatbotService {
+  private apiService: ChatbotAPIService;
+  private dialogflowService: DialogflowService;
+  private costTracker: CostTracker;
+
+  constructor() {
+    this.apiService = new ChatbotAPIService();
+    this.dialogflowService = new DialogflowService();
+    this.costTracker = new CostTracker();
+  }
+
+  async sendMessage(message: string, sessionId: string): Promise<ChatResponse> {
+    try {
+      // 1. Intentar con Dialogflow primero (Free tier)
+      const dialogflowResponse = await this.dialogflowService.detectIntent(
+        message, 
+        sessionId
+      );
+
+      // 2. Si Dialogflow puede manejar la respuesta, usarla
+      if (this.canDialogflowHandle(dialogflowResponse)) {
+        await this.costTracker.recordDialogflowUsage(sessionId, 'success');
+        
+        return {
+          ...dialogflowResponse,
+          source: 'dialogflow_es',
+          costOptimization: {
+            dialogflowRequests: 1,
+            vertexAiTokens: 0,
+            costSavings: '100% (Free tier)',
+            responseTime: '<200ms'
+          }
+        };
+      }
+
+      // 3. Si no, usar Vertex AI con contexto optimizado
+      const vertexAiResponse = await this.apiService.sendMessage(message, sessionId);
+      
+      await this.costTracker.recordVertexAiUsage(
+        sessionId, 
+        vertexAiResponse.tokensConsumed || 0
+      );
+
+      return {
+        ...vertexAiResponse,
+        source: 'vertex_ai_optimized',
+        costOptimization: {
+          dialogflowRequests: 1,
+          vertexAiTokens: vertexAiResponse.tokensConsumed || 0,
+          contextOptimization: '40-60% reducción en tokens',
+          responseTime: '<2s'
+        }
+      };
+
+    } catch (error) {
+      console.error('Error en servicio híbrido:', error);
+      
+      // Fallback a Vertex AI
+      const fallbackResponse = await this.apiService.sendMessage(message, sessionId);
+      
+      return {
+        ...fallbackResponse,
+        source: 'vertex_ai_fallback',
+        costOptimization: {
+          dialogflowRequests: 0,
+          vertexAiTokens: fallbackResponse.tokensConsumed || 0,
+          contextOptimization: '0% (fallback)',
+          responseTime: '<3s'
+        }
+      };
+    }
+  }
+
+  private canDialogflowHandle(response: DialogflowResponse): boolean {
+    const simpleIntents = [
+      'greeting', 'goodbye', 'thanks', 'help_request',
+      'basic_info', 'contact_info', 'schedule_info'
+    ];
+
+    return (
+      simpleIntents.includes(response.intent) &&
+      response.confidence > 0.8 &&
+      response.fulfillmentText &&
+      response.fulfillmentText.length > 10
+    );
+  }
+
+  async getHybridMetrics(timeRange: string = '24h'): Promise<HybridMetrics> {
+    try {
+      const [dialogflowMetrics, vertexAiMetrics, costMetrics] = await Promise.all([
+        this.dialogflowService.getMetrics(timeRange),
+        this.apiService.getVertexAiMetrics(timeRange),
+        this.costTracker.getCostMetrics(timeRange)
+      ]);
+
+      return {
+        dialogflow: dialogflowMetrics,
+        vertexAi: vertexAiMetrics,
+        costs: costMetrics,
+        hybridEfficiency: this.calculateHybridEfficiency(
+          dialogflowMetrics, 
+          vertexAiMetrics, 
+          costMetrics
+        )
+      };
+    } catch (error) {
+      console.error('Error obteniendo métricas híbridas:', error);
+      throw error;
+    }
+  }
+
+  private calculateHybridEfficiency(
+    dialogflow: DialogflowMetrics,
+    vertexAi: VertexAiMetrics,
+    costs: CostMetrics
+  ): HybridEfficiency {
+    const totalRequests = dialogflow.totalRequests + vertexAi.totalRequests;
+    
+    if (totalRequests === 0) {
+      return {
+        dialogflowUsagePercentage: 0,
+        vertexAiUsagePercentage: 0,
+        costPerRequest: 0,
+        efficiencyScore: 0
+      };
+    }
+
+    const dialogflowPercentage = (dialogflow.totalRequests / totalRequests) * 100;
+    const vertexAiPercentage = (vertexAi.totalRequests / totalRequests) * 100;
+    const costPerRequest = costs.totalCost / totalRequests;
+
+    // Calcular score de eficiencia (0-100)
+    const efficiencyScore = this.calculateEfficiencyScore(
+      dialogflow, 
+      vertexAi, 
+      costs
+    );
+
+    return {
+      dialogflowUsagePercentage: Math.round(dialogflowPercentage * 100) / 100,
+      vertexAiUsagePercentage: Math.round(vertexAiPercentage * 100) / 100,
+      costPerRequest: Math.round(costPerRequest * 1000000) / 1000000,
+      efficiencyScore: Math.round(efficiencyScore * 100) / 100,
+      totalRequests,
+      costOptimizationAchieved: costs.costSavingsPercentage || 0
+    };
+  }
+
+  private calculateEfficiencyScore(
+    dialogflow: DialogflowMetrics,
+    vertexAi: VertexAiMetrics,
+    costs: CostMetrics
+  ): number {
+    const dialogflowEfficiency = Math.min(
+      (dialogflow.successfulRequests / Math.max(dialogflow.totalRequests, 1)) * 100,
+      100
+    );
+
+    const vertexAiEfficiency = Math.min(
+      (vertexAi.successfulRequests / Math.max(vertexAi.totalRequests, 1)) * 100,
+      100
+    );
+
+    const costEfficiency = Math.min(costs.costSavingsPercentage || 0, 100);
+
+    // Ponderación: Dialogflow 40%, Vertex AI 30%, Costos 30%
+    return (
+      dialogflowEfficiency * 0.4 +
+      vertexAiEfficiency * 0.3 +
+      costEfficiency * 0.3
+    );
+  }
+}
+```
+
+### **🎯 Servicio de Dialogflow para Frontend**
+
+```typescript
+// services/DialogflowService.ts
+import { APIConfig } from '../config/APIConfig';
+
+export interface DialogflowResponse {
+  intent: string;
+  confidence: number;
+  entities: Entity[];
+  fulfillmentText: string;
+  contexts: Context[];
+  action: string;
+  parameters: Record<string, any>;
+  source: 'dialogflow_es';
+  sessionId: string;
+  timestamp: string;
+  queryText: string;
+}
+
+export interface Entity {
+  type: string;
+  value: string;
+  confidence: number;
+  source: string;
+}
+
+export interface Context {
+  name: string;
+  lifespanCount: number;
+  parameters: Record<string, any>;
+}
+
+export interface DialogflowMetrics {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  averageResponseTime: number;
+  intentDistribution: Record<string, number>;
+  averageConfidence: number;
+  fallbackRate: number;
+  freeTierUtilization: number;
+}
+
+export class DialogflowService {
+  private config: APIConfig;
+
+  constructor() {
+    this.config = new APIConfig();
+  }
+
+  async detectIntent(message: string, sessionId: string): Promise<DialogflowResponse> {
+    try {
+      const response = await fetch(`${this.config.baseURL}/api/v1/dialogflow/detect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.config.getAuthToken()}`
+        },
+        body: JSON.stringify({
+          message,
+          sessionId,
+          languageCode: 'es'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Dialogflow error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      // Validar respuesta con Zod
+      const validatedResponse = this.validateDialogflowResponse(result);
+      
+      return validatedResponse;
+
+    } catch (error) {
+      console.error('Error detectando intent con Dialogflow:', error);
+      throw error;
+    }
+  }
+
+  async getMetrics(timeRange: string = '24h'): Promise<DialogflowMetrics> {
+    try {
+      const response = await fetch(
+        `${this.config.baseURL}/api/v1/dialogflow/metrics?timeRange=${timeRange}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.config.getAuthToken()}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error obteniendo métricas: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return this.validateDialogflowMetrics(result);
+
+    } catch (error) {
+      console.error('Error obteniendo métricas de Dialogflow:', error);
+      return this.getDefaultMetrics();
+    }
+  }
+
+  private validateDialogflowResponse(data: any): DialogflowResponse {
+    // Implementar validación con Zod
+    // Por ahora, validación básica
+    if (!data.intent || !data.confidence || !data.fulfillmentText) {
+      throw new Error('Respuesta de Dialogflow inválida');
+    }
+
+    return {
+      intent: data.intent,
+      confidence: data.confidence,
+      entities: data.entities || [],
+      fulfillmentText: data.fulfillmentText,
+      contexts: data.contexts || [],
+      action: data.action || '',
+      parameters: data.parameters || {},
+      source: 'dialogflow_es',
+      sessionId: data.sessionId || '',
+      timestamp: data.timestamp || new Date().toISOString(),
+      queryText: data.queryText || ''
+    };
+  }
+
+  private validateDialogflowMetrics(data: any): DialogflowMetrics {
+    return {
+      totalRequests: data.totalRequests || 0,
+      successfulRequests: data.successfulRequests || 0,
+      failedRequests: data.failedRequests || 0,
+      averageResponseTime: data.averageResponseTime || 0,
+      intentDistribution: data.intentDistribution || {},
+      averageConfidence: data.averageConfidence || 0,
+      fallbackRate: data.fallbackRate || 0,
+      freeTierUtilization: data.freeTierUtilization || 0
+    };
+  }
+
+  private getDefaultMetrics(): DialogflowMetrics {
+    return {
+      totalRequests: 0,
+      successfulRequests: 0,
+      failedRequests: 0,
+      averageResponseTime: 0,
+      intentDistribution: {},
+      averageConfidence: 0,
+      fallbackRate: 0,
+      freeTierUtilization: 0
+    };
+  }
+}
+```
+
+### **📊 Componente de Métricas Híbridas**
+
+```typescript
+// components/HybridMetrics.tsx
+import React, { useState, useEffect } from 'react';
+import { HybridChatbotService } from '../services/HybridChatbotService';
+import { CostTracker } from '../services/CostTracker';
+import { 
+  ChartBarIcon, 
+  CurrencyDollarIcon, 
+  ClockIcon, 
+  CheckCircleIcon 
+} from '@heroicons/react/24/outline';
+
+interface HybridMetricsProps {
+  timeRange?: string;
+  refreshInterval?: number;
+}
+
+export const HybridMetrics: React.FC<HybridMetricsProps> = ({
+  timeRange = '24h',
+  refreshInterval = 30000 // 30 segundos
+}) => {
+  const [metrics, setMetrics] = useState<HybridMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const hybridService = new HybridChatbotService();
+  const costTracker = new CostTracker();
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setLoading(true);
+        const hybridMetrics = await hybridService.getHybridMetrics(timeRange);
+        setMetrics(hybridMetrics);
+        setError(null);
+      } catch (err) {
+        setError('Error obteniendo métricas híbridas');
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Cargar métricas iniciales
+    fetchMetrics();
+
+    // Configurar intervalo de actualización
+    const interval = setInterval(fetchMetrics, refreshInterval);
+
+    return () => clearInterval(interval);
+  }, [timeRange, refreshInterval]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <CheckCircleIcon className="h-5 w-5 text-red-400" />
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">Error</h3>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Métricas de Arquitectura Híbrida
+        </h3>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">Rango:</span>
+          <select 
+            value={timeRange}
+            onChange={(e) => setMetrics(null)}
+            className="text-sm border border-gray-300 rounded-md px-2 py-1"
+          >
+            <option value="1h">1 hora</option>
+            <option value="24h">24 horas</option>
+            <option value="7d">7 días</option>
+            <option value="30d">30 días</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Métricas de Uso */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="flex items-center">
+            <ChartBarIcon className="h-8 w-8 text-blue-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-blue-600">Dialogflow ES</p>
+              <p className="text-2xl font-bold text-blue-900">
+                {metrics.dialogflow.totalRequests.toLocaleString()}
+              </p>
+              <p className="text-xs text-blue-600">
+                {metrics.dialogflow.usagePercentage}% del total
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="flex items-center">
+            <ChartBarIcon className="h-8 w-8 text-green-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-green-600">Vertex AI</p>
+              <p className="text-2xl font-bold text-green-900">
+                {metrics.vertexAi.totalRequests.toLocaleString()}
+              </p>
+              <p className="text-xs text-green-600">
+                {metrics.vertexAi.usagePercentage}% del total
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-purple-50 rounded-lg p-4">
+          <div className="flex items-center">
+            <CurrencyDollarIcon className="h-8 w-8 text-purple-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-purple-600">Ahorro de Costos</p>
+              <p className="text-2xl font-bold text-purple-900">
+                {metrics.costs.costSavingsPercentage}%
+              </p>
+              <p className="text-xs text-purple-600">
+                ${metrics.costs.totalSavings.toFixed(2)} ahorrados
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Eficiencia Híbrida */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h4 className="text-md font-semibold text-gray-900 mb-4">
+          Eficiencia de la Arquitectura Híbrida
+        </h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">
+              {metrics.hybridEfficiency.dialogflowUsagePercentage}%
+            </p>
+            <p className="text-sm text-gray-600">Dialogflow</p>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">
+              {metrics.hybridEfficiency.vertexAiUsagePercentage}%
+            </p>
+            <p className="text-sm text-gray-600">Vertex AI</p>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-2xl font-bold text-purple-600">
+              ${metrics.hybridEfficiency.costPerRequest.toFixed(6)}
+            </p>
+            <p className="text-sm text-gray-600">Costo por Request</p>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-2xl font-bold text-indigo-600">
+              {metrics.hybridEfficiency.efficiencyScore}/100
+            </p>
+            <p className="text-sm text-gray-600">Score de Eficiencia</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h5 className="text-sm font-medium text-gray-900 mb-3">Performance</h5>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Tiempo de Respuesta Promedio</span>
+              <span className="text-sm font-medium text-gray-900">
+                {metrics.performance.averageResponseTime}ms
+              </span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Cache Hit Rate</span>
+              <span className="text-sm font-medium text-gray-900">
+                {metrics.vertexAi.cacheHitRate}%
+              </span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Fallback Rate</span>
+              <span className="text-sm font-medium text-gray-900">
+                {metrics.dialogflow.fallbackRate}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h5 className="text-sm font-medium text-gray-900 mb-3">Optimización</h5>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Tokens Reducidos</span>
+              <span className="text-sm font-medium text-gray-900">
+                {metrics.vertexAi.tokenReductionPercentage}%
+              </span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Contexto Optimizado</span>
+              <span className="text-sm font-medium text-gray-900">
+                {metrics.vertexAi.contextOptimizationRate}%
+              </span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Free Tier Utilizado</span>
+              <span className="text-sm font-medium text-gray-900">
+                {metrics.dialogflow.freeTierUtilization}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recomendaciones */}
+      {metrics.recommendations && metrics.recommendations.length > 0 && (
+        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h5 className="text-sm font-medium text-yellow-800 mb-3">
+            Recomendaciones de Optimización
+          </h5>
+          
+          <div className="space-y-2">
+            {metrics.recommendations.map((rec, index) => (
+              <div key={index} className="flex items-start">
+                <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
+                  rec.priority === 'high' ? 'bg-red-400' : 'bg-yellow-400'
+                }`}></div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-yellow-800">
+                    {rec.title}
+                  </p>
+                  <p className="text-sm text-yellow-700">{rec.description}</p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    <strong>Acción:</strong> {rec.action}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+```
+
+### **🎯 Criterios de Éxito Actualizados**
+
+#### **Métricas de Integración con la API:**
+```typescript
+// Criterios de éxito para la arquitectura híbrida
+const hybridArchitectureSuccessCriteria = {
+  apiCoverage: {
+    dialogflowEndpoints: "100% de endpoints de Dialogflow implementados",
+    vertexAiEndpoints: "100% de endpoints de Vertex AI implementados",
+    hybridRouting: "Routing inteligente entre servicios funcionando",
+    fallbackMechanism: "Fallback automático implementado y probado"
+  },
+  
+  errorHandling: {
+    dialogflowErrors: "Manejo de errores de Dialogflow implementado",
+    vertexAiErrors: "Manejo de errores de Vertex AI implementado",
+    fallbackErrors: "Manejo de errores en fallback implementado",
+    userFeedback: "Feedback de errores claro para el usuario"
+  },
+  
+  validation: {
+    dialogflowResponses: "Validación de respuestas de Dialogflow con Zod",
+    vertexAiResponses: "Validación de respuestas de Vertex AI con Zod",
+    hybridResponses: "Validación de respuestas híbridas implementada",
+    dataIntegrity: "Integridad de datos mantenida en toda la cadena"
+  },
+  
+  retryLogic: {
+    dialogflowRetries: "Lógica de reintentos para Dialogflow implementada",
+    vertexAiRetries: "Lógica de reintentos para Vertex AI implementada",
+    exponentialBackoff: "Backoff exponencial implementado",
+    maxRetries: "Límite máximo de reintentos configurado"
+  },
+  
+  swaggerOpenAPI: {
+    dialogflowDocs: "Documentación Swagger para endpoints de Dialogflow",
+    vertexAiDocs: "Documentación Swagger para endpoints de Vertex AI",
+    hybridDocs: "Documentación Swagger para endpoints híbridos",
+    apiContract: "Contrato de API completo y actualizado"
+  },
+  
+  typeSafety: {
+    dialogflowTypes: "Tipos TypeScript para Dialogflow completos",
+    vertexAiTypes: "Tipos TypeScript para Vertex AI completos",
+    hybridTypes: "Tipos TypeScript para arquitectura híbrida",
+    apiTypes: "Tipos de API consistentes y validados"
+  }
+};
+```
+
+#### **Métricas de Optimización de Costos:**
+```typescript
+// Criterios de éxito para optimización de costos
+const costOptimizationSuccessCriteria = {
+  costReduction: {
+    targetSavings: "70-85% reducción en costos totales",
+    dialogflowFreeTier: "100% de uso de capa gratuita de Dialogflow",
+    vertexAiOptimization: "40-60% reducción en tokens de Vertex AI",
+    monthlyBudget: "Presupuesto mensual dentro de $25-50 objetivo"
+  },
+  
+  performanceMetrics: {
+    responseTime: "Tiempo de respuesta total <2s",
+    dialogflowLatency: "Dialogflow <200ms para intents simples",
+    vertexAiLatency: "Vertex AI <2s para casos complejos",
+    cacheEfficiency: "Cache hit rate >70%"
+  },
+  
+  userExperience: {
+    seamlessRouting: "Routing transparente entre servicios",
+    consistentResponses: "Respuestas consistentes independientemente del servicio",
+    fallbackTransparency: "Fallback invisible para el usuario",
+    multilingualSupport: "Soporte nativo multilingüe funcionando"
+  },
+  
+  monitoring: {
+    realTimeMetrics: "Métricas en tiempo real disponibles",
+    costTracking: "Seguimiento de costos por conversación",
+    performanceAlerts: "Alertas de performance configuradas",
+    optimizationInsights: "Insights de optimización generados"
+  }
+};
+```
+
+#### **Métricas de Integración con la API:**
+```typescript
+// Criterios de éxito para integración con la API
+const apiIntegrationSuccessCriteria = {
+  apiCoverage: {
+    chatEndpoints: "100% de endpoints de chat implementados",
+    sessionEndpoints: "100% de endpoints de sesión implementados",
+    userEndpoints: "100% de endpoints de usuario implementados",
+    documentEndpoints: "100% de endpoints de documentos implementados",
+    analyticsEndpoints: "100% de endpoints de analytics implementados",
+    costEndpoints: "100% de endpoints de costos implementados"
+  },
+  
+  errorHandling: {
+    apiErrors: "Manejo de errores de API implementado",
+    validationErrors: "Validación de entrada implementada",
+    networkErrors: "Manejo de errores de red implementado",
+    rateLimitHandling: "Manejo de rate limiting implementado"
+  },
+  
+  validation: {
+    requestValidation: "Validación de requests con Zod implementada",
+    responseValidation: "Validación de responses implementada",
+    typeSafety: "Type safety completo en toda la API",
+    dataIntegrity: "Integridad de datos mantenida"
+  },
+  
+  retryLogic: {
+    retryMechanism: "Mecanismo de reintentos implementado",
+    exponentialBackoff: "Backoff exponencial implementado",
+    maxRetries: "Límite máximo de reintentos configurado",
+    retryConditions: "Condiciones de reintento definidas"
+  },
+  
+  swaggerOpenAPI: {
+    documentation: "Documentación Swagger/OpenAPI completa",
+    apiContract: "Contrato de API definido y validado",
+    examples: "Ejemplos de uso incluidos",
+    errorCodes: "Códigos de error documentados"
+  },
+  
+  typeSafety: {
+    typescriptTypes: "Tipos TypeScript completos para toda la API",
+    interfaceDefinitions: "Interfaces de API definidas",
+    responseTypes: "Tipos de respuesta tipados",
+    requestTypes: "Tipos de request tipados"
+  }
+};
+```
 
 ---
 

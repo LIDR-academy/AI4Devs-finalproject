@@ -2014,3 +2014,651 @@ El documento `tech-solution.md` ha sido **completamente actualizado** con todas 
 *Este documento ha sido completamente actualizado con todas las optimizaciones de costos identificadas en la auditoría GCP, implementando una estrategia integral que maximiza el ROI y minimiza los costos operativos del chatbot de portfolio profesional.*
 
 ---
+
+## 🏗️ **Arquitectura del Sistema - Híbrida Dialogflow + Vertex AI**
+
+### **🎯 Arquitectura Híbrida Optimizada**
+
+El sistema implementa una **arquitectura híbrida inteligente** que combina **Dialogflow ES (Free Tier)** para detección de intenciones y **Vertex AI** para generación de respuestas, maximizando eficiencia y minimizando costos.
+
+```mermaid
+graph TB
+    subgraph "Frontend - React Portfolio"
+        A[Usuario escribe mensaje]
+        B[Validación y sanitización]
+        C[Rate limiting]
+    end
+    
+    subgraph "Backend - FastAPI"
+        D[API Gateway]
+        E[Security Middleware]
+        F[Session Management]
+    end
+    
+    subgraph "Dialogflow ES (Free Tier)"
+        G[Intent Detection]
+        H[Entity Extraction]
+        I[Context Management]
+        J[Conversation Flow]
+        K[Basic Responses]
+    end
+    
+    subgraph "Vertex AI (Optimizado)"
+        L[Smart Context Filtering]
+        M[Document Retrieval]
+        N[Advanced Response Generation]
+        O[Cost Optimization]
+    end
+    
+    subgraph "Cache Inteligente Multinivel"
+        P[Redis Cache - Fastest]
+        Q[Cloud Storage - Persistent]
+        R[Database - Analytics]
+    end
+    
+    subgraph "Document Store"
+        S[Professional YAML Document]
+        T[Version Control]
+        U[Translation System]
+    end
+    
+    subgraph "Analytics & Monitoring"
+        V[User Analytics]
+        W[Cost Metrics]
+        X[Performance Monitoring]
+        Y[Security Logging]
+    end
+    
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    I --> J
+    
+    J --> K
+    J --> L
+    
+    L --> M
+    M --> N
+    N --> O
+    
+    K --> P
+    N --> P
+    P --> Q
+    Q --> R
+    
+    M --> S
+    S --> T
+    T --> U
+    
+    G --> V
+    N --> V
+    V --> W
+    W --> X
+    X --> Y
+```
+
+### **🔀 Flujo de Procesamiento Híbrido**
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant B as Backend
+    participant D as Dialogflow ES
+    participant V as Vertex AI
+    participant C as Cache
+    participant S as Document Store
+    
+    U->>F: Escribe mensaje
+    F->>B: Envía mensaje validado
+    B->>D: Detecta intención
+    
+    alt Intención Simple (Greeting, Goodbye, Help)
+        D->>B: Respuesta directa
+        B->>F: Respuesta del chatbot
+        F->>U: Muestra respuesta
+    else Intención Compleja (Experiencia, Skills, Projects)
+        D->>B: Intención + Entidades
+        B->>V: Solicita respuesta avanzada
+        V->>S: Obtiene contexto relevante
+        S->>V: Contexto optimizado
+        V->>B: Respuesta generada
+        B->>C: Almacena en cache
+        B->>F: Respuesta del chatbot
+        F->>U: Muestra respuesta
+    end
+    
+    B->>B: Registra analytics
+    B->>B: Actualiza métricas de costos
+```
+
+### **💰 Optimización de Costos con Arquitectura Híbrida**
+
+#### **Distribución de Costos:**
+```yaml
+# Análisis de costos por arquitectura
+cost_analysis:
+  dialogflow_es:
+    requests_per_month: "15,000 (Free tier)"
+    cost_per_month: "$0 (Free)"
+    intent_detection: "95% accuracy"
+    basic_responses: "Simple intents"
+  
+  vertex_ai:
+    requests_per_month: "5,000 (Reducido por Dialogflow)"
+    cost_per_month: "$25-50 (60-80% reducción)"
+    advanced_generation: "Complex intents"
+    smart_context: "Optimizado"
+  
+  total_monthly:
+    original_vertex_ai_only: "$150-300"
+    hybrid_architecture: "$25-50"
+    savings: "70-85% reducción"
+    roi_improvement: "3-4x mejor"
+```
+
+#### **Estrategia de Routing Inteligente:**
+```python
+# app/services/hybrid_routing_service.py
+class HybridRoutingService:
+    """Servicio de routing inteligente entre Dialogflow y Vertex AI"""
+    
+    def __init__(self):
+        self.dialogflow_service = DialogflowService()
+        self.vertex_ai_service = VertexAIService()
+        self.cost_optimizer = CostOptimizationService()
+    
+    async def route_message(self, message: str, session_id: str) -> dict:
+        """Rutea mensaje a Dialogflow o Vertex AI según complejidad"""
+        
+        # 1. Detección de intención con Dialogflow (Free)
+        dialogflow_result = await self.dialogflow_service.detect_intent(
+            session_id, message
+        )
+        
+        # 2. Evaluar si Dialogflow puede manejar la respuesta
+        if self._can_dialogflow_handle(dialogflow_result):
+            return await self._handle_with_dialogflow(dialogflow_result)
+        
+        # 3. Si no, usar Vertex AI con contexto optimizado
+        return await self._handle_with_vertex_ai(message, dialogflow_result)
+    
+    def _can_dialogflow_handle(self, dialogflow_result: dict) -> bool:
+        """Determina si Dialogflow puede manejar la respuesta"""
+        simple_intents = [
+            "greeting", "goodbye", "thanks", "help_request",
+            "basic_info", "contact_info", "schedule_info"
+        ]
+        
+        return (
+            dialogflow_result["intent"] in simple_intents and
+            dialogflow_result["confidence"] > 0.8 and
+            dialogflow_result["fulfillment_text"] and
+            len(dialogflow_result["fulfillment_text"]) > 10
+        )
+    
+    async def _handle_with_dialogflow(self, dialogflow_result: dict) -> dict:
+        """Maneja respuesta usando solo Dialogflow"""
+        return {
+            "response": dialogflow_result["fulfillment_text"],
+            "intent": dialogflow_result["intent"],
+            "confidence": dialogflow_result["confidence"],
+            "entities": dialogflow_result["entities"],
+            "source": "dialogflow_es",
+            "cost_optimization": {
+                "dialogflow_requests": 1,
+                "vertex_ai_tokens": 0,
+                "cost_savings": "100% (Free tier)"
+            }
+        }
+    
+    async def _handle_with_vertex_ai(self, message: str, dialogflow_result: dict) -> dict:
+        """Maneja respuesta usando Vertex AI con contexto optimizado"""
+        
+        # Usar intención detectada por Dialogflow para optimizar contexto
+        optimized_context = await self.vertex_ai_service.get_optimized_context(
+            message, dialogflow_result["intent"], dialogflow_result["entities"]
+        )
+        
+        vertex_response = await self.vertex_ai_service.generate_response(
+            message, optimized_context
+        )
+        
+        return {
+            "response": vertex_response["content"],
+            "intent": dialogflow_result["intent"],
+            "confidence": dialogflow_result["confidence"],
+            "entities": dialogflow_result["entities"],
+            "source": "vertex_ai_optimized",
+            "context_used": optimized_context["sections"],
+            "cost_optimization": {
+                "dialogflow_requests": 1,
+                "vertex_ai_tokens": vertex_response["tokens_consumed"],
+                "context_optimization": "40-60% reducción en tokens"
+            }
+        }
+```
+
+### **🎯 Configuración de Dialogflow ES**
+
+#### **Intents Principales Configurados:**
+```yaml
+# Configuración de intents en Dialogflow ES
+dialogflow_intents:
+  greeting:
+    training_phrases:
+      - "Hola"
+      - "Buenos días"
+      - "¿Cómo estás?"
+      - "Hola, ¿cómo va?"
+    responses:
+      - "¡Hola! Soy el asistente virtual de Álvaro Maldonado. ¿En qué puedo ayudarte hoy?"
+      - "¡Hola! Bienvenido a mi portfolio. ¿Qué te gustaría saber sobre mi experiencia profesional?"
+  
+  goodbye:
+    training_phrases:
+      - "Adiós"
+      - "Hasta luego"
+      - "Gracias, eso es todo"
+      - "Chao"
+    responses:
+      - "¡Ha sido un placer ayudarte! Si tienes más preguntas, aquí estaré."
+      - "¡Hasta luego! Espero que la información te haya sido útil."
+  
+  help_request:
+    training_phrases:
+      - "¿Puedes ayudarme?"
+      - "¿Qué puedes hacer?"
+      - "¿Cómo funciona esto?"
+      - "Ayuda"
+    responses:
+      - "¡Por supuesto! Puedo ayudarte con información sobre mi experiencia laboral, tecnologías que manejo, proyectos realizados, formación académica y más. ¿Qué te interesa saber?"
+  
+  basic_info:
+    training_phrases:
+      - "¿Quién eres?"
+      - "¿Qué haces?"
+      - "Cuéntame de ti"
+      - "¿A qué te dedicas?"
+    responses:
+      - "Soy Álvaro Maldonado, un Software Engineer especializado en desarrollo web y aplicaciones móviles. Tengo experiencia en React, Node.js, Python y tecnologías cloud. ¿Te gustaría que profundice en algún área específica?"
+  
+  contact_info:
+    training_phrases:
+      - "¿Cómo te contacto?"
+      - "¿Tienes LinkedIn?"
+      - "¿Cuál es tu email?"
+      - "¿Dónde trabajas?"
+    responses:
+      - "Puedes contactarme a través de LinkedIn: [linkedin.com/in/almaldonado](https://linkedin.com/in/almaldonado), o por email: alvaro@almapi.dev. También puedes visitar mi portfolio en almapi.dev para más información."
+  
+  schedule_info:
+    training_phrases:
+      - "¿Estás disponible?"
+      - "¿Tienes tiempo para proyectos?"
+      - "¿Cuándo puedes empezar?"
+      - "¿Estás buscando trabajo?"
+    responses:
+      - "Actualmente estoy evaluando nuevas oportunidades. Mi disponibilidad depende del proyecto y la modalidad de trabajo. ¿Te gustaría que conversemos sobre tu proyecto específico?"
+```
+
+#### **Entidades Configuradas:**
+```yaml
+# Entidades para extracción automática
+dialogflow_entities:
+  technology:
+    entries:
+      - value: "Python"
+        synonyms: ["python", "py", "python3", "django", "flask"]
+      - value: "React"
+        synonyms: ["react", "reactjs", "react.js", "jsx", "hooks"]
+      - value: "Node.js"
+        synonyms: ["node", "nodejs", "node.js", "express", "npm"]
+      - value: "JavaScript"
+        synonyms: ["javascript", "js", "es6", "typescript", "ts"]
+      - value: "TypeScript"
+        synonyms: ["typescript", "ts", "typed js"]
+      - value: "PostgreSQL"
+        synonyms: ["postgresql", "postgres", "sql", "database"]
+      - value: "MongoDB"
+        synonyms: ["mongodb", "mongo", "nosql", "document db"]
+      - value: "Docker"
+        synonyms: ["docker", "containerization", "kubernetes", "k8s"]
+      - value: "AWS"
+        synonyms: ["aws", "amazon web services", "cloud", "ec2", "s3"]
+      - value: "Google Cloud"
+        synonyms: ["gcp", "google cloud", "cloud run", "cloud sql"]
+  
+  company:
+    entries:
+      - value: "Empresa Actual"
+        synonyms: ["mi empresa", "donde trabajo", "actualmente"]
+      - value: "Empresa Anterior"
+        synonyms: ["empresa pasada", "antes trabajaba", "anteriormente"]
+  
+  role:
+    entries:
+      - value: "Software Engineer"
+        synonyms: ["desarrollador", "programador", "engineer", "dev"]
+      - value: "Full Stack Developer"
+        synonyms: ["fullstack", "full stack", "desarrollador completo"]
+      - value: "Backend Developer"
+        synonyms: ["backend", "servidor", "api developer"]
+      - value: "Frontend Developer"
+        synonyms: ["frontend", "cliente", "ui developer"]
+      - value: "DevOps Engineer"
+        synonyms: ["devops", "infraestructura", "cloud engineer"]
+  
+  project_type:
+    entries:
+      - value: "Web Application"
+        synonyms: ["aplicación web", "sitio web", "web app", "website"]
+      - value: "Mobile App"
+        synonyms: ["app móvil", "aplicación móvil", "mobile application"]
+      - value: "API"
+        synonyms: ["api", "rest api", "servicio web", "backend"]
+      - value: "Database"
+        synonyms: ["base de datos", "database", "sql", "nosql"]
+      - value: "Cloud Infrastructure"
+        synonyms: ["infraestructura cloud", "cloud", "servidores", "deployment"]
+```
+
+### **🔧 Integración Técnica Dialogflow + FastAPI**
+
+#### **Servicio de Integración:**
+```python
+# app/services/dialogflow_integration_service.py
+from google.cloud import dialogflow_v2
+from app.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+class DialogflowIntegrationService:
+    """Servicio de integración con Dialogflow ES"""
+    
+    def __init__(self):
+        self.project_id = settings.GCP_PROJECT_ID
+        self.session_client = dialogflow_v2.SessionsClient()
+        self.intents_client = dialogflow_v2.IntentsClient()
+        
+        # Configuración para free tier
+        self.language_code = "es"
+        self.use_audio = False  # Solo texto para optimizar costos
+    
+    async def detect_intent(self, session_id: str, text: str) -> dict:
+        """Detecta la intención del usuario usando Dialogflow ES"""
+        try:
+            session_path = self.session_client.session_path(
+                self.project_id, session_id
+            )
+            
+            text_input = dialogflow_v2.TextInput(
+                text=text, language_code=self.language_code
+            )
+            
+            query_input = dialogflow_v2.QueryInput(text=text_input)
+            
+            request = dialogflow_v2.DetectIntentRequest(
+                session=session_path, query_input=query_input
+            )
+            
+            response = self.session_client.detect_intent(request=request)
+            
+            return {
+                "intent": response.query_result.intent.display_name,
+                "confidence": response.query_result.intent_detection_confidence,
+                "entities": self._extract_entities(response.query_result.parameters),
+                "fulfillment_text": response.query_result.fulfillment_text,
+                "contexts": self._extract_contexts(response.query_result.output_contexts),
+                "action": response.query_result.action,
+                "parameters": response.query_result.parameters,
+                "source": "dialogflow_es"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error en Dialogflow: {e}")
+            # Fallback a Vertex AI
+            return await self._fallback_to_vertex_ai(text)
+    
+    async def _extract_entities(self, parameters) -> list:
+        """Extrae entidades de los parámetros de Dialogflow"""
+        entities = []
+        if parameters:
+            for key, value in parameters.items():
+                if value:
+                    entities.append({
+                        "type": key,
+                        "value": value,
+                        "confidence": 0.95,  # Dialogflow ES confidence
+                        "source": "dialogflow_es"
+                    })
+        return entities
+    
+    async def _extract_contexts(self, output_contexts) -> list:
+        """Extrae contextos de salida de Dialogflow"""
+        contexts = []
+        for context in output_contexts:
+            contexts.append({
+                "name": context.name,
+                "lifespan_count": context.lifespan_count,
+                "parameters": dict(context.parameters)
+            })
+        return contexts
+    
+    async def _fallback_to_vertex_ai(self, text: str) -> dict:
+        """Fallback a Vertex AI si Dialogflow falla"""
+        # Implementar fallback a Vertex AI
+        from app.services.vertex_ai_service import VertexAIService
+        
+        vertex_service = VertexAIService()
+        return await vertex_service.generate_response(text, {})
+```
+
+### **📊 Métricas y Monitoreo de la Arquitectura Híbrida**
+
+#### **KPIs de Performance:**
+```yaml
+# Métricas clave de la arquitectura híbrida
+hybrid_architecture_metrics:
+  dialogflow_performance:
+    intent_accuracy: ">95%"
+    response_time: "<200ms"
+    free_tier_utilization: "<80%"
+    fallback_rate: "<5%"
+  
+  vertex_ai_optimization:
+    token_reduction: "40-60%"
+    context_optimization: ">85%"
+    cost_per_response: "<$0.001"
+    cache_hit_rate: ">70%"
+  
+  overall_system:
+    total_response_time: "<2s"
+    user_satisfaction: ">4.5/5"
+    cost_per_conversation: "<$0.005"
+    system_uptime: ">99.9%"
+```
+
+#### **Dashboard de Monitoreo:**
+```python
+# app/services/hybrid_monitoring_service.py
+class HybridMonitoringService:
+    """Servicio de monitoreo para arquitectura híbrida"""
+    
+    async def get_hybrid_metrics(self) -> dict:
+        """Obtiene métricas completas de la arquitectura híbrida"""
+        try:
+            # Métricas de Dialogflow
+            dialogflow_metrics = await self._get_dialogflow_metrics()
+            
+            # Métricas de Vertex AI
+            vertex_ai_metrics = await self._get_vertex_ai_metrics()
+            
+            # Métricas de costos
+            cost_metrics = await self._get_cost_metrics()
+            
+            # Métricas de performance
+            performance_metrics = await self._get_performance_metrics()
+            
+            return {
+                "dialogflow": dialogflow_metrics,
+                "vertex_ai": vertex_ai_metrics,
+                "costs": cost_metrics,
+                "performance": performance_metrics,
+                "hybrid_efficiency": self._calculate_hybrid_efficiency(
+                    dialogflow_metrics, vertex_ai_metrics, cost_metrics
+                )
+            }
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo métricas híbridas: {e}")
+            return {}
+    
+    def _calculate_hybrid_efficiency(self, dialogflow: dict, vertex_ai: dict, costs: dict) -> dict:
+        """Calcula la eficiencia de la arquitectura híbrida"""
+        total_requests = dialogflow.get("total_requests", 0) + vertex_ai.get("total_requests", 0)
+        dialogflow_percentage = (dialogflow.get("total_requests", 0) / total_requests * 100) if total_requests > 0 else 0
+        vertex_ai_percentage = (vertex_ai.get("total_requests", 0) / total_requests * 100) if total_requests > 0 else 0
+        
+        cost_per_request = costs.get("total_cost", 0) / total_requests if total_requests > 0 else 0
+        
+        return {
+            "dialogflow_usage_percentage": round(dialogflow_percentage, 2),
+            "vertex_ai_usage_percentage": round(vertex_ai_percentage, 2),
+            "cost_per_request": round(cost_per_request, 6),
+            "efficiency_score": self._calculate_efficiency_score(dialogflow, vertex_ai, costs),
+            "optimization_recommendations": self._generate_optimization_recommendations(
+                dialogflow, vertex_ai, costs
+            )
+        }
+```
+
+### **🚀 Beneficios de la Arquitectura Híbrida**
+
+#### **Ventajas Técnicas:**
+```yaml
+# Beneficios técnicos de la arquitectura híbrida
+technical_benefits:
+  performance:
+    - "Respuestas instantáneas para intents simples (Dialogflow)"
+    - "Respuestas contextuales avanzadas para casos complejos (Vertex AI)"
+    - "Reducción de latencia general del sistema"
+    - "Mejor experiencia de usuario"
+  
+  scalability:
+    - "Dialogflow maneja picos de tráfico (Free tier)"
+    - "Vertex AI se enfoca en casos complejos"
+    - "Distribución inteligente de carga"
+    - "Escalado automático según demanda"
+  
+  reliability:
+    - "Fallback automático entre servicios"
+    - "Redundancia en detección de intenciones"
+    - "Mejor manejo de errores"
+    - "Sistema más robusto"
+```
+
+#### **Ventajas de Negocio:**
+```yaml
+# Beneficios de negocio de la arquitectura híbrida
+business_benefits:
+  cost_optimization:
+    - "70-85% reducción en costos totales"
+    - "Aprovechamiento completo de capas gratuitas"
+    - "ROI mejorado del proyecto"
+    - "Presupuesto optimizado para escalamiento"
+  
+  time_to_market:
+    - "Desarrollo 60-80% más rápido"
+    - "Intents básicos funcionando en días"
+    - "Funcionalidades complejas en semanas"
+    - "Lanzamiento más rápido al mercado"
+  
+  user_experience:
+    - "Respuestas más precisas y contextuales"
+    - "Mejor manejo de conversaciones complejas"
+    - "Soporte multilingüe nativo"
+    - "Experiencia más natural y fluida"
+```
+
+### **📋 Plan de Implementación Dialogflow**
+
+#### **Fase 1: Configuración Básica (Semana 1)**
+```yaml
+# Configuración inicial de Dialogflow ES
+phase_1_setup:
+  dialogflow_project:
+    - "Crear proyecto en GCP"
+    - "Configurar Dialogflow ES"
+    - "Configurar idioma español"
+    - "Crear agente básico"
+  
+  intents_basic:
+    - "Configurar intents de saludo"
+    - "Configurar intents de despedida"
+    - "Configurar intents de ayuda"
+    - "Configurar intents básicos de información"
+  
+  entities_basic:
+    - "Configurar entidad de tecnologías"
+    - "Configurar entidad de empresas"
+    - "Configurar entidad de roles"
+    - "Configurar entidad de tipos de proyecto"
+```
+
+#### **Fase 2: Integración Técnica (Semana 2)**
+```yaml
+# Integración con el backend
+phase_2_integration:
+  backend_integration:
+    - "Implementar DialogflowIntegrationService"
+    - "Configurar routing híbrido"
+    - "Implementar fallback a Vertex AI"
+    - "Configurar manejo de errores"
+  
+  api_endpoints:
+    - "Actualizar endpoint de chat"
+    - "Implementar detección de intención"
+    - "Configurar routing inteligente"
+    - "Implementar métricas híbridas"
+```
+
+#### **Fase 3: Testing y Optimización (Semana 3)**
+```yaml
+# Testing y optimización
+phase_3_optimization:
+  testing:
+    - "Testing de intents básicos"
+    - "Testing de routing híbrido"
+    - "Testing de fallback"
+    - "Testing de performance"
+  
+  optimization:
+    - "Ajustar thresholds de routing"
+    - "Optimizar entidades"
+    - "Mejorar respuestas de Dialogflow"
+    - "Ajustar configuración de cache"
+```
+
+#### **Fase 4: Lanzamiento y Monitoreo (Semana 4)**
+```yaml
+# Lanzamiento y monitoreo
+phase_4_launch:
+  launch:
+    - "Despliegue a producción"
+    - "Configuración de monitoreo"
+    - "Configuración de alertas"
+    - "Documentación para usuarios"
+  
+  monitoring:
+    - "Dashboard de métricas híbridas"
+    - "Alertas de performance"
+    - "Monitoreo de costos"
+    - "Análisis de uso y satisfacción"
+```
