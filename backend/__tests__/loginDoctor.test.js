@@ -63,7 +63,7 @@ describe('POST /api/auth/login/doctor', () => {
                 token: 'jwt_token_doctor',
                 id: mockUser.id,
                 email: mockUser.email,
-                userType: 'doctor'
+                role: 'doctor'
             }
         });
 
@@ -79,7 +79,7 @@ describe('POST /api/auth/login/doctor', () => {
                 token: 'jwt_token_doctor',
                 id: mockUser.id,
                 email: mockUser.email,
-                userType: 'doctor',
+                role: 'doctor',
             }
         });
     });
@@ -171,7 +171,7 @@ describe('POST /api/auth/login/doctor', () => {
                 token: 'jwt_token_doctor',
                 id: mockUser.id,
                 email: mockUser.email,
-                userType: 'doctor'
+                role: 'doctor'
             }
         });
 
@@ -183,6 +183,6 @@ describe('POST /api/auth/login/doctor', () => {
         expect(res.body.payload.token).toBe('jwt_token_doctor');
         expect(res.body.payload).toHaveProperty('id', mockUser.id);
         expect(res.body.payload).toHaveProperty('email', mockUser.email);
-        expect(res.body.payload).toHaveProperty('userType', 'doctor');
+        expect(res.body.payload).toHaveProperty('role', 'doctor');
     });
 });

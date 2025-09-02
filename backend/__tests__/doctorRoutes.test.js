@@ -10,8 +10,10 @@ jest.mock('../src/domain/jwtService', () => ({
 const request = require('supertest');
 jest.mock('../src/domain/doctorService'); // Mock del servicio de dominio
 jest.mock('../src/application/getDoctorProfile'); // Mock del caso de uso
+jest.mock('../src/application/getDoctorComments'); // Mock del caso de uso de comentarios
 const { searchDoctors } = require('../src/domain/doctorService');
 const { getDoctorProfile } = require('../src/application/getDoctorProfile');
+const { getDoctorComments } = require('../src/application/getDoctorComments');
 const app = require('../server');
 
 
@@ -110,6 +112,13 @@ describe('GET /api/doctors/:id', () => {
   });
 
   it('Debe regresar un perfil publico para un doctor activo (criterio 7.1)', async () => {
+    // Simula visitante (no autenticado)
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 99,
+      email: 'test@mock.com'
+      // sin role
+    }));
+
     getDoctorProfile.mockResolvedValue({
       id: 1,
       name: 'Dr. Juan Pérez',
@@ -119,10 +128,8 @@ describe('GET /api/doctors/:id', () => {
       licenseNumber: '123456',
       title: 'Cardiología',
       city: 'Ciudad de México',
-      state: 'CDMX',
-      email: 'juan.perez@ejemplo.com',
-      phone: '555-1234',
-      address: 'Av. Reforma 123, Ciudad de México'
+      state: 'CDMX'
+      // sin datos sensibles
     });
 
     const res = await request(app).get('/api/doctors/1');
@@ -146,6 +153,12 @@ describe('GET /api/doctors/:id', () => {
   });
 
   it('Debe regresar un perfil completo para usuario autenticado', async () => {
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 99,
+      email: 'test@mock.com',
+      role: 'patient'
+    }));
+
     getDoctorProfile.mockResolvedValue({
       id: 2,
       name: 'Dra. Ana López',
@@ -161,7 +174,6 @@ describe('GET /api/doctors/:id', () => {
       address: 'Av. Juárez 456, Guadalajara'
     });
 
-    // Simula autenticación agregando un token válido
     const token = 'Bearer mock.jwt.token';
     const res = await request(app)
       .get('/api/doctors/2')
@@ -194,5 +206,117 @@ describe('GET /api/doctors/:id', () => {
     expect(Array.isArray(res.body.payload.error)).toBe(true);
     expect(res.body.payload.error[0]).toMatch(/id/i);
     expect(res.body.payload.error[0]).toMatch(/number/i);
+  });
+});
+
+describe('GET /api/doctors/:id/comments', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('debe retornar comentarios paginados para usuario autenticado', async () => {
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 99,
+      email: 'test@mock.com',
+      role: 'patient'
+    }));
+
+    getDoctorComments.mockResolvedValue({
+      results: [
+        {
+          doctor_id: 4,
+          score: 5,
+          comment: 'Excelente atención.',
+          created_at: '2025-08-01T10:00:00.000Z',
+          anonymous: false,
+          patient_name: 'Ana López'
+        },
+        {
+          doctor_id: 4,
+          score: 4,
+          comment: 'Muy profesional.',
+          created_at: '2025-07-15T09:30:00.000Z',
+          anonymous: true,
+          patient_name: 'Anonymous'
+        }
+      ],
+      pagination: {
+        total: 2,
+        page: 1,
+        limit: 5,
+        totalPages: 1
+      }
+    });
+
+    const token = 'Bearer mock.jwt.token';
+    const res = await request(app)
+      .get('/api/doctors/4/comments')
+      .set('Authorization', token);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('code', 200);
+    expect(res.body).toHaveProperty('message', 'success');
+    expect(res.body).toHaveProperty('payload');
+    expect(Array.isArray(res.body.payload.results)).toBe(true);
+    expect(res.body.payload.results[0]).toHaveProperty('doctor_id', 4);
+    expect(res.body.payload.results[0]).toHaveProperty('score');
+    expect(res.body.payload.results[0]).toHaveProperty('comment');
+    expect(res.body.payload.results[0]).toHaveProperty('created_at');
+    expect(res.body.payload.results[0]).toHaveProperty('anonymous', false);
+    expect(res.body.payload.results[0]).toHaveProperty('patient_name', 'Ana López');
+    expect(res.body.payload.results[1]).toHaveProperty('anonymous', true);
+    expect(res.body.payload.results[1]).toHaveProperty('patient_name', 'Anonymous');
+    expect(res.body.payload.pagination).toHaveProperty('total', 2);
+    expect(res.body.payload.pagination).toHaveProperty('page', 1);
+    expect(res.body.payload.pagination).toHaveProperty('limit', 5);
+    expect(res.body.payload.pagination).toHaveProperty('totalPages', 1);
+  });
+
+  it('debe retornar error 401 si el usuario no está autenticado', async () => {
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => null);
+
+    const res = await request(app).get('/api/doctors/4/comments');
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toHaveProperty('code', 401);
+    expect(res.body).toHaveProperty('message', 'Unauthorized');
+    expect(res.body.payload).toHaveProperty('error');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
+  });
+
+  it('debe retornar error 400 para id inválido', async () => {
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 99,
+      email: 'test@mock.com',
+      role: 'patient'
+    }));
+
+    const res = await request(app)
+      .get('/api/doctors/abc/comments')
+      .set('Authorization', 'Bearer mock.jwt.token');
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('code', 400);
+    expect(res.body).toHaveProperty('message');
+    expect(res.body.payload).toHaveProperty('error');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/id/i);
+  });
+
+  it('debe retornar error 401 si el token está mal formado', async () => {
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => {
+      throw new Error('jwt malformed');
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/4/comments')
+      .set('Authorization', 'Bearer token_mal_formado');
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body).toHaveProperty('code', 401);
+    expect(res.body).toHaveProperty('message', 'Unauthorized');
+    expect(res.body.payload).toHaveProperty('error');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
   });
 });

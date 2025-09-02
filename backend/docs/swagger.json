@@ -531,7 +531,7 @@
                           "type": "string",
                           "example": "ana.garcia@example.com"
                         },
-                        "userType": {
+                        "role": {
                           "type": "string",
                           "example": "patient"
                         }
@@ -549,7 +549,7 @@
                         "token": "jwt_token_aqui",
                         "id": 1,
                         "email": "ana.garcia@example.com",
-                        "userType": "patient"
+                        "role": "patient"
                       }
                     }
                   }
@@ -762,13 +762,13 @@
                         },
                         "id": {
                           "type": "integer",
-                          "example": 2
+                          "example": 1
                         },
                         "email": {
                           "type": "string",
                           "example": "luis.perez@example.com"
                         },
-                        "userType": {
+                        "role": {
                           "type": "string",
                           "example": "doctor"
                         }
@@ -784,9 +784,9 @@
                       "message": "Login successful",
                       "payload": {
                         "token": "jwt_token_aqui",
-                        "id": 2,
+                        "id": 1,
                         "email": "luis.perez@example.com",
-                        "userType": "doctor"
+                        "role": "doctor"
                       }
                     }
                   }
@@ -1348,6 +1348,192 @@
                       "payload": {
                         "error": [
                           "Doctor with specified ID does not exist"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/doctors/{id}/comments": {
+      "get": {
+        "tags": [
+          "Doctors"
+        ],
+        "summary": "Obtener comentarios de pacientes sobre un especialista",
+        "description": "Devuelve una lista paginada de comentarios de pacientes para el especialista indicado. Solo accesible para usuarios autenticados. El nombre del paciente se oculta si el comentario es anónimo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID del especialista",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de comentarios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "doctor_id": {
+                                "type": "integer",
+                                "example": 4
+                              },
+                              "score": {
+                                "type": "integer",
+                                "example": 5
+                              },
+                              "comment": {
+                                "type": "string",
+                                "example": "Excelente atención."
+                              },
+                              "created_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2025-08-01T10:00:00.000Z"
+                              },
+                              "anonymous": {
+                                "type": "boolean",
+                                "example": false
+                              },
+                              "patient_name": {
+                                "type": "string",
+                                "example": "Ana López"
+                              }
+                            }
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "example": 2
+                            },
+                            "page": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "limit": {
+                              "type": "integer",
+                              "example": 5
+                            },
+                            "totalPages": {
+                              "type": "integer",
+                              "example": 1
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Respuesta exitosa",
+                    "value": {
+                      "code": 200,
+                      "message": "success",
+                      "payload": {
+                        "results": [
+                          {
+                            "doctor_id": 4,
+                            "score": 5,
+                            "comment": "Excelente atención.",
+                            "created_at": "2025-08-01T10:00:00.000Z",
+                            "anonymous": false,
+                            "patient_name": "Ana López"
+                          },
+                          {
+                            "doctor_id": 4,
+                            "score": 4,
+                            "comment": "Muy profesional.",
+                            "created_at": "2025-07-15T09:30:00.000Z",
+                            "anonymous": true,
+                            "patient_name": "Anonymous"
+                          }
+                        ],
+                        "pagination": {
+                          "total": 2,
+                          "page": 1,
+                          "limit": 5,
+                          "totalPages": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 401
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "unauthorized": {
+                    "summary": "No autenticado",
+                    "value": {
+                      "code": 401,
+                      "message": "Unauthorized",
+                      "payload": {
+                        "error": [
+                          "Authentication required to view doctor comments"
                         ]
                       }
                     }

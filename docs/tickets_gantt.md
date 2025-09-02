@@ -54,13 +54,13 @@ gantt
     Pruebas unitarias endpoint login médico especialista (Backend) :done, des8.16, 2025-09-01, 1h
 
     section 9. Buscar especialistas y ver perfiles [US-4]
-    Diseñar el endpoint de búsqueda de especialistas para pacientes :des9.1, 2025-09-01, 1h
-    Implementar la lógica de consulta en el backend para búsqueda y comparación :des9.2, 2025-09-01, 2h
-    Diseñar el endpoint para consultar el perfil completo de especialista :des9.3, 2025-09-02, 1h
-    Implementar la lógica de consulta del perfil completo en el backend :des9.4, 2025-09-02, 2h
-    Agregar validaciones y controles de acceso para mostrar información sensible :des9.5, 2025-09-02, 1h
-    Documentar los endpoints de búsqueda y perfil de especialista para pacientes :des9.6, 2025-09-03, 1h
-    Crear pruebas unitarias para los endpoints de búsqueda y perfil de especialista :des9.7, 2025-09-03, 1h
+    Diseñar el endpoint de búsqueda de especialistas para pacientes :done, des9.1, 2025-09-01, 1h
+    Implementar la lógica de consulta en el backend para búsqueda y comparación :done, des9.2, 2025-09-01, 2h
+    Diseñar el endpoint para consultar el perfil completo de especialista :done, des9.3, 2025-09-02, 1h
+    Implementar la lógica de consulta del perfil completo en el backend :done, des9.4, 2025-09-02, 2h
+    Agregar validaciones y controles de acceso para mostrar información sensible :done, des9.5, 2025-09-02, 1h
+    Documentar los endpoints de búsqueda y perfil de especialista para pacientes :done, des9.6, 2025-09-03, 1h
+    Crear pruebas unitarias para los endpoints de búsqueda y perfil de especialista :done, des9.7, 2025-09-03, 1h
 
     section 10. Agendar cita con especialista [US-5]
     Diseñar el endpoint para agendar cita con especialista :des10.1, 2025-09-03, 1h

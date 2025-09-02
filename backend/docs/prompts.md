@@ -1218,3 +1218,163 @@ module.exports = { generateToken };
 
 Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+
+
+
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para la historia de usuario denomidada "Buscar especialistas y ver perfiles", empezaremos con su implementación.
+En cuanto al proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a implementar las historia de usuario y sus series de tickets para el inicio de sesión de pacientes y medicos
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para ChatGPT 4.1: Implementación de endpoints de búsqueda y perfil de especialistas para pacientes autenticados
+
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Convenciones:** camelCase para variables, funciones y clases  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest (usar mocks)  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **JWT:** Usar jsonwebtoken, autenticación obligatoria para endpoints de paciente  
+> **Swagger:** Documentar ambos endpoints y ejemplos de respuesta  
+> **Internacionalización:** Respuestas en inglés  
+> **Seguridad:** Cumplir LFPDPPP, mostrar información sensible solo a pacientes autenticados
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Revisa el modelo de datos, PRD y código fuente para ubicar la ruta, controlador y servicio correctos, siguiendo arquitectura hexagonal.
+   - Los controladores solo orquestan la llamada a los casos de uso y manejan la respuesta estándar.
+   - La lógica de negocio debe estar en servicios de dominio.
+
+2. **Diseño e implementación de endpoints REST**
+   - Implementa los endpoints:
+     - `GET /api/patient/doctors/search`
+       - Parámetros de consulta: `specialty_id`, `city_id`, `state_id`, valoración mínima, disponibilidad.
+       - Requiere autenticación de paciente.
+       - Retorna información detallada de especialistas activos para comparación.
+     - `GET /api/patient/doctors/:id`
+       - Requiere autenticación de paciente.
+       - Retorna perfil completo del especialista: nombre, especialidad, biografía, foto, cédula profesional, título, ciudad, estado, dirección profesional, valoración promedio, comentarios de pacientes, disponibilidad.
+       - Solo muestra información sensible si el usuario está autenticado como paciente.
+   - Consulta las entidades DOCTOR, DOCTOR_SPECIALTY, SPECIALTY, LOCATION, CITY, STATE, RATING y USER usando Prisma.
+   - Optimiza la consulta para responder en menos de 2 segundos.
+   - Valida que el especialista esté activo antes de mostrar el perfil.
+
+3. **Validaciones y controles de acceso**
+   - Usa Yup para validaciones de datos de entrada.
+   - Implementa middleware de autenticación y control de acceso para verificar el rol de paciente.
+   - Oculta información sensible para usuarios no autenticados o con roles distintos.
+   - Registra intentos de acceso no autorizado para auditoría.
+   - Cumple con la LFPDPPP y buenas prácticas de seguridad.
+
+4. **Documentación Swagger**
+   - Documenta ambos endpoints en Swagger:
+     - Descripción de funcionalidad y requisitos de autenticación.
+     - Parámetros de consulta y ruta.
+     - Ejemplo de petición y respuesta.
+     - Estructura de los datos retornados (incluyendo información adicional para pacientes).
+     - Campos sensibles y controles de acceso.
+     - Posibles errores y mensajes de validación.
+
+5. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para ambos endpoints usando Jest y Supertest.
+   - Usa mocks para dependencias externas.
+   - Casos a cubrir:
+     - Búsqueda exitosa con filtros avanzados y usuario autenticado.
+     - Consulta exitosa de perfil completo con usuario autenticado.
+     - Ocultamiento de información sensible para usuarios no autenticados.
+     - Manejo de especialistas inactivos y errores por ID inexistente o formato incorrecto.
+     - Validación de paginación y tiempos de respuesta.
+
+---
+
+## Ejemplo de estructura base para el servicio y endpoints
+
+```js
+// backend/services/patientDoctorsService.js
+const yup = require('yup');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const searchDoctors = async (filters) => {
+  // Validación con Yup
+  // Consulta avanzada con Prisma usando filtros
+  // Retornar especialistas activos y datos relevantes
+};
+
+const getDoctorProfile = async (doctorId, patientId) => {
+  // Validación con Yup
+  // Consulta de perfil completo con Prisma
+  // Verificar especialista activo
+  // Mostrar información sensible solo si el usuario es paciente autenticado
+  // Retornar datos completos o restringidos según rol
+};
+
+module.exports = { searchDoctors, getDoctorProfile };
+```
+
+```js
+// backend/controllers/patientDoctorsController.js
+const patientDoctorsService = require('../services/patientDoctorsService');
+
+const searchDoctors = async (req, res, next) => {
+  // Extraer filtros de req.query
+  // Llamar a patientDoctorsService.searchDoctors
+  // Manejar respuesta estándar y errores
+};
+
+const getDoctorProfile = async (req, res, next) => {
+  // Extraer doctorId de req.params y patientId de req.user
+  // Llamar a patientDoctorsService.getDoctorProfile
+  // Manejar respuesta estándar y errores
+};
+
+module.exports = { searchDoctors, getDoctorProfile };
+```
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Diagrama de arquitectura](docs/planificacion_y_documentacion/diagramas/diagrama_visual_arquitectura.md)
+- [Diagrama de casos de uso](docs/planificacion_y_documentacion/diagramas/diagrama_casos_de_uso.md)
+- [Product Backlog](docs/product_backlog.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de los requerimientos
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso dime que archivo se a modificar o agregar, muestrame el codigo a agregar o reemplazar y dime en donde lo debo colocar
+- Muestrame la lista de pasos a ejecutar antes de realizar la implementación
+
+Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

@@ -47,7 +47,7 @@ async function loginUser(data, userType) {
   const token = jwtService.generateToken({
     id: user.id,
     email: user.email,
-    userType: user.role
+    role: user.role
   });
 
   // Respuesta estándar
@@ -55,7 +55,7 @@ async function loginUser(data, userType) {
     token,
     id: user.id,
     email: user.email,
-    userType: user.role
+    role: user.role
   };
 }
 

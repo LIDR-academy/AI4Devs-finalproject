@@ -2,13 +2,15 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 /**
- * Busca especialistas filtrando por especialidad, ciudad y estado.
+ * Busca especialistas filtrando por especialidad, ciudad, estado, valoración mínima y disponibilidad.
  * @param {Object} filters - Filtros de búsqueda
  * @param {number} page - Página actual
  * @param {number} limit - Resultados por página
+ * @param {number} minRating - Valoración mínima
+ * @param {boolean} available - Disponibilidad (true/false)
  * @returns {Object} - Resultados y paginación
  */
-async function searchDoctors({ specialtyId, cityId, stateId, page = 1, limit = 10 }) {
+async function searchDoctors({ specialtyId, cityId, stateId, minRating, available, page = 1, limit = 10 }) {
   const where = {
     active: true,
     ...(specialtyId && {
@@ -24,6 +26,7 @@ async function searchDoctors({ specialtyId, cityId, stateId, page = 1, limit = 1
     })
   };
 
+  // Consulta principal
   const [results, total] = await Promise.all([
     prisma.doctor.findMany({
       where,
@@ -36,29 +39,47 @@ async function searchDoctors({ specialtyId, cityId, stateId, page = 1, limit = 1
         },
         location: {
           select: {
+            address: true,
             city: { select: { name: true } },
             state: { select: { name: true } }
           }
-        }
+        },
+        ratings: true,
+        appointments: available
+          ? {
+              where: { status: 'available' }
+            }
+          : false
       }
     }),
     prisma.doctor.count({ where })
   ]);
 
-  const doctors = results.map(doc => ({
-    id: doc.id,
-    name: `${doc.user.first_name} ${doc.user.last_name}`,
-    specialty: doc.specialties.map(ds => ds.specialty.name).join(', '),
-    city: doc.location?.city?.name || '',
-    state: doc.location?.state?.name || '',
-    photo: doc.photo_url || '', // ← Aquí se obtiene la foto del modelo Doctor
-    biography: doc.biography || ''
-  }));
+  // Filtrar por valoración mínima si aplica
+  const doctors = results
+    .map(doc => {
+      const avgRating =
+        doc.ratings.length > 0
+          ? doc.ratings.reduce((acc, r) => acc + r.score, 0) / doc.ratings.length
+          : null;
+      return {
+        id: doc.id,
+        name: `${doc.user.first_name} ${doc.user.last_name}`,
+        specialty: doc.specialties.map(ds => ds.specialty.name).join(', '),
+        city: doc.location?.city?.name || '',
+        state: doc.location?.state?.name || '',
+        photo: doc.photo_url || '',
+        biography: doc.biography || '',
+        avgRating,
+        available: doc.appointments ? doc.appointments.length > 0 : null
+      };
+    })
+    .filter(doc => (minRating ? doc.avgRating >= minRating : true));
 
   return {
     results: doctors,
     pagination: {
-      total,
+      total: doctors.length,
       page,
       limit,
       totalPages: Math.ceil(total / limit)
@@ -66,4 +87,62 @@ async function searchDoctors({ specialtyId, cityId, stateId, page = 1, limit = 1
   };
 }
 
-module.exports = { searchDoctors };
+/**
+ * Obtiene el perfil completo de un especialista, excluyendo comentarios (ratings).
+ * Los comentarios ahora se consultan únicamente por el endpoint dedicado.
+ * @param {number} doctorId
+ * @param {string} userRole
+ * @returns {Object|null}
+ */
+async function getDoctorProfile({ doctorId, userRole }) {
+  const doctor = await prisma.doctor.findUnique({
+    where: { id: Number(doctorId), active: true },
+    include: {
+      user: { select: { first_name: true, last_name: true, email: true } },
+      specialties: {
+        include: { specialty: { select: { name: true } } }
+      },
+      location: {
+        select: {
+          address: true,
+          city: { select: { name: true } },
+          state: { select: { name: true } }
+        }
+      }
+    }
+  });
+
+  if (!doctor) return null;
+
+  // Calcular valoración promedio (opcional: puedes obtenerla con una consulta agregada si lo prefieres)
+  const avgRating = await prisma.rating.aggregate({
+    _avg: { score: true },
+    where: { doctor_id: doctor.id }
+  });
+
+  // Datos públicos
+  const profile = {
+    id: doctor.id,
+    name: `${doctor.user.first_name} ${doctor.user.last_name}`,
+    specialty: doctor.specialties.map(ds => ds.specialty.name).join(', '),
+    biography: doctor.biography || '',
+    photo: doctor.photo_url || '',
+    licenseNumber: doctor.license_number,
+    title: doctor.specialties[0]?.specialty.name || '',
+    city: doctor.location?.city?.name || '',
+    state: doctor.location?.state?.name || '',
+    avgRating: avgRating._avg.score || null
+  };
+
+  // Datos sensibles solo para pacientes autenticados
+  if (userRole === 'patient') {
+    profile.email = doctor.user.email;
+    profile.phone = doctor.phone;
+    profile.address = doctor.location?.address || '';
+    profile.available = true; // Simulación de disponibilidad
+  }
+
+  return profile;
+}
+
+module.exports = { searchDoctors, getDoctorProfile };
