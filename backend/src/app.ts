@@ -6,7 +6,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 
 // Importar configuraciones
-import { connectDatabase, syncDatabase } from './models';
+import { sequelize } from './models';
 import redisClient from './config/redis';
 
 // Importar middleware
@@ -150,11 +150,13 @@ async function startApp() {
     console.log('✅ Redis conectado correctamente');
 
     // Conectar a la base de datos
-    await connectDatabase();
+    await sequelize.authenticate();
+    console.log('✅ Base de datos conectada correctamente');
 
     // Sincronizar modelos (en desarrollo)
     if (process.env.NODE_ENV === 'development') {
-      await syncDatabase();
+      await sequelize.sync({ alter: true });
+      console.log('✅ Modelos sincronizados correctamente');
     }
 
     // Iniciar servidor

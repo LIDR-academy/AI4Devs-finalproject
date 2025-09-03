@@ -26,7 +26,7 @@ export class PropertyService {
       include: [
         {
           model: User,
-          as: 'user',
+          as: 'owner',
           attributes: ['id', 'first_name', 'last_name', 'email', 'phone']
         }
       ],
@@ -44,7 +44,7 @@ export class PropertyService {
       include: [
         {
           model: User,
-          as: 'user',
+          as: 'owner',
           attributes: ['id', 'first_name', 'last_name', 'email', 'phone']
         }
       ]

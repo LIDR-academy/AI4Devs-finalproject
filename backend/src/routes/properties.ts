@@ -68,7 +68,6 @@ router.get('/:id', PropertyController.getPropertyById);
 // Rutas protegidas
 router.post('/', 
   authenticateToken, 
-  requireAgentOrAdmin, 
   propertyCreationRateLimit, 
   validateRequest(propertyValidation), 
   PropertyController.createProperty

@@ -48,7 +48,7 @@ services:
       - DATABASE_URL=mysql://zonmatch_user:zonmatch_pass@mysql:3306/zonmatch
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=your-super-secret-jwt-key-change-in-production
-      - CORS_ORIGIN=http://localhost:3000
+      - CORS_ORIGIN=http://localhost:3002
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -67,7 +67,7 @@ services:
     container_name: zonmatch_frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3002:3002"
     environment:
       - VITE_API_URL=http://localhost:3001
       - VITE_APP_NAME=Zonmatch

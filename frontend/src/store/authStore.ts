@@ -55,8 +55,8 @@ export const useAuthStore = create<AuthStore>()(
           
           const authResponse: IAuthResponse = data;
           set({
-            user: authResponse.user,
-            token: authResponse.token,
+            user: authResponse.data.user,
+            token: authResponse.data.token,
             isAuthenticated: true,
             error: null,
             isLoading: false
@@ -89,8 +89,8 @@ export const useAuthStore = create<AuthStore>()(
           
           const authResponse: IAuthResponse = data;
           set({
-            user: authResponse.user,
-            token: authResponse.token,
+            user: authResponse.data.user,
+            token: authResponse.data.token,
             isAuthenticated: true,
             error: null,
             isLoading: false

@@ -18,6 +18,7 @@ import { LocationOn, Bed, Bathtub, SquareFoot } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { usePropertyStore } from '../store/propertyStore';
 import { IProperty } from '../types';
+import CurrencyDisplay from '../components/CurrencyDisplay';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -34,14 +35,7 @@ const Dashboard: React.FC = () => {
     }
   }, [properties]);
 
-  const formatPrice = (price: number, currency: string = 'MXN') => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+
 
   const handlePropertyClick = (propertyId: number) => {
     navigate(`/property/${propertyId}`);
@@ -155,9 +149,12 @@ const Dashboard: React.FC = () => {
                       color="primary" 
                       size="small" 
                     />
-                    <Typography variant="h6" color="primary" fontWeight="bold">
-                      {formatPrice(property.price, property.currency)}
-                    </Typography>
+                    <CurrencyDisplay
+                      amount={property.price}
+                      options={{ currency: property.currency }}
+                      variant="h6"
+                      sx={{ color: 'primary.main', fontWeight: 'bold' }}
+                    />
                   </Box>
                   
                   <Typography variant="h6" component="h3" gutterBottom sx={{ fontWeight: 'bold' }}>

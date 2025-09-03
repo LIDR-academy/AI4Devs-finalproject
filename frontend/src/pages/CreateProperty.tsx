@@ -31,6 +31,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { usePropertyStore } from '../store/propertyStore';
 import { useAuthStore } from '../store/authStore';
+import CurrencyInput from '../components/CurrencyInput';
 
 const steps = ['Información básica', 'Detalles', 'Ubicación y precio'];
 
@@ -196,6 +197,23 @@ const CreateProperty: React.FC = () => {
       navigate('/');
     } catch (error) {
       // Error is handled by the store
+    }
+  };
+
+  const handleCancel = () => {
+    // Verificar si hay datos ingresados
+    const hasData = formData.title || formData.description || formData.price || 
+                   formData.address || formData.city || formData.state;
+    
+    if (hasData) {
+      const confirmed = window.confirm(
+        '¿Estás seguro de que quieres cancelar? Se perderán todos los datos ingresados.'
+      );
+      if (confirmed) {
+        navigate('/');
+      }
+    } else {
+      navigate('/');
     }
   };
 
@@ -397,24 +415,21 @@ const CreateProperty: React.FC = () => {
         return (
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <TextField
+              <CurrencyInput
                 fullWidth
                 label="Precio"
-                name="price"
-                type="number"
                 value={formData.price}
-                onChange={handleInputChange}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, price: value.toString() }));
+                  if (validationErrors.price) {
+                    setValidationErrors(prev => ({ ...prev, price: '' }));
+                  }
+                }}
                 error={!!validationErrors.price}
                 helperText={validationErrors.price}
                 required
-                inputProps={{ min: 0, step: 0.01 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AttachMoney color="action" />
-                    </InputAdornment>
-                  ),
-                }}
+                currency={formData.currency}
+                showCurrencySymbol={true}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -498,13 +513,24 @@ const CreateProperty: React.FC = () => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-            Crear Nueva Propiedad
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Completa la información de tu propiedad
-          </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Button
+            variant="text"
+            onClick={handleCancel}
+            color="secondary"
+            sx={{ minWidth: 'auto' }}
+          >
+            ← Volver
+          </Button>
+          <Box sx={{ textAlign: 'center', flex: 1 }}>
+            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+              Crear Nueva Propiedad
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Completa la información de tu propiedad
+            </Typography>
+          </Box>
+          <Box sx={{ minWidth: 80 }} /> {/* Espaciador para centrar el título */}
         </Box>
 
         {error && (
@@ -526,13 +552,21 @@ const CreateProperty: React.FC = () => {
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            sx={{ mr: 1 }}
-          >
-            Atrás
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              onClick={handleCancel}
+              color="secondary"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={activeStep === 0}
+              onClick={handleBack}
+            >
+              Atrás
+            </Button>
+          </Box>
           <Box>
             {activeStep === steps.length - 1 ? (
               <Button

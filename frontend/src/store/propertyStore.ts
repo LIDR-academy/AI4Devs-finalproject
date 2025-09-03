@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { IProperty, IPropertyFilters } from '@/types';
+import { useAuthStore } from './authStore';
 
 interface PropertyState {
   properties: IProperty[];
@@ -120,26 +121,33 @@ export const usePropertyStore = create<PropertyStore>((set) => ({
   createProperty: async (propertyData: any) => {
     set({ isLoading: true, error: null });
     try {
-      // Aquí iría la llamada a la API
+      const token = useAuthStore.getState().token;
+      
+      if (!token) {
+        throw new Error('No estás autenticado. Por favor, inicia sesión.');
+      }
+
       const response = await fetch('/api/properties', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(propertyData),
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Error al crear la propiedad');
+        throw new Error(data.message || 'Error al crear la propiedad');
       }
       
-      const property = await response.json();
       set((state) => ({
-        properties: [property, ...state.properties],
+        properties: [data.data, ...state.properties],
         isLoading: false
       }));
       
-      return property;
+      return data.data;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       set({ error: errorMessage, isLoading: false });
@@ -150,7 +158,6 @@ export const usePropertyStore = create<PropertyStore>((set) => ({
   fetchProperties: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Aquí iría la llamada a la API
       const response = await fetch('/api/properties');
       
       if (!response.ok) {
@@ -159,7 +166,7 @@ export const usePropertyStore = create<PropertyStore>((set) => ({
       
       const data = await response.json();
       set({ 
-        properties: data.properties || [],
+        properties: data.data || [],
         pagination: data.pagination || initialPagination,
         isLoading: false 
       });

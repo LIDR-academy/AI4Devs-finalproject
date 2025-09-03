@@ -40,7 +40,7 @@ npm run dev
 ```
 
 ## 🌐 **URLs de acceso**
-- **Frontend**: http://localhost:3000
+- **Frontend**: http://localhost:3002
 - **Backend API**: http://localhost:3001
 - **MySQL**: localhost:3306
 - **Redis**: localhost:6379

@@ -141,9 +141,11 @@ export enum PropertyStatus {
 
 // Tipos de autenticación
 export interface IAuthResponse {
-  user: IUser;
-  token: string;
-  refresh_token?: string;
+  data: {
+    user: IUser;
+    token: string;
+    refresh_token?: string;
+  };
 }
 
 // Tipos de respuesta de API
@@ -211,3 +213,6 @@ export type UpdateProperty = IUpdateProperty;
 export type AuthResponse = IAuthResponse;
 export type ApiResponse<T = any> = IApiResponse<T>;
 export type PropertyFilters = IPropertyFilters;
+
+// Re-exportar utilidades de moneda
+export * from '../utils/currency';
