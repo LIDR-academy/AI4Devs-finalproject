@@ -246,7 +246,6 @@ const ResetPassword: React.FC = () => {
                   <Button
                     aria-label="toggle password visibility"
                     onClick={handleTogglePasswordVisibility}
-                    edge="end"
                     sx={{ minWidth: 'auto', p: 1 }}
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -279,7 +278,6 @@ const ResetPassword: React.FC = () => {
                   <Button
                     aria-label="toggle confirm password visibility"
                     onClick={handleToggleConfirmPasswordVisibility}
-                    edge="end"
                     sx={{ minWidth: 'auto', p: 1 }}
                   >
                     {showConfirmPassword ? <VisibilityOff /> : <Visibility />}

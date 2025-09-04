@@ -1,10 +1,11 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
 import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 import { UserRole, VerificationStatus } from '../types';
 import sequelize from '../config/database';
 
 class User extends Model {
-  public id!: number;
+  public id_user!: string;
   public email!: string;
   public password_hash!: string;
   public role!: UserRole;
@@ -38,10 +39,10 @@ class User extends Model {
 
 User.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
+    id_user: {
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: () => uuidv4()
     },
     email: {
       type: DataTypes.STRING(255),

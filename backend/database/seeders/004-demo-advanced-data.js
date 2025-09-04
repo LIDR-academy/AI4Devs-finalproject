@@ -1,15 +1,16 @@
 'use strict';
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     // Obtener IDs de usuarios y propiedades existentes
     const users = await queryInterface.sequelize.query(
-      'SELECT id FROM users LIMIT 3',
+      'SELECT id_user FROM users LIMIT 3',
       { type: Sequelize.QueryTypes.SELECT }
     );
 
     const properties = await queryInterface.sequelize.query(
-      'SELECT id FROM properties LIMIT 5',
+      'SELECT id_property FROM properties LIMIT 5',
       { type: Sequelize.QueryTypes.SELECT }
     );
 
@@ -18,12 +19,22 @@ module.exports = {
       return;
     }
 
-    const userId = users[0].id;
-    const propertyId = properties[0].id;
+    const userId = users[0].id_user;
+    const propertyId = properties[0].id_property;
+    
+    // Obtener los IDs de las búsquedas que acabamos de crear
+    const searches = await queryInterface.sequelize.query(
+      'SELECT id_search FROM searches WHERE user_id = ?',
+      { 
+        replacements: [userId],
+        type: Sequelize.QueryTypes.SELECT 
+      }
+    );
 
     // Crear búsquedas guardadas
     await queryInterface.bulkInsert('searches', [
       {
+        id_search: uuidv4(),
         user_id: userId,
         name: 'Casa en Polanco',
         property_type: 'house',
@@ -42,6 +53,7 @@ module.exports = {
         updated_at: new Date()
       },
       {
+        id_search: uuidv4(),
         user_id: userId,
         name: 'Departamento en Condesa',
         property_type: 'apartment',
@@ -64,8 +76,9 @@ module.exports = {
     // Crear polígonos de zonas de interés
     await queryInterface.bulkInsert('polygons', [
       {
+        id_polygon: uuidv4(),
         user_id: userId,
-        search_id: 1,
+        search_id: searches[0]?.id_search || null,
         name: 'Zona Polanco',
         coordinates: JSON.stringify([
           [19.4326, -99.1332],
@@ -80,8 +93,9 @@ module.exports = {
         updated_at: new Date()
       },
       {
+        id_polygon: uuidv4(),
         user_id: userId,
-        search_id: 2,
+        search_id: searches[1]?.id_search || null,
         name: 'Zona Condesa',
         coordinates: JSON.stringify([
           [19.4126, -99.1632],
@@ -100,6 +114,7 @@ module.exports = {
     // Crear favoritos
     await queryInterface.bulkInsert('favorites', [
       {
+        id_favorite: uuidv4(),
         user_id: userId,
         property_id: propertyId,
         notes: 'Me gusta mucho esta propiedad, tiene todo lo que busco',
@@ -111,9 +126,10 @@ module.exports = {
     // Crear coincidencias automáticas
     await queryInterface.bulkInsert('matches', [
       {
+        id_match: uuidv4(),
         user_id: userId,
         property_id: propertyId,
-        search_id: 1,
+        search_id: searches[0]?.id_search || null,
         match_percentage: 85.5,
         match_criteria: JSON.stringify({
           price: 'match',
@@ -130,6 +146,7 @@ module.exports = {
     // Crear notificaciones
     await queryInterface.bulkInsert('notifications', [
       {
+        id_notification: uuidv4(),
         user_id: userId,
         type: 'match',
         title: '¡Nueva coincidencia encontrada!',
@@ -143,6 +160,7 @@ module.exports = {
         updated_at: new Date()
       },
       {
+        id_notification: uuidv4(),
         user_id: userId,
         type: 'system',
         title: 'Bienvenido a ZonMatch',
@@ -156,8 +174,9 @@ module.exports = {
     // Crear mensajes de chat
     await queryInterface.bulkInsert('messages', [
       {
+        id_message: uuidv4(),
         sender_id: userId,
-        receiver_id: users[1]?.id || userId,
+        receiver_id: users[1]?.id_user || userId,
         property_id: propertyId,
         content: 'Hola, me interesa esta propiedad. ¿Podrías darme más información?',
         message_type: 'text',

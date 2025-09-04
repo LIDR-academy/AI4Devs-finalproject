@@ -3,11 +3,10 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('password_resets', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
+      id_password_reset: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        defaultValue: Sequelize.UUIDV4
       },
       email: {
         type: Sequelize.STRING(255),

@@ -10,12 +10,13 @@ import { sequelize } from './models';
 import redisClient from './config/redis';
 
 // Importar middleware
-import { generalRateLimit } from './middleware/rateLimit';
+import { criticalRoutesRateLimit } from './middleware/rateLimit';
 
 // Importar rutas
 import authRoutes from './routes/auth';
 import propertyRoutes from './routes/properties';
 import passwordResetRoutes from './routes/passwordReset';
+import favoriteRoutes from './routes/favorites';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -49,8 +50,8 @@ app.use(compression());
 // Middleware de logging
 app.use(morgan('combined'));
 
-// Middleware de rate limiting general
-app.use(generalRateLimit);
+// Middleware de rate limiting solo para rutas críticas
+app.use(criticalRoutesRateLimit);
 
 // Middleware para parsear JSON
 app.use(express.json({ limit: '10mb' }));
@@ -74,6 +75,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 // Middleware para manejar rutas no encontradas
 app.use('*', (req, res) => {

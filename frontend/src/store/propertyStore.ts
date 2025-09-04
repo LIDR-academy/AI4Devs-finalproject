@@ -20,8 +20,8 @@ interface PropertyActions {
   setProperties: (properties: IProperty[]) => void;
   addProperty: (property: IProperty) => void;
   createProperty: (propertyData: any) => Promise<IProperty>;
-  updateProperty: (id: number, updates: Partial<IProperty>) => void;
-  removeProperty: (id: number) => void;
+  updateProperty: (id_property: string, updates: Partial<IProperty>) => void;
+  removeProperty: (id_property: string) => void;
   setCurrentProperty: (property: IProperty | null) => void;
   setFilters: (filters: Partial<IPropertyFilters>) => void;
   resetFilters: () => void;
@@ -68,21 +68,21 @@ export const usePropertyStore = create<PropertyStore>((set) => ({
     }));
   },
 
-  updateProperty: (id: number, updates: Partial<IProperty>) => {
+  updateProperty: (id_property: string, updates: Partial<IProperty>) => {
     set((state) => ({
       properties: state.properties.map((prop) =>
-        prop.id === id ? { ...prop, ...updates } : prop
+        prop.id_property === id_property ? { ...prop, ...updates } : prop
       ),
-      currentProperty: state.currentProperty?.id === id
+      currentProperty: state.currentProperty?.id_property === id_property
         ? { ...state.currentProperty, ...updates }
         : state.currentProperty
     }));
   },
 
-  removeProperty: (id: number) => {
+  removeProperty: (id_property: string) => {
     set((state) => ({
-      properties: state.properties.filter((prop) => prop.id !== id),
-      currentProperty: state.currentProperty?.id === id ? null : state.currentProperty
+      properties: state.properties.filter((prop) => prop.id_property !== id_property),
+      currentProperty: state.currentProperty?.id_property === id_property ? null : state.currentProperty
     }));
   },
 

@@ -13,6 +13,7 @@ import Dashboard from '@/pages/Dashboard';
 import CreateProperty from '@/pages/CreateProperty';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import Favorites from '@/pages/Favorites';
 
 // Hooks
 import { useAuthStore } from '@/store/authStore';
@@ -86,6 +87,15 @@ function App() {
                   <RoleRoute allowedRoles={['user', 'agent', 'admin']}>
                     <CreateProperty />
                   </RoleRoute>
+                } 
+              />
+              
+              <Route 
+                path="/favorites" 
+                element={
+                  <ProtectedRoute>
+                    <Favorites />
+                  </ProtectedRoute>
                 } 
               />
               

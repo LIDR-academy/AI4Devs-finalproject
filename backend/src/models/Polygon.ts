@@ -1,12 +1,13 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 import sequelize from '../config/database';
 import User from './User';
 import Search from './Search';
 
 interface PolygonAttributes {
-  id: number;
-  user_id: number;
-  search_id?: number;
+  id_polygon: string;
+  user_id: string;
+  search_id?: string;
   name: string;
   coordinates: any; // JSON con coordenadas del polígono
   color: string;
@@ -15,12 +16,12 @@ interface PolygonAttributes {
   updated_at: Date;
 }
 
-interface PolygonCreationAttributes extends Omit<PolygonAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface PolygonCreationAttributes extends Omit<PolygonAttributes, 'id_polygon' | 'created_at' | 'updated_at'> {}
 
 class Polygon extends Model<PolygonAttributes, PolygonCreationAttributes> implements PolygonAttributes {
-  public id!: number;
-  public user_id!: number;
-  public search_id?: number;
+  public id_polygon!: string;
+  public user_id!: string;
+  public search_id?: string;
   public name!: string;
   public coordinates!: any;
   public color!: string;
@@ -35,27 +36,27 @@ class Polygon extends Model<PolygonAttributes, PolygonCreationAttributes> implem
 
 Polygon.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+    id_polygon: {
+      type: DataTypes.UUID,
       primaryKey: true,
+      defaultValue: () => uuidv4()
     },
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id',
+        key: 'id_user',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
     search_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       references: {
         model: 'searches',
-        key: 'id',
+        key: 'id_search',
       },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',

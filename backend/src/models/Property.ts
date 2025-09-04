@@ -1,10 +1,11 @@
 import { Model, DataTypes } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 import { PropertyType, OperationType, PropertyCondition, PropertyStatus } from '../types';
 import sequelize from '../config/database';
 
 class Property extends Model {
-  public id!: number;
-  public user_id!: number;
+  public id_property!: string;
+  public user_id!: string;
   public title!: string;
   public description?: string;
   public property_type!: PropertyType;
@@ -42,17 +43,17 @@ class Property extends Model {
 
 Property.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
+    id_property: {
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: () => uuidv4()
     },
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id'
+        key: 'id_user'
       }
     },
     title: {

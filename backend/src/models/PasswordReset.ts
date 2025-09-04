@@ -2,7 +2,7 @@ import { Model, DataTypes, Sequelize } from 'sequelize';
 import sequelize from '../config/database';
 
 class PasswordReset extends Model {
-  public id!: number;
+  public id_password_reset!: string;
   public email!: string;
   public token!: string;
   public expires_at!: Date;
@@ -12,10 +12,10 @@ class PasswordReset extends Model {
 
 PasswordReset.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
+    id_password_reset: {
+      type: DataTypes.UUID,
       primaryKey: true,
-      autoIncrement: true
+      defaultValue: DataTypes.UUIDV4
     },
     email: {
       type: DataTypes.STRING(255),

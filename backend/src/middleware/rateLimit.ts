@@ -21,8 +21,8 @@ export const authRateLimit = rateLimit({
   }
 });
 
-// Rate limiter general para todas las rutas
-export const generalRateLimit = rateLimit({
+// Rate limiter para rutas críticas (solo las que realmente necesitan protección)
+export const criticalRoutesRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Más permisivo en desarrollo
   message: {
@@ -34,7 +34,10 @@ export const generalRateLimit = rateLimit({
   legacyHeaders: false,
   skip: (req) => {
     // Saltar rate limiting para health check y rutas de desarrollo
-    return req.path === '/health' || req.path === '/api/health';
+    return req.path === '/health' || 
+           req.path === '/api/health' ||
+           req.path.startsWith('/api/properties') || // Propiedades no necesitan rate limiting general
+           req.path.startsWith('/api/favorites');    // Favoritos no necesitan rate limiting general
   }
 });
 
@@ -52,5 +55,39 @@ export const propertyCreationRateLimit = rateLimit({
   keyGenerator: (req) => {
     // Usar la IP por defecto, ya que req.user puede no estar disponible
     return req.ip || 'unknown';
+  }
+});
+
+// Rate limiter específico para favoritos (más permisivo)
+export const favoritesRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 operaciones de favoritos por 15 minutos
+  message: {
+    success: false,
+    message: 'Demasiadas operaciones de favoritos. Intenta nuevamente en 15 minutos.',
+    error: 'RATE_LIMIT_EXCEEDED'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Solo aplicar a operaciones de escritura, no a consultas
+    return req.method === 'GET';
+  }
+});
+
+// Rate limiter para operaciones de escritura críticas
+export const writeOperationsRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 50, // máximo 50 operaciones de escritura por 15 minutos
+  message: {
+    success: false,
+    message: 'Demasiadas operaciones de escritura. Intenta nuevamente en 15 minutos.',
+    error: 'RATE_LIMIT_EXCEEDED'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Solo aplicar a operaciones POST, PUT, DELETE
+    return req.method === 'GET';
   }
 });

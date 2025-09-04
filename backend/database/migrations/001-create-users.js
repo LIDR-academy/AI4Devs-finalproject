@@ -3,11 +3,10 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('users', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
+      id_user: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        defaultValue: Sequelize.UUIDV4
       },
       email: {
         type: Sequelize.STRING(255),
@@ -81,18 +80,12 @@ module.exports = {
       }
     });
 
-    // Crear índices
-    await queryInterface.addIndex('users', ['email'], {
-      name: 'idx_users_email'
-    });
+    // Crear índices (email y phone ya tienen índices únicos automáticos)
     await queryInterface.addIndex('users', ['role'], {
       name: 'idx_users_role'
     });
     await queryInterface.addIndex('users', ['is_active'], {
       name: 'idx_users_is_active'
-    });
-    await queryInterface.addIndex('users', ['phone'], {
-      name: 'idx_users_phone'
     });
     await queryInterface.addIndex('users', ['verification_status'], {
       name: 'idx_users_verification_status'

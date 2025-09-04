@@ -2145,7 +2145,7 @@ Esta infraestructura proporciona una base sólida y económica para el desarroll
 ```mermaid
 erDiagram
     User {
-        int id PK
+        uuid id_user PK
         varchar email UK
         varchar password_hash
         enum role
@@ -2164,8 +2164,8 @@ erDiagram
     }
 
     Property {
-        int id PK
-        int user_id FK
+        uuid id_property PK
+        uuid user_id FK
         varchar title
         text description
         enum property_type
@@ -2202,35 +2202,38 @@ erDiagram
     }
 
     PropertyImage {
-        int id PK
-        int property_id FK
+        uuid id_property_image PK
+        uuid property_id FK
         varchar url
         varchar cloudinary_id
         boolean is_primary
         int order_index
         varchar alt_text
         datetime created_at
+        datetime updated_at
     }
 
     Amenity {
-        int id PK
-        varchar name
+        uuid id_amenity PK
+        varchar name UK
         varchar category
         varchar icon
+        text description
         boolean is_active
         datetime created_at
+        datetime updated_at
     }
 
     PropertyAmenity {
-        int id PK
-        int property_id FK
-        int amenity_id FK
+        uuid id_property_amenity PK
+        uuid property_id FK
+        uuid amenity_id FK
         datetime created_at
     }
 
     Search {
-        int id PK
-        int user_id FK
+        uuid id_search PK
+        uuid user_id FK
         varchar name
         enum property_type
         enum operation_type
@@ -2249,9 +2252,9 @@ erDiagram
     }
 
     Polygon {
-        int id PK
-        int user_id FK
-        int search_id FK
+        uuid id_polygon PK
+        uuid user_id FK
+        uuid search_id FK
         varchar name
         json coordinates
         varchar color
@@ -2260,30 +2263,31 @@ erDiagram
     }
 
     Match {
-        int id PK
-        int user_id FK
-        int property_id FK
-        int search_id FK
+        uuid id_match PK
+        uuid user_id FK
+        uuid property_id FK
+        uuid search_id FK
         decimal match_percentage
         json match_criteria
         enum status
         datetime notified_at
         datetime created_at
+        datetime updated_at
     }
 
     Favorite {
-        int id PK
-        int user_id FK
-        int property_id FK
+        uuid id_favorite PK
+        uuid user_id FK
+        uuid property_id FK
         text notes
         datetime created_at
     }
 
     Message {
-        int id PK
-        int sender_id FK
-        int receiver_id FK
-        int property_id FK
+        uuid id_message PK
+        uuid sender_id FK
+        uuid receiver_id FK
+        uuid property_id FK
         text content
         enum message_type
         datetime read_at
@@ -2292,8 +2296,8 @@ erDiagram
     }
 
     Notification {
-        int id PK
-        int user_id FK
+        uuid id_notification PK
+        uuid user_id FK
         enum type
         varchar title
         text content
@@ -2304,12 +2308,21 @@ erDiagram
     }
 
     PropertyView {
-        int id PK
-        int property_id FK
-        int user_id FK
+        uuid id_property_view PK
+        uuid property_id FK
+        uuid user_id FK
         varchar ip_address
         text user_agent
         datetime viewed_at
+    }
+
+    PasswordReset {
+        uuid id_password_reset PK
+        uuid user_id FK
+        varchar token
+        datetime expires_at
+        boolean used
+        datetime created_at
     }
 
     User ||--o{ Property : "publishes"
@@ -2320,6 +2333,7 @@ erDiagram
     User ||--o{ Message : "sends"
     User ||--o{ Message : "receives"
     User ||--o{ Notification : "receives"
+    User ||--o{ PasswordReset : "requests"
     Property ||--o{ PropertyImage : "has"
     Property ||--o{ PropertyAmenity : "has"
     Property ||--o{ Match : "matched_in"
@@ -2338,7 +2352,7 @@ erDiagram
 #### **1. User (Usuarios)**
 **Propósito:** Gestión de usuarios del sistema con diferentes roles y perfiles.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Primaria:** `id_user` (UUID, PRIMARY KEY)
 
 **Atributos Principales:**
 - `email` (VARCHAR, UNIQUE, NOT NULL): Correo electrónico del usuario
@@ -2372,8 +2386,8 @@ erDiagram
 #### **2. Property (Propiedades)**
 **Propósito:** Almacenamiento de todas las propiedades inmobiliarias del sistema.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+**Clave Primaria:** `id_property` (UUID, PRIMARY KEY)
+**Clave Foránea:** `user_id` (UUID, NOT NULL) → User.id_user
 
 **Atributos Básicos:**
 - `title` (VARCHAR, NOT NULL): Título de la propiedad
@@ -2433,8 +2447,8 @@ erDiagram
 #### **3. PropertyImage (Imágenes de Propiedades)**
 **Propósito:** Gestión de imágenes asociadas a las propiedades.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+**Clave Primaria:** `id_property_image` (UUID, PRIMARY KEY)
+**Clave Foránea:** `property_id` (UUID, NOT NULL) → Property.id_property
 
 **Atributos:**
 - `url` (VARCHAR, NOT NULL): URL de la imagen
@@ -2454,7 +2468,7 @@ erDiagram
 #### **4. Amenity (Amenidades)**
 **Propósito:** Catálogo de amenidades disponibles para las propiedades.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
+**Clave Primaria:** `id_amenity` (UUID, PRIMARY KEY)
 
 **Atributos:**
 - `name` (VARCHAR, NOT NULL): Nombre de la amenidad
@@ -2472,9 +2486,9 @@ erDiagram
 #### **5. PropertyAmenity (Relación Propiedad-Amenidad)**
 **Propósito:** Tabla de relación N:N entre propiedades y amenidades.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
-**Clave Foránea:** `amenity_id` (INT, NOT NULL) → Amenity.id
+**Clave Primaria:** `id_property_amenity` (UUID, PRIMARY KEY)
+**Clave Foránea:** `property_id` (UUID, NOT NULL) → Property.id_property
+**Clave Foránea:** `amenity_id` (UUID, NOT NULL) → Amenity.id_amenity
 
 **Restricciones:**
 - `UNIQUE(property_id, amenity_id)`: Evita duplicados
@@ -2485,8 +2499,8 @@ erDiagram
 #### **6. Search (Búsquedas Guardadas)**
 **Propósito:** Almacenamiento de búsquedas guardadas por los usuarios.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+**Clave Primaria:** `id_search` (UUID, PRIMARY KEY)
+**Clave Foránea:** `user_id` (UUID, NOT NULL) → User.id_user
 
 **Atributos de Filtros:**
 - `name` (VARCHAR, NOT NULL): Nombre de la búsqueda guardada
@@ -2515,9 +2529,9 @@ erDiagram
 #### **7. Polygon (Polígonos de Zonas de Interés)**
 **Propósito:** Definición de zonas geográficas de interés para búsquedas.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
-**Clave Foránea:** `search_id` (INT) → Search.id (opcional)
+**Clave Primaria:** `id_polygon` (UUID, PRIMARY KEY)
+**Clave Foránea:** `user_id` (UUID, NOT NULL) → User.id_user
+**Clave Foránea:** `search_id` (UUID) → Search.id_search (opcional)
 
 **Atributos:**
 - `name` (VARCHAR, NOT NULL): Nombre del polígono
@@ -2536,10 +2550,10 @@ erDiagram
 #### **8. Match (Coincidencias)**
 **Propósito:** Registro de coincidencias automáticas entre búsquedas y propiedades.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
-**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
-**Clave Foránea:** `search_id` (INT) → Search.id (opcional)
+**Clave Primaria:** `id_match` (UUID, PRIMARY KEY)
+**Clave Foránea:** `user_id` (UUID, NOT NULL) → User.id_user
+**Clave Foránea:** `property_id` (UUID, NOT NULL) → Property.id_property
+**Clave Foránea:** `search_id` (UUID) → Search.id_search (opcional)
 
 **Atributos:**
 - `match_percentage` (DECIMAL, NOT NULL): Porcentaje de coincidencia
@@ -2562,9 +2576,9 @@ erDiagram
 #### **9. Favorite (Favoritos)**
 **Propósito:** Propiedades guardadas como favoritas por los usuarios.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
-**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+**Clave Primaria:** `id_favorite` (UUID, PRIMARY KEY)
+**Clave Foránea:** `user_id` (UUID, NOT NULL) → User.id_user
+**Clave Foránea:** `property_id` (UUID, NOT NULL) → Property.id_property
 
 **Atributos:**
 - `notes` (TEXT): Notas del usuario sobre la propiedad
@@ -2582,10 +2596,10 @@ erDiagram
 #### **10. Message (Mensajes)**
 **Propósito:** Sistema de mensajería interna entre usuarios.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `sender_id` (INT, NOT NULL) → User.id
-**Clave Foránea:** `receiver_id` (INT, NOT NULL) → User.id
-**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
+**Clave Primaria:** `id_message` (UUID, PRIMARY KEY)
+**Clave Foránea:** `sender_id` (UUID, NOT NULL) → User.id_user
+**Clave Foránea:** `receiver_id` (UUID, NOT NULL) → User.id_user
+**Clave Foránea:** `property_id` (UUID, NOT NULL) → Property.id_property
 
 **Atributos:**
 - `content` (TEXT, NOT NULL): Contenido del mensaje
@@ -2607,8 +2621,8 @@ erDiagram
 #### **11. Notification (Notificaciones)**
 **Propósito:** Sistema de notificaciones del usuario.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `user_id` (INT, NOT NULL) → User.id
+**Clave Primaria:** `id_notification` (UUID, PRIMARY KEY)
+**Clave Foránea:** `user_id` (UUID, NOT NULL) → User.id_user
 
 **Atributos:**
 - `type` (ENUM): Tipo de notificación (match, message, system, property_update)
@@ -2629,9 +2643,9 @@ erDiagram
 #### **12. PropertyView (Vistas de Propiedades)**
 **Propósito:** Tracking de vistas de propiedades para analytics.
 
-**Clave Primaria:** `id` (INT, AUTO_INCREMENT)
-**Clave Foránea:** `property_id` (INT, NOT NULL) → Property.id
-**Clave Foránea:** `user_id` (INT) → User.id (opcional, para usuarios no registrados)
+**Clave Primaria:** `id_property_view` (UUID, PRIMARY KEY)
+**Clave Foránea:** `property_id` (UUID, NOT NULL) → Property.id_property
+**Clave Foránea:** `user_id` (UUID) → User.id_user (opcional, para usuarios no registrados)
 
 **Atributos:**
 - `ip_address` (VARCHAR): IP del visitante
@@ -2647,14 +2661,37 @@ erDiagram
 - `idx_user_id` (user_id)
 - `idx_viewed_at` (viewed_at)
 
+#### **13. PasswordReset (Reseteo de Contraseñas)**
+**Propósito:** Gestión de tokens para reseteo de contraseñas.
+
+**Clave Primaria:** `id_password_reset` (UUID, PRIMARY KEY)
+**Clave Foránea:** `user_id` (UUID, NOT NULL) → User.id_user
+
+**Atributos:**
+- `token` (VARCHAR, NOT NULL): Token único para reseteo
+- `expires_at` (DATETIME, NOT NULL): Fecha de expiración del token
+- `used` (BOOLEAN, DEFAULT false): Indica si el token ya fue usado
+- `created_at` (DATETIME, NOT NULL): Fecha de creación
+
+**Relaciones:**
+- **N:1** con User (múltiples tokens de reseteo pueden pertenecer a un usuario)
+
+**Índices:**
+- `idx_user_id` (user_id)
+- `idx_token` (token)
+- `idx_expires_at` (expires_at)
+
 #### **Restricciones Globales del Sistema:**
 
 1. **Integridad Referencial:** Todas las claves foráneas tienen CASCADE DELETE donde es apropiado
-2. **Índices Geoespaciales:** Para búsquedas por ubicación en Property
-3. **Índices de Texto:** Para búsquedas full-text en Property.title y Property.description
-4. **Soft Deletes:** Implementados en User y Property para mantener historial
-5. **Timestamps:** Todas las entidades principales tienen created_at y updated_at
-6. **Validaciones:** Implementadas a nivel de aplicación y base de datos
+2. **Claves Primarias UUID:** Todas las entidades utilizan UUID como claves primarias para mejor escalabilidad
+3. **Índices Geoespaciales:** Para búsquedas por ubicación en Property
+4. **Índices de Texto:** Para búsquedas full-text en Property.title y Property.description
+5. **Soft Deletes:** Implementados en User y Property para mantener historial
+6. **Timestamps:** Todas las entidades principales tienen created_at y updated_at
+7. **Validaciones:** Implementadas a nivel de aplicación y base de datos
+8. **Relaciones N:N:** Implementadas correctamente con tablas intermedias (PropertyAmenity)
+9. **Amenidades Categorizadas:** Sistema de amenidades organizadas por categorías (básicas, lujo, accesibilidad, tecnología, servicios)
 
 ---
 

@@ -27,7 +27,7 @@ export class PropertyService {
         {
           model: User,
           as: 'owner',
-          attributes: ['id', 'first_name', 'last_name', 'email', 'phone']
+          attributes: ['id_user', 'first_name', 'last_name', 'email', 'phone']
         }
       ],
       limit,
@@ -39,13 +39,13 @@ export class PropertyService {
   }
 
   // Obtener propiedad por ID
-  static async getPropertyById(id: number): Promise<Property | null> {
-    const property = await Property.findByPk(id, {
+  static async getPropertyById(id_user: number): Promise<Property | null> {
+    const property = await Property.findByPk(id_user, {
       include: [
         {
           model: User,
           as: 'owner',
-          attributes: ['id', 'first_name', 'last_name', 'email', 'phone']
+          attributes: ['id_user', 'first_name', 'last_name', 'email', 'phone']
         }
       ]
     });
@@ -59,7 +59,7 @@ export class PropertyService {
   }
 
   // Crear propiedad
-  static async createProperty(propertyData: ICreateProperty, userId: number): Promise<Property> {
+  static async createProperty(propertyData: ICreateProperty, userId: string): Promise<Property> {
     const property = await Property.create({
       ...propertyData,
       user_id: userId,
@@ -76,9 +76,9 @@ export class PropertyService {
   }
 
   // Actualizar propiedad
-  static async updateProperty(id: number, propertyData: IUpdateProperty, userId: number): Promise<Property | null> {
+  static async updateProperty(id_property: string, propertyData: IUpdateProperty, userId: string): Promise<Property | null> {
     const property = await Property.findOne({
-      where: { id, user_id: userId }
+      where: { id_property, user_id: userId }
     });
 
     if (!property) {
@@ -94,9 +94,9 @@ export class PropertyService {
   }
 
   // Eliminar propiedad
-  static async deleteProperty(id: number, userId: number): Promise<boolean> {
+  static async deleteProperty(id_property: string, userId: string): Promise<boolean> {
     const property = await Property.findOne({
-      where: { id, user_id: userId }
+      where: { id_property, user_id: userId }
     });
 
     if (!property) {
@@ -108,7 +108,7 @@ export class PropertyService {
   }
 
   // Obtener propiedades de un usuario
-  static async getUserProperties(userId: number): Promise<Property[]> {
+  static async getUserProperties(userId: string): Promise<Property[]> {
     return await Property.findAll({
       where: { user_id: userId },
       order: [['created_at', 'DESC']]
@@ -116,8 +116,8 @@ export class PropertyService {
   }
 
   // Cambiar estado destacado (solo admin)
-  static async toggleFeatured(id: number): Promise<Property | null> {
-    const property = await Property.findByPk(id);
+  static async toggleFeatured(id_user: number): Promise<Property | null> {
+    const property = await Property.findByPk(id_user);
     
     if (!property) {
       return null;

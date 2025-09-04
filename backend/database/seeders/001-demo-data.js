@@ -1,11 +1,13 @@
 'use strict';
 const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     // Crear usuarios de prueba
     const users = [
       {
+        id_user: uuidv4(),
         email: 'admin@zonmatch.com',
         password_hash: await bcrypt.hash('Admin123!', 12),
         role: 'admin',
@@ -18,6 +20,7 @@ module.exports = {
         updated_at: new Date()
       },
       {
+        id_user: uuidv4(),
         email: 'agente@zonmatch.com',
         password_hash: await bcrypt.hash('Agente123!', 12),
         role: 'agent',
@@ -30,6 +33,7 @@ module.exports = {
         updated_at: new Date()
       },
       {
+        id_user: uuidv4(),
         email: 'usuario@zonmatch.com',
         password_hash: await bcrypt.hash('Usuario123!', 12),
         role: 'user',
@@ -47,7 +51,7 @@ module.exports = {
 
     // Obtener los IDs de los usuarios insertados
     const adminUser = await queryInterface.sequelize.query(
-      'SELECT id FROM users WHERE email = ?',
+      'SELECT id_user FROM users WHERE email = ?',
       {
         replacements: ['admin@zonmatch.com'],
         type: queryInterface.sequelize.QueryTypes.SELECT
@@ -55,7 +59,7 @@ module.exports = {
     );
     
     const agentUser = await queryInterface.sequelize.query(
-      'SELECT id FROM users WHERE email = ?',
+      'SELECT id_user FROM users WHERE email = ?',
       {
         replacements: ['agente@zonmatch.com'],
         type: queryInterface.sequelize.QueryTypes.SELECT
@@ -63,7 +67,7 @@ module.exports = {
     );
     
     const regularUser = await queryInterface.sequelize.query(
-      'SELECT id FROM users WHERE email = ?',
+      'SELECT id_user FROM users WHERE email = ?',
       {
         replacements: ['usuario@zonmatch.com'],
         type: queryInterface.sequelize.QueryTypes.SELECT
@@ -73,7 +77,8 @@ module.exports = {
     // Crear propiedades de prueba
     const properties = [
       {
-        user_id: agentUser[0].id, // Agente
+        id_property: uuidv4(),
+        user_id: agentUser[0].id_user,
         title: 'Hermosa casa en Lomas de Chapultepec',
         description: 'Casa moderna de 3 recámaras con acabados de lujo, ubicada en una de las mejores zonas de la Ciudad de México. Cuenta con jardín, terraza y estacionamiento para 2 autos.',
         property_type: 'house',
@@ -87,6 +92,7 @@ module.exports = {
         sq_meters: 200,
         sq_meters_land: 300,
         floors: 2,
+        floor_number: null,
         parking_spaces: 2,
         year_built: 2020,
         condition: 'new',
@@ -97,7 +103,8 @@ module.exports = {
         zip_code: '11000',
         latitude: 19.4326,
         longitude: -99.1332,
-        amenities: ['pool', 'garden', 'terrace', 'security', 'parking'],
+        location_accuracy: null,
+        amenities: JSON.stringify(['pool', 'garden', 'terrace', 'security', 'parking']),
         status: 'active',
         featured: true,
         views_count: 45,
@@ -107,7 +114,8 @@ module.exports = {
         updated_at: new Date()
       },
       {
-        user_id: createdUsers[1].id, // Agente
+        id_property: uuidv4(),
+        user_id: agentUser[0].id_user,
         title: 'Departamento en Polanco',
         description: 'Departamento de lujo en el corazón de Polanco, con vista panorámica y acceso a todas las amenidades. Ideal para ejecutivos o familias pequeñas.',
         property_type: 'apartment',
@@ -119,6 +127,7 @@ module.exports = {
         bathrooms: 2,
         total_bathrooms: 2,
         sq_meters: 120,
+        sq_meters_land: null,
         floors: 1,
         floor_number: 15,
         parking_spaces: 1,
@@ -131,7 +140,8 @@ module.exports = {
         zip_code: '11560',
         latitude: 19.4333,
         longitude: -99.1333,
-        amenities: ['gym', 'pool', 'security', 'parking', 'elevator'],
+        location_accuracy: null,
+        amenities: JSON.stringify(['gym', 'pool', 'security', 'parking', 'elevator']),
         status: 'active',
         featured: false,
         views_count: 32,
@@ -141,7 +151,8 @@ module.exports = {
         updated_at: new Date()
       },
       {
-        user_id: createdUsers[2].id, // Usuario
+        id_property: uuidv4(),
+        user_id: regularUser[0].id_user,
         title: 'Oficina en Santa Fe',
         description: 'Oficina moderna en edificio corporativo de Santa Fe, ideal para empresas en crecimiento. Incluye recepción y servicios de conserjería.',
         property_type: 'office',
@@ -149,7 +160,11 @@ module.exports = {
         price: 25000,
         currency: 'MXN',
         price_per_sqm: 25000,
+        bedrooms: null,
+        bathrooms: null,
+        total_bathrooms: null,
         sq_meters: 80,
+        sq_meters_land: null,
         floors: 1,
         floor_number: 8,
         parking_spaces: 2,
@@ -162,7 +177,8 @@ module.exports = {
         zip_code: '01210',
         latitude: 19.3569,
         longitude: -99.2574,
-        amenities: ['reception', 'security', 'parking', 'elevator', 'concierge'],
+        location_accuracy: null,
+        amenities: JSON.stringify(['reception', 'security', 'parking', 'elevator', 'concierge']),
         status: 'active',
         featured: false,
         views_count: 18,

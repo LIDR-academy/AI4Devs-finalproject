@@ -1,10 +1,11 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 import sequelize from '../config/database';
 import User from './User';
 
 interface SearchAttributes {
-  id: number;
-  user_id: number;
+  id_search: string;
+  user_id: string;
   name: string;
   property_type?: 'house' | 'apartment' | 'office' | 'land' | 'commercial';
   operation_type?: 'sale' | 'rent' | 'transfer';
@@ -22,11 +23,11 @@ interface SearchAttributes {
   updated_at: Date;
 }
 
-interface SearchCreationAttributes extends Omit<SearchAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface SearchCreationAttributes extends Omit<SearchAttributes, 'id_search' | 'created_at' | 'updated_at'> {}
 
 class Search extends Model<SearchAttributes, SearchCreationAttributes> implements SearchAttributes {
-  public id!: number;
-  public user_id!: number;
+  public id_search!: string;
+  public user_id!: string;
   public name!: string;
   public property_type?: 'house' | 'apartment' | 'office' | 'land' | 'commercial';
   public operation_type?: 'sale' | 'rent' | 'transfer';
@@ -50,17 +51,17 @@ class Search extends Model<SearchAttributes, SearchCreationAttributes> implement
 
 Search.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+    id_search: {
+      type: DataTypes.UUID,
       primaryKey: true,
+      defaultValue: () => uuidv4()
     },
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id',
+        key: 'id_user',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',

@@ -1,10 +1,11 @@
 'use strict';
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     // Obtener el ID del agente
     const agentUser = await queryInterface.sequelize.query(
-      'SELECT id FROM users WHERE email = ?',
+      'SELECT id_user FROM users WHERE email = ?',
       {
         replacements: ['agente@zonmatch.com'],
         type: queryInterface.sequelize.QueryTypes.SELECT
@@ -12,7 +13,7 @@ module.exports = {
     );
     
     const regularUser = await queryInterface.sequelize.query(
-      'SELECT id FROM users WHERE email = ?',
+      'SELECT id_user FROM users WHERE email = ?',
       {
         replacements: ['usuario@zonmatch.com'],
         type: queryInterface.sequelize.QueryTypes.SELECT
@@ -25,9 +26,11 @@ module.exports = {
     }
 
     // Crear propiedades de prueba
+    const now = new Date();
     const properties = [
       {
-        user_id: agentUser[0].id,
+        id_property: uuidv4(),
+        user_id: agentUser[0].id_user,
         title: 'Hermosa casa en Lomas de Chapultepec',
         description: 'Casa moderna de 3 recámaras con acabados de lujo',
         property_type: 'house',
@@ -43,10 +46,14 @@ module.exports = {
         status: 'active',
         featured: true,
         views_count: 45,
-        contact_count: 8
+        contact_count: 8,
+        last_updated: now,
+        created_at: now,
+        updated_at: now
       },
       {
-        user_id: agentUser[0].id,
+        id_property: uuidv4(),
+        user_id: agentUser[0].id_user,
         title: 'Departamento en Polanco',
         description: 'Departamento de lujo en el corazón de Polanco',
         property_type: 'apartment',
@@ -62,7 +69,10 @@ module.exports = {
         status: 'active',
         featured: false,
         views_count: 32,
-        contact_count: 5
+        contact_count: 5,
+        last_updated: now,
+        created_at: now,
+        updated_at: now
       }
     ];
 

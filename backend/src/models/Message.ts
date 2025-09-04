@@ -1,13 +1,14 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 import sequelize from '../config/database';
 import User from './User';
 import Property from './Property';
 
 interface MessageAttributes {
-  id: number;
-  sender_id: number;
-  receiver_id: number;
-  property_id: number;
+  id_message: string;
+  sender_id: string;
+  receiver_id: string;
+  property_id: string;
   content: string;
   message_type: 'text' | 'image' | 'file';
   read_at?: Date;
@@ -16,13 +17,13 @@ interface MessageAttributes {
   updated_at: Date;
 }
 
-interface MessageCreationAttributes extends Omit<MessageAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface MessageCreationAttributes extends Omit<MessageAttributes, 'id_message' | 'created_at' | 'updated_at'> {}
 
 class Message extends Model<MessageAttributes, MessageCreationAttributes> implements MessageAttributes {
-  public id!: number;
-  public sender_id!: number;
-  public receiver_id!: number;
-  public property_id!: number;
+  public id_message!: string;
+  public sender_id!: string;
+  public receiver_id!: string;
+  public property_id!: string;
   public content!: string;
   public message_type!: 'text' | 'image' | 'file';
   public read_at?: Date;
@@ -37,37 +38,37 @@ class Message extends Model<MessageAttributes, MessageCreationAttributes> implem
 
 Message.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+    id_message: {
+      type: DataTypes.UUID,
       primaryKey: true,
+      defaultValue: () => uuidv4()
     },
     sender_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id',
+        key: 'id_user',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
     receiver_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id',
+        key: 'id_user',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
     property_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'properties',
-        key: 'id',
+        key: 'id_property',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',

@@ -1,15 +1,24 @@
 // Polyfills para crypto en macOS
-if (typeof global === 'undefined') {
-  (window as any).global = window;
+if (typeof (globalThis as any).global === 'undefined') {
+  (globalThis as any).global = globalThis;
 }
 
-if (typeof process === 'undefined') {
-  (window as any).process = { env: {} };
+if (typeof (globalThis as any).process === 'undefined') {
+  (globalThis as any).process = { env: {} };
 }
 
 // Polyfill para crypto.getRandomValues
-if (typeof crypto !== 'undefined' && !crypto.getRandomValues) {
-  (crypto as any).getRandomValues = function(arr: any) {
+if (typeof (globalThis as any).crypto === 'undefined') {
+  (globalThis as any).crypto = {
+    getRandomValues: function(arr: any) {
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = Math.floor(Math.random() * 256);
+      }
+      return arr;
+    }
+  };
+} else if (typeof (globalThis as any).crypto.getRandomValues === 'undefined') {
+  (globalThis as any).crypto.getRandomValues = function(arr: any) {
     for (let i = 0; i < arr.length; i++) {
       arr[i] = Math.floor(Math.random() * 256);
     }

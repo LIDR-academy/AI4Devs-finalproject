@@ -23,7 +23,6 @@ import {
   Home, 
   Business, 
   LocationOn, 
-  AttachMoney,
   Description,
   Add,
   Remove

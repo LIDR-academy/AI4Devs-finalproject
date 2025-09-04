@@ -1,10 +1,11 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 import sequelize from '../config/database';
 import User from './User';
 
 interface NotificationAttributes {
-  id: number;
-  user_id: number;
+  id_notification: string;
+  user_id: string;
   type: 'match' | 'message' | 'system' | 'property_update';
   title: string;
   content: string;
@@ -15,11 +16,11 @@ interface NotificationAttributes {
   updated_at: Date;
 }
 
-interface NotificationCreationAttributes extends Omit<NotificationAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface NotificationCreationAttributes extends Omit<NotificationAttributes, 'id_notification' | 'created_at' | 'updated_at'> {}
 
 class Notification extends Model<NotificationAttributes, NotificationCreationAttributes> implements NotificationAttributes {
-  public id!: number;
-  public user_id!: number;
+  public id_notification!: string;
+  public user_id!: string;
   public type!: 'match' | 'message' | 'system' | 'property_update';
   public title!: string;
   public content!: string;
@@ -36,17 +37,17 @@ class Notification extends Model<NotificationAttributes, NotificationCreationAtt
 
 Notification.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+    id_notification: {
+      type: DataTypes.UUID,
       primaryKey: true,
+      defaultValue: () => uuidv4()
     },
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id',
+        key: 'id_user',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',

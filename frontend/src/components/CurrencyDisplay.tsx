@@ -1,8 +1,7 @@
 import React from 'react';
-import { Typography, TypographyProps } from '@mui/material';
 import { formatCurrency, formatPriceRange, formatPricePerSqm, CurrencyOptions } from '@/utils/currency';
 
-interface CurrencyDisplayProps extends Omit<TypographyProps, 'children'> {
+interface CurrencyDisplayProps {
   amount: number | string;
   options?: CurrencyOptions;
   variant?: 'currency' | 'number' | 'range' | 'pricePerSqm';
@@ -10,6 +9,8 @@ interface CurrencyDisplayProps extends Omit<TypographyProps, 'children'> {
   maxAmount?: number | string;
   sqMeters?: number | string;
   showCurrencySymbol?: boolean;
+  className?: string;
+  sx?: any;
 }
 
 export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
@@ -19,8 +20,8 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   minAmount,
   maxAmount,
   sqMeters,
-  showCurrencySymbol = true,
-  ...typographyProps
+  className,
+  sx
 }) => {
   const getFormattedValue = (): string => {
     switch (variant) {
@@ -50,9 +51,9 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   const formattedValue = getFormattedValue();
 
   return (
-    <Typography {...typographyProps}>
+    <span className={className} style={sx}>
       {formattedValue}
-    </Typography>
+    </span>
   );
 };
 

@@ -47,8 +47,8 @@ export class PropertyController {
   // Obtener una propiedad por ID
   static async getPropertyById(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const property = await PropertyService.getPropertyById(parseInt(id));
+      const { id_user } = req.params;
+      const property = await PropertyService.getPropertyById(parseInt(id_user));
 
       if (!property) {
         res.status(404).json({
@@ -78,7 +78,7 @@ export class PropertyController {
   static async createProperty(req: IRequestWithUser, res: Response): Promise<void> {
     try {
       const user = req.user!;
-      const property = await PropertyService.createProperty(req.body, user.id);
+      const property = await PropertyService.createProperty(req.body, user.id_user);
 
       res.status(201).json({
         success: true,
@@ -99,8 +99,8 @@ export class PropertyController {
   static async updateProperty(req: IRequestWithUser, res: Response): Promise<void> {
     try {
       const user = req.user!;
-      const { id } = req.params;
-      const property = await PropertyService.updateProperty(parseInt(id), req.body, user.id);
+      const { id_user } = req.params;
+      const property = await PropertyService.updateProperty(id_user, req.body, user.id_user);
 
       if (!property) {
         res.status(404).json({
@@ -130,8 +130,8 @@ export class PropertyController {
   static async deleteProperty(req: IRequestWithUser, res: Response): Promise<void> {
     try {
       const user = req.user!;
-      const { id } = req.params;
-      const success = await PropertyService.deleteProperty(parseInt(id), user.id);
+      const { id_user } = req.params;
+      const success = await PropertyService.deleteProperty(id_user, user.id_user);
 
       if (!success) {
         res.status(404).json({
@@ -160,7 +160,7 @@ export class PropertyController {
   static async getUserProperties(req: IRequestWithUser, res: Response): Promise<void> {
     try {
       const user = req.user!;
-      const properties = await PropertyService.getUserProperties(user.id);
+      const properties = await PropertyService.getUserProperties(user.id_user);
 
       res.status(200).json({
         success: true,
@@ -191,8 +191,8 @@ export class PropertyController {
         return;
       }
 
-      const { id } = req.params;
-      const property = await PropertyService.toggleFeatured(parseInt(id));
+      const { id_user } = req.params;
+      const property = await PropertyService.toggleFeatured(parseInt(id_user));
 
       if (!property) {
         res.status(404).json({

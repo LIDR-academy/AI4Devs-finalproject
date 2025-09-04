@@ -65,11 +65,11 @@ export class PasswordResetController {
   static async verifyToken(req: Request, res: Response): Promise<void> {
     try {
       const { token } = req.params;
-      const isValid = await PasswordResetService.verifyToken(token);
+      const isValid_user = await PasswordResetService.verifyToken(token);
       
       res.status(200).json({
         success: true,
-        data: { valid: isValid }
+        data: { valid_user: isValid_user }
       });
     } catch (error: any) {
       console.error('Error al verificar token:', error);

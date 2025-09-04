@@ -3,38 +3,37 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('matches', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
+      id_match: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        defaultValue: Sequelize.UUIDV4
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'users',
-          key: 'id'
+          key: 'id_user'
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
       property_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'properties',
-          key: 'id'
+          key: 'id_property'
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
       search_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: true,
         references: {
           model: 'searches',
-          key: 'id'
+          key: 'id_search'
         },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'

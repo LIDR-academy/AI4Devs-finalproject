@@ -1,14 +1,15 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 import sequelize from '../config/database';
 import User from './User';
 import Property from './Property';
 import Search from './Search';
 
 interface MatchAttributes {
-  id: number;
-  user_id: number;
-  property_id: number;
-  search_id?: number;
+  id_match: string;
+  user_id: string;
+  property_id: string;
+  search_id?: string;
   match_percentage: number;
   match_criteria: any; // JSON con criterios que coincidieron
   status: 'new' | 'viewed' | 'contacted' | 'ignored';
@@ -17,13 +18,13 @@ interface MatchAttributes {
   updated_at: Date;
 }
 
-interface MatchCreationAttributes extends Omit<MatchAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface MatchCreationAttributes extends Omit<MatchAttributes, 'id_match' | 'created_at' | 'updated_at'> {}
 
 class Match extends Model<MatchAttributes, MatchCreationAttributes> implements MatchAttributes {
-  public id!: number;
-  public user_id!: number;
-  public property_id!: number;
-  public search_id?: number;
+  public id_match!: string;
+  public user_id!: string;
+  public property_id!: string;
+  public search_id?: string;
   public match_percentage!: number;
   public match_criteria!: any;
   public status!: 'new' | 'viewed' | 'contacted' | 'ignored';
@@ -38,37 +39,37 @@ class Match extends Model<MatchAttributes, MatchCreationAttributes> implements M
 
 Match.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+    id_match: {
+      type: DataTypes.UUID,
       primaryKey: true,
+      defaultValue: () => uuidv4()
     },
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id',
+        key: 'id_user',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
     property_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'properties',
-        key: 'id',
+        key: 'id_property',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
     search_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       references: {
         model: 'searches',
-        key: 'id',
+        key: 'id_search',
       },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL',

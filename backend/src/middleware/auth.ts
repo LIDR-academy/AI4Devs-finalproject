@@ -38,7 +38,7 @@ export const authenticateToken = async (
 
     // Agregar información del usuario a la request
     req.user = {
-      id: user.id,
+      id_user: user.id_user,
       email: user.email,
       role: user.role,
       first_name: user.first_name,

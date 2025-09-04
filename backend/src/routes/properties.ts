@@ -63,7 +63,7 @@ const propertyValidation = [
 
 // Rutas públicas
 router.get('/', PropertyController.getProperties);
-router.get('/:id', PropertyController.getPropertyById);
+router.get('/:id_user', PropertyController.getPropertyById);
 
 // Rutas protegidas
 router.post('/', 
@@ -73,13 +73,13 @@ router.post('/',
   PropertyController.createProperty
 );
 
-router.put('/:id', 
+router.put('/:id_user', 
   authenticateToken, 
   validateRequest(propertyValidation), 
   PropertyController.updateProperty
 );
 
-router.delete('/:id', 
+router.delete('/:id_user', 
   authenticateToken, 
   PropertyController.deleteProperty
 );
@@ -89,7 +89,7 @@ router.get('/user/me',
   PropertyController.getUserProperties
 );
 
-router.patch('/:id/featured', 
+router.patch('/:id_user/featured', 
   authenticateToken, 
   PropertyController.toggleFeatured
 );

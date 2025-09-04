@@ -1,6 +1,6 @@
 // Tipos de usuario
 export interface IUser {
-  id: number;
+  id_user: string;
   email: string;
   role: UserRole;
   first_name: string;
@@ -43,8 +43,8 @@ export enum VerificationStatus {
 
 // Tipos de propiedad
 export interface IProperty {
-  id: number;
-  user_id: number;
+  id_property: string;
+  user_id: string;
   title: string;
   description?: string;
   property_type: PropertyType;

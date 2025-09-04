@@ -1,5 +1,6 @@
 'use strict';
 const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -7,6 +8,7 @@ module.exports = {
     const hashedPassword = await bcrypt.hash('test123', 12);
     
     const debugUser = {
+      id_user: uuidv4(),
       email: 'test@test.com',
       password_hash: hashedPassword,
       role: 'user',
@@ -21,7 +23,7 @@ module.exports = {
 
     // Verificar si ya existe
     const existingUser = await queryInterface.sequelize.query(
-      'SELECT id FROM users WHERE email = ?',
+      'SELECT id_user FROM users WHERE email = ?',
       {
         replacements: ['test@test.com'],
         type: queryInterface.sequelize.QueryTypes.SELECT

@@ -30,11 +30,11 @@ export class AuthService {
     await user.update({ last_login: new Date() });
 
     // Guardar token en Redis
-    await redisClient.setEx(`token:${user.id}`, 86400, token);
+    await redisClient.setEx(`token:${user.id_user}`, 86400, token);
 
     return {
       user: {
-        id: user.id,
+        id_user: user.id_user,
         email: user.email,
         role: user.role,
         first_name: user.first_name,
@@ -76,11 +76,11 @@ export class AuthService {
     await user.update({ last_login: new Date() });
 
     // Guardar token en Redis
-    await redisClient.setEx(`token:${user.id}`, 86400, token);
+    await redisClient.setEx(`token:${user.id_user}`, 86400, token);
 
     return {
       user: {
-        id: user.id,
+        id_user: user.id_user,
         email: user.email,
         role: user.role,
         first_name: user.first_name,
@@ -132,7 +132,7 @@ export class AuthService {
   private static generateToken(user: User): string {
     return (jwt as any).sign(
       {
-        user_id: user.id,
+        user_id: user.id_user,
         email: user.email,
         role: user.role
       },

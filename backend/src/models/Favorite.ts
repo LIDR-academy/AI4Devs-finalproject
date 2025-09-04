@@ -1,23 +1,24 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 import sequelize from '../config/database';
 import User from './User';
 import Property from './Property';
 
 interface FavoriteAttributes {
-  id: number;
-  user_id: number;
-  property_id: number;
+  id_favorite: string;
+  user_id: string;
+  property_id: string;
   notes?: string;
   created_at: Date;
   updated_at: Date;
 }
 
-interface FavoriteCreationAttributes extends Omit<FavoriteAttributes, 'id' | 'created_at' | 'updated_at'> {}
+interface FavoriteCreationAttributes extends Omit<FavoriteAttributes, 'id_favorite' | 'created_at' | 'updated_at'> {}
 
 class Favorite extends Model<FavoriteAttributes, FavoriteCreationAttributes> implements FavoriteAttributes {
-  public id!: number;
-  public user_id!: number;
-  public property_id!: number;
+  public id_favorite!: string;
+  public user_id!: string;
+  public property_id!: string;
   public notes?: string;
   public created_at!: Date;
   public updated_at!: Date;
@@ -29,27 +30,27 @@ class Favorite extends Model<FavoriteAttributes, FavoriteCreationAttributes> imp
 
 Favorite.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+    id_favorite: {
+      type: DataTypes.UUID,
       primaryKey: true,
+      defaultValue: () => uuidv4()
     },
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'users',
-        key: 'id',
+        key: 'id_user',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
     property_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'properties',
-        key: 'id',
+        key: 'id_property',
       },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
@@ -66,7 +67,7 @@ Favorite.init(
     updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
   },
   {
