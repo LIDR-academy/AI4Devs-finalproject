@@ -63,11 +63,11 @@ gantt
     Crear pruebas unitarias para los endpoints de búsqueda y perfil de especialista :done, des9.7, 2025-09-03, 1h
 
     section 10. Agendar cita con especialista [US-5]
-    Diseñar el endpoint para agendar cita con especialista :des10.1, 2025-09-03, 1h
-    Implementar la lógica de agendamiento de cita con especialista :des10.2, 2025-09-03, 2h
-    Validar disponibilidad y conflictos de horario al agendar cita :des10.3, 2025-09-04, 1h
-    Documentar el endpoint para agendar cita con especialista :des10.4, 2025-09-04, 1h
-    Crear pruebas unitarias para el endpoint de agendar cita con especialista :des10.5, 2025-09-04, 1h
+    Diseñar el endpoint para agendar cita con especialista :done, des10.1, 2025-09-03, 1h
+    Implementar la lógica de agendamiento de cita con especialista :done, des10.2, 2025-09-03, 2h
+    Validar disponibilidad y conflictos de horario al agendar cita :done, des10.3, 2025-09-04, 1h
+    Documentar el endpoint para agendar cita con especialista :done, des10.4, 2025-09-04, 1h
+    Crear pruebas unitarias para el endpoint de agendar cita con especialista :done, des10.5, 2025-09-04, 1h
 
     section 11. Gestionar agenda y disponibilidad [US-8]
     Diseñar el endpoint para gestionar agenda y disponibilidad :des11.1, 2025-09-04, 1h
