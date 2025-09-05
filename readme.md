@@ -672,7 +672,333 @@ stop
 ---
 
 ### **1.8. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+#### **Prerrequisitos del Sistema**
+
+Antes de comenzar, asegúrate de tener instalado:
+
+- **Node.js** 18.x o superior
+- **npm** 8.x o superior
+- **MySQL** 8.0 o superior
+- **Redis** 6.x o superior
+- **Git** para clonar el repositorio
+
+#### **Instalación Completa del Proyecto**
+
+##### **1. Clonar el Repositorio**
+```bash
+git clone https://github.com/tu-usuario/zonmatch.git
+cd zonmatch
+```
+
+##### **2. Configurar Base de Datos**
+
+**MySQL:**
+```bash
+# Crear base de datos
+mysql -u root -p
+CREATE DATABASE zonmatch;
+CREATE USER 'zonmatch_user'@'localhost' IDENTIFIED BY 'tu_password_seguro';
+GRANT ALL PRIVILEGES ON zonmatch.* TO 'zonmatch_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+**Redis:**
+```bash
+# Verificar que Redis esté ejecutándose
+redis-cli ping
+# Debería responder: PONG
+```
+
+##### **3. Configurar Backend**
+
+```bash
+# Navegar al directorio backend
+cd backend
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp env.example .env
+```
+
+**Editar archivo `.env` del backend:**
+```env
+# Base de datos
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=zonmatch
+DB_USER=zonmatch_user
+DB_PASSWORD=tu_password_seguro
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_URL=redis://localhost:6379
+
+# JWT
+JWT_SECRET=tu_jwt_secret_super_seguro_minimo_32_caracteres
+JWT_EXPIRES_IN=24h
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Servidor
+PORT=3001
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:3000
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=10
+```
+
+**Ejecutar migraciones y seeders:**
+```bash
+# Ejecutar migraciones
+npm run migrate
+
+# Ejecutar seeders (datos de prueba)
+npm run seed
+
+# Verificar estado de migraciones
+npx sequelize-cli db:migrate:status
+```
+
+**Levantar servidor backend:**
+```bash
+# Desarrollo con nodemon
+npm run dev
+
+# O en producción
+npm run build
+npm start
+```
+
+##### **4. Configurar Frontend**
+
+```bash
+# Navegar al directorio frontend (en nueva terminal)
+cd frontend
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp env.example .env
+```
+
+**Editar archivo `.env` del frontend:**
+```env
+# Backend API
+VITE_API_URL=http://localhost:3001
+
+# Aplicación
+VITE_APP_NAME=ZonMatch
+VITE_APP_VERSION=1.0.0
+
+# Entorno
+VITE_NODE_ENV=development
+
+# Características
+VITE_ENABLE_ANALYTICS=false
+VITE_ENABLE_DEBUG=true
+```
+
+**Levantar servidor frontend:**
+```bash
+# Desarrollo con hot reload
+npm run dev
+
+# O build para producción
+npm run build
+npm run preview
+```
+
+##### **5. Verificar Instalación**
+
+**Backend (http://localhost:3001):**
+```bash
+# Health check
+curl http://localhost:3001/health
+
+# Debería responder:
+# {
+#   "status": "OK",
+#   "timestamp": "2024-01-01T00:00:00.000Z",
+#   "version": "1.0.0"
+# }
+```
+
+**Frontend (http://localhost:3000):**
+- Abrir navegador en http://localhost:3000
+- Verificar que la página principal cargue correctamente
+- Verificar que las propiedades se muestren
+
+#### **Comandos de Desarrollo**
+
+##### **Backend:**
+```bash
+# Desarrollo con nodemon
+npm run dev
+
+# Build del proyecto
+npm run build
+
+# Ejecutar tests
+npm test
+
+# Linting
+npm run lint
+
+# Reset completo de base de datos
+npm run db:reset
+```
+
+##### **Frontend:**
+```bash
+# Desarrollo con hot reload
+npm run dev
+
+# Build optimizado
+npm run build
+
+# Preview del build
+npm run preview
+
+# Linting
+npm run lint
+npm run lint:fix
+
+# Verificar tipos TypeScript
+npm run type-check
+```
+
+#### **Gestión de Base de Datos**
+
+##### **Migraciones:**
+```bash
+# Crear nueva migración
+npx sequelize-cli migration:generate --name nombre-migracion
+
+# Ejecutar migraciones
+npm run migrate
+
+# Revertir última migración
+npx sequelize-cli db:migrate:undo
+
+# Ver estado de migraciones
+npx sequelize-cli db:migrate:status
+```
+
+##### **Seeders:**
+```bash
+# Crear nuevo seeder
+npx sequelize-cli seed:generate --name nombre-seeder
+
+# Ejecutar seeders
+npm run seed
+
+# Ejecutar seeder específico
+npx sequelize-cli db:seed --seed XXXX-nombre.js
+```
+
+##### **Reset completo:**
+```bash
+# Reset completo de base de datos
+npm run db:reset
+```
+
+#### **Instalación con Docker (Opcional)**
+
+##### **Backend:**
+```bash
+cd backend
+docker build -t zonmatch-backend .
+docker run -p 3001:3001 zonmatch-backend
+```
+
+##### **Frontend:**
+```bash
+cd frontend
+docker build -t zonmatch-frontend .
+docker run -p 3000:3000 zonmatch-frontend
+```
+
+#### **Troubleshooting**
+
+##### **Problemas Comunes:**
+
+1. **Error de conexión a MySQL:**
+   ```bash
+   # Verificar que MySQL esté ejecutándose
+   sudo service mysql status
+   
+   # Verificar credenciales en .env
+   cat .env | grep DB_
+   ```
+
+2. **Error de conexión a Redis:**
+   ```bash
+   # Verificar que Redis esté ejecutándose
+   redis-cli ping
+   
+   # Debería responder: PONG
+   ```
+
+3. **Errores de migración:**
+   ```bash
+   # Resetear base de datos
+   npm run db:reset
+   
+   # Verificar estado de migraciones
+   npx sequelize-cli db:migrate:status
+   ```
+
+4. **Problemas de permisos:**
+   ```bash
+   # Verificar permisos de archivos
+   ls -la
+   
+   # Ajustar permisos si es necesario
+   chmod 755 src/
+   ```
+
+5. **Error de conexión frontend-backend:**
+   - Verificar que el backend esté corriendo en puerto 3001
+   - Revisar la variable `VITE_API_URL` en `.env` del frontend
+   - Verificar CORS en el backend
+
+##### **Checklist de Verificación:**
+- [ ] Variables de entorno configuradas correctamente
+- [ ] MySQL ejecutándose y accesible
+- [ ] Redis ejecutándose y accesible
+- [ ] Migraciones ejecutadas sin errores
+- [ ] Seeders ejecutados correctamente
+- [ ] Puerto 3001 disponible para backend
+- [ ] Puerto 3000 disponible para frontend
+- [ ] Backend responde en http://localhost:3001/health
+- [ ] Frontend carga en http://localhost:3000
+
+#### **URLs de Acceso**
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **Health Check**: http://localhost:3001/health
+- **Base de Datos**: MySQL en localhost:3306
+- **Cache**: Redis en localhost:6379
+
+#### **Próximos Pasos**
+
+Una vez que la instalación esté completa:
+
+1. **Crear cuenta de usuario** en http://localhost:3000/register
+2. **Explorar propiedades** en la página principal
+3. **Crear una propiedad** si eres agente o admin
+4. **Probar funcionalidades** de favoritos y gestión
+5. **Revisar logs** en ambas consolas para verificar funcionamiento
+
+¡El proyecto ZonMatch estará listo para desarrollo y testing!
 
 ---
 
@@ -1458,183 +1784,183 @@ graph TB
 
 ```
 zonmatch/
-├── 📁 backend/                     # Servidor Node.js + TypeScript + Sequelize
-│   ├── 📁 src/
-│   │   ├── 📁 controllers/        # Capa de Controladores (MVC)
-│   │   │   ├── 📄 authController.ts     # Autenticación y autorización
-│   │   │   ├── 📄 propertyController.ts # Gestión de propiedades
-│   │   │   ├── 📄 searchController.ts   # Búsquedas y filtros
-│   │   │   ├── 📄 matchController.ts    # Sistema de coincidencias
-│   │   │   ├── 📄 chatController.ts     # Chat interno
-│   │   │   └── 📄 userController.ts     # Gestión de usuarios
-│   │   ├── 📁 models/             # Capa de Modelos (MVC)
-│   │   │   ├── 📄 index.ts              # Configuración de Sequelize
-│   │   │   ├── 📄 User.ts               # Usuario con roles
-│   │   │   ├── 📄 Property.ts           # Propiedades inmobiliarias
-│   │   │   ├── 📄 Search.ts             # Búsquedas guardadas
-│   │   │   ├── 📄 Match.ts              # Coincidencias generadas
-│   │   │   ├── 📄 Favorite.ts           # Propiedades favoritas
-│   │   │   ├── 📄 Message.ts            # Mensajes del chat
-│   │   │   └── 📄 Polygon.ts            # Polígonos de zonas de interés
-│   │   ├── 📁 services/           # Capa de Servicios (Lógica de negocio)
-│   │   │   ├── 📄 matchService.ts       # Algoritmo de coincidencias
-│   │   │   ├── 📄 notificationService.ts # Notificaciones
-│   │   │   ├── 📄 emailService.ts       # Envío de emails
-│   │   │   ├── 📄 mapService.ts         # Servicios de geolocalización
-│   │   │   ├── 📄 openAIService.ts      # Integración OpenAI
-│   │   │   └── 📄 whatsAppService.ts    # Integración WhatsApp
-│   │   ├── 📁 routes/             # Definición de rutas API
-│   │   │   ├── 📄 auth.ts               # Rutas de autenticación
-│   │   │   ├── 📄 properties.ts         # Rutas de propiedades
-│   │   │   ├── 📄 search.ts             # Rutas de búsqueda
-│   │   │   ├── 📄 matches.ts            # Rutas de coincidencias
-│   │   │   ├── 📄 chat.ts               # Rutas de chat
-│   │   │   └── 📄 users.ts              # Rutas de usuarios
-│   │   ├── 📁 middleware/         # Middleware de Express
-│   │   │   ├── 📄 auth.ts               # Verificación JWT
-│   │   │   ├── 📄 roleAuth.ts           # Autorización por roles
-│   │   │   ├── 📄 rateLimit.ts          # Límite de intentos
-│   │   │   └── 📄 validation.ts         # Validación de datos
-│   │   ├── 📁 utils/              # Utilidades compartidas
-│   │   │   ├── 📄 jwt.ts                # Manejo de JWT
-│   │   │   ├── 📄 bcrypt.ts             # Encriptación
-│   │   │   ├── 📄 validation.ts         # Validaciones
-│   │   │   └── 📄 helpers.ts            # Funciones auxiliares
-│   │   ├── 📁 config/             # Configuraciones
-│   │   │   ├── 📄 database.ts           # Configuración MySQL
-│   │   │   ├── 📄 jwt.ts                # Configuración JWT
-│   │   │   ├── 📄 email.ts              # Configuración email
-│   │   │   └── 📄 redis.ts              # Configuración Redis
-│   │   ├── 📁 types/              # Tipos TypeScript
-│   │   │   ├── 📄 auth.ts               # Tipos de autenticación
-│   │   │   ├── 📄 property.ts           # Tipos de propiedades
-│   │   │   ├── 📄 user.ts               # Tipos de usuario
-│   │   │   └── 📄 api.ts                # Tipos de API
-│   │   └── 📄 app.ts              # Punto de entrada
-│   ├── 📁 database/
-│   │   ├── 📁 migrations/         # Migraciones Sequelize
-│   │   │   ├── 📄 001-create-users.ts
-│   │   │   ├── 📄 002-create-properties.ts
-│   │   │   ├── 📄 003-create-searches.ts
-│   │   │   ├── 📄 004-create-matches.ts
-│   │   │   ├── 📄 005-create-favorites.ts
-│   │   │   ├── 📄 006-create-messages.ts
-│   │   │   └── 📄 007-create-polygons.ts
-│   │   ├── 📁 seeders/            # Datos de prueba
-│   │   │   ├── 📄 001-demo-users.ts
-│   │   │   ├── 📄 002-demo-properties.ts
-│   │   │   └── 📄 003-demo-searches.ts
-│   │   └── 📁 config/             # Configuración de base de datos
-│   │       └── 📄 database.js
-│   ├── 📁 tests/                  # Tests del backend
-│   │   ├── 📁 unit/
-│   │   ├── 📁 integration/
-│   │   └── 📁 e2e/
-│   ├── 📁 docker/                 # Configuración Docker
-│   │   ├── 📄 Dockerfile
-│   │   └── 📄 docker-compose.yml
-│   ├── 📄 package.json
-│   ├── 📄 tsconfig.json
-│   ├── 📄 .env.example
-│   └── 📄 .gitignore
-├── 📁 frontend/                    # Aplicación React + TypeScript + Vite
-│   ├── 📁 src/
-│   │   ├── 📁 components/         # Componentes reutilizables
-│   │   │   ├── 📁 common/         # Componentes base
-│   │   │   │   ├── 📁 Button/
-│   │   │   │   ├── 📁 Input/
-│   │   │   │   ├── 📁 Modal/
-│   │   │   │   ├── 📁 Card/
-│   │   │   │   └── 📁 Loading/
-│   │   │   ├── 📁 layout/         # Componentes de layout
-│   │   │   │   ├── 📁 Header/
-│   │   │   │   ├── 📁 Footer/
-│   │   │   │   ├── 📁 Sidebar/
-│   │   │   │   └── 📁 Navigation/
-│   │   │   └── 📁 features/       # Componentes específicos
-│   │   │       ├── 📁 auth/       # Autenticación
-│   │   │       ├── 📁 properties/ # Propiedades
-│   │   │       ├── 📁 search/     # Búsqueda y filtros
-│   │   │       ├── 📁 map/        # Mapa y geolocalización
-│   │   │       ├── 📁 chat/       # Chat interno
-│   │   │       ├── 📁 favorites/  # Favoritos
-│   │   │       └── 📁 dashboard/  # Panel de control
-│   │   ├── 📁 pages/              # Páginas principales
-│   │   │   ├── 📁 Home/
-│   │   │   ├── 📁 Login/
-│   │   │   ├── 📁 Register/
-│   │   │   ├── 📁 Search/
-│   │   │   ├── 📁 PropertyDetail/
-│   │   │   ├── 📁 Dashboard/
-│   │   │   ├── 📁 Favorites/
-│   │   │   └── 📁 Chat/
-│   │   ├── 📁 hooks/              # Custom hooks
-│   │   │   ├── 📄 useAuth.ts      # Hook de autenticación
-│   │   │   ├── 📄 useProperties.ts # Hook de propiedades
-│   │   │   ├── 📄 useSearch.ts    # Hook de búsqueda
-│   │   │   ├── 📄 useMap.ts       # Hook de mapa
-│   │   │   └── 📄 useChat.ts      # Hook de chat
-│   │   ├── 📁 services/           # Llamadas a la API
-│   │   │   ├── 📄 api.ts          # Configuración base
-│   │   │   ├── 📄 authService.ts  # Servicios de auth
-│   │   │   ├── 📄 propertyService.ts # Servicios de propiedades
-│   │   │   ├── 📄 searchService.ts # Servicios de búsqueda
-│   │   │   └── 📄 chatService.ts  # Servicios de chat
-│   │   ├── 📁 store/              # Estado global con Zustand
-│   │   │   ├── 📄 authStore.ts    # Estado de autenticación
-│   │   │   ├── 📄 propertyStore.ts # Estado de propiedades
-│   │   │   ├── 📄 searchStore.ts  # Estado de búsqueda
-│   │   │   ├── 📄 favoriteStore.ts # Estado de favoritos
-│   │   │   └── 📄 index.ts        # Store principal
-│   │   ├── 📁 utils/              # Utilidades del frontend
-│   │   │   ├── 📄 constants.ts    # Constantes
-│   │   │   ├── 📄 helpers.ts      # Funciones auxiliares
-│   │   │   ├── 📄 validation.ts   # Validaciones
-│   │   │   └── 📄 formatters.ts   # Formateadores
-│   │   ├── 📁 types/              # Tipos TypeScript
-│   │   │   ├── 📄 auth.ts         # Tipos de autenticación
-│   │   │   ├── 📄 property.ts     # Tipos de propiedades
-│   │   │   ├── 📄 user.ts         # Tipos de usuario
-│   │   │   └── 📄 api.ts          # Tipos de API
-│   │   ├── 📁 styles/             # Estilos globales
-│   │   │   ├── 📄 globals.css
-│   │   │   ├── 📄 variables.css
-│   │   │   └── 📄 components.css
-│   │   ├── 📄 App.tsx
-│   │   └── 📄 main.tsx
-│   ├── 📁 public/
-│   │   ├── 📄 index.html
-│   │   └── 📁 assets/
-│   ├── 📄 package.json
-│   ├── 📄 tsconfig.json
-│   ├── 📄 vite.config.ts          # Configuración Vite
-│   ├── 📄 .env.example
-│   └── 📄 .gitignore
-├── 📁 shared/                      # Código compartido
-│   ├── 📁 types/                   # Tipos compartidos
-│   │   ├── 📄 common.ts            # Tipos comunes
-│   │   ├── 📄 api.ts               # Tipos de API compartidos
-│   │   └── 📄 validation.ts        # Esquemas de validación
-│   └── 📁 constants/               # Constantes compartidas
-│       ├── 📄 roles.ts             # Roles del sistema
-│       ├── 📄 propertyTypes.ts     # Tipos de propiedad
-│       └── 📄 apiEndpoints.ts      # Endpoints de la API
-├── 📁 docs/                        # Documentación técnica
-│   ├── 📁 casos-uso/              # Diagramas de casos de uso
-│   ├── 📁 flujos-usuario/         # Flujos de usuario
-│   ├── 📁 diagramas/              # Diagramas técnicos
-│   ├── 📁 api/                     # Documentación de la API
-│   ├── 📁 deployment/              # Guías de despliegue
-│   └── 📁 architecture/            # Documentación de arquitectura
-├── 📁 scripts/                     # Scripts de automatización
-│   ├── 📄 setup.sh                 # Script de configuración inicial
-│   ├── 📄 deploy.sh                # Script de despliegue
-│   ├── 📄 backup.sh                # Script de backup
-│   └── 📁 docker/                  # Scripts de Docker
-├── 📄 docker-compose.yml           # Docker Compose principal
-├── 📄 .env.example                 # Variables de entorno ejemplo
-├── 📄 .gitignore
-└── 📄 README.md                    # Documentación principal
+├── backend/                     # Servidor Node.js + TypeScript + Sequelize
+│   ├── src/
+│   │   ├── controllers/        # Capa de Controladores (MVC)
+│   │   │   ├── authController.ts     # Autenticación y autorización
+│   │   │   ├── propertyController.ts # Gestión de propiedades
+│   │   │   ├── searchController.ts   # Búsquedas y filtros
+│   │   │   ├── matchController.ts    # Sistema de coincidencias
+│   │   │   ├── chatController.ts     # Chat interno
+│   │   │   └── userController.ts     # Gestión de usuarios
+│   │   ├── models/             # Capa de Modelos (MVC)
+│   │   │   ├── index.ts              # Configuración de Sequelize
+│   │   │   ├── User.ts               # Usuario con roles
+│   │   │   ├── Property.ts           # Propiedades inmobiliarias
+│   │   │   ├── Search.ts             # Búsquedas guardadas
+│   │   │   ├── Match.ts              # Coincidencias generadas
+│   │   │   ├── Favorite.ts           # Propiedades favoritas
+│   │   │   ├── Message.ts            # Mensajes del chat
+│   │   │   └── Polygon.ts            # Polígonos de zonas de interés
+│   │   ├── services/           # Capa de Servicios (Lógica de negocio)
+│   │   │   ├── matchService.ts       # Algoritmo de coincidencias
+│   │   │   ├── notificationService.ts # Notificaciones
+│   │   │   ├── emailService.ts       # Envío de emails
+│   │   │   ├── mapService.ts         # Servicios de geolocalización
+│   │   │   ├── openAIService.ts      # Integración OpenAI
+│   │   │   └── whatsAppService.ts    # Integración WhatsApp
+│   │   ├── routes/             # Definición de rutas API
+│   │   │   ├── auth.ts               # Rutas de autenticación
+│   │   │   ├── properties.ts         # Rutas de propiedades
+│   │   │   ├── search.ts             # Rutas de búsqueda
+│   │   │   ├── matches.ts            # Rutas de coincidencias
+│   │   │   ├── chat.ts               # Rutas de chat
+│   │   │   └── users.ts              # Rutas de usuarios
+│   │   ├── middleware/         # Middleware de Express
+│   │   │   ├── auth.ts               # Verificación JWT
+│   │   │   ├── roleAuth.ts           # Autorización por roles
+│   │   │   ├── rateLimit.ts          # Límite de intentos
+│   │   │   └── validation.ts         # Validación de datos
+│   │   ├── utils/              # Utilidades compartidas
+│   │   │   ├── jwt.ts                # Manejo de JWT
+│   │   │   ├── bcrypt.ts             # Encriptación
+│   │   │   ├── validation.ts         # Validaciones
+│   │   │   └── helpers.ts            # Funciones auxiliares
+│   │   ├── config/             # Configuraciones
+│   │   │   ├── database.ts           # Configuración MySQL
+│   │   │   ├── jwt.ts                # Configuración JWT
+│   │   │   ├── email.ts              # Configuración email
+│   │   │   └── redis.ts              # Configuración Redis
+│   │   ├── types/              # Tipos TypeScript
+│   │   │   ├── auth.ts               # Tipos de autenticación
+│   │   │   ├── property.ts           # Tipos de propiedades
+│   │   │   ├── user.ts               # Tipos de usuario
+│   │   │   └── api.ts                # Tipos de API
+│   │   └── app.ts              # Punto de entrada
+│   ├── database/
+│   │   ├── migrations/         # Migraciones Sequelize
+│   │   │   ├── 001-create-users.ts
+│   │   │   ├── 002-create-properties.ts
+│   │   │   ├── 003-create-searches.ts
+│   │   │   ├── 004-create-matches.ts
+│   │   │   ├── 005-create-favorites.ts
+│   │   │   ├── 006-create-messages.ts
+│   │   │   └── 007-create-polygons.ts
+│   │   ├── seeders/            # Datos de prueba
+│   │   │   ├── 001-demo-users.ts
+│   │   │   ├── 002-demo-properties.ts
+│   │   │   └── 003-demo-searches.ts
+│   │   └── config/             # Configuración de base de datos
+│   │       └── database.js
+│   ├── tests/                  # Tests del backend
+│   │   ├── unit/
+│   │   ├── integration/
+│   │   └── e2e/
+│   ├── docker/                 # Configuración Docker
+│   │   ├── Dockerfile
+│   │   └── docker-compose.yml
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── .env.example
+│   └── .gitignore
+├── frontend/                    # Aplicación React + TypeScript + Vite
+│   ├── src/
+│   │   ├── components/         # Componentes reutilizables
+│   │   │   ├── common/         # Componentes base
+│   │   │   │   ├── Button/
+│   │   │   │   ├── Input/
+│   │   │   │   ├── Modal/
+│   │   │   │   ├── Card/
+│   │   │   │   └── Loading/
+│   │   │   ├── layout/         # Componentes de layout
+│   │   │   │   ├── Header/
+│   │   │   │   ├── Footer/
+│   │   │   │   ├── Sidebar/
+│   │   │   │   └── Navigation/
+│   │   │   └── features/       # Componentes específicos
+│   │   │       ├── auth/       # Autenticación
+│   │   │       ├── properties/ # Propiedades
+│   │   │       ├── search/     # Búsqueda y filtros
+│   │   │       ├── map/        # Mapa y geolocalización
+│   │   │       ├── chat/       # Chat interno
+│   │   │       ├── favorites/  # Favoritos
+│   │   │       └── dashboard/  # Panel de control
+│   │   ├── pages/              # Páginas principales
+│   │   │   ├── Home/
+│   │   │   ├── Login/
+│   │   │   ├── Register/
+│   │   │   ├── Search/
+│   │   │   ├── PropertyDetail/
+│   │   │   ├── Dashboard/
+│   │   │   ├── Favorites/
+│   │   │   └── Chat/
+│   │   ├── hooks/              # Custom hooks
+│   │   │   ├── useAuth.ts      # Hook de autenticación
+│   │   │   ├── useProperties.ts # Hook de propiedades
+│   │   │   ├── useSearch.ts    # Hook de búsqueda
+│   │   │   ├── useMap.ts       # Hook de mapa
+│   │   │   └── useChat.ts      # Hook de chat
+│   │   ├── services/           # Llamadas a la API
+│   │   │   ├── api.ts          # Configuración base
+│   │   │   ├── authService.ts  # Servicios de auth
+│   │   │   ├── propertyService.ts # Servicios de propiedades
+│   │   │   ├── searchService.ts # Servicios de búsqueda
+│   │   │   └── chatService.ts  # Servicios de chat
+│   │   ├── store/              # Estado global con Zustand
+│   │   │   ├── authStore.ts    # Estado de autenticación
+│   │   │   ├── propertyStore.ts # Estado de propiedades
+│   │   │   ├── searchStore.ts  # Estado de búsqueda
+│   │   │   ├── favoriteStore.ts # Estado de favoritos
+│   │   │   └── index.ts        # Store principal
+│   │   ├── utils/              # Utilidades del frontend
+│   │   │   ├── constants.ts    # Constantes
+│   │   │   ├── helpers.ts      # Funciones auxiliares
+│   │   │   ├── validation.ts   # Validaciones
+│   │   │   └── formatters.ts   # Formateadores
+│   │   ├── types/              # Tipos TypeScript
+│   │   │   ├── auth.ts         # Tipos de autenticación
+│   │   │   ├── property.ts     # Tipos de propiedades
+│   │   │   ├── user.ts         # Tipos de usuario
+│   │   │   └── api.ts          # Tipos de API
+│   │   ├── styles/             # Estilos globales
+│   │   │   ├── globals.css
+│   │   │   ├── variables.css
+│   │   │   └── components.css
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── public/
+│   │   ├── index.html
+│   │   └── assets/
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts          # Configuración Vite
+│   ├── .env.example
+│   └── .gitignore
+├── shared/                      # Código compartido
+│   ├── types/                   # Tipos compartidos
+│   │   ├── common.ts            # Tipos comunes
+│   │   ├── api.ts               # Tipos de API compartidos
+│   │   └── validation.ts        # Esquemas de validación
+│   └── constants/               # Constantes compartidas
+│       ├── roles.ts             # Roles del sistema
+│       ├── propertyTypes.ts     # Tipos de propiedad
+│       └── apiEndpoints.ts      # Endpoints de la API
+├── docs/                        # Documentación técnica
+│   ├── casos-uso/              # Diagramas de casos de uso
+│   ├── flujos-usuario/         # Flujos de usuario
+│   ├── diagramas/              # Diagramas técnicos
+│   ├── api/                     # Documentación de la API
+│   ├── deployment/              # Guías de despliegue
+│   └── architecture/            # Documentación de arquitectura
+├── scripts/                     # Scripts de automatización
+│   ├── setup.sh                 # Script de configuración inicial
+│   ├── deploy.sh                # Script de despliegue
+│   ├── backup.sh                # Script de backup
+│   └── docker/                  # Scripts de Docker
+├── docker-compose.yml           # Docker Compose principal
+├── .env.example                 # Variables de entorno ejemplo
+├── .gitignore
+└── README.md                    # Documentación principal
 ```
 
 #### **Descripción de Carpetas y Archivos Principales**
@@ -2022,27 +2348,27 @@ graph LR
 #!/bin/bash
 set -e
 
-echo "🚀 Iniciando despliegue..."
+echo "Iniciando despliegue..."
 
 # Verificar que estamos en main
 if [[ $(git branch --show-current) != "main" ]]; then
-    echo "❌ Error: Debes estar en la rama main"
+    echo "Error: Debes estar en la rama main"
     exit 1
 fi
 
 # Ejecutar tests
-echo "🧪 Ejecutando tests..."
+echo "Ejecutando tests..."
 npm run test
 
 # Build del frontend
-echo "🏗️ Build del frontend..."
+echo "Build del frontend..."
 cd frontend && npm run build && cd ..
 
 # Deploy automático via GitHub Actions
-echo "📤 Push a main para trigger de deploy..."
+echo "Push a main para trigger de deploy..."
 git push origin main
 
-echo "✅ Despliegue iniciado. Revisar GitHub Actions para progreso."
+echo "Despliegue iniciado. Revisar GitHub Actions para progreso."
 ```
 
 **`scripts/rollback.sh`:**
@@ -2050,16 +2376,16 @@ echo "✅ Despliegue iniciado. Revisar GitHub Actions para progreso."
 #!/bin/bash
 set -e
 
-echo "🔄 Iniciando rollback..."
+echo "Iniciando rollback..."
 
 # Obtener commit anterior
 PREVIOUS_COMMIT=$(git log --oneline -2 | tail -1 | cut -d' ' -f1)
 
-echo "⏪ Revertiendo a commit: $PREVIOUS_COMMIT"
+echo "Revertiendo a commit: $PREVIOUS_COMMIT"
 git revert --no-edit HEAD
 git push origin main
 
-echo "✅ Rollback completado. Revisar GitHub Actions."
+echo "Rollback completado. Revisar GitHub Actions."
 ```
 
 #### **Configuración de Seguridad**
