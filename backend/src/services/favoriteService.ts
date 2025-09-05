@@ -1,5 +1,6 @@
-import { Favorite, Property, User } from '../models';
+import { Favorite, Property, User, PropertyImage } from '../models';
 import { Op } from 'sequelize';
+import sequelize from '../config/database';
 
 export class FavoriteService {
   // Obtener favoritos del usuario con paginación
@@ -17,6 +18,11 @@ export class FavoriteService {
               model: User,
               as: 'owner',
               attributes: ['id_user', 'first_name', 'last_name', 'email', 'phone']
+            },
+            {
+              model: PropertyImage,
+              as: 'images',
+              attributes: ['id_property_image', 'url', 'alt_text', 'is_primary', 'order_index']
             }
           ]
         }
@@ -43,65 +49,93 @@ export class FavoriteService {
 
   // Agregar propiedad a favoritos
   static async addToFavorites(userId: string, propertyId: string) {
-    // Verificar que la propiedad existe
-    const property = await Property.findByPk(propertyId);
-    if (!property) {
-      throw new Error('PROPERTY_NOT_FOUND');
-    }
+    // Iniciar transacción
+    const transaction = await sequelize.transaction();
 
-    // Verificar que no esté ya en favoritos
-    const existingFavorite = await Favorite.findOne({
-      where: {
+    try {
+      // Verificar que la propiedad existe
+      const property = await Property.findByPk(propertyId, { transaction });
+      if (!property) {
+        throw new Error('PROPERTY_NOT_FOUND');
+      }
+
+      // Verificar que no esté ya en favoritos
+      const existingFavorite = await Favorite.findOne({
+        where: {
+          user_id: userId,
+          property_id: propertyId
+        },
+        transaction
+      });
+
+      if (existingFavorite) {
+        throw new Error('ALREADY_IN_FAVORITES');
+      }
+
+      // Crear el favorito
+      const favorite = await Favorite.create({
         user_id: userId,
         property_id: propertyId
-      }
-    });
+      }, { transaction });
 
-    if (existingFavorite) {
-      throw new Error('ALREADY_IN_FAVORITES');
+      // Obtener el favorito con la propiedad incluida
+      const favoriteWithProperty = await Favorite.findByPk(favorite.id_favorite, {
+        include: [
+          {
+            model: Property,
+            as: 'favoriteProperty',
+            include: [
+              {
+                model: User,
+                as: 'owner',
+                attributes: ['id_user', 'first_name', 'last_name', 'email', 'phone']
+              }
+            ]
+          }
+        ],
+        transaction
+      });
+
+      // Confirmar transacción
+      await transaction.commit();
+      return favoriteWithProperty;
+
+    } catch (error) {
+      // Revertir transacción en caso de error
+      await transaction.rollback();
+      throw error;
     }
-
-    // Crear el favorito
-    const favorite = await Favorite.create({
-      user_id: userId,
-      property_id: propertyId
-    });
-
-    // Obtener el favorito con la propiedad incluida
-    const favoriteWithProperty = await Favorite.findByPk(favorite.id_favorite, {
-      include: [
-        {
-          model: Property,
-          as: 'favoriteProperty',
-          include: [
-            {
-              model: User,
-              as: 'owner',
-              attributes: ['id_user', 'first_name', 'last_name', 'email', 'phone']
-            }
-          ]
-        }
-      ]
-    });
-
-    return favoriteWithProperty;
   }
 
   // Remover propiedad de favoritos
   static async removeFromFavorites(userId: string, propertyId: string) {
-    const favorite = await Favorite.findOne({
-      where: {
-        user_id: userId,
-        property_id: propertyId
+    // Iniciar transacción
+    const transaction = await sequelize.transaction();
+
+    try {
+      const favorite = await Favorite.findOne({
+        where: {
+          user_id: userId,
+          property_id: propertyId
+        },
+        transaction
+      });
+
+      if (!favorite) {
+        throw new Error('FAVORITE_NOT_FOUND');
       }
-    });
 
-    if (!favorite) {
-      throw new Error('FAVORITE_NOT_FOUND');
+      await favorite.destroy({ transaction });
+
+      // Confirmar transacción
+      await transaction.commit();
+      return true;
+
+    } catch (error) {
+      // Revertir transacción en caso de error
+      await transaction.rollback();
+      throw error;
     }
-
-    await favorite.destroy();
-    return true;
   }
 
   // Verificar si una propiedad está en favoritos

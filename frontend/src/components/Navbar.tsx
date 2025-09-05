@@ -12,7 +12,7 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
-import { Menu as MenuIcon, Home, Search, Add, Person, Favorite } from '@mui/icons-material';
+import { Menu as MenuIcon, Home, Search, Add, Person, Favorite, List } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
@@ -126,6 +126,10 @@ const Navbar: React.FC = () => {
       )}
       {isAuthenticated && (
         <>
+          <MenuItem onClick={() => navigate('/my-properties')}>
+            <List sx={{ mr: 1 }} />
+            Mis Propiedades
+          </MenuItem>
           <MenuItem onClick={handleProfile}>
             <Person sx={{ mr: 1 }} />
             Mi Perfil
@@ -196,6 +200,15 @@ const Navbar: React.FC = () => {
                 onClick={() => navigate('/favorites')}
               >
                 Favoritos
+              </Button>
+            )}
+            {isAuthenticated && (
+              <Button
+                color="inherit"
+                startIcon={<List />}
+                onClick={() => navigate('/my-properties')}
+              >
+                Mis Propiedades
               </Button>
             )}
             {isAuthenticated && (

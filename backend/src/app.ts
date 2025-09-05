@@ -15,6 +15,7 @@ import { criticalRoutesRateLimit } from './middleware/rateLimit';
 // Importar rutas
 import authRoutes from './routes/auth';
 import propertyRoutes from './routes/properties';
+import propertyImageRoutes from './routes/propertyImages';
 import passwordResetRoutes from './routes/passwordReset';
 import favoriteRoutes from './routes/favorites';
 
@@ -74,6 +75,7 @@ app.get('/health', (_req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
+app.use('/api/property-images', propertyImageRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/favorites', favoriteRoutes);
 
@@ -155,11 +157,11 @@ async function startApp() {
     await sequelize.authenticate();
     console.log('✅ Base de datos conectada correctamente');
 
-    // Sincronizar modelos (en desarrollo)
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true });
-      console.log('✅ Modelos sincronizados correctamente');
-    }
+    // Sincronizar modelos (en desarrollo) - DESHABILITADO: usamos migraciones
+    // if (process.env.NODE_ENV === 'development') {
+    //   await sequelize.sync({ alter: true });
+    //   console.log('✅ Modelos sincronizados correctamente');
+    // }
 
     // Iniciar servidor
     app.listen(PORT, () => {

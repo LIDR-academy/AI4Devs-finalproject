@@ -31,8 +31,10 @@ import { useNavigate } from 'react-router-dom';
 import { usePropertyStore } from '../store/propertyStore';
 import { useAuthStore } from '../store/authStore';
 import CurrencyInput from '../components/CurrencyInput';
+import ImageUpload from '../components/ImageUpload';
+import { IPropertyImage } from '../types';
 
-const steps = ['Información básica', 'Detalles', 'Ubicación y precio'];
+const steps = ['Información básica', 'Detalles', 'Ubicación y precio', 'Imágenes'];
 
 const CreateProperty: React.FC = () => {
   const navigate = useNavigate();
@@ -53,7 +55,7 @@ const CreateProperty: React.FC = () => {
     city: '',
     state: '',
     amenities: [] as string[],
-    images: [] as string[]
+    images: [] as IPropertyImage[]
   });
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [newAmenity, setNewAmenity] = useState('');
@@ -164,6 +166,12 @@ const CreateProperty: React.FC = () => {
       if (!formData.address) errors.address = 'La dirección es requerida';
       if (!formData.city) errors.city = 'La ciudad es requerida';
       if (!formData.state) errors.state = 'El estado es requerido';
+    }
+
+    if (step === 3) {
+      if (formData.images.length === 0) {
+        errors.images = 'Debes agregar al menos una imagen';
+      }
     }
 
     setValidationErrors(errors);
@@ -493,7 +501,15 @@ const CreateProperty: React.FC = () => {
             </Grid>
           </Grid>
         );
-
+      case 3:
+        return (
+          <ImageUpload
+            images={formData.images}
+            onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+            maxImages={10}
+            disabled={loading}
+          />
+        );
       default:
         return null;
     }

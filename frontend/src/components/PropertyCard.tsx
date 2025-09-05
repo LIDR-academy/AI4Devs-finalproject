@@ -39,7 +39,7 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property, onPropertyCl
       <CardMedia
         component="img"
         height="200"
-        image={property.images?.[0] || '/placeholder-property.jpg'}
+        image={property.images?.find(img => img.is_primary)?.url || property.images?.[0]?.url || '/placeholder-property.jpg'}
         alt={property.title}
         sx={{ objectFit: 'cover' }}
       />
@@ -93,6 +93,31 @@ const PropertyCard: React.FC<PropertyCardProps> = memo(({ property, onPropertyCl
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {property.description?.substring(0, 100)}...
         </Typography>
+
+        {/* Amenidades */}
+        {property.amenities && property.amenities.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {property.amenities.slice(0, 3).map((amenity, index) => (
+                <Chip
+                  key={index}
+                  label={amenity}
+                  size="small"
+                  variant="outlined"
+                  sx={{ fontSize: '0.7rem', height: '20px' }}
+                />
+              ))}
+              {property.amenities.length > 3 && (
+                <Chip
+                  label={`+${property.amenities.length - 3} más`}
+                  size="small"
+                  variant="outlined"
+                  sx={{ fontSize: '0.7rem', height: '20px' }}
+                />
+              )}
+            </Box>
+          </Box>
+        )}
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Rating value={4.5} readOnly size="small" />

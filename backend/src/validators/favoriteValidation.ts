@@ -4,22 +4,22 @@ export const favoriteValidation = {
   // Validaciones para agregar a favoritos
   addToFavorites: [
     param('propertyId')
-      .isInt({ min: 1 })
-      .withMessage('El ID de la propiedad debe ser un número entero positivo')
+      .isUUID()
+      .withMessage('El ID de la propiedad debe ser un UUID válido')
   ],
 
   // Validaciones para remover de favoritos
   removeFromFavorites: [
     param('propertyId')
-      .isInt({ min: 1 })
-      .withMessage('El ID de la propiedad debe ser un número entero positivo')
+      .isUUID()
+      .withMessage('El ID de la propiedad debe ser un UUID válido')
   ],
 
   // Validaciones para verificar estado de favorito
   checkFavoriteStatus: [
     param('propertyId')
-      .isInt({ min: 1 })
-      .withMessage('El ID de la propiedad debe ser un número entero positivo')
+      .isUUID()
+      .withMessage('El ID de la propiedad debe ser un UUID válido')
   ],
 
   // Validaciones para obtener favoritos del usuario

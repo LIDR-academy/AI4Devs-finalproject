@@ -42,7 +42,7 @@ User.init(
     id_user: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: () => uuidv4()
+      defaultValue: DataTypes.UUIDV4
     },
     email: {
       type: DataTypes.STRING(255),

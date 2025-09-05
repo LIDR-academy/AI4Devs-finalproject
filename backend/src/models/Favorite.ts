@@ -33,7 +33,7 @@ Favorite.init(
     id_favorite: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: () => uuidv4()
+      defaultValue: DataTypes.UUIDV4
     },
     user_id: {
       type: DataTypes.UUID,

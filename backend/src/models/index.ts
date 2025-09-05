@@ -8,6 +8,10 @@ import Polygon from './Polygon';
 import Match from './Match';
 import Notification from './Notification';
 import Message from './Message';
+import { PropertyImage } from './PropertyImage';
+import { Amenity } from './Amenity';
+import { PropertyAmenity } from './PropertyAmenity';
+import { PropertyView } from './PropertyView';
 
 // Definir las relaciones entre modelos
 User.hasMany(Property, { foreignKey: 'user_id', as: 'properties' });
@@ -52,6 +56,32 @@ Message.belongsTo(User, { foreignKey: 'receiver_id', as: 'messageReceiver' });
 Property.hasMany(Message, { foreignKey: 'property_id', as: 'messages' });
 Message.belongsTo(Property, { foreignKey: 'property_id', as: 'messageProperty' });
 
+// Relaciones de PropertyImage
+Property.hasMany(PropertyImage, { foreignKey: 'property_id', as: 'images' });
+PropertyImage.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+
+// Relaciones de PropertyView
+Property.hasMany(PropertyView, { foreignKey: 'property_id', as: 'views' });
+PropertyView.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+User.hasMany(PropertyView, { foreignKey: 'user_id', as: 'propertyViews' });
+PropertyView.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// Relaciones de Amenity y PropertyAmenity
+Property.belongsToMany(Amenity, { 
+  through: PropertyAmenity, 
+  foreignKey: 'property_id', 
+  otherKey: 'amenity_id',
+  as: 'propertyAmenities' 
+});
+Amenity.belongsToMany(Property, { 
+  through: PropertyAmenity, 
+  foreignKey: 'amenity_id', 
+  otherKey: 'property_id',
+  as: 'amenityProperties' 
+});
+PropertyAmenity.belongsTo(Property, { foreignKey: 'property_id', as: 'property' });
+PropertyAmenity.belongsTo(Amenity, { foreignKey: 'amenity_id', as: 'amenity' });
+
 export {
   sequelize,
   User,
@@ -63,4 +93,8 @@ export {
   Match,
   Notification,
   Message,
+  PropertyImage,
+  Amenity,
+  PropertyAmenity,
+  PropertyView,
 };

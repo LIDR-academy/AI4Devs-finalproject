@@ -45,7 +45,27 @@ export const createPropertyValidators = [
   body('state')
     .trim()
     .isLength({ min: 2, max: 100 })
-    .withMessage('El estado debe tener entre 2 y 100 caracteres')
+    .withMessage('El estado debe tener entre 2 y 100 caracteres'),
+  body('images')
+    .optional()
+    .isArray()
+    .withMessage('Las imágenes deben ser un array'),
+  body('images.*.url')
+    .optional()
+    .isURL()
+    .withMessage('La URL de la imagen debe ser válida'),
+  body('images.*.alt_text')
+    .optional()
+    .isLength({ max: 255 })
+    .withMessage('El texto alternativo no puede exceder 255 caracteres'),
+  body('images.*.is_primary')
+    .optional()
+    .isBoolean()
+    .withMessage('is_primary debe ser un booleano'),
+  body('images.*.order_index')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('order_index debe ser un entero no negativo')
 ];
 
 export const updatePropertyValidators = [

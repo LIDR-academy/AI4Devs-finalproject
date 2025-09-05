@@ -11,9 +11,12 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
 import CreateProperty from '@/pages/CreateProperty';
+import EditProperty from '@/pages/EditProperty';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Favorites from '@/pages/Favorites';
+import PropertyDetail from '@/pages/PropertyDetail';
+import MyProperties from '@/pages/MyProperties';
 
 // Hooks
 import { useAuthStore } from '@/store/authStore';
@@ -66,6 +69,7 @@ function App() {
             <Routes>
               {/* Rutas públicas */}
               <Route path="/" element={<Dashboard />} />
+              <Route path="/property/:id" element={<PropertyDetail />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -91,11 +95,29 @@ function App() {
               />
               
               <Route 
+                path="/edit-property/:id" 
+                element={
+                  <RoleRoute allowedRoles={['user', 'agent', 'admin']}>
+                    <EditProperty />
+                  </RoleRoute>
+                } 
+              />
+              
+              <Route 
                 path="/favorites" 
                 element={
                   <ProtectedRoute>
                     <Favorites />
                   </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/my-properties" 
+                element={
+                  <RoleRoute allowedRoles={['user', 'agent', 'admin']}>
+                    <MyProperties />
+                  </RoleRoute>
                 } 
               />
               

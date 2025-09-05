@@ -111,6 +111,18 @@ export interface IProperty {
   updated_at: Date;
 }
 
+export interface IPropertyImage {
+  id_property_image: string;
+  property_id: string;
+  url: string;
+  alt_text?: string;
+  is_primary: boolean;
+  order_index: number;
+  cloudinary_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ICreateProperty {
   title: string;
   description?: string;
@@ -125,12 +137,16 @@ export interface ICreateProperty {
   city: string;
   state: string;
   amenities?: string[];
+  images?: IPropertyImage[];
 }
 
 export interface IUpdateProperty {
   title?: string;
   description?: string;
+  property_type?: PropertyType;
+  operation_type?: OperationType;
   price?: number;
+  currency?: string;
   bedrooms?: number;
   bathrooms?: number;
   sq_meters?: number;
@@ -139,6 +155,8 @@ export interface IUpdateProperty {
   state?: string;
   amenities?: string[];
   status?: PropertyStatus;
+  featured?: boolean;
+  images?: IPropertyImage[];
 }
 
 export enum PropertyType {

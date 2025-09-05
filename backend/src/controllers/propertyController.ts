@@ -47,8 +47,8 @@ export class PropertyController {
   // Obtener una propiedad por ID
   static async getPropertyById(req: Request, res: Response): Promise<void> {
     try {
-      const { id_user } = req.params;
-      const property = await PropertyService.getPropertyById(parseInt(id_user));
+      const { id_property } = req.params;
+      const property = await PropertyService.getPropertyById(id_property);
 
       if (!property) {
         res.status(404).json({
@@ -99,8 +99,8 @@ export class PropertyController {
   static async updateProperty(req: IRequestWithUser, res: Response): Promise<void> {
     try {
       const user = req.user!;
-      const { id_user } = req.params;
-      const property = await PropertyService.updateProperty(id_user, req.body, user.id_user);
+      const { id_property } = req.params;
+      const property = await PropertyService.updateProperty(id_property, req.body, user.id_user);
 
       if (!property) {
         res.status(404).json({
@@ -130,8 +130,8 @@ export class PropertyController {
   static async deleteProperty(req: IRequestWithUser, res: Response): Promise<void> {
     try {
       const user = req.user!;
-      const { id_user } = req.params;
-      const success = await PropertyService.deleteProperty(id_user, user.id_user);
+      const { id_property } = req.params;
+      const success = await PropertyService.deleteProperty(id_property, user.id_user);
 
       if (!success) {
         res.status(404).json({
@@ -165,7 +165,7 @@ export class PropertyController {
       res.status(200).json({
         success: true,
         message: 'Propiedades del usuario obtenidas exitosamente',
-        data: properties
+        properties: properties
       });
     } catch (error) {
       console.error('Error al obtener propiedades del usuario:', error);
@@ -177,27 +177,18 @@ export class PropertyController {
     }
   }
 
-  // Cambiar estado destacado (solo admin)
+  // Cambiar estado destacado
   static async toggleFeatured(req: IRequestWithUser, res: Response): Promise<void> {
     try {
       const user = req.user!;
+      const { id_property } = req.params;
       
-      if (user.role !== 'admin') {
-        res.status(403).json({
-          success: false,
-          message: 'Solo los administradores pueden cambiar el estado destacado',
-          error: 'INSUFFICIENT_PERMISSIONS'
-        });
-        return;
-      }
-
-      const { id_user } = req.params;
-      const property = await PropertyService.toggleFeatured(parseInt(id_user));
+      const property = await PropertyService.toggleFeatured(id_property, user.id_user);
 
       if (!property) {
         res.status(404).json({
           success: false,
-          message: 'Propiedad no encontrada',
+          message: 'Propiedad no encontrada o no tienes permisos para modificarla',
           error: 'PROPERTY_NOT_FOUND'
         });
         return;
@@ -210,6 +201,76 @@ export class PropertyController {
       });
     } catch (error) {
       console.error('Error al cambiar estado destacado:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Actualizar estado de propiedad
+  static async updatePropertyStatus(req: IRequestWithUser, res: Response): Promise<void> {
+    try {
+      const user = req.user!;
+      const { id_property } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        res.status(400).json({
+          success: false,
+          message: 'El estado es requerido',
+          error: 'MISSING_STATUS'
+        });
+        return;
+      }
+
+      const property = await PropertyService.updatePropertyStatus(id_property, status, user.id_user);
+
+      if (!property) {
+        res.status(404).json({
+          success: false,
+          message: 'Propiedad no encontrada o no tienes permisos para modificarla',
+          error: 'PROPERTY_NOT_FOUND'
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Estado de propiedad actualizado exitosamente',
+        data: property
+      });
+    } catch (error) {
+      console.error('Error al actualizar estado de propiedad:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Incrementar vistas de una propiedad
+  static async incrementViews(req: Request, res: Response) {
+    try {
+      const { id_property } = req.params;
+
+      const success = await PropertyService.incrementPropertyViews(id_property);
+
+      if (success) {
+        res.status(200).json({
+          success: true,
+          message: 'Vistas incrementadas exitosamente'
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          message: 'Vistas no incrementadas (ya incrementadas recientemente)'
+        });
+      }
+    } catch (error) {
+      console.error('Error al incrementar vistas:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor',

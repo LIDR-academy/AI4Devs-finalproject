@@ -41,7 +41,7 @@ Message.init(
     id_message: {
       type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: () => uuidv4()
+      defaultValue: DataTypes.UUIDV4
     },
     sender_id: {
       type: DataTypes.UUID,

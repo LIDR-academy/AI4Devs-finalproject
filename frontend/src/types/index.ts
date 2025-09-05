@@ -42,6 +42,18 @@ export enum VerificationStatus {
 }
 
 // Tipos de propiedad
+export interface IPropertyImage {
+  id_property_image: string;
+  property_id: string;
+  url: string;
+  alt_text?: string;
+  is_primary: boolean;
+  order_index: number;
+  cloudinary_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface IProperty {
   id_property: string;
   user_id: string;
@@ -71,7 +83,7 @@ export interface IProperty {
   longitude?: number;
   location_accuracy?: string;
   amenities?: string[];
-  images?: string[];
+  images?: IPropertyImage[];
   status: PropertyStatus;
   featured: boolean;
   views_count: number;
@@ -96,6 +108,7 @@ export interface ICreateProperty {
   city: string;
   state: string;
   amenities?: string[];
+  images?: IPropertyImage[];
 }
 
 export interface IUpdateProperty {
