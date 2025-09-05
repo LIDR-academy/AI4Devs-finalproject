@@ -16,34 +16,36 @@
    - [1.7. Principios de Diseño Centrado en el Usuario](#17-principios-de-diseño-centrado-en-el-usuario)
    - [1.8. Instrucciones de instalación](#18-instrucciones-de-instalación)
    - [1.9. Casos de Uso Principales del Sistema](#19-casos-de-uso-principales-del-sistema)
-     - [1.9.1. Registrarse y configurar perfil](#caso-de-uso-191-registrarse-y-configurar-perfil)
-     - [1.9.2. Publicar una propiedad](#caso-de-uso-192-publicar-una-propiedad-core)
-     - [1.9.3. Buscar propiedades en el mapa](#caso-de-uso-193-buscar-propiedades-en-el-mapa-core)
-     - [1.9.4. Generar coincidencias automáticas](#caso-de-uso-194-generar-coincidencias-automáticas-core)
-     - [1.9.5. Contactar al publicador](#caso-de-uso-195-contactar-al-publicador-core)
-     - [1.9.6. Administrar mis propiedades](#caso-de-uso-196-administrar-mis-propiedades)
-     - [1.9.7. Guardar y comparar propiedades favoritas](#caso-de-uso-197-guardar-y-comparar-propiedades-favoritas)
-     - [1.9.8. Recuperar contraseña](#caso-de-uso-198-recuperar-contraseña)
-     - [1.9.9. Recibir notificaciones de coincidencias](#caso-de-uso-199-recibir-notificaciones-de-coincidencias)
-     - [1.9.10. Cerrar sesión y limpiar sesión segura](#caso-de-uso-1910-cerrar-sesión-y-limpiar-sesión-segura)
+     - [1.9.1. Registrarse y configurar perfil](#191-registrarse-y-configurar-perfil)
+     - [1.9.2. Publicar una propiedad](#192-publicar-una-propiedad-core)
+     - [1.9.3. Buscar propiedades en el mapa](#193-buscar-propiedades-en-el-mapa-core)
+     - [1.9.4. Generar coincidencias automáticas](#194-generar-coincidencias-automáticas-core)
+     - [1.9.5. Contactar al publicador](#195-contactar-al-publicador-core)
+     - [1.9.6. Administrar mis propiedades](#196-administrar-mis-propiedades)
+     - [1.9.7. Guardar y comparar propiedades favoritas](#197-guardar-y-comparar-propiedades-favoritas)
+     - [1.9.8. Recuperar contraseña](#198-recuperar-contraseña)
+     - [1.9.9. Recibir notificaciones de coincidencias](#199-recibir-notificaciones-de-coincidencias)
+     - [1.9.10. Cerrar sesión y limpiar sesión segura](#1910-cerrar-sesión-y-limpiar-sesión-segura)
 2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
    - [2.1. Diagrama de arquitectura](#21-diagrama-de-arquitectura)
-   - [2.1.2. Tecnologías por Componente](#212-tecnologías-por-componente)
-   - [2.1.3. Patrón Arquitectónico: MVC Monolítico Modular](#213-patrón-arquitectónico-mvc-monolítico-modular)
-   - [2.2. Descripción de componentes principales](#22-descripción-de-componentes-principales)
-     - [2.2.1. Frontend (Cliente)](#221-frontend-cliente)
-     - [2.2.2. Backend (Servidor de Negocio)](#222-backend-servidor-de-negocio)
-     - [2.2.3. Base de Datos](#223-base-de-datos)
-     - [2.2.4. Sistema de Notificaciones](#224-sistema-de-notificaciones)
-     - [2.2.5. Módulo de IA para Coincidencias](#225-módulo-de-ia-para-coincidencias)
-     - [2.2.6. Servicios Externos / Integraciones](#226-servicios-externos--integraciones)
-     - [2.2.7. Middleware y Seguridad](#227-middleware-y-seguridad)
-     - [2.2.8. Infraestructura / Orquestación](#228-infraestructura--orquestación)
-   - [2.3. Descripción de alto nivel del proyecto y estructura de ficheros](#23-descripción-de-alto-nivel-del-proyecto-y-estructura-de-ficheros)
-   - [2.4. Infraestructura y despliegue](#24-infraestructura-y-despliegue)
-   - [2.5. Seguridad](#25-seguridad)
-   - [2.6. Tests](#26-tests)
+   - [2.2. Tecnologías por Componente](#22-tecnologías-por-componente)
+   - [2.3. Patrón Arquitectónico: MVC Monolítico Modular](#23-patrón-arquitectónico-mvc-monolítico-modular)
+   - [2.4. Descripción de componentes principales](#24-descripción-de-componentes-principales)
+     - [2.4.1. Frontend (Cliente)](#241-frontend-cliente)
+     - [2.4.2. Backend (Servidor de Negocio)](#242-backend-servidor-de-negocio)
+     - [2.4.3. Base de Datos](#243-base-de-datos)
+     - [2.4.4. Sistema de Notificaciones](#244-sistema-de-notificaciones)
+     - [2.4.5. Módulo de IA para Coincidencias](#245-módulo-de-ia-para-coincidencias)
+     - [2.4.6. Servicios Externos / Integraciones](#246-servicios-externos--integraciones)
+     - [2.4.7. Middleware y Seguridad](#247-middleware-y-seguridad)
+     - [2.4.8. Infraestructura / Orquestación](#248-infraestructura--orquestación)
+   - [2.5. Descripción de alto nivel del proyecto y estructura de ficheros](#25-descripción-de-alto-nivel-del-proyecto-y-estructura-de-ficheros)
+   - [2.6. Infraestructura y despliegue](#26-infraestructura-y-despliegue)
+   - [2.7. Seguridad](#27-seguridad)
+   - [2.8. Tests](#28-tests)
 3. [Modelo de datos](#3-modelo-de-datos)
+   - [3.1. Diagrama del Modelo de Datos](#31-diagrama-del-modelo-de-datos)
+   - [3.2. Descripción de Entidades Principales](#32-descripción-de-entidades-principales)
 4. [Especificación de la API](#4-especificación-de-la-api)
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
@@ -676,7 +678,7 @@ stop
 
 ## 1.9. Casos de Uso Principales del Sistema
 
-### Caso de Uso 1.9.1: Registrarse y configurar perfil
+### 1.9.1. Registrarse y configurar perfil
 **Actor:** Usuario (Buscador o Publicador)  
 **Descripción:** Permite a un nuevo usuario registrarse en la plataforma y configurar su perfil según el rol.  
 **Precondiciones:** El usuario no debe tener una cuenta activa.  
@@ -705,7 +707,7 @@ L --> P : Si es buscador
 
 ---
 
-### Caso de Uso 1.9.2: Publicar una propiedad *(Core)*
+### 1.9.2. Publicar una propiedad *(Core)*
 **Actor:** Publicador (Agente, Inmobiliaria, Constructora)  
 **Descripción:** El publicador registra un nuevo inmueble en la plataforma.  
 **Precondiciones:** El usuario debe estar autenticado como publicador.  
@@ -737,7 +739,7 @@ Publicador --> (Iniciar publicación)
 
 ---
 
-### Caso de Uso 1.9.3: Buscar propiedades en el mapa *(Core)*
+### 1.9.3. Buscar propiedades en el mapa *(Core)*
 **Actor:** Buscador  
 **Descripción:** El usuario explora propiedades según filtros y zonas de interés.  
 **Precondiciones:** Ninguna (puede ejecutarse con o sin sesión iniciada).  
@@ -766,7 +768,7 @@ Buscador --> (Guardar búsqueda)
 
 ---
 
-### Caso de Uso 1.9.4: Generar coincidencias automáticas *(Core)*
+### 1.9.4. Generar coincidencias automáticas *(Core)*
 **Actor:** Sistema  
 **Descripción:** Detecta automáticamente coincidencias entre búsquedas activas y propiedades publicadas.  
 **Precondiciones:** Debe existir al menos una propiedad y una búsqueda activa.  
@@ -794,7 +796,7 @@ Sistema --> (Detectar coincidencia)
 
 ---
 
-### Caso de Uso 1.9.5: Contactar al publicador *(Core)*
+### 1.9.5. Contactar al publicador *(Core)*
 **Actor:** Buscador  
 **Descripción:** El usuario interesado inicia una conversación con el agente o publicador, por chat o WhatsApp.  
 **Precondiciones:** El usuario debe haber accedido a la ficha de una propiedad.  
@@ -827,7 +829,7 @@ Buscador --> (Ver propiedad)
 
 ---
 
-### Caso de Uso 1.9.6: Administrar mis propiedades
+### 1.9.6. Administrar mis propiedades
 **Actor:** Publicador  
 **Descripción:** Permite a los publicadores gestionar su catálogo de inmuebles.  
 **Precondiciones:** El usuario debe estar autenticado como publicador.  
@@ -858,7 +860,7 @@ Publicador --> (Ver mis propiedades)
 
 ---
 
-### Caso de Uso 1.9.7: Guardar y comparar propiedades favoritas
+### 1.9.7. Guardar y comparar propiedades favoritas
 **Actor:** Buscador  
 **Descripción:** El usuario puede guardar propiedades y compararlas en su panel de favoritos.  
 **Precondiciones:** El usuario debe tener una cuenta activa.  
@@ -885,7 +887,7 @@ Buscador --> (Acceder a favoritos)
 
 ---
 
-### Caso de Uso 1.9.8: Recuperar contraseña
+### 1.9.8. Recuperar contraseña
 **Actor:** Usuario  
 **Descripción:** Permite recuperar el acceso si el usuario olvida su contraseña.  
 **Precondiciones:** El correo electrónico debe estar registrado.  
@@ -917,7 +919,7 @@ Usuario --> (Solicitar recuperación)
 
 ---
 
-### Caso de Uso 1.9.9: Recibir notificaciones de coincidencias
+### 1.9.9. Recibir notificaciones de coincidencias
 **Actor:** Usuario (buscador o publicador)  
 **Descripción:** El sistema informa sobre nuevos matches detectados automáticamente.  
 **Precondiciones:** El usuario debe tener al menos una búsqueda o propiedad activa.  
@@ -944,7 +946,7 @@ Sistema --> (Detectar coincidencia)
 
 ---
 
-### Caso de Uso 1.9.10: Cerrar sesión y limpiar sesión segura
+### 1.9.10. Cerrar sesión y limpiar sesión segura
 **Actor:** Usuario  
 **Descripción:** El usuario finaliza su sesión cerrando el acceso a su cuenta.  
 **Precondiciones:** El usuario debe haber iniciado sesión previamente.  
@@ -1064,7 +1066,7 @@ graph TB
     N --> O
 ```
 
-## 2.1.2. Tecnologías por Componente
+## 2.2. Tecnologías por Componente
 
 | Componente | Tecnología | Justificación |
 |------------|------------|---------------|
@@ -1080,7 +1082,7 @@ graph TB
 | **Hosting** | AWS EC2 + S3 | Escalabilidad y redundancia |
 | **CI/CD** | GitHub Actions | Integración continua y despliegue automático |
 
-## 2.1.3. Patrón Arquitectónico: MVC Monolítico Modular
+## 2.3. Patrón Arquitectónico: MVC Monolítico Modular
 
 **Justificación de la elección:**
 - **Escalabilidad moderada**: Miles de usuarios no requieren microservicios complejos
@@ -1102,47 +1104,47 @@ graph TB
 - Curva de aprendizaje para el patrón MVC 
 
 
-### **2.2. Descripción de componentes principales:**
+### **2.4. Descripción de componentes principales:**
 
 #### Índice de Componentes Principales
 
-1. **[Frontend (Cliente)](#221-frontend-cliente)**
-   - [React.js Application](#2211-reactjs-application)
-   - [Componentes Especializados](#2212-componentes-especializados)
+1. **[Frontend (Cliente)](#241-frontend-cliente)**
+   - [React.js Application](#2411-reactjs-application)
+   - [Componentes Especializados](#2412-componentes-especializados)
 
-2. **[Backend (Servidor de Negocio)](#222-backend-servidor-de-negocio)**
-   - [Express.js Server](#2221-expressjs-server)
-   - [Controladores (Controllers)](#2222-controladores-controllers)
+2. **[Backend (Servidor de Negocio)](#242-backend-servidor-de-negocio)**
+   - [Express.js Server](#2421-expressjs-server)
+   - [Controladores (Controllers)](#2422-controladores-controllers)
 
-3. **[Base de Datos](#223-base-de-datos)**
-   - [MySQL Database](#2231-mysql-database)
-   - [Redis Cache](#2232-redis-cache)
+3. **[Base de Datos](#243-base-de-datos)**
+   - [MySQL Database](#2431-mysql-database)
+   - [Redis Cache](#2432-redis-cache)
 
-4. **[Sistema de Notificaciones](#224-sistema-de-notificaciones)**
-   - [NotificationService](#2241-notificationservice)
-   - [Canales de Notificación](#2242-canales-de-notificación)
+4. **[Sistema de Notificaciones](#244-sistema-de-notificaciones)**
+   - [NotificationService](#2441-notificationservice)
+   - [Canales de Notificación](#2442-canales-de-notificación)
 
-5. **[Módulo de IA para Coincidencias](#225-módulo-de-ia-para-coincidencias)**
-   - [MatchingService](#2251-matchingservice)
-   - [Algoritmo de Matching](#2252-algoritmo-de-matching)
+5. **[Módulo de IA para Coincidencias](#245-módulo-de-ia-para-coincidencias)**
+   - [MatchingService](#2451-matchingservice)
+   - [Algoritmo de Matching](#2452-algoritmo-de-matching)
 
-6. **[Servicios Externos / Integraciones](#226-servicios-externos--integraciones)**
-   - [Google Maps API](#2261-google-maps-api)
-   - [OpenAI Integration](#2262-openai-integration)
+6. **[Servicios Externos / Integraciones](#246-servicios-externos--integraciones)**
+   - [Google Maps API](#2461-google-maps-api)
+   - [OpenAI Integration](#2462-openai-integration)
 
-7. **[Middleware y Seguridad](#227-middleware-y-seguridad)**
-   - [Authentication Middleware](#2271-authentication-middleware)
-   - [Security Middleware](#2272-security-middleware)
+7. **[Middleware y Seguridad](#247-middleware-y-seguridad)**
+   - [Authentication Middleware](#2471-authentication-middleware)
+   - [Security Middleware](#2472-security-middleware)
 
-8. **[Infraestructura / Orquestación](#228-infraestructura--orquestación)**
-   - [Servidor de Aplicación](#2281-servidor-de-aplicación)
-   - [Monitoreo y Logging](#2282-monitoreo-y-logging)
+8. **[Infraestructura / Orquestación](#248-infraestructura--orquestación)**
+   - [Servidor de Aplicación](#2481-servidor-de-aplicación)
+   - [Monitoreo y Logging](#2482-monitoreo-y-logging)
 
 ---
 
-## 2.2.1. Frontend (Cliente)
+## 2.4.1. Frontend (Cliente)
 
-### **2.2.1.1. React.js Application**
+### **2.4.1.1. React.js Application**
 **Propósito funcional:** Interfaz de usuario responsiva que permite a los usuarios interactuar con todas las funcionalidades de Zonmatch.
 
 **Tecnología utilizada:**
@@ -1167,7 +1169,7 @@ graph TB
 - **Error boundaries:** Manejo de errores por componentes
 - **Responsive design:** Mobile-first approach
 
-### **2.2.1.2. Componentes Especializados**
+### **2.4.1.2. Componentes Especializados**
 
 #### **Mapa Interactivo**
 **Propósito:** Visualización y selección geográfica de propiedades
@@ -1179,9 +1181,9 @@ graph TB
 **Tecnología:** React Hook Form + Yup validation
 **Interacciones:** Comunicación con PropertyService para búsquedas dinámicas
 
-## 2.2.2. Backend (Servidor de Negocio)
+## 2.4.2. Backend (Servidor de Negocio)
 
-### **2.2.2.1. Express.js Server**
+### **2.4.2.1. Express.js Server**
 **Propósito funcional:** Servidor principal que orquesta todas las operaciones de negocio y gestiona las peticiones HTTP.
 
 **Tecnología utilizada:**
@@ -1205,7 +1207,7 @@ graph TB
 - **Rate limiting:** Protección contra ataques de fuerza bruta
 - **CORS configuration:** Seguridad en comunicación cross-origin
 
-### **2.2.2.2. Controladores (Controllers)**
+### **2.4.2.2. Controladores (Controllers)**
 
 #### **UserController**
 **Propósito:** Gestión de autenticación, registro y perfiles de usuario
@@ -1231,9 +1233,9 @@ graph TB
 - Integración con OpenAI para análisis de preferencias
 - Notificaciones automáticas a usuarios
 
-## 2.2.3. Base de Datos
+## 2.4.3. Base de Datos
 
-### **2.2.3.1. MySQL Database**
+### **2.4.3.1. MySQL Database**
 **Propósito funcional:** Almacenamiento persistente de todos los datos del sistema con garantías ACID.
 
 **Tecnología utilizada:**
@@ -1256,7 +1258,7 @@ graph TB
 - **Prepared statements:** Prevención de SQL injection
 - **Connection pooling:** Optimización de conexiones
 
-### **2.2.3.2. Redis Cache**
+### **2.4.3.2. Redis Cache**
 **Propósito funcional:** Almacenamiento temporal de datos frecuentemente accedidos y sesiones de usuario.
 
 **Tecnología utilizada:**
@@ -1271,9 +1273,9 @@ graph TB
 - **Rate limiting:** Control de intentos de acceso
 - **Notificaciones:** Cola temporal de notificaciones
 
-## 2.2.4. Sistema de Notificaciones
+## 2.4.4. Sistema de Notificaciones
 
-### **2.2.4.1. NotificationService**
+### **2.4.4.1. NotificationService**
 **Propósito funcional:** Gestión centralizada de todos los tipos de notificaciones del sistema.
 
 **Tecnología utilizada:**
@@ -1295,7 +1297,7 @@ graph TB
 - **Rate limiting:** Control de frecuencia de notificaciones
 - **Templates:** Plantillas reutilizables para diferentes tipos
 
-### **2.2.4.2. Canales de Notificación**
+### **2.4.4.2. Canales de Notificación**
 
 #### **Push Notifications (Firebase)**
 **Propósito:** Notificaciones instantáneas en navegador
@@ -1307,9 +1309,9 @@ graph TB
 **Tecnología:** WhatsApp Business API + templates
 **Interacciones:** Integración con sistema de chat interno
 
-## 2.2.5. Módulo de IA para Coincidencias
+## 2.4.5. Módulo de IA para Coincidencias
 
-### **2.2.5.1. MatchingService**
+### **2.4.5.1. MatchingService**
 **Propósito funcional:** Algoritmo inteligente que genera coincidencias automáticas entre propiedades y buscadores.
 
 **Tecnología utilizada:**
@@ -1330,7 +1332,7 @@ graph TB
 - **Fallback mechanisms:** Algoritmos de respaldo si OpenAI falla
 - **Métricas:** Tracking de efectividad de coincidencias
 
-### **2.2.5.2. Algoritmo de Matching**
+### **2.4.5.2. Algoritmo de Matching**
 **Propósito:** Evaluación de compatibilidad entre propiedades y buscadores
 **Tecnología:** Algoritmos personalizados + OpenAI embeddings
 **Criterios de evaluación:**
@@ -1339,9 +1341,9 @@ graph TB
 - Características de la propiedad (20% del peso)
 - Preferencias del usuario (10% del peso)
 
-## 2.2.6. Servicios Externos / Integraciones
+## 2.4.6. Servicios Externos / Integraciones
 
-### **2.2.6.1. Google Maps API**
+### **2.4.6.1. Google Maps API**
 **Propósito funcional:** Servicios de geolocalización, validación de direcciones y visualización de mapas.
 
 **Tecnología utilizada:**
@@ -1354,7 +1356,7 @@ graph TB
 - **Backend:** Validación de direcciones en creación de propiedades
 - **Cache:** Almacenamiento de resultados de geocoding
 
-### **2.2.6.2. OpenAI Integration**
+### **2.4.6.2. OpenAI Integration**
 **Propósito funcional:** Análisis inteligente de preferencias y generación de sugerencias personalizadas.
 
 **Tecnología utilizada:**
@@ -1367,9 +1369,9 @@ graph TB
 - **PropertyService:** Generación de descripciones optimizadas
 - **Cache:** Almacenamiento de embeddings para optimización
 
-## 2.2.7. Middleware y Seguridad
+## 2.4.7. Middleware y Seguridad
 
-### **2.2.7.1. Authentication Middleware**
+### **2.4.7.1. Authentication Middleware**
 **Propósito funcional:** Verificación de identidad y autorización de usuarios.
 
 **Tecnología utilizada:**
@@ -1383,7 +1385,7 @@ graph TB
 - **Redis:** Blacklist de tokens invalidados
 - **Base de datos:** Verificación de usuarios activos
 
-### **2.2.7.2. Security Middleware**
+### **2.4.7.2. Security Middleware**
 **Propósito funcional:** Protección contra ataques comunes y vulnerabilidades.
 
 **Tecnología utilizada:**
@@ -1398,9 +1400,9 @@ graph TB
 - **Input sanitization:** Limpieza de datos de entrada
 - **HTTPS enforcement:** Redirección automática a HTTPS
 
-## 2.2.8. Infraestructura / Orquestación
+## 2.4.8. Infraestructura / Orquestación
 
-### **2.2.8.1. Servidor de Aplicación**
+### **2.4.8.1. Servidor de Aplicación**
 **Propósito funcional:** Hosting y ejecución del servidor Node.js.
 
 **Tecnología utilizada:**
@@ -1415,7 +1417,7 @@ graph TB
 - **Static files:** Servido de archivos estáticos
 - **Health checks:** Monitoreo de estado del servidor
 
-### **2.2.8.2. Monitoreo y Logging**
+### **2.4.8.2. Monitoreo y Logging**
 **Propósito funcional:** Observabilidad del sistema y detección de problemas.
 
 **Tecnología utilizada:**
@@ -1430,7 +1432,7 @@ graph TB
 - **Centralized logging:** Agregación de logs en un punto
 - **Alerting:** Notificaciones automáticas de problemas críticos 
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+### **2.5. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 #### **Visión Técnica General del Sistema**
 
@@ -1772,7 +1774,7 @@ El proyecto sigue una **arquitectura híbrida** que combina múltiples patrones:
 - **Despliegue independiente**: Backend y frontend pueden desplegarse por separado
 - **Testing comprehensivo**: Cada capa puede ser testeada independientemente
 
-### **2.4. Infraestructura y Despliegue**
+### **2.6. Infraestructura y Despliegue**
 
 #### **Arquitectura de Infraestructura**
 
@@ -2128,11 +2130,233 @@ app.get('/health', (req, res) => {
 
 Esta infraestructura proporciona una base sólida y económica para el desarrollo inicial de Zonmatch, con capacidad de escalar según el crecimiento del proyecto.
 
-### **2.5. Seguridad**
+### **2.7. Seguridad**
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+ZonMatch implementa múltiples capas de seguridad para proteger tanto los datos de los usuarios como la integridad del sistema. A continuación se detallan las principales prácticas de seguridad implementadas:
 
-### **2.6. Tests**
+#### **1. Autenticación y Autorización**
+
+**JWT (JSON Web Tokens) con verificación de estado:**
+- Tokens JWT firmados con clave secreta para autenticación stateless
+- Verificación de validez del token en cada request autenticado
+- Validación de usuario activo en base de datos para cada token
+- Expiración automática de tokens para limitar ventanas de vulnerabilidad
+
+```typescript
+// Ejemplo de verificación de token
+const decoded = jwt.verify(token, JWT_CONFIG.SECRET) as IJWTPayload;
+const user = await User.findByPk(decoded.user_id);
+
+if (!user || !user.is_active) {
+  return res.status(401).json({
+    success: false,
+    message: 'Usuario no válido o inactivo',
+    error: 'INVALID_USER'
+  });
+}
+```
+
+**Sistema de roles y permisos:**
+- Roles diferenciados: `user`, `agent`, `admin`
+- Middleware de autorización basado en roles
+- Acceso restringido a funcionalidades según el tipo de usuario
+
+#### **2. Protección de Contraseñas**
+
+**Hashing seguro con bcrypt:**
+- Algoritmo bcrypt con factor de costo 12 para hashing de contraseñas
+- Salt automático generado por bcrypt para cada contraseña
+- Comparación segura de contraseñas sin almacenar texto plano
+
+```typescript
+// Ejemplo de creación de usuario con hash seguro
+public static async createUser(userData: any): Promise<User> {
+  const hashedPassword = await bcrypt.hash(userData.password, 12);
+  return this.create({
+    ...userData,
+    password_hash: hashedPassword
+  });
+}
+```
+
+**Políticas de contraseñas robustas:**
+- Mínimo 8 caracteres de longitud
+- Requerimiento de mayúsculas, minúsculas, números y caracteres especiales
+- Validación en tiempo real durante el registro
+
+#### **3. Rate Limiting y Protección contra Ataques**
+
+**Rate limiting diferenciado por tipo de operación:**
+- Autenticación: 10 intentos por 15 minutos
+- Creación de propiedades: 10 por hora por usuario
+- Operaciones de escritura: 50 por 15 minutos
+- Favoritos: 100 operaciones por 15 minutos
+
+```typescript
+// Ejemplo de rate limiting para autenticación
+export const authRateLimit = rateLimit({
+  windowMs: 900000, // 15 minutos
+  max: 10, // máximo 10 intentos
+  message: {
+    success: false,
+    message: 'Demasiados intentos de autenticación. Intenta nuevamente en 15 minutos.',
+    error: 'RATE_LIMIT_EXCEEDED'
+  }
+});
+```
+
+**Protección contra ataques de fuerza bruta:**
+- Límites progresivos de intentos fallidos
+- Bloqueo temporal de IPs sospechosas
+- Logging de intentos de acceso fallidos
+
+#### **4. Validación y Sanitización de Datos**
+
+**Validación exhaustiva de entrada:**
+- Validación de tipos de datos con express-validator
+- Sanitización automática de strings (trim, normalize)
+- Validación de formatos específicos (email, teléfono, UUID)
+- Límites de longitud para prevenir ataques de buffer overflow
+
+```typescript
+// Ejemplo de validación de registro
+export const registerValidators = [
+  body('email')
+    .isEmail()
+    .withMessage('El email debe ser válido')
+    .normalizeEmail(),
+  body('password')
+    .isLength({ min: 8 })
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .withMessage('La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial')
+];
+```
+
+**Protección contra inyección SQL:**
+- Uso de Sequelize ORM con prepared statements
+- Validación de parámetros antes de consultas
+- Escape automático de caracteres especiales
+
+#### **5. Headers de Seguridad HTTP**
+
+**Configuración de Helmet.js:**
+- Content Security Policy (CSP) restrictiva
+- Headers de seguridad estándar (X-Frame-Options, X-Content-Type-Options)
+- Prevención de clickjacking y MIME type sniffing
+
+```typescript
+// Configuración de seguridad con Helmet
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
+```
+
+#### **6. Configuración CORS Segura**
+
+**Política CORS restrictiva:**
+- Origen específico configurado (no wildcard)
+- Métodos HTTP permitidos explícitamente
+- Headers autorizados limitados
+- Credenciales habilitadas solo para dominios confiables
+
+```typescript
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+```
+
+#### **7. Gestión Segura de Variables de Entorno**
+
+**Separación de configuraciones:**
+- Variables sensibles en archivos .env
+- Valores por defecto seguros para desarrollo
+- Validación de variables críticas al inicio de la aplicación
+- No exposición de secretos en logs o respuestas
+
+#### **8. Recuperación Segura de Contraseñas**
+
+**Sistema de tokens temporales:**
+- Tokens únicos con expiración de 15 minutos
+- Un solo uso por token (invalidación automática)
+- Validación de email antes de envío
+- Enlaces seguros con tokens no predecibles
+
+#### **9. Logging y Monitoreo de Seguridad**
+
+**Logging estructurado:**
+- Registro de intentos de autenticación fallidos
+- Tracking de operaciones sensibles
+- Logs de errores sin exposición de datos sensibles
+- Rotación automática de logs
+
+```typescript
+// Ejemplo de manejo seguro de errores
+app.use((error: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Error no manejado:', error);
+  
+  // No exponer detalles internos en producción
+  return res.status(500).json({
+    success: false,
+    message: 'Error interno del servidor',
+    error: 'INTERNAL_ERROR'
+  });
+});
+```
+
+#### **10. Configuración de Base de Datos Segura**
+
+**Conexión encriptada:**
+- Conexiones SSL/TLS a la base de datos
+- Pool de conexiones limitado para prevenir DoS
+- Timeouts configurados apropiadamente
+- Charset UTF-8 para prevenir inyección de caracteres
+
+```typescript
+// Configuración segura de base de datos
+const sequelize = new Sequelize(databaseUrl, {
+  dialect: 'mysql',
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  dialectOptions: {
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_unicode_ci'
+  }
+});
+```
+
+#### **11. Validación de Archivos y Uploads**
+
+**Restricciones de archivos:**
+- Validación de tipos MIME permitidos
+- Límites de tamaño de archivo (10MB máximo)
+- Sanitización de nombres de archivo
+- Almacenamiento seguro en Cloudinary con URLs firmadas
+
+#### **12. Manejo Seguro de Errores**
+
+**Respuestas de error consistentes:**
+- No exposición de información sensible en errores
+- Códigos de estado HTTP apropiados
+- Mensajes de error genéricos para usuarios finales
+- Logging detallado para administradores
+
+Estas prácticas de seguridad proporcionan una base sólida para proteger la aplicación ZonMatch contra las principales amenazas de seguridad web, manteniendo al mismo tiempo una experiencia de usuario fluida y funcional.
+
+### **2.8. Tests**
 
 > Describe brevemente algunos de los tests realizados
 
