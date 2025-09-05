@@ -88,7 +88,7 @@ on delivering business value and user outcomes.
 **Goal**: Implement complex transaction calculations with mathematical expressions
 
 **Development Stories & Progress:**
-- [ ] **DS-13: Calculation Parser Service** - Mathematical expression parsing and validation
+- [x] **DS-13: Calculation Parser Service** - Mathematical expression parsing and validation
 - [ ] **DS-14: Transaction Calculator Service** - Complex calculations (refering to other transactions)
 - [ ] **DS-15: Composition Validation Service** - Circular reference detection and validation
 
@@ -99,7 +99,7 @@ on delivering business value and user outcomes.
 - [ ] Validate calculation expressions
 - [ ] Calculate totals automatically
 - [ ] Circular reference detection
-- [ ] Mathematical expression validation
+- [x] Mathematical expression validation
 - [ ] Transaction ID resolution
 
 #### **User Story 1.5: Bank Account Integration (Week 3)**
