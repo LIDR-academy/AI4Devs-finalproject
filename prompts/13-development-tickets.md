@@ -54,18 +54,18 @@ on delivering business value and user outcomes.
 **Goal**: Implement category management system for organizing transactions
 
 **Development Stories & Progress:**
-- [x] **DS-8: Category Service Implementation** - Category CRUD operations and hierarchy
-- [x] **DS-9: Category Controller and DTOs** - Category management API endpoints
+- [ ] **DS-8: Category Service Implementation** - Category CRUD operations and hierarchy
+- [ ] **DS-9: Category Controller and DTOs** - Category management API endpoints
 
 **User Story Deliverables:**
-- [x] View list of available categories with names and colors
-- [x] Create custom categories with name and color
+- [ ] View list of available categories with names and colors
+- [ ] Create custom categories with name and color
 - [x] Assign categories to transactions
-- [x] Edit existing category names and colors
-- [x] Delete unused categories safely
-- [x] Hierarchical category support
+- [ ] Edit existing category names and colors
+- [ ] Delete unused categories safely
+- [ ] Hierarchical category support
 - [x] Default categories seeder
-- [x] Category validation and error handling
+- [ ] Category validation and error handling
 
 #### **User Story 1.3: Transaction Frequency (Week 3)**
 **Goal**: Implement recurring transaction system with cron-based scheduling
