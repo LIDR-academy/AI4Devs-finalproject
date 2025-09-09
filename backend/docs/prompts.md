@@ -1378,3 +1378,155 @@ module.exports = { searchDoctors, getDoctorProfile };
 
 Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+
+
+
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para la historia de usuario denomidada "Agendar cita con especialista", empezaremos con su implementación.
+En cuanto al proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a implementar la historia de usuario y su serie de tickets para agendar cita con especilistas
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+# Prompt para ChatGPT 4.1: Implementación de endpoint para agendar cita con especialista
+
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest (usar mocks)  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **JWT:** Usar jsonwebtoken, autenticación obligatoria para agendar citas  
+> **Swagger:** Documentar el endpoint y ejemplos de respuesta  
+> **Internacionalización:** Respuestas en inglés  
+> **Notificaciones:** Agregar comentarios en el código para indicar dónde implementar el envío de notificaciones en tickets futuros
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Revisa el modelo de datos, PRD y código fuente para ubicar la ruta, controlador y servicio correctos, siguiendo arquitectura hexagonal.
+   - Los controladores solo orquestan la llamada a los casos de uso y manejan la respuesta estándar.
+   - La lógica de negocio debe estar en servicios de dominio.
+
+2. **Diseño e implementación del endpoint REST**
+   - Implementa el endpoint:
+     - `POST /api/appointments`
+       - Parámetros de entrada: `doctor_id`, `appointment_date`, `reason` (opcional). El `patient_id` se obtiene del token JWT.
+       - Requiere autenticación de paciente.
+       - Valida que el especialista y paciente estén activos.
+       - Valida que la fecha/hora solicitada esté disponible en la agenda del especialista.
+       - Evita conflictos de horario y citas duplicadas para especialista y paciente.
+       - Registra la cita en la entidad APPOINTMENT con estado "pending".
+       - Retorna confirmación de la cita agendada en formato estándar (consultar PRD).
+       - Agrega comentario en el código donde se implementarán notificaciones (email/SMS) en tickets futuros.
+
+3. **Validaciones y controles de acceso**
+   - Usa Yup para validaciones de datos de entrada.
+   - Implementa middleware de autenticación y control de acceso para verificar el rol de paciente.
+   - Devuelve mensajes claros y específicos en inglés (ejemplo: "Time slot not available", "Doctor not found", "Patient not found").
+   - Implementa manejo de errores con middleware global y clases customizadas.
+
+4. **Documentación Swagger**
+   - Documenta el endpoint en Swagger:
+     - Descripción de funcionalidad y requisitos de autenticación.
+     - Parámetros de entrada y ruta.
+     - Ejemplo de petición y respuesta.
+     - Validaciones de disponibilidad y conflictos de horario.
+     - Posibles errores y mensajes de validación.
+
+5. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para el endpoint usando Jest y Supertest.
+   - Usa mocks para dependencias externas.
+   - Casos a cubrir:
+     - Agendamiento exitoso con horarios disponibles y usuario autenticado.
+     - Manejo de conflictos de horario y disponibilidad.
+     - Validación de parámetros obligatorios y opcionales.
+     - Manejo de errores por especialista/paciente inactivo o IDs inexistentes.
+
+---
+
+## Ejemplo de estructura base para el servicio y endpoint
+
+```js
+// filepath: src/domain/appointmentService.js
+const yup = require('yup');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const appointmentSchema = yup.object().shape({
+  doctorId: yup.number().required(),
+  appointmentDate: yup.date().required(),
+  reason: yup.string().optional(),
+});
+
+const createAppointment = async ({ doctorId, patientId, appointmentDate, reason }) => {
+  // Validar datos con Yup
+  // Verificar que doctor y paciente estén activos
+  // Consultar agenda del especialista para disponibilidad
+  // Verificar que no existan conflictos de horario para doctor y paciente
+  // Registrar cita en la entidad APPOINTMENT con estado "pending"
+  // // TODO: Implementar notificación por email/SMS en tickets futuros
+  // Retornar confirmación de la cita
+};
+
+module.exports = { createAppointment };
+```
+
+```js
+// filepath: src/adapters/controllers/appointmentController.js
+const appointmentService = require('../../domain/appointmentService');
+
+const createAppointment = async (req, res, next) => {
+  try {
+    const patientId = req.user.id; // obtenido del JWT
+    const { doctorId, appointmentDate, reason } = req.body;
+    const result = await appointmentService.createAppointment({ doctorId, patientId, appointmentDate, reason });
+    res.status(201).json(result);
+  } catch (error) {
+    next(error); // Manejo global de errores
+  }
+};
+
+module.exports = { createAppointment };
+```
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Product Backlog](docs/product_backlog.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de los requerimientos
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso dime que archivo se a modificar o agregar, muestrame el codigo a agregar o reemplazar y dime en donde lo debo colocar
+- Muestrame la lista de pasos a ejecutar antes de realizar la implementación
+
+Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

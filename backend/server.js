@@ -45,6 +45,8 @@ app.get('/api/health', (req, res) => {
 });
 app.use('/api/auth', require('./src/adapters/in/authRoutes'));
 app.use('/api/doctors', require('./src/adapters/in/doctorRoutes'));
+app.use('/api/appointments', require('./src/adapters/in/appointmentRoutes'));
+
 
 // Manejo global de errores
 app.use(errorHandler);

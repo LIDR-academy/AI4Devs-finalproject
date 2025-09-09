@@ -1544,6 +1544,315 @@
           }
         }
       }
+    },
+    "/api/appointments": {
+      "post": {
+        "tags": [
+          "Appointments"
+        ],
+        "summary": "Agendar cita con especialista",
+        "description": "Permite a un paciente autenticado agendar una cita con un especialista. Requiere autenticación JWT y rol de paciente. Valida que el especialista y el paciente estén activos, que el horario esté disponible y evita conflictos de horario.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "doctor_id": {
+                    "type": "integer",
+                    "example": 2,
+                    "description": "ID del especialista"
+                  },
+                  "appointment_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2025-09-10T10:00:00.000Z",
+                    "description": "Fecha y hora de la cita (solo en punto, ej. 10:00, 11:00)"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "Chequeo general",
+                    "description": "Motivo de la consulta (opcional)"
+                  }
+                },
+                "required": [
+                  "doctor_id",
+                  "appointment_date"
+                ]
+              },
+              "examples": {
+                "agendarCita": {
+                  "summary": "Ejemplo de agendar cita",
+                  "value": {
+                    "doctor_id": 2,
+                    "appointment_date": "2025-09-10T10:00:00.000Z",
+                    "reason": "Chequeo general"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cita agendada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 5
+                        },
+                        "doctor_id": {
+                          "type": "integer",
+                          "example": 2
+                        },
+                        "patient_id": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "appointment_date": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-09-10T10:00:00.000Z"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "pending"
+                        },
+                        "reason": {
+                          "type": "string",
+                          "example": "Chequeo general"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Cita agendada",
+                    "value": {
+                      "code": 201,
+                      "message": "success",
+                      "payload": {
+                        "id": 5,
+                        "doctor_id": 2,
+                        "patient_id": 1,
+                        "appointment_date": "2025-09-10T10:00:00.000Z",
+                        "status": "pending",
+                        "reason": "Chequeo general"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Validation error"
+                    },
+                    "payload": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "examples": {
+                  "horaInvalida": {
+                    "summary": "Hora no válida",
+                    "value": {
+                      "code": 400,
+                      "message": "Validation error",
+                      "payload": {
+                        "error": [
+                          "Appointments must be scheduled at the start of the hour (e.g., 10:00, 11:00)"
+                        ]
+                      }
+                    }
+                  },
+                  "fechaPasada": {
+                    "summary": "Fecha en el pasado",
+                    "value": {
+                      "code": 400,
+                      "message": "Validation error",
+                      "payload": {
+                        "error": [
+                          "Appointment date cannot be in the past"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo pacientes pueden agendar citas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 403
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    },
+                    "payload": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "examples": {
+                  "noPaciente": {
+                    "summary": "Usuario no es paciente",
+                    "value": {
+                      "code": 403,
+                      "message": "Forbidden",
+                      "payload": {
+                        "error": [
+                          "Only patients can schedule appointments"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Especialista o paciente no encontrado o inactivo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Doctor not found"
+                    },
+                    "payload": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "examples": {
+                  "doctorNoEncontrado": {
+                    "summary": "Doctor no encontrado o inactivo",
+                    "value": {
+                      "code": 404,
+                      "message": "Doctor not found",
+                      "payload": {
+                        "error": [
+                          "Doctor not found or inactive"
+                        ]
+                      }
+                    }
+                  },
+                  "pacienteNoEncontrado": {
+                    "summary": "Paciente no encontrado o inactivo",
+                    "value": {
+                      "code": 404,
+                      "message": "Patient not found",
+                      "payload": {
+                        "error": [
+                          "Patient not found or inactive"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de horario (doctor o paciente ya tiene cita en ese horario)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 409
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Time slot not available"
+                    },
+                    "payload": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "examples": {
+                  "doctorOcupado": {
+                    "summary": "Doctor ya tiene cita en ese horario",
+                    "value": {
+                      "code": 409,
+                      "message": "Time slot not available",
+                      "payload": {
+                        "error": [
+                          "Doctor already has an appointment at this time"
+                        ]
+                      }
+                    }
+                  },
+                  "pacienteOcupado": {
+                    "summary": "Paciente ya tiene cita en ese horario",
+                    "value": {
+                      "code": 409,
+                      "message": "Time slot not available",
+                      "payload": {
+                        "error": [
+                          "Patient already has an appointment at this time"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
