@@ -10,7 +10,6 @@ const factory = Factory.define<Category>('category')
     flow: () => faker.helpers.arrayElement(Object.values(CategoryFlow)),
     color: () => faker.internet.color(),
     description: () => faker.lorem.sentence(),
-    parentId: () => undefined,
     createdAt: () => faker.date.past(),
     updatedAt: () => faker.date.recent()
   });
@@ -40,28 +39,4 @@ export class CategoryBuilder extends BaseBuilder<Category> {
     return this;
   }
   
-  withParentId(parentId: string): this {
-    this.options.parentId = parentId;
-    return this;
-  }
-  
-  withParent(parent: Category): this {
-    this.options.parentId = parent.id;
-    return this;
-  }
-  
-  asRoot(): this {
-    this.options.parentId = undefined;
-    return this;
-  }
-  
-  asChild(parentId: string): this {
-    this.options.parentId = parentId;
-    return this;
-  }
-  
-  asChildOf(parent: Category): this {
-    this.options.parentId = parent.id;
-    return this;
-  }
 }
