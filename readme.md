@@ -22,18 +22,18 @@
 ## 0. Ficha del proyecto
 
 ### **0.1. Jairo Javier Polo Martínez:**
-Estudiante de Ingeniería de Software especializado en Inteligencia Artificial y desarrollo Full-Stack. Enfoque en sistemas distribuidos y arquitecturas escalables para aplicaciones AI-powered.
+Ingeniero de Software y músico aficionado apasionado por la arquitectura, la solución creativa de problemas y el uso de buenas prácticas de desarrollo de Software.
 
 ### **0.2. Nombre del proyecto:**
 🤖 **Nura - AI Developer Assistant**
 
 ### **0.3. Descripción breve del proyecto:**
-Asistente de IA especializado para desarrolladores que elimina barreras psicológicas en el onboarding técnico. Proporciona respuestas contextuales sobre código y arquitectura sin exposición social, reduciendo el tiempo de ramp-up de desarrolladores en 50% mediante un ambiente de "contexto sin juicio".
+Asistente de IA especializado que acelera la eficiencia operacional en equipos de ingeniería, resolviendo los retos de mentoría técnica y empresarial a escala. Proporciona respuestas contextuales sobre código, arquitectura, procesos de negocio e inteligencia empresarial, reduciendo el tiempo de ramp-up de desarrolladores en 50% y liberando tiempo de mentores senior para trabajo de alto valor estratégico.
 
 ### **0.4. URL del proyecto:**
 🔗 **Fase de Documentación Completada** - Proyecto en fase de desarrollo  
-📊 **Demo Streamlit MVP**: Planificado para Febrero 2025  
-🚀 **Producción**: Q2 2025
+📊 **Demo Streamlit MVP**: Planificado para Octubre 2025  
+🚀 **Producción**: Q4 2025
 
 ### 0.5. URL o archivo comprimido del repositorio
 📁 **Repositorio**: `AI4Devs-finalproject-JairoPolo`  
@@ -46,17 +46,18 @@ Asistente de IA especializado para desarrolladores que elimina barreras psicoló
 ## 1. Descripción general del producto
 
 ### **1.1. Objetivo:**
-🎯 **Acelerar la eficiencia operacional del área de ingeniería** eliminando barreras psicológicas en el onboarding técnico.
+🎯 **Acelerar la eficiencia operacional del área de ingeniería** optimizando los procesos de mentoría técnica, transferencia de conocimiento empresarial e inteligencia de negocio.
 
 **Propósito del producto:**
-- **Problema:** Desarrolladores requieren 2+ semanas para ser productivos debido a "síndrome del impostor amplificado" en culturas meritocráticas tech
-- **Solución:** Ambiente de aprendizaje "sin juicio" que proporciona contexto técnico y empresarial sin exposición social
-- **Valor:** Reducción del 50% en tiempo de ramp-up (de 2 semanas a 1 semana productiva)
+- **Problema:** Desarrolladores requieren 2+ semanas para ser productivos debido a retos de mentoría a escala - los expertos técnicos y líderes de producto se quedan cortos ante la demanda de explicación de conceptos técnicos, procesos empresariales, decisiones de negocio y flujos de trabajo internos
+- **Solución:** Asistente IA que democratiza el acceso al conocimiento técnico y empresarial, proporcionando mentoría integral escalable 24/7 que abarca desde arquitectura de código hasta inteligencia de negocio
+- **Valor:** Reducción del 50% en tiempo de ramp-up (de 2 semanas a 1 semana productiva) + liberación de 60% del tiempo de mentores técnicos y líderes de producto para trabajo estratégico
 
 **Audiencia objetivo:**
 - 🥇 **Primaria:** Desarrolladores junior/mid-level en equipos de software
 - 🥈 **Secundaria:** Equipos de ingeniería que buscan eficiencia en onboarding
 - 🥉 **Terciaria:** Senior developers que actúan como mentores
+- 🎯 **Cuaternaria:** Product Managers y Business Analysts que necesitan explicar contexto empresarial a equipos técnicos
 
 ### **1.2. Características y funcionalidades principales:**
 
@@ -67,7 +68,7 @@ Asistente de IA especializado para desarrolladores que elimina barreras psicoló
 - **Single-agent proof:** Dev Agent especializado con CodeLlama-70B via AWS Bedrock
 
 #### 🔄 **Multi-Agent Evolution (Epic 2-3)**
-- **PM Agent:** Explica el "por qué" empresarial detrás de decisiones técnicas
+- **PM Agent:** Proporciona inteligencia de negocio y contexto empresarial detrás de decisiones técnicas, procesos internos y objetivos estratégicos
 - **Architect Agent:** Análisis de dependencias y vistas estructurales
 - **Orchestration Intelligence:** Routing automático al agente especializado apropiado
 - **Confidence Scoring:** Nivel de confianza (1-10) en cada respuesta
@@ -88,26 +89,27 @@ Asistente de IA especializado para desarrolladores que elimina barreras psicoló
 
 #### 📱 **Flujo de Usuario Principal**
 ```
-🏠 Landing → 💬 Chat Input → 🤔 Processing → 📋 Contextualized Response
-                   ↓
-              🕐 Conversation History → 📊 Usage Metrics
+🏠 Landing → 💬 Query (Technical + Business) → 🤖 AI Processing → 📊 Enterprise Context Response
+                                    ↓
+                    💼 Business Intelligence + 🕐 History → 📊 Efficiency Metrics
 ```
 
 #### 🖼️ **Mockup Interface (Streamlit MVP)**
 ```
-┌─────────────────────────────────────┐
-│ 🤖 Nura - AI Developer Assistant   │
-├─────────────────────────────────────┤
-│ Chat History:                       │
-│ [Usuario] ¿Por qué usamos JWT?      │
-│ [Dev Agent] Te recuerdo que JWT...  │
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │ Pregúntale a Nura sobre código  │ │
-│ │ arquitectura, o contexto...     │ │
-│ └─────────────────────────────────┘ │
-│              [Send 🚀]              │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ 🤖 Nura - Enterprise AI Assistant          │
+├─────────────────────────────────────────────┤
+│ Conversation History:                       │
+│ [Usuario] ¿Por qué usamos JWT para auth?    │
+│ [Enhanced PM Agent] JWT se eligió por       │
+│ compliance + escalabilidad empresarial...   │
+│                                             │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Consulta sobre código, arquitectura,    │ │
+│ │ procesos o inteligencia empresarial...  │ │
+│ └─────────────────────────────────────────┘ │
+│                 [Enviar 🚀]                 │
+└─────────────────────────────────────────────┘
 ```
 
 ### **1.4. Instrucciones de instalación:**
@@ -922,11 +924,11 @@ erDiagram
 
 ### 📋 **Historias de Usuario Principales del MVP**
 
-#### **👨‍💻 Historia de Usuario 1 - Consulta Técnica sin Exposición Social**
+#### **👨‍💻 Historia de Usuario 1 - Acceso Eficiente a Mentoría Técnica-Empresarial**
 
-**Como** desarrollador junior que teme hacer preguntas "básicas" en Slack  
-**Quiero** poder consultar dudas técnicas a un asistente IA especializado  
-**Para que** pueda aprender sin exposición social y sin interrumpir a seniors
+**Como** desarrollador junior que necesita contexto técnico y empresarial rápido  
+**Quiero** poder consultar dudas sobre código, procesos y decisiones de negocio a un asistente IA especializado  
+**Para que** pueda ser productivo sin sobrecargar a mentores senior y líderes de producto con consultas repetitivas
 
 **🎯 Criterios de Aceptación:**
 - ✅ Puedo hacer preguntas técnicas en lenguaje natural
@@ -936,10 +938,11 @@ erDiagram
 - ✅ No hay tracking público de mis preguntas (privacidad garantizada)
 
 **📊 Métricas de Éxito:**
-- **Engagement:** >5 preguntas por developer por semana
-- **Satisfacción:** >85% de respuestas marcadas como útiles
-- **Adopción:** 80% de junior/mid developers usan la herramienta
-- **Reducción:** 30% menos preguntas técnicas en canales públicos
+- **Engagement:** >5 consultas técnicas-empresariales por developer por semana
+- **Satisfacción:** >85% de respuestas marcadas como útiles (técnicas + contexto de negocio)
+- **Adopción:** 80% de junior/mid developers + 60% PMs usan la herramienta regularmente
+- **Eficiencia:** 40% reducción en interrupciones a seniors + 35% reducción en consultas repetitivas a PMs
+- **Business Intelligence:** 70% de consultas incluyen contexto empresarial exitoso
 
 #### **🔄 Diagrama de Secuencia - Historia 1**
 
@@ -952,15 +955,17 @@ sequenceDiagram
     participant KB as 📚 Knowledge Base
     participant LLM as ☁️ AWS Bedrock
     
-    Dev->>UI: "¿Por qué usamos Redis?"
-    UI->>Core: process_query(technical_question)
-    Core->>Core: analyze_intent() → "technical"
+    Dev->>UI: "¿Por qué usamos Redis para sesiones?"
+    UI->>Core: process_query(technical_business_question)
+    Core->>Core: analyze_intent() → "technical_with_business_context"
     Core->>DevAgent: route_to_dev_agent(query)
     
     DevAgent->>KB: search_codebase("Redis usage")
     KB-->>DevAgent: [code_examples, configs]
-    DevAgent->>KB: search_business_docs("Redis decision")
-    KB-->>DevAgent: [architecture_decisions]
+    DevAgent->>KB: search_business_docs("Redis decision + scalability requirements")
+    KB-->>DevAgent: [architecture_decisions, business_requirements, performance_goals]
+    DevAgent->>KB: search_process_docs("session_management_strategy")
+    KB-->>DevAgent: [business_rules, compliance_requirements]
     
     DevAgent->>LLM: generate_response(context + examples)
     LLM-->>DevAgent: contextual_answer + confidence(8)
@@ -1025,11 +1030,11 @@ sequenceDiagram
 
 ---
 
-#### **📋 Historia de Usuario 3 - Contexto Empresarial en Decisiones Técnicas**
+#### **📋 Historia de Usuario 3 - Integración de Inteligencia de Negocio y Contexto Técnico**
 
-**Como** developer que quiere entender el "por qué" detrás del código  
-**Quiero** obtener contexto empresarial de decisiones técnicas implementadas  
-**Para que** pueda tomar mejores decisiones alineadas con objetivos de negocio
+**Como** developer que necesita entender el contexto empresarial completo  
+**Quiero** obtener inteligencia de negocio, procesos internos y rationale empresarial detrás de decisiones técnicas  
+**Para que** pueda tomar decisiones informadas que alineen perfectamente soluciones técnicas con objetivos estratégicos de la empresa
 
 **🎯 Criterios de Aceptación:**
 - ✅ Puedo preguntar por qué se eligió una tecnología específica
@@ -1039,10 +1044,11 @@ sequenceDiagram
 - ✅ Aprendo sobre constraints de negocio que influyeron en la arquitectura
 
 **📊 Métricas de Éxito:**
-- **Comprehension:** 75% developers reportan mejor entendimiento del negocio
-- **Decision Quality:** 50% mejora en alineación técnica-negocio en nuevos features
-- **Context Relevance:** 80% de respuestas incluyen contexto empresarial útil
-- **Knowledge Transfer:** 60% reducción en tiempo para onboarding de business context
+- **Business Intelligence Access:** 85% developers reportan acceso eficiente a inteligencia empresarial
+- **Decision Quality:** 60% mejora en alineación técnica-negocio en nuevos features
+- **Context Integration:** 90% de respuestas técnicas incluyen inteligencia de negocio relevante
+- **Knowledge Scaling:** 70% reducción en consultas repetitivas a PMs + 50% faster onboarding empresarial
+- **Strategic Impact:** 40% más decisiones técnicas informadas por objetivos estratégicos
 
 #### **🔄 Diagrama de Secuencia - Historia 3**
 
@@ -1086,10 +1092,10 @@ sequenceDiagram
 - **Journey:** Question → Private consultation → Contextualized answer → Applied learning
 
 #### **👩‍💼 Developer Mid-level - "Maria"**
-- **Background:** 3 años experiencia, changing teams, need business context
-- **Pain Points:** Technical skills good, but lacks business domain knowledge
-- **Goals:** Understand business rationale, make better technical decisions
-- **Journey:** Technical question → Business context → Informed decision making
+- **Background:** 3 años experiencia, changing teams, necesita contexto empresarial integral
+- **Pain Points:** Skills técnicos sólidos, pero falta acceso eficiente a inteligencia de negocio y procesos internos
+- **Goals:** Comprender rationale empresarial, acceder a knowledge base corporativa, tomar decisiones técnicas informadas por contexto de negocio
+- **Journey:** Consulta técnica-empresarial → Inteligencia de negocio contextualizada → Decisiones informadas estratégicamente
 
 #### **🏗️ Senior Developer - "Carlos"**
 - **Background:** 8 años experiencia, architecture focus, mentoring load
@@ -1097,19 +1103,25 @@ sequenceDiagram
 - **Goals:** Reduce interruptions, scale knowledge transfer, focus on complex work
 - **Journey:** Knowledge creation → AI captures context → Automated responses → More focus time
 
+#### **👩‍💼 Product Manager - "Sofia"**
+- **Background:** 5 años experiencia, lidera features cross-funcionales, bottleneck de comunicación técnica-negocio
+- **Pain Points:** Demanda constante de explicar decisiones de producto, procesos de negocio y estrategia a equipos técnicos
+- **Goals:** Escalar transferencia de conocimiento empresarial, reducir interrupciones, permitir auto-servicio de inteligencia de negocio
+- **Journey:** Documenta conocimiento → Nura indexa inteligencia empresarial → Respuestas automatizadas → Más tiempo estratégico
+
 ### 🔄 **User Journey Flow**
 
 ```mermaid
 journey
-    title Developer Learning Journey con Nura
+    title Developer Efficiency Journey con Nura
     section Descubrimiento
       Developer se une al equipo: 3: Alex
-      Overwhelming codebase: 2: Alex
-      Miedo a preguntar: 1: Alex
+      Overwhelming codebase + business context: 2: Alex
+      Mentores saturados con consultas: 1: Alex
     section Primer Uso
       Descubre Nura interface: 4: Alex
-      Hace primera pregunta: 5: Alex
-      Recibe respuesta contextual: 8: Alex
+      Hace primera consulta técnica-empresarial: 5: Alex
+      Recibe contexto integral: 8: Alex
     section Adopción
       Uso regular para dudas: 7: Alex
       Gana confianza técnica: 8: Alex
@@ -1250,153 +1262,6 @@ Configurar base de datos PostgreSQL con extensión pgvector para almacenamiento 
 
 ## 7. Pull Requests
 
-### 🔀 **Pull Requests del Epic 1 MVP**
-
-#### **🔀 Pull Request #1 - Nura MVP Core Implementation**
-
-**📋 Información del PR**
-- **Título:** `feat: implement complete Nura MVP with core kernel, agents, and interface`
-- **ID:** #001  
-- **Autor:** @development-team  
-- **Reviewers:** @tech-lead, @senior-dev, @ux-designer  
-- **Branch:** `feature/nura-mvp-complete` → `main`  
-- **Estado:** ✅ Ready for Merge  
-
-**📝 Resumen Ejecutivo**
-Este Pull Request implementa la funcionalidad completa del MVP de Nura, incluyendo el sistema core con arquitectura microkernel, el Dev Agent especializado, la interfaz Streamlit para validación de hipótesis, y la base de datos PostgreSQL con búsqueda vectorial. Representa la **primera entrega funcional** del sistema Nura que permite a developers hacer consultas técnicas sin exposición social.
-
-### **🎯 Funcionalidades Principales Implementadas**
-
-#### **1. 🧠 Nura Core Kernel**
-- ✅ Plugin registration system con interface contract
-- ✅ Query routing inteligente hacia agentes especializados
-- ✅ Event bus para comunicación asíncrona
-- ✅ Health monitoring y logging estructurado
-- ✅ Configuration management con environment variables
-
-#### **2. 👨‍💻 Dev Agent Plugin**
-- ✅ Integración con AWS Bedrock (CodeLlama-70B)
-- ✅ Procesamiento de preguntas técnicas contextuales
-- ✅ Formato "Te recuerdo que..." para enseñanza sin condescendencia
-- ✅ Confidence scoring (1-10) en cada respuesta
-- ✅ Business context integration
-
-#### **3. 🎨 Streamlit Chat Interface**
-- ✅ Interface conversacional minimalista
-- ✅ Session state management para persistencia
-- ✅ Loading indicators y error handling
-- ✅ Responsive design para diferentes devices
-- ✅ Real-time API integration
-
-#### **4. 🗄️ PostgreSQL + Vector Search**
-- ✅ Schema completo con pgvector extension
-- ✅ Code indexing con BGE-M3 embeddings
-- ✅ Vector search performance <100ms
-- ✅ Migration scripts y backup procedures
-- ✅ Security permissions configuradas
-
-### **📊 Métricas de Calidad**
-
-```bash
-# Test Coverage
-Total Coverage: 91.2% (target: >90%) ✅
-Unit Tests: 247 tests passing ✅
-Integration Tests: 32 tests passing ✅
-E2E Tests: 12 critical user journeys ✅
-
-# Performance Metrics
-Health Check Response: <50ms ✅
-Query Processing: <2s average ✅
-Vector Search: <100ms ✅
-Plugin Registration: <100ms ✅
-
-# Security Validation
-Static Analysis: No critical vulnerabilities ✅
-Database Permissions: Properly configured ✅
-Input Validation: All endpoints protected ✅
-OAuth Integration: Ready for corporate SSO ✅
-```
-
-### **🔧 Cambios Técnicos Principales**
-
-**Arquitectura Implementada:**
-- Microkernel pattern con plugins especializados
-- Clean Architecture con dependency inversion
-- Event-driven communication entre componentes
-- Vector storage para búsqueda semántica
-
-**Stack Tecnológico:**
-- **Backend:** Python 3.11, FastAPI, PostgreSQL + pgvector
-- **Frontend:** Streamlit (MVP), preparado para React evolution
-- **AI/ML:** AWS Bedrock (CodeLlama-70B), SageMaker (BGE-M3)
-- **Infrastructure:** Docker, AWS EKS, GitOps con ArgoCD
-
-### **🎭 Historias de Usuario Completadas**
-
-✅ **Historia 1:** Developer junior puede hacer preguntas técnicas sin exposición social  
-✅ **Historia 2:** Sistema analiza dependencias de código automáticamente  
-✅ **Historia 3:** Respuestas incluyen contexto empresarial relevante
-
-### **📱 User Experience Validada**
-
-**Flujo de Usuario Típico:**
-1. Developer accede a interface Streamlit simple
-2. Escribe pregunta técnica en lenguaje natural
-3. Sistema procesa query en <2 segundos
-4. Recibe respuesta contextual con confidence score
-5. Conversación se mantiene en sesión para continuidad
-
-**Cross-browser Testing:**
-- ✅ Chrome 120+ (Primary target)
-- ✅ Firefox 115+ (Secondary)
-- ✅ Safari 16+ (Mobile support)
-- ✅ Edge 120+ (Enterprise users)
-
-### **🚀 Deployment Strategy**
-
-```mermaid
-graph LR
-    LOCAL[💻 Local Development] --> STAGING[🔧 Staging Environment]
-    STAGING --> PROD[🚀 Production EKS]
-    
-    STAGING --> VALIDATE[✅ Validation Testing]
-    VALIDATE --> USER_TEST[👥 Internal User Testing]
-    USER_TEST --> PROD
-```
-
-### **📋 Checklist de Merge**
-
-- [x] **Code Quality:** 91.2% test coverage achieved
-- [x] **Performance:** All benchmarks met (<2s response time)
-- [x] **Security:** Security scan passed, no critical vulnerabilities
-- [x] **Documentation:** README, API docs, and architecture docs updated
-- [x] **UX Testing:** Validated with 3 internal developers
-- [x] **Infrastructure:** Database migrations tested
-- [x] **CI/CD:** All pipelines passing
-- [x] **Review Approvals:** Tech Lead + Senior Dev + UX Designer approved
-
-### **🎯 Post-Merge Next Steps**
-
-1. **Deploy to Staging:** Automated deployment via ArgoCD
-2. **Internal Beta:** 5-10 developers for 1 week validation
-3. **Metrics Collection:** Usage analytics y feedback gathering
-4. **Epic 2 Planning:** Multi-agent orchestration development
-5. **Performance Monitoring:** CloudWatch dashboards setup
-
-### **💝 Value Delivered**
-
-🎯 **Business Impact:**
-- Eliminación de barrera psicológica para preguntas técnicas
-- Reducción estimada del 50% en tiempo de onboarding
-- Ambiente de aprendizaje "sin juicio" funcional
-
-📈 **Technical Achievement:**
-- Sistema AI-first completamente funcional
-- Arquitectura escalable preparada para evolution
-- Foundation sólida para multi-agent expansion
-
-**🚀 Ready for Production Deployment**
-
-**📋 Referencias:** [🔧 Implementation Guides](./docs/) | [📝 Architecture Documentation](./docs/architecture/)
+1. **2025-09-15:** [Pull Request](https://github.com/LIDR-academy/AI4Devs-finalproject/pull/59)
 
 ---

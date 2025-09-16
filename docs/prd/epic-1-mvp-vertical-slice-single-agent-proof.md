@@ -1,6 +1,6 @@
 # Epic 1: MVP Vertical Slice + Single Agent Proof
 
-**Objetivo Expandido**: Entregar en 2-3 semanas un vertical slice funcional que permita a developers hacer preguntas sobre código y recibir respuestas contextuales, validando la hipótesis core de que "AI contextual elimina miedo al fracaso mejor que documentación tradicional". Este epic prioriza speed-to-feedback sobre arquitectura perfecta.
+**Objetivo Expandido**: Entregar en 2-3 semanas un vertical slice funcional que permita a developers hacer preguntas sobre código y recibir respuestas contextuales, validando la hipótesis core de que "AI con inteligencia empresarial optimiza procesos de mentoría mejor que documentación tradicional". Este epic prioriza speed-to-feedback sobre arquitectura perfecta.
 
 ## Story 1.1: Nura Core Kernel Mínimo
 **Como** desarrollador que necesita ayuda técnica,  

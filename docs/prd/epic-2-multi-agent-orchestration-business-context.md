@@ -1,18 +1,19 @@
 # Epic 2: Multi-Agent Orchestration + Business Context
 
-**Objetivo Expandido**: Completar el value proposition diferenciador de Nura agregando PM Agent + Architect Agent + orquestación inteligente + business context integration. Transforma el single-agent proof en experiencia multi-agente completa que distingue Nura de competidores como GitHub Copilot.
+**Objetivo Expandido**: Completar el value proposition diferenciador de Nura agregando Enhanced PM & Business Intelligence Agent + Architect Agent + orquestación inteligente + business context integration. Transforma el single-agent proof en experiencia multi-agente completa que distingue Nura de competidores como GitHub Copilot.
 
-## Story 2.1: PM Agent Plugin + Business Context Integration
-**Como** desarrollador que necesita entender el "por qué" empresarial de features,  
-**Quiero** un agente que explique contexto de negocio y decisiones técnicas,  
-**Para que** pueda implementar código que alinee con objetivos empresariales reales.
+## Story 2.1: Enhanced PM & Business Intelligence Agent Plugin
+**Como** desarrollador que necesita acceso eficiente a product context e inteligencia de negocio,  
+**Quiero** un agente que proporcione contexto de producto, business intelligence y procesos empresariales integrados,  
+**Para que** pueda tomar decisiones técnicas informadas sin sobrecargar PMs o Business Analysts con consultas repetitivas.
 
 ### ✅ Acceptance Criteria
-1. PM Agent plugin se registra con Nura Core usando Llama-3.1-70B
-2. Procesa consultas sobre reglas de negocio, procesos, y contexto funcional
-3. Integra documentación Confluence indexada para business context
-4. Respuestas conectan features técnicos con objetivos de negocio específicos
-5. Formato educativo explica "por qué se tomó esta decisión técnica"
+1. Enhanced PM Agent plugin se registra con Nura Core usando Llama-3.1-70B
+2. **Product Management Capabilities**: Procesa consultas sobre product context, user stories, feature rationale
+3. **Business Intelligence Capabilities**: Accede inteligencia empresarial, procesos internos, strategic context
+4. Integra documentación Confluence + knowledge bases corporativas para business intelligence
+5. Respuestas conectan decisiones técnicas con objetivos estratégicos empresariales
+6. Reduce carga de mentores PM/Business Analysts proporcionando contexto empresarial escalable
 
 ## Story 2.2: Architect Agent Plugin + Dependency Analysis  
 **Como** desarrollador que necesita entender arquitectura del sistema,  
@@ -33,7 +34,7 @@
 
 ### ✅ Acceptance Criteria  
 1. Nura Core analiza intent de queries y determina agente apropiado
-2. Routing inteligente: código → Dev Agent, negocio → PM Agent, arquitectura → Architect Agent
+2. Routing inteligente: código → Dev Agent, product/business intelligence → Enhanced PM Agent, arquitectura → Architect Agent
 3. Maneja consultas híbridas que requieren multiple agents coordination
 4. Implementa fallback si agent primario falla o no tiene confianza
 5. Response aggregation cuando multiple agents necesarios

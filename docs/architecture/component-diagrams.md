@@ -636,9 +636,9 @@ graph TB
     Skill --> PT
 ```
 
-### PM Agent Plugin
+### Enhanced PM & Business Intelligence Agent Plugin
 
-**Responsabilidad**: Business context, requirements analysis, y project management guidance
+**Responsabilidad**: Product management context + Business intelligence + Enterprise knowledge access + Strategic context integration
 
 ```mermaid
 graph TB

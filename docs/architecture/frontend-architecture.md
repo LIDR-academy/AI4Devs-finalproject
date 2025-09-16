@@ -262,9 +262,9 @@ class ChatInterface:
             
             with col1:
                 user_input = st.text_area(
-                    "Ask Nura anything about code, architecture, or business context:",
+                    "Consulta a Nura sobre código, arquitectura, procesos o inteligencia empresarial:",
                     height=100,
-                    placeholder="e.g., ¿Por qué usamos este patrón de autenticación?",
+                    placeholder="e.g., ¿Por qué se eligió JWT para auth? ¿Cuál es el proceso de deployment?",
                     key="user_message_input"
                 )
             
@@ -285,7 +285,7 @@ class ChatInterface:
         st.session_state.messages.append(user_message)
         
         # Show processing indicator
-        with st.spinner("Nura is thinking..."):
+        with st.spinner("Nura analizando contexto empresarial..."):
             try:
                 # Send message to backend
                 response = self.send_message_to_backend(message)
