@@ -13,11 +13,13 @@
 
 ## 0. Ficha del proyecto
 
-### **0.1. Tu nombre completo:**
+### **0.1. Tu nombre completo: JOSE FERNANDO ARIAS**
 
-### **0.2. Nombre del proyecto:**
+### **0.2. Nombre del proyecto: GAMY **
 
-### **0.3. Descripción breve del proyecto:**
+### **0.3. Descripción breve del proyecto: 
+Gamy es una plataforma web que permite a los entusiastas de juegos de mesa descubrir, aprender y gestionar su colección personal de juegos. El proyecto combina una base de datos curada de juegos con funcionalidades de gestión personal, ofreciendo contenido diferenciado según el nivel de registro del usuario.
+
 
 ### **0.4. URL del proyecto:**
 
@@ -36,7 +38,25 @@
 
 ### **1.1. Objetivo:**
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+3. Product Vision & Objectives
+3.1 Vision Statement
+"Ser la plataforma de referencia para que los amantes de juegos de mesa en Francia gestionen su pasión, descubran nuevos juegos y accedan a reglas claras y organizadas."
+
+3.2 Mission Statement
+"Simplificar la gestión y descubrimiento de juegos de mesa mediante una plataforma intuitiva que conecta a jugadores con contenido curado y herramientas de organización personal."
+
+3.3 Business Objectives (6 meses)
+Adopción: 50 usuarios activos mensuales
+Engagement: 30% tasa de retención semanal
+Satisfacción: Net Promoter Score (NPS) de 70
+Contenido: Base de 500+ juegos catalogados
+Validación: Feedback positivo de casas de juego locales
+
+3.4 Long-term Objectives (12+ meses)
+Modelo de patrocinio con casas de juego parisinas
+Expansión a otras ciudades francesas
+Sistema de monetización validado
+
 
 ### **1.2. Características y funcionalidades principales:**
 
@@ -59,7 +79,12 @@
 
 ### **2.2. Descripción de componentes principales:**
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+* **Mobile-first** en navegación y formularios.
+* Flujos principales:
+
+  1. **Descubrimiento** (explorar catálogo + filtros).
+  2. **Gestión personal** (biblioteca y wishlist).
+  3. **Solicitud de juegos** (formulario + seguimiento de estado).
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -103,10 +128,90 @@
 > Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
 
 **Historia de Usuario 1**
+# Historias de Usuario — Gamy (MVP)
 
+## US-001 — Explorar catálogo como visitante
+
+**Título de la Historia de Usuario:**
+Como **visitante**,
+quiero **buscar, filtrar y ver la ficha básica de un juego**,
+para que **pueda descubrir juegos adecuados sin necesidad de registrarme**.
+
+**Criterios de Aceptación:**
+
+* Puedo **buscar por nombre** y **filtrar** por **número de jugadores**, **tiempo de juego** y **edad mínima**.
+* Al abrir un juego, veo **descripción básica**, **categoría**, **rango de jugadores**, **tiempo estimado**, **edad mínima** e **imagen**.
+* Se muestran **reglas básicas** y hasta **3 videos intro** (si existen) sin requerir login.
+* La interfaz es **responsive** y se carga en **< 3 s** para la ficha y el listado principal.
+* Si no hay resultados, el sistema muestra un **mensaje claro** y sugiere **limpiar filtros**.
+
+**Notas Adicionales:**
+
+* Preparar SEO básico (título/meta) para las páginas de detalle.
+* Los videos deben **abrirse en una nueva pestaña** (enlace externo).
+
+**Historias de Usuario Relacionadas:**
+
+* **US-002** (Biblioteca/Wishlist — requiere registro).
+* **US-003** (Curación de catálogo y reglas por el administrador).
+
+---
 **Historia de Usuario 2**
 
+## US-002 — Gestionar mi biblioteca y wishlist
+
+**Título de la Historia de Usuario:**
+Como **usuario registrado**,
+quiero **agregar/quitar juegos a mi biblioteca y wishlist**,
+para que **pueda organizar mi colección y planear futuras compras**.
+
+**Criterios de Aceptación:**
+
+* Desde la ficha de un juego puedo **Agregar a Biblioteca** (estado: *owned*) o **Agregar a Wishlist** (*wishlist*), y **quitar** con un clic.
+* El sistema **evita duplicados**: un juego no puede estar dos veces en el mismo estado; mover entre *owned* ↔ *wishlist* es posible con confirmación.
+* Puedo **ver mi lista** paginada con **contador** total y **filtros** (owned/wishlist).
+* La acción muestra **feedback inmediato** (toast/alerta) y se **persiste** en la base de datos.
+* Cumple con **seguridad CSRF** y **requiere sesión**; si no estoy logueado, se me redirige a **login** y luego a la página previa.
+
+**Notas Adicionales:**
+
+* Registrar en la BD **fecha de agregado** para ordenar por **recientes**.
+* Preparar endpoint para **recomendaciones futuras** (no obligatorio en MVP).
+
+**Historias de Usuario Relacionadas:**
+
+* **US-001** (Explorar catálogo para descubrir juegos).
+* **US-003** (Administrador mantiene el catálogo actualizado).
+
+---
 **Historia de Usuario 3**
+
+## US-003 — Curar catálogo, reglas y solicitudes
+
+**Título de la Historia de Usuario:**
+Como **administrador/curador**,
+quiero **crear/editar juegos, gestionar versiones de reglas y variantes, y aprobar solicitudes de nuevos juegos**,
+para que **el catálogo se mantenga actualizado y de alta calidad**.
+
+**Criterios de Aceptación:**
+
+* Puedo **crear/editar** juegos (nombre, descripciones, atributos clave, imagen, categoría) desde **Django Admin**.
+* Puedo crear **RuleSets** por **idioma** y **versión** (p. ej. *es/en/fr*, *v2.0*), y asociar **reglas en markdown**.
+* Puedo crear **RuleVariants** (oficial o comunidad) con **tags** y **ajustes** (p. ej. deltas de jugadores/tiempo).
+* Puedo **asociar videos** de entrenamiento (YouTube/Vimeo/otro) a un **juego** y opcionalmente a un **RuleSet**.
+* Puedo **aprobar/rechazar** **solicitudes de nuevos juegos** con **historial** (quién y cuándo lo cambió).
+* Las operaciones de admin requieren **permisos**; usuarios sin rol admin reciben **403**.
+
+**Notas Adicionales:**
+
+* Mantener **auditoría básica** (created\_at/updated\_at y usuario que modifica).
+* Validar **enlaces de video** y **idiomas** contra lista permitida (ISO-639-1).
+
+**Historias de Usuario Relacionadas:**
+
+* **US-001** (Contenido visible para visitantes: reglas básicas/videos).
+* **US-002** (Usuarios registrados gestionan su biblioteca y wishlist).
+
 
 ---
 
