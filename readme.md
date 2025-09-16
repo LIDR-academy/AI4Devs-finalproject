@@ -13,7 +13,7 @@
 
 ## 0. Ficha del proyecto
 
-### **0.1. Tu nombre completo:**
+### **0.1. Jairo Javier Polo Martínez:**
 
 ### **0.2. Nombre del proyecto:**
 
