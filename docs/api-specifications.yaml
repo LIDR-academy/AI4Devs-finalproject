@@ -1,0 +1,802 @@
+openapi: 3.0.3
+info:
+  title: Couple's Financial Management API
+  description: |
+    A self-hosted financial management system for couples, supporting multi-currency transactions,
+    automated 50/30/20 budgeting, and privacy-respecting shared/personal account management.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@couplefi.local
+servers:
+  - url: https://api.couplefi.local/v1
+    description: Production server (self-hosted)
+security:
+  - bearerAuth: []
+tags:
+  - name: transactions
+    description: Transaction management operations
+  - name: accounts
+    description: Account balance and transaction history
+  - name: budgets
+    description: Budget tracking and envelope management
+
+paths:
+  /transactions:
+    post:
+      tags:
+        - transactions
+      summary: Create a new transaction
+      description: |
+        Records a new financial transaction with multi-currency support. Automatically converts
+        to user's base currency and enforces 50/30/20 categorization rules. For transfers between
+        accounts, creates linked transactions automatically.
+      operationId: createTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionRequest"
+            examples:
+              expense:
+                summary: Grocery expense from shared account
+                value:
+                  account_id: 42
+                  amount: -125.50
+                  transaction_date: "2024-01-15"
+                  description: "Whole Foods - Weekly groceries"
+                  category_id: 15
+                  transaction_type: "expense"
+              transfer:
+                summary: Transfer between accounts
+                value:
+                  account_id: 10
+                  amount: -500.00
+                  transaction_date: "2024-01-15"
+                  description: "Transfer to savings"
+                  transaction_type: "transfer"
+                  target_account_id: 25
+      responses:
+        "201":
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResponse"
+              example:
+                data:
+                  id: 1234
+                  account_id: 42
+                  amount: -125.50
+                  base_amount: -135.75
+                  transaction_date: "2024-01-15"
+                  description: "Whole Foods - Weekly groceries"
+                  category:
+                    id: 15
+                    name: "Groceries"
+                    budget_type: "needs"
+                    parent:
+                      id: 1
+                      name: "Needs"
+                  transaction_type: "expense"
+                  currency:
+                    code: "EUR"
+                    symbol: "€"
+                  base_currency:
+                    code: "USD"
+                    symbol: "$"
+                  exchange_rate: 1.08
+                  created_by:
+                    id: 1
+                    name: "Alice Johnson"
+                  created_at: "2024-01-15T14:30:00Z"
+                  updated_at: "2024-01-15T14:30:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+
+  /accounts/{accountId}/balance:
+    get:
+      tags:
+        - accounts
+      summary: Get account balance with recent transactions
+      description: |
+        Retrieves current balance and transaction history for an account. Includes multi-currency
+        conversion to user's base currency. Respects partner permissions - returns 403 for
+        unauthorized access to partner's personal accounts.
+      operationId: getAccountBalance
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The account ID to retrieve balance for
+          schema:
+            type: integer
+            minimum: 1
+          example: 42
+        - name: page
+          in: query
+          description: Page number for transaction pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+        - name: limit
+          in: query
+          description: Number of transactions per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: start_date
+          in: query
+          description: Filter transactions from this date (inclusive)
+          schema:
+            type: string
+            format: date
+          example: "2024-01-01"
+        - name: end_date
+          in: query
+          description: Filter transactions until this date (inclusive)
+          schema:
+            type: string
+            format: date
+          example: "2024-01-31"
+        - name: category_id
+          in: query
+          description: Filter by category ID
+          schema:
+            type: integer
+          example: 15
+      responses:
+        "200":
+          description: Account balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountBalanceResponse"
+              example:
+                data:
+                  account:
+                    id: 42
+                    name: "Joint Checking"
+                    account_type: "checking"
+                    ownership_type: "shared"
+                    currency:
+                      code: "EUR"
+                      symbol: "€"
+                    is_active: true
+                  balance:
+                    current_balance: 3456.78
+                    current_balance_base_currency: 3733.32
+                    currency:
+                      code: "EUR"
+                      symbol: "€"
+                    base_currency:
+                      code: "USD"
+                      symbol: "$"
+                    exchange_rate: 1.08
+                    as_of: "2024-01-15T14:45:00Z"
+                  transactions:
+                    - id: 1234
+                      amount: -125.50
+                      base_amount: -135.75
+                      transaction_date: "2024-01-15"
+                      description: "Whole Foods - Weekly groceries"
+                      category:
+                        id: 15
+                        name: "Groceries"
+                        budget_type: "needs"
+                      transaction_type: "expense"
+                      created_at: "2024-01-15T14:30:00Z"
+                    - id: 1233
+                      amount: 2500.00
+                      base_amount: 2700.00
+                      transaction_date: "2024-01-10"
+                      description: "Salary deposit"
+                      category:
+                        id: 50
+                        name: "Salary"
+                        budget_type: null
+                      transaction_type: "income"
+                      created_at: "2024-01-10T09:00:00Z"
+                  pagination:
+                    current_page: 1
+                    per_page: 20
+                    total_items: 156
+                    total_pages: 8
+                    has_next: true
+                    has_previous: false
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /budgets/current/status:
+    get:
+      tags:
+        - budgets
+      summary: Get current budget status with 50/30/20 breakdown
+      description: |
+        Retrieves the active budget status showing spending against 50/30/20 allocations.
+        Includes both individual and combined views for partners, with multi-currency
+        consolidation in user's base currency.
+      operationId: getCurrentBudgetStatus
+      parameters:
+        - name: view
+          in: query
+          description: View perspective for budget data
+          schema:
+            type: string
+            enum: [combined, personal, partner]
+            default: combined
+          example: combined
+        - name: include_transactions
+          in: query
+          description: Include recent transactions per envelope
+          schema:
+            type: boolean
+            default: false
+          example: true
+      responses:
+        "200":
+          description: Budget status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BudgetStatusResponse"
+              example:
+                data:
+                  budget:
+                    id: 10
+                    name: "January 2024 Budget"
+                    period_type: "monthly"
+                    start_date: "2024-01-01"
+                    end_date: "2024-01-31"
+                    days_remaining: 16
+                  overview:
+                    total_income: 5000.00
+                    total_allocated: 5000.00
+                    total_spent: 1876.50
+                    total_remaining: 3123.50
+                    base_currency:
+                      code: "USD"
+                      symbol: "$"
+                  categories:
+                    needs:
+                      allocated_amount: 2500.00
+                      allocated_percentage: 50
+                      spent_amount: 1125.75
+                      spent_percentage: 45.03
+                      remaining_amount: 1374.25
+                      progress_percentage: 45.03
+                      envelopes:
+                        - category:
+                            id: 11
+                            name: "Housing"
+                          allocated: 1200.00
+                          spent: 800.00
+                          remaining: 400.00
+                          transactions_count: 1
+                        - category:
+                            id: 15
+                            name: "Groceries"
+                          allocated: 600.00
+                          spent: 325.75
+                          remaining: 274.25
+                          transactions_count: 8
+                    wants:
+                      allocated_amount: 1500.00
+                      allocated_percentage: 30
+                      spent_amount: 450.75
+                      spent_percentage: 30.05
+                      remaining_amount: 1049.25
+                      progress_percentage: 30.05
+                      envelopes:
+                        - category:
+                            id: 21
+                            name: "Entertainment"
+                          allocated: 300.00
+                          spent: 125.50
+                          remaining: 174.50
+                          transactions_count: 3
+                        - category:
+                            id: 25
+                            name: "Dining Out"
+                          allocated: 400.00
+                          spent: 325.25
+                          remaining: 74.75
+                          transactions_count: 12
+                    savings:
+                      allocated_amount: 1000.00
+                      allocated_percentage: 20
+                      spent_amount: 300.00
+                      spent_percentage: 30.00
+                      remaining_amount: 700.00
+                      progress_percentage: 30.00
+                      envelopes:
+                        - category:
+                            id: 31
+                            name: "Emergency Fund"
+                          allocated: 500.00
+                          spent: 0.00
+                          remaining: 500.00
+                          transactions_count: 0
+                        - category:
+                            id: 35
+                            name: "Investment"
+                          allocated: 500.00
+                          spent: 300.00
+                          remaining: 200.00
+                          transactions_count: 1
+                  user_breakdown:
+                    user1:
+                      name: "Alice Johnson"
+                      total_spent: 1050.25
+                      needs_spent: 625.50
+                      wants_spent: 275.25
+                      savings_spent: 150.00
+                    user2:
+                      name: "Bob Johnson"
+                      total_spent: 826.25
+                      needs_spent: 500.25
+                      wants_spent: 175.50
+                      savings_spent: 150.00
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: No active budget found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: "BUDGET_NOT_FOUND"
+                  message: "No active budget found for the current period"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from authentication endpoint
+
+  schemas:
+    CreateTransactionRequest:
+      type: object
+      required:
+        - account_id
+        - amount
+        - transaction_date
+        - description
+        - transaction_type
+      properties:
+        account_id:
+          type: integer
+          description: ID of the account for this transaction
+          minimum: 1
+        amount:
+          type: number
+          format: decimal
+          description: |
+            Transaction amount in account currency. Negative for expenses,
+            positive for income, negative for transfer out
+        transaction_date:
+          type: string
+          format: date
+          description: Date when the transaction occurred
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Transaction description
+        category_id:
+          type: integer
+          description: Category ID (required for income/expense, not for transfers)
+          minimum: 1
+        transaction_type:
+          type: string
+          enum: [income, expense, transfer]
+          description: Type of transaction
+        target_account_id:
+          type: integer
+          description: Target account ID (required only for transfers)
+          minimum: 1
+
+    TransactionResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Transaction"
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        account_id:
+          type: integer
+        amount:
+          type: number
+          format: decimal
+        base_amount:
+          type: number
+          format: decimal
+          description: Amount converted to user's base currency
+        transaction_date:
+          type: string
+          format: date
+        description:
+          type: string
+        category:
+          $ref: "#/components/schemas/Category"
+        transaction_type:
+          type: string
+          enum: [income, expense, transfer]
+        currency:
+          $ref: "#/components/schemas/Currency"
+        base_currency:
+          $ref: "#/components/schemas/Currency"
+        exchange_rate:
+          type: number
+          format: decimal
+        linked_transaction_id:
+          type: integer
+          nullable: true
+        created_by:
+          $ref: "#/components/schemas/UserSummary"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AccountBalanceResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            account:
+              $ref: "#/components/schemas/Account"
+            balance:
+              $ref: "#/components/schemas/Balance"
+            transactions:
+              type: array
+              items:
+                $ref: "#/components/schemas/TransactionSummary"
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+
+    BudgetStatusResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            budget:
+              $ref: "#/components/schemas/BudgetSummary"
+            overview:
+              $ref: "#/components/schemas/BudgetOverview"
+            categories:
+              $ref: "#/components/schemas/BudgetCategories"
+            user_breakdown:
+              type: object
+              additionalProperties:
+                $ref: "#/components/schemas/UserBudgetBreakdown"
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        account_type:
+          type: string
+          enum: [checking, savings, credit_card, investment]
+        ownership_type:
+          type: string
+          enum: [personal_user1, personal_user2, shared]
+        currency:
+          $ref: "#/components/schemas/Currency"
+        is_active:
+          type: boolean
+
+    Balance:
+      type: object
+      properties:
+        current_balance:
+          type: number
+          format: decimal
+        current_balance_base_currency:
+          type: number
+          format: decimal
+        currency:
+          $ref: "#/components/schemas/Currency"
+        base_currency:
+          $ref: "#/components/schemas/Currency"
+        exchange_rate:
+          type: number
+          format: decimal
+        as_of:
+          type: string
+          format: date-time
+
+    TransactionSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: number
+          format: decimal
+        base_amount:
+          type: number
+          format: decimal
+        transaction_date:
+          type: string
+          format: date
+        description:
+          type: string
+        category:
+          $ref: "#/components/schemas/CategorySummary"
+        transaction_type:
+          type: string
+          enum: [income, expense, transfer]
+        created_at:
+          type: string
+          format: date-time
+
+    BudgetSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        period_type:
+          type: string
+          enum: [monthly, annual, custom]
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        days_remaining:
+          type: integer
+
+    BudgetOverview:
+      type: object
+      properties:
+        total_income:
+          type: number
+          format: decimal
+        total_allocated:
+          type: number
+          format: decimal
+        total_spent:
+          type: number
+          format: decimal
+        total_remaining:
+          type: number
+          format: decimal
+        base_currency:
+          $ref: "#/components/schemas/Currency"
+
+    BudgetCategories:
+      type: object
+      properties:
+        needs:
+          $ref: "#/components/schemas/BudgetCategoryDetail"
+        wants:
+          $ref: "#/components/schemas/BudgetCategoryDetail"
+        savings:
+          $ref: "#/components/schemas/BudgetCategoryDetail"
+
+    BudgetCategoryDetail:
+      type: object
+      properties:
+        allocated_amount:
+          type: number
+          format: decimal
+        allocated_percentage:
+          type: number
+        spent_amount:
+          type: number
+          format: decimal
+        spent_percentage:
+          type: number
+        remaining_amount:
+          type: number
+          format: decimal
+        progress_percentage:
+          type: number
+        envelopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/EnvelopeStatus"
+
+    EnvelopeStatus:
+      type: object
+      properties:
+        category:
+          $ref: "#/components/schemas/CategorySummary"
+        allocated:
+          type: number
+          format: decimal
+        spent:
+          type: number
+          format: decimal
+        remaining:
+          type: number
+          format: decimal
+        transactions_count:
+          type: integer
+
+    UserBudgetBreakdown:
+      type: object
+      properties:
+        name:
+          type: string
+        total_spent:
+          type: number
+          format: decimal
+        needs_spent:
+          type: number
+          format: decimal
+        wants_spent:
+          type: number
+          format: decimal
+        savings_spent:
+          type: number
+          format: decimal
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        budget_type:
+          type: string
+          enum: [needs, wants, savings]
+          nullable: true
+        parent:
+          $ref: "#/components/schemas/CategorySummary"
+          nullable: true
+
+    CategorySummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        budget_type:
+          type: string
+          enum: [needs, wants, savings]
+          nullable: true
+
+    Currency:
+      type: object
+      properties:
+        code:
+          type: string
+          pattern: "^[A-Z]{3}$"
+        symbol:
+          type: string
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_previous:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: "INVALID_REQUEST"
+              message: "The request body is invalid"
+              details:
+                amount: "Amount must be negative for expenses"
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Invalid or expired authentication token"
+
+    Forbidden:
+      description: Forbidden - No permission to access resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: "FORBIDDEN"
+              message: "You don't have permission to access this partner's personal account"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: "NOT_FOUND"
+              message: "Account with ID 42 not found"
+
+    UnprocessableEntity:
+      description: Unprocessable entity - Business logic validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: "VALIDATION_FAILED"
+              message: "Category is required for expense transactions"
+              details:
+                category_id: "This field is required for expense type"
