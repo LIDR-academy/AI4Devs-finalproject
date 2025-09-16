@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "curl",
+      "args": ["-X", "POST", "https://mcp.context7.com/mcp"],
+      "transport": {
+        "type": "http",
+        "url": "https://mcp.context7.com/mcp"
+      }
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "magic": {
+      "command": "npx",
+      "args": ["@21st-dev/magic@latest"]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-puppeteer"]
+    }
+  }
+}
