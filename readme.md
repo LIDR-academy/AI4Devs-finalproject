@@ -17,7 +17,7 @@
 
 ### **0.1. Tu nombre completo:**
 
-Gonzalo Germån Gonzålez Castillo
+Gonzalo Germán González Castillo
 
 ### **0.2. Nombre del proyecto:**
 
