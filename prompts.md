@@ -410,6 +410,23 @@ Generate the complete task breakdown file now.
 
 **Prompt 1:**
 
+```markdown
+Let's add a PR template to @branch-strategy.md
+```
+
 **Prompt 2:**
 
-**Prompt 3:**
+```markdown
+1. PR Title should be `Jira issue: [Ticket description]`
+2. Add a Jira section before Summary with link to the issue
+3. No need for type of PR
+4. No acceptance criteria
+5. Add a coverage table in the Testing section
+6. Add Jira links to Related Issues/Stories
+```
+
+**Context files used:**
+
+- [branch-strategy.md](./docs/branch-strategy.md)
+
+**[Link to chat](.cursorchats/cursor_create_pr_template.md)**

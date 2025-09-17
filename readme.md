@@ -1115,14 +1115,68 @@ erDiagram
 
 ## 7. Pull Requests
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+### Pull Request Template
 
-**Pull Request 1**
+```markdown
+### PR Title Format
 
-**Pull Request 2**
+`AI4DFP-123: [Ticket description]`
 
-**Pull Request 3**
+### PR Description Template
 
-```
+## Jira
 
+- **Epic**: [AI4DFP-1](https://your-jira-instance.atlassian.net/browse/AI4DFP-1) - Epic Name
+- **Story**: [AI4DFP-124](https://your-jira-instance.atlassian.net/browse/AI4DFP-124) - Story Name
+- **Issue**: [AI4DFP-123](https://your-jira-instance.atlassian.net/browse/AI4DFP-123)
+
+## Summary
+
+Brief description of what this PR accomplishes.
+
+## Changes
+
+- List of key changes made
+- Files added/modified/deleted
+- New features or fixes implemented
+
+## Testing
+
+- [ ] Manual testing completed
+- [ ] Unit tests added/updated
+- [ ] Integration tests pass
+- [ ] No regressions introduced
+
+## Coverage
+
+| File         | % Stmts | % Branch | % Funcs | % Lines | Uncovered Lines |
+| ------------ | ------- | -------- | ------- | ------- | --------------- |
+| path/to/file | 100%    | 100%     | 100%    | 100%    | -               |
+| path/to/file | 94.11%  | 100%     | 50%     | 94.11%  | 39              |
+
+## Screenshots/Demo
+
+Include screenshots or demo links for UI changes.
+
+## Deployment Notes
+
+Any special deployment considerations or environment variables needed.
+
+## Self-Review Checklist
+
+- [ ] I have tested this code locally
+- [ ] I have added/updated tests for new functionality
+- [ ] I have reviewed my own code line-by-line
+- [ ] I have checked for potential security issues
+- [ ] I have updated documentation as needed
+- [ ] I have considered edge cases and error handling
+- [ ] I have removed all debug code and console logs
+
+## Checklist
+
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Comments added for complex logic
+- [ ] Documentation updated
+- [ ] No console.log or debug statements
 ```
