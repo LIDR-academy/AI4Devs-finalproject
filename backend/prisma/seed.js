@@ -226,6 +226,67 @@ async function main() {
         }
       });
 
+      // --- Disponibilidad de médicos ---
+      // Doctor 1: Lunes y Miércoles de 9:00 a 13:00
+      await tx.availability.createMany({
+        data: [
+          {
+            doctor_id: doctor1.id,
+            day_of_week: 1, // Lunes
+            start_time: new Date('2025-09-15T09:00:00'),
+            end_time: new Date('2025-09-15T13:00:00'),
+            is_available: true
+          },
+          {
+            doctor_id: doctor1.id,
+            day_of_week: 3, // Miércoles
+            start_time: new Date('2025-09-17T09:00:00'),
+            end_time: new Date('2025-09-17T13:00:00'),
+            is_available: true
+          }
+        ]
+      });
+
+      // Doctor 2: Martes y Jueves de 15:00 a 18:00
+      await tx.availability.createMany({
+        data: [
+          {
+            doctor_id: doctor2.id,
+            day_of_week: 2, // Martes
+            start_time: new Date('2025-09-16T15:00:00'),
+            end_time: new Date('2025-09-16T18:00:00'),
+            is_available: true
+          },
+          {
+            doctor_id: doctor2.id,
+            day_of_week: 4, // Jueves
+            start_time: new Date('2025-09-18T15:00:00'),
+            end_time: new Date('2025-09-18T18:00:00'),
+            is_available: true
+          }
+        ]
+      });
+
+      // Doctor 3: Viernes de 10:00 a 14:00 y Sábado de 9:00 a 12:00
+      await tx.availability.createMany({
+        data: [
+          {
+            doctor_id: doctor3.id,
+            day_of_week: 5, // Viernes
+            start_time: new Date('2025-09-19T10:00:00'),
+            end_time: new Date('2025-09-19T14:00:00'),
+            is_available: true
+          },
+          {
+            doctor_id: doctor3.id,
+            day_of_week: 6, // Sábado
+            start_time: new Date('2025-09-20T09:00:00'),
+            end_time: new Date('2025-09-20T12:00:00'),
+            is_available: true
+          }
+        ]
+      });
+
       // --- Citas ---
       const appointment1 = await tx.appointment.create({
         data: {

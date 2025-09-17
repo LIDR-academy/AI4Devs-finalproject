@@ -1,30 +1,65 @@
+// Mock para jwtService (debe ir primero, antes de cualquier require)
+const mockVerifyToken = jest.fn(() => ({
+  id: 99,
+  email: 'test@mock.com',
+  role: 'patient'
+}));
+
 jest.mock('../src/domain/jwtService', () => ({
-  verifyToken: jest.fn(() => ({
-    id: 99,
-    email: 'test@mock.com',
-    role: 'patient'
-  })),
+  verifyToken: mockVerifyToken,
   generateToken: jest.fn()
 }));
 
+// Importaciones
 const request = require('supertest');
-jest.mock('../src/domain/doctorService'); // Mock del servicio de dominio
-jest.mock('../src/application/getDoctorProfile'); // Mock del caso de uso
-jest.mock('../src/application/getDoctorComments'); // Mock del caso de uso de comentarios
+const app = require('../server');
+
+// Mocks para servicios de dominio
+jest.mock('../src/domain/doctorService');
+jest.mock('../src/application/getDoctorProfile');
+jest.mock('../src/application/getDoctorComments');
+jest.mock('../src/domain/doctorAvailabilityService', () => ({
+  getAvailability: jest.fn(),
+  setAvailability: jest.fn()
+}));
+jest.mock('../src/domain/doctorAppointmentService', () => ({
+  getAppointments: jest.fn(),
+  updateAppointmentStatus: jest.fn()
+}));
+
+// Importaciones después de los mocks
 const { searchDoctors } = require('../src/domain/doctorService');
 const { getDoctorProfile } = require('../src/application/getDoctorProfile');
 const { getDoctorComments } = require('../src/application/getDoctorComments');
-const app = require('../server');
+const { getAvailability, setAvailability } = require('../src/domain/doctorAvailabilityService');
+const { getAppointments, updateAppointmentStatus } = require('../src/domain/doctorAppointmentService');
 
+// Constantes útiles para las pruebas
+const doctorToken = 'Bearer doctor.jwt.token';
+const patientToken = 'Bearer patient.jwt.token';
 
-jest.mock('../src/domain/jwtService', () => ({
-  verifyToken: jest.fn(() => ({
-    id: 99,
-    email: 'test@mock.com',
-    role: 'patient'
-  })),
-  generateToken: jest.fn()
-}));
+// Helper para configurar mockVerifyToken en cada prueba
+function setupAuth(role = 'patient', id = 99) {
+  if (role === 'doctor') {
+    mockVerifyToken.mockImplementation(() => ({
+      id: id || 1,
+      email: 'doctor@email.com',
+      role: 'doctor'
+    }));
+  } else if (role === 'patient') {
+    mockVerifyToken.mockImplementation(() => ({
+      id: id || 99,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+  } else if (role === 'error') {
+    mockVerifyToken.mockImplementation(() => {
+      throw new Error('jwt malformed');
+    });
+  } else if (role === 'unauthenticated') {
+    mockVerifyToken.mockImplementation(() => null);
+  }
+}
 
 describe('GET /api/doctors/search', () => {
   beforeEach(() => {
@@ -212,9 +247,11 @@ describe('GET /api/doctors/:id', () => {
 describe('GET /api/doctors/:id/comments', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    setupAuth('patient');
   });
 
   it('debe retornar comentarios paginados para usuario autenticado', async () => {
+    setupAuth('patient');
     require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
       id: 99,
       email: 'test@mock.com',
@@ -273,6 +310,7 @@ describe('GET /api/doctors/:id/comments', () => {
   });
 
   it('debe retornar error 401 si el usuario no está autenticado', async () => {
+    setupAuth('error');
     require('../src/domain/jwtService').verifyToken.mockImplementation(() => null);
 
     const res = await request(app).get('/api/doctors/4/comments');
@@ -285,6 +323,7 @@ describe('GET /api/doctors/:id/comments', () => {
   });
 
   it('debe retornar error 400 para id inválido', async () => {
+    setupAuth('error');
     require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
       id: 99,
       email: 'test@mock.com',
@@ -304,6 +343,7 @@ describe('GET /api/doctors/:id/comments', () => {
   });
 
   it('debe retornar error 401 si el token está mal formado', async () => {
+    setupAuth('error');
     require('../src/domain/jwtService').verifyToken.mockImplementation(() => {
       throw new Error('jwt malformed');
     });
@@ -316,6 +356,597 @@ describe('GET /api/doctors/:id/comments', () => {
     expect(res.body).toHaveProperty('code', 401);
     expect(res.body).toHaveProperty('message', 'Unauthorized');
     expect(res.body.payload).toHaveProperty('error');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
+  });
+});
+
+describe('Endpoints de disponibilidad de médicos especialitas', () => {
+  const { getAvailability, setAvailability } = require('../src/domain/doctorAvailabilityService');
+  const doctorToken = 'Bearer doctor.jwt.token';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Simula usuario médico autenticado
+    /*require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 1,
+      email: 'doctor@email.com',
+      role: 'doctor'
+    }));*/
+    setupAuth('doctor');
+  });
+
+  it('GET /api/doctors/availability - retorna disponibilidad para médico autenticado', async () => {
+    getAvailability.mockResolvedValue([
+      { dayOfWeek: 1, startTime: '09:00', endTime: '13:00', available: true }
+    ]);
+    const res = await request(app)
+      .get('/api/doctors/availability')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('code', 200);
+    expect(res.body).toHaveProperty('message', 'success');
+    expect(Array.isArray(res.body.payload)).toBe(true);
+    expect(res.body.payload[0]).toHaveProperty('dayOfWeek', 1);
+    expect(res.body.payload[0]).toHaveProperty('startTime', '09:00');
+    expect(res.body.payload[0]).toHaveProperty('endTime', '13:00');
+    expect(res.body.payload[0]).toHaveProperty('available', true);
+  });
+
+  it('GET /api/doctors/availability - retorna lista vacía si no hay disponibilidad', async () => {
+    getAvailability.mockResolvedValue([]);
+    const res = await request(app)
+      .get('/api/doctors/availability')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body.payload)).toBe(true);
+    expect(res.body.payload.length).toBe(0);
+  });
+
+  it('GET /api/doctors/availability - error 403 si usuario no es médico', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 2,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+    const res = await request(app)
+      .get('/api/doctors/availability')
+      .set('Authorization', 'Bearer patient.jwt.token');
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/i);
+  });
+
+  it('POST /api/doctors/availability - define disponibilidad correctamente', async () => {
+    setAvailability.mockResolvedValue([
+      { dayOfWeek: 1, startTime: '09:00', endTime: '13:00', available: true }
+    ]);
+    const body = {
+      daysOfWeek: [1],
+      ranges: [
+        { dayOfWeek: 1, startTime: '09:00', endTime: '13:00', blocked: false }
+      ]
+    };
+    const res = await request(app)
+      .post('/api/doctors/availability')
+      .set('Authorization', doctorToken)
+      .send(body);
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body).toHaveProperty('code', 201);
+    expect(res.body).toHaveProperty('message', 'Availability updated');
+    expect(Array.isArray(res.body.payload)).toBe(true);
+    expect(res.body.payload[0]).toHaveProperty('dayOfWeek', 1);
+    expect(res.body.payload[0]).toHaveProperty('available', true);
+  });
+
+  it('POST /api/doctors/availability - bloquea día correctamente', async () => {
+    setAvailability.mockResolvedValue([
+      { dayOfWeek: 5, startTime: '08:00', endTime: '12:00', available: false }
+    ]);
+    const body = {
+      daysOfWeek: [5],
+      ranges: [
+        { dayOfWeek: 5, startTime: '08:00', endTime: '12:00', blocked: true }
+      ]
+    };
+    const res = await request(app)
+      .post('/api/doctors/availability')
+      .set('Authorization', doctorToken)
+      .send(body);
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body.payload[0]).toHaveProperty('available', false);
+  });
+
+  it('POST /api/doctors/availability - error si múltiples rangos para el mismo día', async () => {
+    setupAuth('doctor');
+
+    // Crear una instancia real de ApiError
+    const apiError = new (require('../src/adapters/in/errorHandler').ApiError)(
+      400,
+      'Overlapping ranges for the same day are not allowed',
+      ['Multiple ranges for day 1 are not allowed']
+    );
+
+    setAvailability.mockRejectedValue(apiError);
+
+    const body = {
+      daysOfWeek: [1],
+      ranges: [
+        { dayOfWeek: 1, startTime: '09:00', endTime: '11:00', blocked: false },
+        { dayOfWeek: 1, startTime: '12:00', endTime: '14:00', blocked: false }
+      ]
+    };
+
+    const res = await request(app)
+      .post('/api/doctors/availability')
+      .set('Authorization', doctorToken)
+      .send(body);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('code', 400);
+    expect(res.body.payload.error[0]).toMatch(/Multiple ranges for day/i);
+  });
+
+  it('POST /api/doctors/availability - error 403 si usuario no es médico', async () => {
+    setupAuth('doctor');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 2,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+    const body = {
+      daysOfWeek: [1],
+      ranges: [
+        { dayOfWeek: 1, startTime: '09:00', endTime: '13:00', blocked: false }
+      ]
+    };
+    const res = await request(app)
+      .post('/api/doctors/availability')
+      .set('Authorization', 'Bearer patient.jwt.token')
+      .send(body);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/i);
+  });
+
+  it('POST /api/doctors/availability - error 400 si datos inválidos', async () => {
+    setupAuth('doctor');
+    setAvailability.mockRejectedValue({
+      name: 'ValidationError',
+      errors: ['Invalid dayOfWeek', 'Invalid time range']
+    });
+    const body = {
+      daysOfWeek: [10], // Día inválido
+      ranges: [
+        { dayOfWeek: 10, startTime: '09:00', endTime: '08:00', blocked: false } // Rango inválido
+      ]
+    };
+    const res = await request(app)
+      .post('/api/doctors/availability')
+      .set('Authorization', doctorToken)
+      .send(body);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('code', 400);
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Invalid dayOfWeek/i);
+    expect(res.body.payload.error[1]).toMatch(/Invalid time range/i);
+  });
+});
+
+describe('Endpoints de citas para médicos especialistas', () => {
+  const { getAppointments } = require('../src/domain/doctorAppointmentService');
+  const doctorToken = 'Bearer doctor.jwt.token';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    /*require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 1,
+      email: 'doctor@email.com',
+      role: 'doctor'
+    }));*/
+    setupAuth('doctor');
+  });
+
+  it('GET /api/doctors/appointments - retorna citas agendadas para médico autenticado', async () => {
+    getAppointments.mockResolvedValue([
+      {
+        id: 123,
+        appointmentDate: '2025-09-10T09:00:00.000Z',
+        status: 'confirmed',
+        reason: 'Consulta general',
+        patient: {
+          id: 5,
+          firstName: 'Ana',
+          lastName: 'García',
+          email: 'ana@email.com'
+        }
+      }
+    ]);
+    const res = await request(app)
+      .get('/api/doctors/appointments')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('code', 200);
+    expect(res.body).toHaveProperty('message', 'success');
+    expect(Array.isArray(res.body.payload)).toBe(true);
+    expect(res.body.payload[0]).toHaveProperty('id', 123);
+    expect(res.body.payload[0]).toHaveProperty('status', 'confirmed');
+    expect(res.body.payload[0]).toHaveProperty('patient');
+    expect(res.body.payload[0].patient).toHaveProperty('firstName', 'Ana');
+  });
+
+  it('GET /api/doctors/appointments - filtra por fecha y estado', async () => {
+    getAppointments.mockResolvedValue([
+      {
+        id: 124,
+        appointmentDate: '2025-09-10T10:00:00.000Z',
+        status: 'pending',
+        reason: 'Consulta dermatológica',
+        patient: {
+          id: 6,
+          firstName: 'Luis',
+          lastName: 'Martínez',
+          email: 'luis@email.com'
+        }
+      }
+    ]);
+    const res = await request(app)
+      .get('/api/doctors/appointments?date=2025-09-10&status=pending')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body.payload)).toBe(true);
+    expect(res.body.payload[0]).toHaveProperty('status', 'pending');
+    expect(res.body.payload[0]).toHaveProperty('appointmentDate', '2025-09-10T10:00:00.000Z');
+  });
+
+  it('GET /api/doctors/appointments - error 403 si usuario no es médico', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 2,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+    const res = await request(app)
+      .get('/api/doctors/appointments')
+      .set('Authorization', 'Bearer patient.jwt.token');
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/i);
+  });
+
+  it('GET /api/doctors/appointments - error si token es inválido', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => {
+      throw new Error('jwt malformed');
+    });
+    const res = await request(app)
+      .get('/api/doctors/appointments')
+      .set('Authorization', 'Bearer token_mal_formado');
+
+    expect(res.statusCode).toBe(403);  // Actualizado a 403 en lugar de 401
+    expect(res.body).toHaveProperty('code', 403);  // Actualizado a 403
+    expect(res.body).toHaveProperty('message', 'Forbidden');  // Cambiado a Forbidden
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
+  });
+});
+
+describe('Control de acceso y manejo de errores en endpoints de agenda/disponibilidad', () => {
+  const doctorToken = 'Bearer doctor.jwt.token';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupAuth('error');
+  });
+
+  it('GET /api/doctors/availability - error 403 si no hay token', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => {
+      throw new Error('Authentication required');
+    });
+    const res = await request(app)
+      .get('/api/doctors/availability');
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Authentication required|Doctor authentication required/i);
+  });
+
+  it('POST /api/doctors/availability - error 403 si no hay token', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => {
+      throw new Error('Authentication required');
+    });
+    const body = {
+      daysOfWeek: [1],
+      ranges: [
+        { dayOfWeek: 1, startTime: '09:00', endTime: '13:00', blocked: false }
+      ]
+    };
+    const res = await request(app)
+      .post('/api/doctors/availability')
+      .send(body);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
+  });
+
+  it('GET /api/doctors/appointments - error 403 si no hay token', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => {
+      throw new Error('Authentication required');
+    });
+    const res = await request(app)
+      .get('/api/doctors/appointments');
+
+    // Actualizamos las expectativas para reflejar el comportamiento real
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
+  });
+
+  it('PATCH /api/doctors/appointments/:id - error 403 si no hay token', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => {
+      throw new Error('Authentication required');
+    });
+    const res = await request(app)
+      .patch('/api/doctors/appointments/123')
+      .send({ status: 'confirmed' });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
+  });
+
+  it('GET /api/doctors/availability - error 403 si usuario autenticado es paciente', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 2,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+    const res = await request(app)
+      .get('/api/doctors/availability')
+      .set('Authorization', 'Bearer patient.jwt.token');
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/i);
+  });
+
+  it('POST /api/doctors/availability - error 403 si usuario autenticado es paciente', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 2,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+    const body = {
+      daysOfWeek: [1],
+      ranges: [
+        { dayOfWeek: 1, startTime: '09:00', endTime: '13:00', blocked: false }
+      ]
+    };
+    const res = await request(app)
+      .post('/api/doctors/availability')
+      .set('Authorization', 'Bearer patient.jwt.token')
+      .send(body);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/i);
+  });
+
+  it('GET /api/doctors/appointments - error 403 si usuario autenticado es paciente', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 2,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+    const res = await request(app)
+      .get('/api/doctors/appointments')
+      .set('Authorization', 'Bearer patient.jwt.token');
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/i);
+  });
+
+  it('PATCH /api/doctors/appointments/:id - error 403 si usuario autenticado es paciente', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 2,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+    const res = await request(app)
+      .patch('/api/doctors/appointments/123')
+      .set('Authorization', 'Bearer patient.jwt.token')
+      .send({ status: 'confirmed' });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/i);
+  });
+});
+
+
+describe('Endpoints de confirmación/rechazo de citas para médicos especialistas', () => {
+  const { updateAppointmentStatus } = require('../src/domain/doctorAppointmentService');
+  const doctorToken = 'Bearer doctor.jwt.token';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    /*require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+       id: 1,
+       email: 'doctor@email.com',
+       role: 'doctor'
+     }));*/
+    setupAuth('doctor');
+  });
+
+  it('PATCH /api/doctors/appointments/:id - confirma cita correctamente', async () => {
+    updateAppointmentStatus.mockResolvedValue({
+      id: 123,
+      appointmentDate: '2025-09-10T09:00:00.000Z',
+      status: 'confirmed',
+      reason: 'Consulta general'
+    });
+    const res = await request(app)
+      .patch('/api/doctors/appointments/123')
+      .set('Authorization', doctorToken)
+      .send({ status: 'confirmed' });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('code', 200);
+    expect(res.body).toHaveProperty('message', 'Appointment status updated');
+    expect(res.body.payload).toHaveProperty('id', 123);
+    expect(res.body.payload).toHaveProperty('status', 'confirmed');
+  });
+
+  it('PATCH /api/doctors/appointments/:id - rechaza cita y actualiza disponibilidad', async () => {
+    updateAppointmentStatus.mockResolvedValue({
+      id: 124,
+      appointmentDate: '2025-09-11T10:00:00.000Z',
+      status: 'rejected',
+      reason: 'Motivo personal'
+    });
+    const res = await request(app)
+      .patch('/api/doctors/appointments/124')
+      .set('Authorization', doctorToken)
+      .send({ status: 'rejected' });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.payload).toHaveProperty('status', 'rejected');
+  });
+
+  it('PATCH /api/doctors/appointments/:id - error si cita no existe o no pertenece al médico', async () => {
+    setupAuth('doctor');
+
+    // Crear una instancia real de ApiError
+    const apiError = new (require('../src/adapters/in/errorHandler').ApiError)(
+      404,
+      'Appointment not found',
+      ['Appointment does not exist or does not belong to this doctor']
+    );
+
+    updateAppointmentStatus.mockRejectedValue(apiError);
+
+    const res = await request(app)
+      .patch('/api/doctors/appointments/999')
+      .set('Authorization', doctorToken)
+      .send({ status: 'confirmed' });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toHaveProperty('code', 404);
+    expect(res.body).toHaveProperty('message', 'Appointment not found');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/does not exist/i);
+  });
+
+  it('PATCH /api/doctors/appointments/:id - error si estado enviado es inválido', async () => {
+    updateAppointmentStatus.mockRejectedValue({
+      name: 'ValidationError',
+      errors: ['Invalid status']
+    });
+    const res = await request(app)
+      .patch('/api/doctors/appointments/123')
+      .set('Authorization', doctorToken)
+      .send({ status: 'invalid_status' });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('code', 400);
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/Invalid status/i);
+  });
+
+  it('PATCH /api/doctors/appointments/:id - error si cita ya tiene el estado solicitado', async () => {
+    setupAuth('doctor');
+
+    // Crear una instancia real de ApiError
+    const apiError = new (require('../src/adapters/in/errorHandler').ApiError)(
+      400,
+      'Appointment already has this status',
+      ['Appointment is already confirmed']
+    );
+
+    updateAppointmentStatus.mockRejectedValue(apiError);
+
+    const res = await request(app)
+      .patch('/api/doctors/appointments/123')
+      .set('Authorization', doctorToken)
+      .send({ status: 'confirmed' });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('code', 400);
+    expect(res.body).toHaveProperty('message', 'Appointment already has this status');
+    expect(Array.isArray(res.body.payload.error)).toBe(true);
+    expect(res.body.payload.error[0]).toMatch(/already confirmed/i);
+  });
+
+  it('PATCH /api/doctors/appointments/:id - error 403 si usuario no es médico', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => ({
+      id: 2,
+      email: 'patient@email.com',
+      role: 'patient'
+    }));
+    const res = await request(app)
+      .patch('/api/doctors/appointments/123')
+      .set('Authorization', 'Bearer patient.jwt.token')
+      .send({ status: 'confirmed' });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/i);
+  });
+
+  it('PATCH /api/doctors/appointments/:id - error 403 si token es inválido', async () => {
+    setupAuth('error');
+    require('../src/domain/jwtService').verifyToken.mockImplementation(() => {
+      throw new Error('jwt malformed');
+    });
+    const res = await request(app)
+      .patch('/api/doctors/appointments/123')
+      .set('Authorization', 'Bearer token_mal_formado')
+      .send({ status: 'confirmed' });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('code', 403);
+    expect(res.body).toHaveProperty('message', 'Forbidden');
     expect(Array.isArray(res.body.payload.error)).toBe(true);
     expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
   });

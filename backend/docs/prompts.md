@@ -1530,3 +1530,229 @@ module.exports = { createAppointment };
 
 Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para la historia de usuario denomidada "Gestionar agenda y disponibilidad", empezaremos con su implementación.
+En cuanto al proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a implementar la historia de usuario y su serie de tickets para gestionar la agenda de los especialistas
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+
+
+# Prompt para ChatGPT 4.1: Implementación de endpoints para gestión de agenda y disponibilidad del médico especialista
+
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest (usar mocks)  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **JWT:** Usar jsonwebtoken, autenticación obligatoria para endpoints de médico  
+> **Swagger:** Documentar todos los endpoints y ejemplos de respuesta  
+> **Internacionalización:** Respuestas en inglés  
+> **Notificaciones:** Agregar comentarios en el código donde se debe implementar el envío de notificaciones en tickets futuros
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Revisa el modelo de datos, PRD y código fuente para ubicar la ruta, controlador y servicio correctos, siguiendo arquitectura hexagonal.
+   - Los controladores solo orquestan la llamada a los casos de uso y manejan la respuesta estándar.
+   - La lógica de negocio debe estar en servicios de dominio.
+
+2. **Diseño e implementación de endpoints REST**
+   - Implementa los endpoints:
+     - `GET /api/doctor/availability`
+       - Retorna los rangos de fechas y horas disponibles del médico.
+       - Formato: días de la semana y rangos de horas (`start_time`, `end_time`).
+     - `POST /api/doctor/availability`
+       - Permite definir o modificar disponibilidad.
+       - Recibe días de la semana y rangos de horas.
+       - Permite bloquear fechas específicas por motivos personales.
+     - `GET /api/doctor/appointments`
+       - Retorna el listado de citas agendadas, incluyendo información relevante del paciente y estado de la cita.
+       - Permite filtrar por fecha y estado (consultar PRD).
+     - `PATCH /api/doctor/appointments/:id`
+       - Permite confirmar o rechazar cita.
+       - Cambia el estado de la cita a "confirmed" o "rejected".
+       - Actualiza la disponibilidad si la cita es rechazada.
+       - // TODO: Implementar notificación al paciente en tickets futuros.
+   - Todos los endpoints requieren autenticación y rol de médico especialista.
+   - Cumple con la LFPDPPP y buenas prácticas de seguridad.
+
+3. **Validaciones y controles de acceso**
+   - Usa Yup para validaciones de datos de entrada.
+   - Implementa middleware de autenticación y control de acceso para verificar el rol de médico.
+   - Devuelve mensajes claros y específicos en inglés.
+   - Implementa manejo de errores con middleware global y clases customizadas.
+
+4. **Documentación Swagger**
+   - Documenta todos los endpoints en Swagger:
+     - Descripción de funcionalidad y requisitos de autenticación.
+     - Parámetros de entrada y ruta.
+     - Ejemplo de petición y respuesta.
+     - Estructura de los datos retornados (disponibilidad, citas, estado de cita).
+     - Campos sensibles y controles de acceso.
+     - Posibles errores y mensajes de validación.
+
+5. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para todos los endpoints usando Jest y Supertest.
+   - Usa mocks para dependencias externas.
+   - Casos a cubrir:
+     - Definición y modificación exitosa de disponibilidad.
+     - Consulta de citas y disponibilidad con usuario autenticado.
+     - Confirmación y rechazo de citas.
+     - Validación de permisos y control de acceso.
+     - Manejo de errores por fechas bloqueadas, citas inexistentes o estados inválidos.
+
+---
+
+## Ejemplo de estructura base para el servicio y endpoints
+
+```js
+// filepath: src/domain/doctorAvailabilityService.js
+const yup = require('yup');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const availabilitySchema = yup.object().shape({
+  daysOfWeek: yup.array().of(yup.string().required()).required(),
+  ranges: yup.array().of(
+    yup.object().shape({
+      startTime: yup.date().required(),
+      endTime: yup.date().required(),
+      blocked: yup.boolean().default(false),
+    })
+  ).required(),
+});
+
+const setAvailability = async ({ doctorId, daysOfWeek, ranges }) => {
+  // Validar datos con Yup
+  // Registrar o modificar disponibilidad en la base de datos
+  // Bloquear fechas específicas si 'blocked' es true
+  // Retornar disponibilidad actualizada
+};
+
+const getAvailability = async (doctorId) => {
+  // Consultar disponibilidad actual del médico
+  // Retornar días de la semana y rangos de horas
+};
+
+module.exports = { setAvailability, getAvailability };
+```
+
+```js
+// filepath: src/domain/doctorAppointmentService.js
+const yup = require('yup');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const getAppointments = async ({ doctorId, date, status }) => {
+  // Consultar citas agendadas filtrando por fecha y estado
+  // Retornar información relevante del paciente y estado de la cita
+};
+
+const updateAppointmentStatus = async ({ appointmentId, doctorId, status }) => {
+  // Validar estado ("confirmed" o "rejected")
+  // Actualizar estado en la base de datos
+  // Si es "rejected", actualizar disponibilidad
+  // // TODO: Notificar al paciente sobre el cambio de estado
+  // Retornar cita actualizada
+};
+
+module.exports = { getAppointments, updateAppointmentStatus };
+```
+
+```js
+// filepath: src/adapters/in/doctorRoutes.js
+const doctorAvailabilityService = require('../../domain/doctorAvailabilityService');
+const doctorAppointmentService = require('../../domain/doctorAppointmentService');
+
+const getAvailability = async (req, res, next) => {
+  try {
+    const doctorId = req.user.id; // obtenido del JWT
+    const result = await doctorAvailabilityService.getAvailability(doctorId);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const setAvailability = async (req, res, next) => {
+  try {
+    const doctorId = req.user.id;
+    const { daysOfWeek, ranges } = req.body;
+    const result = await doctorAvailabilityService.setAvailability({ doctorId, daysOfWeek, ranges });
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAppointments = async (req, res, next) => {
+  try {
+    const doctorId = req.user.id;
+    const { date, status } = req.query;
+    const result = await doctorAppointmentService.getAppointments({ doctorId, date, status });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateAppointmentStatus = async (req, res, next) => {
+  try {
+    const doctorId = req.user.id;
+    const appointmentId = req.params.id;
+    const { status } = req.body;
+    const result = await doctorAppointmentService.updateAppointmentStatus({ appointmentId, doctorId, status });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getAvailability, setAvailability, getAppointments, updateAppointmentStatus };
+```
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Product Backlog](docs/product_backlog.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de los requerimientos
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso dime que archivo se a modificar o agregar, muestrame el codigo a agregar o reemplazar y dime en donde lo debo colocar
+- Muestrame la lista de pasos a ejecutar antes de realizar la implementación
+
+Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

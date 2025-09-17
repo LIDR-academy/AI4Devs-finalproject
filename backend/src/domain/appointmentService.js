@@ -29,9 +29,6 @@ async function createAppointment({ doctorId, patientId, appointmentDate, reason 
     throw new ApiError(400, 'Invalid appointment time', ['Appointments must be scheduled at the start of the hour (e.g., 10:00, 11:00)']);
   }
 
-  // Validación futura: horario laboral del especialista
-  // TODO: Implement doctor working hours validation when availability structure is defined
-
   // 1. Verificar que el doctor exista y esté activo
   const doctor = await prisma.doctor.findUnique({
     where: { id: doctorId },
@@ -50,7 +47,40 @@ async function createAppointment({ doctorId, patientId, appointmentDate, reason 
     throw new ApiError(404, 'Patient not found', ['Patient not found or inactive']);
   }
 
-  // 3. Validar disponibilidad y conflictos de horario
+  // Validar que la cita esté dentro del horario disponible del médico
+  // 1. Obtener el día de la semana de la cita (0 = domingo, 6 = sábado)
+  const appointmentDay = dateObj.getDay();
+  const appointmentHour = dateObj.getHours();
+
+  // 2. Consultar bloques de disponibilidad del médico para ese día
+  const availabilities = await prisma.availability.findMany({
+    where: {
+      doctor_id: doctorId,
+      day_of_week: appointmentDay,
+      is_available: true
+    }
+  });
+
+  // 3. Verificar si la hora de la cita está dentro de algún bloque disponible
+  const isWithinAvailability = availabilities.some(avail => {
+    const start = new Date(avail.start_time);
+    const end = new Date(avail.end_time);
+    // Solo comparar la hora (ignorar fecha)
+    return (
+      appointmentHour >= start.getHours() &&
+      appointmentHour < end.getHours()
+    );
+  });
+
+  if (!isWithinAvailability) {
+    throw new ApiError(
+      400,
+      "Appointment time is outside doctor's available hours",
+      ["Appointment time is outside doctor's available hours"]
+    );
+  }
+
+  // 4. Validar disponibilidad y conflictos de horario
   // Solo considerar citas en estado "pending" y "confirmed"
   const conflictingDoctorAppointment = await prisma.appointment.findFirst({
     where: {

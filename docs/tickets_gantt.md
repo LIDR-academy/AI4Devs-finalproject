@@ -70,12 +70,12 @@ gantt
     Crear pruebas unitarias para el endpoint de agendar cita con especialista :done, des10.5, 2025-09-04, 1h
 
     section 11. Gestionar agenda y disponibilidad [US-8]
-    Diseñar el endpoint para gestionar agenda y disponibilidad :des11.1, 2025-09-04, 1h
-    Implementar la lógica para definir y modificar disponibilidad :des11.2, 2025-09-05, 2h
-    Implementar la lógica para consultar citas agendadas y disponibilidad actual :des11.3, 2025-09-05, 2h
-    Implementar la lógica para confirmar o rechazar citas agendadas :des11.4, 2025-09-05, 1h
-    Documentar los endpoints para gestión de agenda y disponibilidad :des11.5, 2025-09-06, 1h
-    Crear pruebas unitarias para los endpoints de gestión de agenda y disponibilidad :des11.6, 2025-09-06, 1h
+    Diseñar el endpoint para gestionar agenda y disponibilidad :done, des11.1, 2025-09-04, 1h
+    Implementar la lógica para definir y modificar disponibilidad :done,des11.2, 2025-09-05, 2h
+    Implementar la lógica para consultar citas agendadas y disponibilidad actual :done,des11.3, 2025-09-05, 2h
+    Implementar la lógica para confirmar o rechazar citas agendadas :done, des11.4, 2025-09-05, 1h
+    Documentar los endpoints para gestión de agenda y disponibilidad :done, des11.5, 2025-09-06, 1h
+    Crear pruebas unitarias para los endpoints de gestión de agenda y disponibilidad :done, des11.6, 2025-09-06, 1h
 
     section 12. Ver listado de próximas citas [US-9]
     Diseñar el endpoint para ver listado de próximas citas :des12.1, 2025-09-06, 1h

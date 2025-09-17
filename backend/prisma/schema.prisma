@@ -42,6 +42,7 @@ model Doctor {
   specialties  DoctorSpecialty[]
   appointments Appointment[]
   ratings      Rating[]
+  availabilities Availability[]
 }
 
 model Patient {
@@ -158,4 +159,19 @@ model State {
 
   cities   City[]
   locations Location[]
+}
+
+model Availability {
+  id           Int      @id @default(autoincrement())
+  doctor_id    Int
+  day_of_week  Int
+  start_time   DateTime
+  end_time     DateTime
+  is_available Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  doctor       Doctor   @relation(fields: [doctor_id], references: [id])
+
+  @@index([doctor_id])
 }

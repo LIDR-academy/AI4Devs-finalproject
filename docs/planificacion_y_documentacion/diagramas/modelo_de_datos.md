@@ -99,6 +99,16 @@ erDiagram
         int id PK "required"
         string name "required"
     }
+    AVAILABILITY {
+        int id PK "required"
+        int doctor_id FK "required"
+        int day_of_week "required"
+        datetime start_time "required"
+        datetime end_time "required"
+        boolean is_available "required"
+        datetime created_at "required, default: now()"
+        datetime updated_at "required, default: now()"
+    }
 
     USER ||--o| DOCTOR : has
     USER ||--o| PATIENT : has
@@ -115,4 +125,6 @@ erDiagram
     LOCATION }o--|| CITY : "belongs to"
     LOCATION }o--|| STATE : "belongs to"
     CITY }o--|| STATE : "belongs to"
+    DOCTOR ||--o{ AVAILABILITY : has
+
 ```

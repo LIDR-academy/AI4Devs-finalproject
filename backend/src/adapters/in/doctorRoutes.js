@@ -3,6 +3,11 @@ const router = express.Router();
 const { searchDoctors } = require('../../domain/doctorService');
 const { getDoctorProfile } = require('../../application/getDoctorProfile');
 const { getDoctorComments } = require('../../application/getDoctorComments');
+const { setAvailability, getAvailability } = require('../../domain/doctorAvailabilityService');
+const { getAppointments, updateAppointmentStatus } = require('../../domain/doctorAppointmentService');
+const { requireDoctorRole } = require('./authMiddleware');
+
+const { ApiError } = require('./errorHandler');
 const yup = require('yup');
 
 // Esquema de validación Yup para búsqueda
@@ -42,6 +47,61 @@ router.get('/search', async (req, res, next) => {
       return next(err);
     }
     next(err);
+  }
+});
+
+// GET /api/doctor/availability
+router.get('/availability', requireDoctorRole, async (req, res, next) => {
+  console.log(req.user.id);
+  try {
+    const doctorId = req.user.id;
+    const result = await getAvailability(doctorId);
+    res.locals.message = 'success';
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+// POST /api/doctor/availability
+router.post('/availability', requireDoctorRole, async (req, res, next) => {
+  try {
+    const doctorId = req.user.id;
+    const { daysOfWeek, ranges } = req.body;
+    const result = await setAvailability({ doctorId, daysOfWeek, ranges });
+    res.locals.message = 'Availability updated';
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/doctor/appointments
+router.get('/appointments', requireDoctorRole, async (req, res, next) => {
+  try {
+    const doctorId = req.user.id;
+    const { date, status } = req.query;
+    const result = await getAppointments({ doctorId, date, status });
+    res.locals.message = 'success';
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/doctor/appointments/:id
+router.patch('/appointments/:id', requireDoctorRole, async (req, res, next) => {
+  try {
+    const doctorId = req.user.id;
+    const appointmentId = Number(req.params.id);
+    const { status } = req.body;
+    const result = await updateAppointmentStatus({ appointmentId, doctorId, status });
+    res.locals.message = 'Appointment status updated';
+    res.json(result);
+    // TODO: Implement notification to patient in future tickets
+  } catch (error) {
+    next(error);
   }
 });
 

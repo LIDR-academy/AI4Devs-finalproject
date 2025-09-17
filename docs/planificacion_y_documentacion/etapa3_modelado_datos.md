@@ -143,6 +143,19 @@ Catálogo de estados de México.
 - **id**: Identificador único del estado (PK)
 - **name**: Nombre del estado
 
+### 2.12. AVAILABILITY (Disponibilidad)
+Horarios disponibles de los médicos.
+
+**Campos principales:**
+- **id**: Identificador único (PK)
+- **doctor_id**: Identificador del médico (FK)
+- **day_of_week**: Día de la semana (1-7)
+- **start_time**: Hora de inicio (DateTime)
+- **end_time**: Hora de fin (DateTime)
+- **is_available**: Disponibilidad (booleano)
+- **created_at**: Fecha de creación
+- **updated_at**: Fecha de última actualización
+
 ---
 
 ## 3. Diagrama de Entidad-Relación
@@ -248,6 +261,16 @@ erDiagram
         int id PK "required"
         string name "required"
     }
+    AVAILABILITY {
+        int id PK "required"
+        int doctor_id FK "required"
+        int day_of_week "required"
+        datetime start_time "required"
+        datetime end_time "required"
+        boolean is_available "required"
+        datetime created_at "required, default: now()"
+        datetime updated_at "required, default: now()"
+    }
 
     USER ||--o| DOCTOR : has
     USER ||--o| PATIENT : has
@@ -264,6 +287,7 @@ erDiagram
     LOCATION }o--|| CITY : "belongs to"
     LOCATION }o--|| STATE : "belongs to"
     CITY }o--|| STATE : "belongs to"
+    DOCTOR ||--o{ AVAILABILITY : has
 
 ```
 
@@ -274,6 +298,7 @@ erDiagram
 - **USER → DOCTOR/PATIENT**: Relación uno a uno. Un usuario puede ser un médico o un paciente.
 - **DOCTOR ↔ SPECIALTY**: Relación muchos a muchos a través de DOCTOR_SPECIALTY. Un médico puede tener múltiples especialidades, y una especialidad puede ser ejercida por múltiples médicos.
 - **DOCTOR ↔ PATIENT**: Relación muchos a muchos a través de APPOINTMENT. Un médico puede atender a múltiples pacientes, y un paciente puede consultar a múltiples médicos.
+- **DOCTOR ← AVAILABILITY**: Relación uno a muchos. Un médico puede tener múltiples horarios de disponibilidad.
 - **APPOINTMENT → RATING**: Relación uno a muchos. Una cita puede generar múltiples valoraciones.
 - **USER ← NOTIFICATION**: Relación uno a muchos. Un usuario puede recibir múltiples notificaciones.
 - Cada **DOCTOR** y **PATIENT** tiene una relación uno a uno con una **LOCATION**.
@@ -318,18 +343,7 @@ Servicios específicos ofrecidos por los médicos.
 
 **Relación**: Muchos a muchos con DOCTOR a través de DOCTOR_SERVICE.
 
-### 5.4. AVAILABILITY (Disponibilidad)
-Horarios disponibles de los médicos.
-
-**Campos principales:**
-- **id**: Identificador único (PK)
-- **doctor_id**: Identificador del médico (FK)
-- **day_of_week**: Día de la semana (1-7)
-- **start_time**: Hora de inicio
-- **end_time**: Hora de fin
-- **is_available**: Disponibilidad
-
-### 5.5. MEDICAL_CENTER (Centro médico)
+### 5.4. MEDICAL_CENTER (Centro médico)
 Instalaciones donde los médicos atienden.
 
 **Campos principales:**
@@ -341,7 +355,7 @@ Instalaciones donde los médicos atienden.
 
 **Relación**: Muchos a muchos con DOCTOR a través de DOCTOR_MEDICAL_CENTER.
 
-### 5.6. PAYMENT (Pago)
+### 5.5. PAYMENT (Pago)
 Gestiona los pagos asociados a las citas.
 
 **Campos principales:**

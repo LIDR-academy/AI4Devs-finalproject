@@ -26,4 +26,21 @@ function authMiddleware(req, res, next) {
   next();
 }
 
+/**
+ * Middleware para verificar que el usuario autenticado es médico especialista.
+ * Si no cumple, retorna error 403 con mensaje en inglés.
+ */
+function requireDoctorRole(req, res, next) {
+  if (!req.user || req.user.role !== 'doctor') {
+    // Mensaje estándar y formato internacionalizado
+    return res.status(403).json({
+      code: 403,
+      message: 'Forbidden',
+      payload: { error: ['Doctor authentication required'] }
+    });
+  }
+  next();
+}
+
 module.exports = authMiddleware;
+module.exports.requireDoctorRole = requireDoctorRole;
