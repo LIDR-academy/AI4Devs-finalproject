@@ -3,6 +3,7 @@ const router = express.Router();
 const { searchDoctors } = require('../../domain/doctorService');
 const { getDoctorProfile } = require('../../application/getDoctorProfile');
 const { getDoctorComments } = require('../../application/getDoctorComments');
+const { getDoctorUpcomingAppointments } = require('../../application/getDoctorUpcomingAppointments');
 const { setAvailability, getAvailability } = require('../../domain/doctorAvailabilityService');
 const { getAppointments, updateAppointmentStatus } = require('../../domain/doctorAppointmentService');
 const { requireDoctorRole } = require('./authMiddleware');
@@ -77,15 +78,50 @@ router.post('/availability', requireDoctorRole, async (req, res, next) => {
   }
 });
 
+// Esquema de validación Yup para consulta de citas (incluye paginación)
+const appointmentsQuerySchema = yup.object().shape({
+  date: yup.date().optional(),
+  status: yup.string().oneOf(['pending', 'confirmed', 'rejected']).optional(),
+  page: yup.number().integer().positive().default(1),
+  limit: yup.number().integer().positive().max(50).default(10)
+});
+
 // GET /api/doctor/appointments
 router.get('/appointments', requireDoctorRole, async (req, res, next) => {
   try {
+    // Validar parámetros de consulta
+    const validated = await appointmentsQuerySchema.validate(
+      {
+        date: req.query.date,
+        status: req.query.status,
+        upcoming: false,
+        page: req.query.page ? Number(req.query.page) : 1,
+        limit: req.query.limit ? Number(req.query.limit) : 10
+      },
+      { abortEarly: false }
+    );
+
     const doctorId = req.user.id;
-    const { date, status } = req.query;
-    const result = await getAppointments({ doctorId, date, status });
+
+    // Llama al servicio de dominio con los parámetros validados
+    const result = await getAppointments({
+      doctorId,
+      date: validated.date,
+      status: validated.status,
+      upcoming: validated.upcoming,
+      page: validated.page,
+      limit: validated.limit
+    });
+
     res.locals.message = 'success';
     res.json(result);
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      error.statusCode = 400;
+      error.errors = error.errors || ['Invalid query parameters'];
+      error.message = 'Bad Request';
+      return next(error);
+    }
     next(error);
   }
 });
@@ -100,6 +136,28 @@ router.patch('/appointments/:id', requireDoctorRole, async (req, res, next) => {
     res.locals.message = 'Appointment status updated';
     res.json(result);
     // TODO: Implement notification to patient in future tickets
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/doctors/upcoming-appointments
+router.get('/upcoming-appointments', requireDoctorRole, async (req, res, next) => {
+  try {
+    const doctorId = req.user.id;
+    const { date, status, page = 1, limit = 10 } = req.query;
+
+    // Orquestar el caso de uso
+    const result = await getDoctorUpcomingAppointments({
+      doctorId,
+      date,
+      status,
+      page: Number(page),
+      limit: Number(limit)
+    });
+
+    res.locals.message = 'success';
+    res.json(result);
   } catch (error) {
     next(error);
   }

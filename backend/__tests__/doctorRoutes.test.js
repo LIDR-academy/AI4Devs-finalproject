@@ -27,12 +27,18 @@ jest.mock('../src/domain/doctorAppointmentService', () => ({
   updateAppointmentStatus: jest.fn()
 }));
 
+// Mock de autenticación y casos de uso
+jest.mock('../src/application/getDoctorUpcomingAppointments');
+
+
 // Importaciones después de los mocks
 const { searchDoctors } = require('../src/domain/doctorService');
 const { getDoctorProfile } = require('../src/application/getDoctorProfile');
 const { getDoctorComments } = require('../src/application/getDoctorComments');
 const { getAvailability, setAvailability } = require('../src/domain/doctorAvailabilityService');
 const { getAppointments, updateAppointmentStatus } = require('../src/domain/doctorAppointmentService');
+const { getDoctorUpcomingAppointments } = require('../src/application/getDoctorUpcomingAppointments');
+
 
 // Constantes útiles para las pruebas
 const doctorToken = 'Bearer doctor.jwt.token';
@@ -949,5 +955,206 @@ describe('Endpoints de confirmación/rechazo de citas para médicos especialista
     expect(res.body).toHaveProperty('message', 'Forbidden');
     expect(Array.isArray(res.body.payload.error)).toBe(true);
     expect(res.body.payload.error[0]).toMatch(/Authentication required/i);
+  });
+});
+
+
+describe('GET /api/doctors/upcoming-appointments', () => {
+  const doctorToken = 'Bearer valid-doctor-token';
+  const patientToken = 'Bearer valid-patient-token';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setupAuth('doctor');
+  });
+
+  it('Consulta exitosa de próximas citas (estructura y datos)', async () => {
+    getDoctorUpcomingAppointments.mockResolvedValue({
+      results: [
+        {
+          id: 1,
+          appointmentDate: '2025-09-18T10:00:00.000Z',
+          status: 'pending',
+          reason: 'Consulta general',
+          patient: {
+            id: 5,
+            firstName: 'Ana',
+            lastName: 'García',
+            email: 'ana@email.com',
+            phone: '555-1234',
+            gender: 'female'
+          }
+        }
+      ],
+      pagination: { total: 1, page: 1, limit: 10, totalPages: 1 }
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.code).toBe(200);
+    expect(res.body.payload.results).toHaveLength(1);
+    expect(res.body.payload.results[0].patient).toHaveProperty('email');
+    expect(res.body.payload.results[0].patient).toHaveProperty('gender');
+    expect(res.body.payload.pagination).toMatchObject({ total: 1, page: 1, limit: 10, totalPages: 1 });
+  });
+
+  it('Filtrado por fecha', async () => {
+    getDoctorUpcomingAppointments.mockResolvedValue({
+      results: [],
+      pagination: { total: 0, page: 1, limit: 10, totalPages: 0 }
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments?date=2025-09-18')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.payload.results).toEqual([]);
+  });
+
+  it('Filtrado por estado', async () => {
+    getDoctorUpcomingAppointments.mockResolvedValue({
+      results: [
+        {
+          id: 2,
+          appointmentDate: '2025-09-19T12:00:00.000Z',
+          status: 'confirmed',
+          reason: 'Revisión anual',
+          patient: {
+            id: 6,
+            firstName: 'Luis',
+            lastName: 'Martínez',
+            email: 'luis@email.com',
+            phone: '555-5678',
+            gender: 'male'
+          }
+        }
+      ],
+      pagination: { total: 1, page: 1, limit: 10, totalPages: 1 }
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments?status=confirmed')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.payload.results[0].status).toBe('confirmed');
+  });
+
+  it('Paginación correcta', async () => {
+    getDoctorUpcomingAppointments.mockResolvedValue({
+      results: [],
+      pagination: { total: 25, page: 2, limit: 10, totalPages: 3 }
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments?page=2&limit=10')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.payload.pagination.page).toBe(2);
+    expect(res.body.payload.pagination.limit).toBe(10);
+    expect(res.body.payload.pagination.totalPages).toBe(3);
+  });
+
+  it('Acceso denegado sin autenticación', async () => {
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments');
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body.code).toBe(403);
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/);
+  });
+
+  it('Acceso denegado con usuario no médico', async () => {
+    setupAuth('patient');
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments')
+      .set('Authorization', patientToken);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body.code).toBe(403);
+    expect(res.body.payload.error[0]).toMatch(/Doctor authentication required/);
+  });
+
+  it('Validación de parámetros inválidos', async () => {
+    getDoctorUpcomingAppointments.mockImplementation(() => {
+      throw { name: 'ValidationError', errors: ['limit must be a positive number'] };
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments?limit=-1')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.code).toBe(400);
+    expect(res.body.payload.error[0]).toMatch(/limit must be a positive number/);
+  });
+
+  it('Sin próximas citas', async () => {
+    getDoctorUpcomingAppointments.mockResolvedValue({
+      results: [],
+      pagination: { total: 0, page: 1, limit: 10, totalPages: 0 }
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.payload.results).toEqual([]);
+    expect(res.body.payload.pagination.total).toBe(0);
+  });
+
+  it('Privacidad: solo datos relevantes del paciente', async () => {
+    getDoctorUpcomingAppointments.mockResolvedValue({
+      results: [
+        {
+          id: 3,
+          appointmentDate: '2025-09-20T09:00:00.000Z',
+          status: 'pending',
+          reason: 'Consulta',
+          patient: {
+            id: 7,
+            firstName: 'Maria',
+            lastName: 'Lopez',
+            email: 'maria@email.com',
+            phone: '555-9999',
+            gender: 'female'
+          }
+        }
+      ],
+      pagination: { total: 1, page: 1, limit: 10, totalPages: 1 }
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(200);
+    const patient = res.body.payload.results[0].patient;
+    expect(Object.keys(patient)).toEqual(
+      expect.arrayContaining(['id', 'firstName', 'lastName', 'email', 'phone', 'gender'])
+    );
+    // No debe incluir dirección ni datos médicos
+    expect(patient).not.toHaveProperty('address');
+    expect(patient).not.toHaveProperty('medicalData');
+  });
+
+  it('Manejo de errores inesperados', async () => {
+    getDoctorUpcomingAppointments.mockImplementation(() => {
+      throw new Error('Unexpected error');
+    });
+
+    const res = await request(app)
+      .get('/api/doctors/upcoming-appointments')
+      .set('Authorization', doctorToken);
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.code).toBe(500);
+    expect(res.body.message).toMatch(/Internal Server Error|Unexpected error/);
   });
 });

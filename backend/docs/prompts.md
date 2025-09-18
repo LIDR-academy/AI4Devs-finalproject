@@ -1756,3 +1756,149 @@ module.exports = { getAvailability, setAvailability, getAppointments, updateAppo
 
 Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para la historia de usuario denomidada "Ver listado de próximas citas", empezaremos con su implementación.
+En cuanto al proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a implementar la historia de usuario y su serie de tickets para ver el listado de proximas citas.
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+
+# Prompt para ChatGPT 4.1: Implementación de endpoint para ver listado de próximas citas del médico especialista
+
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest (usar mocks)  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **JWT:** Usar jsonwebtoken, autenticación obligatoria para endpoints de médico  
+> **Swagger:** Documentar el endpoint y ejemplos de respuesta  
+> **Internacionalización:** Respuestas en inglés  
+> **Privacidad:** Cumplir LFPDPPP, mostrar información relevante del paciente solo a médicos autenticados
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Revisa el modelo de datos, PRD y código fuente para ubicar el adaptador de entrada, aplicación y dominio correctos, siguiendo arquitectura hexagonal.
+   - Los adaptadores de entrada solo orquestan la llamada a los casos de uso y manejan la respuesta estándar.
+   - La lógica de negocio debe estar en servicios de dominio y casos de uso en la capa de aplicación.
+
+2. **Diseño e implementación del endpoint REST**
+   - Implementa el endpoint:
+     - `GET /api/doctor/upcoming-appointments`
+       - Requiere autenticación de médico especialista.
+       - Retorna el listado de citas futuras (estado: pending/confirmed) ordenadas por fecha.
+       - Incluye información relevante del paciente (id, nombre, teléfono, motivo de consulta) y detalles de la cita (fecha, hora, estado).
+       - Permite filtrar por fecha y estado.
+       - Cumple con la LFPDPPP mostrando solo información relevante y permitida.
+   - Consulta las entidades APPOINTMENT, PATIENT, DOCTOR usando Prisma.
+   - Optimiza la consulta para responder en menos de 2 segundos.
+
+3. **Validaciones y controles de acceso**
+   - Usa Yup para validaciones de datos de entrada (filtros de fecha y estado).
+   - Implementa middleware de autenticación y control de acceso para verificar el rol de médico.
+   - Devuelve mensajes claros y específicos en inglés.
+   - Implementa manejo de errores con middleware global y clases customizadas.
+
+4. **Documentación Swagger**
+   - Documenta el endpoint en Swagger:
+     - Descripción de funcionalidad y requisitos de autenticación.
+     - Parámetros de consulta y ruta.
+     - Ejemplo de petición y respuesta.
+     - Estructura de los datos retornados (información relevante del paciente y cita).
+     - Campos sensibles y controles de acceso conforme a la LFPDPPP.
+     - Posibles errores y mensajes de validación.
+
+5. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para el endpoint usando Jest y Supertest.
+   - Usa mocks para dependencias externas.
+   - Casos a cubrir:
+     - Consulta exitosa de próximas citas con usuario autenticado.
+     - Filtrado por fecha y estado.
+     - Validación de permisos y control de acceso.
+     - Manejo de errores por citas inexistentes, estados inválidos o datos sensibles.
+
+---
+
+## Ejemplo de estructura base para el adaptador y servicio
+
+```js
+// filepath: src/application/getDoctorUpcomingAppointments.js
+const yup = require('yup');
+// Aqui consulta el archivo de dominio correspondiente para obtener los Appointments
+
+const filterSchema = yup.object().shape({
+  date: yup.date().optional(),
+  status: yup.string().oneOf(['pending', 'confirmed']).optional(),
+});
+
+const doctorUpcomingAppointmentsUseCase = async ({ doctorId, date, status }) => {
+  await filterSchema.validate({ date, status });
+  // Lógica de consulta en appointmentRepository
+  return await appointmentRepository.getUpcomingAppointments({ doctorId, date, status });
+};
+
+module.exports = doctorUpcomingAppointmentsUseCase;
+```
+
+```js
+// filepath: src/adapters/in/doctorRoutes.js
+const doctorUpcomingAppointmentsUseCase = require('../../application/getDoctorUpcomingAppointments');
+
+const getUpcomingAppointments = async (req, res, next) => {
+  try {
+    const doctorId = req.user.id; // obtenido del JWT
+    const { date, status } = req.query;
+    const result = await doctorUpcomingAppointmentsUseCase({ doctorId, date, status });
+    res.status(200).json(result);
+  } catch (error) {
+    next(error); // Manejo global de errores
+  }
+};
+
+module.exports = { getUpcomingAppointments };
+```
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Product Backlog](docs/product_backlog.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de los requerimientos
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso dime que archivo se a modificar o agregar, muestrame el codigo a agregar o reemplazar y dime en donde lo debo colocar
+- Muestrame la lista de pasos a ejecutar antes de realizar la implementación
+
+Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

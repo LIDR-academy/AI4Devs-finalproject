@@ -2168,7 +2168,7 @@
           "Doctors"
         ],
         "summary": "Consultar citas agendadas",
-        "description": "Retorna el listado de citas agendadas del médico especialista autenticado. Permite filtrar por fecha y estado. Requiere autenticación y rol de médico.",
+        "description": "Retorna el listado de citas agendadas del médico especialista autenticado. Permite filtrar por fecha, estado y paginación. Requiere autenticación y rol de médico.",
         "security": [
           {
             "bearerAuth": []
@@ -2193,11 +2193,32 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página (por defecto 1)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Resultados por página (por defecto 10, máximo 50)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "maximum": 50
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Listado de citas",
+            "description": "Listado paginado de citas",
             "content": {
               "application/json": {
                 "schema": {
@@ -2212,46 +2233,80 @@
                       "example": "success"
                     },
                     "payload": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "example": 123
-                          },
-                          "appointmentDate": {
-                            "type": "string",
-                            "format": "date-time",
-                            "example": "2025-09-10T09:00:00.000Z"
-                          },
-                          "status": {
-                            "type": "string",
-                            "example": "confirmed"
-                          },
-                          "reason": {
-                            "type": "string",
-                            "example": "Consulta general"
-                          },
-                          "patient": {
+                      "type": "object",
+                      "properties": {
+                        "results": {
+                          "type": "array",
+                          "items": {
                             "type": "object",
                             "properties": {
                               "id": {
                                 "type": "integer",
-                                "example": 5
+                                "example": 123
                               },
-                              "firstName": {
+                              "appointmentDate": {
                                 "type": "string",
-                                "example": "Ana"
+                                "format": "date-time",
+                                "example": "2025-09-10T09:00:00.000Z"
                               },
-                              "lastName": {
+                              "status": {
                                 "type": "string",
-                                "example": "García"
+                                "example": "confirmed"
                               },
-                              "email": {
+                              "reason": {
                                 "type": "string",
-                                "example": "ana@email.com"
+                                "example": "Consulta general"
+                              },
+                              "patient": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "example": 5
+                                  },
+                                  "firstName": {
+                                    "type": "string",
+                                    "example": "Ana"
+                                  },
+                                  "lastName": {
+                                    "type": "string",
+                                    "example": "García"
+                                  },
+                                  "email": {
+                                    "type": "string",
+                                    "example": "ana@email.com"
+                                  },
+                                  "phone": {
+                                    "type": "string",
+                                    "example": "555-1234"
+                                  },
+                                  "gender": {
+                                    "type": "string",
+                                    "example": "female"
+                                  }
+                                }
                               }
+                            }
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "example": 25
+                            },
+                            "page": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "limit": {
+                              "type": "integer",
+                              "example": 10
+                            },
+                            "totalPages": {
+                              "type": "integer",
+                              "example": 3
                             }
                           }
                         }
@@ -2261,24 +2316,364 @@
                 },
                 "examples": {
                   "success": {
-                    "summary": "Listado de citas",
+                    "summary": "Listado paginado de citas",
                     "value": {
                       "code": 200,
                       "message": "success",
-                      "payload": [
-                        {
-                          "id": 123,
-                          "appointmentDate": "2025-09-10T09:00:00.000Z",
-                          "status": "confirmed",
-                          "reason": "Consulta general",
-                          "patient": {
-                            "id": 5,
-                            "firstName": "Ana",
-                            "lastName": "García",
-                            "email": "ana@email.com"
+                      "payload": {
+                        "results": [
+                          {
+                            "id": 123,
+                            "appointmentDate": "2025-09-10T09:00:00.000Z",
+                            "status": "confirmed",
+                            "reason": "Consulta general",
+                            "patient": {
+                              "id": 5,
+                              "firstName": "Ana",
+                              "lastName": "García",
+                              "email": "ana@email.com",
+                              "phone": "555-1234",
+                              "gender": "female"
+                            }
+                          }
+                        ],
+                        "pagination": {
+                          "total": 1,
+                          "page": 1,
+                          "limit": 10,
+                          "totalPages": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación de parámetros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
                           }
                         }
-                      ]
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Error de validación",
+                    "value": {
+                      "code": 400,
+                      "message": "Bad Request",
+                      "payload": {
+                        "error": [
+                          "limit must be a positive number"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acceso denegado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 403
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Acceso denegado",
+                    "value": {
+                      "code": 403,
+                      "message": "Forbidden",
+                      "payload": {
+                        "error": [
+                          "Doctor authentication required"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/doctors/upcoming-appointments": {
+      "get": {
+        "tags": [
+          "Doctors"
+        ],
+        "summary": "Consultar próximas citas del médico especialista",
+        "description": "Retorna el listado de próximas citas (estado: pending/confirmed y fecha futura) del médico especialista autenticado. Permite filtrar por fecha, estado y paginación.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Fecha de la cita (YYYY-MM-DD)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Estado de la cita (pending, confirmed)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "confirmed"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página (por defecto 1)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Resultados por página (por defecto 10, máximo 50)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "maximum": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listado paginado de próximas citas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 200
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "example": 123
+                              },
+                              "appointmentDate": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2025-09-18T10:00:00.000Z"
+                              },
+                              "status": {
+                                "type": "string",
+                                "example": "pending"
+                              },
+                              "reason": {
+                                "type": "string",
+                                "example": "Consulta general"
+                              },
+                              "patient": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "example": 5
+                                  },
+                                  "firstName": {
+                                    "type": "string",
+                                    "example": "Ana"
+                                  },
+                                  "lastName": {
+                                    "type": "string",
+                                    "example": "García"
+                                  },
+                                  "email": {
+                                    "type": "string",
+                                    "example": "ana@email.com"
+                                  },
+                                  "phone": {
+                                    "type": "string",
+                                    "example": "555-1234"
+                                  },
+                                  "gender": {
+                                    "type": "string",
+                                    "example": "female"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "example": 25
+                            },
+                            "page": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "limit": {
+                              "type": "integer",
+                              "example": 10
+                            },
+                            "totalPages": {
+                              "type": "integer",
+                              "example": 3
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Listado paginado de próximas citas",
+                    "value": {
+                      "code": 200,
+                      "message": "success",
+                      "payload": {
+                        "results": [
+                          {
+                            "id": 123,
+                            "appointmentDate": "2025-09-18T10:00:00.000Z",
+                            "status": "pending",
+                            "reason": "Consulta general",
+                            "patient": {
+                              "id": 5,
+                              "firstName": "Ana",
+                              "lastName": "García",
+                              "email": "ana@email.com",
+                              "phone": "555-1234",
+                              "gender": "female"
+                            }
+                          }
+                        ],
+                        "pagination": {
+                          "total": 1,
+                          "page": 1,
+                          "limit": 10,
+                          "totalPages": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación de parámetros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Error de validación",
+                    "value": {
+                      "code": 400,
+                      "message": "Bad Request",
+                      "payload": {
+                        "error": [
+                          "limit must be a positive number"
+                        ]
+                      }
                     }
                   }
                 }

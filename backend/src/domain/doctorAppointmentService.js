@@ -3,62 +3,98 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { ApiError } = require('../adapters/in/errorHandler');
 
-// Validación para actualizar estado de cita
-const statusSchema = yup.object().shape({
-  status: yup.string().oneOf(['confirmed', 'rejected'], 'Invalid status').required('Status is required')
+// Esquema de validación para consulta de citas
+const appointmentsQuerySchema = yup.object().shape({
+  date: yup.date().optional(),
+  status: yup.string().oneOf(['pending', 'confirmed', 'rejected']).optional(),
+  upcoming: yup.boolean().optional(),
+  page: yup.number().integer().positive().default(1),
+  limit: yup.number().integer().positive().max(50).default(10)
 });
 
 /**
- * Consulta citas agendadas del médico, filtrando por fecha y estado.
- * @param {Object} params - { doctorId, date, status }
- * @returns {Array} Listado de citas con información relevante del paciente y estado
+ * Consulta citas del médico, con opción de filtrar solo próximas citas y paginación.
+ * @param {Object} params - { doctorId, date, status, upcoming, page, limit }
+ * @returns {Object} Listado paginado de citas con información relevante del paciente y cita
  */
-async function getAppointments({ doctorId, date, status }) {
+async function getAppointments({ doctorId, date, status, upcoming = false, page = 1, limit = 10 }) {
+  await appointmentsQuerySchema.validate({ date, status, upcoming, page, limit }, { abortEarly: false });
+
   const where = { doctor_id: doctorId };
+
+  // Filtrar por próximas citas si upcoming=true
+  if (upcoming) {
+    const now = new Date();
+    where.appointment_date = { gte: now };
+    where.status = { in: ['pending', 'confirmed'] };
+  }
+
+  // Filtrar por fecha exacta si se envía
   if (date) {
-    // Filtra por fecha exacta (solo día, sin hora)
     const start = new Date(date);
     start.setHours(0, 0, 0, 0);
     const end = new Date(date);
     end.setHours(23, 59, 59, 999);
     where.appointment_date = { gte: start, lte: end };
   }
-  if (status) {
+
+  // Filtrar por estado si se envía y no está en modo upcoming
+  if (status && !upcoming) {
     where.status = status;
   }
 
-  const appointments = await prisma.appointment.findMany({
-    where,
-    include: {
-      patient: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              first_name: true,
-              last_name: true,
-              email: true
+  const [total, appointments] = await Promise.all([
+    prisma.appointment.count({ where }),
+    prisma.appointment.findMany({
+      where,
+      include: {
+        patient: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                first_name: true,
+                last_name: true,
+                email: true
+              }
             }
           }
         }
-      }
-    },
-    orderBy: { appointment_date: 'asc' }
-  });
+      },
+      orderBy: { appointment_date: 'asc' },
+      skip: (page - 1) * limit,
+      take: limit
+    })
+  ]);
 
-  return appointments.map(a => ({
-    id: a.id,
-    appointmentDate: a.appointment_date,
-    status: a.status,
-    reason: a.reason,
-    patient: {
-      id: a.patient.user.id,
-      firstName: a.patient.user.first_name,
-      lastName: a.patient.user.last_name,
-      email: a.patient.user.email
+  return {
+    results: appointments.map(a => ({
+      id: a.id,
+      appointmentDate: a.appointment_date,
+      status: a.status,
+      reason: a.reason,
+      patient: {
+        id: a.patient.user.id,
+        firstName: a.patient.user.first_name,
+        lastName: a.patient.user.last_name,
+        email: a.patient.user.email,
+        phone: a.patient.phone,
+        gender: a.patient.user.gender
+      }
+    })),
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
     }
-  }));
+  };
 }
+
+// Validación para actualizar estado de cita
+const statusSchema = yup.object().shape({
+  status: yup.string().oneOf(['confirmed', 'rejected'], 'Invalid status').required('Status is required')
+});
 
 /**
  * Actualiza el estado de una cita (confirmar o rechazar).
