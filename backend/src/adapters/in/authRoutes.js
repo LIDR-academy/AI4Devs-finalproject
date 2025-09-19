@@ -1,6 +1,8 @@
 const express = require('express');
 const { registerPatient, registerDoctor } = require('../../domain/registerService');
 const { loginUser } = require('../../domain/authService');
+const logger = require('../../config/logger');
+
 
 
 const router = express.Router();
@@ -10,6 +12,8 @@ const router = express.Router();
  * Registro de paciente
  */
 router.post('/register/patient', async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     const result = await registerPatient(req.body);
     res.status(result.code).json(result);
@@ -23,6 +27,8 @@ router.post('/register/patient', async (req, res, next) => {
  * Registro de médico especialista
  */
 router.post('/register/doctor', async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     const result = await registerDoctor(req.body);
     res.status(result.code).json(result);
@@ -36,6 +42,8 @@ router.post('/register/doctor', async (req, res, next) => {
  * Login para pacientes
  */
 router.post('/login/patient', async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     const result = await loginUser(req.body, 'patient');
     res.locals.message = 'Login successful';
@@ -50,6 +58,8 @@ router.post('/login/patient', async (req, res, next) => {
  * Login para médicos especialistas
  */
 router.post('/login/doctor', async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     const result = await loginUser(req.body, 'doctor');
     res.locals.message = 'Login successful';

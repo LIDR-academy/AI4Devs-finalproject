@@ -7,6 +7,8 @@ const { getDoctorUpcomingAppointments } = require('../../application/getDoctorUp
 const { setAvailability, getAvailability } = require('../../domain/doctorAvailabilityService');
 const { getAppointments, updateAppointmentStatus } = require('../../domain/doctorAppointmentService');
 const { requireDoctorRole } = require('./authMiddleware');
+const logger = require('../../config/logger');
+
 
 const { ApiError } = require('./errorHandler');
 const yup = require('yup');
@@ -24,6 +26,8 @@ const searchSchema = yup.object().shape({
 
 // Endpoint de búsqueda de especialistas
 router.get('/search', async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     // Validar parámetros de consulta
     const validated = await searchSchema.validate(req.query, { abortEarly: false, stripUnknown: true });
@@ -53,7 +57,8 @@ router.get('/search', async (req, res, next) => {
 
 // GET /api/doctor/availability
 router.get('/availability', requireDoctorRole, async (req, res, next) => {
-  console.log(req.user.id);
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     const doctorId = req.user.id;
     const result = await getAvailability(doctorId);
@@ -67,6 +72,8 @@ router.get('/availability', requireDoctorRole, async (req, res, next) => {
 
 // POST /api/doctor/availability
 router.post('/availability', requireDoctorRole, async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     const doctorId = req.user.id;
     const { daysOfWeek, ranges } = req.body;
@@ -88,6 +95,8 @@ const appointmentsQuerySchema = yup.object().shape({
 
 // GET /api/doctor/appointments
 router.get('/appointments', requireDoctorRole, async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     // Validar parámetros de consulta
     const validated = await appointmentsQuerySchema.validate(
@@ -128,6 +137,8 @@ router.get('/appointments', requireDoctorRole, async (req, res, next) => {
 
 // PATCH /api/doctor/appointments/:id
 router.patch('/appointments/:id', requireDoctorRole, async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     const doctorId = req.user.id;
     const appointmentId = Number(req.params.id);
@@ -143,6 +154,8 @@ router.patch('/appointments/:id', requireDoctorRole, async (req, res, next) => {
 
 // GET /api/doctors/upcoming-appointments
 router.get('/upcoming-appointments', requireDoctorRole, async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     const doctorId = req.user.id;
     const { date, status, page = 1, limit = 10 } = req.query;
@@ -174,6 +187,8 @@ const doctorIdSchema = yup.object({
 
 // Endpoint para consultar perfil de especialista
 router.get('/:id', async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     // Validación de parámetro id
     const validated = await doctorIdSchema.validate(
@@ -237,6 +252,8 @@ const doctorCommentsSchema = yup.object({
 
 // Endpoint para consultar comentarios de un especialista
 router.get('/:id/comments', async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     // Validar parámetros
     const validated = await doctorCommentsSchema.validate(

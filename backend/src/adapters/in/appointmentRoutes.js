@@ -2,6 +2,7 @@ const express = require('express');
 const yup = require('yup');
 const { ApiError } = require('./errorHandler');
 const appointmentService = require('../../domain/appointmentService');
+const logger = require('../../config/logger');
 
 const router = express.Router();
 
@@ -53,6 +54,8 @@ function requirePatientRole(req, res, next) {
 
 // POST /api/appointments
 router.post('/', requirePatientRole, async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
   try {
     // Validar datos de entrada
     await appointmentSchema.validate(req.body, { abortEarly: false });

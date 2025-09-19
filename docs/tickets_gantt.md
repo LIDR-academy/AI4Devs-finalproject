@@ -78,11 +78,11 @@ gantt
     Crear pruebas unitarias para los endpoints de gestión de agenda y disponibilidad :done, des11.6, 2025-09-06, 1h
 
     section 12. Ver listado de próximas citas [US-9]
-    Diseñar el endpoint para ver listado de próximas citas :des12.1, 2025-09-06, 1h
-    Implementar la lógica para consultar el listado de próximas citas :des12.2, 2025-09-06, 2h
-    Documentar el endpoint para ver próximas citas :des12.3, 2025-09-07, 1h
-    Crear pruebas unitarias para el endpoint de próximas citas :des12.4, 2025-09-07, 1h
-    Ticket de despliegue inicial del sistema Buscadoc :des12.5, 2025-09-07, 2h
+    Diseñar el endpoint para ver listado de próximas citas :done, des12.1, 2025-09-06, 1h
+    Implementar la lógica para consultar el listado de próximas citas :done, des12.2, 2025-09-06, 2h
+    Documentar el endpoint para ver próximas citas :done, des12.3, 2025-09-07, 1h
+    Crear pruebas unitarias para el endpoint de próximas citas :done, des12.4, 2025-09-07, 1h
+    Ticket de despliegue inicial del sistema Buscadoc :done, des12.5, 2025-09-07, 2h
 
     section 13. Crear la carpeta frontend e inicializar el proyecto con npm
     Crear carpeta frontend e inicializar proyecto con npm :des13.1, 2025-09-08, 0.5h

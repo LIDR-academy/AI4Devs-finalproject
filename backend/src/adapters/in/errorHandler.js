@@ -1,3 +1,4 @@
+const logger = require('../../config/logger');
 /**
  * Clase customizada para errores API.
  */
@@ -38,7 +39,6 @@ function errorHandler(err, req, res, next) {
 
   // Determina el código de error
   const statusCode = err.statusCode || 500;
-  // Mensaje estándar en inglés
   let message = 'Internal Server Error';
 
   // Mensajes personalizados según código
@@ -50,6 +50,44 @@ function errorHandler(err, req, res, next) {
 
   // Permite personalizar el mensaje desde el error lanzado
   if (err.message) message = err.message;
+
+  // Logging según tipo de error
+  const logPayload = {
+    method: req.method,
+    url: req.originalUrl,
+    user: req.user?.id || 'anonymous',
+    ip: req.ip,
+    params: req.params,
+    query: req.query,
+    body: req.body,
+    error: err.errors || err.message
+  };
+
+  if (statusCode >= 500) {
+    logger.error(`[Error 5xx] ${message}`, logPayload);
+
+    // Respuesta genérica para errores 5xx
+    return res.status(statusCode).json({
+      code: statusCode,
+      message: 'Internal server error. Please contact support.',
+      payload: {
+        error: ['Internal server error. Please contact support.']
+      }
+    });
+  } else if (statusCode >= 400) {
+    logger.warn(`[Error 4xx] ${message}`, logPayload);
+
+    // Respuesta estándar para errores 4xx
+    return res.status(statusCode).json({
+      code: statusCode,
+      message,
+      payload: {
+        error: Array.isArray(err.errors)
+          ? err.errors
+          : [err.errors || err.message || 'Unexpected error']
+      }
+    });
+  }
 
   // Estructura estándar de error
   res.status(statusCode).json({

@@ -1902,3 +1902,38 @@ module.exports = { getUpcomingAppointments };
 
 Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+
+
+
+
+
+Eres un experto en Ingeniero Backend
+# Contexto inicial
+Tenemos una serie de endopoints implementados que estan bien documentados y listos para usar, pero requerimos realizar algunas modificaciones.
+
+# Instrucciones Generales
+Aplicar los siguientes requerimientos para mejorar el contenido de las respuestas de los endpoints y la escritura de logs cumpliendo con los siguientes requerimientos
+
+# Requerimientos funcionales
+1. Agregar logs en los archivos:
+  * Cuando es consumido cada uno de los metodos para tener una trazabilidad
+  * Cuando tenemos errores 4xx y 5xx en el proyecto
+2. Modificar el payload de las respuestas con codigo 5xx para evitar que impriman rutas o código del proyecto y digan un mensaje generico relacionado al error
+
+# Requerimientos tecnicos
+1. Para la impresión de Logs usar el paquere "Pino", el cual ya se encuentra instalado
+
+
+# Mejores Practicas
+1. Seguir las convenciones establecidas en el Product Requeriment Document (PRD)
+
+
+# Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.

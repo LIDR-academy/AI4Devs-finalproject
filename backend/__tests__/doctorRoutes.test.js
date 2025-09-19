@@ -1155,6 +1155,6 @@ describe('GET /api/doctors/upcoming-appointments', () => {
 
     expect(res.statusCode).toBe(500);
     expect(res.body.code).toBe(500);
-    expect(res.body.message).toMatch(/Internal Server Error|Unexpected error/);
+    expect(res.body.message).toMatch(/Internal server error\. Please contact support\./i);
   });
 });
