@@ -175,7 +175,7 @@ git push origin production
 
 Use Jira issue format:
 
-- `AI4DFP-123: [Ticket description]`
+- `US2.1-T3: [Task Title or Description]`
 
 ### PR Description Template
 
