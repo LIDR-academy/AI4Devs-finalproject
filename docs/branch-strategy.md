@@ -180,11 +180,27 @@ Use Jira issue format:
 ### PR Description Template
 
 ```markdown
-## Jira
+## PR Metadata
 
-- **Epic**: [AI4DFP-1](https://your-jira-instance.atlassian.net/browse/AI4DFP-1) - Epic Name
-- **Story**: [AI4DFP-124](https://your-jira-instance.atlassian.net/browse/AI4DFP-124) - Story Name
-- **Issue**: [AI4DFP-123](https://your-jira-instance.atlassian.net/browse/AI4DFP-123)
+- **Task Type**: [DevOps/Backend/Frontend/Documentation]
+- **Breaking Changes**: Yes/No
+- **Dependencies Added/Updated**: Yes/No (list if yes)
+- **Migration Required**: Yes/No
+
+## Jira References
+
+**Task Being Implemented**: `US0.2-T3` <!-- This should match your PR title -->
+
+**Jira Links**:
+
+- **Epic**: [AI4DFP-XX](https://joangarme.atlassian.net/browse/AI4DFP-XX) - Epic Name
+- **Story**: [AI4DFP-XX](https://joangarme.atlassian.net/browse/AI4DFP-XX) - Story Name
+- **Task**: [AI4DFP-XX](https://joangarme.atlassian.net/browse/AI4DFP-XX) - Task Name
+
+<!--
+Tip: Search Jira using the task ID from your PR title
+Or use: Tools > MCP Atlassian > Search with JQL: "summary ~ 'US0.2-T3'"
+-->
 
 ## Summary
 
@@ -196,45 +212,93 @@ Brief description of what this PR accomplishes.
 - Files added/modified/deleted
 - New features or fixes implemented
 
+<!-- Example for dependency updates:
+- Updated requirements.txt with FastAPI 0.104.1
+- Added SQLAlchemy 2.0.23 for database ORM
+- Pinned all versions for reproducibility
+-->
+
+<!-- Example for feature implementation:
+- Implemented user authentication endpoint
+- Added JWT token generation
+- Created user model and schema
+-->
+
 ## Testing
+
+### What was tested:
+
+- Description of testing performed
+
+### Testing checklist (check all that apply):
 
 - [ ] Manual testing completed
 - [ ] Unit tests added/updated
 - [ ] Integration tests pass
 - [ ] No regressions introduced
+- [ ] N/A - Configuration/dependency change only
 
 ## Coverage
 
 | File         | % Stmts | % Branch | % Funcs | % Lines | Uncovered Lines |
 | ------------ | ------- | -------- | ------- | ------- | --------------- |
 | path/to/file | 100%    | 100%     | 100%    | 100%    | -               |
-| path/to/file | 94.11%  | 100%     | 50%     | 94.11%  | 39              |
+
+_Note: If this PR doesn't include testable code (e.g., configuration files, dependencies), mark as N/A_
 
 ## Screenshots/Demo
 
-Include screenshots or demo links for UI changes.
+<!-- Include for UI changes, API endpoint demos, or configuration examples -->
+<!-- Mark as "N/A - [reason]" if not applicable -->
 
 ## Deployment Notes
 
 Any special deployment considerations or environment variables needed.
 
+## Task Type Specific Checklist
+
+### For DevOps Tasks:
+
+- [ ] Dependencies installed and versions pinned
+- [ ] Configuration files validated
+- [ ] Environment setup documented
+
+### For Backend/Frontend Tasks:
+
+- [ ] Unit tests added/updated
+- [ ] Integration tests pass
+- [ ] Code coverage maintained/improved
+
 ## Self-Review Checklist
 
-- [ ] I have tested this code locally
-- [ ] I have added/updated tests for new functionality
-- [ ] I have reviewed my own code line-by-line
+### Required:
+
+- [ ] I have tested this code/configuration locally
+- [ ] I have reviewed my own changes line-by-line
 - [ ] I have checked for potential security issues
+
+### If Applicable:
+
+- [ ] I have added/updated tests for new functionality
 - [ ] I have updated documentation as needed
 - [ ] I have considered edge cases and error handling
 - [ ] I have removed all debug code and console logs
 
-## Checklist
+## General Checklist
 
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Comments added for complex logic
 - [ ] Documentation updated
 - [ ] No console.log or debug statements
+
+## PR Readiness
+
+- [ ] Branch is up to date with base branch
+- [ ] Commits are logical and well-messaged
+- [ ] PR title follows format: `[TASK-ID]: [Description]`
+- [ ] All CI checks passing (or explained why not)
+- [ ] Jira ticket is in "In Progress" status
 ```
 
 ## Best Practices
