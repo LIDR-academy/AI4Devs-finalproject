@@ -205,7 +205,7 @@ Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a lo
 *Constrained*
 [URL Proyecto](https://github.com/vuetifyjs/vuetify/blob/master/packages/docs/src/examples/wireframes/constrained.vue)
 
-![](assets/constrained.png)
+![](assets/constrained.jpg)
 
 ### Registro y Login
 

@@ -1,0 +1,44 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+  pull_request:
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Instalar dependencias
+        run: |
+          cd frontend
+          npm install
+
+      - name: Lint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Formatear código
+        run: |
+          cd frontend
+          npm run format
+
+      - name: Ejecutar pruebas E2E (Cypress)
+        run: |
+          cd frontend
+          npm run test:e2e
+        env:
+          CYPRESS_API_URL: ${{ secrets.CYPRESS_API_URL }}

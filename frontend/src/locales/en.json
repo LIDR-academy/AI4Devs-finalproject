@@ -1,0 +1,12 @@
+{
+  "app": {
+    "title": "Buscadoc",
+    "welcome": "Welcome to Buscadoc",
+    "login": "Login",
+    "logout": "Logout",
+    "search": "Search specialists",
+    "profile": "My profile",
+    "appointments": "My appointments",
+    "adminPanel": "Admin panel"
+  }
+}
