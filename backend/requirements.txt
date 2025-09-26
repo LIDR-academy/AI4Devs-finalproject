@@ -1,0 +1,24 @@
+# Personal Finance Tracker - Backend Dependencies
+# Core dependencies for US0.2-T3
+
+# Core FastAPI dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Database dependencies
+sqlalchemy==2.0.23
+alembic==1.12.1
+
+# Configuration management
+pydantic-settings==2.0.3
+
+# Testing dependencies
+pytest==7.4.3
+httpx==0.25.2
+pytest-cov==4.1.0
+
+# Note: Authentication and other utilities will be added in future tasks
+# python-jose[cryptography]>=3.3.0
+# passlib[bcrypt]>=1.7.4
+# python-multipart>=0.0.6
+# pydantic[email]>=2.5.0
