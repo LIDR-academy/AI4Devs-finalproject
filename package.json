@@ -18,6 +18,7 @@
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
     "@nestjs/testing": "^10.0.0",
+    "@nestjs/typeorm": "^11.0.0",
     "@playwright/test": "^1.40.0",
     "@types/jest": "^29.5.8",
     "@types/pg": "^8.15.5",
@@ -30,6 +31,7 @@
     "rosie": "^2.1.1",
     "testcontainers": "^11.5.1",
     "ts-jest": "^29.1.1",
+    "typeorm": "^0.3.20",
     "typescript": "^5.2.2"
   }
 }

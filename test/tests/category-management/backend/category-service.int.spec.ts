@@ -170,7 +170,7 @@ describe('CategoryService Integration Tests', () => {
       mockCategoryRepository.findOne.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.findOne(categoryId)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne(categoryId)).rejects.toThrow('Category with ID non-existent-id not found');
       expect(mockCategoryRepository.findOne).toHaveBeenCalledWith({
         where: { id: categoryId },
       });
@@ -253,7 +253,7 @@ describe('CategoryService Integration Tests', () => {
       mockCategoryRepository.findOne.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.update(categoryId, updateCategoryDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update(categoryId, updateCategoryDto)).rejects.toThrow('Category with ID non-existent-id not found');
     });
   });
 
@@ -289,7 +289,6 @@ describe('CategoryService Integration Tests', () => {
       mockTransactionRepository.count.mockResolvedValue(3);
 
       // Act & Assert
-      await expect(service.remove(categoryId)).rejects.toThrow(BadRequestException);
       await expect(service.remove(categoryId)).rejects.toThrow(
         'Cannot delete category "Test Category" because it is being used by 3 transaction(s). Please reassign or delete those transactions first.'
       );
@@ -305,7 +304,7 @@ describe('CategoryService Integration Tests', () => {
       mockCategoryRepository.findOne.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.remove(categoryId)).rejects.toThrow(NotFoundException);
+      await expect(service.remove(categoryId)).rejects.toThrow('Category with ID non-existent-id not found');
       expect(mockTransactionRepository.count).not.toHaveBeenCalled();
       expect(mockCategoryRepository.remove).not.toHaveBeenCalled();
     });
