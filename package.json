@@ -1,0 +1,37 @@
+{
+  "name": "ai4devs-finalproject",
+  "version": "1.0.0",
+  "description": "Personal Finance Management Application",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:social",
+    "test:unit": "git submodule foreach --recursive 'npm run test'",
+    "test:integration": "jest --config ./test/jest-integration.json --passWithNoTests",
+    "test:integration:watch": "npm run test:integration --watch",
+    "test:integration:coverage": "npm run test:integration --coverage",
+    "test:e2e": "playwright test --reporter=null",
+    "test:e2e:watch": "playwright test",
+    "test:social": "npm run test:integration && npm run test:e2e",
+    "env": "npm run env:down && npm run env:up",
+    "env:up": "docker compose --env-file ${PROJECT_CONFIG_FILE:-.env.test} -p ${PROJECT_NAME:-test} up -d",
+    "env:down": "docker compose -p ${PROJECT_NAME-test} down"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.3.1",
+    "@nestjs/testing": "^10.0.0",
+    "@nestjs/typeorm": "^11.0.0",
+    "@playwright/test": "^1.40.0",
+    "@types/jest": "^29.5.8",
+    "@types/pg": "^8.15.5",
+    "@types/rosie": "^0.0.45",
+    "ai4devs-api-client": "^1.0.0",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "jest": "^29.7.0",
+    "pg": "^8.16.3",
+    "rosie": "^2.1.1",
+    "testcontainers": "^11.5.1",
+    "ts-jest": "^29.1.1",
+    "typeorm": "^0.3.20",
+    "typescript": "^5.2.2"
+  }
+}

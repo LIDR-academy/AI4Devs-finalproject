@@ -1,0 +1,16 @@
+.env*
+node_modules
+coverage
+playwright-report
+test-results/.last-run.json
+.DS_Store
+test-results/
+session.md
+
+# OpenAPI generated files
+**/generated/
+**/src/generated/
+**/openapi.json
+**/dist/
+htpasswd
+*.htpasswd
