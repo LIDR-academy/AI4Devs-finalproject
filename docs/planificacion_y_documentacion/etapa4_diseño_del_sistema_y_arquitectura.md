@@ -26,7 +26,7 @@
    - **Persistencia (Prisma + PostgreSQL):** Repositorios para entidades principales.
    - **Email (Nodemailer, SendGrid, etc.):** Envío de notificaciones reales.
    - **Almacenamiento de archivos (Firebase Storage):** Fotos de perfil.
-5. **Frontend (Vue.js + Vuetify)**
+5. **Frontend (React + Tailwind CSS + Headless UI)**
 
    - **Portal público:** Búsqueda, perfiles, registro/login.
    - **Portal paciente:** Agenda, valoraciones.
@@ -34,7 +34,7 @@
    - **Panel administración:** Gestión de usuarios, especialidades, monitoreo básico.
 6. **Internacionalización**
 
-   - **Soporte multilenguaje:** vue-i18n en frontend, estructura preparada en backend para mensajes y validaciones.
+   - **Soporte multilenguaje:** react-i18next en frontend, estructura preparada en backend para mensajes y validaciones.
 7. **Ubicación**
 
    - **Entidades:** LOCATION, CITY, STATE.
@@ -99,17 +99,17 @@
 ## 4. Recomendaciones
 
 - **Backend:** Express.js + Prisma (por rapidez, curva baja, comunidad y compatibilidad con arquitectura hexagonal).
-- **Frontend:** Vue.js 3 + Vuetify (por rapidez, soporte multilenguaje, UI Kit robusto y comunidad activa).
+- **Frontend:** React + Tailwind CSS + Headless UI (por rapidez, soporte multilenguaje, UI Kit robusto y comunidad activa).
 - **Base de datos:** PostgreSQL (por robustez, soporte de UUID, documentación y comunidad).
 - **Arquitectura:** Hexagonal, para facilitar mantenibilidad, escalabilidad y futuras integraciones.
-- **Internacionalización:** vue-i18n en frontend, estructura preparada en backend.
+- **Internacionalización:** react-i18next en frontend, estructura preparada en backend.
 
 ---
 
 ## 5. Tecnologías y arquitectura seleccionada
 
 - **Backend:** Express.js (TypeScript), Prisma ORM, PostgreSQL, arquitectura hexagonal.
-- **Frontend:** Vue.js 3, Vuetify, vue-i18n.
+- **Frontend:** React, Tailwind CSS + Headless UI, react-i18next.
 - **Infraestructura:** Digital Ocean App Platform o AWS, Sentry para monitoreo, GitHub Actions para CI/CD.
 - **Almacenamiento de archivos:** Firebase Storage para fotos de perfil.
 - **Email:** Nodemailer/SendGrid para notificaciones.
@@ -139,7 +139,7 @@
 
 ```mermaid
 flowchart TD
-    subgraph "Frontend (Vue.js + Vuetify)"
+    subgraph "Frontend (React + Tailwind CSS + Headless UI)"
         F1[Portal Público]
         F2[Portal Paciente]
         F3[Portal Médico]
@@ -175,7 +175,7 @@ flowchart TD
     end
 
     subgraph "Otros"
-        I18N["Internacionalización (vue-i18n/backend)"]
+        I18N["Internacionalización (react-i18next/backend)"]
         OAUTH["OAuth2 (Google/Outlook)"]
     end
 
@@ -215,7 +215,7 @@ flowchart TD
 
 ### 7.1 Límites y responsabilidades de los componentes principales
 
-- **Frontend (Vue.js + Vuetify):**
+- **Frontend (React + Tailwind CSS + Headless UI):**
 
   - Presenta la interfaz de usuario para visitantes, pacientes, médicos y administradores.
   - Gestiona la experiencia de usuario, internacionalización y validación básica de formularios.
@@ -244,7 +244,7 @@ flowchart TD
   - Transforman los datos entre el dominio y los formatos requeridos por los servicios externos.
 - **Internacionalización:**
 
-  - Gestiona la traducción de textos y mensajes en el frontend (vue-i18n) y prepara la estructura para mensajes multilenguaje en el backend.
+  - Gestiona la traducción de textos y mensajes en el frontend (react-i18next) y prepara la estructura para mensajes multilenguaje en el backend.
   - Permite la adaptación de la interfaz y mensajes del sistema a diferentes idiomas y contextos culturales.
 - **Otros servicios externos (OAuth2, Email, Storage):**
 
@@ -676,6 +676,6 @@ Todos los endpoints de la API REST responden bajo un formato estructurado y cons
 - Los mensajes siempre se entregan en inglés para facilitar la internacionalización en el frontend.
 - Los datos de la operación se incluyen directamente en el campo `payload`, sin envoltorios adicionales.
 - Los errores se entregan como un arreglo en `payload.error`, permitiendo mostrar múltiples mensajes de validación o sistema.
-- Este estándar facilita la integración con el frontend (Vue.js + vue-i18n) y otros sistemas externos.
+- Este estándar facilita la integración con el frontend (React + react-i18next) y otros sistemas externos.
 
 ---

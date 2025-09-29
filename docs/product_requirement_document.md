@@ -73,7 +73,7 @@ etapa2_casos_de_uso.md
 
 ```mermaid
 flowchart TD
-    subgraph "Frontend (Vue.js + Vuetify)"
+    subgraph "Frontend (React + Tailwind CSS + Headless UI)"
         F1[Portal Público]
         F2[Portal Paciente]
         F3[Portal Médico]
@@ -109,7 +109,7 @@ flowchart TD
     end
 
     subgraph "Otros"
-        I18N["Internacionalización (vue-i18n/backend)"]
+        I18N["Internacionalización (react-i18next/backend)"]
         OAUTH["OAuth2 (Google/Outlook)"]
     end
 
@@ -192,86 +192,38 @@ Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a lo
 
 ## Diseños
 
-### Home / Página de inicio
+### Layout Visitantes/Pacientes
+![](assets/layout_visitantes_pacientes.jpg)
 
-**Vuetify Landing Page**
+### Layout Médicos
+![](assets/layout_medicos.jpg)
 
-[URL Proyecto](https://store.vuetifyjs.com/products/landing-theme-free)
+### Login Pacientes y Médicos
+![](assets/login_pacientes_medicos.jpg)
 
-![](assets/landing_page.png)
+### Registro Pacientes
+![](assets/registro_pacientes.jpg)
 
-### Layout principal
+### Home / Busqueda de especialista
+![](assets/home_busqueda_especialistas.jpg)
 
-*Constrained*
-[URL Proyecto](https://github.com/vuetifyjs/vuetify/blob/master/packages/docs/src/examples/wireframes/constrained.vue)
+### Busqueda avanzada de especialistas
+![](assets/busqueda_avanzada_especialistas.jpg)
 
-![](assets/constrained.jpg)
+### Perfil Médico Especialista
+![](assets/perfil_medico_especialista.jpg)
 
-### Registro y Login
+### Agendar cita médica
+![](assets/agendar_cita_medica.jpg)
 
-[URL Proyecto](https://nicepage.com/t/1473906/login-form-with-image-template)
+### Registro Médicos
+![](assets/registro_medicos.jpg)
 
-![](assets/login.png)
+### Gestionar agenda médica
+![](assets/gestionar_agenda_medica.jpg)
 
-### Buscador
-
-![](assets/buscador_ejemplo.png)
-
-## Resultados de busqueda, Mis Citas y Agenda del médico
-
-![](assets/resultados_busqueda_ejemplo.png.png)
-
-### Mi Perfil
-
-#### Perfil Médico
-
-[URL Proyecto](https://www.w3schools.com/w3css/tryw3css_templates_cv.htm)
-
-![](assets/perfil_medico.png)
-
-#### Perfil de Paciente
-
-[URL Proyecto](https://nicepage.com/h5/1362604/creative-designer-profile-html5-template)
-![](assets/perfil_paciente.png)
-
-### Valorar Especialista
-
-![](assets/valorar_especialista.png)
-
-### Notificaciones y Recordatorios
-
-![](assets/notificaciones.png)
-
-### Panel de administración
-
-#### Gestión de usuarios
-
-##### Listado de usuarios
-
-![](assets/resultados_busqueda_ejemplo.png.png)
-
-##### Perfil Médico
-
-[URL Proyecto](https://www.w3schools.com/w3css/tryw3css_templates_cv.htm)
-
-![](assets/perfil_medico.png)
-
-##### Perfil de Paciente
-
-[URL Proyecto](https://nicepage.com/h5/1362604/creative-designer-profile-html5-template)
-![](assets/perfil_paciente.png)
-
-### Gestión de especialidades y filtros
-
-##### Listado de especialidades, ciudades y estados
-
-![](assets/resultados_busqueda_ejemplo.png.png)
-
-### Aviso de privacidad, Términos y condiciones
-
-[URL Proyecto](https://nicepage.com/st/6543609/enterprise-level-privacy-protection-website-template)
-
-![](assets/aviso_privacidad_terminos.png)
+### Disponibilidad de horario médico
+![](assets/disponibilidad_horario_medico.jpg)
 
 ## Fuentes y paleta de colores
 
@@ -302,9 +254,9 @@ Basarse en los siguientes ejemplos y proyectos para el diseño adecuandolos a lo
   - Estructura preparada para internacionalización de mensajes y validaciones.
 
 - **Frontend:**
-  - Vue.js con Vuetify para la interfaz de usuario.
+  - React + Tailwind CSS + Headless UI para la interfaz de usuario.
   - Consumo de la API REST para todas las operaciones.
-  - Soporte multilenguaje mediante vue-i18n.
+  - Soporte multilenguaje mediante react-i18next.
 
 - **Interactividad y personalización:**
   - Filtros de búsqueda personalizables (especialidad, ubicación, etc.).
@@ -547,7 +499,7 @@ Todos los endpoints de la API REST responden bajo un formato estructurado y cons
 - Los mensajes siempre se entregan en inglés para facilitar la internacionalización en el frontend.
 - Los datos de la operación se incluyen directamente en el campo `payload`, sin envoltorios adicionales.
 - Los errores se entregan como un arreglo en `payload.error`, permitiendo mostrar múltiples mensajes de validación o sistema.
-- Este estándar facilita la integración con el frontend (Vue.js + vue-i18n) y otros sistemas externos.
+- Este estándar facilita la integración con el frontend (React + react-i18next) y otros sistemas externos.
 
 **Referencia:**  
 etapa4_diseño_del_sistema_y_arquitectura.md, arquitectura hexagonal.

@@ -233,3 +233,1148 @@ Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD.
 
 Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
 Realiza preguntas si necesitas mas información.
+
+
+--- REACT ---
+Eres un experto en Ingenieria de Prompts y con experiencia como Frontend Developer
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para implementar el frontent desde cero, ya que este no existe.
+En cuanto al todo el proyecto, ya se cuenta con un backend funcional.
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y la documentación del API que se va consumir.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el agente Vercel `v0` que me ayude a implementar los tickets y tener una estructura inicial donde realizar la maquetación del frontend del proyecto.
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+
+# Consideraciones
+- Para crear este prompt consulta los siguientes documentos (mencionados en el contexto)
+   * PRD: (ARCHIVO)
+   * Diagrama de arquitectura: (ARCHIVO)
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para agente Vercel v0: Inicialización y estructura base del frontend Buscadoc
+
+## Rol
+Actúa como un **Frontend Engineer experto en React, Tailwind CSS, Headless UI e internacionalización (react-i18next)**, con experiencia en proyectos web y cumplimiento normativo en México (LFPDPPP).
+
+## Objetivo
+Tu tarea es implementar los tickets 12-14 para crear la estructura inicial y la configuración base del frontend del sistema Buscadoc. El backend ya está implementado y expone una API REST con formato de respuesta estándar.
+
+---
+
+## Contexto y requisitos clave
+
+- **Stack:** React, Tailwind CSS, Headless UI, react-i18next, axios, react-router-dom, dotenv.
+- **Internacionalización:** Soporte multilenguaje desde el inicio (español e inglés).
+- **Consumo de API:** Usar axios y variables de entorno para la URL base.
+- **Formateo y calidad:** Configurar Prettier y ESLint.
+- **Documentación:** Incluir README en español con instrucciones de uso y variables de entorno.
+- **No incluir archivos sensibles (.env) en el control de versiones.**
+
+---
+
+## Estructura recomendada de carpetas y archivos
+
+Crea la siguiente estructura:
+```
+├── public/
+│   └── index.html
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── pages/
+│   ├── routes/
+│   ├── services/
+│   │   └── api.js
+│   ├── i18n/
+│   │   ├── index.js
+│   │   ├── es.json
+│   │   └── en.json
+│   ├── styles/
+│   │   └── tailwind.css
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.js
+├── .env.example
+├── .gitignore
+├── package.json
+├── tailwind.config.js
+├── postcss.config.js
+├── prettier.config.js
+├── .eslintrc.js
+└── README.md
+```
+
+## Fuentes y paleta de colores
+
+### Colores CSS
+
+```css
+--federal-blue: #03045eff;
+--honolulu-blue: #0077b6ff;
+--pacific-cyan: #00b4d8ff;
+--non-photo-blue: #90e0efff;
+--light-cyan: #caf0f8ff;
+```
+
+[URL Paleta](https://coolors.co/palette/03045e-0077b6-00b4d8-90e0ef-caf0f8)
+
+### Fuente
+
+**Roboto**
+[URL Fuente](https://fonts.google.com/specimen/Roboto)
+
+---
+
+## Instrucciones detalladas para el agente
+
+1. **Inicializa el proyecto:**
+   - Inicializa el proyecto ejecutando `npm init -y`.
+2. **Instala las dependencias principales:**
+   - `react`, `react-dom`, `react-router-dom`, `tailwindcss`, `postcss`, `autoprefixer`, `@headlessui/react`, `react-i18next`, `i18next`, `axios`, `dotenv`.
+   - Instala Prettier y ESLint para formateo y calidad de código.
+3. **Configura Tailwind CSS:**
+   - Genera los archivos de configuración (`tailwind.config.js`, `postcss.config.js`).
+   - Crea el archivo base de estilos en `src/styles/tailwind.css` e inclúyelo en el entrypoint.
+   - Usa la paleta de colores y fuente Roboto del PRD.
+4. **Configura internacionalización:**
+   - Implementa `react-i18next` en `src/i18n/` con archivos de traducción `es.json` y `en.json`.
+   - Usa `APP_I18N_LOCALE` como idioma por defecto desde variables de entorno.
+5. **Configura consumo de API:**
+   - Crea `src/services/api.js` usando axios y la variable `APP_API_URL` del `.env`.
+6. **Configura variables de entorno:**
+   - Crea `.env.example` con:
+     ```
+     APP_API_URL=https://localhost:3000
+     APP_I18N_LOCALE=es
+     ```
+   - Asegúrate de que `.env` esté en `.gitignore`.
+7. **Configura Prettier y ESLint:**
+   - Añade reglas recomendadas para React y Tailwind.
+8. **Crea un ejemplo base funcional:**
+   - Implementa un componente `App.jsx` que muestre un texto traducido y realice una petición de prueba a la API usando axios.
+   - Incluye rutas básicas con `react-router-dom`.
+9. **Documenta en español:**
+   - El README debe explicar cómo instalar dependencias, configurar variables de entorno, iniciar el proyecto y estructura de carpetas.
+   - Explica cómo agregar nuevos idiomas y consumir la API.
+
+---
+
+## Consideraciones adicionales
+
+- El backend responde con el siguiente formato estándar:
+  ```json
+  {
+    "code": 200,
+    "message": "success",
+    "payload": { ... }
+  }
+  ```
+- El frontend debe estar preparado para manejar mensajes y errores en inglés y mostrar traducciones al usuario.
+- El sistema debe ser escalable y fácil de mantener, siguiendo las mejores prácticas de React moderno.
+
+## Salida esperada
+- Entrega la estructura de carpetas y archivos iniciales, los archivos de configuración y un ejemplo funcional mínimo, todo documentado en español y listo para comenzar la maquetación del frontend de Buscadoc.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+Eres un experto en Ingenieria de Prompts y con experiencia como Frontend Developer
+# Contexto Inicial
+Nos encontramos implementado ma maquetación del frontend, actualmente ya tenemos un proyecto base basado en React donde podemos trabajar para realizar la maquetación de las vistas del proyecto.
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y la documentación del API que se va consumir.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el agente Vercel `v0` que me ayude a implementar en la maquetación el layout que usaran los visitantes no autenticados y los pacientes logueados en el proyecto de frontend.
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- El agente no realizará otras vistas a menos que el usurio lo indique
+- Se deberan crear componentes para que puedan ser reutilizados.
+- Debe ser responsivo para ajustarse a dispositivos moviles.
+
+# Consideraciones
+- El angente tendrá acceso a la imagen del layout en el contexto
+- El layout maquetado servirá como base para maquetar las otras vistes del proyecto.
+- Para crear este prompt consulta los siguientes documentos (mencionados en el contexto) ya que no tendrá acceso a ellos al ejecutar la tarea:
+   * PRD: #file:product_requirement_document.md 
+   * Diagrama de arquitectura: #file:diagrama_visual_arquitectura.md 
+   * README del proyecto: #file:README.md 
+   * Package.json del proyecto: #file:package.json 
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para agente Vercel v0: Maquetación del Layout para Visitantes y Pacientes en Buscadoc
+
+## Rol
+Actúa como **Frontend Developer experto en React, Tailwind CSS, Headless UI, internacionalización (react-i18next) y patrones de componentes reutilizables**. Aplica las mejores prácticas de accesibilidad, seguridad, internacionalización y arquitectura actual. Sigue las convenciones de nombres en PascalCase y documenta tus decisiones de diseño.
+
+---
+
+## Contexto
+
+- El proyecto ya cuenta con una base en React, Vite y Tailwind CSS, con internacionalización y estructura modular.
+- Dispones de la imagen del layout a maquetar en el contexto.
+
+---
+
+## Objetivo
+
+Maqueta el layout base que será utilizado por:
+- Visitantes no autenticados
+- Pacientes autenticados
+
+Este layout servirá como base para el resto de las vistas del proyecto. No generes otras vistas a menos que el usuario lo indique explícitamente.
+
+---
+
+## Requisitos y mejores prácticas
+
+1. **Responsive Design:**  
+   El layout debe ser completamente responsive, adaptándose a dispositivos móviles, tablets y desktop. Utiliza los breakpoints recomendados por Tailwind CSS.
+
+2. **Componentización y reutilización:**  
+   - Divide el layout en componentes reutilizables (Navbar, Footer, Sidebar, etc.).
+   - Usa PascalCase para nombres de componentes y carpetas.
+   - Incluye placeholders (`children` o similares) para contenido dinámico.
+
+3. **Internacionalización:**  
+   - Usa `react-i18next` para todos los textos visibles.
+   - Los textos deben estar en los archivos de localización (`es.json`, `en.json`).
+
+4. **Enlaces y navegación:**  
+   - Incluye enlaces reales a las rutas principales (ejemplo: Home, Buscar especialistas, Mi perfil, Cerrar sesión).
+   - Usa `react-router-dom` para la navegación.
+
+5. **Accesibilidad y buenas prácticas:**  
+   - Usa etiquetas semánticas y atributos ARIA donde corresponda.
+   - Asegúrate de que el layout sea navegable con teclado.
+
+6. **Documentación y comentarios:**  
+   - Comenta el código explicando la estructura, puntos de personalización y decisiones de diseño, especialmente si la imagen del layout no cubre algún aspecto.
+   - Si tomas decisiones de diseño por falta de información, documenta el razonamiento en comentarios.
+
+7. **Placeholders y slots:**  
+   - Incluye áreas claramente marcadas para contenido dinámico (por ejemplo, `{children}` en React).
+
+8. **Convenciones y estructura:**  
+   - Sigue la estructura de carpetas y convenciones del proyecto (ver README).
+   - No incluyas lógica de negocio ni llamadas a la API en el layout.
+
+---
+
+## Salida esperada
+
+- Archivos de componentes React en PascalCase, siguiendo la estructura del proyecto.
+- Código comentado y documentado en español.
+- Todos los textos internacionalizados.
+- Layout funcional y responsive, listo para ser extendido en futuras vistas.
+
+---
+
+## Ejemplo de estructura esperada
+```
+src/
+├── components/
+│   ├── Navbar/
+│   │   └── Navbar.jsx
+│   ├── Footer/
+│   │   └── Footer.jsx
+│   ├── Sidebar/
+│   │   └── Sidebar.jsx
+│   └── Layout/
+│       └── MainLayout.jsx
+├── pages/
+│   └── (placeholders para futuras vistas)
+├── i18n/
+│   ├── es.json
+│   ├── en.json
+│   └── index.js
+├── services/
+│   └── api.js
+├── styles/
+│   └── tailwind.css
+├── App.jsx
+├── main.jsx
+└── index.html
+```
+
+---
+
+## Notas adicionales
+
+- No generes otras vistas ni lógica adicional.
+- Si la imagen del layout no especifica algún comportamiento (por ejemplo, menú móvil), aplica buenas prácticas y documenta tu decisión.
+- No incluyas pruebas visuales/manuales en esta entrega.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+Eres un experto en Ingenieria de Prompts y con experiencia como Frontend Developer
+# Contexto Inicial
+Nos encontramos implementado la maquetación del frontend, actualmente contamos con lo siguiente:
+- Un proyecto base funcional basado en React
+- Se ha implementado un Layout para visitante no autenticas y pacientes logueados
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y la documentación del API que se va consumir.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el agente Vercel `v0` que me ayude a implementar la maquetación de la vista de Login para los usuarios.
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- El agente no realizará otras vistas a menos que el usuario lo indique
+- Se deberan crear componentes para que puedan ser reutilizados.
+- Si es posible reutilizar los layouts y componentes existentes en el proyecto
+- Respetar la paleta de colores y fuentes iniciales del proyecto
+- Debe ser responsivo para ajustarse a dispositivos moviles.
+- Utilizar convención de nombre con Pascal Case
+
+# Consideraciones
+- El agente tendrá acceso a la imagen del diseño en el contexto
+- Para crear este prompt consulta los siguientes documentos (mencionados en el contexto) ya que no tendrá acceso a ellos al ejecutar la tarea:
+   * PRD: #file:product_requirement_document.md 
+   * Diagrama de arquitectura: #file:diagrama_visual_arquitectura.md 
+   * README del proyecto: #file:README.md 
+   * Package.json del proyecto: #file:package.json 
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+
+# Prompt para agente Vercel v0: Maquetación de la Vista de Login en Buscadoc
+
+## Rol
+Actúa como **Frontend Developer experto en React, Tailwind CSS, Headless UI, internacionalización (react-i18next) y patrones de componentes reutilizables**. Aplica las mejores prácticas de accesibilidad, seguridad, internacionalización y arquitectura hexagonal. Usa PascalCase para nombres de componentes y carpetas. Documenta tus decisiones de diseño y estructura el código con comentarios claros.
+
+---
+
+## Contexto
+
+- El proyecto base ya está implementado en React y cuenta con layouts y componentes reutilizables.
+- El diseño de la vista de Login está disponible como imagen en el contexto.
+
+---
+
+## Objetivo
+
+Maquetar la vista de Login para usuarios, siguiendo el diseño proporcionado y reutilizando los layouts y componentes existentes en el proyecto siempre que sea posible. No generes otras vistas a menos que el usuario lo indique explícitamente.
+
+---
+
+## Requisitos y mejores prácticas
+
+1. **Componentización y reutilización:**  
+   - Divide la vista de Login en componentes reutilizables (por ejemplo, LoginForm, Input, Button, etc.).
+   - Usa PascalCase para nombres de componentes y carpetas.
+   - Reutiliza layouts y componentes existentes del proyecto cuando sea posible.
+
+2. **Internacionalización:**  
+   - Usa `react-i18next` para todos los textos visibles.
+   - Los textos deben estar en los archivos de localización (`es.json`, `en.json`).
+
+3. **Responsive Design:**  
+   - El diseño debe ser completamente responsive, adaptándose a dispositivos móviles, tablets y desktop. Utiliza los breakpoints recomendados por Tailwind CSS.
+
+4. **Accesibilidad y buenas prácticas:**  
+   - Usa etiquetas semánticas y atributos ARIA donde corresponda.
+   - Asegúrate de que el formulario sea navegable con teclado.
+
+5. **Estados y validaciones:**  
+   - Si la imagen del diseño no cubre algún estado (errores de validación, loading, mensajes de error), documenta las decisiones de diseño en comentarios y aplica buenas prácticas.
+
+6. **Enlaces y navegación:**  
+   - Si el diseño incluye enlaces como “¿Olvidaste tu contraseña?” o “Crear cuenta”, respétalos según la imagen. Usa `react-router-dom` para la navegación si corresponde.
+
+7. **Documentación y comentarios:**  
+   - Comenta el código explicando la estructura, puntos de personalización y decisiones de diseño, especialmente si la imagen no cubre algún aspecto.
+
+8. **Convenciones y estructura:**  
+   - Sigue la estructura de carpetas y convenciones del proyecto (ver README).
+   - No incluyas lógica de negocio ni llamadas a la API en la maquetación.
+
+---
+
+## Salida esperada
+
+- Archivos de componentes React en PascalCase, siguiendo la estructura del proyecto.
+- Código comentado y documentado en español.
+- Todos los textos internacionalizados.
+- Vista de Login funcional y responsive, lista para ser conectada a la lógica de autenticación.
+
+---
+
+## Ejemplo de estructura esperada
+```
+src/
+├── components/
+│   ├── LoginForm/
+│   │   └── LoginForm.jsx
+├── pages/
+│   └── Login.jsx
+├── layouts/
+│   └── MainLayout.jsx
+├── i18n/
+│   ├── es.json
+│   ├── en.json
+│   └── index.js
+├── services/
+│   └── api.js
+├── styles/
+│   └── tailwind.css
+├── App.jsx
+├── main.jsx
+└── index.html
+```
+
+---
+
+## Notas adicionales
+
+- No generes otras vistas ni lógica adicional.
+- Si la imagen del diseño no especifica algún comportamiento, aplica buenas prácticas y documenta tu decisión.
+- Reutiliza layouts y componentes existentes siempre que sea posible.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+
+Eres un experto en Ingenieria de Prompts y con experiencia como Frontend Developer
+# Contexto Inicial
+Nos encontramos implementado la maquetación del frontend, actualmente contamos con lo siguiente:
+- Un proyecto base funcional basado en React
+- Se ha implementado un Layout para visitante no autenticas y pacientes logueados
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y la documentación del API que se va consumir.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el agente Vercel `v0` que me ayude a implementar la maquetación de la vista de Registro para los usuarios.
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- El agente no realizará otras vistas a menos que el usuario lo indique
+- Se deberan crear componentes para que puedan ser reutilizados.
+- Si es posible reutilizar los layouts y componentes existentes en el proyecto
+- Respetar la paleta de colores y fuentes iniciales del proyecto
+- Debe ser responsivo para ajustarse a dispositivos moviles.
+- Utilizar convención de nombre con Pascal Case
+
+# Consideraciones
+- El agente tendrá acceso a la imagen del diseño en el contexto
+- Para crear este prompt consulta los siguientes documentos (mencionados en el contexto) ya que no tendrá acceso a ellos al ejecutar la tarea:
+   * PRD: #file:product_requirement_document.md 
+   * Diagrama de arquitectura: #file:diagrama_visual_arquitectura.md 
+   * README del proyecto: #file:README.md 
+   * Package.json del proyecto: #file:package.json 
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+
+# Prompt para agente Vercel v0: Maquetación de la Vista de Registro en Buscadoc
+
+## Rol
+Actúa como **Frontend Developer experto en React, Tailwind CSS, Headless UI, internacionalización (react-i18next) y patrones de componentes reutilizables**. Aplica las mejores prácticas de accesibilidad, seguridad, internacionalización y arquitectura. Usa PascalCase para nombres de componentes y carpetas. Documenta tus decisiones de diseño y estructura el código con comentarios claros.
+
+---
+
+## Contexto
+
+- El proyecto base ya está implementado en React y cuenta con layouts y componentes reutilizables.
+- El diseño de la vista de Registro está disponible como imagen en el contexto.
+
+---
+
+## Objetivo
+
+Maquetar la vista de Registro para usuarios, siguiendo el diseño proporcionado y reutilizando los layouts y componentes existentes en el proyecto siempre que sea posible. No generes otras vistas a menos que el usuario lo indique explícitamente.
+
+---
+
+## Requisitos y mejores prácticas
+
+1. **Guíate del diseño en la imagen adjunta al contexto:**  
+   - Todos los campos, enlaces y elementos visuales deben apegarse al diseño proporcionado.
+   - Si el diseño no cubre algún estado (errores de validación, loading, mensajes de éxito/error), documenta las decisiones de diseño en comentarios y aplica buenas prácticas.
+
+2. **Componentización y reutilización:**  
+   - Divide la vista de Registro en componentes reutilizables (por ejemplo, RegisterForm, etc.).
+   - Usa PascalCase para nombres de componentes y carpetas.
+   - Reutiliza layouts y componentes existentes del proyecto cuando sea posible.
+
+3. **Internacionalización:**  
+   - Usa `react-i18next` para todos los textos visibles.
+   - Los textos deben estar en los archivos de localización (`es.json`, `en.json`).
+
+4. **Responsive Design:**  
+   - El diseño debe ser completamente responsive, adaptándose a dispositivos móviles, tablets y desktop. Utiliza los breakpoints recomendados por Tailwind CSS.
+
+5. **Accesibilidad y buenas prácticas:**  
+   - Usa etiquetas semánticas y atributos ARIA donde corresponda.
+   - Asegúrate de que el formulario sea navegable con teclado.
+
+6. **Enlaces y navegación:**  
+   - Si el diseño incluye enlaces como “¿Ya tienes cuenta? Inicia sesión” o términos y condiciones, respétalos según la imagen. Usa `react-router-dom` para la navegación si corresponde.
+
+7. **Documentación y comentarios:**  
+   - Comenta el código explicando la estructura, puntos de personalización y decisiones de diseño, especialmente si la imagen no cubre algún aspecto.
+
+8. **Convenciones y estructura:**  
+   - Sigue la estructura de carpetas y convenciones del proyecto (ver README).
+   - No incluyas lógica de negocio ni llamadas a la API en la maquetación.
+   - Respeta la paleta de colores y fuentes iniciales del proyecto.
+
+---
+
+## Salida esperada
+
+- Archivos de componentes React en PascalCase, siguiendo la estructura del proyecto.
+- Código comentado y documentado en español.
+- Todos los textos internacionalizados.
+- Vista de Registro funcional y responsive, lista para ser conectada a la lógica de registro.
+
+---
+
+## Ejemplo de estructura esperada
+```
+src/
+├── components/
+│   ├── RegisterForm/
+│   │   └── RegisterForm.jsx
+├── pages/
+│   └── Register.jsx
+├── layouts/
+│   └── MainLayout.jsx
+├── i18n/
+│   ├── es.json
+│   ├── en.json
+│   └── index.js
+├── services/
+│   └── api.js
+├── styles/
+│   └── tailwind.css
+├── App.jsx
+├── main.jsx
+└── index.html
+```
+---
+
+## Notas adicionales
+- No generes otras vistas ni lógica adicional.
+- Si la imagen del diseño no especifica algún comportamiento, aplica buenas prácticas y documenta tu decisión.
+- Reutiliza layouts y componentes existentes siempre que sea posible.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+Eres un experto en Ingenieria de Prompts y con experiencia como Frontend Developer
+# Contexto Inicial
+Nos encontramos implementado la maquetación del frontend, actualmente contamos con lo siguiente:
+- Un proyecto base funcional basado en React
+- Se ha implementado un Layout para visitante no autenticadas y pacientes logueados
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y la documentación del API que se va consumir.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el agente Vercel `v0` que me ayude a implementar la maquetación de la vista de busqueda de especialistas médicos.
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- El agente no realizará otras vistas a menos que el usuario lo indique
+- Se deberan crear componentes para que puedan ser reutilizados.
+- Si es posible reutilizar los layouts y componentes existentes en el proyecto
+- Respetar la paleta de colores y fuentes iniciales del proyecto
+- Debe ser responsivo para ajustarse a dispositivos moviles.
+- Utilizar convención de nombre con Pascal Case
+
+# Consideraciones
+- El agente tendrá acceso a la imagen del diseño en el contexto
+- Esta vista funcionará como Home del sitio
+- Para crear este prompt consulta los siguientes documentos (mencionados en el contexto) ya que no tendrá acceso a ellos al ejecutar la tarea:
+   * PRD: #file:product_requirement_document.md 
+   * Diagrama de arquitectura: #file:diagrama_visual_arquitectura.md 
+   * README del proyecto: #file:README.md 
+   * Package.json del proyecto: #file:package.json 
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+# Prompt para agente Vercel v0: Maquetación de la Vista de Búsqueda de Especialistas Médicos (Home) en Buscadoc
+
+## Rol
+Actúa como **Frontend Developer experto en React, Tailwind CSS, Headless UI, internacionalización (react-i18next) y patrones de componentes reutilizables**. Aplica las mejores prácticas de accesibilidad, seguridad, internacionalización y arquitectura. Usa PascalCase para nombres de componentes y carpetas. Documenta tus decisiones de diseño y estructura el código con comentarios claros.
+
+---
+
+## Contexto
+
+- El proyecto base ya está implementado en React y cuenta con layouts y componentes reutilizables.
+- El diseño de la vista de búsqueda de especialistas médicos (Home) está disponible como imagen en el contexto.
+
+---
+
+## Objetivo
+
+Maquetar la vista de búsqueda de especialistas médicos, que funcionará como Home del sitio, siguiendo el diseño proporcionado y reutilizando los layouts y componentes existentes en el proyecto siempre que sea posible. No generes otras vistas a menos que el usuario lo indique explícitamente.
+
+---
+
+## Requisitos y mejores prácticas
+
+1. **Guíate del diseño en la imagen adjunta al contexto:**  
+   - El campo de búsqueda por texto debe ser solo para el nombre del médico.
+   - La valoración debe implementarse como un control personalizado, el cual consta de 5 iconos de estrellas que al darle clic asignan una valoracion del 1 al 5.
+   - Los demás filtros deben ser dropdowns.
+   - Si el diseño no cubre algún estado (sin resultados, loading, errores), documenta las decisiones de diseño en comentarios y aplica buenas prácticas.
+
+2. **Componentización y reutilización:**  
+   - Divide la vista en componentes reutilizables (por ejemplo, SearchBar, DoctorCard, StarRating, DropdownFilter, etc.).
+   - Usa PascalCase para nombres de componentes y carpetas.
+   - Reutiliza layouts y componentes existentes del proyecto cuando sea posible.
+
+3. **Internacionalización:**  
+   - Usa `react-i18next` para todos los textos visibles.
+   - Los textos deben estar en los archivos de localización (`es.json`, `en.json`).
+
+4. **Responsive Design:**  
+   - El diseño debe ser completamente responsive, adaptándose a dispositivos móviles, tablets y desktop. Utiliza los breakpoints recomendados por Tailwind CSS.
+
+5. **Accesibilidad y buenas prácticas:**  
+   - Usa etiquetas semánticas y atributos ARIA donde corresponda.
+   - Asegúrate de que todos los controles sean navegables con teclado.
+
+6. **Paginación:**  
+   - La carga de la siguiente página de elementos debe realizarse mediante un botón "Ver más médicos", no scroll infinito.
+
+7. **Documentación y comentarios:**  
+   - Comenta el código explicando la estructura, puntos de personalización y decisiones de diseño, especialmente si la imagen no cubre algún aspecto.
+
+8. **Convenciones y estructura:**  
+   - Sigue la estructura de carpetas y convenciones del proyecto (ver README).
+   - No incluyas lógica de negocio ni llamadas a la API en la maquetación.
+   - Respeta la paleta de colores y fuentes iniciales del proyecto.
+
+---
+
+## Salida esperada
+
+- Archivos de componentes React en PascalCase, siguiendo la estructura del proyecto.
+- Código comentado y documentado en español.
+- Todos los textos internacionalizados.
+- Vista de búsqueda funcional y responsive, lista para ser conectada a la lógica de búsqueda.
+
+---
+
+## Ejemplo de estructura esperada
+```
+src/
+├── components/
+│   ├── SearchBar/
+│   │   └── SearchBar.jsx
+│   ├── DoctorCard/
+│   │   └── DoctorCard.jsx
+│   ├── StarRating/
+│   │   └── StarRating.jsx
+│   ├── DropdownFilter/
+│   │   └── DropdownFilter.jsx
+├── pages/
+│   └── Home.jsx
+├── layouts/
+│   └── MainLayout.jsx
+├── i18n/
+│   ├── es.json
+│   ├── en.json
+│   └── index.js
+├── services/
+│   └── api.js
+├── styles/
+│   └── tailwind.css
+├── App.jsx
+├── main.jsx
+└── index.html
+```
+---
+
+## Notas adicionales
+
+- No generes otras vistas ni lógica adicional.
+- Si la imagen del diseño no especifica algún comportamiento, aplica buenas prácticas y documenta tu decisión.
+- Reutiliza layouts y componentes existentes siempre que sea posible.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+Eres un experto en Ingenieria de Prompts y con experiencia como Frontend Developer
+# Contexto Inicial
+Nos encontramos implementado la maquetación del frontend, actualmente contamos con lo siguiente:
+- Un proyecto base funcional basado en React
+- Se ha implementado un Layout para visitante no autenticadas y pacientes logueados
+- Varias vistas funcionales
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y la documentación del API que se va consumir.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el agente Vercel `v0` que me ayude a implementar la maquetación de la vista de para que un medico gestione su agenda medica.
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- El agente no realizará otras vistas a menos que el usuario lo indique
+- Se deberan crear componentes para que puedan ser reutilizados.
+- Si es posible reutilizar los layouts y componentes existentes en el proyecto
+- Respetar la paleta de colores y fuentes iniciales del proyecto
+- Debe ser responsivo para ajustarse a dispositivos moviles.
+- Utilizar convención de nombre con Pascal Case
+
+# Consideraciones
+- El agente tendrá acceso a la imagen del diseño en el contexto
+- Para crear este prompt consulta los siguientes documentos (mencionados en el contexto) ya que el agente no tendrá acceso y el prompt debe contener la información necesaria de ellos:
+   * PRD: #file:product_requirement_document.md 
+   * Diagrama de arquitectura: #file:diagrama_visual_arquitectura.md 
+   * README del proyecto: #file:README.md 
+   * Package.json del proyecto: #file:package.json 
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+
+
+# Prompt para agente Vercel v0: Maquetación de la Vista de Gestión de Agenda Médica para Médicos en Buscadoc
+
+## Rol
+Actúa como **Frontend Developer experto en React, Tailwind CSS, Headless UI, internacionalización (react-i18next) y patrones de componentes reutilizables**. Aplica las mejores prácticas de accesibilidad, seguridad, internacionalización y arquitectura. Usa PascalCase para nombres de componentes y carpetas. Documenta tus decisiones de diseño y estructura el código con comentarios claros.
+
+---
+
+## Contexto
+
+- El proyecto base ya está implementado en React y cuenta con layouts y componentes reutilizables.
+- El diseño de la vista de gestión de agenda médica está disponible como imagen en el contexto.
+
+---
+
+## Objetivo
+
+Maquetar la vista para que un médico gestione su agenda médica, siguiendo el diseño proporcionado y reutilizando los layouts y componentes existentes en el proyecto siempre que sea posible. No generes otras vistas a menos que el usuario lo indique explícitamente.
+
+---
+
+## Requisitos y mejores prácticas
+
+1. **Guíate del diseño en la imagen adjunta al contexto:**  
+   - La vista debe permitir visualizar citas y realizar acciones como confirmar, rechazar y cancelar citas, según lo mostrado en el diseño.
+   - Si el diseño no cubre algún estado (sin citas, loading, errores), documenta las decisiones de diseño en comentarios y aplica buenas prácticas.
+
+2. **Componentización y reutilización:**  
+   - Divide la vista en componentes reutilizables (por ejemplo, AppointmentTable, AppointmentRow, ActionButton, Modal, etc.).
+   - Usa PascalCase para nombres de componentes y carpetas.
+   - Reutiliza layouts y componentes existentes del proyecto cuando sea posible.
+
+3. **Internacionalización:**  
+   - Usa `react-i18next` para todos los textos visibles.
+   - Los textos deben estar en los archivos de localización (`es.json`, `en.json`).
+
+4. **Responsive Design:**  
+   - El diseño debe ser completamente responsive, adaptándose a dispositivos móviles, tablets y desktop. Utiliza los breakpoints recomendados por Tailwind CSS.
+
+5. **Accesibilidad y buenas prácticas:**  
+   - Usa etiquetas semánticas y atributos ARIA donde corresponda.
+   - Asegúrate de que todos los controles sean navegables con teclado.
+
+6. **Documentación y comentarios:**  
+   - Comenta el código explicando la estructura, puntos de personalización y decisiones de diseño, especialmente si la imagen no cubre algún aspecto.
+
+7. **Convenciones y estructura:**  
+   - Sigue la estructura de carpetas y convenciones del proyecto (ver README).
+   - No incluyas lógica de negocio ni llamadas a la API en la maquetación.
+   - Respeta la paleta de colores y fuentes iniciales del proyecto.
+
+---
+
+## Salida esperada
+
+- Archivos de componentes React en PascalCase, siguiendo la estructura del proyecto.
+- Código comentado y documentado en español.
+- Todos los textos internacionalizados.
+- Vista de gestión de agenda funcional y responsive, lista para ser conectada a la lógica de negocio.
+
+---
+
+## Ejemplo de estructura esperada
+```
+src/
+├── components/
+│   ├── AppointmentTable/
+│   │   └── AppointmentTable.jsx
+│   ├── AppointmentRow/
+│   │   └── AppointmentRow.jsx
+│   ├── ActionButton/
+│   │   └── ActionButton.jsx
+│   └── Modal/
+│       └── Modal.jsx
+├── pages/
+│   └── Agenda.jsx
+├── layouts/
+│   └── MainLayout.jsx
+├── i18n/
+│   ├── es.json
+│   ├── en.json
+│   └── index.js
+├── services/
+│   └── api.js
+├── styles/
+│   └── tailwind.css
+├── App.jsx
+├── main.jsx
+└── index.html
+```
+---
+
+## Notas adicionales
+
+- No generes otras vistas ni lógica adicional.
+- Si la imagen del diseño no especifica algún comportamiento, aplica buenas prácticas y documenta tu decisión.
+- Reutiliza layouts y componentes existentes siempre que sea posible.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+Eres un experto en Ingenieria de Prompts y con experiencia como Frontend Developer
+# Contexto Inicial
+Nos encontramos implementado la maquetación del frontend, actualmente contamos con lo siguiente:
+- Un proyecto base funcional basado en React
+- Se ha implementado un Layout para visitante no autenticadas y pacientes logueados
+- Varias vistas funcionales
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y la documentación del API que se va consumir.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el agente Vercel `v0` que me ayude a implementar la maquetación de la vista de para que un medico edite su horario de disponibilidad.
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- El agente no realizará otras vistas a menos que el usuario lo indique
+- Se deberan crear componentes para que puedan ser reutilizados.
+- Si es posible reutilizar los layouts y componentes existentes en el proyecto
+- Respetar la paleta de colores y fuentes iniciales del proyecto
+- Debe ser responsivo para ajustarse a dispositivos moviles.
+- Utilizar convención de nombre con Pascal Case
+
+# Consideraciones
+- El agente tendrá acceso a la imagen del diseño en el contexto
+- Para crear este prompt consulta los siguientes documentos (mencionados en el contexto) ya que el agente no tendrá acceso y el prompt debe contener la información necesaria de ellos:
+   * PRD: #file:product_requirement_document.md 
+   * Diagrama de arquitectura: #file:diagrama_visual_arquitectura.md 
+   * README del proyecto: #file:README.md 
+   * Package.json del proyecto: #file:package.json 
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+
+
+
+
+# Prompt para agente Vercel v0: Maquetación de la Vista de Edición de Horario de Disponibilidad para Médicos en Buscadoc
+
+## Rol
+Actúa como **Frontend Developer experto en React, Tailwind CSS, Headless UI, internacionalización (react-i18next) y patrones de componentes reutilizables**. Aplica las mejores prácticas de accesibilidad, seguridad, internacionalización y arquitectura. Usa PascalCase para nombres de componentes y carpetas. Documenta tus decisiones de diseño y estructura el código con comentarios claros.
+
+---
+
+## Contexto
+
+- El proyecto base ya está implementado en React y cuenta con layouts y componentes reutilizables.
+- El diseño de la vista de edición de horario de disponibilidad está disponible como imagen en el contexto.
+
+---
+
+## Objetivo
+
+Maquetar la vista para que un médico edite su horario de disponibilidad, siguiendo el diseño proporcionado y reutilizando los layouts y componentes existentes en el proyecto siempre que sea posible. No generes otras vistas a menos que el usuario lo indique explícitamente.
+
+---
+
+## Requisitos y mejores prácticas
+
+1. **Guíate del diseño en la imagen adjunta al contexto:**  
+   - La edición de horario debe contemplar solo días de la semana y horas, según lo mostrado en el diseño.
+   - Si el diseño no cubre algún estado (sin horarios, errores, loading, etc.), documenta las decisiones de diseño en comentarios y aplica buenas prácticas.
+
+2. **Componentización y reutilización:**  
+   - Divide la vista en componentes reutilizables (por ejemplo, ScheduleForm, etc.).
+   - Usa PascalCase para nombres de componentes y carpetas.
+   - Reutiliza layouts y componentes existentes del proyecto cuando sea posible.
+
+3. **Internacionalización:**  
+   - Usa `react-i18next` para todos los textos visibles.
+   - Los textos deben estar en los archivos de localización (`es.json`, `en.json`).
+
+4. **Responsive Design:**  
+   - El diseño debe ser completamente responsive, adaptándose a dispositivos móviles, tablets y desktop. Utiliza los breakpoints recomendados por Tailwind CSS.
+
+5. **Accesibilidad y buenas prácticas:**  
+   - Usa etiquetas semánticas y atributos ARIA donde corresponda.
+   - Asegúrate de que todos los controles sean navegables con teclado.
+
+6. **Documentación y comentarios:**  
+   - Comenta el código explicando la estructura, puntos de personalización y decisiones de diseño, especialmente si la imagen no cubre algún aspecto.
+
+7. **Convenciones y estructura:**  
+   - Sigue la estructura de carpetas y convenciones del proyecto (ver README).
+   - No incluyas lógica de negocio ni llamadas a la API en la maquetación.
+   - Respeta la paleta de colores y fuentes iniciales del proyecto.
+
+---
+
+## Salida esperada
+
+- Archivos de componentes React en PascalCase, siguiendo la estructura del proyecto.
+- Código comentado y documentado en español.
+- Todos los textos internacionalizados.
+- Vista de edición de horario funcional y responsive, lista para ser conectada a la lógica de negocio.
+
+---
+
+## Ejemplo de estructura esperada
+```
+src/
+├── components/
+│   ├── ScheduleForm/
+│   │   └── ScheduleForm.jsx
+├── pages/
+│   └── EditSchedule.jsx
+├── layouts/
+│   └── MainLayout.jsx
+├── i18n/
+│   ├── es.json
+│   ├── en.json
+│   └── index.js
+├── services/
+│   └── api.js
+├── styles/
+│   └── tailwind.css
+├── App.jsx
+├── main.jsx
+└── index.html
+```
+
+---
+
+## Notas adicionales
+
+- No generes otras vistas ni lógica adicional.
+- Si la imagen del diseño no especifica algún comportamiento, aplica buenas prácticas y documenta tu decisión.
+- Reutiliza layouts y componentes existentes siempre que sea posible.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+Eres un experto en Ingenieria de Prompts y con experiencia como Frontend Developer
+# Contexto Inicial
+Nos encontramos implementado la maquetación del frontend, actualmente contamos con lo siguiente:
+- Un proyecto base funcional basado en React
+- Se ha implementado un Layout para visitante no autenticadas y pacientes logueados
+- Varias vistas funcionales
+Como parte de la documentación se cuenta con un product requirement document (PRD), el diagrama de arquitectura y la documentación del API que se va consumir.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el agente Vercel `v0` que me ayude a mejorar la maquetación de la vista "DoctorProfile.tsx"
+
+# Requerimientos visuales
+- Integrar los elementos faltantes del layout: NavBar, Footer, etc
+- Conservar los elementos y la funcionalidad existentes de la vista mencionada
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- El agente no realizará otras vistas a menos que el usuario lo indique
+- Reutilizar los layouts y componentes existentes en el proyecto
+- Respetar la paleta de colores y fuentes iniciales del proyecto
+- Debe ser responsivo para ajustarse a dispositivos moviles.
+- Utilizar convención de nombre con Pascal Case
+
+# Consideraciones
+- Para crear este prompt consulta los siguientes documentos (mencionados en el contexto) ya que el agente no tendrá acceso y el prompt debe contener la información necesaria de ellos:
+   * PRD: #file:product_requirement_document.md 
+   * Diagrama de arquitectura: #file:diagrama_visual_arquitectura.md 
+   * README del proyecto: #file:README.md 
+   * Package.json del proyecto: #file:package.json 
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+
+# Prompt para agente Vercel v0: Mejora de la Maquetación en la Vista DoctorProfile.tsx
+
+## Rol
+Actúa como **Frontend Developer experto en React, Tailwind CSS, Headless UI, internacionalización (react-i18next) y patrones de componentes reutilizables**. Aplica las mejores prácticas de accesibilidad, seguridad, internacionalización y arquitectura. Usa PascalCase para nombres de componentes y carpetas. Documenta tus decisiones de diseño y estructura el código con comentarios claros.
+
+---
+
+## Contexto
+
+- El proyecto base ya está implementado en React y cuenta con layouts y componentes reutilizables.
+- La vista `DoctorProfile.tsx` ya existe y contiene elementos y funcionalidad que deben conservarse.
+- El diseño actualizado incluye elementos faltantes como NavBar y Footer.
+
+---
+
+## Objetivo
+
+Mejorar la maquetación de la vista `DoctorProfile.tsx` integrando los elementos faltantes del layout (NavBar, Footer, etc.), conservando todos los elementos y la funcionalidad existentes de la vista.
+
+---
+
+## Requisitos y mejores prácticas
+
+1. **Integración de elementos de layout:**  
+   - Añade los elementos faltantes del layout (NavBar, Footer, etc.) según el diseño y reutiliza los componentes existentes del proyecto.
+   - Asegúrate de que la vista sea completamente responsive y se adapte a dispositivos móviles, tablets y desktop.
+
+2. **Internacionalización:**  
+   - Usa `react-i18next` para todos los textos visibles.
+   - Los textos deben estar en los archivos de localización (`es.json`, `en.json`).
+
+3. **Accesibilidad y buenas prácticas:**  
+   - Usa etiquetas semánticas y atributos ARIA donde corresponda.
+   - Asegúrate de que todos los controles sean navegables con teclado.
+
+4. **Documentación y comentarios:**  
+   - Comenta el código explicando la estructura, puntos de personalización y decisiones de diseño, especialmente si la imagen del layout no cubre algún estado o comportamiento (por ejemplo, responsive, loading, errores).
+
+5. **Convenciones y estructura:**  
+   - Sigue la estructura de carpetas y convenciones del proyecto (ver README).
+   - No modifiques la lógica de negocio ni las llamadas a la API ya existentes en `DoctorProfile.tsx`.
+   - Respeta la paleta de colores y fuentes iniciales del proyecto.
+
+---
+
+## Salida esperada
+
+- Código de la vista `DoctorProfile.tsx` mejorado, integrando los elementos de layout faltantes y conservando la funcionalidad existente.
+- Código comentado y documentado en español.
+- Todos los textos internacionalizados.
+- Vista completamente responsive y alineada al diseño.
+
+---
+
+## Notas adicionales
+
+- No generes otras vistas ni lógica adicional.
+- Reutiliza layouts y componentes existentes siempre que sea posible.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.

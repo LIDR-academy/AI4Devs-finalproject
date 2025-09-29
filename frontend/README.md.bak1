@@ -1,0 +1,194 @@
+# Buscadoc Frontend
+
+Plataforma médica moderna para conectar pacientes con doctores especializados. Interfaz de usuario desarrollada con React 19.1, Vite y Tailwind CSS.
+
+## Descripción
+
+Buscadoc es una aplicación web que facilita la conexión entre pacientes y profesionales médicos especializados. La plataforma permite el registro de pacientes, búsqueda de doctores por especialidad, y gestión de citas médicas a través de una interfaz intuitiva y responsive.
+
+## Estructura del Proyecto
+
+\`\`\`
+buscadoc-frontend/
+├── public/                     # Archivos estáticos públicos
+├── src/                        # Código fuente de la aplicación
+│   ├── i18n/                   # Configuración de internacionalización
+│   │   ├── en.json             # Traducciones en inglés
+│   │   ├── es.json             # Traducciones en español
+│   │   └── index.js            # Configuración de i18next
+│   ├── services/               # Servicios para comunicación con APIs
+│   │   ├── api.js              # Configuración base de Axios
+│   │   ├── authService.js      # Servicios de autenticación
+│   │   ├── doctorService.js    # Servicios relacionados con doctores
+│   │   └── patientService.js   # Servicios relacionados con pacientes
+│   ├── styles/                 # Estilos globales
+│   │   └── tailwind.css        # Configuración de Tailwind CSS
+│   ├── App.tsx                 # Componente principal de la aplicación
+│   └── main.jsx                # Punto de entrada de la aplicación
+├── components/                 # Componentes UI reutilizables (shadcn/ui)
+├── .env.example                # Variables de entorno de ejemplo
+├── .eslintrc.js                # Configuración de ESLint
+├── .gitignore                  # Archivos ignorados por Git
+├── index.html                  # Template HTML principal
+├── package.json                # Dependencias y scripts del proyecto
+├── postcss.config.js           # Configuración de PostCSS
+├── tailwind.config.js          # Configuración de Tailwind CSS
+├── tsconfig.json               # Configuración de TypeScript
+└── vite.config.js              # Configuración de Vite
+\`\`\`
+
+### Descripción de Carpetas
+
+- **`src/i18n/`**: Contiene la configuración de internacionalización con soporte para español e inglés
+- **`src/services/`**: Servicios para la comunicación con APIs backend, organizados por funcionalidad
+- **`src/styles/`**: Estilos globales y configuración de Tailwind CSS con colores personalizados de Buscadoc
+- **`components/`**: Componentes UI reutilizables basados en shadcn/ui para mantener consistencia visual
+
+## Variables de Entorno
+
+Crea un archivo `.env` basado en `.env.example`:
+
+\`\`\`bash
+# API Configuration
+REACT_APP_API_BASE_URL=http://localhost:3000
+
+# App Configuration
+REACT_APP_NAME=Buscadoc
+REACT_APP_VERSION=1.0.0
+
+# Development
+REACT_APP_ENV=development
+\`\`\`
+
+### Variables Disponibles
+
+- **`REACT_APP_API_BASE_URL`**: URL base del API backend
+- **`REACT_APP_NAME`**: Nombre de la aplicación
+- **`REACT_APP_VERSION`**: Versión actual de la aplicación
+- **`REACT_APP_ENV`**: Entorno de ejecución (development/production)
+
+## Instalación y Desarrollo
+
+### Prerrequisitos
+
+- Node.js 18+ 
+- npm o yarn
+
+### Instalación
+
+\`\`\`bash
+# Clonar el repositorio
+git clone <repository-url>
+cd buscadoc-frontend
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus configuraciones
+\`\`\`
+
+### Desarrollo
+
+\`\`\`bash
+# Iniciar servidor de desarrollo
+npm run dev
+
+# El servidor estará disponible en http://localhost:5173
+\`\`\`
+
+### Scripts Disponibles
+
+- **`npm run dev`**: Inicia el servidor de desarrollo con hot reload
+- **`npm run build`**: Construye la aplicación para producción
+- **`npm run preview`**: Previsualiza la build de producción localmente
+- **`npm run lint`**: Ejecuta ESLint para verificar el código
+- **`npm run lint:fix`**: Corrige automáticamente errores de ESLint
+- **`npm run format`**: Formatea el código con Prettier
+
+## Compilación y Puesta a Producción
+
+### Build de Producción
+
+\`\`\`bash
+# Generar build optimizada
+npm run build
+
+# Los archivos se generarán en la carpeta 'dist/'
+\`\`\`
+
+### Despliegue
+
+La aplicación puede desplegarse en cualquier servicio de hosting estático:
+
+#### Vercel (Recomendado)
+\`\`\`bash
+# Instalar Vercel CLI
+npm i -g vercel
+
+# Desplegar
+vercel
+\`\`\`
+
+#### Netlify
+\`\`\`bash
+# Build command: npm run build
+# Publish directory: dist
+\`\`\`
+
+#### Servidor Web Tradicional
+\`\`\`bash
+# Subir contenido de la carpeta 'dist/' al servidor
+# Configurar servidor para SPA (Single Page Application)
+\`\`\`
+
+## Arquitectura
+
+### Stack Tecnológico
+
+- **Frontend Framework**: React 19.1 con JSX/TSX
+- **Build Tool**: Vite 6.0 para desarrollo y build optimizado
+- **Styling**: Tailwind CSS 3.4 con configuración personalizada
+- **UI Components**: shadcn/ui con Radix UI primitives
+- **HTTP Client**: Axios para comunicación con APIs
+- **Internacionalización**: react-i18next con detección automática de idioma
+- **Routing**: React Router DOM 6.28 (configurado pero no activo en v0)
+- **Icons**: Heroicons y Lucide React
+- **Linting**: ESLint con configuración para React
+- **Formatting**: Prettier con plugin para Tailwind
+
+### Patrones de Diseño
+
+- **Component-Based Architecture**: Componentes reutilizables y modulares
+- **Service Layer**: Separación de lógica de API en servicios dedicados
+- **Responsive Design**: Mobile-first con breakpoints de Tailwind
+- **Internationalization**: Soporte multiidioma desde el diseño inicial
+- **Type Safety**: TypeScript para mayor robustez del código
+
+### Paleta de Colores Personalizada
+
+La aplicación utiliza una paleta de colores específica para Buscadoc:
+
+- **Federal Blue**: `#1e3a8a` - Color principal para elementos importantes
+- **Honolulu Blue**: `#0ea5e9` - Color secundario para acciones
+- **Pacific Cyan**: `#06b6d4` - Color de acento para destacar información
+
+### Estructura de Componentes
+
+- **Atomic Design**: Componentes organizados desde elementos básicos hasta páginas completas
+- **Props Interface**: Interfaces TypeScript bien definidas para cada componente
+- **Accessibility**: Implementación de ARIA labels y navegación por teclado
+- **Performance**: Lazy loading y optimizaciones de renderizado
+
+## Contribución
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Abre un Pull Request
+
+## Licencia
+
+Este proyecto es privado y confidencial. Todos los derechos reservados.

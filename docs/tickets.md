@@ -1754,18 +1754,19 @@ Este ticket es el primer paso para la configuración del frontend. No incluye in
 **Historial de cambios:**  
 - [17/08/2025] [GitHub Copilot] Ticket creado para inicialización de frontend.
 
-## 13. Instalar las dependencias necesarias en frontend (Vue.js, Vuetify, vue-i18n, etc.)
+## 13. Instalar las dependencias necesarias en frontend (React + Tailwind CSS + Headless UI, react-i18next, etc.)
 
 **Descripción detallada:**  
 - **Propósito:**  
 Preparar el entorno de desarrollo frontend instalando todas las dependencias esenciales para el stack definido en el PRD, permitiendo la implementación de la interfaz de usuario y consumo de la API.
 - **Detalle específico:**  
 Instalar los siguientes paquetes en la carpeta `frontend`:
-  - vue
-  - vuetify
-  - vue-i18n
+  - react
+  - tailwindcss
+  - headlessui/react
+  - react-i18next
   - axios (para consumo de API)
-  - vue-router
+  - react-router-dom
   - dotenv
   - Otros paquetes necesarios según el PRD
 
@@ -1804,17 +1805,17 @@ Revisar el PRD para confirmar versiones y dependencias adicionales. Documentar c
 Asegurar que el frontend tenga configuraciones seguras y flexibles para consumir la API, gestionar internacionalización y otros servicios, siguiendo las mejores prácticas y requisitos del PRD.
 - **Detalle específico:**  
 Crear un archivo `.env` en la carpeta `frontend` con las siguientes variables mínimas:
-  - `VUE_APP_API_URL` (URL base de la API backend)
-  - `VUE_APP_I18N_LOCALE` (idioma por defecto)
+  - `APP_API_URL` (URL base de la API backend)
+  - `APP_I18N_LOCALE` (idioma por defecto)
   - Variables adicionales según dependencias (Firebase, etc. si aplica)
-Configurar el uso de `dotenv` o el sistema de variables de entorno de Vue en el proyecto para cargar estas variables.
+Configurar el uso de `dotenv` o el sistema de variables de entorno de React en el proyecto para cargar estas variables.
 
 **Criterios de aceptación:**  
 - El archivo `.env` existe y contiene las variables necesarias.
 - El frontend puede leer las variables de entorno correctamente.
 - El consumo de la API y la internacionalización funcionan usando las variables configuradas.
 - **Pruebas de validación:**  
-  - Ejecutar el frontend y verificar que consume la API usando `VUE_APP_API_URL`.
+  - Ejecutar el frontend y verificar que consume la API usando `APP_API_URL`.
   - Probar el cambio de idioma y otras variables configuradas.
 
 **Prioridad:**  
@@ -1848,14 +1849,14 @@ No subir el archivo `.env` al repositorio. Documentar las variables requeridas e
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar el layout base de la aplicación Buscadoc en Vue.js, asegurando una estructura visual consistente para todas las vistas principales.
+Diseñar y maquetar el layout base de la aplicación Buscadoc en React, asegurando una estructura visual consistente para todas las vistas principales.
 - **Detalle específico:**  
 Crear los componentes base:
   - Header con logo y navegación principal.
   - Menú lateral o superior para navegación entre vistas.
   - Footer con información legal y enlaces útiles.
   - Contenedor principal para renderizar las vistas.
-Utilizar Vuetify para el diseño responsivo y asegurar compatibilidad con futuras vistas.
+Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar compatibilidad con futuras vistas.
 
 **Criterios de aceptación:**  
 - El layout base está implementado y disponible en el frontend.
@@ -1876,7 +1877,7 @@ Muy alta
 - Característica del producto: Frontend, UI/UX, Maquetado
 
 **Comentarios y Notas:**  
-Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -1889,13 +1890,13 @@ Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD.
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista principal de búsqueda en Vue.js, permitiendo al usuario filtrar especialistas por especialidad, ciudad y estado.
+Diseñar y maquetar la vista principal de búsqueda en React, permitiendo al usuario filtrar especialistas por especialidad, ciudad y estado.
 - **Detalle específico:**  
 Crear un formulario con los siguientes campos:
   - Select de especialidad (con datos del catálogo).
   - Select de ciudad y estado (con datos del catálogo).
   - Botón para ejecutar la búsqueda.
-Maquetar el área de resultados para mostrar la lista de especialistas filtrados. Utilizar Vuetify para el diseño responsivo y asegurar accesibilidad.
+Maquetar el área de resultados para mostrar la lista de especialistas filtrados. Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
 **Criterios de aceptación:**  
 - La vista de búsqueda está implementada y disponible en el frontend.
@@ -1917,7 +1918,7 @@ Muy alta
 - Característica del producto: Frontend, UI/UX, Maquetado
 
 **Comentarios y Notas:**  
-Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -1974,7 +1975,7 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 - **Propósito:**  
 Permitir que la vista de búsqueda muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para el público objetivo.
 - **Detalle específico:**  
-- Instalar y configurar vue-i18n en el proyecto frontend.
+- Instalar y configurar react-i18next en el proyecto frontend.
 - Crear archivos de traducción para español con los textos de la vista de búsqueda (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en el layout base y la vista de búsqueda.
 - Asegurar que todos los textos de la vista se gestionan mediante el sistema de internacionalización.
@@ -1998,7 +1999,7 @@ Alta
 - Característica del producto: Frontend, Internacionalización, UI/UX
 
 **Comentarios y Notas:**  
-Utilizar vue-i18n y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2096,13 +2097,13 @@ Actualizar las pruebas si la vista de búsqueda cambia en futuras iteraciones.
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista de perfil de especialista en Vue.js, mostrando información profesional y ubicación general (ciudad y estado) según los criterios del PRD.
+Diseñar y maquetar la vista de perfil de especialista en React, mostrando información profesional y ubicación general (ciudad y estado) según los criterios del PRD.
 - **Detalle específico:**  
 Crear la vista y componentes para mostrar:
   - Nombre, especialidad, biografía, foto, cédula profesional y título.
   - Ubicación general: ciudad y estado (sin dirección exacta).
   - Botón para regresar a resultados de búsqueda.
-Utilizar Vuetify para el diseño responsivo y asegurar accesibilidad.
+Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
 **Criterios de aceptación:**  
 - La vista de perfil está implementada y disponible en el frontend.
@@ -2123,7 +2124,7 @@ Muy alta
 - Característica del producto: Frontend, UI/UX, Maquetado
 
 **Comentarios y Notas:**  
-Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2178,7 +2179,7 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 - **Propósito:**  
 Permitir que la vista de perfil de especialista muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para el público objetivo.
 - **Detalle específico:**  
-- Configurar vue-i18n en el proyecto frontend si no está ya configurado.
+- Configurar react-i18next en el proyecto frontend si no está ya configurado.
 - Crear archivos de traducción para español con los textos de la vista de perfil (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en la vista de perfil de especialista.
 - Asegurar que todos los textos de la vista se gestionan mediante el sistema de internacionalización.
@@ -2200,7 +2201,7 @@ Alta
 - Característica del producto: Frontend, Internacionalización, UI/UX
 
 **Comentarios y Notas:**  
-Utilizar vue-i18n y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2299,14 +2300,14 @@ Actualizar las pruebas si la vista de perfil cambia en futuras iteraciones.
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista de búsqueda avanzada en Vue.js para pacientes autenticados, permitiendo filtrar especialistas por especialidad, ubicación, valoración y disponibilidad.
+Diseñar y maquetar la vista de búsqueda avanzada en React para pacientes autenticados, permitiendo filtrar especialistas por especialidad, ubicación, valoración y disponibilidad.
 - **Detalle específico:**  
 Crear el formulario de búsqueda con los siguientes filtros:
   - Especialidad (select)
   - Ciudad y estado (select)
   - Valoración mínima (slider o select)
   - Disponibilidad (checkbox o select)
-Maquetar el área de resultados para mostrar la lista de especialistas con información relevante y acceso al perfil completo. Utilizar Vuetify para el diseño responsivo y asegurar accesibilidad.
+Maquetar el área de resultados para mostrar la lista de especialistas con información relevante y acceso al perfil completo. Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
 **Criterios de aceptación:**  
 - La vista de búsqueda avanzada está implementada y disponible solo para pacientes autenticados.
@@ -2328,7 +2329,7 @@ Muy alta
 - Característica del producto: Frontend, UI/UX, Maquetado
 
 **Comentarios y Notas:**  
-Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2383,7 +2384,7 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista de perfil completo de especialista en Vue.js para pacientes autenticados, mostrando información adicional relevante para la comparación y agendamiento.
+Diseñar y maquetar la vista de perfil completo de especialista en React para pacientes autenticados, mostrando información adicional relevante para la comparación y agendamiento.
 - **Detalle específico:**  
 - Crear la vista y componentes para mostrar:
   - Nombre, especialidad, biografía, foto, cédula profesional, título.
@@ -2413,7 +2414,7 @@ Muy alta
 - Característica del producto: Frontend, Consumo de API, UI/UX, Seguridad
 
 **Comentarios y Notas:**  
-Utilizar Vuetify para componentes visuales y Axios para llamadas a la API. Validar autenticación y permisos antes de mostrar información sensible.
+Utilizar Tailwind CSS + Headless UI para componentes visuales y Axios para llamadas a la API. Validar autenticación y permisos antes de mostrar información sensible.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2429,7 +2430,7 @@ Utilizar Vuetify para componentes visuales y Axios para llamadas a la API. Valid
 - **Propósito:**  
 Permitir que las vistas de búsqueda avanzada y perfil completo de especialistas muestren todos los textos y mensajes en español, facilitando la experiencia de usuario para pacientes autenticados.
 - **Detalle específico:**  
-- Configurar vue-i18n en el proyecto frontend si no está ya configurado.
+- Configurar react-i18next en el proyecto frontend si no está ya configurado.
 - Crear archivos de traducción para español con los textos de las vistas de búsqueda avanzada y perfil completo (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en ambas vistas.
 - Asegurar que todos los textos se gestionan mediante el sistema de internacionalización.
@@ -2451,7 +2452,7 @@ Alta
 - Característica del producto: Frontend, Internacionalización, UI/UX
 
 **Comentarios y Notas:**  
-Utilizar vue-i18n y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2552,14 +2553,14 @@ Actualizar las pruebas si las vistas cambian en futuras iteraciones.
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista de agendamiento de cita en Vue.js para pacientes autenticados, permitiendo seleccionar fecha, hora y motivo de consulta.
+Diseñar y maquetar la vista de agendamiento de cita en React para pacientes autenticados, permitiendo seleccionar fecha, hora y motivo de consulta.
 - **Detalle específico:**  
 Crear el formulario de agendamiento con los siguientes campos:
   - Calendario para seleccionar fecha disponible.
   - Selector de hora según disponibilidad del especialista.
   - Campo de texto para motivo de consulta (opcional).
   - Botón para confirmar agendamiento.
-Maquetar el área de confirmación y retroalimentación visual. Utilizar Vuetify para el diseño responsivo y asegurar accesibilidad.
+Maquetar el área de confirmación y retroalimentación visual. Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
 **Criterios de aceptación:**  
 - La vista de agendamiento está implementada y disponible solo para pacientes autenticados.
@@ -2581,7 +2582,7 @@ Muy alta
 - Característica del producto: Frontend, UI/UX, Maquetado
 
 **Comentarios y Notas:**  
-Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2637,7 +2638,7 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 - **Propósito:**  
 Permitir que la vista de agendamiento de cita muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para pacientes autenticados.
 - **Detalle específico:**  
-- Configurar vue-i18n en el proyecto frontend si no está ya configurado.
+- Configurar react-i18next en el proyecto frontend si no está ya configurado.
 - Crear archivos de traducción para español con los textos de la vista de agendamiento (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en la vista de agendamiento.
 - Asegurar que todos los textos se gestionan mediante el sistema de internacionalización.
@@ -2659,7 +2660,7 @@ Alta
 - Característica del producto: Frontend, Internacionalización, UI/UX
 
 **Comentarios y Notas:**  
-Utilizar vue-i18n y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2760,14 +2761,14 @@ Actualizar las pruebas si la vista de agendamiento cambia en futuras iteraciones
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista de gestión de agenda y disponibilidad en Vue.js para médicos especialistas autenticados, permitiendo definir horarios disponibles, bloquear fechas y visualizar citas pendientes.
+Diseñar y maquetar la vista de gestión de agenda y disponibilidad en React para médicos especialistas autenticados, permitiendo definir horarios disponibles, bloquear fechas y visualizar citas pendientes.
 - **Detalle específico:**  
 Crear la vista y componentes para:
   - Seleccionar y modificar horarios disponibles por día.
   - Bloquear fechas por motivos personales.
   - Visualizar citas pendientes y su estado (pendiente, confirmada, rechazada).
   - Botón para confirmar o rechazar citas.
-Utilizar Vuetify para el diseño responsivo y asegurar accesibilidad.
+Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
 **Criterios de aceptación:**  
 - La vista de gestión de agenda está implementada y disponible solo para médicos autenticados.
@@ -2789,7 +2790,7 @@ Muy alta
 - Característica del producto: Frontend, UI/UX, Maquetado
 
 **Comentarios y Notas:**  
-Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2853,7 +2854,7 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 - **Propósito:**  
 Permitir que la vista de gestión de agenda y disponibilidad muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para médicos especialistas.
 - **Detalle específico:**  
-- Configurar vue-i18n en el proyecto frontend si no está ya configurado.
+- Configurar react-i18next en el proyecto frontend si no está ya configurado.
 - Crear archivos de traducción para español con los textos de la vista de gestión de agenda (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en la vista de gestión de agenda y disponibilidad.
 - Asegurar que todos los textos se gestionan mediante el sistema de internacionalización.
@@ -2875,7 +2876,7 @@ Alta
 - Característica del producto: Frontend, Internacionalización, UI/UX
 
 **Comentarios y Notas:**  
-Utilizar vue-i18n y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -2977,14 +2978,14 @@ Actualizar las pruebas si la vista de gestión de agenda cambia en futuras itera
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista de próximas citas en Vue.js para médicos especialistas autenticados, mostrando la información relevante de cada cita y paciente.
+Diseñar y maquetar la vista de próximas citas en React para médicos especialistas autenticados, mostrando la información relevante de cada cita y paciente.
 - **Detalle específico:**  
 Crear la vista y componentes para:
   - Listar las próximas citas del médico, ordenadas por fecha y hora.
   - Mostrar información relevante del paciente (nombre, edad, motivo de consulta).
   - Mostrar detalles de la cita (fecha, hora, estado).
   - Permitir filtrar citas por fecha y estado (opcional).
-Utilizar Vuetify para el diseño responsivo y asegurar accesibilidad.
+Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
 **Criterios de aceptación:**  
 - La vista de próximas citas está implementada y disponible solo para médicos autenticados.
@@ -3005,7 +3006,7 @@ Muy alta
 - Característica del producto: Frontend, UI/UX, Maquetado
 
 **Comentarios y Notas:**  
-Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -3063,7 +3064,7 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 - **Propósito:**  
 Permitir que la vista de próximas citas muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para médicos especialistas.
 - **Detalle específico:**  
-- Configurar vue-i18n en el proyecto frontend si no está ya configurado.
+- Configurar react-i18next en el proyecto frontend si no está ya configurado.
 - Crear archivos de traducción para español con los textos de la vista de próximas citas (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en la vista de próximas citas.
 - Asegurar que todos los textos se gestionan mediante el sistema de internacionalización.
@@ -3085,7 +3086,7 @@ Alta
 - Característica del producto: Frontend, Internacionalización, UI/UX
 
 **Comentarios y Notas:**  
-Utilizar vue-i18n y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
 
 **Enlaces o Referencias:**  
 - [Product Requirement Document](docs/product_requirement_document.md)
@@ -3187,7 +3188,7 @@ Asegurar la calidad y mantenibilidad del sistema implementando pruebas unitarias
   - Validar lógica de negocio, manejo de errores y respuestas esperadas.
 - Frontend:  
   - Implementar pruebas unitarias para los componentes principales (búsqueda, perfil, agendamiento, agenda, próximas citas).
-  - Utilizar Vitest o Jest para Vue.js.
+  - Utilizar Cypress o Jest para React.
   - Validar renderizado, props y eventos principales.
 - Automatizar la ejecución de pruebas en el entorno de desarrollo.
 
@@ -3229,7 +3230,7 @@ Facilitar la puesta en marcha y mantenimiento del sistema documentando y automat
 - Definir los pasos para el despliegue en ambiente local y producción.
 - Documentar la configuración de variables de entorno y archivos `.env`.
 - Incluir instrucciones para la instalación de dependencias y ejecución de migraciones de base de datos.
-- Documentar el proceso de build y despliegue de frontend (Vue.js + Vuetify).
+- Documentar el proceso de build y despliegue de frontend (React + Tailwind CSS + Headless UI).
 - Incluir ejemplos de scripts de despliegue y configuración de servicios (Docker, PM2, Firebase Storage, etc.).
 - Documentar el proceso de actualización y rollback.
 - Incluir recomendaciones de seguridad y cumplimiento normativo (LFPDPPP).

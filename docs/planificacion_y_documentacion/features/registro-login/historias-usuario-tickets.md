@@ -159,7 +159,7 @@ Alta
 ##### 1.1.5 [Frontend] Crear formulario de registro de paciente
 
 **Descripción detallada:**  
-Diseñar el formulario de registro de paciente en Vue.js + Vuetify, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: nombre, apellido, email, contraseña, confirmación de contraseña y selección de tipo de usuario (paciente).
+Diseñar el formulario de registro de paciente en React + Tailwind CSS + Headless UI, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: nombre, apellido, email, contraseña, confirmación de contraseña y selección de tipo de usuario (paciente).
 
 **Dependencias:**  
 - Depende de la definición del endpoint en backend.
@@ -347,7 +347,7 @@ Actualizar las pruebas si el endpoint cambia en futuras iteraciones.
 ##### 1.2.5 [Frontend] Crear formulario de registro de médico especialista
 
 **Descripción detallada:**  
-Diseñar el formulario de registro de médico especialista en Vue.js + Vuetify, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: nombre, apellido, email, contraseña, confirmación de contraseña, selección de tipo de usuario (médico) y license_number.
+Diseñar el formulario de registro de médico especialista en React + Tailwind CSS + Headless UI, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: nombre, apellido, email, contraseña, confirmación de contraseña, selección de tipo de usuario (médico) y license_number.
 
 **Dependencias:**  
 - Depende de la definición del endpoint en backend.
@@ -536,7 +536,7 @@ Actualizar las pruebas si el endpoint cambia en futuras iteraciones.
 ##### 2.1.5 [Frontend] Crear formulario de login de paciente
 
 **Descripción detallada:**  
-Diseñar el formulario de login de paciente en Vue.js + Vuetify, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: email, contraseña y selección de tipo de usuario (paciente).
+Diseñar el formulario de login de paciente en React + Tailwind CSS + Headless UI, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: email, contraseña y selección de tipo de usuario (paciente).
 
 **Dependencias:**  
 - Depende de la definición del endpoint en backend.
@@ -719,7 +719,7 @@ Actualizar las pruebas si el endpoint cambia en futuras iteraciones.
 ##### 2.2.5 [Frontend] Crear formulario de login de médico especialista
 
 **Descripción detallada:**  
-Diseñar el formulario de login de médico especialista en Vue.js + Vuetify, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: email, contraseña y selección de tipo de usuario (médico especialista).
+Diseñar el formulario de login de médico especialista en React + Tailwind CSS + Headless UI, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: email, contraseña y selección de tipo de usuario (médico especialista).
 
 **Dependencias:**  
 - Depende de la definición del endpoint en backend.
@@ -785,7 +785,7 @@ Frontend, API REST, Internacionalización, Validación
 ### Internacionalización
 
 - El Backend responde siempre en inglés para facilitar la traducción en el Frontend.
-- El Frontend utiliza vue-i18n para mostrar mensajes y errores en el idioma seleccionado por el usuario.
+- El Frontend utiliza react-i18next para mostrar mensajes y errores en el idioma seleccionado por el usuario.
 - Todos los textos y mensajes deben estar definidos en archivos de localización.
 
 ### Seguridad y cumplimiento

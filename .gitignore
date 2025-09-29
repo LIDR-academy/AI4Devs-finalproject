@@ -4,6 +4,11 @@
 **/.env.example
 **/node_modules
 **/prompts_master.md
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # other dependencies
 **/.pnp
@@ -11,6 +16,7 @@
 
 # testing
 **/coverage
+*.lcov
 
 # production
 **/build
@@ -27,6 +33,46 @@ yarn-error.log*
 
 .env
 
+# Package manager lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+**/dist
+**/build
+*.local
+*.next
+
+# Temporary folders
+tmp/
+temp/
+
+# nyc test coverage
+.nyc_output
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
 
 # specstory
 .specstory/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+
+# Editor directories and files
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

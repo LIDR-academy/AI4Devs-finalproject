@@ -34,18 +34,19 @@ Este ticket es el primer paso para la configuración del frontend. No incluye in
 **Historial de cambios:**  
 - [17/08/2025] [GitHub Copilot] Ticket creado para inicialización de frontend.
 
-## 13. Instalar las dependencias necesarias en frontend (Vue.js, Vuetify, vue-i18n, etc.)
+## 13. Instalar las dependencias necesarias en frontend (React + Tailwind CSS + Headless UI, react-i18next, etc.)
 
 **Descripción detallada:**  
 - **Propósito:**  
 Preparar el entorno de desarrollo frontend instalando todas las dependencias esenciales para el stack definido en el PRD, permitiendo la implementación de la interfaz de usuario y consumo de la API.
 - **Detalle específico:**  
 Instalar los siguientes paquetes en la carpeta `frontend`:
-  - vue
-  - vuetify
-  - vue-i18n
+  - react
+  - tailwindcss
+  - headlessui/react
+  - react-i18next
   - axios (para consumo de API)
-  - vue-router
+  - react-router-dom
   - dotenv
   - Otros paquetes necesarios según el PRD
 
@@ -84,17 +85,17 @@ Revisar el PRD para confirmar versiones y dependencias adicionales. Documentar c
 Asegurar que el frontend tenga configuraciones seguras y flexibles para consumir la API, gestionar internacionalización y otros servicios, siguiendo las mejores prácticas y requisitos del PRD.
 - **Detalle específico:**  
 Crear un archivo `.env` en la carpeta `frontend` con las siguientes variables mínimas:
-  - `VUE_APP_API_URL` (URL base de la API backend)
-  - `VUE_APP_I18N_LOCALE` (idioma por defecto)
+  - `APP_API_URL` (URL base de la API backend)
+  - `APP_I18N_LOCALE` (idioma por defecto)
   - Variables adicionales según dependencias (Firebase, etc. si aplica)
-Configurar el uso de `dotenv` o el sistema de variables de entorno de Vue en el proyecto para cargar estas variables.
+Configurar el uso de `dotenv` o el sistema de variables de entorno de React en el proyecto para cargar estas variables.
 
 **Criterios de aceptación:**  
 - El archivo `.env` existe y contiene las variables necesarias.
 - El frontend puede leer las variables de entorno correctamente.
 - El consumo de la API y la internacionalización funcionan usando las variables configuradas.
 - **Pruebas de validación:**  
-  - Ejecutar el frontend y verificar que consume la API usando `VUE_APP_API_URL`.
+  - Ejecutar el frontend y verificar que consume la API usando `APP_API_URL`.
   - Probar el cambio de idioma y otras variables configuradas.
 
 **Prioridad:**  

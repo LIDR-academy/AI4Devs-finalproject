@@ -1,6 +1,6 @@
 ```mermaid
 flowchart TD
-    subgraph "Frontend (Vue.js + Vuetify)"
+    subgraph "Frontend (React + Tailwind CSS + Headless UI)"
         F1[Portal Público]
         F2[Portal Paciente]
         F3[Portal Médico]
@@ -36,7 +36,7 @@ flowchart TD
     end
 
     subgraph "Otros"
-        I18N["Internacionalización (vue-i18n/backend)"]
+        I18N["Internacionalización (react-i18next/backend)"]
         OAUTH["OAuth2 (Google/Outlook)"]
     end
 
