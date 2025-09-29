@@ -72,79 +72,57 @@ Preguntame 3 dudas antes de generar el diagrama para generarlo con precision
 ### **2.2. Descripción de componentes principales:**
 
 **Prompt 1:**
+Explícame en detalle cuáles son los principales componentes que debería tener mi aplicación (frontend, backend, base de datos) y cómo interactúan entre sí.
 
 **Prompt 2:**
+Genérame un esquema de clases a alto nivel para los componentes principales del backend en Spring Boot.
 
 **Prompt 3:**
+Hazme un resumen en 5 puntos de las responsabilidades principales de cada componente del sistema.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 **Prompt 1:**
+Genérame la estructura recomendada de carpetas y ficheros para un proyecto Spring Boot con frontend en React.
 
 **Prompt 2:**
+Sugiere buenas prácticas de organización de código en el backend para facilitar escalabilidad.
 
 **Prompt 3:**
+Descríbeme en un párrafo cómo se relacionan los módulos del proyecto y qué conviene documentar en cada carpeta.
 
 ### **2.4. Infraestructura y despliegue**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
 ### **2.5. Seguridad**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
 ### **2.6. Tests**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
 
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+Genérame el diagrama entidad-relación para los modelos Tienda, Proveedor, Producto e Inventario.
 
 **Prompt 2:**
-
-**Prompt 3:**
+Dame el script SQL para crear las tablas correspondientes en MySQL.
 
 ### 4. Especificación de la API
 
 **Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+Crea un controlador en Spring Boot con endpoints CRUD (`GET /proveedores`, `GET /proveedores/{id}`, `POST /proveedores`, `PUT /proveedores/{id}`, `DELETE /proveedores/{id}`) usando `@RestController` y devolviendo `ResponseEntity`.
 
 ### 5. Historias de Usuario
 
 **Prompt 1:**
+Genérame 3 historias de usuario adicionales para la gestión de inventario con su criterio de aceptación.
 
 **Prompt 2:**
+Explícame cómo escribir historias de usuario siguiendo el formato “Como [rol], quiero [funcionalidad], para [beneficio]”.
 
 **Prompt 3:**
+Dame ejemplos de historias de usuario enfocadas en mejorar la experiencia del trabajador que hace pedidos.
 
 ### 6. Tickets de Trabajo
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
 ### 7. Pull Requests
 
-**Prompt 1:**
 
-**Prompt 2:**
-
-**Prompt 3:**

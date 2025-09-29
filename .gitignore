@@ -1,0 +1,9 @@
+# Ignorar archivos de configuración
+application-ai4dev.properties
+
+# Ignorar logs
+*.log
+
+# Ignorar carpetas de compilación
+/target
+/build
