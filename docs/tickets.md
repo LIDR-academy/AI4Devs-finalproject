@@ -1766,7 +1766,7 @@ Instalar los siguientes paquetes en la carpeta `frontend`:
   - headlessui/react
   - react-i18next
   - axios (para consumo de API)
-  - react-router-dom
+  - next
   - dotenv
   - Otros paquetes necesarios según el PRD
 

@@ -1,21 +1,21 @@
 "use client"
 
-import type React from "react"
-import MainLayout from "../components/MainLayout"
-import LoginForm from "../components/LoginForm"
+import MainLayout from "../../src/components/MainLayout"
+import LoginForm from "../../src/components/LoginForm"
+import { useRouter } from "next/navigation"
 
-interface LoginProps {
-  onNavigateToRegister: () => void
-  onNavigateToHome: () => void
-}
+export default function LoginPage() {
+  const router = useRouter()
 
-const Login: React.FC<LoginProps> = ({ onNavigateToRegister, onNavigateToHome }) => {
   const handleLoginSubmit = (data: any) => {
     console.log("[v0] Login attempt:", data)
-    // Simular login exitoso y navegar al home
     setTimeout(() => {
-      onNavigateToHome()
+      router.push("/")
     }, 1000)
+  }
+
+  const handleRegisterClick = () => {
+    router.push("/register")
   }
 
   return (
@@ -30,12 +30,10 @@ const Login: React.FC<LoginProps> = ({ onNavigateToRegister, onNavigateToHome })
                     <h1 className="text-3xl font-bold text-white mb-2">Inicio de sesión</h1>
                     <p className="text-non-photo-blue">Accede a tu cuenta de Buscadoc</p>
                   </div>
-
-                  <LoginForm onSubmit={handleLoginSubmit} onRegisterClick={onNavigateToRegister} />
+                  <LoginForm onSubmit={handleLoginSubmit} onRegisterClick={handleRegisterClick} />
                 </div>
               </div>
             </div>
-
             <div className="order-1 lg:order-2">
               <div className="bg-gradient-to-br from-pacific-cyan to-non-photo-blue rounded-2xl overflow-hidden shadow-custom">
                 <div className="relative h-full min-h-[400px] lg:min-h-[600px]">
@@ -54,5 +52,3 @@ const Login: React.FC<LoginProps> = ({ onNavigateToRegister, onNavigateToHome })
     </MainLayout>
   )
 }
-
-export default Login

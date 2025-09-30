@@ -1,23 +1,21 @@
 "use client"
 
-import type React from "react"
+import { useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useState } from "react"
-import { Button } from "../components/ui/Button"
-import { StarRating } from "../components/StarRating/StarRating"
-import MainLayout from "../components/MainLayout"
 import { useTranslation } from "react-i18next"
+import MainLayout from "../../../src/components/MainLayout"
+import { Button } from "../../../src/components/ui/Button"
+import { StarRating } from "../../../src/components/StarRating/StarRating"
 
-interface DoctorProfileProps {
-  doctorId: string
-  onBack: () => void
-  onBookAppointment: (doctorId: string) => void
-}
-
-const DoctorProfile: React.FC<DoctorProfileProps> = ({ doctorId, onBack, onBookAppointment }) => {
+export default function DoctorProfilePage() {
+  const router = useRouter()
+  const { id } = useParams<{ id: string }>()
   const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState(1)
   const reviewsPerPage = 3
 
+  // Aquí deberías obtener el doctor por ID desde tu servicio o mock
   const mockDoctors = [
     {
       id: "1",
@@ -104,8 +102,7 @@ const DoctorProfile: React.FC<DoctorProfileProps> = ({ doctorId, onBack, onBookA
     },
   ]
 
-  // Find doctor by ID (in a real app, this would come from props or API)
-  const doctor = mockDoctors.find((d) => d.id === doctorId) || mockDoctors[0]
+  const doctor = mockDoctors.find((d) => d.id === id) || mockDoctors[0]
 
   const totalReviews = doctor.reviews.length
   const totalPages = Math.ceil(totalReviews / reviewsPerPage)
@@ -115,18 +112,26 @@ const DoctorProfile: React.FC<DoctorProfileProps> = ({ doctorId, onBack, onBookA
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
-    // Scroll to reviews section when page changes
     const reviewsSection = document.getElementById("reviews-section")
     if (reviewsSection) {
       reviewsSection.scrollIntoView({ behavior: "smooth", block: "start" })
     }
   }
 
+  const handleBack = () => {
+    router.push("/")
+  }
+
+  const handleBookAppointment = (doctorId: string) => {
+    // Aquí podrías navegar a la página de reserva o abrir un modal
+    router.push(`/appointment-booking?doctorId=${doctorId}`)
+  }
+
   return (
     <MainLayout>
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button onClick={onBack} className="flex items-center text-blue-600 hover:text-blue-700">
+          <button onClick={handleBack} className="flex items-center text-blue-600 hover:text-blue-700">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -280,7 +285,7 @@ const DoctorProfile: React.FC<DoctorProfileProps> = ({ doctorId, onBack, onBookA
                 </span>
               </div>
               <Button
-                onClick={() => onBookAppointment(doctor.id)}
+                onClick={() => handleBookAppointment(doctor.id)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
               >
                 {t("doctorProfile.bookAppointment")}
@@ -351,5 +356,3 @@ const DoctorProfile: React.FC<DoctorProfileProps> = ({ doctorId, onBack, onBookA
     </MainLayout>
   )
 }
-
-export default DoctorProfile

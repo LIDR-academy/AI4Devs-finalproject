@@ -30,63 +30,54 @@ Buscadoc es una aplicación web que facilita la conexión entre pacientes y prof
 
 ## Estructura del Proyecto
 
-\`\`\`
+```
 buscadoc-frontend/
 ├── public/                     # Archivos estáticos públicos
-├── src/                        # Código fuente de la aplicación
-│   ├── components/             # Componentes reutilizables
-│   │   ├── ui/                 # Componentes UI base (shadcn/ui)
-│   │   ├── AppointmentBooking.tsx  # Sistema de reserva de citas
-│   │   ├── DoctorCard.tsx      # Tarjeta de doctor para listados
-│   │   ├── EditSchedule.tsx    # Editor de horarios médicos
-│   │   ├── Login.tsx           # Componente de inicio de sesión
-│   │   ├── MainLayout.tsx      # Layout principal con NavBar/Footer
-│   │   ├── MedicalAgenda.tsx   # Agenda médica
-│   │   ├── MedicalFilters.tsx  # Filtros de búsqueda médica
-│   │   └── Register.tsx        # Componente de registro
+├── app/                        # Sistema de rutas y páginas Next.js
+│   ├── layout.tsx              # Layout global (NavBar, Footer, modales, notificaciones)
+│   ├── page.tsx                # Página principal (Home)
+│   ├── agenda/                 # Página de agenda médica
+│   │   └── page.tsx
+│   ├── doctor/
+│   │   └── [id]/
+│   │       └── page.tsx        # Perfil de doctor (ruta dinámica)
+│   ├── login/
+│   │   └── page.tsx            # Login de usuario
+│   ├── register/
+│   │   └── page.tsx            # Registro de usuario
+│   ├── schedule-edit/
+│   │   └── page.tsx            # Edición de horarios médicos
+│   └── globals.css             # Estilos globales
+├── src/                        # Componentes, datos, servicios y utilidades
+│   ├── components/             # Componentes reutilizables y UI
 │   ├── data/                   # Datos mock y configuraciones
-│   │   └── mockDoctors.js      # Datos de ejemplo para desarrollo
-│   ├── i18n/                   # Configuración de internacionalización
-│   │   ├── en.json             # Traducciones en inglés
-│   │   ├── es.json             # Traducciones en español
-│   │   └── index.js            # Configuración de i18next
-│   ├── pages/                  # Páginas principales de la aplicación
-│   │   └── DoctorProfile.tsx   # Perfil detallado de doctor
-│   ├── services/               # Servicios para comunicación con APIs
-│   │   ├── api.js              # Configuración base de Axios
-│   │   ├── authService.js      # Servicios de autenticación
-│   │   ├── doctorService.js    # Servicios relacionados con doctores
-│   │   └── patientService.js   # Servicios relacionados con pacientes
-│   ├── styles/                 # Estilos globales
-│   │   └── tailwind.css        # Configuración de Tailwind CSS
-│   ├── App.tsx                 # Componente principal de la aplicación
-│   └── main.jsx                # Punto de entrada de la aplicación
+│   ├── i18n/                   # Internacionalización
+│   ├── lib/                    # Utilidades y helpers
+│   ├── services/               # Servicios para APIs
+│   ├── styles/                 # Tailwind CSS y estilos
 ├── .env.example                # Variables de entorno de ejemplo
-├── .eslintrc.js                # Configuración de ESLint
-├── .gitignore                  # Archivos ignorados por Git
-├── index.html                  # Template HTML principal
-├── package.json                # Dependencias y scripts del proyecto
+├── package.json                # Dependencias y scripts
 ├── postcss.config.js           # Configuración de PostCSS
 ├── tailwind.config.js          # Configuración de Tailwind CSS
 ├── tsconfig.json               # Configuración de TypeScript
-└── vite.config.js              # Configuración de Vite
-\`\`\`
+└── next.config.mjs             # Configuración de Next.js
+```
 
 ### Descripción de Carpetas
 
-- **`src/components/`**: Componentes reutilizables organizados por funcionalidad
-- **`src/components/ui/`**: Componentes UI base basados en shadcn/ui para consistencia visual
-- **`src/data/`**: Datos mock para desarrollo y testing de componentes
-- **`src/i18n/`**: Sistema completo de internacionalización con soporte para español e inglés
-- **`src/pages/`**: Páginas principales de la aplicación con funcionalidad completa
-- **`src/services/`**: Servicios para la comunicación con APIs backend, organizados por funcionalidad
-- **`src/styles/`**: Estilos globales y configuración de Tailwind CSS con colores personalizados
+- **`app/`**: Sistema de rutas y páginas de Next.js. Cada carpeta representa una ruta, y aquí se encuentran el layout global, los estilos y las páginas principales (home, login, register, agenda, perfil de doctor, edición de horarios).
+- **`src/components/`**: Componentes reutilizables y UI, organizados por funcionalidad y tipo (cards, filtros, formularios, UI base, etc.).
+- **`src/data/`**: Datos mock para desarrollo y testing de componentes y servicios.
+- **`src/i18n/`**: Configuración y archivos de internacionalización, con soporte para español e inglés.
+- **`src/lib/`**: Funciones utilitarias y helpers para lógica compartida.
+- **`src/services/`**: Servicios para la comunicación con APIs backend, organizados por recurso (autenticación, doctores, pacientes).
+- **`src/styles/`**: Estilos globales y configuración de Tailwind CSS.
 
 ## Variables de Entorno
 
 Crea un archivo `.env` basado en `.env.example`:
 
-\`\`\`bash
+```bash
 # API Configuration
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3000
 
@@ -96,7 +87,7 @@ REACT_APP_VERSION=1.0.0
 
 # Development
 REACT_APP_ENV=development
-\`\`\`
+```
 
 ### Variables Disponibles
 
@@ -114,7 +105,7 @@ REACT_APP_ENV=development
 
 ### Instalación
 
-\`\`\`bash
+```bash
 # Clonar el repositorio
 git clone <repository-url>
 cd buscadoc-frontend
@@ -124,32 +115,30 @@ npm install
 
 # Configurar variables de entorno
 cp .env.example .env
-# Editar .env con tus configuraciones
-\`\`\`
+# Edita .env con tus configuraciones
+```
 
 ### Desarrollo
 
-\`\`\`bash
+```bash
 # Iniciar servidor de desarrollo
 npm run dev
 
-# El servidor estará disponible en http://localhost:5173
-\`\`\`
+# El servidor estará disponible en http://localhost:3000
+```
 
 ### Scripts Disponibles
 
-- **`npm run dev`**: Inicia el servidor de desarrollo con hot reload
+- **`npm run dev`**: Inicia el servidor de desarrollo Next.js con hot reload
 - **`npm run build`**: Construye la aplicación para producción
-- **`npm run preview`**: Previsualiza la build de producción localmente
+- **`npm run start`**: Inicia la aplicación en modo producción
 - **`npm run lint`**: Ejecuta ESLint para verificar el código
-- **`npm run lint:fix`**: Corrige automáticamente errores de ESLint
-- **`npm run format`**: Formatea el código con Prettier
 
 ## Ejemplos de Componentes en Uso
 
 ### Sistema de Internacionalización
 
-\`\`\`tsx
+```tsx
 import { useTranslation } from 'react-i18next';
 
 function MyComponent() {
@@ -162,11 +151,11 @@ function MyComponent() {
     </div>
   );
 }
-\`\`\`
+```
 
 ### Componente de Paginación
 
-\`\`\`tsx
+```tsx
 // Ejemplo de uso del sistema de paginación implementado
 const [currentPage, setCurrentPage] = useState(1);
 const reviewsPerPage = 3;
@@ -182,11 +171,11 @@ const paginatedReviews = reviews.slice(
   totalPages={totalPages}
   onPageChange={setCurrentPage}
 />
-\`\`\`
+```
 
 ### Uso de Componentes UI
 
-\`\`\`tsx
+```tsx
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
@@ -204,28 +193,28 @@ function ExampleComponent() {
     </Card>
   );
 }
-\`\`\`
+```
 
 ## Compilación y Puesta a Producción
 
 ### Build de Producción
 
-\`\`\`bash
+```bash
 # Generar build optimizada
 npm run build
 
 # Los archivos se generarán en la carpeta 'dist/'
-\`\`\`
+```
 
 ### Configuración de Despliegue
 
 #### Variables de Entorno de Producción
 
-\`\`\`bash
+```bash
 # Configuración específica para producción
 NEXT_PUBLIC_API_BASE_URL=https://api.buscadoc.com
 REACT_APP_ENV=production
-\`\`\`
+```
 
 #### Consideraciones Especiales
 
@@ -239,46 +228,45 @@ REACT_APP_ENV=production
 La aplicación puede desplegarse en cualquier servicio de hosting estático:
 
 #### Vercel (Recomendado)
-\`\`\`bash
+```bash
 # Instalar Vercel CLI
 npm i -g vercel
 
 # Desplegar
 vercel
-\`\`\`
+```
 
 #### Netlify
-\`\`\`bash
+```bash
 # Build command: npm run build
 # Publish directory: dist
-\`\`\`
+```
 
 #### Servidor Web Tradicional
-\`\`\`bash
+```bash
 # Subir contenido de la carpeta 'dist/' al servidor
 # Configurar servidor para SPA (Single Page Application)
-\`\`\`
+```
 
 ## Arquitectura
 
 ### Stack Tecnológico Actualizado
 
 - **Frontend Framework**: React 19.1 con JSX/TSX
-- **Meta Framework**: Next.js 15.5.4 para SSR y optimizaciones
-- **Build Tool**: Vite 6.0 para desarrollo y build optimizado
-- **Styling**: Tailwind CSS 3.4 con configuración personalizada
-- **UI Components**: shadcn/ui con Radix UI primitives
-- **HTTP Client**: Axios para comunicación con APIs
-- **Internacionalización**: react-i18next con detección automática de idioma
-- **Routing**: React Router DOM 6.28 (configurado pero no activo en v0)
-- **Icons**: Heroicons y Lucide React
+- **Meta Framework**: Next.js 15.5.4 para SSR, rutas basadas en archivos y optimizaciones de rendimiento
+- **Styling**: Tailwind CSS 3.4 con configuración personalizada y PostCSS
+- **UI Components**: shadcn/ui y Radix UI primitives para componentes accesibles y reutilizables
+- **HTTP Client**: Axios para comunicación con APIs REST
+- **Internacionalización**: react-i18next con soporte dinámico para español e inglés
+- **Routing**: Sistema de rutas nativo de Next.js en la carpeta `/app`
+- **Icons**: Heroicons y Lucide React para iconografía moderna
 - **Linting**: ESLint con configuración para React y TypeScript
-- **Formatting**: Prettier con plugin para Tailwind
-- **Analytics**: Vercel Analytics para métricas de rendimiento
+- **Formatting**: Prettier con plugin para Tailwind CSS
+- **Analytics**: Vercel Analytics para métricas de rendimiento y uso
 
 ### Dependencias Principales
 
-\`\`\`json
+```json
 {
   "dependencies": {
     "next": "15.5.4",
@@ -294,7 +282,7 @@ vercel
     "@vercel/analytics": "^1.4.1"
   }
 }
-\`\`\`
+```
 
 ### Patrones de Diseño Implementados
 
@@ -316,33 +304,41 @@ La aplicación utiliza una paleta de colores específica para Buscadoc:
 - **Honolulu Blue**: `#0ea5e9` - Color secundario para acciones
 - **Pacific Cyan**: `#06b6d4` - Color de acento para destacar información
 
+### Notas sobre la arquitectura y convenciones
+
+- La estructura del proyecto sigue las convenciones recomendadas por Next.js, utilizando el sistema de rutas basado en archivos dentro de la carpeta `/app`.
+- La navegación y el renderizado del contenido se gestionan de forma nativa mediante Next.js, permitiendo Server Side Rendering (SSR) y optimizaciones automáticas.
+- Los componentes globales como modales y notificaciones se gestionan desde el layout global (`app/layout.tsx`) para asegurar consistencia en toda la aplicación.
+- La lógica de negocio y los servicios están desacoplados y organizados en la carpeta `src/services/`, siguiendo buenas prácticas de arquitectura.
+- El sistema de internacionalización está centralizado en `src/i18n/`, facilitando la traducción y el soporte multilenguaje.
+
 ### Guías de Uso
 
 #### Sistema de Internacionalización
 
-\`\`\`bash
+```bash
 # Agregar nuevas traducciones
 # 1. Editar src/i18n/es.json y src/i18n/en.json
 # 2. Usar la clave en el componente con useTranslation
 # 3. El cambio de idioma es automático en toda la aplicación
-\`\`\`
+```
 
 #### Agregar Nuevos Componentes UI
 
-\`\`\`bash
+```bash
 # 1. Crear el componente en src/components/ui/
 # 2. Seguir el patrón de shadcn/ui con Radix primitives
 # 3. Exportar desde el index correspondiente
 # 4. Documentar props y variantes disponibles
-\`\`\`
+```
 
 #### Trabajar con Datos Mock
 
-\`\`\`bash
+```bash
 # Los datos mock están en src/data/mockDoctors.js
 # Estructura consistente para desarrollo y testing
 # Incluye datos en ambos idiomas para internacionalización
-\`\`\`
+```
 
 ## API Integration
 
@@ -354,7 +350,7 @@ La aplicación utiliza una paleta de colores específica para Buscadoc:
 
 ### Estructura de Datos Esperada
 
-\`\`\`javascript
+```javascript
 // Ejemplo de estructura de doctor
 {
   id: "string",
@@ -366,7 +362,7 @@ La aplicación utiliza una paleta de colores específica para Buscadoc:
   schedule: "object",
   location: "object"
 }
-\`\`\`
+```
 
 ### Endpoints Utilizados
 
@@ -379,7 +375,7 @@ La aplicación utiliza una paleta de colores específica para Buscadoc:
 
 ### Guía para Escribir Tests
 
-\`\`\`bash
+```bash
 # Estructura recomendada para tests
 src/
 ├── __tests__/
@@ -392,7 +388,7 @@ src/
 # 2. Tests de integración para flujos completos
 # 3. Tests de accesibilidad con @testing-library/jest-dom
 # 4. Tests de internacionalización para ambos idiomas
-\`\`\`
+```
 
 ## Contribución
 

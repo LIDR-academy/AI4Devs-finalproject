@@ -1,20 +1,21 @@
 "use client"
 
-import type React from "react"
-import MainLayout from "../components/MainLayout"
-import RegisterForm from "../components/RegisterForm"
+import MainLayout from "../../src/components/MainLayout"
+import RegisterForm from "../../src/components/RegisterForm"
+import { useRouter } from "next/navigation"
 
-interface RegisterProps {
-  onNavigateToLogin: () => void
-  onNavigateToHome: () => void
-}
+export default function RegisterPage() {
+  const router = useRouter()
 
-const Register: React.FC<RegisterProps> = ({ onNavigateToLogin, onNavigateToHome }) => {
   const handleRegisterSubmit = (data: any) => {
     console.log("[v0] Register attempt:", data)
     setTimeout(() => {
-      onNavigateToHome()
+      router.push("/")
     }, 2000)
+  }
+
+  const handleLoginClick = () => {
+    router.push("/login")
   }
 
   return (
@@ -26,15 +27,13 @@ const Register: React.FC<RegisterProps> = ({ onNavigateToLogin, onNavigateToHome
               <div className="bg-gradient-primary rounded-2xl p-8 lg:p-12 shadow-custom">
                 <div className="max-w-md mx-auto">
                   <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">Inicio de sesión</h1>
+                    <h1 className="text-3xl font-bold text-white mb-2">Registro</h1>
                     <p className="text-non-photo-blue">Crea tu cuenta en Buscadoc</p>
                   </div>
-
-                  <RegisterForm onSubmit={handleRegisterSubmit} onLoginClick={onNavigateToLogin} />
+                  <RegisterForm onSubmit={handleRegisterSubmit} onLoginClick={handleLoginClick} />
                 </div>
               </div>
             </div>
-
             <div className="order-1 lg:order-2">
               <div className="bg-gradient-to-br from-pacific-cyan to-non-photo-blue rounded-2xl overflow-hidden shadow-custom">
                 <div className="relative h-full min-h-[400px] lg:min-h-[600px]">
@@ -53,5 +52,3 @@ const Register: React.FC<RegisterProps> = ({ onNavigateToLogin, onNavigateToHome
     </MainLayout>
   )
 }
-
-export default Register

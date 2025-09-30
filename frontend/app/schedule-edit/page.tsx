@@ -1,34 +1,35 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import MainLayout from "../components/MainLayout"
-import ScheduleTable from "../components/ScheduleTable/ScheduleTable"
+import { useRouter } from "next/navigation"
+import MainLayout from "../../src/components/MainLayout"
+import ScheduleTable from "../../src/components/ScheduleTable/ScheduleTable"
 
-interface EditScheduleProps {
-  onNavigateToHome: () => void
-  onNavigateToMedicalAgenda: () => void
-}
-
-const EditSchedule: React.FC<EditScheduleProps> = ({ onNavigateToHome, onNavigateToMedicalAgenda }) => {
+export default function EditSchedulePage() {
+  const router = useRouter()
   const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Simulate loading state
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 800)
-
     return () => clearTimeout(timer)
   }, [])
 
-  // Loading state
+  const handleGoHome = () => {
+    router.push("/")
+  }
+
+  const handleGoAgenda = () => {
+    router.push("/agenda")
+  }
+
   if (isLoading) {
     return (
-      <MainLayout onNavigateToHome={onNavigateToHome} onNavigateToMedicalAgenda={onNavigateToMedicalAgenda}>
+      <MainLayout onNavigateToHome={handleGoHome} onNavigateToMedicalAgenda={handleGoAgenda}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse">
             {/* Header skeleton */}
@@ -41,7 +42,6 @@ const EditSchedule: React.FC<EditScheduleProps> = ({ onNavigateToHome, onNavigat
                 <div className="h-10 bg-gray-200 rounded w-32"></div>
               </div>
             </div>
-
             {/* Table skeleton */}
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -77,10 +77,9 @@ const EditSchedule: React.FC<EditScheduleProps> = ({ onNavigateToHome, onNavigat
     )
   }
 
-  // Error state
   if (error) {
     return (
-      <MainLayout onNavigateToHome={onNavigateToHome} onNavigateToMedicalAgenda={onNavigateToMedicalAgenda}>
+      <MainLayout onNavigateToHome={handleGoHome} onNavigateToMedicalAgenda={handleGoAgenda}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <div className="flex justify-center mb-4">
@@ -111,9 +110,8 @@ const EditSchedule: React.FC<EditScheduleProps> = ({ onNavigateToHome, onNavigat
     )
   }
 
-  // Main content
   return (
-    <MainLayout onNavigateToHome={onNavigateToHome} onNavigateToMedicalAgenda={onNavigateToMedicalAgenda}>
+    <MainLayout onNavigateToHome={handleGoHome} onNavigateToMedicalAgenda={handleGoAgenda}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -123,7 +121,7 @@ const EditSchedule: React.FC<EditScheduleProps> = ({ onNavigateToHome, onNavigat
               <p className="text-gray-600">{t("scheduleEdit.subtitle")}</p>
             </div>
             <button
-              onClick={onNavigateToMedicalAgenda}
+              onClick={handleGoAgenda}
               className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors duration-200 shadow-sm"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,11 +131,8 @@ const EditSchedule: React.FC<EditScheduleProps> = ({ onNavigateToHome, onNavigat
             </button>
           </div>
         </div>
-
         <ScheduleTable />
       </div>
     </MainLayout>
   )
 }
-
-export default EditSchedule

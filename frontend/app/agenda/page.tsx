@@ -1,18 +1,14 @@
 "use client"
 
-import type React from "react"
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import MainLayout from "../components/MainLayout"
-import MedicalFilters from "../components/MedicalFilters/MedicalFilters"
-import AppointmentList from "../components/AppointmentList/AppointmentList"
+import MainLayout from "../../src/components/MainLayout"
+import MedicalFilters from "../../src/components/MedicalFilters/MedicalFilters"
+import AppointmentList from "../../src/components/AppointmentList/AppointmentList"
 
-interface MedicalAgendaProps {
-  onNavigateToHome: () => void
-  onNavigateToEditSchedule?: () => void
-}
-
-const MedicalAgenda: React.FC<MedicalAgendaProps> = ({ onNavigateToHome, onNavigateToEditSchedule }) => {
+export default function AgendaPage() {
+  const router = useRouter()
   const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,12 +18,10 @@ const MedicalAgenda: React.FC<MedicalAgendaProps> = ({ onNavigateToHome, onNavig
     timeSlot: "",
   })
 
-  // Simulate loading state
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 1000)
-
     return () => clearTimeout(timer)
   }, [])
 
@@ -43,10 +37,17 @@ const MedicalAgenda: React.FC<MedicalAgendaProps> = ({ onNavigateToHome, onNavig
     })
   }
 
-  // Loading state
+  const handleGoHome = () => {
+    router.push("/")
+  }
+
+  const handleEditSchedule = () => {
+    router.push("/schedule-edit")
+  }
+
   if (isLoading) {
     return (
-      <MainLayout onNavigateToHome={onNavigateToHome} onNavigateToMedicalAgenda={() => {}}>
+      <MainLayout onNavigateToHome={handleGoHome} onNavigateToMedicalAgenda={() => {}}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
@@ -78,10 +79,9 @@ const MedicalAgenda: React.FC<MedicalAgendaProps> = ({ onNavigateToHome, onNavig
     )
   }
 
-  // Error state
   if (error) {
     return (
-      <MainLayout onNavigateToHome={onNavigateToHome} onNavigateToMedicalAgenda={() => {}}>
+      <MainLayout onNavigateToHome={handleGoHome} onNavigateToMedicalAgenda={() => {}}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <div className="flex justify-center mb-4">
@@ -112,9 +112,8 @@ const MedicalAgenda: React.FC<MedicalAgendaProps> = ({ onNavigateToHome, onNavig
     )
   }
 
-  // Main content
   return (
-    <MainLayout onNavigateToHome={onNavigateToHome} onNavigateToMedicalAgenda={() => {}}>
+    <MainLayout onNavigateToHome={handleGoHome} onNavigateToMedicalAgenda={() => {}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -125,7 +124,7 @@ const MedicalAgenda: React.FC<MedicalAgendaProps> = ({ onNavigateToHome, onNavig
             </div>
             <div className="flex gap-3">
               <button
-                onClick={onNavigateToEditSchedule}
+                onClick={handleEditSchedule}
                 className="inline-flex items-center px-4 py-2 bg-federal-blue hover:bg-honolulu-blue text-white font-medium rounded-lg transition-colors duration-200 shadow-sm"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,5 +159,3 @@ const MedicalAgenda: React.FC<MedicalAgendaProps> = ({ onNavigateToHome, onNavig
     </MainLayout>
   )
 }
-
-export default MedicalAgenda
