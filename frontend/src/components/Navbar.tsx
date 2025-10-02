@@ -3,26 +3,27 @@
 import type React from "react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useRouter } from "next/navigation"
+
 
 interface NavbarProps {
   currentLanguage?: string
   onLanguageChange?: (language: string) => void
-  onNavigateToHome?: () => void
-  onNavigateToMedicalAgenda?: () => void
-  onNavigateToProfile?: () => void
-  onNavigateToFindSpecialist?: () => void
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   currentLanguage = "es",
-  onLanguageChange,
-  onNavigateToHome,
-  onNavigateToMedicalAgenda,
-  onNavigateToProfile,
-  onNavigateToFindSpecialist,
+  onLanguageChange
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { t } = useTranslation()
+
+  const router = useRouter()
+
+  const handleNavigateToHome = () => router.push("/")
+  const handleNavigateToMedicalAgenda = () => router.push("/agenda")
+  const handleNavigateToProfile = () => router.push("/") // Ajusta la ruta si es diferente
+  const handleNavigateToFindSpecialist = () => router.push("/") // Ajusta la ruta si es diferente
 
   const handleLanguageToggle = () => {
     const newLanguage = currentLanguage === "es" ? "en" : "es"
@@ -43,25 +44,25 @@ const Navbar: React.FC<NavbarProps> = ({
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <button
-              onClick={onNavigateToHome}
+              onClick={handleNavigateToHome}
               className="text-gray-700 hover:text-federal-blue font-medium transition-colors"
             >
               {t("nav.home")}
             </button>
             <button
-              onClick={onNavigateToMedicalAgenda}
+              onClick={handleNavigateToMedicalAgenda}
               className="text-gray-700 hover:text-federal-blue font-medium transition-colors"
             >
               {t("nav.myAppointments")}
             </button>
             <button
-              onClick={onNavigateToFindSpecialist}
+              onClick={handleNavigateToFindSpecialist}
               className="text-gray-700 hover:text-federal-blue font-medium transition-colors"
             >
               {t("nav.findSpecialist")}
             </button>
             <button
-              onClick={onNavigateToProfile}
+              onClick={handleNavigateToProfile}
               className="text-gray-700 hover:text-federal-blue font-medium transition-colors"
             >
               {t("nav.myProfile")}
@@ -136,7 +137,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   <input
                     type="text"
-                    placeholder={t("search.placeholder")}
+                    placeholder={t("search.searchButton")}
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-federal-blue focus:border-federal-blue text-sm"
                   />
                 </div>

@@ -173,8 +173,6 @@ Frontend, UI, Validación, Internacionalización
 - [ ] Las validaciones de frontend muestran mensajes claros y traducibles (i18n).
 - [ ] El botón de registro está deshabilitado hasta que todos los campos sean válidos.
 - [ ] El diseño sigue la paleta de colores y fuente definida.
-- [ ] Se muestran mensajes de error del backend en el idioma seleccionado.
-- [ ] Se incluyen pruebas unitarias/mocks de validación de formulario.
 
 **Estimación de tiempo:**  
 2 horas
@@ -356,14 +354,15 @@ Diseñar el formulario de registro de médico especialista en React + Tailwind C
 Frontend, UI, Validación, Internacionalización
 
 **Criterios de aceptación:**  
+- [ ] El label `registerFormTitle` debe contener el texto de acuerdo al tipo de usuario que se va a registrar
 - [ ] El formulario incluye todos los campos requeridos.
-- [ ] La selección de tipo de usuario está presente y por defecto en "Médico especialista".
-- [ ] El campo license_number es obligatorio y validado en frontend.
+- [ ] El Toogle de tipo de usuario está presente y desactivado para "Registrarme como médico".
+- [ ] El Toogle es visualmente atractivo y tiene una separación correcta
+- [ ] El campo de Cédula Profesional se muestra hasta que se active el toogle para "Registrarme como médico".
+- [ ] El campo license_number es obligatorio para registro como médico y validado en frontend.
 - [ ] Las validaciones de frontend muestran mensajes claros y traducibles (i18n).
 - [ ] El botón de registro está deshabilitado hasta que todos los campos sean válidos.
 - [ ] El diseño sigue la paleta de colores y fuente definida.
-- [ ] Se muestran mensajes de error del backend en el idioma seleccionado.
-- [ ] Se incluyen pruebas unitarias/mocks de validación de formulario.
 
 **Estimación de tiempo:**  
 2 horas
@@ -382,11 +381,12 @@ Implementar la lógica para enviar los datos del formulario al endpoint de regis
 Frontend, API REST, Internacionalización, Validación
 
 **Criterios de aceptación:**  
+- [ ] El endpoint para el registro de un médico es `POST /api/auth/register/doctor`
 - [ ] El formulario envía los datos correctamente al endpoint.
+- [ ] Los campos del formulario, obligatorios y opcionales coinciden con los descritos en el API
 - [ ] Se muestra mensaje de éxito al usuario tras registro exitoso.
 - [ ] Se muestran mensajes de error claros y traducibles en caso de fallo.
-- [ ] El usuario es redirigido al login tras registro exitoso.
-- [ ] Se incluyen pruebas unitarias/mocks de integración.
+- [ ] El formulario se limpia y el usuario es redirigido al login "/login" tras registro exitoso.
 
 **Estimación de tiempo:**  
 1 hora

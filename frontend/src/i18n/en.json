@@ -69,7 +69,14 @@
     "professionalIdRequired": "Professional ID is required",
     "professionalIdInvalid": "Professional ID must contain only numbers (maximum 10 digits)",
     "confirmPasswordRequired": "Confirm password is required",
-    "passwordsDoNotMatch": "Passwords do not match"
+    "passwordsDoNotMatch": "Passwords do not match",
+    "Patient already exists": "Patient already exists.",
+    "Validation error": "Validation error.",
+    "Password too weak": "Password too weak.",
+    "Passwords do not match": "Passwords do not match.",
+    "professionalIdMinLength": "Professional ID must be at least 8 digits",
+    "doctorAlreadyExists": "Doctor already exists.",
+    "License number required": "License number is required."
   },
   "patient": {
     "registerTitle": "Patient Registration",
@@ -184,14 +191,14 @@
     "emergencyMedicine": "Emergency Medicine",
     "generalPractice": "General Practice"
   },
-  "navigation": {
+  "nav": {
     "home": "Home",
     "findDoctors": "Find Doctors",
     "myAppointments": "My Appointments",
     "myProfile": "My Profile",
     "settings": "Settings",
     "logout": "Logout",
-    "searchSpecialist": "Search specialist",
+    "findSpecialist": "Search specialist",
     "searchPlaceholder": "Search specialist",
     "myScheduledAppointments": "My scheduled appointments"
   },
@@ -205,6 +212,7 @@
     "stateFilter": "Select a state",
     "municipalityFilter": "Select a municipality",
     "searchButton": "Search",
+    "placeholder": "Search doctor...",
     "resultsTitle": "Results",
     "visitProfile": "Visit profile",
     "seeMoreDoctors": "See more doctors",
@@ -414,8 +422,15 @@
       "location": "Mexico City",
       "experience": "15 years of experience",
       "education": "National Autonomous University of Mexico",
-      "certifications": ["Interventional Cardiology", "Echocardiography", "Internal Medicine"],
-      "languages": ["Spanish", "English"],
+      "certifications": [
+        "Interventional Cardiology",
+        "Echocardiography",
+        "Internal Medicine"
+      ],
+      "languages": [
+        "Spanish",
+        "English"
+      ],
       "about": "Cardiology specialist with extensive experience in interventional procedures. Committed to providing quality and personalized medical care to each patient.",
       "address": "Av. Insurgentes Sur 1234, Col. Del Valle, Mexico City",
       "phone": "+52 55 1234 5678",

@@ -1,10 +1,11 @@
+//import { log } from "console"
 import api from "./api"
 
 export const authService = {
   // Login de usuario
   login: async (credentials) => {
     try {
-      const response = await api.post("/auth/login", credentials)
+      const response = await api.post("/api/auth/login", credentials)
       if (response.data.token) {
         localStorage.setItem("authToken", response.data.token)
       }
@@ -17,7 +18,7 @@ export const authService = {
   // Logout de usuario
   logout: async () => {
     try {
-      await api.post("/auth/logout")
+      await api.post("/api/auth/logout")
       localStorage.removeItem("authToken")
       return true
     } catch (error) {
@@ -30,17 +31,42 @@ export const authService = {
   // Registro de usuario
   register: async (userData) => {
     try {
-      const response = await api.post("/auth/register", userData)
+      const response = await api.post("/api/auth/register", userData)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
     }
   },
 
+  // Registro de paciente
+  registerPatient: async (patientData) => {
+    try {
+      console.log("Enviando datos al endpoint:", patientData); // Depuración
+      const response = await api.post("/api/auth/register/patient", patientData);
+      console.log("Respuesta recibida:", response.data); // Depuración
+      return response.data;
+    } catch (error) {
+      console.error("Error en registro:", error); // Depuración
+      throw error.response?.data || { message: error.message };
+    }
+  },
+
+  registerDoctor: async (doctorData) => {
+    try {
+      console.log("Enviando datos al endpoint de doctor:", doctorData); // Depuración
+      const response = await api.post("/api/auth/register/doctor", doctorData);
+      console.log("Respuesta recibida:", response.data); // Depuración
+      return response.data;
+    } catch (error) {
+      console.error("Error en registro de doctor:", error); // Depuración
+      throw error.response?.data || { message: error.message };
+    }
+  },
+
   // Verificar token actual
   verifyToken: async () => {
     try {
-      const response = await api.get("/auth/verify")
+      const response = await api.get("/api/auth/verify")
       return response.data
     } catch (error) {
       localStorage.removeItem("authToken")
@@ -51,7 +77,7 @@ export const authService = {
   // Obtener perfil del usuario actual
   getCurrentUser: async () => {
     try {
-      const response = await api.get("/auth/profile")
+      const response = await api.get("/api/auth/profile")
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

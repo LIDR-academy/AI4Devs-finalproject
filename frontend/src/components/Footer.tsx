@@ -1,6 +1,10 @@
 import type React from "react"
+import Link from "next/link"
+import { useTranslation } from "react-i18next"
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation()
+
   return (
     <footer className="bg-gray-700 text-white py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -39,54 +43,54 @@ const Footer: React.FC = () => {
 
           {/* Enlaces importantes */}
           <div className="md:col-span-1">
-            <h3 className="text-lg font-semibold mb-4">Enlaces importantes</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("footer.importantLinks")}</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Preguntas frecuentes
-                </a>
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                  {t("footer.faq")}
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Iniciar sesión / Registrarse
-                </a>
+                <Link href="/login" className="text-gray-300 hover:text-white transition-colors">
+                  {t("footer.loginRegister")}
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Mi perfil
-                </a>
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                  {t("footer.myProfile")}
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Acerca de Buscadoc
-                </a>
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                  {t("footer.aboutBuscadoc")}
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Contáctanos
-                </a>
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                  {t("footer.contactUs")}
+                </Link>
               </li>
             </ul>
           </div>
 
           {/* Otros */}
           <div className="md:col-span-1">
-            <h3 className="text-lg font-semibold mb-4">Otros</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("footer.others")}</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Aviso de privacidad
-                </a>
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                  {t("footer.privacyPolicy")}
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Términos y condiciones
-                </a>
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                  {t("footer.termsConditions")}
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Mapa del sitio
-                </a>
+                <Link href="/" className="text-gray-300 hover:text-white transition-colors">
+                  {t("footer.siteMap")}
+                </Link>
               </li>
             </ul>
           </div>

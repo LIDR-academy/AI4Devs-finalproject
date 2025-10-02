@@ -1378,3 +1378,508 @@ Mejorar la maquetación de la vista `DoctorProfile.tsx` integrando los elementos
 
 Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
 Hazme preguntas si necesitas más información.
+
+
+
+
+Eres un experto en Ingenieria de Prompts y en desarrollo de Frontend con React y Next
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para las historias de usuario tituladas "Registro de paciente" y "Registro de médico especialista", vamos a conectar la vista correspondiente con el backend mediante el API y dotarla de funcionalidad.
+La vista ya se encuentra maquetada con los componentes visuales necesarios definidos en el diseño, así mismo el proyecto ya cuenta con las carpetas y estructura para modificar los arhivos necesarios.
+Como parte de la documentación se cuenta con un product requirement document (PRD), la documentación del API y la documentación del proyecto de frontend.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el modelo (ChatGPT 4.1) que me ayude a implementar la historias de usuario y sus series de tickets para ver el registro de usuarios.
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+
+## Para generar el prompt
+- Inicialmente tendrás acceso a la documentación descrita en el contexto y debera consultarla para generar el prompt que se pide
+
+## Al ejecutar el prompt resultante
+- El modelo tendrá acceso a la documentación descrita en el contexto
+- El modelo tendra que revisar la documentación para ejectuar el prompt resultante
+- Incluir una tarea de internacionalización en caso de agregar o modificar textos
+- El modelo deberá utilizar y modificar las propiedades de los componentes visuales para cumplir con los requerimientos, esto sin modificarlos visualmente, es decir, solo agregar la funcionalidad faltante
+- El modelo debera pedirle al usuario que agregue arhivos falantes al contexto si lo requiere para finalizar la tarea
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para ChatGPT 4.1: Implementación de Registro de Usuarios en Buscadoc
+
+## Descripción
+
+Actúa como **desarrollador frontend experto en React y Next.js**. Tu tarea es implementar la funcionalidad de registro de usuarios (paciente y médico especialista) en la plataforma Buscadoc, conectando los formularios ya maquetados con el backend mediante los endpoints definidos en la documentación. Debes cumplir con los criterios de aceptación de los tickets, las mejores prácticas de validación, internacionalización y arquitectura, y respetar el formato estándar de respuesta de la API.
+
+## Instrucciones
+
+1. **Revisa la documentación adjunta**:
+   - Tickets de registro de usuario y médico especialista.
+   - Product Requirement Document (PRD).
+   - Documentación del API (Swagger).
+   - README del frontend.
+
+2. **Validaciones en frontend**:
+   - Implementa validaciones para todos los campos requeridos (nombre, apellido, email, teléfono, contraseña, confirmación de contraseña, tipo de usuario, Cédula profesional (license_number) para médicos).
+   - Valida fuerza de contraseña, coincidencia de contraseñas, formato de email y obligatoriedad de Cédula profesional (license_number) para médicos.
+   - El botón de registro debe estar deshabilitado hasta que todos los campos sean válidos.
+
+3. **Internacionalización**:
+   - Antes de agregar nuevos textos, revisa los archivos de internacionalización existentes.
+   - Si faltan claves, agrégalas en los archivos correspondientes siguiendo el patrón actual.
+   - Todos los mensajes de validación y respuesta deben ser traducibles usando react-i18next.
+
+4. **Consumo de API**:
+   - Conecta el formulario con el endpoint correspondiente (`/api/auth/register/patient` o `/api/auth/register/doctor`).
+   - Envía los datos en el formato esperado por el backend.
+   - Maneja las respuestas siguiendo el formato estándar de la API (`code`, `message`, `payload`).
+   - Muestra mensajes claros y traducibles al usuario según el resultado (éxito o error).
+
+5. **Manejo de respuestas**:
+   - Si el registro es exitoso, muestra un mensaje de éxito y redirige automáticamente a la vista de login (`/login`).
+   - Si hay errores (validación, duplicados, etc.), muestra los mensajes de error proporcionados por el backend, asegurando que sean traducibles.
+
+6. **Componentes visuales**:
+   - Utiliza y modifica únicamente las propiedades de los componentes visuales existentes para agregar la funcionalidad requerida, sin alterar el diseño visual.
+   - Si existe un componente global de notificaciones, úsalo para mostrar mensajes.
+
+7. **Cumplimiento de arquitectura y seguridad**:
+   - Respeta la arquitectura y las convenciones de seguridad e internacionalización descritas en la documentación.
+   - Asegúrate de que los datos personales se manejen conforme a la LFPDPPP.
+
+8. **Solicita archivos faltantes**:
+   - Si necesitas archivos adicionales para completar la tarea (servicios, componentes, archivos de i18n, etc.), pídele al usuario que los agregue al contexto.
+
+## Checklist final
+
+- [ ] Validaciones de frontend implementadas y botón deshabilitado hasta que sean válidas.
+- [ ] Mensajes y textos internacionalizados y revisados en los archivos de i18n.
+- [ ] Consumo correcto del endpoint y manejo del formato estándar de respuesta.
+- [ ] Mensajes de éxito y error claros, traducibles y mostrados al usuario.
+- [ ] Redirección automática a `/login` tras registro exitoso.
+- [ ] Uso de componentes visuales y de notificaciones existentes.
+- [ ] Cumplimiento de arquitectura y normativas de seguridad.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- Revisa si tienes todos los archivos necesarios en el contexto, de lo contrario pide al usuario que los agregue
+- En cada paso de la lista menciona el archivo que se va a crear o modificar e incluye el código que se va agregar
+
+Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+Eres un experto en Ingenieria de Prompts, con gran experiencia como Frontend developer y con conocimientos en React, Next y Tailwind CSS
+# Contexto Inicial
+Se ha realizado la maquetación del frontend para un sistema de búsqueda de especialidades médicas y profesionales de la salud denominado "Buscadoc".
+Así mismo se tiene el API de un backend funcional, del cual ya se tiene una definición.
+Finalmente se tiene una serie de tickets de trabajo para el frontend.
+
+# Intrucciones generales
+Tu tarea es generar un prompt inicial para el modelo (ChatGPT 4.1) que revise si la vista o vistas, así como sus componentes, cumplen con los requerimientos del ticket, para ello debe seguir las siguientes instrucciones
+
+# Instrucciones
+1. El modelo deberá revisar el ticket, la documentación del contexto, así como el código de la vista y su componente para determinar si se cumplen con los criterios del ticket
+   - Deberá pedir al usuario los archivos faltantes si no estan en el contexto
+2. Si el código de la vista y sus componentes cumple con los criterios del ticket el modelo deberá ir al paso 1
+3. En dado caso que la vista y sus componentes no cumplan con el ticket 
+   * El modelo debe generar una lista de criterios que faltan por completar
+   * Posteriormente el modelo debe generar una lista de pasos para implementar los criterios faltantes del ticket
+   * Al final el modelo debe corroborar que se hayan cumplido los criterios
+4. Despues de implementar los criterios del ticket anterior debe pedir un nuevo ticket
+
+# Mejores practicas
+- Para el prompt incluye el rol en el que debe actual el chatbot
+- El modelo deberá concentrarse implementar lo faltante sin modificar la parte visual de los componentes
+- El prompt resultante deberá ser reutilizable
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+----
+# Prompt Inicial para Revisión de Tickets en Buscadoc
+
+## Rol del modelo
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+
+```
+## Ticket
+```markdown
+
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+----
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+**ID:** REG-PAC-01  
+**Título:** Registro de paciente  
+**Descripción:**  
+Como visitante, quiero registrarme como paciente proporcionando mi nombre, correo electrónico y contraseña segura, para poder agendar citas y gestionar mi perfil en la plataforma.
+```
+## Ticket
+```markdown
+##### 1.1.5 [Frontend] Crear formulario de registro de paciente
+
+**Descripción detallada:**  
+Diseñar el formulario de registro de paciente en React + Tailwind CSS + Headless UI, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: nombre, apellido, email, contraseña, confirmación de contraseña y selección de tipo de usuario (paciente).
+
+**Dependencias:**  
+- Depende de la definición del endpoint en backend.
+
+**Etiquetas:**  
+Frontend, UI, Validación, Internacionalización
+
+**Criterios de aceptación:**  
+- [ ] El formulario incluye todos los campos requeridos.
+- [ ] La selección de tipo de usuario está presente y por defecto en "Paciente".
+- [ ] Las validaciones de frontend muestran mensajes claros y traducibles (i18n).
+- [ ] El botón de registro está deshabilitado hasta que todos los campos sean válidos.
+- [ ] El diseño sigue la paleta de colores y fuente definida.
+- [ ] El Toogle de registro como medico se encuentra en estado "No" 
+- [ ] El Toogle de registro como medico al estar desactivado oculta el campo de "Cedula profesional"
+- [ ] Los titulos y labels de la vista se encuentran internacionalizados
+
+**Estimación de tiempo:**  
+2 horas
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+**ID:** REG-PAC-01  
+**Título:** Registro de paciente  
+**Descripción:**  
+Como visitante, quiero registrarme como paciente proporcionando mi nombre, correo electrónico y contraseña segura, para poder agendar citas y gestionar mi perfil en la plataforma.
+```
+## Ticket
+```markdown
+##### 1.1.6 [Frontend] Integrar consumo del endpoint de registro y manejo de respuestas
+
+**Descripción detallada:**  
+Implementar la lógica para enviar los datos del formulario al endpoint de registro, manejar respuestas exitosas y errores, y mostrar mensajes al usuario según el resultado.
+
+**Dependencias:**  
+- Depende del formulario de registro y del endpoint en backend.
+
+**Etiquetas:**  
+Frontend, API REST, Internacionalización, Validación
+
+**Criterios de aceptación:**  
+- [ ] El endpoint para el registro de un paciente es `POST /api/auth/register/patient`
+- [ ] Para que un paciente se pueda registrar el Toggle "Registrarme como médico" debe estar desactivado
+- [ ] El formulario envía los datos correctamente al endpoint.
+- [ ] Se muestra mensaje de éxito al usuario tras registro exitoso.
+- [ ] Se muestran mensajes de error claros y traducibles en caso de fallo.
+- [ ] El usuario es redirigido al login tras registro exitoso.
+- [ ] Los campos obligatorios y opcionales en el formulario deben coincidir con los definidos en el API del endpoint
+
+**Estimación de tiempo:**  
+1 hora
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+**ID:** REG-MED-01  
+**Título:** Registro de médico especialista  
+**Descripción:**  
+Como visitante, quiero registrarme como médico especialista proporcionando mi nombre, correo electrónico, contraseña segura y número de cédula profesional, para poder ofrecer mis servicios y gestionar mi agenda en la plataforma.
+```
+## Ticket
+```markdown
+##### 1.2.5 [Frontend] Crear formulario de registro de médico especialista
+
+**Descripción detallada:**  
+Diseñar el formulario de registro de médico especialista en React + Tailwind CSS + Headless UI, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: nombre, apellido, email, contraseña, confirmación de contraseña, selección de tipo de usuario (médico) y license_number.
+
+**Dependencias:**  
+- Depende de la definición del endpoint en backend.
+
+**Etiquetas:**  
+Frontend, UI, Validación, Internacionalización
+
+**Criterios de aceptación:**  
+- [ ] El label `registerFormTitle` debe contener el texto de acuerdo al tipo de usuario que se va a registrar
+- [ ] El formulario incluye todos los campos requeridos.
+- [ ] El Toogle de tipo de usuario está presente y desactivado para "Registrarme como médico".
+- [ ] El Toogle es visualmente atractivo y tiene una separación correcta
+- [ ] El campo de Cédula Profesional se muestra hasta que se active el toogle para "Registrarme como médico".
+- [ ] El campo license_number es obligatorio para registro como médico y validado en frontend.
+- [ ] Las validaciones de frontend muestran mensajes claros y traducibles (i18n).
+- [ ] El botón de registro está deshabilitado hasta que todos los campos sean válidos.
+- [ ] El diseño sigue la paleta de colores y fuente definida.
+
+**Estimación de tiempo:**  
+2 horas
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+**ID:** REG-MED-01  
+**Título:** Registro de médico especialista  
+**Descripción:**  
+Como visitante, quiero registrarme como médico especialista proporcionando mi nombre, correo electrónico, contraseña segura y número de cédula profesional, para poder ofrecer mis servicios y gestionar mi agenda en la plataforma.
+```
+## Ticket
+```markdown
+##### 1.2.6 [Frontend] Integrar consumo del endpoint de registro y manejo de respuestas
+
+**Descripción detallada:**  
+Implementar la lógica para enviar los datos del formulario al endpoint de registro, manejar respuestas exitosas y errores, y mostrar mensajes al usuario según el resultado.
+
+**Dependencias:**  
+- Depende del formulario de registro y del endpoint en backend.
+
+**Etiquetas:**  
+Frontend, API REST, Internacionalización, Validación
+
+**Criterios de aceptación:**  
+- [ ] El endpoint para el registro de un médico es `POST /api/auth/register/doctor`
+- [ ] El formulario envía los datos correctamente al endpoint.
+- [ ] Los campos del formulario, obligatorios y opcionales coinciden con los descritos en el API
+- [ ] Se muestra mensaje de éxito al usuario tras registro exitoso.
+- [ ] Se muestran mensajes de error claros y traducibles en caso de fallo.
+- [ ] El formulario se limpia y el usuario es redirigido al login "/login" tras registro exitoso.
+
+**Estimación de tiempo:**  
+1 hora
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.

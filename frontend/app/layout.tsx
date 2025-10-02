@@ -4,6 +4,7 @@ import { Roboto } from "next/font/google"
 import { Suspense } from "react"
 import "./globals.css"
 import "../src/styles/tailwind.css"
+import I18nClientProvider from "../src/providers/I18nClientProvider"
 
 const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
@@ -33,7 +34,9 @@ html {
         `}</style>
       </head>
       <body>
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        <I18nClientProvider>
+          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        </I18nClientProvider>
       </body>
     </html>
   )

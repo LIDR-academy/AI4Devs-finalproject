@@ -85,41 +85,41 @@ gantt
     Ticket de despliegue inicial del sistema Buscadoc :done, des12.5, 2025-09-07, 2h
 
     section 13. Crear la carpeta frontend e inicializar el proyecto con npm
-    Crear carpeta frontend e inicializar proyecto con npm :des13.1, 2025-09-08, 0.5h
+    Crear carpeta frontend e inicializar proyecto con npm :done, des13.1, 2025-09-08, 0.5h
 
     section 14. Instalar dependencias necesarias en frontend
-    Instalar dependencias frontend :des14.1, 2025-09-08, 1h
+    Instalar dependencias frontend :done, des14.1, 2025-09-08, 1h
 
     section 15. Configurar entorno de desarrollo frontend
-    Configurar entorno de desarrollo frontend :des15.1, 2025-09-08, 1h
+    Configurar entorno de desarrollo frontend :done, des15.1, 2025-09-08, 1h
 
     section 16. Registro y Login de usuarios [REG-PAC-XX] [Frontend]
-    Crear formulario de registro de paciente (Frontend) :des16.1, 2025-09-08, 2h
-    Integrar consumo endpoint registro paciente (Frontend) :des16.2, 2025-09-09, 1h
-    Crear formulario de registro médico especialista (Frontend) :des16.3, 2025-09-09, 2h
-    Integrar consumo endpoint registro médico especialista (Frontend) :des16.4, 2025-09-09, 1h
+    Crear formulario de registro de paciente (Frontend) :done, des16.1, 2025-09-08, 2h
+    Integrar consumo endpoint registro paciente (Frontend) :done, des16.2, 2025-09-09, 1h
+    Crear formulario de registro médico especialista (Frontend) :done, des16.3, 2025-09-09, 2h
+    Integrar consumo endpoint registro médico especialista (Frontend) :done, des16.4, 2025-09-09, 1h
     Crear formulario de login paciente (Frontend) :des16.5, 2025-09-10, 1h
     Integrar consumo endpoint login paciente (Frontend) :des16.6, 2025-09-10, 1h
     Crear formulario de login médico especialista (Frontend) :des16.7, 2025-09-10, 1h
     Integrar consumo endpoint login médico especialista (Frontend) :des16.8, 2025-09-10, 1h
 
     section 17. Buscar especialistas por especialidad y ubicación [Frontend]
-    Maquetar layout base de la aplicación :des17.1, 2025-09-11, 2h
-    Maquetar vista de búsqueda de especialistas :des17.2, 2025-09-11, 2h
+    Maquetar layout base de la aplicación :done, des17.1, 2025-09-11, 2h
+    Maquetar vista de búsqueda de especialistas :done, des17.2, 2025-09-11, 2h
     Implementar lógica de consumo de API para búsqueda :des17.3, 2025-09-11, 2h
     Configurar internacionalización en español (búsqueda) :des17.4, 2025-09-12, 1h
     Documentar componente/vista de búsqueda :des17.5, 2025-09-12, 1h
     Crear pruebas end-to-end búsqueda especialistas :des17.6, 2025-09-12, 1h
 
     section 18. Ver perfil de especialista [Frontend]
-    Maquetar vista de perfil de especialista :des18.1, 2025-09-12, 2h
+    Maquetar vista de perfil de especialista :done, des18.1, 2025-09-12, 2h
     Implementar lógica de consumo de API perfil especialista :des18.2, 2025-09-13, 2h
     Configurar internacionalización en español (perfil) :des18.3, 2025-09-13, 1h
     Documentar componente/vista de perfil especialista :des18.4, 2025-09-13, 1h
     Crear pruebas end-to-end perfil especialista :des18.5, 2025-09-13, 1h
 
     section 19. Buscar especialistas y ver perfiles (pacientes autenticados) [Frontend]
-    Maquetar vista de búsqueda avanzada pacientes :des19.1, 2025-09-14, 2h
+    Maquetar vista de búsqueda avanzada pacientes :done, des19.1, 2025-09-14, 2h
     Implementar lógica de consumo de API búsqueda avanzada :des19.2, 2025-09-14, 2h
     Maquetar y consumir perfil completo especialista :des19.3, 2025-09-14, 2h
     Configurar internacionalización en español (búsqueda y perfil pacientes) :des19.4, 2025-09-15, 1h
@@ -127,21 +127,21 @@ gantt
     Crear pruebas end-to-end búsqueda avanzada y perfil completo :des19.6, 2025-09-15, 1h
 
     section 20. Agendar cita con especialista [Frontend]
-    Maquetar vista de agendamiento de cita :des20.1, 2025-09-15, 2h
+    Maquetar vista de agendamiento de cita :done, des20.1, 2025-09-15, 2h
     Implementar lógica de consumo de API y confirmación de cita :des20.2, 2025-09-16, 2h
     Configurar internacionalización en español (agendamiento) :des20.3, 2025-09-16, 1h
     Documentar componente/vista de agendamiento de cita :des20.4, 2025-09-16, 1h
     Crear pruebas end-to-end agendamiento de cita :des20.5, 2025-09-16, 1h
 
     section 21. Gestionar agenda y disponibilidad (médicos) [Frontend]
-    Maquetar vista de gestión de agenda y disponibilidad :des21.1, 2025-09-17, 2h
+    Maquetar vista de gestión de agenda y disponibilidad :done, des21.1, 2025-09-17, 2h
     Implementar lógica de consumo de API agenda/disponibilidad :des21.2, 2025-09-17, 2h
     Configurar internacionalización en español (agenda/disponibilidad) :des21.3, 2025-09-17, 1h
     Documentar componente/vista de gestión de agenda :des21.4, 2025-09-18, 1h
     Crear pruebas end-to-end gestión de agenda y disponibilidad :des21.5, 2025-09-18, 1h
 
     section 22. Ver listado de próximas citas (médicos) [Frontend]
-    Maquetar vista de próximas citas médicos :des22.1, 2025-09-18, 2h
+    Maquetar vista de próximas citas médicos :done, des22.1, 2025-09-18, 2h
     Implementar lógica de consumo de API próximas citas :des22.2, 2025-09-18, 2h
     Configurar internacionalización en español (próximas citas) :des22.3, 2025-09-19, 1h
     Documentar componente/vista de próximas citas :des22.4, 2025-09-19, 1h

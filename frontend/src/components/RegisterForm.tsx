@@ -5,6 +5,8 @@ import { useState } from "react"
 import Input from "./ui/Input"
 import Button from "./ui/Button"
 import Toggle from "./ui/Toggle"
+import { useTranslation } from "react-i18next"
+
 
 interface RegisterFormProps {
   onSubmit?: (data: RegisterFormData) => void
@@ -34,7 +36,10 @@ interface FormErrors {
   general?: string
 }
 
+
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isLoading = false }) => {
+  const { t } = useTranslation()
+
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: "",
     lastName: "",
@@ -43,129 +48,91 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
     professionalId: "",
     password: "",
     confirmPassword: "",
-    isDoctor: true, // Activado por defecto según el diseño
+    isDoctor: false,
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Traducciones estáticas (preparado para react-i18next)
-  const t = {
-    title: "Inicio de sesión",
-    doctorToggle: "Registrarme como médico",
-    firstName: "Nombre*",
-    firstNamePlaceholder: "Ingresa tu nombre",
-    lastName: "Apellido*",
-    lastNamePlaceholder: "Ingresa tu apellido",
-    email: "Correo Electrónico*",
-    emailPlaceholder: "Ingresa tu correo electrónico",
-    phone: "Teléfono*",
-    phonePlaceholder: "Ingresa tu teléfono",
-    professionalId: "Cédula profesional*",
-    professionalIdPlaceholder: "Ingresa tu cédula profesional",
-    password: "Contraseña*",
-    passwordPlaceholder: "Ingresa tu contraseña",
-    confirmPassword: "Confirmar contraseña*",
-    confirmPasswordPlaceholder: "Confirma tu contraseña",
-    registerButton: "Registrarme",
-    loginLink: "¿Ya tienes cuenta? Inicia sesión",
-    errors: {
-      firstNameRequired: "El nombre es requerido",
-      firstNameMinLength: "El nombre debe tener al menos 2 caracteres",
-      lastNameRequired: "El apellido es requerido",
-      lastNameMinLength: "El apellido debe tener al menos 2 caracteres",
-      emailRequired: "El correo electrónico es requerido",
-      emailInvalid: "Ingresa un correo electrónico válido",
-      phoneRequired: "El teléfono es requerido",
-      phoneInvalid: "El teléfono debe contener solo números",
-      phoneLength: "El teléfono debe tener entre 7 y 15 dígitos",
-      professionalIdRequired: "La cédula profesional es requerida",
-      professionalIdInvalid: "La cédula debe contener solo números",
-      professionalIdLength: "La cédula debe tener máximo 10 dígitos",
-      passwordRequired: "La contraseña es requerida",
-      passwordMinLength: "La contraseña debe tener al menos 6 caracteres",
-      confirmPasswordRequired: "Debes confirmar tu contraseña",
-      passwordMismatch: "Las contraseñas no coinciden",
-    },
-  }
-
-  // Funciones de validación
+  // Validaciones usando claves de traducción
   const validateFirstName = (firstName: string): string | undefined => {
     if (!firstName.trim()) {
-      return t.errors.firstNameRequired
+      return t("auth.firstNameRequired")
     }
     if (firstName.trim().length < 2) {
-      return t.errors.firstNameMinLength
+      return t("auth.firstNameMinLength")
     }
     return undefined
   }
 
   const validateLastName = (lastName: string): string | undefined => {
     if (!lastName.trim()) {
-      return t.errors.lastNameRequired
+      return t("auth.lastNameRequired")
     }
     if (lastName.trim().length < 2) {
-      return t.errors.lastNameMinLength
+      return t("auth.lastNameMinLength")
     }
     return undefined
   }
 
   const validateEmail = (email: string): string | undefined => {
     if (!email.trim()) {
-      return t.errors.emailRequired
+      return t("auth.emailRequired")
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      return t.errors.emailInvalid
+      return t("auth.emailInvalid")
     }
     return undefined
   }
 
   const validatePhone = (phone: string): string | undefined => {
     if (!phone.trim()) {
-      return t.errors.phoneRequired
+      return t("auth.phoneRequired")
     }
     const phoneRegex = /^\d+$/
     if (!phoneRegex.test(phone)) {
-      return t.errors.phoneInvalid
+      return t("auth.phoneInvalid")
     }
     if (phone.length < 7 || phone.length > 15) {
-      return t.errors.phoneLength
+      return t("auth.phoneLength")
     }
     return undefined
   }
 
+  // Validación del campo de cédula profesional (solo números y mínimo 8 dígitos)
+  // Se muestra y valida únicamente si el usuario selecciona "Registrarme como médico"
+
   const validateProfessionalId = (professionalId: string): string | undefined => {
     if (!professionalId.trim()) {
-      return t.errors.professionalIdRequired
+      return t("auth.professionalIdRequired")
     }
     const idRegex = /^\d+$/
     if (!idRegex.test(professionalId)) {
-      return t.errors.professionalIdInvalid
+      return t("auth.professionalIdInvalid") // Mensaje traducible: solo números
     }
-    if (professionalId.length > 10) {
-      return t.errors.professionalIdLength
+    if (professionalId.length < 8) {
+      return t("auth.professionalIdMinLength") // Mensaje traducible: mínimo 8 dígitos
     }
     return undefined
   }
 
   const validatePassword = (password: string): string | undefined => {
     if (!password) {
-      return t.errors.passwordRequired
+      return t("auth.passwordRequired")
     }
     if (password.length < 6) {
-      return t.errors.passwordMinLength
+      return t("auth.passwordMinLength")
     }
     return undefined
   }
 
   const validateConfirmPassword = (confirmPassword: string, password: string): string | undefined => {
     if (!confirmPassword) {
-      return t.errors.confirmPasswordRequired
+      return t("auth.confirmPasswordRequired")
     }
     if (confirmPassword !== password) {
-      return t.errors.passwordMismatch
+      return t("auth.passwordsDoNotMatch")
     }
     return undefined
   }
@@ -173,13 +140,25 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
 
+    // Solo validar campos obligatorios
     const firstNameError = validateFirstName(formData.firstName)
-    const lastNameError = validateLastName(formData.lastName)
     const emailError = validateEmail(formData.email)
-    const phoneError = validatePhone(formData.phone)
-    const professionalIdError = validateProfessionalId(formData.professionalId)
     const passwordError = validatePassword(formData.password)
     const confirmPasswordError = validateConfirmPassword(formData.confirmPassword, formData.password)
+
+    // Validar opcionales solo si tienen valor
+    let lastNameError
+    if (formData.lastName.trim()) {
+      lastNameError = validateLastName(formData.lastName)
+    }
+    let phoneError
+    if (formData.phone.trim()) {
+      phoneError = validatePhone(formData.phone)
+    }
+    let professionalIdError
+    if (formData.isDoctor && formData.professionalId.trim()) {
+      professionalIdError = validateProfessionalId(formData.professionalId)
+    }
 
     if (firstNameError) newErrors.firstName = firstNameError
     if (lastNameError) newErrors.lastName = lastNameError
@@ -280,32 +259,38 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
     })
 
     if (validateForm()) {
-      setIsSubmitting(true)
       onSubmit?.(formData)
-
-      // Reset loading state after a delay (simulating API call)
-      setTimeout(() => {
-        setIsSubmitting(false)
-      }, 2000)
     }
   }
 
-  const isFormLoading = isLoading || isSubmitting
+  // Determina el label dinámico según el tipo de usuario seleccionado (paciente/médico)
+  // Esto permite que el título del formulario cambie en tiempo real al alternar el toggle
+  const registerFormTitle = formData.isDoctor
+    ? t("doctor.registerTitle")
+    : t("patient.registerTitle")
+
+  const isFormLoading = isLoading
+  const isFormValid =
+    formData.firstName.trim().length > 0 &&
+    formData.email.trim().length > 0 &&
+    formData.password.length >= 6 &&
+    formData.confirmPassword === formData.password &&
+    // Solo validar professionalId si isDoctor está activo
+    (!formData.isDoctor || (formData.isDoctor && formData.professionalId.trim().length > 0))
 
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl p-8 text-white shadow-xl">
-        <h2 className="text-2xl font-bold mb-6 text-center">{t.title}</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">{registerFormTitle}</h2>
 
         {/* Toggle Registrarme como médico */}
         <div className="flex items-center justify-between mb-6">
-          <span className="text-sm font-medium">{t.doctorToggle}</span>
           <Toggle
             checked={formData.isDoctor}
             onChange={handleToggleChange}
             disabled={isFormLoading}
-            label="Sí"
-            aria-label={t.doctorToggle}
+            label={t("auth.registerAsDoctorLabel")}
+            aria-label={t("auth.registerAsDoctorLabel")}
           />
         </div>
 
@@ -313,7 +298,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
           {/* Campo Nombre */}
           <div>
             <label htmlFor="firstName" className="block text-sm font-medium mb-1">
-              {t.firstName}
+              {t("auth.firstNameLabel")}
             </label>
             <Input
               id="firstName"
@@ -321,7 +306,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
               value={formData.firstName}
               onChange={handleInputChange("firstName")}
               onBlur={handleBlur("firstName")}
-              placeholder={t.firstNamePlaceholder}
+              placeholder={t("auth.firstNamePlaceholder")}
               error={touched.firstName ? errors.firstName : undefined}
               disabled={isFormLoading}
               className="w-full"
@@ -334,7 +319,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
           {/* Campo Apellido */}
           <div>
             <label htmlFor="lastName" className="block text-sm font-medium mb-1">
-              {t.lastName}
+              {t("auth.lastNameLabel")}
             </label>
             <Input
               id="lastName"
@@ -342,7 +327,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
               value={formData.lastName}
               onChange={handleInputChange("lastName")}
               onBlur={handleBlur("lastName")}
-              placeholder={t.lastNamePlaceholder}
+              placeholder={t("auth.lastNamePlaceholder")}
               error={touched.lastName ? errors.lastName : undefined}
               disabled={isFormLoading}
               className="w-full"
@@ -355,7 +340,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
           {/* Campo Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
-              {t.email}
+              {t("auth.emailLabel")}
             </label>
             <Input
               id="email"
@@ -363,7 +348,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
               value={formData.email}
               onChange={handleInputChange("email")}
               onBlur={handleBlur("email")}
-              placeholder={t.emailPlaceholder}
+              placeholder={t("auth.emailPlaceholder")}
               error={touched.email ? errors.email : undefined}
               disabled={isFormLoading}
               className="w-full"
@@ -377,7 +362,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
           {/* Campo Teléfono */}
           <div>
             <label htmlFor="phone" className="block text-sm font-medium mb-1">
-              {t.phone}
+              {t("auth.phoneLabel")}
             </label>
             <Input
               id="phone"
@@ -385,7 +370,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
               value={formData.phone}
               onChange={handleInputChange("phone")}
               onBlur={handleBlur("phone")}
-              placeholder={t.phonePlaceholder}
+              placeholder={t("auth.phonePlaceholder")}
               error={touched.phone ? errors.phone : undefined}
               disabled={isFormLoading}
               className="w-full"
@@ -396,36 +381,39 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
             />
           </div>
 
-          {/* Campo Cédula profesional */}
-          <div>
-            <label htmlFor="professionalId" className="block text-sm font-medium mb-1">
-              {t.professionalId}
-            </label>
-            <Input
-              id="professionalId"
-              type="text"
-              value={formData.professionalId}
-              onChange={handleInputChange("professionalId")}
-              onBlur={handleBlur("professionalId")}
-              placeholder={t.professionalIdPlaceholder}
-              error={touched.professionalId ? errors.professionalId : undefined}
-              disabled={isFormLoading}
-              className="w-full"
-              maxLength={10}
-              aria-required="true"
-              aria-invalid={touched.professionalId && errors.professionalId ? "true" : "false"}
-              aria-describedby={touched.professionalId && errors.professionalId ? "professionalId-error" : undefined}
-              pattern="[0-9]*"
-              inputMode="numeric"
-            />
-          </div>
+          {/* Campo Cédula profesional, solo visible si el usuario es médico.
+          Aplica borde rojo y muestra mensaje de error si la validación falla. */}
+          {formData.isDoctor && (
+            <div>
+              <label htmlFor="professionalId" className="block text-sm font-medium mb-1">
+                {t("auth.professionalIdLabel")}
+              </label>
+              <Input
+                id="professionalId"
+                type="text"
+                value={formData.professionalId}
+                onChange={handleInputChange("professionalId")}
+                onBlur={handleBlur("professionalId")}
+                placeholder={t("auth.professionalIdPlaceholder")}
+                error={touched.professionalId ? errors.professionalId : undefined}
+                disabled={isFormLoading}
+                className={`w-full ${touched.professionalId && errors.professionalId ? "border-red-500" : ""}`}
+                maxLength={16}
+                aria-required="true"
+                aria-invalid={touched.professionalId && errors.professionalId ? "true" : "false"}
+                aria-describedby={touched.professionalId && errors.professionalId ? "professionalId-error" : undefined}
+                pattern="[0-9]*"
+                inputMode="numeric"
+              />
+            </div>
+          )}
 
           {/* Campos de Contraseña en una fila */}
           <div className="grid grid-cols-2 gap-3">
             {/* Campo Contraseña */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium mb-1">
-                {t.password}
+                {t("auth.passwordLabel")}
               </label>
               <Input
                 id="password"
@@ -433,7 +421,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
                 value={formData.password}
                 onChange={handleInputChange("password")}
                 onBlur={handleBlur("password")}
-                placeholder={t.passwordPlaceholder}
+                placeholder={t("auth.passwordPlaceholder")}
                 error={touched.password ? errors.password : undefined}
                 disabled={isFormLoading}
                 className="w-full"
@@ -447,7 +435,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
             {/* Campo Confirmar Contraseña */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
-                {t.confirmPassword}
+                {t("auth.confirmPasswordLabel")}
               </label>
               <Input
                 id="confirmPassword"
@@ -455,7 +443,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
                 value={formData.confirmPassword}
                 onChange={handleInputChange("confirmPassword")}
                 onBlur={handleBlur("confirmPassword")}
-                placeholder={t.confirmPasswordPlaceholder}
+                placeholder={t("auth.confirmPasswordPlaceholder")}
                 error={touched.confirmPassword ? errors.confirmPassword : undefined}
                 disabled={isFormLoading}
                 className="w-full"
@@ -480,10 +468,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
             variant="secondary"
             size="lg"
             isLoading={isFormLoading}
-            disabled={isFormLoading}
+            disabled={isFormLoading || !isFormValid}
             className="w-full mt-6"
           >
-            {t.registerButton}
+            {t("auth.registerButton")}
           </Button>
 
           {/* Enlace de login */}
@@ -494,7 +482,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
               className="text-white underline hover:text-yellow-200 transition-colors text-sm"
               disabled={isFormLoading}
             >
-              {t.loginLink}
+              {t("auth.loginLinkText")}
             </button>
           </div>
         </form>

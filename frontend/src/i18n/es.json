@@ -69,7 +69,14 @@
     "professionalIdRequired": "La cédula profesional es requerida",
     "professionalIdInvalid": "La cédula debe contener solo números (máximo 10 dígitos)",
     "confirmPasswordRequired": "Confirmar contraseña es requerido",
-    "passwordsDoNotMatch": "Las contraseñas no coinciden"
+    "passwordsDoNotMatch": "Las contraseñas no coinciden",
+    "Patient already exists": "El paciente ya está registrado.",
+    "Validation error": "Error de validación.",
+    "Password too weak": "La contraseña es demasiado débil.",
+    "Passwords do not match": "Las contraseñas no coinciden.",
+    "professionalIdMinLength": "La cédula debe tener al menos 8 dígitos",
+    "doctorAlreadyExists": "El doctor ya está registrado.",
+    "License number required": "La cédula profesional es obligatoria."
   },
   "patient": {
     "registerTitle": "Registro de Paciente",
@@ -184,14 +191,14 @@
     "emergencyMedicine": "Medicina de Urgencias",
     "generalPractice": "Medicina General"
   },
-  "navigation": {
+  "nav": {
     "home": "Inicio",
     "findDoctors": "Encontrar Doctores",
     "myAppointments": "Mis Citas",
     "myProfile": "Mi Perfil",
     "settings": "Configuración",
     "logout": "Cerrar Sesión",
-    "searchSpecialist": "Buscar especialista",
+    "findSpecialist": "Buscar especialista",
     "searchPlaceholder": "Buscar especialista",
     "myScheduledAppointments": "Mis citas agendadas"
   },
@@ -205,6 +212,7 @@
     "stateFilter": "Selecciona un estado",
     "municipalityFilter": "Selecciona un municipio",
     "searchButton": "Buscar",
+    "placeholder": "Buscar especialista...",
     "resultsTitle": "Resultados",
     "visitProfile": "Visitar perfil",
     "seeMoreDoctors": "Ver más médicos",
@@ -414,8 +422,15 @@
       "location": "Ciudad de México",
       "experience": "15 años de experiencia",
       "education": "Universidad Nacional Autónoma de México",
-      "certifications": ["Cardiología Intervencionista", "Ecocardiografía", "Medicina Interna"],
-      "languages": ["Español", "Inglés"],
+      "certifications": [
+        "Cardiología Intervencionista",
+        "Ecocardiografía",
+        "Medicina Interna"
+      ],
+      "languages": [
+        "Español",
+        "Inglés"
+      ],
       "about": "Especialista en cardiología con amplia experiencia en procedimientos intervencionistas. Comprometida con brindar atención médica de calidad y personalizada a cada paciente.",
       "address": "Av. Insurgentes Sur 1234, Col. Del Valle, Ciudad de México",
       "phone": "+52 55 1234 5678",
