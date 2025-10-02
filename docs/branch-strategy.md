@@ -294,6 +294,7 @@ Any special deployment considerations or environment variables needed.
 
 ## PR Readiness
 
+- [ ] Base branch follow `branch-strategy.md`
 - [ ] Branch is up to date with base branch
 - [ ] Commits are logical and well-messaged
 - [ ] PR title follows format: `[TASK-ID]: [Description]`
