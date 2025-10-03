@@ -1858,27 +1858,245 @@ Como visitante, quiero registrarme como médico especialista proporcionando mi n
 ```
 ## Ticket
 ```markdown
-##### 1.2.6 [Frontend] Integrar consumo del endpoint de registro y manejo de respuestas
+
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+**ID:** LOGIN-PAC-01  
+**Título:** Login de paciente  
+**Descripción:**  
+Como paciente registrado, quiero iniciar sesión con mi correo electrónico y contraseña, para acceder a mi perfil, agendar citas y recibir notificaciones.
+```
+## Ticket
+```markdown
+##### 2.1.5 [Frontend] Crear formulario de login de paciente
 
 **Descripción detallada:**  
-Implementar la lógica para enviar los datos del formulario al endpoint de registro, manejar respuestas exitosas y errores, y mostrar mensajes al usuario según el resultado.
+Diseñar el formulario de login de paciente en React + Tailwind CSS + Headless UI, siguiendo el diseño y paleta de colores definidos. Debe incluir campos: email, contraseña y selección de tipo de usuario (paciente).
 
 **Dependencias:**  
-- Depende del formulario de registro y del endpoint en backend.
+- Depende de la definición del endpoint en backend.
+
+**Etiquetas:**  
+Frontend, UI, Validación, Internacionalización
+
+**Criterios de aceptación:**  
+- [ ] El formulario incluye los campos requeridos.
+- [ ] La selección de tipo de usuario está presente y por defecto en "No" para la opción "Soy un médico".
+- [ ] Las validaciones de frontend muestran mensajes claros y traducibles (i18n).
+- [ ] El botón de login está deshabilitado hasta que los campos sean válidos.
+- [ ] El diseño sigue la paleta de colores y fuente definida.
+- [ ] Se muestran mensajes de error del backend en el idioma seleccionado.
+
+**Estimación de tiempo:**  
+1 hora
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+**ID:** LOGIN-PAC-01  
+**Título:** Login de paciente  
+**Descripción:**  
+Como paciente registrado, quiero iniciar sesión con mi correo electrónico y contraseña, para acceder a mi perfil, agendar citas y recibir notificaciones.
+```
+## Ticket
+```markdown
+##### 2.1.6 [Frontend] Integrar consumo del endpoint de login y manejo de respuestas
+
+**Descripción detallada:**  
+Implementar la lógica para enviar los datos del formulario al endpoint de login, manejar respuestas exitosas y errores, y mostrar mensajes al usuario según el resultado.
+
+**Dependencias:**  
+- Depende del formulario de login y del endpoint en backend.
+
+**Etiquetas:**  
+Frontend, API REST, Internacionalización, Validación
+
+**Criterios de aceptación:**
+- [ ] El endpoint para realizar el login del paciente es `POST /api/auth/login/patient`
+- [ ] Se envia la información al endpoint de pacientes cuando el toogle de "Soy un médico" se encuentra en "no"  
+- [ ] El formulario envía los datos correctamente al endpoint.
+- [ ] Se muestra mensaje de éxito y el usuario es redirigido al portal de inicio tras login exitoso.
+- [ ] Se muestran mensajes de error claros y traducibles en caso de fallo.
+- [ ] El JWT se almacena de forma segura en el frontend.
+
+**Estimación de tiempo:**  
+1 hora
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+**ID:** LOGIN-MED-01  
+**Título:** Login de médico especialista  
+**Descripción:**  
+Como médico especialista registrado, quiero iniciar sesión con mi correo electrónico y contraseña, para gestionar mi perfil, agenda y recibir notificaciones.
+
+```
+## Ticket
+```markdown
+##### 2.2.6 [Frontend] Integrar consumo del endpoint de login y manejo de respuestas
+
+**Descripción detallada:**  
+Implementar la lógica para enviar los datos del formulario al endpoint de login, manejar respuestas exitosas y errores, y mostrar mensajes al usuario según el resultado.
+
+**Dependencias:**  
+- Depende del formulario de login y del endpoint en backend.
 
 **Etiquetas:**  
 Frontend, API REST, Internacionalización, Validación
 
 **Criterios de aceptación:**  
-- [ ] El endpoint para el registro de un médico es `POST /api/auth/register/doctor`
+- [ ] El endpoint para el inición de sesión como medico es `POST /api/auth/login/doctor`
+- [ ] Se envian los datos de formulario al endpoint indicado cuando el toggle "Soy un médico" se encuentra en valor "Si"
 - [ ] El formulario envía los datos correctamente al endpoint.
-- [ ] Los campos del formulario, obligatorios y opcionales coinciden con los descritos en el API
-- [ ] Se muestra mensaje de éxito al usuario tras registro exitoso.
+- [ ] Se muestra mensaje de éxito y el usuario es redirigido a "/agenda" tras un login exitoso.
 - [ ] Se muestran mensajes de error claros y traducibles en caso de fallo.
-- [ ] El formulario se limpia y el usuario es redirigido al login "/login" tras registro exitoso.
+- [ ] El JWT se almacena de forma segura en frontend.
 
 **Estimación de tiempo:**  
 1 hora
+
 ```
 
 Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?

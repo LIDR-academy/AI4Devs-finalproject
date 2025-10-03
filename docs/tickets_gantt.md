@@ -98,10 +98,10 @@ gantt
     Integrar consumo endpoint registro paciente (Frontend) :done, des16.2, 2025-09-09, 1h
     Crear formulario de registro médico especialista (Frontend) :done, des16.3, 2025-09-09, 2h
     Integrar consumo endpoint registro médico especialista (Frontend) :done, des16.4, 2025-09-09, 1h
-    Crear formulario de login paciente (Frontend) :des16.5, 2025-09-10, 1h
-    Integrar consumo endpoint login paciente (Frontend) :des16.6, 2025-09-10, 1h
-    Crear formulario de login médico especialista (Frontend) :des16.7, 2025-09-10, 1h
-    Integrar consumo endpoint login médico especialista (Frontend) :des16.8, 2025-09-10, 1h
+    Crear formulario de login paciente (Frontend) :done, des16.5, 2025-09-10, 1h
+    Integrar consumo endpoint login paciente (Frontend) :done, des16.6, 2025-09-10, 1h
+    Crear formulario de login médico especialista (Frontend) :done, des16.7, 2025-09-10, 1h
+    Integrar consumo endpoint login médico especialista (Frontend) :done, des16.8, 2025-09-10, 1h
 
     section 17. Buscar especialistas por especialidad y ubicación [Frontend]
     Maquetar layout base de la aplicación :done, des17.1, 2025-09-11, 2h

@@ -546,12 +546,11 @@ Frontend, UI, Validación, Internacionalización
 
 **Criterios de aceptación:**  
 - [ ] El formulario incluye los campos requeridos.
-- [ ] La selección de tipo de usuario está presente y por defecto en "Paciente".
+- [ ] La selección de tipo de usuario está presente y por defecto en "No" para la opción "Soy un médico".
 - [ ] Las validaciones de frontend muestran mensajes claros y traducibles (i18n).
 - [ ] El botón de login está deshabilitado hasta que los campos sean válidos.
 - [ ] El diseño sigue la paleta de colores y fuente definida.
 - [ ] Se muestran mensajes de error del backend en el idioma seleccionado.
-- [ ] Se incluyen pruebas unitarias/mocks de validación de formulario.
 
 **Estimación de tiempo:**  
 1 hora
@@ -569,12 +568,13 @@ Implementar la lógica para enviar los datos del formulario al endpoint de login
 **Etiquetas:**  
 Frontend, API REST, Internacionalización, Validación
 
-**Criterios de aceptación:**  
+**Criterios de aceptación:**
+- [ ] El endpoint para realizar el login del paciente es `POST /api/auth/login/patient`
+- [ ] Se envia la información al endpoint de pacientes cuando el toogle de "Soy un médico" se encuentra en "no"  
 - [ ] El formulario envía los datos correctamente al endpoint.
-- [ ] Se muestra mensaje de éxito y el usuario es redirigido al portal de paciente tras login exitoso.
+- [ ] Se muestra mensaje de éxito y el usuario es redirigido al portal de inicio tras login exitoso.
 - [ ] Se muestran mensajes de error claros y traducibles en caso de fallo.
-- [ ] El JWT se almacena de forma segura en frontend.
-- [ ] Se incluyen pruebas unitarias/mocks de integración.
+- [ ] El JWT se almacena de forma segura en el frontend.
 
 **Estimación de tiempo:**  
 1 hora
@@ -753,11 +753,12 @@ Implementar la lógica para enviar los datos del formulario al endpoint de login
 Frontend, API REST, Internacionalización, Validación
 
 **Criterios de aceptación:**  
+- [ ] El endpoint para el inición de sesión como medico es `POST /api/auth/login/doctor`
+- [ ] Se envian los datos de formulario al endpoint indicado cuando el toggle "Soy un médico" se encuentra en valor "Si"
 - [ ] El formulario envía los datos correctamente al endpoint.
-- [ ] Se muestra mensaje de éxito y el usuario es redirigido al portal de médico tras login exitoso.
+- [ ] Se muestra mensaje de éxito y el usuario es redirigido a "/agenda" tras un login exitoso.
 - [ ] Se muestran mensajes de error claros y traducibles en caso de fallo.
 - [ ] El JWT se almacena de forma segura en frontend.
-- [ ] Se incluyen pruebas unitarias/mocks de integración.
 
 **Estimación de tiempo:**  
 1 hora

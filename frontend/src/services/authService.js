@@ -2,13 +2,27 @@
 import api from "./api"
 
 export const authService = {
-  // Login de usuario
+  // Login de usuario (paciente/médico)
   login: async (credentials) => {
     try {
-      const response = await api.post("/api/auth/login", credentials)
-      if (response.data.token) {
-        localStorage.setItem("authToken", response.data.token)
+      // Determina el endpoint según el tipo de usuario
+      const endpoint = credentials.isDoctor
+        ? "/api/auth/login/doctor" // Flujo para médicos (preparado, no implementado)
+        : "/api/auth/login/patient" // Endpoint para pacientes
+
+      const payload = {
+        email: credentials.email,
+        password: credentials.password,
       }
+
+      // Realiza la petición al endpoint correspondiente
+      const response = await api.post(endpoint, payload)
+
+      // Extrae el token desde el payload y almacénalo
+      if (response.data?.payload?.token) {
+        localStorage.setItem("authToken", response.data.payload.token)
+      }
+
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

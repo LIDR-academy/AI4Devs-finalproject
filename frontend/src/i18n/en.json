@@ -30,6 +30,7 @@
     "registerTitle": "Create Account",
     "registerSubtitle": "Join Buscadoc to find the best doctors",
     "loginFormTitle": "Login",
+    "loginFormSubtitle": "Enter your login details",
     "emailLabel": "Email*",
     "emailPlaceholder": "Enter your email",
     "passwordLabel": "Password*",
@@ -76,7 +77,9 @@
     "Passwords do not match": "Passwords do not match.",
     "professionalIdMinLength": "Professional ID must be at least 8 digits",
     "doctorAlreadyExists": "Doctor already exists.",
-    "License number required": "License number is required."
+    "License number required": "License number is required.",
+    "loginSuccess": "Login successful. Welcome to Buscadoc!",
+    "recoveringSession": "Recovering session, just a moment..."
   },
   "patient": {
     "registerTitle": "Patient Registration",

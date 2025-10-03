@@ -30,6 +30,7 @@
     "registerTitle": "Crear Cuenta",
     "registerSubtitle": "Únete a Buscadoc para encontrar los mejores doctores",
     "loginFormTitle": "Inicio de sesión",
+    "loginFormSubtitle": "Ingresa tus datos de sesión",
     "emailLabel": "Correo Electrónico*",
     "emailPlaceholder": "Ingresa tu correo electrónico",
     "passwordLabel": "Contraseña*",
@@ -76,7 +77,9 @@
     "Passwords do not match": "Las contraseñas no coinciden.",
     "professionalIdMinLength": "La cédula debe tener al menos 8 dígitos",
     "doctorAlreadyExists": "El doctor ya está registrado.",
-    "License number required": "La cédula profesional es obligatoria."
+    "License number required": "La cédula profesional es obligatoria.",
+    "loginSuccess": "Inicio de sesión exitoso. ¡Bienvenido a Buscadoc!",
+    "recoveringSession": "Recuperando sesión, un momento..."
   },
   "patient": {
     "registerTitle": "Registro de Paciente",

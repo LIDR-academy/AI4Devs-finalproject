@@ -285,11 +285,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, onLoginClick, isL
 
         {/* Toggle Registrarme como médico */}
         <div className="flex items-center justify-between mb-6">
+          <label
+            htmlFor="register-as-doctor-toggle"
+            className="text-sm font-medium mr-4 flex-1 text-left"
+          >
+            {t("auth.registerAsDoctorLabel")}
+          </label>
           <Toggle
+            id="register-as-doctor-toggle"
             checked={formData.isDoctor}
             onChange={handleToggleChange}
             disabled={isFormLoading}
-            label={t("auth.registerAsDoctorLabel")}
             aria-label={t("auth.registerAsDoctorLabel")}
           />
         </div>

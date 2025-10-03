@@ -7,6 +7,7 @@ import { useState } from "react"
 import { authService } from "../../src/services/authService"
 import NotificationToast from "../../src/components/NotificationToast"
 import { useTranslation } from "react-i18next"
+import AuthRedirect from "../../src/components/AuthRedirect" // Importar el componente
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -46,7 +47,7 @@ export default function RegisterPage() {
         // Si es paciente, enviar al endpoint de pacientes
         await authService.registerPatient(payload);
       }
-      
+
       // Notificación de éxito y limpieza/redirección
       setToast({ message: t("auth.registerSuccess"), isVisible: true })
       setFormResetKey((prev) => prev + 1)
@@ -79,6 +80,10 @@ export default function RegisterPage() {
 
   return (
     <MainLayout>
+      {/* Componente que verifica si hay una sesión activa y redirige */}
+      <AuthRedirect />
+
+      {/* Componente de Notificaciones */}
       <NotificationToast
         message={toast.message}
         isVisible={toast.isVisible}
@@ -103,13 +108,13 @@ export default function RegisterPage() {
                 </div>
               </div>
             </div>
-            <div className="order-1 lg:order-2">
-              <div className="bg-gradient-to-br from-pacific-cyan to-non-photo-blue rounded-2xl overflow-hidden shadow-custom">
-                <div className="relative h-full min-h-[400px] lg:min-h-[600px]">
+            <div className="order-1 lg:order-2 flex items-center justify-center">
+              <div className="bg-gradient-to-br from-pacific-cyan to-non-photo-blue rounded-2xl overflow-hidden shadow-custom flex items-center justify-center w-full h-full min-h-[400px] lg:min-h-[600px]">
+                <div className="relative w-full h-full flex items-center justify-center">
                   <img
                     src="/images/login-hero.jpg"
                     alt="Profesional médico usando la aplicación Buscadoc en su teléfono móvil"
-                    className="w-full h-full object-cover"
+                    className="object-cover w-full h-full"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-federal-blue/20 to-transparent" />
                 </div>
