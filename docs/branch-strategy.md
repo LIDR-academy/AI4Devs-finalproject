@@ -184,7 +184,10 @@ Use Jira issue format:
 
 - **Task Type**: [DevOps/Backend/Frontend/Documentation]
 - **Breaking Changes**: Yes/No
-- **Dependencies Added/Updated**: Yes/No (list if yes)
+- **Dependencies Added/Updated**: Yes/No
+  - list
+  - if
+  - yes
 - **Migration Required**: Yes/No
 
 ## Jira References
