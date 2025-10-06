@@ -1,0 +1,441 @@
+openapi: 3.0.3
+info:
+  title: Booking Platform - API
+  version: 0.1.0
+  description: Initial MVP API for managing services, slots and bookings.
+servers:
+  - url: https://api.example.com/v1
+    description: Production (placeholder)
+  - url: http://localhost:8080/v1
+    description: Local development
+tags:
+  - name: Auth
+  - name: Services
+  - name: Slots
+  - name: Bookings
+  - name: Admin
+  - name: System
+
+paths:
+  /auth/login:
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+        '503':
+          description: Service unhealthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+    post:
+      tags: [Auth]
+      summary: Admin login
+      operationId: loginAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Authentication success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  token_type: { type: string, example: Bearer }
+        '401': { description: Invalid credentials }
+
+  /services:
+    get:
+      tags: [Services]
+      summary: List public active services
+      operationId: listServices
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Service' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Services]
+      summary: Create service (admin)
+      operationId: createService
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Service' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /services/{id}:
+    get:
+      tags: [Services]
+      summary: Get service detail
+      operationId: getService
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    put:
+      tags: [Services]
+      summary: Update service (admin)
+      operationId: updateService
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceUpdate' }
+      responses:
+        '200': { description: Updated }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    delete:
+      tags: [Services]
+      summary: Delete service (admin)
+      operationId: deleteService
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /services/{id}/slots:
+    get:
+      tags: [Slots]
+      summary: List upcoming open slots for a service
+      operationId: listServiceSlots
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SlotPublic' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    post:
+      tags: [Slots]
+      summary: Create slot (admin)
+      operationId: createSlot
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SlotCreate' }
+      responses:
+        '201': { description: Created }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /slots/{slotId}:
+    patch:
+      tags: [Slots]
+      summary: Change slot state (e.g. reopen) admin
+      operationId: updateSlotState
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: slotId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /bookings:
+    post:
+      tags: [Bookings]
+      summary: Create pending booking
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BookingCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BookingPublic' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /bookings/{booking_code}:
+    get:
+      tags: [Bookings]
+      summary: Get booking status by booking_code
+      operationId: getBookingByCode
+      parameters:
+        - in: path
+          name: booking_code
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BookingPublic' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /admin/bookings:
+    get:
+      tags: [Admin]
+      summary: List pending bookings
+      operationId: listPendingBookings
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BookingAdmin' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /admin/bookings/{id}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve booking
+      operationId: approveBooking
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Approved }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /admin/bookings/{id}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject booking
+      operationId: rejectBooking
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Rejected }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Service:
+      type: object
+      properties:
+        id: { type: string, format: uuid, readOnly: true }
+        title: { type: string, minLength: 3, maxLength: 120 }
+        description: { type: string, maxLength: 5000 }
+        duration_minutes: { type: integer, minimum: 1, maximum: 1440 }
+        price_cents: { type: integer, minimum: 0 }
+        active: { type: boolean }
+        created_at: { type: string, format: date-time, readOnly: true }
+        updated_at: { type: string, format: date-time, readOnly: true }
+      required: [id, title, description, duration_minutes, price_cents, active]
+    ServiceCreate:
+      type: object
+      required: [title, description, duration_minutes, price_cents]
+      properties:
+        title: { type: string, minLength: 3, maxLength: 120 }
+        description: { type: string, maxLength: 5000 }
+        duration_minutes: { type: integer, minimum: 1, maximum: 1440 }
+        price_cents: { type: integer, minimum: 0 }
+        active: { type: boolean, default: true }
+    ServiceUpdate:
+      allOf:
+        - $ref: '#/components/schemas/ServiceCreate'
+    ServiceDetail:
+      allOf:
+        - $ref: '#/components/schemas/Service'
+      properties:
+        open_slots:
+          type: array
+          items: { $ref: '#/components/schemas/SlotPublic' }
+    SlotPublic:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        start: { type: string, format: date-time }
+        end: { type: string, format: date-time }
+      required: [id, start, end]
+    SlotCreate:
+      type: object
+      required: [start]
+      properties:
+        start: { type: string, format: date-time, description: UTC ISO-8601 start datetime }
+    BookingCreate:
+      type: object
+      required: [slot_id, name, email]
+      properties:
+        slot_id: { type: string, format: uuid }
+        name: { type: string, minLength: 2, maxLength: 120 }
+        email: { type: string, format: email }
+    BookingPublic:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        slot_id: { type: string, format: uuid }
+        status: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+        booking_code: { type: string }
+        service: { $ref: '#/components/schemas/Service' }
+        slot: { $ref: '#/components/schemas/SlotPublic' }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+      required: [id, slot_id, status, booking_code, service, slot]
+    BookingAdmin:
+      allOf:
+        - $ref: '#/components/schemas/BookingPublic'
+      properties:
+        name: { type: string }
+        email: { type: string }
+        google_event_id: { type: string, nullable: true }
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [UP, DOWN] }
+        timestamp: { type: string, format: date-time }
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: array
+          items: { type: string }
+        trace_id: { type: string, description: Correlation / tracing id }
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+      properties:
+        field_errors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: { type: string }
+              message: { type: string }
+  responses:
+    BadRequest:
+      description: Bad request / validation error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Conflict (e.g. slot already booked or calendar conflict)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
