@@ -1893,8 +1893,12 @@ Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía 
 Diseñar y maquetar la vista principal de búsqueda en React, permitiendo al usuario filtrar especialistas por especialidad, ciudad y estado.
 - **Detalle específico:**  
 Crear un formulario con los siguientes campos:
+  - Input para busqueda por nombre del médico especialista
   - Select de especialidad (con datos del catálogo).
-  - Select de ciudad y estado (con datos del catálogo).
+  - Select de estado (con datos del catálogo).
+  - Select de ciudad (con datos del catálogo).
+  - Rango de valoración minima se encuentra oculto hasta iniciar sesión
+  - Select de dispinibilidad se encuentra oculto hasta iniciar sesión
   - Botón para ejecutar la búsqueda.
 Maquetar el área de resultados para mostrar la lista de especialistas filtrados. Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
@@ -1934,8 +1938,8 @@ Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía 
 Conectar el formulario de búsqueda con el backend, consumir el endpoint de búsqueda y mostrar los resultados en la vista correspondiente.
 - **Detalle específico:**  
 - Implementar la llamada al endpoint `GET /api/doctors/search` usando Axios.
-- Enviar los filtros seleccionados (especialidad, ciudad, estado) como parámetros de consulta.
-- Renderizar la lista de especialistas en el área de resultados, mostrando nombre, especialidad, ciudad, estado, foto y biografía.
+- Enviar los filtros seleccionados (nombre, especialidad, estado) como parámetros de consulta.
+- Renderizar la lista de especialistas en el área de resultados, mostrando nombre, especialidad, ciudad, estado, foto y valoración.
 - Manejar estados de carga, error y resultados vacíos.
 - Asegurar que la búsqueda responde en menos de 2 segundos.
 

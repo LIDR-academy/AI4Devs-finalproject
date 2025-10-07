@@ -7,7 +7,8 @@ import SearchFilters from "../src/components/SearchFilters/SearchFilters"
 import DoctorCard from "../src/components/DoctorCard/DoctorCard"
 import AppointmentBooking from "../src/components/AppointmentBooking/AppointmentBooking"
 import NotificationToast from "../src/components/NotificationToast"
-import { mockDoctors, filterDoctors, searchDoctors } from "../src/data/mockDoctors"
+import { mockDoctors, searchDoctors } from "../src/data/mockDoctors"
+import { filterDoctors } from "../src/services/patientService"
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -18,6 +19,7 @@ export default function HomePage() {
     priceRange: "",
     availability: "",
     gender: "",
+    minRating: 0, // Nuevo campo
   })
   const [showFilters, setShowFilters] = useState(false)
   const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState<any>(null)
@@ -25,6 +27,11 @@ export default function HomePage() {
   const [showNotification, setShowNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState("")
 
+  // Verificación de autenticación (sincrónica)
+  // Si existe el token en localStorage, el usuario está autenticado y se habilitan filtros avanzados
+  const isAuthenticated = typeof window !== "undefined" && !!localStorage.getItem("authToken")
+
+  // Se utiliza patientService.filterDoctors para aplicar todos los filtros, incluyendo valoración mínima si corresponde
   const filteredDoctors = filterDoctors(searchDoctors(mockDoctors, searchQuery), filters)
 
   const handleSearch = (query: string) => {
@@ -43,6 +50,7 @@ export default function HomePage() {
       priceRange: "",
       availability: "",
       gender: "",
+      minRating: 0, // Nuevo campo
     })
     setSearchQuery("")
   }
@@ -115,7 +123,12 @@ export default function HomePage() {
               </button>
             </div>
             <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
-              <SearchFilters filters={filters} onFiltersChange={handleFiltersChange} onClearFilters={clearFilters} />
+              <SearchFilters
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                onClearFilters={clearFilters}
+                isAuthenticated={isAuthenticated} // Prop para mostrar/ocultar filtros avanzados
+              />
             </div>
           </aside>
           <div className="flex-1">

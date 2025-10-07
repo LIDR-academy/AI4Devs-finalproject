@@ -2,15 +2,16 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 /**
- * Busca especialistas filtrando por especialidad, ciudad, estado, valoración mínima y disponibilidad.
+ * Busca especialistas filtrando por especialidad, ciudad, estado, valoración mínima, disponibilidad y nombre.
  * @param {Object} filters - Filtros de búsqueda
  * @param {number} page - Página actual
  * @param {number} limit - Resultados por página
  * @param {number} minRating - Valoración mínima
  * @param {boolean} available - Disponibilidad (true/false)
+ * @param {string} doctorName - Nombre del médico (opcional)
  * @returns {Object} - Resultados y paginación
  */
-async function searchDoctors({ specialtyId, cityId, stateId, minRating, available, page = 1, limit = 10 }) {
+async function searchDoctors({ specialtyId, cityId, stateId, minRating, available, page = 1, limit = 10, doctorName }) {
   const where = {
     active: true,
     ...(specialtyId && {
@@ -25,6 +26,38 @@ async function searchDoctors({ specialtyId, cityId, stateId, minRating, availabl
       location: { state_id: Number(stateId) }
     })
   };
+
+  // Filtro por nombre del médico (doctorName)
+  if (doctorName && typeof doctorName === 'string' && doctorName.length >= 3 && doctorName.length <= 255) {
+    const words = doctorName.trim().split(/\s+/);
+    if (words.length === 1) {
+      // Buscar por first_name (coincidencia parcial, ignorando mayúsculas/acentos)
+      where.user = {
+        first_name: {
+          mode: 'insensitive',
+          contains: words[0]
+        }
+      };
+    } else {
+      // Buscar por first_name y last_name (coincidencia parcial)
+      where.user = {
+        AND: [
+          {
+            first_name: {
+              mode: 'insensitive',
+              contains: words[0]
+            }
+          },
+          {
+            last_name: {
+              mode: 'insensitive',
+              contains: words.slice(1).join(' ')
+            }
+          }
+        ]
+      };
+    }
+  }
 
   // Consulta principal
   const [results, total] = await Promise.all([

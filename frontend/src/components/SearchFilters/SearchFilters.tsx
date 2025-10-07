@@ -5,18 +5,20 @@ import { useState } from "react"
 import DropdownFilter from "../DropdownFilter/DropdownFilter"
 import Button from "../ui/Button"
 
+
 interface SearchFiltersProps {
   onFiltersChange?: (filters: FilterState) => void
   className?: string
+  isAuthenticated?: boolean // Nueva prop para controlar filtros visibles
+
 }
 
 interface FilterState {
   specialty: string
   state: string
   municipality: string
-  priceRange: string
-  availability: string
   gender: string
+  minRating: number // Nuevo campo para el slider de valoración mínima
 }
 
 const translations = {
@@ -28,8 +30,9 @@ const translations = {
   "search.filters.selectState": "Seleccionar estado",
   "search.filters.municipality": "Municipio",
   "search.filters.selectMunicipality": "Seleccionar municipio",
-  "search.filters.priceRange": "Rango de precio",
-  "search.filters.selectPriceRange": "Seleccionar rango",
+  "search.filters.minRating": "Valoración mínima", // Added rating filter translation
+  "search.filters.minRatingDescription": "{rating}+ estrellas",
+  "search.filters.allRatings": "Todas las valoraciones",
   "search.filters.availability": "Disponibilidad",
   "search.filters.selectAvailability": "Seleccionar disponibilidad",
   "search.filters.gender": "Género",
@@ -46,62 +49,57 @@ const translations = {
 
 const t = (key: string) => translations[key as keyof typeof translations] || key
 
-const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, className = "" }) => {
+const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, className = "", isAuthenticated = false }) => {
   const [filters, setFilters] = useState<FilterState>({
     specialty: "",
     state: "",
     municipality: "",
-    priceRange: "",
+    minRating: 0, // Valor inicial del slider
     availability: "",
     gender: "",
   })
 
+  const [hoveredRating, setHoveredRating] = useState<number>(0)
+
+
+  //TODO: implementar Endpoint para consultar especialidades
   const specialties = [
-    { value: "cardiology", label: "Cardiología" },
-    { value: "dermatology", label: "Dermatología" },
-    { value: "neurology", label: "Neurología" },
-    { value: "pediatrics", label: "Pediatría" },
-    { value: "psychiatry", label: "Psiquiatría" },
-    { value: "orthopedics", label: "Ortopedia" },
+    { value: "1", label: "Cardiología" },
+    { value: "2", label: "Pediatría" },
+    { value: "3", label: "Dermatología" },
   ]
 
+  //TODO: implementar Endpoint para consultar Estadis
   const states = [
-    { value: "cdmx", label: "Ciudad de México" },
-    { value: "jalisco", label: "Jalisco" },
-    { value: "nuevo-leon", label: "Nuevo León" },
-    { value: "puebla", label: "Puebla" },
-    { value: "veracruz", label: "Veracruz" },
+    { value: "1", label: "Ciudad de México" },
+    { value: "2", label: "Jalisco" },
+    { value: "3", label: "Nuevo León" },
+    { value: "4", label: "Puebla" },
+    { value: "5", label: "Veracruz" },
   ]
 
+  //TODO: implementar Endpoint para consultar municipios
   const getMunicipalities = () => {
     if (!filters.state) return []
     const municipalitiesMap: Record<string, Array<{ value: string; label: string }>> = {
       cdmx: [
-        { value: "benito-juarez", label: "Benito Juárez" },
-        { value: "coyoacan", label: "Coyoacán" },
-        { value: "miguel-hidalgo", label: "Miguel Hidalgo" },
+        { value: "1", label: "Coyoacán" },
+        { value: "7", label: "Benito Juárez" },
+        { value: "8", label: "Miguel Hidalgo" },
       ],
       jalisco: [
-        { value: "guadalajara", label: "Guadalajara" },
-        { value: "zapopan", label: "Zapopan" },
-        { value: "tlaquepaque", label: "Tlaquepaque" },
+        { value: "2", label: "Guadalajara" },
+        { value: "3", label: "Zapopan" },
+        { value: "9", label: "Tlaquepaque" },
       ],
       "nuevo-leon": [
-        { value: "monterrey", label: "Monterrey" },
-        { value: "san-pedro", label: "San Pedro Garza García" },
-        { value: "santa-catarina", label: "Santa Catarina" },
+        { value: "10", label: "Monterrey" },
+        { value: "11", label: "San Pedro Garza García" },
+        { value: "12", label: "Santa Catarina" },
       ],
     }
     return municipalitiesMap[filters.state] || []
   }
-
-  const priceRanges = [
-    { value: "0-500", label: "$0 - $500" },
-    { value: "500-1000", label: "$500 - $1,000" },
-    { value: "1000-2000", label: "$1,000 - $2,000" },
-    { value: "2000-5000", label: "$2,000 - $5,000" },
-    { value: "5000+", label: "$5,000+" },
-  ]
 
   const availabilityOptions = [
     { value: "today", label: t("search.filters.today") },
@@ -115,7 +113,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
     { value: "female", label: t("search.filters.female") },
   ]
 
-  const handleFilterChange = (key: keyof FilterState, value: string) => {
+  const handleFilterChange = (key: keyof FilterState, value: string | number) => {
     const newFilters = { ...filters, [key]: value }
 
     // Reset municipality when state changes
@@ -127,12 +125,17 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
     onFiltersChange?.(newFilters)
   }
 
+  const handleRatingClick = (rating: number) => {
+    const newRating = filters.minRating === rating ? 0 : rating
+    handleFilterChange("minRating", newRating)
+  }
+
   const clearAllFilters = () => {
     const clearedFilters: FilterState = {
       specialty: "",
       state: "",
       municipality: "",
-      priceRange: "",
+      minRating: 0, // Changed from priceRange to minRating
       availability: "",
       gender: "",
     }
@@ -140,7 +143,35 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
     onFiltersChange?.(clearedFilters)
   }
 
-  const hasActiveFilters = Object.values(filters).some((value) => value !== "")
+  const hasActiveFilters = Object.values(filters).some((value) => value !== "" && value !== 0)
+
+  const renderStar = (index: number) => {
+    const starNumber = index + 1
+    const isFilled = starNumber <= filters.minRating
+    const isHovered = starNumber <= hoveredRating
+
+    return (
+      <button
+        key={index}
+        type="button"
+        onClick={() => handleRatingClick(starNumber)}
+        onMouseEnter={() => setHoveredRating(starNumber)}
+        onMouseLeave={() => setHoveredRating(0)}
+        className="focus:outline-none focus:ring-2 focus:ring-federal-blue focus:ring-offset-1 rounded transition-all"
+        aria-label={`Seleccionar ${starNumber} estrellas`}
+      >
+        <svg
+          className={`w-8 h-8 transition-colors ${isFilled || isHovered ? "text-yellow-400" : "text-gray-300"
+            } hover:text-yellow-400`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      </button>
+    )
+  }
 
   return (
     <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
@@ -193,26 +224,44 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
           </div>
         )}
 
-        {/* Price Range Filter */}
+        {/* Rating */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">{t("search.filters.priceRange")}</label>
-          <DropdownFilter
-            options={priceRanges}
-            value={filters.priceRange}
-            onChange={(value) => handleFilterChange("priceRange", value)}
-            placeholder={t("search.filters.selectPriceRange")}
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t("search.filters.minRating")}</label>
+          {isAuthenticated ? (
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-center gap-1 mb-2">
+                {Array.from({ length: 5 }, (_, index) => renderStar(index))}
+              </div>
+              <p className="text-center text-sm text-gray-600">
+                {filters.minRating > 0
+                  ? t("search.filters.minRatingDescription").replace("{rating}", filters.minRating.toString())
+                  : t("search.filters.allRatings")}
+              </p>
+            </div>
+          ) : (
+            // Placeholder para visitantes
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center text-gray-400 text-sm">
+              Inicia sesión para filtrar por valoración mínima
+            </div>
+          )}
         </div>
 
         {/* Availability Filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">{t("search.filters.availability")}</label>
-          <DropdownFilter
-            options={availabilityOptions}
-            value={filters.availability}
-            onChange={(value) => handleFilterChange("availability", value)}
-            placeholder={t("search.filters.selectAvailability")}
-          />
+          {isAuthenticated ? (
+            <DropdownFilter
+              options={availabilityOptions}
+              value={filters.availability}
+              onChange={(value) => handleFilterChange("availability", value)}
+              placeholder={t("search.filters.selectAvailability")}
+            />
+          ) : (
+            // Placeholder para visitantes
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center text-gray-400 text-sm">
+              Inicia sesión para filtrar por disponibilidad
+            </div>
+          )}
         </div>
 
         {/* Gender Filter */}
@@ -238,8 +287,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
       {hasActiveFilters && (
         <div className="mt-3 text-center">
           <span className="text-sm text-gray-600">
-            {Object.values(filters).filter((value) => value !== "").length} {t("search.filters.activeFilters")}
-          </span>
+            {Object.entries(filters).filter(([key, value]) => value !== "" && value !== 0).length}{" "}
+            {t("search.filters.activeFilters")}          </span>
         </div>
       )}
     </div>

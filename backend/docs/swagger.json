@@ -938,8 +938,8 @@
         "tags": [
           "Doctors"
         ],
-        "summary": "Buscar especialistas por especialidad y ubicación",
-        "description": "Permite buscar especialistas médicos filtrando por especialidad, ciudad y estado. Accesible sin autenticación.",
+        "summary": "Buscar especialistas por especialidad, ubicación y nombre",
+        "description": "Permite buscar especialistas médicos filtrando por especialidad, ciudad, estado y nombre del médico. El parámetro doctor_name permite coincidencias parciales e ignora mayúsculas y acentos. Accesible sin autenticación.",
         "parameters": [
           {
             "name": "specialty_id",
@@ -966,6 +966,17 @@
             "required": false,
             "schema": {
               "type": "integer"
+            }
+          },
+          {
+            "name": "doctor_name",
+            "in": "query",
+            "description": "Nombre del médico (mínimo 3, máximo 255 caracteres, coincidencia parcial, ignora mayúsculas y acentos)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 255
             }
           },
           {

@@ -61,3 +61,52 @@ export const patientService = {
     }
   },
 }
+
+/**
+ * Filtra doctores según los criterios seleccionados por el usuario.
+ * Incluye filtro de especialidad, estado, municipio, rango de precio, disponibilidad, género y valoración mínima.
+ * El filtro de valoración mínima solo se aplica si el usuario está autenticado.
+ */
+export const filterDoctors = (doctors, filters) => {
+  return doctors.filter((doctor) => {
+    // Specialty filter
+    if (filters.specialty && doctor.specialty !== filters.specialty) {
+      return false
+    }
+
+    // State filter
+    if (filters.state && doctor.location.state !== filters.state) {
+      return false
+    }
+
+    // Municipality filter
+    if (filters.municipality && doctor.location.municipality !== filters.municipality) {
+      return false
+    }
+
+    // Price range filter
+    if (filters.priceRange) {
+      const [min, max] = filters.priceRange
+      if (doctor.price < min || doctor.price > max) {
+        return false
+      }
+    }
+
+    // Availability filter
+    if (filters.availability === "available" && !doctor.isAvailable) {
+      return false
+    }
+
+    // Gender filter
+    if (filters.gender && doctor.gender !== filters.gender) {
+      return false
+    }
+
+    // Valoración mínima
+    if (filters.minRating && doctor.rating < filters.minRating) {
+      return false
+    }
+
+    return true
+  })
+}

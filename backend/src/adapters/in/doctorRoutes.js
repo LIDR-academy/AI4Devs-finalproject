@@ -20,6 +20,7 @@ const searchSchema = yup.object().shape({
   state_id: yup.number().integer().positive().nullable(true),
   min_rating: yup.number().min(1).max(5).nullable(true),
   available: yup.boolean().nullable(true),
+  doctor_name: yup.string().min(3).max(255).nullable(true),
   page: yup.number().integer().positive().default(1),
   limit: yup.number().integer().positive().max(100).default(10)
 });
@@ -38,6 +39,7 @@ router.get('/search', async (req, res, next) => {
       stateId: validated.state_id,
       minRating: validated.min_rating,
       available: validated.available,
+      doctorName: validated.doctor_name, // <-- Nuevo parámetro
       page: validated.page,
       limit: validated.limit
     });
@@ -54,6 +56,7 @@ router.get('/search', async (req, res, next) => {
     next(err);
   }
 });
+
 
 // GET /api/doctor/availability
 router.get('/availability', requireDoctorRole, async (req, res, next) => {

@@ -1570,6 +1570,15 @@ Revisar si la vista y sus componentes cumplen con los criterios funcionales y vi
 Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
 Hazme preguntas si necesitas más información.
 
+
+# Confirmación
+<Respuesta preguntas>
+
+Revisa mi información, muestrame el analisis de criterios y dudas, así como el plan para implementar lo faltante.
+
+# Implementar puntos
+Muestrame solo la implementación del punto <numero>: <titulo>, dime que archivos se tienen que modificar y en donde se debe realizar la modificación
+
 ----
 
 
@@ -2097,6 +2106,200 @@ Frontend, API REST, Internacionalización, Validación
 **Estimación de tiempo:**  
 1 hora
 
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+- **ID:** 1  
+- **Título:** Buscar especialistas por especialidad y ubicación  
+- **Descripción:** Como visitante, quiero buscar especialistas por especialidad y ubicación (ciudad y estado), para encontrar médicos adecuados a mis necesidades sin necesidad de registrarme.
+```
+## Ticket
+```markdown
+### 15.2 [Frontend] Maquetar la vista de búsqueda de especialistas (formulario de filtros: especialidad, ciudad, estado)
+
+**Descripción detallada:**  
+- **Propósito:**  
+Diseñar y maquetar la vista principal de búsqueda en React, permitiendo al usuario filtrar especialistas por especialidad, ciudad y estado.
+- **Detalle específico:**  
+Crear un formulario con los siguientes campos:
+  - Input para busqueda por nombre del médico especialista
+  - Select de especialidad (con datos del catálogo).
+  - Select de estado (con datos del catálogo).
+  - Select de ciudad (con datos del catálogo).
+  - Rango de valoración minima se encuentra oculto hasta iniciar sesión
+  - Select de dispinibilidad se encuentra oculto hasta iniciar sesión
+  - Botón para ejecutar la búsqueda.
+Maquetar el área de resultados para mostrar la lista de especialistas filtrados. Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
+
+**Criterios de aceptación:**  
+- La vista de búsqueda está implementada y disponible en el frontend.
+- El formulario permite seleccionar filtros y ejecutar la búsqueda.
+- El diseño es responsivo y cumple con las pautas de UI/UX del PRD.
+- El área de resultados está lista para integrar la lógica de consumo de API.
+- **Pruebas de validación:**  
+  - Visualizar la vista en diferentes dispositivos y tamaños de pantalla.
+  - Verificar que los campos de filtro y el área de resultados se muestran correctamente.
+
+**Prioridad:**  
+Muy alta
+
+**Estimación de tiempo:**  
+2 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Feature  
+- Característica del producto: Frontend, UI/UX, Maquetado
+
+**Comentarios y Notas:**  
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para maquetado de vista de búsqueda de especialistas.
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+- **ID:** 1  
+- **Título:** Buscar especialistas por especialidad y ubicación  
+- **Descripción:** Como visitante, quiero buscar especialistas por especialidad y ubicación (ciudad y estado), para encontrar médicos adecuados a mis necesidades sin necesidad de registrarme.
+```
+## Ticket
+```markdown
+### 15.3 [Frontend] Implementar la lógica de consumo de API para búsqueda de especialistas y mostrar resultados
+
+**Descripción detallada:**  
+- **Propósito:**  
+Conectar el formulario de búsqueda con el backend, consumir el endpoint de búsqueda y mostrar los resultados en la vista correspondiente.
+- **Detalle específico:**  
+- Implementar la llamada al endpoint `GET /api/doctors/search` usando Axios.
+- Enviar los filtros seleccionados (nombre, especialidad, estado) como parámetros de consulta.
+- Renderizar la lista de especialistas en el área de resultados, mostrando nombre, especialidad, ciudad, estado, foto y valoración.
+- Manejar estados de carga, error y resultados vacíos.
+- Asegurar que la búsqueda responde en menos de 2 segundos.
+
+**Criterios de aceptación:**  
+- El formulario ejecuta la búsqueda y muestra los resultados correctamente.
+- Los datos se obtienen del backend y se renderizan en la vista.
+- Se manejan estados de carga, error y resultados vacíos.
+- El tiempo de respuesta es menor a 2 segundos.
+- **Pruebas de validación:**  
+  - Probar la búsqueda con diferentes filtros y verificar los resultados.
+  - Simular errores y estados vacíos.
+
+**Prioridad:**  
+Muy alta
+
+**Estimación de tiempo:**  
+2 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Feature  
+- Característica del producto: Frontend, Consumo de API, UI/UX
+
+**Comentarios y Notas:**  
+Utilizar Axios para las llamadas a la API y seguir la estructura de datos definida en el backend. Validar que los datos mostrados cumplen con los criterios del PRD.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para lógica de consumo de API y renderizado de resultados en búsqueda de especialistas.
 ```
 
 Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
