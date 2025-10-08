@@ -1,10 +1,22 @@
 import api from "./api"
 
 export const doctorService = {
-  // Buscar doctores
+  /**
+   * Busca doctores usando filtros y paginación.
+   * Los parámetros se envían como query params según Swagger:
+   * - doctor_name: nombre del médico (mínimo 3 caracteres)
+   * - specialty_id: ID de la especialidad
+   * - state_id: ID del estado
+   * - city_id: ID de la ciudad
+   * - page: número de página
+   * - limit: resultados por página
+   * La respuesta incluye payload.results (array de doctores) y payload.pagination (objeto de paginación).
+   */
   searchDoctors: async (searchParams) => {
     try {
-      const response = await api.get("/doctors/search", { params: searchParams })
+      // Los parámetros se envían como query params según Swagger
+      const response = await api.get("api/doctors/search", { params: searchParams })
+      // La respuesta incluye: payload.results (array de doctores) y payload.pagination (objeto de paginación)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

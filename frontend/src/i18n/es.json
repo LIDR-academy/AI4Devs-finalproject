@@ -206,6 +206,10 @@
     "myScheduledAppointments": "Mis citas agendadas"
   },
   "search": {
+    "heroTitle": "Encuentra tu especialista médico",
+    "heroSubtitle": "Conecta con los mejores doctores especializados en tu área",
+    "welcome": "Bienvenido a la búsqueda",
+    "initialLoadMessage": "Cargando especialistas destacados...",
     "filterTitle": "Filtro de búsqueda",
     "doctorNameFilter": "Nombre del médico",
     "doctorNamePlaceholder": "Dr. Candido Pérez...",
@@ -215,12 +219,39 @@
     "stateFilter": "Selecciona un estado",
     "municipalityFilter": "Selecciona un municipio",
     "searchButton": "Buscar",
-    "placeholder": "Buscar especialista...",
+    "placeholder": "Buscar especialista por nombre y apellido (Juan Pérez)...",
     "resultsTitle": "Resultados",
     "visitProfile": "Visitar perfil",
     "seeMoreDoctors": "Ver más médicos",
     "noResults": "No se encontraron resultados",
-    "doctorsFound": "médicos encontrados"
+    "doctorsFound": "médicos encontrados",
+    "clearFilters": "Limpiar filtros",
+    "filters": {
+      "title": "Filtros de búsqueda",
+      "clearAll": "Limpiar todo",
+      "specialty": "Especialidad",
+      "selectSpecialty": "Seleccionar especialidad",
+      "state": "Estado",
+      "selectState": "Seleccionar estado",
+      "municipality": "Municipio",
+      "selectMunicipality": "Seleccionar municipio",
+      "minRating": "Valoración mínima",
+      "minRatingDescription": "{rating}+ estrellas",
+      "allRatings": "Todas las valoraciones",
+      "availability": "Disponibilidad",
+      "selectAvailability": "Todos",
+      "availableNow": "Disponible ahora",
+      "applyFilters": "Aplicar filtros",
+      "activeFilters": "filtros activos",
+      "today": "Hoy",
+      "tomorrow": "Mañana",
+      "thisWeek": "Esta semana",
+      "nextWeek": "Próxima semana",
+      "male": "Masculino",
+      "female": "Femenino",
+      "loginForMinRating": "Inicia sesión para filtrar por valoración mínima",
+      "loginForAvailability": "Inicia sesión para filtrar por disponibilidad"
+    }
   },
   "locations": {
     "states": {

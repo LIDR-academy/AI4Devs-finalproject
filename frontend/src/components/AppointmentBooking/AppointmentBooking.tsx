@@ -7,6 +7,8 @@ import { Calendar } from "../../../components/ui/calendar"
 import { Button } from "../ui/Button"
 import Input from "../ui/Input"
 import { patientService } from "../../services/patientService"
+import { useTranslation } from "react-i18next"
+
 
 interface AppointmentBookingProps {
   isOpen: boolean
@@ -42,6 +44,9 @@ interface FormErrors {
 }
 
 const AppointmentBooking: React.FC<AppointmentBookingProps> = ({ isOpen, onClose, doctor, onSuccess }) => {
+  const { t } = useTranslation()
+
+
   const [formData, setFormData] = useState<AppointmentFormData>({
     date: undefined,
     time: "",
@@ -200,9 +205,10 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({ isOpen, onClose
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Agendar Cita con {doctor.name}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">{t("appointment.bookTitle")} {doctor.name}
+          </DialogTitle>
           <DialogDescription>
-            {doctor.specialty} • ${doctor.price} por consulta
+            {doctor.specialty} • ${doctor.price} {t("doctor.perConsultation")}
           </DialogDescription>
         </DialogHeader>
 
@@ -211,9 +217,8 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({ isOpen, onClose
           <div className="flex items-center justify-center space-x-4">
             <div className={`flex items-center ${step === "datetime" ? "text-blue-600" : "text-gray-400"}`}>
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step === "datetime" ? "bg-blue-600 text-white" : "bg-gray-200"
-                }`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === "datetime" ? "bg-blue-600 text-white" : "bg-gray-200"
+                  }`}
               >
                 1
               </div>
@@ -222,9 +227,8 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({ isOpen, onClose
             <div className="w-8 h-px bg-gray-300"></div>
             <div className={`flex items-center ${step === "details" ? "text-blue-600" : "text-gray-400"}`}>
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step === "details" ? "bg-blue-600 text-white" : "bg-gray-200"
-                }`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === "details" ? "bg-blue-600 text-white" : "bg-gray-200"
+                  }`}
               >
                 2
               </div>
@@ -233,9 +237,8 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({ isOpen, onClose
             <div className="w-8 h-px bg-gray-300"></div>
             <div className={`flex items-center ${step === "confirmation" ? "text-blue-600" : "text-gray-400"}`}>
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step === "confirmation" ? "bg-blue-600 text-white" : "bg-gray-200"
-                }`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === "confirmation" ? "bg-blue-600 text-white" : "bg-gray-200"
+                  }`}
               >
                 3
               </div>
@@ -271,11 +274,10 @@ const AppointmentBooking: React.FC<AppointmentBookingProps> = ({ isOpen, onClose
                           key={time}
                           type="button"
                           onClick={() => handleTimeSelect(time)}
-                          className={`p-2 text-sm rounded-md border transition-colors ${
-                            formData.time === time
+                          className={`p-2 text-sm rounded-md border transition-colors ${formData.time === time
                               ? "bg-blue-600 text-white border-blue-600"
                               : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                          }`}
+                            }`}
                         >
                           {time}
                         </button>

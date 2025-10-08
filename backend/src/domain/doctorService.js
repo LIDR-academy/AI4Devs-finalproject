@@ -19,12 +19,10 @@ async function searchDoctors({ specialtyId, cityId, stateId, minRating, availabl
         some: { specialty_id: Number(specialtyId) }
       }
     }),
-    ...(cityId && {
-      location: { city_id: Number(cityId) }
-    }),
-    ...(stateId && {
-      location: { state_id: Number(stateId) }
-    })
+    location: {
+      ...(cityId && { city_id: Number(cityId) }),
+      ...(stateId && { state_id: Number(stateId) })
+    }
   };
 
   // Filtro por nombre del médico (doctorName)
@@ -80,8 +78,8 @@ async function searchDoctors({ specialtyId, cityId, stateId, minRating, availabl
         ratings: true,
         appointments: available
           ? {
-              where: { status: 'available' }
-            }
+            where: { status: 'available' }
+          }
           : false
       }
     }),

@@ -1973,23 +1973,23 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 **Historial de cambios:**  
 - [18/08/2025] [GitHub Copilot] Ticket creado para lógica de consumo de API y renderizado de resultados en búsqueda de especialistas.
 
-## 15.4 [Frontend] Configurar internacionalización (i18n) en español para la vista de búsqueda
+## 15.4 [Frontend] Configurar internacionalización (i18n) para la vista de búsqueda
 
 **Descripción detallada:**  
 - **Propósito:**  
-Permitir que la vista de búsqueda muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para el público objetivo.
+Permitir que la vista de búsqueda muestre todos los textos y mensajes de acuerdo al idioma seleccionado, facilitando la experiencia de usuario para el público objetivo.
 - **Detalle específico:**  
 - Instalar y configurar react-i18next en el proyecto frontend.
-- Crear archivos de traducción para español con los textos de la vista de búsqueda (etiquetas, botones, mensajes de error, estados vacíos).
+- Crear archivos de traducción con los textos de la vista de búsqueda (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en el layout base y la vista de búsqueda.
 - Asegurar que todos los textos de la vista se gestionan mediante el sistema de internacionalización.
 
 **Criterios de aceptación:**  
-- Todos los textos de la vista de búsqueda se muestran en español.
-- El sistema permite cambiar el idioma desde la configuración (si aplica).
+- Todos los textos de la vista de búsqueda se muestran con el idioma seleccionado por defecto.
+- El sistema permite cambiar el idioma desde la configuración.
 - Los textos se gestionan mediante archivos de traducción.
 - **Pruebas de validación:**  
-  - Visualizar la vista de búsqueda y verificar que todos los textos están en español.
+  - Visualizar la vista de búsqueda y verificar que todos los textos se encuentran disponibles.
   - Cambiar el idioma (si está habilitado) y verificar la traducción.
 
 **Prioridad:**  

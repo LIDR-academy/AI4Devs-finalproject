@@ -938,8 +938,8 @@
         "tags": [
           "Doctors"
         ],
-        "summary": "Buscar especialistas por especialidad, ubicación y nombre",
-        "description": "Permite buscar especialistas médicos filtrando por especialidad, ciudad, estado y nombre del médico. El parámetro doctor_name permite coincidencias parciales e ignora mayúsculas y acentos. Accesible sin autenticación.",
+        "summary": "Buscar especialistas por especialidad, ubicación, nombre, valoración y disponibilidad",
+        "description": "Permite buscar especialistas médicos filtrando por especialidad, ciudad, estado, nombre del médico, valoración mínima y disponibilidad. El parámetro doctor_name permite coincidencias parciales e ignora mayúsculas y acentos. Los parámetros min_rating y available permiten filtrar por valoración mínima y disponibilidad actual del especialista. Accesible sin autenticación.",
         "parameters": [
           {
             "name": "specialty_id",
@@ -977,6 +977,26 @@
               "type": "string",
               "minLength": 3,
               "maxLength": 255
+            }
+          },
+          {
+            "name": "min_rating",
+            "in": "query",
+            "description": "Valoración mínima del especialista (1 a 5)",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          {
+            "name": "available",
+            "in": "query",
+            "description": "Filtrar solo especialistas con disponibilidad actual (true/false)",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           },
           {
@@ -1044,6 +1064,14 @@
                               },
                               "biography": {
                                 "type": "string"
+                              },
+                              "avgRating": {
+                                "type": "number",
+                                "example": 4.5
+                              },
+                              "available": {
+                                "type": "boolean",
+                                "example": true
                               }
                             }
                           }
@@ -1071,7 +1099,7 @@
                 },
                 "examples": {
                   "success": {
-                    "summary": "Respuesta exitosa",
+                    "summary": "Respuesta exitosa con filtros avanzados",
                     "value": {
                       "code": 200,
                       "message": "success",
@@ -1084,13 +1112,71 @@
                             "city": "Coyoacán",
                             "state": "Ciudad de México",
                             "photo": "",
-                            "biography": "Cardiólogo con 10 años de experiencia."
+                            "biography": "Cardiólogo con 10 años de experiencia.",
+                            "avgRating": 4.7,
+                            "available": true
                           }
                         ],
                         "pagination": {
                           "total": 1,
                           "page": 1,
                           "limit": 5,
+                          "totalPages": 1
+                        }
+                      }
+                    }
+                  },
+                  "busquedaPorNombreYValoracion": {
+                    "summary": "Búsqueda por nombre y valoración mínima",
+                    "value": {
+                      "code": 200,
+                      "message": "success",
+                      "payload": {
+                        "results": [
+                          {
+                            "id": 7,
+                            "name": "Dra. Ana López",
+                            "specialty": "Dermatología",
+                            "city": "Guadalajara",
+                            "state": "Jalisco",
+                            "photo": "",
+                            "biography": "Dermatóloga experta en piel.",
+                            "avgRating": 5,
+                            "available": false
+                          }
+                        ],
+                        "pagination": {
+                          "total": 1,
+                          "page": 1,
+                          "limit": 10,
+                          "totalPages": 1
+                        }
+                      }
+                    }
+                  },
+                  "busquedaPorDisponibilidad": {
+                    "summary": "Búsqueda solo especialistas disponibles",
+                    "value": {
+                      "code": 200,
+                      "message": "success",
+                      "payload": {
+                        "results": [
+                          {
+                            "id": 12,
+                            "name": "Dr. Luis Martínez",
+                            "specialty": "Pediatría",
+                            "city": "Monterrey",
+                            "state": "Nuevo León",
+                            "photo": "",
+                            "biography": "Pediatra con experiencia en neonatología.",
+                            "avgRating": 4.2,
+                            "available": true
+                          }
+                        ],
+                        "pagination": {
+                          "total": 1,
+                          "page": 1,
+                          "limit": 10,
                           "totalPages": 1
                         }
                       }
@@ -1136,7 +1222,8 @@
                       "message": "Bad Request",
                       "payload": {
                         "error": [
-                          "limit must be a positive number"
+                          "min_rating must be between 1 and 5",
+                          "doctor_name must be at least 3 characters"
                         ]
                       }
                     }

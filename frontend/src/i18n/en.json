@@ -206,6 +206,10 @@
     "myScheduledAppointments": "My scheduled appointments"
   },
   "search": {
+    "heroTitle": "Find your medical specialist",
+    "heroSubtitle": "Connect with the best doctors specialized in your area",
+    "welcome": "Welcome to the search",
+    "initialLoadMessage": "Loading featured specialists...",
     "filterTitle": "Search filters",
     "doctorNameFilter": "Doctor name",
     "doctorNamePlaceholder": "Dr. John Smith...",
@@ -220,7 +224,34 @@
     "visitProfile": "Visit profile",
     "seeMoreDoctors": "See more doctors",
     "noResults": "No results found",
-    "doctorsFound": "doctors found"
+    "doctorsFound": "doctors found",
+    "clearFilters": "Clear filters",
+    "filters": {
+      "title": "Search filters",
+      "clearAll": "Clear all",
+      "specialty": "Specialty",
+      "selectSpecialty": "Select specialty",
+      "state": "State",
+      "selectState": "Select state",
+      "municipality": "Municipality",
+      "selectMunicipality": "Select municipality",
+      "minRating": "Minimum rating",
+      "minRatingDescription": "{rating}+ stars",
+      "allRatings": "All ratings",
+      "availability": "Availability",
+      "selectAvailability": "All",
+      "availableNow": "Available now",
+      "applyFilters": "Apply filters",
+      "activeFilters": "active filters",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "thisWeek": "This week",
+      "nextWeek": "Next week",
+      "male": "Male",
+      "female": "Female",
+      "loginForMinRating": "Log in to filter by minimum rating",
+      "loginForAvailability": "Log in to filter by availability"
+    }
   },
   "locations": {
     "states": {

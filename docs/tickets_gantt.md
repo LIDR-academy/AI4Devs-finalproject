@@ -106,9 +106,9 @@ gantt
     section 17. Buscar especialistas por especialidad y ubicación [Frontend]
     Maquetar layout base de la aplicación :done, des17.1, 2025-09-11, 2h
     Maquetar vista de búsqueda de especialistas :done, des17.2, 2025-09-11, 2h
-    Implementar lógica de consumo de API para búsqueda :des17.3, 2025-09-11, 2h
-    Configurar internacionalización en español (búsqueda) :des17.4, 2025-09-12, 1h
-    Documentar componente/vista de búsqueda :des17.5, 2025-09-12, 1h
+    Implementar lógica de consumo de API para búsqueda :done, des17.3, 2025-09-11, 2h
+    Configurar internacionalización en español (búsqueda) :done, des17.4, 2025-09-12, 1h
+    Documentar componente/vista de búsqueda :done, des17.5, 2025-09-12, 1h
     Crear pruebas end-to-end búsqueda especialistas :des17.6, 2025-09-12, 1h
 
     section 18. Ver perfil de especialista [Frontend]
@@ -120,7 +120,7 @@ gantt
 
     section 19. Buscar especialistas y ver perfiles (pacientes autenticados) [Frontend]
     Maquetar vista de búsqueda avanzada pacientes :done, des19.1, 2025-09-14, 2h
-    Implementar lógica de consumo de API búsqueda avanzada :des19.2, 2025-09-14, 2h
+    Implementar lógica de consumo de API búsqueda avanzada :done, des19.2, 2025-09-14, 2h
     Maquetar y consumir perfil completo especialista :des19.3, 2025-09-14, 2h
     Configurar internacionalización en español (búsqueda y perfil pacientes) :des19.4, 2025-09-15, 1h
     Documentar componentes búsqueda avanzada y perfil completo :des19.5, 2025-09-15, 1h

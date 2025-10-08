@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useRouter } from "next/navigation"
+import i18n from "../i18n"
 
 
 interface NavbarProps {
@@ -11,12 +12,10 @@ interface NavbarProps {
   onLanguageChange?: (language: string) => void
 }
 
-const Navbar: React.FC<NavbarProps> = ({
-  currentLanguage = "es",
-  onLanguageChange
-}) => {
+const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { t } = useTranslation()
+  const { t, i18n: i18nextInstance } = useTranslation()
+  const currentLanguage = i18nextInstance.language || "es"
 
   const router = useRouter()
 
@@ -27,7 +26,8 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const handleLanguageToggle = () => {
     const newLanguage = currentLanguage === "es" ? "en" : "es"
-    onLanguageChange?.(newLanguage)
+    i18n.changeLanguage(newLanguage)
+    localStorage.setItem("language", newLanguage)
   }
 
   return (

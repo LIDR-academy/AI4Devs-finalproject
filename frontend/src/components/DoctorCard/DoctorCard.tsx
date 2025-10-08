@@ -2,20 +2,26 @@
 
 import type React from "react"
 import StarRating from "../StarRating/StarRating"
+import { useTranslation } from "react-i18next"
+
 
 export interface Doctor {
   id: string
   name: string
   specialty: string
-  rating: number
-  reviewCount: number
-  location: {
-    state: string
-    city: string
+  rating?: number  // Hacer rating opcional
+  reviewCount?: number  // Hacer reviewCount opcional
+  location?: {
+    state?: string
+    city?: string
+    municipality?: string  // Para compatibilidad con datos mock
   }
-  price: number
-  image: string
-  isAvailable: boolean
+  state?: string  // Para compatibilidad con API
+  city?: string   // Para compatibilidad con API
+  price?: number
+  image?: string
+  photo?: string  // Para compatibilidad con API
+  isAvailable?: boolean
   nextAvailableDate?: string
 }
 
@@ -26,6 +32,8 @@ interface DoctorCardProps {
 }
 
 const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onViewProfile }) => {
+  const { t } = useTranslation()
+
   const handleBookAppointment = () => {
     onBookAppointment?.(doctor.id)
   }
@@ -34,12 +42,21 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
     onViewProfile?.(doctor.id)
   }
 
+  // Normalizar la estructura de datos para trabajar con diferentes formatos
+  const rating = doctor.rating || 0
+  const reviewCount = doctor.reviewCount || 0
+  const city = doctor.city || doctor.location?.city || doctor.location?.municipality || ""
+  const state = doctor.state || doctor.location?.state || ""
+  const image = doctor.image || doctor.photo || "/placeholder.svg"
+  const price = doctor.price || 0
+  const isAvailable = doctor.isAvailable !== undefined ? doctor.isAvailable : true
+
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
       {/* Doctor Image */}
       <div className="relative h-48 bg-gradient-to-br from-federal-blue/10 to-pacific-cyan/10">
         <img
-          src={doctor.image || "/placeholder.svg"}
+          src={image}
           alt={doctor.name}
           className="w-full h-full object-cover"
           onError={(e) => {
@@ -47,7 +64,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
             target.src = `/placeholder.svg?height=192&width=300&query=doctor+${doctor.specialty}`
           }}
         />
-        {doctor.isAvailable && (
+        {isAvailable && (
           <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
             Disponible
           </div>
@@ -64,33 +81,37 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
 
         {/* Rating */}
         <div className="flex items-center gap-2 mb-3">
-          <StarRating rating={doctor.rating} size="sm" />
+          <StarRating rating={rating} size="sm" />
           <span className="text-sm text-gray-600">
-            {doctor.rating.toFixed(1)} ({doctor.reviewCount} reseñas)
+            {rating.toFixed(1)} ({reviewCount} reseñas)
           </span>
         </div>
 
         {/* Location */}
-        <div className="flex items-center gap-1 mb-3">
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span className="text-sm text-gray-600">
-            {doctor.location.city}, {doctor.location.state}
-          </span>
-        </div>
+        {(city || state) && (
+          <div className="flex items-center gap-1 mb-3">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-sm text-gray-600">
+              {city && state ? `${city}, ${state}` : city || state}
+            </span>
+          </div>
+        )}
 
-        {/* Price */}
-        <div className="mb-4">
-          <span className="text-xl font-bold text-gray-900">${doctor.price.toLocaleString()}</span>
-          <span className="text-sm text-gray-500 ml-1">MXN</span>
-        </div>
+        {/* Price - solo mostrar si hay precio */}
+        {price > 0 && (
+          <div className="mb-4">
+            <span className="text-xl font-bold text-gray-900">${price.toLocaleString()}</span>
+            <span className="text-sm text-gray-500 ml-1">MXN</span>
+          </div>
+        )}
 
         {/* Next Available Date */}
         {doctor.nextAvailableDate && (
@@ -103,14 +124,14 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
             onClick={handleViewProfile}
             className="flex-1 px-3 py-2 text-sm font-medium text-federal-blue border border-federal-blue rounded-lg hover:bg-federal-blue hover:text-white transition-colors duration-200"
           >
-            Ver perfil
+            {t("search.visitProfile")}
           </button>
           <button
             onClick={handleBookAppointment}
             className="flex-1 px-3 py-2 text-sm font-medium text-white bg-federal-blue rounded-lg hover:bg-federal-blue/90 transition-colors duration-200"
-            disabled={!doctor.isAvailable}
+            disabled={!isAvailable}
           >
-            {doctor.isAvailable ? "Agendar" : "No disponible"}
+            {isAvailable ? t("doctor.bookAppointment") : t("doctor.notAvailable")}
           </button>
         </div>
       </div>

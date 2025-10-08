@@ -1,6 +1,8 @@
 "use client"
 
 import React from "react"
+import { useTranslation } from "react-i18next"
+
 
 interface NotificationToastProps {
   message: string
@@ -13,6 +15,8 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   isVisible,
   onClose,
 }) => {
+    const { t } = useTranslation()
+
   if (!isVisible) return null
 
   return (
@@ -22,7 +26,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
         <button
           onClick={onClose}
           className="ml-4 px-2 py-1 bg-honolulu-blue rounded hover:bg-pacific-cyan transition-colors"
-          aria-label="Cerrar notificación"
+          aria-label={t("common.closeNotification")}
         >
           ×
         </button>

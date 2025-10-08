@@ -1,16 +1,16 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react" // Añadir useMemo
 import DropdownFilter from "../DropdownFilter/DropdownFilter"
 import Button from "../ui/Button"
-
+import { useTranslation } from "react-i18next"
 
 interface SearchFiltersProps {
   onFiltersChange?: (filters: FilterState) => void
   className?: string
-  isAuthenticated?: boolean // Nueva prop para controlar filtros visibles
-
+  isAuthenticated?: boolean
+  onClearFilters?: () => void
 }
 
 interface FilterState {
@@ -18,69 +18,76 @@ interface FilterState {
   state: string
   municipality: string
   gender: string
-  minRating: number // Nuevo campo para el slider de valoración mínima
+  minRating: number
+  availability: string
 }
 
-const translations = {
-  "search.filters.title": "Filtros de búsqueda",
-  "search.filters.clearAll": "Limpiar todo",
-  "search.filters.specialty": "Especialidad",
-  "search.filters.selectSpecialty": "Seleccionar especialidad",
-  "search.filters.state": "Estado",
-  "search.filters.selectState": "Seleccionar estado",
-  "search.filters.municipality": "Municipio",
-  "search.filters.selectMunicipality": "Seleccionar municipio",
-  "search.filters.minRating": "Valoración mínima", // Added rating filter translation
-  "search.filters.minRatingDescription": "{rating}+ estrellas",
-  "search.filters.allRatings": "Todas las valoraciones",
-  "search.filters.availability": "Disponibilidad",
-  "search.filters.selectAvailability": "Seleccionar disponibilidad",
-  "search.filters.gender": "Género",
-  "search.filters.selectGender": "Seleccionar género",
-  "search.filters.applyFilters": "Aplicar filtros",
-  "search.filters.activeFilters": "filtros activos",
-  "search.filters.today": "Hoy",
-  "search.filters.tomorrow": "Mañana",
-  "search.filters.thisWeek": "Esta semana",
-  "search.filters.nextWeek": "Próxima semana",
-  "search.filters.male": "Masculino",
-  "search.filters.female": "Femenino",
-}
+const SearchFilters: React.FC<SearchFiltersProps> = ({
+  onFiltersChange,
+  onClearFilters,
+  className = "",
+  isAuthenticated = false
+}) => {
+  const { t, i18n: i18nInstance } = useTranslation()
+  const [currentLanguage, setCurrentLanguage] = useState(i18nInstance.language)
 
-const t = (key: string) => translations[key as keyof typeof translations] || key
+  // Actualizar el estado local cuando cambie el idioma globalmente
+  useEffect(() => {
+    const handleLanguageChanged = () => {
+      setCurrentLanguage(i18nInstance.language);
+    };
 
-const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, className = "", isAuthenticated = false }) => {
+    // Suscribirse al evento de cambio de idioma
+    i18nInstance.on('languageChanged', handleLanguageChanged);
+
+    // Limpiar la suscripción cuando el componente se desmonte
+    return () => {
+      i18nInstance.off('languageChanged', handleLanguageChanged);
+    };
+  }, [i18nInstance]);
+
+  //console.log("Current language:", currentLanguage)
+  //console.log("Translation test:", t("search.filters.title"))
+  //console.log("Translation object:", i18nInstance.getResource(currentLanguage, 'translation', 'search.filters'))
+
   const [filters, setFilters] = useState<FilterState>({
     specialty: "",
     state: "",
     municipality: "",
-    minRating: 0, // Valor inicial del slider
+    minRating: 0,
     availability: "",
     gender: "",
   })
 
   const [hoveredRating, setHoveredRating] = useState<number>(0)
 
+  // Usar useMemo para recrear las opciones cuando cambie el idioma
+  const specialties = useMemo(() => [
+    { value: "1", label: t("specialties.cardiology") },
+    { value: "2", label: t("specialties.pediatrics") },
+    { value: "3", label: t("specialties.dermatology") },
+  ], [currentLanguage, t]);
 
-  //TODO: implementar Endpoint para consultar especialidades
-  const specialties = [
-    { value: "1", label: "Cardiología" },
-    { value: "2", label: "Pediatría" },
-    { value: "3", label: "Dermatología" },
-  ]
+  const states = useMemo(() => [
+    { value: "1", label: t("locations.states.cdmx") },
+    { value: "2", label: t("locations.states.jalisco") },
+    { value: "3", label: t("locations.states.nuevoLeon") },
+    { value: "4", label: t("locations.states.puebla") },
+    { value: "5", label: t("locations.states.veracruz") },
+  ], [currentLanguage, t]);
 
-  //TODO: implementar Endpoint para consultar Estadis
-  const states = [
-    { value: "1", label: "Ciudad de México" },
-    { value: "2", label: "Jalisco" },
-    { value: "3", label: "Nuevo León" },
-    { value: "4", label: "Puebla" },
-    { value: "5", label: "Veracruz" },
-  ]
+  // Mapeo entre value y clave del catálogo
+  const stateKeyMap: Record<string, string> = {
+    "1": "cdmx",
+    "2": "jalisco",
+    "3": "nuevoLeon", // Actualizar para que coincida con las claves de los archivos de traducción
+    "4": "puebla",
+    "5": "veracruz",
+  }
 
-  //TODO: implementar Endpoint para consultar municipios
-  const getMunicipalities = () => {
-    if (!filters.state) return []
+  // Usar useMemo para las opciones de municipios
+  const getMunicipalities = useMemo(() => {
+    if (!filters.state) return [];
     const municipalitiesMap: Record<string, Array<{ value: string; label: string }>> = {
       cdmx: [
         { value: "1", label: "Coyoacán" },
@@ -92,26 +99,36 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
         { value: "3", label: "Zapopan" },
         { value: "9", label: "Tlaquepaque" },
       ],
-      "nuevo-leon": [
+      nuevoLeon: [
         { value: "10", label: "Monterrey" },
         { value: "11", label: "San Pedro Garza García" },
         { value: "12", label: "Santa Catarina" },
       ],
+      puebla: [
+        { value: "13", label: "Puebla" },
+        { value: "14", label: "Tehuacán" },
+        { value: "15", label: "Atlixco" },
+      ],
+      veracruz: [
+        { value: "16", label: "Veracruz" },
+        { value: "17", label: "Xalapa" },
+        { value: "18", label: "Coatzacoalcos" },
+      ],
     }
-    return municipalitiesMap[filters.state] || []
-  }
+    const key = stateKeyMap[filters.state]
+    return municipalitiesMap[key] || []
+  }, [filters.state]);
 
-  const availabilityOptions = [
-    { value: "today", label: t("search.filters.today") },
-    { value: "tomorrow", label: t("search.filters.tomorrow") },
-    { value: "thisWeek", label: t("search.filters.thisWeek") },
-    { value: "nextWeek", label: t("search.filters.nextWeek") },
-  ]
 
-  const genderOptions = [
+  const availabilityOptions = useMemo(() => [
+    { value: "", label: t("search.filters.selectAvailability") }, // "Todos" por defecto
+    { value: "available", label: t("search.filters.availableNow") }, // "Disponible ahora"
+  ], [currentLanguage, t]);
+
+  const genderOptions = useMemo(() => [
     { value: "male", label: t("search.filters.male") },
     { value: "female", label: t("search.filters.female") },
-  ]
+  ], [currentLanguage, t]);
 
   const handleFilterChange = (key: keyof FilterState, value: string | number) => {
     const newFilters = { ...filters, [key]: value }
@@ -122,7 +139,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
     }
 
     setFilters(newFilters)
-    onFiltersChange?.(newFilters)
+    // No llamamos a onFiltersChange aquí para que solo se aplique al hacer clic en el botón
   }
 
   const handleRatingClick = (rating: number) => {
@@ -135,12 +152,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
       specialty: "",
       state: "",
       municipality: "",
-      minRating: 0, // Changed from priceRange to minRating
+      minRating: 0,
       availability: "",
       gender: "",
     }
     setFilters(clearedFilters)
     onFiltersChange?.(clearedFilters)
+    onClearFilters?.()
   }
 
   const hasActiveFilters = Object.values(filters).some((value) => value !== "" && value !== 0)
@@ -158,7 +176,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
         onMouseEnter={() => setHoveredRating(starNumber)}
         onMouseLeave={() => setHoveredRating(0)}
         className="focus:outline-none focus:ring-2 focus:ring-federal-blue focus:ring-offset-1 rounded transition-all"
-        aria-label={`Seleccionar ${starNumber} estrellas`}
+        aria-label={`${t("common.rating")} ${starNumber}`} // Cambiado a una clave que existe
       >
         <svg
           className={`w-8 h-8 transition-colors ${isFilled || isHovered ? "text-yellow-400" : "text-gray-300"
@@ -216,7 +234,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">{t("search.filters.municipality")}</label>
             <DropdownFilter
-              options={getMunicipalities()}
+              options={getMunicipalities}
               value={filters.municipality}
               onChange={(value) => handleFilterChange("municipality", value)}
               placeholder={t("search.filters.selectMunicipality")}
@@ -234,14 +252,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
               </div>
               <p className="text-center text-sm text-gray-600">
                 {filters.minRating > 0
-                  ? t("search.filters.minRatingDescription").replace("{rating}", filters.minRating.toString())
+                  ? t("search.filters.minRatingDescription", { rating: filters.minRating })
                   : t("search.filters.allRatings")}
               </p>
             </div>
           ) : (
             // Placeholder para visitantes
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center text-gray-400 text-sm">
-              Inicia sesión para filtrar por valoración mínima
+              {t("search.filters.loginForMinRating")}
             </div>
           )}
         </div>
@@ -259,26 +277,22 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
           ) : (
             // Placeholder para visitantes
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center text-gray-400 text-sm">
-              Inicia sesión para filtrar por disponibilidad
+              {t("search.filters.loginForAvailability")}
             </div>
           )}
         </div>
 
-        {/* Gender Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">{t("search.filters.gender")}</label>
-          <DropdownFilter
-            options={genderOptions}
-            value={filters.gender}
-            onChange={(value) => handleFilterChange("gender", value)}
-            placeholder={t("search.filters.selectGender")}
-          />
-        </div>
+        {/* Gender Filter ha sido ocultado según requerimiento */}
       </div>
 
       {/* Apply Filters Button */}
       <div className="mt-6 pt-4 border-t border-gray-200">
-        <Button variant="primary" size="md" className="w-full" onClick={() => onFiltersChange?.(filters)}>
+        <Button
+          variant="primary"
+          size="md"
+          className="w-full"
+          onClick={() => onFiltersChange?.(filters)} // Solo aquí se dispara la búsqueda
+        >
           {t("search.filters.applyFilters")}
         </Button>
       </div>
@@ -288,7 +302,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFiltersChange, classNam
         <div className="mt-3 text-center">
           <span className="text-sm text-gray-600">
             {Object.entries(filters).filter(([key, value]) => value !== "" && value !== 0).length}{" "}
-            {t("search.filters.activeFilters")}          </span>
+            {t("search.filters.activeFilters")}
+          </span>
         </div>
       )}
     </div>
