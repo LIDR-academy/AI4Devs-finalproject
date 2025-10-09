@@ -22,14 +22,21 @@ async function searchDoctors({ specialtyId, cityId, stateId, minRating, availabl
     location: {
       ...(cityId && { city_id: Number(cityId) }),
       ...(stateId && { state_id: Number(stateId) })
-    }
+    },
+    // Nuevo filtro por disponibilidad
+    ...(available === true && {
+      availabilities: {
+        some: {
+          is_available: true
+        }
+      }
+    })
   };
 
   // Filtro por nombre del médico (doctorName)
   if (doctorName && typeof doctorName === 'string' && doctorName.length >= 3 && doctorName.length <= 255) {
     const words = doctorName.trim().split(/\s+/);
     if (words.length === 1) {
-      // Buscar por first_name (coincidencia parcial, ignorando mayúsculas/acentos)
       where.user = {
         first_name: {
           mode: 'insensitive',
@@ -37,7 +44,6 @@ async function searchDoctors({ specialtyId, cityId, stateId, minRating, availabl
         }
       };
     } else {
-      // Buscar por first_name y last_name (coincidencia parcial)
       where.user = {
         AND: [
           {
@@ -76,11 +82,7 @@ async function searchDoctors({ specialtyId, cityId, stateId, minRating, availabl
           }
         },
         ratings: true,
-        appointments: available
-          ? {
-            where: { status: 'available' }
-          }
-          : false
+        availabilities: true
       }
     }),
     prisma.doctor.count({ where })
@@ -102,7 +104,7 @@ async function searchDoctors({ specialtyId, cityId, stateId, minRating, availabl
         photo: doc.photo_url || '',
         biography: doc.biography || '',
         avgRating,
-        available: doc.appointments ? doc.appointments.length > 0 : null
+        available: doc.availabilities.some(a => a.is_available === true)
       };
     })
     .filter(doc => (minRating ? doc.avgRating >= minRating : true));

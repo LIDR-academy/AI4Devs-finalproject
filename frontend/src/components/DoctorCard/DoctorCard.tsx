@@ -10,7 +10,8 @@ export interface Doctor {
   name: string
   specialty: string
   rating?: number  // Hacer rating opcional
-  reviewCount?: number  // Hacer reviewCount opcional
+  avgRating?: number // Para compatibilidad con API
+  available?: boolean // Para compatibilidad con API
   location?: {
     state?: string
     city?: string
@@ -35,7 +36,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
   const { t } = useTranslation()
 
   const handleBookAppointment = () => {
-    onBookAppointment?.(doctor.id)
+    window.location.assign(`/doctor/${doctor.id}?book=1`)
   }
 
   const handleViewProfile = () => {
@@ -43,13 +44,35 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
   }
 
   // Normalizar la estructura de datos para trabajar con diferentes formatos
-  const rating = doctor.rating || 0
+  const rating =
+    typeof doctor.avgRating === "number" && doctor.avgRating !== null
+      ? doctor.avgRating
+      : typeof doctor.rating === "number" && doctor.rating !== null
+        ? doctor.rating
+        : 0  
   const reviewCount = doctor.reviewCount || 0
-  const city = doctor.city || doctor.location?.city || doctor.location?.municipality || ""
-  const state = doctor.state || doctor.location?.state || ""
-  const image = doctor.image || doctor.photo || "/placeholder.svg"
+  const city =
+    doctor.city ||
+    doctor.location?.city ||
+    doctor.location?.municipality ||
+    "" 
+  const state =
+    doctor.state ||
+    doctor.location?.state ||
+    ""
+  const image =
+    doctor.image && doctor.image.trim()
+      ? doctor.image
+      : doctor.photo && doctor.photo.trim()
+        ? doctor.photo
+        : "/images/login-hero.jpg"
   const price = doctor.price || 0
-  const isAvailable = doctor.isAvailable !== undefined ? doctor.isAvailable : true
+  const isAvailable =
+    typeof doctor.available === "boolean"
+      ? doctor.available
+      : typeof doctor.isAvailable === "boolean"
+        ? doctor.isAvailable
+        : false
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
@@ -61,12 +84,12 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
           className="w-full h-full object-cover"
           onError={(e) => {
             const target = e.target as HTMLImageElement
-            target.src = `/placeholder.svg?height=192&width=300&query=doctor+${doctor.specialty}`
+            target.src = "/images/login-hero.jpg"
           }}
         />
         {isAvailable && (
           <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-            Disponible
+            {t("doctorProfile.availableToday")}
           </div>
         )}
       </div>
@@ -83,7 +106,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
         <div className="flex items-center gap-2 mb-3">
           <StarRating rating={rating} size="sm" />
           <span className="text-sm text-gray-600">
-            {rating.toFixed(1)} ({reviewCount} reseñas)
+            {rating.toFixed(1)}
           </span>
         </div>
 
@@ -110,12 +133,15 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookAppointment, onVi
           <div className="mb-4">
             <span className="text-xl font-bold text-gray-900">${price.toLocaleString()}</span>
             <span className="text-sm text-gray-500 ml-1">MXN</span>
+            <span className="text-sm text-gray-500 ml-2">{t("doctorProfile.perConsultation")}</span>
           </div>
         )}
 
         {/* Next Available Date */}
         {doctor.nextAvailableDate && (
-          <div className="mb-4 text-xs text-gray-500">Próxima cita: {doctor.nextAvailableDate}</div>
+          <div className="mb-4 text-xs text-gray-500">
+            {t("doctorProfile.availableToday")}: {doctor.nextAvailableDate}
+          </div>
         )}
 
         {/* Action Buttons */}

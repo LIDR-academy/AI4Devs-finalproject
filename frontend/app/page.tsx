@@ -35,6 +35,7 @@ export default function HomePage() {
 
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
+  const [isClientReady, setIsClientReady] = useState(false);
 
   // Verificación de autenticación (sincrónica)
   const isAuthenticated = typeof window !== "undefined" && !!localStorage.getItem("authToken")
@@ -43,6 +44,7 @@ export default function HomePage() {
   useEffect(() => {
     // Carga inicial de doctores con parámetros por defecto
     fetchDoctors("", filters, 1);
+    setIsClientReady(true);
   }, []); // Array de dependencias vacío para que se ejecute solo al montar
 
   // Maneja la búsqueda de doctores usando filtros y consulta a la API.
@@ -199,12 +201,19 @@ export default function HomePage() {
               </button>
             </div>
             <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
-              <SearchFilters
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                onClearFilters={clearFilters}
-                isAuthenticated={isAuthenticated}
-              />
+              {isClientReady ? (
+                <SearchFilters
+                  onFiltersChange={handleFiltersChange}
+                  onClearFilters={clearFilters}
+                  isAuthenticated={!!localStorage.getItem("authToken")}
+                />
+              ) : (
+                <SearchFilters
+                  onFiltersChange={handleFiltersChange}
+                  onClearFilters={clearFilters}
+                  isAuthenticated={false}
+                />
+              )}
             </div>
           </aside>
           <div className="flex-1">

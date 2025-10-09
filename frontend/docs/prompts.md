@@ -2398,3 +2398,102 @@ Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo config
 
 Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
 Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+- **ID:** 4  
+- **Título:** Buscar especialistas y ver perfiles  
+- **Descripción:** Como paciente, quiero buscar especialistas y ver sus perfiles, para comparar opciones y tomar decisiones informadas.
+```
+## Ticket
+```markdown
+## 15.4 [Frontend] Configurar internacionalización (i18n) para la vista de búsqueda
+
+**Descripción detallada:**  
+- **Propósito:**  
+Permitir que la vista de búsqueda muestre todos los textos y mensajes de acuerdo al idioma seleccionado, facilitando la experiencia de usuario para el público objetivo.
+- **Detalle específico:**  
+- Instalar y configurar react-i18next en el proyecto frontend.
+- Crear archivos de traducción con los textos de la vista de búsqueda (etiquetas, botones, mensajes de error, estados vacíos).
+- Integrar la configuración de idioma en el layout base y la vista de búsqueda.
+- Asegurar que todos los textos de la vista se gestionan mediante el sistema de internacionalización.
+
+**Criterios de aceptación:**  
+- Todos los textos de la vista de búsqueda se muestran con el idioma seleccionado por defecto.
+- El sistema permite cambiar el idioma desde la configuración.
+- Los textos se gestionan mediante archivos de traducción.
+- **Pruebas de validación:**  
+  - Visualizar la vista de búsqueda y verificar que todos los textos se encuentran disponibles.
+  - Cambiar el idioma (si está habilitado) y verificar la traducción.
+
+**Prioridad:**  
+Alta
+
+**Estimación de tiempo:**  
+1 hora
+
+**Etiquetas o Tags:**  
+- Tipo: Tarea Técnica  
+- Característica del producto: Frontend, Internacionalización, UI/UX
+
+**Comentarios y Notas:**  
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para configuración de internacionalización en español en la vista de búsqueda.
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.

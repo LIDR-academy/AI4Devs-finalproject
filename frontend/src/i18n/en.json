@@ -112,6 +112,7 @@
     "rating": "Rating",
     "reviews": "Reviews",
     "bookAppointment": "Book Appointment",
+    "notAvailable": "Not available",
     "viewProfile": "View Profile"
   },
   "appointment": {

@@ -112,6 +112,7 @@
     "rating": "Calificación",
     "reviews": "Reseñas",
     "bookAppointment": "Reservar Cita",
+    "notAvailable": "No disponible",
     "viewProfile": "Ver Perfil"
   },
   "appointment": {
