@@ -50,6 +50,7 @@
     "i18next": "latest",
     "input-otp": "1.4.1",
     "jiti": "latest",
+    "jwt-decode": "^4.0.0",
     "less": "latest",
     "lightningcss": "latest",
     "lucide-react": "^0.454.0",

@@ -32,7 +32,7 @@ export const authService = {
   // Logout de usuario
   logout: async () => {
     try {
-      await api.post("/api/auth/logout")
+      //await api.post("/api/auth/logout")
       localStorage.removeItem("authToken")
       return true
     } catch (error) {
