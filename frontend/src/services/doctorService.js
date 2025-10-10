@@ -26,7 +26,7 @@ export const doctorService = {
   // Obtener perfil del doctor
   getDoctorProfile: async (doctorId) => {
     try {
-      const response = await api.get(`/doctors/${doctorId}`)
+      const response = await api.get(`/api/doctors/${doctorId}`)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -36,7 +36,7 @@ export const doctorService = {
   // Registro de doctor
   registerDoctor: async (doctorData) => {
     try {
-      const response = await api.post("/doctors/register", doctorData)
+      const response = await api.post("/api/doctors/register", doctorData)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -46,7 +46,7 @@ export const doctorService = {
   // Actualizar perfil del doctor
   updateDoctorProfile: async (doctorId, doctorData) => {
     try {
-      const response = await api.put(`/doctors/${doctorId}`, doctorData)
+      const response = await api.put(`/api/doctors/${doctorId}`, doctorData)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -56,7 +56,7 @@ export const doctorService = {
   // Obtener disponibilidad del doctor
   getDoctorAvailability: async (doctorId) => {
     try {
-      const response = await api.get(`/doctors/${doctorId}/availability`)
+      const response = await api.get(`/api/doctors/${doctorId}/availability`)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -66,7 +66,7 @@ export const doctorService = {
   // Actualizar disponibilidad del doctor
   updateDoctorAvailability: async (doctorId, availabilityData) => {
     try {
-      const response = await api.put(`/doctors/${doctorId}/availability`, availabilityData)
+      const response = await api.put(`/api/doctors/${doctorId}/availability`, availabilityData)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -76,7 +76,7 @@ export const doctorService = {
   // Obtener citas del doctor
   getDoctorAppointments: async (doctorId) => {
     try {
-      const response = await api.get(`/doctors/${doctorId}/appointments`)
+      const response = await api.get(`/api/doctors/${doctorId}/appointments`)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

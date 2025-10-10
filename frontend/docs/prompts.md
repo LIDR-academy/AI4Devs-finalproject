@@ -2497,3 +2497,171 @@ Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo config
 
 Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
 Hazme preguntas si necesitas más información.
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket o tickets proporcionados, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket (o tickets) en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales de los tickets.
+   - Revisa permisos y roles de usuario según lo indicado en el tickets.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con los tickets, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios de los tickets.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, realiza preguntas, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+- **ID:** 2  
+- **Título:** Ver perfil de especialista  
+- **Descripción:** Como visitante, quiero ver el perfil de un especialista, para conocer su información profesional y ubicación general antes de decidirme a agendar una cita.
+```
+## Tickets
+```markdown
+### 16.1 [Frontend] Maquetar la vista de perfil de especialista (información profesional y ubicación general)
+
+**Descripción detallada:**  
+- **Propósito:**  
+Diseñar y maquetar la vista de perfil de especialista en React, mostrando información profesional y ubicación general (ciudad y estado) según los criterios del PRD.
+- **Detalle específico:**  
+Crear la vista y componentes para mostrar:
+  - Nombre, especialidad, biografía, foto, cédula profesional y título.
+  - Ubicación general: ciudad y estado (sin dirección exacta).
+  - Botón para regresar a resultados de búsqueda.
+Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
+
+**Criterios de aceptación:**  
+- La vista de perfil está implementada y disponible en el frontend.
+- El diseño es responsivo y cumple con las pautas de UI/UX del PRD.
+- Solo se muestran datos permitidos para visitantes (sin datos personales sensibles).
+- **Pruebas de validación:**  
+  - Visualizar la vista en diferentes dispositivos y tamaños de pantalla.
+  - Verificar que los datos se muestran correctamente y cumplen con los criterios de privacidad.
+
+**Prioridad:**  
+Muy alta
+
+**Estimación de tiempo:**  
+2 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Feature  
+- Característica del producto: Frontend, UI/UX, Maquetado
+
+**Comentarios y Notas:**  
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para maquetado de vista de perfil de especialista.
+
+### 16.2 [Frontend] Implementar la lógica de consumo de API y renderizado de perfil de especialista
+
+**Descripción detallada:**  
+- **Propósito:**  
+Conectar la vista de perfil de especialista con el backend, consumir el endpoint correspondiente y mostrar la información profesional y ubicación general en el frontend.
+- **Detalle específico:**  
+- Implementar la llamada al endpoint `GET /api/doctors/:id` usando Axios.
+- Renderizar los datos recibidos: nombre, especialidad, biografía, foto, cédula profesional, título, ciudad y estado.
+- Asegurar que no se muestran datos personales sensibles (correo, teléfono, dirección exacta).
+- Manejar estados de carga, error y datos vacíos.
+
+**Criterios de aceptación:**  
+- La vista de perfil consume la API y muestra los datos correctamente.
+- Solo se muestran los datos permitidos para visitantes.
+- Se manejan estados de carga y error.
+- **Pruebas de validación:**  
+  - Probar la consulta de perfil con diferentes especialistas y verificar los datos mostrados.
+  - Simular errores y estados vacíos.
+
+**Prioridad:**  
+Muy alta
+
+**Estimación de tiempo:**  
+2 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Feature  
+- Característica del producto: Frontend, Consumo de API, UI/UX
+
+**Comentarios y Notas:**  
+Utilizar Axios para las llamadas a la API y seguir la estructura de datos definida en el backend. Validar que los datos mostrados cumplen con los criterios del PRD y la LFPDPPP.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para lógica de consumo de API y renderizado de perfil de especialista.
+
+### 16.3 [Frontend] Configurar internacionalización (i18n) en español para la vista de perfil de especialista
+
+**Descripción detallada:**  
+- **Propósito:**  
+Permitir que la vista de perfil de especialista muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para el público objetivo.
+- **Detalle específico:**  
+- Configurar react-i18next en el proyecto frontend si no está ya configurado.
+- Crear archivos de traducción para español con los textos de la vista de perfil (etiquetas, botones, mensajes de error, estados vacíos).
+- Integrar la configuración de idioma en la vista de perfil de especialista.
+- Asegurar que todos los textos de la vista se gestionan mediante el sistema de internacionalización.
+
+**Criterios de aceptación:**  
+- Todos los textos de la vista de perfil se muestran en español.
+- Los textos se gestionan mediante archivos de traducción.
+- **Pruebas de validación:**  
+  - Visualizar la vista de perfil y verificar que todos los textos están en español.
+
+**Prioridad:**  
+Alta
+
+**Estimación de tiempo:**  
+1 hora
+
+**Etiquetas o Tags:**  
+- Tipo: Tarea Técnica  
+- Característica del producto: Frontend, Internacionalización, UI/UX
+
+**Comentarios y Notas:**  
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para configuración de internacionalización en español en la vista de perfil de especialista.
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.

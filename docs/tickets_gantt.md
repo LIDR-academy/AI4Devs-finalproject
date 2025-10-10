@@ -113,8 +113,8 @@ gantt
 
     section 18. Ver perfil de especialista [Frontend]
     Maquetar vista de perfil de especialista :done, des18.1, 2025-09-12, 2h
-    Implementar lógica de consumo de API perfil especialista :des18.2, 2025-09-13, 2h
-    Configurar internacionalización en español (perfil) :des18.3, 2025-09-13, 1h
+    Implementar lógica de consumo de API perfil especialista :done, des18.2, 2025-09-13, 2h
+    Configurar internacionalización en español (perfil) :done, des18.3, 2025-09-13, 1h
     Documentar componente/vista de perfil especialista :des18.4, 2025-09-13, 1h
     Crear pruebas end-to-end perfil especialista :des18.5, 2025-09-13, 1h
 

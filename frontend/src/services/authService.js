@@ -97,4 +97,8 @@ export const authService = {
       throw error.response?.data || error.message
     }
   },
+  isAuthenticated: () => {
+    // Retorna true si existe un token de autenticación en localStorage
+    return typeof window !== "undefined" && !!localStorage.getItem("authToken")
+  },
 }
