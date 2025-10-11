@@ -8,7 +8,7 @@ Of course. Here is a more concise set of rules updated to reflect a Domain-Drive
 
 ## 1\. Project Setup & Dependencies 🏗️
 
-  * **Build & Versions:** Use **Gradle** or **Maven**. Target **Java 21 LTS** and the latest stable **Spring Boot 3+**.
+  * **Build & Versions:** Use **Gradle**. Target **Java 21 LTS** and the latest stable **Spring Boot 3+**.
   * **Database Migrations:** Use **Flyway** for database schema version control. Place SQL migration scripts in `src/main/resources/db/migration`.
   * **Dependencies:** Use the official **Spring Boot Starter POMs** (`web`, `data-jpa`, `validation`, `flyway-mysql`, etc.).
   * **Concurrency:** Enable **Virtual Threads** in `application.properties` for scalable I/O operations (`spring.threads.virtual.enabled=true`).
