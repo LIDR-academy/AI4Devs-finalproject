@@ -27,17 +27,10 @@ Of course. Here is a more concise set of rules updated to reflect a Domain-Drive
     /com/example/app
       /domain
         /user
-          - User.java                   // Aggregate Root with rich business logic
-          - Email.java                  // Value Object with validation
-          - UserRepository.java         // Interface ("Port")
       /application
         /user
-          - UserApplicationService.java // Thin coordinator
       /infrastructure
         /user
-          - UserController.java         // REST Adapter
-          - JpaUserRepository.java      // JPA Adapter
-          - UserDto.java                // DTO for the web
     ```
 
 -----
