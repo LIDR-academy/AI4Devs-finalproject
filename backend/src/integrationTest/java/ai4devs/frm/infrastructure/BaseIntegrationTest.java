@@ -22,7 +22,8 @@ public abstract class BaseIntegrationTest {
 
     @Container
     @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
+    @SuppressWarnings("resource") // Testcontainers manages lifecycle via @Testcontainers annotation
+    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
             DockerImageName.parse("postgres:16-alpine")
     )
     .withDatabaseName("testdb")
