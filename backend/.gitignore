@@ -35,3 +35,15 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### JaCoCo ###
+.jacoco/
+*.exec
+
+### SonarQube ###
+.sonar/
+.scannerwork/
+
+### Test Reports ###
+**/test-results/
+**/reports/

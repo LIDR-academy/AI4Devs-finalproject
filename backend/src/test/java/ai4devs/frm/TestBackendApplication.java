@@ -1,6 +1,6 @@
-package ai4devs.frm.backend;
+package ai4devs.frm;
 
-import ai4devs.frm.backend.infrastructure.BackendApplication;
+import ai4devs.frm.infrastructure.BackendApplication;
 import org.springframework.boot.SpringApplication;
 
 public class TestBackendApplication {
