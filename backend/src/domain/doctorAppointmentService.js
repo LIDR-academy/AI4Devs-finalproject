@@ -144,4 +144,27 @@ async function updateAppointmentStatus({ appointmentId, doctorId, status }) {
   };
 }
 
-module.exports = { getAppointments, updateAppointmentStatus };
+
+/**
+ * Consulta las citas futuras ocupadas (pending/confirmed) de un médico.
+ * @param {Number} doctorId
+ * @returns {Array} Lista de objetos { id, appointmentDate }
+ */
+async function getOccupiedSlots(doctorId) {
+  const now = new Date();
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      doctor_id: doctorId,
+      appointment_date: { gte: now },
+      status: { in: ['pending', 'confirmed'] }
+    },
+    orderBy: { appointment_date: 'asc' }
+  });
+
+  return appointments.map(a => ({
+    id: a.id,
+    appointmentDate: a.appointment_date.toISOString()
+  }));
+}
+
+module.exports = { getAppointments, updateAppointmentStatus, getOccupiedSlots };

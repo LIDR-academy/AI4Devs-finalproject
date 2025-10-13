@@ -44,7 +44,7 @@ export const patientService = {
   // Agendar nueva cita
   bookAppointment: async (appointmentData) => {
     try {
-      const response = await api.post("/appointments", appointmentData)
+      const response = await api.post("/api/appointments", appointmentData)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

@@ -121,15 +121,15 @@ gantt
     section 19. Buscar especialistas y ver perfiles (pacientes autenticados) [Frontend]
     Maquetar vista de búsqueda avanzada pacientes :done, des19.1, 2025-09-14, 2h
     Implementar lógica de consumo de API búsqueda avanzada :done, des19.2, 2025-09-14, 2h
-    Maquetar y consumir perfil completo especialista :des19.3, 2025-09-14, 2h
-    Configurar internacionalización en español (búsqueda y perfil pacientes) :des19.4, 2025-09-15, 1h
+    Maquetar y consumir perfil completo especialista :done, des19.3, 2025-09-14, 2h
+    Configurar internacionalización en español (búsqueda y perfil pacientes) :done, des19.4, 2025-09-15, 1h
     Documentar componentes búsqueda avanzada y perfil completo :des19.5, 2025-09-15, 1h
     Crear pruebas end-to-end búsqueda avanzada y perfil completo :des19.6, 2025-09-15, 1h
 
     section 20. Agendar cita con especialista [Frontend]
     Maquetar vista de agendamiento de cita :done, des20.1, 2025-09-15, 2h
-    Implementar lógica de consumo de API y confirmación de cita :des20.2, 2025-09-16, 2h
-    Configurar internacionalización en español (agendamiento) :des20.3, 2025-09-16, 1h
+    Implementar lógica de consumo de API y confirmación de cita :done, des20.2, 2025-09-16, 2h
+    Configurar internacionalización en español (agendamiento) :done, des20.3, 2025-09-16, 1h
     Documentar componente/vista de agendamiento de cita :des20.4, 2025-09-16, 1h
     Crear pruebas end-to-end agendamiento de cita :des20.5, 2025-09-16, 1h
 

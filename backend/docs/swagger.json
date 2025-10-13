@@ -1315,6 +1315,11 @@
                         "address": {
                           "type": "string",
                           "nullable": true
+                        },
+                        "available": {
+                          "type": "boolean",
+                          "nullable": true,
+                          "description": "Indica si el médico tiene disponibilidad para agendar citas. Solo se muestra a usuarios autenticados con rol paciente."
                         }
                       }
                     }
@@ -1356,7 +1361,8 @@
                         "state": "Jalisco",
                         "email": "luis.perez@ejemplo.com",
                         "phone": "5559876543",
-                        "address": "Av. México 123, Guadalajara"
+                        "address": "Av. México 123, Guadalajara",
+                        "available": true
                       }
                     }
                   }
@@ -1952,21 +1958,33 @@
         }
       }
     },
-    "/api/doctors/availability": {
+    "/api/doctors/availability/{doctorId}": {
       "get": {
         "tags": [
           "Doctors"
         ],
-        "summary": "Consultar disponibilidad actual del médico",
-        "description": "Retorna los rangos de días y horas disponibles del médico especialista autenticado. Requiere autenticación y rol de médico.",
+        "summary": "Consultar disponibilidad de un médico",
+        "description": "Retorna los rangos de días y horas disponibles de un médico. Accesible para pacientes y médicos autenticados. Los pacientes deben enviar el ID del médico en la ruta y solo verán horarios con available=true. Los médicos pueden consultar su propia disponibilidad (sin enviar doctorId) o la de otro médico enviando el ID.",
         "security": [
           {
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "doctorId",
+            "in": "path",
+            "description": "ID del médico a consultar. Obligatorio para pacientes, opcional para médicos.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Disponibilidad actual",
+            "description": "Disponibilidad actual y horarios ocupados futuros",
             "content": {
               "application/json": {
                 "schema": {
@@ -1981,25 +1999,57 @@
                       "example": "success"
                     },
                     "payload": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "dayOfWeek": {
-                            "type": "integer",
-                            "example": 1
-                          },
-                          "startTime": {
-                            "type": "string",
-                            "example": "09:00"
-                          },
-                          "endTime": {
-                            "type": "string",
-                            "example": "13:00"
-                          },
-                          "available": {
-                            "type": "boolean",
-                            "example": true
+                      "type": "object",
+                      "properties": {
+                        "availability": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "dayOfWeek": {
+                                "type": "integer",
+                                "enum": [
+                                  0,
+                                  1,
+                                  2,
+                                  3,
+                                  4,
+                                  5,
+                                  6
+                                ],
+                                "description": "Day of week (0=Sunday, 6=Saturday)",
+                                "example": 1
+                              },
+                              "startTime": {
+                                "type": "string",
+                                "example": "09:00"
+                              },
+                              "endTime": {
+                                "type": "string",
+                                "example": "13:00"
+                              },
+                              "available": {
+                                "type": "boolean",
+                                "example": true
+                              }
+                            }
+                          }
+                        },
+                        "occupiedSlots": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "example": 123
+                              },
+                              "appointmentDate": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2025-10-15T10:00:00.000Z"
+                              }
+                            }
                           }
                         }
                       }
@@ -2008,18 +2058,128 @@
                 },
                 "examples": {
                   "success": {
-                    "summary": "Ejemplo de disponibilidad",
+                    "summary": "Ejemplo de disponibilidad y horarios ocupados",
                     "value": {
                       "code": 200,
                       "message": "success",
-                      "payload": [
-                        {
-                          "dayOfWeek": 1,
-                          "startTime": "09:00",
-                          "endTime": "13:00",
-                          "available": true
+                      "payload": {
+                        "availability": [
+                          {
+                            "dayOfWeek": 1,
+                            "startTime": "09:00",
+                            "endTime": "13:00",
+                            "available": true
+                          }
+                        ],
+                        "occupiedSlots": [
+                          {
+                            "id": 123,
+                            "appointmentDate": "2025-10-15T10:00:00.000Z"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
-                      ]
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "missingDoctorId": {
+                    "summary": "Doctor ID is required for patients",
+                    "value": {
+                      "code": 400,
+                      "message": "Bad Request",
+                      "payload": {
+                        "error": [
+                          "Doctor ID is required for patients"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Doctor no encontrado o sin disponibilidad",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Doctor not found"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "doctorNotFound": {
+                    "summary": "Doctor not found",
+                    "value": {
+                      "code": 404,
+                      "message": "Doctor not found",
+                      "payload": {
+                        "error": [
+                          "Doctor with specified ID does not exist or is inactive"
+                        ]
+                      }
+                    }
+                  },
+                  "noAvailability": {
+                    "summary": "No availability defined",
+                    "value": {
+                      "code": 404,
+                      "message": "No availability defined",
+                      "payload": {
+                        "error": [
+                          "No availability defined for this doctor"
+                        ]
+                      }
                     }
                   }
                 }
@@ -2062,193 +2222,7 @@
                       "message": "Forbidden",
                       "payload": {
                         "error": [
-                          "Doctor authentication required"
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Doctors"
-        ],
-        "summary": "Definir o modificar disponibilidad",
-        "description": "Permite al médico especialista definir o modificar su disponibilidad. Requiere autenticación y rol de médico.",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "daysOfWeek": {
-                    "type": "array",
-                    "items": {
-                      "type": "integer",
-                      "example": 1
-                    }
-                  },
-                  "ranges": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "dayOfWeek": {
-                          "type": "integer",
-                          "example": 1
-                        },
-                        "startTime": {
-                          "type": "string",
-                          "example": "09:00"
-                        },
-                        "endTime": {
-                          "type": "string",
-                          "example": "13:00"
-                        },
-                        "blocked": {
-                          "type": "boolean",
-                          "example": false
-                        }
-                      }
-                    }
-                  }
-                },
-                "required": [
-                  "daysOfWeek",
-                  "ranges"
-                ]
-              },
-              "examples": {
-                "definirDisponibilidad": {
-                  "summary": "Ejemplo de definición de disponibilidad",
-                  "value": {
-                    "daysOfWeek": [
-                      1
-                    ],
-                    "ranges": [
-                      {
-                        "dayOfWeek": 1,
-                        "startTime": "09:00",
-                        "endTime": "13:00",
-                        "blocked": false
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Disponibilidad actualizada",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 201
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Availability updated"
-                    },
-                    "payload": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "dayOfWeek": {
-                            "type": "integer",
-                            "example": 1
-                          },
-                          "startTime": {
-                            "type": "string",
-                            "example": "09:00"
-                          },
-                          "endTime": {
-                            "type": "string",
-                            "example": "13:00"
-                          },
-                          "available": {
-                            "type": "boolean",
-                            "example": true
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "examples": {
-                  "success": {
-                    "summary": "Disponibilidad actualizada",
-                    "value": {
-                      "code": 201,
-                      "message": "Availability updated",
-                      "payload": [
-                        {
-                          "dayOfWeek": 1,
-                          "startTime": "09:00",
-                          "endTime": "13:00",
-                          "available": true
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Error de validación",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 400
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Validation error"
-                    },
-                    "payload": {
-                      "type": "object",
-                      "properties": {
-                        "error": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "examples": {
-                  "validacion": {
-                    "summary": "Error de validación",
-                    "value": {
-                      "code": 400,
-                      "message": "Validation error",
-                      "payload": {
-                        "error": [
-                          "Invalid dayOfWeek",
-                          "Invalid time range"
+                          "Authentication required"
                         ]
                       }
                     }

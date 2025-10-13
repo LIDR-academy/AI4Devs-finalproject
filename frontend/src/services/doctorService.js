@@ -1,4 +1,6 @@
 import api from "./api"
+import { authService } from "./authService"
+
 
 export const doctorService = {
   /**
@@ -27,7 +29,33 @@ export const doctorService = {
   getDoctorProfile: async (doctorId) => {
     try {
       const response = await api.get(`/api/doctors/${doctorId}`)
-      return response.data
+      const data = response.data?.payload || {}
+
+      // Validar si el usuario está autenticado
+      const isAuthenticated = authService.isAuthenticated()
+
+      // Leyenda para campos no disponibles
+      const unavailableMsg = "No disponible por el momento" // Puedes internacionalizar desde el componente
+
+      // Mapear campos sensibles según autenticación y disponibilidad
+      return {
+        ...response.data,
+        payload: {
+          ...data,
+          email: isAuthenticated
+            ? data.email || unavailableMsg
+            : null,
+          phone: isAuthenticated
+            ? data.phone || unavailableMsg
+            : null,
+          address: isAuthenticated
+            ? data.address || unavailableMsg
+            : null,
+          available: typeof data.available === "boolean"
+            ? data.available
+            : false,
+        },
+      }
     } catch (error) {
       throw error.response?.data || error.message
     }
@@ -56,7 +84,25 @@ export const doctorService = {
   // Obtener disponibilidad del doctor
   getDoctorAvailability: async (doctorId) => {
     try {
-      const response = await api.get(`/api/doctors/${doctorId}/availability`)
+      // Consumir el endpoint de disponibilidad según Swagger
+      const response = await api.get(`/api/doctors/availability/${doctorId}`)
+      // Retornar la respuesta estándar (payload es un array de horarios)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Obtener comentarios de pacientes sobre un especialista.
+   * Solo accesible para usuarios autenticados.
+   * @param {number|string} doctorId - ID del especialista
+   * @param {object} params - { page, limit }
+   * @returns {Promise<object>} - { results: [], pagination: {} }
+   */
+  getDoctorComments: async (doctorId, params = {}) => {
+    try {
+      const response = await api.get(`/api/doctors/${doctorId}/comments`, { params })
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

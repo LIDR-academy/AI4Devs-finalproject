@@ -147,7 +147,7 @@ async function getDoctorProfile({ doctorId, userRole }) {
 
   if (!doctor) return null;
 
-  // Calcular valoración promedio (opcional: puedes obtenerla con una consulta agregada si lo prefieres)
+  // Calcular valoración promedio (opcional)
   const avgRating = await prisma.rating.aggregate({
     _avg: { score: true },
     where: { doctor_id: doctor.id }
@@ -172,10 +172,21 @@ async function getDoctorProfile({ doctorId, userRole }) {
     profile.email = doctor.user.email;
     profile.phone = doctor.phone;
     profile.address = doctor.location?.address || '';
-    profile.available = true; // Simulación de disponibilidad
+
+    // Consulta disponibilidad real en la tabla Availability
+    const hasAvailability = await prisma.availability.findFirst({
+      where: {
+        doctor_id: doctor.id,
+        is_available: true
+      }
+    });
+
+    // Campo available: true si el médico está activo y tiene al menos un horario disponible
+    profile.available = !!(doctor.active && hasAvailability);
   }
 
   return profile;
 }
+
 
 module.exports = { searchDoctors, getDoctorProfile };

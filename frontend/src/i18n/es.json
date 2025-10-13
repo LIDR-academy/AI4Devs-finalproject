@@ -18,7 +18,9 @@
     "error": "Error",
     "success": "Éxito",
     "welcome": "Bienvenido",
-    "language": "Idioma"
+    "language": "Idioma",
+    "confirmAppointment": "Confirmar cita",
+    "confirmationAppointment": "Confirmación de cita"
   },
   "auth": {
     "email": "Correo Electrónico",
@@ -112,7 +114,7 @@
     "rating": "Calificación",
     "reviews": "Reseñas",
     "bookAppointment": "Reservar Cita",
-    "notAvailable": "No disponible",
+    "notAvailable": "No disponible por el momento",
     "viewProfile": "Ver Perfil"
   },
   "appointment": {
@@ -127,7 +129,23 @@
     "cancelled": "Cancelada",
     "completed": "Completada",
     "upcoming": "Próximas",
-    "past": "Anteriores"
+    "past": "Anteriores",
+    "selectDateTime": "Selecciona fecha y hora",
+    "validation": {
+      "dateRequired": "Selecciona una fecha",
+      "datePast": "La fecha no puede ser pasada",
+      "timeRequired": "Selecciona una hora",
+      "timeOnHour": "La cita debe ser en punto (ej. 10:00, 11:00)",
+      "reasonRequired": "Describe el motivo de la consulta",
+      "nameRequired": "Ingresa tu nombre completo",
+      "emailRequired": "Ingresa tu correo electrónico",
+      "emailInvalid": "Ingresa un correo válido",
+      "phoneRequired": "Ingresa tu teléfono",
+      "phoneInvalid": "Ingresa un teléfono válido",
+      "submitError": "Error al agendar la cita. Intenta nuevamente.",
+      "namePlaceholder": "Tu nombre completo"
+    },
+    "bookSuccess": "Cita agendada exitosamente"
   },
   "medicalAgenda": {
     "title": "Filtro de citas médicas",
@@ -237,7 +255,7 @@
       "municipality": "Municipio",
       "selectMunicipality": "Seleccionar municipio",
       "minRating": "Valoración mínima",
-      "minRatingDescription": "{rating}+ estrellas",
+      "minRatingDescription": "{{rating}}+ estrellas",
       "allRatings": "Todas las valoraciones",
       "availability": "Disponibilidad",
       "selectAvailability": "Todos",
@@ -427,9 +445,8 @@
     "education": "Educación",
     "certifications": "Certificaciones",
     "languages": "Idiomas",
-    "patientReviews": "Reseñas de Pacientes",
     "perConsultation": "por consulta",
-    "availableToday": "Disponible hoy",
+    "availableToday": "Disponible para cita",
     "bookAppointment": "Agendar Cita",
     "officeHours": "Horarios de Atención",
     "contactInfo": "Información de Contacto",
@@ -437,14 +454,16 @@
     "stars": "estrellas",
     "yearsExperience": "años de experiencia",
     "sensitiveInfoMsg": "Para ver esta información inicia sesión o registrate",
+    "notAvailable": "No disponible por el momento",
     "bookingInfoMsg": "Para ver disponibilidad y agendar cita inicia sesión o registrate",
     "specialty": "Especialidad",
     "licenseNumber": "Número de Licencia",
+    "patientReviews": "Reseñas de Pacientes",
     "pagination": {
-      "showingReviews": "Mostrando {start} - {end} de {total} reseñas",
+      "showingReviews": "Mostrando {{start}} - {{end}} de {{total}} reseñas",
       "previousPage": "Página anterior",
       "nextPage": "Página siguiente",
-      "page": "Página {number}",
+      "page": "Página {{number}}",
       "reviewsPerPage": "reseñas por página"
     },
     "schedule": {

@@ -7,11 +7,11 @@ const { getDoctorUpcomingAppointments } = require('../../application/getDoctorUp
 const { setAvailability, getAvailability } = require('../../domain/doctorAvailabilityService');
 const { getAppointments, updateAppointmentStatus } = require('../../domain/doctorAppointmentService');
 const { requireDoctorRole } = require('./authMiddleware');
+const yup = require('yup');
+const { ApiError } = require('./errorHandler');
 const logger = require('../../config/logger');
 
 
-const { ApiError } = require('./errorHandler');
-const yup = require('yup');
 
 // Esquema de validación Yup para búsqueda
 const searchSchema = yup.object().shape({
@@ -73,18 +73,58 @@ router.get('/availability', requireDoctorRole, async (req, res, next) => {
   }
 });
 
-// POST /api/doctor/availability
-router.post('/availability', requireDoctorRole, async (req, res, next) => {
-  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+// Validación Yup para doctorId en la ruta
+const doctorIdAvailableSchema = yup.object().shape({
+  doctorId: yup
+    .number()
+    .integer()
+    .min(1, 'Doctor ID must be a positive integer')
+    .required('Doctor ID is required for patients')
+});
 
+// Ruta: GET /api/doctors/availability/:doctorId?
+router.get('/availability/:doctorId?', async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
   try {
-    const doctorId = req.user.id;
-    const { daysOfWeek, ranges } = req.body;
-    const result = await setAvailability({ doctorId, daysOfWeek, ranges });
-    res.locals.message = 'Availability updated';
-    res.status(201).json(result);
-  } catch (error) {
-    next(error);
+    const { user } = req;
+    const doctorIdParam = req.params.doctorId;
+
+    // Validación para pacientes: doctorId es obligatorio
+    if (user.role === 'patient') {
+      await doctorIdAvailableSchema.validate({ doctorId: doctorIdParam }, { abortEarly: false });
+    }
+
+    // Para médicos: si no envía doctorId, consulta su propio horario
+    const doctorId = doctorIdParam
+      ? parseInt(doctorIdParam, 10)
+      : user.role === 'doctor'
+        ? user.id
+        : null;
+
+    // Validación extra: si no hay doctorId, error 400
+    if (!doctorId) {
+      throw new ApiError(400, 'Doctor ID is required for patients', ['Doctor ID is required for patients']);
+    }
+
+    // Llama al servicio de dominio
+    const result = await getAvailability(doctorId, user.role);
+
+    // Manejo de error 404 si el médico no existe o está inactivo
+    if (result === null) {
+      throw new ApiError(404, 'Doctor not found', ['Doctor with specified ID does not exist or is inactive']);
+    }
+    // Manejo de error 404 si no hay horarios definidos
+    if (Array.isArray(result.availability) && result.availability.length === 0) {
+      throw new ApiError(404, 'No availability defined', ['No availability defined for this doctor']);
+    }
+
+    // Respuesta estándar: incluye disponibilidad y horarios ocupados
+    res.json({
+      availability: result.availability,
+      occupiedSlots: result.occupiedSlots
+    });
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -179,13 +219,13 @@ router.get('/upcoming-appointments', requireDoctorRole, async (req, res, next) =
   }
 });
 
-// Esquema de validación Yup para id de doctor
-const doctorIdSchema = yup.object({
+// Validación Yup para doctorId en la ruta, profiel
+const doctorIdProfileSchema = yup.object().shape({
   id: yup
     .number()
     .integer()
-    .positive()
-    .required('Doctor id is required')
+    .min(1, 'Doctor ID must be a positive integer')
+    .required('Doctor ID is required for patients')
 });
 
 // Endpoint para consultar perfil de especialista
@@ -194,7 +234,7 @@ router.get('/:id', async (req, res, next) => {
 
   try {
     // Validación de parámetro id
-    const validated = await doctorIdSchema.validate(
+    const validated = await doctorIdProfileSchema.validate(
       {
         id: Number(req.params.id)
       },
@@ -229,6 +269,7 @@ router.get('/:id', async (req, res, next) => {
     res.locals.message = 'success';
     res.json(profile);
   } catch (err) {
+    console.error(err);
     if (err.name === 'ValidationError') {
       return res.status(400).json({
         code: 400,

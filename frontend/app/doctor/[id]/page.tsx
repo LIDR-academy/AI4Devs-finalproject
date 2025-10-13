@@ -9,20 +9,32 @@ import { Button } from "../../../src/components/ui/Button"
 import { StarRating } from "../../../src/components/StarRating/StarRating"
 import { doctorService } from "../../../src/services/doctorService"
 import { authService } from "../../../src/services/authService"
+import AppointmentBooking from "../../../src/components/AppointmentBooking/AppointmentBooking"
+import { decodeAuthToken } from "../../../src/lib/utils"
+import NotificationToast from "../../../src/components/NotificationToast"
 
 
 export default function DoctorProfilePage() {
+  // Hooks de navegación y traducción
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
   const { t } = useTranslation()
+
+  // Estados para el perfil del doctor y paginación de reseñas
   const [doctor, setDoctor] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const reviewsPerPage = 3
+
+  // Estado de autenticación del usuario
   const isAuthenticated = authService.isAuthenticated()
 
-  // Efecto para obtener datos del doctor por ID
+
+  /**
+   * Efecto para obtener el perfil del doctor por ID.
+   * Asigna los campos sensibles solo si el usuario está autenticado.
+   */
   useEffect(() => {
     async function fetchDoctor() {
       setLoading(true)
@@ -42,10 +54,11 @@ export default function DoctorProfilePage() {
             city: data.city,
             state: data.state,
             avgRating: data.avgRating ?? 0,
-            // Campos sensibles (siempre ocultos para visitante)
-            address: null,
-            phone: null,
-            email: null,
+            // Asignar los campos sensibles correctamente
+            address: data.address,
+            phone: data.phone,
+            email: data.email,
+            available: data.available,
             // Mock de reviews y otros campos si se requieren en el futuro
             reviews: [],
             experience: "",
@@ -73,6 +86,138 @@ export default function DoctorProfilePage() {
     if (id) fetchDoctor()
   }, [id, t])
 
+  // Estados para la disponibilidad del médico
+  const [doctorAvailability, setDoctorAvailability] = useState([])
+  const [loadingAvailability, setLoadingAvailability] = useState(false)
+  const [availabilityError, setAvailabilityError] = useState("")
+
+  /**
+   * Efecto para consultar la disponibilidad del médico.
+   * Solo se ejecuta si el usuario está autenticado y el ID cambia.
+   * Filtra y muestra solo los horarios con available=true.
+   */
+  useEffect(() => {
+    // Limpiar estados al cambiar de doctor
+    setDoctorAvailability([])
+    setAvailabilityError("")
+    if (!isAuthenticated || !id) return
+
+    setLoadingAvailability(true)
+    doctorService.getDoctorAvailability(id)
+      .then((response) => {
+        // Filtrar solo horarios disponibles
+        const availableSchedules = (response?.payload.availability || []).filter(
+          (slot) => slot.available === true
+        )
+        setDoctorAvailability(availableSchedules)
+      })
+      .catch((error) => {
+        // Internacionalizar errores conocidos
+        let errorMsg = t("doctorProfile.notAvailable")
+        if (error?.message === "Doctor not found") {
+          errorMsg = t("search.noResults")
+        } else if (error?.message === "No availability defined") {
+          errorMsg = t("doctorProfile.notAvailable")
+        }
+        setAvailabilityError(errorMsg)
+      })
+      .finally(() => {
+        setLoadingAvailability(false)
+      })
+  }, [id, isAuthenticated, t])
+
+  // Estados para comentarios y paginación de reseñas
+  const [doctorComments, setDoctorComments] = useState([])
+  const [commentsPagination, setCommentsPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 3,
+    totalPages: 1,
+  })
+  const [loadingComments, setLoadingComments] = useState(false)
+  const [commentsError, setCommentsError] = useState("")
+
+  /**
+   * Efecto para consultar los comentarios del médico.
+   * Solo se ejecuta si el usuario está autenticado y el ID o la página cambia.
+   * Limpia los estados al cambiar de doctor.
+   */
+  useEffect(() => {
+    setDoctorComments([])
+    setCommentsError("")
+    setCommentsPagination({
+      total: 0,
+      page: currentPage,
+      limit: reviewsPerPage,
+      totalPages: 1,
+    })
+
+    if (!isAuthenticated || !id) return
+
+    setLoadingComments(true)
+    doctorService.getDoctorComments(id, { page: currentPage, limit: reviewsPerPage })
+      .then((response) => {
+        const payload = response?.payload || {}
+        setDoctorComments(payload.results || [])
+        setCommentsPagination(payload.pagination || {
+          total: 0,
+          page: currentPage,
+          limit: reviewsPerPage,
+          totalPages: 1,
+        })
+      })
+      .catch((error) => {
+        // Internacionalizar errores conocidos
+        let errorMsg = t("doctorProfile.notAvailable")
+        if (error?.message === "Doctor not found") {
+          errorMsg = t("search.noResults")
+        } else if (error?.message === "Unauthorized") {
+          errorMsg = t("doctorProfile.sensitiveInfoMsg")
+        }
+        setCommentsError(errorMsg)
+      })
+      .finally(() => {
+        setLoadingComments(false)
+      })
+  }, [id, isAuthenticated, currentPage, t])
+
+
+  // Estado para el modal de agendamiento y notificación
+  const [isBookingOpen, setIsBookingOpen] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+  const [toastMsg, setToastMsg] = useState("")
+
+  // Detectar query param book=1 y abrir modal automáticamente
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get("book") === "1") {
+        const user = decodeAuthToken()
+        if (user?.role === "patient") {
+          setIsBookingOpen(true)
+        } else {
+          setToastMsg(t("doctorProfile.registerAsPatientMsg"))
+          setShowToast(true)
+        }
+      }
+    }
+  }, [id])
+
+  // Eliminar el query param book=1 al cerrar el modal
+  const handleCloseBooking = () => {
+    setIsBookingOpen(false)
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get("book") === "1") {
+        params.delete("book")
+        const newUrl =
+          window.location.pathname +
+          (params.toString() ? `?${params.toString()}` : "")
+        window.history.replaceState({}, "", newUrl)
+      }
+    }
+  }
+
   const totalReviews = doctor?.reviews?.length || 0
   const totalPages = Math.ceil(totalReviews / reviewsPerPage)
   const startIndex = (currentPage - 1) * reviewsPerPage
@@ -92,7 +237,21 @@ export default function DoctorProfilePage() {
   }
 
   const handleBookAppointment = (doctorId: string) => {
-    router.push(`/appointment-booking?doctorId=${doctorId}`)
+    if (typeof window !== "undefined") {
+      const user = decodeAuthToken()
+      if (user?.role === "patient") {
+        const params = new URLSearchParams(window.location.search)
+        params.set("book", "1")
+        const newUrl =
+          window.location.pathname +
+          (params.toString() ? `?${params.toString()}` : "")
+        window.history.replaceState({}, "", newUrl)
+        setIsBookingOpen(true)
+      } else {
+        setToastMsg(t("doctorProfile.registerAsPatientMsg"))
+        setShowToast(true)
+      }
+    }
   }
 
   // Leyenda para campos sensibles
@@ -151,6 +310,9 @@ export default function DoctorProfilePage() {
       : doctor.photo && doctor.photo.trim()
         ? doctor.photo
         : "/images/login-hero.jpg"  
+  
+  const unavailableMsg = t("doctor.notAvailable")
+
 
   return (
     <MainLayout>
@@ -197,7 +359,7 @@ export default function DoctorProfilePage() {
               <p className="text-gray-700 leading-relaxed">{doctor.biography}</p>
             </div>
 
-            {/* Educación y Especialidades */}
+            {/* Perfil Médico */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">{t("doctorProfile.medicalProfile")}</h2>
               <div className="space-y-4">
@@ -219,16 +381,28 @@ export default function DoctorProfilePage() {
             </div>
 
             {/* Reviews with Pagination */}
+            {/**
+             * Renderizado condicional de la tarjeta "Reviews with Pagination":
+             * - Si no hay sesión, muestra la leyenda internacionalizada y mock.
+             * - Si está cargando, muestra spinner visual.
+             * - Si hay error, muestra mensaje internacionalizado.
+             * - Si no hay comentarios, muestra la leyenda de no resultados.
+             * - Si hay comentarios, los muestra paginados, con nombre y fecha formateada.
+             */}
             <div id="reviews-section" className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">{t("doctorProfile.patientReviews")}</h2>
                 {/* Ocultar label de paginación si no hay sesión */}
-                {isAuthenticated && (
+                {isAuthenticated && commentsPagination.total > 0 && (
                   <span className="text-sm text-gray-500">
                     {t("doctorProfile.pagination.showingReviews", {
-                      start: startIndex + 1,
-                      end: Math.min(endIndex, totalReviews),
-                      total: totalReviews,
+                      start: commentsPagination.total === 0
+                        ? 0
+                        : (commentsPagination.page - 1) * commentsPagination.limit + 1,
+                      end: commentsPagination.total === 0
+                        ? 0
+                        : Math.min(commentsPagination.page * commentsPagination.limit, commentsPagination.total),
+                      total: commentsPagination.total,
                     })}
                   </span>
                 )}
@@ -243,30 +417,54 @@ export default function DoctorProfilePage() {
                   </svg>
                   <span>{t("doctorProfile.sensitiveInfoMsg")}</span>
                 </div>
+              ) : loadingComments ? (
+                // Estado de carga
+                <span className="flex items-center gap-2 text-gray-500 py-8 justify-center">
+                  <svg className="animate-spin w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" fill="none" />
+                  </svg>
+                  {t("common.loading")}
+                </span>
+              ) : commentsError ? (
+                // Estado de error
+                <span className="text-red-500">{commentsError}</span>
+              ) : doctorComments.length === 0 ? (
+                // Sin comentarios disponibles
+                <span className="text-gray-500">{t("search.noResults")}</span>
               ) : (
+                // Mostrar comentarios paginados
                 <>
                   <div className="space-y-4 mb-6">
-                    {currentReviews.length === 0 && (
-                      <p className="text-gray-500">{t("search.noResults")}</p>
-                    )}
-                    {currentReviews.map((review) => (
-                      <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                    {doctorComments.map((review, idx) => (
+                      <div key={idx} className="border-b border-gray-200 pb-4 last:border-b-0">
                         <div className="flex items-center gap-2 mb-2">
-                          <StarRating rating={review.rating} />
-                          <span className="font-medium text-gray-900">{review.patientName}</span>
-                          <span className="text-gray-500 text-sm">{review.date}</span>
+                          <StarRating rating={review.score} />
+                          <span className="font-medium text-gray-900">
+                            {review.anonymous ? t("doctorProfile.anonymous", { defaultValue: "Anónimo" }) : review.patient_name}
+                          </span>
+                          <span className="text-gray-500 text-sm">
+                            {/* Formatear fecha en español */}
+                            {review.created_at
+                              ? new Date(review.created_at).toLocaleDateString("es-MX", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })
+                              : ""}
+                          </span>
                         </div>
                         <p className="text-gray-700">{review.comment}</p>
                       </div>
                     ))}
                   </div>
 
-                  {totalPages > 1 && (
+                  {commentsPagination.totalPages > 1 && (
                     <div className="flex items-center justify-between border-t border-gray-200 pt-4">
                       <div className="flex items-center gap-2">
                         <Button
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage === 1}
+                          onClick={() => handlePageChange(commentsPagination.page - 1)}
+                          disabled={commentsPagination.page === 1}
                           variant="outline"
                           size="sm"
                           className="flex items-center gap-1"
@@ -278,11 +476,11 @@ export default function DoctorProfilePage() {
                         </Button>
 
                         <div className="flex items-center gap-1">
-                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          {Array.from({ length: commentsPagination.totalPages }, (_, i) => i + 1).map((page) => (
                             <Button
                               key={page}
                               onClick={() => handlePageChange(page)}
-                              variant={currentPage === page ? "default" : "outline"}
+                              variant={commentsPagination.page === page ? "default" : "outline"}
                               size="sm"
                               className="min-w-[40px]"
                             >
@@ -292,8 +490,8 @@ export default function DoctorProfilePage() {
                         </div>
 
                         <Button
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage === totalPages}
+                          onClick={() => handlePageChange(commentsPagination.page + 1)}
+                          disabled={commentsPagination.page === commentsPagination.totalPages}
                           variant="outline"
                           size="sm"
                           className="flex items-center gap-1"
@@ -315,10 +513,26 @@ export default function DoctorProfilePage() {
           <div className="space-y-6">
             {/* Booking Card */}
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
-              {/* Quitar precio por consulta */}
-              {/* Badge con leyenda si no hay sesión */}
               <div className="mb-4">
-                {!isAuthenticated ? (
+                {isAuthenticated ? (
+                  doctor.available ? (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 gap-2">
+                      {/* Icono de check */}
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {t("doctorProfile.availableToday")}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 gap-2">
+                      {/* Icono de candado */}
+                      <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      {unavailableMsg}
+                    </span>
+                  )
+                ) : (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 gap-2">
                     {/* Icono de candado */}
                     <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,42 +540,74 @@ export default function DoctorProfilePage() {
                     </svg>
                     {t("doctorProfile.bookingInfoMsg")}
                   </span>
-                ) : (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    {doctor.availability}
-                  </span>
                 )}
               </div>
               <Button
                 onClick={() => handleBookAppointment(doctor.id)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
-                disabled={!isAuthenticated}
+                disabled={!isAuthenticated || !doctor.available}
               >
                 {t("doctorProfile.bookAppointment")}
               </Button>
             </div>
-
+            
             {/* Schedule */}
+            {/**
+             * Renderizado condicional de la tarjeta "Schedule":
+             * - Si no hay sesión, muestra la leyenda internacionalizada.
+             * - Si está cargando, muestra spinner/texto de carga.
+             * - Si hay error, muestra mensaje internacionalizado.
+             * - Si no hay horarios, muestra leyenda de no disponible.
+             * - Si hay horarios, los muestra agrupados por día.
+             */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">{t("doctorProfile.officeHours")}</h3>
               <div className="space-y-2">
+                {/* Si no hay sesión, mostrar leyenda */}
                 {!isAuthenticated ? (
                   <span className="flex items-center gap-2 text-gray-500">
-                    {/* Icono de candado */}
                     <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-7V7a6 6 0 10-12 0v3a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-8-3a4 4 0 118 0v3" />
                     </svg>
                     {t("doctorProfile.sensitiveInfoMsg")}
                   </span>
-                ) : Object.entries(doctor.schedule).length === 0 ? (
+                ) : loadingAvailability ? (
+                  // Estado de carga
+                  <span className="flex items-center gap-2 text-gray-500">
+                    <svg className="animate-spin w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" fill="none" />
+                    </svg>
+                    {t("common.loading")}
+                  </span>
+                ) : availabilityError ? (
+                  // Estado de error
+                  <span className="text-red-500">{availabilityError}</span>
+                ) : doctorAvailability.length === 0 ? (
+                  // Sin horarios disponibles
                   <span className="text-gray-500">{t("doctorProfile.notAvailable")}</span>
                 ) : (
-                  Object.entries(doctor.schedule).map(([day, hours]) => (
-                    <div key={day} className="flex justify-between">
-                      <span className="text-gray-600">{day}</span>
-                      <span className="text-gray-900">{hours}</span>
-                    </div>
-                  ))
+                  // Mostrar horarios disponibles agrupados por día
+                  doctorAvailability.map((slot, idx) => {
+                    // Mapear el número de día a la clave internacionalizada
+                    const dayNames = [
+                      t("doctorProfile.schedule.sunday"),
+                      t("doctorProfile.schedule.monday"),
+                      t("doctorProfile.schedule.tuesday"),
+                      t("doctorProfile.schedule.wednesday"),
+                      t("doctorProfile.schedule.thursday"),
+                      t("doctorProfile.schedule.friday"),
+                      t("doctorProfile.schedule.saturday"),
+                    ]
+                    return (
+                      <div key={idx} className="flex justify-between">
+                        <span className="text-gray-600">{dayNames[slot.dayOfWeek]}</span>
+                        <span className="text-gray-900">
+                          {slot.startTime} - {slot.endTime}
+                        </span>
+                      </div>
+                    )
+                  })
                 )}
               </div>
             </div>
@@ -370,6 +616,7 @@ export default function DoctorProfilePage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">{t("doctorProfile.contactInfo")}</h3>
               <div className="space-y-3">
+                {/* Ciudad, Estado y Dirección */}
                 <div className="flex items-start gap-3">
                   <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -386,21 +633,12 @@ export default function DoctorProfilePage() {
                     />
                   </svg>
                   <div>
-                    <p className="text-gray-700 text-sm">{doctor.city}, {doctor.state}</p>
-                    <p className="text-gray-500 text-xs">{sensitiveInfoMsg}</p>
+                    <p className="text-gray-700 text-sm">{doctor.city}, {doctor.state}{isAuthenticated
+                      ? `, ${doctor.address || unavailableMsg}` 
+                      : ""}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                    />
-                  </svg>
-                  <p className="text-gray-500 text-xs">{sensitiveInfoMsg}</p>
-                </div>
+                {/* Email */}
                 <div className="flex items-center gap-3">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -410,13 +648,54 @@ export default function DoctorProfilePage() {
                       d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
-                  <p className="text-gray-500 text-xs">{sensitiveInfoMsg}</p>
+                  <p className="text-gray-500 text-xs">
+                    {isAuthenticated
+                      ? doctor.email
+                        ? <a href={`mailto:${doctor.email}`} className="underline text-blue-600">{doctor.email}</a>
+                        : unavailableMsg
+                      : t("doctorProfile.sensitiveInfoMsg")}
+                  </p>
+                </div>
+                {/* Teléfono */}
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
+                  </svg>
+                  <p className="text-gray-500 text-xs">
+                    {isAuthenticated
+                      ? doctor.phone
+                        ? <a href={`tel:${doctor.phone}`} className="underline text-blue-600">{doctor.phone}</a>
+                        : unavailableMsg
+                      : t("doctorProfile.sensitiveInfoMsg")}
+                  </p>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </div>
+      {/* Modal de agendamiento de cita */}
+      <AppointmentBooking
+        isOpen={isBookingOpen}
+        onClose={handleCloseBooking}
+        doctor={doctor}
+        onSuccess={() => {
+          setToastMsg(t("appointment.bookSuccess"))
+          setShowToast(true)
+        }}
+      />
+      {/* Toast de notificación para usuarios no pacientes */}
+      <NotificationToast
+        message={toastMsg}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </MainLayout>
   )
 }

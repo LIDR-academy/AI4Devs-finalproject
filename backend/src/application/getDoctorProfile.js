@@ -7,6 +7,7 @@ const { getDoctorProfile: getDoctorProfileDomain } = require('../domain/doctorSe
  * @returns {object|null} Perfil del especialista o null si no existe/está inactivo
  */
 async function getDoctorProfile(doctorId, userRole = null) {
+  // Pasa el userRole al servicio de dominio para controlar los datos sensibles y el campo "available"
   return await getDoctorProfileDomain({
     doctorId,
     userRole

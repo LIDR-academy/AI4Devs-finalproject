@@ -1579,6 +1579,59 @@ Revisa mi información, muestrame el analisis de criterios y dudas, así como el
 # Implementar puntos
 Muestrame solo la implementación del punto <numero>: <titulo>, dime que archivos se tienen que modificar y en donde se debe realizar la modificación
 
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales de los tickets proporcionados, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza la historia de usuario, tickets en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales de los tickets.
+   - Revisa permisos y roles de usuario según lo indicado en los tickets.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si algun ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con los tickets, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios de los tickets.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+
+```
+## Tickets
+```markdown
+
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
 ----
 
 
@@ -2661,6 +2714,314 @@ Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo config
 
 **Historial de cambios:**  
 - [18/08/2025] [GitHub Copilot] Ticket creado para configuración de internacionalización en español en la vista de perfil de especialista.
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales de los tickets proporcionados, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza la historia de usuario, tickets en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales de los tickets.
+   - Revisa permisos y roles de usuario según lo indicado en los tickets.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si algun ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con los tickets, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios de los tickets.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+- **ID:** 4  
+- **Título:** Buscar especialistas y ver perfiles  
+- **Descripción:** Como paciente, quiero buscar especialistas y ver sus perfiles, para comparar opciones y tomar decisiones informadas.
+
+```
+## Tickets
+```markdown
+### 17.3 [Frontend] Maquetar y consumir el perfil completo de especialista para pacientes autenticados
+
+**Descripción detallada:**  
+- **Propósito:**  
+Diseñar y maquetar la vista de perfil completo de especialista en React para pacientes autenticados, mostrando información adicional relevante para la comparación y agendamiento.
+- **Detalle específico:**  
+- Componentes para mostrar en la vista con autenticación del paciente:
+  - Nombre, especialidad, biografía, foto, cédula profesional, título.
+  - Ubicación completa: ciudad, estado, dirección profesional.
+  - Valoración promedio y comentarios de pacientes.
+  - Disponibilidad para agendar cita.
+- Implementar la llamada al endpoint `GET /api/patient/doctors/:id` usando Axios.
+- Validar que el usuario esté autenticado como paciente antes de mostrar información sensible.
+- Manejar estados de carga, error y datos vacíos.
+
+**Criterios de aceptación:**  
+- La vista de perfil completo consume la API y muestra los datos correctamente solo para pacientes autenticados.
+- Se muestran datos adicionales respecto al perfil público.
+- Se manejan estados de carga y error.
+- **Pruebas de validación:**  
+  - Probar la consulta de perfil con diferentes especialistas y verificar los datos mostrados.
+  - Simular errores y estados vacíos.
+
+**Prioridad:**  
+Muy alta
+
+**Estimación de tiempo:**  
+2 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Feature  
+- Característica del producto: Frontend, Consumo de API, UI/UX, Seguridad
+
+**Comentarios y Notas:**  
+Utilizar Tailwind CSS + Headless UI para componentes visuales y Axios para llamadas a la API. Validar autenticación y permisos antes de mostrar información sensible.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para maquetado y consumo de perfil completo de especialista para pacientes.
+
+### 17.4 [Frontend] Configurar internacionalización (i18n) en español para la vista de búsqueda y perfil de especialistas (pacientes autenticados)
+
+**Descripción detallada:**  
+- **Propósito:**  
+Permitir que las vistas de búsqueda avanzada y perfil completo de especialistas muestren todos los textos y mensajes en español, facilitando la experiencia de usuario para pacientes autenticados.
+- **Detalle específico:**  
+- Configurar react-i18next en el proyecto frontend si no está ya configurado.
+- Crear archivos de traducción para español con los textos de las vistas de búsqueda avanzada y perfil completo (etiquetas, botones, mensajes de error, estados vacíos).
+- Integrar la configuración de idioma en ambas vistas.
+- Asegurar que todos los textos se gestionan mediante el sistema de internacionalización.
+
+**Criterios de aceptación:**  
+- Todos los textos de las vistas de búsqueda avanzada y perfil completo se muestran en español.
+- Los textos se gestionan mediante archivos de traducción.
+- **Pruebas de validación:**  
+  - Visualizar ambas vistas y verificar que todos los textos están en español.
+
+**Prioridad:**  
+Alta
+
+**Estimación de tiempo:**  
+1 hora
+
+**Etiquetas o Tags:**  
+- Tipo: Tarea Técnica  
+- Característica del producto: Frontend, Internacionalización, UI/UX
+
+**Comentarios y Notas:**  
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para configuración de internacionalización en español en búsqueda y perfil de especialistas para pacientes.
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+
+
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales de los tickets proporcionados, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza la historia de usuario, tickets en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales de los tickets.
+   - Revisa permisos y roles de usuario según lo indicado en los tickets.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si algun ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con los tickets, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios de los tickets.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+- **ID:** 5  
+- **Título:** Agendar cita con especialista  
+- **Descripción:** Como paciente, quiero agendar una cita con un especialista, para reservar una consulta de manera sencilla.
+```
+## Tickets
+```markdown
+### 18.1 [Frontend] Maquetar la vista de agendamiento de cita (selección de fecha, hora y motivo)
+
+**Descripción detallada:**  
+- **Propósito:**  
+Diseñar y maquetar el modal de agendamiento de cita en React para pacientes autenticados, permitiendo seleccionar fecha, hora y motivo de consulta.
+- **Detalle específico:**  
+Crear el formulario de agendamiento con los siguientes campos:
+  - Calendario para seleccionar fecha disponible.
+  - Selector de hora según disponibilidad del especialista.
+  - Campo de texto para motivo de consulta (opcional).
+  - Botón para confirmar agendamiento.
+Maquetar el área de confirmación y retroalimentación visual. Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
+
+**Criterios de aceptación:**  
+- El modal de agendamiento está implementada y disponible solo para pacientes autenticados.
+- El modal se muestra desde la vista del perfil médico al dar clic en "Agendar Cita"
+- El modal se muestra despues de cargar la vista si en los query params de la URL se indica como en el siguiente ejemplo: `GET /doctor/{id]?book=1`
+- El formulario permite seleccionar fecha, hora y motivo.
+- El diseño es responsivo y cumple con las pautas de UI/UX del PRD.
+- El área de confirmación está lista para integrar la lógica de consumo de API.
+- **Pruebas de validación:**  
+  - Visualizar la vista en diferentes dispositivos y tamaños de pantalla.
+  - Verificar que los campos y la retroalimentación se muestran correctamente.
+
+**Prioridad:**  
+Muy alta
+
+**Estimación de tiempo:**  
+2 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Feature  
+- Característica del producto: Frontend, UI/UX, Maquetado
+
+**Comentarios y Notas:**  
+Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía de estilos del PRD. Este ticket no incluye lógica de consumo de API ni internacionalización.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para maquetado de vista de agendamiento de cita.
+
+### 18.2 [Frontend] Implementar la lógica de consumo de API y confirmación de cita
+
+**Descripción detallada:**  
+- **Propósito:**  
+Conectar el formulario de agendamiento con el backend, consumir el endpoint de agendar cita y mostrar la confirmación en el frontend.
+- **Detalle específico:** 
+- Implementar la llamada al endpoint `GET /api/doctors/availability/{doctorId}`, utilizar su información para mostrar los días y horas disponibles en los que se puede realizar la reserva
+- El rango de horas será dividido en intervalos de una hora los cuales se mostrarán en el componente 
+- Implementar la llamada al endpoint `POST /api/appointments` usando Axios, enviando los datos seleccionados (doctor_id, fecha, hora, motivo).
+- Validar que el usuario esté autenticado como paciente antes de permitir el agendamiento.
+- Mostrar retroalimentación visual de éxito o error tras intentar agendar la cita.
+- Manejar estados de carga, error y validaciones de disponibilidad.
+- Actualizar la vista tras la confirmación de cita.
+
+**Criterios de aceptación:**  
+- El formulario ejecuta el agendamiento y muestra la confirmación correctamente solo para pacientes autenticados.
+- Los datos se envían al backend y se recibe la respuesta adecuada.
+- Se manejan estados de carga, error y validaciones de disponibilidad.
+- **Pruebas de validación:**  
+  - Probar el agendamiento con diferentes fechas y horas.
+  - Simular errores y conflictos de disponibilidad.
+
+**Prioridad:**  
+Muy alta
+
+**Estimación de tiempo:**  
+2 horas
+
+**Etiquetas o Tags:**  
+- Tipo: Feature  
+- Característica del producto: Frontend, Consumo de API, UI/UX, Seguridad
+
+**Comentarios y Notas:**  
+Utilizar Axios para las llamadas a la API y seguir la estructura de datos definida en el backend. Validar autenticación y permisos antes de permitir el agendamiento.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para lógica de consumo de API y confirmación de cita.
+
+### 18.3 [Frontend] Configurar internacionalización (i18n) en español para la vista de agendamiento de cita
+
+**Descripción detallada:**  
+- **Propósito:**  
+Permitir que el modal de agendamiento de cita muestre todos los textos y mensajes en el idioma seleccionado, facilitando la experiencia de usuario para pacientes autenticados.
+- **Detalle específico:**  
+- Configurar react-i18next en el proyecto frontend si no está ya configurado.
+- Crear archivos de traducción con los textos de la vista de agendamiento (etiquetas, botones, mensajes de error, estados vacíos).
+- Integrar la configuración de idioma en la vista de agendamiento.
+- Asegurar que todos los textos se gestionan mediante el sistema de internacionalización.
+
+**Criterios de aceptación:**  
+- Todos los textos de la vista de agendamiento se muestran en español.
+- Los textos se gestionan mediante archivos de traducción.
+- **Pruebas de validación:**  
+  - Visualizar la vista y verificar que todos los textos están en español.
+
+**Prioridad:**  
+Alta
+
+**Estimación de tiempo:**  
+1 hora
+
+**Etiquetas o Tags:**  
+- Tipo: Tarea Técnica  
+- Característica del producto: Frontend, Internacionalización, UI/UX
+
+**Comentarios y Notas:**  
+Utilizar react-i18next y seguir la estructura recomendada en el PRD. Solo configurar español en esta etapa.
+
+**Enlaces o Referencias:**  
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Product Backlog](docs/product_backlog.md)
+
+**Historial de cambios:**  
+- [18/08/2025] [GitHub Copilot] Ticket creado para configuración de internacionalización en español en la vista de agendamiento de cita.
 ```
 
 Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?

@@ -2390,7 +2390,7 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 - **Propósito:**  
 Diseñar y maquetar la vista de perfil completo de especialista en React para pacientes autenticados, mostrando información adicional relevante para la comparación y agendamiento.
 - **Detalle específico:**  
-- Crear la vista y componentes para mostrar:
+- Componentes para mostrar en la vista con autenticación del paciente:
   - Nombre, especialidad, biografía, foto, cédula profesional, título.
   - Ubicación completa: ciudad, estado, dirección profesional.
   - Valoración promedio y comentarios de pacientes.
@@ -2557,7 +2557,7 @@ Actualizar las pruebas si las vistas cambian en futuras iteraciones.
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista de agendamiento de cita en React para pacientes autenticados, permitiendo seleccionar fecha, hora y motivo de consulta.
+Diseñar y maquetar el modal de agendamiento de cita en React para pacientes autenticados, permitiendo seleccionar fecha, hora y motivo de consulta.
 - **Detalle específico:**  
 Crear el formulario de agendamiento con los siguientes campos:
   - Calendario para seleccionar fecha disponible.
@@ -2567,7 +2567,9 @@ Crear el formulario de agendamiento con los siguientes campos:
 Maquetar el área de confirmación y retroalimentación visual. Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
 **Criterios de aceptación:**  
-- La vista de agendamiento está implementada y disponible solo para pacientes autenticados.
+- El modal de agendamiento está implementada y disponible solo para pacientes autenticados.
+- El modal se muestra desde la vista del perfil médico al dar clic en "Agendar Cita"
+- El modal se muestra despues de cargar la vista si en los query params de la URL se indica como en el siguiente ejemplo: `GET /doctor/{id]?book=1`
 - El formulario permite seleccionar fecha, hora y motivo.
 - El diseño es responsivo y cumple con las pautas de UI/UX del PRD.
 - El área de confirmación está lista para integrar la lógica de consumo de API.
@@ -2600,7 +2602,9 @@ Utilizar Tailwind CSS + Headless UI para componentes visuales y seguir la guía 
 **Descripción detallada:**  
 - **Propósito:**  
 Conectar el formulario de agendamiento con el backend, consumir el endpoint de agendar cita y mostrar la confirmación en el frontend.
-- **Detalle específico:**  
+- **Detalle específico:** 
+- Implementar la llamada al endpoint `GET /api/doctors/availability/{doctorId}`, utilizar su información para mostrar los días y horas disponibles en los que se puede realizar la reserva
+- El rango de horas será dividido en intervalos de una hora los cuales se mostrarán en el componente 
 - Implementar la llamada al endpoint `POST /api/appointments` usando Axios, enviando los datos seleccionados (doctor_id, fecha, hora, motivo).
 - Validar que el usuario esté autenticado como paciente antes de permitir el agendamiento.
 - Mostrar retroalimentación visual de éxito o error tras intentar agendar la cita.
@@ -2640,10 +2644,10 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 
 **Descripción detallada:**  
 - **Propósito:**  
-Permitir que la vista de agendamiento de cita muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para pacientes autenticados.
+Permitir que el modal de agendamiento de cita muestre todos los textos y mensajes en el idioma seleccionado, facilitando la experiencia de usuario para pacientes autenticados.
 - **Detalle específico:**  
 - Configurar react-i18next en el proyecto frontend si no está ya configurado.
-- Crear archivos de traducción para español con los textos de la vista de agendamiento (etiquetas, botones, mensajes de error, estados vacíos).
+- Crear archivos de traducción con los textos de la vista de agendamiento (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en la vista de agendamiento.
 - Asegurar que todos los textos se gestionan mediante el sistema de internacionalización.
 

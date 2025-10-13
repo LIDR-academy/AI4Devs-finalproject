@@ -18,7 +18,9 @@
     "error": "Error",
     "success": "Success",
     "welcome": "Welcome",
-    "language": "Language"
+    "language": "Language",
+    "confirmAppointment": "Confirm appointment",
+    "confirmationAppointment": "Appointment confirmation"
   },
   "auth": {
     "email": "Email",
@@ -112,7 +114,7 @@
     "rating": "Rating",
     "reviews": "Reviews",
     "bookAppointment": "Book Appointment",
-    "notAvailable": "Not available",
+    "notAvailable": "Not available at the moment",
     "viewProfile": "View Profile"
   },
   "appointment": {
@@ -127,7 +129,23 @@
     "cancelled": "Cancelled",
     "completed": "Completed",
     "upcoming": "Upcoming",
-    "past": "Past"
+    "past": "Past",
+    "selectDateTime": "Select date and time",
+    "validation": {
+      "dateRequired": "Select a date",
+      "datePast": "Date cannot be in the past",
+      "timeRequired": "Select a time",
+      "timeOnHour": "Appointment must be on the hour (e.g., 10:00, 11:00)",
+      "reasonRequired": "Describe the reason for the consultation",
+      "nameRequired": "Enter your full name",
+      "emailRequired": "Enter your email",
+      "emailInvalid": "Enter a valid email",
+      "phoneRequired": "Enter your phone number",
+      "phoneInvalid": "Enter a valid phone number",
+      "submitError": "Error booking the appointment. Please try again.",
+      "namePlaceholder": "Your full name"
+    },
+    "bookSuccess": "Appointment booked successfully"
   },
   "medicalAgenda": {
     "title": "Medical appointments filter",
@@ -237,7 +255,7 @@
       "municipality": "Municipality",
       "selectMunicipality": "Select municipality",
       "minRating": "Minimum rating",
-      "minRatingDescription": "{rating}+ stars",
+      "minRatingDescription": "{{rating}}+ stars",
       "allRatings": "All ratings",
       "availability": "Availability",
       "selectAvailability": "All",
@@ -427,9 +445,8 @@
     "education": "Education",
     "certifications": "Certifications",
     "languages": "Languages",
-    "patientReviews": "Patient Reviews",
     "perConsultation": "per consultation",
-    "availableToday": "Available today",
+    "availableToday": "Available to appointment",
     "bookAppointment": "Book Appointment",
     "officeHours": "Office Hours",
     "contactInfo": "Contact Information",
@@ -437,11 +454,13 @@
     "reviews": "reviews",
     "yearsExperience": "years of experience",
     "sensitiveInfoMsg": "To view this information, please log in or register",
+    "notAvailable": "Not available at the moment",
     "bookingInfoMsg": "To view availability and book an appointment, please log in or register",
     "specialty": "Specialty",
     "licenseNumber": "License Number",
+    "patientReviews": "Patient Reviews",
     "pagination": {
-      "showingReviews": "Showing {start} - {end} of {total} reviews",
+      "showingReviews": "Showing {{start}} - {{end}} of {{total}} reviews",
       "previousPage": "Previous page",
       "nextPage": "Next page",
       "page": "Page {number}",
