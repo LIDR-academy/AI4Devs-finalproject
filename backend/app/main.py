@@ -5,14 +5,18 @@ This module contains the FastAPI application instance with configuration
 loaded from environment variables.
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+import time
 
 from app.core.config import get_settings
 from app.core.exceptions import BaseAPIException
 from app.core.logging import get_logger
+from app.core.database import get_db
 
 # Get application settings and logger
 settings = get_settings()
@@ -122,6 +126,68 @@ async def health_check():
         "debug": settings.debug,
         "log_level": settings.log_level
     }
+
+
+@app.get("/health/db")
+async def health_check_db(db: Session = Depends(get_db)):
+    """
+    Database health check endpoint to verify database connectivity.
+    
+    This endpoint tests the database connection by executing a simple query
+    and measuring the response time. It returns appropriate status codes:
+    - 200: Database is accessible and responding
+    - 503: Database is unavailable or connection failed
+    
+    Args:
+        db: Database session dependency
+        
+    Returns:
+        dict: Database status information including connection state and query time
+        
+    Raises:
+        JSONResponse: 503 status if database is unavailable
+    """
+    try:
+        # Record start time for performance measurement
+        start_time = time.time()
+        
+        # Execute simple query to test database connection
+        # Using text() for SQLAlchemy 2.0 compatibility
+        result = db.execute(text("SELECT 1"))
+        result.fetchone()
+        
+        # Calculate query execution time
+        query_time = time.time() - start_time
+        
+        # Log successful health check
+        logger.info(f"Database health check successful - query time: {query_time:.4f}s")
+        
+        return {
+            "status": "healthy",
+            "message": "Database connection is operational",
+            "database": {
+                "connected": True,
+                "query_time_seconds": round(query_time, 4),
+                "database_url": settings.database_url.split("///")[-1] if "///" in settings.database_url else "configured"
+            }
+        }
+        
+    except Exception as e:
+        # Log database connection failure
+        logger.error(f"Database health check failed: {str(e)}", exc_info=True)
+        
+        # Return 503 Service Unavailable
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "message": "Database connection failed",
+                "database": {
+                    "connected": False,
+                    "error": str(e)
+                }
+            }
+        )
 
 
 if __name__ == "__main__":

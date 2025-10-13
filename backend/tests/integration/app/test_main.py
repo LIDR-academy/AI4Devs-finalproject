@@ -5,8 +5,9 @@ This module contains tests for the basic FastAPI app setup and health endpoint.
 """
 
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import OperationalError
 from app.main import app
 from app.core.exceptions import ValidationException, NotFoundException, UnauthorizedException
 
@@ -40,6 +41,118 @@ class TestHealthEndpoint:
         """Test that the health endpoint returns JSON content type."""
         response = client.get("/health")
         assert response.headers["content-type"] == "application/json"
+
+
+@pytest.mark.integration
+class TestDatabaseHealthEndpoint:
+    """Test cases for the /health/db endpoint."""
+    
+    def test_db_health_endpoint_returns_200_with_valid_connection(self, client):
+        """Test that the database health endpoint returns 200 when DB is accessible."""
+        response = client.get("/health/db")
+        assert response.status_code == 200
+    
+    def test_db_health_endpoint_returns_correct_response_structure(self, client):
+        """Test that the database health endpoint returns the expected response structure."""
+        response = client.get("/health/db")
+        data = response.json()
+        
+        # Check top-level fields
+        assert "status" in data
+        assert "message" in data
+        assert "database" in data
+        assert data["status"] == "healthy"
+        assert data["message"] == "Database connection is operational"
+        
+        # Check database-specific fields
+        assert "connected" in data["database"]
+        assert "query_time_seconds" in data["database"]
+        assert "database_url" in data["database"]
+        assert data["database"]["connected"] is True
+        assert isinstance(data["database"]["query_time_seconds"], (int, float))
+    
+    def test_db_health_endpoint_with_database_failure_returns_503(self, client):
+        """Test that the endpoint returns 503 when database is unavailable."""
+        # Mock the get_db dependency to return a session that fails on execute
+        from app.core.database import get_db
+        
+        def mock_failing_db():
+            db = MagicMock()
+            # Mock execute to raise an OperationalError
+            db.execute.side_effect = OperationalError("Database connection failed", None, None)
+            yield db
+        
+        # Override the dependency
+        app.dependency_overrides[get_db] = mock_failing_db
+        
+        try:
+            response = client.get("/health/db")
+            assert response.status_code == 503
+            
+            data = response.json()
+            assert data["status"] == "unhealthy"
+            assert data["message"] == "Database connection failed"
+            assert "database" in data
+            assert data["database"]["connected"] is False
+            assert "error" in data["database"]
+        finally:
+            # Clean up the override
+            app.dependency_overrides.clear()
+    
+    def test_db_health_endpoint_query_executes_quickly(self, client):
+        """Test that the database query executes in less than 1 second."""
+        response = client.get("/health/db")
+        data = response.json()
+        
+        # Verify query time is reasonable (< 1 second)
+        query_time = data["database"]["query_time_seconds"]
+        assert query_time < 1.0, f"Query took {query_time}s, expected < 1s"
+    
+    def test_db_health_endpoint_does_not_leak_connections(self, client):
+        """Test that multiple calls to the endpoint don't leak database connections."""
+        # Make multiple requests to ensure connections are properly closed
+        for _ in range(10):
+            response = client.get("/health/db")
+            assert response.status_code == 200
+        
+        # If connections were leaking, this test would fail or hang
+        # The fact that all 10 requests complete successfully indicates
+        # connections are being properly managed
+    
+    def test_db_health_endpoint_documented_in_openapi(self, client):
+        """Test that the /health/db endpoint is documented in OpenAPI spec."""
+        response = client.get("/openapi.json")
+        openapi_spec = response.json()
+        
+        assert "/health/db" in openapi_spec["paths"]
+        assert "get" in openapi_spec["paths"]["/health/db"]
+    
+    def test_db_health_endpoint_response_content_type(self, client):
+        """Test that the database health endpoint returns JSON content type."""
+        response = client.get("/health/db")
+        assert response.headers["content-type"] == "application/json"
+    
+    def test_db_health_endpoint_with_database_exception(self, client):
+        """Test that the endpoint handles various database exceptions appropriately."""
+        from app.core.database import get_db
+        
+        def mock_exception_db():
+            db = MagicMock()
+            # Mock execute to raise a generic exception
+            db.execute.side_effect = Exception("Unexpected database error")
+            yield db
+        
+        app.dependency_overrides[get_db] = mock_exception_db
+        
+        try:
+            response = client.get("/health/db")
+            assert response.status_code == 503
+            
+            data = response.json()
+            assert data["status"] == "unhealthy"
+            assert data["database"]["connected"] is False
+        finally:
+            app.dependency_overrides.clear()
 
 
 @pytest.mark.integration

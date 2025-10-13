@@ -276,6 +276,90 @@ class TestSettingsExtraFields:
 
 
 @pytest.mark.unit
+class TestSettingsDatabaseConfiguration:
+    """Test cases for database configuration settings."""
+    
+    def test_default_database_url(self):
+        """Test that database URL defaults to SQLite."""
+        settings = Settings()
+        assert settings.database_url == "sqlite:///./app.db"
+    
+    def test_default_db_echo(self):
+        """Test that db_echo defaults to False."""
+        settings = Settings()
+        assert settings.db_echo is False
+    
+    def test_database_url_from_env(self):
+        """Test that DATABASE_URL can be set from environment variable."""
+        with patch.dict(os.environ, {"DATABASE_URL": "sqlite:///./test.db"}):
+            settings = Settings()
+            assert settings.database_url == "sqlite:///./test.db"
+    
+    def test_database_url_postgresql_format(self):
+        """Test that PostgreSQL URL format is accepted."""
+        postgres_url = "postgresql://user:password@localhost:5432/testdb"
+        with patch.dict(os.environ, {"DATABASE_URL": postgres_url}):
+            settings = Settings()
+            assert settings.database_url == postgres_url
+    
+    def test_database_url_mysql_format(self):
+        """Test that MySQL URL format is accepted."""
+        mysql_url = "mysql://user:password@localhost:3306/testdb"
+        with patch.dict(os.environ, {"DATABASE_URL": mysql_url}):
+            settings = Settings()
+            assert settings.database_url == mysql_url
+    
+    def test_database_url_absolute_path(self):
+        """Test that SQLite absolute path format is accepted."""
+        absolute_url = "sqlite:////absolute/path/to/app.db"
+        with patch.dict(os.environ, {"DATABASE_URL": absolute_url}):
+            settings = Settings()
+            assert settings.database_url == absolute_url
+    
+    def test_db_echo_from_env(self):
+        """Test that DB_ECHO can be set from environment variable."""
+        with patch.dict(os.environ, {"DB_ECHO": "true"}):
+            settings = Settings()
+            assert settings.db_echo is True
+        
+        with patch.dict(os.environ, {"DB_ECHO": "false"}):
+            settings = Settings()
+            assert settings.db_echo is False
+    
+    def test_database_settings_from_env_file(self, temp_env_file):
+        """Test that database settings can be loaded from .env file."""
+        env_file = temp_env_file / ".env"
+        env_file.write_text("""
+DATABASE_URL=sqlite:///./custom.db
+DB_ECHO=true
+""")
+        
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings(_env_file=str(env_file))
+            assert settings.database_url == "sqlite:///./custom.db"
+            assert settings.db_echo is True
+    
+    def test_database_env_overrides_env_file(self, temp_env_file):
+        """Test that DATABASE_URL environment variable overrides .env file."""
+        env_file = temp_env_file / ".env"
+        env_file.write_text("""
+DATABASE_URL=sqlite:///./from_file.db
+DB_ECHO=false
+""")
+        
+        with patch.dict(os.environ, {"DATABASE_URL": "sqlite:///./from_env.db", "DB_ECHO": "true"}):
+            settings = Settings(_env_file=str(env_file))
+            assert settings.database_url == "sqlite:///./from_env.db"
+            assert settings.db_echo is True
+    
+    def test_database_url_case_insensitive(self):
+        """Test that database URL environment variable is case-insensitive."""
+        with patch.dict(os.environ, {"database_url": "sqlite:///./lowercase.db"}):
+            settings = Settings()
+            assert settings.database_url == "sqlite:///./lowercase.db"
+
+
+@pytest.mark.unit
 class TestSettingsDocumentation:
     """Test cases for settings documentation and metadata."""
     

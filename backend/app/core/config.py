@@ -84,6 +84,17 @@ class Settings(BaseSettings):
         description="Allowed headers for CORS (comma-separated)"
     )
     
+    # Database settings
+    database_url: str = Field(
+        default="sqlite:///./app.db",
+        description="Database connection URL (SQLite by default)"
+    )
+    
+    db_echo: bool = Field(
+        default=False,
+        description="Enable SQLAlchemy SQL query logging for debugging"
+    )
+    
     @field_validator('cors_origins', 'cors_allow_methods', 'cors_allow_headers', mode='after')
     @classmethod
     def parse_comma_separated(cls, v):
