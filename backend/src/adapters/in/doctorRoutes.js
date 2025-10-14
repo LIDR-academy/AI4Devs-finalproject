@@ -58,7 +58,7 @@ router.get('/search', async (req, res, next) => {
 });
 
 
-// GET /api/doctor/availability
+/*// GET /api/doctor/availability
 router.get('/availability', requireDoctorRole, async (req, res, next) => {
   logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
 
@@ -71,7 +71,7 @@ router.get('/availability', requireDoctorRole, async (req, res, next) => {
     console.error(error);
     next(error);
   }
-});
+});*/
 
 // Validación Yup para doctorId en la ruta
 const doctorIdAvailableSchema = yup.object().shape({
@@ -125,6 +125,51 @@ router.get('/availability/:doctorId?', async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+});
+
+// Esquema de validación Yup para disponibilidad médica (seguridad y formato)
+const availabilitySchema = yup.object().shape({
+  ranges: yup.array()
+    .of(
+      yup.object().shape({
+        dayOfWeek: yup.number()
+          .integer('Day of week must be an integer')
+          .min(0, 'Day of week must be between 0 and 6')
+          .max(6, 'Day of week must be between 0 and 6')
+          .required('dayOfWeek is required'),
+        startTime: yup.string()
+          .matches(/^([01]\d|2[0-3]):([0-5]\d)$/, 'startTime must be in HH:mm format')
+          .required('startTime is required'),
+        endTime: yup.string()
+          .matches(/^([01]\d|2[0-3]):([0-5]\d)$/, 'endTime must be in HH:mm format')
+          .required('endTime is required'),
+        blocked: yup.boolean().default(false)
+      })
+    )
+    .required('ranges is required')
+    .min(1, 'At least one range must be provided')
+    .test('uniqueDay', 'ranges must not contain duplicate dayOfWeek values', arr => Array.isArray(arr) && new Set(arr.map(r => r.dayOfWeek)).size === arr.length)
+    .test('validRange', 'startTime must be before endTime', arr => Array.isArray(arr) && arr.every(r => r.startTime < r.endTime))
+});
+
+// POST /api/doctor/availability
+router.post('/availability', requireDoctorRole, async (req, res, next) => {
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | Body: ${JSON.stringify(req.body)} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+
+  try {
+    // Validación de seguridad y formato de entrada (solo "ranges")
+    await availabilitySchema.validate(req.body, { abortEarly: false });
+
+    const doctorId = req.user.id;
+    const { ranges } = req.body;
+    const result = await setAvailability({ doctorId, ranges });
+
+    res.locals.message = 'Availability updated';
+    res.status(201).json(result);
+  } catch (error) {
+    //console.error(error);
+    next(error);
   }
 });
 

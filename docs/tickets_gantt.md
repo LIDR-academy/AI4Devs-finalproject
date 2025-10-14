@@ -135,15 +135,15 @@ gantt
 
     section 21. Gestionar agenda y disponibilidad (médicos) [Frontend]
     Maquetar vista de gestión de agenda y disponibilidad :done, des21.1, 2025-09-17, 2h
-    Implementar lógica de consumo de API agenda/disponibilidad :des21.2, 2025-09-17, 2h
-    Configurar internacionalización en español (agenda/disponibilidad) :des21.3, 2025-09-17, 1h
+    Implementar lógica de consumo de API agenda/disponibilidad :done, des21.2, 2025-09-17, 2h
+    Configurar internacionalización en español (agenda/disponibilidad) :done, des21.3, 2025-09-17, 1h
     Documentar componente/vista de gestión de agenda :des21.4, 2025-09-18, 1h
     Crear pruebas end-to-end gestión de agenda y disponibilidad :des21.5, 2025-09-18, 1h
 
     section 22. Ver listado de próximas citas (médicos) [Frontend]
     Maquetar vista de próximas citas médicos :done, des22.1, 2025-09-18, 2h
-    Implementar lógica de consumo de API próximas citas :des22.2, 2025-09-18, 2h
-    Configurar internacionalización en español (próximas citas) :des22.3, 2025-09-19, 1h
+    Implementar lógica de consumo de API próximas citas :done, des22.2, 2025-09-18, 2h
+    Configurar internacionalización en español (próximas citas) :done, des22.3, 2025-09-19, 1h
     Documentar componente/vista de próximas citas :des22.4, 2025-09-19, 1h
     Crear pruebas end-to-end próximas citas :des22.5, 2025-09-19, 1h
 

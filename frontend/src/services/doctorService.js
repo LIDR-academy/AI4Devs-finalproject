@@ -112,7 +112,8 @@ export const doctorService = {
   // Actualizar disponibilidad del doctor
   updateDoctorAvailability: async (doctorId, availabilityData) => {
     try {
-      const response = await api.put(`/api/doctors/${doctorId}/availability`, availabilityData)
+      // Corregir el endpoint según Swagger: POST /api/doctors/availability
+      const response = await api.post(`/api/doctors/availability`, availabilityData)
       return response.data
     } catch (error) {
       throw error.response?.data || error.message
@@ -120,9 +121,26 @@ export const doctorService = {
   },
 
   // Obtener citas del doctor
-  getDoctorAppointments: async (doctorId) => {
+  getDoctorAppointments: async (doctorId, params = {}) => {
     try {
-      const response = await api.get(`/api/doctors/${doctorId}/appointments`)
+      // Enviar los filtros como query params
+      const response = await api.get(`/api/doctors/appointments`, { params })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  /**
+   * Actualiza el estado de una cita médica (confirmar/rechazar).
+   * @param {number|string} appointmentId - ID de la cita
+   * @param {object} params - { status: "confirmed" | "rejected" }
+   * @returns {Promise<object>} - Respuesta del backend
+   */
+  updateAppointmentStatus: async (appointmentId, { status }) => {
+    try {
+      // PATCH /api/doctors/appointments/{id} con body { status }
+      const response = await api.patch(`/api/doctors/appointments/${appointmentId}`, { status })
       return response.data
     } catch (error) {
       throw error.response?.data || error.message

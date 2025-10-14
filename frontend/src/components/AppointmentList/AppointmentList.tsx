@@ -26,6 +26,8 @@ interface AppointmentListProps {
   onLoadMore?: () => void
   hasMore?: boolean
   isLoadingMore?: boolean
+  onApprove?: (appointmentId: string) => void
+  onReject?: (appointmentId: string) => void
 }
 
 const AppointmentList: React.FC<AppointmentListProps> = ({
@@ -36,66 +38,12 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   onLoadMore,
   hasMore = true,
   isLoadingMore = false,
+  onApprove,
+  onReject,
 }) => {
   const { t } = useTranslation()
 
-  // Mock data based on design - María González and similar patients
-  const mockAppointments: Appointment[] = [
-    {
-      id: "1",
-      patient: {
-        name: "María González",
-        avatar: "/professional-woman-avatar.jpg",
-        isOnline: true,
-      },
-      description: "Consulta de rutina para chequeo general",
-      date: "15 de marzo, 2024",
-      time: "10:00 AM",
-      status: "pending",
-      type: "Consulta General",
-    },
-    {
-      id: "2",
-      patient: {
-        name: "Carlos Rodríguez",
-        avatar: "/professional-man-avatar.jpg",
-        isOnline: false,
-      },
-      description: "Seguimiento de tratamiento cardiovascular",
-      date: "15 de marzo, 2024",
-      time: "11:30 AM",
-      status: "confirmed",
-      type: "Cardiología",
-    },
-    {
-      id: "3",
-      patient: {
-        name: "Ana Martínez",
-        avatar: "/young-woman-avatar.jpg",
-        isOnline: true,
-      },
-      description: "Consulta dermatológica por lesión en piel",
-      date: "15 de marzo, 2024",
-      time: "2:00 PM",
-      status: "pending",
-      type: "Dermatología",
-    },
-    {
-      id: "4",
-      patient: {
-        name: "Roberto Silva",
-        avatar: "/middle-aged-man-avatar.jpg",
-        isOnline: false,
-      },
-      description: "Evaluación ortopédica post-cirugía",
-      date: "16 de marzo, 2024",
-      time: "9:00 AM",
-      status: "confirmed",
-      type: "Ortopedia",
-    },
-  ]
-
-  const displayAppointments = appointments.length > 0 ? appointments : mockAppointments
+  const displayAppointments = appointments
 
   // Loading skeleton
   if (isLoading) {
@@ -137,14 +85,15 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
             />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t("medicalAgenda.results.error.title")}</h3>
+        {/* Usar clave internacionalizada para el título y botón */}
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t("medicalAgenda.error.title")}</h3>
         <p className="text-gray-600 mb-4">{error}</p>
         {onRetry && (
           <button
             onClick={onRetry}
             className="px-4 py-2 bg-federal-blue text-white rounded-lg hover:bg-honolulu-blue transition-colors"
           >
-            {t("medicalAgenda.results.error.retry")}
+            {t("medicalAgenda.error.retry")}
           </button>
         )}
       </div>
@@ -165,6 +114,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
             />
           </svg>
         </div>
+        {/* Usar clave internacionalizada para el título y descripción */}
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{t("medicalAgenda.results.empty.title")}</h3>
         <p className="text-gray-600">{t("medicalAgenda.results.empty.description")}</p>
       </div>
@@ -187,14 +137,8 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
           <AppointmentCard
             key={appointment.id}
             appointment={appointment}
-            onApprove={(id) => {
-              console.log("[v0] Approving appointment:", id)
-              // Handle approve action
-            }}
-            onReject={(id) => {
-              console.log("[v0] Rejecting appointment:", id)
-              // Handle reject action
-            }}
+            onApprove={onApprove}
+            onReject={onReject}
           />
         ))}
       </div>

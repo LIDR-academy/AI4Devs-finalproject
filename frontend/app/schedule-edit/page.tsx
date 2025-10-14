@@ -5,19 +5,167 @@ import { useTranslation } from "react-i18next"
 import { useRouter } from "next/navigation"
 import MainLayout from "../../src/components/MainLayout"
 import ScheduleTable from "../../src/components/ScheduleTable/ScheduleTable"
+import { decodeAuthToken } from "../../src/lib/utils"
+import { doctorService } from "../../src/services/doctorService"
+import NotificationToast from "../../src/components/NotificationToast"
 
+/**
+ * Página de edición de disponibilidad de horario para médicos.
+ * - Solo accesible para usuarios autenticados con rol "doctor".
+ * - Permite consultar, modificar y eliminar rangos de disponibilidad semanal.
+ * - Consume la API REST definida en Swagger para obtener y actualizar disponibilidad.
+ * - Muestra estados de carga, error y notificaciones internacionalizadas.
+ * - Cumple con arquitectura hexagonal: la lógica de negocio está desacoplada en servicios.
+ */
 export default function EditSchedulePage() {
   const router = useRouter()
   const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [schedules, setSchedules] = useState([])
+  const [toast, setToast] = useState({ message: "", isVisible: false })
+  const [isProcessing, setIsProcessing] = useState(false) // Nuevo estado para bloqueo durante procesamiento
+
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [])
+    // Validación de permisos: solo médicos pueden acceder
+    // Redirige si el usuario no tiene el rol adecuado    
+    const payload = decodeAuthToken()
+    if (!payload || payload.role !== "doctor") {
+      router.push("/")
+      return
+    }
+
+    // Consulta la disponibilidad actual del médico desde la API
+    const fetchAvailability = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const doctorId = payload.id
+        const response = await doctorService.getDoctorAvailability(doctorId)
+        // Mapear la respuesta a formato esperado por ScheduleTable
+        const availability = response?.payload?.availability || []
+        const mappedSchedules = availability.map((item, idx) => ({
+          id: idx.toString(),
+          dayOfWeek: item.dayOfWeek,
+          openingTime: item.startTime,
+          closingTime: item.endTime,
+        }))
+        setSchedules(mappedSchedules)
+      } catch (err: any) {
+        setError(err?.message || "Error al cargar disponibilidad")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchAvailability()
+  }, [router])
+
+  /**
+   * Actualiza la disponibilidad del médico en la API.
+   * @param scheduleId - ID del horario a modificar
+   * @param updatedData - Datos actualizados (día, hora inicio, hora fin)
+   */  
+  const handleSaveSchedule = async (scheduleId: string, updatedData: Partial<{ day: string; startTime: string; endTime: string }>) => {
+    setIsProcessing(true) // Bloquear toda la interfaz
+    setError(null)
+    try {
+      const payload = decodeAuthToken()
+      if (!payload || payload.role !== "doctor") {
+        router.push("/login")
+        return
+      }
+
+      // Actualiza el arreglo local con los datos actualizados
+      const updatedSchedules = schedules.map((s) =>
+        s.id === scheduleId ? { 
+          ...s, 
+          dayOfWeek: updatedData.day || s.dayOfWeek, 
+          openingTime: updatedData.startTime || s.openingTime, 
+          closingTime: updatedData.endTime || s.closingTime 
+        } : s
+      )
+
+      // Formatear para la API - enviando todos los horarios al endpoint
+      const ranges = updatedSchedules.map((s) => ({
+        dayOfWeek: parseInt(s.dayOfWeek),
+        startTime: s.openingTime,
+        endTime: s.closingTime,
+        blocked: false,
+      }))
+
+      // Usar POST según Swagger y no enviar ID en la URL
+      await doctorService.updateDoctorAvailability(payload.id, { ranges })
+      setSchedules(updatedSchedules)
+      setToast({ message: t("scheduleEdit.messages.scheduleUpdated"), isVisible: true })
+    } catch (err: any) {
+      setError(err?.message || t("scheduleEdit.messages.updateError"))
+      setToast({ message: t("scheduleEdit.messages.updateError"), isVisible: true })
+    } finally {
+      setIsProcessing(false) // Desbloquear interfaz
+    }
+  }
+
+  /**
+   * Elimina un rango de disponibilidad del médico en la API.
+   * @param scheduleId - ID del horario a eliminar
+   */  
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    setIsProcessing(true) // Bloquear toda la interfaz
+    setError(null)
+    try {
+      const payload = decodeAuthToken()
+      if (!payload || payload.role !== "doctor") {
+        router.push("/login")
+        return
+      }
+
+      // Filtrar el horario eliminado del array local
+      const updatedSchedules = schedules.filter((s) => s.id !== scheduleId)
+      
+      // Formatear correctamente para la API
+      // Es importante que esto incluya TODOS los rangos actualizados, sin el eliminado
+      const ranges = updatedSchedules.map((s) => ({
+        dayOfWeek: parseInt(s.dayOfWeek),
+        startTime: s.openingTime,
+        endTime: s.closingTime,
+        blocked: false,
+      }))
+
+      // Enviar la actualización completa de disponibilidad al backend
+      // Esto efectivamente "elimina" el horario al no incluirlo en el nuevo array de rangos
+      await doctorService.updateDoctorAvailability(payload.id, { ranges })
+      
+      // Solo actualizar el estado local después de confirmar que la API ha sido actualizada
+      setSchedules(updatedSchedules)
+      setToast({ message: t("scheduleEdit.messages.scheduleDeleted"), isVisible: true })
+    } catch (err: any) {
+      // Si hay un error, mostrar notificación pero NO actualizar el estado local
+      // para que la UI refleje correctamente lo que está en el backend
+      setError(err?.message || t("scheduleEdit.messages.deleteError"))
+      setToast({ message: t("scheduleEdit.messages.deleteError"), isVisible: true })
+    } finally {
+      setIsProcessing(false) // Desbloquear interfaz
+    }
+  }
+
+  /**
+   * Agrega un nuevo horario al estado local.
+   * No realiza ninguna petición al backend hasta que el usuario guarde.
+   */
+  const handleAddNewSchedule = () => {
+    // Crear un nuevo horario vacío con ID temporal
+    const newSchedule = {
+      id: `temp-${Date.now()}`, // ID temporal para identificar la fila
+      dayOfWeek: "",            // Sin día seleccionado por defecto
+      openingTime: "",          // Sin hora de apertura por defecto
+      closingTime: "",          // Sin hora de cierre por defecto
+    }
+    
+    // Simplemente añadir al estado local (sin petición al backend)
+    setSchedules((prev) => [...prev, newSchedule])
+  }
 
   const handleGoHome = () => {
     router.push("/")
@@ -131,8 +279,20 @@ export default function EditSchedulePage() {
             </button>
           </div>
         </div>
-        <ScheduleTable />
+        {/* Renderizar la tabla con los horarios obtenidos de la API */}
+        <ScheduleTable
+          schedules={schedules}
+          onSaveSchedule={handleSaveSchedule}
+          onDeleteSchedule={handleDeleteSchedule}
+          onAddNewSchedule={handleAddNewSchedule}
+          isProcessing={isProcessing} // Pasar estado de procesamiento para bloquear botones
+        />
       </div>
+      <NotificationToast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </MainLayout>
   )
 }

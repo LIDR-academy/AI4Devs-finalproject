@@ -148,21 +148,46 @@
     "bookSuccess": "Cita agendada exitosamente"
   },
   "medicalAgenda": {
-    "title": "Filtro de citas médicas",
+    "title": "Gestión de agenda médica",
+    "subtitle": "Visualiza y gestiona tus citas pendientes y confirmadas.",
     "filters": {
       "title": "Filtros",
-      "dateFrom": "Fecha desde",
-      "dateTo": "Fecha hasta",
-      "appointmentStatus": "Estado de cita",
-      "allStatuses": "Todos los estados",
-      "filterButton": "Filtrar"
+      "dateRange": {
+        "label": "Rango de fecha",
+        "all": "Todas las fechas",
+        "today": "Hoy",
+        "tomorrow": "Mañana",
+        "thisWeek": "Esta semana",
+        "nextWeek": "Próxima semana",
+        "thisMonth": "Este mes"
+      },
+      "status": {
+        "label": "Estado de cita",
+        "all": "Todos los estados",
+        "pending": "Pendiente",
+        "confirmed": "Confirmada",
+        "cancelled": "Cancelada",
+        "rejected": "Rechazada"
+      },
+      "timeSlot": {
+        "label": "Franja horaria",
+        "all": "Todas las franjas",
+        "morning": "Mañana",
+        "afternoon": "Tarde",
+        "evening": "Noche"
+      },
+      "clearAll": "Limpiar filtros",
+      "activeFilters": "Filtros activos"
     },
     "results": {
-      "title": "Resultados",
-      "noResults": "No se encontraron citas",
-      "loadingResults": "Cargando citas...",
-      "errorLoading": "Error al cargar las citas",
-      "seeMoreAppointments": "Ver más citas"
+      "title": "Citas encontradas",
+      "count": "{{count}} citas",
+      "loadMore": "Ver más citas",
+      "loadingMore": "Cargando más citas...",
+      "empty": {
+        "title": "No hay citas programadas",
+        "description": "No se encontraron citas para los filtros seleccionados."
+      }
     },
     "appointmentCard": {
       "patientName": "María González",
@@ -187,6 +212,10 @@
       "appointmentRejected": "Cita rechazada exitosamente",
       "appointmentApproved": "Cita aprobada exitosamente",
       "actionError": "Error al procesar la acción"
+    },
+    "error": {
+      "title": "Error al cargar citas",
+      "retry": "Reintentar"
     }
   },
   "specialties": {
@@ -372,7 +401,11 @@
   },
   "scheduleEdit": {
     "title": "Editar disponibilidad de horario",
+    "subtitle": "Configura los días y horarios en los que puedes recibir consultas.",
+    "backToAgenda": "Volver a agenda médica",
     "table": {
+      "title": "Horarios configurados",
+      "subtitle": "Gestiona tu disponibilidad semanal para recibir citas.",
       "dayOfWeek": "Día de la semana",
       "openingTime": "Hora de apertura",
       "closingTime": "Hora de cierre",
@@ -435,6 +468,10 @@
       "openingTimeRequired": "Debe seleccionar una hora de apertura",
       "closingTimeRequired": "Debe seleccionar una hora de cierre",
       "closingTimeAfterOpening": "La hora de cierre debe ser posterior a la hora de apertura"
+    },
+    "error": {
+      "title": "Error al cargar horarios",
+      "retry": "Reintentar"
     }
   },
   "doctorProfile": {

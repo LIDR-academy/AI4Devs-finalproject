@@ -2769,18 +2769,17 @@ Actualizar las pruebas si la vista de agendamiento cambia en futuras iteraciones
 
 **Descripción detallada:**  
 - **Propósito:**  
-Diseñar y maquetar la vista de gestión de agenda y disponibilidad en React para médicos especialistas autenticados, permitiendo definir horarios disponibles, bloquear fechas y visualizar citas pendientes.
+Diseñar y maquetar la vista de gestión de agenda y disponibilidad en React para médicos especialistas autenticados, permitiendo gestionar horarios disponibles y visualizar citas pendientes.
 - **Detalle específico:**  
 Crear la vista y componentes para:
-  - Seleccionar y modificar horarios disponibles por día.
-  - Bloquear fechas por motivos personales.
+  - Seleccionar y modificar horarios disponibles por día de la semana.
   - Visualizar citas pendientes y su estado (pendiente, confirmada, rechazada).
   - Botón para confirmar o rechazar citas.
 Utilizar Tailwind CSS + Headless UI para el diseño responsivo y asegurar accesibilidad.
 
 **Criterios de aceptación:**  
 - La vista de gestión de agenda está implementada y disponible solo para médicos autenticados.
-- El formulario permite definir horarios y bloquear fechas.
+- El formulario permite gestionar horarios.
 - El diseño es responsivo y cumple con las pautas de UI/UX del PRD.
 - El área de citas pendientes está lista para integrar la lógica de consumo de API.
 - **Pruebas de validación:**  
@@ -2817,9 +2816,10 @@ Conectar la vista de gestión de agenda y disponibilidad con el backend, consumi
   - `GET /api/doctor/availability` para consultar disponibilidad actual.
   - `POST /api/doctor/availability` para definir o modificar disponibilidad.
   - `GET /api/doctor/appointments` para consultar citas agendadas.
+    - Si es necesario ajustar el componente visual de filtros a los filtros documentados en API
   - `PATCH /api/doctor/appointments/:id` para confirmar o rechazar citas.
-- Renderizar la información de horarios disponibles, fechas bloqueadas y citas pendientes.
-- Permitir modificar disponibilidad y bloquear fechas desde la interfaz.
+- Renderizar la información de horarios disponibles y citas pendientes.
+- Permitir modificar disponibilidad desde la interfaz.
 - Permitir confirmar o rechazar citas desde la vista.
 - Manejar estados de carga, error y validaciones.
 - Validar que el usuario esté autenticado como médico especialista.
@@ -2863,15 +2863,15 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 Permitir que la vista de gestión de agenda y disponibilidad muestre todos los textos y mensajes en español, facilitando la experiencia de usuario para médicos especialistas.
 - **Detalle específico:**  
 - Configurar react-i18next en el proyecto frontend si no está ya configurado.
-- Crear archivos de traducción para español con los textos de la vista de gestión de agenda (etiquetas, botones, mensajes de error, estados vacíos).
+- Crear o actualizar archivos de traducción con los textos de la vista de gestión de agenda (etiquetas, botones, mensajes de error, estados vacíos).
 - Integrar la configuración de idioma en la vista de gestión de agenda y disponibilidad.
 - Asegurar que todos los textos se gestionan mediante el sistema de internacionalización.
 
 **Criterios de aceptación:**  
-- Todos los textos de la vista de gestión de agenda y disponibilidad se muestran en español.
+- Todos los textos de la vista de gestión de agenda y disponibilidad se muestran en el idioma correpondiente.
 - Los textos se gestionan mediante archivos de traducción.
 - **Pruebas de validación:**  
-  - Visualizar la vista y verificar que todos los textos están en español.
+  - Visualizar la vista y verificar que todos los textos están en el idioma correspondiente.
 
 **Prioridad:**  
 Alta

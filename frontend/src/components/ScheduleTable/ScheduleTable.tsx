@@ -15,35 +15,27 @@ export interface ScheduleData {
 }
 
 interface ScheduleTableProps {
+  schedules: ScheduleData[]
+  onSaveSchedule: (scheduleId: string, updatedData: Partial<ScheduleData>) => Promise<void>
+  onDeleteSchedule: (scheduleId: string) => Promise<void>
+  onAddNewSchedule: () => void
+  isProcessing: boolean // Nueva prop para indicar procesamiento
   className?: string
 }
 
-const ScheduleTable: React.FC<ScheduleTableProps> = ({ className = "" }) => {
+const ScheduleTable: React.FC<ScheduleTableProps> = ({
+    schedules,
+    onSaveSchedule,
+    onDeleteSchedule,
+    onAddNewSchedule,
+    isProcessing, // Recibir prop de procesamiento
+    className = "",
+  }) => {
   const { t } = useTranslation()
-
-  // Estado local para manejar los horarios
-  const [schedules, setSchedules] = useState<ScheduleData[]>([
-    {
-      id: "1",
-      dayOfWeek: "monday",
-      openingTime: "09:00",
-      closingTime: "18:00",
-    },
-    {
-      id: "2",
-      dayOfWeek: "tuesday",
-      openingTime: "09:00",
-      closingTime: "18:00",
-    },
-    {
-      id: "3",
-      dayOfWeek: "wednesday",
-      openingTime: "09:00",
-      closingTime: "18:00",
-    },
-  ])
-
   const [isAddingNew, setIsAddingNew] = useState(false)
+
+  // Obtén los días ya usados para filtrar en cada fila
+  const usedDays = schedules.map(s => s.dayOfWeek)
 
   // Función para agregar nuevo horario
   const handleAddNewSchedule = () => {
@@ -83,19 +75,20 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ className = "" }) => {
     <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}>
       {/* Table Header */}
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-lg font-semibold text-gray-900">{t("scheduleEdit.tableTitle")}</h3>
-        <p className="text-sm text-gray-600 mt-1">{t("scheduleEdit.tableSubtitle")}</p>
+        <h3 className="text-lg font-semibold text-gray-900">{t("scheduleEdit.table.title")}</h3>
+        <p className="text-sm text-gray-600 mt-1">{t("scheduleEdit.table.subtitle")}</p>
       </div>
 
       {/* Table Content */}
       <div className="overflow-x-auto">
         {/* Desktop Table Headers */}
         <div className="hidden md:grid md:grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-          <div className="col-span-3">{t("scheduleEdit.dayOfWeek")}</div>
-          <div className="col-span-3">{t("scheduleEdit.openingTime")}</div>
-          <div className="col-span-3">{t("scheduleEdit.closingTime")}</div>
-          <div className="col-span-3">{t("scheduleEdit.actions")}</div>
+          <div className="col-span-3">{t("scheduleEdit.table.dayOfWeek")}</div>
+          <div className="col-span-3">{t("scheduleEdit.table.openingTime")}</div>
+          <div className="col-span-3">{t("scheduleEdit.table.closingTime")}</div>
+          <div className="col-span-3">{t("scheduleEdit.table.actions")}</div>
         </div>
+
 
         {/* Schedule Rows */}
         <div className="divide-y divide-gray-200">
@@ -115,16 +108,21 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ className = "" }) => {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h4 className="text-lg font-medium text-gray-900 mb-2">{t("scheduleEdit.emptyState.title")}</h4>
-              <p className="text-gray-600 mb-4">{t("scheduleEdit.emptyState.description")}</p>
+              <h4 className="text-lg font-medium text-gray-900 mb-2">{t("scheduleEdit.messages.noSchedulesFound")}</h4>
+              <p className="text-gray-600 mb-4">{t("scheduleEdit.messages.loadingSchedules")}</p>
             </div>
           ) : (
             schedules.map((schedule) => (
               <ScheduleRow
                 key={schedule.id}
-                schedule={schedule}
-                onSave={handleSaveSchedule}
-                onDelete={handleDeleteSchedule}
+                id={schedule.id}
+                initialDay={schedule.dayOfWeek}
+                initialStartTime={schedule.openingTime}
+                initialEndTime={schedule.closingTime}
+                onSave={(updated) => onSaveSchedule(schedule.id, updated)}
+                onDelete={() => onDeleteSchedule(schedule.id)}
+                usedDays={usedDays.filter(d => d !== schedule.dayOfWeek)}
+                isProcessing={isProcessing} // Pasar el estado de procesamiento
               />
             ))
           )}
@@ -134,14 +132,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ className = "" }) => {
       {/* Add New Schedule Button */}
       <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
         <Button
-          onClick={handleAddNewSchedule}
-          disabled={isAddingNew}
+          onClick={onAddNewSchedule}
+          disabled={isProcessing || isAddingNew} // Deshabilitar durante procesamiento
           className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-federal-blue hover:bg-honolulu-blue text-white font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          {t("scheduleEdit.addNewSchedule")}
+          {t("scheduleEdit.buttons.addNewSchedule")}
         </Button>
       </div>
     </div>

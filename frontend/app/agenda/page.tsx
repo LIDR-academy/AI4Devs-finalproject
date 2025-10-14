@@ -6,24 +6,83 @@ import { useTranslation } from "react-i18next"
 import MainLayout from "../../src/components/MainLayout"
 import MedicalFilters from "../../src/components/MedicalFilters/MedicalFilters"
 import AppointmentList from "../../src/components/AppointmentList/AppointmentList"
+import { decodeAuthToken } from "../../src/lib/utils"
+import { doctorService } from "../../src/services/doctorService"
+import { format } from "date-fns"
+import { es, enUS } from "date-fns/locale"
+import NotificationToast from "../../src/components/NotificationToast"
 
+/**
+ * Página de gestión de agenda médica para doctores.
+ * - Solo accesible para usuarios autenticados con rol "doctor".
+ * - Permite visualizar, filtrar y gestionar citas médicas (confirmar/rechazar).
+ * - Consume la API REST definida en Swagger para obtener y actualizar citas.
+ * - Muestra estados de carga, error y notificaciones internacionalizadas.
+ * - Cumple con arquitectura hexagonal: la lógica de negocio está desacoplada en servicios.
+ */
 export default function AgendaPage() {
   const router = useRouter()
   const { t } = useTranslation()
+  const [appointments, setAppointments] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState({
-    dateRange: { start: "", end: "" },
+    date: "",
     status: "",
     timeSlot: "",
   })
+  const [toast, setToast] = useState({ message: "", isVisible: false })
+
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
-    return () => clearTimeout(timer)
-  }, [])
+    // Validación de permisos: solo médicos pueden acceder
+    // Redirige si el usuario no tiene el rol adecuado
+    const payload = decodeAuthToken()
+    if (!payload || payload.role !== "doctor") {
+      router.push("/")
+      return
+    }
+
+    // Consulta las citas del médico desde la API
+    const fetchAppointments = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params: any = {}
+        if (filters.date) params.date = filters.date
+        if (filters.status) params.status = filters.status
+
+        const doctorId = payload.id
+        const response = await doctorService.getDoctorAppointments(doctorId, params)
+        // Mapear la respuesta de la API al formato esperado por AppointmentList
+        const apiAppointments = response?.payload?.results || []
+        const mappedAppointments = apiAppointments.map((item: any) => ({
+          id: item.id?.toString(),
+          patient: {
+            name: item.patient?.firstName + " " + item.patient?.lastName,
+            avatar: "/placeholder-user.jpg", // Puedes ajustar según el campo real
+            isOnline: false, // Si tienes este dato en la API, úsalo
+          },
+          description: item.reason,
+          date: item.appointmentDate
+            ? format(new Date(item.appointmentDate), "dd/MM/yyyy")
+            : "",
+          time: item.appointmentDate
+            ? format(new Date(item.appointmentDate), "HH:mm")
+            : "",
+          status: item.status,
+          type: item.patient?.gender || "",
+        }))
+        setAppointments(mappedAppointments)
+      } catch (err: any) {
+        setError(err?.message || "Error al cargar citas")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchAppointments()
+  }, [router, filters])
 
   const handleFiltersChange = (newFilters: typeof filters) => {
     setFilters(newFilters)
@@ -35,6 +94,58 @@ export default function AgendaPage() {
       status: "",
       timeSlot: "",
     })
+  }
+
+  /**
+   * Aprueba una cita médica (cambia el estado a "confirmed").
+   * @param appointmentId - ID de la cita a aprobar
+   */
+  const handleApproveAppointment = async (appointmentId: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const payload = decodeAuthToken()
+      if (!payload || payload.role !== "doctor") {
+        router.push("/login")
+        return
+      }
+
+      await doctorService.updateAppointmentStatus(appointmentId, { status: "confirmed" })
+      setToast({ message: t("medicalAgenda.messages.appointmentApproved"), isVisible: true })
+      // Refrescar citas
+      setFilters({ ...filters })
+    } catch (err: any) {
+      setError(err?.message || t("medicalAgenda.messages.actionError"))
+      setToast({ message: t("medicalAgenda.messages.actionError"), isVisible: true })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  /**
+   * Rechaza una cita médica (cambia el estado a "rejected").
+   * @param appointmentId - ID de la cita a rechazar
+   */
+  const handleRejectAppointment = async (appointmentId: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const payload = decodeAuthToken()
+      if (!payload || payload.role !== "doctor") {
+        router.push("/login")
+        return
+      }
+
+      await doctorService.updateAppointmentStatus(appointmentId, { status: "rejected" })
+      setToast({ message: t("medicalAgenda.messages.appointmentRejected"), isVisible: true })
+      // Refrescar citas
+      setFilters({ ...filters })
+    } catch (err: any) {
+      setError(err?.message || t("medicalAgenda.messages.actionError"))
+      setToast({ message: t("medicalAgenda.messages.actionError"), isVisible: true })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleGoHome = () => {
@@ -150,12 +261,23 @@ export default function AgendaPage() {
               onClearFilters={handleClearFilters}
             />
           </div>
-
           <div className="lg:col-span-3">
-            <AppointmentList filters={filters} />
+            <AppointmentList
+              appointments={appointments}
+              isLoading={isLoading}
+              error={error}
+              onRetry={() => setFilters({ ...filters })}
+              onApprove={handleApproveAppointment}
+              onReject={handleRejectAppointment}
+            />
           </div>
         </div>
       </div>
+      <NotificationToast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </MainLayout>
   )
 }

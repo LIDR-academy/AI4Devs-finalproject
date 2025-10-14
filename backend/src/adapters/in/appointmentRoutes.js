@@ -54,7 +54,7 @@ function requirePatientRole(req, res, next) {
 
 // POST /api/appointments
 router.post('/', requirePatientRole, async (req, res, next) => {
-  logger.info(`[Access] ${req.method} ${req.originalUrl} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
+  logger.info(`[Access] ${req.method} ${req.originalUrl} | Body: ${JSON.stringify(req.body)} | User: ${req.user?.id || 'anonymous'} | IP: ${req.ip}`);
 
   try {
     // Validar datos de entrada

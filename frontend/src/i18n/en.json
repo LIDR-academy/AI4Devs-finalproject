@@ -148,45 +148,50 @@
     "bookSuccess": "Appointment booked successfully"
   },
   "medicalAgenda": {
-    "title": "Medical appointments filter",
-    "filters": {
-      "title": "Filters",
-      "dateFrom": "Date from",
-      "dateTo": "Date to",
-      "appointmentStatus": "Appointment status",
-      "allStatuses": "All statuses",
-      "filterButton": "Filter"
+    "title": "Medical agenda management",
+    "subtitle": "View and manage your pending and confirmed appointments.",
+    "error": {
+      "title": "Error loading appointments",
+      "retry": "Retry"
     },
     "results": {
-      "title": "Results",
-      "noResults": "No appointments found",
-      "loadingResults": "Loading appointments...",
-      "errorLoading": "Error loading appointments",
-      "seeMoreAppointments": "See more appointments"
+      "title": "Appointments found",
+      "count": "{{count}} appointments",
+      "loadMore": "See more appointments",
+      "loadingMore": "Loading more appointments...",
+      "empty": {
+        "title": "No scheduled appointments",
+        "description": "No appointments found for the selected filters."
+      }
     },
-    "appointmentCard": {
-      "patientName": "María González",
-      "description": "Routine consultation for general checkup",
-      "dateTime": "March 15, 2024 - 10:00 AM",
-      "rejectButton": "Reject",
-      "approveButton": "Approve",
-      "rejecting": "Rejecting...",
-      "approving": "Approving...",
-      "rejected": "Rejected",
-      "approved": "Approved"
-    },
-    "status": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "rejected": "Rejected",
-      "approved": "Approved"
-    },
-    "messages": {
-      "appointmentRejected": "Appointment rejected successfully",
-      "appointmentApproved": "Appointment approved successfully",
-      "actionError": "Error processing action"
+    "filters": {
+      "title": "Filters",
+      "dateRange": {
+        "label": "Date range",
+        "all": "All dates",
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "thisWeek": "This week",
+        "nextWeek": "Next week",
+        "thisMonth": "This month"
+      },
+      "status": {
+        "label": "Appointment status",
+        "all": "All statuses",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "cancelled": "Cancelled",
+        "rejected": "Rejected"
+      },
+      "timeSlot": {
+        "label": "Time slot",
+        "all": "All slots",
+        "morning": "Morning",
+        "afternoon": "Afternoon",
+        "evening": "Evening"
+      },
+      "clearAll": "Clear filters",
+      "activeFilters": "Active filters"
     }
   },
   "specialties": {
@@ -372,7 +377,11 @@
   },
   "scheduleEdit": {
     "title": "Edit schedule availability",
+    "subtitle": "Configure the days and times you are available for consultations.",
+    "backToAgenda": "Back to medical agenda",
     "table": {
+      "title": "Configured schedules",
+      "subtitle": "Manage your weekly availability for appointments.",
       "dayOfWeek": "Day of the week",
       "openingTime": "Opening time",
       "closingTime": "Closing time",
@@ -435,6 +444,10 @@
       "openingTimeRequired": "Must select an opening time",
       "closingTimeRequired": "Must select a closing time",
       "closingTimeAfterOpening": "Closing time must be after opening time"
+    },
+    "error": {
+      "title": "Error loading schedules",
+      "retry": "Retry"
     }
   },
   "doctorProfile": {

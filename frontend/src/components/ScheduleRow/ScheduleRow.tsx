@@ -36,6 +36,8 @@ interface ScheduleRowProps {
   onSave: (data: { day: string; startTime: string; endTime: string }) => void
   onDelete: (id?: string) => void
   isNew?: boolean
+  usedDays?: number[]
+  isProcessing?: boolean // Nueva prop para estado de procesamiento global
 }
 
 const ScheduleRow: React.FC<ScheduleRowProps> = ({
@@ -46,6 +48,8 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
   onSave,
   onDelete,
   isNew = false,
+  usedDays = [],
+  isProcessing = false // Valor por defecto
 }) => {
   const { t } = useTranslation()
   const [day, setDay] = useState(initialDay)
@@ -55,19 +59,13 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
   const [isDeleting, setIsDeleting] = useState(false)
   const [validationError, setValidationError] = useState("")
 
-  // Generate time options (every 30 minutes from 6:00 AM to 10:00 PM)
+  // Generate time options (every 60 minutes from 6:00 AM to 10:00 PM)
   const generateTimeOptions = () => {
     const times = []
     for (let hour = 6; hour <= 22; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeString = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`
-        const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString("es-ES", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
-        times.push({ value: timeString, label: displayTime })
-      }
+      const timeString = `${hour.toString().padStart(2, "0")}:00`
+      // Mostrar el valor tal como viene de la API (ejemplo: "09:00", "13:00")
+      times.push({ value: timeString, label: timeString })
     }
     return times
   }
@@ -81,7 +79,7 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
       const end = new Date(`2000-01-01T${endTime}`)
 
       if (end <= start) {
-        setValidationError(t("scheduleEdit.validation.endTimeAfterStart"))
+        setValidationError(t("scheduleEdit.validation.closingTimeAfterOpening"))
       } else {
         setValidationError("")
       }
@@ -92,14 +90,12 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
 
   const handleSave = async () => {
     if (!day || !startTime || !endTime) {
-      setValidationError(t("scheduleEdit.validation.allFieldsRequired"))
+      setValidationError(t("scheduleEdit.validation.dayRequired"))
       return
     }
-
     if (validationError) {
       return
     }
-
     setIsSaving(true)
     try {
       await onSave({ day, startTime, endTime })
@@ -123,33 +119,46 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
 
   const isFormValid = day && startTime && endTime && !validationError
 
+  const dayOfWeekOptions = [
+    { value: 1, label: t("scheduleEdit.days.monday") },
+    { value: 2, label: t("scheduleEdit.days.tuesday") },
+    { value: 3, label: t("scheduleEdit.days.wednesday") },
+    { value: 4, label: t("scheduleEdit.days.thursday") },
+    { value: 5, label: t("scheduleEdit.days.friday") },
+    { value: 6, label: t("scheduleEdit.days.saturday") },
+    { value: 0, label: t("scheduleEdit.days.sunday") },
+  ]
+
+  // Filtra días ya usados, excepto el actual
+  const availableDayOptions = dayOfWeekOptions.filter(
+    option => !usedDays.includes(option.value) || option.value === Number(day)
+  )
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 rounded-lg bg-white">
       {/* Day Selection */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 md:hidden">{t("scheduleEdit.dayOfWeek")}</label>
-        <Select value={day} onValueChange={setDay}>
+        <label className="block text-sm font-medium text-gray-700 md:hidden">{t("scheduleEdit.table.dayOfWeek")}</label>
+        <Select value={day.toString()} onValueChange={(v) => setDay(Number(v))}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("scheduleEdit.selectDay")} />
+            <SelectValue placeholder={t("scheduleEdit.placeholders.selectDay")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="monday">{t("scheduleEdit.days.monday")}</SelectItem>
-            <SelectItem value="tuesday">{t("scheduleEdit.days.tuesday")}</SelectItem>
-            <SelectItem value="wednesday">{t("scheduleEdit.days.wednesday")}</SelectItem>
-            <SelectItem value="thursday">{t("scheduleEdit.days.thursday")}</SelectItem>
-            <SelectItem value="friday">{t("scheduleEdit.days.friday")}</SelectItem>
-            <SelectItem value="saturday">{t("scheduleEdit.days.saturday")}</SelectItem>
-            <SelectItem value="sunday">{t("scheduleEdit.days.sunday")}</SelectItem>
+            {availableDayOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value.toString()}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
       {/* Start Time Selection */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 md:hidden">{t("scheduleEdit.startTime")}</label>
+        <label className="block text-sm font-medium text-gray-700 md:hidden">{t("scheduleEdit.table.openingTime")}</label>
         <Select value={startTime} onValueChange={setStartTime}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("scheduleEdit.selectStartTime")} />
+            <SelectValue placeholder={t("scheduleEdit.placeholders.selectOpeningTime")} />
           </SelectTrigger>
           <SelectContent>
             {timeOptions.map((time) => (
@@ -163,10 +172,10 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
 
       {/* End Time Selection */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 md:hidden">{t("scheduleEdit.endTime")}</label>
+        <label className="block text-sm font-medium text-gray-700 md:hidden">{t("scheduleEdit.table.closingTime")}</label>
         <Select value={endTime} onValueChange={setEndTime}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("scheduleEdit.selectEndTime")} />
+            <SelectValue placeholder={t("scheduleEdit.placeholders.selectClosingTime")} />
           </SelectTrigger>
           <SelectContent>
             {timeOptions.map((time) => (
@@ -184,23 +193,24 @@ const ScheduleRow: React.FC<ScheduleRowProps> = ({
           variant="primary"
           size="sm"
           onClick={handleSave}
-          disabled={!isFormValid}
-          isLoading={isSaving}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1"
+          disabled={!isFormValid || isSaving || isDeleting || isProcessing} // Deshabilitar también durante el procesamiento global
+          isLoading={isSaving || isProcessing} // Mostrar carga durante procesamiento local o global
+          className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 flex justify-between items-center"
         >
+          <span>{isSaving || isProcessing ? t("scheduleEdit.buttons.saving") : t("scheduleEdit.buttons.save")}</span>
           <SaveIcon />
-          <span className="ml-1">{t("scheduleEdit.save")}</span>
         </Button>
 
         <Button
           variant="secondary"
           size="sm"
           onClick={handleDelete}
-          isLoading={isDeleting}
-          className="bg-red-600 hover:bg-red-700 text-white flex-1"
+          disabled={isSaving || isDeleting || isProcessing} // Deshabilitar también durante el procesamiento global
+          isLoading={isDeleting || isProcessing} // Mostrar carga durante procesamiento local o global
+          className="bg-red-600 hover:bg-red-700 text-white flex-1 flex justify-between items-center"
         >
+          <span>{isDeleting || isProcessing ? t("scheduleEdit.buttons.deleting") : t("scheduleEdit.buttons.delete")}</span>
           <TrashIcon />
-          <span className="ml-1">{t("scheduleEdit.delete")}</span>
         </Button>
       </div>
 

@@ -2234,6 +2234,302 @@
         }
       }
     },
+    "/api/doctors/availability": {
+      "post": {
+        "tags": [
+          "Doctors"
+        ],
+        "summary": "Definir o modificar disponibilidad del médico",
+        "description": "Permite a un médico autenticado definir o modificar su disponibilidad semanal. Solo accesible para médicos especialistas autenticados.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ranges": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "dayOfWeek": {
+                          "type": "integer",
+                          "enum": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6
+                          ],
+                          "description": "Day of week (0=Sunday, 6=Saturday)"
+                        },
+                        "startTime": {
+                          "type": "string",
+                          "example": "09:00"
+                        },
+                        "endTime": {
+                          "type": "string",
+                          "example": "13:00"
+                        },
+                        "blocked": {
+                          "type": "boolean",
+                          "example": false
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "ranges"
+                ]
+              },
+              "examples": {
+                "definirDisponibilidad": {
+                  "summary": "Ejemplo de definición de disponibilidad",
+                  "value": {
+                    "ranges": [
+                      {
+                        "dayOfWeek": 1,
+                        "startTime": "09:00",
+                        "endTime": "13:00",
+                        "blocked": false
+                      },
+                      {
+                        "dayOfWeek": 3,
+                        "startTime": "10:00",
+                        "endTime": "14:00",
+                        "blocked": false
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Disponibilidad actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 201
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Availability updated"
+                    },
+                    "payload": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "dayOfWeek": {
+                            "type": "integer",
+                            "enum": [
+                              0,
+                              1,
+                              2,
+                              3,
+                              4,
+                              5,
+                              6
+                            ],
+                            "description": "Day of week (0=Sunday, 6=Saturday)"
+                          },
+                          "startTime": {
+                            "type": "string",
+                            "example": "09:00"
+                          },
+                          "endTime": {
+                            "type": "string",
+                            "example": "13:00"
+                          },
+                          "available": {
+                            "type": "boolean",
+                            "example": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Ejemplo de disponibilidad actualizada",
+                    "value": {
+                      "code": 201,
+                      "message": "Availability updated",
+                      "payload": [
+                        {
+                          "dayOfWeek": 1,
+                          "startTime": "09:00",
+                          "endTime": "13:00",
+                          "available": true
+                        },
+                        {
+                          "dayOfWeek": 3,
+                          "startTime": "10:00",
+                          "endTime": "14:00",
+                          "available": true
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error de validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 400
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "invalidDay": {
+                    "summary": "Día inválido",
+                    "value": {
+                      "code": 400,
+                      "message": "Bad Request",
+                      "payload": {
+                        "error": [
+                          "Invalid dayOfWeek"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acceso denegado para pacientes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 403
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "forbidden": {
+                    "summary": "Acceso denegado",
+                    "value": {
+                      "code": 403,
+                      "message": "Forbidden",
+                      "payload": {
+                        "error": [
+                          "Doctor authentication required"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Médico no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 404
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Doctor not found"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "doctorNotFound": {
+                    "summary": "Doctor not found",
+                    "value": {
+                      "code": 404,
+                      "message": "Doctor not found",
+                      "payload": {
+                        "error": [
+                          "Doctor with specified ID does not exist or is inactive"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/doctors/appointments": {
       "get": {
         "tags": [
