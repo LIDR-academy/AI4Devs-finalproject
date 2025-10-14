@@ -176,7 +176,7 @@ async function main() {
           phone: '5559876543',
           location_id: location1.id,
           biography: 'Cardiólogo con 10 años de experiencia.',
-          photo_url: null
+          photo_url: 'https://firebasestorage.googleapis.com/v0/b/reznor-tools.firebasestorage.app/o/avatars%2Fdoctor-mexicano-dermat-logo-profesional.jpg?alt=media&token=8d31f8b0-d923-4ee0-ae97-9d2c0bf61238'
         }
       });
       const doctor2 = await tx.doctor.create({
@@ -186,7 +186,7 @@ async function main() {
           phone: '3331234567',
           location_id: location2.id,
           biography: 'Pediatra apasionada por la salud infantil.',
-          photo_url: null
+          photo_url: 'https://firebasestorage.googleapis.com/v0/b/reznor-tools.firebasestorage.app/o/avatars%2Fdoctora-mexicana-endocrin-loga-profesional.jpg?alt=media&token=8004f885-ff03-4f39-8328-21f36d0cb97e'
         }
       });
       const doctor3 = await tx.doctor.create({
@@ -196,7 +196,7 @@ async function main() {
           phone: '3319876543',
           location_id: location3.id,
           biography: 'Dermatólogo especialista en enfermedades de la piel.',
-          photo_url: null
+          photo_url: 'https://firebasestorage.googleapis.com/v0/b/reznor-tools.firebasestorage.app/o/avatars%2Fdoctora-mexicana-endocrin-loga-profesional.jpg?alt=media&token=8004f885-ff03-4f39-8328-21f36d0cb97e'
         }
       });
 

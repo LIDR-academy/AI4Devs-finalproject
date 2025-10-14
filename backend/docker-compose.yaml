@@ -6,12 +6,30 @@ services:
     container_name: postgres_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: buscadoc_user
+      POSTGRES_PASSWORD: contraseña
+      POSTGRES_DB: buscadoc_db
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: buscadoc_backend
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    volumes:
+      # Monta el archivo .env para variables de entorno seguras
+      - ./.env:/app/.env
+    depends_on:
+      - postgres
+    environment:
+      # Variables de entorno mínimas para conexión a la base de datos
+      DATABASE_URL: "postgresql://buscadoc_user:contraseña@postgres:5432/buscadoc_db"
+      NODE_ENV: development
+    # Puedes agregar más variables aquí si lo requieres
 
 volumes:
   pgdata:

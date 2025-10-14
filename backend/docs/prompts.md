@@ -1937,3 +1937,108 @@ Aplicar los siguientes requerimientos para mejorar el contenido de las respuesta
 
 Antes de realizar la tarea revisa mis requisitos ¿hay algo que me este faltando considerar?
 Hazme preguntas si necesitas más información.
+
+
+
+
+Eres un experto en Ingenieria de Prompts, en DevSecOps y en Docker
+# Contexto Inicial
+Tenemos un proyeto de backend listo para su despliegue en la nube
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el modelo (ChatGPT 4.1) que me ayude empaquetar en un contenedor de docker cumpliendo con los siguientes requerimientos
+
+# Requerimientos
+1. El contenedor debe contemplar las dependecias del proyecto
+2. Contempla la ejecución del proyecto
+3. El modelo deberá consultar el README del proyecto para asegurar una construccion exitosa del contenedor
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- Consulta el archivo [[ARCHIVO]] para construir el prompt
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis requerimientos ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+
+# Prompt para empaquetar el backend Buscadoc en un contenedor Docker
+
+## Rol del modelo
+Actúa como un **DevSecOps experto en Docker y arquitectura hexagonal**. Tu objetivo es generar los archivos y comandos necesarios para empaquetar el backend Buscadoc en un contenedor Docker, siguiendo las mejores prácticas de seguridad, monitoreo y despliegue.
+
+## Instrucciones
+
+1. **Consulta el archivo `README.md` del backend** para identificar dependencias, scripts de ejecución, variables de entorno y puertos expuestos.
+2. **Genera un `Dockerfile`** que:
+   - Use la versión de Node.js especificada (`node:22`).
+   - Instale todas las dependencias del proyecto.
+   - Copie el código fuente siguiendo la estructura hexagonal.
+   - Exponga el puerto `3010`.
+   - Ejecute el servidor en modo producción (`npm start`) y documente cómo ejecutar en modo desarrollo (`npm run dev`).
+   - Incluya instrucciones para copiar el archivo `.env` y destacar la importancia de no versionarlo.
+   - Implemente un `HEALTHCHECK` para verificar que el backend responde correctamente.
+   - Configure logs y monitoreo dentro del contenedor, e incluya instrucciones para migrar logs a contenedores externos.
+   - Siga recomendaciones básicas de seguridad (no ejecutar como root, minimizar capas, excluir archivos sensibles).
+3. **Genera un archivo `docker-compose.yml`** que:
+   - Permita levantar el backend junto con el contenedor de PostgreSQL (según lo documentado).
+   - Configure la red y los volúmenes necesarios para persistencia y comunicación entre servicios.
+4. **Documenta en formato Markdown**:
+   - Explica cada paso del proceso de construcción y despliegue.
+   - Detalla cómo configurar variables de entorno y credenciales sensibles usando archivos `.env`.
+   - Incluye instrucciones para ejecutar pruebas (`npm test`) dentro del contenedor.
+   - Explica cómo acceder a la documentación Swagger y endpoints principales.
+   - Incluye recomendaciones para migrar logs y monitoreo a contenedores externos en producción.
+   - Resalta las mejores prácticas de seguridad y cumplimiento con la LFPDPPP.
+
+## Ejemplo de estructura esperada en el archivo Markdown resultante
+
+```markdown
+# Despliegue del backend Buscadoc con Docker
+
+## 1. Construcción del contenedor
+
+### Dockerfile
+...explicación y código...
+
+### docker-compose.yml
+...explicación y código...
+
+## 2. Variables de entorno y seguridad
+
+...instrucciones para `.env` y recomendaciones...
+
+## 3. Ejecución y pruebas
+
+...comandos para producción, desarrollo y pruebas...
+
+## 4. Monitoreo y logs
+
+...configuración básica y recomendaciones para migración...
+
+## 5. Acceso a la API y documentación
+
+...endpoints y Swagger...
+
+## 6. Buenas prácticas y cumplimiento
+
+...seguridad, exclusión de archivos sensibles, LFPDPPP...
+```
+
+## Consideraciones adicionales
+
+- Mantén la lógica de negocio fuera del Dockerfile y scripts de arranque.
+- Consulta los diagramas y documentación en la carpeta `docs/` para asegurar el cumplimiento de la arquitectura hexagonal.
+- Documenta todo en español y sigue las convenciones del proyecto.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- Antes de iniciar muestrame la lista de pasos a ejecutar
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

@@ -33,6 +33,7 @@ Buscadoc es una aplicación web que facilita la conexión entre pacientes y prof
 ```
 buscadoc-frontend/
 ├── public/                     # Archivos estáticos públicos
+|── components/                 # Componentes comunes y dependecias para React
 ├── app/                        # Sistema de rutas y páginas Next.js
 │   ├── layout.tsx              # Layout global (NavBar, Footer, modales, notificaciones)
 │   ├── page.tsx                # Página principal (Home)
@@ -47,7 +48,9 @@ buscadoc-frontend/
 │   │   └── page.tsx            # Registro de usuario
 │   ├── schedule-edit/
 │   │   └── page.tsx            # Edición de horarios médicos
-│   └── globals.css             # Estilos globales
+│   ├── globals.css             # Estilos globales
+|   ├── page.tsx                # Página de inicio de Buscadoc
+|   └── layout.tsx              # Plantilla de la página Buscadoc
 ├── src/                        # Componentes, datos, servicios y utilidades
 │   ├── components/             # Componentes reutilizables y UI
 │   ├── data/                   # Datos mock y configuraciones
@@ -279,7 +282,8 @@ vercel
     "lucide-react": "^0.468.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
-    "@vercel/analytics": "^1.4.1"
+    "@vercel/analytics": "^1.4.1",
+    "jwt-decode": "^4.0.0",
   }
 }
 ```

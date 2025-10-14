@@ -33,7 +33,7 @@ if (fs.existsSync(swaggerFile)) {
   fs.writeFileSync(swaggerFile, JSON.stringify(swaggerDocument, null, 2));
 }
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api-docs/e6b2fa317dc910b88fd4c2a05f9934b47f46661d', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const authMiddleware = require('./src/adapters/in/authMiddleware'); // Importa el middleware
 app.use(authMiddleware); // Aplica el middleware global de autenticación
