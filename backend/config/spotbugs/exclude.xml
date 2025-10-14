@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude test classes from certain checks -->
+    <Match>
+        <Class name="~.*Test$"/>
+        <Bug pattern="DM_DEFAULT_ENCODING"/>
+    </Match>
+
+    <!-- Exclude generated code -->
+    <Match>
+        <Class name="~.*\.Q.*"/>
+    </Match>
+
+    <!-- Exclude Spring Boot auto-configuration -->
+    <Match>
+        <Class name="~.*Application$"/>
+        <Method name="main"/>
+    </Match>
+
+    <!-- Allow serialization without serialVersionUID in DTOs -->
+    <Match>
+        <Package name="~.*\.dto.*"/>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+</FindBugsFilter>

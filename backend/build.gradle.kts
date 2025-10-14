@@ -4,6 +4,8 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.7"
 	id("jacoco")
 	id("org.sonarqube") version "5.1.0.4882"
+	id("checkstyle")
+	id("com.github.spotbugs") version "6.0.26"
 }
 
 group = "ai4devs.frm"
@@ -146,4 +148,38 @@ sonar {
 // Make build depend on both test tasks
 tasks.build {
 	dependsOn(tasks.test, integrationTestTask)
+}
+
+// Configure Checkstyle
+checkstyle {
+ toolVersion = "10.20.2"
+ maxWarnings = 0
+ configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+}
+tasks.withType<Checkstyle> {
+ reports {
+ xml.required.set(true)
+ html.required.set(true)
+ }
+}
+// Configure SpotBugs
+spotbugs {
+ toolVersion = "4.8.6"
+ effort = com.github.spotbugs.snom.Effort.MAX
+ reportLevel = com.github.spotbugs.snom.Confidence.MEDIUM
+ excludeFilter = file("${rootDir}/config/spotbugs/exclude.xml")
+}
+tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
+ reports.create("html") {
+ required.set(true)
+ }
+ reports.create("xml") {
+ required.set(true)
+ }
+}
+// Create quality task that runs all checks
+tasks.register("quality") {
+ description = "Runs all quality checks (checkstyle, spotbugs)"
+ group = "verification"
+ dependsOn(tasks.checkstyleMain, tasks.checkstyleTest, tasks.spotbugsMain, tasks.spotbugsTest)
 }

@@ -1,3 +1,10 @@
+# Nexo - Booking Platform
+
+[![CI Pipeline](https://github.com/FacuRamallo/AI4Devs-finalproject/actions/workflows/ci.yml/badge.svg)](https://github.com/FacuRamallo/AI4Devs-finalproject/actions/workflows/ci.yml)
+[![Backend Coverage](https://img.shields.io/badge/coverage-backend-brightgreen.svg)](https://github.com/FacuRamallo/AI4Devs-finalproject)
+[![Frontend Coverage](https://img.shields.io/badge/coverage-frontend-brightgreen.svg)](https://github.com/FacuRamallo/AI4Devs-finalproject)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 ## Índice
 
 0. [Ficha del proyecto](#0-ficha-del-proyecto)
@@ -92,7 +99,39 @@ Las funcionalidades del producto (en su versión MVP) se centran en resolver el 
     * Envío de correos electrónicos automáticos al cliente para confirmar la recepción de su solicitud y para notificarle cuando su reserva ha sido aprobada o rechazada.
 
 ### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+#### Prerrequisitos
+- **Java 21** (OpenJDK o Temurin)
+- **Node.js 18+** y npm
+- **Docker** y Docker Compose (para base de datos local)
+- **Git**
+#### Instalación Local
+**1. Clonar el repositorio**
+```bash
+git clone https://github.com/FacuRamallo/AI4Devs-finalproject.git
+cd AI4Devs-finalproject
+```
+**2. Backend Setup**
+```bash
+cd backend
+# Levantar PostgreSQL con Docker Compose
+docker-compose up -d
+# Ejecutar migraciones (automático en startup)
+./gradlew bootRun
+# En otra terminal, ejecutar tests
+./gradlew test integrationTest
+```
+El backend estará disponible en `http://localhost:8080`
+**3. Frontend Setup**
+```bash
+cd frontend
+# Instalar dependencias
+npm install
+# Ejecutar en modo desarrollo
+npm run dev
+# En otra terminal, ejecutar tests
+npm run test
+```
+El frontend estará disponible en `http://localhost:5173`
 
 ---
 

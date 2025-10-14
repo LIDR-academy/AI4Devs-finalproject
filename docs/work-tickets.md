@@ -11,13 +11,12 @@ Numeración: T01..T05 (mantener). Cada ticket incluye: Objetivo, Alcance IN/OUT,
 **Motivación:** Habilitar entregas incrementales y validación temprana en entorno remoto (criterio #2 del requerimiento).  
 
 ### Alcance IN
-- Workflow CI (GitHub Actions u otro) con stages: checkout, cache, build backend (Gradle), build frontend (Next.js), lint, tests, análisis estático (ej. Sonar o detekt/ktlint + eslint), build imagen multi-stage Docker.
+- Workflow CI (GitHub Actions) con stages: checkout, cache, build backend (Gradle), build frontend (Next.js), lint, tests, análisis estático (ej. Sonar o detekt/ktlint + eslint), build imagen multi-stage Docker.
 - Publicación imagen en container registry (tag: `semver` + `commit-sha`).
-- Infra local: `docker-compose.yml` (backend, postgres, mailhog, frontend, migraciones Flyway en startup).
+- Infra local: `docker-compose.yml` (backend, postgres, frontend, migraciones Flyway en startup).
 - Despliegue automatizado a `production` tras merge a `main` (aplica migraciones).
 - Variables/secrets gestionadas de forma segura (no en repo). Ej: `DB_URL`, `GCAL_CLIENT_ID`, etc.
 - README sección "Ejecutar local" básica (comandos). 
-- Job programado (scheduler) habilitado solo en `staging/production` (flag env). 
 
 ### Alcance OUT
 - Autoscaling / Terraform (futuro).  
