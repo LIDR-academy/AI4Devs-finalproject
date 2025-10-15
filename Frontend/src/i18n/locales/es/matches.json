@@ -1,0 +1,68 @@
+{
+  "title": "Buscar Viajes",
+  "search": {
+    "title": "Buscar viajes",
+    "destination": "Destino",
+    "destinationPlaceholder": "Seleccionar destino...",
+    "time": "Hora Preferida (HH:MM)",
+    "timePlaceholder": "08:30",
+    "origin": "Ubicación de Origen (lat,lng)",
+    "originPlaceholder": "40.4168,-3.7038",
+    "originHelper": "Formato: latitud,longitud",
+    "search": "Buscar Viajes",
+    "searching": "Buscando...",
+    "selectDestination": "Por favor selecciona un destino"
+  },
+  "results": {
+    "title": "Encontrados {count} viajes compatibles",
+    "empty": "No se encontraron viajes",
+    "tryDifferent": "No hay viajes disponibles que coincidan con tus criterios de búsqueda.",
+    "clearSearch": "Limpiar Búsqueda",
+    "initialTitle": "Busca tu viaje ideal",
+    "initialDescription": "Completa el formulario de búsqueda para encontrar viajes compatibles con tu ubicación y horario."
+  },
+  "match": {
+    "driver": "Conductor",
+    "departure": "Salida",
+    "arrival": "Llegada",
+    "seats": "Asientos",
+    "book": "Reservar Viaje",
+    "viewProfile": "Ver Perfil",
+    "rate": "Valorar",
+    "alreadyBooked": "Ya Reservado",
+    "noSeatsAvailable": "Sin asientos disponibles",
+    "tripTo": "Viaje a {destination}",
+    "origin": "Origen",
+    "freeSeats": "Asientos libres",
+    "compatibilityReasons": "Razones de compatibilidad",
+    "seatsPrompt": "¿Cuántos asientos deseas reservar? (Disponibles: {seats})",
+    "invalidSeats": "Por favor ingresa un número válido de asientos",
+    "notEnoughSeats": "Solo hay {seats} asientos disponibles",
+    "bookingSuccess": "¡Reserva creada exitosamente! {seats} asiento(s) reservado(s). Ve a \"Reservas\" para ver tu reserva.",
+    "bookingError": "Error al crear la reserva",
+    "searchError": "Error al buscar matches. Intenta nuevamente.",
+    "score": {
+      "excellent": "Excelente",
+      "good": "Bueno", 
+      "regular": "Regular",
+      "low": "Bajo"
+    }
+  },
+  "modals": {
+    "trustProfile": {
+      "title": "Perfil de Confianza",
+      "close": "✕"
+    },
+    "rating": {
+      "title": "Valorar Usuario",
+      "close": "✕",
+      "success": "Valoración enviada correctamente"
+    }
+  },
+  "sede": {
+    "SEDE-1": "Sede Madrid Centro",
+    "SEDE-2": "Sede Madrid Norte", 
+    "SEDE-3": "Sede Barcelona"
+  }
+}
+

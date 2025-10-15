@@ -1,0 +1,20 @@
+{
+  "title": "Profil",
+  "personal": {
+    "title": "Informații personale",
+    "name": "Nume",
+    "email": "Email",
+    "phone": "Telefon",
+    "office": "Birou"
+  },
+  "preferences": {
+    "title": "Preferințe",
+    "language": "Limbă",
+    "notifications": "Notificări",
+    "privacy": "Confidențialitate"
+  },
+  "actions": {
+    "save": "Salvează modificările",
+    "edit": "Editează profilul"
+  }
+}

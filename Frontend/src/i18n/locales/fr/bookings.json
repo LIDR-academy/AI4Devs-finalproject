@@ -1,0 +1,21 @@
+{
+  "title": "Réservations",
+  "list": {
+    "title": "Mes réservations",
+    "empty": "Vous n'avez aucune réservation",
+    "bookFirst": "Faites votre première réservation"
+  },
+  "status": {
+    "pending": "En attente",
+    "confirmed": "Confirmée",
+    "cancelled": "Annulée"
+  },
+  "actions": {
+    "view": "Voir",
+    "cancel": "Annuler"
+  },
+  "confirmation": {
+    "title": "Réservation confirmée",
+    "message": "Votre réservation a été confirmée avec succès"
+  }
+}

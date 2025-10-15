@@ -1,0 +1,49 @@
+{
+  "title": "El Meu Perfil",
+  "personal": {
+    "title": "Informació Personal",
+    "name": "Nom",
+    "email": "Correu electrònic",
+    "sede": "Oficina",
+    "schedule": "Horari Preferit",
+    "required": "Camp obligatori",
+    "optional": "Opcional",
+    "namePlaceholder": "Joan Pérez",
+    "emailPlaceholder": "joan.perez@empresa.com",
+    "emailHelper": "Utilitzem el teu correu corporatiu per a les notificacions",
+    "schedulePlaceholder": "08:00 - 17:00",
+    "scheduleHelper": "Opcional: El teu horari habitual de treball",
+    "sedePlaceholder": "Selecciona la teva oficina"
+  },
+  "account": {
+    "title": "Informació del Compte",
+    "userId": "ID d'Usuari",
+    "role": "Rol"
+  },
+  "notifications": {
+    "title": "Notificacions Push",
+    "enable": "Habilitar",
+    "disable": "Deshabilitar",
+    "error": "No s'ha pogut habilitar/deshabilitar les notificacions"
+  },
+  "actions": {
+    "save": "Desar Canvis",
+    "saving": "Desant...",
+    "loadError": "No s'ha pogut carregar el perfil",
+    "updateSuccess": "Perfil actualitzat exitosament!",
+    "updateError": "Error al actualitzar el perfil"
+  },
+  "validation": {
+    "nameMinLength": "El nom ha de tenir almenys 2 caràcters",
+    "emailRequired": "El correu electrònic és obligatori",
+    "emailInvalid": "Si us plau introdueix un correu electrònic vàlid",
+    "sedeRequired": "L'oficina és obligatòria",
+    "formErrors": "Si us plau corregeix els errors del formulari"
+  },
+  "sede": {
+    "SEDE-1": "Sede Madrid Centre",
+    "SEDE-2": "Sede Madrid Nord",
+    "SEDE-3": "Sede Barcelona"
+  }
+}
+

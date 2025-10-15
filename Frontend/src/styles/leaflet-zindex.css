@@ -1,0 +1,20 @@
+/* Asegurar que los mapas de Leaflet no interfieran con modales */
+.leaflet-container {
+  z-index: 1 !important;
+}
+
+.leaflet-control-container {
+  z-index: 2 !important;
+}
+
+/* Los modales deben tener z-index más alto */
+.modal-overlay {
+  z-index: 9999 !important;
+}
+
+/* Asegurar que los popups de Leaflet no interfieran */
+.leaflet-popup {
+  z-index: 1000 !important;
+}
+
+

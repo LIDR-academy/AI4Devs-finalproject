@@ -1,0 +1,41 @@
+{
+  "required": "The {{field}} field is required",
+  "email": {
+    "invalid": "Invalid email format"
+  },
+  "minLength": "Minimum {{min}} characters",
+  "maxLength": "Maximum {{max}} characters",
+  "range": "Must be between {{min}} and {{max}}",
+  "numeric": "Must be a number",
+  "phone": {
+    "invalid": "Invalid phone format"
+  },
+  "date": {
+    "invalid": "Invalid date format",
+    "required": "Date and time are required",
+    "future": "Date must be in the future"
+  },
+  "time": {
+    "invalid": "Invalid time format"
+  },
+  "futureDate": "Date must be in the future",
+  "positiveNumber": "Number must be positive",
+  "seats": {
+    "min": "Must have at least 1 seat",
+    "max": "Cannot be more than 8 seats",
+    "required": "Seats are required"
+  },
+  "coordinates": {
+    "latitude": {
+      "required": "Latitude is required",
+      "range": "Latitude must be between -90 and 90"
+    },
+    "longitude": {
+      "required": "Longitude is required",
+      "range": "Longitude must be between -180 and 180"
+    }
+  },
+  "destination": {
+    "required": "Destination is required"
+  }
+}

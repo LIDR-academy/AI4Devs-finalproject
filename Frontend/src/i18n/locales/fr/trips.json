@@ -1,0 +1,79 @@
+{
+  "title": "Voyages",
+  "create": {
+    "title": "Créer un Voyage",
+    "newTrip": "Créer un Nouveau Voyage",
+    "origin": "Origine",
+    "latitude": "Latitude d'Origine",
+    "longitude": "Longitude d'Origine",
+    "destination": "Destination",
+    "date": "Date et heure",
+    "seats": "Places disponibles",
+    "seatsTotal": "Places Totales",
+    "submit": "Créer le voyage",
+    "cancel": "Annuler",
+    "creating": "Création...",
+    "selectDestination": "Sélectionnez une destination",
+    "maxSeats": "Maximum 8 places"
+  },
+  "list": {
+    "title": "Mes Voyages",
+    "empty": "Vous n'avez aucun voyage créé",
+    "createFirst": "Créez votre premier voyage",
+    "emptyDescription": "Créez votre premier voyage pour commencer à partager avec vos collègues",
+    "tripTo": "Voyage vers {{destination}}",
+    "seatsFree": "{{free}} libres sur {{total}} au total"
+  },
+  "status": {
+    "active": "Actif",
+    "completed": "Terminé",
+    "cancelled": "Annulé"
+  },
+  "actions": {
+    "view": "Voir",
+    "edit": "Modifier",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "addSeat": "+1 Place",
+    "show": "Afficher",
+    "hide": "Masquer"
+  },
+  "labels": {
+    "origin": "Origine:",
+    "destination": "Destination:",
+    "time": "Heure:",
+    "seats": "Places:"
+  },
+  "messages": {
+    "createSuccess": "Voyage créé avec succès!",
+    "createError": "Erreur lors de la création du voyage",
+    "updateSuccess": "Voyage mis à jour avec succès!",
+    "tripUpdated": "Voyage mis à jour avec succès",
+    "updateError": "Erreur lors de la mise à jour du voyage",
+    "deleteSuccess": "Voyage annulé avec succès",
+    "deleteError": "Erreur lors de l'annulation du voyage",
+    "loadError": "Erreur lors du chargement des voyages",
+    "confirmDelete": "Êtes-vous sûr de vouloir annuler ce voyage?",
+    "formErrors": "Veuillez corriger les erreurs dans le formulaire",
+    "seatsUpdated": "Places mises à jour: {{total}} au total, {{free}} libres"
+  },
+  "sedes": {
+    "select": "Sélectionnez une destination",
+    "SEDE-1": "Bureau Madrid Centre",
+    "SEDE-2": "Bureau Madrid Nord",
+    "SEDE-3": "Bureau Barcelone"
+  },
+  "filters": {
+    "title": "Filtres",
+    "status": "Statut",
+    "destination": "Destination",
+    "dateFrom": "Date de",
+    "dateTo": "Date à",
+    "allStatuses": "Tous les statuts",
+    "allDestinations": "Toutes les destinations",
+    "from": "De",
+    "to": "À",
+    "clearAll": "Effacer les filtres",
+    "noResults": "Aucun voyage trouvé avec les filtres appliqués"
+  }
+}

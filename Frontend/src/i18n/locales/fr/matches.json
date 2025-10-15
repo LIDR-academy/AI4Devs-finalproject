@@ -1,0 +1,24 @@
+{
+  "title": "Rechercher des Voyages",
+  "search": {
+    "title": "Rechercher des voyages",
+    "from": "De",
+    "to": "À",
+    "date": "Date",
+    "seats": "Places nécessaires",
+    "search": "Rechercher"
+  },
+  "results": {
+    "title": "Résultats de recherche",
+    "empty": "Aucun voyage trouvé",
+    "tryDifferent": "Essayez d'autres critères"
+  },
+  "match": {
+    "driver": "Conducteur",
+    "departure": "Départ",
+    "arrival": "Arrivée",
+    "seats": "Places",
+    "book": "Réserver",
+    "viewProfile": "Voir le profil"
+  }
+}

@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: Trips Service
+  version: 0.1.0
+servers:
+  - url: http://localhost:8082
+paths:
+  /trips:
+    post:
+      summary: Create a trip
+      security:
+        - bearerAuth: []
+      description: Requires Authorization header. Example: `Authorization: Bearer eyJ...`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+    get:
+      summary: List trips
+      security:
+        - bearerAuth: []
+      description: Requires Authorization header. Example: `Authorization: Bearer eyJ...`
+      parameters:
+        - in: query
+          name: destinationSedeId
+          schema:
+            type: string
+          description: Filter by destination sede ID
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: time
+          description: Filter by start time (ISO-8601 format)
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: time
+          description: Filter by end time (ISO-8601 format)
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ACTIVE, COMPLETED]
+          description: Filter by trip status (ACTIVE for future trips, COMPLETED for past trips)
+      responses:
+        '200':
+          description: List of trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trip'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Trip:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        driverId:
+          type: string
+          format: uuid
+        origin:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        destinationSedeId:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        seatsTotal:
+          type: integer
+        seatsFree:
+          type: integer
+    TripCreate:
+      type: object
+      required: [destinationSedeId, dateTime, seatsTotal]
+      properties:
+        origin:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        destinationSedeId:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        seatsTotal:
+          type: integer

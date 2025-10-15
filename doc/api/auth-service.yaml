@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: Auth Service
+  version: 0.1.0
+servers:
+  - url: http://localhost:8085
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /.well-known/jwks.json:
+    get:
+      summary: JWKS passthrough (from Keycloak) or cache info
+      responses:
+        '200':
+          description: JWKS JSON
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

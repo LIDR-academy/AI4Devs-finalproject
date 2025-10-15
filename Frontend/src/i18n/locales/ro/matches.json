@@ -1,0 +1,24 @@
+{
+  "title": "Căutare Călătorii",
+  "search": {
+    "title": "Caută călătorii",
+    "from": "De la",
+    "to": "La",
+    "date": "Data",
+    "seats": "Locuri necesare",
+    "search": "Caută"
+  },
+  "results": {
+    "title": "Rezultate căutare",
+    "empty": "Nu s-au găsit călătorii",
+    "tryDifferent": "Încearcă criterii diferite"
+  },
+  "match": {
+    "driver": "Șofer",
+    "departure": "Plecare",
+    "arrival": "Sosire",
+    "seats": "Locuri",
+    "book": "Rezervă",
+    "viewProfile": "Vezi profilul"
+  }
+}
