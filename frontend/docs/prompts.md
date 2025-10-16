@@ -3496,3 +3496,106 @@ Utilizar Axios para las llamadas a la API y seguir la estructura de datos defini
 
 Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
 Hazme preguntas si necesitas más información.
+
+
+
+
+Eres un experto en Ingenieria de Prompts, en DevSecOps y en Docker
+# Contexto Inicial
+Tenemos un proyeto de frontend listo para su despliegue en la nube, ademas de que mi backend y base de datos se encuentran empaquetados cada uno en un contedor propio y se levantan mediaten docker-compse  
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el modelo (ChatGPT 4.1) que me ayude empaquetar en un contenedor de docker mi aplicación frontend cumpliendo con los siguientes requerimientos
+
+# Requerimientos
+1. El contenedor debe contemplar las dependecias del proyecto
+2. Contempla la ejecución del proyecto, tanto en modo producción como en modo desarrollo
+3. El modelo deberá consultar el README del proyecto para asegurar una construccion exitosa del contenedor
+4. Una vez que la aplicación se encuentre en un contenedor se debe crear otro archivo que permita levantar los 3 contenedores: base de datos, backend y frontend, esto a partir de los archivos de docker existentes
+
+
+# Mejores practicas
+- Incluye el rol en el que debe actuar el modelo
+- Consulta el archivo [[ARCHIVO]] para construir el prompt
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis requerimientos ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+
+
+
+# Prompt para empaquetar Buscadoc Frontend en un contenedor Docker
+
+## Rol del modelo
+Actúa como **DevSecOps experto en Docker y despliegue de aplicaciones frontend modernas**. Tu objetivo es generar los archivos y comandos necesarios para empaquetar el frontend Buscadoc en un contenedor Docker, siguiendo las mejores prácticas de seguridad, internacionalización y despliegue, y asegurando la integración con backend y base de datos ya orquestados con Docker Compose.
+
+## Instrucciones
+
+1. **Consulta el archivo `README.md` del frontend** para identificar dependencias, scripts de ejecución, variables de entorno y puertos expuestos.
+2. **Genera un `Dockerfile`** que:
+   - Use la versión de Node.js especificada en el README (`node:22` si no se indica otra).
+   - Instale todas las dependencias del proyecto.
+   - Copie el código fuente siguiendo la estructura recomendada por Next.js.
+   - Exponga el puerto `3000`.
+   - Permita ejecutar la aplicación en modo desarrollo (`npm run dev`) y en modo producción (`npm run build` + `npm run start`).
+   - Incluya instrucciones para copiar el archivo `.env` y destaque la importancia de no versionarlo.
+   - Implemente un `HEALTHCHECK` para verificar que el frontend responde correctamente.
+   - Siga recomendaciones básicas de seguridad (no ejecutar como root, minimizar capas, excluir archivos sensibles).
+3. **Documenta en formato Markdown**:
+   - Explica cada paso del proceso de construcción y despliegue.
+   - Detalla cómo configurar variables de entorno y credenciales sensibles usando archivos `.env`.
+   - Incluye instrucciones para ejecutar en modo desarrollo y producción.
+   - Explica cómo acceder a la aplicación y verificar el funcionamiento.
+   - Resalta las mejores prácticas de seguridad y cumplimiento con la LFPDPPP.
+4. **Una vez generado el contenedor frontend**, crea un archivo `docker-compose.yml` que:
+   - Permita levantar los tres servicios: base de datos, backend y frontend.
+   - Configure la red y los volúmenes necesarios para persistencia y comunicación entre servicios.
+   - Documenta cómo levantar todos los servicios juntos y cómo acceder a cada uno.
+
+## Ejemplo de estructura esperada en el archivo Markdown resultante
+
+```markdown
+# Despliegue del frontend Buscadoc con Docker
+
+## 1. Construcción del contenedor
+
+### Dockerfile
+...explicación y código...
+
+## 2. Variables de entorno y seguridad
+
+...instrucciones para `.env` y recomendaciones...
+
+## 3. Ejecución en modo desarrollo y producción
+
+...comandos y explicación...
+
+## 4. Healthcheck y verificación
+
+...cómo verificar que la app responde...
+
+## 5. Orquestación con Docker Compose
+
+### docker-compose.yml
+...explicación y código...
+
+## 6. Buenas prácticas y cumplimiento
+
+...seguridad, exclusión de archivos sensibles, LFPDPPP...
+```
+
+## Consideraciones adicionales
+
+- Mantén la lógica de negocio fuera del Dockerfile y scripts de arranque.
+- Consulta la documentación para asegurar el cumplimiento de la arquitectura y las convenciones del proyecto.
+- Documenta todo en español y sigue las convenciones del proyecto.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- Antes de iniciar muestrame la lista de pasos a ejecutar
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.

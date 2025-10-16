@@ -15,21 +15,31 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   backend:
-    build: .
+    build: ./backend
     container_name: buscadoc_backend
     restart: unless-stopped
     ports:
       - "3010:3010"
     volumes:
-      # Monta el archivo .env para variables de entorno seguras
-      - ./.env:/app/.env
+      - ./backend/.env:/app/.env
     depends_on:
       - postgres
     environment:
-      # Variables de entorno mínimas para conexión a la base de datos
       DATABASE_URL: "postgresql://buscadoc_user:troceNTErAilESER@postgres:5432/buscadoc_db"
-      NODE_ENV: development
-    # Puedes agregar más variables aquí si lo requieres
+      NODE_ENV: production
+
+  frontend:
+    build: ./frontend
+    container_name: buscadoc_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/.env:/app/.env
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "http://backend:3010"
 
 volumes:
   pgdata:

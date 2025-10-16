@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
     if (authState.role === "patient") {
       return [
         { key: "home", label: t("nav.home"), onClick: handleNavigateToHome },
-        { key: "myAppointments", label: t("nav.myAppointments"), onClick: handleNavigateToMedicalAgenda },
+        /*{ key: "myAppointments", label: t("nav.myAppointments"), onClick: handleNavigateToMedicalAgenda },*/ /*Proximamente*/
         { key: "findSpecialist", label: t("nav.findSpecialist"), onClick: handleNavigateToFindSpecialist },
         {
           key: "logout",

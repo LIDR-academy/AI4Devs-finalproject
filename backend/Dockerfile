@@ -48,8 +48,15 @@ EXPOSE 3010
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget --spider --quiet http://localhost:3010/api-docs/e6b2fa317dc910b88fd4c2a05f9934b47f46661d || exit 1
 
+# Copiar el script de arranque personalizado
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Usar usuario no root
 USER appuser
+
+# Cambiar el comando de arranque para usar el script personalizado
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 # --- MODO DESARROLLO ---
 # Habilitado por defecto para pruebas locales y hot reload con nodemon

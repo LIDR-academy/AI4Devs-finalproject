@@ -59,6 +59,7 @@ buscadoc-frontend/
 │   ├── services/               # Servicios para APIs
 │   ├── styles/                 # Tailwind CSS y estilos
 ├── .env.example                # Variables de entorno de ejemplo
+├── .env                        # Variables de entorno
 ├── package.json                # Dependencias y scripts
 ├── postcss.config.js           # Configuración de PostCSS
 ├── tailwind.config.js          # Configuración de Tailwind CSS
@@ -76,28 +77,38 @@ buscadoc-frontend/
 - **`src/services/`**: Servicios para la comunicación con APIs backend, organizados por recurso (autenticación, doctores, pacientes).
 - **`src/styles/`**: Estilos globales y configuración de Tailwind CSS.
 
-## Variables de Entorno
+# Configuración de variables de entorno y seguridad
 
-Crea un archivo `.env` basado en `.env.example`:
+### Ejemplo de archivo `.env`
 
-```bash
+Crea un archivo `.env` en la raíz del proyecto `frontend` con el siguiente contenido adaptado a tu entorno:
+
+```
 # API Configuration
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://backend:3010
 
 # App Configuration
-REACT_APP_NAME=Buscadoc
+REACT_APP_NAME=Buscadoc Frontend
 REACT_APP_VERSION=1.0.0
 
 # Development
 REACT_APP_ENV=development
 ```
 
-### Variables Disponibles
+**Notas importantes:**
+- Si usas Docker Compose, la variable `NEXT_PUBLIC_API_BASE_URL` debe apuntar al nombre del servicio backend (`http://backend:3010`) para asegurar la comunicación interna entre contenedores.
+- No compartas ni subas el archivo `.env` al repositorio. Verifica que `.env` esté incluido en `.gitignore`.
+- Utiliza variables de entorno para todas las credenciales y datos sensibles.
+- Cambia las contraseñas y secretos en producción. No uses valores por defecto.
+- Mantén diferentes archivos `.env` para desarrollo y producción según tus necesidades.
 
-- **`NEXT_PUBLIC_API_BASE_URL`**: URL base del API backend (accesible en cliente y servidor)
-- **`REACT_APP_NAME`**: Nombre de la aplicación
-- **`REACT_APP_VERSION`**: Versión actual de la aplicación
-- **`REACT_APP_ENV`**: Entorno de ejecución (development/production)
+### Buenas prácticas de seguridad y cumplimiento LFPDPPP
+
+- Mantén las credenciales fuera del código fuente y del contenedor (monta `.env` como volumen externo).
+- Limita el acceso a datos sensibles solo a servicios autorizados.
+- Audita regularmente el acceso y uso de datos personales.
+- Documenta el uso y almacenamiento de datos personales en la carpeta `docs/`.
+- Aplica controles de acceso y protección de datos conforme a la LFPDPPP.
 
 ## Instalación y Desarrollo
 
@@ -136,6 +147,98 @@ npm run dev
 - **`npm run build`**: Construye la aplicación para producción
 - **`npm run start`**: Inicia la aplicación en modo producción
 - **`npm run lint`**: Ejecuta ESLint para verificar el código
+
+
+## Ejecución en modo desarrollo y producción usando Docker
+
+### Modo desarrollo
+
+Para iniciar el frontend en modo desarrollo con hot reload:
+
+- **Windows:**
+  ```sh
+  docker run -it --rm -p 3000:3000 -v "%cd%"\.env:/app/.env buscadoc-frontend /bin/sh -c "npm run dev"
+  ```
+- **Linux/Mac:**
+  ```sh
+  docker run -it --rm -p 3000:3000 -v $(pwd)/.env:/app/.env buscadoc-frontend /bin/sh -c "npm run dev"
+  ```
+
+- El servidor estará disponible en [http://localhost:3000](http://localhost:3000).
+- Los cambios en el código se reflejan automáticamente.
+- Asegúrate de que la variable `NEXT_PUBLIC_API_BASE_URL` apunte al backend correcto.
+
+### Modo producción
+
+Para ejecutar el frontend en modo producción (SSR optimizado):
+
+- **Windows:**
+  ```sh
+  docker run -it --rm -p 3000:3000 -v "%cd%"\.env:/app/.env buscadoc-frontend
+  ```
+- **Linux/Mac:**
+  ```sh
+  docker run -it --rm -p 3000:3000 -v $(pwd)/.env:/app/.env buscadoc-frontend
+  ```
+
+- El contenedor ejecuta `npm run build` y `npm start` por defecto.
+- Accede a la aplicación en [http://localhost:3000](http://localhost:3000).
+- Verifica que la variable `NEXT_PUBLIC_API_BASE_URL` esté configurada para el entorno productivo.
+
+### Notas adicionales
+
+- Para cambiar entre modos, edita el `Dockerfile` y comenta/descomenta la línea correspondiente:
+  ```dockerfile
+  # CMD ["npm", "start"]      # Producción
+  # CMD ["npm", "run", "dev"] # Desarrollo
+  ```
+- Monta el archivo `.env` como volumen externo para mayor seguridad.
+- Consulta los logs del contenedor con:
+  ```sh
+  docker logs -f <container_id>
+  ```
+
+## Healthcheck y verificación de funcionamiento
+
+### Healthcheck en el contenedor Docker
+
+El contenedor frontend implementa un `HEALTHCHECK` para verificar que la aplicación responde correctamente en la ruta principal (`/`).  
+Esta configuración está definida en el archivo `Dockerfile`:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD wget --spider --quiet http://localhost:3000/ || exit 1
+```
+
+- El healthcheck consulta la página principal cada 30 segundos.
+- Si la aplicación no responde, Docker marcará el contenedor como "unhealthy".
+
+### Verificación manual del funcionamiento
+
+1. **Accede a la aplicación en tu navegador:**
+   ```
+   http://localhost:3000/
+   ```
+   Deberías ver la página principal de Buscadoc Frontend.
+
+2. **Verifica el estado del contenedor:**
+   ```sh
+   docker ps
+   ```
+   Busca la columna `STATUS`. Si el healthcheck es exitoso, verás `healthy`.
+
+3. **Consultar logs del contenedor:**
+   ```sh
+   docker logs -f <container_id>
+   ```
+   Revisa los logs para detectar errores de arranque o problemas de conexión.
+
+### Recomendaciones
+
+- Si el contenedor aparece como `unhealthy`, revisa la configuración de variables de entorno y asegúrate de que el backend esté accesible.
+- Para monitoreo avanzado, integra herramientas como Prometheus, Grafana o Datadog.
+- Mantén el healthcheck activo en producción para detectar caídas y reiniciar el servicio automáticamente si es necesario.
+
 
 ## Ejemplos de Componentes en Uso
 
@@ -198,63 +301,62 @@ function ExampleComponent() {
 }
 ```
 
-## Compilación y Puesta a Producción
+## Preparación para Modo Servidor (Producción)
 
-### Build de Producción
+Sigue estos pasos para compilar y ejecutar Buscadoc Frontend en modo producción:
+
+### 1. Instalar dependencias
+
+Desde la raíz del proyecto frontend:
 
 ```bash
-# Generar build optimizada
+npm install
+```
+
+### 2. Configurar variables de entorno
+
+Copia el archivo de ejemplo y edítalo con tus valores de producción:
+
+```bash
+cp .env.example .env
+# Edita .env según tu configuración (API, entorno, etc.)
+```
+
+Asegúrate de que la variable `NEXT_PUBLIC_API_BASE_URL` apunte al backend correcto.
+
+### 3. Generar el build de producción
+
+Ejecuta el comando para compilar la aplicación:
+
+```bash
 npm run build
-
-# Los archivos se generarán en la carpeta 'dist/'
 ```
 
-### Configuración de Despliegue
+### 4. Iniciar el servidor en modo producción
 
-#### Variables de Entorno de Producción
+Arranca el servidor Next.js:
 
 ```bash
-# Configuración específica para producción
-NEXT_PUBLIC_API_BASE_URL=https://api.buscadoc.com
-REACT_APP_ENV=production
+npm run start
 ```
 
-#### Consideraciones Especiales
+### 5. Verificar funcionamiento
 
-- Configurar CORS en el backend para el dominio de producción
-- Verificar que todas las rutas de API estén correctamente configuradas
-- Asegurar que las traducciones estén completas para ambos idiomas
-- Validar el funcionamiento del sistema de paginación con datos reales
+Abre tu navegador y accede a [http://localhost:3000](http://localhost:3000).  
+Navega por las páginas principales y verifica que todo carga correctamente.
 
-### Despliegue
+---
 
-La aplicación puede desplegarse en cualquier servicio de hosting estático:
-
-#### Vercel (Recomendado)
-```bash
-# Instalar Vercel CLI
-npm i -g vercel
-
-# Desplegar
-vercel
-```
-
-#### Netlify
-```bash
-# Build command: npm run build
-# Publish directory: dist
-```
-
-#### Servidor Web Tradicional
-```bash
-# Subir contenido de la carpeta 'dist/' al servidor
-# Configurar servidor para SPA (Single Page Application)
-```
+**Notas:**
+- Si usas internacionalización, prueba el cambio de idioma.
+- Si tienes integración con backend, asegúrate de que la API responde correctamente.
 
 ## Arquitectura
 
 ### Stack Tecnológico Actualizado
 
+- **Gestor de paquetes**: `npm@10.x`
+- **Entorno de ejecución de Javascript**: `node@v22.x`
 - **Frontend Framework**: React 19.1 con JSX/TSX
 - **Meta Framework**: Next.js 15.5.4 para SSR, rutas basadas en archivos y optimizaciones de rendimiento
 - **Styling**: Tailwind CSS 3.4 con configuración personalizada y PostCSS
