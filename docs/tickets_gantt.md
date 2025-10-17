@@ -148,8 +148,8 @@ gantt
     Crear pruebas end-to-end próximas citas :des22.5, 2025-09-19, 1h
 
     section 23. Pruebas unitarias básicas backend y frontend
-    Crear pruebas unitarias módulos principales :des23.1, 2025-09-20, 4h
+    Crear pruebas unitarias módulos principales :done, des23.1, 2025-09-20, 4h
 
     section 24. Configurar y documentar proceso de despliegue inicial
-    Configurar y documentar despliegue inicial :des24.1, 2025-09-20, 3h
+    Configurar y documentar despliegue inicial :done, des24.1, 2025-09-20, 3h
 ```

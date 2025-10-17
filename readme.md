@@ -14,12 +14,15 @@
 ## 0. Ficha del proyecto
 
 ### **0.1. Tu nombre completo:**
+
 Jorge Antonio Pérez Moreno
 
 ### **0.2. Nombre del proyecto:**
-Sistemas de búsqueda de especialidades médicas y profesionales de la salud (Buscadoc)    
+
+Sistemas de búsqueda de especialidades médicas y profesionales de la salud (Buscadoc)
 
 ### **0.3. Descripción breve del proyecto:**
+
 El sistema de búsqueda de especialidades médicas y profesionales de la salud es una plataforma diseñada para facilitar la localización, comparación y contacto con especialistas médicos. El propósito principal es optimizar la experiencia de búsqueda y agendamiento de citas tanto para pacientes como para médicos, proporcionando información transparente y herramientas que permitan tomar decisiones informadas.
 Además, el sistema gestiona direcciones detalladas de pacientes y médicos mediante las entidades LOCATION, CITY y STATE, permitiendo búsquedas y filtrados más precisos por ubicación.
 
@@ -27,8 +30,13 @@ Además, el sistema gestiona direcciones detalladas de pacientes y médicos medi
 
 > Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
 
+* **Url Proyecto: [http://50.18.7.99:3000/](http://50.18.7.99:3000/)**
+
+> Nota: El acceso es libre, sin embargo dado que es un entorno de desarrollo es propenso a fallos, favor de comunicarse con el autor en casos de no tener acceso al sitio.
+
 ### 0.5. URL o archivo comprimido del repositorio
-> https://github.com/rockeroicantonidev/AI4Devs-finalproject.git
+
+Repositorio en Github: [https://github.com/rockeroicantonidev/AI4Devs-finalproject.git](https://github.com/rockeroicantonidev/AI4Devs-finalproject.git)
 
 ---
 
@@ -37,6 +45,7 @@ Además, el sistema gestiona direcciones detalladas de pacientes y médicos medi
 > Describe en detalle los siguientes aspectos del producto:
 
 ### **1.1. Objetivo:**
+
 > Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
 
 #### Objetivos y metas
@@ -58,33 +67,173 @@ El sistema está diseñado para satisfacer las necesidades de pacientes, médico
 - **Búsqueda de especialistas:** Permite localizar médicos por especialidad y ubicación (dirección, ciudad y estado), con filtros adicionales relevantes.
 - **Visualización de perfiles profesionales:** Muestra información detallada de los médicos, incluyendo datos de contacto, biografía, foto de perfil, título y cédula profesional.
 - **Agendamiento de citas:** Los pacientes pueden reservar consultas con especialistas de manera sencilla y eficiente.
-- **Valoraciones y opiniones:** Los pacientes pueden dejar opiniones y calificar a los médicos tras una consulta, fomentando la confianza.
-- **Notificaciones y recordatorios:** El sistema envía avisos automáticos a pacientes y médicos sobre citas y eventos importantes.
 - **Gestión de agenda para médicos:** Los médicos pueden administrar su disponibilidad, confirmar o rechazar citas y ver el listado de próximas consultas.
-- **Gestión de usuarios:** El administrador puede crear, editar o eliminar cuentas de médicos y pacientes.
-- **Gestión de especialidades y filtros:** El administrador mantiene actualizado el catálogo de especialidades, ubicaciones y otros filtros.
-- **Monitoreo de actividad:** El administrador supervisa el funcionamiento general y la actividad relevante del sistema.
+- **Registro de usuarios:** Los usuarios pueden registrarse como médicos especialistas o pacientes e iniciar sesión.
 - **Soporte multilenguaje:** El sistema está preparado para operar en varios idiomas.
-- **Gestión de direcciones:** Administración de direcciones detalladas de pacientes y médicos mediante entidades LOCATION, CITY y STATE.
-
 
 ### **1.3. Diseño y experiencia de usuario:**
 
 > Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
 
+* **Url Presentación del proyecto: [Video presentación de Buscadoc](https://drive.google.com/file/d/1UoyRQR_NvLOF-nn7WbCN_lQ2RIQIkrff/view?usp=sharing)**
+
 ### **1.4. Instrucciones de instalación:**
+
 > Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+#### 1. Prerrequisitos
+
+- Tener acceso a una máquina virtual en la nube (Linux recomendado, con Ubuntu 22.04 o superior).
+- Instalar [Docker](https://docs.docker.com/get-docker/) y [Docker Compose](https://docs.docker.com/compose/install/).
+- Clonar el repositorio del proyecto.
+
+```sh
+git clone <URL_DEL_REPOSITORIO>
+cd finalroject-JAPM
+```
+
+---
+
+#### 2. Configuración de variables de entorno
+
+##### Backend
+
+Copia el archivo de ejemplo y edítalo con tus valores:
+
+```sh
+cd backend
+cp .env.example .env
+# Edita backend/.env según tu configuración (base de datos, JWT, SMTP, Firebase, etc.)
+```
+
+##### Frontend
+
+Copia el archivo de ejemplo y edítalo con tus valores:
+
+```sh
+cd ../frontend
+cp .env.example .env
+# Edita frontend/.env según tu configuración (API base URL, entorno, etc.)
+```
+
+**Recomendaciones:**
+
+- No subas archivos `.env` al repositorio.
+- Usa diferentes archivos `.env` para desarrollo y producción.
+
+---
+
+#### 3. Construcción y despliegue con Docker Compose
+
+Desde la raíz del proyecto, ejecuta:
+
+```sh
+docker compose up -d --build
+```
+
+Esto levantará los servicios de base de datos, backend y frontend en contenedores separados.
+
+- El **backend** estará disponible en `http://<IP_PUBLICA>:3010`
+- El **frontend** estará disponible en `http://<IP_PUBLICA>:3000`
+
+---
+
+#### 4. Verificación de funcionamiento
+
+##### Verifica los contenedores
+
+```sh
+docker ps
+```
+
+##### Consulta los logs
+
+```sh
+docker logs -f buscadoc_backend
+docker logs -f buscadoc-frontend
+```
+
+##### Accede a la aplicación
+
+- Frontend: `http://<IP_PUBLICA>:3000`
+- Backend: `http://<IP_PUBLICA>:3010`
+
+---
+
+#### 5. Migración y configuración de la base de datos
+
+Accede al contenedor backend para ejecutar migraciones:
+
+```sh
+docker exec -it buscadoc_backend sh
+npx prisma migrate dev --name init
+```
+
+Para visualizar la base de datos:
+
+```sh
+npx prisma studio
+```
+
+---
+
+#### 6. Ejecución de pruebas
+
+Dentro del contenedor backend:
+
+```sh
+docker exec -it buscadoc_backend sh
+npm test
+```
+
+---
+
+#### 7. Actualización del código
+
+Para actualizar el proyecto en la nube:
+
+```sh
+git fetch --all
+git pull
+docker compose up -d --build
+```
+
+---
+
+#### 8. Detener y eliminar servicios
+
+Para detener todos los servicios:
+
+```sh
+docker compose down
+```
+
+Para eliminar los volúmenes de datos (incluye la base de datos):
+
+```sh
+docker compose down -v
+```
+
+---
+
+#### 9. Buenas prácticas y cumplimiento
+
+- Mantén las credenciales fuera del código fuente.
+- Aplica controles de acceso y protección de datos conforme a la LFPDPPP.
+- Audita regularmente el acceso y uso de datos personales.
+- Consulta la documentación en la carpeta `docs/` para detalles sobre arquitectura, flujos y cumplimiento.
 
 ---
 
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura:**
+
 > Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
 
 ```mermaid
 flowchart TD
-    subgraph "Frontend (Vue.js + Vuetify)"
+    subgraph "Frontend (React + Tailwind CSS + Headless UI)"
         F1[Portal Público]
         F2[Portal Paciente]
         F3[Portal Médico]
@@ -120,7 +269,7 @@ flowchart TD
     end
 
     subgraph "Otros"
-        I18N["Internacionalización (vue-i18n/backend)"]
+        I18N["Internacionalización (react-i18next/backend)"]
         OAUTH["OAuth2 (Google/Outlook)"]
     end
 
@@ -157,6 +306,7 @@ flowchart TD
     F3-->|Traducción|I18N
     F4-->|Traducción|I18N
 ```
+
 [Referencia](docs/planificacion_y_documentacion/diagramas/diagrama_visual_arquitectura.md)
 
 ### **2.2. Descripción de componentes principales:**
@@ -166,41 +316,192 @@ flowchart TD
 #### Componentes del MVP
 
 - **Core de Dominio:** Entidades y servicios para usuarios, médicos, pacientes, especialidades, citas, valoraciones, notificaciones y ubicaciones.
-- **Aplicación (Casos de Uso):** Lógica de negocio para búsqueda, agendamiento, valoración, gestión de usuarios y edición de perfiles.
-- **Frontend:** Portal público, panel de paciente, panel de médico y panel de administración, con soporte de internacionalización.
-- **Backend:** API REST, autenticación, orquestadores de casos de uso, endpoints para gestión de direcciones y usuarios.
+- **Aplicación (Casos de Uso):** Lógica de negocio para búsqueda, agendamiento, gestión de cietas y horario, registro e inicio de sesión de usuarios y visualización de perfiles médicos.
+- **Frontend:** Portal público, panel de paciente/visitatne y panel de médico, con soporte de internacionalización.
+- **Backend:** API REST, autenticación, orquestadores de casos de uso, endpoints para gestión de agendas y usuarios.
 - **Almacenamiento:** Base de datos para usuarios, médicos, especialidades, citas, valoraciones y direcciones.
-- **Notificaciones:** Envío de correos electrónicos y gestión de recordatorios.
 
 #### Tecnologías usadas
 
 - **Backend:** Node.js, Express.js, Prisma ORM, PostgreSQL, Nodemailer, JWT (jsonwebtoken), bcryptjs, dotenv, cors.
-- **Frontend:** Vue.js, Vuetify, vue-i18n.
+- **Frontend:** React, Next, React-i18next.
 - **Almacenamiento de archivos:** Firebase Storage.
-- **Internacionalización:** vue-i18n (frontend), preparado para i18n en backend.
+- **Internacionalización:** React-i18next (frontend).
 - **Autenticación:** JWT y hash de contraseñas con bcryptjs.
-
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 > Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
 
+### Backend
+
 La estructura recomendada sigue la arquitectura hexagonal:
 
 ```
-/src/domain                # Entidades y servicios de dominio
-/src/application           # Casos de uso
-/src/adapters/in           # Adaptadores de entrada (API REST, controladores)
-/src/adapters/out          # Adaptadores de salida (persistencia, email, storage)
-/src/config                # Configuración y utilidades
-/prisma                    # Archivos de modelo y migraciones
-/docs                      # Documentación y planificación
+__test__          # Archivos de test unitarios del proyecto
+docs/             # Documentación importante del proyecto
+   swagger.json   # Documentación del API del proyecto
+src/
+  domain/         # Entidades y servicios de dominio
+  application/    # Casos de uso
+  adapters/
+    in/           # Adaptadores de entrada (API REST, controladores)
+    out/          # Adaptadores de salida (persistencia, email, storage)
+  config/         # Configuración y utilidades
+      logger.js   # Utilidad del proyecto para el manejo de logs
+prisma/           # Modelos y migraciones
+.env              # Variables de entorno
+.gitignore        # Archivos exluidos en el repositorio de Github
+nodemon.json      # Configuración de nodemon para ejecución en el entorno de desarrollo
+docker-compose    # Orquestador de Docker para levantar base de datos y proyecto backend en contenedores
+server.json       # Punto de arranque de la aplicación Backend de Buscadoc
+README.md         # Documentación inicial del proyecto (archivo actual)
+package.json      # Archivo de paquetes, dependecias y detalles del proyecto de NPM
 ```
 
+### Frontend
+
+```
+buscadoc-frontend/
+├── public/                     # Archivos estáticos públicos
+|── components/                 # Componentes comunes y dependecias para React
+├── app/                        # Sistema de rutas y páginas Next.js
+│   ├── layout.tsx              # Layout global (NavBar, Footer, modales, notificaciones)
+│   ├── page.tsx                # Página principal (Home)
+│   ├── agenda/                 # Página de agenda médica
+│   │   └── page.tsx
+│   ├── doctor/
+│   │   └── [id]/
+│   │       └── page.tsx        # Perfil de doctor (ruta dinámica)
+│   ├── login/
+│   │   └── page.tsx            # Login de usuario
+│   ├── register/
+│   │   └── page.tsx            # Registro de usuario
+│   ├── schedule-edit/
+│   │   └── page.tsx            # Edición de horarios médicos
+│   ├── globals.css             # Estilos globales
+|   ├── page.tsx                # Página de inicio de Buscadoc
+|   └── layout.tsx              # Plantilla de la página Buscadoc
+├── src/                        # Componentes, datos, servicios y utilidades
+│   ├── components/             # Componentes reutilizables y UI
+│   ├── data/                   # Datos mock y configuraciones
+│   ├── i18n/                   # Internacionalización
+│   ├── lib/                    # Utilidades y helpers
+│   ├── services/               # Servicios para APIs
+│   ├── styles/                 # Tailwind CSS y estilos
+├── .env.example                # Variables de entorno de ejemplo
+├── .env                        # Variables de entorno
+├── package.json                # Dependencias y scripts
+├── postcss.config.js           # Configuración de PostCSS
+├── tailwind.config.js          # Configuración de Tailwind CSS
+├── tsconfig.json               # Configuración de TypeScript
+└── next.config.mjs             # Configuración de Next.js
+```
 
 ### **2.4. Infraestructura y despliegue**
 
 > Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+
+Buscadoc está diseñado bajo una **arquitectura hexagonal** (puertos y adaptadores), desacoplando el core de dominio de frameworks y tecnologías. La infraestructura se compone de los siguientes elementos principales:
+
+- **Frontend**: Aplicación web desarrollada con React/Next.js, internacionalización con vue-i18n o react-i18next.
+- **Backend**: API REST en Node.js + Express.js, autenticación con Auth.js y JWT/OAuth2, orquestadores de casos de uso.
+- **Base de datos**: PostgreSQL gestionada por Prisma ORM.
+- **Almacenamiento de archivos**: Firebase Storage.
+- **Notificaciones**: Email vía Nodemailer/SendGrid.
+- **Contenedores Docker**: Todo el stack se despliega en contenedores orquestados con Docker Compose.
+- **Infraestructura en la nube**: El despliegue se realiza sobre una máquina virtual (por ejemplo, EC2 en AWS), con acceso público a los puertos necesarios.
+
+#### Diagrama de Infraestructura
+
+```mermaid
+flowchart TD
+    subgraph Cloud VM [Máquina Virtual en la Nube]
+        direction TB
+        F[Frontend, React/Next.js]
+        B[Backend, Node.js/Express.js]
+        DB[PostgreSQL]
+        FS[Firebase Storage]
+        EMAIL[Email, Nodemailer/SendGrid]
+    end
+    U[Usuario] -->|HTTP 3000| F
+    F -->|API REST 3010| B
+    B -->|ORM| DB
+    B -->|Archivos| FS
+    B -->|Notificaciones| EMAIL
+```
+
+**Puertos expuestos:**
+
+- `3000`: Frontend (web)
+- `3010`: Backend (API REST)
+- `5432`: PostgreSQL (interno, no expuesto públicamente)
+
+#### Despliegue de Buscadoc con Terraform
+
+Terraform automatiza la creación y configuración de la infraestructura necesaria para ejecutar Buscadoc en la nube, siguiendo estos pasos:
+
+##### 1. Definición de recursos
+
+En los archivos `main.tf`, `variables.tf` y `outputs.tf`, se describe la infraestructura deseada:
+
+- **Instancia EC2**: Se crea una máquina virtual en AWS con Ubuntu 22.04.
+- **Grupo de seguridad**: Permite solo los puertos necesarios (22 para SSH, 3000 para frontend, 3010 para backend).
+- **Clave SSH**: Se genera y almacena una clave privada para acceso seguro.
+
+##### 2. Aplicación de la infraestructura
+
+Al ejecutar:
+
+```sh
+terraform init
+terraform apply
+```
+
+Terraform:
+
+- Se conecta a AWS usando las credenciales configuradas.
+- Crea la instancia EC2, el grupo de seguridad y la clave SSH.
+- Asigna una IP pública y muestra el comando SSH para conectarse.
+
+##### 3. Provisionamiento automático
+
+La instancia EC2 ejecuta el script `provision.sh`:
+
+- Instala Docker y Docker Compose.
+- Clona el repositorio de Buscadoc.
+- Levanta los servicios (frontend, backend, base de datos) usando Docker Compose.
+
+##### 4. Acceso y administración
+
+Una vez desplegada la infraestructura:
+
+- Puedes conectarte por SSH usando la clave generada.
+- Los servicios quedan accesibles desde la IP pública en los puertos configurados.
+
+##### 5. Destrucción de la infraestructura
+
+Para eliminar todos los recursos creados, ejecuta:
+
+```sh
+terraform destroy
+```
+
+---
+
+##### Diagrama de Infraestructura
+
+```mermaid
+flowchart TD
+    subgraph AWS EC2 [Instancia EC2 en AWS]
+        F[Frontend, React + Next]
+        B[Backend, Node.js + Express]
+        DB[PostgreSQL]
+    end
+    U[Usuario] -->|HTTP 3000| F
+    F -->|API REST 3010| B
+    B -->|ORM| DB
+```
 
 ### **2.5. Seguridad**
 
@@ -215,10 +516,35 @@ La estructura recomendada sigue la arquitectura hexagonal:
 - **Seguridad de la información:** Encriptación, control de acceso, registros de actividad y pruebas de seguridad periódicas.
 - **Transferencia y eliminación de datos:** Políticas de retención, eliminación segura y control de transferencias a terceros.
 
-
 ### **2.6. Tests**
 
 > Describe brevemente algunos de los tests realizados
+
+Los siguientes archivos de prueba están implementados usando Jest y Supertest, siguiendo el patrón de mocks para desacoplar la lógica de negocio y adaptadores:
+
+- **appointmentRoutes.test.js**
+  Pruebas de endpoints para la gestión de citas médicas (crear, listar, cancelar).
+- **doctorRoutes.test.js**
+  Pruebas de endpoints para el listado, perfil y comentarios de médicos.
+- **loginDoctor.test.js**
+  Pruebas de autenticación y login para usuarios tipo médico.
+- **loginPatient.test.js**
+  Pruebas de autenticación y login para usuarios tipo paciente.
+- **registerDoctor.test.js**
+  Pruebas de registro de nuevos médicos en el sistema.
+- **registerPatient.test.js**
+  Pruebas de registro de nuevos pacientes en el sistema.
+
+---
+
+**Notas:**
+
+- Todos los tests emplean mocks para servicios de dominio y persistencia, siguiendo la arquitectura hexagonal.
+- Las pruebas cubren flujos principales de autenticación, registro, gestión de citas y consulta de médicos.
+- Para ejecutar los tests, usa el comando:
+  ```sh
+  npm test
+  ```
 
 ---
 
@@ -358,6 +684,7 @@ erDiagram
     DOCTOR ||--o{ AVAILABILITY : has
 
 ```
+
 [Referencia](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
 
 ### **3.2. Descripción de entidades principales:**
@@ -365,39 +692,41 @@ erDiagram
 > Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
 
 1. **USER**
+
    - Representa a cualquier usuario registrado en el sistema. Incluye datos personales, correo electrónico, contraseña (hash), rol (paciente, médico, administrador), estado de actividad y fechas de registro.
-
 2. **DOCTOR**
+
    - Especialista médico vinculado a un usuario. Contiene información profesional como número de cédula, teléfono, ubicación (dirección), biografía y foto de perfil.
-
 3. **PATIENT**
+
    - Paciente vinculado a un usuario. Incluye datos como teléfono, fecha de nacimiento, género y dirección.
-
 4. **SPECIALTY**
+
    - Especialidad médica. Define el área de conocimiento o práctica de los médicos, con nombre y descripción.
-
 5. **DOCTOR_SPECIALTY**
+
    - Relación entre médicos y especialidades. Permite que un médico tenga una o varias especialidades.
-
 6. **APPOINTMENT**
+
    - Cita médica entre paciente y médico. Incluye fecha, estado, motivo y referencias a ambos usuarios.
-
 7. **RATING**
+
    - Valoración realizada por un paciente sobre un médico tras una cita. Incluye puntuación, comentario, anonimato y fecha.
-
 8. **NOTIFICATION**
+
    - Mensajes enviados a usuarios sobre eventos importantes (citas, recordatorios, etc.), con estado y fecha de envío.
-
 9. **LOCATION**
+
    - Dirección física detallada de pacientes y médicos. Incluye calle, números, colonia, código postal, ciudad, estado y enlace a Google Maps.
-
 10. **CITY**
-    - Ciudad asociada a una dirección. Permite organizar y filtrar ubicaciones.
 
+    - Ciudad asociada a una dirección. Permite organizar y filtrar ubicaciones.
 11. **STATE**
+
     - Estado asociado a una ciudad y dirección. Facilita la segmentación geográfica.
 
 ---
+
 Estas entidades forman la base del sistema, permitiendo la gestión integral de usuarios, profesionales, citas, valoraciones y ubicaciones.
 
 ---
@@ -406,6 +735,26 @@ Estas entidades forman la base del sistema, permitiendo la gestión integral de 
 
 > Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
 
+La API REST sigue la estructura recomendada por la arquitectura hexagonal, exponiendo los recursos bajo el prefijo `/api/{recurso}`.Algunos endpoints principales incluyen:
+
+- **Usuarios:**
+
+  - `POST /api/register/patient` — Registro de paciente
+  - `POST /api/register/doctor` — Registro de médico
+  - `POST /api/login/patient` — Login de paciente
+  - `POST /api/login/doctor` — Login de médico
+- **Médicos:**
+
+  - `GET /api/doctors` — Listado de médicos
+  - `GET /api/doctors/:id` — Perfil de médico
+  - `GET /api/doctors/:id/comments` — Comentarios de médico
+- **Citas:**
+
+  - `GET /api/appointments` — Listado de citas
+  - `POST /api/appointments` — Crear cita
+
+Consulta el archivo `docs/swagger.json` para la definición completa de los endpoints y sus parámetros.
+
 ---
 
 ## 5. Historias de Usuario
@@ -413,21 +762,25 @@ Estas entidades forman la base del sistema, permitiendo la gestión integral de 
 > Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
 
 **Historia de Usuario 1**
+
 - Como **visitante**, quiero buscar especialistas por especialidad y ubicación (ciudad y estado), para encontrar médicos adecuados a mis necesidades sin necesidad de registrarme.
 
 **Historia de Usuario 2**
+
 - Como **paciente**, quiero agendar una cita con un especialista, para reservar una consulta de manera sencilla.
 
 **Historia de Usuario 3**
+
 - Como **médico especialista**, quiero gestionar mi agenda y disponibilidad, para organizar mis consultas y confirmar o rechazar citas.
 
 ---
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto.
 
 **Ticket 1**
+
 ```markdown
 ### 9.1 [Backend] Diseñar el endpoint para agendar cita con especialista
 
@@ -471,7 +824,9 @@ Asegurarse de que el endpoint cumpla con los criterios de aceptación del Produc
 **Historial de cambios:**  
 - [17/08/2025] [GitHub Copilot] Ticket creado para diseño de endpoint para agendar cita con especialista.
 ```
+
 **Ticket 2**
+
 ```markdown
 ### 15.2 [Frontend] Maquetar la vista de búsqueda de especialistas (formulario de filtros: especialidad, ciudad, estado)
 
@@ -516,6 +871,7 @@ Utilizar Vuetify para componentes visuales y seguir la guía de estilos del PRD.
 ```
 
 **Ticket 3**
+
 ```markdown
 ## 3. Generar la migración de la base de datos para su ejecución (usando Prisma)
 
@@ -562,7 +918,71 @@ Revisar el modelo de datos en `docs/planificacion_y_documentacion/diagramas/mode
 
 **Pull Request 1**
 
+```markdown
+## Descripción de la entrega
+
+Esta Pull Request representa la **entrega final** del proyecto **Buscadoc**, un sistema integral para la búsqueda de especialidades médicas y profesionales de la salud, desarrollado bajo una arquitectura hexagonal (puertos y adaptadores) y cumpliendo con las mejores prácticas de seguridad, internacionalización y protección de datos personales (LFPDPPP).
+
+### Funcionalidades principales del MVP
+
+#### 1. Registro y autenticación de usuarios
+
+- Registro de pacientes y médicos especialistas mediante formularios validados y conectados a la API REST.
+- Autenticación segura con JWT y hash de contraseñas.
+- Soporte para roles diferenciados (paciente, médico, administrador).
+- Flujos de login y registro internacionalizados.
+
+#### 2. Búsqueda avanzada de especialistas
+
+- Filtros por especialidad, ciudad y estado.
+- Visualización de resultados con información relevante y acceso rápido a perfiles.
+- Sistema de búsqueda accesible para visitantes y usuarios autenticados.
+
+#### 3. Perfiles profesionales de médicos
+
+- Visualización de información profesional, biografía, cédula, foto y ubicación.
+- Listado de especialidades y valoraciones recibidas.
+- Acceso a comentarios y calificaciones de pacientes.
+
+#### 4. Agendamiento y gestión de citas
+
+- Creación de citas médicas por parte de pacientes autenticados.
+- Validación de disponibilidad y gestión de agenda para médicos.
+- Confirmación, cancelación y visualización de próximas citas.
+
+#### 5. Internacionalización completa
+
+- Soporte multilenguaje (español e inglés) en frontend y mensajes de backend.
+- Sistema de traducciones centralizado y dinámico.
+- Formularios, validaciones y notificaciones completamente traducibles.
+
+#### 6. Seguridad y cumplimiento normativo
+
+- Gestión de credenciales y datos sensibles mediante variables de entorno.
+- Restricción de acceso a datos personales conforme a la LFPDPPP.
+- Control de acceso por roles y protección de endpoints críticos.
+
+#### 7. Infraestructura y despliegue automatizado
+
+- Despliegue automatizado en AWS mediante Terraform y Docker Compose.
+- Separación de servicios en contenedores: frontend, backend y base de datos.
+- Scripts de provisionamiento y healthchecks para asegurar la disponibilidad.
+
+#### 8. Arquitectura hexagonal
+
+- Desacoplamiento del core de dominio respecto a frameworks y tecnologías externas.
+- Adaptadores de entrada (API REST) y salida (persistencia, email, almacenamiento de archivos).
+- Servicios de dominio y casos de uso orquestados según los diagramas y documentación técnica.
+
+### Documentación y buenas prácticas
+
+- Documentación exhaustiva en la carpeta `docs/` sobre requisitos, arquitectura, modelo de datos y casos de uso.
+- Ejemplos de uso, instalación y despliegue en los archivos `README.md` de backend, frontend y Terraform.
+- Pruebas unitarias e integración con mocks siguiendo el patrón hexagonal.
+- Cumplimiento de las convenciones de internacionalización y seguridad en todos los componentes.
+
+```
+
 **Pull Request 2**
 
 **Pull Request 3**
-

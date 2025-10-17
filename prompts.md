@@ -443,26 +443,510 @@ Hazme preguntas si necesitas más información.
 ### **2.4. Infraestructura y despliegue**
 
 **Prompt 1:**
+```markdown
+Eres un experto en Terraform y en DevSecOps. Dime los requisitos minimos para desplegar un proyecto en una instancia de AWS mediante Terraform. El objetivo es saber que necesito y como preparar mi entorno local para desplegar mi proyecto en la nube utilizando la herramienta mencionada. El contenido es para un ingeniero de software que nunca ha utilizado terraform para desplegar un proyecto en la nube. Tus pautas para generar el contenido son:
+1. Que las instrucciones sean claras y mediante una lista de pasos
+2. Que incluya ejemplos y los comandos necesarios
+
+Antes de realizar esta tarea ¿tienes alguna pregunta? 
+```
 
 **Prompt 2:**
+```markdown
+Eres un experto en Ingenieria de Prompts y en DevSecOps
+# Contexto Inicial
+Tenemos un proyecto que consta de una base de datos, backend y frontend, los cuales estan empaquetados en contenedores de Docker y se levantan en conjunto con Docker-Compose, ahora buscamos desplegarlo en la nube de AWS
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el modelo (ChatGPT 4.1) que me ayude a desplegar de mi proyecto completo en AWS mediante terraform cumpliendo con las siguientes instrucciones
+
+# Instrucciones
+- La infraestructura consta de una instancias EC2 del tipo t3.micro
+- Tendras que hacer checkout del proyecto mediante git desde la siguiente url del proyecto: `https://github.com/rockeroicantonidev/AI4Devs-finalproject.git`, no requieres crendiales ya que el repositorio es publico
+    * Deberás ubicar el proyecto en el branch `JAPM-Implementación-Frontend`
+- el backend debe ser accesible por medio del puerto 3010
+- el frontend debe ser accesible por medio del puerto 3000
+- No es necesario solicitar nombres de keys ya que ya se encuentran configuradas con aws configure
+- Utiliza terraform en la carpeta [[tf]]
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el modelo
+
+# Consideraciones adicionales
+- El modelo tendrá acceso a la documentaación del proyecto y los achivos de Docker para implementar la configuracion correctamente.
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+```
 
 **Prompt 3:**
+```markdown
+Actúa como **DevSecOps experto en despliegue cloud y automatización con Terraform**. Tu objetivo es generar los archivos y comandos necesarios para desplegar el proyecto Buscadoc (base de datos, backend y frontend) en AWS, siguiendo las mejores prácticas de seguridad, documentación y arquitectura hexagonal.
+
+## Instrucciones
+
+1. **Infraestructura en AWS:**
+   - Despliega una instancia EC2 tipo `t3.micro` en la región `us-west-1` con sistema operativo Ubuntu 22.04.
+   - Configura el grupo de seguridad para permitir acceso a los puertos `22` (SSH), `3000` (frontend) y `3010` (backend) desde cualquier IP.
+   - Asigna una IP pública a la instancia.
+
+2. **Provisionamiento del proyecto:**
+   - Realiza el checkout del repositorio público:  
+     `https://github.com/rockeroicantonidev/AI4Devs-finalproject.git`  
+     usando el branch `JAPM-Implementación-Frontend`.
+   - Ubica el proyecto en la instancia EC2 y asegúrate de que los archivos `.env` y `docker-compose.yml` estén presentes.
+   - Instala Docker y Docker Compose en la instancia.
+   - Levanta los servicios usando el archivo `docker-compose.yml` existente.
+
+3. **Configuración y acceso:**
+   - El backend debe ser accesible por el puerto `3010`.
+   - El frontend debe ser accesible por el puerto `3000`.
+   - Documenta que el puerto `22` está abierto para acceso SSH.
+   - Explica cómo conectarse por SSH a la instancia y cómo actualizar el código desde el repositorio en caso de futuros cambios.
+
+4. **Terraform:**
+   - Genera los archivos de configuración de Terraform en la carpeta `tf` para crear y provisionar la instancia EC2 con los parámetros indicados.
+   - Incluye instrucciones para inicializar, aplicar y destruir la infraestructura.
+
+5. **Documentación en formato Markdown:**
+   - Explica cada paso del proceso de despliegue y configuración.
+   - Detalla cómo acceder a los servicios desplegados y cómo realizar actualizaciones.
+   - Resalta las mejores prácticas de seguridad y cumplimiento con la LFPDPPP.
+
+## Ejemplo de estructura esperada en el archivo Markdown resultante
+
+# Despliegue de Buscadoc en AWS con Terraform
+
+## 1. Infraestructura en AWS
+
+### Configuración de la instancia EC2
+...explicación y código Terraform...
+
+### Grupo de seguridad
+...puertos abiertos y justificación...
+
+## 2. Provisionamiento del proyecto
+
+### Clonación del repositorio y preparación
+...comandos y pasos...
+
+### Instalación de Docker y Docker Compose
+...comandos y explicación...
+
+### Levantar los servicios con Docker Compose
+...comandos y verificación...
+
+## 3. Acceso y administración
+
+### Acceso SSH
+...cómo conectarse y recomendaciones...
+
+### Actualización del código
+...comandos para actualizar desde git...
+
+## 4. Buenas prácticas y cumplimiento
+
+...seguridad, exclusión de archivos sensibles, LFPDPPP...
+
+## 5. Destrucción de la infraestructura
+
+...comandos para eliminar recursos con Terraform...
+
+## Consideraciones adicionales
+
+- Mantén la lógica de negocio fuera de los scripts de provisionamiento.
+- Documenta todo en español y sigue las convenciones del proyecto.
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- Antes de iniciar muestrame la lista de pasos a ejecutar
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+```
+
 
 ### **2.5. Seguridad**
 
 **Prompt 1:**
+```markdown
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para las historias de usuario denomidadas "Registro de paciente" y "Registro de médico especialista", empezaremos con su implementación.
+En cuanto el proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Adicionalmente se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a configurar JWT (`jsonwebtoken`) en el proyecto e implementar las historia de usuario y sus series de tickets
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+```
 
 **Prompt 2:**
+```markdown
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Convenciones:** camelCase para variables, funciones y clases  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest (usar mocks)  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **JWT:** Usar jsonwebtoken, configuración en servicio y variables en `.env`  
+> **Swagger:** Documentar ambos endpoints y el esquema de autenticación
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Revisa el modelo de datos y el código fuente para ubicar la ruta y controlador correctos.
+   - Sigue la arquitectura hexagonal:  
+     - Lógica de negocio en servicios de dominio  
+     - Controladores gestionan entrada/salida  
+     - Adaptadores de entrada (API REST) invocan casos de uso  
+     - Adaptadores de salida gestionan persistencia con Prisma
+
+2. **Configuración de JWT**
+   - Crea un servicio de dominio para la gestión de JWT
+   - Usa la librería `jsonwebtoken`.
+   - Configura el secreto y expiración en el archivo `.env`:
+     ```
+     JWT_SECRET=your_secret_key
+     JWT_EXPIRES_IN=1d
+     ```
+   - El servicio debe incluir funciones para generar y validar tokens.
+   - Documenta el esquema de autenticación en el README.
+
+3. **Implementación del servicio de registro compartido**
+   - Crea un servicio de dominio (por ejemplo, `backend/services/registerService.js`) que gestione el registro tanto de pacientes como de médicos especialistas.
+   - El servicio debe:
+     - Validar los datos de entrada con Yup.
+     - Verificar unicidad de email y, para médicos, de `license_number`.
+     - Validar la fortaleza de la contraseña.
+     - Hashear la contraseña con bcryptjs.
+     - Crear los registros en las tablas de acuerdo al modelo de datos
+     - Retornar una respuesta estándar de éxito o error.
+     - No generar JWT en el registro, solo crear el usuario.
+
+4. **Endpoints REST**
+   - Implementa los endpoints:
+     - `POST /api/auth/register/patient`
+     - `POST /api/auth/register/doctor`
+   - Los controladores deben delegar la lógica al servicio de registro.
+   - Los mensajes de error deben estar en inglés y seguir el formato estándar de la API.
+
+5. **Validaciones y manejo de errores**
+   - Usa Yup para validaciones de datos.
+   - Devuelve mensajes claros y específicos (ejemplo: "Email already exists", "Password too weak", "License number required").
+   - Implementa manejo de errores con middleware global y clases customizadas.
+
+6. **Documentación Swagger**
+   - Documenta ambos endpoints en Swagger:
+     - Descripción de funcionalidad.
+     - Campos requeridos y ejemplos de petición/respuesta.
+     - Estructura de datos retornados.
+     - Posibles errores y mensajes de validación.
+     - Esquema de autenticación JWT.
+
+7. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para ambos endpoints usando Jest y Supertest.
+   - Usa mocks para dependencias externas.
+   - Casos a cubrir:
+     - Registro exitoso con datos válidos.
+     - Error por email duplicado.
+     - Error por license_number faltante o duplicado (médico).
+     - Error por contraseña débil.
+     - Error por campos faltantes o inválidos.
+     - Validación de almacenamiento seguro de la contraseña (hash).
+     - Validación de JWT (generación y verificación).
+
+---
+
+## Ejemplo de estructura base para el servicio y endpoints
+
+```js
+// filepath: backend/services/registerService.js
+const bcrypt = require('bcryptjs');
+const yup = require('yup');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const registerPatient = async (data) => {
+  // Validación con Yup
+  // Verificar email único
+  // Validar contraseña
+  // Hashear contraseña
+  // Crear USER y PATIENT
+  // Retornar respuesta estándar
+};
+
+const registerDoctor = async (data) => {
+  // Validación con Yup
+  // Verificar email y license_number únicos
+  // Validar contraseña
+  // Hashear contraseña
+  // Crear USER y DOCTOR
+  // Retornar respuesta estándar
+};
+
+module.exports = { registerPatient, registerDoctor };
+```
+
+```js
+// filepath: backend/services/jwtService.js
+const jwt = require('jsonwebtoken');
+
+const generateToken = (payload) => {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+};
+
+const verifyToken = (token) => {
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
+module.exports = { generateToken, verifyToken };
+```
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Diagrama de arquitectura](docs/planificacion_y_documentacion/diagramas/diagrama_visual_arquitectura.md)
+- [Diagrama de casos de uso](docs/planificacion_y_documentacion/diagramas/diagrama_casos_de_uso.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de los requerimientos
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- En cada paso dime que archivo se a modificar o agregar, muestrame el codigo a agregar o reemplazar y dime en donde lo debo colocar
+- Muestrame la lista de pasos a ejecutar antes de realizar la implementación
+
+Antes de comenzar con la implementación revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+```
 
 **Prompt 3:**
+```markdown
+
+Actúa como **Frontend Developer experto en React, Next, Tailwind CSS e internacionalización con react-i18next**, siguiendo la arquitectura y convenciones del proyecto.
+
+## Objetivo
+Revisar si la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket proporcionado, considerando la documentación del contexto, el Product Requirement Document, el README y los archivos de código y configuración del proyecto.
+
+## Instrucciones
+
+1. **Revisión de contexto y archivos**
+   - Analiza el ticket en formato Markdown y reconoce su estructura.
+   - Consulta la documentación relevante (`docs/product_requirement_document.md`, README, diagramas, etc.).
+   - Revisa los archivos de la vista y sus componentes, así como archivos de configuración relacionados.
+   - Si falta algún archivo necesario para la revisión, solicita al usuario que lo proporcione.
+
+2. **Validación de criterios**
+   - Verifica que la vista y sus componentes cumplen con los criterios funcionales y visuales del ticket.
+   - Revisa permisos y roles de usuario según lo indicado en el ticket.
+   - Valida la configuración de internacionalización y multilenguaje.
+   - Asegúrate de seguir las convenciones de nombres: PascalCase para componentes, camelCase para variables y funciones.
+   - Confirma que la lógica de negocio esté desacoplada y ubicada en servicios de dominio, no en los controladores.
+   - Menciona el cumplimiento de la LFPDPPP solo si el ticket lo solicita.
+
+3. **Identificación de faltantes**
+   - Si la vista y sus componentes no cumplen con el ticket, genera una lista de criterios faltantes.
+   - Propón una lista de pasos para implementar los criterios faltantes, siguiendo patrones y convenciones del proyecto.
+   - Indica cómo documentar los cambios realizados (comentarios en el código).
+
+4. **Confirmación y flujo**
+   - Corrobora que se hayan cumplido todos los criterios del ticket.
+   - Espera confirmación del usuario antes de pasar al siguiente ticket.
+   - Solicita el siguiente ticket una vez confirmada la implementación.
+
+## Consideraciones adicionales
+- No modificar la parte visual de los componentes, solo implementar lo funcional.
+- Omite sugerencias de pruebas unitarias.
+- Si tienes dudas sobre la estructura, consulta los diagramas y documentación del contexto.
+- Mantén el idioma de la documentación generado acorde al archivo complementado (generalmente español).
+
+## Historia de usuario
+```markdown
+**ID:** LOGIN-MED-01  
+**Título:** Login de médico especialista  
+**Descripción:**  
+Como médico especialista registrado, quiero iniciar sesión con mi correo electrónico y contraseña, para gestionar mi perfil, agenda y recibir notificaciones.
+
+```
+## Ticket
+```markdown
+##### 2.2.6 [Frontend] Integrar consumo del endpoint de login y manejo de respuestas
+
+**Descripción detallada:**  
+Implementar la lógica para enviar los datos del formulario al endpoint de login, manejar respuestas exitosas y errores, y mostrar mensajes al usuario según el resultado.
+
+**Dependencias:**  
+- Depende del formulario de login y del endpoint en backend.
+
+**Etiquetas:**  
+Frontend, API REST, Internacionalización, Validación
+
+**Criterios de aceptación:**  
+- [ ] El endpoint para el inición de sesión como medico es `POST /api/auth/login/doctor`
+- [ ] Se envian los datos de formulario al endpoint indicado cuando el toggle "Soy un médico" se encuentra en valor "Si"
+- [ ] El formulario envía los datos correctamente al endpoint.
+- [ ] Se muestra mensaje de éxito y el usuario es redirigido a "/agenda" tras un login exitoso.
+- [ ] Se muestran mensajes de error claros y traducibles en caso de fallo.
+- [ ] El JWT se almacena de forma segura en frontend.
+
+**Estimación de tiempo:**  
+1 hora
+
+```
+
+Antes de realizar la tarea revisa mis instrucciones ¿hay algo que me este faltando considerar?
+Hazme preguntas si necesitas más información.
+```
+
 
 ### **2.6. Tests**
+**Prompt 1: **
+```markdown
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para las historias de usuario denomidadas "Registro de paciente" y "Registro de médico especialista", empezaremos con su implementación.
+En cuanto el proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Adicionalmente se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
 
-**Prompt 1:**
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a configurar JWT (`jsonwebtoken`) en el proyecto e implementar las historia de usuario y sus series de tickets
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+```
+
 
 **Prompt 2:**
+```markdown
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Convenciones:** camelCase para variables, funciones y clases  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **Internacionalización:** Omitida, respuestas en inglés  
+> **Swagger:** Actualizar documentación del endpoint
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Antes de implementar, revisa el modelo de datos y el código fuente para ubicar la ruta y controlador correctos.
+   - Asegúrate de seguir la arquitectura hexagonal:  
+     - Lógica de negocio en servicios de dominio  
+     - Controladores gestionan entrada/salida  
+     - Adaptadores de entrada (API REST) invocan casos de uso  
+     - Adaptadores de salida gestionan persistencia con Prisma
+
+2. **Diseño del endpoint para consultar el perfil de especialista**
+   - Implementa el endpoint REST `GET /api/doctors/:id` para consultar el perfil profesional y ubicación general de un especialista.
+   - El endpoint debe recibir el identificador del especialista y retornar:
+     - Información profesional: nombre, especialidad, biografía, foto, cédula profesional, título
+     - Ubicación general: ciudad y estado
+     - Oculta datos personales sensibles (correo, teléfono, dirección exacta) si el usuario no está autenticado
+   - Valida que el especialista esté activo antes de mostrar el perfil.
+   - Actualiza la documentación en Swagger.
+
+3. **Implementación de la lógica de consulta**
+   - Consulta las entidades DOCTOR, USER, DOCTOR_SPECIALTY, SPECIALTY, LOCATION, CITY y STATE usando Prisma.
+   - Aplica validaciones de entrada con Yup.
+   - Si el usuario no está autenticado, excluye los datos sensibles de la respuesta.
+   - Maneja errores con middleware global y clases customizadas.
+
+4. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para el endpoint usando Jest y Supertest.
+   - Prueba los siguientes casos:
+     - Acceso con usuario no autenticado (verifica que no se muestran datos sensibles)
+     - Acceso a perfil de especialista activo
+     - Acceso a perfil de especialista inactivo (no debe mostrarse)
+
+5. **Convenciones y patrones**
+   - Mantén la lógica de negocio fuera de los controladores y adáptala en servicios de dominio.
+   - Usa camelCase en todo el código.
+   - Cumple con la LFPDPPP y buenas prácticas de seguridad.
+   - Documenta el endpoint en Swagger.
+
+---
+
+## Ejemplo de estructura base para el endpoint
+
+```js
+// ...existing code...
+// backend/routes/doctors.js
+router.get('/:id', doctorsController.getDoctorProfile);
+// ...existing code...
+
+// backend/controllers/doctorsController.js
+const getDoctorProfile = async (req, res, next) => {
+  // Validación con Yup
+  // Consulta de datos con Prisma
+  // Ocultación de datos sensibles si no hay autenticación
+  // Manejo de errores con clases customizadas
+  // Respuesta en inglés
+};
+// ...existing code...
+```
 
 **Prompt 3:**
+Muestrame solo la implementación del punto 4: Pruebas unitarias, dime que archivos se tienen que modificar y en donde se debe realizar la modificación
+
+
+---
+
+## Referencias
+
+- [Product Requirement Document](docs/product_requirement_document.md)
+- [Modelo de Datos](docs/planificacion_y_documentacion/diagramas/modelo_de_datos.md)
+- [Diagrama de arquitectura](docs/planificacion_y_documentacion/diagramas/diagrama_visual_arquitectura.md)
+- [Diagrama de casos de uso](docs/planificacion_y_documentacion/diagramas/diagrama_casos_de_uso.md)
+
+## Pautas para generar el contenido:
+- Genera una lista de pasos para realizar la implementación de las tareas y tickets
+- Cada paso se va ejecutar de manera individual por lo que me tienes que preguntar si podemos pasar al siguiente
+- Antes de iniciar muestrame la lista de pasos a ejecutar
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+```
 
 ---
 
@@ -501,11 +985,110 @@ Realiza pregunta si es necesario.
 
 ### 4. Especificación de la API
 
-**Prompt 1:**
+**Prompt 1: **
+```markdown
+Eres un experto en Ingenieria de Prompts, en NodeJS, Express.js, JWT (`jsonwebtoken`) y Prisma ORM
+# Contexto Inicial
+Tenemos una serie de tickets documentados (ARCHIVO) para las historias de usuario denomidadas "Registro de paciente" y "Registro de médico especialista", empezaremos con su implementación.
+En cuanto el proyecto, ya se cuenta con las carpetas y estructura base para empezar a crear archivos de código.
+Adicionalmente se cuenta con un product requirement document (PRD), el diagrama de arquitectura y el modelo de datos de la aplicación.
+
+# Intrucciones generales
+Tu tarea es generar un prompt para el chatboot (ChatGPT 4.1) que me ayude a configurar JWT (`jsonwebtoken`) en el proyecto e implementar las historia de usuario y sus series de tickets
+
+# Mejores practicas
+- Incluye el rol en el que debe actual el chatbot
+
+# Consideraciones
+- El chatbot tendrá acceso a la documentación descrita en el contexto
+- El chatbot tendra que revisar la documentación para ejectuar el prompt resultante
+- Omitir Internacionalización, las respuestan se manejaran en Inglés
+- usar Yup para la validación de datos
+- usar Jest y Supertest para las pruebas unitarias
+- Para el manejo de errores utilizar middleware global + clases customizadas
+
+# Pautas para generar el contenido
+1. El formato de salida va ser un archivo con extensión .md y el contenido en formato Markdown
+
+Antes de generar el prompt revisa mis instrucciones ¿me esta faltando algo por considerar?
+Realiza preguntas si necesitas mas información.
+```
+
 
 **Prompt 2:**
+```markdown
+> **Rol:** Ingeniero Backend y Arquitecto de Software  
+> **Referencia:** PRD, modelo de datos, arquitectura hexagonal, convenciones del repositorio  
+> **Convenciones:** camelCase para variables, funciones y clases  
+> **Validaciones:** Yup  
+> **Pruebas:** Jest y Supertest  
+> **Manejo de errores:** Middleware global + clases customizadas  
+> **Internacionalización:** Omitida, respuestas en inglés  
+> **Swagger:** Actualizar documentación del endpoint
+
+---
+
+## Instrucciones Generales
+
+1. **Consulta la documentación y el código fuente**
+   - Antes de implementar, revisa el modelo de datos y el código fuente para ubicar la ruta y controlador correctos.
+   - Asegúrate de seguir la arquitectura hexagonal:  
+     - Lógica de negocio en servicios de dominio  
+     - Controladores gestionan entrada/salida  
+     - Adaptadores de entrada (API REST) invocan casos de uso  
+     - Adaptadores de salida gestionan persistencia con Prisma
+
+2. **Diseño del endpoint para consultar el perfil de especialista**
+   - Implementa el endpoint REST `GET /api/doctors/:id` para consultar el perfil profesional y ubicación general de un especialista.
+   - El endpoint debe recibir el identificador del especialista y retornar:
+     - Información profesional: nombre, especialidad, biografía, foto, cédula profesional, título
+     - Ubicación general: ciudad y estado
+     - Oculta datos personales sensibles (correo, teléfono, dirección exacta) si el usuario no está autenticado
+   - Valida que el especialista esté activo antes de mostrar el perfil.
+   - Actualiza la documentación en Swagger.
+
+3. **Implementación de la lógica de consulta**
+   - Consulta las entidades DOCTOR, USER, DOCTOR_SPECIALTY, SPECIALTY, LOCATION, CITY y STATE usando Prisma.
+   - Aplica validaciones de entrada con Yup.
+   - Si el usuario no está autenticado, excluye los datos sensibles de la respuesta.
+   - Maneja errores con middleware global y clases customizadas.
+
+4. **Pruebas unitarias**
+   - Implementa pruebas unitarias y de integración para el endpoint usando Jest y Supertest.
+   - Prueba los siguientes casos:
+     - Acceso con usuario no autenticado (verifica que no se muestran datos sensibles)
+     - Acceso a perfil de especialista activo
+     - Acceso a perfil de especialista inactivo (no debe mostrarse)
+
+5. **Convenciones y patrones**
+   - Mantén la lógica de negocio fuera de los controladores y adáptala en servicios de dominio.
+   - Usa camelCase en todo el código.
+   - Cumple con la LFPDPPP y buenas prácticas de seguridad.
+   - Documenta el endpoint en Swagger.
+
+---
+
+## Ejemplo de estructura base para el endpoint
+
+```js
+// ...existing code...
+// backend/routes/doctors.js
+router.get('/:id', doctorsController.getDoctorProfile);
+// ...existing code...
+
+// backend/controllers/doctorsController.js
+const getDoctorProfile = async (req, res, next) => {
+  // Validación con Yup
+  // Consulta de datos con Prisma
+  // Ocultación de datos sensibles si no hay autenticación
+  // Manejo de errores con clases customizadas
+  // Respuesta en inglés
+};
+// ...existing code...
+```
 
 **Prompt 3:**
+Muestrame solo la implementación del punto 5: Documenta el endpoint, dime que archivos se tienen que modificar y en donde se debe realizar la modificación
 
 ---
 
@@ -814,6 +1397,7 @@ Realiza preguntas si necesitas mas información.
 ### 7. Pull Requests
 
 **Prompt 1:**
+Eres un experto en documentación técnica. Genera el contenido del Pull Request de lo realizado hasta el momento. El objetivo es detallar lo realizado en el proyecto. El contenido va dirigido a publico en general. Tus pautas para generar el contenido es que ademas del contenido del pull request, generes un titulo y el comentario del ultimo commit, tomando en cuenta que es la entrega final de un proyecto, todo esto en formato Markdown para archivos .md. Antes de realizar esta tarea ¿tienes alguna pregunta?
 
 **Prompt 2:**
 
