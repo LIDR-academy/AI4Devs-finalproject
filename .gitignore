@@ -76,3 +76,10 @@ pids
 *.njsproj
 *.sln
 *.sw?
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.pem
+*pem.bak
