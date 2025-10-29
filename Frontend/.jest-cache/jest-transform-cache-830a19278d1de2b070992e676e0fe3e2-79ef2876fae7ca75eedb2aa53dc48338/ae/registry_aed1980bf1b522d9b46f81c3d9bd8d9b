@@ -1,0 +1,6 @@
+fad87598bad3c633796ecff63a34116f
+'use strict';
+
+const behavior = {};
+
+exports.behavior = behavior;

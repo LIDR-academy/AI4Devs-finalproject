@@ -1,0 +1,107 @@
+ef78afe10313ab8cf8b1550571d59dbb
+{
+  "title": "Viatges",
+  "create": {
+    "title": "Crear Viatge",
+    "newTrip": "Crear Nou Viatge",
+    "origin": "Origen",
+    "latitude": "Latitud d'Origen",
+    "longitude": "Longitud d'Origen",
+    "destination": "Destinació",
+    "date": "Data i hora",
+    "seats": "Seients disponibles",
+    "seatsTotal": "Seients Totals",
+    "submit": "Crear viatge",
+    "cancel": "Cancel·lar",
+    "creating": "Creant...",
+    "selectDestination": "Selecciona una destinació",
+    "maxSeats": "Màxim 8 seients",
+    "helpText": "Pots crear viatges únics o recurrents. Els viatges únics són perfectes per a esdeveniments especials o viatges ocasionals.",
+    "tripType": {
+      "label": "Tipus de Viatge",
+      "oneTime": "Viatge únic",
+      "recurring": "Viatge recurrent",
+      "oneTimeDescription": "Perfecte per a esdeveniments especials o viatges ocasionals",
+      "recurringDescription": "Viatges regulars (ex. desplaçament diari)"
+    },
+    "direction": {
+      "label": "Direcció",
+      "toSede": "Cap a la seu",
+      "fromSede": "Des de la seu"
+    }
+  },
+  "list": {
+    "title": "Els meus viatges",
+    "empty": "No tens cap viatge creat",
+    "createFirst": "Crea el teu primer viatge",
+    "emptyDescription": "Crea el teu primer viatge per començar a compartir amb els teus companys",
+    "tripTo": "Viatge a {{destination}}",
+    "seatsFree": "{{free}} lliures de {{total}} total"
+  },
+  "status": {
+    "active": "Actiu",
+    "completed": "Completat",
+    "cancelled": "Cancel·lat"
+  },
+  "actions": {
+    "view": "Veure",
+    "edit": "Editar",
+    "cancel": "Cancel·lar",
+    "delete": "Eliminar",
+    "addSeat": "+1 Seient",
+    "show": "Mostrar",
+    "hide": "Amagar"
+  },
+  "labels": {
+    "origin": "Origen:",
+    "destination": "Destinació:",
+    "time": "Hora:",
+    "seats": "Seients:"
+  },
+  "map": {
+    "showMap": "Veure al Mapa",
+    "hideMap": "Amagar Mapa"
+  },
+  "edit": {
+    "title": "Editar Viatge",
+    "mapPreview": "Vista prèvia del mapa",
+    "bookedSeatsWarning": "Advertència:",
+    "seatsAlreadyBooked": "seients ja estan reservats"
+  },
+  "messages": {
+    "createSuccess": "Viatge creat exitosament!",
+    "createError": "Error al crear el viatge",
+    "updateSuccess": "Viatge actualitzat exitosament!",
+    "tripUpdated": "Viatge actualitzat exitosament",
+    "updateError": "Error al actualitzar el viatge",
+    "deleteSuccess": "Viatge cancel·lat exitosament",
+    "deleteError": "Error al cancel·lar el viatge",
+    "loadError": "Error al carregar els viatges",
+    "confirmDelete": "Estàs segur que vols cancel·lar aquest viatge?",
+    "formErrors": "Si us plau corregeix els errors en el formulari",
+    "seatsUpdated": "Seients actualitzats: {{total}} total, {{free}} lliures"
+  },
+  "sedes": {
+    "select": "Selecciona un destí",
+    "SEDE-1": "Seu Madrid Centre",
+    "SEDE-2": "Seu Madrid Nord",
+    "SEDE-3": "Seu Barcelona"
+  },
+  "filters": {
+    "title": "Filtres",
+    "status": "Estat",
+    "direction": "Direcció",
+    "destination": "Destinació",
+    "dateFrom": "Data des de",
+    "dateTo": "Data fins a",
+    "allStatuses": "Tots els estats",
+    "allDirections": "Totes les direccions",
+    "allDestinations": "Totes les destinacions",
+    "from": "Des de",
+    "to": "Fins a",
+    "clearAll": "Netejar filtres",
+    "active": "actius",
+    "noResults": "No s'han trobat viatges amb els filtres aplicats"
+  }
+}
+

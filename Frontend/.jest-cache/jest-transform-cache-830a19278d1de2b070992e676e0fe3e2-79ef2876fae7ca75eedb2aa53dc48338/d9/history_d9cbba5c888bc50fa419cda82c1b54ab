@@ -1,0 +1,19 @@
+ab1a6337332f847196d684b8b1ff78b8
+{
+  "title": "Istoric",
+  "filters": {
+    "title": "Filtre",
+    "date": "Data",
+    "status": "Status",
+    "role": "Rol"
+  },
+  "stats": {
+    "totalTrips": "Total călătorii",
+    "co2Saved": "CO2 economisit",
+    "kmShared": "Km partajate"
+  },
+  "list": {
+    "title": "Istoric călătorii",
+    "empty": "Nu există călătorii în istoric"
+  }
+}

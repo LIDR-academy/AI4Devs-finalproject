@@ -1,0 +1,11 @@
+76ec3f5b4b9a6bda503271b39640c7ff
+'use strict';
+
+function getDocumentFromNode(el) {
+    return isDocument(el) ? el : el.ownerDocument;
+}
+function isDocument(node) {
+    return node.nodeType === 9;
+}
+
+exports.getDocumentFromNode = getDocumentFromNode;

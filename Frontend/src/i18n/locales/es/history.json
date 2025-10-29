@@ -1,0 +1,44 @@
+{
+  "title": "Historial de Viajes",
+  "stats": {
+    "totalTrips": "Total Viajes",
+    "co2Saved": "CO₂ Ahorrado",
+    "kmShared": "Km Compartidos",
+    "co2Unit": "kg",
+    "kmUnit": "km"
+  },
+  "filters": {
+    "title": "Filtros",
+    "from": "Desde",
+    "to": "Hasta",
+    "status": "Estado",
+    "role": "Rol",
+    "clear": "Limpiar Filtros"
+  },
+  "status": {
+    "all": "Todos",
+    "COMPLETED": "Completado",
+    "ACTIVE": "Activo", 
+    "CONFIRMED": "Confirmado",
+    "PENDING": "Pendiente",
+    "CANCELLED": "Cancelado"
+  },
+  "role": {
+    "all": "Todos",
+    "driver": "Conductor",
+    "passenger": "Pasajero"
+  },
+  "list": {
+    "empty": "No se encontraron viajes en el historial.",
+    "loadError": "Error al cargar el historial. Por favor, intenta de nuevo."
+  },
+  "trip": {
+    "destination": "Destino",
+    "seats": "Asientos"
+  },
+  "booking": {
+    "tripId": "ID del Viaje",
+    "seatsRequested": "Asientos reservados"
+  }
+}
+

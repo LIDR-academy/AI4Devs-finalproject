@@ -1,0 +1,74 @@
+{
+  "page": "trips",
+  "timestamp": "2025-10-24T09:33:37.910Z",
+  "selects": [
+    {
+      "index": 1,
+      "id": "select-5xzyvs3jg",
+      "name": null,
+      "className": "form-input  ",
+      "options": [
+        {
+          "value": "",
+          "text": "Todos los estados"
+        },
+        {
+          "value": "ACTIVE",
+          "text": "Activo"
+        },
+        {
+          "value": "COMPLETED",
+          "text": "Completado"
+        },
+        {
+          "value": "CANCELLED",
+          "text": "Cancelado"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "select-8zjm958uc",
+      "name": null,
+      "className": "form-input  ",
+      "options": [
+        {
+          "value": "",
+          "text": "Todas las direcciones"
+        },
+        {
+          "value": "TO_SEDE",
+          "text": "Hacia la sede"
+        },
+        {
+          "value": "FROM_SEDE",
+          "text": "Desde la sede"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "id": "select-1b2g81efp",
+      "name": null,
+      "className": "form-input  ",
+      "options": [
+        {
+          "value": "",
+          "text": "Todos los destinos"
+        },
+        {
+          "value": "SEDE-1",
+          "text": "Sede Madrid Centro"
+        },
+        {
+          "value": "SEDE-2",
+          "text": "Sede Madrid Norte"
+        },
+        {
+          "value": "SEDE-3",
+          "text": "Sede Barcelona"
+        }
+      ]
+    }
+  ]
+}

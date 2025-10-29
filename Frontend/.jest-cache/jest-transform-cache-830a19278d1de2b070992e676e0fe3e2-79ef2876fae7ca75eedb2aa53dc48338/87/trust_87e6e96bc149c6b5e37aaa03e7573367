@@ -1,0 +1,26 @@
+2672225dc4b4fca2a8dd8688a68945ae
+{
+  "title": "Trust system",
+  "profile": {
+    "title": "Trust profile",
+    "score": "Trust score",
+    "ratings": "Ratings",
+    "tags": "Tags"
+  },
+  "rating": {
+    "title": "Rate user",
+    "thumbsUp": "Positive",
+    "thumbsDown": "Negative",
+    "comment": "Comment",
+    "tags": "Tags",
+    "submit": "Submit rating"
+  },
+  "list": {
+    "title": "Ratings received",
+    "empty": "You haven't received any ratings"
+  }
+}
+
+
+
+

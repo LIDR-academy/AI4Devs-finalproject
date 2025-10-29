@@ -1,0 +1,44 @@
+{
+  "required": "Le champ {{field}} est obligatoire",
+  "email": {
+    "invalid": "Format d'email invalide"
+  },
+  "minLength": "Minimum {{min}} caractères",
+  "maxLength": "Maximum {{max}} caractères",
+  "range": "Doit être entre {{min}} et {{max}}",
+  "numeric": "Doit être un nombre",
+  "phone": {
+    "invalid": "Format de téléphone invalide"
+  },
+  "date": {
+    "invalid": "Format de date invalide",
+    "required": "La date et l'heure sont obligatoires",
+    "future": "La date doit être dans le futur"
+  },
+  "time": {
+    "invalid": "Format d'heure invalide"
+  },
+  "futureDate": "La date doit être dans le futur",
+  "positiveNumber": "Le nombre doit être positif",
+  "seats": {
+    "min": "Doit avoir au moins 1 place",
+    "max": "Ne peut pas être plus de 8 places",
+    "required": "Les places sont obligatoires"
+  },
+  "coordinates": {
+    "latitude": {
+      "required": "La latitude est obligatoire",
+      "range": "La latitude doit être entre -90 et 90"
+    },
+    "longitude": {
+      "required": "La longitude est obligatoire",
+      "range": "La longitude doit être entre -180 et 180"
+    }
+  },
+  "destination": {
+    "required": "La destination est obligatoire"
+  },
+  "direction": {
+    "required": "La direction est obligatoire"
+  }
+}

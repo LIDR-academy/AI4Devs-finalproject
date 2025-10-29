@@ -1,0 +1,27 @@
+{
+  "title": "Notificacions Push",
+  "description": "Rep notificacions sobre les teves reserves, matches i actualitzacions de viatges.",
+  "enable": "Activar Notificacions",
+  "disable": "Desactivar Notificacions",
+  "subscribed": "Les notificacions estan activades",
+  "subscribing": "Activant...",
+  "unsubscribing": "Desactivant...",
+  "notSupported": "Les notificacions push no són compatibles",
+  "notSupportedDescription": "El teu navegador no suporta notificacions push. Si us plau, usa un navegador modern com Chrome, Firefox o Safari.",
+  "error": "Error en actualitzar la configuració de notificacions. Si us plau, torna-ho a intentar.",
+  "permissionDenied": "Es va denegar el permís de notificacions. Si us plau, activa les notificacions a la configuració del teu navegador.",
+  "endpoint": "Endpoint de notificacions",
+  "privacyNote": "Només enviem notificacions sobre les teves reserves i matches. Pots desactivar-les en qualsevol moment.",
+  "bookingConfirmed": {
+    "title": "Reserva Confirmada",
+    "body": "La teva reserva de {seats} seient(s) ha estat confirmada"
+  },
+  "matchFound": {
+    "title": "Nou Match Trobat",
+    "body": "S'ha trobat un match amb {score}% de compatibilitat"
+  },
+  "tripCancelled": {
+    "title": "Viatge Cancel·lat",
+    "body": "El viatge {tripId} ha estat cancel·lat"
+  }
+}

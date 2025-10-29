@@ -1,0 +1,27 @@
+{
+  "title": "Notificări Push",
+  "description": "Primește notificări despre rezervările tale, potriviri și actualizări de călătorii.",
+  "enable": "Activează Notificările",
+  "disable": "Dezactivează Notificările",
+  "subscribed": "Notificările sunt activate",
+  "subscribing": "Se activează...",
+  "unsubscribing": "Se dezactivează...",
+  "notSupported": "Notificările push nu sunt suportate",
+  "notSupportedDescription": "Browserul tău nu suportă notificări push. Te rugăm să folosești un browser modern precum Chrome, Firefox sau Safari.",
+  "error": "Eroare la actualizarea setărilor de notificare. Te rugăm să încerci din nou.",
+  "permissionDenied": "Permisiunea de notificare a fost refuzată. Te rugăm să activezi notificările în setările browserului.",
+  "endpoint": "Endpoint notificări",
+  "privacyNote": "Trimitem doar notificări despre rezervările și potrivirile tale. Le poți dezactiva oricând.",
+  "bookingConfirmed": {
+    "title": "Rezervare Confirmată",
+    "body": "Rezervarea ta pentru {seats} loc(uri) a fost confirmată"
+  },
+  "matchFound": {
+    "title": "Potrivire Nouă Găsită",
+    "body": "A fost găsită o potrivire cu {score}% compatibilitate"
+  },
+  "tripCancelled": {
+    "title": "Călătorie Anulată",
+    "body": "Călătoria {tripId} a fost anulată"
+  }
+}

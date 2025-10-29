@@ -1,0 +1,33 @@
+4ce90605cb5399bf10c3cc6e562e822f
+{
+  "title": "Les Meves Reserves",
+  "list": {
+    "title": "Les meves reserves",
+    "empty": "No tens cap reserva",
+    "emptyDescription": "Quan reservis un viatge, apareixerà aquí.",
+    "emptyHint": "Ves a \"Cercar\" per trobar viatges disponibles",
+    "loadingError": "Error al carregar les reserves"
+  },
+  "booking": {
+    "id": "Reserva #{{id}}",
+    "tripId": "ID del Viatge",
+    "seatsRequested": "Seients reservats",
+    "bookingDate": "Data de reserva",
+    "status": "Estat",
+    "cancel": "Cancel·lar Reserva",
+    "cancelConfirm": "Estàs segur que vols cancel·lar aquesta reserva?",
+    "cancelSuccess": "Reserva cancel·lada exitosament",
+    "cancelError": "Error al cancel·lar la reserva"
+  },
+  "status": {
+    "CONFIRMED": "Confirmada",
+    "PENDING": "Pendent de confirmació",
+    "CANCELLED": "Cancel·lada",
+    "badges": {
+      "CONFIRMED": "Confirmada",
+      "PENDING": "Pendent",
+      "CANCELLED": "Cancel·lada"
+    }
+  }
+}
+

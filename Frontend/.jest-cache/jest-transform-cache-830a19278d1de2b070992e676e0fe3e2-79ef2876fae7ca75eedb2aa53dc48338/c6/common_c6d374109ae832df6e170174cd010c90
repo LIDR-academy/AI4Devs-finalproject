@@ -1,0 +1,80 @@
+c989ac8209cfb163651357499bed3978
+{
+  "nav": {
+    "home": "Acasă",
+    "trips": "Călătorii",
+    "search": "Căutare",
+    "bookings": "Rezervări",
+    "history": "Istoric",
+    "profile": "Profil"
+  },
+  "actions": {
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "edit": "Editează",
+    "delete": "Șterge",
+    "confirm": "Confirmă",
+    "create": "Creează",
+    "search": "Caută",
+    "filter": "Filtrează",
+    "clear": "Șterge",
+    "login": "Autentificare",
+    "logout": "Deconectare",
+    "openMenu": "Deschide meniul"
+  },
+  "messages": {
+    "success": "Operațiune reușită",
+    "error": "Eroare în operațiune",
+    "loading": "Se încarcă...",
+    "noData": "Nu există date disponibile",
+    "tryAgain": "Încearcă din nou"
+  },
+  "language": {
+    "select": "Selectează limba",
+    "catalan": "Català",
+    "spanish": "Español",
+    "romanian": "Română",
+    "ukrainian": "Українська",
+    "english": "English",
+    "french": "Français"
+  },
+  "home": {
+    "title": "bonÀreaGo",
+    "subtitle": "Platforma ta corporativă pentru partajarea călătoriilor. Reduce costurile și contribuie la sustenabilitate.",
+    "getStarted": "Începe Acum",
+    "createTrip": "Creează Călătorie",
+    "searchTrips": "Caută Călătorii",
+    "features": {
+      "share": {
+        "title": "Partajează Călătoria Ta",
+        "description": "Oferă locuri disponibile în călătoriile tale corporative și ajută colegii tăi"
+      },
+      "find": {
+        "title": "Găsește Potriviri",
+        "description": "Algoritmul nostru inteligent îți găsește cele mai bune călătorii în funcție de locația și programul tău"
+      },
+      "save": {
+        "title": "Economisește Costuri",
+        "description": "Reduce cheltuielile de transport partajând călătorii cu colegii de muncă"
+      }
+    },
+    "howItWorks": {
+      "title": "Cum funcționează?",
+      "subtitle": "Trei pași simpli pentru a începe să partajezi călătorii",
+      "steps": {
+        "create": {
+          "title": "Creează Călătoria Ta",
+          "description": "Publică călătoria ta corporativă cu originea, destinația și programul"
+        },
+        "search": {
+          "title": "Caută Potriviri",
+          "description": "Găsește călătorii compatibile cu locația și programul tău"
+        },
+        "book": {
+          "title": "Rezervă și Călătorește",
+          "description": "Confirmă rezervarea și bucură-te de călătoria partajată"
+        }
+      }
+    }
+  }
+}

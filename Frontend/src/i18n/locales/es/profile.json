@@ -1,0 +1,50 @@
+{
+  "title": "Mi Perfil",
+  "personal": {
+    "title": "Información Personal",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "sede": "Sede",
+    "schedule": "Horario Preferido",
+    "required": "Campo obligatorio",
+    "optional": "Opcional",
+    "namePlaceholder": "Juan Pérez",
+    "emailPlaceholder": "juan.perez@empresa.com",
+    "emailHelper": "Usamos tu email corporativo para las notificaciones",
+    "schedulePlaceholder": "08:00 - 17:00",
+    "scheduleHelper": "Opcional: Tu horario habitual de trabajo",
+    "sedePlaceholder": "Selecciona tu sede"
+  },
+  "account": {
+    "title": "Información de la Cuenta",
+    "userId": "ID de Usuario",
+    "role": "Rol"
+  },
+  "notifications": {
+    "title": "Notificaciones Push",
+    "enable": "Habilitar",
+    "disable": "Deshabilitar",
+    "error": "No se pudo habilitar/deshabilitar las notificaciones",
+    "pushApiNotSupported": "Push API no soportada"
+  },
+  "actions": {
+    "save": "Guardar Cambios",
+    "saving": "Guardando...",
+    "loadError": "No se pudo cargar el perfil",
+    "updateSuccess": "¡Perfil actualizado exitosamente!",
+    "updateError": "Error al actualizar el perfil"
+  },
+  "validation": {
+    "nameMinLength": "El nombre debe tener al menos 2 caracteres",
+    "emailRequired": "El email es obligatorio",
+    "emailInvalid": "Por favor ingresa un email válido",
+    "sedeRequired": "La sede es obligatoria",
+    "formErrors": "Por favor corrige los errores en el formulario"
+  },
+  "sede": {
+    "SEDE-1": "Sede Madrid Centro",
+    "SEDE-2": "Sede Madrid Norte",
+    "SEDE-3": "Sede Barcelona"
+  }
+}
+

@@ -1,0 +1,12 @@
+{
+  "noCoordinates": "No coordinates available to show map.",
+  "clickButtons": "Click buttons to open in Google Maps or Waze",
+  "location": "Trip Location",
+  "origin": "📍 Origin",
+  "destination": "🎯 Destination",
+  "route": "🛣️ Route",
+  "googleMaps": "Google Maps",
+  "waze": "Waze",
+  "loadingRoute": "Loading route...",
+  "approximateDistance": "Approximate distance: {{distance}} km"
+}

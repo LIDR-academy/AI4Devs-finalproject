@@ -1,0 +1,12 @@
+{
+  "noCoordinates": "Aucune coordonnée disponible pour afficher la carte.",
+  "clickButtons": "Cliquez sur les boutons pour ouvrir dans Google Maps ou Waze",
+  "location": "Emplacement du Voyage",
+  "origin": "📍 Origine",
+  "destination": "🎯 Destination",
+  "route": "🛣️ Itinéraire",
+  "googleMaps": "Google Maps",
+  "waze": "Waze",
+  "loadingRoute": "Chargement de l'itinéraire...",
+  "approximateDistance": "Distance approximative: {{distance}} km"
+}

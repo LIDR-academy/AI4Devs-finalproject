@@ -1,0 +1,14 @@
+{
+  "fullText": "\n    bonÀreaGoInicioViajesBuscarReservasHistorial🇪🇸EspañolPerfilCerrar SesiónAbrir menúbonÀreaGoTu plataforma corporativa para compartir viajes. Reduce costos y contribuye a la sostenibilidad.Crear ViajeBuscar ViajesComparte tu ViajeOfrece asientos disponibles en tus viajes corporativos y ayuda a tus compañerosEncuentra MatchesNuestro algoritmo inteligente te encuentra los mejores viajes según tu ubicación y horarioAhorra CostosReduce gastos de transporte compartiendo viajes con compañeros de trabajo¿Cómo funciona?Tres simples pasos para comenzar a compartir viajes1Crea tu ViajePublica tu viaje corporativo con origen, destino y horario2Busca MatchesEncuentra viajes compatibles con tu ubicación y horario3Reserva y ViajaConfirma tu reserva y disfruta del viaje compartido\n    \n  \n  \n\n",
+  "buttons": [
+    "🇪🇸Español",
+    "Cerrar Sesión",
+    "Abrir menú",
+    "Crear Viaje",
+    "Buscar Viajes"
+  ],
+  "foundKeywords": [
+    "sesión",
+    "comenzar"
+  ]
+}

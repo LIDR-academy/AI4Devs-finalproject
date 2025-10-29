@@ -1,0 +1,51 @@
+fefa967bc2225dfae4d1175200f17bea
+{
+  "title": "My Profile",
+  "personal": {
+    "title": "Personal Information",
+    "name": "Name",
+    "email": "Email",
+    "sede": "Office",
+    "schedule": "Preferred Schedule",
+    "required": "Required field",
+    "optional": "Optional",
+    "namePlaceholder": "Juan Pérez",
+    "emailPlaceholder": "juan.perez@empresa.com",
+    "emailHelper": "We use your corporate email for notifications",
+    "schedulePlaceholder": "08:00 - 17:00",
+    "scheduleHelper": "Optional: Your usual work schedule",
+    "sedePlaceholder": "Select your office"
+  },
+  "account": {
+    "title": "Account Information",
+    "userId": "User ID",
+    "role": "Role"
+  },
+  "notifications": {
+    "title": "Push Notifications",
+    "enable": "Enable",
+    "disable": "Disable",
+    "error": "Could not enable/disable notifications",
+    "pushApiNotSupported": "Push API not supported"
+  },
+  "actions": {
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "loadError": "Could not load profile",
+    "updateSuccess": "Profile updated successfully!",
+    "updateError": "Error updating profile"
+  },
+  "validation": {
+    "nameMinLength": "Name must be at least 2 characters",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email",
+    "sedeRequired": "Office is required",
+    "formErrors": "Please correct the errors in the form"
+  },
+  "sede": {
+    "SEDE-1": "Madrid Center Office",
+    "SEDE-2": "Madrid North Office",
+    "SEDE-3": "Barcelona Office"
+  }
+}
+

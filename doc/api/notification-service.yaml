@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8085/api
+paths:
+  /notifications/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /notifications/subscribe:
+    post:
+      summary: Subscribe current user to Web Push
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                endpoint:
+                  type: string
+                p256dhKey:
+                  type: string
+                authKey:
+                  type: string
+              required: [endpoint, p256dhKey, authKey]
+      responses:
+        '200':
+          description: Subscription stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSubscription'
+        '401':
+          description: Unauthorized
+  /notifications/unsubscribe:
+    delete:
+      summary: Unsubscribe current user by subscription endpoint
+      parameters:
+        - in: query
+          name: endpoint
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Unsubscribed
+        '400':
+          description: Missing endpoint
+        '401':
+          description: Unauthorized
+  /notifications/subscriptions:
+    get:
+      summary: List active subscriptions for current user
+      responses:
+        '200':
+          description: Array of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationSubscription'
+        '401':
+          description: Unauthorized
+  /notifications/send:
+    post:
+      summary: Send a test push to current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                body:
+                  type: string
+              required: [title]
+      responses:
+        '200':
+          description: Sent
+        '401':
+          description: Unauthorized
+components:
+  schemas:
+    NotificationSubscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        endpoint:
+          type: string
+        p256dhKey:
+          type: string
+        authKey:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastUsed:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+

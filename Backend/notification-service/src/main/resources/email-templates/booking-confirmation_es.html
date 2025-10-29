@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Confirmada - Covoituraje</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 20px;
+            color: #28a745;
+            margin: 20px 0;
+        }
+        .content {
+            margin: 20px 0;
+        }
+        .trip-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .detail-value {
+            color: #212529;
+        }
+        .seats-info {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚗 Covoituraje</div>
+            <div>Plataforma de Coche Compartido Corporativo</div>
+        </div>
+        
+        <div class="title">✅ Reserva Confirmada</div>
+        
+        <div class="content">
+            <p>Hola {{userName}},</p>
+            <p>¡Tu reserva ha sido confirmada exitosamente! Ya está todo listo para tu próximo viaje.</p>
+        </div>
+        
+        <div class="trip-details">
+            <h3>Detalles del Viaje</h3>
+            <div class="detail-row">
+                <span class="detail-label">ID del Viaje:</span>
+                <span class="detail-value">{{tripId}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Fecha y Hora:</span>
+                <span class="detail-value">{{tripDateTime}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Desde:</span>
+                <span class="detail-value">{{origin}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Hasta:</span>
+                <span class="detail-value">{{destination}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Conductor:</span>
+                <span class="detail-value">{{driverName}}</span>
+            </div>
+        </div>
+        
+        <div class="seats-info">
+            🎫 Has reservado {{seats}} asiento(s) para este viaje
+        </div>
+        
+        <div class="content">
+            <p><strong>Recordatorios importantes:</strong></p>
+            <ul>
+                <li>Por favor, llega al punto de encuentro 5 minutos antes de la salida</li>
+                <li>Contacta con el conductor si necesitas hacer algún cambio</li>
+                <li>Cancela tu reserva si no puedes asistir (mínimo 2 horas de antelación)</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{appUrl}}" class="button">Ver Detalles del Viaje</a>
+        </div>
+        
+        <div class="footer">
+            <p>Este es un mensaje automático de Covoituraje.</p>
+            <p>Si tienes alguna pregunta, contacta con tu departamento de RRHH.</p>
+            <p>&copy; 2024 Covoituraje. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

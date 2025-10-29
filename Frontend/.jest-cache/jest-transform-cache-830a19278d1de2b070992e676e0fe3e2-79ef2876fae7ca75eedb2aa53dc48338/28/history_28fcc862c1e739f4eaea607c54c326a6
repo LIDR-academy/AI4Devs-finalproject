@@ -1,0 +1,19 @@
+09a59e17763bb1fdb24a20b0a69209f5
+{
+  "title": "Historique",
+  "filters": {
+    "title": "Filtres",
+    "date": "Date",
+    "status": "Statut",
+    "role": "Rôle"
+  },
+  "stats": {
+    "totalTrips": "Total des voyages",
+    "co2Saved": "CO2 économisé",
+    "kmShared": "Km partagés"
+  },
+  "list": {
+    "title": "Historique des voyages",
+    "empty": "Aucun voyage dans l'historique"
+  }
+}

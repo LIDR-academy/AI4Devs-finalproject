@@ -1,0 +1,46 @@
+{
+  "page": "matches",
+  "timestamp": "2025-10-24T09:33:25.122Z",
+  "selects": [
+    {
+      "index": 1,
+      "id": "",
+      "name": null,
+      "className": "border rounded px-3 py-2",
+      "options": [
+        {
+          "value": "TO_SEDE",
+          "text": "Hacia la sede"
+        },
+        {
+          "value": "FROM_SEDE",
+          "text": "Desde la sede"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "select-swwbazb70",
+      "name": null,
+      "className": "form-input  ",
+      "options": [
+        {
+          "value": "",
+          "text": "Seleccionar destino..."
+        },
+        {
+          "value": "SEDE-1",
+          "text": "Sede Madrid Centro"
+        },
+        {
+          "value": "SEDE-2",
+          "text": "Sede Madrid Norte"
+        },
+        {
+          "value": "SEDE-3",
+          "text": "Sede Barcelona"
+        }
+      ]
+    }
+  ]
+}
