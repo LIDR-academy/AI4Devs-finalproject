@@ -1,0 +1,14 @@
+{
+    "name": "astillero/herramientas",
+    "description": "Sistema de gestión de herramientas portátiles para astillero",
+    "type": "project",
+    "require": {
+        "php": ">=8.2.0",
+        "resend/resend-php": "^0.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

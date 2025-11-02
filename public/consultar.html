@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultar Ubicación - Gestión de Herramientas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <div class="container mx-auto p-6">
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-8 border border-slate-700">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-yellow-500 to-amber-500 p-3 rounded-lg shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white">Buscar Herramienta</h1>
+                        <p class="text-slate-400 text-sm">Consulta la ubicación y estado</p>
+                    </div>
+                </div>
+                <button onclick="window.close()" class="px-3 sm:px-5 py-2.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-semibold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span class="hidden sm:inline">Volver</span>
+                </button>
+            </div>
+
+            <!-- Formulario de consulta -->
+            <div class="mb-8">
+                <form id="consultarUbicacionForm" class="space-y-6" onsubmit="return false">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-300 mb-2">Seleccione una herramienta</label>
+                        <select name="herramienta" required class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500 focus:outline-none transition-all">
+                            <option value="">Cargando herramientas...</option>
+                        </select>
+                    </div>
+                    <button type="button" id="btnConsultar" class="w-full bg-gradient-to-r from-yellow-600 to-amber-600 text-white py-4 px-6 rounded-lg font-bold hover:from-yellow-700 hover:to-amber-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 text-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Buscar Ubicación
+                    </button>
+                </form>
+            </div>
+
+            <!-- Resultado de la consulta -->
+            <div id="resultadoConsulta" class="hidden">
+                <!-- Se llenará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/session-utils.js"></script>
+    <script src="js/consultar.js"></script>
+    <script>
+        // Funciones de utilidad globales para esta ventana
+        window.formatDate = function(date) {
+            if (typeof date === 'string') {
+                date = new Date(date);
+            }
+            return date.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        // Inicialización cuando se carga la página
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Verificar sesión en el servidor (seguridad)
+                if (!await checkSessionOrRedirect()) {
+                    return; // Ya redirigió al login
+                }
+
+                // Obtener token CSRF
+                await api.getCsrfToken();
+                
+                // Crear instancia de consulta
+                window.consultar = new ConsultarUbicacion();
+                
+                // Inicializar consulta
+                await window.consultar.init();
+            } catch (error) {
+                console.error('Error durante la inicialización:', error);
+                showToast('Error al inicializar: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

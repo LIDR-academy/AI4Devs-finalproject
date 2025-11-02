@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usar Herramienta - Gestión de Herramientas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <div class="container mx-auto p-6">
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-8 border border-slate-700">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-blue-500 to-cyan-500 p-3 rounded-lg shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white">Usar Herramienta</h1>
+                        <p class="text-slate-400 text-sm">Registra el uso de una herramienta</p>
+                    </div>
+                </div>
+                <button onclick="window.close()" class="px-3 sm:px-5 py-2.5 bg-slate-700 text-white rounded-lg hover:bg-slate-600 font-semibold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span class="hidden sm:inline">Cerrar</span>
+                </button>
+            </div>
+
+            <!-- Formulario de usar herramienta -->
+            <form id="usarHerramientaForm" class="space-y-6" onsubmit="return false">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Herramienta</label>
+                    <select name="herramienta" required class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
+                        <option value="">Cargando herramientas...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Ubicación</label>
+                    <select name="ubicacion" required class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
+                        <option value="">Cargando ubicaciones...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Fecha fin (opcional)</label>
+                    <input type="datetime-local" name="fechaFin" id="fechaFin" class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
+                    <p class="mt-2 text-sm text-slate-400">Fecha estimada de finalización (dejar vacío si no se sabe)</p>
+                </div>
+                <button type="button" id="btnUsar" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-4 px-6 rounded-lg font-bold hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Registrar Uso de Herramienta
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/session-utils.js"></script>
+    <script src="js/usar.js"></script>
+    <script>
+        // Funciones de utilidad globales para esta ventana
+        window.formatDate = function(date) {
+            if (typeof date === 'string') {
+                date = new Date(date);
+            }
+            return date.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        // Inicialización cuando se carga la página
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Establecer fecha mínima en el campo de fecha fin (fecha/hora actual)
+            const fechaFinInput = document.getElementById('fechaFin');
+            if (fechaFinInput) {
+                const ahora = new Date();
+                const year = ahora.getFullYear();
+                const month = String(ahora.getMonth() + 1).padStart(2, '0');
+                const day = String(ahora.getDate()).padStart(2, '0');
+                const hours = String(ahora.getHours()).padStart(2, '0');
+                const minutes = String(ahora.getMinutes()).padStart(2, '0');
+                const fechaMinima = `${year}-${month}-${day}T${hours}:${minutes}`;
+                fechaFinInput.setAttribute('min', fechaMinima);
+            }
+            
+            try {
+                // Verificar sesión en el servidor (seguridad)
+                if (!await checkSessionOrRedirect()) {
+                    return; // Ya redirigió al login
+                }
+
+                // Obtener token CSRF
+                await api.getCsrfToken();
+                
+                // Crear instancia de usar herramienta
+                window.usarManager = new UsarHerramienta();
+                
+                // Inicializar
+                await window.usarManager.init();
+            } catch (error) {
+                console.error('Error durante la inicialización:', error);
+                showToast('Error al inicializar: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

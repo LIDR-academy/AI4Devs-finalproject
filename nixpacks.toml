@@ -1,0 +1,21 @@
+[phases.setup]
+nixPkgs = [
+  'php83',
+  'php83Packages.composer'
+]
+
+[phases.install]
+cmds = [
+  'echo "=== Limpiando submódulos antiguos ==="',
+  'rm -rf lib/Resend',
+  'echo "=== Instalando dependencias de Composer ==="',
+  'composer install --no-dev --optimize-autoloader',
+  'echo "=== Verificando extensiones PHP ==="',
+  'php -v',
+  'php -m',
+  'php -i | grep -i pdo',
+  'echo "=== Extensiones verificadas ==="'
+]
+
+[start]
+cmd = 'php -d display_errors=0 -d log_errors=1 -d error_log=/tmp/php_errors.log -S 0.0.0.0:${PORT:-8080} -t . index.php'

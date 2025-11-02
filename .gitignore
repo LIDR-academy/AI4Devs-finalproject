@@ -1,0 +1,142 @@
+# Environment files (CRÍTICO: Contienen credenciales SMTP, DB, etc.)
+.env
+.env.production
+.env.produccion
+.env.railway
+.env.local
+.env.development
+.env.test
+.env.*.local
+.env.backup
+
+# EXCEPCIONES: Archivos de ejemplo (sin credenciales reales)
+!.env.example
+
+# Dependencias y paquetes
+/vendor/
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Archivos de log y datos temporales
+/src/utils/logs/*
+!/src/utils/logs/.gitkeep
+*.log
+*.cache
+*.tmp
+temp/
+tmp/
+
+# Archivos de configuración local
+config.local.php
+database.local.php
+email.local.php
+
+# Archivos de IDE y editores
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+.vs/
+*.swp
+*.swo
+*~
+.settings/
+.project
+.buildpath
+.netbeans/
+nbproject/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Archivos de Composer
+composer.phar
+composer.lock
+/vendor/
+.php-cs-fixer.cache
+
+# Archivos de base de datos
+*.sqlite
+*.sqlite3
+*.db
+
+# Archivos de respaldo y temporales
+*.bak
+*.backup
+*.old
+*.save
+*.swp
+*.test
+
+# Archivos de compilación y caché
+*.class
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+*.dll
+*.dylib
+
+# Archivos de certificados y claves (SEGURIDAD)
+*.pem
+*.key
+*.crt
+*.csr
+*.cer
+*.der
+*.priv
+*.pub
+*.p12
+*.pfx
+*.keystore
+ssl/
+certs/
+
+# Directorios de caché
+.phpunit.result.cache
+.phpunit.cache
+.php_cs.cache
+.php-cs-fixer.cache
+
+# Archivos de cobertura y pruebas
+/coverage/
+/coverage-html/
+/phpunit.xml
+.phpunit.result.cache
+
+# Archivos específicos del proyecto
+/public/uploads/*
+!/public/uploads/.gitkeep
+/public/cache/*
+!/public/cache/.gitkeep
+/src/config/*.local.php
+
+# Backups de base de datos (pueden contener datos sensibles)
+*.sql
+*.sql.gz
+*.sql.zip
+backups/
+backup/
+dumps/
+!db/schema.sql
+!db/data.sql
+
+# Archivos de sesión (pueden contener tokens)
+/tmp/sessions/*
+/var/sessions/*
+sessions/
+
+# Archivos de logs que pueden contener información sensible
+error_log
+error.log
+access.log
+php_errors.log
+debug.log

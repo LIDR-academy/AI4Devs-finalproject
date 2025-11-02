@@ -1,0 +1,10 @@
+# Redirigir todas las peticiones a través del front controller
+RewriteEngine On
+RewriteBase /AI4Devs-finalproject/public/
+
+# Permitir acceso directo a archivos existentes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redirigir el resto a index.html
+RewriteRule ^(.*)$ index.html [L]
