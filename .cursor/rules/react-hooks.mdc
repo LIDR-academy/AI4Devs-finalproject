@@ -1,0 +1,81 @@
+---
+globs: *.tsx,*.jsx,*.ts,*.js
+description: React hooks usage standards and custom hook guidelines
+---
+
+# React Hooks Standards
+
+## Hook Usage Rules
+- Only call hooks at the top level of components or other hooks
+- Never call hooks inside loops, conditions, or nested functions
+- Use the `use` prefix for all custom hooks
+- Always include dependencies in useEffect dependency arrays
+
+## Built-in Hooks Best Practices
+
+### useState
+- Use functional updates for state that depends on previous state
+- Split state into multiple useState calls for unrelated data
+- Use objects/arrays only when state items are closely related
+
+### useEffect
+- Keep effects focused on a single concern
+- Clean up subscriptions and timers in return function
+- Use separate effects for unrelated side effects
+- Optimize with proper dependency arrays
+
+### useMemo and useCallback
+- Only use for expensive calculations or preventing unnecessary re-renders
+- Include all dependencies in dependency array
+- Don't overuse - measure performance impact
+
+## Custom Hooks
+- Extract stateful logic into reusable custom hooks
+- Return objects for multiple values, arrays for simple pairs
+- Use TypeScript for better type safety
+- Test custom hooks independently
+
+Example custom hook:
+```tsx
+interface UseApiOptions {
+  immediate?: boolean;
+}
+
+interface UseApiReturn<T> {
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+const useApi = <T>(
+  url: string,
+  options: UseApiOptions = {}
+): UseApiReturn<T> => {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(url);
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  }, [url]);
+
+  useEffect(() => {
+    if (options.immediate !== false) {
+      fetchData();
+    }
+  }, [fetchData, options.immediate]);
+
+  return { data, loading, error, refetch: fetchData };
+};
+```

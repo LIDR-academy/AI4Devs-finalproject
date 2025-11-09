@@ -1,0 +1,28 @@
+#SPECS PENDIENTES
+- EXPORTAR A EXCEL
+- AUMENTAR LA PRECISIÓN SEMÁNTICA DE near_text
+    - uso de IA para la predición semática
+- COMPARAR DOS DOCUMENTOS
+- Crear base de datos de documentos
+    - Tipos de documentos
+        1. contratos
+        2. horas complementarioas
+        3. otros
+    - documentos. Campos
+        1. ID (automatico)
+        2. Nombre
+        3. ultima actualización
+        4. fichero template
+    - historico del documento 
+        1. ID
+        2. fecha creación
+        3. fichero
+- Scrapeo de la web del sepe
+
+
+#BUGFIXING
+- El primer click para cargar un documento no functional
+- Cuando ya has cargado un documento se puede seguir clickando el componente
+
+# MEJORAS
+- Paginación y buscador en la página

@@ -1,0 +1,42 @@
+# SEPE Templates Comparator - Development Dependencies
+
+# Include production requirements
+-r requirements.txt
+
+# Testing Framework
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+httpx==0.25.2  # For TestClient
+
+# Code Quality & Formatting
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Pre-commit Hooks
+pre-commit==3.5.0
+
+# Development Tools
+watchdog==3.0.0
+python-dotenv==1.0.0
+
+# Database Testing
+pytest-postgresql==5.0.0
+
+# API Testing
+factory-boy==3.3.0
+faker==20.1.0
+
+# Development Server
+uvicorn[standard]==0.24.0
+
+# Debugging
+ipdb==0.13.13
+rich==13.7.0
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.8

@@ -1,0 +1,129 @@
+---
+globs: *.tsx,*.jsx
+description: React accessibility (a11y) standards and WCAG compliance guidelines
+---
+
+# React Accessibility Standards
+
+## Semantic HTML
+- Use semantic HTML elements: `<button>`, `<nav>`, `<main>`, `<header>`, `<footer>`
+- Use headings (`h1-h6`) in hierarchical order
+- Use lists (`ul`, `ol`) for grouped content
+- Use `<form>` elements for user input
+
+## ARIA Attributes
+- Use `aria-label` for elements without visible text
+- Use `aria-labelledby` to reference descriptive elements
+- Use `aria-describedby` for additional context
+- Use `aria-expanded` for collapsible content
+- Use `aria-hidden` for decorative elements
+
+## Keyboard Navigation
+- Ensure all interactive elements are keyboard accessible
+- Implement proper tab order with `tabIndex`
+- Handle keyboard events: Enter, Space, Escape, Arrow keys
+- Provide visible focus indicators
+- Implement focus management for dynamic content
+
+## Form Accessibility
+```tsx
+interface FormFieldProps {
+  id: string;
+  label: string;
+  error?: string;
+  required?: boolean;
+}
+
+const FormField: React.FC<FormFieldProps> = ({
+  id,
+  label,
+  error,
+  required,
+  ...props
+}) => {
+  const errorId = error ? `${id}-error` : undefined;
+  
+  return (
+    <div className="form-field">
+      <label htmlFor={id} className="form-label">
+        {label}
+        {required && <span aria-label="required">*</span>}
+      </label>
+      <input
+        id={id}
+        aria-describedby={errorId}
+        aria-invalid={error ? 'true' : 'false'}
+        {...props}
+      />
+      {error && (
+        <div id={errorId} className="form-error" role="alert">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+```
+
+## Interactive Components
+```tsx
+// Accessible Modal
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      modalRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div
+        ref={modalRef}
+        className="modal-content"
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+      >
+        <h2 id="modal-title">{title}</h2>
+        <button
+          className="modal-close"
+          onClick={onClose}
+          aria-label="Close modal"
+        >
+          ×
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+};
+```
+
+## Testing Accessibility
+- Test with screen readers (NVDA, JAWS, VoiceOver)
+- Use automated tools: axe-core, React Testing Library queries
+- Test keyboard-only navigation
+- Verify color contrast ratios
+- Test with browser zoom up to 200%
+
+## Common Accessibility Patterns
+- Skip links for keyboard users
+- Live regions for dynamic content updates
+- Proper color contrast (4.5:1 for normal text)
+- Alternative text for images
+- Captions for videos
+- Focus management in SPAs

@@ -1,0 +1,148 @@
+---
+globs: *.tsx,*.jsx,*.ts,*.js
+description: React performance optimization standards and best practices
+---
+
+# React Performance Standards
+
+## Rendering Optimization
+- Use `React.memo()` to prevent unnecessary re-renders
+- Implement proper dependency arrays in hooks
+- Avoid creating objects/functions in render methods
+- Use `useMemo()` for expensive calculations
+- Use `useCallback()` for stable function references
+
+## Code Splitting
+- Implement route-based code splitting with `React.lazy()`
+- Use dynamic imports for heavy components
+- Split vendor bundles from application code
+- Lazy load non-critical components
+
+```tsx
+// Route-based code splitting
+const LazyComponent = React.lazy(() => import('./HeavyComponent'));
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route 
+          path="/heavy" 
+          element={
+            <Suspense fallback={<Loading />}>
+              <LazyComponent />
+            </Suspense>
+          } 
+        />
+      </Routes>
+    </Router>
+  );
+};
+```
+
+## State Management
+- Keep state as close to where it's needed as possible
+- Use local state for component-specific data
+- Use context sparingly - split contexts by concern
+- Consider state management libraries for complex apps
+
+## List Optimization
+```tsx
+// Optimized list rendering
+interface ListItemProps {
+  item: Item;
+  onSelect: (id: string) => void;
+}
+
+const ListItem: React.FC<ListItemProps> = React.memo(({ item, onSelect }) => {
+  const handleClick = useCallback(() => {
+    onSelect(item.id);
+  }, [item.id, onSelect]);
+
+  return (
+    <div className="list-item" onClick={handleClick}>
+      {item.name}
+    </div>
+  );
+});
+
+const OptimizedList: React.FC<ListProps> = ({ items }) => {
+  const handleSelect = useCallback((id: string) => {
+    // Handle selection
+  }, []);
+
+  return (
+    <div className="list">
+      {items.map((item) => (
+        <ListItem
+          key={item.id}
+          item={item}
+          onSelect={handleSelect}
+        />
+      ))}
+    </div>
+  );
+};
+```
+
+## Image and Asset Optimization
+- Use appropriate image formats (WebP, AVIF)
+- Implement lazy loading for images
+- Use responsive images with srcSet
+- Optimize bundle size with tree shaking
+
+```tsx
+// Lazy loaded image component
+const LazyImage: React.FC<ImageProps> = ({ src, alt, ...props }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={imgRef} className="lazy-image-container">
+      {isInView && (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setIsLoaded(true)}
+          className={`lazy-image ${isLoaded ? 'loaded' : 'loading'}`}
+          {...props}
+        />
+      )}
+    </div>
+  );
+};
+```
+
+## Performance Monitoring
+- Use React DevTools Profiler
+- Monitor bundle size with webpack-bundle-analyzer
+- Implement performance metrics (Core Web Vitals)
+- Use performance.mark() for custom metrics
+- Monitor memory leaks and cleanup effects properly
+
+## Anti-patterns to Avoid
+- Inline object/function creation in JSX
+- Mutating props or state directly
+- Using array indices as keys for dynamic lists
+- Excessive prop drilling
+- Creating components inside render methods

@@ -1,0 +1,11 @@
+dist
+node_modules
+.env
+.env.local
+.env.production
+.env.staging
+*.log
+.DS_Store
+coverage
+build
+public

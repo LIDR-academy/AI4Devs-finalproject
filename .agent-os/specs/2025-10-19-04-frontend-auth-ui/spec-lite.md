@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Implement a complete, production-ready authentication UI layer for the SEPE Templates Comparator frontend that integrates with the existing JWT-based backend API. The primary deliverable is a fully-featured Login Page (`/login`) with comprehensive form validation, error handling, and accessibility features, followed by Registration (`/register`) and Password Reset flows (`/password-reset`, `/password-reset/confirm`). The implementation will enhance the existing `AuthContext`, utilize React Hook Form for validation, follow the project's TypeScript and Tailwind CSS standards, support dark mode, and achieve WCAG 2.1 AA accessibility compliance with >80% test coverage using Vitest and React Testing Library.

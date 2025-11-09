@@ -1,0 +1,32 @@
+---
+globs: *.py
+alwaysApply: false
+description: Architectural and Style Rules for Backend (Python/FastAPI)
+---
+
+## 1. Code Style and Cleanliness (PEP 8)
+
+1.  **Style & Formatting:** Always adhere strictly to Python style conventions (PEP 8). Use 'black' for formatting and 'isort' for organizing imports.
+2.  **Naming Convention:** Use **`snake_case`** (`user_id`, `field_name`) for all function names, variables, and Pydantic Model attributes. Avoid `camelCase`.
+3.  **Typing:** Use strict Python type annotations for all functions, arguments, and return values (e.g., List, Optional, Dict).
+4.  **Logging:** Use the standard `logging` module for all output, prioritizing levels `INFO` (normal events) and `ERROR` (critical failures).
+
+## 2. Architecture Principles (FastAPI / Data)
+
+1.  **Layer Separation:** Strictly adhere to the separation of concerns:
+    - **Routers/API (endpoints):** Handle input/output validation (Pydantic), authentication, and call Services.
+    - **Services (app/services):** Contain business logic, file manipulation, and task coordination.
+    - **Repository/DB:** Handle SQLAlchemy query logic and data persistence.
+2.  **Asynchronicity:** All API router functions must be **asynchronous** (`async def`). Blocking I/O code (e.g., PDF processing, synchronous DB calls) must be executed in the **Worker (Celery/Redis)**.
+3.  **Database Schema (Alembic):** Never modify the database schema manually. All modifications must be done via a new Alembic migration (`alembic revision --autogenerate`).
+
+## 3. Security and Environment (DevOps)
+
+1.  **Credentials:** Never print or **hardcode** credentials, tokens, or secrets (e.g., `SECRET_KEY`, `DATABASE_URL`) directly into the Python code. Always read them via the central Pydantic `settings` object.
+2.  **External Communication:** All calls to external services (APIs, Web Scraping) must handle network failures and timeouts gracefully.
+3.  **CORS:** Ensure the CORS middleware in `app/main.py` explicitly allows the Front-end development origin (`http://localhost:3000`) to prevent API communication blocks.
+
+## 4. AI & Performance
+
+1.  **Heavy Tasks:** All CPU-intensive or long-running operations (PDF structure analysis, template comparison, IA calculations) must be queued to the **Celery Worker** and executed asynchronously.
+2.  **Caching:** Utilize **Redis** for quick caching of API results and processed data to maintain high performance and reduce latency.

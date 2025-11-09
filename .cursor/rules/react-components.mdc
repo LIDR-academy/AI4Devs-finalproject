@@ -1,0 +1,75 @@
+---
+globs: *.tsx,*.jsx,*.ts,*.js
+description: React component development standards and best practices
+---
+
+# React Component Standards
+
+## Component Structure
+- Use functional components with TypeScript
+- Follow PascalCase naming for components and files
+- Use arrow function syntax: `const MyComponent: React.FC = () => {}`
+- Export components as default exports
+- Place interfaces/types above the component definition
+
+## File Organization
+- One component per file
+- Component file name should match component name
+- Use `index.ts` files for clean imports from directories
+- Structure: `components/ComponentName/ComponentName.tsx` and `components/ComponentName/index.ts`
+
+## Props and State
+- Define prop interfaces with descriptive names ending in `Props`
+- Use optional props with default values when appropriate
+- Prefer controlled components over uncontrolled
+- Use `useState` for local state, context for shared state
+- Destructure props in function parameters
+
+## Styling
+- Use CSS Modules or styled-components for component-scoped styles
+- Follow BEM methodology if using regular CSS
+- Use Tailwind CSS classes consistently if adopted
+- Avoid inline styles except for dynamic values
+
+## Performance
+- Use `React.memo()` for expensive re-renders
+- Use `useMemo()` and `useCallback()` judiciously
+- Lazy load components with `React.lazy()` when appropriate
+- Avoid creating objects/functions in render methods
+
+## Error Handling
+- Implement Error Boundaries for component trees
+- Use try-catch in async operations
+- Provide fallback UI for error states
+- Log errors appropriately for debugging
+
+Example component structure:
+```tsx
+interface ButtonProps {
+  variant?: 'primary' | 'secondary';
+  size?: 'small' | 'medium' | 'large';
+  onClick: () => void;
+  children: React.ReactNode;
+  disabled?: boolean;
+}
+
+const Button: React.FC<ButtonProps> = ({
+  variant = 'primary',
+  size = 'medium',
+  onClick,
+  children,
+  disabled = false
+}) => {
+  return (
+    <button
+      className={`btn btn--${variant} btn--${size}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  );
+};
+
+export default Button;
+```
