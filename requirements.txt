@@ -1,0 +1,44 @@
+# Django - Framework principal
+Django>=4.2,<6.0
+
+# PostgreSQL driver
+psycopg2-binary>=2.9.0
+
+# Servidor WSGI para producción
+gunicorn>=21.0.0
+
+# Servir archivos estáticos en PaaS
+whitenoise>=6.0.0
+
+# Gestión de variables de entorno
+python-decouple>=3.8
+
+# Testing
+pytest>=7.0.0
+pytest-django>=4.5.0
+
+# Linting y formatting
+black>=23.0.0
+ruff>=0.1.0
+
+# Django extensions (opcional, útil para desarrollo)
+django-extensions>=3.2.0
+
+# Herramienta opcional para gestionar traducciones (.po) desde la UI
+django-rosetta>=0.9.0
+
+# Pillow para manejo de imágenes (si se necesita)
+Pillow>=10.0.0
+
+# django-allauth para autenticación social (Google OAuth)
+django-allauth>=0.57.0
+PyJWT>=2.8.0
+cryptography>=41.0.0
+
+# django-cors-headers (si se necesita para API)
+# django-cors-headers>=4.0.0
+
+# django-environ (alternativa a python-decouple)
+# django-environ>=0.11.0
+
+

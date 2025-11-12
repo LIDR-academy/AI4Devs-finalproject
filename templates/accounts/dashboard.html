@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Dashboard" %} - Gamy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-green': '#2D5C50',
+                        'game-salmon': '#E78787',
+                        'game-beige': '#D8D0B8',
+                        'game-dark-salmon': '#D57272'
+                    },
+                    fontFamily: {
+                        'game': ['"Roboto Slab"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto Slab', serif;
+        }
+    </style>
+</head>
+<body class="bg-game-green min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-game-salmon p-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'catalog:home' %}" class="bg-opacity-70 bg-white px-4 py-2 rounded text-game-green font-game hover:bg-opacity-90 transition">
+                {% trans "Inicio" %}
+            </a>
+            <span class="text-white font-game">
+                {% trans "Hola" %}, {{ user.first_name|default:user.username }}!
+            </span>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- Logout Form -->
+            <form method="post" action="{% url 'accounts:logout' %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="bg-opacity-70 bg-white px-4 py-2 rounded text-game-green font-game hover:bg-opacity-90 transition">
+                    {% trans "Cerrar Sesión" %}
+                </button>
+            </form>
+
+            <!-- Language selector -->
+            <div class="relative flex items-center">
+                <div class="flex flex-col items-center">
+                    <button id="lang-toggle" type="button" aria-haspopup="true" aria-expanded="false" class="bg-white bg-opacity-90 text-game-green px-3 py-2 rounded-full font-game shadow">
+                        🌐
+                    </button>
+                    <small class="text-game-beige text-xs mt-1">{% if LANGUAGE_CODE == 'es' %}Español{% elif LANGUAGE_CODE == 'en' %}English{% else %}Français{% endif %}</small>
+                </div>
+
+                <!-- Dropdown menu -->
+                <div id="lang-menu" class="hidden absolute right-0 mt-12 bg-white rounded shadow-lg w-44 z-50">
+                    <div class="p-2">
+                        <form action="{% url 'set_language' %}" method="post" class="mb-1">
+                            {% csrf_token %}
+                            <input name="next" type="hidden" value="{{ request.path }}">
+                            <button type="submit" name="language" value="es" class="w-full text-left px-3 py-2 hover:bg-gray-100">🇪🇸 Español</button>
+                        </form>
+                        <form action="{% url 'set_language' %}" method="post" class="mb-1">
+                            {% csrf_token %}
+                            <input name="next" type="hidden" value="{{ request.path }}">
+                            <button type="submit" name="language" value="en" class="w-full text-left px-3 py-2 hover:bg-gray-100">🇬🇧 English</button>
+                        </form>
+                        <form action="{% url 'set_language' %}" method="post">
+                            {% csrf_token %}
+                            <input name="next" type="hidden" value="{{ request.path }}">
+                            <button type="submit" name="language" value="fr" class="w-full text-left px-3 py-2 hover:bg-gray-100">🇫🇷 Français</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center justify-start pt-8 px-4">
+        <h1 class="text-game-beige text-3xl font-bold mb-8">{% trans "Mi Dashboard" %}</h1>
+
+        <!-- Messages -->
+        {% if messages %}
+            <div class="w-full max-w-4xl mb-4">
+                {% for message in messages %}
+                    <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative border mb-2" role="alert">
+                        <span class="block sm:inline">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Dashboard Grid -->
+        <div class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Profile Card -->
+            <div class="bg-white rounded-lg shadow-lg p-6 border-2 border-game-beige">
+                <h2 class="text-xl font-bold text-game-green mb-4">{% trans "Mi Perfil" %}</h2>
+                <div class="space-y-2 text-gray-700">
+                    <p><strong>{% trans "Nombre:" %}</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                    <p><strong>{% trans "Usuario:" %}</strong> {{ user.username }}</p>
+                    <p><strong>{% trans "Email:" %}</strong> {{ user.email }}</p>
+                    <p class="text-sm text-gray-500 mt-4">
+                        {% trans "Miembro desde:" %} {{ user.date_joined|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <button class="mt-4 w-full bg-game-salmon hover:bg-game-dark-salmon text-white px-4 py-2 rounded-lg transition duration-300">
+                    {% trans "Editar Perfil" %}
+                </button>
+            </div>
+
+            <!-- Library Card -->
+            <div class="bg-white rounded-lg shadow-lg p-6 border-2 border-game-beige">
+                <h2 class="text-xl font-bold text-game-green mb-4">{% trans "Mi Biblioteca" %}</h2>
+                <div class="text-center py-8">
+                    <div class="text-5xl mb-4">📚</div>
+                    <p class="text-gray-600 mb-2">{% trans "0 juegos en tu colección" %}</p>
+                    <p class="text-sm text-gray-500">{% trans "¡Comienza a agregar juegos!" %}</p>
+                </div>
+                <button class="mt-4 w-full bg-game-salmon hover:bg-game-dark-salmon text-white px-4 py-2 rounded-lg transition duration-300">
+                    {% trans "Ver Catálogo" %}
+                </button>
+            </div>
+
+            <!-- Wishlist Card -->
+            <div class="bg-white rounded-lg shadow-lg p-6 border-2 border-game-beige">
+                <h2 class="text-xl font-bold text-game-green mb-4">{% trans "Lista de Deseos" %}</h2>
+                <div class="text-center py-8">
+                    <div class="text-5xl mb-4">⭐</div>
+                    <p class="text-gray-600 mb-2">{% trans "0 juegos deseados" %}</p>
+                    <p class="text-sm text-gray-500">{% trans "Guarda tus favoritos aquí" %}</p>
+                </div>
+                <button class="mt-4 w-full bg-game-salmon hover:bg-game-dark-salmon text-white px-4 py-2 rounded-lg transition duration-300">
+                    {% trans "Explorar Juegos" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Welcome Section -->
+        <div class="w-full max-w-6xl mt-8">
+            <div class="bg-game-green bg-opacity-80 rounded-lg p-8 border-2 border-game-beige shadow-lg">
+                <h2 class="text-game-beige text-2xl font-bold mb-4">
+                    {% trans "¡Bienvenido a tu Dashboard!" %}
+                </h2>
+                <div class="text-game-beige space-y-3">
+                    <p>{% trans "Ahora tienes acceso a contenido premium:" %}</p>
+                    <ul class="list-disc list-inside space-y-2 ml-4">
+                        <li>{% trans "Reglas detalladas de todos los juegos" %}</li>
+                        <li>{% trans "Gestión completa de tu biblioteca personal" %}</li>
+                        <li>{% trans "Lista de deseos para planificar tus compras" %}</li>
+                        <li>{% trans "Descripciones extendidas y contenido exclusivo" %}</li>
+                    </ul>
+                    <div class="mt-6 flex gap-4">
+                        <a href="{% url 'catalog:game_list' %}" class="bg-game-salmon hover:bg-game-dark-salmon text-white px-6 py-3 rounded-lg transition duration-300 font-medium">
+                            {% trans "Explorar Catálogo" %}
+                        </a>
+                        <a href="#" class="bg-game-beige hover:bg-opacity-90 text-game-green px-6 py-3 rounded-lg transition duration-300 font-medium">
+                            {% trans "Solicitar Juego" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-game-salmon p-4 mt-8">
+        <div class="text-center text-white text-sm">
+            <p>&copy; 2025 Gamy. {% trans "Todos los derechos reservados." %}</p>
+        </div>
+    </footer>
+
+    <!-- Language toggle script -->
+    <script>
+        (function(){
+            const toggle = document.getElementById('lang-toggle');
+            const menu = document.getElementById('lang-menu');
+            if(!toggle || !menu) return;
+
+            function openMenu(){
+                menu.classList.remove('hidden');
+                toggle.setAttribute('aria-expanded','true');
+            }
+            function closeMenu(){
+                menu.classList.add('hidden');
+                toggle.setAttribute('aria-expanded','false');
+            }
+
+            toggle.addEventListener('click', function(e){
+                e.stopPropagation();
+                if(menu.classList.contains('hidden')) openMenu(); else closeMenu();
+            });
+
+            document.addEventListener('click', function(e){
+                if(!menu.classList.contains('hidden')){
+                    const within = menu.contains(e.target) || toggle.contains(e.target);
+                    if(!within) closeMenu();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
