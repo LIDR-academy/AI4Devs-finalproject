@@ -1,0 +1,10 @@
+{
+  "servers": [
+    {
+      "id": "docs",
+      "type": "filesystem",
+      "path": "./Documents",
+      "include": ["*.md"]
+    }
+  ]
+}
