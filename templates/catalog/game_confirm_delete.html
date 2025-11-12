@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Eliminar Juego" %} - Gamy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-green': '#2D5C50',
+                        'game-salmon': '#E78787',
+                        'game-beige': '#D8D0B8',
+                        'game-dark-salmon': '#D57272'
+                    },
+                    fontFamily: {
+                        'game': ['"Roboto Slab"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-game-green min-h-screen font-game">
+    <!-- Header -->
+    <header class="bg-game-salmon p-4">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'catalog:home' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Inicio" %}
+                </a>
+                <a href="{% url 'catalog:game_list' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Juegos" %}
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white rounded-lg shadow-xl p-8">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">⚠️</div>
+                    <h1 class="text-3xl font-bold text-red-600 mb-2">{% trans "Confirmar Eliminación" %}</h1>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                {% trans "¿Estás seguro de que deseas eliminar este juego? El juego se marcará como inactivo y no será visible en el catálogo." %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Info Card -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <div class="flex items-start space-x-4">
+                        <!-- Game Image -->
+                        <div class="flex-shrink-0 w-32 h-32 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
+                            {% if game.image %}
+                            <img src="{{ game.image.url }}" alt="{{ game.get_name }}" class="max-w-full max-h-full object-contain">
+                            {% else %}
+                            <div class="w-full h-full bg-gradient-to-br from-game-green to-game-salmon flex items-center justify-center">
+                                <span class="text-5xl text-white">🎲</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Game Details -->
+                        <div class="flex-1">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-3">{{ game.get_name }}</h2>
+                            
+                            <!-- Categories -->
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                {% for category in game.categories.all %}
+                                <span class="text-xs bg-game-beige text-game-green px-2 py-1 rounded">
+                                    {{ category.icon }} {{ category.get_name }}
+                                </span>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Quick Stats -->
+                            <div class="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                                {% if game.min_players and game.max_players %}
+                                <div>
+                                    <strong>👥 {% trans "Jugadores:" %}</strong> {{ game.min_players }}-{{ game.max_players }}
+                                </div>
+                                {% endif %}
+                                {% if game.min_age %}
+                                <div>
+                                    <strong>🎂 {% trans "Edad:" %}</strong> {{ game.min_age }}+
+                                </div>
+                                {% endif %}
+                                {% if game.min_playtime and game.max_playtime %}
+                                <div>
+                                    <strong>⏱️ {% trans "Tiempo:" %}</strong> {{ game.min_playtime }}-{{ game.max_playtime }} min
+                                </div>
+                                {% endif %}
+                                {% if game.difficulty %}
+                                <div>
+                                    <strong>📊 {% trans "Dificultad:" %}</strong> {{ game.get_difficulty_display }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% if game.description_es %}
+                            <div class="mt-3 text-sm text-gray-600">
+                                <p class="line-clamp-3">{{ game.get_description }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                ℹ️ {% trans "Nota: Esta es una eliminación suave. El juego se marcará como inactivo (is_active=False) pero permanecerá en la base de datos. Puedes reactivarlo desde el panel de administración." %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="flex justify-between items-center space-x-4">
+                        <a href="{% url 'catalog:game_detail' game.slug %}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-3 px-6 rounded-lg text-center transition">
+                            ↩️ {% trans "Cancelar" %}
+                        </a>
+                        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition">
+                            🗑️ {% trans "Sí, Desactivar Juego" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
