@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Gestión de Categorías" %} - Gamy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-green': '#2D5C50',
+                        'game-salmon': '#E78787',
+                        'game-beige': '#D8D0B8',
+                        'game-dark-salmon': '#D57272'
+                    },
+                    fontFamily: {
+                        'game': ['"Roboto Slab"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-game-green min-h-screen font-game">
+    <!-- Header -->
+    <header class="bg-game-salmon p-4">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'catalog:home' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Inicio" %}
+                </a>
+                <a href="{% url 'catalog:game_list' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Juegos" %}
+                </a>
+                <span class="text-white font-semibold">{% trans "Categorías" %}</span>
+            </div>
+            {% if user.is_authenticated %}
+                <span class="text-white">{{ user.first_name|default:user.username }}</span>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header Section -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-game-beige mb-2">{% trans "Gestión de Categorías" %}</h1>
+                    <p class="text-game-beige text-opacity-80">{% trans "Total:" %} {{ total_categories }} {% trans "categorías" %}</p>
+                </div>
+                <a href="{% url 'catalog:category_create' %}" class="bg-game-salmon hover:bg-game-dark-salmon text-white px-6 py-3 rounded-lg transition duration-300 font-medium">
+                    ➕ {% trans "Nueva Categoría" %}
+                </a>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative border mb-2" role="alert">
+                            <span class="block sm:inline">{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Categories Table -->
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-game-green text-white">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{% trans "Icono" %}</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Slug</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Español</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">English</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Français</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">{% trans "Juegos" %}</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">{% trans "Acciones" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for category in categories %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-2xl">{{ category.icon }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ category.slug }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ category.name_es }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ category.name_en }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ category.name_fr }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-700">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    {{ category.games.count }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                <a href="{% url 'catalog:category_update' category.slug %}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                    ✏️ {% trans "Editar" %}
+                                </a>
+                                <a href="{% url 'catalog:category_delete' category.slug %}" class="text-red-600 hover:text-red-900">
+                                    🗑️ {% trans "Eliminar" %}
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                {% trans "No hay categorías creadas. Haz clic en 'Nueva Categoría' para comenzar." %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
