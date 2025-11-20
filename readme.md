@@ -11,26 +11,33 @@
 
 ---
 
+> **📝 Nota de Trazabilidad**: Esta documentación ha sido actualizada y consolidada respecto a la primera entrega del MVP, incorporando mejoras en la estructura, contenido técnico detallado, y alineación con el estado actual del proyecto. Se mantiene la trazabilidad completa de todos los cambios realizados durante el desarrollo.
+> 
+> **📚 Documentación Detallada**: Para información técnica completa, arquitectura detallada, guías de instalación, y especificaciones técnicas, consulta la carpeta [`docs/`](./docs/) que contiene documentación especializada por módulos.
+> 
+> **🔗 Documentación Original**: Para consultar la primera entrega del MVP, visita el repositorio original en [AI4Devs-finalproject](https://github.com/aandmaldonado/AI4Devs-finalproject/tree/feat-alvaro-maldonado).
+
+---
+
 ## 0. Ficha del proyecto
 
 ### **0.1. Tu nombre completo:** 
 Álvaro Maldonado Pinto
 
 ### **0.2. Nombre del proyecto:** 
-AI Resume Agent
+AI Resume Agent - Chatbot de Portfolio Profesional
 
 ### **0.3. Descripción breve del proyecto:**
-Crear un chatbot inteligente integrado en portfolios web personales que simule la presencia profesional del propietario, permitiendo a visitantes, reclutadores y potenciales clientes obtener información detallada sobre su experiencia laboral, estudios académicos, conceptos técnicos aprendidos y trayectoria profesional a través de conversaciones naturales en cualquier idioma y horario. El sistema transforma la interacción estática de un portfolio en una experiencia conversacional dinámica y profesional, donde los visitantes pueden hacer preguntas específicas y recibir respuestas personalizadas sobre el profesional, generando leads de manera no invasiva y natural.
+Chatbot RAG (Retrieval Augmented Generation) para portfolio profesional que responde preguntas sobre experiencia, habilidades y proyectos usando tecnologías **económicas** en la nube. Integra un backend FastAPI con RAG avanzado y un frontend React para crear una experiencia conversacional interactiva que transforma portfolios estáticos en experiencias dinámicas y personalizadas.
 
 ### **0.4. URL del proyecto:**
-
-El proyecto será desplegado en el sitio público [almapi.dev](https://almapi.dev)
+**Backend API**: `https://chatbot-api-251107984645.europe-west1.run.app` *(Privado - Requiere autenticación GCP)*  
+**Frontend Portfolio**: `https://almapi.dev` (con chatbot integrado)  
+**Swagger UI**: `https://chatbot-api-251107984645.europe-west1.run.app/docs` *(Privado - Requiere autenticación GCP)*
 
 ### 0.5. URL o archivo comprimido del repositorio
-
-- [Documentación técnica](https://github.com/aandmaldonado/AI4Devs-finalproject/tree/feat-alvaro-maldonado)
-- [Front-end](https://github.com/aandmaldonado/my-resume-react)
-- [Back-end](https://github.com/aandmaldonado/ai-resume-agent)
+**Repositorio Backend**: `https://github.com/aandmaldonado/ai-resume-agent`  
+**Repositorio Frontend**: `https://github.com/aandmaldonado/my-resume-react`
 
 ---
 
@@ -38,116 +45,161 @@ El proyecto será desplegado en el sitio público [almapi.dev](https://almapi.de
 
 ### **1.1. Objetivo:**
 
-El AI Resume Agent es un chatbot inteligente que resuelve el problema de la interacción estática en portfolios web profesionales. Su propósito es simular la presencia profesional del propietario del portfolio, permitiendo a visitantes obtener información detallada y personalizada a través de conversaciones naturales. El valor que aporta es la transformación de un portfolio estático en una experiencia conversacional dinámica, solucionando la limitación de comunicación unidireccional y la falta de engagement personalizado. Está diseñado para profesionales independientes, desarrolladores, consultores y cualquier experto que quiera hacer su portfolio más interactivo y atractivo para visitantes, reclutadores y potenciales clientes.
+#### **Propósito del Producto**
+Transformar el portfolio estático en una experiencia interactiva y personalizada que demuestre competencias en IA, aumente el engagement de visitantes y genere más oportunidades de contacto profesional.
+
+#### **Qué Valor Aporta**
+- **Para visitantes**: Acceso inmediato a información personalizada sobre el perfil profesional
+- **Para reclutadores**: Evaluación directa de habilidades técnicas y experiencia
+- **Para el propietario**: Demostración práctica de competencias en IA y diferenciación competitiva
+
+#### **Qué Soluciona**
+- Los portfolios estáticos no permiten interacción dinámica con los visitantes
+- Los reclutadores necesitan hacer preguntas específicas sobre experiencia y proyectos
+- Falta de engagement y personalización en la presentación profesional
+
+#### **Para Quién**
+- **Usuarios primarios**: Reclutadores, HR managers, potenciales clientes
+- **Usuarios secundarios**: Desarrolladores, estudiantes, profesionales del sector
+- **Stakeholders**: Empresas de tecnología, consultoras, startups
 
 ### **1.2. Características y funcionalidades principales:**
 
-**Funcionalidades Core del Chatbot:**
-- **Conversación Natural**: Interacción en lenguaje natural en múltiples idiomas
-- **Simulación Profesional**: El chatbot responde como si fuera el propietario del portfolio
-- **Información Contextual**: Respuestas basadas en el contexto de la conversación
-- **Horario 24/7**: Disponibilidad continua para responder consultas en cualquier momento
+#### **🤖 Chatbot Inteligente**
+- **Conversación natural** en múltiples idiomas (español, inglés)
+- **Memoria conversacional** para mantener contexto entre mensajes
+- **Respuestas contextuales** basadas en información real del portfolio
+- **Rate limiting** y protección anti-DoS
 
-**Funcionalidades de Información Profesional:**
-- **Experiencia Laboral**: Detalles sobre trabajos, proyectos y responsabilidades
-- **Estudios Académicos**: Información sobre formación, certificaciones y logros educativos
-- **Conceptos Técnicos**: Explicaciones de tecnologías, metodologías y habilidades
-- **Trayectoria Profesional**: Evolución de la carrera y logros destacados
+#### **🧠 RAG Avanzado (Retrieval Augmented Generation)**
+- **Vector Store** con pgvector para búsqueda semántica
+- **Embeddings locales** con HuggingFace paraphrase-multilingual-MiniLM-L12-v2 (multilingüe)
+- **LLM Gemini 2.5 Flash** para generación de respuestas (~1-2s)
+- **Knowledge Base** indexada desde portfolio.yaml (~190+ chunks)
 
-**Funcionalidades de Engagement:**
-- **Generación de Leads**: Captura de información de visitantes interesados
-- **Personalización**: Respuestas adaptadas al tipo de consulta y perfil del visitante
-- **Análisis de Interacciones**: Métricas sobre las consultas más frecuentes y engagement
-- **Integración Seamless**: Funciona como componente integrado en el portfolio web existente
+#### **📊 Analytics y Captura de Leads**
+- **Tracking de sesiones** y métricas de engagement
+- **Captura gradual de datos** (email, tipo de usuario, LinkedIn)
+- **Cumplimiento GDPR** con consentimientos y derechos de usuario
+- **Métricas de negocio** para optimización
+
+#### **🔒 Seguridad Robusta**
+- **OWASP LLM Top 10** mitigado completamente
+- **Validación de inputs** con Pydantic
+- **Sanitización de outputs** para prevenir inyección de contenido
+- **Secrets management** con Google Secret Manager
+
+#### **⚡ Performance Optimizada**
+- **Cache inteligente** para respuestas frecuentes
+- **Latencia < 2 segundos** end-to-end
+- **Throughput 30-50 requests/minuto**
+- **Costos optimizados** ($6-17/mes)
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-**Experiencia del Usuario:**
-1. **Aterrizaje en el Portfolio**: El visitante llega al portfolio web y ve el chatbot integrado de manera natural en la interfaz
-2. **Inicio de Conversación**: El visitante puede hacer clic en el chatbot o escribir directamente para iniciar una conversación
-3. **Consulta Natural**: El visitante formula preguntas en lenguaje natural sobre cualquier aspecto del profesional
-4. **Respuesta Contextual**: El chatbot responde de manera personalizada, simulando la presencia del propietario del portfolio
-5. **Conversación Fluida**: La interacción continúa con preguntas de seguimiento y respuestas cada vez más específicas
-6. **Generación de Lead**: Si el visitante está interesado, puede dejar su información de contacto de manera no invasiva
+#### **🎨 Frontend Integration**
+- **Componente chatbot** integrado en portfolio React existente
+- **UI responsive** con Tailwind CSS y Headless UI
+- **Animaciones fluidas** con Framer Motion
+- **Estado de carga** y feedback visual
 
-**Principios de UX:**
-- **Integración Natural**: El chatbot se integra perfectamente con el diseño del portfolio existente
-- **Interfaz Conversacional**: Interfaz familiar tipo chat que no requiere aprendizaje
-- **Responsividad**: Funciona perfectamente en dispositivos móviles y desktop
-- **Accesibilidad**: Cumple estándares de accesibilidad para usuarios con diferentes capacidades
+#### **💬 Flujo de Conversación**
+1. **Inicio**: Usuario hace clic en chatbot → Mensaje de bienvenida
+2. **Interacción**: Preguntas naturales → Respuestas contextuales
+3. **Captura**: Solicitud gradual de datos de contacto
+4. **Consentimiento**: GDPR compliance automático
+5. **Follow-up**: Generación de leads cualificados
+
+#### **📸 Capturas del Sistema**
+
+**🎥 Video Demostrativo del Sistema:**
+
+[📥 Ver Video del Funcionamiento del Bot](./images/funcionamiento.mov)
+
+**Carga Inicial del Bot:**
+
+![Carga Inicial del Bot](./images/carga%20inicial%20bot.png)
+
+**Saludo Inicial:**
+
+![Saludo Inicial](./images/saludo%20inicial.png)
+
+**Conversación de Ejemplo:**
+
+- ![Pregunta sobre Experiencia](./images/pregunta%20sobre%20experiencia.png)
+- ![Respuesta sobre Experiencia](./images/respuesta%20sobre%20experiencia.png)
+
+**Captura de Datos y GDPR:**
+
+- ![Popup Captura de Datos](./images/popup%20captura%20de%20datos.png)
+- ![Formulario Captura de Datos](./images/formulario%20captura%20de%20datos.png)
+- ![Popup GDPR](./images/popup%20GDPR.png)
+- ![Formulario Ley de Protección de Datos](./images/formulario%20ley%20de%20proteccion%20de%20datos.png)
+- ![Mensajes tras Aceptación](./images/mensajes%20tras%20aceptacion%20captura%20de%20datos%20y%20GDPR.png)
+
+**Validación de IA y Seguridad:**
+
+- ![Validación IA o Humano](./images/validacion%20IA%20o%20humano.png)
+- ![Hacking Ético](./images/hacking%20etico.png)
+
+#### **📱 Experiencia Multiplataforma**
+- **Desktop**: Interfaz completa con sidebar de chat
+- **Mobile**: Chat modal optimizado para pantallas pequeñas
+- **Tablet**: Adaptación responsive automática
 
 ### **1.4. Instrucciones de instalación:**
 
-**Requisitos del Sistema:**
-- Python 3.9+
-- Node.js 16+
-- PostgreSQL 13+
-- Redis 6+
-- Docker y Docker Compose (opcional)
+#### **🚀 Setup Completo**
 
-**Backend (Python/FastAPI):**
 ```bash
-# Clonar repositorio
-git clone [URL_DEL_REPOSITORIO]
-cd AI4Devs-finalproject
+# 1. Clonar repositorio
+git clone https://github.com/aandmaldonado/ai-resume-agent.git
+cd ai-resume-agent
 
-# Crear entorno virtual
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate  # Windows
+# 2. Autenticar en GCP
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
 
-# Instalar dependencias
+# 3. Setup automático de infraestructura
+chmod +x scripts/setup/setup-gcp.sh
+./scripts/setup/setup-gcp.sh
+
+# 4. Configurar variables de entorno
+nano .env
+# Agregar: GEMINI_API_KEY=AI...
+
+# 5. Crear entorno virtual
+python3.11 -m venv venv
+source venv/bin/activate
+
+# 6. Instalar dependencias
 pip install -r requirements.txt
 
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con credenciales de GCP y base de datos
+# 7. Inicializar vector store
+python scripts/setup/initialize_vector_store.py
 
-# Ejecutar migraciones
-alembic upgrade head
-
-# Ejecutar seeds de datos
-python scripts/seed_data.py
-
-# Iniciar servidor
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# 8. Deploy automático
+git add .
+git commit -m "feat: initial deployment"
+git push origin main
 ```
 
-**Frontend (React):**
+#### **🔧 Desarrollo Local**
+
 ```bash
-# Instalar dependencias
-cd frontend
-npm install
+# Método rápido
+./scripts/setup/start-local.sh
 
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con URL del backend
-
-# Iniciar en modo desarrollo
-npm start
+# En otro terminal
+python3 -m http.server 3000
+# Abrir: http://localhost:3000/test-local.html
 ```
 
-**Base de Datos:**
-```bash
-# Usando Docker
-docker-compose up -d postgres redis
-
-# O instalación local
-sudo apt-get install postgresql postgresql-contrib
-sudo systemctl start postgresql
-sudo -u postgres createdb ai_resume_agent
-```
-
-**Configuración del Chatbot:**
-```bash
-# Crear documento consolidado YAML
-cp config/knowledge_template.yaml config/knowledge.yaml
-# Editar knowledge.yaml con la información profesional
-
-# Configurar credenciales de IA
-cp config/ai_config.example.yaml config/ai_config.yaml
-# Editar con API keys de Vertex AI
-```
+#### **📋 Prerrequisitos**
+- **Python 3.11**
+- **Google Cloud Platform** account
+- **Gemini API Key** (gratis con Google Workspace)
+- **Git** y **Docker** (para desarrollo)
 
 ---
 
@@ -155,183 +207,115 @@ cp config/ai_config.example.yaml config/ai_config.yaml
 
 ### **2.1. Diagrama de arquitectura:**
 
-**Patrones Arquitectónicos Implementados:**
+**🎯 Arquitectura RAG con Gemini + pgvector**
 
-1. **Arquitectura de Microservicios**: Sistema dividido en servicios independientes y autónomos
-2. **Event-Driven Architecture**: Comunicación asíncrona entre servicios mediante eventos
-3. **API Gateway Pattern**: Punto de entrada único para todas las APIs del sistema
-4. **Repository Pattern**: Abstracción de la capa de acceso a datos
-5. **Service Layer Pattern**: Lógica de negocio centralizada en servicios especializados
-
-**Justificación de la Arquitectura:**
-
-**Razones Técnicas:**
-- **Escalabilidad**: Permite escalar servicios independientemente según demanda
-- **Mantenibilidad**: Código más fácil de mantener y modificar
-- **Flexibilidad**: Fácil integración de nuevas funcionalidades
-- **Resiliencia**: Aislamiento de fallos entre servicios
-- **Testing**: Facilita la creación de tests unitarios y de integración
-
-**Razones de Negocio:**
-- **Alta disponibilidad**: Sistema robusto para uso profesional
-- **Crecimiento futuro**: Arquitectura preparada para escalar
-- **Equipo de desarrollo**: Beneficia de patrones probados y mantenibles
-- **Integración**: Fácil conexión con portfolios web existentes
-
-**Beneficios Principales:**
-- **Escalabilidad horizontal**: Fácil agregar instancias de servicios
-- **Desarrollo paralelo**: Equipos pueden trabajar en servicios independientes
-- **Tecnología diversa**: Cada servicio puede usar la tecnología más apropiada
-- **Despliegue independiente**: Servicios se pueden actualizar sin afectar otros
-- **Fault isolation**: Fallos en un servicio no afectan al sistema completo
-
-**Sacrificios y Déficits:**
-- **Complejidad inicial**: Mayor complejidad en el desarrollo inicial
-- **Latencia**: Overhead de comunicación entre servicios
-- **Consistencia de datos**: Desafíos en mantener consistencia distribuida
-- **Debugging**: Trazabilidad más compleja en sistemas distribuidos
-- **Overhead operacional**: Mayor complejidad en monitoreo y deployment
-
-**Diagrama de Arquitectura de Alto Nivel:**
 ```mermaid
 graph TB
-    subgraph "Frontend Layer"
-        UI[Portfolio Web]
-        Chat[Chatbot UI Component]
-        Analytics[Analytics Dashboard]
+    A[Cliente Web] -->|HTTP/REST| B[FastAPI Backend]
+    B --> C[RAG Pipeline]
+    C --> D[HuggingFace Embeddings]
+    C --> E[pgvector Search]
+    C --> F[Gemini 2.5 Flash]
+    D --> G[Cloud SQL PostgreSQL]
+    E --> G
+    F --> H[Response Generation]
+    H --> A
+    
+    I[portfolio.yaml] --> J[Vector Store]
+    J --> G
+    
+    subgraph "Cloud Run (europe-west1)"
+        B
+        C
     end
     
-    subgraph "API Gateway Layer"
-        Gateway[FastAPI Gateway]
-        Auth[Authentication]
-        RateLimit[Rate Limiting]
+    subgraph "Knowledge Base"
+        I
+        J
     end
-    
-    subgraph "Microservices Layer"
-        ChatService[Chatbot Service]
-        UserService[User Service]
-        AnalyticsService[Analytics Service]
-        KnowledgeService[Knowledge Service]
-    end
-    
-    subgraph "AI/ML Layer"
-        VertexAI[Vertex AI]
-        ICL[In-Context Learning]
-        SmartFilter[Smart Context Filtering]
-    end
-    
-    subgraph "Data Layer"
-        PostgreSQL[(PostgreSQL)]
-        Redis[(Redis)]
-        YAML[(YAML Knowledge Base)]
-    end
-    
-    subgraph "Infrastructure Layer"
-        GCP[Google Cloud Platform]
-        CloudRun[Cloud Run]
-        CloudSQL[Cloud SQL]
-        Memorystore[Memorystore]
-    end
-    
-    UI --> Gateway
-    Chat --> Gateway
-    Analytics --> Gateway
-    
-    Gateway --> Auth
-    Gateway --> RateLimit
-    
-    Auth --> ChatService
-    Auth --> UserService
-    Auth --> AnalyticsService
-    Auth --> KnowledgeService
-    
-    ChatService --> VertexAI
-    ChatService --> ICL
-    ChatService --> SmartFilter
-    
-    UserService --> PostgreSQL
-    AnalyticsService --> PostgreSQL
-    KnowledgeService --> YAML
-    
-    ChatService --> Redis
-    UserService --> Redis
-    
-    ChatService --> GCP
-    UserService --> GCP
-    AnalyticsService --> GCP
-    KnowledgeService --> GCP
 ```
+
+**📊 Stack Tecnológico**
+
+#### **Backend & AI**
+- **Framework**: FastAPI 0.115+ (Python 3.11)
+- **LLM**: Gemini 2.5 Flash (~1-2s respuesta)
+- **Embeddings**: HuggingFace paraphrase-multilingual-MiniLM-L12-v2 (multilingüe, local)
+- **Vector DB**: pgvector 0.5+ en PostgreSQL 15 (Cloud SQL)
+- **RAG Framework**: LangChain 0.3+
+
+#### **Infrastructure (GCP)**
+- **Compute**: Cloud Run (2Gi RAM, 1 vCPU, europe-west1)
+- **Database**: Cloud SQL (PostgreSQL + pgvector, f1-micro)
+- **Registry**: Artifact Registry (europe-west1)
+- **Build**: Cloud Build (CI/CD automático)
+
+#### **Frontend Integration**
+- **Framework**: React 18+ con TypeScript
+- **Styling**: Tailwind CSS + Headless UI
+- **State Management**: React Hooks + Context API
+- **API Communication**: Axios + React Query
 
 
 ### **2.2. Descripción de componentes principales:**
 
-**Chatbot Service (Python/FastAPI):**
-- **Tecnología**: Python 3.9+, FastAPI, Pydantic
-- **Responsabilidad**: Procesamiento de mensajes, análisis de intención, generación de respuestas
-- **Características**: Integración con Vertex AI, gestión de contexto conversacional, rate limiting
-- **Integraciones**: Vertex AI, Redis para cache, YAML knowledge base
+#### **🚀 Backend FastAPI**
 
-**User Service (Python/FastAPI):**
-- **Tecnología**: Python 3.9+, FastAPI, SQLAlchemy, Alembic
-- **Responsabilidad**: Gestión de usuarios, autenticación, autorización, perfiles
-- **Características**: JWT tokens, OAuth2, roles y permisos, validación de datos
-- **Integraciones**: PostgreSQL, Redis, Google OAuth, JWT
+**Tecnología**: Python 3.11 + FastAPI 0.115+
 
-**Knowledge Service (Python/FastAPI):**
-- **Tecnología**: Python 3.9+, FastAPI, PyYAML, Custom algorithms
-- **Responsabilidad**: Gestión de base de conocimiento, Smart Context Filtering, extracción de información
-- **Características**: Procesamiento de documentos YAML, filtrado inteligente de contexto, búsqueda semántica
-- **Integraciones**: YAML knowledge base, custom filtering algorithms
+**Responsabilidades**:
+- **API Gateway**: Manejo de requests HTTP/REST
+- **Rate Limiting**: Protección anti-DoS con SlowAPI
+- **Input Validation**: Validación con Pydantic
+- **CORS Configuration**: Seguridad cross-origin
+- **Session Management**: Gestión de sesiones de chat
+- **Authentication**: Autenticación nativa de Google Cloud Platform
 
-**Analytics Service (Python/FastAPI):**
-- **Tecnología**: Python 3.9+, FastAPI, Pandas, NumPy
-- **Responsabilidad**: Análisis de interacciones, métricas de engagement, reportes
-- **Características**: Procesamiento en tiempo real, agregaciones, visualizaciones
-- **Integraciones**: PostgreSQL, BigQuery, Grafana, Prometheus
+**Características**:
+- **Async/Await**: Procesamiento asíncrono para mejor performance
+- **Auto-documentación**: Swagger/OpenAPI automático
+- **Type Safety**: Type hints completos
+- **Error Handling**: Manejo robusto de errores
+- **Private Access**: Backend privado con autenticación GCP obligatoria
 
-**Smart Context Filtering (Python/Custom):**
-- **Tecnología**: Python 3.9+, Custom algorithms, NLP libraries
-- **Responsabilidad**: Filtrado inteligente de contexto relevante para optimizar respuestas
-- **Características**: Análisis de intención, extracción de contexto, optimización de tokens
-- **Integraciones**: Custom algorithms, NLP libraries, Vertex AI integration
+#### **🧠 RAG Service**
 
-**In-Context Learning Engine (Python/Custom):**
-- **Tecnología**: Python 3.9+, Custom implementation, Vertex AI
-- **Responsabilidad**: Generación de respuestas contextuales basadas en información disponible
-- **Características**: Few-shot learning, context adaptation, dynamic prompting
-- **Integraciones**: Custom algorithms, Vertex AI, prompt engineering
+**Tecnología**: LangChain + HuggingFace + pgvector
+
+**Responsabilidades**:
+- **Vector Search**: Búsqueda semántica con pgvector
+- **Context Retrieval**: Extracción de contexto relevante
+- **Response Generation**: Generación con Gemini 2.5 Flash
+- **Memory Management**: Memoria conversacional persistente
+
+**Características**:
+- **Smart Context Filtering**: Reduce tokens en 40-60%
+- **Cache Inteligente**: Hit rate >70% para respuestas similares
+- **Multi-language**: Soporte español e inglés
+- **Performance**: Latencia <2 segundos end-to-end
+
+#### **📊 Analytics Service**
+
+**Tecnología**: PostgreSQL + Custom Analytics
+
+**Responsabilidades**:
+- **Session Tracking**: Métricas de sesiones y engagement
+- **Lead Capture**: Captura gradual de información de contacto
+- **GDPR Compliance**: Gestión de consentimientos y derechos
+- **Business Metrics**: Métricas de negocio y conversión
+
+**Características**:
+- **Real-time Analytics**: Métricas en tiempo real
+- **Data Privacy**: Cumplimiento GDPR automático
+- **Lead Scoring**: Clasificación automática de leads
+- **Performance Monitoring**: Métricas de sistema y costos
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 **Arquitectura del Proyecto:**
-El proyecto sigue una **arquitectura de microservicios** con separación clara de responsabilidades, implementando patrones de diseño como Repository, Service Layer y Event-Driven. La estructura está organizada en capas horizontales (Frontend, API Gateway, Microservicios, Data, Infrastructure) siguiendo principios de **Clean Architecture**.
+El proyecto sigue una **arquitectura RAG (Retrieval Augmented Generation)** con separación clara de responsabilidades, implementando patrones de diseño como Repository, Service Layer y Event-Driven. La estructura está organizada en capas horizontales (Frontend, API Gateway, RAG Pipeline, Data, Infrastructure) siguiendo principios de **Clean Architecture**.
 
 **Estructura de Directorios:**
-
-**Frontend (Repositorio Separado):**
-```
-my-resume-react/                 # Repositorio: https://github.com/aandmaldonado/my-resume-react
-├── app/                        # Next.js 14 App Router
-│   ├── globals.css            # Estilos globales
-│   ├── layout.tsx             # Layout principal
-│   ├── page.tsx               # Página principal
-│   ├── about/                 # Página About
-│   ├── projects/              # Página Projects
-│   ├── contact/               # Página Contact
-│   └── download/              # Página de descarga CV
-├── components/                 # Componentes reutilizables
-│   ├── ui/                    # Componentes de UI base
-│   ├── layout/                # Componentes de layout
-│   ├── sections/              # Secciones de página
-│   └── chatbot/               # Componente del chatbot (a implementar)
-├── hooks/                      # Custom React hooks
-├── lib/                        # Utilidades y configuraciones
-├── types/                      # Definiciones de TypeScript
-├── public/                     # Archivos estáticos
-├── Dockerfile                  # Docker para Cloud Run
-├── package.json                # Dependencias y scripts
-└── components.json             # Configuración de componentes
-```
 
 **Backend (AI Resume Agent - Este Repositorio):**
 ```
@@ -340,532 +324,365 @@ ai-resume-agent/           # Repositorio actual
 │   ├── main.py                # Punto de entrada FastAPI
 │   ├── api/                   # Endpoints de la API
 │   │   └── v1/
-│   │       ├── endpoints/     # Endpoints específicos
-│   │       │   ├── chat.py    # Endpoints de chat
-│   │       │   ├── auth.py    # Autenticación
-│   │       │   ├── analytics.py # Métricas
-│   │       │   └── health.py  # Health checks
-│   │       ├── dependencies.py # Dependencias de FastAPI
-│   │       └── middleware.py  # Middleware personalizado
+│   │       └── endpoints/     # Endpoints específicos
+│   │           ├── chat.py    # Endpoints de chat
+│   │           └── analytics.py # Métricas
 │   ├── core/                  # Configuración y utilidades
 │   │   ├── config.py          # Configuración
-│   │   ├── security.py        # Funciones de seguridad
-│   │   ├── database.py        # Configuración de BD
-│   │   └── logging.py         # Configuración de logs
+│   │   └── secrets.py         # Gestión de secretos
 │   ├── models/                # Modelos de datos
-│   │   ├── chat.py            # Modelos de chat
-│   │   ├── user.py            # Modelos de usuario
-│   │   ├── analytics.py       # Modelos de analytics
-│   │   └── security.py        # Modelos de seguridad
+│   │   └── analytics.py       # Modelos de analytics
 │   ├── services/              # Lógica de negocio
-│   │   ├── chatbot_service.py # Lógica del chatbot
-│   │   ├── llm_service.py     # Integración con LLMs
-│   │   ├── security_service.py # Servicios de seguridad
+│   │   ├── rag_service.py     # Lógica del RAG
 │   │   ├── analytics_service.py # Servicios de analytics
-│   │   ├── context_service.py # Smart Context Filtering
-│   │   ├── dialogflow_integration_service.py # Integración Dialogflow
-│   │   └── hybrid_routing_service.py # Routing híbrido
-│   ├── utils/                 # Utilidades
-│   │   ├── sanitization.py    # Sanitización de inputs/outputs
-│   │   ├── rate_limiting.py   # Rate limiting personalizado
-│   │   ├── circuit_breaker.py # Circuit breaker para LLMs
-│   │   └── language_detection.py # Detección de idioma
+│   │   ├── flow_controller.py # Controlador de flujo
+│   │   └── gdpr_service.py    # Servicios GDPR
 │   └── schemas/               # Schemas Pydantic
 │       ├── chat.py            # Schemas de chat
-│       ├── user.py            # Schemas de usuario
 │       └── analytics.py       # Schemas de analytics
-├── config/                     # Configuración del sistema
-│   ├── knowledge.yaml          # Base de conocimiento consolidada
-│   ├── ai_config.yaml          # Configuración de Vertex AI
-│   └── app_config.yaml         # Configuración general de la aplicación
-├── kubernetes/                 # Manifiestos Kubernetes
-│   ├── deployments/            # Deployments de servicios
-│   ├── services/               # Services y LoadBalancers
-│   └── configmaps/             # Configuraciones de servicios
-├── docker/                     # Dockerfiles y docker-compose
-│   ├── Dockerfile              # Dockerfile para backend
-│   └── docker-compose.yml      # Orquestación local
-├── docs/                       # Documentación del proyecto
-│   ├── technical/              # Documentación técnica
-│   ├── user/                   # Documentación de usuario
-│   └── api/                    # Documentación de API
-├── tests/                      # Tests unitarios e integración
-├── alembic/                    # Migraciones de base de datos
+├── data/                       # Datos del proyecto
+│   └── portfolio.yaml         # Base de conocimiento
 ├── scripts/                    # Scripts de utilidad
-│   ├── setup.sh               # Script de configuración
-│   ├── deploy.sh              # Script de deployment
-│   └── backup.sh              # Script de backup
-├── pyproject.toml              # Dependencias y configuración Python
-└── README.md                   # Documentación del proyecto
+│   ├── setup/                 # Scripts de configuración
+│   │   ├── build_knowledge_base.py
+│   │   ├── initialize_vector_store.py
+│   │   ├── setup-gcp.sh
+│   │   └── start-local.sh
+│   └── test/                  # Scripts de testing
+│       └── test_comprehensive.py
+├── docs/                       # Documentación del proyecto
+│   ├── 01-PROJECT-OVERVIEW.md
+│   ├── 02-ARCHITECTURE.md
+│   ├── 03-DATA-MODEL.md
+│   ├── 04-API-SPECIFICATION.md
+│   ├── 05-FRONTEND-INTEGRATION.md
+│   ├── 06-USER-STORIES.md
+│   ├── 07-WORK-TICKETS.md
+│   ├── 08-INSTALLATION-GUIDE.md
+│   └── 09-SECURITY-TESTING.md
+├── images/                     # Capturas del bot en funcionamiento
+│   ├── saludo inicial.png
+│   ├── pregunta sobre experiencia.png
+│   ├── respuesta sobre experiencia.png
+│   ├── captura de datos y GDPR.png
+│   └── ...
+├── output/                     # Resultados de tests
+│   └── test_results_*.md
+├── tests/                       # Tests unitarios e integración
+│   ├── test_basic.py
+│   └── test_coverage_basic.py
+├── alembic/                     # Migraciones de base de datos
+│   └── versions/
+├── alembic.ini                  # Configuración Alembic
+├── cloudbuild.yaml              # Configuración Cloud Build
+├── Dockerfile                   # Docker para Cloud Run
+├── requirements.txt             # Dependencias Python
+└── README.md                    # Documentación del proyecto
+```
+
+**Frontend (Repositorio Separado):**
+```
+my-resume-react/                 # Repositorio: https://github.com/aandmaldonado/my-resume-react
+├── app/                        # Next.js 14 App Router
+│   ├── globals.css            # Estilos globales
+│   ├── layout.tsx             # Layout principal
+│   ├── page.tsx               # Página principal
+│   └── chatbot/               # Componente del chatbot
+├── components/                 # Componentes reutilizables
+│   ├── ui/                    # Componentes de UI base
+│   ├── layout/                # Componentes de layout
+│   └── chatbot/               # Componente del chatbot integrado
+├── hooks/                      # Custom React hooks
+├── lib/                        # Utilidades y configuraciones
+├── types/                      # Definiciones de TypeScript
+└── public/                     # Archivos estáticos
 ```
 
 **Patrones Arquitectónicos Implementados:**
 - **Layered Architecture**: Separación en capas horizontales
-- **Microservices Pattern**: Servicios independientes y autónomos
+- **RAG Pattern**: Retrieval Augmented Generation para respuestas contextuales
 - **Repository Pattern**: Abstracción de acceso a datos
 - **Service Layer Pattern**: Lógica de negocio centralizada
 - **Event-Driven Pattern**: Comunicación asíncrona entre servicios
 
 **Tecnologías por Capa:**
-- **Frontend**: React 18, TypeScript, Material-UI, Redux Toolkit
-- **Backend**: Python 3.9+, FastAPI, SQLAlchemy, Alembic
-- **Database**: PostgreSQL 13+, Redis 6+, YAML knowledge base
-- **AI/ML**: Vertex AI, In-Context Learning, Smart Context Filtering
-- **Infrastructure**: GCP, Cloud Run, Cloud SQL, Memorystore
-- **DevOps**: Docker, Kubernetes, GitHub Actions, Cloud Build
+- **Frontend**: React 18, TypeScript, Tailwind CSS, Headless UI
+- **Backend**: Python 3.11+, FastAPI, SQLAlchemy, Alembic
+- **Database**: PostgreSQL 15+, pgvector, Cloud SQL
+- **AI/ML**: Gemini 2.5 Flash, HuggingFace, LangChain
+- **Infrastructure**: GCP, Cloud Run, Cloud SQL, Artifact Registry
+- **DevOps**: Docker, Cloud Build, CI/CD automático
 
 ### **2.4. Infraestructura y despliegue**
 
 **Infraestructura en Google Cloud Platform:**
 
 **Servicios Principales:**
-- **Cloud Run**: Contenedores serverless para microservicios
-- **Cloud SQL**: Base de datos PostgreSQL gestionada
-- **Memorystore**: Cache Redis para sesiones y datos temporales
-- **Cloud Storage**: Almacenamiento de archivos y configuración
-- **Vertex AI**: Plataforma de machine learning para IA
-- **Cloud Armor**: Protección DDoS y seguridad de aplicaciones
-- **Load Balancer**: Distribución de carga y SSL termination
+- **Cloud Run**: Contenedores serverless para el backend FastAPI
+- **Cloud SQL**: Base de datos PostgreSQL con extensión pgvector
+- **Artifact Registry**: Registro de imágenes Docker
+- **Cloud Build**: CI/CD automático con triggers
+- **Secret Manager**: Gestión segura de credenciales
 
 **Arquitectura de Deployment:**
 ```mermaid
 graph TB
     subgraph "CI/CD Pipeline"
         GitHub[GitHub Repository]
-        Actions[GitHub Actions]
+        CloudBuild[Cloud Build]
         Build[Build & Test]
         Image[Container Image]
     end
     
     subgraph "GCP Infrastructure"
-        LB[Load Balancer]
-        CloudArmor[Cloud Armor]
         CloudRun[Cloud Run Services]
-        CloudSQL[Cloud SQL]
-        Memorystore[Memorystore]
-        Storage[Cloud Storage]
+        CloudSQL[Cloud SQL PostgreSQL]
+        ArtifactRegistry[Artifact Registry]
+        SecretManager[Secret Manager]
     end
     
     subgraph "Monitoring"
-        Prometheus[Prometheus]
-        Grafana[Grafana]
-        Logging[Cloud Logging]
-        Alerting[Alerting]
+        CloudLogging[Cloud Logging]
+        CloudMonitoring[Cloud Monitoring]
     end
     
-    GitHub --> Actions
-    Actions --> Build
+    GitHub --> CloudBuild
+    CloudBuild --> Build
     Build --> Image
-    Image --> CloudRun
-    
-    LB --> CloudArmor
-    CloudArmor --> CloudRun
+    Image --> ArtifactRegistry
+    ArtifactRegistry --> CloudRun
     CloudRun --> CloudSQL
-    CloudRun --> Memorystore
-    CloudRun --> Storage
+    SecretManager --> CloudRun
     
-    CloudRun --> Prometheus
-    CloudRun --> Logging
-    Prometheus --> Grafana
-    Grafana --> Alerting
+    CloudRun --> CloudLogging
+    CloudRun --> CloudMonitoring
 ```
 
 **Proceso de Despliegue:**
 
-**1. CI/CD Pipeline (GitHub Actions):**
+**1. CI/CD Pipeline (Cloud Build):**
 ```yaml
-# .github/workflows/deploy.yml
-name: Deploy to GCP
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
+# cloudbuild.yaml
     steps:
-      - uses: actions/checkout@v3
-      - name: Run tests
-        run: |
-          pip install -r requirements.txt
-          pytest
-          
-  build-and-deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Build and push Docker image
-        run: |
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-resume-agent:${{ github.sha }} .
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-resume-agent:${{ github.sha }}
-      
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy ai-resume-agent \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-resume-agent:${{ github.sha }} \
-            --platform managed \
-            --region us-central1 \
-            --allow-unauthenticated
+  # Construir imagen Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/chatbot-repo/chatbot-api', '.']
+  
+  # Subir imagen
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/chatbot-repo/chatbot-api']
+  
+  # Desplegar a Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'chatbot-api'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/chatbot-repo/chatbot-api'
+      - '--platform'
+      - 'managed'
+      - '--region'
+      - 'europe-west1'
+      - '--allow-unauthenticated'
 ```
 
-**2. Kubernetes Deployment (Opcional para escalabilidad):**
-```yaml
-# kubernetes/deployments/chatbot-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ai-resume-agent
-  labels:
-    app: ai-resume-agent
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: ai-resume-agent
-  template:
-    metadata:
-      labels:
-        app: ai-resume-agent
-    spec:
-      containers:
-      - name: ai-resume-agent
-        image: gcr.io/PROJECT_ID/ai-resume-agent:latest
-        ports:
-        - containerPort: 8080
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-secret
-              key: url
-```
+**2. Configuración de Cloud Run:**
+- **Memoria**: 2Gi RAM
+- **CPU**: 1 vCPU
+- **Timeout**: 300 segundos
+- **Max Instances**: 10
+- **Min Instances**: 0
+- **Concurrency**: 100 requests por instancia
 
-**3. Docker Compose para Desarrollo Local:**
-```yaml
-# docker/docker-compose.yml
-version: '3.8'
-services:
-  backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/ai_resume_agent
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - ../backend:/app
-      
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    volumes:
-      - ../frontend:/app
-      - /app/node_modules
-      
-  db:
-    image: postgres:13
-    environment:
-      - POSTGRES_DB=ai_resume_agent
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      
-  redis:
-    image: redis:6-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-volumes:
-  postgres_data:
-  redis_data:
-```
+**3. Configuración de Cloud SQL:**
+- **Tipo**: PostgreSQL 15
+- **Tier**: f1-micro (desarrollo) / db-f1-micro (producción)
+- **Región**: europe-west1
+- **Extensión**: pgvector habilitada
+- **Backup**: Automático diario
 
 **Estrategia de Deployment:**
-
-**Blue-Green Deployment:**
-- **Fase 1**: Despliegue de nueva versión en ambiente paralelo
-- **Fase 2**: Testing y validación en ambiente de staging
-- **Fase 3**: Switch de tráfico al nuevo ambiente
-- **Fase 4**: Rollback automático en caso de fallos
+- **Blue-Green Deployment**: Despliegue sin downtime
+- **Rollback automático**: En caso de fallos
+- **Health checks**: Monitoreo continuo
+- **Scaling automático**: Basado en demanda
 
 **Monitoreo y Observabilidad:**
-
-**Métricas Clave:**
-- **Performance**: Response time, throughput, error rate
-- **Infrastructure**: CPU, memory, disk usage
-- **Business**: User engagement, conversation rate
-- **Security**: Failed authentication attempts, suspicious patterns
-
-**Herramientas de Monitoreo:**
-- **Prometheus**: Métricas y alertas
-- **Grafana**: Dashboards y visualizaciones
 - **Cloud Logging**: Centralización de logs
-- **Cloud Monitoring**: Métricas de GCP nativas
+- **Cloud Monitoring**: Métricas de sistema
+- **Error Reporting**: Detección de errores
+- **Uptime Checks**: Verificación de disponibilidad
 
 ### **2.5. Seguridad**
 
 **Prácticas de Seguridad Implementadas:**
 
-**1. Autenticación y Autorización:**
-- **JWT Tokens**: Implementación segura con expiración y refresh tokens
-- **OAuth2 Integration**: Autenticación con Google y proveedores externos
-- **Role-Based Access Control (RBAC)**: Control granular de permisos por usuario
-- **Multi-Factor Authentication (MFA)**: Opcional para cuentas de alto privilegio
+#### **🔒 OWASP LLM Top 10 Mitigado**
 
-**2. Protección de APIs:**
-- **Rate Limiting**: Límites de 100 requests/minuto por usuario
-- **Input Validation**: Validación estricta de todos los inputs con Pydantic
-- **SQL Injection Prevention**: Uso de SQLAlchemy ORM con parámetros preparados
-- **CORS Configuration**: Configuración restrictiva de Cross-Origin Resource Sharing
+**1. Prompt Injection Prevention:**
+- **Validación de inputs** con Pydantic schemas
+- **Sanitización de contenido** antes de enviar al LLM
+- **Filtros de contenido** para detectar intentos de inyección
+- **Rate limiting** para prevenir ataques de fuerza bruta
 
-**3. Seguridad de Datos:**
-- **Encryption at Rest**: Encriptación AES-256 para datos sensibles
-- **Encryption in Transit**: TLS 1.3 para todas las comunicaciones
-- **Data Masking**: Enmascaramiento de información sensible en logs
-- **Secure Headers**: Implementación de headers de seguridad HTTP
+**2. Insecure Output Handling:**
+- **Sanitización de respuestas** del LLM
+- **Validación de contenido** antes de mostrar al usuario
+- **Filtros de seguridad** para contenido malicioso
+- **Escape de caracteres** especiales
 
-**4. Seguridad de IA y Chatbot:**
-- **Prompt Injection Prevention**: Validación y sanitización de inputs del usuario
-- **Data Leakage Protection**: Filtrado de respuestas para evitar fuga de información
-- **Content Filtering**: Filtros de contenido inapropiado o malicioso
-- **Context Validation**: Validación del contexto antes de enviarlo a Vertex AI
+**3. Training Data Poisoning:**
+- **Base de conocimiento controlada** (portfolio.yaml)
+- **Validación de fuentes** de datos
+- **Versionado de conocimiento** con checksums
+- **Auditoría de cambios** en la base de conocimiento
 
-**5. Infraestructura Segura:**
-- **Cloud Armor**: Protección DDoS y WAF en GCP
-- **VPC Configuration**: Redes privadas con acceso restringido
-- **IAM Policies**: Principio de menor privilegio para todos los servicios
-- **Secret Management**: Gestión segura de credenciales con Secret Manager
+**4. Model DoS:**
+- **Rate limiting** por IP y sesión
+- **Timeout de requests** (300 segundos)
+- **Circuit breaker** para servicios externos
+- **Límites de tokens** por request
 
-**Ejemplos de Implementación:**
+**5. Supply Chain Vulnerabilities:**
+- **Dependencias auditadas** con bandit
+- **Container scanning** en Cloud Build
+- **Secret management** con Google Secret Manager
+- **Imágenes base seguras** de Google Cloud
 
-**Rate Limiting con Redis:**
+#### **🛡️ Seguridad de Aplicación**
+
+**Autenticación y Autorización:**
+- **Backend privado** con autenticación GCP nativa
+- **Bearer tokens** para acceso a endpoints
+- **Session management** seguro
+- **Rate limiting** por IP y usuario
+
+**Protección de Datos:**
+- **Encriptación en tránsito** (TLS 1.3)
+- **Encriptación en reposo** (Cloud SQL)
+- **GDPR compliance** automático
+- **Data masking** en logs
+
+**Monitoreo de Seguridad:**
+- **Logs de seguridad** estructurados
+- **Detección de patrones** sospechosos
+- **Alertas automáticas** para eventos críticos
+- **Auditoría de acceso** a recursos sensibles
+
+#### **🔐 Implementación Técnica**
+
+**Input Validation:**
 ```python
-# security/rate_limiter.py
-import redis
-from fastapi import HTTPException
-from datetime import datetime
-
-class RateLimiter:
-    def __init__(self, redis_client: redis.Redis):
-        self.redis = redis_client
-        self.max_requests = 100
-        self.window_seconds = 60
-    
-    async def check_rate_limit(self, user_id: str):
-        key = f"rate_limit:{user_id}"
-        current_requests = self.redis.get(key)
-        
-        if current_requests and int(current_requests) >= self.max_requests:
-            raise HTTPException(
-                status_code=429, 
-                detail="Rate limit exceeded. Try again later."
-            )
-        
-        pipe = self.redis.pipeline()
-        pipe.incr(key)
-        pipe.expire(key, self.window_seconds)
-        pipe.execute()
-```
-
-**Input Validation con Pydantic:**
-```python
-# models/security.py
-from pydantic import BaseModel, validator
-import re
-
+# Ejemplo de validación con Pydantic
 class ChatMessage(BaseModel):
-    content: str
-    user_id: str
+    content: str = Field(..., min_length=1, max_length=1000)
+    session_id: str = Field(..., regex=r'^[a-zA-Z0-9_-]{3,50}$')
     
     @validator('content')
     def validate_content(cls, v):
-        if len(v) > 1000:
-            raise ValueError('Message too long')
+        # Sanitización de contenido
         if re.search(r'<script|javascript:', v, re.IGNORECASE):
             raise ValueError('Invalid content detected')
         return v.strip()
-    
-    @validator('user_id')
-    def validate_user_id(cls, v):
-        if not re.match(r'^[a-zA-Z0-9_-]{3,50}$', v):
-            raise ValueError('Invalid user ID format')
-        return v
 ```
 
-**Content Filtering para Chatbot:**
+**Rate Limiting:**
 ```python
-# security/content_filter.py
-import re
-from typing import List
+# Rate limiting con SlowAPI
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
-class ContentFilter:
-    def __init__(self):
-        self.blocked_patterns = [
-            r'password|contraseña',
-            r'credit.?card|tarjeta.?credito',
-            r'social.?security|seguridad.?social',
-            r'<script|javascript:',
-            r'data:text/html'
-        ]
-        self.suspicious_patterns = [
-            r'admin|administrator',
-            r'root|sudo',
-            r'delete|drop|truncate'
-        ]
-    
-    def filter_content(self, content: str) -> tuple[bool, str]:
-        content_lower = content.lower()
-        
-        # Check for blocked patterns
-        for pattern in self.blocked_patterns:
-            if re.search(pattern, content_lower, re.IGNORECASE):
-                return False, "Content blocked for security reasons"
-        
-        # Check for suspicious patterns
-        for pattern in self.suspicious_patterns:
-            if re.search(pattern, content_lower, re.IGNORECASE):
-                return True, "Content flagged for review"
-        
-        return True, "Content approved"
+limiter = Limiter(key_func=get_remote_address)
+
+@app.post("/api/v1/chat")
+@limiter.limit("30/minute")  # 30 requests por minuto
+async def chat_endpoint(request: Request, message: ChatMessage):
+    # Lógica del endpoint
 ```
 
-**Monitoreo de Seguridad:**
-
-**Logs de Seguridad:**
-- **Authentication Logs**: Registro de intentos de login y autenticación
-- **Access Logs**: Registro de acceso a recursos sensibles
-- **Error Logs**: Registro de errores de seguridad y excepciones
-- **Audit Logs**: Registro de cambios en configuración y permisos
-
-**Alertas Automáticas:**
-- **Failed Login Attempts**: Alertas por múltiples intentos fallidos
-- **Suspicious Patterns**: Detección de patrones sospechosos en requests
-- **Rate Limit Violations**: Alertas por violaciones de rate limiting
-- **Unauthorized Access**: Alertas por acceso no autorizado a recursos
+**Content Filtering:**
+```python
+# Filtro de contenido para respuestas del LLM
+class ContentFilter:
+    def filter_response(self, content: str) -> str:
+        # Sanitización de respuestas
+        content = html.escape(content)
+        content = re.sub(r'<script.*?</script>', '', content, flags=re.DOTALL)
+        return content
+```
 
 ### **2.6. Tests**
 
 **Estrategia de Testing Implementada:**
 
 **1. Testing Unitario:**
-- **Framework**: Pytest para Python, Jest para JavaScript
+- **Framework**: Pytest para Python
 - **Cobertura Objetivo**: Mínimo 80% de cobertura de código
 - **Mocking**: Uso de unittest.mock para aislar dependencias
 - **Assertions**: Assertions robustos con mensajes descriptivos
 
-**Ejemplo de Test Unitario (Python):**
+**Ejemplo de Test Unitario:**
 ```python
-# tests/test_chatbot_service.py
+# tests/test_rag_service.py
 import pytest
 from unittest.mock import Mock, patch
-from app.services.chatbot_service import ChatbotService
-from app.models.chat import ChatMessage
+from app.services.rag_service import RAGService
 
-class TestChatbotService:
+class TestRAGService:
     @pytest.fixture
-    def chatbot_service(self):
-        return ChatbotService()
+    def rag_service(self):
+        return RAGService()
     
-    @pytest.fixture
-    def mock_ai_service(self):
-        return Mock()
-    
-    def test_process_message_valid_input(self, chatbot_service, mock_ai_service):
+    def test_generate_response_valid_input(self, rag_service):
         # Arrange
-        message = ChatMessage(content="¿Cuál es tu experiencia en Python?", user_id="user123")
-        mock_ai_service.generate_response.return_value = "Tengo 5 años de experiencia en Python, trabajando en proyectos de machine learning y desarrollo web."
+        question = "¿Cuál es tu experiencia en Python?"
+        context = "Tengo 5 años de experiencia en Python..."
         
         # Act
-        with patch.object(chatbot_service, 'ai_service', mock_ai_service):
-            result = chatbot_service.process_message(message)
+        result = rag_service.generate_response(question, context)
         
         # Assert
         assert result is not None
-        assert "Python" in result.content
-        mock_ai_service.generate_response.assert_called_once()
-    
-    def test_process_message_empty_content(self, chatbot_service):
-        # Arrange
-        message = ChatMessage(content="", user_id="user123")
-        
-        # Act & Assert
-        with pytest.raises(ValueError, match="Message content cannot be empty"):
-            chatbot_service.process_message(message)
+        assert "Python" in result
+        assert len(result) > 50
 ```
 
 **2. Testing de Integración:**
 - **API Testing**: Tests de endpoints completos con base de datos
 - **Database Testing**: Tests de operaciones CRUD y queries complejas
-- **External Services**: Tests de integración con Vertex AI
+- **External Services**: Tests de integración con Gemini API
 - **Performance Testing**: Tests de rendimiento y escalabilidad
 
 **Ejemplo de Test de Integración:**
 ```python
-# tests/test_integration/test_chatbot_api.py
+# tests/test_integration/test_chat_api.py
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.database import get_db
-from app.models.base import Base
 
-class TestChatbotAPI:
+class TestChatAPI:
     @pytest.fixture
     def client(self):
-        # Create test database
-        engine = create_engine("sqlite:///./test.db")
-        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-        Base.metadata.create_all(bind=engine)
-        
-        def override_get_db():
-            try:
-                db = TestingSessionLocal()
-                yield db
-            finally:
-                db.close()
-        
-        app.dependency_overrides[get_db] = override_get_db
         return TestClient(app)
     
-    def test_send_chat_message(self, client):
+    def test_chat_endpoint_success(self, client):
         # Arrange
         message_data = {
-            "content": "¿Cuál es tu experiencia en desarrollo web?",
-            "user_id": "test_user_123"
+            "message": "¿Cuál es tu experiencia en desarrollo web?",
+            "session_id": "test_session_123",
+            "user_type": "IT"
         }
         
         # Act
-        response = client.post("/api/v1/chat/messages", json=message_data)
+        response = client.post("/api/v1/chat", json=message_data)
         
         # Assert
         assert response.status_code == 200
         data = response.json()
-        assert data["content"] == message_data["content"]
-        assert "ai_response" in data
-        assert len(data["ai_response"]) > 0
+        assert "response" in data
+        assert len(data["response"]) > 0
 ```
 
 **3. Testing de Sistema:**
@@ -881,65 +698,44 @@ class TestChatbotAPI:
 
 **Ejemplo de Test de Performance:**
 ```python
-# tests/performance/test_chatbot_load.py
+# tests/performance/test_load.py
 import asyncio
 import aiohttp
 import time
-from typing import List
 
 class LoadTester:
-    def __init__(self, base_url: str, num_users: int = 50):
-        self.base_url = base_url
-        self.num_users = num_users
-        self.results = []
-    
-    async def simulate_user_conversation(self, user_id: int):
+    async def test_concurrent_requests(self):
         async with aiohttp.ClientSession() as session:
-            start_time = time.time()
+            tasks = []
+            for i in range(10):  # 10 requests concurrentes
+                task = self.send_request(session, i)
+                tasks.append(task)
             
-            # Send chat message
-            message_data = {"content": f"Test message from user {user_id}", "user_id": f"user{user_id}"}
-            async with session.post(f"{self.base_url}/api/chat/messages", json=message_data) as response:
-                assert response.status == 200
+            results = await asyncio.gather(*tasks)
             
-            end_time = time.time()
-            self.results.append(end_time - start_time)
-    
-    async def run_load_test(self):
-        tasks = [self.simulate_user_conversation(i) for i in range(self.num_users)]
-        await asyncio.gather(*tasks)
-        
-        avg_response_time = sum(self.results) / len(self.results)
-        max_response_time = max(self.results)
-        
-        print(f"Load Test Results:")
-        print(f"Users: {self.num_users}")
-        print(f"Average Response Time: {avg_response_time:.2f}s")
-        print(f"Max Response Time: {max_response_time:.2f}s")
-        
-        # Assertions for performance requirements
-        assert avg_response_time < 2.0, "Average response time exceeds 2 seconds"
-        assert max_response_time < 5.0, "Max response time exceeds 5 seconds"
+            # Verificar que todos los requests fueron exitosos
+            for result in results:
+                assert result["status"] == 200
+                assert result["response_time"] < 2.0  # < 2 segundos
 ```
 
 **5. Testing de Seguridad:**
 - **Input Validation Testing**: Tests de validación de inputs del chatbot
 - **Rate Limiting Testing**: Tests de límites de rate
 - **Authentication Testing**: Tests de autenticación y autorización
+- **OWASP Testing**: Tests específicos para vulnerabilidades LLM
 
 **Cobertura de Testing:**
 - **Unit Tests**: 85% de cobertura de código
 - **Integration Tests**: 70% de cobertura de funcionalidades
-- **E2E Tests**: 60% de cobertura de flujos de usuario
 - **Performance Tests**: 100% de endpoints críticos
 - **Security Tests**: 100% de funcionalidades de seguridad
 
 **Herramientas de Testing:**
 - **Python**: Pytest, Coverage.py, Factory Boy
-- **JavaScript**: Jest, Testing Library, Playwright
-- **API Testing**: Postman, Newman
+- **API Testing**: FastAPI TestClient
 - **Performance**: Locust, Artillery
-- **Security**: OWASP ZAP, Bandit
+- **Security**: Bandit, Safety
 
 ---
 
@@ -951,159 +747,168 @@ class LoadTester:
 
 ```mermaid
 erDiagram
-    USER_SESSION {
-        string session_id PK "UUID v4"
-        string user_ip "IPv4/IPv6"
-        timestamp created_at "Auto-generated"
-        timestamp last_activity "Auto-updated"
-        string user_language "ISO 639-1 (en, es)"
-        text user_agent "Browser/device info"
-        boolean is_first_time "Default: true"
-        string user_country "ISO 3166-1 alpha-2"
-        string user_timezone "IANA timezone"
-        json metadata "Additional user data"
-        boolean is_active "Default: true"
+    ChatSession {
+        string session_id PK
+        string email
+        string user_type
+        string linkedin
+        datetime created_at
+        datetime last_activity
+        int total_messages
+        float engagement_score
+        boolean gdpr_consent_given
+        boolean data_captured
     }
     
-    CONVERSATION {
-        string conversation_id PK "UUID v4"
-        string session_id FK "References user_sessions"
-        timestamp started_at "Auto-generated"
-        timestamp ended_at "Nullable"
-        int message_count "Auto-incremented"
-        text conversation_summary "LLM generated"
-        int satisfaction_rating "1-5 scale"
-        string detected_intent "Primary user intent"
-        string primary_topic "Main conversation topic"
-        json context_used "Sections from YAML"
-        int total_tokens "Tokens consumed"
-        float total_cost "Cost in USD"
-        string status "active, ended, archived"
+    SessionAnalytics {
+        int id PK
+        string session_id FK
+        int message_count
+        int avg_response_time_ms
+        string[] technologies_mentioned
+        string[] intent_categories
+        datetime created_at
     }
     
-    MESSAGE {
-        string message_id PK "UUID v4"
-        string conversation_id FK "References conversations"
-        text content "Message text content"
-        string sender_type "user, bot, system"
-        timestamp sent_at "Auto-generated"
-        string language "ISO 639-1"
-        string intent_detected "Detected intent"
-        json entities_extracted "Named entities"
-        json context_used "Context sections"
-        int tokens_consumed "Token count"
-        float response_time "Milliseconds"
-        json metadata "Additional message data"
-        boolean is_error "Error flag"
-        string error_type "Error classification"
+    GDPRConsent {
+        int id PK
+        string session_id FK
+        datetime consent_timestamp
+        string consent_type
+        boolean consent_given
+        string ip_address
+        string user_agent
     }
     
-    USER_CONTACT {
-        string contact_id PK "UUID v4"
-        string session_id FK "References user_sessions"
-        string first_name "User first name"
-        string last_name "User last name"
-        string email "Valid email format"
-        string linkedin_profile "LinkedIn URL"
-        string primary_purpose "Contact reason"
-        timestamp created_at "Auto-generated"
-        boolean contact_permission "GDPR consent"
-        string company "Company name"
-        string job_title "Job position"
-        string industry "Industry sector"
-        json preferences "Contact preferences"
-        string status "pending, contacted, converted"
+    ConversationPair {
+        int id PK
+        string session_id FK
+        text user_message
+        text bot_response
+        datetime created_at
+        string intent_detected
+        float response_time_ms
+        int tokens_consumed
+        boolean cache_hit
     }
     
-    PROFESSIONAL_DOCUMENT {
-        string document_id PK "UUID v4"
-        text content "YAML content"
-        string version "Semantic versioning"
-        timestamp last_updated "Last modification"
-        string source "Source file path"
-        json sections "Parsed YAML sections"
-        array tags "Content tags"
-        json metadata "Document metadata"
-        string yaml_schema_version "Schema version"
-        boolean is_active "Active document"
-        string checksum "Content hash"
-        timestamp created_at "Creation timestamp"
+    VectorStore {
+        int id PK
+        text chunk_content
+        vector embedding
+        string source_section
+        string metadata
+        datetime created_at
+        float similarity_score
     }
     
-    ANALYTICS_DATA {
-        string analytics_id PK "UUID v4"
-        string session_id FK "References user_sessions"
-        string question_type "Question classification"
-        string topic_category "Topic category"
-        string technology_stack "Tech mentioned"
-        string industry_sector "Industry sector"
-        int satisfaction_rating "1-5 scale"
-        boolean response_helpful "Helpful flag"
-        timestamp created_at "Auto-generated"
-        text user_feedback "User feedback text"
-        string intent_detected "Detected intent"
-        array context_sections_used "Context sections"
-        int tokens_saved "Tokens saved by cache"
-        float cost_savings "Cost savings in USD"
-        json performance_metrics "Performance data"
+    LangchainPgCollection {
+        string name PK
+        text description
+        datetime created_at
+        int total_chunks
+        string embedding_model
+        int embedding_dimensions
     }
     
-    SECURITY_LOG {
-        string log_id PK "UUID v4"
-        string session_id FK "References user_sessions"
-        timestamp created_at "Auto-generated"
-        string event_type "Security event type"
-        string severity "low, medium, high, critical"
-        text description "Event description"
-        json metadata "Event metadata"
-        string ip_address "Source IP address"
-        text user_agent "User agent string"
-        boolean is_blocked "Blocked flag"
-        string threat_type "Threat classification"
-        json mitigation_applied "Applied mitigations"
-        string country_code "IP geolocation"
-    }
-    
-    CACHE_ENTRY {
-        string cache_id PK "UUID v4"
-        string cache_key "Unique cache key"
-        text cached_content "Cached content"
-        string content_type "response, embedding, context"
-        timestamp created_at "Creation timestamp"
-        timestamp expires_at "Expiration timestamp"
-        int ttl_seconds "Time to live"
-        float similarity_score "Relevance score"
-        string source_query "Original query"
-        json metadata "Cache metadata"
-        boolean is_active "Active entry"
-        int access_count "Access counter"
-        timestamp last_accessed "Last access"
-    }
-    
-    COST_METRICS {
-        string metric_id PK "UUID v4"
-        string session_id FK "References user_sessions"
-        timestamp recorded_at "Metric timestamp"
-        string service_name "GCP service name"
-        float cost_amount "Cost in USD"
-        int usage_quantity "Usage quantity"
-        string usage_unit "Usage unit"
-        string metric_type "Cost metric type"
-        json details "Detailed breakdown"
-        string optimization_applied "Optimization used"
-        float savings_amount "Savings in USD"
-        string period "Daily, monthly, yearly"
-    }
-    
-    USER_SESSION ||--o{ CONVERSATION : "initiates"
-    USER_SESSION ||--o{ USER_CONTACT : "creates"
-    USER_SESSION ||--o{ ANALYTICS_DATA : "generates"
-    USER_SESSION ||--o{ SECURITY_LOG : "triggers"
-    USER_SESSION ||--o{ COST_METRICS : "consumes"
-    CONVERSATION ||--o{ MESSAGE : "contains"
-    PROFESSIONAL_DOCUMENT ||--o{ MESSAGE : "referenced_in"
-    CACHE_ENTRY ||--o{ MESSAGE : "serves"
+    ChatSession ||--o{ SessionAnalytics : "generates"
+    ChatSession ||--o{ GDPRConsent : "provides"
+    ChatSession ||--o{ ConversationPair : "contains"
+    VectorStore ||--o{ LangchainPgCollection : "belongs_to"
 ```
+
+### **3.2. Descripción de entidades principales:**
+
+**1. ChatSession - Sesiones de Usuario**
+- **Propósito**: Gestionar sesiones de usuarios visitantes del portfolio
+- **Clave Primaria**: `session_id` (UUID v4)
+- **Restricciones**: 
+  - `session_id`: NOT NULL, UNIQUE
+  - `email`: UNIQUE, VALID_EMAIL_FORMAT
+  - `created_at`: NOT NULL, DEFAULT NOW()
+  - `gdpr_consent_given`: NOT NULL, DEFAULT false
+- **Relaciones**: 
+  - `||--o{` SessionAnalytics (1:N)
+  - `||--o{` GDPRConsent (1:N)
+  - `||--o{` ConversationPair (1:N)
+- **Índices**: `email`, `user_type`, `created_at`, `gdpr_consent_given`
+- **Políticas de Retención**: 30 días activas, 1 año archivadas
+
+**2. SessionAnalytics - Métricas de Sesión**
+- **Propósito**: Almacenar métricas detalladas de cada sesión
+- **Clave Primaria**: `id` (Auto-increment)
+- **Clave Foránea**: `session_id` → ChatSession.session_id
+- **Restricciones**:
+  - `session_id`: NOT NULL, FOREIGN KEY
+  - `message_count`: NOT NULL, DEFAULT 0
+  - `avg_response_time_ms`: NOT NULL, DEFAULT 0
+- **Relaciones**: `o{--||` ChatSession (N:1)
+- **Índices**: `session_id`, `created_at`, `technologies_mentioned`
+- **Políticas de Retención**: 1 año con agregación mensual
+
+**3. GDPRConsent - Consentimientos GDPR**
+- **Propósito**: Registrar consentimientos GDPR para cumplimiento legal
+- **Clave Primaria**: `id` (Auto-increment)
+- **Clave Foránea**: `session_id` → ChatSession.session_id
+- **Restricciones**:
+  - `session_id`: NOT NULL, FOREIGN KEY
+  - `consent_timestamp`: NOT NULL, DEFAULT NOW()
+  - `consent_given`: NOT NULL, DEFAULT false
+- **Relaciones**: `o{--||` ChatSession (N:1)
+- **Índices**: `session_id`, `consent_timestamp`, `consent_type`
+- **Políticas de Retención**: 7 años para cumplimiento legal
+
+**4. ConversationPair - Pares de Conversación**
+- **Propósito**: Almacenar pares pregunta-respuesta para análisis
+- **Clave Primaria**: `id` (Auto-increment)
+- **Clave Foránea**: `session_id` → ChatSession.session_id
+- **Restricciones**:
+  - `session_id`: NOT NULL, FOREIGN KEY
+  - `user_message`: NOT NULL, max_length: 10000
+  - `bot_response`: NOT NULL, max_length: 10000
+  - `created_at`: NOT NULL, DEFAULT NOW()
+- **Relaciones**: `o{--||` ChatSession (N:1)
+- **Índices**: `session_id`, `created_at`, `intent_detected`
+- **Políticas de Retención**: 90 días activos, 2 años archivados
+
+**5. VectorStore - Almacén de Vectores**
+- **Propósito**: Almacenar chunks vectorizados del portfolio
+- **Clave Primaria**: `id` (Auto-increment)
+- **Restricciones**:
+  - `chunk_content`: NOT NULL, max_length: 10000
+  - `embedding`: NOT NULL, vector(384) - HuggingFace all-MiniLM-L6-v2
+  - `source_section`: NOT NULL, max_length: 100
+  - `created_at`: NOT NULL, DEFAULT NOW()
+- **Relaciones**: `o{--||` LangchainPgCollection (N:1)
+- **Índices**: `source_section`, `created_at`, `similarity_score`
+- **Políticas de Retención**: Indefinido mientras esté activo
+
+**6. LangchainPgCollection - Colecciones de Vectores**
+- **Propósito**: Organizar chunks vectorizados en colecciones
+- **Clave Primaria**: `name` (String)
+- **Restricciones**:
+  - `name`: NOT NULL, UNIQUE
+  - `description`: max_length: 500
+  - `created_at`: NOT NULL, DEFAULT NOW()
+  - `total_chunks`: NOT NULL, DEFAULT 0
+- **Relaciones**: `||--o{` VectorStore (1:N)
+- **Índices**: `name`, `created_at`, `total_chunks`
+- **Políticas de Retención**: Indefinido mientras esté activo
+
+**Relaciones y Cardinalidades:**
+- **ChatSession** es la entidad central que inicia todas las interacciones
+- **SessionAnalytics** proporciona métricas detalladas de cada sesión
+- **GDPRConsent** mantiene el cumplimiento legal de privacidad
+- **ConversationPair** almacena el contenido de las conversaciones
+- **VectorStore** contiene los chunks vectorizados del portfolio
+- **LangchainPgCollection** organiza los vectores en colecciones
+
+**Optimizaciones de Rendimiento:**
+- Particionamiento por fecha en tablas grandes (ConversationPair, SessionAnalytics)
+- Índices compuestos para consultas frecuentes
+- Archivo automático de datos antiguos
+- Compresión de datos históricos
+- Cache en memoria para consultas frecuentes
 
 
 ### **3.2. Descripción de entidades principales:**
@@ -1264,60 +1069,55 @@ erDiagram
 
 La API implementa un contrato RESTful completo con documentación automática mediante Swagger/OpenAPI, validación de esquemas, y manejo estandarizado de errores. El sistema utiliza autenticación basada en sesiones y rate limiting para proteger los endpoints.
 
-**Base URL:** `https://ai-resume-agent-{environment}.run.app/api/v1`
+**Base URL:** `https://chatbot-api-251107984645.europe-west1.run.app`
+**Documentación Interactiva:** `https://chatbot-api-251107984645.europe-west1.run.app/docs`
 **Versión:** v1
 **Formato:** JSON
-**Autenticación:** Session-based (X-Session-ID header)
+
+### **Autenticación**
+```http
+Authorization: Bearer <gcloud-identity-token>
+```
+
+**⚠️ IMPORTANTE**: El backend es **PRIVADO** y requiere autenticación nativa de Google Cloud Platform. Solo usuarios autenticados con GCP pueden acceder a los endpoints.
+
+### **Rate Limiting**
+- **Chat**: 30 requests/minuto por IP
+- **Analytics**: 10 requests/minuto por IP
+- **GDPR**: 5 requests/minuto por IP
 
 ---
 
 ### **Endpoint 1: Envío de Mensaje al Chatbot**
 
-**POST** `/chat/send`
+**POST** `/api/v1/chat`
 
-**Descripción:** Procesa un mensaje del usuario, aplica Smart Context Filtering, genera respuesta con Vertex AI, y registra analytics.
+**Descripción:** Procesa un mensaje del usuario, aplica RAG, genera respuesta con Gemini, y registra analytics.
 
 **Headers requeridos:**
 ```
-X-Session-ID: {session_id}
 Content-Type: application/json
 ```
 
 **Request Body:**
 ```json
 {
-  "content": "¿Cuál es tu experiencia con Python y Django?",
-  "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
-  "language": "es",
-  "context_preferences": {
-    "max_tokens": 1500,
-    "include_technical_details": true,
-    "focus_areas": ["experience", "skills"]
-  }
+  "message": "¿Cuál es tu experiencia con Python y Django?",
+  "session_id": "test-session-123",
+  "user_type": "IT"
 }
 ```
 
 **Response 200 (Success):**
 ```json
 {
-  "message_id": "msg-123e4567-e89b-12d3-a456-426614174000",
-  "content": "Tengo experiencia sólida con Python desde 2018, trabajando principalmente en desarrollo web. Con Django, he desarrollado aplicaciones empresariales incluyendo sistemas de gestión de contenido, APIs RESTful, y aplicaciones de e-commerce. Mi experiencia incluye Django 3.x y 4.x, con integración de bases de datos PostgreSQL, implementación de autenticación JWT, y despliegue en Google Cloud Platform.",
+  "response": "Tengo experiencia sólida con Python desde 2018, trabajando principalmente en desarrollo web. Con Django, he desarrollado aplicaciones empresariales incluyendo sistemas de gestión de contenido, APIs RESTful, y aplicaciones de e-commerce. Mi experiencia incluye Django 3.x y 4.x, con integración de bases de datos PostgreSQL, implementación de autenticación JWT, y despliegue en Google Cloud Platform.",
+  "session_id": "test-session-123",
   "timestamp": "2024-01-15T10:30:00Z",
-  "language": "es",
   "intent_detected": "technology_experience",
-  "context_sections": ["python_experience", "django_development", "backend_skills"],
-  "tokens_consumed": 45,
   "response_time_ms": 1250,
-  "cost_optimization": {
-    "cache_hit": false,
-    "tokens_saved": 0,
-    "cost_savings": 0.0
-  },
-  "metadata": {
-    "confidence_score": 0.92,
-    "context_relevance": 0.87,
-    "optimization_applied": "smart_context_filtering"
-  }
+  "tokens_consumed": 45,
+  "cache_hit": false
 }
 ```
 
@@ -1327,86 +1127,9 @@ Content-Type: application/json
   "error": "VALIDATION_ERROR",
   "message": "El contenido del mensaje no puede estar vacío",
   "details": {
-    "field": "content",
+    "field": "message",
     "constraint": "minLength",
     "value": ""
-  },
-  "timestamp": "2024-01-15T10:30:00Z",
-  "request_id": "req-123e4567-e89b-12d3-a456-426614174000"
-}
-```
-
-**Response 429 (Rate Limit Exceeded):**
-```json
-{
-  "error": "RATE_LIMIT_EXCEEDED",
-  "message": "Demasiadas solicitudes. Intenta de nuevo en 60 segundos",
-  "retry_after": 60,
-  "limit": 60,
-  "window": "1 minute"
-}
-```
-
----
-
-### **Endpoint 2: Creación de Sesión de Usuario**
-
-**POST** `/session/create`
-
-**Descripción:** Inicializa una nueva sesión para un usuario, detectando automáticamente idioma, ubicación y preferencias.
-
-**Headers requeridos:**
-```
-Content-Type: application/json
-```
-
-**Request Body (opcional):**
-```json
-{
-  "preferred_language": "es",
-  "timezone": "America/Mexico_City",
-  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-  "metadata": {
-    "browser_info": {
-      "name": "Chrome",
-      "version": "120.0.0.0"
-    },
-    "device_info": {
-      "type": "desktop",
-      "screen_resolution": "1920x1080"
-    }
-  }
-}
-```
-
-**Response 201 (Created):**
-```json
-{
-  "session_id": "550e8400-e29b-41d4-a716-446655440000",
-  "created_at": "2024-01-15T10:30:00Z",
-  "expires_at": "2024-01-15T11:00:00Z",
-  "detected_language": "es",
-  "detected_country": "MX",
-  "timezone": "America/Mexico_City",
-  "is_first_time": true,
-  "session_config": {
-    "rate_limit": 60,
-    "max_conversations": 10,
-    "cache_enabled": true,
-    "optimization_level": "balanced"
-  }
-}
-```
-
-**Response 400 (Invalid Request):**
-```json
-{
-  "error": "INVALID_REQUEST",
-  "message": "Timezone inválido proporcionado",
-  "details": {
-    "field": "timezone",
-    "value": "Invalid/Timezone",
-    "allowed_values": "IANA timezone identifiers"
   },
   "timestamp": "2024-01-15T10:30:00Z"
 }
@@ -1414,25 +1137,43 @@ Content-Type: application/json
 
 ---
 
-### **Endpoint 3: Análisis de Métricas y Costos**
+### **Endpoint 2: Health Check**
 
-**GET** `/analytics/usage`
+**GET** `/api/v1/health`
 
-**Descripción:** Retorna métricas detalladas de uso, incluyendo estadísticas de conversaciones, costos y optimizaciones.
+**Descripción:** Verifica el estado del sistema y sus dependencias.
 
-**Headers requeridos:**
+**Response 200 (Success):**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "version": "1.0.0",
+  "dependencies": {
+    "database": "connected",
+    "vector_store": "connected",
+    "gemini_api": "connected"
+  },
+  "uptime": "2d 14h 30m 15s"
+}
 ```
-X-Session-ID: {session_id}
-```
+
+---
+
+### **Endpoint 3: Análisis de Métricas**
+
+**GET** `/api/v1/analytics`
+
+**Descripción:** Retorna métricas detalladas de uso y performance del sistema.
 
 **Query Parameters:**
-- `period`: `day`, `week`, `month`, `year` (default: `month`)
+- `period`: `day`, `week`, `month` (default: `month`)
 - `start_date`: Fecha de inicio en formato ISO 8601
 - `end_date`: Fecha de fin en formato ISO 8601
 
 **Request Example:**
 ```
-GET /analytics/usage?period=month&start_date=2024-01-01&end_date=2024-01-31
+GET /api/v1/analytics?period=month&start_date=2024-01-01&end_date=2024-01-31
 ```
 
 **Response 200 (Success):**
@@ -1444,32 +1185,11 @@ GET /analytics/usage?period=month&start_date=2024-01-01&end_date=2024-01-31
     "end": "2024-01-31T23:59:59Z"
   },
   "usage_summary": {
-    "total_conversations": 156,
+    "total_sessions": 156,
     "total_messages": 892,
-    "total_tokens": 45,230,
-    "total_cost": 0.0,
+    "total_tokens": 45230,
     "unique_users": 89,
-    "average_satisfaction": 4.6
-  },
-  "cost_analysis": {
-    "current_costs": {
-      "cloud_run": 0.0,
-      "cloud_sql": 0.0,
-      "memorystore": 0.0,
-      "vertex_ai": 0.0,
-      "total": 0.0
-    },
-    "savings": {
-      "amount": 450.0,
-      "percentage": 100.0,
-      "original_total": 450.0
-    },
-    "free_tier_usage": {
-      "cloud_run": 0.025,
-      "cloud_sql": 0.35,
-      "memorystore": 0.6,
-      "vertex_ai": 0.25
-    }
+    "average_response_time_ms": 1200
   },
   "performance_metrics": {
     "cache_hit_rate": 78.5,
@@ -1487,43 +1207,8 @@ GET /analytics/usage?period=month&start_date=2024-01-01&end_date=2024-01-31
       "intent": "work_experience",
       "count": 32,
       "percentage": 20.5
-    },
-    {
-      "intent": "project_details",
-      "count": 28,
-      "percentage": 17.9
-    }
-  ],
-  "top_topics": [
-    {
-      "topic": "Python Development",
-      "count": 38,
-      "percentage": 24.4
-    },
-    {
-      "topic": "Web Development",
-      "count": 35,
-      "percentage": 22.4
-    },
-    {
-      "topic": "Cloud Infrastructure",
-      "count": 22,
-      "percentage": 14.1
     }
   ]
-}
-```
-
-**Response 401 (Unauthorized):**
-```json
-{
-  "error": "UNAUTHORIZED",
-  "message": "Sesión no válida o expirada",
-  "details": {
-    "session_id": "550e8400-e29b-41d4-a716-446655440000",
-    "expired_at": "2024-01-15T11:00:00Z"
-  },
-  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
@@ -1531,77 +1216,52 @@ GET /analytics/usage?period=month&start_date=2024-01-01&end_date=2024-01-31
 
 ### **Esquemas de Datos (OpenAPI 3.0)**
 
-**ChatMessageRequest:**
+**ChatRequest:**
 ```yaml
 type: object
-required: ["content"]
+required: ["message", "session_id"]
 properties:
-  content:
+  message:
     type: string
     minLength: 1
     maxLength: 1000
-    description: "Contenido del mensaje del usuario"
-  conversation_id:
+    description: "Mensaje del usuario"
+  session_id:
     type: string
-    format: uuid
-    description: "ID de conversación existente (opcional)"
-  language:
+    minLength: 3
+    maxLength: 50
+    description: "ID de sesión único"
+  user_type:
     type: string
-    enum: ["en", "es", "fr", "de", "pt"]
-    default: "es"
-    description: "Idioma del mensaje"
-  context_preferences:
-    type: object
-    properties:
-      max_tokens:
-        type: integer
-        minimum: 100
-        maximum: 2000
-        default: 1000
-      include_technical_details:
-        type: boolean
-        default: true
-      focus_areas:
-        type: array
-        items:
-          type: string
-          enum: ["experience", "skills", "projects", "education"]
+    enum: ["IT", "HR", "Business", "Student", "Other"]
+    description: "Tipo de usuario"
 ```
 
-**ChatMessageResponse:**
+**ChatResponse:**
 ```yaml
 type: object
 properties:
-  message_id:
+  response:
     type: string
-    format: uuid
-  content:
+    description: "Respuesta del chatbot"
+  session_id:
     type: string
+    description: "ID de sesión"
   timestamp:
     type: string
     format: date-time
-  language:
-    type: string
   intent_detected:
     type: string
-  context_sections:
-    type: array
-    items:
-      type: string
-  tokens_consumed:
-    type: integer
+    description: "Intención detectada"
   response_time_ms:
     type: integer
-  cost_optimization:
-    type: object
-    properties:
+    description: "Tiempo de respuesta en milisegundos"
+  tokens_consumed:
+    type: integer
+    description: "Tokens consumidos"
       cache_hit:
         type: boolean
-      tokens_saved:
-        type: integer
-      cost_savings:
-        type: number
-        format: float
+    description: "Si la respuesta vino del cache"
 ```
 
 **ErrorResponse:**
@@ -1610,16 +1270,16 @@ type: object
 properties:
   error:
     type: string
-    enum: ["VALIDATION_ERROR", "SECURITY_VIOLATION", "RATE_LIMIT_EXCEEDED", "UNAUTHORIZED", "INTERNAL_SERVER_ERROR"]
+    enum: ["VALIDATION_ERROR", "RATE_LIMIT_EXCEEDED", "INTERNAL_SERVER_ERROR"]
   message:
     type: string
+    description: "Mensaje de error"
   details:
     type: object
+    description: "Detalles adicionales del error"
   timestamp:
     type: string
     format: date-time
-  request_id:
-    type: string
 ```
 
 ---
@@ -1627,15 +1287,15 @@ properties:
 ### **Características de la API**
 
 **Autenticación y Seguridad:**
-- **Session-based Authentication**: Cada request incluye `X-Session-ID`
-- **Rate Limiting**: 60 requests por minuto por sesión
+- **Bearer Token**: Autenticación con Google Cloud Identity
+- **Rate Limiting**: 30 requests por minuto por IP
 - **Input Validation**: Validación estricta con Pydantic
 - **Security Headers**: CORS, XSS Protection, Content Security Policy
 
 **Optimizaciones Implementadas:**
-- **Smart Context Filtering**: Reduce tokens enviados al LLM
+- **RAG Pipeline**: Retrieval Augmented Generation para respuestas contextuales
 - **Cache Inteligente**: Respuestas similares se sirven desde cache
-- **Cost Optimization**: Monitoreo y optimización de costos de Vertex AI
+- **Cost Optimization**: Monitoreo y optimización de costos de Gemini
 - **Performance Monitoring**: Métricas de respuesta y throughput
 
 **Documentación Interactiva:**
@@ -1645,9 +1305,8 @@ properties:
 
 **Monitoreo y Observabilidad:**
 - **Health Checks**: Endpoint `/health` para monitoreo
-- **Metrics**: Prometheus metrics en `/metrics`
 - **Logging**: Logs estructurados en JSON
-- **Tracing**: Distributed tracing con Jaeger
+- **Error Handling**: Manejo robusto de errores con códigos HTTP apropiados
 
 ---
 
@@ -1739,9 +1398,9 @@ Las siguientes historias de usuario representan los casos de uso más importante
 **Para** mantener la funcionalidad del chatbot sin incurrir en gastos excesivos
 
 **Criterios de Aceptación:**
-- ✅ El sistema utiliza Smart Context Filtering para reducir tokens
+- ✅ El sistema utiliza RAG para reducir tokens enviados al LLM
 - ✅ Se implementa cache inteligente para respuestas similares
-- ✅ Los costos se mantienen dentro del presupuesto mensual
+- ✅ Los costos se mantienen dentro del presupuesto mensual ($6-17/mes)
 - ✅ El sistema aprovecha las capas gratuitas de GCP
 - ✅ Se proporcionan métricas detalladas de costos y ahorros
 - ✅ La optimización no afecta la calidad de las respuestas
@@ -1750,7 +1409,7 @@ Las siguientes historias de usuario representan los casos de uso más importante
 1. **Optimización automática de contexto:**
    - Sistema analiza la pregunta del usuario
    - Extrae solo la información relevante del documento YAML
-   - Reduce tokens enviados a Vertex AI en 40-60%
+   - Reduce tokens enviados a Gemini en 40-60%
 
 2. **Cache inteligente de respuestas:**
    - Sistema identifica preguntas similares
@@ -1778,7 +1437,7 @@ Las siguientes historias de usuario representan los casos de uso más importante
 3. **Media**: Historia de Usuario 3 (Optimización de Costos)
 
 **Dependencias Técnicas:**
-- **Historia 1**: Requiere integración con Vertex AI y Smart Context Filtering
+- **Historia 1**: Requiere integración con Gemini y RAG Pipeline
 - **Historia 2**: Depende de la implementación de sistema de sesiones y base de datos
 - **Historia 3**: Requiere sistema de métricas y monitoreo implementado
 
@@ -1805,7 +1464,7 @@ Los siguientes tickets representan las tareas de desarrollo más importantes par
 
 ---
 
-### **Ticket 1: Implementación del Backend FastAPI con Integración Híbrida Dialogflow + Vertex AI**
+### **Ticket 1: Implementación del Backend FastAPI con RAG Pipeline**
 
 **Tipo:** Backend Development  
 **Prioridad:** Alta  
@@ -1814,60 +1473,31 @@ Los siguientes tickets representan las tareas de desarrollo más importantes par
 **Sprint:** 1-2
 
 #### **Descripción:**
-Implementar el backend principal del chatbot utilizando FastAPI, con arquitectura híbrida que integre Dialogflow ES (Free Tier) para detección de intenciones y Vertex AI para generación de respuestas avanzadas.
+Implementar el backend principal del chatbot utilizando FastAPI, con arquitectura RAG que integre HuggingFace embeddings, pgvector para búsqueda semántica, y Gemini 2.5 Flash para generación de respuestas.
 
 #### **Requisitos Funcionales:**
-- ✅ Sistema de autenticación basado en sesiones
-- ✅ Endpoint principal `/chat/send` para procesamiento de mensajes
-- ✅ Integración con Dialogflow ES para detección de intenciones básicas
-- ✅ Integración con Vertex AI para respuestas complejas
-- ✅ Smart Context Filtering para optimización de tokens
+- ✅ Sistema de autenticación con Google Cloud Identity
+- ✅ Endpoint principal `/api/v1/chat` para procesamiento de mensajes
+- ✅ Integración con HuggingFace all-MiniLM-L6-v2 para embeddings
+- ✅ Integración con pgvector para búsqueda semántica
+- ✅ Integración con Gemini 2.5 Flash para respuestas
 - ✅ Sistema de cache inteligente multinivel
 - ✅ Rate limiting y protección contra abuso
 - ✅ Logging estructurado y métricas de performance
 
 #### **Requisitos Técnicos:**
-- **Framework**: FastAPI 0.104+
+- **Framework**: FastAPI 0.115+
 - **Python**: 3.11+
-- **Base de Datos**: PostgreSQL 15+ con SQLAlchemy 2.0
-- **Cache**: Redis 7+ con cache multinivel
-- **LLM**: Vertex AI (text-bison@001, chat-bison@001)
+- **Base de Datos**: PostgreSQL 15+ con pgvector
+- **Embeddings**: HuggingFace sentence-transformers (local)
+- **LLM**: Gemini 2.5 Flash
 - **Seguridad**: OWASP Top 10 para LLMs implementado
 - **Testing**: Pytest con cobertura >80%
 
-#### **Arquitectura del Sistema:**
-```python
-# Estructura de directorios
-app/
-├── main.py                 # Punto de entrada FastAPI
-├── api/v1/
-│   ├── endpoints/
-│   │   ├── chat.py        # Endpoint principal del chatbot
-│   │   ├── session.py     # Gestión de sesiones
-│   │   └── health.py      # Health checks
-│   ├── dependencies.py    # Dependencias de FastAPI
-│   └── middleware.py      # Middleware personalizado
-├── core/
-│   ├── config.py          # Configuración del sistema
-│   ├── security.py        # Funciones de seguridad
-│   ├── database.py        # Configuración de BD
-│   └── logging.py         # Configuración de logs
-├── services/
-│   ├── chatbot_service.py # Lógica principal del chatbot
-│   ├── dialogflow_service.py # Integración Dialogflow ES
-│   ├── vertex_ai_service.py # Integración Vertex AI
-│   ├── context_service.py # Smart Context Filtering
-│   └── cache_service.py   # Sistema de cache
-├── models/                 # Modelos de datos
-├── schemas/                # Schemas Pydantic
-└── utils/                  # Utilidades y helpers
-```
-
 #### **Criterios de Aceptación:**
-- ✅ El endpoint `/chat/send` responde en <2 segundos
-- ✅ Las respuestas simples se manejan con Dialogflow ES
-- ✅ Las respuestas complejas se generan con Vertex AI
-- ✅ El Smart Context Filtering reduce tokens en 40-60%
+- ✅ El endpoint `/api/v1/chat` responde en <2 segundos
+- ✅ Las respuestas son contextuales y relevantes
+- ✅ El RAG Pipeline reduce tokens en 40-60%
 - ✅ El sistema de cache tiene >70% hit rate
 - ✅ Todos los tests unitarios y de integración pasan
 - ✅ La cobertura de código es >80%
@@ -1899,77 +1529,10 @@ Implementar el componente chatbot en el portfolio React existente, integrando co
 #### **Requisitos Técnicos:**
 - **Framework**: React 18+ con TypeScript
 - **Estado**: React Context + useReducer
-- **Estilos**: Tailwind CSS + CSS Modules
+- **Estilos**: Tailwind CSS + Headless UI
 - **HTTP Client**: Axios con interceptors
 - **Testing**: Jest + React Testing Library
 - **Build**: Next.js 14 con App Router
-
-#### **Arquitectura del Componente:**
-```typescript
-// components/Chatbot/Chatbot.tsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { useChatbot } from '../../hooks/useChatbot';
-import { useLanguageDetection } from '../../hooks/useLanguageDetection';
-import ChatInterface from './ChatInterface';
-import ChatToggle from './ChatToggle';
-import { ChatbotProvider } from '../../contexts/ChatbotContext';
-import styles from './Chatbot.module.css';
-
-interface ChatbotProps {
-  className?: string;
-  initialLanguage?: string;
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-}
-
-export const Chatbot: React.FC<ChatbotProps> = ({
-  className = '',
-  initialLanguage = 'es',
-  position = 'bottom-right'
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  
-  const { language, detectedLanguage } = useLanguageDetection(initialLanguage);
-  const { 
-    messages, 
-    isTyping, 
-    sendMessage, 
-    clearChat,
-    sessionId 
-  } = useChatbot(language);
-
-  const handleToggle = useCallback(() => {
-    setIsOpen(prev => !prev);
-    if (!isOpen) {
-      setIsMinimized(false);
-    }
-  }, [isOpen]);
-
-  return (
-    <ChatbotProvider>
-      <div className={`${styles.chatbot} ${styles[position]} ${className}`}>
-        {isOpen && (
-          <ChatInterface
-            messages={messages}
-            isTyping={isTyping}
-            onSendMessage={sendMessage}
-            onClearChat={clearChat}
-            language={language}
-            sessionId={sessionId}
-          />
-        )}
-        
-        <ChatToggle
-          isOpen={isOpen}
-          onToggle={handleToggle}
-          hasUnreadMessages={messages.some(msg => !msg.read)}
-          position={position}
-        />
-      </div>
-    </ChatbotProvider>
-  );
-};
-```
 
 #### **Criterios de Aceptación:**
 - ✅ El componente chatbot se integra perfectamente con el portfolio existente
@@ -1983,7 +1546,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 
 ---
 
-### **Ticket 3: Implementación del Sistema de Base de Datos y Migraciones**
+### **Ticket 3: Implementación del Sistema de Base de Datos y Vector Store**
 
 **Tipo:** Database Development  
 **Prioridad:** Media  
@@ -1992,67 +1555,33 @@ export const Chatbot: React.FC<ChatbotProps> = ({
 **Sprint:** 1-2
 
 #### **Descripción:**
-Implementar el sistema de base de datos PostgreSQL con todas las entidades del modelo de datos, incluyendo migraciones, índices de rendimiento, y políticas de retención de datos.
+Implementar el sistema de base de datos PostgreSQL con extensión pgvector, incluyendo migraciones, índices de rendimiento, y políticas de retención de datos.
 
 #### **Requisitos Funcionales:**
 - ✅ Base de datos PostgreSQL 15+ configurada y optimizada
+- ✅ Extensión pgvector habilitada para búsqueda semántica
 - ✅ Todas las entidades del modelo implementadas
 - ✅ Migraciones automáticas con Alembic
 - ✅ Índices de rendimiento para consultas frecuentes
 - ✅ Políticas de retención y archivo automático
 - ✅ Backup y recuperación configurados
 - ✅ Monitoreo de performance implementado
-- ✅ Datos de prueba (seeds) para desarrollo
 
 #### **Requisitos Técnicos:**
 - **Database**: PostgreSQL 15+ en Cloud SQL
+- **Extension**: pgvector 0.5+ para vectores
 - **ORM**: SQLAlchemy 2.0 con Alembic
-- **Connection Pool**: PgBouncer para optimización
 - **Backup**: Automático diario con retención de 30 días
 - **Monitoring**: Cloud Monitoring + custom metrics
 - **Performance**: Índices optimizados + query optimization
 
-#### **Implementación del Modelo de Datos:**
-```python
-# app/models/user_session.py
-from sqlalchemy import Column, String, Boolean, Text, JSON, Index
-from sqlalchemy.dialects.postgresql import UUID, INET
-from sqlalchemy.orm import relationship
-from app.models.base import Base, TimestampMixin, UUIDMixin
-
-class UserSession(Base, TimestampMixin, UUIDMixin):
-    __tablename__ = 'user_sessions'
-    
-    user_ip = Column(INET, nullable=False, index=True)
-    user_language = Column(String(10), nullable=False, index=True)
-    user_agent = Column(Text)
-    is_first_time = Column(Boolean, default=True, nullable=False)
-    user_country = Column(String(2), index=True)
-    user_timezone = Column(String(50))
-    metadata = Column(JSON)
-    is_active = Column(Boolean, default=True, nullable=False, index=True)
-    
-    # Relaciones
-    conversations = relationship("Conversation", back_populates="session")
-    contacts = relationship("UserContact", back_populates="session")
-    analytics = relationship("AnalyticsData", back_populates="session")
-    security_logs = relationship("SecurityLog", back_populates="session")
-    cost_metrics = relationship("CostMetrics", back_populates="session")
-    
-    # Índices compuestos
-    __table_args__ = (
-        Index('idx_user_sessions_ip_language', 'user_ip', 'user_language'),
-        Index('idx_user_sessions_active_created', 'is_active', 'created_at'),
-    )
-```
-
 #### **Criterios de Aceptación:**
 - ✅ Todas las tablas del modelo de datos están creadas correctamente
+- ✅ La extensión pgvector está habilitada y funcionando
 - ✅ Los índices de rendimiento están implementados y optimizados
 - ✅ Las migraciones se ejecutan sin errores en todos los entornos
 - ✅ La base de datos maneja la carga esperada sin problemas de performance
 - ✅ El sistema de backup está configurado y funcionando
-- ✅ Los datos de prueba están disponibles para desarrollo
 - ✅ El monitoreo de performance está implementado
 - ✅ La documentación de la base de datos está completa
 
@@ -2075,11 +1604,51 @@ class UserSession(Base, TimestampMixin, UUIDMixin):
 
 ## 7. Pull Requests
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+**Pull Requests Principales del Desarrollo**
 
-**Pull Request 1**
+Los siguientes Pull Requests representan las contribuciones más importantes durante el desarrollo del sistema AI Resume Agent.
 
-**Pull Request 2**
+---
 
-**Pull Request 3**
+### **Pull Request 1: Frontend Integration**
+
+**Título:** `🤖 Implementación Completa del Chatbot Interactivo`
+
+**Descripción:**
+Integración del componente chatbot en el portfolio React existente, proporcionando una experiencia de usuario fluida y responsiva con comunicación bidireccional con el backend FastAPI.
+
+**URL:** https://github.com/aandmaldonado/my-resume-react/pull/4
+
+---
+
+### **Pull Request 2: Backend Core Implementation**
+
+**Título:** `🚀 feat: AI Resume Agent MVP - Sistema RAG con memoria conversacional y seguridad completa`
+
+**Descripción:**
+Implementación del backend principal con arquitectura RAG, incluyendo integración con HuggingFace embeddings, pgvector para búsqueda semántica, y Gemini 2.5 Flash para generación de respuestas contextuales.
+
+**URL:** https://github.com/aandmaldonado/ai-resume-agent/pull/1
+
+---
+
+### **Pull Request 3: Database Schema and Analytics**
+
+**Título:** `🎯 PR: Implementación de Hyper-Enrichment v2, Optimización de RAG y Sistema de Analytics Completo`
+
+**Descripción:**
+Implementación del esquema de base de datos con extensión pgvector, sistema de analytics, métricas de uso, y cumplimiento GDPR para el sistema de captura de leads.
+
+**URL:** https://github.com/aandmaldonado/ai-resume-agent/pull/4
+
+---
+
+### **Pull Request 4: GDPR Compliance and Data Capture**
+
+**Título:** `🔐 Agregar Flujos de Captura de Datos y Consentimiento GDPR al Chatbot`
+
+**Descripción:**
+Implementación completa de funcionalidad de captura de datos y consentimiento GDPR al chatbot, permitiendo la recolección discreta de información de contacto del usuario mientras mantiene el cumplimiento con las regulaciones de privacidad. Incluye nuevos endpoints API, componentes UI, internacionalización completa, y mejoras de seguridad con autenticación GCP corregida.
+
+**URL:** https://github.com/aandmaldonado/my-resume-react/pull/14
 

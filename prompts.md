@@ -19,12 +19,86 @@ Eres un Product Owner con experiencia en proyectos de IA. Yo seré el cliente y 
 
 **Prompt 2:**
 ```
-Eres un Product Manager experto en productos de IA. Analiza el PRD del chatbot de portfolio y genera un documento de roadmap de producto que incluya: 1) Fases de desarrollo con funcionalidades por versión, 2) Métricas de éxito y KPIs para cada fase, 3) Análisis de competencia y diferenciación, 4) Estrategia de lanzamiento y go-to-market, 5) Plan de iteración y mejora continua basado en feedback de usuarios. El roadmap debe ser realista y alineado con los objetivos de negocio. Documenta todo en product-roadmap.md
+En general el @PRD.md está bien, pero mejoras cosas como la planificacion y no te inventes % en los objetivos, como por ejemplo 300% aumentar el engagement. La planificacion no puede durar menes, solo tengo 30 hh, revisa @init.md . independiente de todos los origenes de informacion, todo converge en un unico documento que tendrá toda mi vida laboral y sobre ese doc se trabajará para entrenar el modelo. considera alguna forma no invasiva de obtener los datos del usuario minimos, asumiendo que se los puede inventar pero escoge uno q sea lo mas fidedigno posible para despues poder conectactarlo, por ejemplo correo o perfil de linkedin, nombre apellido y rol, o cual es su principal proposito para usar el chatbot. modifica todo lo necesario con esta nueva informacion. las secciones que eliminé del documento no las vuelvas a agregar
 ```
 
 **Prompt 3:**
 ```
-Como UX Researcher experto en chatbots, analiza las historias de usuario del proyecto y genera un documento de investigación de usuario que incluya: 1) Personas y segmentos de usuario detallados, 2) Journey maps de la experiencia del usuario, 3) Análisis de usabilidad y accesibilidad, 4) Métricas de experiencia de usuario (NPS, CSAT, tiempo de respuesta), 5) Recomendaciones de mejora basadas en mejores prácticas de UX. El documento debe ser accionable para el equipo de diseño. Documenta todo en user-research.md
+@docs/ necesito actualizar la documentacion del proyecto ya q esto es un entregable de mvp, tengo demasiados documentos la mayoria con informacion obsoleta, analiza que documentos ya no aplican para eliminarlos o los q no aporten valor y de los que sirven cuales se pueden agrupas y consolidar en otro documento, finalmente revisa el contenido q hay q actualizar segun el codigo y las mejoras actuales.
+
+asegurate de q la documentacion sirva para completar todos estos puntos
+
+0. Ficha del proyecto
+0.1. Tu nombre completo:
+0.2. Nombre del proyecto:
+0.3. Descripción breve del proyecto:
+0.4. URL del proyecto:
+Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a alvaro@lidr.co usando algún servicio como onetimesecret.
+
+0.5. URL o archivo comprimido del repositorio
+Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a alvaro@lidr.co usando algún servicio como onetimesecret. También puedes compartir por correo un archivo zip con el contenido
+
+1. Descripción general del producto
+Describe en detalle los siguientes aspectos del producto:
+
+1.1. Objetivo:
+Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+
+1.2. Características y funcionalidades principales:
+Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+
+1.3. Diseño y experiencia de usuario:
+Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+
+1.4. Instrucciones de instalación:
+Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+2. Arquitectura del Sistema
+2.1. Diagrama de arquitectura:
+Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+
+2.2. Descripción de componentes principales:
+Describe los componentes más importantes, incluyendo la tecnología utilizada
+
+2.3. Descripción de alto nivel del proyecto y estructura de ficheros
+Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+
+2.4. Infraestructura y despliegue
+Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+
+2.5. Seguridad
+Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+
+2.6. Tests
+Describe brevemente algunos de los tests realizados
+
+3. Modelo de Datos
+3.1. Diagrama del modelo de datos:
+Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+
+3.2. Descripción de entidades principales:
+Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+
+4. Especificación de la API
+Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+
+5. Historias de Usuario
+Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+
+Hstoria de Usuario 1
+
+Hstoria de Usuario 2
+
+Hstoria de Usuario 3
+
+6. Tickets de Trabajo
+Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto.
+
+Ticket 1
+
+Ticket 2
+
+Ticket 3
 ```
 
 ---
@@ -62,7 +136,36 @@ y se puede hacer un proceso previo para acortar el documento en el contexto? por
 
 **Prompt 3:**
 ```
-Eres un Software Architect especializado en microservicios. Analiza la arquitectura del chatbot y genera un documento de diseño de componentes que incluya: 1) Descomposición en microservicios (chat service, analytics service, user service), 2) Patrones de comunicación entre servicios (síncrona/asíncrona), 3) Estrategias de resiliencia (circuit breaker, retry, fallback), 4) Gestión de estado y cache distribuido, 5) Estrategias de escalabilidad horizontal y vertical. El diseño debe ser escalable y mantenible. Documenta todo en design.md
+eres un experto en IA especializado en la implementacion de RAG. Estoy creando un chatbot q hable como yo sobre mi experiencia laboral, pero no se comporta como deberia, esta cayendo excesivamente en fallback
+
+datos del modelo:
+
+# Google Gemini API (LLM alternativo)
+    GEMINI_API_KEY: str = "[OBFUSCATED]"
+    GEMINI_MODEL: str = "gemini-2.5-flash"  # Modelo más rápido y menos restrictivo
+    GEMINI_TEMPERATURE: float = 0.1
+    GEMINI_TOP_P: float = 0.3  # Nucleus sampling para reducir alucinación
+    GEMINI_MAX_TOKENS: int = 256  # Reducido de 1024 para minimizar costos
+
+prompt:
+
+template = f"""
+Eres Álvaro Andrés Maldonado Pinto, Product Engineer con 15+ años de experiencia.
+[...]
+(Se omite el resto del prompt inicial por brevedad, ya que está documentado en prompts posteriores)
+[...]
+RESPUESTA:"""
+
+estoy usando el contexto adjunto en el yaml (esto esta vectorizado)
+
+problemas:
+
+no responde preguntas tan basicas como cual es tu experiencia con java?
+
+contenido en el yaml:
+[...]
+
+analiza el problema y propon soluciones efectivas
 ```
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
@@ -104,7 +207,28 @@ Como Cloud Architect experto en GCP, analiza la infraestructura del proyecto cha
 
 **Prompt 3:**
 ```
-prefiero el back con python. el front ya esta productivo con react, seria solo agregar el componente chatbot. el website esta correiendo con cloud run de google cloud. dame una nueva propuesta con estos nuevos datos
+tengo este cloudbuild.yaml
+[...]
+(Se omite el YAML de Cloud Build por brevedad)
+[...]
+substitutions:
+  _REGION: 'europe-west1'
+  _CLOUD_SQL_CONNECTION_NAME: '[OBFUSCATED]'
+  _CLOUD_SQL_HOST: '[OBFUSCATED]'
+  _CLOUD_SQL_PORT: '5432'
+  _CLOUD_SQL_DB: '[DB-NAME]'
+  _CLOUD_SQL_USER: '[DB-USER]'
+  _PORTFOLIO_BUCKET: '[BUCKET-NAME]'
+[...]
+despliega bien...
+
+carga bien los secretos como variables de entorno
+
+ambos secretos tienen permisos
+
+el problema es q no puede leer las variables de entorno asociada a secretos y se cae al conectar la bd
+
+q sugieres?
 ```
 
 ### **2.5. Seguridad**
@@ -123,7 +247,7 @@ Como especialista en seguridad de aplicaciones web, analiza la documentación de
 
 **Prompt 3:**
 ```
-Eres un experto en seguridad de LLMs y chatbots. Analiza la implementación del chatbot de portfolio y genera un documento de mejores prácticas de seguridad específicas para sistemas de IA conversacional. Incluye: 1) Prevención de prompt injection attacks, 2) Protección contra data leakage, 3) Validación de respuestas del LLM, 4) Monitoreo de comportamiento anómalo, 5) Implementación de content filtering. El documento debe ser técnicamente detallado y aplicable al proyecto. Documenta todo en security-plan.md
+eres un experto en seguridad en proyectos de IA analiza el codigo y asegurate q estan mitigados los top10 owasp llm
 ```
 
 ### **2.6. Tests**
@@ -164,7 +288,18 @@ aplica @prompt-logging-rule.mdc
 
 **Prompt 3:**
 ```
-Como QA Lead especializado en testing de sistemas de IA, analiza la estrategia de testing del chatbot y genera un plan de testing de integración que incluya: 1) Testing de la integración Dialogflow + Vertex AI, 2) Testing de la API completa con diferentes escenarios, 3) Testing de performance y carga, 4) Testing de seguridad y vulnerabilidades, 5) Testing de usabilidad y accesibilidad. El plan debe ser ejecutable y cubrir todos los aspectos críticos del sistema. Documenta todo en QA.md
+aplique las mejoras q me indicaste, pero...
+
+necesito mejorar algunas cosas, sigue teniendo fallbacks excesivos... te adjunto una conversacion de una prueba q hice
+[...]
+(Se omite el log de conversación por brevedad)
+[...]
+temas q rescato:
+el fallback deberia ser en ingles o español dependiendo el idioma de la pregunta del usuario...
+las respuesta q no sepa responder antes del fallback debe responder estrategicamente...
+en respuesta fuera de scope como la liga de futbol?? hizo fallback y deberia responder algo como eso se escapa del foco de la conversacion... etc.
+el yaml sigue siendo el mismo analiza si con todo lo q tiene de contexto podria haber armado una mejor respuesta...
+luego de eso dame soluciones de mejoras efectivas...
 ```
 
 ---
@@ -183,7 +318,7 @@ Como DBA senior especializado en sistemas de IA, analiza el modelo de datos del 
 
 **Prompt 3:**
 ```
-Eres un Data Engineer experto en sistemas de analytics. Analiza el modelo de datos del chatbot y diseña un data warehouse para analytics avanzados que incluya: 1) Tablas de hechos para métricas de conversación, 2) Dimensiones para análisis temporal, geográfico y de usuario, 3) ETL pipelines para procesamiento de datos, 4) Agregaciones pre-calculadas para reportes, 5) Estrategias de optimización para consultas complejas. El diseño debe permitir análisis detallado del comportamiento del chatbot. Documenta todo en backend-development.md
+tengo todas mis conversaciones de linkedin exportadas en un csv. vale la pena procesarlas y darle algun uso para mejorar al bot??
 ```
 
 ---
@@ -202,7 +337,7 @@ Como API Architect senior, analiza la documentación del proyecto chatbot y gene
 
 **Prompt 3:**
 ```
-Eres un experto en diseño de APIs RESTful. Analiza la API del chatbot de portfolio y genera un documento de estándares de API que incluya: 1) Convenciones de nomenclatura para endpoints, 2) Estructura de respuestas y manejo de errores, 3) Versionado de API y estrategias de backward compatibility, 4) Documentación con Swagger/OpenAPI, 5) Testing de API con Postman/Newman, 6) Monitoreo y métricas de API. Los estándares deben ser claros y aplicables al equipo de desarrollo. Documenta todo en backend-development.md
+en las primera preguntas antes de la captura de datos que campos deberia enviar en el endpoint /chat?
 ```
 
 ---
@@ -212,16 +347,6 @@ Eres un experto en diseño de APIs RESTful. Analiza la API del chatbot de portfo
 **Prompt 1:**
 ```
 analiza @PRD.md y genera todas las historias de usuario necesarias para abarcar las funcionalidades del proyecto. guiate por la siguiente informacion y ejemplos: Estructura basica de una User Story Formato estándar: 'Como [tipo de usuario], quiero [realizar una acción] para [obtener un beneficio]'. Descripción: Una descripción concisa y en lenguaje natural de la funcionalidad que el usuario desea. Criterios de Aceptación: Condiciones específicas que deben cumplirse para considerar la User Story como 'terminada', éstos deberian de seguir un formato similar a "Dado que" [contexto inicial], 'cuando" [acción realizada], "entonces" [resultado esperado]. Notas adicionales: Notas que puedan ayudar al desarrollo de la historia Tareas: Lista de tareas y subtareas para que esta historia pueda ser completada Ejemplos de User Story Desarrollo de Productos:'Como gerente de producto, quiero una manera en que los miembros del equipo puedan entender cómo las tareas individuales contribuyen a los objetivos, para que puedan priorizar mejor su trabajo.' Experiencia del Cliente:'Como cliente recurrente, espero que mi información quede guardada para crear una experiencia de pago más fluida, para que pueda completar mis compras de manera rápida y sencilla.' Aplicación Móvil:'Como usuario frecuente de la aplicación, quiero una forma de simplificar la información relevante de la manera más rápida posible, para poder acceder a la información que necesito de manera eficiente.' Estos ejemplos muestran cómo las User Stories se enfocan en las necesidades y objetivos de los usuarios finales, en lugar de en las funcionalidades técnicas. La estructura simple y el lenguaje natural ayudan a que todos los miembros del equipo, incluyendo stakeholders no técnicos, puedan entender y colaborar en el desarrollo del producto. Ejemplo completo: Título de la Historia de Usuario: Como [rol del usuario], quiero [acción que desea realizar el usuario], para que [beneficio que espera obtener el usuario]. Criterios de Aceptación: [Detalle específico de funcionalidad] [Detalle específico de funcionalidad] [Detalle específico de funcionalidad] Notas Adicionales: [Cualquier consideración adicional] Historias de Usuario Relacionadas: [Relaciones con otras historias de usuario] cada user story debe tener un codigo de identificacion para facilitar el seguimiento formato HDU-XXX por ejemplo HDU-001 la parte numerica del codigo debe ser incremental y secuencial en la medida que se van creando las HDU agrupa las HDU dentro de epicas, las epicas deben tener un nombre representativo y una codificacion EP-XXX ejemplo EP-001, debe ser secuencial e incremental en la medida q se van creando tanto la epica como la hdu deben tener un titulo descriptivo claro y conciso sin ambiguedades documenta todo en @UserStories.md
-```
-
-**Prompt 2:**
-```
-Como UX Researcher experto en chatbots, analiza las historias de usuario del proyecto y genera un documento de investigación de usuario que incluya: 1) Personas y segmentos de usuario detallados, 2) Journey maps de la experiencia del usuario, 3) Análisis de usabilidad y accesibilidad, 4) Métricas de experiencia de usuario (NPS, CSAT, tiempo de respuesta), 5) Recomendaciones de mejora basadas en mejores prácticas de UX. El documento debe ser accionable para el equipo de diseño. Documenta todo en user-research.md
-```
-
-**Prompt 3:**
-```
-Como Product Manager experto en productos de IA. Analiza el PRD del chatbot de portfolio y genera un documento de roadmap de producto que incluya: 1) Fases de desarrollo con funcionalidades por versión, 2) Métricas de éxito y KPIs para cada fase, 3) Análisis de competencia y diferenciación, 4) Estrategia de lanzamiento y go-to-market, 5) Plan de iteración y mejora continua basado en feedback de usuarios. El roadmap debe ser realista y alineado con los objetivos de negocio. Documenta todo en product-roadmap.md
 ```
 
 ---
@@ -300,10 +425,19 @@ Eres un Scrum Master experto en proyectos de IA. Analiza los tickets de trabajo 
 ## 7. Pull Requests
 
 **Prompt 1:**
+```
+haz el commit apra validar el precommit
+```
 
 **Prompt 2:**
+```
+cuando termines no despliegues por comando dejame hacerlo por push
+```
 
 **Prompt 3:**
+```
+no hizo nada el push se habia desconectado el repo, lo volvi a conectar, esta carganado
+```
 
 ---
 
@@ -311,9 +445,30 @@ Eres un Scrum Master experto en proyectos de IA. Analiza los tickets de trabajo 
 
 Para acceder a la conversación completa y todos los prompts generados durante el desarrollo del proyecto, consulta el archivo: [docs/prompts-AMP.md](docs/prompts-AMP.md)
 
-Este archivo contiene el historial completo de 42 prompts categorizados según las fases del desarrollo, incluyendo:
+Este archivo contiene el historial completo de 130 prompts categorizados según las fases del desarrollo, incluyendo:
 - Prompts de análisis y diseño inicial
 - Prompts de implementación técnica
 - Prompts de testing y calidad
 - Prompts de documentación y despliegue
 - Prompts de optimización y mejora continua
+- Estadísticas y métricas detalladas de uso de prompts
+
+### **Selección de Prompts Más Relevantes**
+
+Los prompts seleccionados en este documento representan los **3 más relevantes de cada categoría** basados en:
+- **Impacto en el proyecto**: Prompts que definieron la dirección del desarrollo
+- **Complejidad técnica**: Prompts que abordaron desafíos técnicos importantes
+- **Valor práctico**: Prompts que generaron resultados tangibles y aplicables
+
+### **Categorías Incluidas:**
+- 📦 **Descripción general del producto** (3 prompts)
+- 🏗️ **Diagrama de arquitectura** (3 prompts)
+- 🧩 **Descripción de componentes principales** (3 prompts)
+- 🗂️ **Descripción de alto nivel** (3 prompts)
+- ☁️ **Infraestructura y despliegue** (3 prompts)
+- 🛡️ **Seguridad** (3 prompts)
+- 🧪 **Tests** (3 prompts)
+- 🗃️ **Modelo de datos** (3 prompts)
+- 🔌 **Especificación de la API** (3 prompts)
+- 👤 **Historias de usuario** (1 prompt)
+- 🎟️ **Tickets de trabajo** (3 prompts)
