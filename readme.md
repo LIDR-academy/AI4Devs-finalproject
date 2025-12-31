@@ -25,18 +25,13 @@ Aplicación de mensajería instantánea que permite compartir contenido de texto
 
 ### **0.4. URL del proyecto:**
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
-
 ### 0.5. URL o archivo comprimido del repositorio
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+https://github.com/OMAKALQANTARA/AI4Devs-finalproject
 
 ---
 
 ## 1. Descripción general del producto
-
-> Describe en detalle los siguientes aspectos del producto:
 
 ### **1.1. Objetivo:**
 
@@ -279,7 +274,7 @@ A alto nivel, los componentes son:
 La estructura del proyecto sigue una arquitectura **modular en capas** basada en NestJS, donde cada módulo agrupa lógica de aplicación y dominio para un subdominio específico (auth, usuarios, mensajería, condiciones, etc.), apoyado por una capa de infraestructura común (acceso a datos, integración con Redis, almacenamiento de archivos). El objetivo es mantener alta cohesión dentro de cada módulo y bajo acoplamiento entre ellos, facilitando la evolución futura hacia servicios más independientes si el producto crece.
 
 A continuación se describe una estructura de ficheros propuesta para el repositorio principal del backend:
-
+```
 unlokd-backend/
 ├─ src/
 │ ├─ app.module.ts
@@ -351,6 +346,7 @@ unlokd-backend/
 │ └─ docker-compose.yml
 ├─ package.json
 └─ README.md
+```
 
 #### Propósito de las carpetas principales
 
@@ -1558,35 +1554,35 @@ Content-Type: application/json
 
 ### Ticket 1: Backend - UNLOKD-002
 
-# [UNLOKD-002] Implementar Módulo de Autenticación (Registro + Login + JWT)
+##### [UNLOKD-002] Implementar Módulo de Autenticación (Registro + Login + JWT)
 
-## Tipo
+**Tipo**
 - [x] Feature
 
-## Épica
+**Épica**
 EPIC-1: Fundación - Autenticación y Usuarios
 
-## Prioridad
+**Prioridad**
 - [x] P0 - Blocker
 
-## Sprint
+**Sprint**
 Sprint 1 (06/01 - 19/01)
 
-## Estimación
-**Story Points**: 8
+**Estimación**
+Story Points: 8
 
-## Descripción
+**Descripción**
 Implementar el módulo de autenticación completo que permita a usuarios registrarse con email/contraseña y hacer login obteniendo un JWT válido. Incluye hash seguro de contraseñas con bcrypt, validación de credenciales, rate limiting y guards de protección.
 
-## Historia de Usuario Relacionada
+**Historia de Usuario Relacionada**
 - HU-001: Registro de usuario
 - HU-002: Login de usuario y obtención de JWT
 
-## Caso de Uso Relacionado
+**Caso de Uso Relacionado**
 - UC-001: Registrar Cuenta
 - UC-002: Iniciar Sesión
 
-## Criterios de Aceptación
+**Criterios de Aceptación**
 - [ ] Endpoint `POST /api/v1/auth/register` implementado y funcional
 - [ ] Endpoint `POST /api/v1/auth/login` implementado y funcional
 - [ ] Validación de email formato correcto con `class-validator`
@@ -1599,7 +1595,7 @@ Implementar el módulo de autenticación completo que permita a usuarios registr
 - [ ] Tests unitarios con cobertura > 80%
 - [ ] Tests E2E del flujo completo registro → login
 
-## Tareas Técnicas
+**Tareas Técnicas**
 - [ ] Crear módulo `auth/` con controller, service
 - [ ] Implementar `register(email, password)` en AuthService
 - [ ] Implementar `login(email, password)` en AuthService
@@ -1612,10 +1608,10 @@ Implementar el módulo de autenticación completo que permita a usuarios registr
 - [ ] Escribir tests unitarios (AuthService)
 - [ ] Escribir tests E2E (auth.e2e-spec.ts)
 
-## Dependencias
+**Dependencias**
 - UNLOKD-001: Setup proyecto
 
-## Definición de Done (DoD)
+**Definición de Done (DoD)**
 - [ ] Código implementado y funcional
 - [ ] Tests unitarios escritos y pasando (cobertura > 80%)
 - [ ] Tests E2E escritos y pasando
@@ -1624,30 +1620,30 @@ Implementar el módulo de autenticación completo que permita a usuarios registr
 - [ ] Documentación actualizada (README, comentarios código)
 - [ ] Merge a rama `develop` exitoso
 
-## Endpoints API
+**Endpoints API**
 - POST `/api/v1/auth/register` → `{userId, username, email}`
 - POST `/api/v1/auth/login` → `{accessToken, user: {id, email, username}}`
 
-## Tablas DB
+**Tablas DB**
 - USERS (usado por UsersRepository)
 
-## Consideraciones Técnicas
+**Consideraciones Técnicas**
 
-### Módulos NestJS
+**Módulos NestJS**
 - `src/modules/auth/` (auth.module.ts, auth.controller.ts, auth.service.ts)
 - `src/common/guards/` (jwt-auth.guard.ts)
 - `src/common/strategies/` (jwt.strategy.ts)
 
-### Principios SOLID
+**Principios SOLID**
 - **SRP**: AuthService solo maneja lógica de autenticación, UsersService maneja usuarios
 - **DIP**: Inyección de dependencias de UsersService y JwtService en AuthService
 - **OCP**: Strategy pattern con Passport permite agregar nuevas estrategias de auth
 
-### Patrones de Diseño
+**Patrones de Diseño**
 - **Strategy Pattern**: Passport strategies para diferentes métodos de autenticación
 - **Repository Pattern**: UsersRepository abstrae acceso a datos
 
-## Tests
+**Tests**
 
 ```typescript
 // Unit test ejemplo
@@ -1700,46 +1696,46 @@ describe('Auth E2E', () => {
 });
 ```
 
-## Notas
+**Notas**
 - Usar variables de entorno para JWT_SECRET (nunca hardcodear)
 - Implementar refresh tokens en versiones futuras
 - Considerar agregar OAuth (Google, Facebook) en post-MVP
 - Documentar endpoints con Swagger/OpenAPI
 
-## Labels
+**Labels**
 `auth`, `backend`, `nestjs`, `jwt`, `sprint-1`, `p0-blocker`
 
 ---
 
 ### Ticket 2: Frontend - UNLOKD-019
 
-# [UNLOKD-019] Implementar Previsualización Difuminada en Frontend
+##### [UNLOKD-019] Implementar Previsualización Difuminada en Frontend
 
-## Tipo
+**Tipo**
 - [x] Feature
 
-## Épica
+**Épica**
 EPIC-4: Multimedia, Notificaciones y UX
 
-## Prioridad
+**Prioridad**
 - [x] P1 - High
 
-## Sprint
+**Sprint**
 Sprint 4 (17/02 - 02/03)
 
-## Estimación
-**Story Points**: 5
+**Estimación**
+Story Points: 5
 
-## Descripción
+**Descripción**
 Implementar componentes React para mostrar mensajes bloqueados con estilos visuales atractivos, iconografía consistente, efecto blur en contenido multimedia, e indicadores claros según el tipo de condición (TIME, PASSWORD, QUIZ). La UI debe generar curiosidad y anticipación sin frustrar al usuario.
 
-## Historia de Usuario Relacionada
+**Historia de Usuario Relacionada**
 - HU-012: Ver previsualización difuminada de mensaje bloqueado
 
-## Caso de Uso Relacionado
+**Caso de Uso Relacionado**
 - UC-012: Ver Previsualización Bloqueada
 
-## Criterios de Aceptación
+**Criterios de Aceptación**
 - [ ] Componente `<LockedMessagePreview />` implementado y funcional
 - [ ] Estilos visuales distintivos (gradiente, borde especial, icono 🔒 prominente)
 - [ ] Efecto blur CSS para multimedia (filter: blur(20px))
@@ -1754,7 +1750,7 @@ Implementar componentes React para mostrar mensajes bloqueados con estilos visua
 - [ ] Soporte para modo claro y modo oscuro
 - [ ] Tests de componentes con Jest + React Testing Library
 
-## Tareas Técnicas
+**Tareas Técnicas**
 - [ ] Crear componente `LockedMessagePreview.tsx` en `src/components/messages/`
 - [ ] Crear estilos CSS/SCSS con gradientes y blur en `LockedMessagePreview.module.css`
 - [ ] Implementar renderizado condicional según `conditionType` (TIME, PASSWORD, QUIZ)
@@ -1773,11 +1769,11 @@ Implementar componentes React para mostrar mensajes bloqueados con estilos visua
 - [ ] Validar accesibilidad con axe-core
 - [ ] Validar responsive en diferentes viewports
 
-## Dependencias
+**Dependencias**
 - UNLOKD-007: Módulo de mensajes (backend debe retornar preview data)
 - UNLOKD-012: Condición TIME (para integrar countdown)
 
-## Definición de Done (DoD)
+**Definición de Done (DoD)**
 - [ ] Componente implementado y funcional
 - [ ] Estilos aplicados y responsive verificado
 - [ ] Tests unitarios pasando
@@ -1786,9 +1782,9 @@ Implementar componentes React para mostrar mensajes bloqueados con estilos visua
 - [ ] Documentación de componente actualizada (Storybook o comentarios)
 - [ ] Merge a rama `develop`
 
-## Consideraciones Técnicas
+**Consideraciones Técnicas**
 
-### Componentes React
+**Componentes React**
 
 ```typescript
 // LockedMessagePreview.tsx
@@ -1842,7 +1838,7 @@ export const LockedMessagePreview: React.FC<LockedMessagePreviewProps> = ({
 };
 ```
 
-### Estilos CSS
+**Estilos CSS**
 
 ```css
 /* LockedMessagePreview.module.css */
@@ -1886,7 +1882,7 @@ export const LockedMessagePreview: React.FC<LockedMessagePreviewProps> = ({
 }
 ```
 
-### Tests
+**Tests**
 
 ```typescript
 // LockedMessagePreview.test.tsx
@@ -1938,51 +1934,51 @@ describe('LockedMessagePreview', () => {
 });
 ```
 
-## Principios de Diseño
+**Principios de Diseño**
 - **Atomic Design**: Componentes pequeños y reutilizables
 - **Composición**: Sub-componentes especializados por tipo de condición
 - **Accesibilidad**: ARIA labels, navegación por teclado, contrast ratio WCAG AA
 
-## Notas
+**Notas**
 - Usar CSS Modules o Styled Components para estilos scoped
 - Considerar agregar Storybook para documentar variantes del componente
 - Las animaciones deben respetar `prefers-reduced-motion`
 - El blur debe aplicarse en el cliente, no cargar imagen completa del backend
 
-## Labels
+**Labels**
 `frontend`, `react`, `ui`, `ux`, `sprint-4`, `p1-high`
 
 ---
 
 ### Ticket 3: Base de Datos - UNLOKD-004
 
-# [UNLOKD-004] Crear Migraciones de Base de Datos (USERS, CONTACTS)
+##### [UNLOKD-004] Crear Migraciones de Base de Datos (USERS, CONTACTS)
 
-## Tipo
+**Tipo**
 - [x] Feature
 
-## Épica
+**Épica**
 EPIC-1: Fundación - Autenticación y Usuarios
 
-## Prioridad
+**Prioridad**
 - [x] P0 - Blocker
 
-## Sprint
+**Sprint**
 Sprint 1 (06/01 - 19/01)
 
-## Estimación
-**Story Points**: 2
+**Estimación**
+Story Points: 2
 
-## Descripción
+**Descripción**
 Crear el esquema Prisma completo para las tablas USERS y CONTACTS, generar las migraciones correspondientes y ejecutarlas en la base de datos MySQL. Incluye índices para optimización de consultas frecuentes y constraints para integridad referencial.
 
-## Caso de Uso Relacionado
+**Caso de Uso Relacionado**
 - UC-001: Registrar Cuenta
 - UC-002: Iniciar Sesión
 - UC-003: Gestionar Perfil
 - UC-004: Añadir Contacto
 
-## Criterios de Aceptación
+**Criterios de Aceptación**
 - [ ] Esquema Prisma `schema.prisma` definido con modelos User y Contact
 - [ ] Migración generada exitosamente con `npx prisma migrate dev`
 - [ ] Tablas creadas en MySQL con todos los campos según diseño del modelo de datos
@@ -1995,7 +1991,7 @@ Crear el esquema Prisma completo para las tablas USERS y CONTACTS, generar las m
 - [ ] Documentación del esquema actualizada
 - [ ] Migración ejecutada en MySQL local sin errores
 
-## Tareas Técnicas
+**Tareas Técnicas**
 - [ ] Definir modelo `User` en `prisma/schema.prisma` con todos los campos:
   - id, email, username, password_hash
   - display_name, avatar_url, presence_status
@@ -2012,10 +2008,10 @@ Crear el esquema Prisma completo para las tablas USERS y CONTACTS, generar las m
 - [ ] Ejecutar seeds: `npm run prisma:seed`
 - [ ] Documentar esquema en README o wiki del proyecto
 
-## Dependencias
+**Dependencias**
 - UNLOKD-001: Setup proyecto (MySQL debe estar configurado y corriendo)
 
-## Definición de Done (DoD)
+**Definición de Done (DoD)**
 - [ ] Archivos de migración generados en `prisma/migrations/`
 - [ ] Tablas existen en MySQL con estructura correcta
 - [ ] Índices verificados con `SHOW INDEX FROM users`
@@ -2025,7 +2021,7 @@ Crear el esquema Prisma completo para las tablas USERS y CONTACTS, generar las m
 - [ ] Code review aprobado
 - [ ] Merge a rama `develop`
 
-## Esquema Prisma Completo
+**Esquema Prisma Completo**
 
 ```prisma
 // prisma/schema.prisma
@@ -2082,7 +2078,7 @@ model Contact {
 }
 ```
 
-## Script de Seeds
+**Script de Seeds**
 
 ```typescript
 // prisma/seed.ts
@@ -2165,7 +2161,7 @@ main()
   });
 ```
 
-## Comandos Útiles
+**Comandos Útiles**
 
 ```bash
 # Generar migración
@@ -2187,9 +2183,9 @@ npx prisma generate
 npx prisma migrate reset
 ```
 
-## Tablas DB Creadas
+**Tablas DB Creadas**
 
-### USERS (11 campos)
+**USERS (11 campos)**
 - `id` BIGINT PRIMARY KEY AUTO_INCREMENT
 - `email` VARCHAR(100) UNIQUE NOT NULL
 - `username` VARCHAR(50) UNIQUE NOT NULL
@@ -2202,14 +2198,14 @@ npx prisma migrate reset
 - `updated_at` DATETIME NOT NULL ON UPDATE CURRENT_TIMESTAMP
 - `last_login_at` DATETIME NULL
 
-### CONTACTS (5 campos)
+**CONTACTS (5 campos)**
 - `id` BIGINT PRIMARY KEY AUTO_INCREMENT
 - `owner_user_id` BIGINT NOT NULL (FK → USERS.id)
 - `contact_user_id` BIGINT NOT NULL (FK → USERS.id)
 - `alias` VARCHAR(50) NULL
 - `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 
-## Verificación Post-Migración
+**Verificación Post-Migración**
 
 ```sql
 -- Verificar tablas creadas
@@ -2229,29 +2225,29 @@ SELECT id, email, username, display_name FROM users;
 SELECT * FROM contacts;
 ```
 
-## Consideraciones Técnicas
+**Consideraciones Técnicas**
 
-### Optimización
+**Optimización**
 - Índices en columnas de búsqueda frecuente (email, username)
 - Índice compuesto único en CONTACTS previene duplicados
 - ON DELETE CASCADE en foreign keys para limpieza automática
 
-### Seguridad
+**Seguridad**
 - password_hash nunca expuesto en queries de lectura
 - is_active permite soft delete de usuarios
 - Foreign keys aseguran integridad referencial
 
-### Escalabilidad
+**Escalabilidad**
 - BIGINT para IDs soporta hasta 9.2 quintillones de registros
 - created_at/updated_at automáticos con triggers de MySQL
 
-## Notas
+**Notas**
 - DATABASE_URL debe estar en `.env` (nunca en código)
 - Usar `prisma migrate deploy` en producción (no `dev`)
 - Backups de base de datos antes de migraciones en producción
 - Considerar índice en `last_login_at` si se filtra frecuentemente
 
-## Labels
+**Labels**
 `database`, `prisma`, `migrations`, `mysql`, `sprint-1`, `p0-blocker`
 
 ---
