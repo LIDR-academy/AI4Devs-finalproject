@@ -1,0 +1,133 @@
+erDiagram
+    USERS {
+        bigint      id PK "AUTO_INCREMENT"
+        varchar(100) email "NOT NULL, UNIQUE"
+        varchar(50)  username "NOT NULL, UNIQUE"
+        varchar(255) password_hash "NOT NULL"
+        varchar(255) display_name "NOT NULL"
+        varchar(255) avatar_url "NULL"
+        datetime     created_at "NOT NULL"
+        datetime     updated_at "NOT NULL"
+        datetime     last_login_at "NULL"
+        tinyint(1)   is_active "NOT NULL, DEFAULT 1"
+    }
+
+    CONTACTS {
+        bigint      id PK "AUTO_INCREMENT"
+        bigint      owner_user_id FK "NOT NULL → USERS.id"
+        bigint      contact_user_id FK "NOT NULL → USERS.id"
+        varchar(50) alias "NULL"
+        datetime    created_at "NOT NULL"
+        unique      uq_owner_contact "(owner_user_id, contact_user_id)"
+    }
+
+    CHATS {
+        bigint      id PK "AUTO_INCREMENT"
+        varchar(36) public_id "NOT NULL, UNIQUE"
+        enum        type "NOT NULL, ('DIRECT','GROUP')"
+        varchar(255) title "NULL"
+        bigint      created_by FK "NOT NULL → USERS.id"
+        datetime    created_at "NOT NULL"
+        datetime    updated_at "NOT NULL"
+    }
+
+    CHAT_MEMBERS {
+        bigint      id PK "AUTO_INCREMENT"
+        bigint      chat_id FK "NOT NULL → CHATS.id"
+        bigint      user_id FK "NOT NULL → USERS.id"
+        enum        role "NOT NULL, ('OWNER','ADMIN','MEMBER')"
+        datetime    joined_at "NOT NULL"
+        datetime    last_read_at "NULL"
+        unique      uq_chat_user "(chat_id, user_id)"
+    }
+
+    MESSAGES {
+        bigint      id PK "AUTO_INCREMENT"
+        varchar(36) public_id "NOT NULL, UNIQUE"
+        bigint      chat_id FK "NOT NULL → CHATS.id"
+        bigint      sender_id FK "NOT NULL → USERS.id"
+        enum        content_type "NOT NULL, ('TEXT','IMAGE','AUDIO','VIDEO')"
+        text        content_text "NULL"
+        bigint      media_id FK "NULL → MEDIA_OBJECTS.id"
+        enum        visibility_type "NOT NULL, ('PLAIN','CONDITIONAL')"
+        enum        status "NOT NULL, ('PENDING','UNLOCKED','EXPIRED','FAILED')"
+        datetime    created_at "NOT NULL"
+        datetime    updated_at "NOT NULL"
+        datetime    unlocked_at "NULL"
+        datetime    expires_at "NULL"
+        index       idx_chat_created "(chat_id, created_at)"
+    }
+
+    MESSAGE_CONDITIONS {
+        bigint      id PK "AUTO_INCREMENT"
+        bigint      message_id FK "NOT NULL, UNIQUE → MESSAGES.id"
+        enum        condition_type "NOT NULL, ('TIME','PASSWORD','QUIZ','BIOMETRIC','CAPTCHA','COMBINED')"
+        datetime    available_from "NULL"
+        varchar(255) password_hash "NULL"
+        int         max_attempts "NULL"
+        text        quiz_question "NULL"
+        varchar(255) quiz_correct_answer "NULL"
+        json        config "NULL"
+        datetime    created_at "NOT NULL"
+        datetime    updated_at "NOT NULL"
+    }
+
+    MESSAGE_UNLOCK_ATTEMPTS {
+        bigint      id PK "AUTO_INCREMENT"
+        bigint      message_id FK "NOT NULL → MESSAGES.id"
+        bigint      user_id FK "NOT NULL → USERS.id"
+        datetime    attempted_at "NOT NULL"
+        enum        result "NOT NULL, ('SUCCESS','FAILURE')"
+        varchar(255) failure_reason "NULL"
+        index       idx_message_user "(message_id, user_id)"
+    }
+
+    MESSAGE_READ_EVENTS {
+        bigint      id PK "AUTO_INCREMENT"
+        bigint      message_id FK "NOT NULL → MESSAGES.id"
+        bigint      user_id FK "NOT NULL → USERS.id"
+        datetime    read_at "NOT NULL"
+        index       idx_message_user_read "(message_id, user_id)"
+    }
+
+    MEDIA_OBJECTS {
+        bigint      id PK "AUTO_INCREMENT"
+        varchar(36) public_id "NOT NULL, UNIQUE"
+        varchar(255) storage_key "NOT NULL"
+        varchar(50)  mime_type "NOT NULL"
+        bigint      size_bytes "NOT NULL"
+        varchar(20)  encryption_type "NULL"
+        datetime    created_at "NOT NULL"
+        datetime    expires_at "NULL"
+    }
+
+    NOTIFICATION_TOKENS {
+        bigint      id PK "AUTO_INCREMENT"
+        bigint      user_id FK "NOT NULL → USERS.id"
+        varchar(255) token "NOT NULL"
+        enum        platform "NOT NULL, ('ANDROID','IOS','WEB')"
+        datetime    created_at "NOT NULL"
+        datetime    last_used_at "NULL"
+        unique      uq_token "(token)"
+        index       idx_user "(user_id)"
+    }
+
+    USERS ||--o{ CONTACTS : "owns/contacts"
+    USERS ||--o{ CONTACTS : "is_contact_of"
+
+    USERS ||--o{ CHATS : "creates"
+    CHATS ||--o{ CHAT_MEMBERS : "has members"
+    USERS ||--o{ CHAT_MEMBERS : "participates"
+
+    CHATS ||--o{ MESSAGES : "contains"
+    USERS ||--o{ MESSAGES : "sends"
+
+    MESSAGES ||--o| MESSAGE_CONDITIONS : "has condition"
+    MESSAGES ||--o{ MESSAGE_UNLOCK_ATTEMPTS : "records attempts"
+    USERS ||--o{ MESSAGE_UNLOCK_ATTEMPTS : "performs attempts"
+
+    MESSAGES ||--o{ MESSAGE_READ_EVENTS : "read events"
+    USERS ||--o{ MESSAGE_READ_EVENTS : "reads"
+
+    MESSAGES ||--o{ MEDIA_OBJECTS : "references media"
+    USERS ||--o{ NOTIFICATION_TOKENS : "has tokens"
