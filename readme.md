@@ -184,7 +184,7 @@ Condiciones básicas:
 
 ### **2.1. Diagrama de arquitectura:**
 
-Diagrama: `documentation/diagrams/HighLevelArchitectureDiagram.png`
+Diagrama: [`High Level Architecture Diagram`](documentation/diagrams/HighLevelArchitectureDiagram.png)
 
 UNLOKD se implementa como un backend monolítico modular que expone una API HTTP/REST, complementado con servicios especializados para tiempo real (WebSocket), gestión de multimedia y envío de notificaciones push. Los clientes principales son la aplicación móvil y/o web, que consumen la API y se conectan a un canal de tiempo real para la sincronización de mensajes y estados.
 
@@ -391,7 +391,7 @@ Esta estructura obedece a un patrón de **arquitectura en capas** con organizaci
 
 ### **2.4. Infraestructura y despliegue**
 
-Diagrama: `documentation/diagrams/infraestructure.png`
+Diagrama: [`Diagrama de Infraestructura`](documentation/diagrams/infraestructure.png)
 
 La infraestructura de UNLOKD está pensada para minimizar costes y complejidad, manteniendo a la vez soporte para tiempo real y almacenamiento de contenido multimedia. El backend monolítico modular, la base de datos MySQL, Redis y el almacenamiento de archivos se despliegan sobre un entorno Docker en un servidor (VPS) y pueden escalar progresivamente según crezca el uso.
 
@@ -543,6 +543,7 @@ La estrategia de pruebas para UNLOKD combina tests unitarios, de integración y 
         Escenarios de error (condición incorrecta, límite de intentos cruzado, mensajes expirados).
 
 #### Estructura de tests
+```
 unlokd-backend/
 ├─ test/
 │  ├─ unit/
@@ -559,7 +560,7 @@ unlokd-backend/
 │     ├─ auth.e2e-spec.ts
 │     ├─ messaging-basic.e2e-spec.ts
 │     └─ conditional-unlock.e2e-spec.ts
-
+```
 
 `test/unit`: pruebas puras de lógica de dominio y servicios sin tocar red ni base de datos.
 `test/integration`: pruebas con módulo Nest cargado parcialmente y conectando a MySQL/Redis de test.
@@ -596,8 +597,7 @@ unlokd-backend/
 
 ### **3.1. Diagrama del modelo de datos:**
 
-`documentation/diagrams/databaseDiagram.png`
-
+[`Diagrama de Base de Datos`](documentation/diagrams/databaseDiagram.png)
 
 ### **3.2. Descripción de entidades principales:**
 
