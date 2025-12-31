@@ -1,0 +1,39 @@
+flowchart LR
+subgraph Edge["Perímetro / Red"]
+    LB["Reverse proxy / Load Balancer (Nginx/Traefik)"]
+end
+
+subgraph AppTier["Capa de aplicación (VPS / contenedores)"]
+    API["Backend NestJS (API REST + WS)"]
+    WorkerNotif["Worker notificaciones"]
+    WorkerMedia["Worker multimedia"]
+end
+
+subgraph DataTier["Capa de datos"]
+    MySQL["MySQL"]
+    Redis["Redis (cache, cola, Pub/Sub)"]
+    S3["Almacenamiento S3-compatible\n(Backblaze/Wasabi/MinIO)"]
+end
+
+ClientSide -->|"HTTPS / WSS"| LB
+LB -->|"HTTP(S) / WS"| API
+
+API --> MySQL
+API --> Redis
+API --> S3
+
+WorkerNotif --> Redis
+WorkerNotif --> MySQL
+
+WorkerMedia --> Redis
+WorkerMedia --> S3
+
+classDef client fill:#e3f2fd,stroke:#1e88e5;
+classDef edge fill:#e8f5e9,stroke:#43a047;
+classDef app fill:#fff3e0,stroke:#fb8c00;
+classDef data fill:#f3e5f5,stroke:#8e24aa;
+
+class WebApp,MobileApp client;
+class LB edge;
+class API,WorkerNotif,WorkerMedia app;
+class MySQL,Redis,S3 data;
