@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas del Proceso Quirúrgico - Diagramas</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        .diagram-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+        .mermaid {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .export-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #2196F3;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Canvas del Proceso Quirúrgico</h1>
+        <p style="text-align: center; color: #666;">Sistema Integrado: HCE | Planificación Quirúrgica | Seguridad y Cumplimiento</p>
+        
+        <div class="info">
+            <strong>📌 Instrucciones para exportar como imagen:</strong>
+            <ol>
+                <li>Haz clic derecho sobre el diagrama que deseas exportar</li>
+                <li>Selecciona "Guardar imagen como..." o "Copiar imagen"</li>
+                <li>Alternativamente, usa las herramientas de captura de pantalla de tu sistema</li>
+            </ol>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4FC3F7; border-color: #0277BD;"></div>
+                <span><strong>📋 Historia Clínica Electrónica (HCE)</strong></span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #BA68C8; border-color: #4A148C;"></div>
+                <span><strong>🎯 Planificación Quirúrgica</strong></span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FFB74D; border-color: #E65100;"></div>
+                <span><strong>🔒 Seguridad y Cumplimiento</strong></span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #81C784; border-color: #1B5E20;"></div>
+                <span><strong>⚕️ Proceso Quirúrgico</strong></span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FFF176; border-color: #F57F17;"></div>
+                <span><strong>🚀 Inicio/Fin</strong></span>
+            </div>
+        </div>
+
+        <h2>1. Diagrama Principal del Proceso Completo</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    START([🚀 INICIO<br/>Consulta Paciente]) --> AUTH[🔒 Autenticación MFA]
+    AUTH --> REG[📋 Registro en HCE]
+    
+    REG --> HCE_DATA[📋 Recopilación Datos]
+    HCE_DATA --> HCE1[Datos Demográficos]
+    HCE_DATA --> HCE2[Antecedentes Médicos]
+    HCE_DATA --> HCE3[Alergias/Medicación]
+    HCE_DATA --> HCE4[Examen Físico]
+    
+    HCE1 --> INT[📋 Integración Sistemas]
+    HCE2 --> INT
+    HCE3 --> INT
+    HCE4 --> INT
+    
+    INT --> LAB[Laboratorios]
+    INT --> RAD[Radiología PACS]
+    INT --> FARM[Farmacia]
+    
+    LAB --> ENCRYPT[🔒 Encriptación Datos]
+    RAD --> ENCRYPT
+    FARM --> ENCRYPT
+    
+    ENCRYPT --> STORE[📋 Almacenamiento Seguro]
+    STORE --> AUDIT[🔒 Auditoría y Logging]
+    
+    AUDIT --> EVAL[🎯 Evaluación Preoperatoria]
+    
+    EVAL --> IMG[Análisis Imágenes]
+    EVAL --> 3D[Reconstrucción 3D]
+    EVAL --> RISK[Evaluación Riesgo]
+    
+    IMG --> COMPLIANCE[🔒 Validación Cumplimiento]
+    3D --> COMPLIANCE
+    RISK --> COMPLIANCE
+    
+    COMPLIANCE --> PLAN[🎯 Planificación Procedimiento]
+    
+    PLAN --> APPROACH[Selección Abordaje]
+    PLAN --> SIM[Simulación 3D/VR]
+    PLAN --> GUIDES[Diseño Guías]
+    
+    APPROACH --> CHECKLIST[🎯 Checklist WHO]
+    SIM --> CHECKLIST
+    GUIDES --> CHECKLIST
+    
+    CHECKLIST --> RESOURCES[Asignación Recursos]
+    RESOURCES --> QUIR[Programación Quirófano]
+    RESOURCES --> EQUIP[Equipamiento]
+    RESOURCES --> STAFF[Personal]
+    
+    QUIR --> AUDIT2[🔒 Auditoría]
+    EQUIP --> AUDIT2
+    STAFF --> AUDIT2
+    
+    AUDIT2 --> PRE1[⏰ Pre-inducción]
+    PRE1 --> PRE2[⏰ Pre-incisión]
+    PRE2 --> SURGERY[⚕️ Procedimiento Quirúrgico]
+    SURGERY --> POST[📝 Post-procedimiento]
+    
+    POST --> DOC[📋 Documentación Intraop]
+    DOC --> AUDIT3[🔒 Auditoría]
+    
+    AUDIT3 --> FOLLOW[📊 Seguimiento Postop]
+    FOLLOW --> NOTES[Notas Evolución]
+    NOTES --> DISCHARGE[Alta Médica]
+    
+    DISCHARGE --> ARCHIVE[📋 Archivo HCE]
+    ARCHIVE --> REPORTS[📈 Reportes]
+    REPORTS --> END([✅ FIN])
+    
+    %% Estilos mejorados
+    classDef hce fill:#4FC3F7,stroke:#0277BD,stroke-width:3px,color:#000
+    classDef seguridad fill:#FFB74D,stroke:#E65100,stroke-width:3px,color:#000
+    classDef planificacion fill:#BA68C8,stroke:#4A148C,stroke-width:3px,color:#000
+    classDef proceso fill:#81C784,stroke:#1B5E20,stroke-width:3px,color:#000
+    classDef inicio fill:#FFF176,stroke:#F57F17,stroke-width:3px,color:#000
+    classDef fin fill:#F48FB1,stroke:#880E4F,stroke-width:3px,color:#000
+    
+    class REG,HCE_DATA,HCE1,HCE2,HCE3,HCE4,INT,LAB,RAD,FARM,STORE,DOC,ARCHIVE hce
+    class AUTH,ENCRYPT,AUDIT,COMPLIANCE,AUDIT2,AUDIT3 seguridad
+    class EVAL,IMG,3D,RISK,PLAN,APPROACH,SIM,GUIDES,CHECKLIST,RESOURCES,QUIR,EQUIP,STAFF planificacion
+    class PRE1,PRE2,SURGERY,POST,FOLLOW,NOTES,DISCHARGE proceso
+    class START inicio
+    class END,REPORTS fin
+            </div>
+        </div>
+
+        <h2>2. Canvas Visual - Vista de Matriz por Fases</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+graph TB
+    subgraph MATRIZ["CANVAS DEL PROCESO QUIRÚRGICO"]
+        subgraph FASE1["FASE 1: CONSULTA"]
+            direction LR
+            F1_HCE["📋 HCE<br/>━━━━━━━━<br/>• Registro Paciente<br/>• Antecedentes<br/>• Examen Físico"]
+            F1_SEG["🔒 SEGURIDAD<br/>━━━━━━━━<br/>• Autenticación MFA<br/>• Control Acceso<br/>• Logging"]
+            F1_PLAN["🎯 PLANIFICACIÓN<br/>━━━━━━━━<br/>• -"]
+        end
+        
+        subgraph FASE2["FASE 2: EVALUACIÓN"]
+            direction LR
+            F2_HCE["📋 HCE<br/>━━━━━━━━<br/>• Integración Lab<br/>• Imágenes DICOM<br/>• Documentación"]
+            F2_SEG["🔒 SEGURIDAD<br/>━━━━━━━━<br/>• Encriptación<br/>• Auditoría<br/>• Versiones"]
+            F2_PLAN["🎯 PLANIFICACIÓN<br/>━━━━━━━━<br/>• Análisis Imágenes<br/>• Reconstrucción 3D<br/>• Evaluación Riesgo"]
+        end
+        
+        subgraph FASE3["FASE 3: PLANIFICACIÓN"]
+            direction LR
+            F3_HCE["📋 HCE<br/>━━━━━━━━<br/>• Consentimiento<br/>• Notas Planificación"]
+            F3_SEG["🔒 SEGURIDAD<br/>━━━━━━━━<br/>• Integridad Datos<br/>• Control Versiones"]
+            F3_PLAN["🎯 PLANIFICACIÓN<br/>━━━━━━━━<br/>• Simulación 3D/VR<br/>• Guías Quirúrgicas<br/>• Checklist WHO"]
+        end
+        
+        subgraph FASE4["FASE 4: CIRUGÍA"]
+            direction LR
+            F4_HCE["📋 HCE<br/>━━━━━━━━<br/>• Notas Tiempo Real<br/>• Procedimiento<br/>• Complicaciones"]
+            F4_SEG["🔒 SEGURIDAD<br/>━━━━━━━━<br/>• Log Tiempo Real<br/>• No Repudio"]
+            F4_PLAN["🎯 PLANIFICACIÓN<br/>━━━━━━━━<br/>• Navegación AR/VR<br/>• Guías Activas"]
+        end
+        
+        subgraph FASE5["FASE 5: POSTOPERATORIO"]
+            direction LR
+            F5_HCE["📋 HCE<br/>━━━━━━━━<br/>• Evolución<br/>• Complicaciones<br/>• Medicación"]
+            F5_SEG["🔒 SEGURIDAD<br/>━━━━━━━━<br/>• Retención Datos<br/>• Acceso Controlado"]
+            F5_PLAN["🎯 PLANIFICACIÓN<br/>━━━━━━━━<br/>• -"]
+        end
+        
+        subgraph FASE6["FASE 6: ALTA"]
+            direction LR
+            F6_HCE["📋 HCE<br/>━━━━━━━━<br/>• Plan Alta<br/>• Instrucciones<br/>• Historial Completo"]
+            F6_SEG["🔒 SEGURIDAD<br/>━━━━━━━━<br/>• Exportación Segura<br/>• Backup<br/>• GDPR"]
+            F6_PLAN["🎯 PLANIFICACIÓN<br/>━━━━━━━━<br/>• -"]
+        end
+    end
+    
+    FASE1 --> FASE2
+    FASE2 --> FASE3
+    FASE3 --> FASE4
+    FASE4 --> FASE5
+    FASE5 --> FASE6
+    
+    classDef hceBox fill:#4FC3F7,stroke:#0277BD,stroke-width:2px
+    classDef segBox fill:#FFB74D,stroke:#E65100,stroke-width:2px
+    classDef planBox fill:#BA68C8,stroke:#4A148C,stroke-width:2px
+    
+    class F1_HCE,F2_HCE,F3_HCE,F4_HCE,F5_HCE,F6_HCE hceBox
+    class F1_SEG,F2_SEG,F3_SEG,F4_SEG,F5_SEG,F6_SEG segBox
+    class F1_PLAN,F2_PLAN,F3_PLAN,F4_PLAN,F5_PLAN,F6_PLAN planBox
+            </div>
+        </div>
+
+        <h2>3. Diagrama de Interacción entre Áreas</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+graph TB
+    subgraph CENTRAL["PROCESO QUIRÚRGICO"]
+        PROC[⚕️ Procedimiento Quirúrgico]
+    end
+    
+    subgraph HCE_AREA["📋 HISTORIA CLÍNICA ELECTRÓNICA"]
+        HCE1[Registro Paciente]
+        HCE2[Datos Clínicos]
+        HCE3[Imágenes Médicas]
+        HCE4[Documentación]
+        HCE5[Historial Completo]
+    end
+    
+    subgraph PLAN_AREA["🎯 PLANIFICACIÓN QUIRÚRGICA"]
+        PLAN1[Análisis Preop]
+        PLAN2[Reconstrucción 3D]
+        PLAN3[Simulación]
+        PLAN4[Guías Quirúrgicas]
+        PLAN5[Checklist WHO]
+    end
+    
+    subgraph SEG_AREA["🔒 SEGURIDAD Y CUMPLIMIENTO"]
+        SEG1[Autenticación]
+        SEG2[Encriptación]
+        SEG3[Auditoría]
+        SEG4[Control Acceso]
+        SEG5[Cumplimiento]
+    end
+    
+    %% Flujos HCE
+    HCE1 --> HCE2
+    HCE2 --> HCE3
+    HCE3 --> PLAN1
+    HCE2 --> PLAN1
+    HCE4 --> PROC
+    PROC --> HCE5
+    
+    %% Flujos Planificación
+    PLAN1 --> PLAN2
+    PLAN2 --> PLAN3
+    PLAN3 --> PLAN4
+    PLAN4 --> PLAN5
+    PLAN5 --> PROC
+    
+    %% Flujos Seguridad (transversal)
+    SEG1 --> HCE1
+    SEG1 --> PLAN1
+    SEG2 --> HCE2
+    SEG2 --> PLAN2
+    SEG3 --> HCE4
+    SEG3 --> PROC
+    SEG4 --> HCE1
+    SEG4 --> PLAN1
+    SEG5 --> HCE5
+    
+    %% Conexiones bidireccionales
+    HCE3 -.->|Datos| PLAN2
+    PLAN4 -.->|Guías| PROC
+    PROC -.->|Resultados| HCE4
+    
+    classDef hce fill:#4FC3F7,stroke:#0277BD,stroke-width:2px
+    classDef plan fill:#BA68C8,stroke:#4A148C,stroke-width:2px
+    classDef seg fill:#FFB74D,stroke:#E65100,stroke-width:2px
+    classDef proc fill:#81C784,stroke:#1B5E20,stroke-width:3px
+    
+    class HCE1,HCE2,HCE3,HCE4,HCE5 hce
+    class PLAN1,PLAN2,PLAN3,PLAN4,PLAN5 plan
+    class SEG1,SEG2,SEG3,SEG4,SEG5 seg
+    class PROC proc
+            </div>
+        </div>
+
+        <div class="info" style="margin-top: 40px;">
+            <strong>💡 Consejos para exportar:</strong>
+            <ul>
+                <li>Usa las herramientas de captura de pantalla de tu sistema operativo</li>
+                <li>En Chrome/Edge: F12 → Herramientas de desarrollador → Captura de pantalla</li>
+                <li>En macOS: Cmd+Shift+4 para seleccionar área</li>
+                <li>En Windows: Win+Shift+S para captura de pantalla</li>
+                <li>Puedes hacer zoom en el navegador (Cmd/Ctrl +) para mejor calidad</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>
