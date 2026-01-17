@@ -1,0 +1,47 @@
+<div class="container mt-4">
+  <h1>Registro Médico</h1>
+
+  <div class="card mt-4">
+    <div class="card-body">
+      <h5 class="card-title">Información General</h5>
+      <p><strong>Mascota:</strong> <%= @medical_record.pet.name %></p>
+      <p><strong>Fecha de Visita:</strong> <%= l(@medical_record.visit_date) %></p>
+      <p><strong>Tipo de Registro:</strong> <%= @medical_record.record_type.humanize %></p>
+      <p><strong>Veterinario:</strong> Dr. <%= @medical_record.veterinarian.full_name %></p>
+
+      <hr>
+
+      <h5>Datos Clínicos</h5>
+      <% if @medical_record.weight.present? %>
+        <p><strong>Peso:</strong> <%= @medical_record.weight %> kg</p>
+      <% end %>
+      <% if @medical_record.temperature.present? %>
+        <p><strong>Temperatura:</strong> <%= @medical_record.temperature %> °C</p>
+      <% end %>
+
+      <hr>
+
+      <h5>Diagnóstico</h5>
+      <p><%= @medical_record.diagnosis %></p>
+
+      <% if @medical_record.treatment.present? %>
+        <h5>Tratamiento</h5>
+        <p><%= @medical_record.treatment %></p>
+      <% end %>
+
+      <% if @medical_record.prescription.present? %>
+        <h5>Prescripción</h5>
+        <p><%= @medical_record.prescription %></p>
+      <% end %>
+
+      <% if @medical_record.notes.present? %>
+        <h5>Notas Adicionales</h5>
+        <p><%= @medical_record.notes %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <%= link_to 'Volver', veterinarian_medical_records_path, class: 'btn btn-secondary' %>
+  </div>
+</div>

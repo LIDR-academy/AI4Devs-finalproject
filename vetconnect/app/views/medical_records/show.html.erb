@@ -1,0 +1,76 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Registro Médico</h1>
+      <%= link_to "← Volver", medical_records_path, class: "text-blue-600 hover:text-blue-800" %>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Información General</h2>
+        <dl class="space-y-3">
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Fecha</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= l(@medical_record.visit_date, format: :long) %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Mascota</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @medical_record.pet.name %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Veterinario</dt>
+            <dd class="mt-1 text-sm text-gray-900">Dr. <%= @medical_record.veterinarian.full_name %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Tipo de Consulta</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @medical_record.record_type&.humanize || 'General' %></dd>
+          </div>
+        </dl>
+      </div>
+
+      <div>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Datos Clínicos</h2>
+        <dl class="space-y-3">
+          <% if @medical_record.weight.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Peso</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= number_with_precision(@medical_record.weight, precision: 1) %> kg</dd>
+            </div>
+          <% end %>
+          <% if @medical_record.temperature.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Temperatura</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @medical_record.temperature %> °C</dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Diagnóstico</h2>
+      <p class="text-gray-700"><%= simple_format(@medical_record.diagnosis) %></p>
+    </div>
+
+    <% if @medical_record.treatment.present? %>
+      <div class="mt-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Tratamiento</h2>
+        <p class="text-gray-700"><%= simple_format(@medical_record.treatment) %></p>
+      </div>
+    <% end %>
+
+    <% if @medical_record.prescription.present? %>
+      <div class="mt-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Prescripción</h2>
+        <p class="text-gray-700"><%= simple_format(@medical_record.prescription) %></p>
+      </div>
+    <% end %>
+
+    <% if @medical_record.notes.present? %>
+      <div class="mt-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Notas Adicionales</h2>
+        <p class="text-gray-700"><%= simple_format(@medical_record.notes) %></p>
+      </div>
+    <% end %>
+  </div>
+</div>

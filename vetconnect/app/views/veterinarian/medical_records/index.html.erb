@@ -1,0 +1,40 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Registros Médicos</h1>
+    <%= link_to 'Crear Nuevo Registro', new_veterinarian_medical_record_path, class: 'btn btn-success' %>
+  </div>
+
+  <% if @medical_records.any? %>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Mascota</th>
+            <th>Tipo</th>
+            <th>Diagnóstico</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @medical_records.each do |record| %>
+            <tr>
+              <td><%= l(record.visit_date) %></td>
+              <td><%= record.pet.name %> (<%= record.pet.species.humanize %>)</td>
+              <td><span class="badge bg-info"><%= record.record_type.humanize %></span></td>
+              <td><%= truncate(record.diagnosis, length: 50) %></td>
+              <td>
+                <%= link_to 'Ver', veterinarian_medical_record_path(record), class: 'btn btn-sm btn-info' %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <%= paginate @medical_records %>
+  <% else %>
+    <div class="alert alert-info">
+      No hay registros médicos.
+    </div>
+  <% end %>
+</div>

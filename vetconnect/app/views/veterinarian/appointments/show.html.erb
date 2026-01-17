@@ -1,0 +1,56 @@
+<div class="container mt-4">
+  <h1>Detalles de la Cita</h1>
+
+  <div class="card mt-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h5>Información del Paciente</h5>
+          <p><strong>Mascota:</strong> <%= @appointment.pet.name %></p>
+          <p><strong>Especie:</strong> <%= @appointment.pet.species.humanize %></p>
+          <p><strong>Raza:</strong> <%= @appointment.pet.breed %></p>
+          <p><strong>Edad:</strong> <%= @appointment.pet.age %> años</p>
+          <p><strong>Dueño:</strong> <%= @appointment.owner.full_name %></p>
+          <p><strong>Teléfono:</strong> <%= @appointment.owner.phone %></p>
+        </div>
+        <div class="col-md-6">
+          <h5>Información de la Cita</h5>
+          <p><strong>Fecha y Hora:</strong> <%= l(@appointment.appointment_date, format: :long) %></p>
+          <p><strong>Duración:</strong> <%= @appointment.duration_minutes %> minutos</p>
+          <p><strong>Estado:</strong> 
+            <span class="badge bg-<%= @appointment.status == 'completed' ? 'success' : 'primary' %>">
+              <%= @appointment.status.humanize %>
+            </span>
+          </p>
+          <p><strong>Clínica:</strong> <%= @appointment.clinic.name %></p>
+          <p><strong>Motivo:</strong> <%= @appointment.reason %></p>
+        </div>
+      </div>
+
+      <% if @appointment.notes.present? %>
+        <hr>
+        <h5>Notas del Dueño</h5>
+        <p><%= @appointment.notes %></p>
+      <% end %>
+
+      <% if @appointment.pet.special_notes.present? %>
+        <div class="alert alert-warning mt-3">
+          <strong>Notas Especiales de la Mascota:</strong><br>
+          <%= @appointment.pet.special_notes %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <% if @appointment.can_be_cancelled? %>
+      <%= link_to 'Completar Cita', complete_appointment_path(@appointment), 
+          method: :post, class: 'btn btn-success' %>
+      <%= link_to 'Marcar No Show', mark_no_show_appointment_path(@appointment), 
+          method: :post, 
+          data: { confirm: '¿Estás seguro?' }, 
+          class: 'btn btn-warning' %>
+    <% end %>
+    <%= link_to 'Volver', veterinarian_appointments_path, class: 'btn btn-secondary' %>
+  </div>
+</div>

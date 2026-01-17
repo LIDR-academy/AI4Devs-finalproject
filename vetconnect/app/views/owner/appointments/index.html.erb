@@ -1,0 +1,46 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Mis Citas</h1>
+    <%= link_to 'Agendar Nueva Cita', new_appointment_path, class: 'btn btn-success' %>
+  </div>
+
+  <% if @appointments.any? %>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Mascota</th>
+            <th>Veterinario</th>
+            <th>Clínica</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @appointments.each do |appointment| %>
+            <tr>
+              <td><%= l(appointment.appointment_date, format: :short) %></td>
+              <td><%= appointment.pet.name %></td>
+              <td>Dr. <%= appointment.veterinarian.full_name %></td>
+              <td><%= appointment.clinic.name %></td>
+              <td>
+                <span class="badge bg-<%= appointment.status == 'completed' ? 'success' : 'primary' %>">
+                  <%= appointment.status.humanize %>
+                </span>
+              </td>
+              <td>
+                <%= link_to 'Ver', owner_appointment_path(appointment), class: 'btn btn-sm btn-info' %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="alert alert-info">
+      <p>No tienes citas registradas.</p>
+      <%= link_to 'Agendar mi primera cita', new_appointment_path, class: 'btn btn-success' %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,52 @@
+<div class="container mt-4">
+  <h1>Detalles de la Cita</h1>
+
+  <div class="card mt-4">
+    <div class="card-body">
+      <h5 class="card-title">Información de la Cita</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Mascota:</strong> <%= @appointment.pet.name %></p>
+          <p><strong>Fecha y Hora:</strong> <%= l(@appointment.appointment_date, format: :long) %></p>
+          <p><strong>Duración:</strong> <%= @appointment.duration_minutes %> minutos</p>
+          <p><strong>Estado:</strong> 
+            <span class="badge bg-<%= @appointment.status == 'completed' ? 'success' : 'primary' %>">
+              <%= @appointment.status.humanize %>
+            </span>
+          </p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Veterinario:</strong> Dr. <%= @appointment.veterinarian.full_name %></p>
+          <p><strong>Clínica:</strong> <%= @appointment.clinic.name %></p>
+          <p><strong>Dirección:</strong> <%= @appointment.clinic.address %></p>
+          <p><strong>Teléfono:</strong> <%= @appointment.clinic.phone %></p>
+        </div>
+      </div>
+      
+      <% if @appointment.reason.present? %>
+        <hr>
+        <p><strong>Motivo:</strong> <%= @appointment.reason %></p>
+      <% end %>
+      
+      <% if @appointment.notes.present? %>
+        <p><strong>Notas:</strong> <%= @appointment.notes %></p>
+      <% end %>
+
+      <% if @appointment.cancellation_reason.present? %>
+        <div class="alert alert-warning mt-3">
+          <strong>Razón de cancelación:</strong> <%= @appointment.cancellation_reason %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <% if @appointment.can_be_cancelled? %>
+      <%= link_to 'Cancelar Cita', cancel_appointment_path(@appointment), 
+          method: :post, 
+          data: { confirm: '¿Estás seguro?' }, 
+          class: 'btn btn-danger' %>
+    <% end %>
+    <%= link_to 'Volver', owner_appointments_path, class: 'btn btn-secondary' %>
+  </div>
+</div>

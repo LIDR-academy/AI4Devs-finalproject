@@ -1,0 +1,61 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800"><%= @document.title %></h1>
+      <%= link_to "← Volver", documents_path, class: "text-blue-600 hover:text-blue-800" %>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Información del Documento</h2>
+        <dl class="space-y-3">
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Tipo</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @document.document_type&.humanize || 'Documento' %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Mascota</dt>
+            <dd class="mt-1 text-sm text-gray-900">
+              <%= link_to @document.pet.name, pet_path(@document.pet), class: "text-blue-600 hover:text-blue-800" %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Subido el</dt>
+            <dd class="mt-1 text-sm text-gray-900">
+              <%= l(@document.uploaded_at || @document.created_at, format: :long) %>
+            </dd>
+          </div>
+          <% if @document.file_name.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Archivo</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= @document.file_name %>
+                <% if @document.file_size.present? %>
+                  (<%= number_to_human_size(@document.file_size) %>)
+                <% end %>
+              </dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+
+      <% if @document.description.present? %>
+        <div>
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Descripción</h2>
+          <p class="text-gray-700"><%= simple_format(@document.description) %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @document.file_path.present? %>
+      <div class="mt-6 flex gap-3">
+        <%= link_to "Descargar Documento", download_document_path(@document), 
+            class: "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded" %>
+        <% if policy(@document).update? %>
+          <%= link_to "Editar", edit_document_path(@document), 
+              class: "bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Mis Mascotas</h1>
+    <%= link_to 'Registrar Nueva Mascota', new_pet_path, class: 'btn btn-success' %>
+  </div>
+
+  <% if @pets.any? %>
+    <div class="row">
+      <% @pets.each do |pet| %>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><%= pet.name %></h5>
+              <p class="card-text">
+                <strong>Especie:</strong> <%= pet.species.humanize %><br>
+                <strong>Raza:</strong> <%= pet.breed %><br>
+                <strong>Edad:</strong> <%= pet.age %> años<br>
+                <strong>Género:</strong> <%= pet.gender.humanize %>
+              </p>
+              <%= link_to 'Ver Detalles', owner_pet_path(pet), class: 'btn btn-primary' %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="alert alert-info">
+      <p>No tienes mascotas registradas.</p>
+      <%= link_to 'Registrar mi primera mascota', new_pet_path, class: 'btn btn-success' %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,17 @@
+<div class="container mt-4">
+  <h1>Reportes del Sistema</h1>
+
+  <div class="row mt-4">
+    <% @reports.each do |report| %>
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title"><%= report[:name] %></h5>
+            <p class="card-text"><%= report[:description] %></p>
+            <%= link_to 'Ver Reporte', admin_report_path(report[:id]), class: 'btn btn-primary' %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

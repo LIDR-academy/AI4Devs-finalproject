@@ -1,0 +1,46 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gestión de Usuarios</h1>
+    <%= link_to 'Crear Usuario', new_admin_user_path, class: 'btn btn-success' %>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Fecha Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr>
+            <td><%= user.id %></td>
+            <td><%= user.full_name %></td>
+            <td><%= user.email %></td>
+            <td><span class="badge bg-info"><%= user.role.humanize %></span></td>
+            <td>
+              <% if user.confirmed? %>
+                <span class="badge bg-success">Confirmado</span>
+              <% else %>
+                <span class="badge bg-warning">Pendiente</span>
+              <% end %>
+            </td>
+            <td><%= l(user.created_at, format: :short) %></td>
+            <td>
+              <%= link_to 'Ver', admin_user_path(user), class: 'btn btn-sm btn-info' %>
+              <%= link_to 'Editar', edit_admin_user_path(user), class: 'btn btn-sm btn-warning' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= paginate @users %>
+</div>

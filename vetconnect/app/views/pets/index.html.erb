@@ -1,0 +1,92 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Mascotas 🐾</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Gestiona los perfiles de todas las mascotas
+      </p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <% if policy(Pet).create? %>
+        <%= link_to new_pet_path, class: "inline-flex items-center rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" do %>
+          <span class="mr-2">➕</span> Registrar Nueva Mascota
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Pets Grid -->
+  <% if @pets.any? %>
+    <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in">
+      <% @pets.each do |pet| %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden card-hover">
+          <div class="p-6">
+            <!-- Pet Header -->
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <div class="h-14 w-14 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-3xl">
+                  <%= pet.species == 'dog' ? '🐕' : pet.species == 'cat' ? '🐈' : '🐾' %>
+                </div>
+                <div class="ml-3">
+                  <h2 class="text-xl font-semibold text-gray-900"><%= pet.name %></h2>
+                  <span class="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 capitalize">
+                    <%= pet.species.humanize %>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pet Details -->
+            <div class="space-y-2 text-sm text-gray-600">
+              <% if pet.breed.present? %>
+                <p><strong>Raza:</strong> <%= pet.breed %></p>
+              <% end %>
+              <p><strong>Edad:</strong> <%= pet.age %> años</p>
+              <p><strong>Género:</strong> <span class="capitalize"><%= pet.gender == 'male' ? '♂️ Macho' : '♀️ Hembra' %></span></p>
+              <% if pet.weight.present? %>
+                <p><strong>Peso:</strong> <%= number_with_precision(pet.weight, precision: 1) %> kg</p>
+              <% end %>
+              <p><strong>Dueño:</strong> <%= pet.user.full_name %></p>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-6 flex gap-2">
+              <%= link_to pet_path(pet), class: "flex-1 text-center rounded-lg bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors" do %>
+                Ver Perfil
+              <% end %>
+              <% if policy(pet).update? %>
+                <%= link_to edit_pet_path(pet), class: "flex-1 text-center rounded-lg bg-purple-50 px-3 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100 transition-colors" do %>
+                  Editar
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Pagination -->
+    <% if @pets.respond_to?(:total_pages) && @pets.total_pages > 1 %>
+      <div class="mt-8 flex items-center justify-center">
+        <%= paginate @pets %>
+      </div>
+    <% end %>
+  <% else %>
+    <!-- Empty State -->
+    <div class="mt-12 text-center animate-fade-in">
+      <div class="mx-auto h-24 w-24 text-7xl">🐾</div>
+      <h3 class="mt-4 text-lg font-semibold text-gray-900">No hay mascotas registradas</h3>
+      <p class="mt-2 text-sm text-gray-500">
+        Comienza registrando la primera mascota en el sistema.
+      </p>
+      <% if policy(Pet).create? %>
+        <div class="mt-6">
+          <%= link_to new_pet_path, class: "inline-flex items-center rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" do %>
+            <span class="mr-2">➕</span> Registrar Primera Mascota
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

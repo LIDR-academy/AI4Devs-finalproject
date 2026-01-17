@@ -1,0 +1,28 @@
+CITA CANCELADA - VetConnect
+============================
+
+Hola <%= @owner.first_name %>,
+
+Tu cita para <%= @pet.name %> ha sido cancelada.
+
+DETALLES DE LA CITA CANCELADA:
+------------------------------
+Mascota: <%= @pet.name %> (<%= @pet.species.humanize %>)
+Fecha y Hora: <%= l(@appointment.appointment_date, format: :long) %>
+Clínica: <%= @clinic.name %>
+
+<% if @appointment.cancellation_reason.present? %>
+MOTIVO DE CANCELACIÓN:
+---------------------
+<%= @appointment.cancellation_reason %>
+<% end %>
+
+Si deseas agendar una nueva cita, por favor contáctanos o accede a tu cuenta en VetConnect.
+
+CLÍNICA:
+--------
+<%= @clinic.name %>
+Teléfono: <%= @clinic.phone %>
+
+---
+VetConnect - Cuidando a tu mascota

@@ -1,0 +1,45 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Documentos</h1>
+    <%= link_to "Subir Documento", new_document_path, class: "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" if policy(Document).create? %>
+  </div>
+
+  <% if @documents.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @documents.each do |document| %>
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-800 mb-2"><%= document.title %></h3>
+              <p class="text-sm text-gray-600">
+                <%= document.document_type&.humanize || 'Documento' %>
+              </p>
+            </div>
+            <% if document.file_name.present? %>
+              <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                <%= File.extname(document.file_name).delete('.').upcase %>
+              </span>
+            <% end %>
+          </div>
+
+          <div class="text-sm text-gray-600 mb-4">
+            <p><strong>Mascota:</strong> <%= document.pet.name %></p>
+            <p><strong>Fecha:</strong> <%= l(document.created_at, format: :short) %></p>
+          </div>
+
+          <div class="flex gap-2">
+            <%= link_to "Ver", document_path(document), class: "flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded text-sm" %>
+            <% if document.file_path.present? %>
+              <%= link_to "Descargar", download_document_path(document), class: "flex-1 text-center bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-2 px-4 rounded text-sm" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-lg shadow-md p-12 text-center">
+      <p class="text-gray-600 text-lg mb-4">No hay documentos disponibles.</p>
+      <%= link_to "Subir Primer Documento", new_document_path, class: "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" if policy(Document).create? %>
+    </div>
+  <% end %>
+</div>

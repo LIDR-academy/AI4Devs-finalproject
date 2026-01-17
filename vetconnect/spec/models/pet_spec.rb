@@ -1,0 +1,250 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe Pet, type: :model do
+  describe 'associations' do
+    it { should belong_to(:user) }
+    it { should have_many(:appointments).dependent(:destroy) }
+    it { should have_many(:medical_records).dependent(:destroy) }
+    it { should have_many(:documents).dependent(:destroy) }
+    it { should have_many(:veterinarians).through(:appointments) }
+  end
+
+  describe 'validations' do
+    subject { build(:pet) }
+
+    it { should validate_presence_of(:name) }
+    it { should validate_presence_of(:species) }
+    it { should validate_presence_of(:birth_date) }
+    it { should validate_presence_of(:gender) }
+    
+    it { should validate_length_of(:name).is_at_least(1).is_at_most(50) }
+    
+    it 'validates microchip_number uniqueness case-insensitively' do
+      existing_pet = create(:pet, microchip_number: 'ABC123456789')
+      new_pet = build(:pet, microchip_number: 'abc123456789')
+      
+      expect(new_pet).not_to be_valid
+      expect(new_pet.errors[:microchip_number]).to include('has already been taken')
+    end
+    
+    it 'allows blank microchip_number' do
+      pet = build(:pet, microchip_number: nil)
+      expect(pet).to be_valid
+    end
+    
+    it 'validates weight is greater than 0' do
+      pet = build(:pet, weight: 0)
+      expect(pet).not_to be_valid
+    end
+    
+    it 'validates weight is less than 500' do
+      pet = build(:pet, weight: 500)
+      expect(pet).not_to be_valid
+    end
+    
+    it 'allows nil weight' do
+      pet = build(:pet, weight: nil)
+      expect(pet).to be_valid
+    end
+
+    describe 'birth_date validations' do
+      it 'validates birth_date is not in the future' do
+        pet = build(:pet, birth_date: 1.day.from_now)
+        expect(pet).not_to be_valid
+        expect(pet.errors[:birth_date]).to include('no puede ser en el futuro')
+      end
+      
+      it 'validates birth_date is not too old' do
+        pet = build(:pet, birth_date: 31.years.ago)
+        expect(pet).not_to be_valid
+        expect(pet.errors[:birth_date]).to include('es demasiado antigua (máximo 30 años)')
+      end
+      
+      it 'accepts birth_date within valid range' do
+        pet = build(:pet, birth_date: 5.years.ago)
+        expect(pet).to be_valid
+      end
+    end
+
+    describe 'photo validation' do
+      it 'accepts JPEG photos' do
+        pet = build(:pet)
+        pet.photo.attach(
+          io: File.open(Rails.root.join('spec', 'fixtures', 'files', 'test.jpg')),
+          filename: 'test.jpg',
+          content_type: 'image/jpeg'
+        )
+        expect(pet).to be_valid
+      end
+      
+      it 'accepts PNG photos' do
+        pet = build(:pet)
+        pet.photo.attach(
+          io: File.open(Rails.root.join('spec', 'fixtures', 'files', 'test.png')),
+          filename: 'test.png',
+          content_type: 'image/png'
+        )
+        expect(pet).to be_valid
+      end
+      
+      it 'rejects invalid photo formats' do
+        pet = build(:pet)
+        pet.photo.attach(
+          io: File.open(Rails.root.join('spec', 'fixtures', 'files', 'test.pdf')),
+          filename: 'test.pdf',
+          content_type: 'application/pdf'
+        )
+        expect(pet).not_to be_valid
+        expect(pet.errors[:photo]).to include('debe ser JPEG o PNG')
+      end
+    end
+  end
+
+  describe 'enums' do
+    it 'defines species enum' do
+      expect(Pet.species).to include('dog', 'cat', 'rabbit', 'bird', 'reptile', 'other')
+    end
+    
+    it 'defines gender enum' do
+      expect(Pet.genders).to include('male', 'female', 'unknown')
+    end
+  end
+
+  describe 'scopes' do
+    let!(:active_dog) { create(:pet, :dog, active: true) }
+    let!(:inactive_cat) { create(:pet, :cat, active: false) }
+    let!(:active_bird) { create(:pet, species: :bird, active: true) }
+
+    describe '.active' do
+      it 'returns only active pets' do
+        expect(Pet.active).to include(active_dog, active_bird)
+        expect(Pet.active).not_to include(inactive_cat)
+      end
+    end
+
+    describe '.inactive' do
+      it 'returns only inactive pets' do
+        expect(Pet.inactive).to include(inactive_cat)
+        expect(Pet.inactive).not_to include(active_dog, active_bird)
+      end
+    end
+
+    describe '.by_species' do
+      it 'returns pets of specified species' do
+        expect(Pet.by_species(:dog)).to include(active_dog)
+        expect(Pet.by_species(:dog)).not_to include(inactive_cat, active_bird)
+      end
+    end
+
+    describe '.recent' do
+      it 'orders pets by created_at descending' do
+        expect(Pet.recent.first).to eq(active_bird)
+      end
+    end
+
+    describe '.alphabetical' do
+      it 'orders pets by name ascending' do
+        pets = Pet.alphabetical.pluck(:name)
+        expect(pets).to eq(pets.sort)
+      end
+    end
+  end
+
+  describe 'instance methods' do
+    describe '#age' do
+      it 'calculates age correctly' do
+        pet = create(:pet, birth_date: 3.years.ago)
+        expect(pet.age).to eq(3)
+      end
+      
+      it 'returns 0 for pets less than 1 year old' do
+        pet = create(:pet, birth_date: 6.months.ago)
+        expect(pet.age).to eq(0)
+      end
+      
+      it 'returns nil if birth_date is not set' do
+        pet = build(:pet, birth_date: nil)
+        expect(pet.age).to be_nil
+      end
+    end
+
+    describe '#age_in_months' do
+      it 'calculates age in months correctly' do
+        pet = create(:pet, birth_date: 18.months.ago)
+        expect(pet.age_in_months).to be_between(17, 19)
+      end
+      
+      it 'returns nil if birth_date is not set' do
+        pet = build(:pet, birth_date: nil)
+        expect(pet.age_in_months).to be_nil
+      end
+    end
+
+    describe '#full_name' do
+      it 'returns name with humanized species' do
+        pet = build(:pet, name: 'Max', species: :dog)
+        expect(pet.full_name).to eq('Max (Dog)')
+      end
+      
+      it 'works with different species' do
+        pet = build(:pet, name: 'Whiskers', species: :cat)
+        expect(pet.full_name).to eq('Whiskers (Cat)')
+      end
+    end
+
+    describe '#display_name' do
+      it 'is an alias for full_name' do
+        pet = build(:pet, name: 'Buddy', species: :dog)
+        expect(pet.display_name).to eq(pet.full_name)
+      end
+    end
+
+    describe '#recent_appointments' do
+      let(:pet) { create(:pet) }
+      
+      before do
+        create_list(:appointment, 7, pet: pet, scheduled_at: 1.week.ago)
+      end
+      
+      it 'returns the most recent appointments' do
+        expect(pet.recent_appointments.count).to eq(5)
+      end
+      
+      it 'orders appointments by scheduled_at descending' do
+        appointments = pet.recent_appointments
+        expect(appointments.first.scheduled_at).to be >= appointments.last.scheduled_at
+      end
+      
+      it 'accepts custom limit' do
+        expect(pet.recent_appointments(3).count).to eq(3)
+      end
+    end
+
+    describe '#deactivate!' do
+      let(:pet) { create(:pet, active: true) }
+      
+      it 'sets active to false' do
+        pet.deactivate!
+        expect(pet.reload.active).to be false
+      end
+    end
+
+    describe '#activate!' do
+      let(:pet) { create(:pet, active: false) }
+      
+      it 'sets active to true' do
+        pet.activate!
+        expect(pet.reload.active).to be true
+      end
+    end
+  end
+
+  describe 'Active Storage' do
+    it 'has one attached photo' do
+      pet = create(:pet)
+      expect(pet).to respond_to(:photo)
+    end
+  end
+end

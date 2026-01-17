@@ -1,0 +1,53 @@
+<div class="container mt-4">
+  <h1>Reporte: <%= @report_type.humanize %></h1>
+
+  <div class="card mt-4">
+    <div class="card-body">
+      <% case @report_type %>
+      <% when 'appointments' %>
+        <h5>Estadísticas de Citas</h5>
+        <ul>
+          <li><strong>Total de Citas:</strong> <%= @data[:total] %></li>
+          <li><strong>Citas Próximas:</strong> <%= @data[:upcoming] %></li>
+          <li><strong>Este Mes:</strong> <%= @data[:this_month] %></li>
+        </ul>
+        <h6>Por Estado:</h6>
+        <ul>
+          <% @data[:by_status].each do |status, count| %>
+            <li><%= status.humanize %>: <%= count %></li>
+          <% end %>
+        </ul>
+
+      <% when 'users' %>
+        <h5>Estadísticas de Usuarios</h5>
+        <ul>
+          <li><strong>Total de Usuarios:</strong> <%= @data[:total] %></li>
+          <li><strong>Confirmados:</strong> <%= @data[:confirmed] %></li>
+          <li><strong>Registros Recientes (último mes):</strong> <%= @data[:recent] %></li>
+        </ul>
+        <h6>Por Rol:</h6>
+        <ul>
+          <% @data[:by_role].each do |role, count| %>
+            <li><%= role.humanize %>: <%= count %></li>
+          <% end %>
+        </ul>
+
+      <% when 'pets' %>
+        <h5>Estadísticas de Mascotas</h5>
+        <ul>
+          <li><strong>Total de Mascotas:</strong> <%= @data[:total] %></li>
+          <li><strong>Activas:</strong> <%= @data[:active] %></li>
+          <li><strong>Registros Recientes (último mes):</strong> <%= @data[:recent] %></li>
+        </ul>
+        <h6>Por Especie:</h6>
+        <ul>
+          <% @data[:by_species].each do |species, count| %>
+            <li><%= species.humanize %>: <%= count %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  </div>
+
+  <%= link_to 'Volver a Reportes', admin_reports_path, class: 'btn btn-secondary mt-3' %>
+</div>

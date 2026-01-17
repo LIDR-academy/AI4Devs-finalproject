@@ -1,0 +1,49 @@
+<div class="container mt-4">
+  <h1>Mis Citas</h1>
+
+  <% if @appointments.any? %>
+    <div class="table-responsive mt-4">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Mascota</th>
+            <th>Dueño</th>
+            <th>Clínica</th>
+            <th>Motivo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @appointments.each do |appointment| %>
+            <tr>
+              <td><%= l(appointment.appointment_date, format: :short) %></td>
+              <td><%= appointment.pet.name %> (<%= appointment.pet.species.humanize %>)</td>
+              <td><%= appointment.owner.full_name %></td>
+              <td><%= appointment.clinic.name %></td>
+              <td><%= truncate(appointment.reason, length: 30) %></td>
+              <td>
+                <span class="badge bg-<%= appointment.status == 'completed' ? 'success' : 'primary' %>">
+                  <%= appointment.status.humanize %>
+                </span>
+              </td>
+              <td>
+                <%= link_to 'Ver', veterinarian_appointment_path(appointment), class: 'btn btn-sm btn-info' %>
+                <% if appointment.status_scheduled? || appointment.status_confirmed? %>
+                  <%= link_to 'Completar', complete_appointment_path(appointment), 
+                      method: :post, class: 'btn btn-sm btn-success' %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <%= paginate @appointments %>
+  <% else %>
+    <div class="alert alert-info mt-4">
+      No tienes citas asignadas.
+    </div>
+  <% end %>
+</div>

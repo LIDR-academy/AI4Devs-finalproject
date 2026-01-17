@@ -1,0 +1,56 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Configuración de Clínicas</h1>
+    <%= link_to 'Nueva Clínica', new_clinic_path, class: 'btn btn-success' %>
+  </div>
+
+  <% if @clinics.any? %>
+    <% @clinics.each do |clinic| %>
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-8">
+              <h5 class="card-title">
+                <%= clinic.name %>
+                <% if clinic.active %>
+                  <span class="badge bg-success">Activa</span>
+                <% else %>
+                  <span class="badge bg-secondary">Inactiva</span>
+                <% end %>
+              </h5>
+              <p class="card-text">
+                <strong>Dirección:</strong> <%= clinic.address %><br>
+                <strong>Teléfono:</strong> <%= clinic.phone %><br>
+                <strong>Email:</strong> <%= clinic.email %>
+              </p>
+              
+              <h6>Horarios de Atención:</h6>
+              <ul class="list-unstyled">
+                <% %w[monday tuesday wednesday thursday friday saturday sunday].each do |day| %>
+                  <% hours = clinic.operating_hours[day] %>
+                  <li>
+                    <strong><%= day.capitalize %>:</strong>
+                    <% if hours && hours['open'] %>
+                      <%= hours['start'] %> - <%= hours['end'] %>
+                    <% else %>
+                      Cerrado
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+            <div class="col-md-4 text-end">
+              <%= link_to 'Editar', edit_clinic_path(clinic), class: 'btn btn-warning' %>
+              <%= link_to 'Ver', clinic_path(clinic), class: 'btn btn-info' %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="alert alert-info">
+      No hay clínicas configuradas.
+      <%= link_to 'Crear Primera Clínica', new_clinic_path, class: 'btn btn-success' %>
+    </div>
+  <% end %>
+</div>

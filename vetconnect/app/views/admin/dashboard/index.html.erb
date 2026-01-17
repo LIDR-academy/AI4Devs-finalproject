@@ -1,0 +1,95 @@
+<div class="container mt-4">
+  <h1>Dashboard - Administrador</h1>
+  <p class="lead">Panel de Control del Sistema</p>
+
+  <div class="row mt-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Usuarios</h5>
+          <h2 class="text-primary"><%= @stats[:total_users] %></h2>
+          <%= link_to 'Gestionar', admin_users_path, class: 'btn btn-primary' %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Mascotas</h5>
+          <h2 class="text-success"><%= @stats[:total_pets] %></h2>
+          <%= link_to 'Ver', pets_path, class: 'btn btn-success' %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Citas</h5>
+          <h2 class="text-info"><%= @stats[:total_appointments] %></h2>
+          <small class="text-muted"><%= @stats[:upcoming_appointments] %> próximas</small><br>
+          <%= link_to 'Ver', appointments_path, class: 'btn btn-info mt-2' %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">Registros</h5>
+          <h2 class="text-warning"><%= @stats[:total_medical_records] %></h2>
+          <%= link_to 'Ver', medical_records_path, class: 'btn btn-warning' %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Citas Recientes</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Mascota</th>
+                  <th>Dueño</th>
+                  <th>Veterinario</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @recent_appointments.each do |appointment| %>
+                  <tr>
+                    <td><%= l(appointment.created_at, format: :short) %></td>
+                    <td><%= appointment.pet.name %></td>
+                    <td><%= appointment.owner.full_name %></td>
+                    <td>Dr. <%= appointment.veterinarian.full_name %></td>
+                    <td><span class="badge bg-primary"><%= appointment.status.humanize %></span></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-body text-center">
+          <%= link_to 'Gestionar Usuarios', admin_users_path, class: 'btn btn-primary btn-lg me-3' %>
+          <%= link_to 'Ver Reportes', admin_reports_path, class: 'btn btn-secondary btn-lg me-3' %>
+          <%= link_to 'Configuración de Clínicas', admin_clinic_settings_path, class: 'btn btn-info btn-lg' %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

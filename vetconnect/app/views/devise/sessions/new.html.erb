@@ -1,0 +1,84 @@
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+  <div class="max-w-md w-full space-y-8 animate-fade-in">
+    <!-- Logo and Header -->
+    <div class="text-center">
+      <div class="flex justify-center">
+        <div class="rounded-full gradient-bg p-4 shadow-lg">
+          <span class="text-5xl">🐾</span>
+        </div>
+      </div>
+      <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+        Bienvenido a VetConnect
+      </h2>
+      <p class="mt-2 text-sm text-gray-600">
+        Gestión integral para clínicas veterinarias
+      </p>
+    </div>
+
+    <!-- Login Form -->
+    <div class="mt-8 bg-white shadow-2xl rounded-2xl overflow-hidden ring-1 ring-gray-900/5">
+      <div class="px-8 pt-8 pb-6">
+        <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-6" }) do |f| %>
+          <!-- Email -->
+          <div>
+            <%= f.label :email, "Correo Electrónico", class: "block text-sm font-medium text-gray-700" %>
+            <div class="mt-1">
+              <%= f.email_field :email, 
+                  autofocus: true, 
+                  autocomplete: "email",
+                  class: "appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all",
+                  placeholder: "nombre@ejemplo.com" %>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div>
+            <%= f.label :password, "Contraseña", class: "block text-sm font-medium text-gray-700" %>
+            <div class="mt-1">
+              <%= f.password_field :password, 
+                  autocomplete: "current-password",
+                  class: "appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all",
+                  placeholder: "••••••••" %>
+            </div>
+          </div>
+
+          <!-- Remember Me -->
+          <% if devise_mapping.rememberable? %>
+            <div class="flex items-center">
+              <%= f.check_box :remember_me, class: "h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded" %>
+              <%= f.label :remember_me, "Recordarme", class: "ml-2 block text-sm text-gray-700" %>
+            </div>
+          <% end %>
+
+          <!-- Submit Button -->
+          <div>
+            <%= f.submit "Iniciar Sesión", 
+                class: "w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white gradient-bg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all cursor-pointer" %>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Links -->
+      <div class="px-8 py-4 bg-gray-50 border-t border-gray-200">
+        <div class="text-sm space-y-2">
+          <%= render "devise/shared/links" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo Credentials -->
+    <div class="rounded-lg bg-blue-50 p-4 shadow-sm ring-1 ring-blue-100">
+      <div class="flex">
+        <span class="text-xl mr-2">ℹ️</span>
+        <div class="text-xs">
+          <p class="font-semibold text-blue-900 mb-2">Credenciales de Prueba:</p>
+          <div class="space-y-1 text-blue-700 font-mono">
+            <p>👤 Owner: owner@example.com / password123</p>
+            <p>👨‍⚕️ Vet: vet@example.com / password123</p>
+            <p>👔 Admin: admin@example.com / password123</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

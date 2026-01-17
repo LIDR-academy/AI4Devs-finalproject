@@ -1,0 +1,77 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><%= @pet.name %></h1>
+    <div>
+      <%= link_to 'Editar', edit_pet_path(@pet), class: 'btn btn-warning' %>
+      <%= link_to 'Agendar Cita', new_appointment_path(pet_id: @pet.id), class: 'btn btn-success' %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>Información General</h5>
+        </div>
+        <div class="card-body">
+          <p><strong>Especie:</strong> <%= @pet.species.humanize %></p>
+          <p><strong>Raza:</strong> <%= @pet.breed %></p>
+          <p><strong>Fecha de Nacimiento:</strong> <%= l(@pet.birth_date) %></p>
+          <p><strong>Edad:</strong> <%= @pet.age %> años</p>
+          <p><strong>Género:</strong> <%= @pet.gender.humanize %></p>
+          <p><strong>Peso:</strong> <%= @pet.weight %> kg</p>
+          <% if @pet.microchip_number.present? %>
+            <p><strong>Microchip:</strong> <%= @pet.microchip_number %></p>
+          <% end %>
+          <% if @pet.special_notes.present? %>
+            <p><strong>Notas:</strong> <%= @pet.special_notes %></p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>Citas Recientes</h5>
+        </div>
+        <div class="card-body">
+          <% if @appointments.any? %>
+            <ul class="list-group list-group-flush">
+              <% @appointments.each do |appointment| %>
+                <li class="list-group-item">
+                  <%= l(appointment.appointment_date, format: :long) %><br>
+                  <small><%= appointment.status.humanize %> - Dr. <%= appointment.veterinarian.full_name %></small>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p>No hay citas registradas.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5>Historial Médico</h5>
+        </div>
+        <div class="card-body">
+          <% if @medical_records.any? %>
+            <ul class="list-group list-group-flush">
+              <% @medical_records.each do |record| %>
+                <li class="list-group-item">
+                  <%= l(record.visit_date) %><br>
+                  <small><%= record.record_type.humanize %></small>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p>No hay registros médicos.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%= link_to 'Volver', owner_pets_path, class: 'btn btn-secondary mt-3' %>
+</div>
