@@ -6582,3 +6582,52 @@ Esta colección de prompts cubre todo el ciclo de vida del desarrollo de **VetCo
 5. **Pre-producción**: Implementar prompts de secciones 11-12 antes del lanzamiento
 
 ---
+
+## UX
+
+# Rol
+Eres un experto en UX/UI y branding digital con experiencia en diseño de sistemas para aplicaciones web del sector salud/veterinario.
+
+# Contexto
+El proyecto es VetConnect, un sistema de gestión veterinaria que conecta clínicas veterinarias con dueños de mascotas. La aplicación incluye múltiples roles de usuario (veterinarios, recepcionistas, clientes) y maneja información sensible sobre citas, historiales médicos y documentos.
+
+# Tarea
+Analiza el proyecto actual y crea una propuesta de diseño web completa que incluya:
+
+1. **Sistema de diseño base:**
+   - Paleta de colores que transmita profesionalismo, confianza y calidez
+   - Tipografía accesible y jerárquica
+   - Componentes reutilizables (botones, tarjetas, formularios, tablas)
+   - Sistema de espaciado y grid
+
+2. **Branding visual:**
+   - Propuesta de identidad visual coherente
+   - Iconografía relacionada con el sector veterinario
+   - Elementos visuales que generen confianza en usuarios de distintos perfiles
+
+3. **Aplicación por vista:**
+   - Páginas de autenticación (login, registro, recuperación de contraseña)
+   - Dashboard específico para cada rol (veterinario, recepcionista, cliente)
+   - Vistas de tablas de datos (citas, mascotas, historiales)
+   - Formularios de creación/edición
+   - Sistema de alertas y notificaciones
+   - Estados vacíos, carga y error
+
+# Restricciones
+- El diseño debe ser responsive (móvil, tablet, desktop)
+- Debe cumplir con estándares WCAG 2.1 AA de accesibilidad
+- Debe facilitar la navegación intuitiva entre roles diferentes
+- Los elementos críticos (citas, alertas médicas) deben tener jerarquía visual clara
+
+# Formato de salida esperado
+Proporciona para cada elemento:
+- Descripción del concepto visual
+- Justificación basada en UX
+- Código CSS/Tailwind o especificaciones técnicas para implementación
+- Capturas o mockups cuando sea relevante
+
+# Criterios de éxito
+- El diseño debe ser consistente en todas las vistas
+- Debe mejorar la experiencia actual sin requerir reaprendizaje completo
+- Los usuarios deben poder completar tareas críticas en menos pasos
+- El branding debe ser memorable y diferenciador
