@@ -1,0 +1,114 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8 animate-fade-in">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900"><%= @document.title %> 📄</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Detalles del documento
+        </p>
+      </div>
+      <div class="mt-4 sm:mt-0 flex gap-2">
+        <% if policy(@document).update? %>
+          <%= link_to edit_document_path(@document), 
+              class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+            <span class="mr-2" aria-hidden="true">✏️</span> Editar
+          <% end %>
+        <% end %>
+        <%= link_to documents_path(pet_id: @document.pet_id), 
+            class: "inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors min-h-[44px]" do %>
+          <span class="mr-2" aria-hidden="true">←</span> Volver
+        <% end %>
+      </div>
+    </div>
+
+    <div class="space-y-6 animate-fade-in">
+      <!-- Document Info Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-900">📄 Información del Documento</h2>
+        </div>
+        <div class="px-6 py-5">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Título</dt>
+              <dd class="mt-1 text-sm font-semibold text-gray-900"><%= @document.title %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Tipo</dt>
+              <dd class="mt-1">
+                <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                  <%= @document.document_type&.humanize || 'Documento' %>
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Mascota</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= link_to @document.pet.name, pet_path(@document.pet), 
+                    class: "text-indigo-600 hover:text-indigo-500" %>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Subido el</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= (@document.uploaded_at || @document.created_at).strftime('%d/%m/%Y a las %H:%M') %>
+              </dd>
+            </div>
+            <% if @document.file_name.present? %>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Nombre del Archivo</dt>
+                <dd class="mt-1 text-sm text-gray-900 font-mono"><%= @document.file_name %></dd>
+              </div>
+            <% end %>
+            <% if @document.file_size.present? %>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Tamaño</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= number_to_human_size(@document.file_size) %></dd>
+              </div>
+            <% end %>
+            <% if @document.uploaded_by.present? %>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Subido por</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @document.uploaded_by.full_name %></dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Description Card -->
+      <% if @document.description.present? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">📝 Descripción</h2>
+          </div>
+          <div class="px-6 py-5">
+            <p class="text-sm text-gray-900 whitespace-pre-wrap"><%= @document.description %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <% if @document.file_path.present? %>
+          <%= link_to download_document_path(@document), 
+              class: "flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors min-h-[44px] flex items-center justify-center",
+              aria: { label: "Descargar #{@document.title}" } do %>
+            📥 Descargar Documento
+          <% end %>
+        <% end %>
+        <% if policy(@document).update? %>
+          <%= link_to edit_document_path(@document), 
+              class: "flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors min-h-[44px] flex items-center justify-center" do %>
+            ✏️ Editar Documento
+          <% end %>
+        <% end %>
+        <%= link_to documents_path(pet_id: @document.pet_id), 
+            class: "flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors min-h-[44px] flex items-center justify-center" do %>
+          ← Volver a Documentos
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

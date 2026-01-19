@@ -1,0 +1,128 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8 animate-fade-in">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Reporte: <%= @report_type.humanize %> 📊</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Estadísticas y análisis detallados
+        </p>
+      </div>
+      <%= link_to admin_reports_path, 
+          class: "mt-4 sm:mt-0 inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors min-h-[44px]" do %>
+        <span class="mr-2" aria-hidden="true">←</span> Volver a Reportes
+      <% end %>
+    </div>
+
+    <!-- Report Content -->
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden animate-fade-in">
+      <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-900">Estadísticas Generales</h2>
+      </div>
+      <div class="px-6 py-6">
+        <% case @report_type %>
+        <% when 'appointments' %>
+          <!-- Appointments Report -->
+          <div class="space-y-6">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                <p class="text-sm font-medium text-blue-600">Total de Citas</p>
+                <p class="text-3xl font-bold text-blue-900 mt-1"><%= @data[:total] %></p>
+              </div>
+              <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                <p class="text-sm font-medium text-green-600">Citas Próximas</p>
+                <p class="text-3xl font-bold text-green-900 mt-1"><%= @data[:upcoming] %></p>
+              </div>
+              <div class="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
+                <p class="text-sm font-medium text-purple-600">Este Mes</p>
+                <p class="text-3xl font-bold text-purple-900 mt-1"><%= @data[:this_month] %></p>
+              </div>
+            </div>
+
+            <!-- By Status -->
+            <div class="border-t border-gray-200 pt-6">
+              <h3 class="text-base font-semibold text-gray-900 mb-4">Citas por Estado</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <% @data[:by_status].each do |status, count| %>
+                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="text-sm font-medium text-gray-700 capitalize"><%= status.humanize %></span>
+                    <span class="text-lg font-bold text-gray-900"><%= count %></span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+        <% when 'users' %>
+          <!-- Users Report -->
+          <div class="space-y-6">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-indigo-50 rounded-lg p-4 border-l-4 border-indigo-500">
+                <p class="text-sm font-medium text-indigo-600">Total de Usuarios</p>
+                <p class="text-3xl font-bold text-indigo-900 mt-1"><%= @data[:total] %></p>
+              </div>
+              <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                <p class="text-sm font-medium text-green-600">Confirmados</p>
+                <p class="text-3xl font-bold text-green-900 mt-1"><%= @data[:confirmed] %></p>
+              </div>
+              <div class="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
+                <p class="text-sm font-medium text-purple-600">Registros Recientes</p>
+                <p class="text-3xl font-bold text-purple-900 mt-1"><%= @data[:recent] %></p>
+                <p class="text-xs text-purple-600 mt-1">Último mes</p>
+              </div>
+            </div>
+
+            <!-- By Role -->
+            <div class="border-t border-gray-200 pt-6">
+              <h3 class="text-base font-semibold text-gray-900 mb-4">Usuarios por Rol</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <% @data[:by_role].each do |role, count| %>
+                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="text-sm font-medium text-gray-700 capitalize"><%= role.humanize %></span>
+                    <span class="text-lg font-bold text-gray-900"><%= count %></span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+        <% when 'pets' %>
+          <!-- Pets Report -->
+          <div class="space-y-6">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-emerald-50 rounded-lg p-4 border-l-4 border-emerald-500">
+                <p class="text-sm font-medium text-emerald-600">Total de Mascotas</p>
+                <p class="text-3xl font-bold text-emerald-900 mt-1"><%= @data[:total] %></p>
+              </div>
+              <div class="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
+                <p class="text-sm font-medium text-green-600">Activas</p>
+                <p class="text-3xl font-bold text-green-900 mt-1"><%= @data[:active] %></p>
+              </div>
+              <div class="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
+                <p class="text-sm font-medium text-purple-600">Registros Recientes</p>
+                <p class="text-3xl font-bold text-purple-900 mt-1"><%= @data[:recent] %></p>
+                <p class="text-xs text-purple-600 mt-1">Último mes</p>
+              </div>
+            </div>
+
+            <!-- By Species -->
+            <div class="border-t border-gray-200 pt-6">
+              <h3 class="text-base font-semibold text-gray-900 mb-4">Mascotas por Especie</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <% @data[:by_species].each do |species, count| %>
+                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="text-sm font-medium text-gray-700 capitalize"><%= species.humanize %></span>
+                    <span class="text-lg font-bold text-gray-900"><%= count %></span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

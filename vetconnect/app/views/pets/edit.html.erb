@@ -1,0 +1,172 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Editar Mascota: <%= @pet.name %> 🐾</h1>
+      <p class="mt-2 text-sm text-gray-600">Actualiza la información de tu mascota</p>
+    </div>
+
+    <!-- Form -->
+    <%= form_with(model: @pet, class: "animate-fade-in") do |f| %>
+      <!-- Errors -->
+      <% if @pet.errors.any? %>
+        <div class="mb-6 rounded-lg bg-red-50 p-4 border-l-4 border-red-400">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">⚠️</span>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">
+                <%= pluralize(@pet.errors.count, "error") %> impidieron actualizar la mascota:
+              </h3>
+              <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                <% @pet.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Form Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="px-6 py-8 sm:p-10">
+          <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+            
+            <!-- Name -->
+            <div class="sm:col-span-3">
+              <%= f.label :name, "Nombre *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.text_field :name, 
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true %>
+              </div>
+            </div>
+
+            <!-- Species -->
+            <div class="sm:col-span-3">
+              <%= f.label :species, "Especie *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.select :species,
+                    options_for_select([
+                      ['🐕 Perro', 'dog'],
+                      ['🐈 Gato', 'cat'],
+                      ['🐦 Ave', 'bird'],
+                      ['🐹 Roedor', 'rodent'],
+                      ['🐰 Conejo', 'rabbit'],
+                      ['🦎 Reptil', 'reptile'],
+                      ['Otro', 'other']
+                    ], @pet.species),
+                    {},
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true %>
+              </div>
+            </div>
+
+            <!-- Breed -->
+            <div class="sm:col-span-3">
+              <%= f.label :breed, "Raza", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.text_field :breed, 
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6" %>
+              </div>
+            </div>
+
+            <!-- Birth Date -->
+            <div class="sm:col-span-3">
+              <%= f.label :birth_date, "Fecha de Nacimiento *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.date_field :birth_date, 
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true,
+                    max: Date.today %>
+              </div>
+            </div>
+
+            <!-- Gender -->
+            <div class="sm:col-span-3">
+              <%= f.label :gender, "Género *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.select :gender,
+                    options_for_select([
+                      ['♂️ Macho', 'male'],
+                      ['♀️ Hembra', 'female']
+                    ], @pet.gender),
+                    {},
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true %>
+              </div>
+            </div>
+
+            <!-- Color -->
+            <div class="sm:col-span-3">
+              <%= f.label :color, "Color", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.text_field :color, 
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6" %>
+              </div>
+            </div>
+
+            <!-- Weight -->
+            <div class="sm:col-span-3">
+              <%= f.label :weight, "Peso (kg)", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.number_field :weight, 
+                    step: 0.1,
+                    min: 0,
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6" %>
+              </div>
+            </div>
+
+            <!-- Microchip -->
+            <div class="sm:col-span-3">
+              <%= f.label :microchip_number, "Número de Microchip", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.text_field :microchip_number, 
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6" %>
+              </div>
+            </div>
+
+            <!-- Special Notes -->
+            <div class="sm:col-span-6">
+              <%= f.label :special_notes, "Notas Especiales", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.text_area :special_notes, 
+                    rows: 3,
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6" %>
+              </div>
+              <p class="mt-1 text-xs text-gray-500">Alergias, condiciones médicas, comportamiento especial...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-x-3 border-t border-gray-900/10 px-6 py-4 bg-gray-50">
+          <%= link_to "Cancelar", pet_path(@pet), 
+              class: "rounded-lg px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors" %>
+          <%= f.submit "Actualizar Mascota", 
+              class: "rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity cursor-pointer" %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Danger Zone -->
+    <% if policy(@pet).destroy? %>
+      <div class="mt-8 bg-red-50 shadow-sm ring-1 ring-red-200 rounded-xl overflow-hidden">
+        <div class="px-6 py-4">
+          <h3 class="text-base font-semibold leading-6 text-red-900">Zona de Peligro</h3>
+          <p class="mt-1 text-sm text-red-600">
+            Desactivar la mascota la ocultará del sistema. Esta acción se puede revertir.
+          </p>
+          <div class="mt-4">
+            <%= button_to "Desactivar Mascota", pet_path(@pet), 
+                method: :delete,
+                data: { confirm: "¿Estás seguro de que quieres desactivar a #{@pet.name}?" },
+                class: "rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-colors" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,38 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="animate-fade-in">
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Nuevo Registro Médico 📋</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        <% if @pet.present? %>
+          Registra una nueva consulta médica para <%= @pet.name %>
+        <% else %>
+          Registra una nueva consulta médica
+        <% end %>
+      </p>
+    </div>
+
+    <!-- Form -->
+    <div class="mt-8 bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-900">Información de la Consulta</h2>
+      </div>
+      <div class="px-6 py-6">
+        <%= render 'form', medical_record: @medical_record, pet: @pet || @medical_record.pet %>
+      </div>
+    </div>
+
+    <!-- Back Link -->
+    <div class="mt-6">
+      <% if @pet.present? %>
+        <%= link_to pet_path(@pet), class: "inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900" do %>
+          <span class="mr-2">←</span> Volver a <%= @pet.name %>
+        <% end %>
+      <% else %>
+        <%= link_to medical_records_path, class: "inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900" do %>
+          <span class="mr-2">←</span> Volver a Registros Médicos
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

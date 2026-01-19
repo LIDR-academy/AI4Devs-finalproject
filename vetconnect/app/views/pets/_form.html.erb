@@ -1,0 +1,181 @@
+<%= form_with(model: pet, local: true, class: "bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6 lg:p-8") do |form| %>
+  <% if pet.errors.any? %>
+    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg" role="alert" aria-live="polite">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">
+            <%= pluralize(pet.errors.count, "error") %> impidieron guardar esta mascota:
+          </h3>
+          <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+            <% pet.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="space-y-6">
+    <!-- Nombre -->
+    <div>
+      <%= form.label :name, "Nombre", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+        Nombre <span class="text-red-500" aria-label="requerido">*</span>
+      <% end %>
+      <%= form.text_field :name, 
+          class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+          placeholder: "Ej: Max",
+          required: true,
+          aria: { required: true, describedby: "name-help" } %>
+      <p id="name-help" class="mt-1 text-xs text-gray-500">Nombre de la mascota (máximo 50 caracteres)</p>
+    </div>
+
+    <!-- Especie -->
+    <div>
+      <%= form.label :species, "Especie", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+        Especie <span class="text-red-500" aria-label="requerido">*</span>
+      <% end %>
+      <%= form.select :species, 
+          options_for_select(Pet.species.keys.map { |s| [s.humanize, s] }, pet.species),
+          { prompt: "Selecciona una especie" },
+          { 
+            class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all min-h-[44px]",
+            required: true,
+            aria: { required: true, describedby: "species-help" }
+          } %>
+      <p id="species-help" class="mt-1 text-xs text-gray-500">Tipo de animal</p>
+    </div>
+
+    <!-- Raza -->
+    <div>
+      <%= form.label :breed, "Raza", class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <%= form.text_field :breed, 
+          class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+          placeholder: "Ej: Golden Retriever",
+          aria: { describedby: "breed-help" } %>
+      <p id="breed-help" class="mt-1 text-xs text-gray-500">Raza o tipo de la mascota (opcional)</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Fecha de Nacimiento -->
+      <div>
+        <%= form.label :birth_date, "Fecha de Nacimiento", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+          Fecha de Nacimiento <span class="text-red-500" aria-label="requerido">*</span>
+        <% end %>
+        <%= form.date_field :birth_date, 
+            class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all min-h-[44px]",
+            required: true,
+            aria: { required: true, describedby: "birth_date-help" } %>
+        <p id="birth_date-help" class="mt-1 text-xs text-gray-500">Fecha de nacimiento de la mascota</p>
+      </div>
+
+      <!-- Género -->
+      <div>
+        <%= form.label :gender, "Género", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+          Género <span class="text-red-500" aria-label="requerido">*</span>
+        <% end %>
+        <%= form.select :gender,
+            options_for_select(Pet.genders.keys.map { |g| [g.humanize, g] }, pet.gender),
+            { prompt: "Selecciona" },
+            { 
+              class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all min-h-[44px]",
+              required: true,
+              aria: { required: true }
+            } %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Color -->
+      <div>
+        <%= form.label :color, "Color", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.text_field :color, 
+            class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+            placeholder: "Ej: Dorado",
+            aria: { describedby: "color-help" } %>
+        <p id="color-help" class="mt-1 text-xs text-gray-500">Color principal del pelaje o plumas</p>
+      </div>
+
+      <!-- Peso -->
+      <div>
+        <%= form.label :weight, "Peso (kg)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.number_field :weight, 
+            step: 0.01, 
+            min: 0.01,
+            max: 500,
+            class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+            placeholder: "Ej: 25.5",
+            aria: { describedby: "weight-help" } %>
+        <p id="weight-help" class="mt-1 text-xs text-gray-500">Peso en kilogramos (opcional)</p>
+      </div>
+    </div>
+
+    <!-- Microchip -->
+    <div>
+      <%= form.label :microchip_number, "Número de Microchip", class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <%= form.text_field :microchip_number, 
+          class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+          placeholder: "Ej: ABC123456789",
+          aria: { describedby: "microchip-help" } %>
+      <p id="microchip-help" class="mt-1 text-xs text-gray-500">Número único de identificación si la mascota tiene microchip (opcional)</p>
+    </div>
+
+    <!-- Notas Especiales -->
+    <div>
+      <%= form.label :special_notes, "Notas Especiales", class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <%= form.text_area :special_notes, 
+          rows: 4, 
+          class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-y",
+          placeholder: "Alergias, comportamiento especial, necesidades médicas, etc.",
+          aria: { describedby: "notes-help" } %>
+      <p id="notes-help" class="mt-1 text-xs text-gray-500">Información adicional relevante sobre la mascota</p>
+    </div>
+
+    <!-- Foto -->
+    <div>
+      <%= form.label :photo, "Foto de la Mascota", class: "block text-sm font-medium text-gray-700 mb-2" %>
+      <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-400 transition-colors">
+        <div class="space-y-1 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <div class="flex text-sm text-gray-600">
+            <label for="pet_photo" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+              <span>Subir una foto</span>
+              <%= form.file_field :photo, 
+                  accept: "image/png,image/jpeg,image/jpg", 
+                  class: "sr-only",
+                  id: "pet_photo",
+                  aria: { describedby: "photo-help" } %>
+            </label>
+            <p class="pl-1">o arrastra y suelta</p>
+          </div>
+          <p id="photo-help" class="text-xs text-gray-500">PNG, JPG, JPEG hasta 5MB</p>
+        </div>
+      </div>
+      <% if pet.photo.attached? %>
+        <div class="mt-4">
+          <p class="text-sm text-gray-700 mb-2">Foto actual:</p>
+          <%= image_tag pet.photo, class: "h-32 w-32 object-cover rounded-lg border-2 border-gray-200", alt: "Foto de #{pet.name}" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-8 flex flex-col sm:flex-row gap-4">
+    <%= form.submit pet.persisted? ? "Actualizar Mascota" : "Registrar Mascota", 
+        class: "flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]",
+        aria: { label: pet.persisted? ? "Actualizar información de la mascota" : "Registrar nueva mascota" } %>
+    <%= link_to "Cancelar", pet.persisted? ? pet_path(pet) : pets_path, 
+        class: "flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors min-h-[44px] flex items-center justify-center" %>
+  </div>
+
+  <p class="mt-4 text-sm text-gray-500">
+    <span class="text-red-500" aria-hidden="true">*</span> Campos obligatorios
+  </p>
+<% end %>
