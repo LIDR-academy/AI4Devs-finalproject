@@ -16,7 +16,7 @@ module Admin
         total_medical_records: MedicalRecord.count
       }
       
-      @recent_appointments = Appointment.includes(:pet, :veterinarian, :clinic)
+      @recent_appointments = Appointment.includes(:pet, :veterinarian, :clinic, pet: :user)
                                        .order(created_at: :desc)
                                        .limit(10)
     end

@@ -19,7 +19,7 @@
           <div class="ml-5 w-0 flex-1">
             <dl>
               <dt class="text-sm font-medium text-gray-500 truncate">Citas Hoy</dt>
-              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @today_appointments.count %></dd>
+              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @today_appointments&.count || 0 %></dd>
             </dl>
           </div>
         </div>
@@ -38,7 +38,7 @@
           <div class="ml-5 w-0 flex-1">
             <dl>
               <dt class="text-sm font-medium text-gray-500 truncate">Pendientes</dt>
-              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @pending_appointments.count %></dd>
+              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @pending_appointments&.count || 0 %></dd>
             </dl>
           </div>
         </div>
@@ -57,7 +57,7 @@
           <div class="ml-5 w-0 flex-1">
             <dl>
               <dt class="text-sm font-medium text-gray-500 truncate">Esta Semana</dt>
-              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @week_completed.count %></dd>
+              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @week_completed&.count || 0 %></dd>
             </dl>
           </div>
         </div>
@@ -76,7 +76,7 @@
           <div class="ml-5 w-0 flex-1">
             <dl>
               <dt class="text-sm font-medium text-gray-500 truncate">Pacientes</dt>
-              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @total_patients %></dd>
+              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @total_patients || 0 %></dd>
             </dl>
           </div>
         </div>

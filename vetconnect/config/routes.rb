@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  # Devise routes for authentication
+  # Devise routes for authentication (registration disabled - only admin can create users)
   devise_for :users, controllers: {
-    registrations: 'users/registrations',
     sessions: 'users/sessions',
     passwords: 'users/passwords',
     confirmations: 'users/confirmations'
-  }
+  }, skip: [:registrations]
 
   # Root path
   root 'home#index'

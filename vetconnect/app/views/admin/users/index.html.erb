@@ -1,46 +1,98 @@
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Gestión de Usuarios</h1>
-    <%= link_to 'Crear Usuario', new_admin_user_path, class: 'btn btn-success' %>
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Gestión de Usuarios 👥</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Administra todos los usuarios del sistema
+      </p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <%= link_to new_admin_user_path, class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+        <span class="mr-2" aria-hidden="true">➕</span> Crear Usuario
+      <% end %>
+    </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Email</th>
-          <th>Rol</th>
-          <th>Estado</th>
-          <th>Fecha Registro</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @users.each do |user| %>
+  <!-- Users Table -->
+  <div class="mt-8 bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden animate-fade-in">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
           <tr>
-            <td><%= user.id %></td>
-            <td><%= user.full_name %></td>
-            <td><%= user.email %></td>
-            <td><span class="badge bg-info"><%= user.role.humanize %></span></td>
-            <td>
-              <% if user.confirmed? %>
-                <span class="badge bg-success">Confirmado</span>
-              <% else %>
-                <span class="badge bg-warning">Pendiente</span>
-              <% end %>
-            </td>
-            <td><%= l(user.created_at, format: :short) %></td>
-            <td>
-              <%= link_to 'Ver', admin_user_path(user), class: 'btn btn-sm btn-info' %>
-              <%= link_to 'Editar', edit_admin_user_path(user), class: 'btn btn-sm btn-warning' %>
-            </td>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Registro</th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @users.each do |user| %>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= user.id %></td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-lg">
+                      <span aria-hidden="true"><%= user.role == 'owner' ? '👤' : user.role == 'veterinarian' ? '👨‍⚕️' : '👔' %></span>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900"><%= user.full_name %></div>
+                    <% if user.phone.present? %>
+                      <div class="text-sm text-gray-500"><%= user.phone %></div>
+                    <% end %>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= user.email %></td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800 capitalize">
+                  <%= user.role.humanize %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if user.confirmed? %>
+                  <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                    ✓ Confirmado
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                    ⏳ Pendiente
+                  </span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= user.created_at.strftime('%d/%m/%Y') %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex justify-end gap-2">
+                  <%= link_to admin_user_path(user), 
+                      class: "text-indigo-600 hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-2 py-1",
+                      aria: { label: "Ver detalles de #{user.full_name}" } do %>
+                    Ver
+                  <% end %>
+                  <%= link_to edit_admin_user_path(user), 
+                      class: "text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded px-2 py-1",
+                      aria: { label: "Editar #{user.full_name}" } do %>
+                    Editar
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <%= paginate @users %>
+  <!-- Pagination -->
+  <% if respond_to?(:paginate) && @users.respond_to?(:current_page) %>
+    <div class="mt-6">
+      <%= paginate @users %>
+    </div>
+  <% end %>
 </div>

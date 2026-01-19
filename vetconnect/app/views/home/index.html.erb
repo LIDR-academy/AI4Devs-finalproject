@@ -21,11 +21,11 @@
         </p>
         
         <div class="mt-10 flex items-center justify-center gap-x-6">
-          <%= link_to new_user_registration_path, class: "rounded-lg gradient-bg px-6 py-3 text-base font-semibold text-white shadow-sm hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 transition-all" do %>
-            Comenzar Ahora
+          <%= link_to new_user_session_path, class: "rounded-lg gradient-bg px-6 py-3 text-base font-semibold text-white shadow-sm hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 transition-all" do %>
+            Iniciar Sesión
           <% end %>
-          <%= link_to new_user_session_path, class: "text-base font-semibold leading-6 text-gray-900 hover:text-purple-600 transition-colors" do %>
-            Iniciar Sesión <span aria-hidden="true">→</span>
+          <%= link_to clinics_path, class: "text-base font-semibold leading-6 text-gray-900 hover:text-purple-600 transition-colors" do %>
+            Ver Clínicas <span aria-hidden="true">→</span>
           <% end %>
         </div>
       </div>
@@ -129,11 +129,11 @@
           ¿Listo para comenzar?
         </h2>
         <p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-purple-100">
-          Únete a VetConnect hoy y comienza a gestionar la salud de tus mascotas de manera profesional.
+          Contacta a tu administrador para obtener acceso a VetConnect y comenzar a gestionar la salud de tus mascotas de manera profesional.
         </p>
         <div class="mt-10 flex items-center justify-center gap-x-6">
-          <%= link_to new_user_registration_path, class: "rounded-lg bg-white px-6 py-3 text-base font-semibold text-purple-600 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all" do %>
-            Crear Cuenta Gratis
+          <%= link_to new_user_session_path, class: "rounded-lg bg-white px-6 py-3 text-base font-semibold text-purple-600 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all" do %>
+            Iniciar Sesión
           <% end %>
           <%= link_to clinics_path, class: "text-base font-semibold leading-6 text-white hover:text-purple-100 transition-colors" do %>
             Ver Clínicas <span aria-hidden="true">→</span>

@@ -1,45 +1,97 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-800">Documentos</h1>
-    <%= link_to "Subir Documento", new_document_path, class: "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" if policy(Document).create? %>
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Documentos 📄</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Gestiona todos los documentos del sistema
+      </p>
+    </div>
+    <% if policy(Document).create? %>
+      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+        <%= link_to new_document_path(pet_id: params[:pet_id]), 
+            class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+          <span class="mr-2" aria-hidden="true">➕</span> Subir Documento
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
+  <!-- Documents Grid -->
   <% if @documents.any? %>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in">
       <% @documents.each do |document| %>
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex-1">
-              <h3 class="text-lg font-semibold text-gray-800 mb-2"><%= document.title %></h3>
-              <p class="text-sm text-gray-600">
-                <%= document.document_type&.humanize || 'Documento' %>
-              </p>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden card-hover">
+          <div class="p-6">
+            <!-- Document Header -->
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="flex-shrink-0">
+                  <div class="h-12 w-12 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-2xl">
+                    📄
+                  </div>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900"><%= document.title %></h3>
+                  <span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800 mt-1">
+                    <%= document.document_type&.humanize || 'Documento' %>
+                  </span>
+                </div>
+              </div>
             </div>
-            <% if document.file_name.present? %>
-              <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                <%= File.extname(document.file_name).delete('.').upcase %>
-              </span>
-            <% end %>
-          </div>
 
-          <div class="text-sm text-gray-600 mb-4">
-            <p><strong>Mascota:</strong> <%= document.pet.name %></p>
-            <p><strong>Fecha:</strong> <%= l(document.created_at, format: :short) %></p>
-          </div>
+            <!-- Document Details -->
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center">
+                <span class="mr-2">🐾</span>
+                <span class="text-gray-600">
+                  <%= link_to document.pet.name, pet_path(document.pet), 
+                      class: "text-indigo-600 hover:text-indigo-500" %>
+                </span>
+              </div>
+              <div class="flex items-center">
+                <span class="mr-2">📅</span>
+                <span class="text-gray-600"><%= document.created_at.strftime('%d/%m/%Y') %></span>
+              </div>
+              <% if document.file_name.present? %>
+                <div class="flex items-center">
+                  <span class="mr-2">📎</span>
+                  <span class="text-gray-600 font-mono text-xs"><%= document.file_name %></span>
+                </div>
+              <% end %>
+              <% if document.file_size.present? %>
+                <div class="flex items-center">
+                  <span class="mr-2">💾</span>
+                  <span class="text-gray-600 text-xs"><%= number_to_human_size(document.file_size) %></span>
+                </div>
+              <% end %>
+            </div>
 
-          <div class="flex gap-2">
-            <%= link_to "Ver", document_path(document), class: "flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded text-sm" %>
-            <% if document.file_path.present? %>
-              <%= link_to "Descargar", download_document_path(document), class: "flex-1 text-center bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-2 px-4 rounded text-sm" %>
-            <% end %>
+            <!-- Actions -->
+            <div class="mt-6 flex gap-2">
+              <%= link_to document_path(document), 
+                  class: "flex-1 text-center rounded-lg bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors min-h-[44px] flex items-center justify-center",
+                  aria: { label: "Ver detalles de #{document.title}" } do %>
+                Ver
+              <% end %>
+              <% if document.file_path.present? %>
+                <%= link_to download_document_path(document), 
+                    class: "flex-1 text-center rounded-lg bg-green-50 px-3 py-2 text-sm font-semibold text-green-700 hover:bg-green-100 transition-colors min-h-[44px] flex items-center justify-center",
+                    aria: { label: "Descargar #{document.title}" } do %>
+                  📥 Descargar
+                <% end %>
+              <% end %>
+            </div>
           </div>
         </div>
       <% end %>
     </div>
   <% else %>
-    <div class="bg-white rounded-lg shadow-md p-12 text-center">
-      <p class="text-gray-600 text-lg mb-4">No hay documentos disponibles.</p>
-      <%= link_to "Subir Primer Documento", new_document_path, class: "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" if policy(Document).create? %>
-    </div>
+    <!-- Empty State -->
+    <%= render 'shared/empty_state', 
+        icon: '📄',
+        title: 'No hay documentos disponibles',
+        message: params[:pet_id].present? ? 'Esta mascota no tiene documentos aún.' : 'No hay documentos en el sistema.',
+        action: policy(Document).create? ? { text: 'Subir Primer Documento', path: new_document_path(pet_id: params[:pet_id]), icon: '➕' } : nil %>
   <% end %>
 </div>

@@ -36,14 +36,17 @@
       <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
           <div class="overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-xl">
-            <table class="min-w-full divide-y divide-gray-300 bg-white">
+            <table class="min-w-full divide-y divide-gray-300 bg-white" role="table" aria-label="Lista de citas veterinarias">
+              <caption class="sr-only">Tabla de citas veterinarias con información de fecha, mascota, veterinario, clínica, motivo y estado. Usa las flechas del teclado para navegar.</caption>
               <thead class="bg-gray-50">
                 <tr>
-                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Fecha y Hora</th>
+                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                    <span class="sr-only sm:not-sr-only">Fecha y </span>Hora
+                  </th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mascota</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Veterinario</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Clínica</th>
-                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Motivo</th>
+                  <th scope="col" class="hidden sm:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Veterinario</th>
+                  <th scope="col" class="hidden lg:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Clínica</th>
+                  <th scope="col" class="hidden md:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Motivo</th>
                   <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Estado</th>
                   <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                     <span class="sr-only">Acciones</span>
@@ -74,15 +77,15 @@
                         </div>
                       </div>
                     </td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                    <td class="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                       <div class="font-medium">Dr. <%= appointment.veterinarian.last_name %></div>
                       <div class="text-gray-500 text-xs"><%= appointment.veterinarian.email %></div>
                     </td>
-                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                    <td class="hidden lg:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                       <%= appointment.clinic.name %>
                     </td>
-                    <td class="px-3 py-4 text-sm text-gray-500 max-w-xs">
-                      <div class="truncate"><%= appointment.reason %></div>
+                    <td class="hidden md:table-cell px-3 py-4 text-sm text-gray-500 max-w-xs">
+                      <div class="truncate" title="<%= appointment.reason %>"><%= appointment.reason %></div>
                       <div class="text-xs text-gray-400 capitalize"><%= appointment.appointment_type.humanize %></div>
                     </td>
                     <td class="whitespace-nowrap px-3 py-4 text-sm">
@@ -91,7 +94,9 @@
                       </span>
                     </td>
                     <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                      <%= link_to appointment_path(appointment), class: "text-purple-600 hover:text-purple-900 transition-colors" do %>
+                      <%= link_to appointment_path(appointment), 
+                          class: "text-indigo-600 hover:text-indigo-900 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded px-2 py-1",
+                          aria: { label: "Ver detalles de la cita de #{appointment.pet.name}" } do %>
                         Ver detalles →
                       <% end %>
                     </td>
@@ -112,21 +117,10 @@
     <% end %>
   <% else %>
     <!-- Empty State -->
-    <div class="mt-12 text-center animate-fade-in">
-      <div class="mx-auto h-24 w-24 text-7xl">📅</div>
-      <h3 class="mt-4 text-lg font-semibold text-gray-900">No hay citas</h3>
-      <p class="mt-2 text-sm text-gray-500">
-        <% if params[:status].present? %>
-          No hay citas con el estado seleccionado.
-        <% else %>
-          Comienza agendando la primera cita veterinaria.
-        <% end %>
-      </p>
-      <div class="mt-6">
-        <%= link_to new_appointment_path, class: "inline-flex items-center rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" do %>
-          <span class="mr-2">➕</span> Agendar Primera Cita
-        <% end %>
-      </div>
-    </div>
+    <%= render 'shared/empty_state', 
+        icon: '📅',
+        title: 'No hay citas',
+        message: params[:status].present? ? 'No hay citas con el estado seleccionado.' : 'Comienza agendando la primera cita veterinaria.',
+        action: { text: 'Agendar Primera Cita', path: new_appointment_path, icon: '➕' } %>
   <% end %>
 </div>

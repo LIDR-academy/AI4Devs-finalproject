@@ -7,12 +7,12 @@ class DocumentsController < ApplicationController
   # GET /documents
   def index
     @documents = policy_scope(Document)
-                  .includes(:pet, :uploaded_by)
+                  .includes(:pet, :uploaded_by, pet: :user)
                   .order(created_at: :desc)
     
     # Filter by pet if provided
     if params[:pet_id].present?
-      @pet = Pet.find(params[:pet_id])
+      @pet = Pet.includes(:user).find(params[:pet_id])
       authorize @pet, :show?
       @documents = @documents.where(pet_id: @pet.id)
     end
@@ -77,11 +77,11 @@ class DocumentsController < ApplicationController
   private
 
   def set_document
-    @document = Document.find(params[:id])
+    @document = Document.includes(:pet, :uploaded_by, :medical_record).find(params[:id])
   end
 
   def set_pet
-    @pet = Pet.find(params[:pet_id])
+    @pet = Pet.includes(:user).find(params[:pet_id])
   end
 
   def document_params

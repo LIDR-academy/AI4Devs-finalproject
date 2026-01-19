@@ -1,0 +1,17 @@
+<%# 
+  Empty State Component
+  Usage: <%= render 'shared/empty_state', icon: '🐾', title: 'No hay mascotas', message: 'Comienza registrando tu primera mascota', action: { text: 'Registrar Mascota', path: new_pet_path } %>
+%>
+<div class="empty-state text-center py-12">
+  <span class="empty-state-icon text-6xl mb-4 block" aria-hidden="true"><%= icon || '📭' %></span>
+  <h3 class="text-lg font-semibold text-gray-900 mb-2"><%= title || 'No hay elementos' %></h3>
+  <p class="text-sm text-gray-500 mb-6"><%= message || 'No se encontraron elementos para mostrar' %></p>
+  <% if action.present? %>
+    <%= link_to action[:path], class: "inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+      <% if action[:icon].present? %>
+        <span class="mr-2" aria-hidden="true"><%= action[:icon] %></span>
+      <% end %>
+      <%= action[:text] %>
+    <% end %>
+  <% end %>
+</div>

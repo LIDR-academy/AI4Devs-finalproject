@@ -74,19 +74,10 @@
     <% end %>
   <% else %>
     <!-- Empty State -->
-    <div class="mt-12 text-center animate-fade-in">
-      <div class="mx-auto h-24 w-24 text-7xl">🐾</div>
-      <h3 class="mt-4 text-lg font-semibold text-gray-900">No hay mascotas registradas</h3>
-      <p class="mt-2 text-sm text-gray-500">
-        Comienza registrando la primera mascota en el sistema.
-      </p>
-      <% if policy(Pet).create? %>
-        <div class="mt-6">
-          <%= link_to new_pet_path, class: "inline-flex items-center rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" do %>
-            <span class="mr-2">➕</span> Registrar Primera Mascota
-          <% end %>
-        </div>
-      <% end %>
-    </div>
+    <%= render 'shared/empty_state', 
+        icon: '🐾',
+        title: 'No hay mascotas registradas',
+        message: 'Comienza registrando la primera mascota en el sistema.',
+        action: policy(Pet).create? ? { text: 'Registrar Primera Mascota', path: new_pet_path, icon: '➕' } : nil %>
   <% end %>
 </div>

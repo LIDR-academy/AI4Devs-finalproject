@@ -169,7 +169,7 @@
                     <div class="flex items-center justify-between">
                       <div class="min-w-0 flex-auto">
                         <p class="text-sm font-semibold leading-6 text-gray-900">
-                          <%= record.visit_date.strftime('%d %b %Y') %> - <%= record.visit_type.humanize %>
+                          <%= record.visit_date.strftime('%d %b %Y') %> - <%= record.record_type.humanize %>
                         </p>
                         <p class="mt-1 text-xs leading-5 text-gray-500">
                           <%= truncate(record.diagnosis, length: 80) %>

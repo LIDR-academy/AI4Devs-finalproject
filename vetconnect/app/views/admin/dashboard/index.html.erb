@@ -1,76 +1,179 @@
-<div class="container mt-4">
-  <h1>Dashboard - Administrador</h1>
-  <p class="lead">Panel de Control del Sistema</p>
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="animate-fade-in">
+    <h1 class="text-3xl font-bold tracking-tight text-gray-900">Panel de Administración 👔</h1>
+    <p class="mt-2 text-lg text-gray-600">Bienvenido, <%= current_user.full_name %></p>
+  </div>
 
-  <div class="row mt-4">
-    <div class="col-md-3">
-      <div class="card text-center">
-        <div class="card-body">
-          <h5 class="card-title">Usuarios</h5>
-          <h2 class="text-primary"><%= @stats[:total_users] %></h2>
-          <%= link_to 'Gestionar', admin_users_path, class: 'btn btn-primary' %>
+  <!-- Stats Grid -->
+  <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 animate-fade-in">
+    <!-- Total Users -->
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 card-hover">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="rounded-lg bg-indigo-100 p-3">
+              <span class="text-3xl" aria-hidden="true">👥</span>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Total Usuarios</dt>
+              <dd class="flex items-baseline">
+                <div class="text-3xl font-semibold text-gray-900"><%= @stats[:total_users] %></div>
+                <%= link_to admin_users_path, class: "ml-2 text-sm font-medium text-indigo-600 hover:text-indigo-500" do %>
+                  Gestionar →
+                <% end %>
+              </dd>
+            </dl>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-3">
-      <div class="card text-center">
-        <div class="card-body">
-          <h5 class="card-title">Mascotas</h5>
-          <h2 class="text-success"><%= @stats[:total_pets] %></h2>
-          <%= link_to 'Ver', pets_path, class: 'btn btn-success' %>
+    <!-- Total Pets -->
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 card-hover">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="rounded-lg bg-emerald-100 p-3">
+              <span class="text-3xl" aria-hidden="true">🐾</span>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Total Mascotas</dt>
+              <dd class="flex items-baseline">
+                <div class="text-3xl font-semibold text-gray-900"><%= @stats[:total_pets] %></div>
+                <%= link_to pets_path, class: "ml-2 text-sm font-medium text-emerald-600 hover:text-emerald-500" do %>
+                  Ver todas →
+                <% end %>
+              </dd>
+            </dl>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-3">
-      <div class="card text-center">
-        <div class="card-body">
-          <h5 class="card-title">Citas</h5>
-          <h2 class="text-info"><%= @stats[:total_appointments] %></h2>
-          <small class="text-muted"><%= @stats[:upcoming_appointments] %> próximas</small><br>
-          <%= link_to 'Ver', appointments_path, class: 'btn btn-info mt-2' %>
+    <!-- Total Appointments -->
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 card-hover">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="rounded-lg bg-blue-100 p-3">
+              <span class="text-3xl" aria-hidden="true">📅</span>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Total Citas</dt>
+              <dd class="flex items-baseline">
+                <div class="text-3xl font-semibold text-gray-900"><%= @stats[:total_appointments] %></div>
+                <div class="ml-2 text-xs text-gray-500">
+                  <%= @stats[:upcoming_appointments] %> próximas
+                </div>
+              </dd>
+            </dl>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-3">
-      <div class="card text-center">
-        <div class="card-body">
-          <h5 class="card-title">Registros</h5>
-          <h2 class="text-warning"><%= @stats[:total_medical_records] %></h2>
-          <%= link_to 'Ver', medical_records_path, class: 'btn btn-warning' %>
+    <!-- Total Medical Records -->
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 card-hover">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="rounded-lg bg-amber-100 p-3">
+              <span class="text-3xl" aria-hidden="true">📋</span>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Registros Médicos</dt>
+              <dd class="flex items-baseline">
+                <div class="text-3xl font-semibold text-gray-900"><%= @stats[:total_medical_records] %></div>
+                <%= link_to medical_records_path, class: "ml-2 text-sm font-medium text-amber-600 hover:text-amber-500" do %>
+                  Ver todos →
+                <% end %>
+              </dd>
+            </dl>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row mt-4">
-    <div class="col-md-12">
-      <div class="card">
-        <div class="card-header">
-          <h5>Citas Recientes</h5>
+  <!-- Recent Appointments -->
+  <div class="mt-10 animate-fade-in">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+      <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">📋 Citas Recientes</h2>
+          <%= link_to appointments_path, class: "text-sm font-medium text-indigo-600 hover:text-indigo-500" do %>
+            Ver todas →
+          <% end %>
         </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Mascota</th>
-                  <th>Dueño</th>
-                  <th>Veterinario</th>
-                  <th>Estado</th>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mascota</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dueño</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Veterinario</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% if @recent_appointments.any? %>
+              <% @recent_appointments.each do |appointment| %>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= appointment.appointment_date.strftime('%d/%m/%Y %H:%M') %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-lg">
+                          <span aria-hidden="true"><%= appointment.pet.species == 'dog' ? '🐕' : appointment.pet.species == 'cat' ? '🐈' : '🐾' %></span>
+                        </div>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900"><%= appointment.pet.name %></div>
+                        <div class="text-sm text-gray-500"><%= appointment.pet.species.humanize %></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= appointment.owner.full_name %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    Dr. <%= appointment.veterinarian.full_name %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center rounded-full status-<%= appointment.status %> px-2.5 py-0.5 text-xs font-medium">
+                      <%= appointment.status.humanize %>
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <%= link_to appointment_path(appointment), class: "text-indigo-600 hover:text-indigo-900" do %>
+                      Ver →
+                    <% end %>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <% @recent_appointments.each do |appointment| %>
+              <% end %>
+            <% else %>
                   <tr>
-                    <td><%= l(appointment.created_at, format: :short) %></td>
-                    <td><%= appointment.pet.name %></td>
-                    <td><%= appointment.owner.full_name %></td>
-                    <td>Dr. <%= appointment.veterinarian.full_name %></td>
-                    <td><span class="badge bg-primary"><%= appointment.status.humanize %></span></td>
+                <td colspan="6" class="px-6 py-12 text-center">
+                  <div class="empty-state">
+                    <span class="empty-state-icon" aria-hidden="true">📅</span>
+                    <h3 class="empty-state-title">No hay citas recientes</h3>
+                    <p class="empty-state-text">Las citas recientes aparecerán aquí</p>
+                  </div>
+                </td>
                   </tr>
                 <% end %>
               </tbody>
@@ -78,16 +181,28 @@
           </div>
         </div>
       </div>
+
+  <!-- Quick Actions -->
+  <div class="mt-8 animate-fade-in">
+    <div class="rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 p-6 shadow-sm ring-1 ring-indigo-100">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center">
+          <span class="text-4xl mr-4" aria-hidden="true">⚡</span>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Acciones de Administración</h3>
+            <p class="text-sm text-gray-600">Gestiona el sistema desde aquí</p>
     </div>
   </div>
-
-  <div class="row mt-4">
-    <div class="col-md-12">
-      <div class="card">
-        <div class="card-body text-center">
-          <%= link_to 'Gestionar Usuarios', admin_users_path, class: 'btn btn-primary btn-lg me-3' %>
-          <%= link_to 'Ver Reportes', admin_reports_path, class: 'btn btn-secondary btn-lg me-3' %>
-          <%= link_to 'Configuración de Clínicas', admin_clinic_settings_path, class: 'btn btn-info btn-lg' %>
+        <div class="flex flex-wrap gap-2">
+          <%= link_to admin_users_path, class: "inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors min-h-[44px]" do %>
+            👥 Gestionar Usuarios
+          <% end %>
+          <%= link_to admin_reports_path, class: "inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors min-h-[44px]" do %>
+            📊 Ver Reportes
+          <% end %>
+          <%= link_to admin_clinic_settings_path, class: "inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors min-h-[44px]" do %>
+            ⚙️ Configuración
+          <% end %>
         </div>
       </div>
     </div>

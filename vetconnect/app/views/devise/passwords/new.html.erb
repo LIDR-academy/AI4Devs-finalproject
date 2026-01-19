@@ -1,19 +1,82 @@
-<h2>Forgot Your Password?</h2>
-<p class="subtitle">Enter your email and we'll send you instructions to reset your password.</p>
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+  <div class="max-w-md w-full space-y-8 animate-fade-in">
+    <!-- Logo and Header -->
+    <div class="text-center">
+      <div class="flex justify-center">
+        <div class="rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 p-4 shadow-lg">
+          <span class="text-5xl" aria-hidden="true">🔐</span>
+        </div>
+      </div>
+      <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+        Recuperar Contraseña
+      </h2>
+      <p class="mt-2 text-sm text-gray-600">
+        Te enviaremos instrucciones para restablecer tu contraseña
+      </p>
+    </div>
 
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
+    <!-- Password Reset Form -->
+    <div class="mt-8 bg-white shadow-2xl rounded-2xl overflow-hidden ring-1 ring-gray-900/5">
+      <div class="px-8 pt-8 pb-6">
+        <!-- Error Messages -->
+        <% if alert %>
+          <div class="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-lg text-red-700 text-sm" role="alert">
+            <%= alert %>
+          </div>
+        <% end %>
+        <% if notice %>
+          <div class="mb-4 p-3 bg-green-50 border-l-4 border-green-500 rounded-lg text-green-700 text-sm" role="alert">
+            <%= notice %>
+          </div>
+        <% end %>
+
+        <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "space-y-6" }) do |f| %>
   <%= render "devise/shared/error_messages", resource: resource %>
 
-  <div class="form-group">
-    <%= f.label :email, "Email Address" %>
-    <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control", placeholder: "your.email@example.com" %>
+          <!-- Email -->
+          <div>
+            <%= f.label :email, "Correo Electrónico", class: "block text-sm font-medium text-gray-700" %>
+            <div class="mt-1">
+              <%= f.email_field :email, 
+                  autofocus: true, 
+                  autocomplete: "email",
+                  class: "appearance-none block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+                  placeholder: "nombre@ejemplo.com",
+                  required: true,
+                  aria: { required: true, describedby: "email-help" } %>
+            </div>
+            <p id="email-help" class="mt-1 text-xs text-gray-500">Ingresa el correo electrónico asociado a tu cuenta</p>
   </div>
 
-  <div class="form-actions">
-    <%= f.submit "Send Reset Instructions", class: "btn btn-primary btn-block" %>
+          <!-- Submit Button -->
+          <div>
+            <%= f.submit "Enviar Instrucciones", 
+                class: "w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all cursor-pointer min-h-[44px]" %>
   </div>
 <% end %>
+      </div>
 
-<div class="auth-links">
+      <!-- Links -->
+      <div class="px-8 py-4 bg-gray-50 border-t border-gray-200">
+        <div class="text-sm space-y-2">
   <%= render "devise/shared/links" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help Info -->
+    <div class="rounded-lg bg-blue-50 p-4 shadow-sm ring-1 ring-blue-100 border-l-4 border-blue-500">
+      <div class="flex items-start">
+        <span class="text-2xl mr-3 flex-shrink-0" aria-hidden="true">💡</span>
+        <div class="text-xs text-blue-700">
+          <p class="font-semibold mb-1">¿No recibiste el correo?</p>
+          <ul class="list-disc list-inside space-y-1">
+            <li>Revisa tu carpeta de spam</li>
+            <li>Verifica que el correo sea el correcto</li>
+            <li>Espera unos minutos y vuelve a intentar</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

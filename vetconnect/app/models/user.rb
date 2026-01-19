@@ -5,9 +5,10 @@
 class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :lockable, :timeoutable, :omniauthable
-  devise :database_authenticatable, :registerable,
+  devise :database_authenticatable,
          :recoverable, :rememberable, :validatable,
          :confirmable, :trackable
+  # Registration disabled - users are created by admin only
 
   # Role-based access control using enum
   # owner: Pet owners who manage their pets' health records

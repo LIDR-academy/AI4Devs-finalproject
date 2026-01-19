@@ -10,13 +10,30 @@ module Veterinarian
     def index
       @today_appointments = Appointment.for_veterinarian(current_user.id)
                                       .today
-                                      .includes(:pet, :clinic)
+                                      .includes(:pet, :clinic, pet: :user)
                                       .order(:appointment_date)
       
       @upcoming_appointments = Appointment.for_veterinarian(current_user.id)
                                          .upcoming
                                          .where('appointment_date > ?', Date.tomorrow)
+                                         .includes(:pet, :clinic, pet: :user)
                                          .limit(10)
+      
+      # Pending appointments (scheduled or confirmed)
+      @pending_appointments = Appointment.for_veterinarian(current_user.id)
+                                        .where(status: [:scheduled, :confirmed])
+                                        .upcoming
+      
+      # Completed this week
+      @week_completed = Appointment.for_veterinarian(current_user.id)
+                                  .where(status: :completed)
+                                  .this_week
+      
+      # Total unique patients
+      @total_patients = Appointment.for_veterinarian(current_user.id)
+                                  .joins(:pet)
+                                  .select('DISTINCT pets.id')
+                                  .count
     end
 
     private

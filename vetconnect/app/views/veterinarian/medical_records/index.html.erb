@@ -1,40 +1,71 @@
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Registros Médicos</h1>
-    <%= link_to 'Crear Nuevo Registro', new_veterinarian_medical_record_path, class: 'btn btn-success' %>
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Registros Médicos 📋</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Gestiona el historial médico de las mascotas
+      </p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <%= link_to new_veterinarian_medical_record_path, class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+        <span class="mr-2" aria-hidden="true">➕</span> Crear Nuevo Registro
+      <% end %>
+    </div>
   </div>
 
+  <!-- Medical Records List -->
   <% if @medical_records.any? %>
-    <div class="table-responsive">
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Mascota</th>
-            <th>Tipo</th>
-            <th>Diagnóstico</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @medical_records.each do |record| %>
-            <tr>
-              <td><%= l(record.visit_date) %></td>
-              <td><%= record.pet.name %> (<%= record.pet.species.humanize %>)</td>
-              <td><span class="badge bg-info"><%= record.record_type.humanize %></span></td>
-              <td><%= truncate(record.diagnosis, length: 50) %></td>
-              <td>
-                <%= link_to 'Ver', veterinarian_medical_record_path(record), class: 'btn btn-sm btn-info' %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+    <div class="mt-8 bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden animate-fade-in">
+      <div class="divide-y divide-gray-200">
+        <% @medical_records.each do |record| %>
+          <div class="p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-x-4 flex-1">
+                <div class="flex-shrink-0">
+                  <div class="h-16 w-16 rounded-lg bg-indigo-100 flex flex-col items-center justify-center">
+                    <span class="text-xs font-semibold text-indigo-600"><%= record.visit_date.strftime('%b').upcase %></span>
+                    <span class="text-xl font-bold text-indigo-700"><%= record.visit_date.day %></span>
+                  </div>
+                </div>
+                <div class="min-w-0 flex-auto">
+                  <div class="flex items-center gap-2 mb-1">
+                    <p class="text-sm font-semibold text-gray-900">
+                      <%= record.pet.name %>
+                    </p>
+                    <span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
+                      <%= record.record_type.humanize %>
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-500">
+                    <%= record.visit_date.strftime('%d/%m/%Y') %> • <%= record.pet.species.humanize %>
+                  </p>
+                  <% if record.diagnosis.present? %>
+                    <p class="mt-1 text-sm text-gray-700"><%= truncate(record.diagnosis, length: 80) %></p>
+                  <% end %>
+                  <% if record.veterinarian.present? %>
+                    <p class="mt-1 text-xs text-gray-400">Dr. <%= record.veterinarian.full_name %></p>
+                  <% end %>
+                </div>
+              </div>
+              <div class="ml-4">
+                <%= link_to veterinarian_medical_record_path(record), 
+                    class: "text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-2 py-1 min-h-[44px] flex items-center",
+                    aria: { label: "Ver detalles del registro médico" } do %>
+                  Ver →
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
     </div>
-    <%= paginate @medical_records %>
   <% else %>
-    <div class="alert alert-info">
-      No hay registros médicos.
-    </div>
+    <!-- Empty State -->
+    <%= render 'shared/empty_state', 
+        icon: '📋',
+        title: 'No hay registros médicos',
+        message: 'Comienza creando tu primer registro médico para una mascota.',
+        action: { text: 'Crear Primer Registro', path: new_veterinarian_medical_record_path, icon: '➕' } %>
   <% end %>
 </div>

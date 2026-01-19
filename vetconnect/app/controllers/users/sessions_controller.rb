@@ -11,9 +11,18 @@ class Users::SessionsController < Devise::SessionsController
   # end
 
   # POST /resource/sign_in
-  # def create
-  #   super
-  # end
+  def create
+    # Clean password of leading/trailing whitespace
+    if params[:user] && params[:user][:password]
+      params[:user][:password] = params[:user][:password].strip
+    end
+    
+    Rails.logger.info "=== LOGIN ATTEMPT ==="
+    Rails.logger.info "Email: #{params[:user][:email] rescue 'N/A'}"
+    Rails.logger.info "Password present: #{params[:user][:password].present? rescue false}"
+    Rails.logger.info "Password length: #{params[:user][:password].to_s.length rescue 0}"
+    super
+  end
 
   # DELETE /resource/sign_out
   # def destroy

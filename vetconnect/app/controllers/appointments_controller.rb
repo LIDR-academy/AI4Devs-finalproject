@@ -10,7 +10,7 @@ class AppointmentsController < ApplicationController
   # GET /appointments
   def index
     @appointments = policy_scope(Appointment)
-                      .includes(:pet, :veterinarian, :clinic)
+                      .includes(:pet, :veterinarian, :clinic, pet: :user)
                       .order(appointment_date: :desc)
     
     # Filter by status if provided
@@ -158,7 +158,7 @@ class AppointmentsController < ApplicationController
   private
 
   def set_appointment
-    @appointment = Appointment.find(params[:id])
+    @appointment = Appointment.includes(:pet, :veterinarian, :clinic, pet: :user).find(params[:id])
   end
 
   def appointment_params

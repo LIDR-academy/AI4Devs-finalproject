@@ -17,7 +17,7 @@ class ApplicationController < ActionController::Base
   protected
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name, :phone, :role])
+    # Registration is disabled - users are created by admin only
     devise_parameter_sanitizer.permit(:account_update, keys: [:first_name, :last_name, :phone])
   end
 

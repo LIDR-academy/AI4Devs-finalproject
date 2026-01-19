@@ -5,11 +5,7 @@
     </div>
   <% end %>
 
-  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
-    <div class="text-center">
-      <%= link_to "Crear nueva cuenta", new_registration_path(resource_name), class: "font-medium text-purple-600 hover:text-purple-500 transition-colors" %>
-    </div>
-  <% end %>
+  <%# Registration disabled - users are created by admin only %>
 
   <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
     <div class="text-center">

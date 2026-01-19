@@ -82,12 +82,13 @@
                 sunday: 'Domingo'
               } %>
               <% days.each do |day_key, day_name| %>
-                <div class="flex items-center justify-between py-2 px-3 rounded-lg <%= @clinic.open_on?(day_key) ? 'bg-green-50' : 'bg-gray-50' %>">
+                <% date_for_day = Date.today.beginning_of_week + (days.keys.index(day_key)).days %>
+                <% hours = @clinic.operating_hours_for(date_for_day) %>
+                <div class="flex items-center justify-between py-2 px-3 rounded-lg <%= @clinic.open_on?(date_for_day) ? 'bg-green-50' : 'bg-gray-50' %>">
                   <span class="text-sm font-medium text-gray-900"><%= day_name %></span>
-                  <% hours = @clinic.operating_hours_for(day_key) %>
-                  <% if hours %>
+                  <% if hours && hours['open'] %>
                     <span class="text-sm text-gray-600">
-                      <%= hours[:open] %> - <%= hours[:close] %>
+                      <%= hours['start'] %> - <%= hours['end'] %>
                     </span>
                   <% else %>
                     <span class="text-sm text-gray-400">Cerrado</span>

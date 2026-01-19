@@ -11,9 +11,9 @@ class PetsController < ApplicationController
   # GET /pets/:id
   def show
     authorize @pet
-    @recent_appointments = @pet.recent_appointments
+    @recent_appointments = @pet.recent_appointments.includes(:veterinarian, :clinic, pet: :user)
     @next_vaccination = @pet.next_vaccination_due
-    @medical_records = @pet.medical_records.order(visit_date: :desc).limit(5)
+    @medical_records = @pet.medical_records.includes(:veterinarian).order(visit_date: :desc).limit(5)
   end
 
   # GET /pets/new
@@ -64,7 +64,7 @@ class PetsController < ApplicationController
   private
 
   def set_pet
-    @pet = Pet.find(params[:id])
+    @pet = Pet.includes(:user).find(params[:id])
   end
 
   def pet_params

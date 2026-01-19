@@ -8,20 +8,22 @@ module Admin
     skip_after_action :verify_policy_scoped
 
     def show
-      @clinics = Clinic.all
+      @clinics = Clinic.all.includes(:appointments).order(:name)
     end
 
     def edit
-      @clinic = Clinic.find(params[:id]) if params[:id]
+      # Redirect to clinic edit page
+      @clinic = Clinic.find(params[:id])
+      redirect_to edit_clinic_path(@clinic)
     end
 
     def update
       @clinic = Clinic.find(params[:id])
       
       if @clinic.update(clinic_params)
-        redirect_to admin_clinic_settings_path, notice: 'Clinic settings updated successfully.'
+        redirect_to admin_clinic_settings_path, notice: 'Configuración de clínica actualizada exitosamente.'
       else
-        render :edit, status: :unprocessable_entity
+        redirect_to edit_clinic_path(@clinic), alert: 'No se pudo actualizar la clínica.'
       end
     end
 

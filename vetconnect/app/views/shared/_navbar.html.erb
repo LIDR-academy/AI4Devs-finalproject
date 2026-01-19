@@ -48,8 +48,9 @@
               </div>
             </div>
             <%= button_to destroy_user_session_path, method: :delete, 
-                class: "mt-4 flex w-full items-center justify-center rounded-md bg-white bg-opacity-10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-20 transition-colors" do %>
-              <span class="mr-2">🚪</span> Cerrar Sesión
+                data: { turbo: false },
+                class: "mt-4 flex w-full items-center justify-center rounded-md bg-white bg-opacity-10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-20 transition-colors min-h-[44px]" do %>
+              <span class="mr-2" aria-hidden="true">🚪</span> Cerrar Sesión
             <% end %>
           </div>
         </li>
