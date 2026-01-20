@@ -1,0 +1,57 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'sigq-development'
+    environment: 'development'
+
+# Configuración de alertas (opcional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Reglas de alertas (opcional)
+rule_files:
+  # - "alerts.yml"
+
+# Configuración de scraping (recolección de métricas)
+scrape_configs:
+  # Métricas de Prometheus mismo
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Métricas del backend NestJS (cuando esté implementado)
+  - job_name: 'backend-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['backend:3000']
+        labels:
+          service: 'sigq-backend'
+          environment: 'development'
+
+  # Métricas de PostgreSQL (requiere extensión pg_exporter)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgres'
+          environment: 'development'
+
+  # Métricas de Redis (requiere redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          environment: 'development'
+
+  # Métricas de MinIO
+  - job_name: 'minio'
+    metrics_path: '/minio/v2/metrics/cluster'
+    static_configs:
+      - targets: ['minio:9000']
+        labels:
+          service: 'minio'
+          environment: 'development'

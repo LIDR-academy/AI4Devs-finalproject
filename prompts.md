@@ -487,6 +487,4 @@ Dadas las respuestas rellena @readme.md Desde la seccion 1 a la 7
 revisa por favor que la arquitectura esté propuesta correctamente
 ```
 
-**Contexto**: Durante la revisión de arquitectura, se verificó que los pull requests fueran coherentes con la arquitectura modular propuesta y que cubrieran todos los módulos necesarios.
-
-**Resultado**: Se confirmó que los PRs cubren todos los módulos del sistema (Auth, HCE, Planning, Integration, Documentation, Resources, Followup, Audit) y que las dependencias entre PRs son lógicas y coherentes.
+**Contexto**: Durante la revisión de arquitectura, se verificó que los pull requests fueran coherentes con la arquitectura modular propuesta y que cubrieran todos los módulos necesarios.**Resultado**: Se confirmó que los PRs cubren todos los módulos del sistema (Auth, HCE, Planning, Integration, Documentation, Resources, Followup, Audit) y que las dependencias entre PRs son lógicas y coherentes.

@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-medical-gray-200;
+  }
+  
+  body {
+    @apply bg-medical-gray-50 text-medical-gray-900 font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply bg-medical-primary text-white hover:bg-medical-dark focus:ring-medical-primary;
+  }
+  
+  .btn-secondary {
+    @apply bg-medical-secondary text-white hover:bg-medical-primary focus:ring-medical-secondary;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-medical-primary text-medical-primary hover:bg-medical-primary hover:text-white focus:ring-medical-primary;
+  }
+  
+  .btn-danger {
+    @apply bg-medical-danger text-white hover:bg-red-600 focus:ring-medical-danger;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2 border border-medical-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-medical-primary focus:border-transparent;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .card-header {
+    @apply border-b border-medical-gray-200 pb-4 mb-4;
+  }
+}
