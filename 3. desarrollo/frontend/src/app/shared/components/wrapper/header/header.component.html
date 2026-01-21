@@ -1,0 +1,35 @@
+<!-- Section -->
+<div class="w-full">
+    <div class="flex flex-col items-start sm:flex-row sm:items-center sm:justify-between">
+        <!-- Title -->
+        <div>
+            <div class="text-4xl font-extrabold leading-none tracking-tight">
+                {{title}}
+            </div>
+            <div class="text-secondary ml-0.5 font-medium">
+                {{subtitle}}
+            </div>
+        </div>
+        <!-- Actions -->
+        <div class="mt-4 sm:mt-0">
+            <div class="flex gap-2">
+                @for (item of buttons; track $index) {
+                 @if(item.mode==='primary') {<btn-primary [label]="item.label" [icon]="item.icon" (click)="onButtonRow(item.id, item.label)" />}
+                 @if(item.mode==='secondary') {<btn-secondary [label]="item.label" [icon]="item.icon" (click)="onButtonRow(item.id, item.label)" />}
+                }
+            </div>
+
+            <!--  <button mat-flat-button [color]="'accent'" [matTooltip]="'Shortcut: Ctrl + .'">
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                <span class="ml-2 mr-1">Add Section</span>
+            </button>
+         
+            <button class="ml-3" mat-flat-button [color]="'primary'" [matTooltip]="'Shortcut: Ctrl + /'">
+                <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                <span class="ml-2 mr-1">Add Task</span>
+            </button> -->
+        </div>
+    </div>
+
+
+</div>

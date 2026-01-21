@@ -1,0 +1,9 @@
+.ciiu-selector {
+  width: 100%;
+}
+
+.ciiu-level {
+  @apply flex flex-col p-3 bg-white rounded border border-gray-200;
+  min-height: 80px;
+}
+

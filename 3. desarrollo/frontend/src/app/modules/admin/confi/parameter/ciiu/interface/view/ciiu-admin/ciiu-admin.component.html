@@ -1,0 +1,73 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Catálogo CIIU - Actividades Económicas</h1>
+    <button
+      mat-icon-button
+      (click)="reloadArbol()"
+      [disabled]="loadingArbol()"
+      matTooltip="Recargar árbol"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-red-800 text-sm">{{ error() }}</p>
+    </div>
+  }
+
+  @if (loadingArbol()) {
+    <div class="flex justify-center items-center py-12">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+  } @else {
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div class="mb-4">
+        <h2 class="text-lg font-semibold mb-2">Árbol Jerárquico CIIU</h2>
+        <p class="text-sm text-gray-600">
+          Navegue por la estructura jerárquica de actividades económicas (6 niveles)
+        </p>
+      </div>
+
+      @if (arbol().length === 0) {
+        <div class="text-center py-12 text-gray-500">
+          <mat-icon class="text-6xl mb-4">folder_off</mat-icon>
+          <p>No hay datos disponibles</p>
+        </div>
+      } @else {
+        <div class="tree-container">
+          @for (item of arbol(); track item.id) {
+            <div class="tree-item" [style.padding-left.px]="(item.nivel - 1) * 24">
+              <div class="flex items-center gap-2 py-2">
+                <mat-icon class="text-gray-400" [style.font-size.px]="20">
+                  {{ getIconForLevel(item.nivel) }}
+                </mat-icon>
+                <span
+                  class="font-medium"
+                  [ngClass]="{
+                    'text-blue-600': item.nivel <= 2,
+                    'text-gray-700': item.nivel > 2 && item.nivel < 6,
+                    'text-gray-900': item.nivel === 6
+                  }"
+                >
+                  {{ item.codigo }}
+                </span>
+                <span class="text-sm text-gray-700">{{ item.descripcion }}</span>
+                @if (item.semaf_des && item.nivel === 6) {
+                  <span
+                    class="px-2 py-0.5 text-xs rounded-full font-medium ml-auto"
+                    [ngClass]="getSemaforoClass(item.semaf_cod)"
+                  >
+                    {{ item.semaf_des }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+

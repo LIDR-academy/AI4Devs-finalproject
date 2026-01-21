@@ -1,0 +1,15 @@
+services:
+  frontend:
+    container_name: FRONTEND-FINANTIX-PROD
+    image: frontend-finantix-prod
+    restart: always
+    build: 
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "4200:4200"
+
+
+networks:
+ default:
+  name: prod_fai_cf_net

@@ -1,0 +1,11 @@
+services:
+  angular:
+    container_name: PROD_BACKEND_COREFINANTIX_CONTAINER
+    restart: always
+    build: .
+    image: prod_backend_corefinantix_image:1.0
+
+
+networks:
+ default:
+  name: prod_backend_corefinantix_net

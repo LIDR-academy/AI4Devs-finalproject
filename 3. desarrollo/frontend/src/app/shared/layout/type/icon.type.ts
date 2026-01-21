@@ -1,0 +1,1 @@
+export type IconType = 'create' | 'update' | 'delete' | 'cancel' | 'save' ;

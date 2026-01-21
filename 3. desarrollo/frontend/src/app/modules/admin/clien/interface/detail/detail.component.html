@@ -1,0 +1,682 @@
+<div class="flex flex-col flex-auto min-w-0">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between p-6 sm:py-8 border-b bg-card dark:bg-transparent">
+    <div class="flex-1 min-w-0">
+      <!-- Breadcrumbs -->
+      <div class="flex flex-wrap items-center font-medium">
+        <div>
+          <a class="whitespace-nowrap text-primary-500" [routerLink]="['/confi/management/clientes']">Clientes</a>
+        </div>
+        <div class="flex items-center ml-1 whitespace-nowrap">
+          <mat-icon class="icon-size-5 text-secondary" [svgIcon]="'heroicons_mini:chevron-right'"></mat-icon>
+          <span class="ml-1 text-secondary">Detalle del Cliente</span>
+        </div>
+      </div>
+      <!-- Title -->
+      <div class="mt-2">
+        <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight leading-7 sm:leading-10 truncate">
+          {{ clienteCompleto()?.persona?.perso_nom_perso }} {{ clienteCompleto()?.persona?.perso_ape_perso }}
+        </h2>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+      <button
+        mat-stroked-button
+        (click)="onBack()"
+        class="ml-3">
+        <mat-icon [svgIcon]="'heroicons_outline:arrow-left'"></mat-icon>
+        <span class="ml-2">Volver</span>
+      </button>
+      <button
+        mat-flat-button
+        [color]="'primary'"
+        (click)="onEdit()"
+        class="ml-3">
+        <mat-icon [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+        <span class="ml-2">Editar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="flex flex-auto flex-col min-w-0 p-6 sm:p-8">
+    @if (loading()) {
+      <div class="flex flex-auto items-center justify-center">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else if (clienteCompleto()) {
+      <mat-card class="w-full">
+        <mat-card-content>
+          <mat-tab-group>
+            <!-- Tab 1: Datos Personales -->
+            <mat-tab label="Datos Personales">
+              <div class="mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="text-sm text-secondary">Identificación</label>
+                    <p class="text-base font-semibold">{{ clienteCompleto()?.persona?.perso_ide_perso }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Tipo de Persona</label>
+                    <p class="text-base">{{ getTipoPersonaLabel(clienteCompleto()?.persona?.perso_cod_tpers || 0) }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Nombres</label>
+                    <p class="text-base">{{ clienteCompleto()?.persona?.perso_nom_perso }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Apellidos</label>
+                    <p class="text-base">{{ clienteCompleto()?.persona?.perso_ape_perso }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Fecha de Nacimiento</label>
+                    <p class="text-base">{{ clienteCompleto()?.persona?.perso_fec_inici | date:'shortDate' }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Email</label>
+                    <p class="text-base">{{ clienteCompleto()?.persona?.perso_ema_perso || 'N/A' }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Teléfono</label>
+                    <p class="text-base">{{ clienteCompleto()?.persona?.perso_tel_perso || 'N/A' }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Celular</label>
+                    <p class="text-base">{{ clienteCompleto()?.persona?.perso_cel_perso || 'N/A' }}</p>
+                  </div>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Tab 2: Datos del Cliente -->
+            <mat-tab label="Datos del Cliente">
+              <div class="mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="text-sm text-secondary">Oficina</label>
+                    <p class="text-base">{{ clienteCompleto()?.cliente?.clien_cod_ofici }}</p>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Es Socio</label>
+                    <mat-chip [color]="clienteCompleto()?.cliente?.clien_ctr_socio ? 'primary' : 'accent'">
+                      {{ getEsSocioLabel(clienteCompleto()?.cliente?.clien_ctr_socio || false) }}
+                    </mat-chip>
+                  </div>
+                  <div>
+                    <label class="text-sm text-secondary">Fecha de Ingreso</label>
+                    <p class="text-base">{{ clienteCompleto()?.cliente?.clien_fec_ingin | date:'shortDate' }}</p>
+                  </div>
+                  @if (clienteCompleto()?.cliente?.clien_fec_salid) {
+                    <div>
+                      <label class="text-sm text-secondary">Fecha de Salida</label>
+                      <p class="text-base">{{ clienteCompleto()?.cliente?.clien_fec_salid | date:'shortDate' }}</p>
+                    </div>
+                  }
+                  <div class="md:col-span-2">
+                    <label class="text-sm text-secondary">Observaciones</label>
+                    <p class="text-base">{{ clienteCompleto()?.cliente?.clien_des_obser || 'N/A' }}</p>
+                  </div>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Tab 3: Domicilio -->
+            <mat-tab label="Domicilio">
+              <div class="mt-4">
+                @if (clienteCompleto()?.domicilio) {
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-sm text-secondary">Provincia</label>
+                      <p class="text-base">{{ clienteCompleto()?.domicilio?.cldom_cod_provi }}</p>
+                    </div>
+                    <div>
+                      <label class="text-sm text-secondary">Cantón</label>
+                      <p class="text-base">{{ clienteCompleto()?.domicilio?.cldom_cod_canto }}</p>
+                    </div>
+                    <div>
+                      <label class="text-sm text-secondary">Parroquia</label>
+                      <p class="text-base">{{ clienteCompleto()?.domicilio?.cldom_cod_parro }}</p>
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="text-sm text-secondary">Dirección</label>
+                      <p class="text-base">{{ clienteCompleto()?.domicilio?.cldom_dir_domic }}</p>
+                    </div>
+                    <div>
+                      <label class="text-sm text-secondary">Teléfono</label>
+                      <p class="text-base">{{ clienteCompleto()?.domicilio?.cldom_tel_domic || 'N/A' }}</p>
+                    </div>
+                    <div>
+                      <label class="text-sm text-secondary">Referencia</label>
+                      <p class="text-base">{{ clienteCompleto()?.domicilio?.cldom_ref_domic || 'N/A' }}</p>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="text-secondary">No hay información de domicilio registrada</p>
+                }
+              </div>
+            </mat-tab>
+
+            <!-- Tab 4: Actividad Económica -->
+            <mat-tab label="Actividad Económica">
+              <div class="mt-4">
+                @if (clienteCompleto()?.actividadEconomica) {
+                  <div>
+                    <label class="text-sm text-secondary">Código CIIU / Actividad Económica</label>
+                    <p class="text-base font-semibold">{{ clienteCompleto()?.actividadEconomica?.cleco_cod_aebce }}</p>
+                  </div>
+                } @else {
+                  <p class="text-secondary">No hay información de actividad económica registrada</p>
+                }
+              </div>
+            </mat-tab>
+
+            <!-- Tab 5: Información Adicional -->
+            <mat-tab label="Información Adicional">
+              <div class="mt-4 flex flex-col gap-4">
+                <!-- Representante -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Representante</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    @if (clienteCompleto()?.representante) {
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="text-sm text-secondary">Persona Representante</label>
+                          <p class="text-base">
+                            @if (clienteCompleto()?.representante?.personaRepresentante) {
+                              {{ clienteCompleto()?.representante?.personaRepresentante?.perso_nom_perso }} 
+                              {{ clienteCompleto()?.representante?.personaRepresentante?.perso_ape_perso }}
+                            } @else {
+                              ID: {{ clienteCompleto()?.representante?.clrep_cod_perso }}
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <label class="text-sm text-secondary">Tipo Representante</label>
+                          <p class="text-base">{{ clienteCompleto()?.representante?.clrep_cod_trep }}</p>
+                        </div>
+                        @if (clienteCompleto()?.representante?.clrep_fec_nombr) {
+                          <div>
+                            <label class="text-sm text-secondary">Fecha de Nombramiento</label>
+                            <p class="text-base">{{ clienteCompleto()?.representante?.clrep_fec_nombr | date:'shortDate' }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.representante?.clrep_fec_venci) {
+                          <div>
+                            <label class="text-sm text-secondary">Fecha de Vencimiento</label>
+                            <p class="text-base">{{ clienteCompleto()?.representante?.clrep_fec_venci | date:'shortDate' }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.representante?.clrep_obs_clrep) {
+                          <div class="md:col-span-2">
+                            <label class="text-sm text-secondary">Observaciones</label>
+                            <p class="text-base">{{ clienteCompleto()?.representante?.clrep_obs_clrep }}</p>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-secondary">No hay representante registrado</p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Cónyuge -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Cónyuge</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    @if (clienteCompleto()?.conyuge) {
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="text-sm text-secondary">Persona Cónyuge</label>
+                          <p class="text-base">
+                            @if (clienteCompleto()?.conyuge?.personaConyuge) {
+                              {{ clienteCompleto()?.conyuge?.personaConyuge?.perso_nom_perso }} 
+                              {{ clienteCompleto()?.conyuge?.personaConyuge?.perso_ape_perso }}
+                            } @else {
+                              ID: {{ clienteCompleto()?.conyuge?.clcyg_cod_perso }}
+                            }
+                          </p>
+                        </div>
+                        @if (clienteCompleto()?.conyuge?.clcyg_nom_empre) {
+                          <div>
+                            <label class="text-sm text-secondary">Empresa</label>
+                            <p class="text-base">{{ clienteCompleto()?.conyuge?.clcyg_nom_empre }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.conyuge?.clcyg_des_cargo) {
+                          <div>
+                            <label class="text-sm text-secondary">Cargo</label>
+                            <p class="text-base">{{ clienteCompleto()?.conyuge?.clcyg_des_cargo }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.conyuge?.clcyg_val_ingre) {
+                          <div>
+                            <label class="text-sm text-secondary">Ingresos Mensuales</label>
+                            <p class="text-base">{{ clienteCompleto()?.conyuge?.clcyg_val_ingre | currency }}</p>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-secondary">No hay cónyuge registrado</p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Información Laboral -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Información Laboral</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    @if (clienteCompleto()?.informacionLaboral) {
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @if (clienteCompleto()?.informacionLaboral?.cllab_cod_depen) {
+                          <div>
+                            <label class="text-sm text-secondary">Dependencia</label>
+                            <p class="text-base">{{ clienteCompleto()?.informacionLaboral?.cllab_cod_depen }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.informacionLaboral?.cllab_des_cargo) {
+                          <div>
+                            <label class="text-sm text-secondary">Cargo</label>
+                            <p class="text-base">{{ clienteCompleto()?.informacionLaboral?.cllab_des_cargo }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.informacionLaboral?.cllab_cod_tcont) {
+                          <div>
+                            <label class="text-sm text-secondary">Tipo de Contrato</label>
+                            <p class="text-base">{{ clienteCompleto()?.informacionLaboral?.cllab_cod_tcont }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.informacionLaboral?.cllab_fec_ingre) {
+                          <div>
+                            <label class="text-sm text-secondary">Fecha de Ingreso</label>
+                            <p class="text-base">{{ clienteCompleto()?.informacionLaboral?.cllab_fec_ingre | date:'shortDate' }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.informacionLaboral?.cllab_fec_finct) {
+                          <div>
+                            <label class="text-sm text-secondary">Fecha Fin de Contrato</label>
+                            <p class="text-base">{{ clienteCompleto()?.informacionLaboral?.cllab_fec_finct | date:'shortDate' }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.informacionLaboral?.cllab_val_ingre) {
+                          <div>
+                            <label class="text-sm text-secondary">Ingreso Mensual</label>
+                            <p class="text-base">{{ clienteCompleto()?.informacionLaboral?.cllab_val_ingre | currency }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.informacionLaboral?.cllab_dir_traba) {
+                          <div class="md:col-span-2">
+                            <label class="text-sm text-secondary">Dirección del Trabajo</label>
+                            <p class="text-base">{{ clienteCompleto()?.informacionLaboral?.cllab_dir_traba }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.informacionLaboral?.cllab_tlf_traba) {
+                          <div>
+                            <label class="text-sm text-secondary">Teléfono del Trabajo</label>
+                            <p class="text-base">{{ clienteCompleto()?.informacionLaboral?.cllab_tlf_traba }}</p>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-secondary">No hay información laboral registrada</p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Referencias -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Referencias</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    @if (clienteCompleto()?.referencias && clienteCompleto()?.referencias!.length > 0) {
+                      <div class="flex flex-col gap-4">
+                        @for (ref of clienteCompleto()!.referencias!; track ref.clref_cod_clref) {
+                          <div class="p-4 border rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label class="text-sm text-secondary">Tipo</label>
+                                <p class="text-base">{{ ref.clref_cod_tiref }}</p>
+                              </div>
+                              <div>
+                                <label class="text-sm text-secondary">Persona</label>
+                                <p class="text-base">
+                                  @if (ref.personaReferencia) {
+                                    {{ ref.personaReferencia.perso_nom_perso }} {{ ref.personaReferencia.perso_ape_perso }}
+                                  } @else if (ref.clref_nom_refer) {
+                                    {{ ref.clref_nom_refer }}
+                                  } @else {
+                                    ID: {{ ref.clref_cod_perso || 'N/A' }}
+                                  }
+                                </p>
+                              </div>
+                              @if (ref.clref_dir_refer) {
+                                <div>
+                                  <label class="text-sm text-secondary">Dirección</label>
+                                  <p class="text-base">{{ ref.clref_dir_refer }}</p>
+                                </div>
+                              }
+                              @if (ref.clref_tlf_refer) {
+                                <div>
+                                  <label class="text-sm text-secondary">Teléfono</label>
+                                  <p class="text-base">{{ ref.clref_tlf_refer }}</p>
+                                </div>
+                              }
+                              @if (ref.clref_num_ctadp) {
+                                <div>
+                                  <label class="text-sm text-secondary">Número de Cuenta</label>
+                                  <p class="text-base font-semibold">{{ ref.clref_num_ctadp }}</p>
+                                </div>
+                              }
+                              @if (ref.clref_val_saldo) {
+                                <div>
+                                  <label class="text-sm text-secondary">Saldo Promedio</label>
+                                  <p class="text-base font-semibold">{{ ref.clref_val_saldo | currency }}</p>
+                                </div>
+                              }
+                              @if (ref.clref_fec_apert) {
+                                <div>
+                                  <label class="text-sm text-secondary">Fecha de Apertura</label>
+                                  <p class="text-base">{{ ref.clref_fec_apert | date:'shortDate' }}</p>
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-secondary">No hay referencias registradas</p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Información Financiera -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Información Financiera</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    @if (clienteCompleto()?.informacionFinanciera && clienteCompleto()?.informacionFinanciera!.length > 0) {
+                      <div class="flex flex-col gap-4">
+                        @for (fin of clienteCompleto()!.informacionFinanciera!; track fin.clfin_cod_clfin) {
+                          <div class="p-4 border rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label class="text-sm text-secondary">Tipo</label>
+                                <p class="text-base font-semibold">{{ fin.clfin_cod_tifin }}</p>
+                              </div>
+                              <div>
+                                <label class="text-sm text-secondary">Monto</label>
+                                <p class="text-base font-semibold text-primary">{{ fin.clfin_val_monto | currency }}</p>
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-secondary">No hay información financiera registrada</p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Usuario Banca Digital -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Usuario Banca Digital</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    @if (clienteCompleto()?.usuarioBancaDigital) {
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="text-sm text-secondary">Usuario</label>
+                          <p class="text-base font-semibold">{{ clienteCompleto()?.usuarioBancaDigital?.clbnc_usr_banca }}</p>
+                        </div>
+                        @if (clienteCompleto()?.usuarioBancaDigital?.clbnc_ema_banca) {
+                          <div>
+                            <label class="text-sm text-secondary">Email</label>
+                            <p class="text-base">{{ clienteCompleto()?.usuarioBancaDigital?.clbnc_ema_banca }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.usuarioBancaDigital?.clbnc_tel_banca) {
+                          <div>
+                            <label class="text-sm text-secondary">Teléfono</label>
+                            <p class="text-base">{{ clienteCompleto()?.usuarioBancaDigital?.clbnc_tel_banca }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.usuarioBancaDigital?.clbnc_lim_diario) {
+                          <div>
+                            <label class="text-sm text-secondary">Límite Diario</label>
+                            <p class="text-base">{{ clienteCompleto()?.usuarioBancaDigital?.clbnc_lim_diario | currency }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.usuarioBancaDigital?.clbnc_lim_mensu) {
+                          <div>
+                            <label class="text-sm text-secondary">Límite Mensual</label>
+                            <p class="text-base">{{ clienteCompleto()?.usuarioBancaDigital?.clbnc_lim_mensu | currency }}</p>
+                          </div>
+                        }
+                        <div>
+                          <label class="text-sm text-secondary">Estado</label>
+                          <mat-chip [color]="clienteCompleto()?.usuarioBancaDigital?.clbnc_ctr_activ ? 'primary' : 'warn'">
+                            {{ clienteCompleto()?.usuarioBancaDigital?.clbnc_ctr_activ ? 'Activo' : 'Inactivo' }}
+                          </mat-chip>
+                        </div>
+                      </div>
+                    } @else {
+                      <p class="text-secondary">No hay usuario de banca digital registrado</p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Beneficiarios -->
+                @if (clienteCompleto()?.usuarioBancaDigital) {
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-card-title>Beneficiarios</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      @if (clienteCompleto()?.beneficiarios && clienteCompleto()?.beneficiarios!.length > 0) {
+                        <div class="flex flex-col gap-4">
+                          @for (ben of clienteCompleto()!.beneficiarios!; track ben.clben_cod_clben) {
+                            <div class="p-4 border rounded-lg">
+                              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label class="text-sm text-secondary">Nombre</label>
+                                  <p class="text-base font-semibold">{{ ben.clben_nom_benef }}</p>
+                                </div>
+                                <div>
+                                  <label class="text-sm text-secondary">Identificación</label>
+                                  <p class="text-base">{{ ben.clben_ide_benef }}</p>
+                                </div>
+                                <div>
+                                  <label class="text-sm text-secondary">Número de Cuenta</label>
+                                  <p class="text-base font-semibold">{{ ben.clben_num_cuent }}</p>
+                                </div>
+                                <div>
+                                  <label class="text-sm text-secondary">Tipo de Cuenta</label>
+                                  <p class="text-base">{{ ben.clben_cod_tcuen === 1 ? 'Ahorros' : 'Corriente' }}</p>
+                                </div>
+                                @if (ben.clben_ali_benef) {
+                                  <div>
+                                    <label class="text-sm text-secondary">Alias</label>
+                                    <p class="text-base">{{ ben.clben_ali_benef }}</p>
+                                  </div>
+                                }
+                                @if (ben.clben_ema_benef) {
+                                  <div>
+                                    <label class="text-sm text-secondary">Email</label>
+                                    <p class="text-base">{{ ben.clben_ema_benef }}</p>
+                                  </div>
+                                }
+                                <div>
+                                  <label class="text-sm text-secondary">Estado</label>
+                                  <mat-chip [color]="ben.clben_ctr_activ ? 'primary' : 'warn'">
+                                    {{ ben.clben_ctr_activ ? 'Activo' : 'Inactivo' }}
+                                  </mat-chip>
+                                </div>
+                                @if (ben.clben_ctr_exter) {
+                                  <div>
+                                    <label class="text-sm text-secondary">Es Externo</label>
+                                    <mat-chip color="accent">Sí</mat-chip>
+                                  </div>
+                                }
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <p class="text-secondary">No hay beneficiarios registrados</p>
+                      }
+                    </mat-card-content>
+                  </mat-card>
+                }
+
+                <!-- Residencia Fiscal -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Residencia Fiscal</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    @if (clienteCompleto()?.residenciaFiscal) {
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="text-sm text-secondary">Tiene Residencia Fiscal Extranjera</label>
+                          <mat-chip [color]="clienteCompleto()?.residenciaFiscal?.clrfi_ctr_resfi ? 'primary' : 'accent'">
+                            {{ clienteCompleto()?.residenciaFiscal?.clrfi_ctr_resfi ? 'Sí' : 'No' }}
+                          </mat-chip>
+                        </div>
+                        @if (clienteCompleto()?.residenciaFiscal?.clrfi_cod_nacio) {
+                          <div>
+                            <label class="text-sm text-secondary">País</label>
+                            <p class="text-base">{{ clienteCompleto()?.residenciaFiscal?.clrfi_cod_nacio }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.residenciaFiscal?.clrfi_dir_resfi) {
+                          <div class="md:col-span-2">
+                            <label class="text-sm text-secondary">Dirección</label>
+                            <p class="text-base">{{ clienteCompleto()?.residenciaFiscal?.clrfi_dir_resfi }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.residenciaFiscal?.clrfi_des_provi) {
+                          <div>
+                            <label class="text-sm text-secondary">Provincia</label>
+                            <p class="text-base">{{ clienteCompleto()?.residenciaFiscal?.clrfi_des_provi }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.residenciaFiscal?.clrfi_des_ciuda) {
+                          <div>
+                            <label class="text-sm text-secondary">Ciudad</label>
+                            <p class="text-base">{{ clienteCompleto()?.residenciaFiscal?.clrfi_des_ciuda }}</p>
+                          </div>
+                        }
+                        @if (clienteCompleto()?.residenciaFiscal?.clrfi_cod_posta) {
+                          <div>
+                            <label class="text-sm text-secondary">Código Postal</label>
+                            <p class="text-base">{{ clienteCompleto()?.residenciaFiscal?.clrfi_cod_posta }}</p>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-secondary">No hay información de residencia fiscal registrada</p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Asamblea -->
+                @if (clienteCompleto()?.cliente?.clien_ctr_socio) {
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-card-title>Asamblea</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      @if (clienteCompleto()?.asamblea) {
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          @if (clienteCompleto()?.asamblea?.clasm_cod_rasam) {
+                            <div>
+                              <label class="text-sm text-secondary">Tipo Representante Asamblea</label>
+                              <p class="text-base">{{ clienteCompleto()?.asamblea?.clasm_cod_rasam }}</p>
+                            </div>
+                          }
+                          @if (clienteCompleto()?.asamblea?.clasm_fec_rasam) {
+                            <div>
+                              <label class="text-sm text-secondary">Fecha Nombramiento Asamblea</label>
+                              <p class="text-base">{{ clienteCompleto()?.asamblea?.clasm_fec_rasam | date:'shortDate' }}</p>
+                            </div>
+                          }
+                          <div>
+                            <label class="text-sm text-secondary">Es Directivo</label>
+                            <mat-chip [color]="clienteCompleto()?.asamblea?.clasm_ctr_direc ? 'primary' : 'accent'">
+                              {{ clienteCompleto()?.asamblea?.clasm_ctr_direc ? 'Sí' : 'No' }}
+                            </mat-chip>
+                          </div>
+                          @if (clienteCompleto()?.asamblea?.clasm_fec_direc) {
+                            <div>
+                              <label class="text-sm text-secondary">Fecha Nombramiento Directivo</label>
+                              <p class="text-base">{{ clienteCompleto()?.asamblea?.clasm_fec_direc | date:'shortDate' }}</p>
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <p class="text-secondary">No hay información de asamblea registrada</p>
+                      }
+                    </mat-card-content>
+                  </mat-card>
+                }
+
+                <!-- Cálculos Financieros -->
+                @if (clienteCompleto()?.calculosFinancieros) {
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-card-title>Cálculos Financieros</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="text-sm text-secondary">Capacidad de Pago</label>
+                          <p class="text-base font-semibold text-primary">{{ clienteCompleto()?.calculosFinancieros?.capacidadPago | currency }}</p>
+                        </div>
+                        <div>
+                          <label class="text-sm text-secondary">Patrimonio</label>
+                          <p class="text-base font-semibold text-primary">{{ clienteCompleto()?.calculosFinancieros?.patrimonio | currency }}</p>
+                        </div>
+                        <div>
+                          <label class="text-sm text-secondary">Total Ingresos</label>
+                          <p class="text-base">{{ clienteCompleto()?.calculosFinancieros?.totalIngresos | currency }}</p>
+                        </div>
+                        <div>
+                          <label class="text-sm text-secondary">Total Gastos</label>
+                          <p class="text-base">{{ clienteCompleto()?.calculosFinancieros?.totalGastos | currency }}</p>
+                        </div>
+                        <div>
+                          <label class="text-sm text-secondary">Total Activos</label>
+                          <p class="text-base">{{ clienteCompleto()?.calculosFinancieros?.totalActivos | currency }}</p>
+                        </div>
+                        <div>
+                          <label class="text-sm text-secondary">Total Pasivos</label>
+                          <p class="text-base">{{ clienteCompleto()?.calculosFinancieros?.totalPasivos | currency }}</p>
+                        </div>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                }
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <div class="flex flex-auto items-center justify-center">
+        <div class="text-center">
+          <mat-icon class="icon-size-16 text-secondary mb-4" [svgIcon]="'heroicons_outline:exclamation-triangle'"></mat-icon>
+          <p class="text-secondary">Cliente no encontrado</p>
+        </div>
+      </div>
+    }
+  </div>
+</div>
