@@ -45,7 +45,7 @@ Copilot **DEBE**:
 - Respetar rutas y estructura del repo:
 
 ```
-/backend/src/main/java/com/poc/hexagonal/<boundedContext>/
+/backend/src/main/java/com/hexagonal/<boundedContext>/
 /backend/src/main/resources/openapi/<boundedContext>/
 /backend/tests/bdd
 /backend/tests/contracts

@@ -82,12 +82,12 @@ Cada uno con sus propias responsabilidades, tests y pipelines.
 Toda lógica backend vive bajo:
 
 ```
-/backend/src/main/java/com/poc/hexagonal/
+/backend/src/main/java/com/hexagonal/
 ```
 
 ## 4.1 Bounded context (ejemplo: meditationbuilder)
 ```
-com/poc/hexagonal/meditationbuilder/
+com/hexagonal/meditationbuilder/
     application/
         mapper/
         service/
@@ -229,7 +229,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 - Tests unitarios (TDD)
 
 ### Ubicación
-`/backend/src/main/java/com/poc/hexagonal/<bc>/domain/...`
+`/backend/src/main/java/com/hexagonal/<bc>/domain/...`
 
 ### Reglas
 - Sin Spring, sin infraestructura, sin JSON
@@ -250,7 +250,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 - Unit tests (solo orquestación)
 
 ### Ubicación
-`/backend/src/main/java/com/poc/hexagonal/<bc>/application/...`
+`/backend/src/main/java/com/hexagonal/<bc>/application/...`
 
 ### Reglas
 - Sin reglas de negocio (esas están en dominio)
@@ -270,7 +270,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 - Tests de integración (Testcontainers si aplica)
 
 ### Ubicación
-`/backend/src/main/java/com/poc/hexagonal/<bc>/infrastructure/...`
+`/backend/src/main/java/com/hexagonal/<bc>/infrastructure/...`
 
 ### Reglas
 - Implementan puertos out
@@ -289,7 +289,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 - Validaciones superficiales
 
 ### Ubicación
-`/backend/src/main/java/com/poc/hexagonal/<bc>/infrastructure/in/rest/controller`
+`/backend/src/main/java/com/hexagonal/<bc>/infrastructure/in/rest/controller`
 
 ### Reglas
 - Cumplimiento estricto del OpenAPI

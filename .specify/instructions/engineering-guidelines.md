@@ -21,7 +21,7 @@ Normas de ingeniería **estables** para mantener coherencia de diseño, naming, 
 ---
 
 ## 2. Naming (Backend Java)
-- Paquetes: `com.poc.hexagonal.<boundedContext>.<layer>`.
+- Paquetes: `com.hexagonal.<boundedContext>.<layer>`.
 - Entidades: `MeditationSession`, VOs: `MeditationText`.
 - Puertos **out**: `<Recurso>Port` (p.ej., `TextGenerationPort`).
 - Use cases: `<Accion><Recurso>UseCase` (p.ej., `GenerateMeditationTextUseCase`).

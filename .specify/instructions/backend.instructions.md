@@ -11,9 +11,9 @@ Applies to all backend tasks involving Java 21, Spring Boot, Hexagonal Architect
 ---
 # 2. Mandatory Folder Locations
 ```
-/backend/src/main/java/com/poc/hexagonal/<bc>/application/
-/backend/src/main/java/com/poc/hexagonal/<bc>/domain/
-/backend/src/main/java/com/poc/hexagonal/<bc>/infrastructure/
+/backend/src/main/java/com/hexagonal/<bc>/application/
+/backend/src/main/java/com/hexagonal/<bc>/domain/
+/backend/src/main/java/com/hexagonal/<bc>/infrastructure/
 /backend/src/main/resources/openapi/<bc>/
 /backend/tests/bdd/
 /backend/tests/contracts/

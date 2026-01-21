@@ -11,7 +11,7 @@ Definir **estructura, dependencias y responsabilidades** de la arquitectura hexa
 
 ## 1. Árbol de proyecto (normativo)
 ```
-/backend/src/main/java/com/poc/hexagonal/<boundedContext>/
+/backend/src/main/java/com/hexagonal/<boundedContext>/
   application/
     mapper/
     service/

@@ -53,7 +53,7 @@ Sin lógica, sin decisiones, sin ifs de negocio.
 Todo backend vive bajo:
 ```
 /backend
-    src/main/java/com/poc/hexagonal/<boundedContext>/
+    src/main/java/com/hexagonal/<boundedContext>/
     src/main/resources/openapi/
     src/test/java/...
     tests/bdd/
@@ -63,7 +63,7 @@ Todo backend vive bajo:
 
 ## 2.1 Estructura hexagonal detallada
 ```
-/backend/src/main/java/com/poc/hexagonal/<bc>/
+/backend/src/main/java/com/hexagonal/<bc>/
   application/
     mapper/
     service/
