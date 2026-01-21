@@ -1,113 +1,126 @@
 
-# Hexagonal Architecture Guide – Estructura de carpetas y roles por capa
-
-> **Ámbito**: Guía operativa para mantener una arquitectura hexagonal limpia y consistente en Java.
-
----
-## 1. Árbol de proyecto backend (referencia)
-
-```
-src/main/java/com/poc/hexagonal/
-  ├── prescription/                 # Bounded Context
-  │   ├── application/
-  │   │   ├── mapper/
-  │   │   ├── service/
-  │   │   └── validator/
-  │   ├── domain/
-  │   │   ├── enums/
-  │   │   ├── model/
-  │   │   └── ports/
-  │   │       ├── in/
-  │   │       └── out/  
-  │   └── infrastructure/
-  │       ├── in/
-  │       │   ├── kafka/
-  │       │   └── rest/
-  │       │       ├── controller/
-  │       │       ├── dto/
-  │       │       └── mapper/
-  │       └── out/
-  │           ├── kafka/
-  │           ├── mongodb/
-  │           │   ├── impl/
-  │           │   ├── mapper/
-  │           │   ├── model/
-  │           │   └── repository/
-  │           └── service/
-  └── shared/
-      ├── errorhandler/
-      │   ├── dto/
-      │   ├── enums/
-      │   └── exception/
-      ├── kafka/
-      ├── observability/
-      ├── openapi/
-      ├── security/
-      └── utils/
-src/main/resources/openapi/
-  ├── common/
-  └── prescription/
-```
+# ⬡ Hexagonal Architecture Guide — Meditation Builder (Backend)
+**Versión:** 2.0.0
 
 ---
+
+## 0. Propósito
+Definir **estructura, dependencias y responsabilidades** de la arquitectura hexagonal en el backend (`/backend`).
+
+---
+
+## 1. Árbol de proyecto (normativo)
+```
+/backend/src/main/java/com/poc/hexagonal/<boundedContext>/
+  application/
+    mapper/
+    service/
+    validator/
+  domain/
+    enums/
+    model/
+    ports/
+      in/
+      out/
+  infrastructure/
+    in/
+      kafka/
+      rest/
+        controller/
+        dto/
+        mapper/
+    out/
+      kafka/
+      mongodb/
+        impl/
+        mapper/
+        model/
+        repository/
+      service/
+shared/
+  errorhandler/
+    dto/
+    enums/
+    exception/
+  kafka/
+  observability/
+  openapi/
+  security/
+  utils/
+
+/backend/src/main/resources/openapi/
+  common/
+  <boundedContext>/
+```
+
+---
+
 ## 2. Roles por capa
+### 2.1 Dominio (`domain`)
+- **Qué contiene**: Entidades, VOs, reglas, invariantes, puertos in/out.
+- **Qué NO**: frameworks, HTTP, JSON, repositorios, mensajes, IA.
+- **Objetivo**: modelo de negocio puro, estable, testeable.
 
-### 2.1. Dominio (`domain`)
-- **Qué contiene**: Entidades, VOs, reglas, invariantes, **puertos** (`ports/in`, `ports/out`).
-- **Qué NO**: frameworks, anotaciones, acceso a red/DB, JSON, controladores.
-- **Objetivo**: Modelo de negocio puro y estable.
+### 2.2 Aplicación (`application`)
+- **Qué contiene**: Use cases de orquestación, validadores simples, mappers internos.
+- **Qué NO**: reglas complejas de negocio; acceso directo a infra.
+- **Objetivo**: coordinar dominio a través de puertos; preparar datos.
 
-### 2.2. Aplicación (`application`)
-- **Qué contiene**: **UseCases** que orquestan el dominio; validadores simples; mappers dominio↔DTO aplicación si aplica.
-- **Qué NO**: reglas de negocio complejas; acceso a infra directa.
-- **Objetivo**: Coordinar puertos, gestionar transacciones, preparar datos para el dominio.
+### 2.3 Infraestructura (`infrastructure`)
+- **in/** adapters de **entrada** (REST/Kafka/CLI): traducen protocolo ↔ comandos.
+- **out/** adapters de **salida** (DB/Kafka/servicios externos): implementan puertos out.
+- **Objetivo**: detalles técnicos con pruebas de integración.
 
-### 2.3. Infraestructura (`infrastructure`)
-- **in/** (adaptadores de **entrada**): REST, Kafka, CLI… traducen protocolo → comandos/DTOs de aplicación.
-- **out/** (adaptadores de **salida**): MongoDB, Kafka, servicios externos; implementan puertos **out** del dominio.
-- **Objetivo**: Implementar detalles técnicos sin filtrar reglas a la capa.
-
-### 2.4. Shared (`shared`)
-- Componentes transversales: error handling, observabilidad, seguridad, utilidades, definiciones OpenAPI comunes.
+### 2.4 Shared (`shared`)
+- Cross‑cutting: error handling, observabilidad, seguridad, openapi común.
 
 ---
-## 3. Reglas de dependencia (mandatorias)
+
+## 3. Reglas de dependencia (obligatorias)
 - `domain` **no depende** de nadie.
-- `application` puede depender de `domain` **y de las interfaces** (puertos) definidas allí.
-- `infrastructure` depende de `application` (para comandos/DTOs) y **de `domain` (puertos)** para implementar salidas.
-- `shared` puede ser dependido por todas, pero su API debe ser **estable y mínima**.
+- `application` depende de `domain` y **solo** de sus interfaces (puertos).
+- `infrastructure` depende de `application` y **de los puertos** de `domain`.
+- `shared` puede ser dependido, pero **debe permanecer estable**.
 
 **Nunca**: `domain` ↔ frameworks; `application` ↔ repos/HTTP directos; `controller` ↔ reglas de negocio.
 
 ---
+
 ## 4. API First y controllers
-- OpenAPI en `src/main/resources/openapi` (carpetas por contexto y `common`).
-- Generación de DTOs **en `infrastructure/in/rest/dto`** (o manual si se decide) para mantener separación.
-- Controllers en `infrastructure/in/rest/controller`; **sin lógica**, solo mapping + validaciones superficiales.
+- OpenAPI en `/backend/src/main/resources/openapi` (carpetas por contexto y `common`).
+- Controllers en `infrastructure/in/rest/controller`; **sin lógica**.
+- DTOs REST en `infrastructure/in/rest/dto`.
+- Mapear 1:1 contrato ↔ controlador.
 
 ---
+
 ## 5. Persistencia y mensajería
-- Repositorios en `infrastructure/out/<tech>/repository` implementan **puertos out**.
-- Mappers de persistencia en `infrastructure/out/<tech>/mapper`.
+- Repositorios en `infrastructure/out/<tech>/repository` implementan puertos out.
+- Mappers persistencia en `infrastructure/out/<tech>/mapper`.
 - Modelos de persistencia en `infrastructure/out/<tech>/model` (no son entidades de dominio).
-- Producer/consumer de mensajería en `infrastructure/in|out/kafka` según dirección.
+- Kafka in/out según dirección en `infrastructure/in|out/kafka`.
 
 ---
-## 6. Observabilidad, seguridad y errores (shared)
-- `observability/`: configuración de logs/traces/metrics.
-- `security/`: filtros, policies y helpers (no reglas de negocio).
-- `errorhandler/`: DTOs de error, enums de códigos, excepciones mapeadas.
+
+## 6. HTTP clientes externos
+- Usar **RestClient** (imperativo) para llamadas síncronas.
+- Usar **WebClient** **solo** para streaming/reactivo.
+- Timeouts y retries razonables; circuit breaker si aplica.
+- **No** loguear prompts ni respuestas IA.
 
 ---
+
 ## 7. Testing por capa (orden de confianza)
-1) **Dominio (unit)**: reglas e invariantes.
-2) **Aplicación (unit)**: orquestación con mocks de puertos.
-3) **Infra (integration)**: Testcontainers, contratos.
-4) **BDD/e2e**: escenarios end‑to‑end sobre artefacto real.
+1) Dominio (unit) — reglas e invariantes.
+2) Aplicación (unit) — orquestación con mocks.
+3) Infra (integration) — Testcontainers para persistencia/mensajería.
+4) BDD/E2E — sobre artefacto real.
 
 ---
-## 8. Directrices para agentes (Spec‑Kit)
-- Mantener el árbol de carpetas tal cual.
-- Cualquier nueva clase debe ubicarse en el subpaquete exacto según su rol.
-- Si una tarea requiere tocar más de una capa, **dividirla** en micro‑tareas por capa.
-- Rechazar endpoints, repos o colas no justificados por BDD/plan.
+
+## 8. Directrices para agentes (Spec‑Kit / Copilot)
+- Mantener árbol de carpetas **tal cual**.
+- Cualquier tarea multi‑capa debe **dividirse** en micro‑tareas.
+- Rechazar endpoints/repos/colas no justificados por BDD/plan.
+
+**Principio**: el dominio gobierna; la infraestructura obedece.

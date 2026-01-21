@@ -1,197 +1,436 @@
 
-<!--
-Sync Impact Report
-Version change: 1.0.0 → 1.1.0
-Modified principles: Development Workflow, Source Priority, Agent Directives, CI/CD Gates
-Added sections: Artifacts per Phase, Anti‑patterns, Cross‑file References, Compliance Checklist
-Removed sections: N/A
-Follow-up TODOs: Set RATIFICATION_DATE and OWNER team
--->
-
-# Project Constitution — Hexagonal Microservices (SDD/Spec‑Kit + Copilot)
-
-> **Scope**: Constitución operativa y normativa para el repositorio.  
-> **Objetivo**: Alinear a personas y agentes (Spec‑Kit/Copilot) con arquitectura hexagonal, BDD y API‑First, garantizando calidad, trazabilidad y entregas repetibles.
+# Project Constitution — Meditation Builder  
+**Versión: 2.0.0 (Reescrita y Extendida)**  
+**Ubicación:** `.specify/memory/constitution.md`  
+**Ámbito:** Backend (Java 21 + Spring Boot) y Frontend (React + TS)
 
 ---
 
-## 1) Core Principles
+# 0. Propósito
+Esta constitución es la **norma superior** del proyecto *Meditation Builder*.  
+Define la arquitectura, el flujo de trabajo, la jerarquía normativa, los principios de calidad, y las reglas de comportamiento obligatorias para:
 
-1. **Specifications First (SDD)**: La especificación y el BDD son la fuente de verdad superior del comportamiento; el código solo materializa lo acordado.
-2. **Arquitectura**: **Hexagonal + DDD + TDD + API‑First** (Java 21 + Spring Boot).
-3. **Separación de capas**:
-    - **Dominio**: reglas puras, VOs, entidades y **puertos** (sin frameworks).
-    - **Aplicación**: **orquestación** de casos de uso (sin reglas de negocio).
-    - **Infra**: adaptadores concretos (sin reglas de negocio).
-    - **Controllers**: traducen protocolo ↔ comandos; validación superficial.
-4. **Consistencia de API**: OpenAPI versionado y validado. Controllers **deben** cumplir el contrato.
-5. **Calidad/Testing**: TDD en dominio, BDD real, integración e2e, contratos. CI/CD con **gates** obligatorios.
-6. **Observabilidad y Seguridad**: logs estructurados, métricas y trazas mínimas; manejo estandarizado de errores.
-7. **Evolutividad**: cambios empiezan en **BDD**, siguen por **API** y después **implementación**.
+- Personas desarrolladoras  
+- QA y analistas  
+- IA generativa (Claude 4.5 Sonnet, GitHub Copilot, Spec‑Kit)  
 
----
+Su objetivo es garantizar:
 
-## 2) Prioridad de fuentes (orden absoluto)
-
-1. **Historia de Usuario + BDD (.feature)**
-2. **Delivery Playbook – Backend** (`/.specify/instructions/delivery-playbook-backend.md`)
-3. **Engineering Guidelines** (`/.specify/instructions/engineering-guidelines.md`)
-4. **Hexagonal Architecture Guide** (`/.specify/instructions/hexagonal-architecture-guide.md`)
-5. **Copilot Repo Instructions** (`/.github/copilot-instructions.md` + `/.github/instructions/*.md`)
-6. Convenciones del repo / framework
-
-> Cualquier conflicto se resuelve por este orden. Si un comportamiento **no** está en BDD, **no** se implementa.
+- Diseños claros y evolutivos  
+- Historias verticales que generen valor  
+- Código consistente y testeable  
+- Alta calidad y trazabilidad  
+- Entregas repetibles sin deuda técnica
 
 ---
 
-## 3) Development Workflow (orden **vinculante** por historia)
+# 1. Jerarquía normativa (orden absoluto)
+En caso de conflicto, se debe obedecer estrictamente este orden:
 
-**Pipeline por historia (estricto):**  
-**BDD → API First → Dominio → Aplicación → Infra → Controllers → Contratos → E2E**
+1. **Historia de Usuario + BDD (`.feature`)**  
+2. **Delivery Playbook Backend / Frontend**  
+3. **Engineering Guidelines**  
+4. **Hexagonal Architecture Guide**  
+5. **Copilot Instructions (`.github`)**  
+6. **Instrucciones operativas (`.specify/instructions`)**  
+7. **Frameworks (Spring / React / Vite / Playwright)**  
+8. Preferencias individuales o de equipo (no vinculantes)
 
-### 3.1 BDD First
-- `.feature` **declarativo**, lenguaje de negocio, **sin** detalles técnicos.
-- Cucumber debe **correr en rojo** inicialmente (steps pending/skipped).
-
-### 3.2 API First (mínimo necesario)
-- YAML OpenAPI en `src/main/resources/openapi/`.
-- **Lint obligatorio** (Redocly CLI). Cambios posteriores **rompen** si el contrato no valida.
-
-### 3.3 Dominio (DDD + TDD)
-- Entidades/VOs/Servicios/Reglas/**Puertos**.
-- **Cero** dependencias de framework/transporte/JSON/IA.
-
-### 3.4 Aplicación (Use Cases)
-- Orquestación, comandos/queries/DTOs internos; **sin reglas** de negocio.
-
-### 3.5 Infraestructura (Adapters)
-- Implementaciones concretas de **puertos out** (DB, colas, IA…), tests de integración (Testcontainers cuando aplique).
-
-### 3.6 Controllers (Adapters in)
-- Cumplir **estrictamente** el contrato. Validación superficial. **Sin** lógica.
-
-### 3.7 Contratos (Provider/Consumer)
-- Verificar implementación contra OpenAPI (p.ej., Schemathesis).
-
-### 3.8 E2E BDD
-- Ejecutar `.feature` sobre artefacto real. **Verde** para DoD.
+⚠️ **Si un comportamiento NO está definido en BDD → NO se implementa.**  
+⚠️ **No se admiten rutas, DTOs o reglas extra no justificadas.**
 
 ---
 
-## 4) Artefactos por fase (Done = Deployable)
+# 2. Principios fundamentales
+## 2.1 Specifications-Driven Development (SDD)
+Toda implementación nace de:
 
-| Fase | Artefacto mínimo | Ubicación |
-|---|---|---|
-| BDD | `.feature` + glue pending | `tests/bdd/<context>/<feature>.feature` |
-| API | OpenAPI YAML (lint OK) | `src/main/resources/openapi/<context>.yaml` |
-| Dominio | Entidades/VOs/Puertos | `.../domain/{model|enums|ports/{in|out}}` |
-| Aplicación | Use cases + tests | `.../application/usecases` |
-| Infra | Adapters + IT | `.../infrastructure/{in|out}/...` |
-| Controllers | Recursos HTTP sin lógica | `.../infrastructure/in/rest/controller` |
-| Contratos | Tests provider/consumer | `tests/contract/**` (flexible) |
-| E2E | Cucumber sobre artefacto | `tests/bdd/**` |
+- Historia de Usuario  
+- Escenarios escritos en Given–When–Then  
+- Aprobados por PO + QA + Backend + Frontend
 
-> **DoD global**: BDD verde, OpenAPI validado, tests de dominio/aplicación/infra en verde, contratos OK, e2e OK, observabilidad mínima y no‑funcionales clave (timeouts/retries) implementados.
+El código es una **materialización técnica** de un comportamiento ya acordado.
 
----
+## 2.2 Arquitectura base (ambos lados)
+### Backend:
+- **Java 21 + Spring Boot**  
+- **Arquitectura Hexagonal rígida**  
+- **DDD táctico**  
+- **TDD obligatorio en dominio**  
+- **API First mínimo**
 
-## 5) Reglas para agentes (Spec‑Kit + Copilot)
-
-1. **Al recibir una US**:
-    1) Generar `specs/<us>/spec.md` con BDD declarativo.
-    2) Generar `specs/<us>/plan.md` (paso a paso por pipeline).
-    3) Generar `specs/<us>/tasks.md` (tickets por capa, con CA y artefactos).
-2. **Prohibido** generar código **antes** de que:
-    - Exista `.feature` y Cucumber ejecute en rojo (**BDD first**).
-    - El YAML OpenAPI **valide** con lint.
-3. **Ubicaciones/naming**: obedecer estrictamente `hexagonal-architecture-guide.md` y `engineering-guidelines.md`.
-4. **Controllers**: ≤30 LOC por método; validación superficial; sin decisiones.
-5. **Infra (HTTP)**: usar **RestClient** para sincronía; **WebClient** solo si se requiere streaming/reactivo; mapear errores `(AiTimeout/AiUnavailable/AiRateLimited → 503/429)`; no loguear prompts/respuestas IA.
-6. **IA**: Las acciones de generación deben ser **explícitas** por parte del usuario en BDD (no llamadas automáticas).
-7. **Spec‑Kit**: `/speckit.specify` → spec, `/speckit.plan` → plan, `/speckit.tasks` → tasks (sin saltarse fases).
-8. **Copilot**: respetar `/.github/copilot-instructions.md` y `/.github/instructions/*.md` al sugerir código/archivos.
+### Frontend:
+- **React + TypeScript**  
+- **React Query + Zustand**  
+- **OpenAPI Client autogenerado**  
+- **Playwright E2E**
 
 ---
 
-## 6) CI/CD Gates (orden y bloqueo)
+# 3. Estructura del repositorio (monorepo)
+El proyecto tiene dos módulos principales:
+...
+/backend and /frontend structure and all details
 
-1. **bdd** → Cucumber corre (rojo al inicio aceptable).
-2. **api** → Lint OpenAPI (Redocly) **debe** pasar.
-3. **unit** → Dominio + Aplicación.
-4. **infra** → Integración (adapters; Testcontainers cuando aplique).
-5. **contract** → Provider/consumer contra YAML (ej. Schemathesis).
-6. **e2e** → BDD/e2e sobre artefacto.
+/backend
+/frontend
 
-> Cualquier fallo **bloquea** el merge (fast‑fail). “Build once, deploy many”.
+Cada uno con sus propias responsabilidades, tests y pipelines.
+
+---
+# 4. Estructura backend (normativa)
+Toda lógica backend vive bajo:
+
+```
+/backend/src/main/java/com/poc/hexagonal/
+```
+
+## 4.1 Bounded context (ejemplo: meditationbuilder)
+```
+com/poc/hexagonal/meditationbuilder/
+    application/
+        mapper/
+        service/
+        validator/
+    domain/
+        enums/
+        model/
+        ports/
+            in/
+            out/
+    infrastructure/
+        in/
+            kafka/
+            rest/
+                controller/
+                dto/
+                mapper/
+        out/
+            kafka/
+            mongodb/
+                impl/
+                mapper/
+                model/
+                repository/
+            service/
+shared/
+    errorhandler/
+        dto/
+        enums/
+        exception/
+    kafka/
+    observability/
+    openapi/
+    security/
+    utils/
+```
+
+## 4.2 OpenAPI (API First)
+```
+/backend/src/main/resources/openapi/
+    common/
+    <boundedContext>/
+```
+
+## 4.3 Testing backend
+```
+/backend/tests/bdd/...
+/backend/tests/contracts/...
+/backend/tests/e2e/...
+/backend/src/test/java/... (unit + integration)
+```
+
+---
+# 5. Estructura frontend (normativa)
+```
+/frontend
+    /src
+        /api
+        /components
+        /pages
+        /state
+        /hooks
+        /styles
+    /tests
+        /unit
+        /integration
+        /e2e
+```
+El frontend no contiene lógica de negocio.
+
+---
+# 6. Ciclo de vida por historia (orden estricto e inmutable)
+
+Cada Historia debe recorrer todas estas fases —**sin saltos, sin paralelismos indebidos y sin mezclar capas**.  
+Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y con el **Delivery Playbook**.
 
 ---
 
-## 7) Convenciones de arquitectura y naming (resumen)
+## 6.1 Paso 0 — Historia candidata (Three Amigos pre‑BDD)
 
-- **Dominio**: `.../domain/{model|enums|ports/{in|out}}`
-- **Aplicación**: `.../application/usecases`
-- **Infra (in)**: `.../infrastructure/in/rest/{controller|dto|mapper}`
-- **Infra (out)**: `.../infrastructure/out/{service|mongodb|kafka}/{impl|mapper|model|repository}`
-- **OpenAPI**: `src/main/resources/openapi/`
-- **Use cases**: `Generate<Recurso><Accion>UseCase`
-- **Puertos out**: `<Recurso>Port` (p.ej., `TextGenerationPort`)
-- **Adapters IA**: `<Recurso>AiAdapter`
-- **DTOs**: `<Recurso><Accion>{Request|Response}`
+**Responsables:** PO + QA + Backend + Frontend  
 
-> Detalle completo en `engineering-guidelines.md` y `hexagonal-architecture-guide.md`.
+**Objetivo:** Asegurar que la historia es:
 
----
+- Vertical (aporta valor observable)
+- Pequeña
+- Testeable
+- Independiente
+- Con límites claros
 
-## 8) No funcionales mínimos
-
-- **Performance**: objetivos por endpoint/caso de uso; latencia monitorizada; regresiones = bug crítico.
-- **Confiabilidad**: timeouts y retries razonables en adaptadores; circuit breaker cuando aplique.
-- **Observabilidad**: logs estructurados con correlación; métricas (lat/err), trazas.
-- **Seguridad**: autenticación/autorización coherente con el contexto; datos sensibles **no** se registran.
+> No se diseña nada técnico aún.
 
 ---
 
-## 9) Anti‑patterns (rechazar de plano)
+## 6.2 Paso 1 — BDD FIRST (única fuente de verdad del comportamiento)
 
-- Tareas que mezclan varias capas a la vez.
-- Lógica de negocio en **controllers** o **adapters**.
-- Endpoints/campos no presentes en BDD.
-- “Preparar para futuro” (sobrediseño) sin fundamento.
-- Tests que dependen de servicios cloud reales (usar contenedores/mocks).
-- Persistencia o side‑effects fuera del alcance de la US.
+**Responsables:** PO (input negocio), QA (dueño calidad), Backend + Frontend (colaboran)
 
----
+### Artefactos
+- Archivo `.feature` en  
+  `/backend/tests/bdd/<context>/<feature>.feature`
+- Escenarios **Given–When–Then** en lenguaje **100% negocio**
+- Step definitions vacíos (*pending*)
 
-## 10) Referencias cruzadas (normativas)
-
-- **Playbook**: `/.specify/instructions/delivery-playbook-backend.md`
-- **Guía de Ingeniería**: `/.specify/instructions/engineering-guidelines.md`
-- **Guía Hexagonal**: `/.specify/instructions/hexagonal-architecture-guide.md`
-- **Copilot Repo Instructions**: `/.github/copilot-instructions.md`
-- **Copilot Path‑Scoped**: `/.github/instructions/*.instructions.md`
-
-> Esta constitución **no** duplica las guías; las **refuerza** y **manda** que sean obedecidas por humanos y agentes.
+### Reglas
+- Sin HTTP, JSON, DTOs, repositorios, colas ni UI
+- El BDD define solo comportamiento observable
+- Cucumber debe ejecutar en **ROJO (pending)** inicialmente
+- Nada se implementa hasta que el `.feature` exista
 
 ---
 
-## 11) Cumplimiento (checklist)
+## 6.3 Paso 2 — API FIRST mínimo (derivado exclusivamente del BDD)
 
-- [ ] `.feature` en negocio, ejecuta (rojo al inicio).
-- [ ] OpenAPI YAML válido (lint OK).
-- [ ] Código por capas en ubicaciones correctas y naming conforme.
-- [ ] Tests: dominio, aplicación, infra, contratos, e2e en verde.
-- [ ] Observabilidad y no‑funcionales mínimos implementados.
-- [ ] CI/CD gates en verde; **no** se permite merge con fallos.
+**Responsables:** Backend (owner), Frontend + QA (consumidores)
+
+### Artefactos
+- OpenAPI YAML en  
+  `/backend/src/main/resources/openapi/<boundedContext>/<feature>.yaml`
+- Validado con lint
+
+### Reglas
+- Cada `When` del BDD corresponde a una capacidad expuesta
+- Prohibido añadir campos o endpoints no contemplados en el comportamiento
+- El contrato sirve al negocio, **NO** al dominio ni al UI
+- Tests provider/consumer (contratos)
 
 ---
 
-## 12) Governance
+## 6.4 Paso 3 — Dominio (DDD + TDD puro)
 
-- **Precedencia**: Esta constitución aplica a todo el repositorio y **prevalece** sobre prácticas locales.
-- **Cambios**: Requieren PR con consenso del equipo y actualización de **semver**.
-- **Versionado**: `MAJOR` (cambios incompatibles), `MINOR` (adiciones), `PATCH` (aclaraciones).
-- **Revisión**: Auditoría de cumplimiento por historia y por release.
+**Responsables:** Backend (dominio)
 
-**Version**: 1.1.0  
-**Ratified**: TODO(RATIFICATION_DATE)  
-**Owner**: TODO(TEAM/AREA)
+### Artefactos
+- Entidades
+- Value Objects
+- Puertos (in/out)
+- Servicios de dominio (si aplican)
+- Tests unitarios (TDD)
+
+### Ubicación
+`/backend/src/main/java/com/poc/hexagonal/<bc>/domain/...`
+
+### Reglas
+- Sin Spring, sin infraestructura, sin JSON
+- El dominio piensa en negocio, no en HTTP
+- TDD obligatorio (test → código → refactor)
+
+---
+
+## 6.5 Paso 4 — Aplicación (Use Cases)
+
+**Responsables:** Backend (aplicación)
+
+### Artefactos
+- Use cases
+- Comandos / queries
+- Mappers internos
+- Validadores simples
+- Unit tests (solo orquestación)
+
+### Ubicación
+`/backend/src/main/java/com/poc/hexagonal/<bc>/application/...`
+
+### Reglas
+- Sin reglas de negocio (esas están en dominio)
+- Sin acceso a infraestructura
+- Asociado 1:1 con puertos de dominio
+
+---
+
+## 6.6 Paso 5 — Infraestructura (Adaptadores)
+
+**Responsables:** Backend (infra)
+
+### Artefactos
+- Adaptadores externos (DB, IA, colas, APIs, storage)
+- Modelos de persistencia
+- Mappers persistencia ↔ dominio
+- Tests de integración (Testcontainers si aplica)
+
+### Ubicación
+`/backend/src/main/java/com/poc/hexagonal/<bc>/infrastructure/...`
+
+### Reglas
+- Implementan puertos out
+- Sin lógica de negocio
+- No contaminan dominio con tipos de framework
+
+---
+
+## 6.7 Paso 6 — Controllers / REST Adapters
+
+**Responsables:** Backend (entrada)
+
+### Artefactos
+- Controllers REST
+- DTOs
+- Validaciones superficiales
+
+### Ubicación
+`/backend/src/main/java/com/poc/hexagonal/<bc>/infrastructure/in/rest/controller`
+
+### Reglas
+- Cumplimiento estricto del OpenAPI
+- No lógica de negocio
+- No decisiones
+- Solo traducción protocolo ↔ comando use case
+
+---
+
+## 6.8 Paso 7 — Frontend (UI + cliente + estado)
+
+**Responsables:** Frontend
+
+### Artefactos
+- Páginas (`/frontend/src/pages/...`)
+- Componentes (`/frontend/src/components/...`)
+- Hooks
+- Estado (Zustand)
+- Cliente OpenAPI autogenerado (`/frontend/src/api/...`)
+- Tests unitarios + integración
+
+### Reglas
+- Sin lógica de negocio
+- API Client siempre autogenerado
+- React Query para server-state
+- Estado global solo si es UI/state
+- Mantener fusión mínima entre UI ↔ backend
+
+---
+
+## 6.9 Paso 8 — Contratos (provider/consumer)
+
+**Responsables:** Backend + QA
+
+### Artefactos
+- Tests contractuales en `/backend/tests/contracts/...`
+
+### Reglas
+- El backend debe cumplir su OpenAPI
+- El frontend debe ejecutar contra mocks generados del YAML
+- Un cambio en OpenAPI rompe si contratos fallan
+
+---
+
+## 6.10 Paso 9 — E2E (Backend + Frontend)
+
+**Responsables:** QA + Frontend + Backend
+
+### Artefactos
+- Playwright E2E: `/frontend/tests/e2e/...`
+- Cucumber BDD sobre backend real: `/backend/tests/e2e/...`
+
+### Reglas
+- Validación del comportamiento completo
+- Sin mocks de infraestructura crítica
+- Validación en entorno real o contenedores
+
+---
+
+## 6.11 Paso 10 — CI/CD Gates (bloqueantes)
+
+### Pipeline
+- bdd
+- api
+- unit (dominio + aplicación)
+- infra (integración)
+- contract
+- e2e backend
+- e2e frontend
+- Build artefacto
+- Deploy a entorno superior
+
+### Reglas
+- Ningún fallo permite merge
+- Build once, deploy many
+- Artefacto inmutable
+
+---
+
+## 6.12 Paso 11 — Done = Deployable
+
+Una historia solo está DONE si:
+
+- BDD verde
+- OpenAPI validado
+- Dominio testado por TDD
+- Aplicación testada
+- Infra testada
+- Controllers conformes a contrato
+- Frontend integrado y probado
+- Playwright verde
+- CI/CD verde
+- Observabilidad mínima
+- No deuda técnica
+- Nada fuera del BDD
+
+---
+# 7. Artefactos obligatorios
+| Fase | Artefacto | Ubicación |
+|------|-----------|-----------|
+| BDD | .feature | /backend/tests/bdd/... |
+| API | OpenAPI | /backend/src/main/resources/openapi/... |
+| Dominio | entidades, VOs | /backend/src/main/java/.../domain/... |
+| Aplicación | use cases | /backend/.../application/usecases/... |
+| Infra | adapters | /backend/.../infrastructure/... |
+| Controllers | REST | /backend/.../infrastructure/in/rest/controller |
+| Frontend | UI | /frontend/src/... |
+| Contratos | contract tests | /backend/tests/contracts/ |
+| E2E | Playwright | /frontend/tests/e2e |
+| CI/CD | workflows | .github/workflows |
+
+---
+# 8. Normas para agentes
+- spec.md solo narrativa y BDD
+- plan.md pipeline
+- tasks.md por capa
+- rutas exactas
+- no introducir nada externo
+- no mezclar capas
+
+---
+# 9. Conformidad técnica
+Backend: Java 21, Spring Boot, RestClient/WebClient, JUnit5, Mockito, Testcontainers, Cucumber
+Frontend: React18, TS, React Query, Zustand, Jest/Vitest, RTL, Playwright
+
+---
+# 10. Observabilidad y no funcionales
+Logs estructurados, métricas, trazas, retries, CB, timeouts, build once deploy many
+
+---
+# 11. Antipatrones
+Diseño horizontal, lógica negocio fuera de dominio, endpoints sin BDD, tests externos reales, modelos dios
+
+---
+# 12. Done
+BDD verde, OpenAPI validado, dominio TDD, aplicación probada, infra probada, controllers conformes, frontend integrado, playwright verde, CI/CD verde, observabilidad ok
+
+---
+# 13. Governance
+Cambios requieren PR y consenso.
+
+---
+# 14. Principio final
+Cada historia atraviesa el sistema verticalmente.

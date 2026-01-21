@@ -1,30 +1,79 @@
 
-# Backend Instructions — Proyecto Meditation Builder
+# Backend Instructions — Meditation Builder
+## Version 2.0.0
 
-## Principios clave
-- Arquitectura: Hexagonal (DDD + TDD + API First).
-- Lenguaje: Java 21 + Spring Boot.
-- Controllers: sin lógica de negocio; validación superficial; cumplir OpenAPI.
-- Dominio: sin frameworks; solo reglas de negocio y puertos.
-- Aplicación: orquestación; no conoce infra.
-- Infraestructura: implementa puertos; no define reglas.
+These instructions operationalize the Backend Delivery Playbook by defining concrete rules for agents (human or AI) when implementing backend features under `/backend`.
 
-## Ubicación por capa
-- Dominio: `.../domain/{model|enums|ports/{in|out}}`
-- Aplicación: `.../application/usecases`
-- Infraestructura:
-  - Entrada: `.../infrastructure/in/rest/{controller|dto|mapper}`
-  - Salida: `.../infrastructure/out/service/{impl|mapper}`
-- OpenAPI: `src/main/resources/openapi/`
+---
+# 1. Scope
+Applies to all backend tasks involving Java 21, Spring Boot, Hexagonal Architecture, DDD, TDD, and API First.
 
-## Naming obligatorio
-- Puertos out: `TextGenerationPort`, `MusicGenerationPort`, `ImageGenerationPort`.
-- Use cases: `GenerateMeditationTextUseCase`, `GenerateMeditationMusicUseCase`, `GenerateMeditationImageUseCase`.
-- Adapters IA: `TextGenerationAiAdapter`, `MusicGenerationAiAdapter`, `ImageGenerationAiAdapter`.
-- Controller: `MeditationBuilderController`.
-- DTOs: `<Recurso><Accion>{Request|Response}`.
+---
+# 2. Mandatory Folder Locations
+```
+/backend/src/main/java/com/poc/hexagonal/<bc>/application/
+/backend/src/main/java/com/poc/hexagonal/<bc>/domain/
+/backend/src/main/java/com/poc/hexagonal/<bc>/infrastructure/
+/backend/src/main/resources/openapi/<bc>/
+/backend/tests/bdd/
+/backend/tests/contracts/
+/backend/tests/e2e/
+```
 
-## Reglas técnicas
-- Para llamadas HTTP externas: usar **RestClient** (imperativo); **WebClient** solo si streaming/reactivo.
-- Mapear errores IA → HTTP: `AiTimeout/AiUnavailable/AiRateLimited → 503/429`.
-- No loguear prompts ni respuestas IA.
+---
+# 3. Rules by Layer
+## 3.1 Domain
+- No Spring annotations
+- No infrastructure types
+- Only business rules: entities, VOs, ports
+
+## 3.2 Application
+- Use cases orchestrate domain
+- No business rules
+- No DB/HTTP/infra access
+
+## 3.3 Infrastructure
+- Implement ports out
+- Map infra errors → domain exceptions
+- Use RestClient/WebClient only here
+
+## 3.4 Controllers
+- Must match OpenAPI exactly
+- No business rules or branching logic
+- Only validation + mapping
+
+---
+# 4. API First
+- Every endpoint must originate in BDD
+- YAML must validate using Redocly
+- No adding fields not defined in BDD
+
+---
+# 5. Testing
+- Domain: JUnit 5 pure unit tests
+- Application: unit tests with mocks
+- Infra: Testcontainers integration
+- BDD: Cucumber tests must pass
+- Contract: OpenAPI-based validation
+
+---
+# 6. CI/CD Rules
+- Gates: bdd → api → unit → infra → contract → e2e
+- Any failure blocks merge
+- Build once, deploy many
+
+---
+# 7. Anti-Patterns
+- Mixing layers in one task
+- Lógica de negocio en controllers
+- Endpoints sin BDD
+- Usar servicios externos reales en tests
+
+---
+# 8. Agent Execution Rules
+- Tasks must target exactly one layer
+- Files generated must match folder structure
+- Never generate domain classes before BDD + API
+- No code generation unless requested explicitly
+
+FIN DEL DOCUMENTO

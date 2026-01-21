@@ -1,88 +1,107 @@
 
-# Engineering Guidelines – Naming, SOLID, Patrones
-
-> **Ámbito**: Reglas de ingeniería estables para backend Java en arquitectura hexagonal. Estas normas complementan el `delivery-playbook-backend.md` y se aplican en `spec.md`, `plan.md` y `tasks.md` generados por Spec‑Kit.
-
----
-## 1. Principios SOLID (aplicados al dominio y aplicación)
-- **S**ingle Responsibility: cada clase tiene un motivo de cambio.
-- **O**pen/Closed: abierto a extensión, cerrado a modificación (usa interfaces, composición, políticas).
-- **L**iskov Substitution: puertos/implementaciones cumplen contratos sin sorpresas.
-- **I**nterface Segregation: puertos pequeños y específicos (evitar God‑interfaces).
-- **D**ependency Inversion: dominio depende de **abstracciones** (puertos), nunca de infraestructura.
-
-**Reglas**
-- Dominio: **sin** frameworks, anotaciones de Spring, ni dependencias técnicas.
-- Casos de uso: orquestan **puertos** y entidades; cero lógica de persistencia o red.
-- Adaptadores: contienen detalles concretos; **no** reglas de negocio.
+# 🛠️ Engineering Guidelines — Meditation Builder
+**Versión:** 2.0.0 (Unificado Backend + Frontend)
 
 ---
-## 2. Convenciones de naming (Java)
-### 2.1. Paquetes y módulos
-- `com.poc.hexagonal.<boundedContext>.<layer>`
-  - `application`, `domain`, `infrastructure`, `shared`
-  - Subpaquetes dentro de cada capa según el árbol acordado.
-- Los **bounded contexts** (ej. `prescription`) agrupan verticalmente dominio+aplicación+infra.
 
-### 2.2. Clases y tipos
-- **Entidades**: `Prescription`, `MeditationSession`
-- **Value Objects**: `PrescriptionId`, `MeditationText`
-- **Servicios de dominio**: `<Nombre>DomainService` (si aporta reglas; evitar si es trivial)
-- **Puertos**:
-  - **in** (driven by outside, expuestos al exterior del dominio): `<UseCase>` o `<Capability>UseCase`
-  - **out** (necesidades del dominio): `<Recurso>Port`, p.ej. `TextGenerationPort`
-- **Casos de uso (aplicación)**: `<Accion><Recurso>UseCase`, p.ej. `ComposeMeditationUseCase`
-  - **Implementación (si aplica)**: `<Accion><Recurso>Service` en `application.service`
-- **DTOs (entrada/salida de controller)**: `<Recurso><Action>Request`, `<Recurso><Action>Response`
-- **Mappers**: `<Origen>To<Destino>Mapper`
-- **Controllers**: `<Recurso>Controller`
-- **Adaptadores de infraestructura**:
-  - **in**: `rest` / `kafka` → `<Recurso><Canal>Adapter` (p.ej. `PrescriptionRestAdapter`)
-  - **out**: `mongodb` / `kafka` / `service` → `<Recurso><Tecnologia>Adapter`
-- **Repositorios (infra)**: `<Aggregate>Repository`
-- **Excepciones**: `<Causa>Exception` en `shared/errorhandler/exception`
-
-### 2.3. Métodos y comandos
-- Use cases: verbos imperativos y significado de negocio: `compose`, `previewMusic`, `previewImage`.
-- Puertos **out**: capacidades, no tecnología: `generateText`, `storeAsset`, `publishEvent`.
-
-### 2.4. Constantes y enums
-- Enums en `domain/enums` o `shared/.../enums`. Nombres en singular: `MeditationType`.
+## 0. Propósito
+Normas de ingeniería **estables** para mantener coherencia de diseño, naming, estilo y patrones en **backend** (Java 21 + Spring Boot) y **frontend** (React + TS).
 
 ---
-## 3. Patrones recomendados
-- **Arquitectura hexagonal** (puertos/adaptadores) con **DDD táctico** (Entidades, VOs, Agregados).
-- **Aplicación** como capa de orquestación (comandos/queries, transacciones si aplica).
-- **Mappers** para aislar DTOs de dominio.
-- **Factory** para crear agregados con invariantes.
-- **Policy**/Strategy para reglas variables (ej. selección de generador IA).
-- **Decorator** para cross‑cutting en adaptadores (caching, observabilidad).
-- **Circuit Breaker/Retry** (infra) para llamadas externas.
+
+## 1. SOLID y principios transversales
+- **SRP**: una clase/archivo = un motivo de cambio.
+- **OCP**: extensible por composición/estrategia; evita modificar invariantes.
+- **LSP**: implementaciones cumplen contratos (puertos) sin sorpresas.
+- **ISP**: interfaces pequeñas y específicas (evitar God‑interfaces).
+- **DIP**: dominio depende de **abstracciones** (puertos), no de infra.
+- **YAGNI / KISS**: no anticipar.
+- **Clean Code**: funciones pequeñas, nombres semánticos, side‑effects controlados.
 
 ---
-## 4. Testing
-- **Dominio (unit)**: 1‑test‑por‑regla; sin mocks técnicos.
-- **Aplicación (unit)**: mocks de puertos para orquestación.
-- **Infra (integration)**: Testcontainers para persistencia/colas.
-- **Contrato**: provider/consumer desde OpenAPI/mesasaje.
-- **BDD/e2e**: ejecutar feature files reales.
+
+## 2. Naming (Backend Java)
+- Paquetes: `com.poc.hexagonal.<boundedContext>.<layer>`.
+- Entidades: `MeditationSession`, VOs: `MeditationText`.
+- Puertos **out**: `<Recurso>Port` (p.ej., `TextGenerationPort`).
+- Use cases: `<Accion><Recurso>UseCase` (p.ej., `GenerateMeditationTextUseCase`).
+- Adaptadores IA (out): `<Recurso>AiAdapter`.
+- Controllers: `<Recurso>Controller` (p.ej., `MeditationBuilderController`).
+- DTOs entrada/salida: `<Recurso><Accion>{Request|Response}`.
+- Mappers: `<Origen>To<Destino>Mapper`.
 
 ---
-## 5. Estilo de código
-- Java 21. Formateo con perfil común.
-- Evitar `static` stateful; favorecer inyección por constructor.
-- Métodos pequeños; un nivel de abstracción por función.
-- Null‑safety (Optional cuando aplique), validaciones en dominio.
+
+## 3. Naming (Frontend TS/React)
+- Componentes: `PascalCase`.
+- Hooks: `useCamelCase`.
+- Stores Zustand: `use<Nombre>Store`.
+- Tests: `*.spec.ts(x)` y `*.e2e.ts`.
+- API wrappers: `src/api/client.ts` o `src/api/adapters.ts`.
 
 ---
+
+## 4. Estilo de código
+### Backend
+- Java 21; inyección por constructor; evitar `static` con estado.
+- Dominio **sin** Spring ni tipos de infraestructura.
+- Métodos pequeños; una abstracción por función.
+- Null‑safety: `Optional` donde aplique; validaciones en dominio.
+
+### Frontend
+- React 18 + TS estricto (`strict: true`).
+- Componentes puros; usar `useMemo/useCallback` con mesura.
+- `eslint` + `prettier` comunes.
+- Evitar `any`; tipos derivados del cliente OpenAPI.
+
+---
+
+## 5. Patrones recomendados
+- **Hexagonal (Ports & Adapters)**.
+- **DDD táctico**: Entidades, VOs, Agregados, Políticas.
+- **Factory** para creación con invariantes.
+- **Strategy/Policy** para reglas variables (selección de proveedor IA).
+- **Mapper** para aislar DTOs de dominio y persistencia.
+- **Decorator** para cross‑cutting (caching/metrics) en adaptadores.
+
+---
+
 ## 6. Observabilidad y errores
-- Logs estructurados (correlación, requestId).
-- Métricas: latencia, errores, throughput por endpoint/caso de uso.
-- Trazas: span por llamada externa.
-- Errores: mapear checked/unchecked a `shared/errorhandler` con códigos consistentes.
+- Logs estructurados con correlación (`requestId`).
+- Métricas clave por endpoint y caso de uso: latencia, errores, throughput.
+- Trazas distribuidas (OpenTelemetry).
+- Taxonomía IA → HTTP: `AiTimeout/AiUnavailable → 503`, `AiRateLimited → 429`.
+- **No** loguear prompts ni respuestas IA.
 
 ---
-## 7. Directrices para agentes (Spec‑Kit)
-- Respetar **naming** aquí definido al generar `plan.md` y `tasks.md`.
-- No introducir clases o paquetes fuera de la jerarquía aprobada.
-- Validar que cada tarea mapea a una capacidad (puerto) o a un caso de uso concreto.
+
+## 7. Seguridad
+- Autenticación/autorización coherente por contexto.
+- Secretos fuera del código (env/Secret Manager).
+- Validaciones superficiales en controllers; invariantes en dominio.
+
+---
+
+## 8. Reglas de dependencia
+- `domain` no depende de nadie.
+- `application` depende de `domain` y **de interfaces** de `domain`.
+- `infrastructure` depende de `application` y **de puertos** de `domain`.
+- `shared` es transversal pero **estable**.
+
+---
+
+## 9. Revisión de PR y calidad
+- Lint + tests locales antes del PR.
+- CI obliga gates; ningún fallo permite merge.
+- Evitar PR gigantes; preferir historias y tareas pequeñas.
+
+---
+
+## 10. Anti‑patrones
+- Lógica de negocio en controllers/adapters.
+- Entidades anémicas sin invariantes.
+- Añadir endpoints/DTOs no respaldados por BDD.
+- Tests que dependen de servicios cloud reales.
+- Mezclar capas en la misma tarea.
+
+**Mantra final**: el diseño hoy debe facilitar el cambio de mañana.

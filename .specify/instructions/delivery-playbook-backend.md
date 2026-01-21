@@ -1,326 +1,284 @@
 
-# 🚚 Delivery Playbook – Backend (Spec‑Kit Ready + BDD/API‑First Pipeline Refinado)
-
-> **Propósito**  
-> Establecer un **estándar obligatorio** y **repetible** para todas las User Stories (US) del backend, basado en **BDD → API First → Dominio → Aplicación → Infra → Controllers → Contratos → E2E**.  
-> Compatible con arquitectura **hexagonal**, **DDD**, **TDD**, **API First** y ejecución con **Spec‑Kit**.
+# 🧭 Backend Delivery Playbook — Meditation Builder
+**Versión:** 2.0.0 (Reescritura completa, alineada con Constitución)
+**Ámbito:** `/backend` – Microservicio Java 21 + Spring Boot + Arquitectura Hexagonal
 
 ---
 
+# 0. Propósito del Playbook
+Este documento define **cómo debe entregarse cualquier Historia de Usuario** en el backend del proyecto Meditation Builder.
 
-## ⚙️ Baseline técnico (obligatorio para todos los microservicios)
+Alinea el trabajo técnico con:
+- La **Constitución del proyecto**
+- El **pipeline vertical** (BDD → API First → Dominio → Aplicación → Infra → Controllers → Contratos → E2E → CI/CD)
+- La **arquitectura hexagonal estricta**
+- **DDD**, **TDD**, **API First**, **CI/CD gating**
+- Compliance con Speckit + Claude 4.5 Sonnet
 
-- **Lenguaje**: Java **21** (LTS)
-- **Framework**: **Spring Boot** (microservicios, controllers sin lógica de negocio)
-- **Arquitectura**: Hexagonal (DDD + TDD + API First)
-- **Transporte**: HTTP/REST (OpenAPI como contrato)
-- **Build**: Maven o Gradle (definido por convenciones del repo)
-- **Testing**: JUnit 5 + Cucumber (BDD), Contract Tests (OpenAPI)
-- **CI/CD**: Gates de BDD → API → Unit → Infra → Contract → E2E
-
-> Los agentes **DEBEN** usar Java 21 y Spring Boot para **todas** las US del backend, salvo que la **Historia + BDD** indiquen explícitamente un protocolo diferente (p. ej., gRPC) y esté aprobado.
-
-## 🎯 Resumen ejecutivo
-**Principios clave del sistema:**
-
-1. Cada historia atraviesa el sistema **verticalmente** y entrega **valor observable**.
-2. **BDD** define el **QUÉ** (comportamiento esperado por negocio).
-3. **DDD + TDD** definen el **corazón del sistema** (reglas estables, evolutivas y testeables).
-4. **API First mínima**, derivada exclusivamente de BDD, expone solo el comportamiento necesario.
-5. **Infraestructura obedece al dominio**, nunca lo condiciona.
-6. **Controllers** traducen protocolos; no toman decisiones.
-7. **Tests BDD/e2e** validan que el sistema cumple exactamente lo prometido.
-8. El **pipeline CI/CD** garantiza calidad, no velocidad.
+El objetivo es garantizar que **cada historia es vertical, trazable, testeable y desplegable**.
 
 ---
 
-## 🧭 Prioridad de fuentes (ORDEN ABSOLUTO)
-En caso de conflicto, los agentes deben obedecer:
+# 1. Principios Rectores
+El backend se rige por 7 principios normativos:
 
-1. **Historia de Usuario + escenarios BDD**
-2. **Este Delivery Playbook**
-3. Convenciones del repositorio
-4. Preferencias del framework o herramientas
+### 1.1 BDD-first
+Todo desarrollo nace en un `.feature`. Nada se implementa sin BDD.
 
-❗ **Nunca introducir comportamiento, endpoints o reglas no justificadas por BDD o criterios de aceptación.**
+### 1.2 API First mínima
+OpenAPI modela el contrato **mínimo necesario** para cumplir el BDD.
+
+### 1.3 Arquitectura Hexagonal
+Separación absoluta entre:
+- Dominio
+- Aplicación
+- Infraestructura
+- Adaptadores de entrada (Controllers)
+
+### 1.4 DDD táctico
+El dominio refleja reglas del negocio: entidades, VOs, invariantes, puertos.
+
+### 1.5 TDD obligatorio
+Tests de dominio van antes del código.
+
+### 1.6 Infraestructura obediente
+Implementa puertos del dominio, nunca define reglas.
+
+### 1.7 Controllers delgados
+Sin lógica, sin decisiones, sin ifs de negocio.
 
 ---
 
-# 🔥 SECCIÓN NORMATIVA: Pipeline obligatorio por historia (orden estricto)
+# 2. Estructura del Backend (Normativa)
+Todo backend vive bajo:
+```
+/backend
+    src/main/java/com/poc/hexagonal/<boundedContext>/
+    src/main/resources/openapi/
+    src/test/java/...
+    tests/bdd/
+    tests/contracts/
+    tests/e2e/
+```
 
-Esta sección es **vinculante** para TODAS las US. El orden no puede alterarse.
+## 2.1 Estructura hexagonal detallada
+```
+/backend/src/main/java/com/poc/hexagonal/<bc>/
+  application/
+    mapper/
+    service/
+    validator/
+  domain/
+    enums/
+    model/
+    ports/
+       in/
+       out/
+  infrastructure/
+    in/
+      kafka/
+      rest/
+        controller/
+        dto/
+        mapper/
+    out/
+      kafka/
+      mongodb/
+        impl/
+        mapper/
+        model/
+        repository/
+      service/
+shared/
+  errorhandler/
+    dto/
+    enums/
+    exception/
+  kafka/
+  observability/
+  openapi/
+  security/
+  utils/
+```
 
-## 🟦 1) BDD FIRST (obligatorio, siempre lo primero)
+## 2.2 OpenAPI
+```
+/backend/src/main/resources/openapi/
+/backend/src/main/resources/openapi/common/
+/backend/src/main/resources/openapi/<boundedContext>/
+```
 
-**Entregables mínimos:**
-- Archivo `.feature` en **Gherkin** con escenarios **Given–When–Then** en lenguaje de negocio.
-- **Step Definitions de Cucumber** en estado *Pending/Skipped* (sin implementación).
-- Ejecución de **Cucumber** debe **correr** y **fallar en rojo** inicialmente.
-
-**Reglas:**
-- ❌ No escribir endpoints, dominio, casos de uso ni controllers antes del `.feature`.
-- ❌ No incluir detalles técnicos (HTTP, JSON, DB, IA) en BDD.
-- ✔ BDD es la **fuente de verdad superior** del comportamiento.
-
-**Esqueleto de ejemplo:**
-```gherkin
-Feature: Componer contenido de meditación (US2)
-  As usuario autenticado
-  I want definir texto, música e imagen, manualmente o generados por IA
-  So that personalizo el contenido antes de crear el vídeo final
-
-  Scenario: Definir texto manualmente
-    Given un usuario autenticado en el Meditation Builder
-    When ingresa un texto de meditación
-    Then el texto queda disponible para la sesión actual
+## 2.3 Testing backend
+```
+/backend/tests/bdd/...
+/backend/tests/contracts/...
+/backend/tests/e2e/...
+/backend/src/test/java/... (unit + integration)
 ```
 
 ---
 
-## 🟪 2) API FIRST mínima (derivada directamente de BDD)
-
-**Entregables mínimos:**
-- Fichero **OpenAPI YAML** (versionado en `src/main/resources/openapi/`).
-- Validación con linters (p. ej., **Spectral** / **Redocly CLI**).
-- **Tests provider/consumer** basados en ese YAML.
-
-**Reglas:**
-- ❌ No escribir dominio/aplicación/controllers sin YAML **validado**.
-- ❌ No añadir rutas/campos no justificados por BDD.
-- ✔ Cada endpoint debe corresponder a comportamientos del BDD (interacciones del *When*).
-
----
-
-## 🟧 3) Dominio (DDD + TDD)
-
-**Incluye:**
-- Entidades, **Value Objects**, Servicios de dominio, Invariantes.
-- **Puertos** (interfaces) definidos como **capacidades del negocio**.
-- **TDD obligatorio**: tests de dominio **antes** del código.
-
-**Reglas:**
-- ❌ Dominio no conoce HTTP, JSON, OpenAPI, frameworks ni IA.
-- ✔ Dominio expresa **reglas puras** y **capacidades estables**.
-
----
-
-## 🟨 4) Aplicación (Use Cases)
-
-**Incluye:**
-- Casos de uso que **orquestan** el dominio.
-- Comandos/queries/DTOs **internos**.
-- Dependencia de **puertos** del dominio.
-
-**Reglas:**
-- ❌ No contiene reglas de negocio.
-- ❌ No conoce detalles de infraestructura ni protocolos.
-- ✔ Tests unitarios rápidos y deterministas.
-
----
-
-## 🟫 5) Infraestructura (Adaptadores de salida)
-
-**Incluye:**
-- Implementaciones concretas de **puertos**: IA, storage/assets, streaming, colas, etc.
-- Tests de **integración** con mocks locales o **Testcontainers**.
-
-**Reglas:**
-- ❌ No definir reglas de negocio.
-- ✔ Adaptadores **intercambiables** y **probados**.
-
----
-
-## 🔴 6) Controllers / Adaptadores de entrada)
-
-**Incluye:**
-- Traducción de **protocolo ↔ comandos** del caso de uso.
-- Validación **superficial** (required, formato).
-- **Cumplimiento estricto** del YAML OpenAPI.
-
-**Reglas:**
-- ❌ Sin lógica de negocio.
-- ❌ Sin decisiones ni rutas no definidas por API First.
-
----
-
-## 🟣 7) Contratos (Provider/Consumer)
-
-**Incluye:**
-- Validación de que la implementación **respeta el YAML**.
-- Tests de contrato obligatorios en CI.
-
-**Reglas:**
-- Cualquier cambio comienza en **BDD**, luego **API**, y solo después **código**.
-
----
-
-## 🟢 8) E2E BDD (artefacto real)
-
-**Incluye:**
-- Ejecución de **Cucumber** contra la aplicación **desplegada** (artefacto real).
-- Todos los escenarios deben pasar **en verde**.
-
-**Reglas:**
-- Forma parte del **Definition of Done**.
-
----
-
-## 📚 Glosario del proyecto (IA‑friendly)
-
-- **Dominio** → Entidades, Value Objects, reglas, invariantes, puertos.
-- **Aplicación** → Casos de uso que orquestan el dominio.
-- **Infraestructura** → Adaptadores concretos de puertos: DB, HTTP, colas, IA, storage.
-- **Controller** → Adaptador de entrada (HTTP/gRPC/etc.) que traduce protocolo ↔ comandos.
-- **Feature files (BDD)** → Escenarios Given–When–Then como documentación viva.
-
----
-
-## 🧩 Reglas normativas (DEBE / NO DEBE)
-
-### 🔵 BDD / Historias
-- **DEBE** redactarse en lenguaje de negocio.
-- **DEBE** incluir criterios verificables y escenarios claros.
-- **DEBE** surgir tras una sesión *Three‑Amigos*.
-- **NO DEBE** contener detalles técnicos (HTTP, JSON, DB, frameworks, colas).
-- **CRÍTICO**: Si un comportamiento NO está en BDD, **NO debe implementarse**.
-
-### 🟣 API First (mínimo necesario)
-- **DEBE** definirse solo el contrato REST requerido para cubrir BDD.
-- **DEBE** versionarse OpenAPI.
-- **DEBE** incluir tests provider/consumer.
-- **NO DEBE** anticipar endpoints innecesarios.
-
-### 🟠 Dominio (DDD + TDD)
-- **DEBE** contener **toda** la lógica de negocio.
-- **DEBE** construirse con TDD (tests rápidos y deterministas).
-- **DEBE** definir puertos como capacidades del negocio.
-- **NO DEBE** depender de frameworks, transporte o infraestructura.
-
-### 🟡 Aplicación (Use Cases)
-- **DEBE** orquestar el dominio.
-- **DEBE** trabajar con comandos/queries/DTOs.
-- **NO DEBE** contener reglas de negocio.
-- **NO DEBE** conocer detalles de infraestructura.
-
-### 🟤 Infraestructura (Adaptadores de salida)
-- **DEBE** implementar puertos, y nada más.
-- **DEBE** probar mapeos dominio ↔ persistencia/transporte.
-- **DEBE** usar Testcontainers cuando aplique.
-- **NO DEBE** definir reglas de negocio.
-
-### 🔴 Controllers
-- **DEBE** traducir protocolo ↔ comandos del caso de uso.
-- **DEBE** validar campos superficiales (formato, required).
-- **NO DEBE** contener lógica de negocio.
-- **NO DEBE** añadir decisiones ni rutas no definidas por API First.
-
-### 🧪 Tests BDD / e2e
-- **DEBE** ejecutar los escenarios exactos definidos en BDD.
-- **DEBE** validar dominio, aplicación, infra y wiring completo.
-- **NO DEBE** usar servicios cloud reales (siempre contenedores o mocks).
-
----
-
-## 🏁 Criterio de Done (Done = Deployable)
-
-Una historia está **DONE** solo si:
-
-- **BDD**: escenarios en verde (automatizados).
-- **API First**: contrato OpenAPI válido y versionado.
-- **Dominio** cubierto por TDD unitario.
-- **Aplicación** con tests de orquestación.
-- **Infra** validada con integración.
-- **Controllers** sin lógica y conformes al contrato.
-- **Contratos** provider/consumer pasan.
-- **E2E BDD** sobre artefacto real en verde.
-- **Observabilidad mínima** (logs, métricas, trazas).
-- **Checks no funcionales** (timeouts, retries) implementados.
-
----
-
-## 🔧 Pipeline CI/CD (Orden de confianza)
-
-El pipeline **DEBE** ejecutarse así (orden estricto):
-
-1. **bdd** → Cucumber corre (puede estar rojo al inicio).
-2. **api** → Validación del YAML (lint + schema).
-3. **unit** → Tests de **dominio** y **aplicación**.
-4. **infra** → Tests de adaptadores (mocks/containers).
-5. **contract** → Provider/consumer contra el YAML.
-6. **e2e** → BDD/e2e sobre artefacto real.
-
-✔ **Build once, deploy many**  
-✔ Artefacto inmutable, firmado  
-❌ *No se permite merge con fallos*
-
-**Gates de existencia (ejemplos):**
-```bash
-test -f "specs/<us>/bdd/features/*.feature" || (echo "Falta .feature BDD" && exit 1)
-test -f "src/main/resources/openapi/<us>-openapi.yaml" || (echo "Falta OpenAPI YAML" && exit 1)
+# 3. Pipeline obligatorio por historia
+Cada Historia **DEBE** recorrer estas fases en orden:
+```
+1) BDD First
+2) API First mínima
+3) Dominio
+4) Aplicación
+5) Infraestructura
+6) Controllers
+7) Contratos
+8) E2E
+9) CI/CD gates
+10) Done = deployable
 ```
 
 ---
 
-## 🛠️ Flujo por historia (paso a paso)
+# 4. Fase 1 — BDD FIRST
+## Entregables mínimos:
+- Archivo `.feature` en `/backend/tests/bdd/<context>/<feature>.feature`
+- Escenarios Given–When–Then orientados a negocio
+- Step definitions pending
 
-0. Historia candidata pequeña y vertical
-1. **BDD First (Cucumber rojo)**
-2. **API First mínima (YAML validado)**
-3. Dominio (TDD + puertos)
-4. Aplicación (use cases)
-5. Infraestructura (adaptadores + tests)
-6. Controllers
-7. Contratos (provider/consumer)
-8. E2E BDD
-9. Done (checklist)
-10. Pipeline CI/CD
+## Reglas:
+- Prohibido HTTP/JSON/DTOs/repositorios o UI
+- Nada se implementa hasta tener BDD
 
 ---
 
-## 🚫 Antipatrones (NO generar)
+# 5. Fase 2 — API FIRST mínimo
+## Entregables:
+- YAML OpenAPI validado en:
+```
+/backend/src/main/resources/openapi/<boundedContext>/<feature>.yaml
+```
 
-- Tareas técnicas sin valor observable.
-- Tareas que mezclen varias capas a la vez.
-- Refactors sin motivación de negocio.
-- Endpoints o campos no presentes en BDD.
-- “Preparar para futuro” (sobrediseño).
-- Lógica de negocio en controllers o adaptadores.
-- Tests que dependan de servicios cloud reales.
-
----
-
-## ☑️ Checklist previo a Done
-
-Antes de cerrar:
-
-- ¿Todos los escenarios BDD tienen e2e asociado?
-- ¿Toda regla está en el dominio?
-- ¿La API es mínima y está validada?
-- ¿El contrato está verificado?
-- ¿Infra tiene integración?
-- ¿Pipeline completo en verde?
+## Reglas:
+- Cada `When` del BDD corresponde a una capacidad expuesta
+- No endpoints inventados
+- Lint obligatorio
+- Tests provider/consumer obligatorios
 
 ---
 
-## 🤖 Formato para agentes (Spec‑Kit)
+# 6. Fase 3 — Dominio (DDD + TDD)
+## Entregables:
+- Entidades y VOs
+- Puertos in/out
+- Tests TDD
 
-Los agentes **DEBEN**:
-- Aplicar estas reglas en `spec.md`, `plan.md`, `tasks.md`.
-- Priorizar: **BDD → Playbook → Repo → Framework**.
-- Seguir estrictamente el orden del pipeline:  
-  **BDD → YAML → Dominio → Aplicación → Infra → Controllers → Contratos → E2E**.
-- Rechazar cualquier salida que viole capas o no esté en BDD.
+## Reglas:
+- Sin Spring, sin HTTP, sin JSON
+- Lógica de negocio pura
+- Invariantes explícitas
 
 ---
 
-## Artefactos por historia (obligatorios)
-- BDD: `tests/bdd/<feature>.feature` (Cucumber rojo al inicio).
-- API First: `src/main/resources/openapi/<us>-openapi.yaml` (lint Redocly OK).
-- Código por capas: según `hexagonal-architecture-guide.md`.
-- Contratos: provider/consumer basados en el YAML.
-- CI: gates `bdd → api → unit → infra → contract → e2e` (no merge con fallos).
+# 7. Fase 4 — Aplicación (Use Cases)
+## Entregables:
+- Use cases (ej: `GenerateMeditationTextUseCase`)
+- Validadores simples
+- Mappers
+- Tests de orquestación
 
+## Reglas:
+- Sin lógica de negocio
+- Sin acceso directo a infraestructura
 
-## 🎯 Principio transversal
+---
 
-**Cada historia debe dejar el diseño más claro, más protegido y más fácil de evolucionar que antes.**
+# 8. Fase 5 — Infraestructura (Adapters)
+## Entregables:
+- Adaptadores IA (`TextGenerationAiAdapter`, etc.)
+- Mappers
+- Tests integración
+
+## Reglas:
+- Implementan puertos out
+- Manejo de errores IA → HTTP (429/503)
+- Prohibido loguear prompts IA
+
+---
+
+# 9. Fase 6 — Controllers
+## Entregables:
+- Controllers REST
+- DTOs
+- Validación superficial
+
+## Reglas:
+- Cero lógica de negocio
+- Cumplimiento estricto OpenAPI
+
+---
+
+# 10. Fase 7 — Contratos
+## Entregables:
+- Tests contractuales
+
+## Reglas:
+- Backend debe cumplir OpenAPI
+- Cambios rompientes deben detectarse
+
+---
+
+# 11. Fase 8 — E2E
+## Entregables:
+- Cucumber E2E sobre backend real
+
+## Reglas:
+- Sin servicios externos reales
+
+---
+
+# 12. Fase 9 — CI/CD (gates bloqueantes)
+Pipeline estricto:
+```
+bdd → api → unit → infra → contract → e2e → build → deploy
+```
+
+---
+
+# 13. Artefactos obligatorios por fase
+| Fase | Artefacto | Ubicación |
+|------|-----------|-----------|
+| BDD | `.feature` | `/backend/tests/bdd/...` |
+| API | OpenAPI | `/backend/src/main/resources/openapi/...` |
+| Dominio | entidades/VOs/puertos | `/backend/.../domain` |
+| Aplicación | use cases | `/backend/.../application` |
+| Infra | adapters | `/backend/.../infrastructure` |
+| Controllers | REST | `/backend/.../rest/controller` |
+| Contratos | tests | `/backend/tests/contracts` |
+| E2E | cucumber | `/backend/tests/e2e` |
+
+---
+
+# 14. Anti‑patrones prohibidos
+- Lógica negocio fuera de dominio
+- Endpoints no definidos en BDD
+- Saltarse TDD
+- Usar servicios cloud reales en tests
+- Enormes métodos/controllers
+
+---
+
+# 15. DONE = deployable
+Una historia está DONE solo si:
+- BDD verde
+- OpenAPI validado
+- Dominio probado (TDD)
+- Aplicación probada
+- Infra probada
+- Controllers conformes
+- Contratos verdes
+- E2E verde
+- CI/CD verde
+- Observabilidad mínima activa
+
+---
+
+# 16. Principio final
+**Cada historia debe atravesar verticalmente el sistema y dejar la arquitectura más clara y protegida.**
+
+FIN DEL DOCUMENTO
