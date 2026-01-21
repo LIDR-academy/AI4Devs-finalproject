@@ -1,0 +1,315 @@
+<div class="flex flex-col flex-auto min-w-0">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between p-6 sm:py-8 border-b bg-card dark:bg-transparent">
+    <div class="flex-1 min-w-0">
+      <!-- Breadcrumbs -->
+      <div class="flex flex-wrap items-center font-medium">
+        <div>
+          <a class="whitespace-nowrap text-primary-500" [routerLink]="['/confi/management/clientes']">Clientes</a>
+        </div>
+        <div class="flex items-center ml-1 whitespace-nowrap">
+          <mat-icon class="icon-size-5 text-secondary" [svgIcon]="'heroicons_mini:chevron-right'"></mat-icon>
+          <span class="ml-1 text-secondary">Editar Cliente</span>
+        </div>
+      </div>
+      <!-- Title -->
+      <div class="mt-2">
+        <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight leading-7 sm:leading-10 truncate">
+          Editar Cliente Completo
+        </h2>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+      <button
+        mat-stroked-button
+        (click)="onCancel()"
+        class="ml-3">
+        <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+        <span class="ml-2">Cancelar</span>
+      </button>
+      <button
+        mat-flat-button
+        [color]="'primary'"
+        [disabled]="loading()"
+        (click)="onSubmit()"
+        class="ml-3">
+        <mat-icon [svgIcon]="'heroicons_outline:check'"></mat-icon>
+        <span class="ml-2">Guardar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="flex flex-auto flex-col min-w-0 p-6 sm:p-8">
+    @if (loading()) {
+      <div class="flex flex-auto items-center justify-center">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else {
+      <mat-card class="w-full">
+        <mat-card-content>
+          <mat-tab-group>
+            <!-- Tab 1: Datos Personales -->
+            <mat-tab label="Datos Personales">
+              <form [formGroup]="formPersona" class="flex flex-col gap-4 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo de Persona</mat-label>
+                    <mat-select formControlName="perso_cod_tpers">
+                      @for (tipo of tiposPersona(); track tipo.tpers_cod_tpers) {
+                        <mat-option [value]="tipo.tpers_cod_tpers">
+                          {{ tipo.tpers_des_tpers }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingCatalogs()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo de Identificación</mat-label>
+                    <mat-select formControlName="perso_cod_tiden">
+                      @for (tipo of tiposIdentificacion(); track tipo.tiden_cod_tiden) {
+                        <mat-option [value]="tipo.tiden_cod_tiden">
+                          {{ tipo.tiden_des_tiden }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingCatalogs()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Identificación</mat-label>
+                    <input matInput formControlName="perso_ide_perso" placeholder="Cédula o RUC">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre Completo / Razón Social</mat-label>
+                    <input matInput formControlName="perso_nom_perso">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha de Nacimiento / Constitución</mat-label>
+                    <input matInput [matDatepicker]="picker" formControlName="perso_fec_inici">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sexo</mat-label>
+                    <mat-select formControlName="perso_cod_sexos">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (sexo of sexos(); track sexo.sexos_cod_sexos) {
+                        <mat-option [value]="sexo.sexos_cod_sexos">
+                          {{ sexo.sexos_des_sexos }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nacionalidad</mat-label>
+                    <mat-select formControlName="perso_cod_nacio">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (nacio of nacionalidades(); track nacio.nacio_cod_nacio) {
+                        <mat-option [value]="nacio.nacio_cod_nacio">
+                          {{ nacio.nacio_des_nacio }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nivel de Instrucción</mat-label>
+                    <mat-select formControlName="perso_cod_instr">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (instr of nivelesInstruccion(); track instr.instr_cod_instr) {
+                        <mat-option [value]="instr.instr_cod_instr">
+                          {{ instr.instr_des_instr }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput type="email" formControlName="perso_ema_perso">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono</mat-label>
+                    <input matInput formControlName="perso_tel_perso">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Celular</mat-label>
+                    <input matInput formControlName="perso_cel_perso">
+                  </mat-form-field>
+                </div>
+              </form>
+            </mat-tab>
+
+            <!-- Tab 2: Datos del Cliente -->
+            <mat-tab label="Datos del Cliente">
+              <form [formGroup]="formCliente" class="flex flex-col gap-4 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Oficina</mat-label>
+                    <mat-select formControlName="clien_cod_ofici">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (oficina of oficinas(); track oficina.ofici_cod_ofici) {
+                        <mat-option [value]="oficina.ofici_cod_ofici">
+                          {{ oficina.ofici_nom_ofici }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingCatalogs()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha de Ingreso</mat-label>
+                    <input matInput [matDatepicker]="pickerIngreso" formControlName="clien_fec_ingin">
+                    <mat-datepicker-toggle matSuffix [for]="pickerIngreso"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerIngreso></mat-datepicker>
+                  </mat-form-field>
+
+                  <mat-checkbox formControlName="clien_ctr_socio">
+                    Es Socio
+                  </mat-checkbox>
+
+                  <mat-form-field appearance="outline" class="col-span-2">
+                    <mat-label>Observaciones</mat-label>
+                    <textarea matInput formControlName="clien_des_obser" rows="3"></textarea>
+                  </mat-form-field>
+                </div>
+              </form>
+            </mat-tab>
+
+            <!-- Tab 3: Domicilio -->
+            <mat-tab label="Domicilio">
+              <form [formGroup]="formDomicilio" class="flex flex-col gap-4 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Provincia</mat-label>
+                    <mat-select formControlName="cldom_cod_provi">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (provincia of provincias(); track provincia.provi_cod_provi) {
+                        <mat-option [value]="provincia.provi_cod_provi">
+                          {{ provincia.provi_cod_prov }} - {{ provincia.provi_nom_provi }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingProvincias()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Cantón</mat-label>
+                    <mat-select formControlName="cldom_cod_canto" [disabled]="!formDomicilio.get('cldom_cod_provi')?.value">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (canton of cantones(); track canton.canto_cod_canto) {
+                        <mat-option [value]="canton.canto_cod_canto">
+                          {{ canton.canto_cod_cant }} - {{ canton.canto_nom_canto }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingCantones()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Parroquia</mat-label>
+                    <mat-select formControlName="cldom_cod_parro" [disabled]="!formDomicilio.get('cldom_cod_canto')?.value">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (parroquia of parroquias(); track parroquia.parro_cod_parro) {
+                        <mat-option [value]="parroquia.parro_cod_parro">
+                          {{ parroquia.parro_cod_parr }} - {{ parroquia.parro_nom_parro }}
+                          @if (parroquia.parro_tip_area) {
+                            <span class="text-xs text-gray-500 ml-2">
+                              ({{ parroquia.parro_tip_area === 'U' ? 'Urbana' : 'Rural' }})
+                            </span>
+                          }
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingParroquias()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="col-span-2">
+                    <mat-label>Dirección</mat-label>
+                    <input matInput formControlName="cldom_dir_domic">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono</mat-label>
+                    <input matInput formControlName="cldom_tel_domic">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Referencia</mat-label>
+                    <input matInput formControlName="cldom_ref_domic">
+                  </mat-form-field>
+                </div>
+              </form>
+            </mat-tab>
+
+            <!-- Tab 4: Actividad Económica -->
+            <mat-tab label="Actividad Económica">
+              <form [formGroup]="formActividadEconomica" class="flex flex-col gap-4 mt-4">
+                <mat-form-field appearance="outline">
+                  <mat-label>Buscar Actividad Económica (CIIU)</mat-label>
+                  <input 
+                    matInput 
+                    #ciiuInput
+                    (input)="onSearchCiiu($any($event.target).value)"
+                    placeholder="Buscar por descripción (mínimo 3 caracteres)">
+                  <mat-icon matPrefix [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+                  @if (loadingCiiu()) {
+                    <mat-spinner matSuffix diameter="20"></mat-spinner>
+                  }
+                </mat-form-field>
+
+                @if (actividadesCiiu().length > 0) {
+                  <div class="max-h-60 overflow-y-auto border rounded p-2">
+                    @for (actividad of actividadesCiiu(); track actividad.ciact_cod_ciact) {
+                      <div 
+                        class="p-2 hover:bg-gray-100 cursor-pointer rounded"
+                        (click)="onSelectActividad(actividad)">
+                        <div class="font-semibold">{{ actividad.ciact_abr_ciact }}</div>
+                        <div class="text-sm text-gray-600">{{ actividad.ciact_des_ciact }}</div>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Código CIIU Seleccionado</mat-label>
+                  <input matInput formControlName="cleco_cod_aebce" readonly placeholder="Seleccione una actividad de la lista">
+                </mat-form-field>
+              </form>
+            </mat-tab>
+
+            <!-- Tab 5: Información Adicional -->
+            <mat-tab label="Información Adicional">
+              <div class="flex flex-col gap-4 mt-4">
+                <p class="text-secondary">Las secciones adicionales se cargarán según los datos existentes del cliente.</p>
+                <!-- TODO: Implementar formularios adicionales igual que en create -->
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+</div>
+

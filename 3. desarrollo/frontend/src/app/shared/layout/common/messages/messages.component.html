@@ -1,0 +1,199 @@
+<!-- Messages toggle -->
+<button mat-icon-button (click)="openPanel()" #messagesOrigin>
+    @if (unreadCount > 0) {
+        <span
+            class="absolute left-0 right-0 top-0 flex h-3 items-center justify-center"
+        >
+            <span
+                class="ml-4 mt-2.5 flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-indigo-600 px-1 text-xs font-medium text-indigo-50"
+            >
+                {{ unreadCount }}
+            </span>
+        </span>
+    }
+    <mat-icon [svgIcon]="'heroicons_outline:inbox'"></mat-icon>
+</button>
+
+<!-- Messages panel -->
+<ng-template #messagesPanel>
+    <div
+        class="fixed inset-0 flex flex-col overflow-hidden shadow-lg sm:static sm:inset-auto sm:w-90 sm:min-w-90 sm:rounded-2xl"
+    >
+        <!-- Header -->
+        <div
+            class="flex shrink-0 items-center bg-primary py-4 pl-6 pr-4 text-on-primary"
+        >
+            <div class="-ml-1 mr-3 sm:hidden">
+                <button mat-icon-button (click)="closePanel()">
+                    <mat-icon
+                        class="text-current icon-size-5"
+                        [svgIcon]="'heroicons_solid:x-mark'"
+                    ></mat-icon>
+                </button>
+            </div>
+            <div class="text-lg font-medium leading-10">Messages</div>
+            <div class="ml-auto">
+                <button
+                    class="dark:text-white"
+                    mat-icon-button
+                    [disabled]="unreadCount === 0"
+                    [matTooltip]="'Mark all as read'"
+                    (click)="markAllAsRead()"
+                >
+                    <mat-icon
+                        class="text-current icon-size-5"
+                        [svgIcon]="'heroicons_solid:envelope-open'"
+                    ></mat-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div
+            class="bg-card relative flex flex-auto flex-col divide-y overflow-y-auto sm:max-h-120"
+        >
+            <!-- Messages -->
+            @for (message of messages; track trackByFn($index, message)) {
+                <div
+                    class="group flex hover:bg-gray-50 dark:hover:bg-black dark:hover:bg-opacity-5"
+                    [ngClass]="{ unread: !message.read }"
+                >
+                    <!-- Message with a link -->
+                    @if (message.link) {
+                        <!-- Normal links -->
+                        @if (!message.useRouter) {
+                            <a
+                                class="flex flex-auto cursor-pointer py-5 pl-6"
+                                [href]="message.link"
+                            >
+                                <ng-container
+                                    *ngTemplateOutlet="messageContent"
+                                ></ng-container>
+                            </a>
+                        }
+                        <!-- Router links -->
+                        @if (message.useRouter) {
+                            <a
+                                class="flex flex-auto cursor-pointer py-5 pl-6"
+                                [routerLink]="message.link"
+                            >
+                                <ng-container
+                                    *ngTemplateOutlet="messageContent"
+                                ></ng-container>
+                            </a>
+                        }
+                    }
+
+                    <!-- Message without a link -->
+                    @if (!message.link) {
+                        <div class="flex flex-auto py-5 pl-6">
+                            <ng-container
+                                *ngTemplateOutlet="messageContent"
+                            ></ng-container>
+                        </div>
+                    }
+
+                    <!-- Actions -->
+                    <div class="relative my-5 ml-2 mr-6 flex flex-col">
+                        <!-- Indicator -->
+                        <button
+                            class="h-6 min-h-6 w-6"
+                            mat-icon-button
+                            (click)="toggleRead(message)"
+                            [matTooltip]="
+                                message.read ? 'Mark as unread' : 'Mark as read'
+                            "
+                        >
+                            <span
+                                class="h-2 w-2 rounded-full"
+                                [ngClass]="{
+                                    'bg-gray-400 dark:bg-gray-500 sm:opacity-0 sm:group-hover:opacity-100':
+                                        message.read,
+                                    'bg-primary': !message.read,
+                                }"
+                            ></span>
+                        </button>
+                        <!-- Remove -->
+                        <button
+                            class="h-6 min-h-6 w-6 sm:opacity-0 sm:group-hover:opacity-100"
+                            mat-icon-button
+                            (click)="delete(message)"
+                            [matTooltip]="'Remove'"
+                        >
+                            <mat-icon
+                                class="icon-size-4"
+                                [svgIcon]="'heroicons_solid:x-mark'"
+                            ></mat-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Message content template -->
+                <ng-template #messageContent>
+                    <!-- Icon -->
+                    @if (message.icon && !message.image) {
+                        <div
+                            class="mr-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700"
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="message.icon"
+                            >
+                            </mat-icon>
+                        </div>
+                    }
+                    <!-- Image -->
+                    @if (message.image) {
+                        <img
+                            class="mr-4 h-8 w-8 shrink-0 overflow-hidden rounded-full object-cover object-center"
+                            [src]="message.image"
+                            [alt]="'Message image'"
+                        />
+                    }
+                    <!-- Title, description & time -->
+                    <div class="flex flex-auto flex-col">
+                        @if (message.title) {
+                            <div
+                                class="line-clamp-1 font-semibold"
+                                [innerHTML]="message.title"
+                            ></div>
+                        }
+                        @if (message.description) {
+                            <div
+                                class="line-clamp-2"
+                                [innerHTML]="message.description"
+                            ></div>
+                        }
+                        <div class="text-secondary mt-2 text-sm leading-none">
+                            {{ message.time | date: 'MMM dd, h:mm a' }}
+                        </div>
+                    </div>
+                </ng-template>
+            }
+
+            <!-- No messages -->
+            @if (!messages || !messages.length) {
+                <div
+                    class="flex flex-auto flex-col items-center justify-center px-8 py-12 sm:justify-start"
+                >
+                    <div
+                        class="flex h-14 w-14 flex-0 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-600"
+                    >
+                        <mat-icon
+                            class="text-primary-700 dark:text-primary-50"
+                            [svgIcon]="'heroicons_outline:inbox'"
+                        ></mat-icon>
+                    </div>
+                    <div class="mt-5 text-2xl font-semibold tracking-tight">
+                        No messages
+                    </div>
+                    <div
+                        class="text-secondary mt-1 w-full max-w-60 text-center text-md"
+                    >
+                        When you have messages, they will appear here.
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</ng-template>

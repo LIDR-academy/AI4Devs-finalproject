@@ -1,0 +1,124 @@
+<div class="absolute inset-0 flex min-w-0 flex-col">
+    <div class="flex flex-col">
+        <div class="flex-auto">
+            <div class="flex flex-auto flex-col justify-between border-b px-6 py-8 sm:flex-row md:flex-col md:px-8">
+                <div>
+                    <div class="text-4xl font-extrabold leading-none tracking-tight">
+                        {{confiTable.title}}
+                    </div>
+                    <div class="text-secondary ml-0.5 font-medium" *ngIf="confiTable.title">
+                        @if (confiTable.body.result.data) {
+                        {{ confiTable.body.result.meta.pagination.total ?? 0 }}
+                        }
+                        {{
+                        confiTable.body.result.meta.pagination.total ?? 0 | i18nPlural
+                        : { '=0': 'No hay registros', '=1': 'registro', other: 'registros'}
+                        }}
+                    </div>
+                </div>
+
+                <!-- Main actions -->
+                <div class="mt-4 flex items-center sm:mt-0 md:mt-4 mb-2">
+                    <!-- Search -->
+                    <div class="flex-auto">
+                        <mat-form-field class="fuse-mat-dense fuse-mat-rounded w-full min-w-50"
+                            subscriptSizing="dynamic">
+                            <mat-icon class="icon-size-5" matPrefix
+                                [svgIcon]="'heroicons_solid:magnifying-glass' "></mat-icon>
+                            <input matInput [autocomplete]="'off'" (keyup)="onSearchChange($event)"
+                                placeholder="Buscar {{confiTable.title.toLowerCase()}}..." #input />
+                        </mat-form-field>
+                    </div>
+                    <div class="ml-4">
+                        <div
+                            class="flex flex-row flex-wrap gap-2 justify-center md:justify-end items-center w-full mt-2">
+                            <ng-container *ngFor="let btn of confiTable.header.buttons">
+                                <btn-primary (click)="onButtonRow(btn.title, btn.id)" [label]="btn.title"
+                                    [icon]="btn.icon" />
+                            </ng-container>
+                            <btn-primary *ngIf="confiTable.actions.create" label="Nuevo" icon="plus"
+                                (click)="createRow(null)" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    @if (columnNames.length) {
+                    <div class="mat-elevation-z rounded-xl">
+                        <table mat-table [dataSource]="confiTable.body.source" matSort class="">
+                            <ng-container *ngFor="let column of confiTable.header.column" [matColumnDef]="column.name">
+                                <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-sm uppercase">
+                                    {{ column.title }}
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    <ng-container *ngIf="column.name === 'actions'; else defaultCell">
+                                        <button mat-flat-button [matMenuTriggerFor]="menu" mat-flat-button
+                                            color="secondary" aria-label="Acciones">
+                                            <mat-icon [svgIcon]="'heroicons_outline:ellipsis-vertical'"></mat-icon>
+                                            Acciones
+                                        </button>
+                                        <mat-menu #menu="matMenu">
+                                            <button mat-menu-item *ngIf="confiTable.actions.update"
+                                                (click)="updateRow(row)">
+                                                <mat-icon svgIcon="heroicons_outline:pencil"></mat-icon>
+                                                <span>Actualizar</span>
+                                            </button>
+
+                                            <button mat-menu-item *ngIf="confiTable.actions.delete"
+                                                (click)="deleteRow(row)">
+                                                <mat-icon svgIcon="heroicons_outline:trash"></mat-icon>
+                                                <span>Eliminar</span>
+                                            </button>
+
+                                            <button mat-menu-item *ngIf="confiTable.actions.detail"
+                                                (click)="DetailRow(row)">
+                                                <mat-icon svgIcon="heroicons_outline:folder-minus"></mat-icon>
+                                                <span>Detalle</span>
+                                            </button>
+
+                                            <!-- Divider dinámico -->
+                                            <mat-divider
+                                                *ngIf="(confiTable.actions.buttonsBody?.length ?? 0) > 0"></mat-divider>
+
+                                            <!-- Botones dinámicos -->
+                                            <button mat-menu-item *ngFor="let btn of confiTable.actions.buttonsBody"
+                                                (click)="onButtonRow(btn.title, btn.id, row)">
+                                                <mat-icon>{{ btn.icon }}</mat-icon>
+                                                <span>{{ btn.title }}</span>
+                                            </button>
+                                        </mat-menu>
+                                    </ng-container>
+
+
+
+                                    <ng-template #defaultCell>
+                                        <ng-container [ngSwitch]="true" class="text-xs p-0 m-0">
+                                            <img *ngSwitchCase="column.isImage" [src]="row[column.name]" alt="img" class="w-10 h-10">
+                                            <span *ngSwitchCase="column.isNumber">{{ row[column.name] | number }}</span>
+                                            <span *ngSwitchCase="column.isDate">{{ row[column.name] | date:'short' }}</span>
+                                            <span *ngSwitchDefault>{{ row[column.name] }}</span>
+                                        </ng-container>
+                                    </ng-template>
+
+                                </td>
+                            </ng-container>
+                            <tr mat-header-row *matHeaderRowDef="columnNames"></tr>
+                            <tr mat-row *matRowDef="let row; columns: columnNames"></tr>
+                        </table>
+                        <mat-paginator class="w-full" [length]="confiTable.body.result.meta.pagination.total"
+                            [pageIndex]="confiTable.body.result.meta.pagination.page-1"
+                            [pageSize]="confiTable.body.result.meta.pagination.pageSize"
+                            [pageSizeOptions]="[1, 5, 10, 20, 50]" showFirstLastButtons (page)="pagination($event)">
+                        </mat-paginator>
+                    </div>
+                    } @else {
+                    <div class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16">
+                        Upps!, AUn no tenemos registros.
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

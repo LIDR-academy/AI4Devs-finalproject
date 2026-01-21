@@ -1,0 +1,64 @@
+import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { ApiResponse, ApiResponses, ParamsDto } from 'src/shared/util';
+import { EciviEnum } from '../../infrastructure/enum/enum';
+import { EciviService } from '../../infrastructure/service/service';
+import { EciviEntity } from '../../domain/entity';
+import { EciviDto } from '../../infrastructure/dto';
+
+@Controller(EciviEnum.table)
+export class EciviController {
+  constructor(
+    private readonly service: EciviService,
+  ) { }
+
+  @Get('/')
+  public async findAll(@Body() params: ParamsDto): Promise<ApiResponses<EciviEntity>> {
+    try {
+      const result = await this.service.findAll(params);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get(':id')
+  public async findById(@Param('id') id: number) {
+    try {
+      const result = await this.service.findById(+id);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post()
+  public async create(@Body() data: EciviDto): Promise<ApiResponse<EciviEntity>> {
+    try {
+      const result = await this.service.create(data);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Put(':id')
+  public async update(@Param('id') id: number, @Body() data: EciviDto): Promise<ApiResponse<EciviEntity>> {
+    try {
+      const result = await this.service.update(+id, data);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Delete(':id')
+  public async delete(@Param('id') id: number): Promise<ApiResponse<EciviEntity>> {
+    try {
+      const result = await this.service.delete(+id);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+

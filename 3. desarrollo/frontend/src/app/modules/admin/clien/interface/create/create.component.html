@@ -1,0 +1,948 @@
+<div class="flex flex-col flex-auto min-w-0">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between p-6 sm:py-8 border-b bg-card dark:bg-transparent">
+    <div class="flex-1 min-w-0">
+      <!-- Breadcrumbs -->
+      <div class="flex flex-wrap items-center font-medium">
+        <div>
+          <a class="whitespace-nowrap text-primary-500" [routerLink]="['/confi/management/clientes']">Clientes</a>
+        </div>
+        <div class="flex items-center ml-1 whitespace-nowrap">
+          <mat-icon class="icon-size-5 text-secondary" [svgIcon]="'heroicons_mini:chevron-right'"></mat-icon>
+          <span class="ml-1 text-secondary">Nuevo Cliente</span>
+        </div>
+      </div>
+      <!-- Title -->
+      <div class="mt-2">
+        <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight leading-7 sm:leading-10 truncate">
+          Registrar Cliente Completo
+        </h2>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+      <button
+        mat-stroked-button
+        (click)="onCancel()"
+        class="ml-3">
+        <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+        <span class="ml-2">Cancelar</span>
+      </button>
+      <button
+        mat-flat-button
+        [color]="'primary'"
+        [disabled]="loading()"
+        (click)="onSubmit()"
+        class="ml-3">
+        <mat-icon [svgIcon]="'heroicons_outline:check'"></mat-icon>
+        <span class="ml-2">Guardar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="flex flex-auto flex-col min-w-0 p-6 sm:p-8">
+    @if (loading()) {
+      <div class="flex flex-auto items-center justify-center">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else {
+      <mat-card class="w-full">
+        <mat-card-content>
+          <mat-tab-group>
+            <!-- Tab 1: Datos Personales -->
+            <mat-tab label="Datos Personales">
+              <form [formGroup]="formPersona" class="flex flex-col gap-4 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo de Persona</mat-label>
+                    <mat-select formControlName="perso_cod_tpers">
+                      @for (tipo of tiposPersona(); track tipo.tpers_cod_tpers) {
+                        <mat-option [value]="tipo.tpers_cod_tpers">
+                          {{ tipo.tpers_des_tpers }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingCatalogs()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo de Identificación</mat-label>
+                    <mat-select formControlName="perso_cod_tiden">
+                      @for (tipo of tiposIdentificacion(); track tipo.tiden_cod_tiden) {
+                        <mat-option [value]="tipo.tiden_cod_tiden">
+                          {{ tipo.tiden_des_tiden }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingCatalogs()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Identificación</mat-label>
+                    <input matInput formControlName="perso_ide_perso" placeholder="Cédula o RUC">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre Completo / Razón Social</mat-label>
+                    <input matInput formControlName="perso_nom_perso">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha de Nacimiento / Constitución</mat-label>
+                    <input matInput [matDatepicker]="picker" formControlName="perso_fec_inici">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sexo</mat-label>
+                    <mat-select formControlName="perso_cod_sexos">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (sexo of sexos(); track sexo.sexos_cod_sexos) {
+                        <mat-option [value]="sexo.sexos_cod_sexos">
+                          {{ sexo.sexos_des_sexos }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nacionalidad</mat-label>
+                    <mat-select formControlName="perso_cod_nacio">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (nacio of nacionalidades(); track nacio.nacio_cod_nacio) {
+                        <mat-option [value]="nacio.nacio_cod_nacio">
+                          {{ nacio.nacio_des_nacio }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nivel de Instrucción</mat-label>
+                    <mat-select formControlName="perso_cod_instr">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (instr of nivelesInstruccion(); track instr.instr_cod_instr) {
+                        <mat-option [value]="instr.instr_cod_instr">
+                          {{ instr.instr_des_instr }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Email</mat-label>
+                    <input matInput type="email" formControlName="perso_ema_perso">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono</mat-label>
+                    <input matInput formControlName="perso_tel_perso">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Celular</mat-label>
+                    <input matInput formControlName="perso_cel_perso">
+                  </mat-form-field>
+                </div>
+              </form>
+            </mat-tab>
+
+            <!-- Tab 2: Datos del Cliente -->
+            <mat-tab label="Datos del Cliente">
+              <form [formGroup]="formCliente" class="flex flex-col gap-4 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Oficina</mat-label>
+                    <mat-select formControlName="clien_cod_ofici">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (oficina of oficinas(); track oficina.ofici_cod_ofici) {
+                        <mat-option [value]="oficina.ofici_cod_ofici">
+                          {{ oficina.ofici_nom_ofici }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingCatalogs()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha de Ingreso</mat-label>
+                    <input matInput [matDatepicker]="pickerIngreso" formControlName="clien_fec_ingin">
+                    <mat-datepicker-toggle matSuffix [for]="pickerIngreso"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerIngreso></mat-datepicker>
+                  </mat-form-field>
+
+                  <mat-checkbox formControlName="clien_ctr_socio">
+                    Es Socio
+                  </mat-checkbox>
+
+                  <mat-form-field appearance="outline" class="col-span-2">
+                    <mat-label>Observaciones</mat-label>
+                    <textarea matInput formControlName="clien_des_obser" rows="3"></textarea>
+                  </mat-form-field>
+                </div>
+              </form>
+            </mat-tab>
+
+            <!-- Tab 3: Domicilio -->
+            <mat-tab label="Domicilio">
+              <form [formGroup]="formDomicilio" class="flex flex-col gap-4 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Provincia</mat-label>
+                    <mat-select formControlName="cldom_cod_provi">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (provincia of provincias(); track provincia.provi_cod_provi) {
+                        <mat-option [value]="provincia.provi_cod_provi">
+                          {{ provincia.provi_cod_prov }} - {{ provincia.provi_nom_provi }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingProvincias()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Cantón</mat-label>
+                    <mat-select formControlName="cldom_cod_canto" [disabled]="!formDomicilio.get('cldom_cod_provi')?.value">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (canton of cantones(); track canton.canto_cod_canto) {
+                        <mat-option [value]="canton.canto_cod_canto">
+                          {{ canton.canto_cod_cant }} - {{ canton.canto_nom_canto }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingCantones()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Parroquia</mat-label>
+                    <mat-select formControlName="cldom_cod_parro" [disabled]="!formDomicilio.get('cldom_cod_canto')?.value">
+                      <mat-option [value]="null">Seleccione...</mat-option>
+                      @for (parroquia of parroquias(); track parroquia.parro_cod_parro) {
+                        <mat-option [value]="parroquia.parro_cod_parro">
+                          {{ parroquia.parro_cod_parr }} - {{ parroquia.parro_nom_parro }}
+                          @if (parroquia.parro_tip_area) {
+                            <span class="text-xs text-gray-500 ml-2">
+                              ({{ parroquia.parro_tip_area === 'U' ? 'Urbana' : 'Rural' }})
+                            </span>
+                          }
+                        </mat-option>
+                      }
+                    </mat-select>
+                    @if (loadingParroquias()) {
+                      <mat-spinner matSuffix diameter="20"></mat-spinner>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="col-span-2">
+                    <mat-label>Dirección</mat-label>
+                    <input matInput formControlName="cldom_dir_domic">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono</mat-label>
+                    <input matInput formControlName="cldom_tel_domic">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Referencia</mat-label>
+                    <input matInput formControlName="cldom_ref_domic">
+                  </mat-form-field>
+                </div>
+              </form>
+            </mat-tab>
+
+            <!-- Tab 4: Actividad Económica -->
+            <mat-tab label="Actividad Económica">
+              <form [formGroup]="formActividadEconomica" class="flex flex-col gap-4 mt-4">
+                <mat-form-field appearance="outline">
+                  <mat-label>Buscar Actividad Económica (CIIU)</mat-label>
+                  <input 
+                    matInput 
+                    #ciiuInput
+                    (input)="onSearchCiiu($any($event.target).value)"
+                    placeholder="Buscar por descripción (mínimo 3 caracteres)">
+                  <mat-icon matPrefix [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+                  @if (loadingCiiu()) {
+                    <mat-spinner matSuffix diameter="20"></mat-spinner>
+                  }
+                </mat-form-field>
+
+                @if (actividadesCiiu().length > 0) {
+                  <div class="max-h-60 overflow-y-auto border rounded p-2">
+                    @for (actividad of actividadesCiiu(); track actividad.ciact_cod_ciact) {
+                      <div 
+                        class="p-2 hover:bg-gray-100 cursor-pointer rounded"
+                        (click)="onSelectActividad(actividad)">
+                        <div class="font-semibold">{{ actividad.ciact_abr_ciact }}</div>
+                        <div class="text-sm text-gray-600">{{ actividad.ciact_des_ciact }}</div>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Código CIIU Seleccionado</mat-label>
+                  <input matInput formControlName="cleco_cod_aebce" readonly placeholder="Seleccione una actividad de la lista">
+                </mat-form-field>
+              </form>
+            </mat-tab>
+
+            <!-- Tab 5: Información Adicional -->
+            <mat-tab label="Información Adicional">
+              <div class="flex flex-col gap-4 mt-4">
+                <!-- Representante -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Representante</mat-card-title>
+                    <mat-checkbox [(ngModel)]="showRepresentante" [ngModelOptions]="{standalone: true}">
+                      Agregar Representante
+                    </mat-checkbox>
+                  </mat-card-header>
+                  @if (showRepresentante) {
+                    <mat-card-content>
+                      <form [formGroup]="formRepresentante" class="flex flex-col gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <!-- Persona Representante (autocomplete) -->
+                          <mat-form-field appearance="outline" class="md:col-span-2">
+                            <mat-label>Buscar Persona Representante</mat-label>
+                            <input 
+                              matInput 
+                              #personaRepInput
+                              (input)="onSearchPersona($any($event.target).value, formRepresentante, 'clrep_cod_perso')"
+                              placeholder="Buscar por identificación o nombre (mínimo 3 caracteres)">
+                            <mat-icon matPrefix [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+                            @if (loadingPersonas) {
+                              <mat-spinner matSuffix diameter="20"></mat-spinner>
+                            }
+                            @if (personasBuscadas.length > 0) {
+                              <mat-autocomplete #personaRepAuto="matAutocomplete" (optionSelected)="onSelectPersona($event.option.value, formRepresentante, 'clrep_cod_perso')">
+                                @for (persona of personasBuscadas; track persona.perso_cod_perso) {
+                                  <mat-option [value]="persona">
+                                    <div>
+                                      <div class="font-semibold">{{ persona.perso_nom_perso }} {{ persona.perso_ape_perso }}</div>
+                                      <div class="text-sm text-gray-600">{{ persona.perso_ide_perso }}</div>
+                                    </div>
+                                  </mat-option>
+                                }
+                              </mat-autocomplete>
+                            }
+                          </mat-form-field>
+
+                          <!-- Tipo Representante -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Tipo Representante</mat-label>
+                            <mat-select formControlName="clrep_cod_trep" required>
+                              @if (loadingCatalogs()) {
+                                <mat-option disabled>Cargando...</mat-option>
+                              } @else {
+                                @for (tipo of tiposRepresentante(); track tipo.trep_cod_trep) {
+                                  <mat-option [value]="tipo.trep_cod_trep">{{ tipo.trep_des_trep }}</mat-option>
+                                }
+                              }
+                            </mat-select>
+                            <mat-error>El tipo de representante es requerido</mat-error>
+                          </mat-form-field>
+
+                          <!-- Fecha Nombramiento -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Fecha de Nombramiento</mat-label>
+                            <input matInput [matDatepicker]="pickerRepNombr" formControlName="clrep_fec_nombr">
+                            <mat-datepicker-toggle matIconSuffix [for]="pickerRepNombr"></mat-datepicker-toggle>
+                            <mat-datepicker #pickerRepNombr></mat-datepicker>
+                          </mat-form-field>
+
+                          <!-- Fecha Vencimiento -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Fecha de Vencimiento</mat-label>
+                            <input matInput [matDatepicker]="pickerRepVenci" formControlName="clrep_fec_venci">
+                            <mat-datepicker-toggle matIconSuffix [for]="pickerRepVenci"></mat-datepicker-toggle>
+                            <mat-datepicker #pickerRepVenci></mat-datepicker>
+                          </mat-form-field>
+
+                          <!-- Observaciones -->
+                          <mat-form-field appearance="outline" class="md:col-span-2">
+                            <mat-label>Observaciones</mat-label>
+                            <textarea matInput formControlName="clrep_obs_clrep" rows="3" maxlength="200"></textarea>
+                            <mat-hint align="end">{{ formRepresentante.get('clrep_obs_clrep')?.value?.length || 0 }}/200</mat-hint>
+                          </mat-form-field>
+                        </div>
+                      </form>
+                    </mat-card-content>
+                  }
+                </mat-card>
+
+                <!-- Cónyuge -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Cónyuge</mat-card-title>
+                    <mat-checkbox [(ngModel)]="showConyuge" [ngModelOptions]="{standalone: true}">
+                      Agregar Cónyuge
+                    </mat-checkbox>
+                  </mat-card-header>
+                  @if (showConyuge) {
+                    <mat-card-content>
+                      <form [formGroup]="formConyuge" class="flex flex-col gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <!-- Persona Cónyuge (autocomplete) -->
+                          <mat-form-field appearance="outline" class="md:col-span-2">
+                            <mat-label>Buscar Persona Cónyuge</mat-label>
+                            <input 
+                              matInput 
+                              #personaCygInput
+                              (input)="onSearchPersona($any($event.target).value, formConyuge, 'clcyg_cod_perso')"
+                              placeholder="Buscar por identificación o nombre (mínimo 3 caracteres)">
+                            <mat-icon matPrefix [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+                            @if (loadingPersonas) {
+                              <mat-spinner matSuffix diameter="20"></mat-spinner>
+                            }
+                            @if (personasBuscadas.length > 0) {
+                              <mat-autocomplete #personaCygAuto="matAutocomplete" (optionSelected)="onSelectPersona($event.option.value, formConyuge, 'clcyg_cod_perso')">
+                                @for (persona of personasBuscadas; track persona.perso_cod_perso) {
+                                  <mat-option [value]="persona">
+                                    <div>
+                                      <div class="font-semibold">{{ persona.perso_nom_perso }} {{ persona.perso_ape_perso }}</div>
+                                      <div class="text-sm text-gray-600">{{ persona.perso_ide_perso }}</div>
+                                    </div>
+                                  </mat-option>
+                                }
+                              </mat-autocomplete>
+                            }
+                            <mat-error>La persona cónyuge es requerida</mat-error>
+                          </mat-form-field>
+
+                          <!-- Empresa -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Empresa</mat-label>
+                            <input matInput formControlName="clcyg_nom_empre" maxlength="150">
+                            <mat-hint>Empresa donde trabaja el cónyuge</mat-hint>
+                          </mat-form-field>
+
+                          <!-- Cargo -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Cargo</mat-label>
+                            <input matInput formControlName="clcyg_des_cargo" maxlength="100">
+                          </mat-form-field>
+
+                          <!-- Ingresos Mensuales -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Ingresos Mensuales</mat-label>
+                            <input matInput type="number" formControlName="clcyg_val_ingre" min="0" step="0.01">
+                            <span matPrefix>$&nbsp;</span>
+                            <mat-error>El valor debe ser mayor o igual a 0</mat-error>
+                          </mat-form-field>
+                        </div>
+                      </form>
+                    </mat-card-content>
+                  }
+                </mat-card>
+
+                <!-- Información Laboral -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Información Laboral</mat-card-title>
+                    <mat-checkbox [(ngModel)]="showInformacionLaboral" [ngModelOptions]="{standalone: true}">
+                      Agregar Información Laboral
+                    </mat-checkbox>
+                  </mat-card-header>
+                  @if (showInformacionLaboral) {
+                    <mat-card-content>
+                      <form [formGroup]="formInformacionLaboral" class="flex flex-col gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <!-- Dependencia -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Dependencia</mat-label>
+                            <input matInput type="number" formControlName="cllab_cod_depen" placeholder="ID de dependencia">
+                            <mat-hint>ID de la dependencia/institución</mat-hint>
+                          </mat-form-field>
+
+                          <!-- Cargo -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Cargo</mat-label>
+                            <input matInput formControlName="cllab_des_cargo" maxlength="100">
+                          </mat-form-field>
+
+                          <!-- Tipo Contrato -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Tipo de Contrato</mat-label>
+                            <mat-select formControlName="cllab_cod_tcont">
+                              @if (loadingCatalogs()) {
+                                <mat-option disabled>Cargando...</mat-option>
+                              } @else {
+                                @for (tipo of tiposContrato(); track tipo.tcont_cod_tcont) {
+                                  <mat-option [value]="tipo.tcont_cod_tcont">{{ tipo.tcont_des_tcont }}</mat-option>
+                                }
+                              }
+                            </mat-select>
+                          </mat-form-field>
+
+                          <!-- Fecha Ingreso -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Fecha de Ingreso</mat-label>
+                            <input matInput [matDatepicker]="pickerLabIngre" formControlName="cllab_fec_ingre">
+                            <mat-datepicker-toggle matIconSuffix [for]="pickerLabIngre"></mat-datepicker-toggle>
+                            <mat-datepicker #pickerLabIngre></mat-datepicker>
+                          </mat-form-field>
+
+                          <!-- Fecha Fin Contrato -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Fecha Fin de Contrato</mat-label>
+                            <input matInput [matDatepicker]="pickerLabFinct" formControlName="cllab_fec_finct">
+                            <mat-datepicker-toggle matIconSuffix [for]="pickerLabFinct"></mat-datepicker-toggle>
+                            <mat-datepicker #pickerLabFinct></mat-datepicker>
+                          </mat-form-field>
+
+                          <!-- Ingreso Mensual -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Ingreso Mensual</mat-label>
+                            <input matInput type="number" formControlName="cllab_val_ingre" min="0" step="0.01">
+                            <span matPrefix>$&nbsp;</span>
+                            <mat-error>El valor debe ser mayor o igual a 0</mat-error>
+                          </mat-form-field>
+
+                          <!-- Dirección del Trabajo -->
+                          <mat-form-field appearance="outline" class="md:col-span-2">
+                            <mat-label>Dirección del Trabajo</mat-label>
+                            <textarea matInput formControlName="cllab_dir_traba" rows="2" maxlength="300"></textarea>
+                            <mat-hint align="end">{{ formInformacionLaboral.get('cllab_dir_traba')?.value?.length || 0 }}/300</mat-hint>
+                          </mat-form-field>
+
+                          <!-- Teléfono del Trabajo -->
+                          <mat-form-field appearance="outline">
+                            <mat-label>Teléfono del Trabajo</mat-label>
+                            <input matInput formControlName="cllab_tlf_traba" maxlength="15" placeholder="Ej: 0991234567">
+                          </mat-form-field>
+                        </div>
+                      </form>
+                    </mat-card-content>
+                  }
+                </mat-card>
+
+                <!-- Referencias -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Referencias</mat-card-title>
+                    <button mat-button (click)="addReferencia()">
+                      <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                      Agregar Referencia
+                    </button>
+                  </mat-card-header>
+                  @if (formReferencias.length > 0) {
+                    <mat-card-content>
+                      @for (ref of formReferencias; track $index) {
+                        <div class="mb-4 p-4 border rounded-lg">
+                          <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-semibold">Referencia #{{ $index + 1 }}</h4>
+                            <button mat-icon-button color="warn" (click)="removeReferencia($index)">
+                              <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                            </button>
+                          </div>
+                          <form [formGroup]="ref" class="flex flex-col gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <!-- Tipo Referencia -->
+                              <mat-form-field appearance="outline">
+                                <mat-label>Tipo de Referencia</mat-label>
+                                <mat-select formControlName="clref_cod_tiref" required>
+                                  @if (loadingCatalogs()) {
+                                    <mat-option disabled>Cargando...</mat-option>
+                                  } @else {
+                                    @for (tipo of tiposReferencia(); track tipo.tiref_cod_tiref) {
+                                      <mat-option [value]="tipo.tiref_cod_tiref">{{ tipo.tiref_des_tiref }}</mat-option>
+                                    }
+                                  }
+                                </mat-select>
+                                <mat-error>El tipo de referencia es requerido</mat-error>
+                              </mat-form-field>
+
+                              <!-- Persona Referencia (opcional, autocomplete) -->
+                              <mat-form-field appearance="outline">
+                                <mat-label>Persona Referencia (Opcional)</mat-label>
+                                <input 
+                                  matInput 
+                                  #personaRefInput
+                                  (input)="onSearchPersona($any($event.target).value, ref, 'clref_cod_perso')"
+                                  placeholder="Buscar persona registrada">
+                                <mat-icon matPrefix [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+                                @if (loadingPersonas) {
+                                  <mat-spinner matSuffix diameter="20"></mat-spinner>
+                                }
+                                @if (personasBuscadas.length > 0) {
+                                  <mat-autocomplete #personaRefAuto="matAutocomplete" (optionSelected)="onSelectPersona($event.option.value, ref, 'clref_cod_perso')">
+                                    @for (persona of personasBuscadas; track persona.perso_cod_perso) {
+                                      <mat-option [value]="persona">
+                                        <div>
+                                          <div class="font-semibold">{{ persona.perso_nom_perso }} {{ persona.perso_ape_perso }}</div>
+                                          <div class="text-sm text-gray-600">{{ persona.perso_ide_perso }}</div>
+                                        </div>
+                                      </mat-option>
+                                    }
+                                  </mat-autocomplete>
+                                }
+                                <mat-hint>Si no selecciona, complete los datos manualmente</mat-hint>
+                              </mat-form-field>
+
+                              <!-- Nombre Referencia (si no es persona registrada) -->
+                              <mat-form-field appearance="outline" [class.hidden]="ref.get('clref_cod_perso')?.value">
+                                <mat-label>Nombre</mat-label>
+                                <input matInput formControlName="clref_nom_refer" maxlength="150">
+                                <mat-hint>Complete si no seleccionó una persona registrada</mat-hint>
+                              </mat-form-field>
+
+                              <!-- Dirección -->
+                              <mat-form-field appearance="outline">
+                                <mat-label>Dirección</mat-label>
+                                <textarea matInput formControlName="clref_dir_refer" rows="2" maxlength="200"></textarea>
+                                <mat-hint align="end">{{ ref.get('clref_dir_refer')?.value?.length || 0 }}/200</mat-hint>
+                              </mat-form-field>
+
+                              <!-- Teléfono -->
+                              <mat-form-field appearance="outline">
+                                <mat-label>Teléfono</mat-label>
+                                <input matInput formControlName="clref_tlf_refer" maxlength="15" placeholder="Ej: 0991234567">
+                              </mat-form-field>
+
+                              <!-- Campos específicos para Referencia Financiera -->
+                              @if (isReferenciaFinanciera(ref.get('clref_cod_tiref')?.value)) {
+                                <!-- Número de Cuenta -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Número de Cuenta</mat-label>
+                                  <input matInput formControlName="clref_num_ctadp" required maxlength="30">
+                                  <mat-error>El número de cuenta es requerido para referencias financieras</mat-error>
+                                </mat-form-field>
+
+                                <!-- Saldo Promedio -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Saldo Promedio</mat-label>
+                                  <input matInput type="number" formControlName="clref_val_saldo" required min="0" step="0.01">
+                                  <span matPrefix>$&nbsp;</span>
+                                  <mat-error>El saldo es requerido para referencias financieras</mat-error>
+                                </mat-form-field>
+
+                                <!-- Fecha Apertura -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Fecha de Apertura</mat-label>
+                                  <input matInput [matDatepicker]="pickerRefApert" formControlName="clref_fec_apert" required>
+                                  <mat-datepicker-toggle matIconSuffix [for]="pickerRefApert"></mat-datepicker-toggle>
+                                  <mat-datepicker #pickerRefApert></mat-datepicker>
+                                  <mat-error>La fecha de apertura es requerida para referencias financieras</mat-error>
+                                </mat-form-field>
+                              }
+                            </div>
+                          </form>
+                        </div>
+                      }
+                    </mat-card-content>
+                  }
+                </mat-card>
+
+                <!-- Información Financiera -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Información Financiera</mat-card-title>
+                    <button mat-button (click)="addInformacionFinanciera()">
+                      <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                      Agregar Información Financiera
+                    </button>
+                  </mat-card-header>
+                  @if (formInformacionFinanciera.length > 0) {
+                    <mat-card-content>
+                      @for (fin of formInformacionFinanciera; track $index) {
+                        <div class="mb-4 p-4 border rounded-lg">
+                          <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-semibold">Información Financiera #{{ $index + 1 }}</h4>
+                            <button mat-icon-button color="warn" (click)="removeInformacionFinanciera($index)">
+                              <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                            </button>
+                          </div>
+                          <form [formGroup]="fin" class="flex flex-col gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <!-- Tipo Información Financiera -->
+                              <mat-form-field appearance="outline">
+                                <mat-label>Tipo</mat-label>
+                                <mat-select formControlName="clfin_cod_tifin" required>
+                                  @if (loadingCatalogs()) {
+                                    <mat-option disabled>Cargando...</mat-option>
+                                  } @else {
+                                    @for (tipo of tiposInformacionFinanciera(); track tipo.tifin_cod_tifin) {
+                                      <mat-option [value]="tipo.tifin_cod_tifin">
+                                        {{ tipo.tifin_nom_tifin }} ({{ tipo.tifin_tip_tifin }})
+                                      </mat-option>
+                                    }
+                                  }
+                                </mat-select>
+                                <mat-error>El tipo es requerido</mat-error>
+                              </mat-form-field>
+
+                              <!-- Monto -->
+                              <mat-form-field appearance="outline">
+                                <mat-label>Monto</mat-label>
+                                <input matInput type="number" formControlName="clfin_val_monto" required min="0" step="0.01">
+                                <span matPrefix>$&nbsp;</span>
+                                <mat-error>El monto es requerido y debe ser mayor o igual a 0</mat-error>
+                              </mat-form-field>
+                            </div>
+                          </form>
+                        </div>
+                      }
+                    </mat-card-content>
+                  }
+                </mat-card>
+
+                <!-- Usuario Banca Digital -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Usuario Banca Digital</mat-card-title>
+                    <mat-checkbox [(ngModel)]="showUsuarioBancaDigital" [ngModelOptions]="{standalone: true}">
+                      Crear Usuario Banca Digital
+                    </mat-checkbox>
+                  </mat-card-header>
+                  @if (showUsuarioBancaDigital) {
+                    <mat-card-content>
+                      <form [formGroup]="formUsuarioBancaDigital" class="flex flex-col gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <mat-form-field appearance="outline">
+                            <mat-label>Usuario</mat-label>
+                            <input matInput formControlName="clbnc_usr_banca">
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline">
+                            <mat-label>Contraseña</mat-label>
+                            <input matInput type="password" formControlName="clbnc_pwd_banca">
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline">
+                            <mat-label>Teléfono</mat-label>
+                            <input matInput formControlName="clbnc_tel_banca">
+                          </mat-form-field>
+
+                          <mat-form-field appearance="outline">
+                            <mat-label>Email</mat-label>
+                            <input matInput type="email" formControlName="clbnc_ema_banca">
+                          </mat-form-field>
+                        </div>
+                      </form>
+                    </mat-card-content>
+                  }
+                </mat-card>
+
+                <!-- Beneficiarios -->
+                @if (showUsuarioBancaDigital) {
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-card-title>Beneficiarios</mat-card-title>
+                      <button mat-button (click)="addBeneficiario()">
+                        <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                        Agregar Beneficiario
+                      </button>
+                    </mat-card-header>
+                    @if (formBeneficiarios.length > 0) {
+                      <mat-card-content>
+                        @for (ben of formBeneficiarios; track $index) {
+                          <div class="mb-4 p-4 border rounded-lg">
+                            <div class="flex justify-between items-center mb-4">
+                              <h4 class="font-semibold">Beneficiario #{{ $index + 1 }}</h4>
+                              <button mat-icon-button color="warn" (click)="removeBeneficiario($index)">
+                                <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                              </button>
+                            </div>
+                            <form [formGroup]="ben" class="flex flex-col gap-4">
+                              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Número de Cuenta -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Número de Cuenta</mat-label>
+                                  <input matInput formControlName="clben_num_cuent" required maxlength="20">
+                                  <mat-error>El número de cuenta es requerido</mat-error>
+                                </mat-form-field>
+
+                                <!-- Tipo de Cuenta -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Tipo de Cuenta</mat-label>
+                                  <mat-select formControlName="clben_cod_tcuen" required>
+                                    @for (tipo of tiposCuenta(); track tipo.id) {
+                                      <mat-option [value]="tipo.id">{{ tipo.nombre }}</mat-option>
+                                    }
+                                  </mat-select>
+                                  <mat-error>El tipo de cuenta es requerido</mat-error>
+                                </mat-form-field>
+
+                                <!-- Es Externo -->
+                                <mat-form-field appearance="outline" class="md:col-span-2">
+                                  <mat-checkbox formControlName="clben_ctr_exter">Es Externo (SPI)</mat-checkbox>
+                                  <mat-hint>Marque si el beneficiario es de otra institución financiera</mat-hint>
+                                </mat-form-field>
+
+                                <!-- Institución Financiera (solo si es externo) -->
+                                @if (ben.get('clben_ctr_exter')?.value) {
+                                  <mat-form-field appearance="outline">
+                                    <mat-label>Institución Financiera</mat-label>
+                                    <mat-select formControlName="clben_cod_ifina" required>
+                                      @if (loadingCatalogs()) {
+                                        <mat-option disabled>Cargando...</mat-option>
+                                      } @else {
+                                        @for (ifina of institucionesFinancieras(); track ifina.ifina_cod_ifina) {
+                                          <mat-option [value]="ifina.ifina_cod_ifina">{{ ifina.ifina_nom_ifina }}</mat-option>
+                                        }
+                                      }
+                                    </mat-select>
+                                    <mat-error>La institución financiera es requerida para beneficiarios externos</mat-error>
+                                  </mat-form-field>
+                                }
+
+                                <!-- Nombre del Beneficiario -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Nombre del Beneficiario</mat-label>
+                                  <input matInput formControlName="clben_nom_benef" required maxlength="250">
+                                  <mat-error>El nombre es requerido</mat-error>
+                                </mat-form-field>
+
+                                <!-- Identificación -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Cédula/RUC</mat-label>
+                                  <input matInput formControlName="clben_ide_benef" required maxlength="20">
+                                  <mat-error>La identificación es requerida</mat-error>
+                                </mat-form-field>
+
+                                <!-- Tipo Identificación -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Tipo de Identificación</mat-label>
+                                  <mat-select formControlName="clben_cod_tiden">
+                                    @if (loadingCatalogs()) {
+                                      <mat-option disabled>Cargando...</mat-option>
+                                    } @else {
+                                      @for (tipo of tiposIdentificacion(); track tipo.tiden_cod_tiden) {
+                                        <mat-option [value]="tipo.tiden_cod_tiden">{{ tipo.tiden_des_tiden }}</mat-option>
+                                      }
+                                    }
+                                  </mat-select>
+                                </mat-form-field>
+
+                                <!-- Email -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Email</mat-label>
+                                  <input matInput type="email" formControlName="clben_ema_benef" maxlength="150">
+                                  <mat-error>Ingrese un email válido</mat-error>
+                                </mat-form-field>
+
+                                <!-- Alias -->
+                                <mat-form-field appearance="outline">
+                                  <mat-label>Alias</mat-label>
+                                  <input matInput formControlName="clben_ali_benef" maxlength="50" placeholder="Ej: Juan Banco">
+                                  <mat-hint>Alias opcional para identificar al beneficiario</mat-hint>
+                                </mat-form-field>
+
+                                <!-- Activo -->
+                                <mat-form-field appearance="outline">
+                                  <mat-checkbox formControlName="clben_ctr_activ">Activo</mat-checkbox>
+                                </mat-form-field>
+                              </div>
+                            </form>
+                          </div>
+                        }
+                      </mat-card-content>
+                    }
+                  </mat-card>
+                }
+
+                <!-- Residencia Fiscal -->
+                <mat-card>
+                  <mat-card-header>
+                    <mat-card-title>Residencia Fiscal</mat-card-title>
+                    <mat-checkbox [(ngModel)]="showResidenciaFiscal" [ngModelOptions]="{standalone: true}">
+                      Agregar Residencia Fiscal
+                    </mat-checkbox>
+                  </mat-card-header>
+                  @if (showResidenciaFiscal) {
+                    <mat-card-content>
+                      <form [formGroup]="formResidenciaFiscal" class="flex flex-col gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <!-- Tiene Residencia Fiscal Extranjera -->
+                          <mat-form-field appearance="outline" class="md:col-span-2">
+                            <mat-checkbox formControlName="clrfi_ctr_resfi">Tiene Residencia Fiscal Extranjera</mat-checkbox>
+                            <mat-hint>Marque si el cliente tiene residencia fiscal en el extranjero (CRS/FATCA)</mat-hint>
+                          </mat-form-field>
+
+                          <!-- País de Residencia Fiscal -->
+                          @if (formResidenciaFiscal.get('clrfi_ctr_resfi')?.value) {
+                            <mat-form-field appearance="outline">
+                              <mat-label>País de Residencia Fiscal</mat-label>
+                              <mat-select formControlName="clrfi_cod_nacio">
+                                @if (loadingCatalogs()) {
+                                  <mat-option disabled>Cargando...</mat-option>
+                                } @else {
+                                  @for (pais of paises(); track pais.pais_cod_pais) {
+                                    <mat-option [value]="pais.pais_cod_pais">{{ pais.pais_nom_pais }}</mat-option>
+                                  }
+                                }
+                              </mat-select>
+                            </mat-form-field>
+
+                            <!-- Dirección -->
+                            <mat-form-field appearance="outline">
+                              <mat-label>Dirección</mat-label>
+                              <textarea matInput formControlName="clrfi_dir_resfi" rows="2" maxlength="200"></textarea>
+                              <mat-hint align="end">{{ formResidenciaFiscal.get('clrfi_dir_resfi')?.value?.length || 0 }}/200</mat-hint>
+                            </mat-form-field>
+
+                            <!-- Provincia -->
+                            <mat-form-field appearance="outline">
+                              <mat-label>Provincia</mat-label>
+                              <input matInput formControlName="clrfi_des_provi" maxlength="50">
+                            </mat-form-field>
+
+                            <!-- Ciudad -->
+                            <mat-form-field appearance="outline">
+                              <mat-label>Ciudad</mat-label>
+                              <input matInput formControlName="clrfi_des_ciuda" maxlength="50">
+                            </mat-form-field>
+
+                            <!-- Código Postal -->
+                            <mat-form-field appearance="outline">
+                              <mat-label>Código Postal</mat-label>
+                              <input matInput formControlName="clrfi_cod_posta" maxlength="10">
+                            </mat-form-field>
+                          }
+                        </div>
+                      </form>
+                    </mat-card-content>
+                  }
+                </mat-card>
+
+                <!-- Asamblea (solo socios) -->
+                @if (formCliente.get('clien_ctr_socio')?.value) {
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-card-title>Asamblea</mat-card-title>
+                      <mat-checkbox [(ngModel)]="showAsamblea" [ngModelOptions]="{standalone: true}">
+                        Agregar Información de Asamblea
+                      </mat-checkbox>
+                    </mat-card-header>
+                    @if (showAsamblea) {
+                      <mat-card-content>
+                        <form [formGroup]="formAsamblea" class="flex flex-col gap-4">
+                          <!-- TODO: Formulario de asamblea -->
+                          <p class="text-secondary">Formulario de asamblea pendiente de implementar</p>
+                        </form>
+                      </mat-card-content>
+                    }
+                  </mat-card>
+                }
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+</div>
+

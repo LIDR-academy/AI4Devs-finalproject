@@ -1,0 +1,6 @@
+@if(show){
+<fuse-alert class="mt-8" [appearance]="'outline'" [showIcon]="showIcon" [type]="type" [@shake]="type === 'error'">
+    <span fuseAlertTitle class="text-sm">{{title}}</span>
+    <div class="text-justify">{{ message }}</div>
+</fuse-alert>
+}

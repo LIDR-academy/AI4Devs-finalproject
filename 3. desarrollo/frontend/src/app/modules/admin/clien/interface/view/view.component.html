@@ -1,0 +1,219 @@
+<div class="flex flex-col flex-auto min-w-0">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between p-6 sm:py-8 border-b bg-card dark:bg-transparent">
+    <div class="flex-1 min-w-0">
+      <!-- Breadcrumbs -->
+      <div class="flex flex-wrap items-center font-medium">
+        <div>
+          <a class="whitespace-nowrap text-primary-500">Configuración</a>
+        </div>
+        <div class="flex items-center ml-1 whitespace-nowrap">
+          <mat-icon class="icon-size-5 text-secondary" [svgIcon]="'heroicons_mini:chevron-right'"></mat-icon>
+          <a class="ml-1 text-primary-500">Gestión</a>
+        </div>
+        <div class="flex items-center ml-1 whitespace-nowrap">
+          <mat-icon class="icon-size-5 text-secondary" [svgIcon]="'heroicons_mini:chevron-right'"></mat-icon>
+          <span class="ml-1 text-secondary">Clientes</span>
+        </div>
+      </div>
+      <!-- Title -->
+      <div class="mt-2">
+        <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight leading-7 sm:leading-10 truncate">
+          Gestión de Clientes
+        </h2>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+      <button
+        mat-flat-button
+        [color]="'primary'"
+        (click)="onCreate()"
+        class="ml-3">
+        <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+        <span class="ml-2">Nuevo Cliente</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-col p-6 sm:p-8 border-b bg-card dark:bg-transparent">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+      <!-- Search Identificación -->
+      <mat-form-field class="flex-1" appearance="outline">
+        <mat-label>Buscar por identificación</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchIdentificacion"
+          (keyup.enter)="onSearch()"
+          placeholder="Cédula o RUC">
+        <mat-icon matPrefix [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+      </mat-form-field>
+
+      <!-- Search Nombre -->
+      <mat-form-field class="flex-1" appearance="outline">
+        <mat-label>Buscar por nombre</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchNombre"
+          (keyup.enter)="onSearch()"
+          placeholder="Nombre completo">
+        <mat-icon matPrefix [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+      </mat-form-field>
+
+      <!-- Filter Es Socio -->
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo</mat-label>
+        <mat-select [(ngModel)]="filterEsSocio">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option [value]="true">Socio</mat-option>
+          <mat-option [value]="false">Cliente</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2">
+        <button
+          mat-stroked-button
+          (click)="onSearch()">
+          <mat-icon [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+          <span class="ml-2">Buscar</span>
+        </button>
+        <button
+          mat-stroked-button
+          (click)="onClearFilters()">
+          <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+          <span class="ml-2">Limpiar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toggle Inactivos -->
+    <div class="mt-4">
+      <mat-slide-toggle
+        [checked]="showInactive()"
+        (change)="onToggleInactive()">
+        Mostrar inactivos
+      </mat-slide-toggle>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="flex flex-auto flex-col min-w-0 p-6 sm:p-8">
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="flex flex-auto items-center justify-center">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    }
+
+    <!-- Table -->
+    @if (!loading()) {
+      <div class="flex flex-col flex-auto min-w-0 bg-card rounded-xl shadow">
+        <div class="flex flex-col flex-auto min-w-0 overflow-x-auto">
+          <table mat-table [dataSource]="clientes()" class="w-full">
+            <!-- Identificación Column -->
+            <ng-container matColumnDef="identificacion">
+              <th mat-header-cell *matHeaderCellDef>Identificación</th>
+              <td mat-cell *matCellDef="let cliente">
+                {{ cliente.persona?.perso_ide_perso }}
+              </td>
+            </ng-container>
+
+            <!-- Nombre Column -->
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef>Nombre</th>
+              <td mat-cell *matCellDef="let cliente">
+                {{ cliente.persona?.perso_nom_perso }}
+              </td>
+            </ng-container>
+
+            <!-- Tipo Persona Column -->
+            <ng-container matColumnDef="tipoPersona">
+              <th mat-header-cell *matHeaderCellDef>Tipo</th>
+              <td mat-cell *matCellDef="let cliente">
+                {{ getTipoPersonaLabel(cliente.persona?.perso_cod_tpers || 0) }}
+              </td>
+            </ng-container>
+
+            <!-- Es Socio Column -->
+            <ng-container matColumnDef="esSocio">
+              <th mat-header-cell *matHeaderCellDef>Es Socio</th>
+              <td mat-cell *matCellDef="let cliente">
+                <mat-chip [color]="cliente.clien_ctr_socio ? 'primary' : 'accent'">
+                  {{ getEsSocioLabel(cliente.clien_ctr_socio) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Oficina Column -->
+            <ng-container matColumnDef="oficina">
+              <th mat-header-cell *matHeaderCellDef>Oficina</th>
+              <td mat-cell *matCellDef="let cliente">
+                {{ cliente.clien_cod_ofici }}
+              </td>
+            </ng-container>
+
+            <!-- Fecha Ingreso Column -->
+            <ng-container matColumnDef="fechaIngreso">
+              <th mat-header-cell *matHeaderCellDef>Fecha Ingreso</th>
+              <td mat-cell *matCellDef="let cliente">
+                {{ cliente.clien_fec_ingin | date:'shortDate' }}
+              </td>
+            </ng-container>
+
+            <!-- Acciones Column -->
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef class="w-20">Acciones</th>
+              <td mat-cell *matCellDef="let cliente" class="w-20">
+                <button
+                  mat-icon-button
+                  [matMenuTriggerFor]="menu"
+                  [matTooltip]="'Más opciones'">
+                  <mat-icon [svgIcon]="'heroicons_outline:ellipsis-vertical'"></mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="onView(cliente)">
+                    <mat-icon [svgIcon]="'heroicons_outline:eye'"></mat-icon>
+                    <span>Ver</span>
+                  </button>
+                  <button mat-menu-item (click)="onEdit(cliente)">
+                    <mat-icon [svgIcon]="'heroicons_outline:pencil'"></mat-icon>
+                    <span>Editar</span>
+                  </button>
+                  <button mat-menu-item (click)="onDelete(cliente)" class="text-warn">
+                    <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    <span>Eliminar</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <mat-paginator
+          [length]="totalClientes()"
+          [pageIndex]="pageClientes() - 1"
+          [pageSize]="limitClientes()"
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          (page)="onPageChange($event)">
+        </mat-paginator>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && clientes().length === 0) {
+      <div class="flex flex-auto items-center justify-center">
+        <div class="text-center">
+          <mat-icon class="icon-size-16 text-secondary mb-4" [svgIcon]="'heroicons_outline:inbox'"></mat-icon>
+          <p class="text-secondary">No se encontraron clientes</p>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
