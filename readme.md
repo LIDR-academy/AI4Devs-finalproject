@@ -2552,13 +2552,22 @@ Un médico autenticado debe poder crear, actualizar y eliminar horarios de traba
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+> Tres primeros tickets generados (frontend, backend y base de datos) con rutas actualizadas en `documentation/`.
 
-**Ticket 1**
+**Ticket 1 (Frontend)**  
+- ID: HU1-FE-001 — Formulario de Registro de Paciente  
+- Ruta: `documentation/HU1/frontend/HU1-FE-001-Registro-Paciente.md`  
+- Alcance: Formulario con validación en tiempo real, reCAPTCHA v3, manejo de errores 409/429, i18n ES/EN, redirección a dashboard. Incluye pasos técnicos, archivos a crear y dependencias.
 
-**Ticket 2**
+**Ticket 2 (Backend)**  
+- ID: HU1-BE-001 — Endpoint de Registro de Paciente  
+- Ruta: `documentation/HU1/backend/HU1-BE-001-Registro-Paciente.md`  
+- Alcance: POST `/api/v1/auth/register` con validación, reCAPTCHA, rate limiting, creación de usuario/bcrypt, tokens JWT, audit_logs. Incluye DTOs, servicio, controlador, manejo de errores y env vars.
 
-**Ticket 3**
+**Ticket 3 (Base de Datos)**  
+- ID: HU1-DB-001 — Migración Tabla USERS  
+- Ruta: `documentation/HU1/database/HU1-DB-001-Migracion-Tabla-USERS.md`  
+- Alcance: Migración TypeORM para `USERS` (email único, role enum, timestamps), índices, rollback SQL y pruebas de migración.
 
 ---
 
