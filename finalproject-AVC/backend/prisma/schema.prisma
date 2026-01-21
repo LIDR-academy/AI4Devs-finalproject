@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  role         Role
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  reservations Reservation[]
+
+  @@map("users")
+}
+
+model Court {
+  id           String        @id @default(uuid())
+  name         String
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  reservations Reservation[]
+
+  @@map("courts")
+}
+
+model Reservation {
+  id        String            @id @default(uuid())
+  userId    String            @map("user_id")
+  courtId   String            @map("court_id")
+  startTime DateTime          @map("start_time")
+  endTime   DateTime          @map("end_time")
+  status    ReservationStatus
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  court   Court    @relation(fields: [courtId], references: [id])
+  payment Payment?
+
+  @@index([courtId, startTime, endTime])
+  @@map("reservations")
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  reservationId String        @unique @map("reservation_id")
+  amount        Decimal       @db.Decimal(10, 2)
+  status        PaymentStatus
+  provider      String
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+
+  @@map("payments")
+}
+
+enum Role {
+  PLAYER
+  ADMIN
+}
+
+enum ReservationStatus {
+  CREATED
+  CONFIRMED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}

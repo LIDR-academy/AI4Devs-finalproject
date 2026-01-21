@@ -1309,3 +1309,111 @@ Confirmar un pago y actualizar el estado de la reserva asociada.
 | **Total**                       | **34 puntos**  |
 
 ---
+
+# 7. Ejecución de la aplicación
+
+El siguiente instructivo corresponde a la ejecución de la aplicación en entorno local.
+
+## 7.1 Estructura del proyecto
+
+```
+finalproject-AVC/
+├── backend/           # Node.js + TypeScript + Fastify + Prisma
+│   ├── src/
+│   │   ├── modules/   # Domain modules (auth, users, courts, reservations, payments)
+│   │   └── shared/    # Shared utilities, config, errors, middleware
+│   ├── prisma/        # Database schema and migrations
+│   └── tests/         # Unit and integration tests
+├── frontend/          # React + TypeScript + Vite
+│   ├── src/
+│   │   ├── features/  # Feature-based modules
+│   │   ├── shared/    # Shared components
+│   │   └── api/       # API client
+│   └── cypress/       # E2E tests
+└── README.md
+```
+
+## 7.2 Pre-requisitos
+
+- Node.js 18+
+- Docker and Docker Compose
+- npm or yarn
+
+## 7.3 Iniciar PostgreSQL en Docker
+docker-compose up -d
+
+## 7.4 Configuración del Backend
+
+```bash
+cd backend
+
+# Instalar dependencias
+npm install
+
+# Copiar el archivo de entorno y configurarlo
+cp .env.example .env
+# Editar .env con tu cadena de conexión a PostgreSQL
+
+# Generar cliente Prisma
+npm run prisma:generate
+
+# Ejecutar migraciones de base de datos
+npm run prisma:migrate
+
+# Sembrar la base de datos con datos iniciales
+npm run prisma:seed
+
+# Iniciar el servidor de desarrollador
+npm run dev
+```
+## 7.5 Configuración del Frontend
+
+```bash
+cd frontend
+
+# Instalar dependencias
+npm install
+
+# Iniciar el servidor de desarrollador
+npm run dev
+
+El Frontend se puede acceder mediante: `http://localhost:5173`
+
+## Documentación de la API
+
+La API está disponible en: `http://localhost:3000/api/v1`
+
+### Health Check
+```bash
+curl http://localhost:3000/api/v1/health
+```
+
+## 7.6 Testing
+
+### Testing del Backend
+```bash
+cd backend
+
+# Ejecutar tests unitarios
+npm test
+
+# Ejecutar tests de integración
+npm run test:integration
+
+# Ejecutar coverage
+npm test -- --coverage
+```
+
+### Testing del Frontend
+```bash
+cd frontend
+
+# Ejecutar tests unitarios
+npm test
+
+# Ejecutar tests E2E
+npm run cypress:run
+
+# Open Cypress UI
+npm run cypress:open
+```
