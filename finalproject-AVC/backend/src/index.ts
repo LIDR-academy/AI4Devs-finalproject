@@ -1,0 +1,50 @@
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
+import { config } from './shared/config';
+import { errorHandler } from './shared/errors/error-handler';
+
+const fastify = Fastify({
+    logger: {
+        level: config.nodeEnv === 'production' ? 'info' : 'debug',
+    },
+});
+
+// Register plugins
+fastify.register(cors, {
+    origin: config.corsOrigin,
+});
+
+fastify.register(jwt, {
+    secret: config.jwtSecret,
+});
+
+// Health check endpoint
+fastify.get('/api/v1/health', async () => {
+    return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: config.nodeEnv,
+    };
+});
+
+// Error handler
+fastify.setErrorHandler(errorHandler);
+
+// Start server
+const start = async () => {
+    try {
+        await fastify.listen({
+            port: config.port,
+            host: config.host,
+        });
+        console.log(`🚀 Server running on http://${config.host}:${config.port}`);
+    } catch (err) {
+        fastify.log.error(err);
+        process.exit(1);
+    }
+};
+
+start();
+
+export { fastify };

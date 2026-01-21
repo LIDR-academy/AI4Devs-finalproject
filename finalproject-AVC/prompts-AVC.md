@@ -274,4 +274,242 @@ Assigned to: [team]
 Tags:
 Comments:
 
+---
+
+# Prompts para la implementación de la segunda entrega
+
+## Prompt 13 (ChatGPT GPT-5 mini)
+
+## Prompt 14 (Antigravity - Claude Sonnet 4.5)
+
+You are a senior full-stack software engineer working on a Pilot (Phase 0) Padel Club Management System.
+
+Your task is to IMPLEMENT the system based strictly on the provided documentation.
+Do NOT invent features, flows, or requirements beyond what is explicitly described.
+
+════════════════════════════════════════════
+📌 PROJECT CONTEXT
+════════════════════════════════════════════
+
+Project: SC Padel Club Management System
+Phase: Phase 0 (Pilot)
+Goal: Deliver a small but healthy, working MVP
+
+This project includes:
+• Requirements (functional & non-functional)
+• System actors
+• Lean Canvas
+• User Stories (Must-Have and Should-Have)
+• Use Cases
+• Architecture Overview
+• Data Model (ERD)
+• Tickets (Phase 0)
+• API Design decisions
+
+IMPORTANT:
+- Only MUST-HAVE user stories are implemented in Phase 0.
+- SHOULD-HAVE stories are documented but MUST NOT be coded.
+- There are NO cancellations in Phase 0.
+- Payment flow is mocked.
+- Backend is a Backend-for-Frontend (BFF), not a public API.
+
+════════════════════════════════════════════
+🛠 TECH STACK (MANDATORY)
+════════════════════════════════════════════
+
+Backend:
+- Node.js
+- TypeScript
+- Express OR Fastify
+- PostgreSQL
+- Prisma ORM
+- JWT authentication
+- Jest (unit + integration tests)
+
+Frontend:
+- React
+- TypeScript
+- Jest (unit tests)
+- Cypress (E2E tests)
+
+General:
+- Monolithic architecture (modular)
+- REST API
+- Explicit API versioning (/api/v1)
+- i18n handled in frontend (Spanish, Portuguese, English)
+
+════════════════════════════════════════════
+📁 PROJECT STRUCTURE (MANDATORY)
+════════════════════════════════════════════
+
+Repository structure:
+
+/backend
+/frontend
+
+Backend must follow a domain-based modular structure:
+- auth
+- users
+- courts
+- reservations
+- payments
+
+Frontend must follow a feature-based structure:
+- auth
+- courts
+- reservations
+- shared components
+- api layer
+
+Testing must be organized as:
+- Unit tests
+- Integration tests
+- At least ONE E2E test
+
+════════════════════════════════════════════
+📐 ARCHITECTURAL RULES
+════════════════════════════════════════════
+
+1. Follow the documented architecture and ERD exactly.
+2. Database schema must match the ERD (3NF, constraints enforced).
+3. Reservation lifecycle in Phase 0:
+   - CREATED → CONFIRMED
+   - CANCELLED is NOT implemented.
+4. If a payment fails, reservation remains CREATED.
+5. Admin users can create other users.
+6. No public registration.
+7. No microservices.
+8. No premature optimizations.
+
+════════════════════════════════════════════
+🧪 TESTING RULES
+════════════════════════════════════════════
+
+- Tests are NOT optional.
+- Each implemented feature must include:
+  - Unit tests for business logic
+  - Integration tests for API endpoints
+- At least ONE E2E test must:
+  - Load the frontend
+  - Call the backend
+  - Display data successfully
+
+════════════════════════════════════════════
+🚧 IMPLEMENTATION STRATEGY
+════════════════════════════════════════════
+
+Proceed incrementally using vertical slices:
+
+1. Project setup
+2. Backend boot + health check
+3. Database connection + Prisma schema
+4. Frontend boot
+5. Hello World end-to-end flow
+6. Authentication
+7. Core Phase 0 features (per tickets)
+8. Tests and stabilization
+
+At every step:
+- Keep the system runnable
+- Prefer clarity over completeness
+
+════════════════════════════════════════════
+📄 INPUT DOCUMENTATION
+════════════════════════════════════════════
+
+You will now receive:
+- Project documentation
+- ERD
+- User stories
+- Tickets
+
+Analyze them carefully before writing code.
+
+If something is unclear:
+- ASK before implementing.
+- Do NOT assume.
+
+## Prompt 15
+
+Begin by scaffolding the project structure and initial configuration.
+
+## Prompt 16
+### Cambios en la Base de Datos - Dockerización
+
+I did all the steps in the SETUP.md document except the ones related to the database.
+We need to update the database setup to use Docker instead of a manually created local PostgreSQL instance.
+
+Current issue:
+- The setup instructions require manually creating the database and user via psql.
+- This is NOT desired for this project.
+
+Required change:
+- PostgreSQL must be fully containerized using Docker and docker-compose.
+- No manual psql steps should be required.
+
+Please do the following:
+
+1. Add a `docker-compose.yml` file at the root of the repository (or backend root if more appropriate) that:
+   - Runs a PostgreSQL container
+   - Uses environment variables for:
+     - POSTGRES_DB
+     - POSTGRES_USER
+     - POSTGRES_PASSWORD
+   - Exposes port 5432
+   - Persists data using a Docker volume
+
+2. Update the backend configuration so that:
+   - `.env.example` contains a DATABASE_URL compatible with the Dockerized database
+   - `.env` points to the Docker container (e.g. localhost:5432)
+
+3. Remove or update any documentation or setup steps that instruct the user to:
+   - Run `sudo -u postgres psql`
+   - Manually create databases or users
+
+4. Update the README or setup instructions to include:
+   - How to start the database using `docker-compose up -d`
+   - How to stop it using `docker-compose down`
+   - Connection details derived from `.env`
+
+5. Ensure Prisma:
+   - Connects correctly to the Dockerized PostgreSQL instance
+   - Can run migrations normally against the container
+
+Constraints:
+- Do NOT change the database schema.
+- Do NOT change Prisma models.
+- Do NOT introduce additional services.
+- Keep this aligned with a Phase 0 pilot setup.
+
+After making these changes:
+- The backend should start with the database running in Docker
+- `prisma migrate` should work without manual intervention
+
+Do not change any of the code yet. Show me how you would implement it and when I say OK, proceed.
+
+## Prompt 17
+### Creación de tests unitarios y de integración - Corrección de errores
+
+One more thing, when I run npm test, both in the backend directory and frontend, nothing happens as there are no unit tests. Also, there are errors when I run the other tests, such as:
+npm run test:integration
+
+> sc-padel-backend@1.0.0 test:integration
+> jest --config jest.integration.config.js
+
+● Validation Error:
+(Error found in backend test)
+
+And:
+npm run cypress:run
+
+> sc-padel-frontend@1.0.0 cypress:run
+> cypress run
+
+It looks like this is your first time using Cypress: 13.17.0
+
+
+Cypress failed to start.
+(Cypress error found in frontend test)
+
+My question is, with the backend and frontend code implemented so far, can you create tests? If so, which ones and how you would implement them? I want to see it and if I agree, I’ll say OK so you can proceed.
 
