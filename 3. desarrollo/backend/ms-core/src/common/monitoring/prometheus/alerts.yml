@@ -1,0 +1,195 @@
+groups:
+  - name: core-nest-alerts
+    rules:
+      # Health Check Alerts
+      - alert: ServiceHealthDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 2 minutes"
+
+      - alert: HealthEndpointDown
+        expr: health_status{service=~"ms-.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Health endpoint down for {{ $labels.service }}"
+          description: "Health endpoint for {{ $labels.service }} is returning unhealthy status"
+
+      # Error Rate Alerts
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (service)
+          /
+          sum(rate(http_requests_total[5m])) by (service) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High error rate for {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}"
+
+      - alert: CriticalErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (service)
+          /
+          sum(rate(http_requests_total[5m])) by (service) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Critical error rate for {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}"
+
+      # Latency Alerts
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High latency for {{ $labels.service }}"
+          description: "95th percentile latency is {{ $value }}s for {{ $labels.service }}"
+
+      - alert: CriticalLatency
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 1.0
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Critical latency for {{ $labels.service }}"
+          description: "95th percentile latency is {{ $value }}s for {{ $labels.service }}"
+
+      # Database Alerts
+      - alert: DatabaseConnectionsSaturated
+        expr: db_pool_in_use / db_pool_max > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Database connections saturated for {{ $labels.service }}"
+          description: "{{ $value | humanizePercentage }} of database connections are in use"
+
+      - alert: DatabasePoolExhausted
+        expr: db_pool_waiting > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Database pool exhausted for {{ $labels.service }}"
+          description: "{{ $value }} requests are waiting for database connections"
+
+      # Circuit Breaker Alerts
+      - alert: CircuitBreakerOpen
+        expr: increase(circuit_breaker_open_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+          target: "{{ $labels.target }}"
+        annotations:
+          summary: "Circuit breaker opened for {{ $labels.service }} -> {{ $labels.target }}"
+          description: "Circuit breaker has opened due to failures"
+
+      - alert: CircuitBreakerOpenSustained
+        expr: increase(circuit_breaker_open_total[10m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+          service: "{{ $labels.service }}"
+          target: "{{ $labels.target }}"
+        annotations:
+          summary: "Circuit breaker sustained open for {{ $labels.service }} -> {{ $labels.target }}"
+          description: "Circuit breaker has been open for an extended period"
+
+      # Memory Alerts
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: CriticalMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      # CPU Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}%"
+
+      # Disk Alerts
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage"
+          description: "Disk usage is {{ $value | humanizePercentage }}"
+
+      # NATS Alerts
+      - alert: NATSConnectionIssues
+        expr: nats_connections_total - nats_connections_active > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NATS connection issues"
+          description: "Some NATS connections are inactive"
+
+      # Custom Application Alerts
+      - alert: ApplicationError
+        expr: increase(application_errors_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High application error rate for {{ $labels.service }}"
+          description: "{{ $value }} errors in the last 5 minutes"
+
+      # Dependency Latency Alerts
+      - alert: DependencyHighLatency
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(ms_dependency_latency_seconds_bucket[5m])) by (le, target)
+          ) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          target: "{{ $labels.target }}"
+        annotations:
+          summary: "High dependency latency for {{ $labels.target }}"
+          description: "95th percentile latency is {{ $value }}s for {{ $labels.target }}"

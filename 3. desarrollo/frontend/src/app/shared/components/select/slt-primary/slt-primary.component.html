@@ -1,0 +1,22 @@
+<mat-form-field class="w-full" appearance="outline">
+  <mat-label>{{ label }}</mat-label>
+  <mat-select [ngModel]="currentValue" (ngModelChange)="onSelectChange($event)" [ngClass]="{
+          'is-invalid': errorMessage,
+          'is-valid': control?.valid && control?.touched
+        }" [disabled]="disabled || isDisabled">
+    <mat-option *ngFor="let option of options" [value]="option.id">{{ option.label }}</mat-option>
+  </mat-select>
+  @if (errorMessage) { <mat-error class="-mt-7 text-xs">{{ errorMessage }}</mat-error> }
+</mat-form-field>
+
+<!--   <label class="form-label">{{ label }}:</label>
+  <select class="form-select" [id]="id" [ngModel]="currentValue" (ngModelChange)="onSelectChange($event)" [ngClass]="{
+          'is-invalid': errorMessage,
+          'is-valid': control?.valid && control?.touched
+        }" [disabled]="disabled || isDisabled">
+    <option [ngValue]="null" disabled hidden>{{ placeholder }}</option>
+    <option *ngFor="let option of options" [ngValue]="option.id">
+      {{ option.label }}
+    </option>
+  </select>
+  <div *ngIf="errorMessage" class="invalid-feedback">{{ errorMessage }}</div> -->

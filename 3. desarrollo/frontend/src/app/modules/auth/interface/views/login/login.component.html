@@ -1,0 +1,139 @@
+<div class="login-container flex h-screen w-screen">
+  <!-- Left Section - Branding -->
+  <div class="branding-section hidden lg:flex w-1/2 bg-gradient-to-br from-primary-600 to-primary-800 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-center p-12">
+    <div class="logo-container mb-8">
+      <img src="images/logo/logo.svg" alt="Logo" class="max-h-[60px]" />
+    </div>
+    <h1 class="welcome-title text-4xl font-bold text-white mb-4 text-center">
+      Bienvenido a {{ generalConstant.appName }}
+    </h1>
+    <p class="welcome-subtitle text-lg text-white/80 text-center mb-8">
+      Sistema de Core Financiero
+    </p>
+    <div class="illustration">
+      <!-- Decorative illustration or image can be added here -->
+    </div>
+  </div>
+
+  <!-- Right Section - Form -->
+  <div class="form-section w-full lg:w-1/2 bg-white dark:bg-gray-900 flex flex-col items-center justify-center p-8">
+    <div class="w-full max-w-md">
+      <!-- Header -->
+      <div class="form-header flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Iniciar Sesión</h2>
+        <app-server-status></app-server-status>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form space-y-6">
+        <!-- Username field -->
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Usuario</mat-label>
+          <mat-icon matPrefix>person</mat-icon>
+          <input
+            matInput
+            formControlName="username"
+            autocomplete="username"
+            autofocus
+            [readonly]="isLoading"
+          />
+          @if (loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched) {
+            <mat-error>{{ getErrorMessage('username') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Password field -->
+        <mat-form-field class="w-full" appearance="outline">
+          <mat-label>Contraseña</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input
+            matInput
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+            [readonly]="isLoading"
+          />
+          <button
+            mat-icon-button
+            type="button"
+            matSuffix
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="'Mostrar contraseña'"
+            [attr.aria-pressed]="showPassword"
+          >
+            <mat-icon>{{ showPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
+            <mat-error>{{ getErrorMessage('password') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Form options -->
+        <div class="form-options flex justify-between items-center">
+          <mat-checkbox formControlName="rememberMe" color="primary">
+            Recordar usuario
+          </mat-checkbox>
+          <a
+            class="forgot-password text-primary-600 hover:text-primary-800 dark:text-primary-400 text-sm cursor-pointer"
+            (click)="onForgotPassword()"
+          >
+            ¿Olvidó su contraseña?
+          </a>
+        </div>
+
+        <!-- Captcha (conditional) -->
+        @if (captchaRequired) {
+          <app-captcha (resolved)="onCaptchaResolved($event)"></app-captcha>
+          @if (loginForm.get('captchaToken')?.hasError('required') && loginForm.get('captchaToken')?.touched) {
+            <div class="text-red-600 text-sm mt-2">
+              Complete la verificación de seguridad
+            </div>
+          }
+        }
+
+        <!-- Failed attempts indicator -->
+        @if (failedAttempts > 0 && remainingAttempts !== null) {
+          <div class="attempts-indicator flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+            <mat-icon>warning</mat-icon>
+            <span>Intentos restantes: {{ remainingAttempts }}</span>
+          </div>
+        }
+
+        <!-- Error message -->
+        @if (error) {
+          <div class="error-message flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+            <mat-icon>error</mat-icon>
+            <span>{{ error }}</span>
+          </div>
+        }
+
+        <!-- Submit button -->
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="w-full"
+          [disabled]="isLoading || loginForm.invalid"
+        >
+          @if (isLoading) {
+            <mat-spinner diameter="20" class="inline-block mr-2"></mat-spinner>
+            <span>Ingresando...</span>
+          } @else {
+            <span>Iniciar Sesión</span>
+          }
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <div class="form-footer mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-sm text-gray-500">
+        <span>v{{ generalConstant.appVersion || '1.0.0' }}</span>
+        <div class="footer-links flex gap-4">
+          <a class="hover:underline cursor-pointer">Términos de uso</a>
+          <a class="hover:underline cursor-pointer">Privacidad</a>
+          <a class="hover:underline cursor-pointer">Ayuda</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

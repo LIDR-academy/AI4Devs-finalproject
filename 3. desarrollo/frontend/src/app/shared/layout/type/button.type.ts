@@ -1,0 +1,1 @@
+export type ButtonTyped = 'create' | 'update' | 'delete' | 'cancel' | 'save' | 'detail' | 'search' | 'export' | 'import' | 'custom';

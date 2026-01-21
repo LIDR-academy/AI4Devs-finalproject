@@ -1,0 +1,18 @@
+<div class="w-full">
+    <!-- opciones: 'legacy', 'standard', 'fill', 'outline' -->
+    <mat-form-field class="example-full-width" [subscriptSizing]="'dynamic'" appearance="outline">
+        <mat-label>{{ label }}</mat-label>
+        <input matInput [type]="type" [value]="currentValue" [placeholder]="placeholder" [disabled]="disabled"
+            [readonly]="readonly" [attr.minlength]="minLength" [attr.maxlength]="maxLength"
+            (input)="onInputChange($event)" (blur)="onTouch()" [ngClass]="{
+      'ng-invalid text-red-600': errorMessage,
+      'ng-valid ': control?.valid && control?.touched }">
+        @if (icon) { <mat-icon class="icon-size-5" matPrefix [svgIcon]="'heroicons_solid:'+icon"></mat-icon> }
+    </mat-form-field>
+    <small class="text-white">.</small>
+    @if (errorMessage) { <mat-error class="-mt-7 text-xs">{{ errorMessage }}</mat-error> }
+</div>
+
+
+<!-- Mostrar error temporal -->
+<!-- <pre>{{ control?.errors | json }}</pre> -->

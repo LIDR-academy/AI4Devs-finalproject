@@ -1,0 +1,10 @@
+<content-wrapper class="w-full mt-3">
+    <div class="absolute inset-0 flex min-w-0 flex-col overflow-hidden p-2">
+        <alert-primary [show]="showAlert" [title]="title" [message]="alert.message"></alert-primary>
+        <div class="container p-4 overflow-y-auto">
+            <tbl-primary [confiTable]="confiTable" (onCreate)="onCreate($event)" (onUpdate)="onUpdate($event)"
+                (onDelete)="onDelete($event)" (onPagination)="onPagination($event)">
+            </tbl-primary>
+        </div>
+    </div>
+</content-wrapper>

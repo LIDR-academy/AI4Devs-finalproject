@@ -1,0 +1,50 @@
+services:
+  nats-server:
+    image: nats:2.11.8
+    ports:
+      - "8222:8222"
+
+  ms-core:
+    build: ./ms-core
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ms-core/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - port=8000
+      - msNatsServer=nats://nats-server:4222
+
+  ms-auth:
+    build: ./ms-auth
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ms-auth/src:/usr/src/app/src
+    command: npm run start:dev
+    env_file:
+      - .env
+
+
+  ms-perso:
+    build: ./ms-perso
+    ports:
+      - "8002:8002"
+    restart: always
+    volumes:
+      - ./ms-perso/src:/usr/src/app/src
+    command: npm run start:dev
+    env_file:
+      - .env
+
+
+  ms-confi:
+    build: ./ms-confi
+    ports:
+      - "8012:8012"
+    volumes:
+      - ./ms-confi/src:/usr/src/app/src
+    command: npm run start:dev
+    env_file:
+      - .env
+

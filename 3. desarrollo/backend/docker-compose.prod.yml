@@ -1,0 +1,66 @@
+services:
+  nats-server:
+    container_name: NATS-SERVER-FINANTIX-PROD
+    image: nats:2.11.8
+    restart: always
+    ports:
+      - "8222:8222"
+
+  ms-auth:
+    container_name: MS-AUTH-FINANTIX-PROD
+    image: ms-auth-finantix-prod
+    restart: always
+    depends_on:
+      - nats-server
+    build:
+      context: ./ms-auth
+      dockerfile: Dockerfile.prod
+    ports:
+      - ${portAuth}:${portAuth}
+    env_file:
+      - .env.prod
+
+  ms-perso:
+    container_name: MS-PERSO-FINANTIX-PROD
+    image: ms-perso-finantix-prod
+    restart: always
+    depends_on:
+      - nats-server
+    build:
+      context: ./ms-perso
+      dockerfile: Dockerfile.prod
+    ports:
+      - ${portPerso}:${portPerso}
+    env_file:
+      - .env.prod
+
+  ms-confi:
+    container_name: MS-CONFI-FINANTIX-PROD
+    image: ms-confi-finantix-prod
+    restart: always
+    depends_on:
+      - nats-server
+    build:
+      context: ./ms-confi
+      dockerfile: Dockerfile.prod
+    ports:
+      - ${portConfi}:${portConfi}
+    env_file:
+      - .env.prod
+
+  ms-core:
+    container_name: MS-CORE-FINANTIX-PROD
+    image: ms-core-finantix-prod
+    restart: always
+    depends_on:
+      - nats-server
+      - ms-auth
+      - ms-perso
+      - ms-confi
+    build:
+      context: ./ms-core
+      dockerfile: Dockerfile.prod
+    ports:
+      - ${portCore}:${portCore}
+    env_file:
+      - .env.prod

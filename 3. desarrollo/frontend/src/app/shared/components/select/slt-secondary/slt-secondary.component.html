@@ -1,0 +1,39 @@
+
+
+<mat-form-field class="w-full" appearance="outline">
+  <mat-label>{{ label }}</mat-label>
+  <mat-select [disabled]="disabled || isDisabled" [value]="currentValue" (selectionChange)="onSelectChange($event.value)" [ngClass]="{
+        'is-invalid': errorMessage,
+        'is-valid': control?.valid && control?.touched
+      }">
+    <mat-option *ngFor="let option of options" [value]="option.id">{{ option.label }}</mat-option>
+  </mat-select>
+  <button mat-icon-button matSuffix class="mx-3 z-9999" (click)="selectModal()">
+    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:arrows-pointing-in'"></mat-icon>
+  </button>
+</mat-form-field>
+
+
+<!-- <div class="w-100 mb-1">
+  <label class="form-label">{{ label }}:</label>
+  <div class="d-flex input-group" style="flex-wrap: unset!important;">
+    <select class="form-control" [id]="id" [ngModel]="currentValue" (ngModelChange)="onSelectChange($event)" [ngClass]="{
+          'is-invalid': errorMessage,
+          'is-valid': control?.valid && control?.touched
+        }" [disabled]="disabled || isDisabled">
+      <option [ngValue]="null" disabled hidden>{{ placeholder }}</option>
+      <option *ngFor="let option of options" [ngValue]="option.id">
+        {{ option.value }}
+      </option>
+    </select>
+
+    <button type="button" class="btn" (click)="selectModal()">
+      <i class="fa-solid fa-cogs"></i> <span class="small ms-2">Config. Avanzada</span>
+    </button>
+  </div>
+
+
+  <div *ngIf="errorMessage" class="invalid-feedback">{{ errorMessage }}</div>
+</div>
+
+ -->
