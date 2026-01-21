@@ -1,0 +1,1961 @@
+openapi: 3.1.0
+info:
+  title: CitaYa API
+  description: |
+    API RESTful para la plataforma CitaYa - Sistema de reserva de citas médicas.
+    
+    ## Autenticación
+    La API utiliza JWT (JSON Web Tokens) para autenticación. Los tokens de acceso tienen una duración de 15 minutos y los refresh tokens de 7 días.
+    
+    ## Roles
+    - `patient`: Paciente que busca y reserva citas
+    - `doctor`: Médico que gestiona su agenda y atiende pacientes
+    - `admin`: Administrador del sistema (endpoints no documentados en este MVP)
+    
+    ## Zona Horaria
+    Todas las fechas y horas se manejan en zona horaria de Ciudad de México (America/Mexico_City).
+    
+    ## Rate Limiting
+    - Login: 5 intentos por IP cada 15 minutos
+    - Registro: 3 intentos por IP cada hora
+    - API general: 100 requests por IP cada minuto
+  version: 1.0.0
+  contact:
+    name: CitaYa Support
+    email: support@citaya.com
+
+servers:
+  - url: https://api.citaya.com/api/v1
+    description: Producción
+  - url: https://staging-api.citaya.com/api/v1
+    description: Staging
+
+tags:
+  - name: Autenticación
+    description: Endpoints para registro, login y gestión de sesiones
+  - name: Médicos
+    description: Búsqueda y gestión de médicos
+  - name: Citas
+    description: Gestión de citas médicas
+  - name: Reseñas
+    description: Calificaciones y reseñas de médicos
+  - name: Perfil Médico
+    description: Gestión del perfil del médico
+  - name: Verificación Médico
+    description: Proceso de verificación de credenciales médicas
+  - name: Horarios Médico
+    description: Gestión de horarios y disponibilidad del médico
+
+paths:
+  # ============================================
+  # AUTENTICACIÓN
+  # ============================================
+  
+  /auth/register:
+    post:
+      tags:
+        - Autenticación
+      summary: Registrar nuevo usuario
+      description: Registra un nuevo paciente o médico en el sistema
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - firstName
+                - lastName
+                - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: paciente@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: password123
+                firstName:
+                  type: string
+                  minLength: 1
+                  example: Juan
+                lastName:
+                  type: string
+                  minLength: 1
+                  example: Pérez
+                role:
+                  type: string
+                  enum: [patient, doctor]
+                  example: patient
+                phone:
+                  type: string
+                  example: "+525512345678"
+                recaptchaToken:
+                  type: string
+                  description: Token de reCAPTCHA v3
+                  example: "03AGdBq24..."
+            examples:
+              paciente:
+                summary: Registro de paciente
+                value:
+                  email: paciente@example.com
+                  password: password123
+                  firstName: Juan
+                  lastName: Pérez
+                  role: patient
+                  phone: "+525512345678"
+                  recaptchaToken: "03AGdBq24..."
+              medico:
+                summary: Registro de médico
+                value:
+                  email: doctor@example.com
+                  password: password123
+                  firstName: María
+                  lastName: González
+                  role: doctor
+                  phone: "+525598765432"
+                  recaptchaToken: "03AGdBq24..."
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Registro exitoso
+                  value:
+                    user:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      email: "paciente@example.com"
+                      firstName: "Juan"
+                      lastName: "Pérez"
+                      role: "patient"
+                      emailVerified: false
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email ya registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Email ya está registrado"
+                code: "EMAIL_EXISTS"
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/login:
+    post:
+      tags:
+        - Autenticación
+      summary: Iniciar sesión
+      description: Autentica un usuario y retorna tokens JWT
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: paciente@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+                recaptchaToken:
+                  type: string
+                  description: Token de reCAPTCHA v3
+                  example: "03AGdBq24..."
+      responses:
+        '200':
+          description: Login exitoso
+          headers:
+            Set-Cookie:
+              description: Refresh token en cookie httpOnly
+              schema:
+                type: string
+                example: refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Login exitoso
+                  value:
+                    user:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      email: "paciente@example.com"
+                      firstName: "Juan"
+                      lastName: "Pérez"
+                      role: "patient"
+                      emailVerified: true
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Autenticación
+      summary: Refrescar token de acceso
+      description: Genera un nuevo access token usando el refresh token
+      operationId: refreshToken
+      security:
+        - RefreshTokenAuth: []
+      responses:
+        '200':
+          description: Token refrescado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Autenticación
+      summary: Cerrar sesión
+      description: Invalida el refresh token y cierra la sesión
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sesión cerrada exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sesión cerrada exitosamente"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # BÚSQUEDA DE MÉDICOS (PACIENTE)
+  # ============================================
+  
+  /doctors:
+    get:
+      tags:
+        - Médicos
+      summary: Buscar médicos
+      description: |
+        Busca médicos por especialidad, proximidad y disponibilidad.
+        Si se proporcionan coordenadas (lat, lng), busca en un radio de 5km.
+        Si no hay coordenadas, usa código postal como fallback.
+      operationId: searchDoctors
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: specialty
+          in: query
+          description: ID de la especialidad
+          schema:
+            type: string
+            format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: lat
+          in: query
+          description: Latitud del paciente (para búsqueda por proximidad)
+          schema:
+            type: number
+            format: float
+          example: 19.4326
+        - name: lng
+          in: query
+          description: Longitud del paciente (para búsqueda por proximidad)
+          schema:
+            type: number
+            format: float
+          example: -99.1332
+        - name: postalCode
+          in: query
+          description: Código postal (fallback si no hay coordenadas)
+          schema:
+            type: string
+          example: "01000"
+        - name: radius
+          in: query
+          description: Radio de búsqueda en kilómetros (por defecto 5km)
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 50
+          example: 5
+        - name: date
+          in: query
+          description: Fecha para filtrar por disponibilidad (formato ISO 8601)
+          schema:
+            type: string
+            format: date-time
+          example: "2026-01-25T10:00:00-06:00"
+        - name: page
+          in: query
+          description: Número de página (por defecto 1)
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limit
+          in: query
+          description: Resultados por página (por defecto 20, máximo 50)
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 50
+          example: 20
+      responses:
+        '200':
+          description: Lista de médicos encontrados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorSearchResponse'
+              examples:
+                success:
+                  summary: Búsqueda exitosa
+                  value:
+                    doctors:
+                      - id: "550e8400-e29b-41d4-a716-446655440001"
+                        firstName: "María"
+                        lastName: "González"
+                        specialties:
+                          - id: "123e4567-e89b-12d3-a456-426614174000"
+                            nameEs: "Cardiología"
+                            nameEn: "Cardiology"
+                        address: "Av. Reforma 123, Col. Centro"
+                        latitude: 19.4326
+                        longitude: -99.1332
+                        distanceKm: 2.5
+                        ratingAverage: 4.5
+                        totalReviews: 12
+                        verificationStatus: "approved"
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 1
+                      totalPages: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /doctors/{id}:
+    get:
+      tags:
+        - Médicos
+      summary: Obtener detalle de médico
+      description: Obtiene información detallada de un médico específico
+      operationId: getDoctorById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del médico
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+      responses:
+        '200':
+          description: Detalle del médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorDetail'
+              examples:
+                success:
+                  summary: Médico encontrado
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440001"
+                    firstName: "María"
+                    lastName: "González"
+                    email: "doctor@example.com"
+                    phone: "+525598765432"
+                    specialties:
+                      - id: "123e4567-e89b-12d3-a456-426614174000"
+                        nameEs: "Cardiología"
+                        nameEn: "Cardiology"
+                        isPrimary: true
+                    bio: "Cardióloga con 10 años de experiencia"
+                    address: "Av. Reforma 123, Col. Centro"
+                    postalCode: "06000"
+                    latitude: 19.4326
+                    longitude: -99.1332
+                    ratingAverage: 4.5
+                    totalReviews: 12
+                    verificationStatus: "approved"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # CITAS (PACIENTE)
+  # ============================================
+  
+  /appointments:
+    post:
+      tags:
+        - Citas
+      summary: Crear nueva cita
+      description: |
+        Crea una nueva cita médica. El slot se bloquea transaccionalmente para evitar doble booking.
+        El paciente no puede tener más de una cita activa al mismo tiempo.
+      operationId: createAppointment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - doctorId
+                - slotId
+                - appointmentDate
+              properties:
+                doctorId:
+                  type: string
+                  format: uuid
+                  example: "550e8400-e29b-41d4-a716-446655440001"
+                slotId:
+                  type: string
+                  format: uuid
+                  example: "660e8400-e29b-41d4-a716-446655440002"
+                appointmentDate:
+                  type: string
+                  format: date-time
+                  description: Fecha y hora de la cita (CDMX timezone)
+                  example: "2026-01-25T10:00:00-06:00"
+                notes:
+                  type: string
+                  maxLength: 500
+                  example: "Consulta de seguimiento"
+            examples:
+              crear_cita:
+                summary: Crear nueva cita
+                value:
+                  doctorId: "550e8400-e29b-41d4-a716-446655440001"
+                  slotId: "660e8400-e29b-41d4-a716-446655440002"
+                  appointmentDate: "2026-01-25T10:00:00-06:00"
+                  notes: "Consulta de seguimiento"
+      responses:
+        '201':
+          description: Cita creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+              examples:
+                success:
+                  summary: Cita creada
+                  value:
+                    id: "770e8400-e29b-41d4-a716-446655440003"
+                    patientId: "550e8400-e29b-41d4-a716-446655440000"
+                    doctorId: "550e8400-e29b-41d4-a716-446655440001"
+                    slotId: "660e8400-e29b-41d4-a716-446655440002"
+                    appointmentDate: "2026-01-25T10:00:00-06:00"
+                    status: "confirmed"
+                    notes: "Consulta de seguimiento"
+                    createdAt: "2026-01-20T10:00:00-06:00"
+                    doctor:
+                      firstName: "María"
+                      lastName: "González"
+                      specialties:
+                        - nameEs: "Cardiología"
+                    slot:
+                      startTime: "2026-01-25T10:00:00-06:00"
+                      endTime: "2026-01-25T10:30:00-06:00"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+          content:
+            application/json:
+              examples:
+                slot_no_disponible:
+                  summary: Slot no disponible
+                  value:
+                    error: "El slot seleccionado no está disponible"
+                    code: "SLOT_UNAVAILABLE"
+                paciente_cita_activa:
+                  summary: Paciente ya tiene cita activa
+                  value:
+                    error: "Ya tienes una cita activa. Cancela o reprograma la cita existente antes de crear una nueva"
+                    code: "ACTIVE_APPOINTMENT_EXISTS"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+          content:
+            application/json:
+              examples:
+                doctor_no_encontrado:
+                  summary: Médico no encontrado
+                  value:
+                    error: "Médico no encontrado"
+                    code: "DOCTOR_NOT_FOUND"
+                slot_no_encontrado:
+                  summary: Slot no encontrado
+                  value:
+                    error: "Slot no encontrado"
+                    code: "SLOT_NOT_FOUND"
+        '409':
+          description: Conflicto (slot ya reservado)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "El slot ya fue reservado por otro paciente"
+                code: "SLOT_ALREADY_BOOKED"
+
+    get:
+      tags:
+        - Citas
+      summary: Listar mis citas
+      description: Obtiene todas las citas del paciente autenticado
+      operationId: getMyAppointments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filtrar por estado
+          schema:
+            type: string
+            enum: [confirmed, pending, completed, cancelled, no_show]
+          example: confirmed
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 50
+          example: 20
+      responses:
+        '200':
+          description: Lista de citas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /appointments/{id}:
+    get:
+      tags:
+        - Citas
+      summary: Obtener detalle de cita
+      description: Obtiene información detallada de una cita específica
+      operationId: getAppointmentById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "770e8400-e29b-41d4-a716-446655440003"
+      responses:
+        '200':
+          description: Detalle de la cita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: No autorizado para ver esta cita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "No tienes permiso para ver esta cita"
+                code: "FORBIDDEN"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Citas
+      summary: Reprogramar o cancelar cita
+      description: |
+        Permite reprogramar o cancelar una cita.
+        Para reprogramar, se debe proporcionar un nuevo slotId y appointmentDate.
+        Para cancelar, se debe establecer status en 'cancelled' y opcionalmente cancellationReason.
+      operationId: updateAppointment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "770e8400-e29b-41d4-a716-446655440003"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [cancelled]
+                  example: cancelled
+                slotId:
+                  type: string
+                  format: uuid
+                  description: Nuevo slot para reprogramar (requerido si se reprograma)
+                  example: "660e8400-e29b-41d4-a716-446655440003"
+                appointmentDate:
+                  type: string
+                  format: date-time
+                  description: Nueva fecha/hora (requerido si se reprograma)
+                  example: "2026-01-26T14:00:00-06:00"
+                cancellationReason:
+                  type: string
+                  maxLength: 500
+                  description: Motivo de cancelación (opcional)
+                  example: "Cambio de planes"
+            examples:
+              cancelar:
+                summary: Cancelar cita
+                value:
+                  status: cancelled
+                  cancellationReason: "Cambio de planes"
+              reprogramar:
+                summary: Reprogramar cita
+                value:
+                  slotId: "660e8400-e29b-41d4-a716-446655440003"
+                  appointmentDate: "2026-01-26T14:00:00-06:00"
+      responses:
+        '200':
+          description: Cita actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+              examples:
+                cancelada:
+                  summary: Cita cancelada
+                  value:
+                    id: "770e8400-e29b-41d4-a716-446655440003"
+                    status: "cancelled"
+                    cancellationReason: "Cambio de planes"
+                    updatedAt: "2026-01-20T11:00:00-06:00"
+                reprogramada:
+                  summary: Cita reprogramada
+                  value:
+                    id: "770e8400-e29b-41d4-a716-446655440003"
+                    slotId: "660e8400-e29b-41d4-a716-446655440003"
+                    appointmentDate: "2026-01-26T14:00:00-06:00"
+                    status: "confirmed"
+                    updatedAt: "2026-01-20T11:00:00-06:00"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+          content:
+            application/json:
+              examples:
+                slot_no_disponible:
+                  summary: Nuevo slot no disponible
+                  value:
+                    error: "El nuevo slot seleccionado no está disponible"
+                    code: "SLOT_UNAVAILABLE"
+                estado_invalido:
+                  summary: Estado inválido
+                  value:
+                    error: "No se puede cambiar el estado de una cita completada o cancelada"
+                    code: "INVALID_STATUS_CHANGE"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: No autorizado para modificar esta cita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "No tienes permiso para modificar esta cita"
+                code: "FORBIDDEN"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # RESEÑAS (PACIENTE)
+  # ============================================
+  
+  /appointments/{id}/reviews:
+    post:
+      tags:
+        - Reseñas
+      summary: Crear reseña de cita
+      description: |
+        Crea una reseña y calificación para una cita completada.
+        Solo se puede crear una reseña por cita.
+        La reseña queda en estado 'pending' hasta ser moderada por un administrador.
+      operationId: createReview
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "770e8400-e29b-41d4-a716-446655440003"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - rating
+                - comment
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Calificación de 1 a 5 estrellas
+                  example: 5
+                comment:
+                  type: string
+                  minLength: 10
+                  maxLength: 1000
+                  description: Texto de la reseña (obligatorio)
+                  example: "Excelente atención, muy profesional y empática."
+            examples:
+              crear_resena:
+                summary: Crear reseña
+                value:
+                  rating: 5
+                  comment: "Excelente atención, muy profesional y empática. Me explicó todo claramente."
+      responses:
+        '201':
+          description: Reseña creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+              examples:
+                success:
+                  summary: Reseña creada
+                  value:
+                    id: "880e8400-e29b-41d4-a716-446655440004"
+                    appointmentId: "770e8400-e29b-41d4-a716-446655440003"
+                    patientId: "550e8400-e29b-41d4-a716-446655440000"
+                    doctorId: "550e8400-e29b-41d4-a716-446655440001"
+                    rating: 5
+                    comment: "Excelente atención, muy profesional y empática. Me explicó todo claramente."
+                    moderationStatus: "pending"
+                    createdAt: "2026-01-20T12:00:00-06:00"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+          content:
+            application/json:
+              examples:
+                cita_no_completada:
+                  summary: Cita no completada
+                  value:
+                    error: "Solo se pueden crear reseñas para citas completadas"
+                    code: "APPOINTMENT_NOT_COMPLETED"
+                reseña_existente:
+                  summary: Reseña ya existe
+                  value:
+                    error: "Ya existe una reseña para esta cita"
+                    code: "REVIEW_ALREADY_EXISTS"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: No autorizado (no es el paciente de la cita)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "No tienes permiso para crear una reseña de esta cita"
+                code: "FORBIDDEN"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      tags:
+        - Reseñas
+      summary: Obtener reseña de cita
+      description: Obtiene la reseña asociada a una cita específica
+      operationId: getReviewByAppointment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "770e8400-e29b-41d4-a716-446655440003"
+      responses:
+        '200':
+          description: Reseña encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '404':
+          description: No se encontró reseña para esta cita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "No se encontró reseña para esta cita"
+                code: "REVIEW_NOT_FOUND"
+
+  # ============================================
+  # PERFIL MÉDICO
+  # ============================================
+  
+  /doctors/me:
+    get:
+      tags:
+        - Perfil Médico
+      summary: Obtener mi perfil
+      description: Obtiene el perfil del médico autenticado
+      operationId: getMyProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Perfil del médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Usuario no es médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Este endpoint solo está disponible para médicos"
+                code: "FORBIDDEN"
+
+    patch:
+      tags:
+        - Perfil Médico
+      summary: Actualizar mi perfil
+      description: Actualiza la información del perfil del médico
+      operationId: updateMyProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  minLength: 1
+                  example: María
+                lastName:
+                  type: string
+                  minLength: 1
+                  example: González
+                phone:
+                  type: string
+                  example: "+525598765432"
+                bio:
+                  type: string
+                  maxLength: 1000
+                  example: "Cardióloga con 10 años de experiencia"
+                address:
+                  type: string
+                  example: "Av. Reforma 123, Col. Centro"
+                postalCode:
+                  type: string
+                  example: "06000"
+      responses:
+        '200':
+          description: Perfil actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Usuario no es médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Este endpoint solo está disponible para médicos"
+                code: "FORBIDDEN"
+
+  # ============================================
+  # VERIFICACIÓN MÉDICO
+  # ============================================
+  
+  /doctors/verification:
+    post:
+      tags:
+        - Verificación Médico
+      summary: Subir documento de verificación
+      description: |
+        Sube un documento de verificación (cédula profesional) para ser revisado por un administrador.
+        Formatos permitidos: PDF, JPG, PNG, JPEG.
+        Tamaño máximo: 10MB.
+        El documento se almacena encriptado.
+      operationId: uploadVerificationDocument
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - document
+                - documentType
+              properties:
+                document:
+                  type: string
+                  format: binary
+                  description: Archivo de cédula profesional (PDF o imagen)
+                documentType:
+                  type: string
+                  enum: [cedula, diploma, other]
+                  default: cedula
+                  description: Tipo de documento
+                  example: cedula
+            examples:
+              subir_cedula:
+                summary: Subir cédula profesional
+                value:
+                  document: "(binary file)"
+                  documentType: "cedula"
+      responses:
+        '201':
+          description: Documento subido exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    example: "990e8400-e29b-41d4-a716-446655440005"
+                  doctorId:
+                    type: string
+                    format: uuid
+                    example: "550e8400-e29b-41d4-a716-446655440001"
+                  documentType:
+                    type: string
+                    example: cedula
+                  status:
+                    type: string
+                    example: pending
+                  originalFilename:
+                    type: string
+                    example: "cedula_profesional.pdf"
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2026-01-20T13:00:00-06:00"
+              examples:
+                success:
+                  summary: Documento subido
+                  value:
+                    id: "990e8400-e29b-41d4-a716-446655440005"
+                    doctorId: "550e8400-e29b-41d4-a716-446655440001"
+                    documentType: "cedula"
+                    status: "pending"
+                    originalFilename: "cedula_profesional.pdf"
+                    createdAt: "2026-01-20T13:00:00-06:00"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+          content:
+            application/json:
+              examples:
+                tipo_archivo_invalido:
+                  summary: Tipo de archivo inválido
+                  value:
+                    error: "Tipo de archivo no permitido. Solo se permiten PDF, JPG, PNG, JPEG"
+                    code: "INVALID_FILE_TYPE"
+                tamaño_excedido:
+                  summary: Tamaño excedido
+                  value:
+                    error: "El archivo excede el tamaño máximo de 10MB"
+                    code: "FILE_TOO_LARGE"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Usuario no es médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Este endpoint solo está disponible para médicos"
+                code: "FORBIDDEN"
+
+  # ============================================
+  # HORARIOS MÉDICO
+  # ============================================
+  
+  /doctors/me/schedules:
+    get:
+      tags:
+        - Horarios Médico
+      summary: Listar mis horarios
+      description: Obtiene todos los horarios de trabajo del médico autenticado
+      operationId: getMySchedules
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de horarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schedules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DoctorSchedule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Usuario no es médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Este endpoint solo está disponible para médicos"
+                code: "FORBIDDEN"
+
+    post:
+      tags:
+        - Horarios Médico
+      summary: Crear horario de trabajo
+      description: Crea un nuevo horario de trabajo para el médico
+      operationId: createSchedule
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - dayOfWeek
+                - startTime
+                - endTime
+              properties:
+                dayOfWeek:
+                  type: integer
+                  minimum: 0
+                  maximum: 6
+                  description: Día de la semana (0=domingo, 1=lunes, ..., 6=sábado)
+                  example: 1
+                startTime:
+                  type: string
+                  format: time
+                  description: Hora de inicio (formato HH:MM:SS)
+                  example: "09:00:00"
+                endTime:
+                  type: string
+                  format: time
+                  description: Hora de fin (formato HH:MM:SS)
+                  example: "17:00:00"
+                slotDurationMinutes:
+                  type: integer
+                  default: 30
+                  description: Duración de cada slot en minutos
+                  example: 30
+                breakDurationMinutes:
+                  type: integer
+                  default: 0
+                  description: Duración de pausas entre slots en minutos
+                  example: 15
+      responses:
+        '201':
+          description: Horario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorSchedule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Usuario no es médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Este endpoint solo está disponible para médicos"
+                code: "FORBIDDEN"
+
+  /doctors/me/schedules/{id}:
+    patch:
+      tags:
+        - Horarios Médico
+      summary: Actualizar horario
+      description: Actualiza un horario de trabajo existente
+      operationId: updateSchedule
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "aa0e8400-e29b-41d4-a716-446655440006"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startTime:
+                  type: string
+                  format: time
+                  example: "10:00:00"
+                endTime:
+                  type: string
+                  format: time
+                  example: "18:00:00"
+                slotDurationMinutes:
+                  type: integer
+                  example: 30
+                breakDurationMinutes:
+                  type: integer
+                  example: 15
+                isActive:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Horario actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorSchedule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: No autorizado para modificar este horario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "No tienes permiso para modificar este horario"
+                code: "FORBIDDEN"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Horarios Médico
+      summary: Eliminar horario
+      description: Elimina (soft delete) un horario de trabajo
+      operationId: deleteSchedule
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "aa0e8400-e29b-41d4-a716-446655440006"
+      responses:
+        '200':
+          description: Horario eliminado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Horario eliminado exitosamente"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: No autorizado para eliminar este horario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "No tienes permiso para eliminar este horario"
+                code: "FORBIDDEN"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # CITAS MÉDICO
+  # ============================================
+  
+  /doctors/me/appointments:
+    get:
+      tags:
+        - Perfil Médico
+      summary: Listar mis citas (médico)
+      description: Obtiene todas las citas del médico autenticado
+      operationId: getMyDoctorAppointments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [confirmed, pending, completed, cancelled, no_show]
+          example: confirmed
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          example: "2026-01-25"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 50
+          example: 20
+      responses:
+        '200':
+          description: Lista de citas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Usuario no es médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Este endpoint solo está disponible para médicos"
+                code: "FORBIDDEN"
+
+  /doctors/me/appointments/{id}:
+    get:
+      tags:
+        - Perfil Médico
+      summary: Obtener detalle de cita (médico)
+      description: Obtiene información detallada de una cita específica del médico
+      operationId: getMyDoctorAppointmentById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "770e8400-e29b-41d4-a716-446655440003"
+      responses:
+        '200':
+          description: Detalle de la cita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: No autorizado para ver esta cita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "No tienes permiso para ver esta cita"
+                code: "FORBIDDEN"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # RESEÑAS MÉDICO
+  # ============================================
+  
+  /doctors/me/reviews:
+    get:
+      tags:
+        - Perfil Médico
+      summary: Listar mis reseñas (médico)
+      description: Obtiene todas las reseñas recibidas por el médico autenticado
+      operationId: getMyReviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: moderationStatus
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+          example: approved
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 50
+          example: 20
+      responses:
+        '200':
+          description: Lista de reseñas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Usuario no es médico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Este endpoint solo está disponible para médicos"
+                code: "FORBIDDEN"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT de acceso. Se obtiene mediante el endpoint `/auth/login` o `/auth/register`.
+        El token debe incluirse en el header `Authorization` con el formato:
+        ```
+        Authorization: Bearer <access_token>
+        ```
+        Ejemplo:
+        ```
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJyb2xlIjoicGF0aWVudCIsImlhdCI6MTY3NDIwMDAwMCwiZXhwIjoxNjc0MjAwOTAwfQ.signature
+        ```
+        Duración: 15 minutos
+        
+    RefreshTokenAuth:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+      description: |
+        Refresh token almacenado en cookie httpOnly.
+        Se obtiene mediante el endpoint `/auth/login` o `/auth/register`.
+        Duración: 7 días
+
+  schemas:
+    # ============================================
+    # AUTENTICACIÓN
+    # ============================================
+    
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+          description: Token JWT de acceso (15 minutos)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Token JWT de refresco (7 días, también en cookie httpOnly)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          example: "paciente@example.com"
+        firstName:
+          type: string
+          example: "Juan"
+        lastName:
+          type: string
+          example: "Pérez"
+        role:
+          type: string
+          enum: [patient, doctor, admin]
+          example: "patient"
+        emailVerified:
+          type: boolean
+          example: false
+        phone:
+          type: string
+          nullable: true
+          example: "+525512345678"
+
+    # ============================================
+    # MÉDICOS
+    # ============================================
+    
+    DoctorSearchResponse:
+      type: object
+      properties:
+        doctors:
+          type: array
+          items:
+            $ref: '#/components/schemas/DoctorListItem'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    DoctorListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        firstName:
+          type: string
+          example: "María"
+        lastName:
+          type: string
+          example: "González"
+        specialties:
+          type: array
+          items:
+            $ref: '#/components/schemas/Specialty'
+        address:
+          type: string
+          example: "Av. Reforma 123, Col. Centro"
+        latitude:
+          type: number
+          format: float
+          example: 19.4326
+        longitude:
+          type: number
+          format: float
+          example: -99.1332
+        distanceKm:
+          type: number
+          format: float
+          nullable: true
+          description: Distancia en kilómetros (solo si se proporcionaron coordenadas)
+          example: 2.5
+        ratingAverage:
+          type: number
+          format: float
+          nullable: true
+          example: 4.5
+        totalReviews:
+          type: integer
+          example: 12
+        verificationStatus:
+          type: string
+          enum: [pending, approved, rejected]
+          example: "approved"
+
+    DoctorDetail:
+      allOf:
+        - $ref: '#/components/schemas/DoctorListItem'
+        - type: object
+          properties:
+            email:
+              type: string
+              format: email
+              example: "doctor@example.com"
+            phone:
+              type: string
+              nullable: true
+              example: "+525598765432"
+            bio:
+              type: string
+              nullable: true
+              example: "Cardióloga con 10 años de experiencia"
+            postalCode:
+              type: string
+              example: "06000"
+
+    DoctorProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        email:
+          type: string
+          format: email
+          example: "doctor@example.com"
+        firstName:
+          type: string
+          example: "María"
+        lastName:
+          type: string
+          example: "González"
+        phone:
+          type: string
+          nullable: true
+          example: "+525598765432"
+        bio:
+          type: string
+          nullable: true
+          example: "Cardióloga con 10 años de experiencia"
+        address:
+          type: string
+          example: "Av. Reforma 123, Col. Centro"
+        postalCode:
+          type: string
+          example: "06000"
+        latitude:
+          type: number
+          format: float
+          example: 19.4326
+        longitude:
+          type: number
+          format: float
+          example: -99.1332
+        specialties:
+          type: array
+          items:
+            $ref: '#/components/schemas/Specialty'
+        verificationStatus:
+          type: string
+          enum: [pending, approved, rejected]
+          example: "approved"
+        ratingAverage:
+          type: number
+          format: float
+          nullable: true
+          example: 4.5
+        totalReviews:
+          type: integer
+          example: 12
+
+    Specialty:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        nameEs:
+          type: string
+          example: "Cardiología"
+        nameEn:
+          type: string
+          example: "Cardiology"
+        isPrimary:
+          type: boolean
+          nullable: true
+          description: Solo presente en DoctorProfile
+          example: true
+
+    # ============================================
+    # CITAS
+    # ============================================
+    
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "770e8400-e29b-41d4-a716-446655440003"
+        patientId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        doctorId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        slotId:
+          type: string
+          format: uuid
+          example: "660e8400-e29b-41d4-a716-446655440002"
+        appointmentDate:
+          type: string
+          format: date-time
+          example: "2026-01-25T10:00:00-06:00"
+        status:
+          type: string
+          enum: [confirmed, pending, completed, cancelled, no_show]
+          example: "confirmed"
+        cancellationReason:
+          type: string
+          nullable: true
+          example: null
+        notes:
+          type: string
+          nullable: true
+          example: "Consulta de seguimiento"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-20T10:00:00-06:00"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-01-20T10:00:00-06:00"
+        doctor:
+          type: object
+          nullable: true
+          description: Información del médico (solo en algunos endpoints)
+          properties:
+            firstName:
+              type: string
+              example: "María"
+            lastName:
+              type: string
+              example: "González"
+            specialties:
+              type: array
+              items:
+                type: object
+                properties:
+                  nameEs:
+                    type: string
+                    example: "Cardiología"
+        slot:
+          type: object
+          nullable: true
+          description: Información del slot (solo en algunos endpoints)
+          properties:
+            startTime:
+              type: string
+              format: date-time
+              example: "2026-01-25T10:00:00-06:00"
+            endTime:
+              type: string
+              format: date-time
+              example: "2026-01-25T10:30:00-06:00"
+
+    # ============================================
+    # RESEÑAS
+    # ============================================
+    
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "880e8400-e29b-41d4-a716-446655440004"
+        appointmentId:
+          type: string
+          format: uuid
+          example: "770e8400-e29b-41d4-a716-446655440003"
+        patientId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        doctorId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          example: "Excelente atención, muy profesional y empática. Me explicó todo claramente."
+        moderationStatus:
+          type: string
+          enum: [pending, approved, rejected]
+          example: "pending"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-20T12:00:00-06:00"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-01-20T12:00:00-06:00"
+
+    # ============================================
+    # HORARIOS MÉDICO
+    # ============================================
+    
+    DoctorSchedule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "aa0e8400-e29b-41d4-a716-446655440006"
+        doctorId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        dayOfWeek:
+          type: integer
+          minimum: 0
+          maximum: 6
+          description: 0=domingo, 1=lunes, ..., 6=sábado
+          example: 1
+        startTime:
+          type: string
+          format: time
+          example: "09:00:00"
+        endTime:
+          type: string
+          format: time
+          example: "17:00:00"
+        slotDurationMinutes:
+          type: integer
+          example: 30
+        breakDurationMinutes:
+          type: integer
+          example: 15
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-20T08:00:00-06:00"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-01-20T08:00:00-06:00"
+
+    # ============================================
+    # PAGINACIÓN
+    # ============================================
+    
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 5
+
+    # ============================================
+    # ERRORES
+    # ============================================
+    
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Mensaje de error descriptivo
+          example: "Email ya está registrado"
+        code:
+          type: string
+          description: Código de error para manejo programático
+          example: "EMAIL_EXISTS"
+        details:
+          type: object
+          description: Detalles adicionales del error (opcional)
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Solicitud inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            validation_error:
+              summary: Error de validación
+              value:
+                error: "Los datos proporcionados no son válidos"
+                code: "VALIDATION_ERROR"
+                details:
+                  email: "El formato del email no es válido"
+                  password: "La contraseña debe tener al menos 8 caracteres"
+
+    Unauthorized:
+      description: No autenticado o token inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            no_token:
+              summary: Token no proporcionado
+              value:
+                error: "Token de autenticación requerido"
+                code: "AUTHENTICATION_REQUIRED"
+            invalid_token:
+              summary: Token inválido
+              value:
+                error: "Token de autenticación inválido o expirado"
+                code: "INVALID_TOKEN"
+            invalid_credentials:
+              summary: Credenciales inválidas
+              value:
+                error: "Email o contraseña incorrectos"
+                code: "INVALID_CREDENTIALS"
+
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            not_found:
+              summary: Recurso no encontrado
+              value:
+                error: "El recurso solicitado no existe"
+                code: "NOT_FOUND"
+
+    TooManyRequests:
+      description: Demasiadas solicitudes
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            rate_limit:
+              summary: Rate limit excedido
+              value:
+                error: "Has excedido el límite de solicitudes. Intenta nuevamente más tarde"
+                code: "RATE_LIMIT_EXCEEDED"
+          headers:
+            Retry-After:
+              description: Segundos hasta que se puede intentar nuevamente
+              schema:
+                type: integer
+                example: 60
