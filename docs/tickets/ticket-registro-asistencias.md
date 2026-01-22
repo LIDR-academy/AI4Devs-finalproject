@@ -75,7 +75,7 @@ Crear entidades de dominio para Attendance con validaciones de negocio y enums.
 - [ ] Validaciones de dominio:
   - No duplicado mismo día
   - check_out_time > check_in_time
-  - notes máximo 100 caracteres
+  - notes máximo 200 caracteres en dominio; validar 100 solo para check-in/check-out
 - [ ] Domain Events:
   - `ChildCheckedIn`
   - `ChildCheckedOut`
@@ -429,7 +429,7 @@ Endpoint REST para check-out.
 Agregar método de check-out al notifier.
 
 #### Tareas técnicas
-- [ ] Agregar método `checkOut(childId, pickupNote)` a `AttendanceNotifier`
+- [ ] Agregar método `checkOut(childId, notes)` a `AttendanceNotifier`
 - [ ] Optimistic update del estado
 - [ ] Actualizar listas (mover de present a checkedOut)
 - [ ] Tests unitarios
@@ -456,7 +456,7 @@ Dialog/página para registrar check-out con información de quién recoge.
 
 #### Tareas técnicas
 - [ ] Crear `CheckOutDialog` widget
-  - Campo de texto para pickupNote
+  - Campo de texto para notes
   - Botón de confirmar (deshabilitado si vacío)
   - Loading state
   - Validación de campo requerido
@@ -494,7 +494,7 @@ Tests end-to-end de check-out.
 - [ ] Tests de flujos:
   - Check-out exitoso
   - Check-out sin check-in previo (debe fallar)
-  - Check-out sin pickupNote (debe fallar)
+  - Check-out sin notes (debe fallar)
   - Check-out duplicado (debe fallar)
 - [ ] Tests de UI:
   - Dialog funciona

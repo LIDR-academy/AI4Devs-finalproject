@@ -81,7 +81,7 @@ Crear entidades de dominio (User) con sus value objects (Email, Password, Role) 
 - Validaciones funcionan correctamente
 - Domain events se emiten en momentos correctos
 - Tests unitarios pasan (>80% coverage)
-- TSLint/ESLint sin warnings
+- ESLint (con `@typescript-eslint/*`) sin warnings
 
 #### Dependencias
 - TICKET-001-DB
@@ -138,10 +138,10 @@ Crear servicio de autenticación con lógica de negocio: login, logout, validaci
 
 #### Tareas técnicas
 - [ ] Crear `AuthService` en `domains/users/services/`
-  - `login(email, password): Promise<{ user, token }>`
+  - `login(email, password): Promise<{ user, token, refreshToken, expiresIn }>`
   - `logout(userId): Promise<void>`
   - `validateToken(token): Promise<User | null>`
-  - `refreshToken(oldToken): Promise<string>`
+  - `refreshToken(oldToken): Promise<{ token, refreshToken, expiresIn }>`
   - `trackFailedAttempt(email): Promise<void>`
   - `lockAccount(userId, duration): Promise<void>`
 - [ ] Implementar generación de JWT con claims:
