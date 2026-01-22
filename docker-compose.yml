@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  # MySQL 8.0 - Base de datos principal
+  mysql:
+    image: mysql:8.0
+    container_name: citaya_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_dev
+      MYSQL_DATABASE: citaya_dev
+      MYSQL_USER: citaya_user
+      MYSQL_PASSWORD: citaya_password_dev
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - citaya_network
+
+  # Redis 7 - Cache y sesiones
+  redis:
+    image: redis:7-alpine
+    container_name: citaya_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - citaya_network
+
+  # Backend API - Node.js + Express
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../infrastructure/docker/Dockerfile.backend
+    container_name: citaya_backend
+    ports:
+      - "4000:4000"
+    volumes:
+      # Hot reload: montar código fuente
+      - ./backend/src:/app/src
+      - ./backend/package.json:/app/package.json
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      # Excluir node_modules del volumen para usar los del contenedor
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=citaya_dev
+      - DB_USER=citaya_user
+      - DB_PASSWORD=citaya_password_dev
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=dev_jwt_secret_change_in_production
+      - JWT_REFRESH_SECRET=dev_refresh_secret_change_in_production
+      - API_PORT=4000
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - citaya_network
+    restart: unless-stopped
+
+  # Frontend - Next.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infrastructure/docker/Dockerfile.frontend
+    container_name: citaya_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      # Hot reload: montar código fuente
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
+    command: npm run dev
+    networks:
+      - citaya_network
+    restart: unless-stopped
+
+  # Workers - Background jobs
+  worker:
+    build:
+      context: ./workers
+      dockerfile: ../infrastructure/docker/Dockerfile.worker
+    container_name: citaya_worker
+    volumes:
+      # Hot reload: montar código fuente
+      - ./workers/src:/app/src
+      - ./workers/package.json:/app/package.json
+      - ./workers/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=citaya_dev
+      - DB_USER=citaya_user
+      - DB_PASSWORD=citaya_password_dev
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - citaya_network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  citaya_network:
+    driver: bridge
