@@ -257,18 +257,24 @@ paths:
               type: object
               required:
                 - childId
+                - classRoomId
                 - notes
               properties:
                 childId:
                   type: string
                   format: uuid
                   description: ID del niño
+                classRoomId:
+                  type: string
+                  format: uuid
+                  description: ID del aula
                 notes:
                   type: string
                   maxLength: 100
                   description: Información sobre quién recoge al niño y observaciones de la salida
             example:
               childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+              classRoomId: "a123b456-c789-0d12-e345-f67890123456"
               notes: "Recogido por su madre a tiempo"
       responses:
         '200':
@@ -308,6 +314,7 @@ paths:
                 - childId
                 - classRoomId
                 - date
+                - notes
               properties:
                 childId:
                   type: string
@@ -462,17 +469,17 @@ paths:
                 checkInTime:
                   type: string
                   format: date-time
+                  description: Hora de llegada (corrección)
                 checkOutTime:
                   type: string
                   format: date-time
+                  description: Hora de salida (corrección)
                 state:
                   $ref: '#/components/schemas/ChildState'
-                pickedUpBy:
-                  type: string
-                  enum: [FATHER, MOTHER, AUTHORIZED, OTHER]
                 notes:
                   type: string
-                  maxLength: 100
+                  maxLength: 200
+                  description: Notas adicionales, incluyendo información sobre quién recoge al niño
       responses:
         '200':
           description: Registro actualizado exitosamente
@@ -994,10 +1001,12 @@ paths:
                 - startDate
                 - endDate
               properties:
-                classRoomId:
-                  type: string
-                  format: uuid
-                  description: Filtrar por aula (opcional)
+                classRoomIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Filtrar por aulas (opcional, array de IDs)
                 startDate:
                   type: string
                   format: date
@@ -1007,7 +1016,7 @@ paths:
                   format: date
                   description: Fecha de fin
             example:
-              classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+              classRoomIds: ["a123b456-c789-0d12-e345-f67890123456", "b234c567-d890-1e23-f456-g78901234567"]
               startDate: "2026-01-01"
               endDate: "2026-01-31"
       responses:
@@ -1045,10 +1054,16 @@ paths:
                 - startDate
                 - endDate
               properties:
-                classRoomId:
+                classRoomIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Filtrar por aulas (opcional, array de IDs)
+                childId:
                   type: string
                   format: uuid
-                  description: Filtrar por aula (opcional)
+                  description: Filtrar por niño específico (opcional)
                 startDate:
                   type: string
                   format: date
@@ -1057,10 +1072,24 @@ paths:
                   type: string
                   format: date
                   description: Fecha de fin
+                types:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/IncidentType'
+                  description: Filtrar por tipos de incidentes (opcional)
+                tags:
+                  type: array
+                  items:
+                    type: string
+                    enum: [FINE_MOTOR, GROSS_MOTOR, SOCIALIZATION, LANGUAGE, AUTONOMY, CREATIVITY]
+                  description: Filtrar por áreas de desarrollo (opcional)
             example:
-              classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+              classRoomIds: ["a123b456-c789-0d12-e345-f67890123456"]
+              childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
               startDate: "2026-01-01"
               endDate: "2026-01-31"
+              types: ["POSITIVE", "PEDAGOGICAL"]
+              tags: ["SOCIALIZATION", "LANGUAGE"]
       responses:
         '200':
           description: Archivo CSV generado
@@ -1449,8 +1478,9 @@ components:
               format: time
             state:
               $ref: '#/components/schemas/ChildState'
-            pickedUpBy:
+            notes:
               type: string
+              description: Notas incluyendo información sobre quién recogió al niño
         incidents:
           type: array
           items:
@@ -1480,7 +1510,7 @@ components:
           checkInTime: "08:15"
           checkOutTime: "16:30"
           state: "CALM"
-          pickedUpBy: "MOTHER"
+          notes: "Recogido por su madre"
         incidents:
           - type: "POSITIVE"
             description: "Ayudó a un compañero a guardar los juguetes"

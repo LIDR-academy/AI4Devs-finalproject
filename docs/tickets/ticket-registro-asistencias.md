@@ -48,7 +48,8 @@ Crear esquema completo de asistencias en PostgreSQL con soporte para check-in, c
 #### Notas técnicas
 - check_in_time y check_out_time deben ser timestamps con zona horaria
 - date debe ser DATE type para comparaciones
-- notes max 100 caracteres para check-in
+- notes columna en DB: 200 caracteres (permite motivos de ausencia extensos)
+- regla de negocio: check-in/check-out notes limitadas a 100 caracteres (validar en lógica de entrada, no en DB)
 
 ---
 
@@ -400,8 +401,8 @@ Endpoint REST para check-out.
 - [ ] Agregar a `AttendanceController`:
   - `POST /api/attendance/check-out`
 - [ ] DTO con validación:
-  - `CheckOutDto`: { childId, classRoomId, pickupNote }
-  - Validar pickupNote requerido
+  - `CheckOutDto`: { childId, classRoomId, notes }
+  - Validar notes requerido (información sobre quién recoge)
 - [ ] Aplicar middlewares de autorización
 - [ ] Documentación Swagger
 - [ ] Tests E2E
