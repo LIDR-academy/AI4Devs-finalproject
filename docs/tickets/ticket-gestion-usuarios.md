@@ -229,10 +229,10 @@ Crear controlador y endpoints REST para autenticación.
   - `POST /api/auth/refresh`
 - [ ] Validación de request bodies con Zod
   - LoginDto: { email: string, password: string }
-- [ ] Respuestas estandarizadas:
-  - Success: { user: User, token: string }
-  - Error: { error: string, code: string }
-- [ ] Documentación OpenAPI/Swagger
+- [ ] Respuestas estandarizadas (según contrato OpenAPI):
+  - Success (Login): { token: string, refreshToken: string, expiresIn: number, user: User }
+  - Error: { error: string, message: string, details?: string }
+- [ ] Documentación OpenAPI/Swagger debe coincidir exactamente con las respuestas implementadas
 - [ ] Tests de integración E2E de endpoints
 
 #### Criterios de aceptación

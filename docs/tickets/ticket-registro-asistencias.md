@@ -369,7 +369,7 @@ Extender AttendanceService con método de check-out y validaciones.
 - [ ] Agregar método `checkOut(dto, userId)` a `AttendanceService`
   - Validar existe check-in hoy
   - Validar no tiene check-out previo
-  - Validar pickupNote no vacío
+  - Validar notes no vacío
   - Actualizar checkOutTime
   - Agregar info de pickup a notes
 - [ ] Emitir domain event `ChildCheckedOut`
@@ -379,7 +379,7 @@ Extender AttendanceService con método de check-out y validaciones.
 - Check-out se registra correctamente
 - Validaciones previenen check-out sin check-in
 - Validaciones previenen doble check-out
-- pickupNote es requerido
+- notes es requerido
 - Tests >85% coverage
 
 #### Dependencias
