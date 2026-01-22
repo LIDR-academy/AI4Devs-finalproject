@@ -7,8 +7,8 @@
 1. [Breve descripción del producto](#breve-descripción-del-producto)  
 2. [Valor agregado y ventajas competitivas](#valor-agregado-y-ventajas-competitivas)  
 3. [Descripción general de las funcionalidades](#descripción-general-de-las-funcionalidades)  
-   1. [Registro de Asistencias](#registro-de-asistencias)  
-   2. [Registro de Incidentes](#registro-de-incidentes)  
+    1. [Registro de Asistencias (MVP)](#registro-de-asistencias-mvp)  
+    2. [Registro de Incidentes (MVP)](#registro-de-incidentes-mvp)
 4. [Requisitos clave del MVP](#requisitos-clave-del-mvp)  
 5. [Consideraciones de seguridad](#consideraciones-de-seguridad)  
 6. [Escalabilidad y visión futura](#escalabilidad-y-visión-futura)  
@@ -76,7 +76,7 @@ En resumen, KinderTrack convierte la asistencia y los incidentes en **una histor
 
 - Roles de usuario con permisos diferenciados.  
 - Cada registro de asistencia o incidente incluye: usuario, timestamp, aula y dispositivo.   
-- Datos cifrados en repositorio local (AES256).  
+- Datos cifrados en repositorio local (AES-256).  
 - Control de visibilidad para incidentes: internos vs compartidos con familias.  
 - Adjuntos opcionales (foto, nota) con acceso restringido.
 - Historial inmutable, con posibilidad de corrección solo con justificación (post MVP). 

@@ -86,7 +86,7 @@
 
 - Un usuario puede **registrar muchos registros de asistencia** → Cardinalidad: 1:N  
 - Un usuario puede **registrar muchos incidentes** → Cardinalidad: 1:N  
-- Un usuario puede tener **uno o varios roles definidos en RolePermission** → Cardinalidad: N:1  
+- Un usuario tiene **un único rol** definido en RolePermission → Cardinalidad: N:1  
 
 ---
 
@@ -157,7 +157,8 @@
 
 **Relaciones:**
 
-- Relaciona roles con **acciones permitidas** en el sistema → Cardinalidad: 1:N  
+- Define los **permisos asociados a cada rol** del sistema  
+- Múltiples usuarios pueden tener el mismo rol → Cardinalidad: 1:N (un rol, muchos usuarios)  
 
 ---
 
@@ -231,5 +232,5 @@ erDiagram
     CLASS_ROOM ||--o{ INCIDENT : "contiene incidente"
     CHILD ||--o{ ATTENDANCE : "registros de asistencia"
     CHILD ||--o{ INCIDENT : "registros de incidente"
-    ROLEPERMISSION ||--|| USER : "define permisos de rol"
+    ROLEPERMISSION ||--o{ USER : "define permisos de rol"
 ```

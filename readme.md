@@ -33,7 +33,7 @@ Desarrollado con Flutter Web, Node.js/TypeScript y PostgreSQL, siguiendo arquite
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-https://github.com/juankuja/AI4Devs-finalproject
+[AI4Devs-finalproject - KinderTrack](https://github.com/juankuja/AI4Devs-finalproject)
 
 ---
 
@@ -300,7 +300,7 @@ kindertrack/
 #### **Flujo de despliegue unificado:**
 
 ```
-Flutter Web build --> backend/public
+Flutter Web build --> frontend/build/web
 Backend Node.js sirve frontend + API
 Backend <--> PostgreSQL (Supabase)
 Backend <--> Storage Multimedia
@@ -358,7 +358,7 @@ La arquitectura está diseñada para mantener **infraestructura de costo 0** uti
 
 ### **2.6. Tests**
 
-**Enfoque: TDD (Test-Driven Development)**
+#### Enfoque: TDD (Test-Driven Development)
 
 El proyecto sigue la metodología **TDD**, donde los tests se escriben antes de la implementación. Esto garantiza robustez y facilita el mantenimiento del código.
 
@@ -840,6 +840,8 @@ El sistema debe permitir a los usuarios autenticarse mediante credenciales únic
 - Considerar bloqueo temporal tras múltiples intentos fallidos
 - La sesión debe expirar automáticamente al finalizar el día laboral
 - Implementar en modo offline-first (SQLite local)
+- Implementar en modo offline-first:
+  - **Web:** Usar SQLite vía WASM (paquetes: `drift`, `sqlite3_wasm`, `drift_web`, `sqlite3_flutter_libs`) para persistencia SQL, requiere incluir y inicializar WASM en el build web. Alternativa: usar almacén web nativo como IndexedDB (`idb_shim`), Hive (`hive_flutter`), o Isar (`isar`) para mayor compatibilidad y menor complejidad, aunque sin SQL. Pros: SQLite ofrece queries avanzadas y portabilidad; IndexedDB/Hive/Isar son más simples y nativos en web. Setup: agregar el paquete elegido, inicializar en main y configurar persistencia según plataforma.
 
 #### Historias relacionadas
 

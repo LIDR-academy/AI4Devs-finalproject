@@ -98,7 +98,7 @@ kindertrack/
 
 * **Frontend Flutter Web**
 
-  * `flutter build web` → carpeta `build/web`
+  * `flutter build web` → carpeta `frontend/build/web`
   * Servido desde backend Express: `app.use(express.static('frontend/build/web'))`
   * Hosting gratuito alternativo: Vercel, Netlify o Supabase Hosting
 
@@ -114,7 +114,7 @@ kindertrack/
 **Flujo de despliegue unificado**:
 
 ```
-Flutter Web build --> backend/public
+Flutter Web build --> frontend/build/web
 Backend Node.js sirve frontend + API
 Backend <--> PostgreSQL (Supabase)
 Backend <--> Storage Multimedia
@@ -165,7 +165,7 @@ component "Backend API Server" as Backend {
   [Domain Services]
   [Prisma ORM]
   [Middlewares: Auth/Validation]
-  [Static Assets: Flutter Web]
+  [Static Assets: frontend/build/web]
 }
 
 database "PostgreSQL (Supabase)" as DB

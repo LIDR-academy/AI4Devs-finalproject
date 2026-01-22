@@ -25,6 +25,7 @@ Crear esquema completo de asistencias en PostgreSQL con soporte para check-in, c
 #### Tareas técnicas
 - [ ] Definir schema de Prisma para `Attendance`
   - Campos: id, child_id, class_room_id, date, check_in_time, check_out_time, status (PRESENT, ABSENT), state (CALM, TIRED, HYPERACTIVE, MEDICATED, FED, NOT_FED), notes, recorded_by, created_at
+  - **Nota:** El estado "checkedOut" es un valor derivado calculado como `check_out_time != null`, no es un valor del enum status
 - [ ] Constraint UNIQUE(child_id, date) para evitar duplicados
 - [ ] FK a Child, ClassRoom, User
 - [ ] Índices optimizados:
@@ -68,6 +69,7 @@ Crear entidades de dominio para Attendance con validaciones de negocio y enums.
 - [ ] Crear enums:
   - `AttendanceStatus`: PRESENT, ABSENT
   - `ChildState`: CALM, TIRED, HYPERACTIVE, MEDICATED, FED, NOT_FED
+  - **Nota:** El estado "checkedOut" se calcula como: `attendance.check_out_time !== null` (no es un valor del enum)
 - [ ] Value Objects si necesario (notas con validación de longitud)
 - [ ] Validaciones de dominio:
   - No duplicado mismo día
@@ -83,7 +85,7 @@ Crear entidades de dominio para Attendance con validaciones de negocio y enums.
 - Validaciones funcionan correctamente
 - Domain events emitidos apropiadamente
 - Tests pasan con alta cobertura
-- TSLint sin warnings
+- ESLint sin warnings usando `@typescript-eslint/parser` y `@typescript-eslint/eslint-plugin`
 
 #### Dependencias
 - TICKET-003-DB
@@ -103,6 +105,7 @@ Repositorio de asistencias con operaciones optimizadas para consultas frecuentes
 #### Tareas técnicas
 - [ ] Crear interfaz `IAttendanceRepository` en `domains/attendance/repositories/`
   - Métodos: `create()`, `findByChildAndDate()`, `findByClassRoomAndDate()`, `update()`, `findById()`, `getTodayPresent()`, `getTodayAbsent()`, `getTodayCheckedOut()`
+  - **Nota:** `getTodayCheckedOut()` filtra por `status === PRESENT AND check_out_time IS NOT NULL`
 - [ ] Implementar `PrismaAttendanceRepository`
 - [ ] Optimizar query `findByClassRoomAndDate` con JOIN a Child
 - [ ] Mappers entre dominio y persistencia
@@ -214,6 +217,7 @@ Provider/notifier para gestionar estado de asistencias del aula.
 #### Tareas técnicas
 - [ ] Crear `AttendanceState` en `lib/state/attendance/`
   - Campos: childrenList, todayAttendances, presentChildren, absentChildren, checkedOutChildren, stats, isLoading, error
+  - **Nota:** checkedOutChildren se deriva filtrando attendances con check_out_time != null
 - [ ] Crear `AttendanceNotifier extends StateNotifier<AttendanceState>`
   - Métodos: `checkIn()`, `loadTodayAttendance()`, `refreshStatus()`
 - [ ] Optimistic updates en check-in
@@ -523,6 +527,7 @@ Endpoint optimizado que retorna estado completo del aula con una sola query.
 - [ ] Crear método `getTodayStatus(classRoomId)` en `AttendanceService`
   - Single query con JOIN entre Child y Attendance
   - Agrupar por estado (present, absent, checkedOut)
+  - **Nota:** checkedOut se determina por `status = PRESENT AND check_out_time IS NOT NULL`
   - Calcular estadísticas (totales, porcentajes)
 - [ ] Endpoint `GET /api/attendance/classroom/:classRoomId/today`
   - Respuesta: { present: Child[], absent: Child[], checkedOut: Child[], stats: Stats }
@@ -554,6 +559,7 @@ Notifier que gestiona polling y actualización automática del estado del aula.
 #### Tareas técnicas
 - [ ] Crear `ClassRoomStatusState` en `lib/state/attendance/`
   - Campos: present, absent, checkedOut, stats, lastUpdate, isLoading
+  - **Nota:** checkedOut son los niños con status=PRESENT y check_out_time != null
 - [ ] Crear `ClassRoomStatusNotifier`
   - Métodos: `startPolling()`, `stopPolling()`, `refresh()`
   - Timer periódico cada 30 segundos
@@ -665,23 +671,23 @@ Extender AttendanceService con capacidad de registrar ausencias justificadas.
 #### Tareas técnicas
 - [ ] Agregar método `registerAbsence(dto, userId)` a `AttendanceService`
   - Crear registro de Attendance con status=ABSENT
-  - Agregar motivo a notes
+  - Guardar motivo de ausencia en campo notes (texto libre, max 200 caracteres)
   - Permitir registro anticipado (día anterior)
   - Asociar usuario que registra
-- [ ] Enum de motivos predefinidos en notes:
-  - "Enfermedad", "Cita médica", "Viaje familiar", "Otro: [descripción]"
 - [ ] Validación: no duplicar si ya existe registro ese día
 - [ ] Tests unitarios
 
 #### Criterios de aceptación
 - Ausencia se registra correctamente
-- Motivo almacenado en notes
+- Motivo almacenado en notes como texto libre
 - Registro anticipado funciona
 - Validaciones correctas
 - Tests >85% coverage
 
 #### Dependencias
 - TICKET-003-BE-03
+
+**Nota técnica:** El frontend puede ofrecer categorías predefinidas (Enfermedad, Cita médica, Viaje familiar, Otro), pero el backend almacena el motivo como texto libre en el campo `notes`. Esto simplifica el modelo de datos para el MVP.
 
 ---
 
@@ -697,21 +703,23 @@ Endpoint REST para registrar ausencias justificadas.
 
 #### Tareas técnicas
 - [ ] Agregar a `AttendanceController`:
-  - `POST /api/attendance/absence`
+  - `POST /api/attendance/absent`
 - [ ] DTO:
-  - `RegisterAbsenceDto`: { childId, classRoomId, date, reason, customReason? }
-  - Validar customReason si reason="other"
+  - `RegisterAbsenceDto`: { childId, classRoomId, date, notes }
+  - notes: campo de texto libre (max 200 caracteres) para describir el motivo de la ausencia
 - [ ] Aplicar autorización
 - [ ] Documentación Swagger
 - [ ] Tests E2E
 
 #### Criterios de aceptación
 - Endpoint funciona correctamente
-- Validación aplicada
+- Validación aplicada (notes obligatorio)
 - Tests pasan
 
 #### Dependencias
 - TICKET-006-BE-01
+
+**Nota técnica:** Se usa el campo genérico `notes` del modelo de datos (columna `notes` en tabla Attendance) para almacenar el motivo de la ausencia en formato libre. Esto evita agregar columnas específicas en la tabla en el MVP. Las categorías predefinidas (Enfermedad, Cita médica, etc.) se pueden manejar en el frontend, pero se almacenan como texto libre en el backend.
 
 ---
 

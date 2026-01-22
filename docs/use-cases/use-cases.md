@@ -143,6 +143,9 @@ Para el MVP, identificamos los siguientes **roles**:
 
 ---
 
-Si quieres, puedo generar un **diagrama de casos de uso UML** para KinderTrack con **roles, acciones y dependencias visualizadas**, listo para integrar en el PRD. Esto ayuda mucho al equipo de desarrollo a entender el flujo completo.
 
-¿Quieres que haga eso?
+---
+
+### Próximos pasos
+
+Opcional: generar un diagrama de casos de uso UML para KinderTrack (roles, acciones y dependencias) para integrar en el PRD. Esto ayuda al equipo de desarrollo a entender el flujo completo.

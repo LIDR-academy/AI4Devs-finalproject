@@ -19,7 +19,7 @@ Este documento contiene las **user stories** necesarias para desarrollar el MVP 
 
 Cada user story sigue el formato estándar:
 
-```
+```text
 Como [tipo de usuario],
 quiero [acción que desea realizar],
 para [beneficio que espera obtener].
@@ -749,7 +749,7 @@ Funcionalidades esenciales sin las cuales el sistema no es viable:
 7. **US-010**: Control de visibilidad de incidentes
 8. **US-014**: Cifrado de datos locales
 
-### Historias de Alta Prioridad (MVP Completo - 5 historias)
+### Historias de Alta Prioridad (MVP Completo - 4 historias)
 
 Funcionalidades importantes para completar el valor del MVP:
 
@@ -777,6 +777,9 @@ Funcionalidades que agregan valor pero pueden implementarse después:
 - **Reportes y Seguridad**: 2 historias (US-013, US-014)
 
 **Total**: 14 User Stories para el MVP
+  - Críticas: 8 historias
+  - Alta prioridad: 4 historias
+  - Prioridad media: 2 historias
 
 ### Dependencias Principales
 

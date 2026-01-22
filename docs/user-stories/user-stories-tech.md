@@ -351,14 +351,15 @@ Attendance (asistencia) + Incident (incidente)
 | **Bypass de autorización en frontend** | Alta | Crítico | SIEMPRE validar permisos en backend, frontend solo UI |
 | **Escalación de privilegios** | Media | Crítico | Validación estricta en cada endpoint, auditoría de roles |
 | **Asignaciones inconsistentes** | Media | Alto | Validar integridad referencial, transacciones ACID |
-| **Usuario con múltiples roles** | Media | Medio | Diseñar modelo flexible (tabla intermedia user_roles) |
+| **Cambio de rol requiere nueva sesión** | Baja | Bajo | Invalidar JWT al cambiar rol, forzar re-login |
 | **Performance en queries de permisos** | Media | Medio | Cachear permisos en JWT, indexar tabla de asignaciones |
 | **RBAC vs ABAC confusion** | Baja | Medio | Documentar claramente modelo de permisos, consistencia |
 
 **Consideraciones de Arquitectura:**
 - Implementar RBAC (Role-Based Access Control) estricto
+- Cada usuario tiene un único rol (ENUM en User.role)
 - Permisos en JWT para evitar consultas constantes
-- Tabla intermedia `user_classroom_assignments` para N:M
+- Tabla intermedia `user_classroom_assignments` para N:M (usuario-aula)
 - Auditoría de cambios de roles/permisos
 
 **Testing:**
@@ -382,6 +383,10 @@ Attendance (asistencia) + Incident (incidente)
      ABSENT = 'ABSENT',
      LATE = 'LATE'
    }
+   
+   // Nota: "CHECKED_OUT" no es un valor del enum.
+   // Es un estado derivado que se calcula como:
+   // status === PRESENT && check_out_time !== null
    
    enum ChildState {
      CALM = 'CALM',
@@ -806,6 +811,8 @@ Attendance (asistencia) + Incident (incidente)
      const today = new Date().toISOString().split('T')[0];
      
      // Single query con JOIN
+     // Nota: 'CHECKED_OUT' es un estado derivado, no existe en el enum AttendanceStatus
+     // Se calcula como: status=PRESENT AND check_out_time IS NOT NULL
      const result = await this.prisma.$queryRaw`
        SELECT 
          c.id, c.first_name, c.last_name,
@@ -834,7 +841,7 @@ Attendance (asistencia) + Incident (incidente)
    class ClassRoomStatusState {
      List<Child> present;
      List<Child> absent;
-     List<Child> checkedOut;
+     List<Child> checkedOut; // Derivado: niños con check_out_time != null
      ClassRoomStats stats;
      DateTime lastUpdate;
      bool isLoading;

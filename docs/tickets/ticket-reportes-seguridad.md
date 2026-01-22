@@ -246,7 +246,7 @@ Tests end-to-end de exportación de datos.
 
 ## US-014: Cifrado de datos locales
 
-**Nota:** Esta funcionalidad es más relevante para aplicaciones móviles nativas. Para Flutter Web, el cifrado se enfoca en transit (HTTPS) y en el backend (PostgreSQL encryption at rest). Aunque el título original de US-014 es "Cifrado de datos locales", en este proyecto la implementación se limita a cifrado en tránsito y cifrado en reposo en la base de datos, sin incluir cifrado específico en almacenamiento local del dispositivo/navegador. Se documentan tickets con ese enfoque.
+**Nota:** Esta funcionalidad es más relevante para aplicaciones móviles nativas. Para Flutter Web, el cifrado se enfoca en transit (HTTPS) y en el backend. En este proyecto, el alcance de US-014 se interpreta como cifrado de datos persistidos en el servidor (no del almacenamiento local del dispositivo/navegador): incluye cifrado en tránsito y cifrado en reposo en la base de datos, con cifrado a nivel de campo de datos sensibles en PostgreSQL usando `pgcrypto` y AES-256 según lo definido en el TICKET-014-BE-01. No se implementa cifrado específico del almacenamiento local del dispositivo/navegador. Se documentan tickets con ese enfoque.
 
 ### TICKET-014-BE-01: Implementación de cifrado de datos sensibles en BD
 
