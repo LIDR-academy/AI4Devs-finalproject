@@ -1,0 +1,1756 @@
+openapi: 3.0.3
+info:
+  title: KinderTrack API
+  version: 1.0.0
+  description: |
+    API REST para KinderTrack - Sistema de registro de asistencias e incidentes 
+    para instituciones de educación inicial (0-5 años).
+    
+    **Características principales:**
+    - Registro de asistencias (check-in/check-out)
+    - Gestión de incidentes pedagógicos
+    - Control de acceso basado en roles (RBAC)
+    - Generación de resúmenes diarios
+    - Exportación de datos a CSV
+    
+    **Seguridad:**
+    - Autenticación mediante JWT
+    - Cifrado de datos sensibles
+    - Control de permisos por rol
+  contact:
+    name: KinderTrack Support
+    email: support@kindertrack.example.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.kindertrack.example.com/v1
+    description: Servidor de Producción
+  - url: https://staging-api.kindertrack.example.com/v1
+    description: Servidor de Staging
+  - url: http://localhost:3000/v1
+    description: Servidor Local de Desarrollo
+
+tags:
+  - name: Authentication
+    description: Autenticación y gestión de sesiones
+  - name: Users
+    description: Gestión de usuarios y permisos
+  - name: ClassRooms
+    description: Gestión de aulas
+  - name: Children
+    description: Gestión de información de niños
+  - name: Attendance
+    description: Registro y consulta de asistencias
+  - name: Incidents
+    description: Registro y consulta de incidentes
+  - name: Reports
+    description: Generación de reportes y exportaciones
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ==========================================
+  # AUTHENTICATION ENDPOINTS
+  # ==========================================
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Iniciar sesión
+      description: |
+        Autentica un usuario con sus credenciales y devuelve un token JWT.
+        El token tiene una duración de 8 horas (jornada laboral).
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Correo electrónico del usuario
+                  example: "docente@example.com"
+                password:
+                  type: string
+                  format: password
+                  description: Contraseña del usuario
+                  example: "SecureP@ss123"
+      responses:
+        '200':
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Token JWT para autenticación
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refreshToken:
+                    type: string
+                    description: Token para renovar la sesión
+                  expiresIn:
+                    type: integer
+                    description: Tiempo de expiración en segundos
+                    example: 28800
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          description: Demasiados intentos fallidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Too many failed attempts"
+                message: "Cuenta bloqueada temporalmente. Intente nuevamente en 15 minutos."
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Cerrar sesión
+      description: Invalida el token JWT actual del usuario
+      operationId: logout
+      responses:
+        '204':
+          description: Sesión cerrada exitosamente
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Obtener usuario actual
+      description: Devuelve la información del usuario autenticado
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Información del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Renovar token
+      description: Genera un nuevo token JWT usando el refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: Refresh token obtenido en el login
+      responses:
+        '200':
+          description: Token renovado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  expiresIn:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # ==========================================
+  # USERS ENDPOINTS
+  # ==========================================
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Listar usuarios
+      description: |
+        Obtiene la lista de usuarios del sistema.
+        Solo accesible para directivos.
+      operationId: listUsers
+      parameters:
+        - name: role
+          in: query
+          description: Filtrar por rol
+          schema:
+            $ref: '#/components/schemas/Role'
+        - name: page
+          in: query
+          description: Número de página
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Elementos por página
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /users/{userId}:
+    get:
+      tags:
+        - Users
+      summary: Obtener usuario por ID
+      description: Devuelve la información de un usuario específico
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID del usuario
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /users/{userId}/classrooms:
+    get:
+      tags:
+        - Users
+      summary: Obtener aulas asignadas a un usuario
+      description: |
+        Devuelve las aulas a las que tiene acceso un docente.
+        Los directivos tienen acceso a todas las aulas.
+      operationId: getUserClassRooms
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID del usuario
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista de aulas asignadas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClassRoom'
+
+  # ==========================================
+  # CLASSROOMS ENDPOINTS
+  # ==========================================
+  /classrooms:
+    get:
+      tags:
+        - ClassRooms
+      summary: Listar aulas
+      description: |
+        Obtiene las aulas accesibles para el usuario autenticado.
+        - Docentes: solo sus aulas asignadas
+        - Directivos: todas las aulas
+      operationId: listClassRooms
+      responses:
+        '200':
+          description: Lista de aulas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClassRoom'
+
+  /classrooms/{classRoomId}:
+    get:
+      tags:
+        - ClassRooms
+      summary: Obtener aula por ID
+      description: Devuelve la información de un aula específica
+      operationId: getClassRoomById
+      parameters:
+        - name: classRoomId
+          in: path
+          required: true
+          description: ID del aula
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Aula encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassRoom'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # ==========================================
+  # CHILDREN ENDPOINTS
+  # ==========================================
+  /children:
+    get:
+      tags:
+        - Children
+      summary: Listar niños
+      description: |
+        Obtiene la lista de niños filtrada por aula.
+        Requiere acceso al aula especificada.
+      operationId: listChildren
+      parameters:
+        - name: classRoomId
+          in: query
+          required: true
+          description: ID del aula
+          schema:
+            type: string
+            format: uuid
+        - name: includeInactive
+          in: query
+          description: Incluir niños inactivos
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Lista de niños
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Child'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /children/{childId}:
+    get:
+      tags:
+        - Children
+      summary: Obtener niño por ID
+      description: Devuelve la información de un niño específico
+      operationId: getChildById
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          description: ID del niño
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Niño encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Child'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # ==========================================
+  # ATTENDANCE ENDPOINTS
+  # ==========================================
+  /attendance/check-in:
+    post:
+      tags:
+        - Attendance
+      summary: Registrar check-in (llegada)
+      description: |
+        Registra la llegada de un niño al aula.
+        Captura automáticamente la hora actual y el usuario responsable.
+        
+        **Requisito de velocidad:** Debe completarse en menos de 15 segundos.
+      operationId: checkIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - childId
+                - classRoomId
+              properties:
+                childId:
+                  type: string
+                  format: uuid
+                  description: ID del niño
+                classRoomId:
+                  type: string
+                  format: uuid
+                  description: ID del aula
+                state:
+                  $ref: '#/components/schemas/ChildState'
+                notes:
+                  type: string
+                  maxLength: 100
+                  description: Notas opcionales (máximo 100 caracteres)
+                  example: "Llegó con su peluche favorito"
+            example:
+              childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+              classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+              state: "CALM"
+              notes: "Desayunó en casa"
+      responses:
+        '201':
+          description: Check-in registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '400':
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Validation error"
+                message: "Ya existe un check-in para este niño en la fecha actual"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /attendance/check-out:
+    post:
+      tags:
+        - Attendance
+      summary: Registrar check-out (salida)
+      description: |
+        Registra la salida de un niño del aula.
+        Requiere que exista un check-in previo para la fecha actual.
+      operationId: checkOut
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - childId
+                - pickedUpBy
+              properties:
+                childId:
+                  type: string
+                  format: uuid
+                  description: ID del niño
+                pickedUpBy:
+                  type: string
+                  enum: [FATHER, MOTHER, AUTHORIZED, OTHER]
+                  description: Persona que recoge al niño
+                pickedUpByName:
+                  type: string
+                  description: Nombre obligatorio si pickedUpBy es "OTHER"
+                  maxLength: 100
+                pickedUpByRelation:
+                  type: string
+                  description: Relación obligatoria si pickedUpBy es "OTHER"
+                  maxLength: 50
+                notes:
+                  type: string
+                  maxLength: 100
+                  description: Notas opcionales
+            example:
+              childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+              pickedUpBy: "MOTHER"
+              notes: "Recogido a tiempo"
+      responses:
+        '200':
+          description: Check-out registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '400':
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Validation error"
+                message: "No existe un check-in previo para este niño hoy"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /attendance/absent:
+    post:
+      tags:
+        - Attendance
+      summary: Registrar ausencia justificada
+      description: |
+        Registra una ausencia con su motivo.
+        Permite diferenciar entre ausencias justificadas y no justificadas.
+      operationId: registerAbsence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - childId
+                - classRoomId
+                - date
+                - reason
+              properties:
+                childId:
+                  type: string
+                  format: uuid
+                classRoomId:
+                  type: string
+                  format: uuid
+                date:
+                  type: string
+                  format: date
+                  description: Fecha de la ausencia (permite registros anticipados)
+                reason:
+                  type: string
+                  enum: [ILLNESS, MEDICAL_APPOINTMENT, FAMILY_TRAVEL, OTHER]
+                  description: Motivo de la ausencia
+                reasonDescription:
+                  type: string
+                  maxLength: 200
+                  description: Descripción obligatoria si reason es "OTHER"
+            example:
+              childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+              classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+              date: "2026-01-22"
+              reason: "ILLNESS"
+              reasonDescription: "Resfriado común"
+      responses:
+        '201':
+          description: Ausencia registrada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /attendance/classroom/{classRoomId}/today:
+    get:
+      tags:
+        - Attendance
+      summary: Obtener estado del aula hoy
+      description: |
+        Devuelve el estado actual de asistencia de todos los niños del aula.
+        Incluye tres categorías: presentes, ausentes y retirados.
+      operationId: getTodayClassRoomStatus
+      parameters:
+        - name: classRoomId
+          in: path
+          required: true
+          description: ID del aula
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Estado actual del aula
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  classRoom:
+                    $ref: '#/components/schemas/ClassRoom'
+                  summary:
+                    type: object
+                    properties:
+                      totalChildren:
+                        type: integer
+                      present:
+                        type: integer
+                      absent:
+                        type: integer
+                      checkedOut:
+                        type: integer
+                  present:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Child'
+                        - type: object
+                          properties:
+                            attendance:
+                              $ref: '#/components/schemas/Attendance'
+                  absent:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Child'
+                        - type: object
+                          properties:
+                            attendance:
+                              $ref: '#/components/schemas/Attendance'
+                  checkedOut:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Child'
+                        - type: object
+                          properties:
+                            attendance:
+                              $ref: '#/components/schemas/Attendance'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /attendance/{attendanceId}:
+    get:
+      tags:
+        - Attendance
+      summary: Obtener registro de asistencia por ID
+      description: Devuelve los detalles de un registro de asistencia específico
+      operationId: getAttendanceById
+      parameters:
+        - name: attendanceId
+          in: path
+          required: true
+          description: ID del registro de asistencia
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Registro de asistencia encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      tags:
+        - Attendance
+      summary: Corregir registro de asistencia
+      description: |
+        Permite corregir un registro de asistencia dentro de las 24 horas siguientes.
+        Solo el docente que creó el registro o un directivo pueden corregir.
+      operationId: updateAttendance
+      parameters:
+        - name: attendanceId
+          in: path
+          required: true
+          description: ID del registro de asistencia
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                checkInTime:
+                  type: string
+                  format: date-time
+                checkOutTime:
+                  type: string
+                  format: date-time
+                state:
+                  $ref: '#/components/schemas/ChildState'
+                pickedUpBy:
+                  type: string
+                  enum: [FATHER, MOTHER, AUTHORIZED, OTHER]
+                notes:
+                  type: string
+                  maxLength: 100
+      responses:
+        '200':
+          description: Registro actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+        '400':
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Validation error"
+                message: "No se puede corregir registros después de 24 horas"
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /attendance/child/{childId}/history:
+    get:
+      tags:
+        - Attendance
+      summary: Obtener historial de asistencia de un niño
+      description: |
+        Devuelve el historial completo de asistencia con estadísticas.
+        Permite filtrar por rango de fechas.
+      operationId: getChildAttendanceHistory
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          description: ID del niño
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          description: Fecha inicial del periodo
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Fecha final del periodo
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Historial de asistencia
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  child:
+                    $ref: '#/components/schemas/Child'
+                  period:
+                    type: object
+                    properties:
+                      startDate:
+                        type: string
+                        format: date
+                      endDate:
+                        type: string
+                        format: date
+                  statistics:
+                    type: object
+                    properties:
+                      totalDays:
+                        type: integer
+                        description: Total de días en el periodo
+                      daysPresent:
+                        type: integer
+                        description: Días asistidos
+                      daysAbsentJustified:
+                        type: integer
+                        description: Ausencias justificadas
+                      daysAbsentUnjustified:
+                        type: integer
+                        description: Ausencias sin justificar
+                      attendancePercentage:
+                        type: number
+                        format: float
+                        description: Porcentaje de asistencia
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Attendance'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  # ==========================================
+  # INCIDENTS ENDPOINTS
+  # ==========================================
+  /incidents:
+    post:
+      tags:
+        - Incidents
+      summary: Registrar incidente
+      description: |
+        Registra un incidente pedagógico relevante.
+        Captura automáticamente el usuario y timestamp.
+        
+        **Categorías:** positivo, negativo, pedagógico, salud, comportamiento, logro
+      operationId: createIncident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - childId
+                - classRoomId
+                - category
+                - description
+              properties:
+                childId:
+                  type: string
+                  format: uuid
+                classRoomId:
+                  type: string
+                  format: uuid
+                category:
+                  $ref: '#/components/schemas/IncidentCategory'
+                description:
+                  type: string
+                  maxLength: 500
+                  description: Descripción del incidente (máximo 500 caracteres)
+                developmentAreas:
+                  type: array
+                  items:
+                    type: string
+                    enum: [MOTOR_SKILLS, SOCIALIZATION, LANGUAGE, AUTONOMY, COGNITION]
+                  description: Áreas de desarrollo relacionadas (opcional)
+                visibility:
+                  type: string
+                  enum: [INTERNAL, SHAREABLE]
+                  default: INTERNAL
+                  description: Visibilidad del incidente
+            example:
+              childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+              classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+              category: "POSITIVE"
+              description: "Ayudó a un compañero a guardar los juguetes sin que se lo pidieran"
+              developmentAreas: ["SOCIALIZATION", "AUTONOMY"]
+              visibility: "SHAREABLE"
+      responses:
+        '201':
+          description: Incidente registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    get:
+      tags:
+        - Incidents
+      summary: Listar incidentes
+      description: |
+        Obtiene incidentes filtrados por aula y/o niño.
+        Los docentes solo ven incidentes de sus aulas.
+      operationId: listIncidents
+      parameters:
+        - name: classRoomId
+          in: query
+          description: Filtrar por aula
+          schema:
+            type: string
+            format: uuid
+        - name: childId
+          in: query
+          description: Filtrar por niño
+          schema:
+            type: string
+            format: uuid
+        - name: category
+          in: query
+          description: Filtrar por categoría
+          schema:
+            $ref: '#/components/schemas/IncidentCategory'
+        - name: developmentArea
+          in: query
+          description: Filtrar por área de desarrollo
+          schema:
+            type: string
+            enum: [MOTOR_SKILLS, SOCIALIZATION, LANGUAGE, AUTONOMY, COGNITION]
+        - name: startDate
+          in: query
+          description: Fecha inicial
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Fecha final
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Lista de incidentes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Incident'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /incidents/{incidentId}:
+    get:
+      tags:
+        - Incidents
+      summary: Obtener incidente por ID
+      description: Devuelve los detalles completos de un incidente
+      operationId: getIncidentById
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          description: ID del incidente
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Incidente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      tags:
+        - Incidents
+      summary: Actualizar incidente
+      description: |
+        Actualiza un incidente existente.
+        Solo el docente que creó el incidente o un directivo pueden editarlo.
+      operationId: updateIncident
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          description: ID del incidente
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category:
+                  $ref: '#/components/schemas/IncidentCategory'
+                description:
+                  type: string
+                  maxLength: 500
+                developmentAreas:
+                  type: array
+                  items:
+                    type: string
+                    enum: [MOTOR_SKILLS, SOCIALIZATION, LANGUAGE, AUTONOMY, COGNITION]
+                visibility:
+                  type: string
+                  enum: [INTERNAL, SHAREABLE]
+      responses:
+        '200':
+          description: Incidente actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /incidents/child/{childId}:
+    get:
+      tags:
+        - Incidents
+      summary: Obtener incidentes de un niño
+      description: |
+        Devuelve todos los incidentes de un niño específico.
+        Permite filtrar por categoría, área de desarrollo y búsqueda de texto.
+      operationId: getChildIncidents
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          description: ID del niño
+          schema:
+            type: string
+            format: uuid
+        - name: category
+          in: query
+          description: Filtrar por categoría
+          schema:
+            $ref: '#/components/schemas/IncidentCategory'
+        - name: developmentArea
+          in: query
+          description: Filtrar por área de desarrollo
+          schema:
+            type: string
+            enum: [MOTOR_SKILLS, SOCIALIZATION, LANGUAGE, AUTONOMY, COGNITION]
+        - name: search
+          in: query
+          description: Búsqueda en descripción
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Lista de incidentes del niño
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  child:
+                    $ref: '#/components/schemas/Child'
+                  total:
+                    type: integer
+                  incidents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Incident'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  # ==========================================
+  # REPORTS ENDPOINTS
+  # ==========================================
+  /reports/daily-summary:
+    post:
+      tags:
+        - Reports
+      summary: Generar resúmenes diarios
+      description: |
+        Genera resúmenes diarios para los niños de un aula.
+        Combina información de asistencia e incidentes compartibles.
+      operationId: generateDailySummary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - classRoomId
+                - date
+              properties:
+                classRoomId:
+                  type: string
+                  format: uuid
+                date:
+                  type: string
+                  format: date
+                childIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: IDs específicos de niños (opcional, si está vacío se generan para todos los presentes)
+            example:
+              classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+              date: "2026-01-21"
+      responses:
+        '200':
+          description: Resúmenes generados exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  classRoom:
+                    $ref: '#/components/schemas/ClassRoom'
+                  summaries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DailySummary'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /reports/daily-summary/{summaryId}:
+    get:
+      tags:
+        - Reports
+      summary: Obtener resumen diario por ID
+      description: Devuelve un resumen diario específico
+      operationId: getDailySummaryById
+      parameters:
+        - name: summaryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Resumen diario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailySummary'
+
+    patch:
+      tags:
+        - Reports
+      summary: Editar resumen diario
+      description: |
+        Permite editar un resumen antes de marcarlo como "listo para compartir".
+        Solo el docente creador o un directivo pueden editar.
+      operationId: updateDailySummary
+      parameters:
+        - name: summaryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  description: Contenido editado del resumen
+                status:
+                  type: string
+                  enum: [DRAFT, READY_TO_SHARE]
+      responses:
+        '200':
+          description: Resumen actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailySummary'
+
+  /reports/export:
+    post:
+      tags:
+        - Reports
+      summary: Exportar datos a CSV
+      description: |
+        Exporta registros de asistencia o incidentes en formato CSV.
+        Solo accesible para directivos y administrativos.
+      operationId: exportData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - startDate
+                - endDate
+              properties:
+                type:
+                  type: string
+                  enum: [ATTENDANCE, INCIDENTS]
+                  description: Tipo de datos a exportar
+                classRoomIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: IDs de aulas (opcional, si está vacío exporta todas)
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+            example:
+              type: "ATTENDANCE"
+              classRoomIds: ["a123b456-c789-0d12-e345-f67890123456"]
+              startDate: "2026-01-01"
+              endDate: "2026-01-31"
+      responses:
+        '200':
+          description: Archivo CSV generado
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: 'attachment; filename="kindertrack-export-{type}-{date}.csv"'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+# ==========================================
+# COMPONENTS
+# ==========================================
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT obtenido del endpoint /auth/login.
+        Incluir en el header: Authorization: Bearer {token}
+
+  schemas:
+    # ==========================================
+    # DOMAIN MODELS
+    # ==========================================
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID único del usuario
+        email:
+          type: string
+          format: email
+          description: Correo electrónico
+        firstName:
+          type: string
+          description: Nombre
+        lastName:
+          type: string
+          description: Apellido
+        role:
+          $ref: '#/components/schemas/Role'
+        assignedClassRoomIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs de aulas asignadas (solo para docentes)
+        isActive:
+          type: boolean
+          description: Estado del usuario
+        createdAt:
+          type: string
+          format: date-time
+        lastLogin:
+          type: string
+          format: date-time
+      example:
+        id: "u-12345678-1234-1234-1234-123456789012"
+        email: "docente@example.com"
+        firstName: "María"
+        lastName: "González"
+        role: "TEACHER"
+        assignedClassRoomIds: ["a123b456-c789-0d12-e345-f67890123456"]
+        isActive: true
+        createdAt: "2025-01-01T08:00:00Z"
+        lastLogin: "2026-01-21T07:30:00Z"
+
+    Role:
+      type: string
+      enum:
+        - TEACHER
+        - DIRECTOR
+        - ADMIN
+      description: |
+        Roles del sistema:
+        - TEACHER: Docente (registro en aulas asignadas)
+        - DIRECTOR: Directivo (acceso completo)
+        - ADMIN: Administrativo (registro de asistencias, sin acceso a incidentes)
+
+    ClassRoom:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Nombre del aula
+          example: "Sala Amarilla"
+        ageGroup:
+          type: string
+          description: Rango de edades
+          example: "3-4 años"
+        capacity:
+          type: integer
+          description: Capacidad máxima
+          example: 20
+        activeChildren:
+          type: integer
+          description: Número de niños actualmente inscritos
+        assignedTeachers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              firstName:
+                type: string
+              lastName:
+                type: string
+        isActive:
+          type: boolean
+      example:
+        id: "a123b456-c789-0d12-e345-f67890123456"
+        name: "Sala Amarilla"
+        ageGroup: "3-4 años"
+        capacity: 20
+        activeChildren: 18
+        assignedTeachers:
+          - id: "u-12345678-1234-1234-1234-123456789012"
+            firstName: "María"
+            lastName: "González"
+        isActive: true
+
+    Child:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+          description: Nombre del niño
+        lastName:
+          type: string
+          description: Apellido del niño
+        dateOfBirth:
+          type: string
+          format: date
+          description: Fecha de nacimiento
+        age:
+          type: integer
+          description: Edad en años
+        classRoomId:
+          type: string
+          format: uuid
+          description: Aula asignada
+        photoUrl:
+          type: string
+          format: uri
+          description: URL de la foto del niño
+        isActive:
+          type: boolean
+          description: Estado (inscrito actualmente)
+        enrollmentDate:
+          type: string
+          format: date
+        parents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              relation:
+                type: string
+                enum: [FATHER, MOTHER, GUARDIAN]
+              phone:
+                type: string
+              email:
+                type: string
+      example:
+        id: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+        firstName: "Juan"
+        lastName: "Pérez"
+        dateOfBirth: "2021-05-15"
+        age: 4
+        classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+        photoUrl: "https://storage.kindertrack.example.com/photos/juan-perez.jpg"
+        isActive: true
+        enrollmentDate: "2024-02-01"
+        parents:
+          - name: "Carlos Pérez"
+            relation: "FATHER"
+            phone: "+34612345678"
+            email: "carlos.perez@example.com"
+
+    Attendance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        childId:
+          type: string
+          format: uuid
+        classRoomId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [PRESENT, ABSENT, ABSENT_JUSTIFIED]
+          description: Estado de asistencia
+        checkInTime:
+          type: string
+          format: date-time
+          description: Hora de llegada
+        checkOutTime:
+          type: string
+          format: date-time
+          description: Hora de salida
+        state:
+          $ref: '#/components/schemas/ChildState'
+        notes:
+          type: string
+          maxLength: 100
+          description: Notas del check-in
+        pickedUpBy:
+          type: string
+          enum: [FATHER, MOTHER, AUTHORIZED, OTHER]
+          description: Persona que recogió al niño
+        pickedUpByName:
+          type: string
+          description: Nombre si pickedUpBy es OTHER
+        pickedUpByRelation:
+          type: string
+          description: Relación si pickedUpBy es OTHER
+        absenceReason:
+          type: string
+          enum: [ILLNESS, MEDICAL_APPOINTMENT, FAMILY_TRAVEL, OTHER]
+          description: Motivo de ausencia justificada
+        absenceReasonDescription:
+          type: string
+          maxLength: 200
+        recordedBy:
+          type: string
+          format: uuid
+          description: ID del usuario que registró
+        deviceId:
+          type: string
+          description: ID del dispositivo usado para registrar
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      example:
+        id: "att-98765432-1234-5678-9012-abcdefabcdef"
+        childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+        classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+        date: "2026-01-21"
+        status: "PRESENT"
+        checkInTime: "2026-01-21T08:15:00Z"
+        checkOutTime: "2026-01-21T16:30:00Z"
+        state: "CALM"
+        notes: "Desayunó en casa"
+        pickedUpBy: "MOTHER"
+        recordedBy: "u-12345678-1234-1234-1234-123456789012"
+        createdAt: "2026-01-21T08:15:00Z"
+        updatedAt: "2026-01-21T16:30:00Z"
+
+    ChildState:
+      type: string
+      enum:
+        - CALM
+        - TIRED
+        - HYPERACTIVE
+        - MEDICATED
+        - FED
+        - NOT_FED
+      description: |
+        Estado del niño al llegar:
+        - CALM: Tranquilo
+        - TIRED: Cansado
+        - HYPERACTIVE: Inquieto/Hiperactivo
+        - MEDICATED: Medicado
+        - FED: Desayunó
+        - NOT_FED: No desayunó
+
+    Incident:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        childId:
+          type: string
+          format: uuid
+        classRoomId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        category:
+          $ref: '#/components/schemas/IncidentCategory'
+        description:
+          type: string
+          maxLength: 500
+          description: Descripción del incidente
+        developmentAreas:
+          type: array
+          items:
+            type: string
+            enum: [MOTOR_SKILLS, SOCIALIZATION, LANGUAGE, AUTONOMY, COGNITION]
+          description: Áreas de desarrollo relacionadas
+        visibility:
+          type: string
+          enum: [INTERNAL, SHAREABLE]
+          description: Visibilidad del incidente
+        recordedBy:
+          type: string
+          format: uuid
+          description: Usuario que registró el incidente
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      example:
+        id: "inc-abcdef12-3456-7890-abcd-ef1234567890"
+        childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+        classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+        date: "2026-01-21"
+        category: "POSITIVE"
+        description: "Ayudó a un compañero a guardar los juguetes sin que se lo pidieran"
+        developmentAreas: ["SOCIALIZATION", "AUTONOMY"]
+        visibility: "SHAREABLE"
+        recordedBy: "u-12345678-1234-1234-1234-123456789012"
+        createdAt: "2026-01-21T10:30:00Z"
+        updatedAt: "2026-01-21T10:30:00Z"
+
+    IncidentCategory:
+      type: string
+      enum:
+        - POSITIVE
+        - NEGATIVE
+        - PEDAGOGICAL
+        - HEALTH
+        - BEHAVIOR
+        - ACHIEVEMENT
+      description: |
+        Categorías de incidentes:
+        - POSITIVE: Incidente positivo
+        - NEGATIVE: Incidente negativo
+        - PEDAGOGICAL: Observación pedagógica
+        - HEALTH: Relacionado con salud
+        - BEHAVIOR: Comportamiento
+        - ACHIEVEMENT: Logro alcanzado
+
+    DailySummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        childId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        classRoomId:
+          type: string
+          format: uuid
+        content:
+          type: string
+          description: Contenido del resumen generado
+        status:
+          type: string
+          enum: [DRAFT, READY_TO_SHARE]
+        attendance:
+          type: object
+          properties:
+            checkInTime:
+              type: string
+              format: time
+            checkOutTime:
+              type: string
+              format: time
+            state:
+              $ref: '#/components/schemas/ChildState'
+            pickedUpBy:
+              type: string
+        incidents:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                $ref: '#/components/schemas/IncidentCategory'
+              description:
+                type: string
+        generatedBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      example:
+        id: "sum-11111111-2222-3333-4444-555555555555"
+        childId: "c1a2b3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6"
+        date: "2026-01-21"
+        classRoomId: "a123b456-c789-0d12-e345-f67890123456"
+        content: "Juan tuvo un día excelente. Llegó tranquilo a las 08:15 y desayunó en casa. Durante la jornada ayudó a un compañero a guardar los juguetes, mostrando gran empatía y colaboración. Fue recogido por su madre a las 16:30."
+        status: "READY_TO_SHARE"
+        attendance:
+          checkInTime: "08:15"
+          checkOutTime: "16:30"
+          state: "CALM"
+          pickedUpBy: "MOTHER"
+        incidents:
+          - category: "POSITIVE"
+            description: "Ayudó a un compañero a guardar los juguetes"
+        generatedBy: "u-12345678-1234-1234-1234-123456789012"
+        createdAt: "2026-01-21T17:00:00Z"
+        updatedAt: "2026-01-21T17:05:00Z"
+
+    # ==========================================
+    # UTILITY SCHEMAS
+    # ==========================================
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Página actual
+        limit:
+          type: integer
+          description: Elementos por página
+        total:
+          type: integer
+          description: Total de elementos
+        totalPages:
+          type: integer
+          description: Total de páginas
+      example:
+        page: 1
+        limit: 20
+        total: 45
+        totalPages: 3
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Código de error
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+        details:
+          type: object
+          description: Detalles adicionales (opcional)
+      example:
+        error: "Validation error"
+        message: "Los datos proporcionados no son válidos"
+        details:
+          field: "email"
+          reason: "Formato de email inválido"
+
+  # ==========================================
+  # REUSABLE RESPONSES
+  # ==========================================
+  responses:
+    UnauthorizedError:
+      description: No autenticado o token inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+            message: "Token JWT inválido o expirado"
+
+    ForbiddenError:
+      description: No tiene permisos para realizar esta acción
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Forbidden"
+            message: "No tiene permisos para acceder a este recurso"
+
+    NotFoundError:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Not found"
+            message: "El recurso solicitado no existe"
+
+    ValidationError:
+      description: Error de validación de datos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Validation error"
+            message: "Los datos proporcionados no son válidos"
