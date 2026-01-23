@@ -5,6 +5,10 @@
 
 ---
 
+Prohibido incluir bloques de código en plan.md. 
+Prohibido nominar endpoints, métodos HTTP o DTOs si el BDD no lo explicita. 
+Cualquier naming "obligatorio" aplica SOLO cuando esté respaldado por BDD/OpenAPI ya aprobado.
+
 # 1. Propósito
 Estas instrucciones definen **cómo debe comportarse Copilot** al generar especificaciones, planes, tareas o código dentro de este repositorio.
 
