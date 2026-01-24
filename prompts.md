@@ -192,15 +192,97 @@ Te comparto el formato:
 
 ### **2.4. Infraestructura y despliegue**
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+**Prompt 1**
+En la carpeta @documentation/Infra , has lo siguiente: Basándote en el archivo @funcionalidad_core.md, genera la **documentación de infraestructura y despliegue del proyecto**  en un archivo llamado infraestructura-despliegue.md.
+
+Requisitos:
+- El contenido debe estar en Markdown.
+- Incluye un título principal: "Infraestructura y despliegue".
+- Agrega una sección "Entornos" describiendo los entornos soportados (desarrollo, staging, producción).
+- Agrega una sección "Infraestructura" que detalle:
+  - Proveedor/es (si aplica)
+  - Servicios utilizados (compute, storage, base de datos, colas, etc.)
+  - Red y seguridad a alto nivel
+- Agrega una sección "Proceso de despliegue" explicando:
+  - Estrategia de despliegue (manual, CI/CD)
+  - Pasos principales del pipeline
+  - Versionado y rollback
+- Agrega una sección "Configuración" describiendo:
+  - Variables de entorno
+  - Secretos y manejo de credenciales
+- Agrega una sección "Escalabilidad y monitoreo" cubriendo:
+  - Estrategias de escalado
+  - Logs, métricas y alertas
+- Mantén la documentación alineada con la arquitectura del sistema.
+- Si @funcionalidad_core.md no define algún aspecto, agrega una sección final "Suposiciones" con las inferencias realizadas.
+
+Salida esperada:
+- Crear/actualizar el archivo: @documentation/infraestructura-despliegue.md
+- No incluyas texto fuera del archivo generado.
 
 ### **2.5. Seguridad**
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+**Prompt 1**
+en la carpeta @documentation/Infra has lo siguiente: Basándote en el archivo @funcionalidad_core.md, genera la **documentación de seguridad del proyecto** y guardalo en un archivo llamado seguridad.md.
+
+Requisitos:
+- El contenido debe estar en Markdown.
+- Incluye un título principal: "Seguridad".
+- Agrega una sección "Principios de seguridad" (least privilege, defense in depth, etc.).
+- Agrega una sección "Autenticación y autorización" describiendo:
+  - Mecanismos de autenticación
+  - Gestión de roles y permisos
+- Agrega una sección "Protección de datos" cubriendo:
+  - Datos en tránsito
+  - Datos en reposo
+  - Manejo de información sensible
+- Agrega una sección "Seguridad de la aplicación" que incluya:
+  - Validación de entradas
+  - Manejo de errores
+  - Protección contra amenazas comunes (OWASP Top 10)
+- Agrega una sección "Infraestructura y red" describiendo controles de seguridad a alto nivel.
+- Agrega una sección "Auditoría y monitoreo" cubriendo:
+  - Logs de seguridad
+  - Detección de incidentes
+- Mantén coherencia con la arquitectura e infraestructura definidas previamente.
+- Si faltan detalles en @funcionalidad_core.md, agrega una sección final "Suposiciones" explicando claramente las inferencias realizadas.
+
+Salida esperada:
+- Crear/actualizar el archivo: @documentation/seguridad.md
+- No incluyas texto fuera del archivo generado.
+
 
 ### **2.6. Tests**
 
-> Describe brevemente algunos de los tests realizados
+**Prompt 1**
+En la carpeta @documentation/Test  has lo siguiente: Basándote en el archivo @funcionalidad_core.md, genera la **documentación de estrategia y tipos de pruebas del proyecto** y guárdala en un archivo llamado tests.md.
+
+Requisitos:
+- El contenido debe estar en Markdown.
+- Incluye un título principal: "Tests".
+- Agrega una sección "Estrategia de testing" describiendo el enfoque general de pruebas.
+- Agrega una sección "Tipos de pruebas" que incluya:
+  - Pruebas unitarias
+  - Pruebas de integración
+  - Pruebas end-to-end (E2E)
+  - Pruebas de regresión
+- Para cada tipo de prueba, describe:
+  - Objetivo
+  - Alcance
+  - Herramientas o frameworks sugeridos (si aplica)
+- Agrega una sección "Cobertura y calidad" describiendo:
+  - Métricas de cobertura
+  - Criterios de aceptación
+- Agrega una sección "Automatización" explicando:
+  - Integración con CI/CD
+  - Ejecución de tests
+- Mantén coherencia con la arquitectura, componentes e infraestructura del sistema.
+- Si @funcionalidad_core.md no define algún aspecto, agrega una sección final "Suposiciones" con las inferencias realizadas.
+
+Salida esperada:
+- Crear/actualizar el archivo: @documentation/tests.md
+- No incluyas texto fuera del archivo generado.
+
 
 ---
 
@@ -259,4 +341,6 @@ Te comparto el formato:
 
 
 
+
+NOTA: Algunos prompts los hice por separado para tener un mejor control, esto fue en el caso de Infra - Test - Seguridad.
 
