@@ -344,3 +344,103 @@ Salida esperada:
 
 NOTA: Algunos prompts los hice por separado para tener un mejor control, esto fue en el caso de Infra - Test - Seguridad.
 
+
+
+
+### Prompt para acomodar Backlog ###
+Actúa como un **experto en Product Management y documentación técnica**.
+
+Tu tarea es **refactorizar y organizar la documentación existente**, separando historias de usuario y tickets de trabajo en archivos individuales, siguiendo estrictamente la estructura indicada.
+
+### 1️⃣ Historias de Usuario
+Fuente:
+@documentation/6-historias-usuario/historias-usuario.md 
+
+Instrucciones:
+- Analiza todas las historias de usuario contenidas en el archivo.
+- Crea un **archivo individual por cada historia de usuario**.
+- Cada archivo debe llamarse siguiendo el formato:
+  - `US-XXX.md` (ejemplo: `US-001.md`)
+- Dentro de cada archivo debes colocar **toda la información completa de la historia** (título, descripción, criterios de aceptación, notas, etc.).
+- Organiza los archivos **dentro de carpetas por Épica**.
+- Si una épica no existe, **créala** con un nombre claro y representativo.
+- Mantén una estructura limpia y coherente.
+
+Te comparto una estructura de una User Story:
+Título de la Historia de Usuario:
+
+Como [rol del usuario],
+
+quiero [acción que desea realizar el usuario],
+
+para que [beneficio que espera obtener el usuario].
+
+Criterios de Aceptación:
+
+[Detalle específico de funcionalidad]
+
+[Detalle específico de funcionalidad]
+
+[Detalle específico de funcionalidad]
+
+Notas Adicionales:
+
+• [Cualquier consideración adicional]
+
+Historias de Usuario Relacionadas:
+
+• [Relaciones con otras historias de usuario]
+
+### 2️⃣ Tickets de Trabajo
+Fuente:
+@documentation/7-tickets-trabajo/tickets-trabajo.md 
+
+Instrucciones:
+- Analiza todos los tickets contenidos en el archivo.
+- Crea un **archivo individual por cada ticket**.
+- Cada archivo debe llamarse siguiendo el formato:
+  - `TK-[ÁREA]-XXX.md` (ejemplo: `TK-BE-002`, `TK-FE-004`)
+- Dentro de cada archivo incluye **toda la información completa del ticket**.
+- No omitas ni resumas información.
+
+### Reglas Generales
+- No inventes contenido.
+- No modifiques el texto original, solo reorganízalo.
+- Respeta nombres, numeración y estructura.
+- El resultado final debe ser una **documentación modular, clara y lista para escalar**.
+
+Ejemplo:
+
+Título: Implementación de Autenticación de Dos Factores (2FA)
+
+Descripción: Añadir autenticación de dos factores para mejorar la seguridad del login de usuarios. Debe soportar aplicaciones de autenticación como Authenticator y mensajes SMS.
+
+Criterios de Aceptación:
+
+Los usuarios pueden seleccionar 2FA desde su perfil.
+
+Soporte para Google Authenticator y SMS.
+
+Los usuarios deben confirmar el dispositivo 2FA durante la configuración.
+
+Prioridad: Alta
+
+Estimación: 8 puntos de historia
+
+Asignado a: Equipo de Backend
+
+Etiquetas: Seguridad, Backend, Sprint 10
+
+Comentarios: Verificar la compatibilidad con la base de usuarios internacionales para el envío de SMS.
+
+Enlaces: Documento de Especificación de Requerimientos de Seguridad
+
+Historial de Cambios:
+
+01/10/2023: Creado por [nombre]
+
+05/10/2023: Prioridad actualizada a Alta por [nombre]
+
+Ejecuta los cambios directamente sobre el proyecto.
+
+Si tienes dudas preguntame.
