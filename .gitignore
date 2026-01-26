@@ -292,10 +292,3 @@ Cargo.lock
 .turbo/
 .vercel/
 .netlify/
-
-# ============================================
-# Proyecto Específico
-# ============================================
-
-# Plugin WooCommerce
-plugin_woo/
