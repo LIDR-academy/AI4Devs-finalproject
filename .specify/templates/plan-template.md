@@ -1,104 +1,182 @@
-# Implementation Plan: [FEATURE]
+# IMPL_PLAN Template — Meditation Builder (Minimal)
+**Para**: `speckit.plan`  
+**Ubicación**: Template que Speckit copia a `specs/<us>/plan.md`  
+**Versión**: 1.0.0 (Constitución 2.0.0 compliant)
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+---
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
+# Implementation Plan: [Feature Title from spec.md]
 
-## Summary
+**Branch**: `[us2-compose-meditation-content]`  
+**Spec**: [spec.md](./spec.md)
 
-[Extract from feature spec: primary requirement + technical approach from research]
+## Pipeline Overview
 
-## Technical Context
+| Fase | Artefactos | Dependencias |
+|------|------------|--------------|
+| 1. BDD First | `/backend/tests/bdd/meditationbuilder/[feature].feature` | Ninguna |
+| 2. API First | `/backend/src/main/resources/openapi/meditationbuilder/[feature].yaml` | 1.BDD |
+| 3. Domain | `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/` | 2.API |
+| 4. Application | `/backend/src/main/java/com/hexagonal/meditationbuilder/application/` | 3.Domain |
+| 5. Infrastructure | `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/` | 4.Application |
+| 6. Controllers | `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/` | 5.Infrastructure |
+| 7. Frontend | `/frontend/src/{api,components,pages,hooks,state}/` | 6.Controllers |
+| 8. Contracts | `/backend/tests/contracts/` | 7.Frontend |
+| 9. E2E | `/backend/tests/e2e/ + /frontend/tests/e2e/` | 8.Contracts |
+| 10. CI/CD | `.github/workflows/` | 9.E2E |
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
+## Fases Detalladas
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+### Phase 1: BDD First
+**Artefactos**:
+- `/backend/tests/bdd/meditationbuilder/[feature].feature`
 
-## Constitution Check
+**Herramientas**: Cucumber
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+**Criterios**:
+- Escenarios Given/When/Then extraídos de spec.md
+- Steps pending (Cucumber YELLOW)
+- Lenguaje 100% negocio
 
-[Gates determined based on constitution file]
+**Prohibido**:
+- Implementar steps
+- Términos técnicos (HTTP, JSON, DB)
 
-## Project Structure
+### Phase 2: API First
+**Artefactos**:
+- `/backend/src/main/resources/openapi/meditationbuilder/[feature].yaml`
 
-### Documentation (this feature)
+**Capacidades** (SOLO derivadas de BDD When):
+1. [Capacidad 1] ← Scenario X spec.md
+2. [Capacidad 2] ← Scenario Y spec.md
+[... completar según BDD]
 
-```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
-```
+**Criterios**:
+- Cada When clause = 1 capacidad abstracta
+- Sin paths HTTP, métodos ni DTOs
 
-### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+**Prohibido**:
+- Endpoints no derivados de BDD
+- Campos/esquemas concretos
 
-```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+### Phase 3: Domain
+**Artefactos**:
+- `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/{model,ports,in,out}/`
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+**Herramientas**: JUnit 5
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
+**Criterios**:
+- Entidades/VOs/puertos según capacidades de Phase 2
+- TDD: tests primero
+- Sin Spring ni infra dependencies
 
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
+**Prohibido**:
+- Lógica de infra (HTTP, DB)
+- Frameworks en domain
 
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
+### Phase 4: Application
+**Artefactos**:
+- `/backend/src/main/java/com/hexagonal/meditationbuilder/application/{service,mapper,validator}/`
 
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
-```
+**Herramientas**: JUnit 5, Mockito
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Criterios**:
+- Use cases que orquestan domain a través de ports
+- Sin reglas de negocio
 
-## Complexity Tracking
+**Prohibido**:
+- Lógica de negocio
+- Acceso directo a infra
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
+### Phase 5: Infrastructure
+**Artefactos**:
+- `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/{in,out}/`
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+**Herramientas**: Spring RestClient, Testcontainers
+
+**Criterios**:
+- Adapters implementan ports out
+- Tests de integración
+
+**Prohibido**:
+- Lógica de negocio en adapters
+- Servicios reales en tests
+
+### Phase 6: Controllers
+**Artefactos**:
+- `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/{controller,dto,mapper}/`
+
+**Herramientas**: Spring MVC, MockMvc
+
+**Criterios**:
+- Cumplen OpenAPI exactamente
+- Delegan a use cases
+
+**Prohibido**:
+- Lógica de negocio
+- Desviarse de OpenAPI
+
+### Phase 7: Frontend
+**Artefactos**:
+- `/frontend/src/{api,components,pages,hooks,state}/`
+
+**Herramientas**: React Query, Zustand, Jest/RTL
+
+**Criterios**:
+- Cliente OpenAPI autogenerado
+- React Query para server-state
+- Zustand para UI-state
+
+**Prohibido**:
+- Lógica de negocio en UI
+- Fetch manual
+
+### Phase 8: Contracts
+**Artefactos**:
+- `/backend/tests/contracts/`
+
+**Herramientas**: Contract testing tools
+
+**Criterios**:
+- Valida backend contra OpenAPI
+
+**Prohibido**:
+- Permitir drift de OpenAPI
+
+### Phase 9: E2E
+**Artefactos**:
+- `/backend/tests/e2e/`
+- `/frontend/tests/e2e/`
+
+**Herramientas**: Cucumber, Playwright
+
+**Criterios**:
+- BDD escenarios contra backend real
+- Flujos críticos en Playwright
+
+**Prohibido**:
+- Servicios reales en E2E
+
+### Phase 10: CI/CD
+**Artefactos**:
+- `.github/workflows/`
+
+**Herramientas**: GitHub Actions
+
+**Criterios**:
+- Gates: bdd → api → unit → infra → contract → e2e → build
+
+**Prohibido**:
+- Saltar gates
+
+---
+
+## Definition of Done
+
+- [ ] BDD verde
+- [ ] OpenAPI validado
+- [ ] Domain TDD 100%
+- [ ] Pipeline CI/CD gates verde
+- [ ] No deuda técnica
+
+**Plan Status**: READY FOR TASKS

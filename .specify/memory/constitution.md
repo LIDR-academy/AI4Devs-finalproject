@@ -197,6 +197,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 - El BDD define solo comportamiento observable
 - Cucumber debe ejecutar en **ROJO (pending)** inicialmente
 - Nada se implementa hasta que el `.feature` exista
+- En plan.md, la API First se expresa como una lista de capacidades de negocio derivadas del BDD (sin paths, sin métodos HTTP, sin DTOs). 
 
 ---
 
