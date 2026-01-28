@@ -63,7 +63,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### API Definition Tasks
 
-- [ ] T012 Define OpenAPI capabilities in `/backend/src/main/resources/openapi/meditationbuilder/compose-content.yaml`
+- [X] T012 Define OpenAPI capabilities in `/backend/src/main/resources/openapi/meditationbuilder/compose-content.yaml`
   - **Criteria**: 8 abstract capabilities defined (derived from BDD When clauses):
     1. Access Meditation Builder
     2. Define Meditation Text
@@ -77,14 +77,14 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Capabilities mapped to scenarios in comments
   - **Dependencies**: T011
 
-- [ ] T013 Define OpenAPI paths and operations in `/backend/src/main/resources/openapi/meditationbuilder/compose-content.yaml`
+- [X] T013 Define OpenAPI paths and operations in `/backend/src/main/resources/openapi/meditationbuilder/compose-content.yaml`
   - **Criteria**: Concrete HTTP paths and methods for all 8 capabilities
   - **Criteria**: Request/response schemas defined as components
   - **Criteria**: Error responses (400, 503, 429) defined for AI operations
   - **Criteria**: All operations have operationId matching use case names
   - **Dependencies**: T012
 
-- [ ] T014 Validate OpenAPI specification
+- [X] T014 Validate OpenAPI specification
   - **Criteria**: OpenAPI file passes validation (openapi-generator validate)
   - **Criteria**: No breaking changes from previous versions (if applicable)
   - **Dependencies**: T013
