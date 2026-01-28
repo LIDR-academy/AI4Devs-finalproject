@@ -37,13 +37,13 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### BDD Definition Tasks
 
-- [X] T009 [P] Create BDD feature file: `/backend/src/test/bdd/meditationbuilder/compose-content.feature` with all 8 core scenarios from spec.md
+- [X] T009 [P] Create BDD feature file: `/backend/src/test/resources/meditationbuilder/compose-content.feature` with all 8 core scenarios from spec.md
   - **Criteria**: All Given/When/Then scenarios extracted from spec.md (8 scenarios total)
   - **Criteria**: Steps pending (Cucumber YELLOW state)
   - **Criteria**: 100% business language, no technical terms (HTTP, JSON, DB)
   - **Criteria**: Scenarios cover: access builder, manual text entry, AI text generation/enhancement, AI image generation, output type indication (podcast/video), music preview, image preview
 
-- [X] T010 [P] Create BDD step definitions skeleton: `/backend/src/test/bdd/meditationbuilder/steps/ComposeContentSteps.java`
+- [X] T010 [P] Create BDD step definitions skeleton: `/backend/src/test/java/com/hexagonal/meditationbuilder/bdd/steps/ComposeContentSteps.java`
   - **Criteria**: All steps declared with @Given, @When, @Then annotations
   - **Criteria**: Methods throw PendingException
   - **Criteria**: No implementation logic

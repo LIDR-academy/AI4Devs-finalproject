@@ -54,12 +54,15 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Commented for Phase 2 (BDD YELLOW) - Will be enabled in Phase 9 (BDD GREEN) -->
+        <!--
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-spring</artifactId>
             <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
+        -->
 
         <dependency>
             <groupId>io.cucumber</groupId>
@@ -133,7 +136,5 @@
                 </executions>
             </plugin>
         </plugins>
-
-        <testSourceDirectory>tests</testSourceDirectory>
     </build>
 </project>
