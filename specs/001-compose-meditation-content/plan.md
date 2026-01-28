@@ -242,29 +242,18 @@
 
 ---
 
-## Traceability Matrix
+## Traceability Matrix (9 escenarios limpios)
 
 | BDD Scenario | Domain Entity | Use Case | Business Capability | Frontend Component |
 |--------------|---------------|----------|---------------------|-------------------|
-| US1-S1: Access builder | MeditationComposition | ComposeContentUseCase | Access Meditation Builder | MeditationBuilderPage |
-| US1-S2: Type text | TextContent | ComposeContentUseCase | Define Meditation Text | TextEditor |
-| US1-S3: Text preserved | TextContent (invariant) | - | - | TextEditor |
-| US2-S1: Indicate podcast | OutputType enum | - | Determine Output Type | OutputTypeIndicator |
-| US2-S2: Indicate video | OutputType enum | - | Determine Output Type | OutputTypeIndicator |
-| US2-S3: Update on add image | MeditationComposition.getOutputType() | - | Determine Output Type | OutputTypeIndicator |
-| US2-S4: Update on remove image | MeditationComposition.getOutputType() | - | Determine Output Type | OutputTypeIndicator |
-| US3-S1: Generate from empty | - | GenerateTextUseCase | Generate Meditation Text from Scratch | useGenerateText hook |
-| US3-S2: Text appropriate | TextContent (validation) | - | - | - |
-| US3-S3: Display generated | TextContent | - | - | TextEditor |
-| US4-S1: Generate from existing | - | GenerateTextUseCase | Enhance Existing Meditation Text | useGenerateText hook |
-| US4-S2: Incorporate themes | - | GenerateTextUseCase (AI context) | - | - |
-| US4-S3: Regenerate variation | - | GenerateTextUseCase | - | - |
-| US5-S1: Preview music | MusicReference | - | Preview Selected Music | MusicPreview |
-| US5-S2: Control playback | - | - | - | MusicPreview |
-| US5-S3: No music selected | MusicReference (optional) | - | - | MusicSelector |
-| US6-S1: Preview image | ImageReference | - | Preview Selected Image | ImagePreview |
-| US6-S2: See full image | - | - | - | ImagePreview |
-| US6-S3: No image selected | ImageReference (optional) | - | - | ImageSelector |
+| Access builder | MeditationComposition | ComposeContentUseCase | Access Meditation Builder | MeditationBuilderPage |
+| Enter text | TextContent | ComposeContentUseCase | Define Meditation Text | TextEditor |
+| Podcast no image | OutputType | - | Determine Output Type | OutputTypeIndicator |
+| Video with image | OutputType | - | Determine Output Type | OutputTypeIndicator |
+| AI from scratch | - | GenerateTextUseCase | Generate Text Scratch | useGenerateText |
+| AI enhance | - | GenerateTextUseCase | Enhance Text | useGenerateText |
+| Music preview | MusicReference | - | Preview Music | MusicPreview |
+| Image preview | ImageReference | - | Preview Image | ImagePreview |
 
 ---
 

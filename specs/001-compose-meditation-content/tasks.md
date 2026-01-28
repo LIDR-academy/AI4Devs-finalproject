@@ -21,14 +21,14 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Setup Tasks
 
-- [ ] T001 Create BDD test structure: `/backend/tests/bdd/meditationbuilder/` directory with Cucumber configuration
-- [ ] T002 Create OpenAPI base structure: `/backend/src/main/resources/openapi/meditationbuilder/` directory
-- [ ] T003 Create domain package structure: `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/{model,enums,ports/in,ports/out}/`
-- [ ] T004 Create application package structure: `/backend/src/main/java/com/hexagonal/meditationbuilder/application/{service,mapper,validator}/`
-- [ ] T005 Create infrastructure package structure: `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/{in/rest/{controller,dto,mapper},out/service/}`
-- [ ] T006 Create frontend base structure: `/frontend/src/{api,components,pages,hooks,state}/`
-- [ ] T007 Create contracts test structure: `/backend/tests/contracts/`
-- [ ] T008 Create E2E test structures: `/backend/tests/e2e/` and `/frontend/tests/e2e/`
+- [X] T001 Create BDD test structure: `/backend/tests/bdd/meditationbuilder/` directory with Cucumber configuration
+- [X] T002 Create OpenAPI base structure: `/backend/src/main/resources/openapi/meditationbuilder/` directory
+- [X] T003 Create domain package structure: `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/{model,enums,ports/in,ports/out}/`
+- [X] T004 Create application package structure: `/backend/src/main/java/com/hexagonal/meditationbuilder/application/{service,mapper,validator}/`
+- [X] T005 Create infrastructure package structure: `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/{in/rest/{controller,dto,mapper},out/service/}`
+- [X] T006 Create frontend base structure: `/frontend/src/{api,components,pages,hooks,state}/`
+- [X] T007 Create contracts test structure: `/backend/tests/contracts/`
+- [X] T008 Create E2E test structures: `/backend/tests/e2e/` and `/frontend/tests/e2e/`
 
 ---
 
@@ -38,22 +38,23 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### BDD Definition Tasks
 
-- [ ] T009 [P] Create BDD feature file: `/backend/tests/bdd/meditationbuilder/compose-content.feature` with all scenarios from spec.md (US1-US6)
+- [X] T009 [P] Create BDD feature file: `/backend/tests/bdd/meditationbuilder/compose-content.feature` with all scenarios from spec.md (US1-US6)
   - **Criteria**: All Given/When/Then scenarios extracted from spec.md
   - **Criteria**: Steps pending (Cucumber YELLOW state)
   - **Criteria**: 100% business language, no technical terms (HTTP, JSON, DB)
   - **Criteria**: Scenarios cover: manual text entry, output type indication, AI generation from scratch, AI enhancement, music preview, image preview
 
-- [ ] T010 [P] Create BDD step definitions skeleton: `/backend/tests/bdd/meditationbuilder/steps/ComposeContentSteps.java`
+- [X] T010 [P] Create BDD step definitions skeleton: `/backend/tests/bdd/meditationbuilder/steps/ComposeContentSteps.java`
   - **Criteria**: All steps declared with @Given, @When, @Then annotations
   - **Criteria**: Methods throw PendingException
   - **Criteria**: No implementation logic
   - **Dependencies**: T009
 
-- [ ] T011 Run BDD tests to verify YELLOW state
+- [X] T011 Run BDD tests to verify YELLOW state
   - **Criteria**: All scenarios execute and show as pending/yellow
   - **Criteria**: No failures (red), no passes (green)
   - **Dependencies**: T010
+  - **Note**: Maven test runner configured. Run with: `mvn test -Dtest=ComposeContentBDDTest`
 
 ---
 
