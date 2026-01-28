@@ -28,7 +28,7 @@ class TextContentTest {
         
         // Then
         assertNotNull(textContent);
-        assertEquals(validText, textContent.getValue());
+        assertEquals(validText, textContent.value());
     }
 
     @Test
@@ -43,15 +43,15 @@ class TextContentTest {
         TextContent content2 = new TextContent(textWithNewlines);
         
         // Then
-        assertEquals(textWithSpaces, content1.getValue(), "Spaces must be preserved exactly");
-        assertEquals(textWithNewlines, content2.getValue(), "Newlines must be preserved exactly");
+        assertEquals(textWithSpaces, content1.value(), "Spaces must be preserved exactly");
+        assertEquals(textWithNewlines, content2.value(), "Newlines must be preserved exactly");
     }
 
     @Test
     @DisplayName("Should reject null text")
     void shouldRejectNullText() {
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             new TextContent(null);
         }, "Text content cannot be null");
     }
@@ -85,7 +85,7 @@ class TextContentTest {
         
         // Then
         assertNotNull(textContent);
-        assertEquals(10000, textContent.getValue().length());
+        assertEquals(10000, textContent.value().length());
     }
 
     @Test
@@ -101,15 +101,15 @@ class TextContentTest {
     }
 
     @Test
-    @DisplayName("Should be immutable - getValue returns same instance")
+    @DisplayName("Should be immutable - value returns same instance")
     void shouldBeImmutable() {
         // Given
         String originalText = "Meditation text";
         TextContent textContent = new TextContent(originalText);
         
         // When
-        String retrievedText1 = textContent.getValue();
-        String retrievedText2 = textContent.getValue();
+        String retrievedText1 = textContent.value();
+        String retrievedText2 = textContent.value();
         
         // Then
         assertEquals(originalText, retrievedText1);

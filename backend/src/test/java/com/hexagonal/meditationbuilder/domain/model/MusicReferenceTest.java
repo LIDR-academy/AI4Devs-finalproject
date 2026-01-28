@@ -28,14 +28,14 @@ class MusicReferenceTest {
         
         // Then
         assertNotNull(musicReference);
-        assertEquals(validReference, musicReference.getValue());
+        assertEquals(validReference, musicReference.value());
     }
 
     @Test
     @DisplayName("Should reject null reference")
     void shouldRejectNullReference() {
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             new MusicReference(null);
         }, "Music reference cannot be null");
     }

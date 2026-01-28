@@ -29,7 +29,7 @@ class ImageReferenceTest {
         
         // Then
         assertNotNull(imageReference);
-        assertEquals(validReference, imageReference.getValue());
+        assertEquals(validReference, imageReference.value());
     }
 
     @Test
@@ -43,14 +43,14 @@ class ImageReferenceTest {
         
         // Then
         assertNotNull(imageReference);
-        assertEquals(aiGeneratedReference, imageReference.getValue());
+        assertEquals(aiGeneratedReference, imageReference.value());
     }
 
     @Test
     @DisplayName("Should reject null reference")
     void shouldRejectNullReference() {
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             new ImageReference(null);
         }, "Image reference cannot be null");
     }

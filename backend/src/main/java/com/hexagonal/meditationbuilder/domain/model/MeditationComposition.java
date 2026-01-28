@@ -2,190 +2,160 @@ package com.hexagonal.meditationbuilder.domain.model;
 
 import com.hexagonal.meditationbuilder.domain.enums.OutputType;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+
 /**
- * MeditationComposition Aggregate Root.
- * 
- * Core domain entity representing a meditation composition with:
- * - Unique identifier
- * - Text content (mandatory)
- * - Music reference (optional)
- * - Image reference (optional)
- * 
- * Business Rules (from BDD scenarios):
- * 1. Text is mandatory and preserved exactly
- * 2. Music is optional
- * 3. Image is optional (manual or AI-generated)
- * 4. Output type is derived from image presence:
- *    - No image → PODCAST (audio-only)
- *    - Has image → VIDEO
- * 
- * Domain Invariants:
- * - ID cannot be null or empty
- * - Text content cannot be null
- * - Output type is always derivable
- * 
- * @author Meditation Builder Team
+ * Aggregate Root: MeditationComposition
+ *
+ * Inmutable, con reglas de dominio:
+ * - ID no nulo
+ * - TextContent obligatorio
+ * - createdAt/updatedAt no nulos y updatedAt >= createdAt
+ * - OutputType derivado de la presencia de imagen:
+ *      - Sin imagen -> PODCAST
+ *      - Con imagen -> VIDEO
+ *
+ * Campos opcionales (musicReference, imageReference) pueden ser null.
+ * Expone accessors opcionales vía Optional para mayor expresividad.
  */
-public class MeditationComposition {
+public record MeditationComposition(
+        UUID id,
+        TextContent textContent,
+        MusicReference musicReference,   // nullable
+        ImageReference imageReference,   // nullable
+        Instant createdAt,
+        Instant updatedAt
+) {
 
-    private final String id;
-    private TextContent textContent;
-    private MusicReference musicReference;
-    private ImageReference imageReference;
+    // ===== Constructor canónico con invariantes =====
+    public MeditationComposition {
+        Objects.requireNonNull(id, "ID cannot be null");
+        Objects.requireNonNull(textContent, "Text content is mandatory");
+        Objects.requireNonNull(createdAt, "createdAt cannot be null");
+        Objects.requireNonNull(updatedAt, "updatedAt cannot be null");
 
-    /**
-     * Creates a new composition with text only.
-     * 
-     * @param id unique composition identifier
-     * @param textContent meditation text (mandatory)
-     * @throws IllegalArgumentException if id or textContent is invalid
-     */
-    public MeditationComposition(String id, TextContent textContent) {
-        this(id, textContent, null, null);
-    }
-
-    /**
-     * Creates a new composition with all optional elements.
-     * 
-     * @param id unique composition identifier
-     * @param textContent meditation text (mandatory)
-     * @param musicReference background music reference (optional)
-     * @param imageReference image reference (optional)
-     * @throws IllegalArgumentException if id or textContent is invalid
-     */
-    public MeditationComposition(
-            String id, 
-            TextContent textContent, 
-            MusicReference musicReference, 
-            ImageReference imageReference) {
-        
-        if (id == null) {
-            throw new IllegalArgumentException("Composition ID cannot be null");
+        if (updatedAt.isBefore(createdAt)) {
+            throw new IllegalArgumentException("updatedAt must be >= createdAt");
         }
-        if (id.isEmpty()) {
-            throw new IllegalArgumentException("Composition ID cannot be empty");
+    }
+
+    // ===== Factorías =====
+
+    /**
+     * Crea una composición nueva generando UUID y timestamps con el Clock indicado.
+     */
+    public static MeditationComposition create(TextContent text, Clock clock) {
+        Objects.requireNonNull(text, "Text content is mandatory");
+        Objects.requireNonNull(clock, "Clock cannot be null");
+        Instant now = Instant.now(clock);
+        return new MeditationComposition(UUID.randomUUID(), text, null, null, now, now);
         }
-        if (id.isBlank()) {
-            throw new IllegalArgumentException("Composition ID cannot be blank");
-        }
-        if (textContent == null) {
-            throw new IllegalArgumentException("Text content is mandatory");
-        }
-        
-        this.id = id;
-        this.textContent = textContent;
-        this.musicReference = musicReference;
-        this.imageReference = imageReference;
-    }
 
     /**
-     * Returns the composition identifier.
-     * 
-     * @return unique ID
+     * Crea una composición nueva con UUID proporcionado (por ej., desde otra bounded context),
+     * usando el Clock indicado para los timestamps.
      */
-    public String getId() {
-        return id;
+    public static MeditationComposition create(UUID id, TextContent text, Clock clock) {
+        Objects.requireNonNull(id, "ID cannot be null");
+        Objects.requireNonNull(text, "Text content is mandatory");
+        Objects.requireNonNull(clock, "Clock cannot be null");
+        Instant now = Instant.now(clock);
+        return new MeditationComposition(id, text, null, null, now, now);
     }
 
-    /**
-     * Returns the text content.
-     * 
-     * @return meditation text (never null)
-     */
-    public TextContent getTextContent() {
-        return textContent;
+    // Conveniences sin Clock explícito (usa UTC)
+    public static MeditationComposition create(TextContent text) {
+        return create(text, Clock.systemUTC());
+    }
+    public static MeditationComposition create(UUID id, TextContent text) {
+        return create(id, text, Clock.systemUTC());
     }
 
-    /**
-     * Returns the music reference.
-     * 
-     * @return music reference or null if not set
-     */
-    public MusicReference getMusicReference() {
-        return musicReference;
+    // ===== API de modificación (devuelve nuevas instancias) =====
+
+    /** Cambia el texto y actualiza updatedAt. */
+    public MeditationComposition withText(TextContent newText, Clock clock) {
+        Objects.requireNonNull(newText, "Text content cannot be null");
+        Objects.requireNonNull(clock, "Clock cannot be null");
+        return new MeditationComposition(
+                id, newText, musicReference, imageReference, createdAt, Instant.now(clock)
+        );
+    }
+    public MeditationComposition withText(TextContent newText) {
+        return withText(newText, Clock.systemUTC());
     }
 
-    /**
-     * Returns the image reference.
-     * 
-     * @return image reference or null if not set
-     */
-    public ImageReference getImageReference() {
-        return imageReference;
+    /** Selecciona música (usa null para deseleccionar) y actualiza updatedAt. */
+    public MeditationComposition withMusic(MusicReference music, Clock clock) {
+        Objects.requireNonNull(clock, "Clock cannot be null");
+        return new MeditationComposition(
+                id, textContent, music, imageReference, createdAt, Instant.now(clock)
+        );
+    }
+    public MeditationComposition withMusic(MusicReference music) {
+        return withMusic(music, Clock.systemUTC());
     }
 
-    /**
-     * Returns the output type based on image presence.
-     * 
-     * Business Rule:
-     * - No image → PODCAST (audio-only)
-     * - Has image → VIDEO
-     * 
-     * @return PODCAST or VIDEO
-     */
-    public OutputType getOutputType() {
+    /** Deselecciona música y actualiza updatedAt. */
+    public MeditationComposition withoutMusic(Clock clock) {
+        Objects.requireNonNull(clock, "Clock cannot be null");
+        return new MeditationComposition(
+                id, textContent, null, imageReference, createdAt, Instant.now(clock)
+        );
+    }
+    public MeditationComposition withoutMusic() {
+        return withoutMusic(Clock.systemUTC());
+    }
+
+    /** Añade imagen (no admite null) y actualiza updatedAt. */
+    public MeditationComposition withImage(ImageReference image, Clock clock) {
+        Objects.requireNonNull(image, "Image reference cannot be null");
+        Objects.requireNonNull(clock, "Clock cannot be null");
+        return new MeditationComposition(
+                id, textContent, musicReference, image, createdAt, Instant.now(clock)
+        );
+    }
+    public MeditationComposition withImage(ImageReference image) {
+        return withImage(image, Clock.systemUTC());
+    }
+
+    /** Elimina imagen y actualiza updatedAt. */
+    public MeditationComposition withoutImage(Clock clock) {
+        Objects.requireNonNull(clock, "Clock cannot be null");
+        return new MeditationComposition(
+                id, textContent, musicReference, null, createdAt, Instant.now(clock)
+        );
+    }
+    public MeditationComposition withoutImage() {
+        return withoutImage(Clock.systemUTC());
+    }
+
+    // ===== Reglas de negocio derivadas =====
+
+    /** Derivación del tipo de salida: sin imagen -> PODCAST; con imagen -> VIDEO. */
+    public OutputType outputType() {
         return imageReference == null ? OutputType.PODCAST : OutputType.VIDEO;
     }
 
-    /**
-     * Updates the text content.
-     * 
-     * @param newTextContent new meditation text
-     * @throws IllegalArgumentException if newTextContent is null
-     */
-    public void updateText(TextContent newTextContent) {
-        if (newTextContent == null) {
-            throw new IllegalArgumentException("Text content cannot be null");
-        }
-        this.textContent = newTextContent;
-    }
-
-    /**
-     * Selects background music.
-     * 
-     * @param musicReference music reference (can be null to remove)
-     */
-    public void selectMusic(MusicReference musicReference) {
-        this.musicReference = musicReference;
-    }
-
-    /**
-     * Sets the image reference (manual or AI-generated).
-     * Changes output type to VIDEO.
-     * 
-     * @param imageReference image reference
-     * @throws IllegalArgumentException if imageReference is null
-     */
-    public void setImage(ImageReference imageReference) {
-        if (imageReference == null) {
-            throw new IllegalArgumentException("Image reference cannot be null (use removeImage() instead)");
-        }
-        this.imageReference = imageReference;
-    }
-
-    /**
-     * Removes the image reference.
-     * Changes output type to PODCAST.
-     */
-    public void removeImage() {
-        this.imageReference = null;
-    }
-
-    /**
-     * Checks if composition has an image.
-     * 
-     * @return true if image is present
-     */
     public boolean hasImage() {
         return imageReference != null;
     }
 
-    /**
-     * Checks if composition has music.
-     * 
-     * @return true if music is present
-     */
     public boolean hasMusic() {
         return musicReference != null;
+    }
+
+    // ===== Accessors opcionales =====
+
+    public Optional<MusicReference> musicReferenceOpt() {
+        return Optional.ofNullable(musicReference);
+    }
+
+    public Optional<ImageReference> imageReferenceOpt() {
+        return Optional.ofNullable(imageReference);
     }
 }
