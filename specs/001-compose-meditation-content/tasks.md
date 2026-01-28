@@ -97,31 +97,31 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Domain Model Tasks
 
-- [ ] T015 [P] Create TextContent value object in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/model/TextContent.java`
+- [X] T015 [P] Create TextContent value object in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/model/TextContent.java`
   - **Criteria**: Immutable value object
   - **Criteria**: Validates text not null or empty
   - **Criteria**: Preserves text exactly as provided (invariant)
   - **Criteria**: TDD: Unit tests written first
   - **Dependencies**: T014
 
-- [ ] T016 [P] Create OutputType enum in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/enums/OutputType.java`
+- [X] T016 [P] Create OutputType enum in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/enums/OutputType.java`
   - **Criteria**: PODCAST and VIDEO values
   - **Criteria**: Business-meaningful names
   - **Dependencies**: T014
 
-- [ ] T017 [P] Create MusicReference value object in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/model/MusicReference.java`
+- [X] T017 [P] Create MusicReference value object in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/model/MusicReference.java`
   - **Criteria**: Immutable value object
   - **Criteria**: Optional (can be null)
   - **Criteria**: Contains music identifier
   - **Dependencies**: T014
 
-- [ ] T018 [P] Create ImageReference value object in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/model/ImageReference.java`
+- [X] T018 [P] Create ImageReference value object in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/model/ImageReference.java`
   - **Criteria**: Immutable value object
   - **Criteria**: Optional (can be null)
   - **Criteria**: Contains image identifier (manual or AI-generated)
   - **Dependencies**: T014
 
-- [ ] T019 Create MeditationComposition aggregate root in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/model/MeditationComposition.java`
+- [X] T019 Create MeditationComposition aggregate root in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/model/MeditationComposition.java`
   - **Criteria**: Contains TextContent (mandatory), MusicReference (optional), ImageReference (optional)
   - **Criteria**: Method getOutputType() returns PODCAST if image == null, VIDEO if image != null
   - **Criteria**: TDD: Unit tests verify output type derivation logic
@@ -130,34 +130,34 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Domain Ports Tasks
 
-- [ ] T020 [P] Create ComposeContentUseCase port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/in/ComposeContentUseCase.java`
+- [X] T020 [P] Create ComposeContentUseCase port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/in/ComposeContentUseCase.java`
   - **Criteria**: Interface with methods: createComposition(), updateText(), selectMusic(), setImage(), removeImage()
   - **Criteria**: Input/output use domain types only
   - **Criteria**: No framework dependencies
   - **Dependencies**: T019
 
-- [ ] T021 [P] Create MediaCatalogPort out port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/out/MediaCatalogPort.java`
+- [X] T021 [P] Create MediaCatalogPort out port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/out/MediaCatalogPort.java`
   - **Criteria**: Interface with methods: getMusicById()
   - **Criteria**: Returns domain types
   - **Dependencies**: T017
 
-- [ ] T022 [P] Create GenerateTextUseCase port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/in/GenerateTextUseCase.java`
+- [X] T022 [P] Create GenerateTextUseCase port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/in/GenerateTextUseCase.java`
   - **Criteria**: Interface with method: generateOrEnhanceText(existingTextOptional, contextOptional)
   - **Criteria**: Works with empty field, keywords, or existing content (unified)
   - **Criteria**: Returns TextContent
   - **Dependencies**: T015
 
-- [ ] T023 [P] Create TextGenerationPort out port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/out/TextGenerationPort.java`
+- [X] T023 [P] Create TextGenerationPort out port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/out/TextGenerationPort.java`
   - **Criteria**: Interface with method: generateText(existingTextOptional, contextOptional)
   - **Criteria**: Throws business exceptions: AiServiceUnavailableException, AiGenerationTimeoutException
   - **Dependencies**: T015
 
-- [ ] T024 [P] Create GenerateImageUseCase port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/in/GenerateImageUseCase.java`
+- [X] T024 [P] Create GenerateImageUseCase port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/in/GenerateImageUseCase.java`
   - **Criteria**: Interface with method: generateImage()
   - **Criteria**: Returns ImageReference
   - **Dependencies**: T018
 
-- [ ] T025 [P] Create ImageGenerationPort out port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/out/ImageGenerationPort.java`
+- [X] T025 [P] Create ImageGenerationPort out port in `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/out/ImageGenerationPort.java`
   - **Criteria**: Interface with method: generateImage()
   - **Criteria**: Throws business exceptions: AiServiceUnavailableException, AiGenerationTimeoutException
   - **Dependencies**: T018

@@ -29,7 +29,9 @@ backend/target/
 *.iml
 *.iws
 *.ipr
-out/
+/out/
+backend/out/
+frontend/out/
 
 # IDE - Eclipse
 .project
