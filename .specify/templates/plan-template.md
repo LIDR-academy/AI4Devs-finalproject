@@ -1,25 +1,24 @@
-# IMPL_PLAN Template — Meditation Builder (Minimal)
+# IMPL_PLAN Template — Generic Feature
 **Para**: `speckit.plan`  
-**Ubicación**: Template que Speckit copia a `specs/<us>/plan.md`  
-**Versión**: 1.0.0 (Constitución 2.0.0 compliant)
+**Versión**: 1.0.0
 
 ---
 
 # Implementation Plan: [Feature Title from spec.md]
 
-**Branch**: `[us2-compose-meditation-content]`  
+**Branch**: `[BRANCH_NAME]`  
 **Spec**: [spec.md](./spec.md)
 
 ## Pipeline Overview
 
 | Fase | Artefactos | Dependencias |
 |------|------------|--------------|
-| 1. BDD First | `/backend/tests/bdd/meditationbuilder/[feature].feature` | Ninguna |
-| 2. API First | `/backend/src/main/resources/openapi/meditationbuilder/[feature].yaml` | 1.BDD |
-| 3. Domain | `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/` | 2.API |
-| 4. Application | `/backend/src/main/java/com/hexagonal/meditationbuilder/application/` | 3.Domain |
-| 5. Infrastructure | `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/` | 4.Application |
-| 6. Controllers | `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/` | 5.Infrastructure |
+| 1. BDD First | `/backend/tests/bdd/[boundedContext]/[feature].feature` | Ninguna |
+| 2. API First | `/backend/src/main/resources/openapi/[boundedContext]/[feature].yaml` | 1.BDD |
+| 3. Domain | `/backend/src/main/java/com/hexagonal/[boundedContext]/domain/` | 2.API |
+| 4. Application | `/backend/src/main/java/com/hexagonal/[boundedContext]/application/` | 3.Domain |
+| 5. Infrastructure | `/backend/src/main/java/com/hexagonal/[boundedContext]/infrastructure/` | 4.Application |
+| 6. Controllers | `/backend/src/main/java/com/hexagonal/[boundedContext]/infrastructure/in/rest/` | 5.Infrastructure |
 | 7. Frontend | `/frontend/src/{api,components,pages,hooks,state}/` | 6.Controllers |
 | 8. Contracts | `/backend/tests/contracts/` | 7.Frontend |
 | 9. E2E | `/backend/tests/e2e/ + /frontend/tests/e2e/` | 8.Contracts |
@@ -29,7 +28,7 @@
 
 ### Phase 1: BDD First
 **Artefactos**:
-- `/backend/tests/bdd/meditationbuilder/[feature].feature`
+- `/backend/tests/bdd/[boundedContext]/[feature].feature`
 
 **Herramientas**: Cucumber
 
@@ -44,12 +43,12 @@
 
 ### Phase 2: API First
 **Artefactos**:
-- `/backend/src/main/resources/openapi/meditationbuilder/[feature].yaml`
+- `/backend/src/main/resources/openapi/[boundedContext]/[feature].yaml`
 
 **Capacidades** (SOLO derivadas de BDD When):
 1. [Capacidad 1] ← Scenario X spec.md
-2. [Capacidad 2] ← Scenario Y spec.md
-[... completar según BDD]
+2. [Capacidad 2] ← Scenario Y spec.md  
+   [... completar según BDD]
 
 **Criterios**:
 - Cada When clause = 1 capacidad abstracta
@@ -61,7 +60,7 @@
 
 ### Phase 3: Domain
 **Artefactos**:
-- `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/{model,ports,in,out}/`
+- `/backend/src/main/java/com/hexagonal/[boundedContext]/domain/{model/,ports/in/,ports/out/}`
 
 **Herramientas**: JUnit 5
 
@@ -76,7 +75,7 @@
 
 ### Phase 4: Application
 **Artefactos**:
-- `/backend/src/main/java/com/hexagonal/meditationbuilder/application/{service,mapper,validator}/`
+- `/backend/src/main/java/com/hexagonal/[boundedContext]/application/{service/,mapper/,validator/}`
 
 **Herramientas**: JUnit 5, Mockito
 
@@ -90,7 +89,7 @@
 
 ### Phase 5: Infrastructure
 **Artefactos**:
-- `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/{in,out}/`
+- `/backend/src/main/java/com/hexagonal/[boundedContext]/infrastructure/{in/,out/}`
 
 **Herramientas**: Spring RestClient, Testcontainers
 
@@ -104,7 +103,7 @@
 
 ### Phase 6: Controllers
 **Artefactos**:
-- `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/{controller,dto,mapper}/`
+- `/backend/src/main/java/com/hexagonal/[boundedContext]/infrastructure/in/rest/{controller/,dto/,mapper/}`
 
 **Herramientas**: Spring MVC, MockMvc
 
