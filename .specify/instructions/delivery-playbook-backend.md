@@ -110,9 +110,9 @@ shared/
 
 ## 2.3 Testing backend
 ```
-/backend/tests/bdd/...
-/backend/tests/contracts/...
-/backend/tests/e2e/...
+/backend/src/test/bdd/...
+/backend/src/test/contracts/...
+/backend/src/test/e2e/...
 /backend/src/test/java/... (unit + integration)
 ```
 
@@ -137,7 +137,7 @@ Cada Historia **DEBE** recorrer estas fases en orden:
 
 # 4. Fase 1 — BDD FIRST
 ## Entregables mínimos:
-- Archivo `.feature` en `/backend/tests/bdd/<context>/<feature>.feature`
+- Archivo `.feature` en `/backend/src/test/bdd/<context>/<feature>.feature`
 - Escenarios Given–When–Then orientados a negocio
 - Step definitions pending
 
@@ -243,14 +243,14 @@ bdd → api → unit → infra → contract → e2e → build → deploy
 # 13. Artefactos obligatorios por fase
 | Fase | Artefacto | Ubicación |
 |------|-----------|-----------|
-| BDD | `.feature` | `/backend/tests/bdd/...` |
+| BDD | `.feature` | `/backend/src/test/bdd/...` |
 | API | OpenAPI | `/backend/src/main/resources/openapi/...` |
 | Dominio | entidades/VOs/puertos | `/backend/.../domain` |
 | Aplicación | use cases | `/backend/.../application` |
 | Infra | adapters | `/backend/.../infrastructure` |
 | Controllers | REST | `/backend/.../rest/controller` |
-| Contratos | tests | `/backend/tests/contracts` |
-| E2E | cucumber | `/backend/tests/e2e` |
+| Contratos | tests | `/backend/src/test/contracts` |
+| E2E | cucumber | `/backend/src/test/e2e` |
 
 ---
 

@@ -134,9 +134,9 @@ shared/
 
 ## 4.3 Testing backend
 ```
-/backend/tests/bdd/...
-/backend/tests/contracts/...
-/backend/tests/e2e/...
+/backend/src/test/bdd/...
+/backend/src/test/contracts/...
+/backend/src/test/e2e/...
 /backend/src/test/java/... (unit + integration)
 ```
 
@@ -188,7 +188,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ### Artefactos
 - Archivo `.feature` en  
-  `/backend/tests/bdd/<context>/<feature>.feature`
+  `/backend/src/test/bdd/<context>/<feature>.feature`
 - Escenarios **Given–When–Then** en lenguaje **100% negocio**
 - Step definitions vacíos (*pending*)
 
@@ -326,7 +326,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 **Responsables:** Backend + QA
 
 ### Artefactos
-- Tests contractuales en `/backend/tests/contracts/...`
+- Tests contractuales en `/backend/src/test/contracts/...`
 
 ### Reglas
 - El backend debe cumplir su OpenAPI
@@ -341,7 +341,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ### Artefactos
 - Playwright E2E: `/frontend/tests/e2e/...`
-- Cucumber BDD sobre backend real: `/backend/tests/e2e/...`
+- Cucumber BDD sobre backend real: `/backend/src/test/e2e/...`
 
 ### Reglas
 - Validación del comportamiento completo
@@ -391,14 +391,14 @@ Una historia solo está DONE si:
 # 7. Artefactos obligatorios
 | Fase | Artefacto | Ubicación |
 |------|-----------|-----------|
-| BDD | .feature | /backend/tests/bdd/... |
+| BDD | .feature | /backend/src/test/bdd/... |
 | API | OpenAPI | /backend/src/main/resources/openapi/... |
 | Dominio | entidades, VOs | /backend/src/main/java/.../domain/... |
 | Aplicación | use cases | /backend/.../application/usecases/... |
 | Infra | adapters | /backend/.../infrastructure/... |
 | Controllers | REST | /backend/.../infrastructure/in/rest/controller |
 | Frontend | UI | /frontend/src/... |
-| Contratos | contract tests | /backend/tests/contracts/ |
+| Contratos | contract tests | /backend/src/test/contracts/ |
 | E2E | Playwright | /frontend/tests/e2e |
 | CI/CD | workflows | .github/workflows |
 

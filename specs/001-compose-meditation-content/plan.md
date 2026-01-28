@@ -43,13 +43,13 @@
 
 **Capacidades** (SOLO derivadas de BDD When):
 
-1. **Access Meditation Builder** ← US1 Scenario 1: "When they access the Meditation Builder"
-2. **Define Meditation Text** ← US1 Scenario 2: "When they type text into the meditation content field"
-3. **Determine Output Type** ← US2 Scenarios 1-4: "When they review the composition"
-4. **Generate Meditation Text from Scratch** ← US3 Scenario 1: "When they request the system to generate meditation text" (empty field)
-5. **Enhance Existing Meditation Text** ← US4 Scenario 1: "When they request AI text generation" (with existing content)
-6. **Preview Selected Music** ← US5 Scenario 1: "When they request to preview the music"
-7. **Preview Selected Image** ← US6 Scenario 1: "When they request to preview the image"
+1. **Access Meditation Builder** ← Scenario 1: "When I access the Meditation Builder"
+2. **Define Meditation Text** ← Scenario 2: "When I type meditation text in the text field"
+3. **AI Text Generation/Enhancement** ← Scenario 3: "When I request AI text generation" (works with empty field, keywords, or existing content)
+4. **AI Image Generation** ← Scenario 4: "When I click 'Generate AI image'"
+5. **Determine Output Type** ← Scenarios 5-6: "When I review composition" (indicates podcast or video)
+6. **Preview Selected Music** ← Scenario 7: "When I click music preview"
+7. **Preview Image** ← Scenario 8: "When I click image preview"
 
 **Criterios**:
 - Cada When clause = 1 capacidad abstracta
@@ -70,12 +70,13 @@
   - ImageReference (Value Object)
 - `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/enums/`
   - OutputType (PODCAST, VIDEO)
-  - GenerationMode (MANUAL, AI_FROM_SCRATCH, AI_ENHANCED)
 - `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/in/`
   - ComposeContentUseCase
   - GenerateTextUseCase
+  - GenerateImageUseCase
 - `/backend/src/main/java/com/hexagonal/meditationbuilder/domain/ports/out/`
   - TextGenerationPort
+  - ImageGenerationPort
   - MediaCatalogPort
 
 **Herramientas**: JUnit 5
@@ -97,6 +98,7 @@
 - `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/`
   - ComposeContentService (implements ComposeContentUseCase)
   - GenerateTextService (implements GenerateTextUseCase)
+  - GenerateImageService (implements GenerateImageUseCase)
 - `/backend/src/main/java/com/hexagonal/meditationbuilder/application/mapper/`
   - Internal domain mappers if needed
 - `/backend/src/main/java/com/hexagonal/meditationbuilder/application/validator/`
@@ -119,6 +121,7 @@
 **Artefactos**:
 - `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/`
   - TextGenerationAiAdapter (implements TextGenerationPort)
+  - ImageGenerationAiAdapter (implements ImageGenerationPort)
   - MediaCatalogAdapter (implements MediaCatalogPort)
 - `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/mapper/`
   - AI request/response mappers
@@ -164,6 +167,8 @@
 - `/frontend/src/api/` - OpenAPI-generated client
 - `/frontend/src/components/`
   - TextEditor
+  - GenerateTextButton
+  - GenerateImageButton
   - MusicSelector
   - ImagePreview
   - OutputTypeIndicator
@@ -171,6 +176,7 @@
   - MeditationBuilderPage
 - `/frontend/src/hooks/`
   - useGenerateText
+  - useGenerateImage
   - useComposition
 - `/frontend/src/state/`
   - composerStore.ts (Zustand)
@@ -181,9 +187,9 @@
 - Cliente OpenAPI autogenerado
 - React Query para server-state
 - Zustand para UI-state
-- Output type indicator updates immediately on image add/remove (FR-018)
-- Text field preserves user input exactly (US1-S3)
-- AI generation button disabled during generation (FR-013)
+- Output type indicator updates immediately on image add/remove/generate (FR-019)
+- Text field preserves user input exactly
+- AI generation buttons disabled during generation (FR-014)
 
 **Prohibido**:
 - Lógica de negocio en UI
@@ -216,8 +222,8 @@
 
 **Criterios**:
 - BDD escenarios contra backend real
-- Flujos críticos en Playwright: manual entry, AI generation, preview, output type indication
-- External dependencies mocked (AI service, media catalog)
+- Flujos críticos en Playwright: manual entry, AI text generation, AI image generation, preview, output type indication
+- External dependencies mocked (AI text service, AI image service, media catalog)
 
 **Prohibido**:
 - Servicios reales en E2E
@@ -242,18 +248,18 @@
 
 ---
 
-## Traceability Matrix (9 escenarios limpios)
+## Traceability Matrix (8 escenarios consolidados)
 
 | BDD Scenario | Domain Entity | Use Case | Business Capability | Frontend Component |
 |--------------|---------------|----------|---------------------|-------------------|
-| Access builder | MeditationComposition | ComposeContentUseCase | Access Meditation Builder | MeditationBuilderPage |
-| Enter text | TextContent | ComposeContentUseCase | Define Meditation Text | TextEditor |
-| Podcast no image | OutputType | - | Determine Output Type | OutputTypeIndicator |
-| Video with image | OutputType | - | Determine Output Type | OutputTypeIndicator |
-| AI from scratch | - | GenerateTextUseCase | Generate Text Scratch | useGenerateText |
-| AI enhance | - | GenerateTextUseCase | Enhance Text | useGenerateText |
-| Music preview | MusicReference | - | Preview Music | MusicPreview |
-| Image preview | ImageReference | - | Preview Image | ImagePreview |
+| 1. Access builder | MeditationComposition | ComposeContentUseCase | Access Meditation Builder | MeditationBuilderPage |
+| 2. Enter text | TextContent | ComposeContentUseCase | Define Meditation Text | TextEditor |
+| 3. AI text gen/enhance | TextContent | GenerateTextUseCase | Generate/Enhance Text | GenerateTextButton |
+| 4. Generate AI image | ImageReference | GenerateImageUseCase | Generate AI Image | GenerateImageButton |
+| 5. Podcast no image | OutputType | - | Determine Output Type | OutputTypeIndicator |
+| 6. Video with image | OutputType | - | Determine Output Type | OutputTypeIndicator |
+| 7. Music preview | MusicReference | - | Preview Music | MusicPreview |
+| 8. Image preview | ImageReference | - | Preview Image | ImagePreview |
 
 ---
 

@@ -15,9 +15,9 @@ Applies to all backend tasks involving Java 21, Spring Boot, Hexagonal Architect
 /backend/src/main/java/com/hexagonal/<bc>/domain/
 /backend/src/main/java/com/hexagonal/<bc>/infrastructure/
 /backend/src/main/resources/openapi/<bc>/
-/backend/tests/bdd/
-/backend/tests/contracts/
-/backend/tests/e2e/
+/backend/src/test/bdd/
+/backend/src/test/contracts/
+/backend/src/test/e2e/
 ```
 
 ---

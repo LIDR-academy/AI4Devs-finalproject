@@ -2,6 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning  
 **Created**: January 23, 2026  
+**Updated**: January 28, 2026  
 **Feature**: [spec.md](../spec.md)
 
 ---
@@ -34,13 +35,13 @@
 
 **Validation Notes**:
 - ✅ Zero [NEEDS CLARIFICATION] markers in the specification
-- ✅ All 19 functional requirements are specific, actionable, and testable (e.g., FR-001: "System MUST provide a mandatory text field..." can be verified through UI inspection)
-- ✅ All 13 success criteria include specific metrics (time: 0.5 seconds, 2 seconds, 8 seconds; percentages: 95%, 100%; quantities: 5,000 characters, 10 requests)
+- ✅ All 20 functional requirements are specific, actionable, and testable (e.g., FR-001: "System MUST provide a mandatory text field..." can be verified through UI inspection)
+- ✅ All 15 success criteria include specific metrics (time: 0.5 seconds, 2 seconds, 8 seconds, 10 seconds; percentages: 95%, 100%; quantities: 5,000 characters, 10 requests)
 - ✅ Success criteria focus on user-facing outcomes without mentioning technologies (e.g., "SC-001: Authenticated users can access...within 2 seconds" vs "API responds in 200ms")
-- ✅ 6 user stories with 3-4 acceptance scenarios each, all using Given/When/Then format
-- ✅ 10 edge cases identified covering service failures, data limits, format issues, session management, performance, and output type transitions
-- ✅ Out of Scope section clearly defines capabilities excluded, including actual podcast/video generation (deferred to future US)
-- ✅ Dependencies section lists 4 required external systems; Assumptions section documents 8 reasonable defaults
+- ✅ 8 consolidated core scenarios covering all essential capabilities
+- ✅ 11 edge cases identified covering AI service failures, data limits, format issues, session management, performance, and AI image generation scenarios
+- ✅ Out of Scope section clearly defines capabilities excluded, including actual podcast/video generation (deferred to future US) and manual image catalog selection
+- ✅ Dependencies section lists 5 required external systems (including AI image service); Assumptions section documents 9 reasonable defaults
 
 ---
 
@@ -52,9 +53,9 @@
 - [x] No implementation details leak into specification
 
 **Validation Notes**:
-- ✅ Each of the 19 functional requirements maps to at least one user story acceptance scenario
-- ✅ User scenarios cover all primary flows: manual text entry (P1), output type indication (P1), AI generation from scratch (P2), AI enhancement (P3), music preview (P2), image preview (P2)
-- ✅ Success criteria align with all user stories and functional requirements (e.g., SC-003 for AI generation, SC-004/SC-005 for previews, SC-011/SC-012 for output type indication, SC-006 for overall composition success)
+- ✅ Each of the 20 functional requirements maps to at least one scenario
+- ✅ 8 consolidated scenarios cover all essential flows: access builder, manual text entry, AI text generation/enhancement (unified), AI image generation, output type indication (podcast/video), music preview, image preview
+- ✅ Success criteria align with all scenarios and functional requirements (e.g., SC-004 for AI text generation, SC-005 for AI image generation, SC-006/SC-007 for previews, SC-013/SC-014 for output type indication, SC-008 for overall composition success)
 - ✅ Specification maintains strict business focus throughout - no technology stack, API details, database schemas, or UI frameworks mentioned
 
 ---
@@ -71,18 +72,32 @@ This specification is **READY** for the next phase. The spec can proceed to:
 - Development - Begin implementation following the specification
 
 **Key Strengths**:
-1. Clear prioritization of user stories enables incremental delivery
-2. Comprehensive edge case coverage anticipates real-world scenarios
+1. Consolidated scenarios enable simpler, more focused implementation
+2. Comprehensive edge case coverage anticipates real-world scenarios including AI image generation
 3. Well-defined scope boundaries prevent feature creep - actual podcast/video generation correctly deferred to future user stories
 4. Measurable success criteria enable objective validation
 5. Technology-agnostic approach allows flexible implementation
-6. Business-critical output type indication (P1) ensures users understand podcast vs video outcomes before composition
+6. Business-critical output type indication ensures users understand podcast vs video outcomes before composition
+7. AI image generation capability accelerates content creation without manual selection
 
 **No blocking issues identified.**
 
 ---
 
 ## Iteration History
+
+### Iteration 3 (January 28, 2026)
+- Consolidated from 6 User Stories (18+ scenarios) to 8 core scenarios
+- Merged AI generation "from scratch" and "enhancement" into unified scenario (Scenario 3)
+- Added AI image generation capability (Scenario 4)
+- Simplified output type indication from 4 scenarios to 2 (Scenarios 5-6)
+- Combined music and image preview scenarios (Scenarios 7-8)
+- Updated functional requirements to 20 (added AI image generation FRs)
+- Updated success criteria to 15 (added AI image generation metrics)
+- Updated edge cases to 11 (added AI image generation scenarios)
+- Updated dependencies to include AI image generation service
+- Updated assumptions to include image generation quality expectations
+- Status: COMPLETE ✅
 
 ### Iteration 2 (January 23, 2026)
 - Added business clarification: output type determination (podcast vs video) based on image presence
@@ -98,6 +113,3 @@ This specification is **READY** for the next phase. The spec can proceed to:
 
 ### Iteration 1 (January 23, 2026)
 - Initial specification created
-- All quality checks passed on first attempt
-- No clarifications needed (all reasonable assumptions documented)
-- Status: COMPLETE ✅
