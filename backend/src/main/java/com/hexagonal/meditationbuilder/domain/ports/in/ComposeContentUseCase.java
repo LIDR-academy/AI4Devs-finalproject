@@ -6,6 +6,8 @@ import com.hexagonal.meditationbuilder.domain.model.MusicReference;
 import com.hexagonal.meditationbuilder.domain.model.TextContent;
 import com.hexagonal.meditationbuilder.domain.enums.OutputType;
 
+import java.util.UUID;
+
 /**
  * ComposeContentUseCase - Inbound Port.
  * 
@@ -31,7 +33,7 @@ public interface ComposeContentUseCase {
      * Business Rule: Initial composition contains only text.
      * 
      * @param textContent initial meditation text (mandatory)
-     * @return newly created composition with unique ID
+     * @return newly created composition with unique UUID
      * @throws IllegalArgumentException if textContent is null
      */
     MeditationComposition createComposition(TextContent textContent);
@@ -41,51 +43,51 @@ public interface ComposeContentUseCase {
      * 
      * Business Rule: Text is preserved exactly as provided.
      * 
-     * @param compositionId unique composition identifier
+     * @param compositionId unique composition UUID
      * @param newTextContent new meditation text
      * @return updated composition
      * @throws IllegalArgumentException if compositionId or newTextContent is null
      * @throws CompositionNotFoundException if composition not found
      */
-    MeditationComposition updateText(String compositionId, TextContent newTextContent);
+    MeditationComposition updateText(UUID compositionId, TextContent newTextContent);
 
     /**
      * Selects background music from the media catalog.
      * 
      * Business Rule: Music is optional.
      * 
-     * @param compositionId unique composition identifier
+     * @param compositionId unique composition UUID
      * @param musicReference music catalog reference
      * @return updated composition
      * @throws IllegalArgumentException if compositionId or musicReference is null
      * @throws CompositionNotFoundException if composition not found
      */
-    MeditationComposition selectMusic(String compositionId, MusicReference musicReference);
+    MeditationComposition selectMusic(UUID compositionId, MusicReference musicReference);
 
     /**
      * Sets an image for the composition.
      * 
      * Business Rule: Setting image changes output type to VIDEO.
      * 
-     * @param compositionId unique composition identifier
+     * @param compositionId unique composition UUID
      * @param imageReference image reference (manual or AI-generated)
      * @return updated composition
      * @throws IllegalArgumentException if compositionId or imageReference is null
      * @throws CompositionNotFoundException if composition not found
      */
-    MeditationComposition setImage(String compositionId, ImageReference imageReference);
+    MeditationComposition setImage(UUID compositionId, ImageReference imageReference);
 
     /**
      * Removes the image from the composition.
      * 
      * Business Rule: Removing image changes output type to PODCAST.
      * 
-     * @param compositionId unique composition identifier
+     * @param compositionId unique composition UUID
      * @return updated composition
      * @throws IllegalArgumentException if compositionId is null
      * @throws CompositionNotFoundException if composition not found
      */
-    MeditationComposition removeImage(String compositionId);
+    MeditationComposition removeImage(UUID compositionId);
 
     /**
      * Retrieves the output type for a composition.
@@ -94,28 +96,28 @@ public interface ComposeContentUseCase {
      * - No image → PODCAST
      * - Has image → VIDEO
      * 
-     * @param compositionId unique composition identifier
+     * @param compositionId unique composition UUID
      * @return PODCAST or VIDEO
      * @throws IllegalArgumentException if compositionId is null
      * @throws CompositionNotFoundException if composition not found
      */
-    OutputType getOutputType(String compositionId);
+    OutputType getOutputType(UUID compositionId);
 
     /**
-     * Retrieves a composition by ID.
+     * Retrieves a composition by UUID.
      * 
-     * @param compositionId unique composition identifier
+     * @param compositionId unique composition UUID
      * @return the composition
      * @throws IllegalArgumentException if compositionId is null
      * @throws CompositionNotFoundException if composition not found
      */
-    MeditationComposition getComposition(String compositionId);
+    MeditationComposition getComposition(UUID compositionId);
 
     /**
      * Exception thrown when a composition is not found.
      */
     class CompositionNotFoundException extends RuntimeException {
-        public CompositionNotFoundException(String compositionId) {
+        public CompositionNotFoundException(UUID compositionId) {
             super("Composition not found: " + compositionId);
         }
     }
