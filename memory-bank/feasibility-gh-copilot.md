@@ -128,18 +128,19 @@ def normalize_graph(gh_file):
     components = parse_gh(gh_file)
     
     for comp in components:
-        # Map GUID to component type
+        # Map GUID to component type + signature (to distinguish overloads)
         comp_type = get_component_type(comp.guid)  # "Point", "Circle", etc.
-        comp.normalized_id = f"{comp_type}_{comp.instance_index}"
+        io_signature = f"{len(comp.inputs)}i_{len(comp.outputs)}o"
+        comp.normalized_id = f"{comp_type}_{io_signature}_{comp.instance_index}"
         
     return components
 
 # Result:
-# "Point GUID=abc123" -> "Point_1"
-# "Circle GUID=def456" -> "Circle_1"
+# "Point GUID=abc123" -> "Point_1i_1o_1"
+# "Circle GUID=def456" -> "Circle_2i_1o_1"
 ```
 
-**Complexity**: 1-2 weeks to build robust mapping (GH has 500+ component types)
+**Complexity**: 1-2 weeks to build robust mapping (GH has 500+ component types). *Note: Capturing I/O count is critical for overloaded components.*
 
 ---
 
@@ -246,6 +247,24 @@ User presses: TAB → Ghost becomes real
 
 **Implementation (Grasshopper C# SDK)**:
 ```csharp
+// Event hooks actually EXIST in Grasshopper SDK
+// GH_Document.ObjectsAdded
+// GH_Canvas.CanvasPostPaintWidgets
+// But they require deep integration:
+
+public override void AddedToDocument(GH_Document document)
+{
+    base.AddedToDocument(document);
+    // Hook into canvas events
+    Grasshopper.Instances.ActiveCanvas.CanvasPostPaintWidgets += RenderGhostOverlay;
+}
+
+private void RenderGhostOverlay(GH_Canvas sender)
+{
+    // Custom drawing logic using System.Drawing or Eto
+    // This overlays on top of standard GH interface
+}
+
 // In Grasshopper plugin
 public void ShowGhostNode(string nodeType, Point3d position)
 {
@@ -278,16 +297,16 @@ protected override void OnKeyDown(KeyEventArgs e)
 | Challenge | Difficulty | Time Needed |
 |-----------|------------|-------------|
 | Render custom transparency | Medium | 1 week |
-| Hook into GH canvas events | High | 2 weeks |
+| **Robust Event Handling** | **High** | **2-3 weeks** (Hooks exist but are delicate) |
 | Handle TAB key globally | Medium | 3-4 days |
 | Auto-wire connections | **Very High** | 3-4 weeks |
-| **TOTAL** | **High** | **6-8 weeks** |
+| **TOTAL** | **High** | **7-9 weeks** |
 
 **Wow Factor**: ⭐⭐⭐⭐⭐ (This would go viral on Twitter)
 
-**Risk**: ⚠️ **GH SDK doesn't officially support custom rendering**. You'd be hacking internals.
+**Risk**: ⚠️ **High Implementation Risk**. While `GH_Document` and `GH_Canvas` provide events, correctly managing state, undo/redo stacks, and interaction overlays without crashing GH is technically demanding for a 3-month timeline.
 
-**TFM Viability**: ⭐⭐ **Too risky for 3-month timeline**
+**TFM Viability**: ⭐⭐ **Too risky for MVP timeline**
 
 ---
 

@@ -99,7 +99,7 @@ Loading 5,000 unique meshes in a browser kills performance (RAM/Draw calls).
 ### Optimization Strategy
 
 **1. Instancing (Critical)**
-- sagrada Familia has repeated geometry.
+- Sagrada Família has repeated geometry.
 - If "Column Type A" appears 50 times: Load geometry **ONCE**, render 50 instances (GPU Integers).
 - Requires backend to identify "Geometric Clones".
 

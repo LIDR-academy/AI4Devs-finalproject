@@ -23,7 +23,7 @@ Sagrada Família Parts Manager (SF-PM)
 
 ### **0.3. Descripción breve del proyecto:**
 
-Sistema enterprise que transforma archivos CAD estáticos (Rhino .3dm) en un gemelo digital activo para la gestión integral del inventario de decenas de miles de piezas únicas de la Sagrada Família de Barcelona. El sistema desacopla metadata crítica de geometría pesada, permitiendo acceso instantáneo, validación automática mediante agentes IA ("The Librarian"), y visualización 3D web de alto rendimiento.
+Sistema enterprise que transforma archivos CAD estáticos (Rhino .3dm) en un gemelo digital activo para la gestión integral del inventario de decenas de miles de piezas únicas de la Sagrada Família de Barcelona. El sistema desacopla metadata crítica de geometría pesada (archivos de hasta **500MB**), permitiendo acceso instantáneo, validación automática mediante agentes IA ("The Librarian"), y visualización 3D web de alto rendimiento. La Oficina Técnica obtiene una **Single Source of Truth** para el ciclo de vida completo de cada pieza (Diseñada → Validada → En Fabricación → Completada → Instalada).
 
 ### **0.4. URL del proyecto:**
 
@@ -1125,7 +1125,7 @@ Cambia el estado de una pieza con validación RBAC y registro automático de tra
 
 ✅ **Dado** que corregí los errores en el archivo
 - **Cuando** vuelvo a subirlo
-- **Entonces** las 200 piezas seaceptan correctamente
+- **Entonces** las 200 piezas se aceptan correctamente
 - **Y** aparecen en el Dashboard con estado "Validada"
 
 **Prioridad:** P0 (Crítica)  

@@ -39,13 +39,18 @@ flowchart TD
     SendAPI --> ExtractMetadata[API: Extracción con rhino3dm]
     ExtractMetadata --> ValidateISO{The Librarian:<br/>Valida ISO-19650}
     
-    ValidateISO -->|Falla| GenerateReport[Genera Informe de Rechazo]
-    GenerateReport --> ReturnError[❌ Frontend muestra informe]
+    ValidateISO -->|Falla| Quarantine[🔒 Cuarentena: Bloqueo de entrada]
+    Quarantine --> OptionRetry{¿Usuario corrige?}
+    OptionRetry -->|Sí: Re-subir| RetryRequested[🔄 Retry: Nueva versión]
+    RetryRequested --> Start
+    OptionRetry -->|No: Solicita Revisión| AppealReview[⚠️ Appeal: Revisión Manual]
+    AppealReview --> ManualQueue[Cola de BIM Manager]
+    OptionRetry -->|Abandona| End
     
     ValidateISO -->|OK| CheckGeometry{Valida Geometría:<br/>Volumen > 0?}
     
     CheckGeometry -->|Falla| GenerateGeoReport[Informe: Geometría Corrupta]
-    GenerateGeoReport --> ReturnError
+    GenerateGeoReport --> ReturnError[❌ Frontend muestra informe]
     
     CheckGeometry -->|OK| ClassifyParts[The Librarian:<br/>Clasifica Tipologías]
     ClassifyParts --> EnrichMetadata[Enriquece Metadatos Faltantes]
@@ -57,15 +62,25 @@ flowchart TD
     UploadStorage --> Success[✅ Frontend: Upload Exitoso]
     
     Success --> BackgroundWork[Background: Genera .glb]
-    BackgroundWork --> UpdateDB[(Actualiza URL .glb en DB)]
+    BackgroundWork --> GenSuccess{¿Éxito?}
     
-    ReturnError --> End([Fin])
+    GenSuccess -->|Sí| UpdateDB[(Actualiza URL .glb en DB)]
+    GenSuccess -->|No| GenFailure[❌ Fallo Generación]
+    GenFailure --> MarkFailed[DB: estado='Geometry_Failed']
+    MarkFailed --> NotifyUser[📧 Notifica Usuario]
+    
+    ManualQueue --> End
+    RejectSize --> End
+    ReturnError --> End
     UpdateDB --> End
+    NotifyUser --> End
     
     style ValidateISO fill:#ff6b6b
     style CheckGeometry fill:#ff6b6b
     style SaveDB fill:#51cf66
     style Success fill:#51cf66
+    style Quarantine fill:#fd7e14
+    style GenFailure fill:#fa5252
 ```
 
 ---
@@ -111,6 +126,7 @@ sequenceDiagram
         FE-->>User: ✅ "Archivo validado. Procesando geometría..."
         
         Queue->>Queue: Extract meshes, Generate .glb
+        Note right of Queue: Timeout: 10min max processing time
         Queue->>Storage: PUT /processed/uuid-123.glb
         Storage-->>Queue: 200 OK (url_glb)
         
@@ -267,6 +283,10 @@ flowchart TD
     Start([Usuario intenta cambiar estado]) --> CheckRole{Usuario tiene<br/>rol permitido?}
     
     CheckRole -->|No| DenyAction[❌ Error 403:<br/>"No tienes permisos"]
+    CheckRole -->|Sí| EmergencyOverride{¿Es Override<br/>de Emergencia?}
+    EmergencyOverride -->|Sí| LogAudit[📝 Log Audit: Override activo]
+    LogAudit --> ValidateTransition
+    EmergencyOverride -->|No| ValidateTransition
     
     CheckRole -->|Sí| ValidateTransition{Transición<br/>de estado válida?}
     

@@ -261,7 +261,7 @@ El desarrollo de SF-PM siguió una metodología estructurada de ingeniería de s
 ### Ejemplos de Aplicación
 
 **❌ PROHIBIDO (Fase Actual = 2, Solicitud = Fase 5):**
-```
+```text
 Usuario: "Genera el esquema SQL de la tabla `parts` con todos los campos."
 
 Respuesta del LLM:
@@ -279,7 +279,7 @@ Para llegar a FASE 5, primero debemos completar:
 ```
 
 **✅ PERMITIDO (Fase Actual = 2, Solicitud = Fase 2):**
-```
+```text
 Usuario: "Define los criterios de aceptación del MVP para inversores."
 
 Respuesta del LLM:

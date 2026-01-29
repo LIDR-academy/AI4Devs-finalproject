@@ -218,4 +218,4 @@
 4. Begin Sprint 0 implementation
 
 
-**Next Step**: Create `PRD.md` (Product Requirements Document) to detail the system.
+**Next Step**: Review/update `docs/02-prd.md` if scope changes before Sprint 0.

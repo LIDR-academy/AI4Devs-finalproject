@@ -230,11 +230,22 @@ def extract_geometry(state: ValidationState) -> ValidationState:
     try:
         file = rhino3dm.File3dm.Read(state["file_path"])
         
-        # Extrae objetos 3D
-        objects = [obj for obj in file.Objects if obj.Geometry.ObjectType == rhino3dm.ObjectType.Brep]
+        # Extrae objetos 3D y convierte a Brep para análisis
+        objects = []
+        for obj in file.Objects:
+            geometry = obj.Geometry
+            if isinstance(geometry, rhino3dm.Brep):
+                objects.append(geometry)
+            elif hasattr(geometry, 'ToBrep'):
+                 # Intentar convertir (ej. Extrusion a Brep)
+                 brep = geometry.ToBrep()
+                 if brep: objects.append(brep)
         
-        # Calcula volumen total
-        total_volume = sum([brep.GetVolume() for brep in objects if hasattr(brep, 'GetVolume')])
+        # Calcula volumen total (solo para Breps válidos)
+        total_volume = 0
+        for brep in objects:
+            if brep.IsSolid:
+                total_volume += brep.GetVolume()
         
         # Extrae layers
         layers = [layer.Name for layer in file.Layers]
@@ -351,7 +362,7 @@ Clasifica esta pieza.""")
         
     except Exception as e:
         # Si LLM falla, trigger fallback
-        state["semantic_errors"] = [f"LLM classification failed: {str(e)}"]
+        state.setdefault("semantic_errors", []).append(f"LLM classification failed: {str(e)}")
         state["semantic_valid"] = False
     
     return state

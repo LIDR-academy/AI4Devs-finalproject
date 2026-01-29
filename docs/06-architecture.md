@@ -272,7 +272,7 @@ const subscription = supabase
 
 **Estructura de Buckets:**
 
-```
+```text
 sf-pm-storage/
 ├── quarantine/        # Uploads sin validar (lifecycle: 7 días)
 │   └── temp-{uuid}.3dm
@@ -301,8 +301,8 @@ sf-pm-storage/
 ##### **6.1. OpenAI API (GPT-4)**
 - **Uso:** Clasificación semántica de piezas, enriquecimiento de metadatos
 - **Modelo:** `gpt-4-turbo` (128k context, JSON mode)
-- **Rate Limits:** 10,000 TPM (tokens per minute)
-- **Costo Estimado:** ~$200/mes (10,000 clasificaciones/mes)
+- **Rate Limits:** Depende del Tier de la cuenta (Tier 1 ~30k TPM hasta Tier 5 ~2M TPM).
+- **Costo Estimado:** Variable según consumo real de tokens (input/output). Estimación inicial ~$200/mes para volumen medio.
 
 **Fallback Strategy:**  
 Si API falla o excede presupuesto → Regex-based classification (menos preciso pero funcional)
@@ -336,7 +336,7 @@ Si API falla o excede presupuesto → Regex-based classification (menos preciso 
 Backend genera URL firmada S3 con permisos temporales (PUT). Frontend sube directamente a S3.
 
 **Flujo:**
-```
+```text
 1. Frontend: POST /api/upload/presigned-url {filename, size}
 2. Backend: Valida, genera URL firmada (expira en 15 min)
 3. Frontend: PUT https://s3.../quarantine/uuid.3dm (XMLHttpRequest con progress)

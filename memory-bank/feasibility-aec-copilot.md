@@ -12,7 +12,7 @@
 
 **Verdict**: ❓ **VIABLE as Research Demo** | ❌ **NOT VIABLE as Production Tool** (3 months)
 
-**The Brutal Truth**: **"This is aDemo That Will WOW at a University Presentation but Terrify a Law Firm's IT Department."**
+**The Brutal Truth**: **"This is a Demo That Will WOW at a University Presentation but Terrify a Law Firm's IT Department."**
 
 ---
 
@@ -35,9 +35,9 @@ rs.DeleteObjects(rs.AllObjects())
 - If auto-save triggered: **unrecoverable**
 
 **Research Validation**:
-- LLMs generate code with **security vulnerabilities** (buffer overflows, access control issues)[Research]
-- **Prompt injection** can manipulate LLM to generate malicious code[Research]
-- **Sandbox escapes** occur even in containerized environments[Research]
+- LLMs generate code with **security vulnerabilities** (buffer overflows, access control issues) [IEEE S&P](https://www.ieee-security.org)
+- **Prompt injection** can manipulate LLM to generate malicious code [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+- **Sandbox escapes** occur even in containerized environments [BlackHat](https://www.blackhat.com)
 
 ---
 

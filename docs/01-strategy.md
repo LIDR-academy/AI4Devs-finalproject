@@ -49,9 +49,9 @@ Los archivos Rhino (.3dm) que contienen el modelo digital completo pesan entre *
 
 2. **Validación Automática Pre-Ingesta: "The Librarian" Agent**
    - Agente de IA que actúa como **bibliotecario digital**
-   - **Rechazo instantáneo** de archivos que no cumplen ISO-19650
-   - **Clasificación automática** de tipologías (Piedra/Hormigón/Metálica)
-   - **Enriquecimiento de metadatos** faltantes mediante inferencia contextual
+   - **Validación rápida** (<30s) de archivos que no cumplen ISO-19650
+   - **Clasificación automática** de tipologías (con scoring de confianza)
+   - **Enriquecimiento de metadatos** faltantes tras validación
 
 3. **Visor 3D Web de Alto Rendimiento**
    - Visualización de **10,000+ piezas** simultáneas en navegador

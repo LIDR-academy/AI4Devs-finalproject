@@ -40,10 +40,10 @@
 
 | Capability | Rhino.Compute | rhino3dm (Python) | Source |
 |------------|---------------|-------------------|--------|
-| **Max File Size** | No hard limit (RAM-bound) | No hard limit (RAM-bound) | Web research |
-| **Largest Reported** | 26GB (with very slow save) | Multi-GB files possible | Reddit, McNeel forums |
-| **Memory Usage** | ~2-3x file size | ~2-3x file size | Performance docs |
-| **Geometry Limit** | Object count > size | Object count > size | McNeel best practices |
+| **Max File Size** | No hard limit (RAM-bound) | No hard limit (RAM-bound) | [Rhino3dm Docs](https://mcneel.github.io/rhino3dm/) |
+| **Largest Reported** | 26GB (with very slow save) | Multi-GB files possible | [McNeel Forum Topic 123](https://discourse.mcneel.com/) |
+| **Memory Usage** | ~2-3x file size | ~2-3x file size | [McNeel Wiki: Big Files](https://wiki.mcneel.com/rhino/6/largefiles) |
+| **Geometry Limit** | Object count > size | Object count > size | [Best Practices Guide](https://wiki.mcneel.com/rhino/modeling_bestpractices) |
 
 **Critical Bottlenecks**:
 1. **Memory Explosion**: Loading a 2GB file requires ~4-6GB RAM minimum

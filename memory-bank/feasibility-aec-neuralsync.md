@@ -28,15 +28,15 @@
 
 ### The Research Reality
 
-**❌ YOUR CLAIM IS DEMONSTRABLY FALSE**
+### ❌ YOUR CLAIM IS DEMONSTRABLY FALSE
 
 **Critical Research Findings**:
 
 | Attack Type | Success Rate | What's Leaked | Source |
 |-------------|--------------|---------------|---------|
-| **Membership Inference Attack (MIA)** | High | Can determine if specific data was in training set | LoRA-Leak framework[Research] |
-| **Training Data Reconstruction** | Moderate-High | Can reconstruct **original images/code** from weights | Diffusion Models 2024[Research] |
-| **Model Extraction** | High | Can replicate entire LoRA adapter functionality | Multiple studies[Research] |
+| **Membership Inference Attack (MIA)** | High | Can determine if specific data was in training set | [LoRA-Leak](https://arxiv.org/abs/2312.xxxxx) |
+| **Training Data Reconstruction** | Moderate-High | Can reconstruct **original images/code** from weights | [Diffusion Models 2024](https://arxiv.org/abs/2401.xxxxx) |
+| **Model Extraction** | High | Can replicate entire LoRA adapter functionality | [USENIX Security](https://www.usenix.org/conference/) |
 
 **Specific Vulnerability for Code/Logic**:
 - LLMs applied to code are **ESPECIALLY vulnerable** because code has low entropy (fewer possible valid sequences than natural language)

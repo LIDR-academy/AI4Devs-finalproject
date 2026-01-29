@@ -34,7 +34,7 @@ Transformar la documentación técnica (Fases 1-7) en un sistema funcional despl
 ### Stack Tecnológico (Confirmado)
 - **Backend**: FastAPI (Python 3.11+), Poetry, Pydantic v2
 - **Frontend**: React 18, TypeScript, Vite, TanStack Query, Zustand
-- **Agent**: LangGraph, LangChain, OpenAI GPT-4, rhino3dm (Python)
+- **Agent**: LangGraph, LangChain, OpenAI GPT-4, rhino3dm (Python, lee formatos v5-v8, escribe v8)
 - **Database**: Supabase (PostgreSQL + Storage + Auth)
 - **3D Rendering**: Three.js (r160+), React Three Fiber, GLB format
 - **Infrastructure**: Docker Compose (dev), Docker (prod), GitHub Actions (CI/CD)
@@ -208,10 +208,13 @@ Permitir que un usuario suba un archivo Rhino (`.3dm`), extraer su metadata (nom
   def extract_metadata(file_path: str) -> dict:
       """Extrae metadata básica del archivo .3dm sin cargar geometría completa."""
       # - Nombre de archivo
-      # - Número de capas
-      # - Número de objetos
+      # - Estructura de capas (nombres + validación compliance ISO per layer)
+      # - Número de objetos y GUIDs
       # - Dimensiones del bounding box
       # - Fecha de creación (si está en metadata)
+      # - User Strings / Atributos personalizados
+      # - Materiales asignados
+      # - Jerarquía de bloques (Block Definitions)
   ```
 - [ ] Implementar modelo `Part` (SQLAlchemy/Pydantic):
   ```python
@@ -344,12 +347,13 @@ Implementar el componente más diferenciador del sistema: **The Librarian**. El 
       ```
       You are an ISO-19650 compliance validator for the Sagrada Familia construction project.
       
-      Task: Validate if the layer name follows ISO-19650 naming conventions.
+      Task: Validate if the layer name follows ISO-19650 naming conventions. 
+      CRITICAL: You must strictly follow the Regex pattern. If there is a conflict between Regex and semantics, Regex wins.
       
       Layer name: {layer_name}
       
       Rules:
-      1. Must follow pattern: [Building]-[Floor]-[Element]-[Number]
+      1. Must follow Regex pattern: ^SF-[A-Z0-9]{3}-[A-Z]{3}-\d{3}$ (e.g., SF-NAV-COL-001)
       2. Building codes: SF-NAV (Nave), SF-FAC (Fachada), SF-TOR (Torre)
       3. Element codes: DOV (Dovela), BLO (Bloque), COL (Columna)
       
@@ -357,7 +361,7 @@ Implementar el componente más diferenciador del sistema: **The Librarian**. El 
       {
         "valid": true/false,
         "error_message": "...",
-        "suggested_fix": "..."
+        "suggested_fix": "..." 
       }
       ```
   - **Node 3: Geometry Analysis** (`geometry_analysis.py`)
@@ -543,6 +547,12 @@ Permitir que usuarios visualicen modelos 3D de piezas directamente en el navegad
   async def convert_3dm_to_glb(input_path: str, output_path: str):
       """
       Convierte archivo .3dm a .glb usando rhino3dm.
+      
+      Research & Prototyping Tasks:
+      - Evaluar viabilidad de conversión directa rhino3dm -> glb
+      - Benchmark de librerías de compresión Draco
+      - Definir estrategia LOD (Level of Detail) para modelos arquitectónicos
+      - Performance benchmarks vs tamaño de archivo
       
       Optimizaciones:
       - Reducción de polígonos (LOD)
@@ -763,14 +773,14 @@ Permitir que usuarios visualicen modelos 3D de piezas directamente en el navegad
 | **% Funcionalidad Core** | 10% | 40% | 80% | 100% |
 | **Piezas Procesadas (Demo)** | 0 | 10 | 50 | 100 |
 
-### Burn-Down Chart (Horas Estimadas)
+### Burn-Down Chart (Horas Estimadas + 20% Contingencia)
 ```
-Sprint 0: 60h (Setup)
-Sprint 1: 80h (Core Features)
-Sprint 2: 100h (Agent Implementation)
-Sprint 3: 80h (Visualization)
+Sprint 0: 72h (Setup + Buffer)
+Sprint 1: 96h (Core Features + Buffer)
+Sprint 2: 120h (Agent Implementation + Buffer)
+Sprint 3: 96h (Visualization + Buffer)
 ---
-TOTAL: 320h (~2 meses con equipo de 2-3 devs)
+TOTAL: 384h (~2.5 meses con equipo de 2-3 devs)
 ```
 
 ---

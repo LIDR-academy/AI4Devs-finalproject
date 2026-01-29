@@ -1,4 +1,4 @@
-## � FASE 3: Modelo de Servicio (Lean Canvas)
+## FASE 3: Modelo de Servicio (Lean Canvas)
 
 ### Lean Canvas Adaptado a Herramienta Enterprise
 
@@ -87,7 +87,7 @@ SF-PM no es un producto SaaS comercial, sino una **herramienta interna de gesti�
 
 ---
 
-## �📚 Referencias
+## 📚 Referencias
 
 **Standards:**
 - ISO 19650: Organization and digitization of information about buildings (BIM)
