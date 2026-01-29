@@ -397,6 +397,25 @@ USING (
   )
 );
 
+-- Talleres pueden actualizar estado de sus piezas
+CREATE POLICY "Workshops update assigned blocks"
+ON blocks FOR UPDATE
+TO authenticated
+USING (
+  workshop_id IN (
+    SELECT workshops.id FROM workshops
+    JOIN profiles ON profiles.user_id = auth.uid()
+    WHERE profiles.role = 'workshop'
+  )
+)
+WITH CHECK (
+  workshop_id IN (
+    SELECT workshops.id FROM workshops
+    JOIN profiles ON profiles.user_id = auth.uid()
+    WHERE profiles.role = 'workshop'
+  )
+);
+
 -- Dirección: Solo lectura total
 CREATE POLICY "Directors read all blocks"
 ON blocks FOR SELECT

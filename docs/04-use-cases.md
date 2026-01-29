@@ -100,24 +100,24 @@ sequenceDiagram
     User->>FE: Selecciona archivo .3dm (150MB)
     FE->>FE: Validación cliente (tamaño, extensión)
     
-    FE->>API: POST /api/upload<br/>(multipart/form-data)
-    Note over API: rhino3dm.File3dm.Read(stream)
+    FE->>API: POST /api/upload/request_presigned<br/>{filename, layers}
     
     API->>Agent: validate_iso_19650(filename, layers)
-    Agent->>Agent: LLM Classification<br/>(GPT-4: Tipología, Material)
     
-    alt Validación Falla
-        Agent-->>API: ValidationError(reason: "Nomenclatura inválida")
-        API-->>FE: 422 Unprocessable Entity<br/>{errors: [...]}
-        FE-->>User: ❌ Muestra informe de rechazo
-    else Validación OK
-        Agent-->>API: ValidationSuccess(metadata: {...})
+    alt Nomenclatura Inválida
+        Agent-->>API: ValidationError
+        API-->>FE: 422 Unprocessable Entity
+        FE-->>User: ❌ Muestra error inmediato
+    else Nomenclatura OK
+        API-->>FE: 200 OK<br/>{presigned_url, upload_id}
+        
+        FE->>Storage: PUT presigned_url<br/>(upload original .3dm)
+        Storage-->>FE: 200 OK
+        
+        FE->>API: POST /api/upload/complete<br/>{upload_id}
         
         API->>DB: INSERT INTO parts<br/>(name, tipologia, estado="Validada")
         DB-->>API: part_id: "uuid-123"
-        
-        API->>Storage: PUT /raw/uuid-123.3dm<br/>(archivo original)
-        Storage-->>API: 200 OK (url_original)
         
         API->>Queue: enqueue_process_geometry.delay(part_id)
         Note over Queue: Task ID: task-456
@@ -415,7 +415,8 @@ sequenceDiagram
         
         API-->>FE: 200 OK<br/>{token, user: {name, role}}
         
-        FE->>FE: localStorage.setItem("jwt", token)
+        FE->>FE: setAuthToken(token)
+        FE->>FE: Update AuthProvider Context
         FE->>FE: Actualiza contexto global (AuthProvider)
         
         FE-->>User: Redirige a /dashboard

@@ -577,7 +577,7 @@ def process_uploaded_file(block_id: str, s3_key: str):
 ```python
 from circuitbreaker import circuit
 
-@circuit(failure_threshold=5, recovery_timeout=60, expected_exception=Exception)
+@circuit(failure_threshold=5, recovery_timeout=60, expected_exception=(APIError, TimeoutError))
 def call_openai_api(prompt: str) -> dict:
     """
     Circuit Breaker: Si falla 5 veces consecutivas, abre circuito por 60s.
@@ -733,3 +733,20 @@ def test_full_workflow_valid_file():
 
 ---
 
+
+### Test Environment Setup
+
+**Mocking External Services:**
+
+To ensure deterministic tests and avoid costs, use the following mocking strategy:
+
+1.  **S3 Storage**: Use `moto` library to mock S3 buckets and objects in memory.
+2.  **OpenAI API**: Use `pytest-mock` to mock `openai.ChatCompletion.create` responses.
+    ```python
+    def test_classify_tipologia_mock(mocker):
+        mock_response = mocker.Mock()
+        mock_response.choices[0].message.content = '{"tipologia": "capitel", ...}'
+        mocker.patch("openai.ChatCompletion.create", return_value=mock_response)
+        # ... run test ...
+    ```
+3.  **Supabase Auth**: Mock `auth.uid()` and JWT validation middlewares.

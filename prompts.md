@@ -4,6 +4,13 @@
 **Descripción**: Bitácora de prompts para trazabilidad del proyecto.
 ---
 
+## ESTRATEGIA DE GESTIÓN (ARCHIVADO)
+Para mantener este registro manejable:
+1. **Archivo Histórico:** Mueve prompts antiguos (ej. de fases exploratorias abandonadas) a `memory-bank/archive/`.
+2. **Índice:** Añade una Tabla de Contenidos (TOC) para navegación rápida si el archivo supera las 1000 líneas.
+3. **Rotación:** Considera dividir por años (`prompts-2026.md`) en proyectos de larga duración.
+
+---
 ## 001 - Inicialización del Memory Bank
 **Fecha:** 2025-12-19 07:43
 
