@@ -1,134 +1,106 @@
-## Índice
+# Sagrada Família Parts Manager (SF-PM)
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+> **Digital Twin Activo para Gestión de Inventario de Piezas CAD con Validación Inteligente**
+
+[![Status](https://img.shields.io/badge/Status-In%20Development-yellow)]()
+[![Documentation](https://img.shields.io/badge/Docs-100%25-green)](./docs/)
+[![License](https://img.shields.io/badge/License-MIT-blue)]()
 
 ---
 
-## 0. Ficha del proyecto
+## 🎯 Descripción
 
-### **0.1. Tu nombre completo:**
+Sistema enterprise que transforma archivos CAD estáticos (Rhino .3dm) en un **gemelo digital activo** para la gestión integral del inventario de decenas de miles de piezas únicas de la Sagrada Família de Barcelona.
 
-### **0.2. Nombre del proyecto:**
-
-### **0.3. Descripción breve del proyecto:**
-
-### **0.4. URL del proyecto:**
-
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
-
-### 0.5. URL o archivo comprimido del repositorio
-
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+**Características clave:**
+- ✅ Búsquedas instantáneas (de 3 horas a 10 minutos)
+- ✅ Validación automática con IA ("The Librarian" Agent)
+- ✅ Trazabilidad completa del ciclo de vida
+- ✅ Visualización 3D en navegador (Three.js)
+- ✅ Eliminación de errores logísticos (40% → 0%)
 
 ---
 
-## 1. Descripción general del producto
+## � Documentación
 
-> Describe en detalle los siguientes aspectos del producto:
+**Documentación completa disponible en [`/docs`](./docs/)**
 
-### **1.1. Objetivo:**
+### Índice de Documentación Técnica
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
-
-### **1.2. Características y funcionalidades principales:**
-
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
-
-### **1.3. Diseño y experiencia de usuario:**
-
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
-
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
-
----
-
-## 2. Arquitectura del Sistema
-
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
-
-
-### **2.2. Descripción de componentes principales:**
-
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
-
-### **2.4. Infraestructura y despliegue**
-
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
-
-### **2.5. Seguridad**
-
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
-
-### **2.6. Tests**
-
-> Describe brevemente algunos de los tests realizados
+| Fase | Documento | Descripción |
+|------|-----------|-------------|
+| **Índice** | [📑 00-index.md](./docs/00-index.md) | Índice general del proyecto y guía de navegación |
+| **Fase 1** | [📘 01-strategy.md](./docs/01-strategy.md) | Análisis del problema y propuesta de valor |
+| **Fase 2** | [📘 02-prd.md](./docs/02-prd.md) | Product Requirements Document (PRD) completo |
+| **Fase 3** | [📘 03-service-model.md](./docs/03-service-model.md) | Lean Canvas y modelo de negocio |
+| **Fase 4** | [📘 04-use-cases.md](./docs/04-use-cases.md) | Casos de uso maestros y diagramas de flujo |
+| **Fase 5** | [📘 05-data-model.md](./docs/05-data-model.md) | Modelo de datos PostgreSQL/Supabase |
+| **Fase 6** | [📘 06-architecture.md](./docs/06-architecture.md) | Arquitectura Cloud-Native (C4 Model) |
+| **Fase 7** | [📘 07-agent-design.md](./docs/07-agent-design.md) | Diseño del agente IA "The Librarian" |
+| **Fase 8** | [📘 08-roadmap.md](./docs/08-roadmap.md) | Roadmap de implementación |
 
 ---
 
-## 3. Modelo de Datos
+## 🛠️ Stack Tecnológico
 
-### **3.1. Diagrama del modelo de datos:**
-
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
-
-
-### **3.2. Descripción de entidades principales:**
-
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
-
----
-
-## 4. Especificación de la API
-
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+```
+Frontend:  React 18 + TypeScript + Three.js + Zustand + Vite
+Backend:   FastAPI + Celery Workers + Redis Queue
+AI/ML:     LangGraph + OpenAI GPT-4 Turbo
+Database:  Supabase (PostgreSQL 15 + Auth + Realtime)
+Storage:   S3-compatible buckets
+CAD:       rhino3dm + glTF/GLB conversion
+```
 
 ---
 
-## 5. Historias de Usuario
+## 🚀 Quick Start
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+### Instalación
 
-**Historia de Usuario 1**
+```bash
+# Clonar repositorio
+git clone https://github.com/sagrada-familia/parts-manager.git
+cd parts-manager
 
-**Historia de Usuario 2**
+# Instalar dependencias
+cd frontend && npm install
+cd ../backend && pip install -r requirements.txt
 
-**Historia de Usuario 3**
+# Configurar variables de entorno
+cp .env.example .env
+
+# Ejecutar en modo desarrollo
+npm run dev  # Frontend (puerto 3000)
+python -m uvicorn main:app --reload  # Backend (puerto 8000)
+```
+
+**Más información**: Ver [Getting Started](./docs/00-index.md#-getting-started) en la documentación completa.
 
 ---
 
-## 6. Tickets de Trabajo
+## 📊 Estado del Proyecto
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
-
-**Ticket 1**
-
-**Ticket 2**
-
-**Ticket 3**
+✅ **Completado**: Documentación técnica completa (Fases 1-7)  
+� **En Desarrollo**: Implementación del MVP (Fase 8)
 
 ---
 
-## 7. Pull Requests
+## 📄 Licencia
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+Proyecto académico (TFM) con código open-source bajo [MIT License](./LICENSE).  
+Datos reales de la Sagrada Família no incluidos por confidencialidad.
 
-**Pull Request 1**
+---
 
-**Pull Request 2**
+## 📞 Contacto
 
-**Pull Request 3**
+- **Documentación**: [`/docs`](./docs/)
+- **Email**: [email@proyecto.com]
+- **GitHub**: [@usuario](https://github.com/usuario)
 
+---
+
+<p align="center">
+  <i>Construido con ❤️ para la gestión del patrimonio arquitectónico mundial</i>
+</p>
