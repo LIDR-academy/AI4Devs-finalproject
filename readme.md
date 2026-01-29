@@ -2,9 +2,9 @@
 
 > **Digital Twin Activo para Gestión de Inventario de Piezas CAD con Validación Inteligente**
 
-[![Status](https://img.shields.io/badge/Status-In%20Development-yellow)]()
+[![Status](https://img.shields.io/badge/Status-In%20Development-yellow)](./docs/00-index.md)
 [![Documentation](https://img.shields.io/badge/Docs-100%25-green)](./docs/)
-[![License](https://img.shields.io/badge/License-MIT-blue)]()
+[![License](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
 
 ---
 
@@ -21,7 +21,7 @@ Sistema enterprise que transforma archivos CAD estáticos (Rhino .3dm) en un **g
 
 ---
 
-## � Documentación
+## 📚 Documentación
 
 **Documentación completa disponible en [`/docs`](./docs/)**
 
@@ -43,7 +43,7 @@ Sistema enterprise que transforma archivos CAD estáticos (Rhino .3dm) en un **g
 
 ## 🛠️ Stack Tecnológico
 
-```
+```yaml
 Frontend:  React 18 + TypeScript + Three.js + Zustand + Vite
 Backend:   FastAPI + Celery Workers + Redis Queue
 AI/ML:     LangGraph + OpenAI GPT-4 Turbo
@@ -82,7 +82,7 @@ python -m uvicorn main:app --reload  # Backend (puerto 8000)
 ## 📊 Estado del Proyecto
 
 ✅ **Completado**: Documentación técnica completa (Fases 1-7)  
-� **En Desarrollo**: Implementación del MVP (Fase 8)
+🚧 **En Desarrollo**: Implementación del MVP (Fase 8)
 
 ---
 

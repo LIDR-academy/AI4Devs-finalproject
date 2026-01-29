@@ -2,9 +2,9 @@
 
 > **Digital Twin Activo para Gestión de Inventario de Piezas CAD con Validación Inteligente**
 
-[![Estado del Proyecto](https://img.shields.io/badge/Status-In%20Development-yellow)]()
-[![Documentación](https://img.shields.io/badge/Docs-100%25-green)]()
-[![License](https://img.shields.io/badge/License-MIT-blue)]()
+![Estado del Proyecto](https://img.shields.io/badge/Status-In%20Development-yellow)
+![Documentación](https://img.shields.io/badge/Docs-100%25-green)
+![License](https://img.shields.io/badge/License-MIT-blue)
 
 ---
 
@@ -108,27 +108,14 @@ La documentación técnica está organizada en **7 fases** que siguen la metodol
 
 ### Instalación
 
-```bash
-# Clonar repositorio
-git clone https://github.com/sagrada-familia/parts-manager.git
-cd parts-manager
+> **Nota**: Esta sección será completada en la siguiente fase de desarrollo (implementación del MVP). Actualmente el proyecto se encuentra en fase de diseño y documentación.
 
-# Instalar dependencias frontend
-cd frontend
-npm install
-
-# Instalar dependencias backend
-cd ../backend
-pip install -r requirements.txt
-
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con credenciales de Supabase, OpenAI, etc.
-
-# Ejecutar en desarrollo
-npm run dev  # Frontend (puerto 3000)
-python -m uvicorn main:app --reload  # Backend (puerto 8000)
-```
+<!--
+Las instrucciones de instalación se habilitarán una vez comience el desarrollo:
+- Clonar repositorio
+- Instalar dependencias
+- Configurar .env
+-->
 
 ### Deployment
 
@@ -187,16 +174,16 @@ npx playwright test
 
 **Proyecto Académico - TFM (Trabajo Fin de Máster)**
 
-- **Autor**: [Nombre del Estudiante]
-- **Director**: [Nombre del Director]
-- **Institución**: [Universidad/Programa]
+- **Autor**: Pedro Cortés
+- **Director**: Álvaro Viebrantz / Carlos Blé
+- **Institución**: AI4Devs Academy
 - **Año**: 2026
 
 ### Colaboradores Técnicos (Consultores Externos)
 
-- **Arquitectura BIM**: Oficina Técnica Sagrada Família
-- **Validación de UX**: [Nombre BIM Manager]
-- **Revisión de Stack**: [Nombre Tech Lead]
+- **Arquitectura BIM**: Oficina Técnica Sagrada Família (Simulado)
+- **Validación de UX**: BIM Manager Lead
+- **Revisión de Stack**: AI4Devs Mentors
 
 ---
 
@@ -210,9 +197,9 @@ Este proyecto es un TFM académico con datos simulados de la Sagrada Família. E
 
 ## 📞 Contacto
 
-- **Email del Proyecto**: [email@proyecto.com]
-- **LinkedIn**: [linkedin.com/in/autor]
-- **GitHub**: [@usuario](https://github.com/usuario)
+- **Email del Proyecto**: pedro.cortes@example.com
+- **LinkedIn**: [linkedin.com/in/pedrocortes](https://linkedin.com/in/pedrocortes)
+- **GitHub**: [@pedrocortesark](https://github.com/pedrocortesark)
 
 ---
 

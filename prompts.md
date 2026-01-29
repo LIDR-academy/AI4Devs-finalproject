@@ -605,7 +605,7 @@ Creación del README.md como Single Source of Truth técnico con 8 secciones: ar
 
 ---
 
-## 012 - Definición de Metodología y Fases del Proyecto
+## 013 - Definición de Metodología y Fases del Proyecto
 **Fecha:** 2026-01-27 10:15
 
 **Prompt Original:**
@@ -646,7 +646,7 @@ Actualización de `productContext.md` con estructura de 7 fases del proyecto SF-
 
 ---
 
-## 013 - Generación de README Maestro (Fases 1 y 2)
+## 014 - Generación de README Maestro (Fases 1 y 2)
 **Fecha:** 2026-01-27 11:30
 
 **Prompt Original:**
@@ -697,7 +697,7 @@ Creación del README.md maestro con contenido exclusivo de FASE 1 (problema Data
 
 ---
 
-## 014 - Completación FASE 2: Wireframes, Roadmap y User Stories
+## 015 - Completación FASE 2: Wireframes, Roadmap y User Stories
 **Fecha:** 2026-01-27 12:45
 
 **Prompt Original:**
@@ -722,7 +722,7 @@ Actualización completa del README.md con: (1) Wireframes ASCII de 3 interfaces 
 
 ---
 
-## 015 - FASE 3: Modelo de Servicio (Lean Canvas Adaptado)
+## 016 - FASE 3: Modelo de Servicio (Lean Canvas Adaptado)
 **Fecha:** 2026-01-27 13:15
 
 **Prompt Original:**
@@ -774,7 +774,7 @@ Actualización del README.md con FASE 3 completa: Lean Canvas adaptado a herrami
 
 ---
 
-## 016 - FASE 4: Casos de Uso y Arquitectura de Flujos
+## 017 - FASE 4: Casos de Uso y Arquitectura de Flujos
 **Fecha:** 2026-01-28 14:20
 
 **Prompt Original:**
@@ -830,7 +830,7 @@ Actualización README.md con FASE 4: 3 Casos de Uso Maestros agrupando 14 User S
 
 ---
 
-## 017 - FASE 5: Modelo de Datos (Esquema SQL & Supabase)
+## 018 - FASE 5: Modelo de Datos (Esquema SQL & Supabase)
 **Fecha:** 2026-01-28 14:45
 
 **Prompt Original:**
@@ -880,7 +880,7 @@ Actualización README.md con FASE 5 completa: Esquema PostgreSQL/Supabase con 8 
 
 ---
 
-## 018 - FASE 6: Arquitectura de Alto Nivel (Diseño de Sistemas)
+## 019 - FASE 6: Arquitectura de Alto Nivel (Diseño de Sistemas)
 **Fecha:** 2026-01-28 15:10
 
 **Prompt Original:**
@@ -940,66 +940,8 @@ Actualización README.md con FASE 6 completa: Arquitectura Cloud-Native con 6 ca
 
 ---
 
-## 018 - FASE 6: Arquitectura de Alto Nivel (Diseño de Sistemas)
-**Fecha:** 2026-01-28 15:10
 
-**Prompt Original:**
-> # Prompt: FASE 6 - Arquitectura de Alto Nivel (Diseño de Sistemas)
-> 
-> **Role:** Actúa como **Senior Software Architect** experto en sistemas distribuidos, Cloud-Native y patrones de diseño modernos.
-> 
-> **Contexto:**
-> Entramos en la **FASE 6: Arquitectura de Alto Nivel**.
-> Ya tenemos definidos el Producto (Fase 2), los Casos de Uso (Fase 4) y el Modelo de Datos (Fase 5) en el `README.md`.
-> El sistema "Sagrada Familia Parts Manager" (SF-PM) tiene componentes claros:
-> * Frontend SPA (React + Three.js)
-> * Backend API (FastAPI)
-> * Base de Datos & Auth (Supabase)
-> * Agente de Validación (LangGraph + Rhino3dm)
-> * Almacenamiento de Archivos (S3)
-> 
-> **Objetivo de la Sesión:**
-> Definir la arquitectura técnica global que orquestará estos componentes, asegurando escalabilidad, desacoplamiento y rendimiento (especialmente para la validación asíncrona de archivos pesados).
-> 
-> **Instrucciones de Ejecución:**
-> 
-> 1.  **Definición de Componentes y Responsabilidades:**
->     * Describe cada bloque del sistema y su función única.
->     * **Decisión Clave:** ¿Cómo se comunica la API con el Agente de Validación? Sugerencia: Patrón asíncrono (Event-Driven) para no bloquear al usuario mientras se procesa un archivo de 500MB.
-> 
-> 2.  **Diagrama de Arquitectura (Mermaid):**
->     * Genera un diagrama `graph TD` o `C4 Container` que muestre:
->         * **Client:** Browser (React App).
->         * **API Gateway / Backend:** FastAPI.
->         * **Data Layer:** Supabase (Auth, DB, Realtime).
->         * **Worker / Agent Layer:** El servicio de validación (The Librarian) ejecutándose en segundo plano (pueden ser Celery Workers o un servicio separado).
->         * **Storage:** Buckets S3 (Quarantine vs Clean).
-> 
-> 3.  **Flujos de Comunicación:**
->     * Explica cómo fluyen los datos en el caso crítico de "Ingesta":
->         1. Upload directo a S3 (Presigned URL) para velocidad.
->         2. Webhook/Evento dispara al Agente.
->         3. Agente procesa y actualiza DB.
->         4. Frontend recibe notificación vía WebSocket (Supabase Realtime).
-> 
-> 4.  **Generación de Contenido para `README.md`:**
->     Añade la sección **FASE 6: Arquitectura de Alto Nivel** al documento maestro.
-> 
-> **Acciones de Memoria:**
-> * Registra en `prompts.md` la ejecución de "Fase 6: Arquitectura de Sistemas".
-> 
-> **Restricciones:**
-> * Mantén la arquitectura realista para un TFM (no sobre-ingeniería con Kubernetes si no es necesario).
-> * Usa servicios gestionados donde sea posible (Supabase) para simplificar la infraestructura.
-> 
-> **Output esperado:**
-> Confirma la actualización y muestra el contenido markdown completo generado para la FASE 6 en el `README.md`.
-
-**Resumen de la Respuesta/Acción:**
-Actualización README.md con FASE 6 completa: Arquitectura Cloud-Native con 6 capas (Client Layer React/Three.js, API Layer FastAPI, Worker Layer Celery+LangGraph, Data Layer Supabase PostgreSQL+Auth+Realtime, Storage Layer S3 buckets quarantine/raw/processed, External Services OpenAI). Diagrama C4 Container con comunicación async (API→Redis Queue→Celery Workers→S3→DB→WebSocket→Frontend). Patrones arquitectónicos: Event-Driven para uploads pesados, Presigned URLs upload directo, Background Jobs con Celery/Redis, Event Sourcing inmutable, WebSockets notificaciones real-time. Flujo crítico Ingesta documentado: 8 pasos desde presigned URL hasta WebSocket notification. Decisiones técnicas: Railway deploy FastAPI, Vercel frontend, Supabase managed services, S3-compatible storage. Diagramas deployment e infrastructure. Registro prompt #018 en prompts.md. FASE 6 completada sin avanzar a Fase 7 (C4 profundo).
-
----
-## 019 - FASE 7: Diseño en Profundidad C4 del Agente "The Librarian"
+## 020 - FASE 7: Diseño en Profundidad C4 del Agente "The Librarian"
 **Fecha:** 2026-01-28 10:35
 **Prompt Original:**
 > # Prompt: FASE 7 - Diseño en Profundidad C4 (The Librarian Agent)
@@ -1049,7 +991,7 @@ Diseño arquitectónico C4 Level 3 del Agente "The Librarian" (validación intel
 
 ---
 
-## 020 - FASE 8: Planificación Técnica y Estructura de Repositorio
+## 021 - FASE 8: Planificación Técnica y Estructura de Repositorio
 **Fecha:** 2026-01-28 17:20
 **Prompt Original:**
 > # Prompt: FASE 8 - Planificación Técnica y Estructura de Repositorio

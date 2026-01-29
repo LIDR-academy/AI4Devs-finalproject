@@ -244,11 +244,15 @@ def nurbs_to_arcs(curve, tolerance=0.01):
 
 def fit_arc_segment(points, tolerance):
     """
+    """
     Optimization problem:
     Minimize: number of points NOT included
-    Subject to: max(chord_error) < tolerance
+    Subject to: 
+      - max(chord_error) < tolerance
+      - radius > 1e-6 (prevent singularities)
+      - arc_angle < 180 degrees (stability)
     """
-    # Use scipy.optimize or genetic algorithm
+    # Use scipy.optimize with constraints or robust least-squares
     pass
 ```
 

@@ -110,7 +110,7 @@
 
 #### Flujo de Validación (Vista de Usuario)
 
-```
+```text
 1. ARQUITECTO SUBE ARCHIVO
    ↓
 2. THE LIBRARIAN INSPECCIONA
@@ -247,7 +247,7 @@
 
 **Estado Default (Con Datos)**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  SF-PM    Dashboard | Upload | Piezas         María Pérez (BIM) [Logout]   │
 ├──────────────┬──────────────────────────────────────────────────────────────┤
@@ -286,7 +286,7 @@
 
 **Estado Empty (Sin Piezas)**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  SF-PM    Dashboard | Upload | Piezas    María Pérez [Logout]  │
 ├──────────────┬──────────────────────────────────────────────────┤
@@ -310,7 +310,7 @@
 
 **Estado Default (Listo para Subir)**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  SF-PM    Dashboard | Upload | Piezas           Jordi Vila (Arq.) [Logout] │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -324,7 +324,7 @@
 │   │                 o haz click para seleccionar                  │        │
 │   │                                                               │        │
 │   │          Formatos soportados: .3dm (Rhino 5, 6, 7, 8)        │        │
-│   │                  Tamaño máximo: 2GB                           │        │
+│   │                  Tamaño máximo: 500MB                        │        │
 │   │                                                               │        │
 │   └───────────────────────────────────────────────────────────────┘        │
 │                                                                             │
@@ -340,7 +340,7 @@
 
 **Estado Durante Upload (Procesando)**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  SF-PM    Dashboard | Upload | Piezas           Jordi Vila (Arq.) [Logout] │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -367,7 +367,7 @@
 
 **Estado Éxito / Error**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                      ✅ Upload Completado                                    │
 │                                                                             │
@@ -397,7 +397,7 @@
 
 **Estado Default (Pieza Seleccionada)**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  SF-PM    Dashboard | Upload | Piezas          Enric Soler (Taller) [Out]  │
 ├──────────────┬──────────────────────────────────────────────────────────────┤
@@ -440,7 +440,7 @@
 
 **Estado Empty (Sin Pieza Seleccionada)**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  SF-PM    Dashboard | Upload | Piezas     Enric Soler [Logout] │
 ├──────────────┬──────────────────────────────────────────────────┤
@@ -468,7 +468,7 @@ Sistema de carga de archivos Rhino (.3dm) con drag & drop, validación de format
 
 ✅ **Performance:**
 - Procesa 200 piezas en <30 segundos (archivo de ~150MB)
-- Soporta archivos de hasta 2GB
+- Soporta archivos de hasta 500MB
 - Muestra progreso actualizado cada 1 segundo
 
 ✅ **UX:**
@@ -661,7 +661,7 @@ Visualización interactiva de geometría de piezas en navegador usando Three.js,
 
 #### US-003: Upload cancelado por usuario (Edge Case)
 
-**Given** el arquitecto inicia upload de un archivo de 2GB  
+**Given** el arquitecto inicia upload de un archivo de 500MB  
 **And** el procesamiento está al 40%  
 **When** hace click en "Cancelar Upload"  
 **Then** el sistema detiene el procesamiento inmediatamente  
@@ -828,7 +828,7 @@ Visualización interactiva de geometría de piezas en navegador usando Three.js,
 #### US-013: Login exitoso con credenciales válidas (Happy Path)
 
 **Given** usuario visita la página de login  
-**When** ingresa email "maria@sagradafamilia.cat" y password correcto  
+**When** ingresa email "`maria@sagradafamilia.cat`" y password correcto  
 **Then** el sistema valida credenciales en <2s  
 **And** genera JWT token  
 **And** redirige al Dashboard  
@@ -843,7 +843,7 @@ Visualización interactiva de geometría de piezas en navegador usando Three.js,
 
 #### US-014: Login fallido con credenciales incorrectas (Error Path)
 
-**Given** usuario ingresa email "test@test.com" con password incorrecto  
+**Given** usuario ingresa email "`test@test.com`" con password incorrecto  
 **When** hace click en "Iniciar Sesión"  
 **Then** muestra error: "❌ Email o contraseña incorrectos"  
 **And** NO genera token  

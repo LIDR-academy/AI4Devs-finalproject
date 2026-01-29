@@ -19,6 +19,8 @@ Si el archivo ya existe:
 1. Lee la última entrada para identificar el último ID (ej. 001).
 2. Calcula el siguiente ID incremental (ej. 002).
 3. Añade la nueva entrada al final del archivo siguiendo **estrictamente** este formato:
+   - **IMPORTANTE:** Verifica que el ID calculado no exista ya en el archivo. Si existe (colisión), incrementa el ID hasta encontrar uno libre.
+   - Alternativamente, usa un formato basado en timestamp (ej. `YYYYMMDD-HHMM`) si la concurrencia es alta.
 
 ## [ID-INCREMENTAL] - [Título Breve descriptivo]
 **Fecha:** YYYY-MM-DD HH:MM
@@ -45,19 +47,29 @@ Si el archivo ya existe:
 - Si es un cambio de base de datos, sugiere verificar con herramientas visuales o scripts de prueba.
 
 ## 4. PROTOCOLO DE FINALIZACIÓN (DEFINITION OF DONE)
-
-NO marques una tarea como completada hasta haber verificado estos 3 puntos:
-
-1.  **¿Cambió la Arquitectura?**
-    - Si añadiste un nuevo módulo, carpeta o servicio -> Actualiza `memory-bank/systemPatterns.md`.
-    - Si añadiste una librería o dependencia -> Actualiza `memory-bank/techContext.md`.
-
-2.  **¿Tomaste una Decisión Técnica?**
-    - Si elegiste una herramienta, patrón o descartaste una opción -> Regístralo en `memory-bank/decisions.md`.
-
-3.  **¿Cambió el Alcance (Scope)?**
-    - Si lo que construiste difiere de lo planeado originalmente -> Actualiza `memory-bank/projectbrief.md` y `activeContext.md`.
-
-> **Regla:** El código es volátil, el Memory Bank es permanente. Actualiza primero la memoria, luego el código.
+ 
+NO marques una tarea como completada hasta haber ejecutado este checklist de verificación:
+ 
+### 1. Verificación Documental (Crucial)
+Antes de cerrar, verifica que los artifacts reflejan la realidad del código:
+- [ ] **memory-bank/systemPatterns.md**: Actualizado si hubo cambios de arquitectura/módulos.
+- [ ] **memory-bank/techContext.md**: Actualizado si hubo nuevas dependencias.
+- [ ] **memory-bank/decisions.md**: Registro de decisiones técnicas importantes (ADRs).
+- [ ] **memory-bank/projectbrief.md**: Actualizado si cambió el alcance/scope.
+- [ ] **prompts.md**: Todos los prompts complejos registrados.
+ 
+### 2. Proceso de Aprobación
+- **Reviewer Requerido**: Usuario (BIM Manager / Tech Lead).
+- **Flujo**:
+    1. Presentar resumen de cambios (changelog).
+    2. Demostrar cumplimiento de requisitos (screenshots, logs, tests).
+    3. Solicitar confirmación explícita: "¿Das por cerrada esta tarea?".
+ 
+### 3. Consecuencias
+- **Skipping Steps**: Si saltas estos pasos, el PR será rechazado automáticamente por el sistema de CI/CD 
+ o por la revisión humana, requiriendo un rework costoso.
+- **Inconsistencias**: La deuda de documentación se acumula exponencialmente. Limpia antes de salir.
+ 
+> **Regla de Oro:** El código es volátil, el Memory Bank acumulativo y permanente. Actualiza primero la memoria, luego el código.
 
 ---

@@ -1,4 +1,4 @@
-## � FASE 5: Modelo de Datos (Esquema PostgreSQL/Supabase)
+## 🗄️ FASE 5: Modelo de Datos (Esquema PostgreSQL/Supabase)
 
 ### Principios de Diseño
 

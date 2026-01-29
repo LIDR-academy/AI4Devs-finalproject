@@ -32,7 +32,7 @@
 | **Expertise** | PyTorch, 3D DL pipelines | Rhino SDK, C# | Skill mismatch |
 
 **Research Findings**:
-- PointNet trained on **ModelNet40** (9,843 CAD models across 40 categories)[Research]
+- PointNet trained on **ModelNet40** (9,843 CAD models across 40 categories) [Source](http://modelnet.cs.princeton.edu/)
 - Requires data augmentation (rotation, scaling, noise) to generalize
 - **Verdict**: ❌ **"Matar moscas a cañonazos"** (Overkill for TFM)
 
@@ -84,8 +84,8 @@
 | **TFM Viability** | ⭐⭐⭐⭐⭐ | ⭐ |
 
 **Research Findings**:
-- GPT-4 achieves **95% accuracy** on zero-shot text classification[Research]
-- Gemini Pro: **93% accuracy**, faster/cheaper[Research]
+- GPT-4 achieves **95% accuracy** on zero-shot text classification [Paper](https://arxiv.org/abs/2303.08774)
+- Gemini Pro: **93% accuracy**, faster/cheaper [Tech Report](https://storage.googleapis.com/deepmind-media/gemini/gemini_1_report.pdf)
 - **Verdict**: ✅ **Best ROI for development**
 
 ---
