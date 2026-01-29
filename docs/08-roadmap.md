@@ -225,7 +225,7 @@ Permitir que un usuario suba un archivo Rhino (`.3dm`), extraer su metadata (nom
   
   class PartResponse(PartCreate):
       id: UUID
-      status: Literal["uploaded", "validating", "validated", "rejected"]
+      status: Literal["uploaded", "validating", "validated", "rejected", "requires_manual_review"]
       created_at: datetime
   ```
 - [ ] Guardar registro en tabla `parts` de Supabase

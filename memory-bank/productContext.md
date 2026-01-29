@@ -104,8 +104,10 @@ Alineación con estándares internacionales de gestión BIM para proyectos patri
   - FPS en visor 3D: >30fps con 5,000 piezas visibles
 - **Negocio**:
   - Reducción 70% tiempo de búsqueda de información de piezas
-  - Eliminación 100% emails de "¿Dónde está X pieza?"
-  - Trazabilidad completa (0% piezas sin historial)
+  - Reducción 90% emails de "¿Dónde está X pieza?"
+  - 95% cobertura de trazabilidad
+  - *Risks / Assumptions*: Lograr >30fps con 5,000 piezas requiere estrategias avanzadas de LOD/instancing (Three.js) y validación temprana.
+
 
 ---
 
@@ -257,6 +259,10 @@ El desarrollo de SF-PM siguió una metodología estructurada de ingeniería de s
 > 2. **Explicar** en qué fase nos encontramos actualmente
 > 3. **Listar** qué entregables de la fase actual faltan por completar
 > 4. **Sugerir** volver a la fase actual y completarla antes de avanzar
+
+**Mecanismo de Ejecución:**
+Antes de cerrar cada fase, se debe ejecutar una **checklist de revisión humana** obligatoria para confirmar que todos los entregables cumplen con el estándar de calidad.
+
 
 ### Ejemplos de Aplicación
 

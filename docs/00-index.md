@@ -197,7 +197,7 @@ Este proyecto es un TFM académico con datos simulados de la Sagrada Família. E
 
 ## 📞 Contacto
 
-- **Email del Proyecto**: pedro.cortes@example.com
+- **Email del Proyecto**: [Ver repositorio oficial]
 - **LinkedIn**: [linkedin.com/in/pedrocortes](https://linkedin.com/in/pedrocortes)
 - **GitHub**: [@pedrocortesark](https://github.com/pedrocortesark)
 

@@ -1004,7 +1004,7 @@ Extiende `auth.users` de Supabase con información de negocio:
 
 **Base URL**: `https://api.sagrada-familia-pm.app/api/v1`
 
-Para la especificación completa de la API con todos los endpoints, modelos y ejemplos detallados, consultar el archivo de especificación OpenAPI en `docs/openapi-spec.yaml` y la documentación interactiva disponible en `http://localhost:8000/docs` (Swagger UI).
+Para la especificación completa de la API con todos los endpoints, modelos y ejemplos detallados, consultar la documentación interactiva disponible en `http://localhost:8000/docs` (Swagger UI) una vez desplegado el backend.
 
 Los 3 endpoints principales del sistema son:
 

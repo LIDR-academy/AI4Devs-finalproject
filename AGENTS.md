@@ -19,8 +19,10 @@ Si el archivo ya existe:
 1. Lee la última entrada para identificar el último ID (ej. 001).
 2. Calcula el siguiente ID incremental (ej. 002).
 3. Añade la nueva entrada al final del archivo siguiendo **estrictamente** este formato:
-   - **IMPORTANTE:** Verifica que el ID calculado no exista ya en el archivo. Si existe (colisión), incrementa el ID hasta encontrar uno libre.
-   - Alternativamente, usa un formato basado en timestamp (ej. `YYYYMMDD-HHMM`) si la concurrencia es alta.
+   - **IMPORTANTE:** Este método es vulnerable a condiciones de carrera en entornos multi-agente.
+   - **SOLUCIÓN RECOMENDADA:** Implementar bloqueo de archivos (file-locking) o usar un mecanismo de asignación centralizada de IDs.
+   - **FORMATO ALTERNATIVO:** Usa un ID monotónico único basado en fecha/hora para evitar colisiones: `YYYYMMDD-HHMM-SS`.
+
 
 ## [ID-INCREMENTAL] - [Título Breve descriptivo]
 **Fecha:** YYYY-MM-DD HH:MM
@@ -39,6 +41,11 @@ Si el archivo ya existe:
 2. **Logging:** Genera la entrada en `prompts.md` (como se define en la sección 1).
 3. **Planificación:** Crea una lista de tareas (To-Do List) detallada de lo que vas a hacer.
 4. **Confirmación:** Detente y pregunta: *"¿Procedo con este plan?"*.
+   - **Checklist de Revisión:**
+     - [ ] ¿Están identificados todos los archivos afectados?
+     - [ ] ¿Son claras las dependencias/prerrequisitos?
+     - [ ] ¿El alcance es adecuado para una sola sesión?
+
 5. **Ejecución:** Solo tras recibir un "Sí", procede a generar el código o realizar los cambios.
 
 ## 3. TESTING Y VALIDACIÓN

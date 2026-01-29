@@ -581,7 +581,8 @@ Sistema de autenticación y control de acceso con 2 roles: Admin (BIM Manager) y
 - Interfaces adaptan según rol (Taller no ve botón "Eliminar Pieza")
 
 ✅ **Data Integrity:**
-- Roles almacenados en tabla `users` con campo `role` enum
+- Roles almacenados en tabla `profiles` con campo `role` enum
+
 - Row Level Security (RLS) en Supabase activo
 - API endpoints validan rol en backend (no solo frontend)
 - Intento de acción no autorizada devuelve 403 Forbidden
@@ -633,8 +634,9 @@ Visualización interactiva de geometría de piezas en navegador usando Three.js,
 **Criterios de Aceptación:**
 ✅ Tiempo total: <30s para 200 piezas  
 ✅ Progreso visual claro (spinner + %)  
-✅ 200 piezas insertadas en tabla `parts` con estado "Diseñada"  
+✅ 200 piezas insertadas en tabla `blocks` con estado "uploaded"  
 ✅ Evento registrado en `events`: user_id, timestamp, "upload_success", archivo_nombre
+
 
 ---
 
@@ -858,17 +860,14 @@ Visualización interactiva de geometría de piezas en navegador usando Three.js,
 
 ## 🚀 Próximos Pasos
 
-**Estado Actual:** FASE 2 (Definición del Producto) - 80% Completado
+**Estado Actual:** FASE 2 (Definición del Producto) - 100% Completado
 
 **Bloqueadores para Completar FASE 2:**
-- ❌ Wireframes conceptuales de interfaces (Dashboard, Upload, Visor 3D)
-- ❌ Roadmap detallado con criterios de aceptación técnicos para cada feature
-- ❌ User Stories con formato Given/When/Then
+- Ninguno. Todos los entregables han sido completados.
 
-**Una vez completada FASE 2, se podrá avanzar a:**
-- FASE 3: Modelo de Negocio (Lean Canvas, ROI, Escalabilidad)
-- FASE 4: Casos de Uso Críticos (Diagramas de secuencia)
-- FASE 5: Modelo de Datos (Esquema de base de datos)
+**Próximos Pasos:**
+- Proceder a FASE 8: Implementación del MVP.
+
 
 ---
 

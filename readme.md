@@ -56,6 +56,12 @@ CAD:       rhino3dm + glTF/GLB conversion
 
 ## 🚀 Quick Start
 
+### Prerrequisitos
+
+- Node.js >= 18.0.0
+- Python >= 3.11
+- Librerías de sistema para `rhino3dm` (opcional, si se compila desde fuente)
+
 ### Instalación
 
 ```bash
@@ -68,7 +74,13 @@ cd frontend && npm install
 cd ../backend && pip install -r requirements.txt
 
 # Configurar variables de entorno
+# Configurar variables de entorno
 cp .env.example .env
+# Editar .env con valores reales:
+# SUPABASE_URL=https://xyz.supabase.co
+# SUPABASE_ANON_KEY=eyJ...
+# OPENAI_API_KEY=sk-...
+
 
 # Ejecutar en modo desarrollo
 npm run dev  # Frontend (puerto 3000)
@@ -96,8 +108,8 @@ Datos reales de la Sagrada Família no incluidos por confidencialidad.
 ## 📞 Contacto
 
 - **Documentación**: [`/docs`](./docs/)
-- **Email**: [email@proyecto.com]
-- **GitHub**: [@usuario](https://github.com/usuario)
+- **Email**: [Ver repositorio oficial]
+- **GitHub**: [@pedrocortesark](https://github.com/pedrocortesark)
 
 ---
 

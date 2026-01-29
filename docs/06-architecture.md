@@ -516,7 +516,7 @@ graph TB
     end
     
     subgraph "External APIs"
-        OpenAIService["🧠 OpenAI Platform<br/>- GPT-4 Turbo API<br/>- Rate limit: 10k TPM"]
+        OpenAIService["🧠 OpenAI Platform<br/>- GPT-4 Turbo API<br/>- Rate limit: varies by usage tier"]
     end
     
     subgraph "Monitoring (Opcional)"
