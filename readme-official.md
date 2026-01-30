@@ -27,13 +27,13 @@ Sistema enterprise que transforma archivos CAD estáticos (Rhino .3dm) en un gem
 
 ### **0.4. URL del proyecto:**
 
-https://github.com/pedrocortesark/AI4Devs-finalproject
+[AI4Devs-finalproject](https://github.com/pedrocortesark/AI4Devs-finalproject)
 
 > Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-https://github.com/pedrocortesark/AI4Devs-finalproject
+[AI4Devs-finalproject](https://github.com/pedrocortesark/AI4Devs-finalproject)
 
 > Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
 

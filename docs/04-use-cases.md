@@ -52,8 +52,8 @@ flowchart TD
     CheckGeometry -->|Falla| GenerateGeoReport[Informe: Geometría Corrupta]
     GenerateGeoReport --> ReturnError[❌ Frontend muestra informe]
     
-    CheckGeometry -->|OK| ClassifyParts[The Librarian:<br/>Clasifica Tipologías]
-    ClassifyParts --> EnrichMetadata[Enriquece Metadatos Faltantes]
+    CheckGeometry -->|OK| Classifyblocks[The Librarian:<br/>Clasifica Tipologías]
+    Classifyblocks --> EnrichMetadata[Enriquece Metadatos Faltantes]
     
     EnrichMetadata --> SaveDB[(Guarda en Supabase)]
     SaveDB --> QueueProcessing[Encola Procesamiento 3D<br/>Celery Worker]
@@ -116,13 +116,13 @@ sequenceDiagram
         
         FE->>API: POST /api/upload/complete<br/>{upload_id}
         
-        API->>DB: INSERT INTO parts<br/>(name, tipologia, estado="Validada")
-        DB-->>API: part_id: "uuid-123"
+        API->>DB: INSERT INTO blocks<br/>(name, tipologia, estado="uploaded")
+        DB-->>API: block_id: "uuid-123"
         
-        API->>Queue: enqueue_process_geometry.delay(part_id)
+        API->>Queue: enqueue_process_geometry.delay(block_id)
         Note over Queue: Task ID: task-456
         
-        API-->>FE: 201 Created<br/>{part_id, status: "processing"}
+        API-->>FE: 201 Created<br/>{block_id, status: "processing"}
         FE-->>User: ✅ "Archivo validado. Procesando geometría..."
         
         Queue->>Queue: Extract meshes, Generate .glb
@@ -130,10 +130,10 @@ sequenceDiagram
         Queue->>Storage: PUT /processed/uuid-123.glb
         Storage-->>Queue: 200 OK (url_glb)
         
-        Queue->>DB: UPDATE parts SET url_glb=...<br/>WHERE id=part_id
+        Queue->>DB: UPDATE blocks SET url_glb=...<br/>WHERE id=block_id
         DB-->>Queue: OK
         
-        Queue->>FE: WebSocket: geometry_ready(part_id)
+        Queue->>FE: WebSocket: geometry_ready(block_id)
         FE-->>User: 🔔 "Geometría 3D lista para visualizar"
     end
 ```
@@ -165,9 +165,9 @@ flowchart TD
     CheckAuth -->|Sí| LoadDashboard[GET /api/dashboard]
     
     LoadDashboard --> QueryStats[Query: COUNT piezas<br/>GROUP BY estado]
-    QueryStats --> QueryParts[Query: SELECT * FROM parts<br/>LIMIT 50 OFFSET 0]
+    QueryStats --> Queryblocks[Query: SELECT * FROM blocks<br/>LIMIT 50 OFFSET 0]
     
-    QueryParts --> RenderDashboard[Frontend: Renderiza stats + tabla]
+    Queryblocks --> RenderDashboard[Frontend: Renderiza stats + tabla]
     
     RenderDashboard --> UserAction{Usuario hace...}
     
@@ -180,7 +180,7 @@ flowchart TD
     OpenViewer --> CheckGLB{url_glb<br/>disponible?}
     
     CheckGLB -->|No| ShowBoundingBox[❌ Fallback: Muestra bounding box<br/>+ mensaje "Procesando..."]
-    ShowBoundingBox --> PollStatus[Poll cada 5s:<br/>GET /api/parts/:id/status]
+    ShowBoundingBox --> PollStatus[Poll cada 5s:<br/>GET /api/blocks/:id/status]
     PollStatus --> CheckGLB
     
     CheckGLB -->|Sí| LoadGLB[Fetch .glb desde S3]
@@ -209,25 +209,25 @@ sequenceDiagram
     User->>FE: Abre /dashboard
     FE->>API: GET /api/dashboard<br/>(headers: {Authorization: "Bearer jwt"})
     
-    API->>DB: SELECT COUNT(*), estado<br/>FROM parts GROUP BY estado
+    API->>DB: SELECT COUNT(*), estado<br/>FROM blocks GROUP BY estado
     DB-->>API: [{estado: "Validada", count: 8500}, ...]
     
-    API->>DB: SELECT * FROM parts<br/>ORDER BY created_at DESC<br/>LIMIT 50
-    DB-->>API: [50 parts con metadatos]
+    API->>DB: SELECT * FROM blocks<br/>ORDER BY created_at DESC<br/>LIMIT 50
+    DB-->>API: [50 blocks con metadatos]
     
-    API-->>FE: 200 OK<br/>{stats: {...}, parts: [...]}
+    API-->>FE: 200 OK<br/>{stats: {...}, blocks: [...]}
     FE->>FE: Renderiza stats cards + tabla
     FE-->>User: Dashboard cargado (<2s)
     
     User->>FE: Selecciona filtro "En Fabricación"
-    FE->>API: GET /api/parts?filter=estado:En_Fabricacion
+    FE->>API: GET /api/blocks?filter=estado:En_Fabricacion
     API->>DB: SELECT * WHERE estado='En Fabricación'
-    DB-->>API: [1,234 parts filtradas]
+    DB-->>API: [1,234 blocks filtradas]
     API-->>FE: 200 OK
     FE-->>User: Tabla actualizada + stats recalculadas
     
     User->>FE: Click "Ver en 3D" (pieza: SF-C12-D-001)
-    FE->>API: GET /api/parts/uuid-123
+    FE->>API: GET /api/blocks/uuid-123
     API->>DB: SELECT url_glb, volume, weight<br/>WHERE id='uuid-123'
     
     alt Geometría NO procesada
@@ -237,7 +237,7 @@ sequenceDiagram
         FE-->>User: ⏳ "Geometría en procesamiento"
         
         loop Polling cada 5s
-            FE->>API: GET /api/parts/uuid-123/status
+            FE->>API: GET /api/blocks/uuid-123/status
             API->>DB: SELECT url_glb WHERE id='uuid-123'
             DB-->>API: {url_glb: "https://s3.../uuid-123.glb"}
             API-->>FE: 200 OK {status: "ready"}
@@ -301,9 +301,9 @@ flowchart TD
     UploadFile --> BeginTx[BEGIN TRANSACTION]
     BeginTx --> InsertEvent[(INSERT INTO events:<br/>old_state, new_state,<br/>user_id, timestamp)]
     
-    InsertEvent --> UpdatePart[(UPDATE parts:<br/>SET estado=new_state)]
+    InsertEvent --> UpdateBlock[(UPDATE blocks:<br/>SET estado=new_state)]
     
-    UpdatePart --> CommitTx[COMMIT TRANSACTION]
+    UpdateBlock --> CommitTx[COMMIT TRANSACTION]
     CommitTx --> NotifyUsers[Notifica usuarios afectados<br/>(WebSocket/Email)]
     
     NotifyUsers --> Success[✅ Estado actualizado]
@@ -315,7 +315,7 @@ flowchart TD
     
     style CheckRole fill:#ff6b6b
     style InsertEvent fill:#51cf66
-    style UpdatePart fill:#51cf66
+    style UpdateBlock fill:#51cf66
 ```
 
 ---
@@ -335,12 +335,12 @@ sequenceDiagram
     User->>FE: Cambia estado: "Validada" → "En Fabricación"
     FE->>FE: Añade nota + asigna taller
     
-    FE->>API: PATCH /api/parts/uuid-123/status<br/>(Authorization: Bearer jwt)
+    FE->>API: PATCH /api/blocks/uuid-123/status<br/>(Authorization: Bearer jwt)
     
     API->>Auth: verify_jwt(token)
     Auth->>Auth: Decode payload: {user_id, role: "bim_manager"}
     
-    API->>DB: SELECT role FROM users<br/>WHERE id=user_id
+    API->>DB: SELECT role FROM profiles<br/>WHERE id=profile_id
     DB-->>API: {role: "bim_manager"}
     
     API->>API: check_permission(role, action="update_status")
@@ -349,7 +349,7 @@ sequenceDiagram
         API-->>FE: 403 Forbidden<br/>{error: "No tienes permisos"}
         FE-->>User: ❌ "Acción no autorizada"
     else Usuario tiene permiso
-        API->>DB: SELECT estado FROM parts<br/>WHERE id='uuid-123'
+        API->>DB: SELECT estado FROM blocks<br/>WHERE id='uuid-123'
         DB-->>API: {estado: "Validada"}
         
         API->>API: validate_transition("Validada" → "En Fabricación")
@@ -359,7 +359,7 @@ sequenceDiagram
         API->>DB: INSERT INTO events (part_id, event_type,<br/>old_state, new_state, user_id,<br/>metadata, timestamp)
         DB-->>API: event_id: "evt-789"
         
-        API->>DB: UPDATE parts SET estado='En Fabricación',<br/>taller='Granollers', updated_by=user_id<br/>WHERE id='uuid-123'
+        API->>DB: UPDATE blocks SET estado='En Fabricación',<br/>taller='Granollers', updated_by=user_id<br/>WHERE id='uuid-123'
         DB-->>API: 1 row affected
         
         API->>DB: COMMIT TRANSACTION

@@ -18,7 +18,7 @@
 - **Dashboard en tiempo real**: Ver estado de todas las piezas con filtros rápidos (sector, estado, taller asignado)
 - **Alertas automáticas**: Notificación si pieza crítica está bloqueada >7 días
 - **Reportes ejecutivos**: Generar PDF de progreso mensual para dirección en 2 clicks
-- **Búsqueda avanzada**: "Mostrar piezas de Arco C-12 en estado 'Fabricación' asignadas a Taller Granollers"
+- **Búsqueda avanzada**: "Mostrar piezas de Arco C-12 en estado `in_fabrication` asignadas a Taller Granollers"
 
 **Métricas de Éxito:**
 - Reducir de 3 horas a 10 minutos el tiempo diario de búsqueda de información
@@ -130,7 +130,7 @@
 3. DECISIÓN BINARIA
    
    ✅ ACEPTAR: Archivo cumple todos los estándares
-      → Piezas se ingresan al inventario
+      → Piezas se ingresan al inventario (estado: `uploaded`)
       → Geometría se procesa en segundo plano para visor 3D
       → Arquitecto recibe notificación: "200 piezas aceptadas"
    
@@ -188,8 +188,8 @@
 - Renderizado de 100-1000 piezas simultáneas con buen rendimiento (>30 FPS)
 
 **F5: Actualización de Estado**
-- BIM Manager puede cambiar estado de pieza (Diseñada → Validada → En Fabricación → Completada)
-- Responsable de Taller puede marcar pieza como "Completada" con adjuntar foto
+- BIM Manager puede cambiar estado de pieza (`uploaded` → `validated` → `in_fabrication` → `completed`)
+- Responsable de Taller puede marcar pieza como `completed` con adjuntar foto
 
 **F6: Control de Acceso Básico (RBAC)**
 - 2 roles: Admin (BIM Manager, acceso total) y Viewer (Taller, solo lectura + actualización de estado)
@@ -260,13 +260,13 @@
 │ Tipología:   │  📋 Lista de Piezas                                          │
 │ [Todas    ▼] │  ┌─────────────┬──────────┬────────┬───────────┬──────┐   │
 │              │  │ Nombre      │ Estado   │ Tipo   │ Taller    │ Fec. │   │
-│ Taller:      │  ├─────────────┼──────────┼────────┼───────────┼──────┤   │
-│ [Todos    ▼] │  │ SF-C12-D-001│ En Fab.  │ Piedra │ Granollers│ 2d   │   │
-│              │  │ SF-C12-D-002│ Validada │ Piedra │ Barcelona │ 1d   │   │
-│ [🔍 Buscar]  │  │ SF-C12-D-003│ Diseñada │ Hormig.│ -         │ Hoy  │   │
-│              │  │ SF-C12-D-004│ Complet. │ Piedra │ Manresa   │ 5d   │   │
-│              │  │ ...         │          │        │           │      │   │
-│              │  └─────────────┴──────────┴────────┴───────────┴──────┘   │
+│ Taller:      │  ├─────────────┼──────────────┼────────┼───────────┼──────┤   │
+│ [Todos    ▼] │  │ SF-C12-D-001│ in_fabricat. │ Piedra │ Granollers│ 2d   │   │
+│              │  │ SF-C12-D-002│ validated    │ Piedra │ Barcelona │ 1d   │   │
+│ [🔍 Buscar]  │  │ SF-C12-D-003│ uploaded     │ Hormig.│ -         │ Hoy  │   │
+│              │  │ SF-C12-D-004│ completed    │ Piedra │ Manresa   │ 5d   │   │
+│              │  │ ...         │              │        │           │      │   │
+│              │  └─────────────┴──────────────┴────────┴───────────┴──────┘   │
 │              │  [← Anterior]  Página 1 de 252  [Siguiente →]              │
 └──────────────┴──────────────────────────────────────────────────────────────┘
 ```
@@ -539,7 +539,7 @@ Interfaz principal con tabla de todas las piezas, stats cards, filtros rápidos 
 #### P0.4: Actualización de Estado
 
 **Descripción:**
-Interface para cambiar el estado de una pieza (Diseñada → Validada → En Fabricación → Completada) con control de acceso por roles.
+Interface para cambiar el estado de una pieza (`uploaded` → `validated` → `in_fabrication` → `completed`) con control de acceso por roles.
 
 **Criterios de Aceptación:**
 
@@ -576,8 +576,9 @@ Sistema de autenticación y control de acceso con 2 roles: Admin (BIM Manager) y
 ✅ **UX:**
 - Pantalla de login con email/password
 - Mensaje de error claro si credenciales incorrectas
-- Sesión persiste tras cerrar navegador (JWT en localStorage)
-- Logout limpia sesión completamente
+- Sesión gestionada en memoria vía AuthProvider (no almacenar JWT en localStorage)
+- Persistencia segura mediante HttpOnly Refresh Cookies
+- Logout limpia sesión completamente (borra tokens en memoria y cookies)
 - Interfaces adaptan según rol (Taller no ve botón "Eliminar Pieza")
 
 ✅ **Data Integrity:**
@@ -634,7 +635,7 @@ Visualización interactiva de geometría de piezas en navegador usando Three.js,
 **Criterios de Aceptación:**
 ✅ Tiempo total: <30s para 200 piezas  
 ✅ Progreso visual claro (spinner + %)  
-✅ 200 piezas insertadas en tabla `blocks` con estado "uploaded"  
+✅ 200 piezas insertadas en tabla `blocks` con estado `uploaded`  
 ✅ Evento registrado en `events`: user_id, timestamp, "upload_success", archivo_nombre
 
 
@@ -735,7 +736,7 @@ Visualización interactiva de geometría de piezas en navegador usando Three.js,
 **And** añade nota: "Prioridad alta para Q1"  
 **Then** el sistema actualiza estado en <1s  
 **And** muestra notificación: "✅ Estado actualizado"  
-**And** registra evento en tabla `events`: old_state="Validada", new_state="En Fabricación"  
+**And** registra evento en tabla `events`: old_state="validated", new_state="in_fabrication"  
 **And** Dashboard refleja cambio inmediatamente
 
 **Criterios de Aceptación:**
@@ -768,7 +769,7 @@ Visualización interactiva de geometría de piezas en navegador usando Three.js,
 **And** adjunta foto de control de calidad "qc_photo.jpg"  
 **And** añade nota: "Terminada según especificaciones"  
 **Then** el sistema sube foto a S3  
-**And** actualiza estado a "Completada"  
+**And** actualiza estado a `completed`  
 **And** muestra notificación: "✅ Pieza marcada como Completada"  
 **And** María (BIM Manager) recibe notificación en Dashboard
 

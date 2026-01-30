@@ -12,7 +12,7 @@
 
 **Sagrada Família Parts Manager (SF-PM)** es un sistema enterprise que transforma archivos CAD estáticos (Rhino .3dm) en un **gemelo digital activo** para la gestión integral del inventario de decenas de miles de piezas únicas de la Sagrada Família de Barcelona.
 
-El sistema desacopla metadata crítica de geometría pesada (archivos de hasta 2GB), permitiendo acceso instantáneo, validación automática mediante agentes IA ("The Librarian"), y visualización 3D web de alto rendimiento. La Oficina Técnica obtiene una **Single Source of Truth** para el ciclo de vida completo de cada pieza (Diseñada → Validada → En Fabricación → Completada → Instalada).
+El sistema desacopla metadata crítica de geometría pesada (archivos de hasta 500MB), permitiendo acceso instantáneo, validación automática mediante agentes IA ("The Librarian"), y visualización 3D web de alto rendimiento. La Oficina Técnica obtiene una **Single Source of Truth** para el ciclo de vida completo de cada pieza (Diseñada → Validada → En Fabricación → Completada → Instalada).
 
 ### 🎯 Problemas que Resuelve
 

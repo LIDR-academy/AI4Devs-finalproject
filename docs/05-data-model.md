@@ -66,6 +66,7 @@ erDiagram
         text name
         text email
         text role "ENUM: architect, bim_manager, workshop, director"
+        uuid workshop_id FK "workshops.id, NULL if not workshop"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -156,6 +157,7 @@ erDiagram
 | `name` | `text` | NOT NULL | Nombre completo (ej: "María Pérez") |
 | `email` | `text` | NOT NULL, UNIQUE | Email corporativo |
 | `role` | `text` | NOT NULL, CHECK (role IN ('architect', 'bim_manager', 'workshop', 'director')) | Rol para RBAC |
+| `workshop_id` | `uuid` | FOREIGN KEY `workshops(id)`, NULL | Taller asignado (solo para rol 'workshop') |
 | `created_at` | `timestamptz` | NOT NULL, DEFAULT now() | Fecha de creación |
 | `updated_at` | `timestamptz` | NOT NULL, DEFAULT now() | Última actualización |
 
@@ -384,10 +386,10 @@ CREATE POLICY "Workshops read assigned blocks"
 ON blocks FOR SELECT
 TO authenticated
 USING (
-  workshop_id IN (
-    SELECT workshops.id FROM workshops
-    JOIN profiles ON profiles.user_id = auth.uid()
-    WHERE profiles.role = 'workshop'
+  workshop_id = (
+    SELECT p.workshop_id FROM profiles p
+    WHERE p.user_id = auth.uid()
+    AND p.role = 'workshop'
   )
   OR
   EXISTS (
@@ -402,17 +404,17 @@ CREATE POLICY "Workshops update assigned blocks"
 ON blocks FOR UPDATE
 TO authenticated
 USING (
-  workshop_id IN (
-    SELECT workshops.id FROM workshops
-    JOIN profiles ON profiles.user_id = auth.uid()
-    WHERE profiles.role = 'workshop'
+  workshop_id = (
+    SELECT p.workshop_id FROM profiles p
+    WHERE p.user_id = auth.uid()
+    AND p.role = 'workshop'
   )
 )
 WITH CHECK (
-  workshop_id IN (
-    SELECT workshops.id FROM workshops
-    JOIN profiles ON profiles.user_id = auth.uid()
-    WHERE profiles.role = 'workshop'
+  workshop_id = (
+    SELECT p.workshop_id FROM profiles p
+    WHERE p.user_id = auth.uid()
+    AND p.role = 'workshop'
   )
 );
 
