@@ -4,6 +4,7 @@ import jwt from '@fastify/jwt';
 import { config } from './shared/config';
 import { errorHandler } from './shared/errors/error-handler';
 import { authRoutes } from './modules/auth/auth.routes';
+import { userRoutes } from './modules/users/user.routes';
 
 const fastify = Fastify({
     logger: {
@@ -22,6 +23,7 @@ fastify.register(jwt, {
 
 // Register routes
 fastify.register(authRoutes, { prefix: '/api/v1/auth' });
+fastify.register(userRoutes, { prefix: '/api/v1/auth' });
 
 // Health check endpoint
 fastify.get('/api/v1/health', async () => {
