@@ -207,14 +207,14 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Infrastructure Adapter Tasks
 
-- [ ] T030 [P] Implement MediaCatalogAdapter in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/MediaCatalogAdapter.java`
+- [X] T030 [P] Implement MediaCatalogAdapter in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/MediaCatalogAdapter.java`
   - **Criteria**: Implements MediaCatalogPort
   - **Criteria**: Uses Spring RestClient to call media catalog service
   - **Criteria**: Maps external DTOs to domain types
   - **Criteria**: Integration tests with WireMock (no real services)
   - **Dependencies**: T021
 
-- [ ] T031 [P] Implement TextGenerationAiAdapter in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/TextGenerationAiAdapter.java`
+- [X] T031 [P] Implement TextGenerationAiAdapter in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/TextGenerationAiAdapter.java`
   - **Criteria**: Implements TextGenerationPort
   - **Criteria**: Uses Spring RestClient to call AI text service
   - **Criteria**: Error mapping: timeout → HTTP 503, rate limit → 429
@@ -222,7 +222,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Integration tests with WireMock (mock AI service)
   - **Dependencies**: T023
 
-- [ ] T032 [P] Implement ImageGenerationAiAdapter in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/ImageGenerationAiAdapter.java`
+- [X] T032 [P] Implement ImageGenerationAiAdapter in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/ImageGenerationAiAdapter.java`
   - **Criteria**: Implements ImageGenerationPort
   - **Criteria**: Uses Spring RestClient to call AI image service
   - **Criteria**: Error mapping: timeout → HTTP 503, rate limit → 429
@@ -230,7 +230,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Integration tests with WireMock (mock AI service)
   - **Dependencies**: T025
 
-- [ ] T033 [P] Create AI request/response mappers in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/mapper/`
+- [X] T033 [P] Create AI request/response mappers in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/mapper/`
   - **Files**: AiTextMapper.java, AiImageMapper.java
   - **Criteria**: Maps domain types to AI service request formats
   - **Criteria**: Maps AI service responses to domain types
