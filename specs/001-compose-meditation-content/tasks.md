@@ -170,7 +170,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Application Service Tasks
 
-- [ ] T026 Implement ComposeContentService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/ComposeContentService.java`
+- [X] T026 Implement ComposeContentService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/ComposeContentService.java`
   - **Criteria**: Implements ComposeContentUseCase
   - **Criteria**: Orchestrates domain objects and out ports
   - **Criteria**: No business logic (only orchestration)
@@ -178,12 +178,12 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Unit tests with mocked ports
   - **Dependencies**: T020, T021
 
-- [ ] T027 [P] Create TextLengthValidator in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/validator/TextLengthValidator.java`
+- [X] T027 [P] Create TextLengthValidator in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/validator/TextLengthValidator.java`
   - **Criteria**: Validates text length (max 10,000 characters based on edge cases)
   - **Criteria**: Returns validation result (no exceptions for business validation)
   - **Dependencies**: T015
 
-- [ ] T028 Implement GenerateTextService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateTextService.java`
+- [X] T028 Implement GenerateTextService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateTextService.java`
   - **Criteria**: Implements GenerateTextUseCase
   - **Criteria**: Orchestrates TextGenerationPort calls (unified for generation and enhancement)
   - **Criteria**: No business logic
@@ -191,7 +191,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Unit tests with mocked TextGenerationPort
   - **Dependencies**: T022, T023
 
-- [ ] T029 Implement GenerateImageService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateImageService.java`
+- [X] T029 Implement GenerateImageService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateImageService.java`
   - **Criteria**: Implements GenerateImageUseCase
   - **Criteria**: Orchestrates ImageGenerationPort calls
   - **Criteria**: No business logic
