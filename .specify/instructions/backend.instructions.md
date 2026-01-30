@@ -26,6 +26,12 @@ Applies to all backend tasks involving Java 21, Spring Boot, Hexagonal Architect
 - No Spring annotations
 - No infrastructure types
 - Only business rules: entities, VOs, ports
+- **Java 21 Records obligatorios** (ver `java21-best-practices.md`):
+  - Value Objects → `record` con validación en compact constructor
+  - Entities → `record` con API inmutable (`withX()` methods)
+  - IDs → `UUID`, nunca `String`
+  - Timestamps → `Clock` inyectado, nunca `Instant.now()`
+  - Campos nullable → accessors `Optional` (`xOpt()`)
 
 ## 3.2 Application
 - Use cases orchestrate domain

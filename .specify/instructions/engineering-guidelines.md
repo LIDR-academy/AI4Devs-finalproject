@@ -47,6 +47,12 @@ Normas de ingeniería **estables** para mantener coherencia de diseño, naming, 
 - Dominio **sin** Spring ni tipos de infraestructura.
 - Métodos pequeños; una abstracción por función.
 - Null‑safety: `Optional` donde aplique; validaciones en dominio.
+- **Ver `java21-best-practices.md`** para patrones obligatorios:
+  - Records para Value Objects y Entities
+  - UUID para identificadores (no String)
+  - Clock injection para timestamps (no Instant.now())
+  - API inmutable con métodos `withX()`
+  - Optional accessors para campos nullable
 
 ### Frontend
 - React 18 + TS estricto (`strict: true`).

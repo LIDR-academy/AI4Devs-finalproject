@@ -17,7 +17,8 @@ Copilot opera en **modo estricto** y debe aplicar, sin reinterpretar, las normas
 2. `.specify/memory/constitution.md`
 3. `delivery-playbook-backend.md` / `delivery-playbook-frontend.md`
 4. `engineering-guidelines.md`
-5. `hexagonal-architecture-guide.md` y `testing.instructions.md`
+5. `java21-best-practices.md` (Records, UUID, Clock, inmutabilidad)
+6. `hexagonal-architecture-guide.md` y `testing.instructions.md`
 
 Este archivo solo define **cómo** Copilot usa esas normas; no redefine arquitectura ni pipeline.[file:2][file:3][file:4][file:5][file:7][file:8]
 
@@ -31,10 +32,11 @@ Copilot debe respetar el mismo orden que la Constitución:[file:2]
 2. Constitución
 3. Delivery Playbooks backend/frontend
 4. Engineering Guidelines
-5. Hexagonal Architecture Guide
-6. Testing Instructions
-7. ESTE archivo (`copilot-instructions.md`)
-8. Frameworks (Spring, React, etc.)
+5. **Java 21 Best Practices** (`java21-best-practices.md`)
+6. Hexagonal Architecture Guide
+7. Testing Instructions
+8. ESTE archivo (`copilot-instructions.md`)
+9. Frameworks (Spring, React, etc.)
 
 Copilot NO puede contradecir ninguna fuente de nivel superior.
 
