@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import { config } from './shared/config';
 import { errorHandler } from './shared/errors/error-handler';
+import { authRoutes } from './modules/auth/auth.routes';
 
 const fastify = Fastify({
     logger: {
@@ -18,6 +19,9 @@ fastify.register(cors, {
 fastify.register(jwt, {
     secret: config.jwtSecret,
 });
+
+// Register routes
+fastify.register(authRoutes, { prefix: '/api/v1/auth' });
 
 // Health check endpoint
 fastify.get('/api/v1/health', async () => {
