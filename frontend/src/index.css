@@ -1,0 +1,332 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+#root {
+  max-width: 1280px;
+  width: 100%;
+}
+
+.meditation-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.meditation-builder__header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.meditation-builder__header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.meditation-builder__content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.meditation-builder__left,
+.meditation-builder__right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #333;
+}
+
+.card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Text Editor */
+.text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.text-editor__textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: white;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.text-editor__textarea:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.text-editor__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.text-editor__char-count--warning {
+  color: #ff6b6b;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn--primary {
+  background: #646cff;
+  color: white;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: #535bf2;
+}
+
+.btn--secondary {
+  background: #333;
+  color: white;
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: #444;
+}
+
+.btn--danger {
+  background: #ff4757;
+  color: white;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #ff3344;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--loading {
+  position: relative;
+}
+
+.btn--loading::after {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Output Type Indicator */
+.output-type-indicator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.output-type-indicator--podcast {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.output-type-indicator--video {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.output-type-indicator__icon {
+  font-size: 1.5rem;
+}
+
+.output-type-indicator__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.output-type-indicator__label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.output-type-indicator__type {
+  font-size: 1.25rem;
+}
+
+/* Music Selector */
+.music-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.music-selector__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.music-selector__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #2a2a2a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.music-selector__item:hover {
+  border-color: #646cff;
+}
+
+.music-selector__item--selected {
+  border-color: #646cff;
+  background: rgba(100, 108, 255, 0.1);
+}
+
+.music-selector__item-name {
+  flex: 1;
+}
+
+/* Music Preview */
+.music-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #2a2a2a;
+  border-radius: 6px;
+}
+
+.music-preview__info {
+  flex: 1;
+}
+
+.music-preview__name {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.music-preview__status {
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.music-preview--disabled {
+  opacity: 0.5;
+}
+
+/* Image Preview */
+.image-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.image-preview__container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #2a2a2a;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-preview__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-preview__placeholder {
+  color: #666;
+  text-align: center;
+}
+
+.image-preview__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Generate Buttons */
+.generate-btn-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .meditation-builder__content {
+    grid-template-columns: 1fr;
+  }
+}

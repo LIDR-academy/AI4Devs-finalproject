@@ -315,14 +315,14 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Frontend API Client Tasks
 
-- [ ] T038 Generate OpenAPI client in `/frontend/src/api/` using openapi-generator
+- [X] T038 Generate OpenAPI client in `/frontend/src/api/` using openapi-generator
   - **Criteria**: Client auto-generated from `/backend/src/main/resources/openapi/meditationbuilder/compose-content.yaml`
   - **Criteria**: TypeScript types generated
   - **Dependencies**: T013
 
 ### Frontend State Management Tasks
 
-- [ ] T039 [P] Create composerStore (Zustand) in `/frontend/src/state/composerStore.ts`
+- [X] T039 [P] Create composerStore (Zustand) in `/frontend/src/state/composerStore.ts`
   - **Criteria**: UI state: textContent, selectedMusic, selectedImage, outputType
   - **Criteria**: Actions: setText, setMusic, setImage, clearImage, setAiGeneratedImage
   - **Criteria**: NO server state (managed by React Query)
@@ -330,47 +330,47 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Frontend Component Tasks
 
-- [ ] T040 [P] Create TextEditor component in `/frontend/src/components/TextEditor.tsx`
+- [X] T040 [P] Create TextEditor component in `/frontend/src/components/TextEditor.tsx`
   - **Criteria**: Controlled textarea for meditation text
   - **Criteria**: Preserves text exactly as typed (mirrors domain invariant)
   - **Criteria**: Character count display (max 10,000)
   - **Criteria**: Unit tests (Jest/RTL) verify text preservation
   - **Dependencies**: T039
 
-- [ ] T041 [P] Create OutputTypeIndicator component in `/frontend/src/components/OutputTypeIndicator.tsx`
+- [X] T041 [P] Create OutputTypeIndicator component in `/frontend/src/components/OutputTypeIndicator.tsx`
   - **Criteria**: Displays "Generate Podcast" when no image selected
   - **Criteria**: Displays "Generate Video" when image selected (manual or AI-generated)
   - **Criteria**: Updates immediately on image add/generate/remove (< 0.5s per SC-015)
   - **Criteria**: Unit tests verify indicator logic
   - **Dependencies**: T039
 
-- [ ] T042 [P] Create MusicSelector component in `/frontend/src/components/MusicSelector.tsx`
+- [X] T042 [P] Create MusicSelector component in `/frontend/src/components/MusicSelector.tsx`
   - **Criteria**: Displays music selection interface
   - **Criteria**: Integrates with composerStore
   - **Dependencies**: T039
 
-- [ ] T043 [P] Create MusicPreview component in `/frontend/src/components/MusicPreview.tsx`
+- [X] T043 [P] Create MusicPreview component in `/frontend/src/components/MusicPreview.tsx`
   - **Criteria**: Audio player with play/pause controls
   - **Criteria**: Preview starts within 2 seconds (SC-006)
   - **Criteria**: Disabled/hidden when no music selected
   - **Criteria**: Unit tests verify playback controls
   - **Dependencies**: T042
 
-- [ ] T044 [P] Create ImagePreview component in `/frontend/src/components/ImagePreview.tsx`
+- [X] T044 [P] Create ImagePreview component in `/frontend/src/components/ImagePreview.tsx`
   - **Criteria**: Displays selected or AI-generated image clearly
   - **Criteria**: Preview displays within 1 second (SC-007)
   - **Criteria**: Disabled/hidden when no image present
   - **Criteria**: Unit tests verify display logic
   - **Dependencies**: T039
 
-- [ ] T045 [P] Create GenerateTextButton component in `/frontend/src/components/GenerateTextButton.tsx`
+- [X] T045 [P] Create GenerateTextButton component in `/frontend/src/components/GenerateTextButton.tsx`
   - **Criteria**: Button disabled during generation (FR-014)
   - **Criteria**: Shows loading indicator during AI text generation
   - **Criteria**: Works with empty field, keywords, or existing content (unified)
   - **Criteria**: Unit tests verify disabled state during loading
   - **Dependencies**: T039
 
-- [ ] T046 [P] Create GenerateImageButton component in `/frontend/src/components/GenerateImageButton.tsx`
+- [X] T046 [P] Create GenerateImageButton component in `/frontend/src/components/GenerateImageButton.tsx`
   - **Criteria**: Button disabled during generation (FR-014)
   - **Criteria**: Shows loading indicator during AI image generation
   - **Criteria**: Only enabled when no image is selected
@@ -378,7 +378,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Unit tests verify disabled state during loading
   - **Dependencies**: T039
 
-- [ ] T047 Create MeditationBuilderPage in `/frontend/src/pages/MeditationBuilderPage.tsx`
+- [X] T047 Create MeditationBuilderPage in `/frontend/src/pages/MeditationBuilderPage.tsx`
   - **Criteria**: Composes TextEditor, GenerateTextButton, GenerateImageButton, MusicSelector, MusicPreview, ImagePreview, OutputTypeIndicator
   - **Criteria**: Manages page layout
   - **Criteria**: Integration test (RTL) verifies composition flow for all 8 scenarios
@@ -386,20 +386,20 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Frontend Hooks Tasks
 
-- [ ] T048 [P] Create useComposition hook in `/frontend/src/hooks/useComposition.ts`
+- [X] T048 [P] Create useComposition hook in `/frontend/src/hooks/useComposition.ts`
   - **Criteria**: React Query hook for server-state (fetch/update composition)
   - **Criteria**: Uses auto-generated API client
   - **Criteria**: Error handling for network failures
   - **Dependencies**: T038
 
-- [ ] T049 [P] Create useGenerateText hook in `/frontend/src/hooks/useGenerateText.ts`
+- [X] T049 [P] Create useGenerateText hook in `/frontend/src/hooks/useGenerateText.ts`
   - **Criteria**: React Query mutation for AI text generation/enhancement
   - **Criteria**: Works with empty field, keywords, or existing content (unified)
   - **Criteria**: Error handling: AI unavailable → user-friendly message
   - **Criteria**: Integration test with MSW (mock AI endpoint)
   - **Dependencies**: T038
 
-- [ ] T050 [P] Create useGenerateImage hook in `/frontend/src/hooks/useGenerateImage.ts`
+- [X] T050 [P] Create useGenerateImage hook in `/frontend/src/hooks/useGenerateImage.ts`
   - **Criteria**: React Query mutation for AI image generation
   - **Criteria**: Error handling: AI unavailable → user-friendly message
   - **Criteria**: Integration test with MSW (mock AI image endpoint)
