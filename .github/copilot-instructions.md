@@ -1,150 +1,145 @@
-***
-
-## copilot-instructions.md (versión refactor)
-
-```markdown
 # GitHub Copilot — Strict Operational Instructions
-**Proyecto:** Meditation Builder  
-**Ámbito:** Backend (Java 21 + Spring Boot + Hexagonal) y Frontend (React + TypeScript)
+**Project:** Meditation Builder  
+**Scope:** Backend (Java 21 + Spring Boot + Hexagonal) and Frontend (React + TypeScript)
 
 ---
 
-# 0. Principio general
+# 0. General Principle
 
-Copilot opera en **modo estricto** y debe aplicar, sin reinterpretar, las normas definidas en:
+Copilot operates in **strict mode** and must apply, without reinterpretation, the rules defined in:
 
-1. Historia de Usuario + BDD (`.feature`)
+1. User Story + BDD (`.feature`)
 2. `.specify/memory/constitution.md`
 3. `delivery-playbook-backend.md` / `delivery-playbook-frontend.md`
 4. `engineering-guidelines.md`
-5. `java21-best-practices.md` (Records, UUID, Clock, inmutabilidad)
-6. `hexagonal-architecture-guide.md` y `testing.instructions.md`
+5. `java21-best-practices.md` (Records, UUID, Clock, immutability)
+6. `hexagonal-architecture-guide.md` and `testing.instructions.md`
 
-Este archivo solo define **cómo** Copilot usa esas normas; no redefine arquitectura ni pipeline.[file:2][file:3][file:4][file:5][file:7][file:8]
+This file only defines **how** Copilot uses those rules; it does not redefine architecture or pipeline.
 
 ---
 
-# 1. Jerarquía de fuentes
+# 1. Source Hierarchy
 
-Copilot debe respetar el mismo orden que la Constitución:[file:2]
+Copilot must respect the same order as the Constitution:
 
-1. Historia de Usuario + BDD
-2. Constitución
-3. Delivery Playbooks backend/frontend
+1. User Story + BDD
+2. Constitution
+3. Backend/Frontend Delivery Playbooks
 4. Engineering Guidelines
 5. **Java 21 Best Practices** (`java21-best-practices.md`)
 6. Hexagonal Architecture Guide
 7. Testing Instructions
-8. ESTE archivo (`copilot-instructions.md`)
+8. THIS file (`copilot-instructions.md`)
 9. Frameworks (Spring, React, etc.)
 
-Copilot NO puede contradecir ninguna fuente de nivel superior.
+Copilot CANNOT contradict any higher-level source.
 
 ---
 
-# 2. Reglas de comportamiento (todas las tareas)
+# 2. Behavior Rules (all tasks)
 
-Copilot DEBE:[file:2][file:3][file:4][file:5][file:7][file:8]
+Copilot MUST:
 
-- Mantener cumplimiento estricto de BDD (nada fuera del comportamiento definido).
-- Seguir la arquitectura hexagonal y las reglas de dependencia.
-- Aplicar DDD + TDD en backend.
-- Usar React Query + Zustand correctamente en frontend.
-- Respetar rutas del repo según Constitución/Hexagonal Guide:
+- Maintain strict BDD compliance (nothing outside defined behavior).
+- Follow hexagonal architecture and dependency rules.
+- Apply DDD + TDD in backend.
+- Use React Query + Zustand correctly in frontend.
+- Respect repository paths according to Constitution/Hexagonal Guide:
   - Backend: `backend/src/main/java/com/hexagonal/<boundedContext>/...`
   - OpenAPI: `backend/src/main/resources/openapi/<boundedContext>/...`
-  - Tests backend: `backend/tests/bdd`, `backend/tests/contracts`, `backend/tests/e2e`
+  - Backend tests: `backend/tests/bdd`, `backend/tests/contracts`, `backend/tests/e2e`
   - Frontend: `frontend/src`, `frontend/tests/e2e`
-- Dividir siempre las tareas por capa (nunca mezclar dominio, aplicación, infra, controllers, frontend en la misma tarea).
+- Always divide tasks by layer (never mix domain, application, infra, controllers, frontend in the same task).
 
 ---
 
-# 3. Estrictamente prohibido
+# 3. Strictly Forbidden
 
-Copilot NO DEBE:[file:2][file:3][file:5][file:7][file:8]
+Copilot MUST NOT:
 
-- Generar endpoints no presentes en BDD/OpenAPI aprobados.
-- Añadir campos a DTOs sin estar en OpenAPI.
-- Crear reglas de negocio nuevas.
-- Poner lógica de negocio en controllers o infraestructura.
-- Mezclar pasos del pipeline (por ejemplo, generar dominio antes de BDD+OpenAPI).
-- Crear modelos de dominio “por anticipación” sin respaldo en BDD.
-- Usar clientes HTTP directos sin pasar por puertos de dominio.
-- Generar persistencia si la historia no la requiere.
-- Usar servicios externos reales en tests.
-- Crear tareas que mezclen varias capas.
-
----
-
-# 4. Instrucciones para `spec.md`
-
-Copilot DEBE:[file:2][file:3][file:9]
-
-- Generar narrativa 100% negocio, entendible para PO/QA.
-- Usar BDD consolidado proporcionado por la persona usuaria.
-- Incluir solo:
-  - Resumen de alcance.
-  - Escenarios BDD de negocio.
-  - No-objetivos y riesgos de negocio si se solicitan.
-- NO incluir:
-  - HTTP, JSON, DTOs, arquitectura, código, persistencia.
-  - Métricas técnicas, tiempos de respuesta, formatos, CI/CD.
+- Generate endpoints not present in approved BDD/OpenAPI.
+- Add fields to DTOs without being in OpenAPI.
+- Create new business rules.
+- Put business logic in controllers or infrastructure.
+- Mix pipeline steps (e.g., generate domain before BDD+OpenAPI).
+- Create domain models "in anticipation" without BDD backing.
+- Use HTTP clients directly without going through domain ports.
+- Generate persistence if the story doesn't require it.
+- Use real external services in tests.
+- Create tasks that mix multiple layers.
 
 ---
 
-# 5. Instrucciones para `plan.md`
+# 4. Instructions for `spec.md`
 
-Copilot DEBE:[file:2][file:3]
+Copilot MUST:
 
-- Describir el pipeline completo de la historia, fase por fase, **siguiendo exactamente** el ciclo de vida de la Constitución y los Playbooks.
-- Explicar qué artefactos se generan y en qué carpetas.
-- No saltarse pasos ni mezclar capas.
-
----
-
-# 6. Instrucciones para `tasks.md`
-
-Copilot DEBE:[file:3][file:6]
-
-- Generar micro-tareas por capa (dominio / aplicación / infra / controllers / frontend / tests).
-- Para cada tarea: objetivo, artefactos, ubicación exacta, criterios de aceptación.
-- No anticipar historias futuras ni añadir endpoints nuevos.
-- Si una tarea toca varias capas → dividirla en varias tareas.
+- Generate 100% business narrative, understandable by PO/QA.
+- Use consolidated BDD provided by the user.
+- Include only:
+  - Scope summary.
+  - Business BDD scenarios.
+  - Non-goals and business risks if requested.
+- DO NOT include:
+  - HTTP, JSON, DTOs, architecture, code, persistence.
+  - Technical metrics, response times, formats, CI/CD.
 
 ---
 
-# 7. Reglas para generación de código
+# 5. Instructions for `plan.md`
 
-Copilot solo puede generar código cuando:[file:2][file:3][file:7]
+Copilot MUST:
 
-1. Existe `.feature` ejecutable en rojo.
-2. Existe OpenAPI mínimo validado para la historia.
-3. Existen `spec.md`, `plan.md` y `tasks.md` completos.
-4. La persona usuaria lo solicita explícitamente.
+- Describe the complete story pipeline, phase by phase, **following exactly** the Constitution and Playbooks lifecycle.
+- Explain what artifacts are generated and in which folders.
+- Do not skip steps or mix layers.
+
+---
+
+# 6. Instructions for `tasks.md`
+
+Copilot MUST:
+
+- Generate micro-tasks by layer (domain / application / infra / controllers / frontend / tests).
+- For each task: objective, artifacts, exact location, acceptance criteria.
+- Do not anticipate future stories or add new endpoints.
+- If a task touches multiple layers → divide it into multiple tasks.
+
+---
+
+# 7. Code Generation Rules
+
+Copilot can only generate code when:
+
+1. Executable `.feature` exists in red state.
+2. Minimum validated OpenAPI exists for the story.
+3. Complete `spec.md`, `plan.md` and `tasks.md` exist.
+4. The user explicitly requests it.
 
 ### Backend
 
-- Arquitectura hexagonal estricta.
-- Dominio sin Spring ni tipos de infraestructura.
-- Use cases sin lógica de negocio (solo orquestación).
-- Infraestructura que implementa puertos out.
-- Controllers que cumplen OpenAPI sin desviaciones.
+- Strict hexagonal architecture.
+- Domain without Spring or infrastructure types.
+- Use cases without business logic (only orchestration).
+- Infrastructure that implements out ports.
+- Controllers that comply with OpenAPI without deviations.
 
 ### Frontend
 
-- Cliente OpenAPI autogenerado.
-- React Query para server-state; Zustand para UI-state.
-- Sin lógica de negocio en UI.
-- Playwright para E2E.
+- Auto-generated OpenAPI client.
+- React Query for server-state; Zustand for UI-state.
+- No business logic in UI.
+- Playwright for E2E.
 
 ---
 
-# 8. Testing obligatorio (recordatorio)
+# 8. Mandatory Testing (reminder)
 
-Copilot debe seguir `testing.instructions.md` al sugerir tests:[file:7]
+Copilot must follow `testing.instructions.md` when suggesting tests:
 
 - Backend:
-  - Unit tests (dominio + aplicación).
+  - Unit tests (domain + application).
   - Integration tests (infra).
   - Contract tests (OpenAPI).
   - BDD (Cucumber).
@@ -158,7 +153,7 @@ Copilot debe seguir `testing.instructions.md` al sugerir tests:[file:7]
 
 # 9. CI/CD Gates
 
-Copilot debe considerar como bloqueantes los gates definidos en la Constitución y Testing Instructions:[file:2][file:7]
+Copilot must consider the gates defined in Constitution and Testing Instructions as blocking:
 
 1. BDD
 2. API
@@ -170,29 +165,29 @@ Copilot debe considerar como bloqueantes los gates definidos en la Constitución
 
 ---
 
-# 10. Anti‑patterns (rechazar)
+# 10. Anti-patterns (reject)
 
-Copilot debe evitar activamente y sugerir alternativas cuando detecte:[file:2][file:3][file:5][file:7][file:8]
+Copilot must actively avoid and suggest alternatives when it detects:
 
 - God Objects.
-- Lógica UI ↔ dominio mezclada.
-- Persistencia no solicitada.
-- Clases duplicadas.
-- Tests sin aserciones.
-- Endpoints no basados en BDD.
-- Diseño “para el futuro” sin justificación en historias/BDD.
+- Mixed UI ↔ domain logic.
+- Unrequested persistence.
+- Duplicate classes.
+- Tests without assertions.
+- Endpoints not based on BDD.
+- Design "for the future" without justification in stories/BDD.
 
 ---
 
-# 11. Principio final
+# 11. Final Principle
 
-Copilot debe producir resultados **conservadores, trazables y alineados** con:
+Copilot must produce **conservative, traceable and aligned** results with:
 
 - BDD + User Stories
-- Constitución
+- Constitution
 - Playbooks
-- Guías de ingeniería y arquitectura
+- Engineering and architecture guides
 
-Nunca más allá de lo que el negocio haya definido.
+Never beyond what the business has defined.
 
-FIN DEL DOCUMENTO
+END OF DOCUMENT

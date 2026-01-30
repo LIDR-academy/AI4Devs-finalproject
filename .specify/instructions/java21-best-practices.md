@@ -1,39 +1,39 @@
 # Java 21 Best Practices — Meditation Builder
 
-Este documento define las buenas prácticas obligatorias para código Java 21 en el proyecto.
-Copilot y cualquier agente de IA DEBE seguir estas reglas al generar código Java.
+This document defines the mandatory best practices for Java 21 code in the project.
+Copilot and any AI agent MUST follow these rules when generating Java code.
 
 ---
 
-## 1. Records para Value Objects y Entities
+## 1. Records for Value Objects and Entities
 
-### 1.1 Regla General
-- **SIEMPRE** usar `record` en lugar de `class` para:
-  - Value Objects (inmutables por definición)
-  - Entities del dominio (con API inmutable)
-  - DTOs de entrada/salida
+### 1.1 General Rule
+- **ALWAYS** use `record` instead of `class` for:
+  - Value Objects (immutable by definition)
+  - Domain Entities (with immutable API)
+  - Input/Output DTOs
 
-### 1.2 Estructura de un Record
+### 1.2 Record Structure
 
 ```java
-public record NombreRecord(
-    TipoCampo1 campo1,
-    TipoCampo2 campo2
+public record RecordName(
+    FieldType1 field1,
+    FieldType2 field2
 ) {
-    // Compact constructor para validación
-    public NombreRecord {
-        Objects.requireNonNull(campo1, "campo1 es requerido");
-        // Validaciones adicionales
+    // Compact constructor for validation
+    public RecordName {
+        Objects.requireNonNull(field1, "field1 is required");
+        // Additional validations
     }
     
-    // Factory methods estáticos
-    public static NombreRecord create(TipoCampo1 campo1) {
-        return new NombreRecord(campo1, valorDefault);
+    // Static factory methods
+    public static RecordName create(FieldType1 field1) {
+        return new RecordName(field1, defaultValue);
     }
 }
 ```
 
-### 1.3 Ejemplo Value Object
+### 1.3 Value Object Example
 
 ```java
 public record TextContent(String value) {
@@ -41,13 +41,13 @@ public record TextContent(String value) {
     private static final int MAX_LENGTH = 10_000;
     
     public TextContent {
-        Objects.requireNonNull(value, "El contenido de texto es requerido");
+        Objects.requireNonNull(value, "Text content is required");
         if (value.isBlank()) {
-            throw new IllegalArgumentException("El contenido no puede estar vacío");
+            throw new IllegalArgumentException("Content cannot be empty");
         }
         if (value.length() > MAX_LENGTH) {
             throw new IllegalArgumentException(
-                "El contenido excede el máximo de " + MAX_LENGTH + " caracteres"
+                "Content exceeds maximum of " + MAX_LENGTH + " characters"
             );
         }
     }
@@ -56,18 +56,18 @@ public record TextContent(String value) {
 
 ---
 
-## 2. UUID para Identificadores
+## 2. UUID for Identifiers
 
-### 2.1 Regla General
-- **SIEMPRE** usar `java.util.UUID` para identificadores de entidades
-- **NUNCA** usar `String` para IDs en el dominio
-- Los puertos (interfaces) DEBEN usar `UUID`, no `String`
+### 2.1 General Rule
+- **ALWAYS** use `java.util.UUID` for entity identifiers
+- **NEVER** use `String` for IDs in the domain
+- Ports (interfaces) MUST use `UUID`, not `String`
 
-### 2.2 Ejemplo en Aggregate Root
+### 2.2 Aggregate Root Example
 
 ```java
 public record MeditationComposition(
-    UUID id,                    // ✅ UUID, no String
+    UUID id,                    // ✅ UUID, not String
     TextContent textContent,
     Instant createdAt,
     Instant updatedAt
@@ -75,7 +75,7 @@ public record MeditationComposition(
     public static MeditationComposition create(TextContent text, Clock clock) {
         Instant now = clock.instant();
         return new MeditationComposition(
-            UUID.randomUUID(),  // Generación interna
+            UUID.randomUUID(),  // Internal generation
             text,
             now,
             now
@@ -84,46 +84,46 @@ public record MeditationComposition(
 }
 ```
 
-### 2.3 Ejemplo en Puertos
+### 2.3 Ports Example
 
 ```java
 public interface ComposeContentUseCase {
-    // ✅ CORRECTO: UUID
+    // ✅ CORRECT: UUID
     MeditationComposition getComposition(UUID compositionId);
     
-    // ❌ INCORRECTO: String
+    // ❌ WRONG: String
     // MeditationComposition getComposition(String compositionId);
 }
 ```
 
 ---
 
-## 3. Clock Injection para Timestamps
+## 3. Clock Injection for Timestamps
 
-### 3.1 Regla General
-- **NUNCA** usar `Instant.now()` directamente en el dominio
-- **SIEMPRE** inyectar `java.time.Clock` para timestamps
-- Esto permite tests determinísticos
+### 3.1 General Rule
+- **NEVER** use `Instant.now()` directly in the domain
+- **ALWAYS** inject `java.time.Clock` for timestamps
+- This enables deterministic tests
 
-### 3.2 Patrón de Factory Methods
+### 3.2 Factory Methods Pattern
 
 ```java
 public record Entity(UUID id, Instant createdAt, Instant updatedAt) {
     
-    // Factory con Clock explícito (para producción y tests)
+    // Factory with explicit Clock (for production and tests)
     public static Entity create(Clock clock) {
         Instant now = clock.instant();
         return new Entity(UUID.randomUUID(), now, now);
     }
     
-    // Factory de conveniencia (para uso simple)
+    // Convenience factory (for simple use)
     public static Entity create() {
         return create(Clock.systemUTC());
     }
 }
 ```
 
-### 3.3 Testing con Clock Fijo
+### 3.3 Testing with Fixed Clock
 
 ```java
 @Test
@@ -140,14 +140,14 @@ void shouldCreateWithFixedTimestamp() {
 
 ---
 
-## 4. API Inmutable con Métodos `withX()`
+## 4. Immutable API with `withX()` Methods
 
-### 4.1 Regla General
-- Las entidades DEBEN ser inmutables
-- Para "modificar" una entidad, crear una nueva instancia
-- Usar métodos `withX()` que retornan nueva instancia
+### 4.1 General Rule
+- Entities MUST be immutable
+- To "modify" an entity, create a new instance
+- Use `withX()` methods that return a new instance
 
-### 4.2 Patrón withX()
+### 4.2 withX() Pattern
 
 ```java
 public record MeditationComposition(
@@ -157,30 +157,30 @@ public record MeditationComposition(
     Instant createdAt,
     Instant updatedAt
 ) {
-    // Método de mutación inmutable
+    // Immutable mutation method
     public MeditationComposition withText(TextContent newText, Clock clock) {
-        Objects.requireNonNull(newText, "textContent es requerido");
+        Objects.requireNonNull(newText, "textContent is required");
         return new MeditationComposition(
             this.id,
             newText,
             this.musicReference,
             this.createdAt,
-            clock.instant()  // Actualiza updatedAt
+            clock.instant()  // Updates updatedAt
         );
     }
     
-    // Para campos opcionales (nullable)
+    // For optional fields (nullable)
     public MeditationComposition withMusic(MusicReference music, Clock clock) {
         return new MeditationComposition(
             this.id,
             this.textContent,
-            music,  // Puede ser null
+            music,  // Can be null
             this.createdAt,
             clock.instant()
         );
     }
     
-    // Para eliminar campos opcionales
+    // To remove optional fields
     public MeditationComposition withoutMusic(Clock clock) {
         return withMusic(null, clock);
     }
@@ -189,22 +189,22 @@ public record MeditationComposition(
 
 ---
 
-## 5. Optional para Campos Nullable
+## 5. Optional for Nullable Fields
 
-### 5.1 Regla General
-- Los campos nullable en records DEBEN tener un accessor que retorne `Optional`
-- Nombrar el accessor con sufijo `Opt` para claridad
+### 5.1 General Rule
+- Nullable fields in records MUST have an accessor that returns `Optional`
+- Name the accessor with `Opt` suffix for clarity
 
-### 5.2 Patrón de Accessors Opcionales
+### 5.2 Optional Accessors Pattern
 
 ```java
 public record MeditationComposition(
     UUID id,
     TextContent textContent,
-    MusicReference musicReference,    // Puede ser null
-    ImageReference imageReference     // Puede ser null
+    MusicReference musicReference,    // Can be null
+    ImageReference imageReference     // Can be null
 ) {
-    // Accessors que retornan Optional
+    // Accessors that return Optional
     public Optional<MusicReference> musicReferenceOpt() {
         return Optional.ofNullable(musicReference);
     }
@@ -215,7 +215,7 @@ public record MeditationComposition(
 }
 ```
 
-### 5.3 Uso en Cliente
+### 5.3 Client Usage
 
 ```java
 composition.musicReferenceOpt()
@@ -228,36 +228,36 @@ String imagePath = composition.imageReferenceOpt()
 
 ---
 
-## 6. Validación en Compact Constructor
+## 6. Validation in Compact Constructor
 
-### 6.1 Regla General
-- **TODA** validación DEBE ir en el compact constructor del record
-- Usar `Objects.requireNonNull()` para campos requeridos
-- Lanzar `IllegalArgumentException` para validaciones de negocio
+### 6.1 General Rule
+- **ALL** validation MUST go in the record's compact constructor
+- Use `Objects.requireNonNull()` for required fields
+- Throw `IllegalArgumentException` for business validations
 
-### 6.2 Orden de Validaciones
+### 6.2 Validation Order
 
 ```java
 public record ValueObject(String value, int quantity) {
     
     public ValueObject {
-        // 1. Null checks primero
-        Objects.requireNonNull(value, "value es requerido");
+        // 1. Null checks first
+        Objects.requireNonNull(value, "value is required");
         
-        // 2. Validaciones de formato/contenido
+        // 2. Format/content validations
         if (value.isBlank()) {
-            throw new IllegalArgumentException("value no puede estar vacío");
+            throw new IllegalArgumentException("value cannot be empty");
         }
         
-        // 3. Validaciones de rango
+        // 3. Range validations
         if (quantity < 0) {
-            throw new IllegalArgumentException("quantity debe ser >= 0");
+            throw new IllegalArgumentException("quantity must be >= 0");
         }
         
-        // 4. Validaciones de negocio complejas
+        // 4. Complex business validations
         if (value.length() > 100 && quantity > 10) {
             throw new IllegalArgumentException(
-                "Combinación value/quantity no permitida"
+                "value/quantity combination not allowed"
             );
         }
     }
@@ -266,9 +266,9 @@ public record ValueObject(String value, int quantity) {
 
 ---
 
-## 7. Imports Requeridos
+## 7. Required Imports
 
-Para seguir estas prácticas, los siguientes imports son estándar:
+To follow these practices, the following imports are standard:
 
 ```java
 import java.time.Clock;
@@ -283,31 +283,31 @@ import java.util.UUID;
 
 ## 8. Testing Patterns
 
-### 8.1 Tests de Records
+### 8.1 Record Tests
 
 ```java
 @Test
 void shouldCreateValidRecord() {
-    TextContent content = new TextContent("Texto válido");
-    assertThat(content.value()).isEqualTo("Texto válido");
+    TextContent content = new TextContent("Valid text");
+    assertThat(content.value()).isEqualTo("Valid text");
 }
 
 @Test
 void shouldRejectNullValue() {
     assertThatThrownBy(() -> new TextContent(null))
         .isInstanceOf(NullPointerException.class)
-        .hasMessageContaining("requerido");
+        .hasMessageContaining("required");
 }
 
 @Test
 void shouldRejectInvalidValue() {
     assertThatThrownBy(() -> new TextContent(""))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("vacío");
+        .hasMessageContaining("empty");
 }
 ```
 
-### 8.2 Tests de Entidades con Clock
+### 8.2 Entity Tests with Clock
 
 ```java
 class EntityTest {
@@ -330,7 +330,7 @@ class EntityTest {
         Clock laterClock = Clock.fixed(laterTime, ZoneOffset.UTC);
         
         Entity original = Entity.create(FIXED_CLOCK);
-        Entity updated = original.withName("nuevo", laterClock);
+        Entity updated = original.withName("new", laterClock);
         
         assertThat(updated.createdAt()).isEqualTo(FIXED_TIME);
         assertThat(updated.updatedAt()).isEqualTo(laterTime);
@@ -340,83 +340,83 @@ class EntityTest {
 
 ---
 
-## 9. Anti-Patterns (PROHIBIDO)
+## 9. Anti-Patterns (FORBIDDEN)
 
-### ❌ NO usar clases mutables para Value Objects
+### ❌ DO NOT use mutable classes for Value Objects
 
 ```java
-// ❌ PROHIBIDO
+// ❌ FORBIDDEN
 public class TextContent {
     private String value;
     public void setValue(String value) { this.value = value; }
 }
 
-// ✅ CORRECTO
+// ✅ CORRECT
 public record TextContent(String value) { }
 ```
 
-### ❌ NO usar String para IDs
+### ❌ DO NOT use String for IDs
 
 ```java
-// ❌ PROHIBIDO
+// ❌ FORBIDDEN
 public record Entity(String id) { }
 
-// ✅ CORRECTO
+// ✅ CORRECT
 public record Entity(UUID id) { }
 ```
 
-### ❌ NO usar Instant.now() directamente
+### ❌ DO NOT use Instant.now() directly
 
 ```java
-// ❌ PROHIBIDO
+// ❌ FORBIDDEN
 public static Entity create() {
     return new Entity(UUID.randomUUID(), Instant.now());
 }
 
-// ✅ CORRECTO
+// ✅ CORRECT
 public static Entity create(Clock clock) {
     return new Entity(UUID.randomUUID(), clock.instant());
 }
 ```
 
-### ❌ NO exponer campos nullable sin Optional
+### ❌ DO NOT expose nullable fields without Optional
 
 ```java
-// ❌ PROHIBIDO (cliente no sabe que puede ser null)
+// ❌ FORBIDDEN (client doesn't know it can be null)
 public MusicReference musicReference() { return musicReference; }
 
-// ✅ CORRECTO (explícito que es opcional)
+// ✅ CORRECT (explicit that it's optional)
 public Optional<MusicReference> musicReferenceOpt() {
     return Optional.ofNullable(musicReference);
 }
 ```
 
-### ❌ NO mutar entidades
+### ❌ DO NOT mutate entities
 
 ```java
-// ❌ PROHIBIDO
-entity.setName("nuevo");
+// ❌ FORBIDDEN
+entity.setName("new");
 
-// ✅ CORRECTO
-Entity updated = entity.withName("nuevo", clock);
+// ✅ CORRECT
+Entity updated = entity.withName("new", clock);
 ```
 
 ---
 
-## 10. Checklist de Revisión
+## 10. Review Checklist
 
-Antes de aprobar código Java, verificar:
+Before approving Java code, verify:
 
-- [ ] Value Objects son `record`
-- [ ] Entities del dominio son `record` con API inmutable
-- [ ] IDs usan `UUID`, no `String`
-- [ ] Timestamps usan `Clock` inyectado, no `Instant.now()`
-- [ ] Métodos de mutación retornan nueva instancia (`withX()`)
-- [ ] Campos nullable tienen accessor `Optional` (`xOpt()`)
-- [ ] Validación en compact constructor
-- [ ] Tests usan `Clock.fixed()` para timestamps determinísticos
-- [ ] `Objects.requireNonNull()` para campos requeridos
+- [ ] Value Objects are `record`
+- [ ] Domain Entities are `record` with immutable API
+- [ ] IDs use `UUID`, not `String`
+- [ ] Timestamps use injected `Clock`, not `Instant.now()`
+- [ ] Mutation methods return new instance (`withX()`)
+- [ ] Nullable fields have `Optional` accessor (`xOpt()`)
+- [ ] Validation in compact constructor
+- [ ] Tests use `Clock.fixed()` for deterministic timestamps
+- [ ] `Objects.requireNonNull()` for required fields
 
 ---
 
-**FIN DEL DOCUMENTO**
+**END OF DOCUMENT**
