@@ -513,3 +513,40 @@ Cypress failed to start.
 
 My question is, with the backend and frontend code implemented so far, can you create tests? If so, which ones and how you would implement them? I want to see it and if I agree, I’ll say OK so you can proceed.
 
+#######
+# 3ra entrega
+#######
+
+## Prompt 18
+
+You are an expert software engineer and now you are executing Phase 0 (Pilot) implementation of the SC Padel Club Management System.
+
+Context:
+- The repository is already scaffolded.
+- Backend, frontend, database, and a Hello World vertical slice are working.
+- All documentation (requirements, tickets, ERD, architecture) already exists in the readme-AVC.md file and must be followed strictly.
+
+Phase 0 Rules:
+1. Implement ONLY Phase 0 tickets.
+2. Do NOT implement any Should-Have or Future features.
+3. No reservation cancellation.
+4. Payment flow is mocked.
+5. Backend is a modular monolith (no microservices).
+6. Tests are mandatory (unit, integration, 1 E2E).
+7. Database schema must match the ERD exactly.
+8. Keep the system runnable at all times.
+
+Workflow:
+- Implement tickets one by one.
+- For each ticket:
+  - Backend first
+  - Database changes (if needed)
+  - Tests
+  - Frontend (if applicable)
+- Do NOT move to the next ticket until the current one is complete and stable.
+
+If something is unclear:
+- ASK before coding.
+- Do NOT assume or invent behavior.
+
+Acknowledge this and wait for the first ticket.
