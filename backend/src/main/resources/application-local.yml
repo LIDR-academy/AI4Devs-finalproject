@@ -1,0 +1,20 @@
+# Meditation Builder - Local Development Configuration
+# =====================================================
+# Profile: local
+# Usage: Set SPRING_PROFILES_ACTIVE=local or use default
+
+# OpenAI - Use real API for local development
+# Set OPENAI_API_KEY environment variable with your key
+ai:
+  openai:
+    api-key: ${OPENAI_API_KEY:sk-proj-your-key-here}
+
+# Media Catalog - Local mock or development service
+media-catalog:
+  base-url: ${MEDIA_CATALOG_URL:http://localhost:8081}
+
+# Development logging - more verbose
+logging:
+  level:
+    com.hexagonal.meditationbuilder: DEBUG
+    org.springframework.web.client: DEBUG

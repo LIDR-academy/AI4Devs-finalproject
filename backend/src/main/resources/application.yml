@@ -1,0 +1,61 @@
+# Meditation Builder - Main Configuration
+# ==========================================
+
+spring:
+  application:
+    name: meditation-builder
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
+# OpenAI Configuration
+ai:
+  openai:
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+    api-key: ${OPENAI_API_KEY:}
+    text:
+      connect-timeout-ms: ${OPENAI_TEXT_CONNECT_TIMEOUT:5000}
+      read-timeout-ms: ${OPENAI_TEXT_READ_TIMEOUT:30000}
+      model: ${OPENAI_TEXT_MODEL:gpt-4o-mini}
+    image:
+      connect-timeout-ms: ${OPENAI_IMAGE_CONNECT_TIMEOUT:5000}
+      read-timeout-ms: ${OPENAI_IMAGE_READ_TIMEOUT:60000}
+      model: ${OPENAI_IMAGE_MODEL:dall-e-3}
+      size: ${OPENAI_IMAGE_SIZE:1024x1024}
+      quality: ${OPENAI_IMAGE_QUALITY:standard}
+
+# Media Catalog Service Configuration
+media-catalog:
+  base-url: ${MEDIA_CATALOG_URL:http://localhost:8081}
+  connect-timeout-ms: ${MEDIA_CATALOG_CONNECT_TIMEOUT:5000}
+  read-timeout-ms: ${MEDIA_CATALOG_READ_TIMEOUT:10000}
+
+# Retry Configuration
+retry:
+  max-attempts: ${RETRY_MAX_ATTEMPTS:3}
+  initial-interval-ms: ${RETRY_INITIAL_INTERVAL:1000}
+  multiplier: ${RETRY_MULTIPLIER:2.0}
+  max-interval-ms: ${RETRY_MAX_INTERVAL:10000}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.hexagonal.meditationbuilder: INFO
+    # Never log AI prompts or responses (security)
+    com.hexagonal.meditationbuilder.infrastructure.out.service: WARN

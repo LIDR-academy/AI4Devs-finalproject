@@ -1,0 +1,39 @@
+# Meditation Builder - Test Configuration
+# ========================================
+# Profile: test
+# Usage: Automatically active during tests
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+# OpenAI - Mock configuration for tests
+ai:
+  openai:
+    base-url: http://localhost:${wiremock.server.port:8089}
+    api-key: test-api-key-for-integration-tests
+    text:
+      connect-timeout-ms: 5000
+      read-timeout-ms: 5000
+    image:
+      connect-timeout-ms: 5000
+      read-timeout-ms: 5000
+
+# Media Catalog - Mock configuration for tests
+media-catalog:
+  base-url: http://localhost:${wiremock.server.port:8089}
+  connect-timeout-ms: 5000
+  read-timeout-ms: 5000
+
+# Retry - Faster retries for tests
+retry:
+  max-attempts: 2
+  initial-interval-ms: 100
+  multiplier: 1.5
+  max-interval-ms: 500
+
+# Test logging
+logging:
+  level:
+    root: WARN
+    com.hexagonal.meditationbuilder: INFO

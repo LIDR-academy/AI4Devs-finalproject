@@ -236,6 +236,43 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Maps AI service responses to domain types
   - **Dependencies**: T031, T032
 
+### Infrastructure Configuration Tasks
+
+- [X] T033b [P] Create Spring Boot application and configuration
+  - **Files**:
+    - `/backend/src/main/java/com/hexagonal/meditationbuilder/MeditationBuilderApplication.java`
+    - `/backend/src/main/resources/application.yml`
+    - `/backend/src/main/resources/application-local.yml`
+    - `/backend/src/test/resources/application-test.yml`
+  - **Criteria**: @SpringBootApplication with @ConfigurationPropertiesScan
+  - **Criteria**: Environment-specific profiles (local, test)
+  - **Criteria**: Externalized configuration via environment variables
+  - **Dependencies**: T030, T031, T032
+
+- [X] T033c [P] Create OpenAI configuration properties in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/OpenAiProperties.java`
+  - **Criteria**: @ConfigurationProperties(prefix = "ai.openai")
+  - **Criteria**: Nested records for text and image config (separate timeouts)
+  - **Criteria**: Text timeout: 30s, Image timeout: 60s (longer for DALL-E)
+  - **Criteria**: API key via OPENAI_API_KEY environment variable
+  - **Dependencies**: T031, T032
+
+- [X] T033d [P] Create Media Catalog configuration properties in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/MediaCatalogProperties.java`
+  - **Criteria**: @ConfigurationProperties(prefix = "media-catalog")
+  - **Criteria**: Configurable base URL and timeouts
+  - **Dependencies**: T030
+
+- [X] T033e [P] Create Retry configuration properties in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/RetryProperties.java`
+  - **Criteria**: @ConfigurationProperties(prefix = "retry")
+  - **Criteria**: Exponential backoff parameters (maxAttempts, initialInterval, multiplier, maxInterval)
+  - **Dependencies**: T031, T032
+
+- [X] T033f [P] Create Infrastructure configuration in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/InfrastructureConfig.java`
+  - **Criteria**: @Configuration with @EnableRetry
+  - **Criteria**: Separate RestClient beans with @Qualifier (aiTextRestClient, aiImageRestClient, mediaCatalogRestClient)
+  - **Criteria**: Different timeouts per RestClient (text: 30s, image: 60s, media: 10s)
+  - **Criteria**: Bean definitions for TextGenerationPort, ImageGenerationPort, MediaCatalogPort
+  - **Dependencies**: T033c, T033d, T033e
+
 ---
 
 ## Phase 7: Infrastructure Layer (Controllers In)
