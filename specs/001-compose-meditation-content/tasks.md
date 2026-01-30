@@ -281,7 +281,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Controller Tasks
 
-- [ ] T034 Create MeditationBuilderController in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/controller/MeditationBuilderController.java`
+- [X] T034 Create MeditationBuilderController in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/controller/MeditationBuilderController.java`
   - **Criteria**: Implements all endpoints from OpenAPI spec (8 capabilities)
   - **Criteria**: Delegates to ComposeContentUseCase, GenerateTextUseCase, and GenerateImageUseCase
   - **Criteria**: Uses DTOs (no domain objects exposed)
@@ -289,18 +289,18 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: MockMvc tests verify OpenAPI compliance
   - **Dependencies**: T026, T028, T029, T013
 
-- [ ] T035 [P] Create request DTOs in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/dto/`
+- [X] T035 [P] Create request DTOs in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/dto/`
   - **Files**: CreateCompositionRequest, UpdateTextRequest, GenerateTextRequest, GenerateImageRequest, SelectMusicRequest
   - **Criteria**: Match OpenAPI schemas exactly
   - **Criteria**: Jakarta validation annotations
   - **Dependencies**: T013
 
-- [ ] T036 [P] Create response DTOs in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/dto/`
+- [X] T036 [P] Create response DTOs in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/dto/`
   - **Files**: CompositionResponse, TextContentResponse, ImageReferenceResponse, OutputTypeResponse
   - **Criteria**: Match OpenAPI schemas exactly
   - **Dependencies**: T013
 
-- [ ] T037 [P] Create DTO mappers in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/mapper/CompositionDtoMapper.java`
+- [X] T037 [P] Create DTO mappers in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/in/rest/mapper/CompositionDtoMapper.java`
   - **Criteria**: Maps domain MeditationComposition ↔ DTOs
   - **Criteria**: Maps domain TextContent ↔ DTOs
   - **Criteria**: Maps domain ImageReference ↔ DTOs
