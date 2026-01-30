@@ -26,15 +26,15 @@ Para mantener este registro manejable:
 > Analiza el repositorio (`@workspace`) y genera el contenido para estos archivos. Si no puedes crearlos directamente, dame el código Markdown de cada uno:
 > 
 > /memory-bank/
->   projectbrief.md      (Visión general del proyecto)
->   productContext.md    (Contexto de negocio y usuarios)
->   systemPatterns.md    (Arquitectura y diseño técnico)
->   techContext.md       (Stack, herramientas y comandos)
->   activeContext.md     (El estado actual "en vivo" del desarrollo)
->   progress.md          (Historial de cambios y deuda técnica)
+>  projectbrief.md      (Visión general del proyecto)
+>  productContext.md    (Contexto de negocio y usuarios)
+>  systemPatterns.md    (Arquitectura y diseño técnico)
+>  techContext.md       (Stack, herramientas y comandos)
+>  activeContext.md     (El estado actual "en vivo" del desarrollo)
+>  progress.md          (Historial de cambios y deuda técnica)
 > 
 > /.agent/rules/
->   00-memory-bank.md    (Regla maestra de lectura obligatoria)
+>  00-memory-bank.md    (Regla maestra de lectura obligatoria)
 > 
 > ## 2. Definición del Contenido (Archivos Core)
 > 
@@ -141,13 +141,13 @@ Creé `memory-bank/decisions.md` con estructura ADR y actualicé `.agent/rules/0
 > Navega y analiza patrones en estas fuentes. Busca la frustración del usuario:
 > 
 > 1.  **McNeel Discourse (The Pain):**
->     * [Serengeti Wishes](https://discourse.mcneel.com/tags/c/serengeti/25/wish)
->     * [Wishlist Tag](https://discourse.mcneel.com/tag/wishlist)
->     * *Instrucción:* Busca hilos con muchas respuestas, quejas recurrentes sobre flujos de trabajo rotos, o peticiones de automatización ignoradas.
+>    * [Serengeti Wishes](https://discourse.mcneel.com/tags/c/serengeti/25/wish)
+>    * [Wishlist Tag](https://discourse.mcneel.com/tag/wishlist)
+>    * *Instrucción:* Busca hilos con muchas respuestas, quejas recurrentes sobre flujos de trabajo rotos, o peticiones de automatización ignoradas.
 > 
 > 2.  **Contech Database & Ecosystem (The Gap):**
->     * [Contech Database](https://contechdatabase.softr.app/)
->     * *Instrucción:* Identifica qué está saturado (ej. generación de plantas 2D) y qué está vacío.
+>    * [Contech Database](https://contechdatabase.softr.app/)
+>    * *Instrucción:* Identifica qué está saturado (ej. generación de plantas 2D) y qué está vacío.
 > 
 > # Output Esperado: Archivos del Memory Bank
 > 
@@ -161,8 +161,8 @@ Creé `memory-bank/decisions.md` con estructura ADR y actualicé `.agent/rules/0
 > 
 > ## 1. Pain Points & User Wishes (Evidencia)
 > * **[Nombre del Dolor]**: Descripción del problema.
->   * *Fuente:* [Link al hilo del foro]
->   * *Insight:* ¿Por qué es difícil de resolver sin AI?
+>  * *Fuente:* [Link al hilo del foro]
+>  * *Insight:* ¿Por qué es difícil de resolver sin AI?
 > 
 > ## 2. Competitor Landscape
 > * **Océanos Rojos (Saturado):** ...
@@ -213,22 +213,22 @@ Navegué McNeel Discourse y Contech Database identificando 3 pain points princip
 > **Tareas de Análisis:**
 > 
 > 1.  **El "Stress Test" Técnico (Cuellos de Botella):**
->     * Analiza el problema de la **Latencia y "Data Gravity"**: Si un archivo pesa 2GB, ¿es realista subirlo a la nube para indexarlo? ¿Cuánto tardaría? ¿Sería mejor una indexación local?
->     * Analiza la limitación de `Rhino.Compute` o `rhino3dm`: ¿Son capaces de leer un archivo masivo sin "explotar" la memoria RAM?
+>    * Analiza el problema de la **Latencia y "Data Gravity"**: Si un archivo pesa 2GB, ¿es realista subirlo a la nube para indexarlo? ¿Cuánto tardaría? ¿Sería mejor una indexación local?
+>    * Analiza la limitación de `Rhino.Compute` o `rhino3dm`: ¿Son capaces de leer un archivo masivo sin "explotar" la memoria RAM?
 > 
 > 2.  **Análisis del "Por qué no existe":**
->     * Actúa como abogado del diablo. ¿Por qué McNeel (creadores de Rhino) o Speckle no han resuelto esto aún?
->     * ¿Es un problema de tecnología (no se podía hacer antes) o de flujo de trabajo (los arquitectos no trabajan así)?
+>    * Actúa como abogado del diablo. ¿Por qué McNeel (creadores de Rhino) o Speckle no han resuelto esto aún?
+>    * ¿Es un problema de tecnología (no se podía hacer antes) o de flujo de trabajo (los arquitectos no trabajan así)?
 > 
 > 3.  **Evaluación de Estrategias de Indexado (Comparativa):**
->     * Compara tres enfoques posibles y dime cuál es el más viable para un TFM (un solo desarrollador, 3 meses):
->         * *Opción A:* Base de datos SQL clásica (indexar solo metadatos: capas, nombres).
->         * *Opción B:* Base de datos Vectorial (indexar "forma" y geometría para búsqueda visual).
->         * *Opción C:* Indexado ligero local (generar archivos proxy/baja resolución).
+>    * Compara tres enfoques posibles y dime cuál es el más viable para un TFM (un solo desarrollador, 3 meses):
+>        * *Opción A:* Base de datos SQL clásica (indexar solo metadatos: capas, nombres).
+>        * *Opción B:* Base de datos Vectorial (indexar "forma" y geometría para búsqueda visual).
+>        * *Opción C:* Indexado ligero local (generar archivos proxy/baja resolución).
 > 
 > 4.  **Definición de Escenarios de Uso (User Stories):**
->     * Describe un caso de uso donde esta herramienta ahorre horas de trabajo reales.
->     * Describe un caso donde la herramienta podría fallar estrepitosamente (ej: archivos mal modelados).
+>    * Describe un caso de uso donde esta herramienta ahorre horas de trabajo reales.
+>    * Describe un caso donde la herramienta podría fallar estrepitosamente (ej: archivos mal modelados).
 > 
 > **Output esperado:** Un informe crítico estructurado. Sé brutalmente honesto sobre la complejidad. Si crees que es demasiado para un TFM, sugiérelo.
 
@@ -255,21 +255,21 @@ Realizaré un análisis crítico de viabilidad técnica y comercial para el sist
 > **Tareas de Análisis:**
 > 
 > 1.  **El Dilema del "Core" de IA (Deep Learning vs. Heurística + LLM):**
->     * El concepto original sugiere usar "Redes Neuronales Geométricas" (PointNet, Graph CNNs). Critica esta aproximación para un TFM. ¿Es "matar moscas a cañonazos"?
->     * Analiza la viabilidad de una aproximación **Híbrida**: Usar LLMs para analizar nombres de capas/bloques (texto) + Algoritmos geométricos clásicos (Bounding Box, Normales, Volumen) para desambiguar.
->     * ¿Qué approach tiene mejor retorno de inversión (ROI) de desarrollo?
+>    * El concepto original sugiere usar "Redes Neuronales Geométricas" (PointNet, Graph CNNs). Critica esta aproximación para un TFM. ¿Es "matar moscas a cañonazos"?
+>    * Analiza la viabilidad de una aproximación **Híbrida**: Usar LLMs para analizar nombres de capas/bloques (texto) + Algoritmos geométricos clásicos (Bounding Box, Normales, Volumen) para desambiguar.
+>    * ¿Qué approach tiene mejor retorno de inversión (ROI) de desarrollo?
 > 
 > 2.  **El Problema de los Datos (Data Scarcity):**
->     * Para entrenar una IA que reconozca un "Muro" solo por su forma, necesito miles de muros etiquetados. No tengo ese dataset.
->     * Propón una estrategia "Zero-Shot" o "Few-Shot". ¿Podemos clasificar sin entrenar un modelo desde cero? (Ej: Usar embeddings de CLIP 3D o descriptores matemáticos).
+>    * Para entrenar una IA que reconozca un "Muro" solo por su forma, necesito miles de muros etiquetados. No tengo ese dataset.
+>    * Propón una estrategia "Zero-Shot" o "Few-Shot". ¿Podemos clasificar sin entrenar un modelo desde cero? (Ej: Usar embeddings de CLIP 3D o descriptores matemáticos).
 > 
 > 3.  **UX y Confianza (Trust):**
->     * Si la IA mueve 5.000 objetos de capa y se equivoca en el 5%, el usuario pierde confianza.
->     * Diseña (conceptualmente) el flujo de "Human-in-the-loop". ¿Cómo puede el usuario validar la clasificación rápidamente antes de confirmar?
+>    * Si la IA mueve 5.000 objetos de capa y se equivoca en el 5%, el usuario pierde confianza.
+>    * Diseña (conceptualmente) el flujo de "Human-in-the-loop". ¿Cómo puede el usuario validar la clasificación rápidamente antes de confirmar?
 > 
 > 4.  **Definición del MVP (Alcance TFM):**
->     * Define un alcance acotado. En lugar de clasificar *todo* el edificio, ¿deberíamos centrarnos solo en "Elementos Estructurales" (Pilares, Vigas, Losas)?
->     * Propón el stack tecnológico: ¿Rhino.Compute local? ¿API de OpenAI? ¿Librerías de Python como `trimesh` o `scikit-learn`?
+>    * Define un alcance acotado. En lugar de clasificar *todo* el edificio, ¿deberíamos centrarnos solo en "Elementos Estructurales" (Pilares, Vigas, Losas)?
+>    * Propón el stack tecnológico: ¿Rhino.Compute local? ¿API de OpenAI? ¿Librerías de Python como `trimesh` o `scikit-learn`?
 > 
 > **Output esperado:**
 > Un informe que compare la vía "Académica" (3D Deep Learning) vs. la vía "Pragmática" (Feature Engineering + LLM), recomendando la mejor ruta para un proyecto individual de máster.
@@ -301,20 +301,20 @@ Realizaré análisis comparativo Deep Learning (PointNet) vs. Hybrid (LLM + geom
 > **Tareas de Análisis:**
 > 
 > 1.  **Crítica al Enfoque de Reinforcement Learning (RL):**
->     * El RL requiere un "entorno" de simulación para entrenarse (millones de iteraciones). ¿Es viable crear un simulador de corte láser/CNC realista en Python como parte de un TFM?
->     * ¿Sería más inteligente usar **Algoritmos Genéticos** o **Optimización Convexa** clásica en lugar de Deep RL? Compara la complejidad de implementación vs. beneficio.
+>    * El RL requiere un "entorno" de simulación para entrenarse (millones de iteraciones). ¿Es viable crear un simulador de corte láser/CNC realista en Python como parte de un TFM?
+>    * ¿Sería más inteligente usar **Algoritmos Genéticos** o **Optimización Convexa** clásica en lugar de Deep RL? Compara la complejidad de implementación vs. beneficio.
 > 
 > 2.  **El Problema de la "Alucinación" en G-Code:**
->     * Si un LLM o una red neuronal genera texto (G-code) y se equivoca en una coordenada, la máquina puede chocar físicamente.
->     * Analiza el riesgo de generar G-code directamente. ¿Deberíamos limitar el alcance a generar solo **Geometría Optimizada** (DXF limpio, Arcos perfectos) y dejar que el software CAM tradicional haga el G-code?
+>    * Si un LLM o una red neuronal genera texto (G-code) y se equivoca en una coordenada, la máquina puede chocar físicamente.
+>    * Analiza el riesgo de generar G-code directamente. ¿Deberíamos limitar el alcance a generar solo **Geometría Optimizada** (DXF limpio, Arcos perfectos) y dejar que el software CAM tradicional haga el G-code?
 > 
 > 3.  **Definición del MVP (El problema "Curve to Arc"):**
->     * El análisis menciona el deseo de "convertir curvas a arcos/polilíneas".
->     * ¿Podría ser este el MVP perfecto? Una herramienta pequeña que tome una Spline compleja y use IA para encontrar la mejor aproximación con arcos tangentes (ideal para máquinas CNC antiguas).
->     * Evalúa si esto es suficiente para un TFM de "AI Engineer" o si se queda corto.
+>    * El análisis menciona el deseo de "convertir curvas a arcos/polilíneas".
+>    * ¿Podría ser este el MVP perfecto? Una herramienta pequeña que tome una Spline compleja y use IA para encontrar la mejor aproximación con arcos tangentes (ideal para máquinas CNC antiguas).
+>    * Evalúa si esto es suficiente para un TFM de "AI Engineer" o si se queda corto.
 > 
 > 4.  **Comparativa de Mercado (Nesting):**
->     * Ya existen herramientas como DeepNest (Open Source). ¿Qué valor añadiría una IA aquí? ¿Velocidad? ¿Mejor uso de retales?
+>    * Ya existen herramientas como DeepNest (Open Source). ¿Qué valor añadiría una IA aquí? ¿Velocidad? ¿Mejor uso de retales?
 > 
 > **Output esperado:**
 > Una recomendación honesta sobre si perseguir esta idea (High Risk / High Reward) o si la barrera de entrada técnica (simulación física) es demasiado alta para 3 meses.
@@ -346,20 +346,20 @@ Realizaré reality check técnico para SmartFabricator. Evaluaré viabilidad de 
 > **Tareas de Análisis:**
 > 
 > 1.  **El Problema de la "Alucinación Destructiva" (Safety):**
->     * Si la IA genera un script que dice `rs.DeleteObjects(rs.AllObjects())` por error, el usuario pierde el trabajo.
->     * Analiza críticamente el riesgo de ejecutar código generado por LLM en un entorno de producción local. ¿Qué "guardrails" reales son técnicamente posibles? (¿Sandboxing? ¿Dry-run/Preview?).
+>    * Si la IA genera un script que dice `rs.DeleteObjects(rs.AllObjects())` por error, el usuario pierde el trabajo.
+>    * Analiza críticamente el riesgo de ejecutar código generado por LLM en un entorno de producción local. ¿Qué "guardrails" reales son técnicamente posibles? (¿Sandboxing? ¿Dry-run/Preview?).
 > 
 > 2.  **El Reto del Contexto (Context Awareness):**
->     * Para que la IA diga "Mueve *esa* columna", la IA necesita saber qué es "*esa* columna". Los LLMs son ciegos al Viewport de Rhino.
->     * ¿Cómo inyectamos el estado del modelo (GUIDs, capas, selección actual) en el prompt sin exceder la ventana de contexto o gastar una fortuna en tokens?
+>    * Para que la IA diga "Mueve *esa* columna", la IA necesita saber qué es "*esa* columna". Los LLMs son ciegos al Viewport de Rhino.
+>    * ¿Cómo inyectamos el estado del modelo (GUIDs, capas, selección actual) en el prompt sin exceder la ventana de contexto o gastar una fortuna en tokens?
 > 
 > 3.  **Code Gen vs. Graph Gen:**
->     * La propuesta menciona "Generate Grasshopper definitions".
->     * Critica esto: ¿Es realista generar archivos XML/binarios de Grasshopper (.gh) funcionales mediante texto? ¿O es mucho más sensato generar scripts de Python (`rhinoscriptsyntax`) que hagan lo mismo? Compara la viabilidad de ambos para un TFM.
+>    * La propuesta menciona "Generate Grasshopper definitions".
+>    * Critica esto: ¿Es realista generar archivos XML/binarios de Grasshopper (.gh) funcionales mediante texto? ¿O es mucho más sensato generar scripts de Python (`rhinoscriptsyntax`) que hagan lo mismo? Compara la viabilidad de ambos para un TFM.
 > 
 > 4.  **Análisis de Valor (Speed vs. Typing):**
->     * Escribir "Haz una caja de 10x10x10" tarda 5 segundos. Hacer clic en el icono de caja tarda 1 segundo.
->     * Identifica los casos de uso donde el Chat es *realmente* más rápido (ej: selecciones complejas, batch processing) y descarta los que son peores que la interfaz gráfica.
+>    * Escribir "Haz una caja de 10x10x10" tarda 5 segundos. Hacer clic en el icono de caja tarda 1 segundo.
+>    * Identifica los casos de uso donde el Chat es *realmente* más rápido (ej: selecciones complejas, batch processing) y descarta los que son peores que la interfaz gráfica.
 > 
 > **Output esperado:**
 > Una hoja de ruta crítica. Si recomiendas seguir adelante, define la arquitectura de seguridad imprescindible para no romper los archivos de los usuarios.
@@ -407,8 +407,8 @@ Realizaré análisis forense de AEC Copilot evaluando riesgos de ejecución de c
 > 
 > ### 4. UX/DX: Integración en el Workflow del Arquitecto
 > * Compara dos interfaces de implementación en Rhino/Grasshopper: 
->     * **A) Agente de Chat (Side-panel):** Recupera y sugiere definiciones o fragmentos de código.
->     * **B) Autocompletado Proactivo (Ghost-nodes):** Predice el siguiente nodo o conexión en el lienzo basándose en el fine-tuning.
+>    * **A) Agente de Chat (Side-panel):** Recupera y sugiere definiciones o fragmentos de código.
+>    * **B) Autocompletado Proactivo (Ghost-nodes):** Predice el siguiente nodo o conexión en el lienzo basándose en el fine-tuning.
 > * ¿Cuál aporta un ROI más claro para una empresa y cuál es más factible de prototipar como MVP para un máster de desarrollo?
 > 
 > **Output esperado:**
@@ -444,15 +444,15 @@ Siguiendo protocolo AGENTS.md: Loggear prompt completo primero. Luego analizaré
 > ### 1. El Reto de la Serialización de Grafos (DAG to Sequence)
 > * Grasshopper es un Grafo Acíclico Dirigido (DAG). Para entrenar un LLM, necesito "aplanar" ese grafo a texto.
 > * Analiza: ¿Cuál es el formato más eficiente para que el modelo aprenda? 
->     * ¿JSON estructurado? 
->     * ¿Una pseudo-sintaxis tipo "NodeA[Out] -> NodeB[In]"? 
->     * ¿O entrenar directamente sobre el XML de `.ghx` ignorando los metadatos de posición visual (X, Y)?
+>    * ¿JSON estructurado? 
+>    * ¿Una pseudo-sintaxis tipo "NodeA[Out] -> NodeB[In]"? 
+>    * ¿O entrenar directamente sobre el XML de `.ghx` ignorando los metadatos de posición visual (X, Y)?
 > * Evalúa cómo manejar los **GUIDs**: Los componentes tienen IDs únicos que cambian en cada archivo. ¿Cómo hacemos que el modelo aprenda "conceptos" de nodos y no IDs aleatorios?
 > 
 > ### 2. Fine-Tuning vs. RAG para Predicción de Nodos
 > * Compara dos estrategias para el MVP del máster:
->     * **A) Fine-tuning (LoRA):** El modelo "sabe" qué nodo sigue porque ha internalizado los patrones.
->     * **B) RAG de Grafos:** El sistema busca en una base de datos vectorial sub-grafos similares al que el usuario está dibujando y los "pega" como sugerencia.
+>    * **A) Fine-tuning (LoRA):** El modelo "sabe" qué nodo sigue porque ha internalizado los patrones.
+>    * **B) RAG de Grafos:** El sistema busca en una base de datos vectorial sub-grafos similares al que el usuario está dibujando y los "pega" como sugerencia.
 > * ¿Cuál es más viable para un desarrollo de 3 meses y cuál ofrece una respuesta más rápida (latencia) dentro de Rhino?
 > 
 > ### 3. UX: La Interfaz de "Sugerencia Proactiva"
@@ -542,13 +542,13 @@ Analizaré viabilidad de "Sistema Gestión Piezas Sagrada Familia". Evaluación 
 > 
 > 1.  **Proyecto Seleccionado:** "Sagrada Familia Parts Manager" (Enterprise Digital Twin System).
 > 2.  **Identidad del Producto:**
->     * **Tipo:** Sistema de Gestión de Inventario Digital 3D & Trazabilidad Logística.
->     * **Enfoque:** Systems Architecture, BIM Integration, Hybrid AI Agents (LangGraph).
->     * **Diferenciación:** Solución "Enterprise/Industrial" frente a herramientas "SaaS generalistas". Simulamos una entrega para un cliente de alto perfil (Patrimonio/Construcción Compleja).
+>    * **Tipo:** Sistema de Gestión de Inventario Digital 3D & Trazabilidad Logística.
+>    * **Enfoque:** Systems Architecture, BIM Integration, Hybrid AI Agents (LangGraph).
+>    * **Diferenciación:** Solución "Enterprise/Industrial" frente a herramientas "SaaS generalistas". Simulamos una entrega para un cliente de alto perfil (Patrimonio/Construcción Compleja).
 > 3.  **Objetivos de Alto Nivel:**
->     * Demostrar capacidad de arquitectura de sistemas complejos (Front 3D + Back Data + AI).
->     * Resolver el problema de "Data Gravity" en modelos masivos mediante extracción híbrida (Metadata vs. Geometry).
->     * Implementar un "Agente Bibliotecario" (The Librarian) para normalización de datos.
+>    * Demostrar capacidad de arquitectura de sistemas complejos (Front 3D + Back Data + AI).
+>    * Resolver el problema de "Data Gravity" en modelos masivos mediante extracción híbrida (Metadata vs. Geometry).
+>    * Implementar un "Agente Bibliotecario" (The Librarian) para normalización de datos.
 > 
 > **Acciones Requeridas en Archivos:**
 > * **`productContext.md`:** Reemplaza el contexto de exploración por la descripción de este sistema específico. Define al "Usuario Principal" como el Gestor de BIM/Logística de la obra.
@@ -578,22 +578,22 @@ Oficializaré "Sagrada Familia Parts Manager" como proyecto TFM. Actualizaré pr
 > 3. **Actualizar memory-bank/decisions.md**: Registrar decisión #013 del kickoff oficial (2026-01-26) justificando enfoque en Architecture & Systems, estrategia de MVP para inversores, y elección de README como documentación técnica centralizada.
 >
 > 4. **Crear README.md** estructurado en 8 secciones: 
->    - **Encabezado** (nombre, tagline, estado en desarrollo, badges)
->    - **Fase 1: Contexto y Estrategia** (problema Data Gravity en SF, propuesta Digital Twin Activo)
->    - **Fase 2: Definición del Producto** con subsecciones:
->      - User Personas detalladas (Arquitecto/BIM Manager/Gestor de Piedra)
->      - Arquitectura del Sistema (diagrama textual del flujo de validación The Librarian con ISO-19650)
->      - Stack Tecnológico completo (Frontend: React+Three.js+React-Three-Fiber. Analizar ThatOpenCompany; Backend: FastAPI+rhino3dm+Celery; Data: PostgreSQL/Supabase+S3; AI: LangGraph)
->      - Modelo de Datos (esquema PostgreSQL con tablas `parts`, `geometry`, `metadata`, `events`)
->      - Roadmap de Features por valor de negocio (P0-MVP: Carga+Validación+Visor3D; P1-Scale: Búsqueda+RBAC+Audit; P2-Enterprise: API+Integraciones)
->    - **Fases 3-4 Placeholder** (Casos de Uso, Deployment)
+>   - **Encabezado** (nombre, tagline, estado en desarrollo, badges)
+>   - **Fase 1: Contexto y Estrategia** (problema Data Gravity en SF, propuesta Digital Twin Activo)
+>   - **Fase 2: Definición del Producto** con subsecciones:
+>     - User Personas detalladas (Arquitecto/BIM Manager/Gestor de Piedra)
+>     - Arquitectura del Sistema (diagrama textual del flujo de validación The Librarian con ISO-19650)
+>     - Stack Tecnológico completo (Frontend: React+Three.js+React-Three-Fiber. Analizar ThatOpenCompany; Backend: FastAPI+rhino3dm+Celery; Data: PostgreSQL/Supabase+S3; AI: LangGraph)
+>     - Modelo de Datos (esquema PostgreSQL con tablas `parts`, `geometry`, `metadata`, `events`)
+>     - Roadmap de Features por valor de negocio (P0-MVP: Carga+Validación+Visor3D; P1-Scale: Búsqueda+RBAC+Audit; P2-Enterprise: API+Integraciones)
+>   - **Fases 3-4 Placeholder** (Casos de Uso, Deployment)
 >
 > 5. **Formular 3-5 preguntas técnicas bloqueantes** como Tech Lead:
->    - Estructura monorepo (apps/frontend, apps/backend, packages/shared vs alternativas)
->    - Almacenamiento de archivos pesados (.3dm, .glb) con estrategia Git LFS vs Supabase Storage vs AWS S3
->    - Arquitectura de procesamiento asíncrono (Celery+Redis vs BullMQ vs Temporal)
->    - Configuración inicial de autenticación (Supabase Auth built-in vs JWT custom)
->    - Estrategia de testing (Jest+Pytest vs Vitest+Pytest vs alternativas)
+>   - Estructura monorepo (apps/frontend, apps/backend, packages/shared vs alternativas)
+>   - Almacenamiento de archivos pesados (.3dm, .glb) con estrategia Git LFS vs Supabase Storage vs AWS S3
+>   - Arquitectura de procesamiento asíncrono (Celery+Redis vs BullMQ vs Temporal)
+>   - Configuración inicial de autenticación (Supabase Auth built-in vs JWT custom)
+>   - Estrategia de testing (Jest+Pytest vs Vitest+Pytest vs alternativas)
 >
 > ## Further Considerations
 >
@@ -629,21 +629,21 @@ Creación del README.md como Single Source of Truth técnico con 8 secciones: ar
 > **Instrucciones para el Memory Bank (`productContext.md`):**
 > 
 > 1.  **Define la Estructura de Fases Oficial:**
->     Añade una sección llamada `## Estructura de Fases del Proyecto` con el siguiente contenido:
->     * **FASE 1: Análisis y Estrategia.** (Problema, Visión, Propuesta de Valor).
->     * **FASE 2: Definición del Software (PRD).** (User Personas, Alcance MVP, Stack Tecnológico conceptual).
->     * **FASE 3: Modelo de Negocio/Servicio.** (Lean Canvas adaptado a Enterprise/Oficina Técnica).
->     * **FASE 4: Casos de Uso Críticos.** (Diagramas de flujo y secuencia para Ingesta, Visualización y Auditoría).
->     * **FASE 5: Modelo de Datos.** (Esquema Entidad-Relación, Tablas SQL y Estructura JSONB).
->     * **FASE 6: Arquitectura de Alto Nivel.** (Diagrama de componentes, patrones de comunicación).
->     * **FASE 7: Diseño en Profundidad (C4).** (Foco en el "Librarian Agent" y el motor de validación).
+>    Añade una sección llamada `## Estructura de Fases del Proyecto` con el siguiente contenido:
+>    * **FASE 1: Análisis y Estrategia.** (Problema, Visión, Propuesta de Valor).
+>    * **FASE 2: Definición del Software (PRD).** (User Personas, Alcance MVP, Stack Tecnológico conceptual).
+>    * **FASE 3: Modelo de Negocio/Servicio.** (Lean Canvas adaptado a Enterprise/Oficina Técnica).
+>    * **FASE 4: Casos de Uso Críticos.** (Diagramas de flujo y secuencia para Ingesta, Visualización y Auditoría).
+>    * **FASE 5: Modelo de Datos.** (Esquema Entidad-Relación, Tablas SQL y Estructura JSONB).
+>    * **FASE 6: Arquitectura de Alto Nivel.** (Diagrama de componentes, patrones de comunicación).
+>    * **FASE 7: Diseño en Profundidad (C4).** (Foco en el "Librarian Agent" y el motor de validación).
 > 
 > 2.  **Establece la "Regla de Oro de Fases":**
->     Añade una sección `## Reglas de Ejecución` con la siguiente directiva:
->     > "El LLM tiene terminantemente PROHIBIDO generar contenido, código o decisiones arquitectónicas que pertenezcan a una fase futura a la actual. Solo se puede trabajar en la FASE ACTIVA designada por el usuario. Si el usuario pide algo de una fase futura, el LLM debe rechazarlo y sugerir volver a la fase actual." 
+>    Añade una sección `## Reglas de Ejecución` con la siguiente directiva:
+>    > "El LLM tiene terminantemente PROHIBIDO generar contenido, código o decisiones arquitectónicas que pertenezcan a una fase futura a la actual. Solo se puede trabajar en la FASE ACTIVA designada por el usuario. Si el usuario pide algo de una fase futura, el LLM debe rechazarlo y sugerir volver a la fase actual." 
 > 
 > 3.  **Actualiza el Log:**
->     Añade una entrada en `prompts.md` registrando este prompt como "Definición de Metodología y Fases", tal y como se refleja en el protocolo agents.md
+>    Añade una entrada en `prompts.md` registrando este prompt como "Definición de Metodología y Fases", tal y como se refleja en el protocolo agents.md
 > 
 > **Output esperado:**
 > Confirma que las fases y reglas han sido grabadas en la memoria del proyecto.
@@ -671,30 +671,30 @@ Actualización de `productContext.md` con estructura de 7 fases del proyecto SF-
 > **Instrucciones:**
 > 
 > 1.  **Actualización de Contexto:**
->     * En `productContext.md`, asegura que el "Current Project Focus" sea SF-PM.
->     * En `prompts.md`, registra este prompt como "Generación de README (Fases 1 y 2)".
+>    * En `productContext.md`, asegura que el "Current Project Focus" sea SF-PM.
+>    * En `prompts.md`, registra este prompt como "Generación de README (Fases 1 y 2)".
 > 
 > 2.  **Generación de Contenido (`README.md`):**
->     Crea el archivo `README.md` en la raíz. Debe contener **EXCLUSIVAMENTE** lo siguiente:
+>    Crea el archivo `README.md` en la raíz. Debe contener **EXCLUSIVAMENTE** lo siguiente:
 > 
->     * **Encabezado:** Nombre del proyecto y Estado ("Fase 2: Definición").
->     * **Sección FASE 1 (Estrategia):**
->         * **El Problema:** La desconexión entre el modelo paramétrico (Rhino) y la logística física en una obra de siglos de duración.
->         * **La Solución:** Un "Gemelo Digital Activo" que valida y traza cada bloque.
->         * **Propuesta de Valor:** Integridad ISO-19650, Reducción de rechazos en taller, Visualización democrática.
->     * **Sección FASE 2 (PRD):**
->         * **User Personas:**
->             * *El Arquitecto:* Necesita validación inmediata.
->             * *El Bibliotecario (OT):* Necesita higiene de datos automática.
->             * *El Gestor de Piedra:* Necesita control visual de stock.
->         * **El Agente "The Librarian":** Descripción funcional (no técnica) de cómo intercepta, valida y acepta/rechaza archivos.
->         * **Feature Map (MVP):** Ingesta, Validación Activa, Visor Web, Dashboard.
->         * **Stack Tecnológico:** React, Three.js, FastAPI, Supabase, LangGraph, Rhino3dm.
+>    * **Encabezado:** Nombre del proyecto y Estado ("Fase 2: Definición").
+>    * **Sección FASE 1 (Estrategia):**
+>        * **El Problema:** La desconexión entre el modelo paramétrico (Rhino) y la logística física en una obra de siglos de duración.
+>        * **La Solución:** Un "Gemelo Digital Activo" que valida y traza cada bloque.
+>        * **Propuesta de Valor:** Integridad ISO-19650, Reducción de rechazos en taller, Visualización democrática.
+>    * **Sección FASE 2 (PRD):**
+>        * **User Personas:**
+>            * *El Arquitecto:* Necesita validación inmediata.
+>            * *El Bibliotecario (OT):* Necesita higiene de datos automática.
+>            * *El Gestor de Piedra:* Necesita control visual de stock.
+>        * **El Agente "The Librarian":** Descripción funcional (no técnica) de cómo intercepta, valida y acepta/rechaza archivos.
+>        * **Feature Map (MVP):** Ingesta, Validación Activa, Visor Web, Dashboard.
+>        * **Stack Tecnológico:** React, Three.js, FastAPI, Supabase, LangGraph, Rhino3dm.
 > 
 > 3.  **Restricciones Negativas (Critical):**
->     * **NO** incluyas diagramas de base de datos (Fase 5).
->     * **NO** incluyas estructura de carpetas ni comandos de instalación (Fase 6).
->     * **NO** generes código.
+>    * **NO** incluyas diagramas de base de datos (Fase 5).
+>    * **NO** incluyas estructura de carpetas ni comandos de instalación (Fase 6).
+>    * **NO** generes código.
 > 
 > **Output esperado:**
 > El contenido del `README.md` listo para ser guardado.
@@ -761,12 +761,12 @@ Actualización completa del README.md con: (1) Wireframes ASCII de 3 interfaces 
 > **Acciones de Ejecución:**
 > 
 > 1.  **Actualización de Memoria:**
->     * Registra en `prompts.md` la ejecución de "Fase 3: Modelo de Servicio".
->     * No es necesario modificar `productContext.md` si el foco sigue siendo el mismo.
+>    * Registra en `prompts.md` la ejecución de "Fase 3: Modelo de Servicio".
+>    * No es necesario modificar `productContext.md` si el foco sigue siendo el mismo.
 > 
 > 2.  **Edición del `README.md`:**
->     * Añade la sección `## FASE 3: Modelo de Servicio (Lean Canvas)` a continuación de la Fase 2.
->     * Inserta la tabla detallada.
+>    * Añade la sección `## FASE 3: Modelo de Servicio (Lean Canvas)` a continuación de la Fase 2.
+>    * Inserta la tabla detallada.
 > 
 > **Restricciones (Regla de Oro):**
 > * **NO** avances a la Fase 4 (Casos de uso/Diagramas).
@@ -800,27 +800,27 @@ Actualización del README.md con FASE 3 completa: Lean Canvas adaptado a herrami
 > **Instrucciones de Ejecución:**
 > 
 > 1.  **Agrupación Lógica (Mapping):**
->     Agrupa las User Stories del `README.md` en **3 Flujos Críticos de Sistema** (Épicas):
->     * **CU-01: Ingesta y Validación (The Gatekeeper):** Agrupa US-001, US-002, US-003, US-004.
->     * **CU-02: Gestión y Visualización (The Viewer):** Agrupa US-005, US-006, US-010, US-011.
->     * **CU-03: Trazabilidad y Operativa (The Workflow):** Agrupa US-007, US-008, US-009, US-012.
+>    Agrupa las User Stories del `README.md` en **3 Flujos Críticos de Sistema** (Épicas):
+>    * **CU-01: Ingesta y Validación (The Gatekeeper):** Agrupa US-001, US-002, US-003, US-004.
+>    * **CU-02: Gestión y Visualización (The Viewer):** Agrupa US-005, US-006, US-010, US-011.
+>    * **CU-03: Trazabilidad y Operativa (The Workflow):** Agrupa US-007, US-008, US-009, US-012.
 > 
 > 2.  **Análisis de Dependencias (Critical Path):**
->     * Analiza: ¿Qué datos necesita el CU-02 para funcionar? (Respuesta: Los metadatos creados en CU-01).
->     * Analiza: ¿Qué necesita el CU-03? (Respuesta: El estado base definido en CU-01 y visualizado en CU-02).
->     * Establece el orden de prioridad: **P0 (Bloqueante)** vs **P1 (Dependiente)**.
+>    * Analiza: ¿Qué datos necesita el CU-02 para funcionar? (Respuesta: Los metadatos creados en CU-01).
+>    * Analiza: ¿Qué necesita el CU-03? (Respuesta: El estado base definido en CU-01 y visualizado en CU-02).
+>    * Establece el orden de prioridad: **P0 (Bloqueante)** vs **P1 (Dependiente)**.
 > 
 > 3.  **Generación de Contenido para `README.md`:**
->     Añade la sección **FASE 4: Casos de Uso y Arquitectura de Flujos** al final del documento maestro. Para cada CU, incluye:
->     * **Título y Prioridad:** (ej: `### CU-01: Ingesta y Validación (P0 - Critical Core)`)
->     * **User Stories Cubiertas:** Lista explícitamente qué US del PRD cubre este flujo.
->     * **Diagrama de Flujo (Mermaid `flowchart TD`):** Muestra la lógica de decisión (ej: Si Validación ISO falla -> Informe de Error).
->     * **Diagrama de Secuencia (Mermaid `sequenceDiagram`):** Muestra los mensajes técnicos entre:
->         * `Frontend (React)`
->         * `API (FastAPI)`
->         * `Agent (The Librarian)`
->         * `DB (Supabase)`
->         * `Storage (S3)`
+>    Añade la sección **FASE 4: Casos de Uso y Arquitectura de Flujos** al final del documento maestro. Para cada CU, incluye:
+>    * **Título y Prioridad:** (ej: `### CU-01: Ingesta y Validación (P0 - Critical Core)`)
+>    * **User Stories Cubiertas:** Lista explícitamente qué US del PRD cubre este flujo.
+>    * **Diagrama de Flujo (Mermaid `flowchart TD`):** Muestra la lógica de decisión (ej: Si Validación ISO falla -> Informe de Error).
+>    * **Diagrama de Secuencia (Mermaid `sequenceDiagram`):** Muestra los mensajes técnicos entre:
+>        * `Frontend (React)`
+>        * `API (FastAPI)`
+>        * `Agent (The Librarian)`
+>        * `DB (Supabase)`
+>        * `Storage (S3)`
 > 
 > **Acciones de Memoria:**
 > * Registra en `prompts.md` la ejecución de "Fase 4: Casos de Uso".
@@ -856,20 +856,20 @@ Actualización README.md con FASE 4: 3 Casos de Uso Maestros agrupando 14 User S
 > **Instrucciones de Ejecución:**
 > 
 > 1.  **Definición de Entidades Core:**
->     Define las tablas necesarias. Sugerencia de estructura base (puedes mejorarla):
->     * **`blocks` (Piezas):** Tabla maestra. UUID, Código ISO, Estado, Referencias a geometría.
->     * **`zones` (Contexto):** Para organizar (ej: Torre de María, Nivel 15).
->     * **`events` (Audit Log):** CRÍTICO. Tabla inmutable (append-only) para el Event Sourcing (Quién cambió qué y cuándo).
->     * **`users` / `profiles`:** Gestión de roles (vinculado a Supabase Auth).
+>    Define las tablas necesarias. Sugerencia de estructura base (puedes mejorarla):
+>    * **`blocks` (Piezas):** Tabla maestra. UUID, Código ISO, Estado, Referencias a geometría.
+>    * **`zones` (Contexto):** Para organizar (ej: Torre de María, Nivel 15).
+>    * **`events` (Audit Log):** CRÍTICO. Tabla inmutable (append-only) para el Event Sourcing (Quién cambió qué y cuándo).
+>    * **`users` / `profiles`:** Gestión de roles (vinculado a Supabase Auth).
 > 
 > 2.  **Estrategia Híbrida (JSONB):**
->     * Explica cómo usaremos columnas `JSONB` para almacenar los metadatos flexibles que extraemos de Rhino (User Text, Propiedades Físicas) sin necesidad de migrar el esquema cada vez que un arquitecto añade un atributo nuevo.
+>    * Explica cómo usaremos columnas `JSONB` para almacenar los metadatos flexibles que extraemos de Rhino (User Text, Propiedades Físicas) sin necesidad de migrar el esquema cada vez que un arquitecto añade un atributo nuevo.
 > 
 > 3.  **Generación de Contenido para `README.md`:**
->     Añade la sección **FASE 5: Modelo de Datos** al documento maestro con:
->     * **Diagrama ER (Mermaid `erDiagram`):** Visualización de tablas y relaciones.
->     * **Diccionario de Datos:** Tabla descriptiva de las tablas principales y sus campos clave (ej: `status` como ENUM).
->     * **Políticas de Seguridad (RLS - Row Level Security):** Define conceptualmente quién puede leer/escribir en cada tabla (ej: *Taller solo lectura en `blocks`, escritura en `status`*).
+>    Añade la sección **FASE 5: Modelo de Datos** al documento maestro con:
+>    * **Diagrama ER (Mermaid `erDiagram`):** Visualización de tablas y relaciones.
+>    * **Diccionario de Datos:** Tabla descriptiva de las tablas principales y sus campos clave (ej: `status` como ENUM).
+>    * **Políticas de Seguridad (RLS - Row Level Security):** Define conceptualmente quién puede leer/escribir en cada tabla (ej: *Taller solo lectura en `blocks`, escritura en `status`*).
 > 
 > **Acciones de Memoria:**
 > * Registra en `prompts.md` la ejecución de "Fase 5: Modelo de Datos".
@@ -911,26 +911,26 @@ Actualización README.md con FASE 5 completa: Esquema PostgreSQL/Supabase con 8 
 > **Instrucciones de Ejecución:**
 > 
 > 1.  **Definición de Componentes y Responsabilidades:**
->     * Describe cada bloque del sistema y su función única.
->     * **Decisión Clave:** ¿Cómo se comunica la API con el Agente de Validación? Sugerencia: Patrón asíncrono (Event-Driven) para no bloquear al usuario mientras se procesa un archivo de 500MB.
+>    * Describe cada bloque del sistema y su función única.
+>    * **Decisión Clave:** ¿Cómo se comunica la API con el Agente de Validación? Sugerencia: Patrón asíncrono (Event-Driven) para no bloquear al usuario mientras se procesa un archivo de 500MB.
 > 
 > 2.  **Diagrama de Arquitectura (Mermaid):**
->     * Genera un diagrama `graph TD` o `C4 Container` que muestre:
->         * **Client:** Browser (React App).
->         * **API Gateway / Backend:** FastAPI.
->         * **Data Layer:** Supabase (Auth, DB, Realtime).
->         * **Worker / Agent Layer:** El servicio de validación (The Librarian) ejecutándose en segundo plano (pueden ser Celery Workers o un servicio separado).
->         * **Storage:** Buckets S3 (Quarantine vs Clean).
+>    * Genera un diagrama `graph TD` o `C4 Container` que muestre:
+>        * **Client:** Browser (React App).
+>        * **API Gateway / Backend:** FastAPI.
+>        * **Data Layer:** Supabase (Auth, DB, Realtime).
+>        * **Worker / Agent Layer:** El servicio de validación (The Librarian) ejecutándose en segundo plano (pueden ser Celery Workers o un servicio separado).
+>        * **Storage:** Buckets S3 (Quarantine vs Clean).
 > 
 > 3.  **Flujos de Comunicación:**
->     * Explica cómo fluyen los datos en el caso crítico de "Ingesta":
->         1. Upload directo a S3 (Presigned URL) para velocidad.
->         2. Webhook/Evento dispara al Agente.
->         3. Agente procesa y actualiza DB.
->         4. Frontend recibe notificación vía WebSocket (Supabase Realtime).
+>    * Explica cómo fluyen los datos en el caso crítico de "Ingesta":
+>        1. Upload directo a S3 (Presigned URL) para velocidad.
+>        2. Webhook/Evento dispara al Agente.
+>        3. Agente procesa y actualiza DB.
+>        4. Frontend recibe notificación vía WebSocket (Supabase Realtime).
 > 
 > 4.  **Generación de Contenido para `README.md`:**
->     Añade la sección **FASE 6: Arquitectura de Alto Nivel** al documento maestro.
+>    Añade la sección **FASE 6: Arquitectura de Alto Nivel** al documento maestro.
 > 
 > **Acciones de Memoria:**
 > * Registra en `prompts.md` la ejecución de "Fase 6: Arquitectura de Sistemas".
@@ -966,22 +966,22 @@ Actualización README.md con FASE 6 completa: Arquitectura Cloud-Native con 6 ca
 > **Instrucciones de Ejecución:**
 > 
 > 1.  **Definición de Componentes Internos del Agente:**
->     Desglosa "The Librarian" en sub-componentes lógicos. Ejemplo:
->     * **State Manager (LangGraph):** Mantiene el estado de la validación (Pendiente -> Validando Sintaxis -> Validando Geometría...).
->     * **Syntax Validator:** Motor de Reglas (Regex) para ISO-19650.
->     * **Geometry Extractor:** Wrapper de `rhino3dm` que abre el archivo y extrae metadatos.
->     * **Semantic Validator (LLM):** Cliente que envía metadatos a GPT-4 para comprobaciones de sentido común ("¿Es normal que este bloque pese 5 toneladas?").
->     * **Report Generator:** Compila los errores en un JSON/PDF amigable.
+>    Desglosa "The Librarian" en sub-componentes lógicos. Ejemplo:
+>    * **State Manager (LangGraph):** Mantiene el estado de la validación (Pendiente -> Validando Sintaxis -> Validando Geometría...).
+>    * **Syntax Validator:** Motor de Reglas (Regex) para ISO-19650.
+>    * **Geometry Extractor:** Wrapper de `rhino3dm` que abre el archivo y extrae metadatos.
+>    * **Semantic Validator (LLM):** Cliente que envía metadatos a GPT-4 para comprobaciones de sentido común ("¿Es normal que este bloque pese 5 toneladas?").
+>    * **Report Generator:** Compila los errores en un JSON/PDF amigable.
 > 
 > 2.  **Flujo de Datos Interno:**
->     Explica cómo pasa el dato de un componente a otro.
->     * *Ejemplo:* Syntax Validator (OK) -> Geometry Extractor (Extract) -> Semantic Validator (Check) -> DB Commit.
+>    Explica cómo pasa el dato de un componente a otro.
+>    * *Ejemplo:* Syntax Validator (OK) -> Geometry Extractor (Extract) -> Semantic Validator (Check) -> DB Commit.
 > 
 > 3.  **Generación de Contenido para `README.md`:**
->     Añade la sección **FASE 7: Diseño Detallado del Agente (C4 Level 3)** al documento maestro con:
->     * **Descripción de Componentes:** Tabla con responsabilidad de cada módulo interno.
->     * **Diagrama C4 (Mermaid `C4Component` o `classDiagram` adaptado):** Muestra las conexiones internas y las salidas hacia Supabase/S3.
->     * **Grafo de Estado (Mermaid `stateDiagram-v2`):** Visualización de los nodos de LangGraph (Inicio -> CheckISO -> CheckGeo -> CheckAI -> Fin).
+>    Añade la sección **FASE 7: Diseño Detallado del Agente (C4 Level 3)** al documento maestro con:
+>    * **Descripción de Componentes:** Tabla con responsabilidad de cada módulo interno.
+>    * **Diagrama C4 (Mermaid `C4Component` o `classDiagram` adaptado):** Muestra las conexiones internas y las salidas hacia Supabase/S3.
+>    * **Grafo de Estado (Mermaid `stateDiagram-v2`):** Visualización de los nodos de LangGraph (Inicio -> CheckISO -> CheckGeo -> CheckAI -> Fin).
 > 
 > **Acciones de Memoria:**
 > * Registra en `prompts.md` la ejecución de "Fase 7: Diseño Detallado C4".
@@ -1018,22 +1018,22 @@ Diseño arquitectónico C4 Level 3 del Agente "The Librarian" (validación intel
 > **Instrucciones de Ejecución:**
 > 
 > 1.  **Definición de Estructura de Carpetas:**
->     Propón el árbol de directorios ideal para este stack (FastAPI + React + Supabase + LangGraph).
->     * Debe incluir carpetas para `backend/`, `frontend/`, `agent/` y `shared/` (si aplica).
->     * Incluye archivos de configuración clave (`docker-compose.yml`, `.gitignore`, `pyproject.toml`, `package.json`).
->     * *Nota: No generes el código de los archivos aún, solo la estructura del árbol.*
+>    Propón el árbol de directorios ideal para este stack (FastAPI + React + Supabase + LangGraph).
+>    * Debe incluir carpetas para `backend/`, `frontend/`, `agent/` y `shared/` (si aplica).
+>    * Incluye archivos de configuración clave (`docker-compose.yml`, `.gitignore`, `pyproject.toml`, `package.json`).
+>    * *Nota: No generes el código de los archivos aún, solo la estructura del árbol.*
 > 
 > 2.  **Creación del Roadmap (`docs/08-roadmap.md`):**
->     Crea un nuevo archivo de documentación llamado `docs/08-roadmap.md`.
->     Desglosa el desarrollo en **4 Sprints** lógicos:
->     * **Sprint 0: Walking Skeleton.** (Setup de entorno, Docker, conexión Front-Back-DB con "Hello World").
->     * **Sprint 1: The Core (Ingesta).** (Endpoint upload, Validación básica, Guardado en Supabase).
->     * **Sprint 2: The Librarian (Agente).** (Integración de LangGraph, lógica de validación real).
->     * **Sprint 3: The Viewer (Visualización).** (Integración Three.js, carga de GLB).
+>    Crea un nuevo archivo de documentación llamado `docs/08-roadmap.md`.
+>    Desglosa el desarrollo en **4 Sprints** lógicos:
+>    * **Sprint 0: Walking Skeleton.** (Setup de entorno, Docker, conexión Front-Back-DB con "Hello World").
+>    * **Sprint 1: The Core (Ingesta).** (Endpoint upload, Validación básica, Guardado en Supabase).
+>    * **Sprint 2: The Librarian (Agente).** (Integración de LangGraph, lógica de validación real).
+>    * **Sprint 3: The Viewer (Visualización).** (Integración Three.js, carga de GLB).
 > 
 > 3.  **Actualización de Memoria:**
->     * Actualiza `productContext.md`: Cambia el estado del proyecto a **"Phase: Execution & Development"**.
->     * Actualiza `prompts.md`: Registra "Fase 8: Planificación Técnica".
+>    * Actualiza `productContext.md`: Cambia el estado del proyecto a **"Phase: Execution & Development"**.
+>    * Actualiza `prompts.md`: Registra "Fase 8: Planificación Técnica".
 > 
 > **Output esperado:**
 > 1.  El bloque de código con el árbol de directorios propuesto.

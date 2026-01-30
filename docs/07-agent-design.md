@@ -319,7 +319,7 @@ def validate_geometry(state: ValidationState) -> ValidationState:
 
 **Implementación:**
 ```python
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 import json
 
@@ -544,8 +544,13 @@ def process_uploaded_file(block_id: str, s3_key: str):
         "file_path": file_path,
         "filename": s3_key.split("/")[-1],
         "nomenclature_valid": False,
+        "nomenclature_errors": [],
+        "geometry_metadata": {},
         "geometry_valid": False,
+        "geometry_errors": [],
+        "semantic_data": {},
         "semantic_valid": False,
+        "semantic_errors": [],
         "overall_status": "pending"
     }
     

@@ -204,7 +204,7 @@ class LibrarianWorkflow:
 
 **Comunicación con LLM:**
 ```python
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph
 
 llm = ChatOpenAI(model="gpt-4-turbo", temperature=0)

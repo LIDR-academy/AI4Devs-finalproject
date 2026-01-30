@@ -74,7 +74,6 @@ cd frontend && npm install
 cd ../backend && pip install -r requirements.txt
 
 # Configurar variables de entorno
-# Configurar variables de entorno
 cp .env.example .env
 # Editar .env con valores reales:
 # SUPABASE_URL=https://xyz.supabase.co
