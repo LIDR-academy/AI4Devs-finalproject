@@ -1,18 +1,3 @@
-/**
- * MeditationBuilderPage
- * Main page composing all components for meditation composition
- * 
- * Covers all 8 scenarios:
- * 1. Access Meditation Builder
- * 2. Enter and preserve manual text
- * 3. AI text generation/enhancement
- * 4. AI image generation
- * 5. Output type podcast (without image)
- * 6. Output type video (with image)
- * 7. Preview selected music
- * 8. Preview image
- */
-
 import { useEffect, useCallback, useMemo } from 'react';
 import {
   TextEditor,
@@ -33,16 +18,15 @@ import {
 } from '@/hooks';
 import { useGenerateText } from '@/hooks/useGenerateText';
 import { useGenerateImage } from '@/hooks/useGenerateImage';
-import { 
-  useComposerStore, 
-  useCompositionId, 
+import {
+  useComposerStore,
+  useCompositionId,
   useLocalText,
   useSelectedMusicId,
   useSelectedImageId,
   useGenerationError,
 } from '@/state/composerStore';
 
-// Debounce delay for auto-save (ms)
 const AUTO_SAVE_DELAY = 1000;
 
 export function MeditationBuilderPage() {
@@ -51,36 +35,32 @@ export function MeditationBuilderPage() {
   const selectedMusicId = useSelectedMusicId();
   const selectedImageId = useSelectedImageId();
   const generationError = useGenerationError();
-  
-  const setCompositionId = useComposerStore((state) => state.setCompositionId);
-  const setLocalText = useComposerStore((state) => state.setLocalText);
-  const setSelectedMusic = useComposerStore((state) => state.setSelectedMusic);
-  const setSelectedImage = useComposerStore((state) => state.setSelectedImage);
-  
-  // Mutations
+
+  const setCompositionId = useComposerStore((s) => s.setCompositionId);
+  const setLocalText = useComposerStore((s) => s.setLocalText);
+  const setSelectedMusic = useComposerStore((s) => s.setSelectedMusic);
+  const setSelectedImage = useComposerStore((s) => s.setSelectedImage);
+  const textError = useComposerStore((s) => s.textError);
+  const setTextError = useComposerStore((s) => s.setTextError);
+
   const createComposition = useCreateComposition();
   const updateText = useUpdateText(compositionId);
   const selectMusic = useSelectMusic(compositionId);
   const removeImage = useRemoveImage(compositionId);
-  
-  // Generate hooks
+
   const generateText = useGenerateText({ compositionId });
   const generateImage = useGenerateImage({ compositionId });
-  
-  // Preview queries
+
   const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
-  
-  // Require user to enter text before creating a composition
-  const [initialText, setInitialText] = useComposerStore((state) => [state.localText, state.setLocalText]);
-  const [textError, setTextError] = useComposerStore((state) => [state.textError, state.setTextError]);
 
   const handleStart = useCallback(() => {
-    if (!initialText || initialText.trim() === '') {
+    if (!localText?.trim()) {
       setTextError('Please enter meditation text to start.');
       return;
     }
-    createComposition.mutate(initialText, {
+
+    createComposition.mutate(localText, {
       onSuccess: (data) => {
         setCompositionId(data.id);
         setLocalText(data.textContent);
@@ -88,168 +68,116 @@ export function MeditationBuilderPage() {
         if (data.imageReference) setSelectedImage(data.imageReference);
       },
     });
-  }, [initialText, createComposition, setCompositionId, setLocalText, setSelectedMusic, setSelectedImage, setTextError]);
-  
-  // Auto-save text changes (debounced)
+  }, [localText, createComposition]);
+
   useEffect(() => {
-    if (!compositionId || !localText) return;
-    
-    const timeoutId = setTimeout(() => {
+    if (!compositionId) return;
+    const t = setTimeout(() => {
       updateText.mutate({ text: localText });
     }, AUTO_SAVE_DELAY);
-    
-    return () => clearTimeout(timeoutId);
-  }, [localText, compositionId, updateText]);
-  
-  // Handle music selection
-  const handleMusicSelect = useCallback((musicId: string) => {
-    selectMusic.mutate({ musicReference: musicId });
-  }, [selectMusic]);
-  
-  // Handle image removal
-  const handleImageRemove = useCallback(() => {
-    removeImage.mutate();
-  }, [removeImage]);
-  
-  // Handle text generation (Capability 3)
-  const handleGenerateText = useCallback(() => {
-    generateText.mutate({
-      existingText: localText || null,
-      context: null,
-    });
-  }, [generateText, localText]);
-  
-  // Handle image generation (Capability 4)
-  const handleGenerateImage = useCallback(() => {
-    generateImage.mutate();
-  }, [generateImage]);
-  
-  // Loading state
-  const isInitializing = !compositionId || createComposition.isPending;
-  
-  // Music preview data
+    return () => clearTimeout(t);
+  }, [localText, compositionId]);
+
   const musicPreviewData = useMemo(() => ({
     previewUrl: musicPreview.data?.previewUrl,
-    musicName: musicPreview.data?.musicReference ?? selectedMusicId ?? 'Selected Track',
+    musicName: musicPreview.data?.musicReference ?? selectedMusicId ?? '',
   }), [musicPreview.data, selectedMusicId]);
-  
-  // Image preview data
+
   const imagePreviewData = useMemo(() => ({
     previewUrl: imagePreview.data?.previewUrl,
-    imageName: imagePreview.data?.imageReference ?? selectedImageId ?? 'Selected Image',
+    imageName: imagePreview.data?.imageReference ?? selectedImageId ?? '',
   }), [imagePreview.data, selectedImageId]);
-  
-  if (!compositionId) {
-    return (
-      <div className="meditation-builder" data-testid="meditation-builder-init">
-        <header className="meditation-builder__header">
-          <h1>🧘 Meditation Builder</h1>
-          <p>Enter your meditation text to begin</p>
-        </header>
-        <div className="meditation-builder__content">
-          <div className="card">
-            <h2 className="card__title">Meditation Text</h2>
-            <TextEditor 
-              disabled={createComposition.isPending}
-              placeholder="Enter your meditation text to start..."
-            />
-            {textError && (
-              <div className="meditation-builder__error" role="alert" data-testid="init-error">
-                ⚠️ {textError}
-              </div>
-            )}
-            <button 
-              className="start-btn"
-              onClick={handleStart}
-              disabled={createComposition.isPending}
-              data-testid="start-btn"
-            >
-              {createComposition.isPending ? 'Starting...' : 'Start'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
+
+useEffect(() => {
+  if (compositionId) return;
+
+  createComposition.mutate('', {
+    onSuccess: (data) => {
+      setCompositionId(data.id);
+      setLocalText(data.textContent ?? '');
+      if (data.musicReference) setSelectedMusic(data.musicReference);
+      if (data.imageReference) setSelectedImage(data.imageReference);
+    },
+  });
+}, [compositionId]);
+
+  // ⬇️ PANTALLA PRINCIPAL
   return (
-    <div className="meditation-builder" data-testid="meditation-builder">
-      <header className="meditation-builder__header">
-        <h1>🧘 Meditation Builder</h1>
-        <p>Create your personalized meditation content</p>
-      </header>
-      
-      {/* Error display */}
-      {generationError && (
-        <div 
-          className="meditation-builder__error" 
-          role="alert"
-          data-testid="generation-error"
-        >
-          ⚠️ {generationError}
-        </div>
-      )}
-      
-      <div className="meditation-builder__content">
-        {/* Left column: Text and AI generation */}
-        <div className="meditation-builder__left">
-          <div className="card">
-            <h2 className="card__title">Meditation Text</h2>
-            <TextEditor 
-              disabled={generateText.isPending}
-              placeholder="Enter your meditation text here, or use AI to generate it..."
-            />
-            <div className="generate-btn-group">
-              <GenerateTextButton 
-                onGenerate={handleGenerateText}
-                isLoading={generateText.isPending}
-              />
-            </div>
-          </div>
-          
-          <div className="card">
-            <h2 className="card__title">Background Music</h2>
-            <MusicSelector onSelect={handleMusicSelect} />
-            <MusicPreview 
-              previewUrl={musicPreviewData.previewUrl}
-              musicName={musicPreviewData.musicName}
+  <div className="meditation-builder" data-testid="meditation-builder">
+    <header className="meditation-builder__header">
+      <h1>🧘 Meditation Builder</h1>
+      <p>Create your personalized meditation content</p>
+    </header>
+
+    {generationError && (
+      <div role="alert">⚠️ {generationError}</div>
+    )}
+
+    <div className="meditation-builder__content">
+      {/* Left column */}
+      <div className="meditation-builder__left">
+        <div className="card">
+          <h2 className="card__title">Meditation Text</h2>
+          <TextEditor
+            disabled={generateText.isPending}
+            placeholder="Enter your meditation text here, or use AI to generate it..."
+          />
+          <div className="generate-btn-group">
+            <GenerateTextButton
+              onGenerate={() =>
+                generateText.mutate({ existingText: localText })
+              }
+              isLoading={generateText.isPending}
             />
           </div>
         </div>
-        
-        {/* Right column: Image and output type */}
-        <div className="meditation-builder__right">
-          <div className="card">
-            <h2 className="card__title">Output Type</h2>
-            <OutputTypeIndicator />
-          </div>
-          
-          <div className="card">
-            <h2 className="card__title">Visual Content</h2>
-            <ImagePreview 
-              previewUrl={imagePreviewData.previewUrl}
-              imageName={imagePreviewData.imageName}
-              onRemove={handleImageRemove}
-              disabled={removeImage.isPending}
+
+        <div className="card">
+          <h2 className="card__title">Background Music</h2>
+          <MusicSelector
+            onSelect={(id) =>
+              selectMusic.mutate({ musicReference: id })
+            }
+          />
+          <MusicPreview
+            previewUrl={musicPreviewData.previewUrl}
+            musicName={musicPreviewData.musicName}
+          />
+        </div>
+      </div>
+
+      {/* Right column */}
+      <div className="meditation-builder__right">
+        <div className="card">
+          <h2 className="card__title">Output Type</h2>
+          <OutputTypeIndicator />
+        </div>
+
+        <div className="card">
+          <h2 className="card__title">Visual Content</h2>
+          <ImagePreview
+            previewUrl={imagePreviewData.previewUrl}
+            imageName={imagePreviewData.imageName}
+            onRemove={() => removeImage.mutate()}
+            disabled={removeImage.isPending}
+          />
+          <div className="generate-btn-group">
+            <GenerateImageButton
+              onGenerate={() => generateImage.mutate()}
+              isLoading={generateImage.isPending}
             />
-            <div className="generate-btn-group">
-              <GenerateImageButton 
-                onGenerate={handleGenerateImage}
-                isLoading={generateImage.isPending}
-              />
-            </div>
           </div>
         </div>
       </div>
-      
-      {/* Save indicator */}
-      {updateText.isPending && (
-        <div className="meditation-builder__save-indicator" data-testid="save-indicator">
-          Saving...
-        </div>
-      )}
     </div>
-  );
+
+    {updateText.isPending && (
+      <div className="meditation-builder__save-indicator">
+        Saving...
+      </div>
+    )}
+  </div>
+);
 }
 
 export default MeditationBuilderPage;
