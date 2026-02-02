@@ -40,39 +40,37 @@ public class InfrastructureConfig {
 
     // ========== RestClient Beans ==========
 
-    /**
-     * RestClient configured for OpenAI text generation.
-     * 
-     * <p>Uses shorter timeouts suitable for chat completions API.</p>
-     */
-    @Bean
-    @Qualifier("aiTextRestClient")
-    public RestClient aiTextRestClient(OpenAiProperties openAiProperties) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(openAiProperties.text().connectTimeoutMs());
-        requestFactory.setReadTimeout(openAiProperties.text().readTimeoutMs());
+        /**
+         * RestClient configured for OpenAI text generation.
+         * Uses default timeouts (connect: 5000ms, read: 30000ms).
+         */
+        @Bean
+        @Qualifier("aiTextRestClient")
+        public RestClient aiTextRestClient(OpenAiProperties openAiProperties) {
+                SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+                requestFactory.setConnectTimeout(5000); // default connect timeout
+                requestFactory.setReadTimeout(30000);   // default read timeout
 
-        return RestClient.builder()
-                .requestFactory(requestFactory)
-                .build();
-    }
+                return RestClient.builder()
+                                .requestFactory(requestFactory)
+                                .build();
+        }
 
-    /**
-     * RestClient configured for OpenAI image generation.
-     * 
-     * <p>Uses longer timeouts suitable for DALL-E image generation API.</p>
-     */
-    @Bean
-    @Qualifier("aiImageRestClient")
-    public RestClient aiImageRestClient(OpenAiProperties openAiProperties) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(openAiProperties.image().connectTimeoutMs());
-        requestFactory.setReadTimeout(openAiProperties.image().readTimeoutMs());
+        /**
+         * RestClient configured for OpenAI image generation.
+         * Uses longer timeouts (connect: 5000ms, read: 60000ms).
+         */
+        @Bean
+        @Qualifier("aiImageRestClient")
+        public RestClient aiImageRestClient(OpenAiProperties openAiProperties) {
+                SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+                requestFactory.setConnectTimeout(5000); // default connect timeout
+                requestFactory.setReadTimeout(60000);   // longer read timeout for images
 
-        return RestClient.builder()
-                .requestFactory(requestFactory)
-                .build();
-    }
+                return RestClient.builder()
+                                .requestFactory(requestFactory)
+                                .build();
+        }
 
     /**
      * RestClient configured for Media Catalog service.
@@ -102,8 +100,8 @@ public class InfrastructureConfig {
             OpenAiProperties openAiProperties) {
         return new TextGenerationAiAdapter(
                 restClient,
-                openAiProperties.baseUrl(),
-                openAiProperties.apiKey()
+                openAiProperties.getBaseUrl(),
+                openAiProperties.getApiKey()
         );
     }
 
@@ -118,8 +116,8 @@ public class InfrastructureConfig {
             OpenAiProperties openAiProperties) {
         return new ImageGenerationAiAdapter(
                 restClient,
-                openAiProperties.baseUrl(),
-                openAiProperties.apiKey()
+                openAiProperties.getBaseUrl(),
+                openAiProperties.getApiKey()
         );
     }
 
@@ -137,4 +135,40 @@ public class InfrastructureConfig {
                 mediaCatalogProperties.baseUrl()
         );
     }
+
+        /**
+         * ComposeContentService bean (implements ComposeContentUseCase).
+         * Registers the application service as a Spring bean for controller injection.
+         */
+        @Bean
+        public com.hexagonal.meditationbuilder.domain.ports.in.ComposeContentUseCase composeContentUseCase(
+                        MediaCatalogPort mediaCatalogPort,
+                        com.hexagonal.meditationbuilder.domain.ports.out.CompositionRepositoryPort compositionRepositoryPort,
+                        java.time.Clock clock) {
+                return new com.hexagonal.meditationbuilder.application.service.ComposeContentService(
+                                mediaCatalogPort,
+                                compositionRepositoryPort,
+                                clock
+                );
+        }
+
+        /**
+         * GenerateTextService bean (implements GenerateTextUseCase).
+         * Registers the application service as a Spring bean for controller injection.
+         */
+        @Bean
+        public com.hexagonal.meditationbuilder.domain.ports.in.GenerateTextUseCase generateTextUseCase(
+                        com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort textGenerationPort) {
+                return new com.hexagonal.meditationbuilder.application.service.GenerateTextService(textGenerationPort);
+        }
+
+                /**
+         * GenerateImageService bean (implements GenerateImageUseCase).
+         * Registers the application service as a Spring bean for controller injection.
+         */
+        @Bean
+        public com.hexagonal.meditationbuilder.domain.ports.in.GenerateImageUseCase generateImageUseCase(
+                        com.hexagonal.meditationbuilder.domain.ports.out.ImageGenerationPort imageGenerationPort) {
+                return new com.hexagonal.meditationbuilder.application.service.GenerateImageService(imageGenerationPort);
+        }
 }

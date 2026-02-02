@@ -14,20 +14,14 @@ server:
     context-path: /api
 
 # OpenAI Configuration
-ai:
-  openai:
-    base-url: ${OPENAI_BASE_URL:https://api.openai.com}
-    api-key: ${OPENAI_API_KEY:}
-    text:
-      connect-timeout-ms: ${OPENAI_TEXT_CONNECT_TIMEOUT:5000}
-      read-timeout-ms: ${OPENAI_TEXT_READ_TIMEOUT:30000}
-      model: ${OPENAI_TEXT_MODEL:gpt-4o-mini}
-    image:
-      connect-timeout-ms: ${OPENAI_IMAGE_CONNECT_TIMEOUT:5000}
-      read-timeout-ms: ${OPENAI_IMAGE_READ_TIMEOUT:60000}
-      model: ${OPENAI_IMAGE_MODEL:dall-e-3}
-      size: ${OPENAI_IMAGE_SIZE:1024x1024}
-      quality: ${OPENAI_IMAGE_QUALITY:standard}
+openai:
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+  api-key: ${OPENAI_API_KEY:}
+  temperature: ${OPENAI_TEMPERATURE:1.0}
+  max-tokens: ${OPENAI_MAX_TOKENS:1024}
+  top-p: ${OPENAI_TOP_P:1.0}
+  frequency-penalty: ${OPENAI_FREQUENCY_PENALTY:0.0}
+  presence-penalty: ${OPENAI_PRESENCE_PENALTY:0.0}
 
 # Media Catalog Service Configuration
 media-catalog:
