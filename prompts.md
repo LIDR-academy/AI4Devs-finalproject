@@ -113,7 +113,84 @@ Is there any additional context or "elevator pitch" style description you'd like
 
 **Prompt 1:**
 
+Role: Senior Software Architect, Technical Writer, and DevSecOps Engineer.
+Context: You are tasked with defining the architectural foundation of a project based on the documentation located in the /docs folder and the files:  readme.md (## 2. Arquitectura del Sistema) and instructions.md.
+
+Core Constraints & Tech Stack:
+
+Architecture: Microservices with Domain-Driven Design (DDD) and Clean Architecture.
+Domain Strategy: The system MUST apply strategic DDD and be decomposed into multiple bounded contexts. ﻿ Each bounded context MUST be implemented as an autonomous microservice with:
+its own codebase
+its own database/schema (no shared databases)
+independent deployment lifecycle
+well-defined API or event-based contracts
+Direct coupling between bounded contexts is not allowed. All inter-context communication must occur through APIs or asynchronous messaging.
+Principles: SOLID, DRY, and KISS.
+Cloud Provider: Google Cloud Platform (GCP).
+Local Development: Docker-based environments.
+Security: DevSecOps mindset (security by design).
+
+
+Phase 1: Discovery & Gap Analysis
+Analyze the provided documentation. Generate a set of discovery questions to fill information gaps and propose the best technical solutions.
+Formatting for Phase 1:
+
+Group questions into categories: 2.1 Infrastructure, 2.2 Data & Persistence, 2.3 Communication, 2.4 Security, 2.5 Reliability, 2.6 DevOps/DX.
+For each question, provide:
+Question: Clear and concise.
+Why it matters: (1-line justification).
+Expected answer: (Data type or specific example).
+Impact (Trade-offs): Short comparison of Choice A vs. Choice B.
+
+Priority Topics: Traffic volume/latency (SLAs), Multi-tenancy, API versioning, Cost constraints, Threat modeling, and Observability.
+
+Phase 2: Document Generation
+Once the discovery questions are presented, use the existing documentation to draft "Section 2: System Architecture".
+Output Requirements:
+
+Language: English.
+Format: Structured Markdown.
+Diagrams: Use Mermaid.js syntax for all architectural diagrams (C4 model, sequence, or flowcharts). No external images.
+Integrity Rule: Do NOT invent information. If a technical detail is missing, explicitly state: "Not specified in the documentation" and reference the corresponding question from Phase 1.
+
 **Prompt 2:**
+
+Role: Senior Software Architect, Technical Writer, and DevSecOps Engineer.
+Context: You are tasked with defining the architectural foundation of a project based on the documentation located in the /docs folder and the files: readme.md (## 2. Arquitectura del Sistema) and instructions.md.
+
+Core Constraints & Tech Stack:
+
+Architecture: Microservices with Domain-Driven Design (DDD) and Clean Architecture.
+Domain Strategy: The system MUST apply strategic DDD and be decomposed into the following specific bounded contexts/microservices:
+  1. Routes Service: Manages lines, stops, and schedules. Core domain.
+  2. Sites Service: Manages corporate clients and site configurations. Core domain.
+  3. Rates Service: Manages pricing logic and fares. Support domain.
+  4. Search Service: Optimized geospatial search engine. Generic subdomain.
+
+Extensibility Clause: The architecture MUST be explicitly designed to support the addition of future microservices (e.g., Booking, Notifications) that are NOT currently defined, without requiring refactoring of the existing services.
+
+Implementation Rules:
+- Each microservice MUST have its own codebase and its own database/schema (no shared databases).
+- Direct coupling between bounded contexts is not allowed. All inter-context communication must occur through APIs (Sync) or asynchronous messaging (Async).
+- Principles: SOLID, DRY, and KISS.
+- Cloud Provider: Google Cloud Platform (GCP).
+- Local Development: Docker-based environments.
+- Security: DevSecOps mindset (security by design).
+
+Phase 1: Discovery & Gap Analysis
+Analyze the provided documentation. Generate a set of discovery questions to fill information gaps and propose the best technical solutions. Group questions into categories (Infra, Data, Comm, Security, Reliability, DevOps).
+
+Phase 2: Document Generation
+Create a new  file md  in docs folder called  2 Arquitectura del Sistema,  indicating what is requested in point 2 (## 2. Arquitectura del Sistema) in the readme.md.
+Output Requirements:
+- Language: English.
+- Format: Structured Markdown.
+- Diagrams: Use Mermaid.js syntax for architectural diagrams (C4 Container model).
+- Content:
+   - Define the responsibility of the 4 specific microservices.
+   - explain the extensibility pattern (Events/Gateway).
+   - Define the Tech Stack and flow.
+
 
 **Prompt 3:**
 
@@ -160,8 +237,183 @@ Is there any additional context or "elevator pitch" style description you'd like
 ---
 
 ### 3. Modelo de Datos
+Role
 
-**Prompt 1:**
+Senior Database Administrator, Data Architect, and Technical Writer.
+
+
+
+Context
+
+You are working on the “Route Searcher” project.
+Your responsibility is to define the Data Architecture and Data Model aligned with the system’s Microservices Architecture, following the documentation located in the /docs folder and the files:
+
+docs/2_Arquitectura_del_Sistema.md
+
+readme.md (Section 3. Modelo de Datos)
+
+AI4Devs-finalproject/info-bd.md (legacy / reference schema)
+
+
+
+Core Constraints & Architectural Principles
+
+Architecture Pattern
+
+Microservices Architecture with Database-per-Service pattern.
+
+Each microservice is a bounded context and MUST have:
+
+Its own database/schema
+
+Clear data ownership
+
+No shared tables or schemas
+
+Defined Microservices
+The system is strictly decomposed into the following services:
+
+Routes
+
+Sites
+
+Rates
+
+Search
+
+Data Isolation Rules
+
+Direct foreign keys across databases are not allowed.
+
+Cross-service relationships must be represented via:
+
+Logical ID references
+
+API contracts
+
+Event-based communication
+
+Each table MUST belong to exactly one service, which is considered the data owner.
+
+Design Principles
+
+Domain-Driven Design (DDD)
+
+High cohesion, low coupling
+
+Clear separation between legacy constraints and target architecture
+
+No duplication of data across services unless explicitly justified
+
+
+
+Phase 1: Analysis & Decomposition
+
+Analyze the legacy schema defined in AI4Devs-finalproject/info-bd.md and the architectural constraints described in the /docsfolder.
+
+Your analysis must:
+
+Identify all existing entities and relationships.
+
+Determine the most appropriate microservice (bounded context) that should own each entity.
+
+Detect monolithic or cross-domain relationships that violate microservice boundaries.
+
+Decide how these relationships should be refactored under a distributed architecture.
+
+If any ambiguity or missing information exists, do not make assumptions.
+
+
+
+Phase 2: Data Model Definition
+
+Based on the analysis, generate a new Data Model document reflecting the target microservices architecture.
+
+Decomposition Rules
+
+Create four independent data models, one per microservice.
+
+Do NOT create a single global ER diagram.
+
+Each microservice must have:
+
+Its own ER diagram
+
+Clearly defined entities and relationships
+
+Any former cross-service foreign key must be removed and replaced with:
+
+An ID reference
+
+A clear explanation of how the relationship is handled at the application or integration level.
+
+
+
+Entity Documentation Requirements
+
+For each entity mapped to a service database (including reference, configuration, and join tables), strictly follow the format defined in readme.md:
+
+Entity name
+
+Attributes with data types
+
+Primary Keys
+
+Foreign Keys (only within the same service)
+
+Constraints:
+
+NOT NULL
+
+UNIQUE
+
+Indexes (if applicable)
+
+
+
+Phase 3: Documentation Generation
+
+Generate a new file:
+
+docs/3_Modelo_de_Datos.md
+Mandatory Structure of the Document
+
+Overview
+
+Service-by-Service Data Model
+
+Routes Service
+
+Sites Service
+
+Rates Service
+
+Search Service
+
+Cross-Service Data Relationships
+
+Notes, Assumptions, and Open Points
+
+Output Requirements
+
+Language: English
+
+Format: Structured Markdown
+
+Diagrams: Mermaid.js ER diagrams (erDiagram) only
+
+Integrity Rule:
+
+Do NOT invent information
+
+If a detail is missing, explicitly state:
+
+“Not specified in the documentation”
+
+Reference the affected entity or relationship
+
+
+
 
 **Prompt 2:**
 
