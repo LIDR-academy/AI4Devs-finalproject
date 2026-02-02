@@ -8,7 +8,7 @@
  * Updates outputType indicator when image generated.
  */
 
-import { useComposerStore, useIsGeneratingImage, useSelectedImageId } from '@/state/composerStore';
+import { useIsGeneratingImage, useSelectedImageId } from '@/state/composerStore';
 
 interface GenerateImageButtonProps {
   disabled?: boolean;

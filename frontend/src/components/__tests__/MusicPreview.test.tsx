@@ -3,9 +3,9 @@
  * Verifies playback controls (SC-006: preview within 2 seconds)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+// import userEvent from '@testing-library/user-event';
 import { MusicPreview } from '@/components/MusicPreview';
 import { useComposerStore } from '@/state/composerStore';
 

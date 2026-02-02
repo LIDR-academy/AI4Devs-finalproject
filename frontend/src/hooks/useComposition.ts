@@ -17,7 +17,7 @@ import {
   previewImage,
 } from '@/api/client';
 import type { 
-  CompositionResponse, 
+  // CompositionResponse,
   UpdateTextRequest, 
   SelectMusicRequest, 
   SetImageRequest,

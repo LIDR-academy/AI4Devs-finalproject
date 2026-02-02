@@ -7,7 +7,7 @@
  * Works with empty field, keywords, or existing content (unified).
  */
 
-import { useComposerStore, useIsGeneratingText, useLocalText } from '@/state/composerStore';
+import { useIsGeneratingText, useLocalText } from '@/state/composerStore';
 
 interface GenerateTextButtonProps {
   disabled?: boolean;

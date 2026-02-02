@@ -71,19 +71,24 @@ export function MeditationBuilderPage() {
   const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
   
-  // Initialize composition on mount (Capability 1: Access Meditation Builder)
-  useEffect(() => {
-    if (!compositionId && !createComposition.isPending) {
-      createComposition.mutate('', {
-        onSuccess: (data) => {
-          setCompositionId(data.id);
-          setLocalText(data.textContent);
-          if (data.musicReference) setSelectedMusic(data.musicReference);
-          if (data.imageReference) setSelectedImage(data.imageReference);
-        },
-      });
+  // Require user to enter text before creating a composition
+  const [initialText, setInitialText] = useComposerStore((state) => [state.localText, state.setLocalText]);
+  const [textError, setTextError] = useComposerStore((state) => [state.textError, state.setTextError]);
+
+  const handleStart = useCallback(() => {
+    if (!initialText || initialText.trim() === '') {
+      setTextError('Please enter meditation text to start.');
+      return;
     }
-  }, [compositionId, createComposition, setCompositionId, setLocalText, setSelectedMusic, setSelectedImage]);
+    createComposition.mutate(initialText, {
+      onSuccess: (data) => {
+        setCompositionId(data.id);
+        setLocalText(data.textContent);
+        if (data.musicReference) setSelectedMusic(data.musicReference);
+        if (data.imageReference) setSelectedImage(data.imageReference);
+      },
+    });
+  }, [initialText, createComposition, setCompositionId, setLocalText, setSelectedMusic, setSelectedImage, setTextError]);
   
   // Auto-save text changes (debounced)
   useEffect(() => {
@@ -134,11 +139,34 @@ export function MeditationBuilderPage() {
     imageName: imagePreview.data?.imageReference ?? selectedImageId ?? 'Selected Image',
   }), [imagePreview.data, selectedImageId]);
   
-  if (isInitializing) {
+  if (!compositionId) {
     return (
-      <div className="meditation-builder" data-testid="meditation-builder-loading">
-        <div className="meditation-builder__loading">
-          <span>Initializing Meditation Builder...</span>
+      <div className="meditation-builder" data-testid="meditation-builder-init">
+        <header className="meditation-builder__header">
+          <h1>🧘 Meditation Builder</h1>
+          <p>Enter your meditation text to begin</p>
+        </header>
+        <div className="meditation-builder__content">
+          <div className="card">
+            <h2 className="card__title">Meditation Text</h2>
+            <TextEditor 
+              disabled={createComposition.isPending}
+              placeholder="Enter your meditation text to start..."
+            />
+            {textError && (
+              <div className="meditation-builder__error" role="alert" data-testid="init-error">
+                ⚠️ {textError}
+              </div>
+            )}
+            <button 
+              className="start-btn"
+              onClick={handleStart}
+              disabled={createComposition.isPending}
+              data-testid="start-btn"
+            >
+              {createComposition.isPending ? 'Starting...' : 'Start'}
+            </button>
+          </div>
         </div>
       </div>
     );
