@@ -92,10 +92,14 @@ Alineación con estándares internacionales de gestión BIM para proyectos patri
   3. Configuración de CI/CD para despliegue demo
 
 ## Current Project Phase
-**Status**: ✅ **Phase: Execution & Development**
-**Stage**: Technical Planning Complete - Ready for Sprint 0 (Walking Skeleton)
-**Documentation**: Phases 1-8 Complete (Strategy → Architecture → Roadmap)
-**Next Milestone**: First Commit & Infrastructure Setup
+**Status**: 🚧 **Phase: Implementation - MVP Scope**
+**Stage**: Building Core Features (The Golden Path)
+**Documentation**: Phase 9 (MVP Backlog) Defined.
+**Current Focus**: Executing US-001, US-002, US-005 (Backbone of the application).
+**MVP Scope**:
+- CRITICAL: US-001, US-002, US-005, US-010, US-007
+- HIGH: US-013, US-009
+**Icebox**: All other User Stories (e.g. US-003, US-012) are deferred.
 
 ## Success Metrics (MVP)
 - **Técnicas**:

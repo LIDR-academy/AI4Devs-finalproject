@@ -1044,3 +1044,53 @@ Diseño arquitectónico C4 Level 3 del Agente "The Librarian" (validación intel
 Definiré la estructura completa del monorepo (backend FastAPI + frontend React + agente LangGraph + shared types), crearé el roadmap técnico con 4 sprints (Walking Skeleton → Core Ingestion → Librarian Agent → 3D Viewer), y actualizaré el estado del proyecto a fase de ejecución en el Memory Bank.
 
 ---
+
+## 018 - Definición del MVP Backlog (Scope & Tickets)
+**Fecha:** 2026-02-03 21:00
+
+**Prompt Original:**
+> # Prompt: Definición del MVP Backlog (Scope & Tickets)
+>
+> **Role:** Actúa como **Product Owner** y **Technical Project Manager**.
+>
+> **Contexto:**
+> Hemos completado la arquitectura. Entramos en la fase de **Definición de Alcance de Implementación**.
+> Necesitamos generar el artefacto **"Historias de usuario y tickets de trabajo"** (`docs/09-mvp-backlog.md`) para cumplir con el MVP académico.
+> **Regla de Oro:** Mantén la nomenclatura exacta de las User Stories existentes (`US-XXX`) para garantizar trazabilidad total.
+>
+> **Objetivo:**
+> 1.  Generar el backlog técnico detallado en `docs/09-mvp-backlog.md`.
+> 2.  **Actualizar el Memory Bank de forma exhaustiva** para reflejar que el proyecto entra en modo "Construcción de MVP".
+>
+> **Instrucciones de Ejecución:**
+>
+> 1.  **Selección del MVP (The Golden Path):**
+>    Genera el archivo `docs/09-mvp-backlog.md` seleccionando EXCLUSIVAMENTE estas historias del PRD:
+>
+>    * **MUST-HAVE (Prioridad Crítica - 5 Stories):**
+>        * **US-001:** Upload de archivo .3dm válido.
+>        * **US-002:** Validación de errores (Nomenclatura/Geometría).
+>        * **US-005:** Dashboard de listado de piezas (Visualización).
+>        * **US-010:** Visor 3D (Interacción geométrica).
+>        * **US-007:** Cambio de Estado (Gestión del ciclo de vida).
+>
+>    * **SHOULD-HAVE (Prioridad Alta - 2 Stories):**
+>        * **US-013:** Login/Auth (Seguridad).
+>        * **US-009:** Evidencia de fabricación (Foto + Cambio estado).
+>
+> 2.  **Desglose Técnico (Tickets de Trabajo):**
+>    Para cada una de las 7 historias, crea una tabla de **Tickets de Desarrollo** en el markdown.
+>    * Estructura: `[Componente] Título de la tarea técnica`.
+>    * Componentes: `[FRONT]`, `[BACK]`, `[DB]`, `[AGENT]`, `[INFRA]`.
+>    * *Ejemplo US-001:* `[BACK] Crear endpoint POST /upload-url`, `[AGENT] Script extracción rhino3dm`.
+>
+> 3.  **ACTUALIZACIÓN CRÍTICA DEL MEMORY BANK:**
+>    Es vital que la memoria del proyecto refleje este cambio de fase.
+>    * **`productContext.md`**:
+>        * Actualiza la sección "Current Project State" a: **"Implementation Phase - MVP Scope"**.
+>        * Añade una sección "MVP Scope" listando explícitamente los IDs: US-001, 002, 005, 010, 007, 013, 009.
+>        * Indica que cualquier otra US (ej: US-003, US-012) está en el "Icebox" (fuera de alcance actual).
+>    * **`prompts-log.md`**: Registra la creación del Backlog MVP y la acotación del alcance.
+
+**Resumen de la Respuesta/Acción:**
+Definición formal del alcance MVP en `docs/09-mvp-backlog.md`, seleccionando 7 historias clave (US-001, 002, 005, 010, 007, 013, 009) y generando tickets técnicos detallados. Actualización de `memory-bank/productContext.md` para reflejar el cambio a fase de Implementación con alcance acotado. Actualización del registro de prompts en `prompts.md`.
