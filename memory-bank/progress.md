@@ -1,0 +1,221 @@
+# Progress
+
+## History
+- **2025-12-19 07:43**: Initialized Memory Bank structure.
+- **2025-12-19 08:18**: Added Decision Logging system.
+- **2025-12-19 15:16**: Completed market research and created `market-analysis.md`.
+- **2025-12-23 13:41**: Completed Smart XREF feasibility analysis. Found metadata MVP viable; full solution requires 12-18 months.
+- **2025-12-23 14:09**: Completed Semantic Rhino feasibility analysis. Hybrid approach (LLM + geometry) viable for 3 months; Deep Learning overkill.
+- **2025-12-24 08:10**: Completed SmartFabricator feasibility analysis. RL infeasible without CNC simulator + hardware; Curve-to-Arc MVP viable.
+- **2025-12-26 08:03**: Completed AEC Copilot feasibility analysis. Code execution safety = legal nightmare; viable as research demo only.
+- **2025-12-26 11:00**: Completed AEC-NeuralSync feasibility analysis. PhD-level complexity, privacy claim disproven, REJECTED for TFM.
+- **2025-12-30 22:13**: Completed GH-Copilot feasibility analysis. Most viable "Copilot" variant (70-75% success).
+- **2026-01-13 10:09**: Completed Sagrada Familia Parts Manager analysis. Strong Enterprise/Industry 4.0 contender.
+- **2026-01-20 06:12**: 🚨 **PROJECT SELECTED: Sagrada Familia Parts Manager**. Feasibility Phase CLOSED. Product Definition Phase OPEN.
+
+## Status
+- **Memory Bank**: ✅ Active and operational.
+- **Market Research**: ✅ Completed. 3 blue ocean proposals documented (+2 analyzed ex-post).
+- **Feasibility Analyses**: ✅ **CLOSED** (7 Options Analyzed).
+- **Project Selection**: ✅ **COMPLETE** (Sagrada Familia Parts Manager).
+- **Documentation Phase**: ✅ **COMPLETE** (Phases 1-8).
+- **Current Phase**: 🚀 **EXECUTION & DEVELOPMENT**.
+- **Sprint Status**: Ready for Sprint 0 (Walking Skeleton).
+- **Next Steps**:
+  1. Generate initial configuration files (Docker, Git, Python, Node).
+  2. Setup Supabase project and database schema.
+  3. Initialize backend/frontend/agent services.
+  4. Validate full-stack connectivity (health checks).
+
+## Technical Debt
+- None currently. Pre-planning phase complete.
+
+## Key Findings Summary (All Seven Options)
+
+### 1. Smart XREF (Metadata Index) - Tier 3
+- **Pain Validation**: 7k+ views on McNeel Discourse  
+- **Technical Constraint**: `.3dm` format not designed for granular loading  
+- **Viable MVP**: Metadata index (search without loading) - 3 months  
+- **Full Solution**: Custom file parser, 12-18 months, team required  
+- **Commercial Moat**: ⭐ Low (simple SQL)
+- **Revenue**: $50-100/year
+- **Safety**: ✅ Zero risk
+- **Ranking**: **#3**
+
+### 2. Semantic Rhino (AI Classifier) - Tier 1 🥇
+- **Pain Validation**: Chronic issue, 1000s of manual hours wasted  
+- **Technical Approach**: Hybrid (LLM + classical geometry) beats Deep Learning  
+- **Data Requirement**: Zero-shot LLM (no training data needed)  
+- **Viable MVP**: Structural classifier (columns, beams, slabs) - 3 months  
+- **Commercial Moat**: ⭐⭐⭐⭐⭐ High (AI + domain expertise)  
+- **Revenue**: $99/month SaaS
+- **Safety**: ✅ Zero risk
+- **Ranking**: **#1 RECOMMENDED**
+
+### 3. SmartFabricator (Manufacturing AI) - Tier 2
+- **Pain Validation**: 3.4k views on "curve to arc" conversion  
+- **Technical Reality**: RL requires CNC simulator (8 weeks) + hardware validation (impossible)  
+- **Safety Concern**: G-code generation = physical risk (rejected)  
+- **Viable MVP**: Curve-to-Arc with ML tolerance prediction - 3 months (IF scoped down)  
+- **Full RL Solution**: 20+ weeks, requires industrial lab access  
+- **Commercial Moat**: ⭐⭐⭐ Medium (ML + optimization)
+- **Revenue**: $50-100 (tool purchase)
+- **Safety**: ✅ Geometry only (IF scoped correctly)
+- **Ranking**: **#2**
+
+### 4. AEC Copilot (NL to Script) - Tier 4 (Research Only)
+- **Pain Validation**: Unknown (novelty feature, not validated chronic pain)
+- **Technical Reality**: LLM code execution = VERY HIGH safety risk
+  - Destructive hallucination (`DeleteObjects(AllObjects())`)
+  - Sandbox escapes documented in research
+  - Prompt injection vulnerabilities
+  - Grasshopper XML generation = PhD-level complexity (rejected)
+- **Viable Scope**: Research demo with dry-run preview + whitelist ONLY
+- **Production Deployment**: ❌ **REJECTED** (requires $20k+ security infrastructure + legal team)
+- **Commercial Moat**: ⭐⭐ Medium (UX novelty)
+- **Revenue**: $0 (liability risk kills commercialization)
+- **Safety**: ❌ **CRITICAL RISK** for production
+- **TFM Value**: ⭐⭐⭐ High novelty as research, but demo-only scope
+- **Ranking**: **#4 (conditional: research demo acceptable, production NO)**
+
+### 5. AEC-NeuralSync (Federated Learning + Private Weights) - Tier 5 (PhD Only)
+- **Pain Validation**: Very High (IF system worked as claimed)
+- **Technical Reality**: **PRIVACY CLAIM DISPROVEN**
+  - LoRA weights ARE vulnerable to Membership Inference Attacks (>90% accuracy)
+  - Training data reconstruction POSSIBLE from shared weights
+  - Model extraction proven feasible
+- **4 PhD-Level Components**:
+  1. **Differential Privacy**: 8-12 weeks (requires gradient clipping + noise injection)
+  2. **LoRA Merging**: 8-12 weeks (catastrophic forgetting unsolved research problem 2024)
+  3. **DAG Serialization**: 4-6 weeks (Graph-to-Text for LLMs experimental)
+  4. **Federated Learning Infrastructure**: 12-16 weeks (distributed systems complexity)
+- **Implementation Timeline**: 40-60 weeks (18+ months minimum)
+- **Success Probability**: 10-20% for TFM scope
+- **Legal Risk**: CRITICAL (IP theft lawsuits if competitor extracts designs from shared LoRA weights)
+- **Viable Scope for TFM**: RAG-only (abandon federated learning, LoRA merging, privacy claims)
+- **Commercial Moat**: ⭐⭐⭐⭐⭐ Very High (IF it worked)
+- **Revenue**: $500+/month SaaS (IF achieved)
+- **Safety**: ❌ **CRITICAL** (proven IP leakage risk)
+- **Ranking**: **#5 REJECTED FOR TFM** (Save for PhD)
+
+---
+
+### 6. GH-Copilot (Predictive Node Engine) - Tier 2 🥈
+- **Pain Validation**: Very High (GitHub Copilot analogy resonates strongly)
+- **Technical Approach**: Local RAG or LoRA fine-tuning on user's `.gh` library
+- **Core Innovation**: DAG-to-sequence serialization for Grasshopper graphs
+- **Viable MVP**: RAG with Side Panel UI (12 weeks, 70-75% success)
+- **What This AVOIDS**:
+  - ❌ Code execution risk (AEC Copilot's fatal flaw)
+  - ❌ Federated learning complexity (AEC-NeuralSync's PhD requirement)
+  - ❌ Multi-client privacy issues (IP theft proven possible)
+- **CRITICAL BOTTLENECK**: DAG serialization quality (60% failure risk)
+  - Grasshopper's Data Tree structures (`{0;1}`, `{0;2}`) must be preserved
+  - If lost → model learns garbage → prediction accuracy <50%
+- **Mandatory Requirements**:
+  - Use **RAG** (not LoRA) for MVP: 6 weeks faster, works with 50+ graphs
+  - Use **Side Panel** (not Ghost Nodes) for UX: 4-5 weeks faster, zero GH SDK risk
+  - Use **Pseudo-syntax** (not JSON/XML) for serialization: 70% fewer tokens
+  - **Backup Plan**: Week 6 decision gate → pivot to Semantic Rhino if DAG quality <50%
+- **Commercial Moat**: ⭐⭐⭐⭐ High (proprietary training pipeline)
+- **Revenue**: $50-100/month subscription (per studio)
+- **Safety**: ✅ Local-only training, zero IP leakage (single-client model)
+- **Ranking**: **#2 (tied with SmartFabricator-MVP)**
+- **Risk-Reward**: Higher "wow factor" than Semantic Rhino, but 60% chance bottleneck kills project
+
+---
+
+## Final Six-Way Ranking
+
+| Rank | Option | Commercial Viability | Technical Risk | TFM Novelty | Safety | Success Prob |
+|------|--------|---------------------|----------------|-------------|--------|-------------|
+| **🥇 #1** | **Semantic Rhino** | $99/mo SaaS ⭐⭐⭐⭐⭐ | Medium | High | ✅ Zero | **85%** |
+| **🥈 #2** | **GH-Copilot (RAG)** | $50-100/mo ⭐⭐⭐⭐ | **Medium-High** | **Very High** | ✅ Safe (local) | **70-75%** |
+| **🥈 #3** | **SmartFabricator (MVP)** | $50-100 tool ⭐⭐⭐ | Medium-High | High | ✅ Safe (geometry) | **70%** |
+| **🥉 #4** | **Smart XREF** | $50-100/yr ⭐⭐ | Low | Medium | ✅ Zero | **95%** |
+| **#5** | **AEC Copilot** | $0 (liability) ⭐ | VERY HIGH | Very High | ❌ Critical | **70% demo / 10% prod** |
+| **#6** | **AEC-NeuralSync** | $500+/mo ⭐⭐⭐⭐⭐ (IF worked) | **EXTREME (PhD)** | **EXTREME** | ❌ Critical (IP theft) | **10-20%** |
+
+---
+
+## Recommendation (Final - Seven Options)
+
+**CHOICE A: The "Product Engineer" Path** -> **Semantic Rhino (Hybrid LLM + Geometry)**
+- Build a generic tool that solves a market problem.
+- Focus: Algorithms, LLM integration, Geometry.
+- **Why**: Highest SaaS potential, validated pain, zero liability.
+
+**CHOICE B: The "Systems Architect" Path** -> **Sagrada Familia Parts Manager**
+- Build a specific, high-complexity system for a real client.
+- Focus: Scale, Databases, 3D Web Performance, Agents.
+- **Why**: Immense portfolio value, "Enterprise" credibility, high viability (engineering challenge, not research risk).
+
+**BOTH are Tier 1 excellent choices.** Choose based on career goals.
+
+---
+
+---
+
+## Project Selected: Sagrada Familia Parts Manager
+
+**Status**: Active Development
+**Phase**: Execution & Development (Sprint Planning Complete)
+**Last Updated**: 2026-01-28
+
+### Documentation Timeline (Phases 1-8)
+- **2026-01-20**: Project officially selected after 7-way feasibility comparison
+- **2026-01-22**: FASE 1 - Strategy & Market Analysis ([docs/01-strategy.md](docs/01-strategy.md))
+- **2026-01-23**: FASE 2 - Product Requirements Document ([docs/02-prd.md](docs/02-prd.md))
+- **2026-01-24**: FASE 3 - Service Model / Lean Canvas ([docs/03-service-model.md](docs/03-service-model.md))
+- **2026-01-25**: FASE 4 - Use Cases & User Flows ([docs/04-use-cases.md](docs/04-use-cases.md))
+- **2026-01-26**: FASE 5 - Data Model & Database Schema ([docs/05-data-model.md](docs/05-data-model.md))
+- **2026-01-27**: FASE 6 - High-Level Architecture C4 ([docs/06-architecture.md](docs/06-architecture.md))
+- **2026-01-28 10:35**: FASE 7 - Agent Design Deep Dive ([docs/07-agent-design.md](docs/07-agent-design.md))
+- **2026-01-28 17:20**: ✅ FASE 8 - Technical Roadmap & Repository Structure ([docs/08-roadmap.md](docs/08-roadmap.md))
+
+### Implementation Roadmap (4 Sprints)
+**Total Estimated Time**: 8 weeks (2 weeks per sprint)
+
+1. **Sprint 0: Walking Skeleton** (2 weeks)
+   - Docker Compose setup (backend/frontend/agent/database)
+   - Health check endpoints
+   - Basic connectivity validation
+   - CI/CD pipeline (GitHub Actions)
+
+2. **Sprint 1: The Core (Ingestion)** (2 weeks)
+   - File upload endpoint (`.3dm` files)
+   - Metadata extraction (`rhino3dm`)
+   - Supabase Storage integration
+   - Parts list view (React)
+
+3. **Sprint 2: The Librarian (Agent)** (2 weeks)
+   - LangGraph implementation (5 nodes)
+   - ISO-19650 validation
+   - Geometry analysis
+   - LLM enrichment (GPT-4)
+
+4. **Sprint 3: The Viewer (3D Visualization)** (2 weeks)
+   - Three.js viewer integration
+   - `.3dm` to `.glb` conversion
+   - Instanced rendering for performance
+   - Part detail view
+
+### Key Technical Decisions
+- **Monorepo Structure**: Chosen to simplify development workflow
+- **Stack Confirmation**:
+  - Backend: FastAPI (Python 3.11+) + Poetry
+  - Frontend: React 18 + TypeScript + Vite
+  - Agent: LangGraph + LangChain + OpenAI
+  - Database: Supabase (PostgreSQL + Storage + Auth)
+  - 3D: Three.js + React Three Fiber
+- **Testing Strategy**: 60% unit / 30% integration / 10% E2E
+- **Deployment**: Docker Compose (dev), Docker containers (production)
+
+### Next Immediate Steps
+1. Generate configuration files (docker-compose.yml, .gitignore, pyproject.toml, package.json)
+2. Create initial directory structure
+3. Setup Supabase project
+4. Begin Sprint 0 implementation
+
+
+**Next Step**: Review/update `docs/02-prd.md` if scope changes before Sprint 0.
