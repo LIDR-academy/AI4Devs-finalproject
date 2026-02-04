@@ -90,22 +90,107 @@ Flotiko tiene como propósito permitir a los usuarios llevar el control de sus f
 
 ## 2. Arquitectura del sistema
 
-### 2.1. Diagrama de arquitectura
+### 2.1. Diagramas de arquitectura (modelo C4)
 
 La aplicación sigue una arquitectura cliente-servidor: un frontend SPA (React) consume una API REST (Laravel). La lógica de negocio está en el backend; el frontend se limita a presentación y llamadas HTTP. Se ha elegido esta separación para reutilizar la API en web y futuras apps móviles, y para centralizar reglas y seguridad en el servidor. Beneficios: API única, escalabilidad del backend, despliegue independiente de frontend (ej. Netlify). Sacrificio: mayor complejidad operativa (dos despliegues, CORS, gestión de API key).
 
+Los diagramas siguen el **modelo C4** (Context, Containers, Components) para describir la arquitectura a distintos niveles de detalle.
+
+**Nivel 1 — Contexto del sistema (System Context)**  
+Muestra el sistema Flotiko y sus relaciones con usuarios y sistemas externos.
+
 ```mermaid
 flowchart LR
-  subgraph client [Cliente]
-    SPA[React SPA]
+  subgraph external [Externos]
+    User[Usuario de la empresa]
+    ApiGas[API Gasolineras]
+    Firebase[Firebase Cloud Messaging]
   end
-  subgraph backend [Backend]
-    API[Laravel API]
-    Filament[Filament Admin]
-    API --> DB[(MySQL)]
-    Filament --> DB
+  subgraph system [Sistema Flotiko]
+    Flotiko[Flotiko - Gestión de flotas]
   end
-  SPA -->|"Bearer API Key"| API
+  User -->|"Usa"| Flotiko
+  Flotiko -->|"Consulta precios y ubicación"| ApiGas
+  Flotiko -->|"Notificaciones push opcionales"| Firebase
+```
+
+**Nivel 2 — Contenedores (Containers)**  
+Descompone Flotiko en contenedores (aplicaciones o almacenes de datos). Cada contenedor es un artefacto desplegable.
+
+```mermaid
+flowchart TB
+  subgraph users [Usuarios]
+    Usuario[Usuario de la empresa]
+    Admin[Administrador]
+  end
+  subgraph flotiko_system [Sistema Flotiko]
+    subgraph containers [Contenedores]
+      SPA["React SPA (frontend)<br/>Tecnología: React, Vite"]
+      API["Laravel API (backend)<br/>Tecnología: Laravel, PHP"]
+      Filament["Filament Admin (panel)<br/>Tecnología: Filament"]
+      DB[("MySQL<br/>Base de datos")]
+    end
+  end
+  Usuario -->|"HTTPS, API Key"| SPA
+  Usuario -->|"Navega"| SPA
+  SPA -->|"HTTPS, Bearer API Key"| API
+  Admin -->|"Navega"| Filament
+  Filament -->|"Rutas web, sesión"| API
+  API -->|"SQL"| DB
+  Filament -->|"SQL"| DB
+```
+
+**Nivel 3 — Componentes (Components)**  
+Descompone el contenedor **Laravel API** en componentes principales (responsabilidades internas).
+
+```mermaid
+flowchart TB
+  subgraph api_container [Contenedor: Laravel API]
+    Auth["AuthController<br/>Login, API key"]
+    Vehicles["VehicleController<br/>Vehículos, reporte"]
+    FuelRefills["FuelRefillController<br/>Repostajes"]
+    Maintenances["MaintenanceController<br/>Mantenimientos"]
+    Middleware["Middleware ApiAuth<br/>Validar API key, company_id"]
+    FuelService["FuelRefillService<br/>Cálculo consumo, total_cost"]
+    ReportService["VehicleReportService<br/>Informe vehículo"]
+  end
+  subgraph db [(MySQL)]
+    Tables[Tablas: vehicles, fuel_refills, etc.]
+  end
+  Auth --> Middleware
+  Vehicles --> Middleware
+  FuelRefills --> FuelService
+  FuelRefills --> Middleware
+  Maintenances --> Middleware
+  FuelService --> Tables
+  Vehicles --> ReportService
+  ReportService --> Tables
+  Maintenances --> Tables
+```
+
+**Nivel 3 — Componentes del frontend (React SPA)**  
+Principales módulos o páginas del contenedor frontend.
+
+```mermaid
+flowchart LR
+  subgraph spa_container [Contenedor: React SPA]
+    Login[Login]
+    Dashboard[Dashboard]
+    VehicleDetail[VehicleDetail]
+    AddFuel[AddFuelRefill]
+    AddMaint[AddMaintenance]
+    History[History]
+    Report[VehicleReport]
+    ApiClient[api.js - Cliente HTTP]
+  end
+  Login --> ApiClient
+  Dashboard --> ApiClient
+  VehicleDetail --> ApiClient
+  AddFuel --> ApiClient
+  AddMaint --> ApiClient
+  History --> ApiClient
+  Report --> ApiClient
+  ApiClient -->|"HTTPS"| Backend[Laravel API]
 ```
 
 ### 2.2. Descripción de componentes principales
