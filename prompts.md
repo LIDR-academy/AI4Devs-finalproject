@@ -1143,10 +1143,38 @@ Definiré la estructura completa del monorepo (backend FastAPI + frontend React 
 > * Sobrescribe las secciones de US-005, US-010 y US-007 en `docs/09-mvp-backlog.md` con este detalle técnico.
 
 **Resumen de la Respuesta/Acción:**
-Se han actualizado las historias del Bloque B en `docs/09-mvp-backlog.md` con especificaciones técnicas detalladas:
-- **US-005 (Dashboard):** Implementación con TanStack Table, Paginación server-side, e indexación SQL.
-- **US-010 (Visor 3D):** Uso de @react-three/fiber + drei (Stage), manejo de errores de carga GLB y fallback.
-- **US-007 (Estados):** UI Optimistic, validación de transiciones en backend y triggers de auditoría en DB.
+
+---
+
+## 021 - Refinamiento Profundo de Backlog (Bloque C)
+**Fecha:** 2026-02-04 05:50
+
+**Prompt Original:**
+> # Prompt: Refinamiento Profundo de Backlog (Bloque C: Seguridad y Trazabilidad)
+>
+> **Role:** Actúa como **Security Engineer** y **Senior FullStack Developer**.
+>
+> **Contexto:**
+> Finalizamos el refinamiento del backlog `docs/09-mvp-backlog.md`.
+> Tenemos definidos los bloques Core (A) y Visualización (B).
+> Ahora cerramos con el **Bloque C**: Historias de soporte y valor añadido (**US-013** y **US-009**).
+>
+> **Objetivo:**
+> Especificar técnicamente la implementación de la Autenticación y el registro de Evidencias Físicas.
+>
+> **Instrucciones de Ejecución:**
+> ... (Detalles Gherkin/Tickets para Auth y Evidencia) ...
+>
+> **Acción Final:**
+> * Sobrescribe las secciones de US-013 y US-009 en `docs/09-mvp-backlog.md`.
+> * Añade al final del archivo una nota de **"Definition of Ready (DoR)"** global.
+
+**Resumen de la Respuesta/Acción:**
+Se completó el refinamiento del backlog MVP con el Bloque C:
+- **US-013 (Auth):** Definida protección Frontend (Context + Wrapper) y Backend (Middleware + JWT).
+- **US-009 (Evidence):** Definido flujo de "Transactional Update" para subir foto S3 antes de cambiar estado DB.
+- **DoR:** Añadida "Definition of Ready" global confirmando que el backlog está listo para desarrollo.
+**HITO:** Backlog MVP completamente definido (Blocks A, B, C).
 
 **Resumen de la Respuesta/Acción:**
 Definición formal del alcance MVP en `docs/09-mvp-backlog.md`, seleccionando 7 historias clave (US-001, 002, 005, 010, 007, 013, 009) y generando tickets técnicos detallados. Actualización de `memory-bank/productContext.md` para reflejar el cambio a fase de Implementación con alcance acotado. Actualización del registro de prompts en `prompts.md`.
