@@ -95,43 +95,98 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
 ---
 
 ### US-005: Dashboard de listado de piezas
-**Estimación:** 5 Story Points
-**Dependencias:** US-001, Modelo de Datos
+**User Story:** Como **BIM Manager**, quiero ver una lista paginada de todas las piezas con su estado actual y filtros rápidos, para tener una visión global del progreso sin esperar tiempos de carga excesivos.
 
-| Componente | Ticket | Descripción Técnica |
-|------------|--------|---------------------|
-| `[FRONT]` | **Parts Table Component** | Tabla con TanStack Table: Sort, Paginación server-side. |
-| `[FRONT]` | **Stats Cards** | Componentes visuales para contadores (Total, En Proceso, Alertas). |
-| `[BACK]` | **List Parts Endpoint** | `GET /api/parts`: Endpoint con soporte de filtros (`?status=xxx`) y paginación. |
-| `[DB]` | **Optimized Queries** | Índices SQL en columnas `status` y `workshop` para filtrado rápido. |
-| `[FRONT]` | **Filter Sidebar** | UI para selección de filtros combinados. |
+**Criterios de Aceptación:**
+*   **Scenario 1 (Happy Path - Pagination):**
+    *   Given existen 150 piezas en el sistema.
+    *   When entro al Dashboard.
+    *   Then veo las primeras 50 piezas ordenadas por fecha reciente.
+    *   And veo controles "Página 1 de 3".
+    *   And al dar click en "Siguiente", carga la página 2 en <500ms.
+*   **Scenario 2 (Wait State - Empty Dashboard):**
+    *   Given no existen piezas iniciadas.
+    *   When entro al Dashboard.
+    *   Then veo un "Empty State" amigable invitando a subir el primer archivo.
+*   **Scenario 3 (Filtering):**
+    *   Given selecciono filtro "Workshop: Granollers".
+    *   When aplico el filtro.
+    *   Then la tabla solo muestra piezas de ese taller.
+    *   And el contador "Total Piezas" se actualiza al número filtrado.
+
+**Desglose de Tickets Técnicos:**
+| ID Ticket | Título | Tech Spec | DoD |
+|-----------|--------|-----------|-----|
+| `T-030-FRONT` | **Dashboard Layout & Stats** | Layout principal con Sidebar de filtros y Grid de Stats (Zustand store para filtros globales). | Estructura visual responsive montada. |
+| `T-031-FRONT` | **Parts Table Component** | Implementación `TanStack Table`. Columnas sortables. Hook `useQuery` con key `['parts', page, filters]`. | Tabla renderiza datos mockeados con paginación UI. |
+| `T-032-BACK` | **List Parts Endpoint** | `GET /api/parts`. Query params: `page`, `limit`, `status`, `workshop`. Implementa offset pagination SQL. | Retorna JSON `{ data: [...], meta: { total, page } }`. |
+| `T-033-DB` | **Index Optimization** | Crear índices B-tree compuestos en columnas `status` y `workshop_id` de tabla `parts`. | `EXPLAIN ANALYZE` muestra uso de índice en queries filtradas. |
+
+**Valoración:** 5 Story Points
+**Dependencias:** US-001
 
 ---
 
 ### US-010: Visor 3D Web
-**Estimación:** 8 Story Points
-**Dependencias:** US-001 (Necesita geometría procesada)
+**User Story:** Como **Responsable de Taller**, quiero visualizar la pieza 3D asignada directamente en el navegador, para poder rotarla, hacer zoom y entender su geometría sin instalar software CAD.
 
-| Componente | Ticket | Descripción Técnica |
-|------------|--------|---------------------|
-| `[BACK]` | **Converter Worker** | Celery task para convertir objetos Rhino a .glb (usando `rhino3dm` + trimesh/export). |
-| `[INFRA]` | **Public Assets Bucket** | Bucket S3 `processed-models` optimizado para entrega de assets web. |
-| `[FRONT]` | **Three.js Viewer** | Canvas React-Three-Fiber con OrbitControls y Environment básico. |
-| `[FRONT]` | **GLB Loader** | Hook de carga asíncrona de modelos con manejo de caché y errores. |
-| `[FRONT]` | **Viewer Overlay** | Controles UI sobre el canvas (Reset cámara, Mostrar/Ocultar grid). |
+**Criterios de Aceptación:**
+*   **Scenario 1 (Happy Path - Load Success):**
+    *   Given una pieza con geometría procesada (.glb disponible) y click en "Ver 3D".
+    *   When se abre el modal del visor.
+    *   Then el modelo aparece centrado en pantalla con iluminación neutra.
+    *   And puedo rotar (orbit) suavemente alrededor de la pieza.
+*   **Scenario 2 (Edge Case - Model Not Found):**
+    *   Given el archivo .glb aún no se ha generado (estado `processing`).
+    *   When intento abrir el visor.
+    *   Then veo un "Placeholder" o "Spinner" indicando que se está procesando (o Bounding Box básico).
+*   **Scenario 3 (Error Handling - Load Fail):**
+    *   Given el archivo .glb está corrupto o URL es 404.
+    *   When el loader falla.
+    *   Then veo un mensaje de error "No se pudo cargar la geometría 3D" (no pantalla blanca).
+
+**Desglose de Tickets Técnicos:**
+| ID Ticket | Título | Tech Spec | DoD |
+|-----------|--------|-----------|-----|
+| `T-040-FRONT` | **Viewer Canvas Component** | Setup `@react-three/fiber` con `<Canvas>`. Configurar cámara `makeDefault` y `OrbitControls`. | Canvas 3D renderiza un cubo de prueba rotable. |
+| `T-041-FRONT` | **Model Loader & Stage** | Componente que recibe URL `.glb`. Usa `useGLTF` de `@react-three/drei` y `<Stage>` para entorno automático (luces/sombras). | Carga modelo desde URL estática correctamente. |
+| `T-042-FRONT` | **Error Boundary & Fallback** | Wrapper React Error Boundary para capturar fallos de WebGL. Loader Suspense con spinner. | Si URL rompe, muestra UI de error controlada. |
+| `T-043-BACK` | **Get Model URL** | El endpoint `GET /api/parts/{id}` debe incluir campo `glb_url` (URL pública S3 o presigned GET temporal). | Endpoint retorna URL válida al frontend. |
+
+**Valoración:** 8 Story Points
+**Dependencias:** US-001 (Necesita geometría procesada)
 
 ---
 
 ### US-007: Cambio de Estado (Ciclo de Vida)
-**Estimación:** 3 Story Points
-**Dependencias:** US-005
+**User Story:** Como **BIM Manager**, quiero cambiar el estado de una pieza (ej: de "Validada" a "En Producción") para reflejar su avance real en el flujo de trabajo.
 
-| Componente | Ticket | Descripción Técnica |
-|------------|--------|---------------------|
-| `[FRONT]` | **Status Dropdown** | Componente selector de estado con lógica de transiciones permitidas. |
-| `[BACK]` | **Update Status Endpoint** | `PATCH /api/parts/{id}`: Actualiza estado y valida transición. |
-| `[DB]` | **Audit Log Trigger** | Trigger PostgreSQL que inserta automáticamente en tabla `events` al cambiar estado. |
-| `[FRONT]` | **Optimistic Update** | Reflejar cambio inmediato en UI antes de confirmación de servidor. |
+**Criterios de Aceptación:**
+*   **Scenario 1 (Valid Transition):**
+    *   Given la pieza está en `validated`.
+    *   When selecciono `in_production` en el dropdown.
+    *   Then el estado cambia instantáneamente en la UI (Optimistic).
+    *   And se confirma en el backend.
+    *   And aparece notificación "Estado actualizado".
+*   **Scenario 2 (Invalid Transition - Guardrail):**
+    *   Given la pieza está en `uploaded` (aún no validada por Librarian).
+    *   When intento pasarla directamenet a `completed`.
+    *   Then el backend rechaza la petición (Error 400 "Invalid Transition").
+    *   And la UI revierte al estado original y muestra error toast.
+*   **Scenario 3 (Audit Log):**
+    *   Given cambio el estado exitosamente.
+    *   When consulto el historial.
+    *   Then existe un registro "User X cambió estado A -> B".
+
+**Desglose de Tickets Técnicos:**
+| ID Ticket | Título | Tech Spec | DoD |
+|-----------|--------|-----------|-----|
+| `T-050-FRONT` | **Status Selector UI** | Dropdown component que deshabilita opciones inválidas según estado actual. Usa `useMutation` con `onMutate` para Optimistic Update. | UI actualiza visualmente antes de respuesta server. |
+| `T-051-BACK` | **State Machine Logic** | Lógica en endpoint `PATCH` que valida matriz de transiciones permitidas (ej: `uploaded -> validated` OK, `uploaded -> completed` ERROR). | Unit test de transiciones prohibidas lanza excepción. |
+| `T-052-DB` | **Status Audit Trigger** | Función Trigger PL/pgSQL `log_status_change` que inserta en `events` (old_status, new_status, user_id). | Cambio en `parts` genera fila en `events`. |
+
+**Valoración:** 3 Story Points
+**Dependencias:** US-005
 
 ---
 
