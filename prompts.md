@@ -1117,7 +1117,36 @@ Definiré la estructura completa del monorepo (backend FastAPI + frontend React 
 > * Sobrescribe las secciones de US-001 y US-002 en `docs/09-mvp-backlog.md` con esta nueva información enriquecida.
 
 **Resumen de la Respuesta/Acción:**
-Se ha actualizado `docs/09-mvp-backlog.md` reemplazando las historias US-001 y US-002 con especificaciones técnicas detalladas nivel "Ready for Dev", incluyendo Criterios de Aceptación Gherkin, Desglose de Tickets (Frontend, Backend, Agent, Infra) con Tech Specs y DoD, Estimaciones y Dependencias. Se detalló el flujo de Presigned URLs y la validación con `rhino3dm`.
+
+---
+
+## 020 - Refinamiento Profundo de Backlog (Bloque B)
+**Fecha:** 2026-02-03 21:50
+
+**Prompt Original:**
+> # Prompt: Refinamiento Profundo de Backlog (Bloque B: Visualización y Gestión)
+>
+> **Role:** Actúa como **Senior Frontend Architect** y **Product Owner**.
+>
+> **Contexto:**
+> Continuamos con el refinamiento del backlog `docs/09-mvp-backlog.md`.
+> Ya tenemos el Bloque A (Ingesta) definido. Ahora nos enfocamos en el **Bloque B**, que cubre la interacción del usuario con los datos procesados.
+> Historias a refinar: **US-005**, **US-010** y **US-007**.
+>
+> **Objetivo:**
+> Especificar a nivel de implementación (Ready for Dev) cómo se visualizan, navegan y gestionan las piezas.
+>
+> **Instrucciones de Ejecución:**
+> ... (Detalles técnicos para Dashboard, Visor 3D y Cambio de Estado) ...
+>
+> **Acción Final:**
+> * Sobrescribe las secciones de US-005, US-010 y US-007 en `docs/09-mvp-backlog.md` con este detalle técnico.
+
+**Resumen de la Respuesta/Acción:**
+Se han actualizado las historias del Bloque B en `docs/09-mvp-backlog.md` con especificaciones técnicas detalladas:
+- **US-005 (Dashboard):** Implementación con TanStack Table, Paginación server-side, e indexación SQL.
+- **US-010 (Visor 3D):** Uso de @react-three/fiber + drei (Stage), manejo de errores de carga GLB y fallback.
+- **US-007 (Estados):** UI Optimistic, validación de transiciones en backend y triggers de auditoría en DB.
 
 **Resumen de la Respuesta/Acción:**
 Definición formal del alcance MVP en `docs/09-mvp-backlog.md`, seleccionando 7 historias clave (US-001, 002, 005, 010, 007, 013, 009) y generando tickets técnicos detallados. Actualización de `memory-bank/productContext.md` para reflejar el cambio a fase de Implementación con alcance acotado. Actualización del registro de prompts en `prompts.md`.
