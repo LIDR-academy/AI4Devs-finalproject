@@ -52,7 +52,7 @@ Base URL de la API: configurable por entorno (ej. `VITE_API_BASE_URL` en el fron
 | **MaintenanceType** | Tipo de mantenimiento (revisión, cambio de aceite, etc.). |
 | **Workshop** | Taller donde se realiza el mantenimiento. |
 
-Documentación detallada del modelo: ver [readme.md](readme.md) (sección Modelo de datos) y, en el backend, `flotiko_backend/ai-specs/specs/data-model.md`.
+Documentación detallada del modelo: ver [readme.md](readme.md) (sección Modelo de datos).
 
 ## Orden de implementación
 
