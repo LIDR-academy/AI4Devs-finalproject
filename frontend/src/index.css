@@ -1,3 +1,29 @@
+.text-editor--error .text-editor__textarea {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 2px #e74c3c33;
+}
+
+.toast-error {
+  position: fixed;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #e74c3c;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  z-index: 9999;
+  box-shadow: 0 2px 16px #e74c3c44;
+  animation: fadeInOut 2.5s;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

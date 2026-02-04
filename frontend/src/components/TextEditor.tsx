@@ -38,7 +38,7 @@ export function TextEditor({
   const isOverLimit = charCount > MAX_TEXT_LENGTH;
   
   return (
-    <div className="text-editor" data-testid="text-editor">
+    <div className={`text-editor${textError ? ' text-editor--error' : ''}`} data-testid="text-editor">
       <textarea
         className="text-editor__textarea"
         value={localText}
@@ -48,7 +48,7 @@ export function TextEditor({
         maxLength={MAX_TEXT_LENGTH + 1} // Allow 1 extra to detect overflow
         aria-label="Meditation text"
         aria-describedby={textError ? 'text-error' : undefined}
-        aria-invalid={isOverLimit}
+        aria-invalid={isOverLimit || !!textError}
         data-testid="text-editor-textarea"
       />
       <div className="text-editor__footer">
