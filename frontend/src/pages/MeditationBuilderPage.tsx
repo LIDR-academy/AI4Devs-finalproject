@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   TextEditor,
   OutputTypeIndicator,
@@ -40,8 +40,7 @@ export function MeditationBuilderPage() {
   const setLocalText = useComposerStore((s) => s.setLocalText);
   const setSelectedMusic = useComposerStore((s) => s.setSelectedMusic);
   const setSelectedImage = useComposerStore((s) => s.setSelectedImage);
-  const textError = useComposerStore((s) => s.textError);
-  const setTextError = useComposerStore((s) => s.setTextError);
+
 
   const createComposition = useCreateComposition();
   const updateText = useUpdateText(compositionId);
@@ -54,21 +53,7 @@ export function MeditationBuilderPage() {
   const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
 
-  const handleStart = useCallback(() => {
-    if (!localText?.trim()) {
-      setTextError('Please enter meditation text to start.');
-      return;
-    }
 
-    createComposition.mutate(localText, {
-      onSuccess: (data) => {
-        setCompositionId(data.id);
-        setLocalText(data.textContent);
-        if (data.musicReference) setSelectedMusic(data.musicReference);
-        if (data.imageReference) setSelectedImage(data.imageReference);
-      },
-    });
-  }, [localText, createComposition]);
 
   useEffect(() => {
     if (!compositionId) return;
