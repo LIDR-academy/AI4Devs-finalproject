@@ -1170,11 +1170,30 @@ Definiré la estructura completa del monorepo (backend FastAPI + frontend React 
 > * Añade al final del archivo una nota de **"Definition of Ready (DoR)"** global.
 
 **Resumen de la Respuesta/Acción:**
-Se completó el refinamiento del backlog MVP con el Bloque C:
-- **US-013 (Auth):** Definida protección Frontend (Context + Wrapper) y Backend (Middleware + JWT).
-- **US-009 (Evidence):** Definido flujo de "Transactional Update" para subir foto S3 antes de cambiar estado DB.
-- **DoR:** Añadida "Definition of Ready" global confirmando que el backlog está listo para desarrollo.
-**HITO:** Backlog MVP completamente definido (Blocks A, B, C).
+
+---
+
+## 022 - Definición de Reglas de Ejecución (Protocolo Antigravity)
+**Fecha:** 2026-02-04 11:55
+
+**Prompt Original:**
+> # Prompt: Definición de Reglas de Ejecución (Protocolo Antigravity TDD)
+>
+> **Role:** Actúa como **Quality Assurance Lead** y **Guardián del Repositorio**.
+>
+> **Contexto:**
+> Entramos en la fase de implementación (Coding).
+> Para garantizar la robustez del proyecto, el Tech Lead ha establecido un flujo de trabajo obligatorio.
+>
+> **Objetivo:**
+> Actualizar el Memory Bank con el **Protocolo de Desarrollo TDD**.
+>
+> **Instrucciones de Ejecución:**
+> 1.  **Actualización de Memoria (System Rules):** Añade el "Protocolo de Ejecución (Antigravity Rules)" al inicio de `productContext.md` con las 4 Leyes (Foco, TDD, Confirmación, Integridad).
+> 2.  **Confirmación:** Confirma instalación y simula respuesta ante una petición que viola las reglas.
+
+**Resumen de la Respuesta/Acción:**
+Se ha actualizado `memory-bank/productContext.md` insertando el PROTOCOLO DE EJECUCIÓN inquebrantable al inicio del archivo. Las reglas incluyen: Single Ticket Mode, TDD Strict (Red-Green-Refactor), Confirmación Secuencial y Primacía de la Documentación. Se ha actualizado el log de prompts.
 
 **Resumen de la Respuesta/Acción:**
 Definición formal del alcance MVP en `docs/09-mvp-backlog.md`, seleccionando 7 historias clave (US-001, 002, 005, 010, 007, 013, 009) y generando tickets técnicos detallados. Actualización de `memory-bank/productContext.md` para reflejar el cambio a fase de Implementación con alcance acotado. Actualización del registro de prompts en `prompts.md`.

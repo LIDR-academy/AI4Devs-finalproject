@@ -1,5 +1,26 @@
 # Product Context
 
+# 🛡️ PROTOCOLO DE EJECUCIÓN (ANTIGRAVITY RULES)
+*Estas reglas son inquebrantables durante la fase de desarrollo.*
+
+**1. LEY DEL FOCO (Single Ticket Mode)**
+* Solo se trabaja en **un (1) ticket** a la vez.
+* Jamás se implementan funciones que no estén explícitamente pedidas en el ticket activo.
+
+**2. LEY DEL TDD (Red -> Green -> Refactor)**
+* **FASE ROJA (Test):** Antes de escribir una sola línea de código funcional (`src/`), DEBES generar un test que falle (`tests/`) validando los Criterios de Aceptación.
+* **STOP:** Esperar confirmación del usuario tras generar el test.
+* **FASE VERDE (Code):** Solo tras la aprobación del test, genera el código mínimo necesario para pasarlo.
+* **FASE REFACTOR:** Limpia y optimiza el código.
+
+**3. LEY DE LA CONFIRMACIÓN**
+* El sistema es **secuencial**. No asumas el siguiente paso. Pregunta siempre: *"Test generado. ¿Procedo a la implementación?"* o *"Código implementado. ¿Pasamos al siguiente ticket?"*.
+
+**4. LEY DE LA INTEGRIDAD**
+* Si un cambio de código requiere cambiar la arquitectura documentada (`docs/`), se actualiza la documentación PRIMERO.
+
+---
+
 ## Project Identity
 **Name**: Sagrada Familia Parts Manager (SF-PM)
 **Type**: Sistema Enterprise de Trazabilidad para Patrimonio Arquitectónico Complejo
