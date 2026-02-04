@@ -154,7 +154,7 @@ flowchart TB
     FuelService["FuelRefillService<br/>Cálculo consumo, total_cost"]
     ReportService["VehicleReportService<br/>Informe vehículo"]
   end
-  subgraph db [(MySQL)]
+  subgraph db [MySQL]
     Tables[Tablas: vehicles, fuel_refills, etc.]
   end
   Auth --> Middleware
