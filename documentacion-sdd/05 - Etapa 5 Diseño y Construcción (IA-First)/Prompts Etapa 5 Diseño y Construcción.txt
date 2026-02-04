@@ -1,0 +1,351 @@
+# SDD — Etapa 5: Prompts utilizados (IA-First)
+
+## Proposito del documento
+
+Este documento consolida **todos los prompts utilizados durante la Etapa 5 — Diseño y Construccion**, redactados y refinados bajo un enfoque **IA-first**, para ser reutilizados directamente en herramientas como Cursor + spec-kit u otros asistentes de desarrollo.
+
+Los prompts estan organizados por bloque de la etapa y buscan:
+
+* generar codigo alineado al diseno
+* evitar interpretaciones ambiguas
+* reforzar reglas duras del dominio
+* asegurar trazabilidad y calidad
+
+---
+
+## Prompt base global (contexto del sistema)
+
+"""
+Estas trabajando en un sistema de Mesa de Servicios interna.
+
+Contexto general:
+
+* Backend: Laravel (PHP)
+* Base de datos: MySQL (modelo relacional 3FN)
+* Frontend: Angular
+* Arquitectura: monolito modular orientado a eventos
+* Usuarios solicitantes NO acceden a la plataforma
+* Ingreso de casos por correo (Office365 via Microsoft Graph)
+* WhatsApp esta fuera del MVP pero el diseno lo contempla
+* Los ciclos de vida son configurables
+* No se permiten saltos ni retrocesos de estado
+* Un caso cerrado nunca se reabre
+* Existe la regla de 1 caso activo por contacto
+* IA solo sugiere (no ejecuta reglas duras)
+* Umbral de confianza IA: 0.85
+
+Siempre respeta las reglas de dominio y no tomes decisiones de negocio no explicitadas.
+"""
+
+---
+
+## 5.1 Prompts — Stack y arquitectura
+
+### Prompt: Definicion de arquitectura
+
+"""
+Define una arquitectura backend usando Laravel bajo un enfoque de monolito modular orientado a eventos.
+
+Requisitos:
+
+* Los modulos deben estar desacoplados logicamente
+* La comunicacion entre modulos debe realizarse mediante eventos
+* Las integraciones externas (correo, WhatsApp, IA) no deben afectar la disponibilidad del core
+* No utilices microservicios
+
+Entrega:
+
+* descripcion de modulos
+* responsabilidades
+* dependencias
+  """
+
+---
+
+## 5.2 Prompts — Diseno de componentes
+
+### Prompt: Diseno del modulo Core Casos
+
+"""
+Disena el modulo Core Casos en Laravel.
+
+El modulo debe:
+
+* crear y mantener la entidad Caso
+* no contener reglas de ciclo de vida
+* emitir eventos al crear o modificar un caso
+
+No incluyas integraciones externas ni logica de SLA.
+"""
+
+---
+
+### Prompt: Motor de Ciclo de Vida
+
+"""
+Disena un Motor de Ciclo de Vida para casos.
+
+Reglas duras:
+
+* no permitir saltos de estado
+* no permitir retrocesos
+* las transiciones validas son configurables
+
+El motor debe:
+
+* validar transiciones
+* registrar historial
+* emitir eventos de estado
+  """
+
+---
+
+## 5.3 Prompts — Eventos
+
+### Prompt: Modelo de evento canonico
+
+"""
+Define un modelo canonico de evento para el sistema.
+
+Requisitos:
+
+* evento inmutable
+* versionado explicito
+* idempotencia por event_id
+
+Entrega:
+
+* estructura base del evento
+* explicacion de cada campo
+  """
+
+---
+
+### Prompt: Eventos de dominio
+
+"""
+Lista y define los eventos de dominio principales del sistema de mesa de servicios.
+
+Incluye:
+
+* nombre del evento
+* descripcion
+* payload minimo
+* productores
+* consumidores
+  """
+
+---
+
+## 5.4 Prompts — Modelo de datos
+
+### Prompt: Modelo relacional normalizado
+
+"""
+Disena un modelo de datos relacional en MySQL para un sistema de mesa de servicios.
+
+Requisitos:
+
+* tercera forma normal
+* tablas y campos en espanol
+* comentarios en tablas y campos
+* auditoria completa
+
+Incluye entidades para:
+
+* casos
+* contactos
+* mensajes
+* evidencia
+* ciclos de vida
+* SLA
+* encuestas
+  """
+
+---
+
+### Prompt: Validacion de identificadores
+
+"""
+Define reglas de validacion para identificadores de contacto.
+
+Requisitos:
+
+* RUT chileno validado por modulo 11
+* almacenado con formato xx.xxx.xxx-x
+* NIT almacenado como texto numerico sin formato
+* validacion por pais (CL, CO, US)
+  """
+
+---
+
+## 5.5 Prompts — API
+
+### Prompt: Diseno de API REST
+
+"""
+Disena una API REST para la gestion de casos.
+
+Incluye endpoints para:
+
+* crear casos
+* consultar casos
+* cambiar estado
+* asignar area y responsable
+* registrar mensajes
+* adjuntar evidencia
+
+Respeta reglas:
+
+* caso cerrado no se reabre
+* reasignacion no cambia estado
+  """
+
+---
+
+### Prompt: API Kanban
+
+"""
+Disena endpoints para soportar un tablero Kanban configurable.
+
+Requisitos:
+
+* columnas configurables por area
+* drag and drop solicita transicion
+* validacion por motor de ciclo de vida
+  """
+
+---
+
+## 5.6 Prompts — Integraciones
+
+### Prompt: Integracion correo Office365
+
+"""
+Disena un integrador de correo usando Microsoft Graph.
+
+Requisitos:
+
+* autenticacion OAuth2
+* lectura de correos entrantes
+* deduplicacion por Message-ID
+* correlacion por codigo de caso
+* no reabrir casos cerrados
+  """
+
+---
+
+### Prompt: Integracion WhatsApp (post-MVP)
+
+"""
+Disena una integracion con WhatsApp Business API.
+
+Requisitos:
+
+* un caso activo por contacto
+* deduplicacion de mensajes
+* soporte conversacion bidireccional
+* no reabrir casos cerrados
+  """
+
+---
+
+## 5.7 Prompts — SLA y reglas temporales
+
+### Prompt: Modelo de SLA por hitos
+
+"""
+Disena un sistema de SLA basado en hitos.
+
+Requisitos:
+
+* cada hito tiene evento de inicio y fin
+* tiempos configurables
+* no todos los tipos usan todos los hitos
+* alertas por vencer e incumplimiento
+* SLA no cambia estados automaticamente
+  """
+
+---
+
+### Prompt: Cierre automatico
+
+"""
+Disena un mecanismo de cierre automatico de casos.
+
+Regla:
+
+* si no hay respuesta del solicitante en 14 dias, cerrar automaticamente
+* al cerrar se debe emitir evento y generar encuesta
+* el caso no puede reabrirse
+  """
+
+---
+
+## 5.8 Prompts — Encuestas
+
+### Prompt: Encuesta post-cierre
+
+"""
+Disena un modulo de encuestas post-cierre.
+
+Requisitos:
+
+* encuesta siempre al cerrar
+* respuesta sin login
+* envio por correo o WhatsApp segun canal de ingreso
+* asociar resultado al caso
+  """
+
+---
+
+## 5.9 Prompts — IA
+
+### Prompt: Sugerencias IA
+
+"""
+Disena un servicio de IA que sugiera:
+
+* area responsable
+* subtipo
+* prioridad
+* respuesta sugerida
+
+Reglas:
+
+* la IA no ejecuta acciones
+* umbral 0.85 para preseleccion
+* menor a 0.85 requiere confirmacion
+* toda sugerencia es auditable
+  """
+
+---
+
+## 5.10 Prompts — Pruebas
+
+### Prompt: Estrategia de pruebas
+
+"""
+Define una estrategia de pruebas para el sistema.
+
+Incluye:
+
+* unitarias
+* integracion
+* end to end
+* pruebas de idempotencia
+* pruebas de reglas duras
+  """
+
+---
+
+## Cierre
+
+Este documento representa el conjunto completo de prompts utilizados en la Etapa 5.
+
+Puede reutilizarse para:
+
+* generar codigo
+* validar implementaciones
+* entrenar o guiar nuevos desarrolladores
+* documentar el enfoque IA-first del proyecto

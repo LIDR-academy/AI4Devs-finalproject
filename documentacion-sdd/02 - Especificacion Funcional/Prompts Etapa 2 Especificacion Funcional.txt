@@ -1,0 +1,209 @@
+# SDD — Etapa 2: Resumen de Prompts Utilizados
+
+## Proposito del documento
+
+Este documento registra de forma ordenada y formal **todos los prompts realizados por el usuario durante la Etapa 2**, mostrando como guiaron progresivamente la construccion de la especificacion funcional.
+
+---
+
+## 1. Inicio de la Etapa 2
+
+**Prompt:**
+
+> ok sigamos al paso 2
+
+**Resultado:**
+Inicio formal de la Etapa 2 — Definicion de la Especificacion.
+
+---
+
+## 2. Dudas sobre nivel de detalle
+
+**Prompt:**
+
+> aun tengo dudas con algunas cosas...
+
+**Resultado:**
+Definicion de no adelantar decisiones de implementacion (encuestas, correos, reemplazo de herramientas) y mantener nivel funcional.
+
+---
+
+## 3. Ciclos de vida
+
+**Prompt:**
+
+> cada uno tenga su propio ciclo de vida desde el inicio
+
+**Resultado:**
+Definicion de ciclos de vida independientes por tipo de trabajo.
+
+---
+
+## 4. Tipos de trabajo y subtipos
+
+**Prompt:**
+
+> A) fijos, pero ojo que por ejemplo debe ser subtipos
+
+**Resultado:**
+Definicion de tipos de trabajo fijos con subtipos administrables.
+
+---
+
+## 5. Administracion y mantenedores
+
+**Prompt:**
+
+> administracion por roles... el sistema final tenga mantenedores para todos
+
+**Resultado:**
+Definicion de administracion centralizada y mantenedores globales.
+
+---
+
+## 6. Roles adicionales
+
+**Prompt:**
+
+> existen tambien los jefes de cada area... jefa de gobierno
+
+**Resultado:**
+Incorporacion de Jefes de Area y Jefa de Gobierno TI.
+
+---
+
+## 7. Detalle y visibilidad
+
+**Prompt:**
+
+> si, pueden ver detalle de sus propias areas... ella tambien requiere acceso al detalle
+
+**Resultado:**
+Definicion de visibilidad a detalle por area y transversal.
+
+---
+
+## 8. Imputacion de tiempo
+
+**Prompt:**
+
+> todos podrian imputar horas...
+
+**Resultado:**
+Definicion de imputacion flexible por tipo de trabajo.
+
+---
+
+## 9. Auditoria
+
+**Prompt:**
+
+> deberia ver un rol de auditoria...
+
+**Resultado:**
+Creacion del rol Auditor (solo lectura).
+
+---
+
+## 10. Imputacion sin asignacion
+
+**Prompt:**
+
+> la respuesta es si...
+
+**Resultado:**
+Habilitacion de imputacion sin asignacion directa al caso.
+
+---
+
+## 11. Canales y modelo conceptual
+
+**Prompt:**
+
+> vamos por ambas en ese orden
+
+**Resultado:**
+Definicion de canales de entrada, comunicaciones, encuestas y modelo conceptual.
+
+---
+
+## 12. Preguntas abiertas (modelo conceptual)
+
+**Prompt:**
+
+> no, eso no lo consideremos en este momento...
+
+**Resultado:**
+Exclusion de Inventario y Proceso del MVP.
+
+---
+
+## 13. Datos minimos y SLA
+
+**Prompt:**
+
+> nos interesan algunos datos obvios...
+
+**Resultado:**
+Incorporacion de atributos minimos del Caso, tipos de incidencia y SLA.
+
+---
+
+## 14. Punto de inicio del SLA
+
+**Prompt:**
+
+> A
+
+**Resultado:**
+Definicion inicial del SLA desde el ingreso del caso.
+
+---
+
+## 15. Multiples SLA
+
+**Prompt:**
+
+> me gustaria hacer varias mediciones de sla...
+
+**Resultado:**
+Definicion de cuatro SLA basados en distintos hitos.
+
+---
+
+## 16. Metricas
+
+**Prompt:**
+
+> ok
+
+**Resultado:**
+Definicion del set minimo de metricas estandar.
+
+---
+
+## 17. Cierre de etapa
+
+**Prompt:**
+
+> ok
+
+**Resultado:**
+Cierre formal de la Etapa 2.
+
+---
+
+## 18. Documentacion final
+
+**Prompt:**
+
+> dame el documento final...
+
+**Resultado:**
+Generacion del documento final consolidado y este resumen de prompts.
+
+---
+
+## 19. Cierre
+
+Este resumen demuestra una **evolucion controlada, consciente y metodologica** de la Etapa 2, sin adelantar decisiones tecnicas ni perder trazabilidad.
