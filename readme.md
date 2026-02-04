@@ -117,8 +117,7 @@ flowchart LR
 ### 2.3. Descripción de alto nivel del proyecto y estructura de ficheros
 
 ```
-proyecto/
-├── documentacion/           # Documentación del proyecto (readme, historias, tickets, trazabilidad)
+proyecto Flotiko (backend + frontend en su propio repo o carpetas)
 ├── backend/                 # Backend Laravel
 │   ├── app/
 │   │   ├── Http/Controllers/Api/   # Controladores API
@@ -135,6 +134,8 @@ proyecto/
     │   └── context/                # AppContext, ThemeContext, etc.
     └── vite.config.js
 ```
+
+**Este repositorio (AI4Devs-finalproject)** contiene solo la documentación: readme.md, prompts.md, historias-usuario/, tickets/, TRACEABILITY.md, glosario.md.
 
 El backend sigue la estructura estándar de Laravel (MVC + servicios); el frontend organiza por páginas, componentes y servicios.
 
