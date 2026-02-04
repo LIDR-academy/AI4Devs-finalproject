@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./src/backend
+    container_name: sf-pm-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/backend:/app
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
+    depends_on:
+      - db
+    networks:
+      - sf-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: sf-pm-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=sfpm_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sf-network
+
+  frontend:
+    image: node:20-alpine
+    container_name: sf-pm-frontend
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./src/frontend:/app
+    command: sh -c "echo 'Frontend container ready. Run npm create vite@latest . to start' && tail -f /dev/null"
+    networks:
+      - sf-network
+
+volumes:
+  postgres_data:
+
+networks:
+  sf-network:
+    driver: bridge
