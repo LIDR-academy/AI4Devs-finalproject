@@ -191,27 +191,65 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
 ---
 
 ### US-013: Login/Auth
-**Estimación:** 3 Story Points
-**Dependencias:** N/A (Transversal)
+**User Story:** Como **Usuario del Sistema**, quiero iniciar sesión con mi cuenta corporativa para acceder de forma segura a la información confidencial del proyecto.
 
-| Componente | Ticket | Descripción Técnica |
-|------------|--------|---------------------|
-| `[INFRA]` | **Supabase Auth Config** | Configuración de proyecto Supabase y providers (Email/Pass). |
-| `[FRONT]` | **Login Page** | Formulario de login y manejo de sesión (Context/Store). |
-| `[FRONT]` | **Protected Routes** | Wrapper `RequireAuth` para proteger acceso al Dashboard. |
-| `[BACK]` | **Auth Middleware** | Dependencia FastAPI para validar JWT de Supabase en cada request. |
+**Criterios de Aceptación:**
+*   **Scenario 1 (Successful Login):**
+    *   Given estoy en `/login`.
+    *   When introduzco credenciales válidas y pulso "Entrar".
+    *   Then recibo un token de sesión.
+    *   And soy redirigido automáticamente al Dashboard.
+*   **Scenario 2 (Login Failed):**
+    *   Given introduzco contraseña errónea.
+    *   When intento entrar.
+    *   Then veo mensaje "Credenciales inválidas" (sin revelar si existe el usuario).
+    *   And sigo en la pantalla de login.
+*   **Scenario 3 (Unauthorized Access):**
+    *   Given no estoy logueado.
+    *   When intento entrar a `/dashboard` directamente.
+    *   Then soy interceptado y redirigido a `/login`.
+
+**Desglose de Tickets Técnicos:**
+| ID Ticket | Título | Tech Spec | DoD |
+|-----------|--------|-----------|-----|
+| `T-060-FRONT` | **AuthProvider Context** | Contexto React global que inicializa `supabase.auth.onAuthStateChange`. Expone `session`, `user`, `loading`. | Login persiste al recargar página. |
+| `T-061-FRONT` | **Protected Route Wrapper** | Componente `<RequireAuth>` que envuelve rutas privadas. Si `!session`, redirige a Login. | Dashboard inaccesible sin login. |
+| `T-062-BACK` | **Auth Middleware (Guard)** | Dependencia FastAPI `get_current_user` que valida `Authorization: Bearer <token>` verificando firma JWT de Supabase. | Endpoints protegidos devuelven 401 si no hay token. |
+| `T-063-INFRA` | **Supabase Auth Config** | Habilitar Email/Password en panel Supabase. Deshabilitar "Sign Up" público (solo invitación/admin). | Login funciona con usuario seed. |
+
+**Valoración:** 3 Story Points
+**Dependencias:** N/A (Transversal)
 
 ---
 
 ### US-009: Evidencia de Fabricación
-**Estimación:** 5 Story Points
-**Dependencias:** US-007
+**User Story:** Como **Responsable de Taller**, quiero adjuntar una foto de la pieza terminada antes de marcarla como "Completada", para dejar registro visual de calidad y trazabilidad física.
 
-| Componente | Ticket | Descripción Técnica |
-|------------|--------|---------------------|
-| `[FRONT]` | **Completion Modal** | Modal que exige foto al marcar estado "Completed". |
-| `[BACK]` | **Upload Evidence** | `POST /api/evidence`: Manejo de subida de imagen de evidencia. |
-| `[DB]` | **Evidence Relation** | Vincular registro de `attachments` con el evento de cambio de estado. |
+**Criterios de Aceptación:**
+*   **Scenario 1 (Complete with Photo):**
+    *   Given estoy en una pieza en estado `in_fabrication`.
+    *   When selecciono estado `completed`.
+    *   Then se abre un modal solicitando "Evidencia de Calidad".
+    *   When subo una foto válida y confirmo.
+    *   Then el estado cambia a `completed` y la foto queda guardada.
+*   **Scenario 2 (Attempt without Photo):**
+    *   Given estoy en el modal de completitud.
+    *   When intento confirmar sin adjuntar archivo.
+    *   Then el botón "Confirmar" está deshabilitado.
+*   **Scenario 3 (File Upload Fail):**
+    *   Given el upload de la foto falla por conexión.
+    *   Then el cambio de estado NO se ejecuta (transacción atómica o rollback).
+    *   And veo error "No se pudo subir la evidencia".
+
+**Desglose de Tickets Técnicos:**
+| ID Ticket | Título | Tech Spec | DoD |
+|-----------|--------|-----------|-----|
+| `T-070-FRONT` | **Evidence Completion Modal** | Modal que intercepta el cambio a `completed`. Contiene input file simple (mobile friendly). | Modal aparece solo al seleccionar "Completed". |
+| `T-071-INFRA` | **Quality Control Bucket** | Bucket S3 `quality-control` con ACL confidencial. (Solo lectura para admins/auditores). | Configuración Terraform/Manual lista. |
+| `T-072-BACK` | **Upload Evidence & Transition** | Endpoint `POST /api/parts/{id}/complete`. Recibe imagen (`multipart/form-data`). Sube a S3 -> Inserta en `attachments` -> Actualiza estado a `completed`. | Transacción OK: Foto en S3 y Estado cambiado. Fallo: Estado no cambia. |
+
+**Valoración:** 5 Story Points
+**Dependencias:** US-007
 
 ---
 
@@ -222,3 +260,14 @@ Las siguientes historias quedan pospuestas para futuras iteraciones:
 * **US-008:** Bloqueo de permisos detallado (Testear solo básico).
 * **US-011, US-012:** Fallbacks y Capturas de visor.
 * **US-014:** Login error handling avanzado.
+
+---
+
+## ✅ Definition of Ready (DoR) - Global
+Para que una historia de este backlog entre en el Sprint 0, debe cumplir:
+1.  **Tech Spec Completa:** Tabla de tickets definida con librerías y endpoints.
+2.  **UX Clara:** Criterios de aceptación visuales (Happy Path + Error).
+3.  **Dependencias Resueltas:** La arquitectura base (S3/DB/Auth) está provisionada.
+4.  **Estimación:** Story Points asignados.
+
+**Status Final:** BACKLOG REFINADO Y APROBADO (2026-02-04). LISTO PARA CODING.
