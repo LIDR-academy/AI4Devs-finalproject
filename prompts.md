@@ -1193,7 +1193,37 @@ Definiré la estructura completa del monorepo (backend FastAPI + frontend React 
 > 2.  **Confirmación:** Confirma instalación y simula respuesta ante una petición que viola las reglas.
 
 **Resumen de la Respuesta/Acción:**
-Se ha actualizado `memory-bank/productContext.md` insertando el PROTOCOLO DE EJECUCIÓN inquebrantable al inicio del archivo. Las reglas incluyen: Single Ticket Mode, TDD Strict (Red-Green-Refactor), Confirmación Secuencial y Primacía de la Documentación. Se ha actualizado el log de prompts.
+
+---
+
+## 023 - Sprint 0: Setup de Infraestructura
+**Fecha:** 2026-02-04 12:40
+
+**Prompt Original:**
+> # Prompt: Sprint 0 - Setup de Infraestructura y Testing Harness
+>
+> **Role:** Actúa como **DevOps Engineer** y **QA Architect**.
+>
+> **Contexto:**
+> Iniciamos el **Sprint 0**.
+> Tenemos un protocolo TDD estricto, por lo que este setup es CRÍTICO.
+>
+> **Objetivo:**
+> Generar la estructura de carpetas, archivos de configuración (Docker) y entorno de pruebas.
+>
+> **Instrucciones de Ejecución:**
+> 1.  Script de estructura de carpetas.
+> 2.  Configuración Backend (`requirements.txt`, `Dockerfile`, `main.py`).
+> 3.  Orquestación `docker-compose.yml`.
+> 4.  Instrucciones de arranque.
+
+**Resumen de la Respuesta/Acción:**
+Se ha ejecutado el setup inicial del proyecto:
+1.  Creada estructura de directorios (`src/`, `tests/`, `infra/`, `data/`) mediante script bash.
+2.  Generados archivos de configuración backend: `requirements.txt` (incluyendo pytest), `Dockerfile` (Python 3.11), y `main.py` (Health Check).
+3.  Generado `pytest.ini` para detección automática de tests.
+4.  Generado `docker-compose.yml` orquestando Backend, Database y Frontend (base).
+5.  Entorno listo para iniciar TDD con `docker-compose up` y `pytest`.
 
 **Resumen de la Respuesta/Acción:**
 Definición formal del alcance MVP en `docs/09-mvp-backlog.md`, seleccionando 7 historias clave (US-001, 002, 005, 010, 007, 013, 009) y generando tickets técnicos detallados. Actualización de `memory-bank/productContext.md` para reflejar el cambio a fase de Implementación con alcance acotado. Actualización del registro de prompts en `prompts.md`.
