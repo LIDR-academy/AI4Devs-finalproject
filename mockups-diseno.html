@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockups - Sistema Integrado de Gestión Quirúrgica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #F5F7FA;
+            color: #2C3E50;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #0052A3;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #6C757D;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .mockup-section {
+            margin-bottom: 60px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .mockup-header {
+            background: linear-gradient(135deg, #0052A3 0%, #0066CC 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mockup-header h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .mockup-number {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .mockup-content {
+            padding: 30px;
+        }
+
+        .mockup-screen {
+            background: #FFFFFF;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .screen-header {
+            background: #F8F9FA;
+            border-bottom: 1px solid #E0E0E0;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .screen-title {
+            font-weight: 600;
+            color: #2C3E50;
+            font-size: 0.95em;
+        }
+
+        .screen-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-red { background: #FF5F57; }
+        .dot-yellow { background: #FFBD2E; }
+        .dot-green { background: #28CA42; }
+
+        .screen-body {
+            padding: 25px;
+            min-height: 400px;
+        }
+
+        /* Colores del sistema médico */
+        :root {
+            --primary-blue: #0052A3;
+            --secondary-blue: #0066CC;
+            --light-blue: #E3F2FD;
+            --success-green: #28A745;
+            --warning-orange: #FFC107;
+            --danger-red: #DC3545;
+            --text-dark: #2C3E50;
+            --text-light: #6C757D;
+            --bg-light: #F5F7FA;
+            --border-color: #E0E0E0;
+        }
+
+        /* Login Screen */
+        .login-container {
+            max-width: 420px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #0052A3 0%, #0066CC 100%);
+            border-radius: 20px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            color: #0052A3;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2C3E50;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #0066CC;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0052A3 0%, #0066CC 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,82,163,0.3);
+        }
+
+        .mfa-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #E3F2FD;
+            color: #0052A3;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        /* Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #2C3E50;
+            color: white;
+            padding: 20px 0;
+            border-radius: 8px;
+        }
+
+        .sidebar-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar-item.active {
+            background: #0052A3;
+            border-left: 4px solid #0066CC;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #F0F0F0;
+        }
+
+        .dashboard-title {
+            font-size: 1.8em;
+            color: #0052A3;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #0052A3 0%, #0066CC 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%);
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #0066CC;
+        }
+
+        .stat-label {
+            color: #6C757D;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #0052A3;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .action-card {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-card:hover {
+            border-color: #0066CC;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,102,204,0.2);
+        }
+
+        .action-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+
+        .action-desc {
+            font-size: 0.85em;
+            color: #6C757D;
+        }
+
+        /* Patient Registration */
+        .form-section {
+            background: #F8F9FA;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: #0052A3;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row-full {
+            grid-template-columns: 1fr;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #D4EDDA;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #FFF3CD;
+            color: #856404;
+        }
+
+        .badge-danger {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+
+        /* 3D Viewer */
+        .viewer-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            min-height: 500px;
+        }
+
+        .viewer-controls {
+            background: #F8F9FA;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E0E0E0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0066CC;
+            cursor: pointer;
+        }
+
+        .viewer-main {
+            background: #1A1A1A;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .viewer-placeholder {
+            text-align: center;
+            color: #888;
+        }
+
+        .viewer-placeholder-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        /* Checklist */
+        .checklist-phase {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .checklist-phase.active {
+            border-color: #0066CC;
+            border-left: 4px solid #0066CC;
+        }
+
+        .checklist-phase.completed {
+            border-color: #28A745;
+            background: #F0F9F4;
+        }
+
+        .phase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .phase-title {
+            font-weight: 600;
+            color: #2C3E50;
+            font-size: 1.1em;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #F8F9FA;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #0066CC;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox.checked {
+            background: #0066CC;
+            color: white;
+        }
+
+        .item-label {
+            flex: 1;
+            color: #2C3E50;
+        }
+
+        /* Documentation */
+        .doc-editor {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .editor-main {
+            background: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            min-height: 400px;
+        }
+
+        .editor-toolbar {
+            background: #F8F9FA;
+            padding: 12px 20px;
+            border-bottom: 1px solid #E0E0E0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .toolbar-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .toolbar-btn:hover {
+            background: #E3F2FD;
+            border-color: #0066CC;
+        }
+
+        .editor-content {
+            padding: 20px;
+            min-height: 350px;
+        }
+
+        .voice-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #E3F2FD;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: #0066CC;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .sidebar-panel {
+            background: #F8F9FA;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .info-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        .info-label {
+            font-size: 0.85em;
+            color: #6C757D;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-online {
+            background: #D4EDDA;
+            color: #155724;
+        }
+
+        .status-saving {
+            background: #FFF3CD;
+            color: #856404;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: #6C757D;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #0052A3;
+            border-bottom-color: #0052A3;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: #F8F9FA;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2C3E50;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .table tr:hover {
+            background: #F8F9FA;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .btn-icon {
+            padding: 12px;
+            background: #0066CC;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .alert-box {
+            background: #FFF3CD;
+            border-left: 4px solid #FFC107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-icon {
+            font-size: 1.5em;
+        }
+
+        .description {
+            background: #F8F9FA;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #0066CC;
+        }
+
+        .description h3 {
+            color: #0052A3;
+            margin-bottom: 10px;
+        }
+
+        .description p {
+            color: #6C757D;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Sistema Integrado de Gestión Quirúrgica</h1>
+        <p class="subtitle">Mockups de Diseño - Paleta de Colores Médica Profesional</p>
+
+        <!-- Mockup 1: Login con MFA -->
+        <div class="mockup-section">
+            <div class="mockup-header">
+                <h2>Pantalla de Login con MFA</h2>
+                <span class="mockup-number">Mockup 1</span>
+            </div>
+            <div class="mockup-content">
+                <div class="mockup-screen">
+                    <div class="screen-header">
+                        <span class="screen-title">SIGQ - Sistema Integrado de Gestión Quirúrgica</span>
+                        <div class="screen-actions">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                    </div>
+                    <div class="screen-body">
+                        <div class="login-container">
+                            <div class="logo">
+                                <div class="logo-icon">⚕️</div>
+                                <div class="logo-text">SIGQ</div>
+                            </div>
+                            <form>
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-input" placeholder="cirujano@hospital.com" value="dr.garcia@hospital.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Contraseña</label>
+                                    <input type="password" class="form-input" placeholder="••••••••" value="••••••••">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                                <div style="text-align: center;">
+                                    <div class="mfa-badge">
+                                        🔒 Autenticación MFA Requerida
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="description">
+                    <h3>Características del Login</h3>
+                    <p>Pantalla de autenticación con diseño limpio y profesional. Incluye indicador visual de MFA requerido. Los colores azules (#0052A3, #0066CC) transmiten confianza y profesionalismo médico. El diseño es minimalista para reducir distracciones en entornos clínicos.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mockup 2: Dashboard -->
+        <div class="mockup-section">
+            <div class="mockup-header">
+                <h2>Dashboard Principal</h2>
+                <span class="mockup-number">Mockup 2</span>
+            </div>
+            <div class="mockup-content">
+                <div class="mockup-screen">
+                    <div class="screen-header">
+                        <span class="screen-title">Dashboard - Dr. García</span>
+                        <div class="screen-actions">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                    </div>
+                    <div class="screen-body">
+                        <div class="dashboard-grid">
+                            <div class="sidebar">
+                                <div class="sidebar-item active">
+                                    <span>🏠</span>
+                                    <span>Dashboard</span>
+                                </div>
+                                <div class="sidebar-item">
+                                    <span>👥</span>
+                                    <span>Pacientes</span>
+                                </div>
+                                <div class="sidebar-item">
+                                    <span>🎯</span>
+                                    <span>Planificación</span>
+                                </div>
+                                <div class="sidebar-item">
+                                    <span>⚕️</span>
+                                    <span>Cirugías</span>
+                                </div>
+                                <div class="sidebar-item">
+                                    <span>📊</span>
+                                    <span>Reportes</span>
+                                </div>
+                                <div class="sidebar-item">
+                                    <span>⚙️</span>
+                                    <span>Configuración</span>
+                                </div>
+                            </div>
+                            <div class="main-content">
+                                <div class="dashboard-header">
+                                    <div class="dashboard-title">Bienvenido, Dr. García</div>
+                                    <div class="user-info">
+                                        <div class="avatar">DG</div>
+                                        <div>
+                                            <div style="font-weight: 600;">Dr. García</div>
+                                            <div style="font-size: 0.85em; color: #6C757D;">Cirujano General</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="stats-grid">
+                                    <div class="stat-card">
+                                        <div class="stat-label">Pacientes Activos</div>
+                                        <div class="stat-value">24</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-label">Cirugías Programadas</div>
+                                        <div class="stat-value">8</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-label">Pendientes de Planificación</div>
+                                        <div class="stat-value">3</div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-label">Este Mes</div>
+                                        <div class="stat-value">12</div>
+                                    </div>
+                                </div>
+                                <div class="quick-actions">
+                                    <div class="action-card">
+                                        <div class="action-icon">👤</div>
+                                        <div class="action-title">Nuevo Paciente</div>
+                                        <div class="action-desc">Registrar paciente</div>
+                                    </div>
+                                    <div class="action-card">
+                                        <div class="action-icon">🎯</div>
+                                        <div class="action-title">Planificar Cirugía</div>
+                                        <div class="action-desc">Crear planificación</div>
+                                    </div>
+                                    <div class="action-card">
+                                        <div class="action-icon">📋</div>
+                                        <div class="action-title">Ver Checklist</div>
+                                        <div class="action-desc">Revisar checklist</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="description">
+                    <h3>Características del Dashboard</h3>
+                    <p>Dashboard personalizado por rol con estadísticas clave y acceso rápido a funciones principales. Sidebar oscuro (#2C3E50) para contraste, tarjetas de estadísticas con acento azul médico. Diseño responsive que se adapta a diferentes tamaños de pantalla.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mockup 3: Registro de Paciente -->
+        <div class="mockup-section">
+            <div class="mockup-header">
+                <h2>Registro de Paciente en HCE</h2>
+                <span class="mockup-number">Mockup 3</span>
+            </div>
+            <div class="mockup-content">
+                <div class="mockup-screen">
+                    <div class="screen-header">
+                        <span class="screen-title">Historia Clínica Electrónica - Nuevo Paciente</span>
+                        <div class="screen-actions">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                    </div>
+                    <div class="screen-body">
+                        <div class="tabs">
+                            <div class="tab active">Datos Demográficos</div>
+                            <div class="tab">Antecedentes</div>
+                            <div class="tab">Alergias</div>
+                            <div class="tab">Medicación</div>
+                        </div>
+                        <div class="form-section">
+                            <div class="section-title">Información Personal</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Nombre *</label>
+                                    <input type="text" class="form-input" value="Juan">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Apellidos *</label>
+                                    <input type="text" class="form-input" value="Pérez García">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Fecha de Nacimiento *</label>
+                                    <input type="date" class="form-input" value="1985-05-15">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Género *</label>
+                                    <select class="form-input">
+                                        <option>Masculino</option>
+                                        <option>Femenino</option>
+                                        <option>Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Número de Seguridad Social</label>
+                                    <input type="text" class="form-input" value="12345678A">
+                                    <span class="badge badge-success" style="margin-top: 8px; display: inline-block;">🔒 Encriptado</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-input" value="+34 600 123 456">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <div class="section-title">Alergias</div>
+                            <div class="checklist-item">
+                                <div class="checkbox checked">✓</div>
+                                <div class="item-label">
+                                    <strong>Penicilina</strong> - Severidad: Alta
+                                    <span class="badge badge-danger" style="margin-left: 10px;">Crítica</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" style="width: auto; margin-top: 10px;">+ Agregar Alergia</button>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 25px;">
+                            <button class="btn btn-primary" style="width: auto; flex: 1;">Guardar Paciente</button>
+                            <button class="btn" style="width: auto; flex: 1; background: #F8F9FA; border: 2px solid #E0E0E0;">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="description">
+                    <h3>Características del Formulario</h3>
+                    <p>Formulario de registro con pestañas para organizar información. Validación en tiempo real, indicadores visuales de seguridad (badge de encriptación), y diseño limpio que facilita la entrada rápida de datos. Los colores de alerta (rojo para crítico) ayudan a identificar información importante.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mockup 4: Visualizador 3D -->
+        <div class="mockup-section">
+            <div class="mockup-header">
+                <h2>Planificación Quirúrgica - Visualizador 3D</h2>
+                <span class="mockup-number">Mockup 4</span>
+            </div>
+            <div class="mockup-content">
+                <div class="mockup-screen">
+                    <div class="screen-header">
+                        <span class="screen-title">Planificación Quirúrgica - Paciente: Juan Pérez García</span>
+                        <div class="screen-actions">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                    </div>
+                    <div class="screen-body">
+                        <div class="viewer-container">
+                            <div class="viewer-controls">
+                                <div class="control-group">
+                                    <label class="control-label">Rotación X</label>
+                                    <input type="range" class="slider" value="45" min="0" max="360">
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Rotación Y</label>
+                                    <input type="range" class="slider" value="30" min="0" max="360">
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Zoom</label>
+                                    <input type="range" class="slider" value="75" min="0" max="100">
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Estructuras Marcadas</label>
+                                    <div style="margin-top: 10px;">
+                                        <div class="checklist-item">
+                                            <div class="checkbox checked">✓</div>
+                            <div class="item-label">Hígado</div>
+                                        </div>
+                                        <div class="checklist-item">
+                                            <div class="checkbox checked">✓</div>
+                            <div class="item-label">Vesícula Biliar</div>
+                                        </div>
+                                        <div class="checklist-item">
+                                            <div class="checkbox"></div>
+                            <div class="item-label">Vena Porta</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" style="margin-top: 20px;">Guardar Planificación</button>
+                            </div>
+                            <div class="viewer-main">
+                                <div class="viewer-placeholder">
+                                    <div class="viewer-placeholder-icon">🎯</div>
+                                    <div>Visualizador 3D</div>
+                                    <div style="font-size: 0.85em; margin-top: 10px; color: #666;">Modelo 3D interactivo de anatomía del paciente</div>
+                                    <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 6px;">
+                                        <div style="font-size: 0.9em; margin-bottom: 8px;">Medición: 4.2 cm</div>
+                                        <div style="font-size: 0.9em;">Volumen: 125.3 ml</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="description">
+                    <h3>Características del Visualizador 3D</h3>
+                    <p>Panel de controles lateral con sliders para rotación y zoom. Visualizador principal con fondo oscuro (#1A1A1A) para mejor contraste de imágenes médicas. Herramientas de medición integradas. Diseño optimizado para uso prolongado sin fatiga visual.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mockup 5: Checklist WHO -->
+        <div class="mockup-section">
+            <div class="mockup-header">
+                <h2>Checklist Quirúrgico WHO</h2>
+                <span class="mockup-number">Mockup 5</span>
+            </div>
+            <div class="mockup-content">
+                <div class="mockup-screen">
+                    <div class="screen-header">
+                        <span class="screen-title">Checklist de Seguridad Quirúrgica WHO - Cirugía #1234</span>
+                        <div class="screen-actions">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                    </div>
+                    <div class="screen-body">
+                        <div class="checklist-phase completed">
+                            <div class="phase-header">
+                                <div class="phase-title">✅ Fase 1: Antes de la Inducción Anestésica</div>
+                                <span class="badge badge-success">Completado</span>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox checked">✓</div>
+                                <div class="item-label">Paciente confirmado (nombre y procedimiento)</div>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox checked">✓</div>
+                                <div class="item-label">Sitio quirúrgico marcado</div>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox checked">✓</div>
+                                <div class="item-label">Alergias verificadas</div>
+                            </div>
+                        </div>
+                        <div class="checklist-phase active">
+                            <div class="phase-header">
+                                <div class="phase-title">⏳ Fase 2: Antes de la Incisión</div>
+                                <span class="badge badge-warning">En Progreso</span>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox checked">✓</div>
+                                <div class="item-label">Todo el equipo se ha presentado</div>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox checked">✓</div>
+                                <div class="item-label">Riesgos revisados</div>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox"></div>
+                                <div class="item-label">Profilaxis antibiótica administrada</div>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox"></div>
+                                <div class="item-label">Preocupaciones del equipo abordadas</div>
+                            </div>
+                        </div>
+                        <div class="checklist-phase">
+                            <div class="phase-header">
+                                <div class="phase-title">⏸️ Fase 3: Antes de Salir del Quirófano</div>
+                                <span class="badge" style="background: #E0E0E0; color: #6C757D;">Pendiente</span>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox"></div>
+                                <div class="item-label">Conteo de instrumentos correcto</div>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="checkbox"></div>
+                                <div class="item-label">Muestras identificadas</div>
+                            </div>
+                        </div>
+                        <div class="alert-box" style="margin-top: 20px;">
+                            <span class="alert-icon">⚠️</span>
+                            <div>
+                                <strong>Atención:</strong> Faltan 2 ítems por completar en la Fase 2 antes de proceder.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="description">
+                    <h3>Características del Checklist</h3>
+                    <p>Checklist visual con tres fases claramente diferenciadas. Estados visuales: completado (verde), en progreso (azul), pendiente (gris). Alertas visuales para ítems faltantes. Diseño optimizado para uso en tablet durante el procedimiento quirúrgico.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mockup 6: Documentación Intraoperatoria -->
+        <div class="mockup-section">
+            <div class="mockup-header">
+                <h2>Documentación Intraoperatoria en Tiempo Real</h2>
+                <span class="mockup-number">Mockup 6</span>
+            </div>
+            <div class="mockup-content">
+                <div class="mockup-screen">
+                    <div class="screen-header">
+                        <span class="screen-title">Documentación - Cirugía #1234 - Procedimiento: Colecistectomía Laparoscópica</span>
+                        <div class="screen-actions">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                    </div>
+                    <div class="screen-body">
+                        <div class="doc-editor">
+                            <div class="editor-main">
+                                <div class="editor-toolbar">
+                                    <button class="toolbar-btn">📝 Notas</button>
+                                    <button class="toolbar-btn">🎤 Voz</button>
+                                    <button class="toolbar-btn">📷 Foto</button>
+                                    <button class="toolbar-btn">📎 Adjuntar</button>
+                                </div>
+                                <div class="editor-content">
+                                    <div class="voice-indicator">
+                                        <div class="pulse"></div>
+                                        <span style="font-weight: 600; color: #0052A3;">Dictado activo - Guardando automáticamente...</span>
+                                    </div>
+                                    <div style="min-height: 250px; padding: 15px; background: #FAFAFA; border-radius: 6px; border: 1px dashed #E0E0E0;">
+                                        <div style="margin-bottom: 15px;">
+                                            <strong>12:30</strong> - Inicio del procedimiento. Paciente en posición supina.
+                                        </div>
+                                        <div style="margin-bottom: 15px;">
+                                            <strong>12:35</strong> - Insuflación de neumoperitoneo completada. Presión: 12 mmHg.
+                                        </div>
+                                        <div style="margin-bottom: 15px;">
+                                            <strong>12:40</strong> - Trocares insertados. Visualización de estructuras normales.
+                                        </div>
+                                        <div style="color: #6C757D; font-style: italic;">
+                                            Escribiendo...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sidebar-panel">
+                                <div class="info-item">
+                                    <div class="info-label">Estado de Conexión</div>
+                                    <div class="info-value">
+                                        <span class="status-indicator status-online">
+                                            <span>●</span>
+                                            <span>En línea</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Auto-guardado</div>
+                                    <div class="info-value">
+                                        <span class="status-indicator status-saving">
+                                            <span>●</span>
+                                            <span>Guardando...</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Última actualización</div>
+                                    <div class="info-value">Hace 5 segundos</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Cirujano</div>
+                                    <div class="info-value">Dr. García</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Paciente</div>
+                                    <div class="info-value">Juan Pérez García</div>
+                                </div>
+                                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #E0E0E0;">
+                                    <div class="control-label" style="margin-bottom: 10px;">Guías Quirúrgicas</div>
+                                    <div style="background: #1A1A1A; border-radius: 6px; padding: 15px; text-align: center; color: white; min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                                        <div>
+                                            <div style="font-size: 2em; margin-bottom: 10px;">🎯</div>
+                                            <div style="font-size: 0.9em; color: #888;">Vista 3D de Guía</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="description">
+                    <h3>Características de Documentación</h3>
+                    <p>Editor de documentación optimizado para tablet con indicadores de estado en tiempo real. Panel lateral con información del procedimiento y visualización de guías 3D. Indicadores visuales de conexión y auto-guardado. Diseño minimalista para uso durante cirugía.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mockup 7: Búsqueda de Pacientes -->
+        <div class="mockup-section">
+            <div class="mockup-header">
+                <h2>Búsqueda y Listado de Pacientes</h2>
+                <span class="mockup-number">Mockup 7</span>
+            </div>
+            <div class="mockup-content">
+                <div class="mockup-screen">
+                    <div class="screen-header">
+                        <span class="screen-title">Historia Clínica Electrónica - Pacientes</span>
+                        <div class="screen-actions">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                    </div>
+                    <div class="screen-body">
+                        <div class="search-bar">
+                            <input type="text" class="search-input" placeholder="Buscar por nombre, SSN, ID...">
+                            <button class="btn-icon">🔍</button>
+                            <button class="btn btn-primary" style="width: auto; padding: 12px 24px;">+ Nuevo Paciente</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Fecha Nac.</th>
+                                    <th>Última Visita</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#1234</td>
+                                    <td><strong>Juan Pérez García</strong></td>
+                                    <td>15/05/1985</td>
+                                    <td>15/01/2024</td>
+                                    <td><span class="badge badge-success">Activo</span></td>
+                                    <td>
+                                        <button class="toolbar-btn" style="padding: 6px 12px; font-size: 0.85em;">Ver</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#1235</td>
+                                    <td><strong>María López Sánchez</strong></td>
+                                    <td>22/08/1978</td>
+                                    <td>14/01/2024</td>
+                                    <td><span class="badge badge-warning">Pendiente</span></td>
+                                    <td>
+                                        <button class="toolbar-btn" style="padding: 6px 12px; font-size: 0.85em;">Ver</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#1236</td>
+                                    <td><strong>Carlos Martínez Ruiz</strong></td>
+                                    <td>10/12/1990</td>
+                                    <td>13/01/2024</td>
+                                    <td><span class="badge badge-success">Activo</span></td>
+                                    <td>
+                                        <button class="toolbar-btn" style="padding: 6px 12px; font-size: 0.85em;">Ver</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="description">
+                    <h3>Características de Búsqueda</h3>
+                    <p>Tabla de pacientes con búsqueda rápida. Badges de estado con colores semánticos (verde=activo, amarillo=pendiente). Diseño limpio y fácil de escanear. Acciones rápidas para cada paciente.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paleta de Colores -->
+        <div class="mockup-section">
+            <div class="mockup-header">
+                <h2>Paleta de Colores del Sistema</h2>
+                <span class="mockup-number">Guía de Diseño</span>
+            </div>
+            <div class="mockup-content">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #0052A3; border-radius: 8px; margin-bottom: 10px;"></div>
+                        <div style="font-weight: 600; color: #2C3E50;">Azul Primario</div>
+                        <div style="font-size: 0.85em; color: #6C757D;">#0052A3</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #0066CC; border-radius: 8px; margin-bottom: 10px;"></div>
+                        <div style="font-weight: 600; color: #2C3E50;">Azul Secundario</div>
+                        <div style="font-size: 0.85em; color: #6C757D;">#0066CC</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #28A745; border-radius: 8px; margin-bottom: 10px;"></div>
+                        <div style="font-weight: 600; color: #2C3E50;">Verde Éxito</div>
+                        <div style="font-size: 0.85em; color: #6C757D;">#28A745</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #DC3545; border-radius: 8px; margin-bottom: 10px;"></div>
+                        <div style="font-weight: 600; color: #2C3E50;">Rojo Alerta</div>
+                        <div style="font-size: 0.85em; color: #6C757D;">#DC3545</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #FFC107; border-radius: 8px; margin-bottom: 10px;"></div>
+                        <div style="font-weight: 600; color: #2C3E50;">Amarillo Advertencia</div>
+                        <div style="font-size: 0.85em; color: #6C757D;">#FFC107</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #2C3E50; border-radius: 8px; margin-bottom: 10px;"></div>
+                        <div style="font-weight: 600; color: #2C3E50;">Gris Oscuro</div>
+                        <div style="font-size: 0.85em; color: #6C757D;">#2C3E50</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #F5F7FA; border: 2px solid #E0E0E0; border-radius: 8px; margin-bottom: 10px;"></div>
+                        <div style="font-weight: 600; color: #2C3E50;">Fondo Claro</div>
+                        <div style="font-size: 0.85em; color: #6C757D;">#F5F7FA</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="width: 100%; height: 120px; background: #E3F2FD; border-radius: 8px; margin-bottom: 10px;"></div>
+                        <div style="font-weight: 600; color: #2C3E50;">Azul Claro</div>
+                        <div style="font-size: 0.85em; color: #6C757D;">#E3F2FD</div>
+                    </div>
+                </div>
+                <div class="description" style="margin-top: 30px;">
+                    <h3>Principios de Diseño</h3>
+                    <p><strong>Colores Principales:</strong> Azules médicos profesionales (#0052A3, #0066CC) transmiten confianza y seriedad. <strong>Colores de Estado:</strong> Verde para éxito/completado, rojo para alertas críticas, amarillo para advertencias. <strong>Contraste:</strong> Alto contraste para legibilidad en diferentes condiciones de iluminación (quirófanos). <strong>Accesibilidad:</strong> Cumplimiento WCAG 2.1 con ratios de contraste adecuados.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
