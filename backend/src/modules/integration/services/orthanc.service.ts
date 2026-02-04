@@ -345,9 +345,11 @@ export class OrthancService {
   async healthCheck(): Promise<boolean> {
     try {
       const response = await this.axiosInstance.get('/system');
-      return response.status === 200;
+      const ok = response.status === 200;
+      this.logger.log(`[Integration:Orthanc] Health check: ${ok ? 'OK' : 'FAIL'}`);
+      return ok;
     } catch (error: any) {
-      this.logger.error(`Error en health check de Orthanc: ${error.message}`);
+      this.logger.warn(`[Integration:Orthanc] Health check fallido: ${error.message}`);
       return false;
     }
   }

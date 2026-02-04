@@ -1,14 +1,22 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, ValidateIf } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
-  @ApiProperty({
-    description: 'Email del usuario',
+  @ApiPropertyOptional({
+    description: 'Email del usuario (alternativa: usar username)',
     example: 'cirujano@hospital.com',
   })
+  @ValidateIf((o) => o.email !== undefined && o.email !== '')
   @IsEmail({}, { message: 'Debe ser un email válido' })
-  @IsNotEmpty({ message: 'El email es requerido' })
-  email: string;
+  email?: string;
+
+  @ApiPropertyOptional({
+    description: 'Username (en dev se usa como email si email no viene)',
+    example: 'ana@hospital.com',
+  })
+  @IsOptional()
+  @IsString()
+  username?: string;
 
   @ApiProperty({
     description: 'Contraseña del usuario',

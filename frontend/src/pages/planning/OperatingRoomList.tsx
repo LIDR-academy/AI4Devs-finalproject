@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { operatingRoomService } from '@/services/operating-room.service';
-import { PlusIcon, BuildingOfficeIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, BuildingOfficeIcon, CheckCircleIcon, XCircleIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 
 const OperatingRoomListPage = () => {
   const [activeOnly, setActiveOnly] = useState(true);
@@ -19,13 +19,22 @@ const OperatingRoomListPage = () => {
           <h1 className="text-3xl font-bold text-medical-gray-900">Quirófanos</h1>
           <p className="text-medical-gray-600 mt-2">Gestión de quirófanos y salas de cirugía</p>
         </div>
-        <Link
-          to="/planning/operating-rooms/new"
-          className="btn btn-primary flex items-center gap-2"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Nuevo Quirófano
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/planning/calendar"
+            className="btn btn-outline flex items-center gap-2"
+          >
+            <CalendarDaysIcon className="w-5 h-5" />
+            Calendario
+          </Link>
+          <Link
+            to="/planning/operating-rooms/new"
+            className="btn btn-primary flex items-center gap-2"
+          >
+            <PlusIcon className="w-5 h-5" />
+            Nuevo Quirófano
+          </Link>
+        </div>
       </div>
 
       <div className="card">

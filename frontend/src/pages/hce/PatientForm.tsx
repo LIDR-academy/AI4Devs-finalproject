@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hceService } from '@/services/hce.service';
+import { getApiErrorMessage } from '@/utils/errors';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 const patientSchema = z.object({
@@ -109,16 +110,20 @@ const PatientFormPage = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="bg-medical-gray-100 rounded-lg p-5 mb-6">
+              <h3 className="text-lg font-semibold text-medical-primary mb-4 pb-2 border-b-2 border-medical-gray-200">
+                Información Personal
+              </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-medical-gray-700 mb-1">
+                <label htmlFor="firstName" className="block text-sm font-medium text-medical-gray-800 mb-2">
                   Nombre *
                 </label>
                 <input
                   id="firstName"
                   type="text"
                   {...register('firstName')}
-                  className="input"
+                  className="w-full px-4 py-2 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
                   placeholder="Nombre"
                 />
                 {errors.firstName && (
@@ -127,15 +132,15 @@ const PatientFormPage = () => {
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-medical-gray-700 mb-1">
-                  Apellido *
+                <label htmlFor="lastName" className="block text-sm font-medium text-medical-gray-800 mb-2">
+                  Apellidos *
                 </label>
                 <input
                   id="lastName"
                   type="text"
                   {...register('lastName')}
-                  className="input"
-                  placeholder="Apellido"
+                  className="w-full px-4 py-2 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
+                  placeholder="Apellidos"
                 />
                 {errors.lastName && (
                   <p className="mt-1 text-sm text-medical-danger">{errors.lastName.message}</p>
@@ -143,14 +148,14 @@ const PatientFormPage = () => {
               </div>
 
               <div>
-                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-medical-gray-700 mb-1">
+                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-medical-gray-800 mb-2">
                   Fecha de Nacimiento *
                 </label>
                 <input
                   id="dateOfBirth"
                   type="date"
                   {...register('dateOfBirth')}
-                  className="input"
+                  className="w-full px-4 py-2 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
                 />
                 {errors.dateOfBirth && (
                   <p className="mt-1 text-sm text-medical-danger">{errors.dateOfBirth.message}</p>
@@ -158,10 +163,10 @@ const PatientFormPage = () => {
               </div>
 
               <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-medical-gray-700 mb-1">
+                <label htmlFor="gender" className="block text-sm font-medium text-medical-gray-800 mb-2">
                   Género *
                 </label>
-                <select id="gender" {...register('gender')} className="input">
+                <select id="gender" {...register('gender')} className="w-full px-4 py-2 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors">
                   <option value="">Seleccione...</option>
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
@@ -173,14 +178,14 @@ const PatientFormPage = () => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-medical-gray-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-medical-gray-800 mb-2">
                   Email
                 </label>
                 <input
                   id="email"
                   type="email"
                   {...register('email')}
-                  className="input"
+                  className="w-full px-4 py-2 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
                   placeholder="email@ejemplo.com"
                 />
                 {errors.email && (
@@ -189,27 +194,28 @@ const PatientFormPage = () => {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-medical-gray-700 mb-1">
+                <label htmlFor="phone" className="block text-sm font-medium text-medical-gray-800 mb-2">
                   Teléfono
                 </label>
                 <input
                   id="phone"
                   type="tel"
                   {...register('phone')}
-                  className="input"
+                  className="w-full px-4 py-2 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
                   placeholder="+34 600 000 000"
                 />
               </div>
             </div>
+            </div>
 
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-medical-gray-700 mb-1">
+              <label htmlFor="address" className="block text-sm font-medium text-medical-gray-800 mb-2">
                 Dirección
               </label>
               <textarea
                 id="address"
                 {...register('address')}
-                className="input"
+                className="w-full px-4 py-2 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
                 rows={3}
                 placeholder="Dirección completa"
               />
@@ -217,33 +223,32 @@ const PatientFormPage = () => {
 
             {(createMutation.error || updateMutation.error) && (
               <div className="bg-medical-danger/10 border border-medical-danger text-medical-danger px-4 py-3 rounded-lg">
-                {createMutation.error instanceof Error
-                  ? createMutation.error.message
-                  : updateMutation.error instanceof Error
-                  ? updateMutation.error.message
-                  : 'Error al guardar el paciente'}
+                {getApiErrorMessage(
+                  createMutation.error || updateMutation.error,
+                  'Error al guardar el paciente',
+                )}
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-4 pt-4 border-t border-medical-gray-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t-2 border-medical-gray-200">
               <button
                 type="button"
                 onClick={() => navigate('/hce')}
-                className="btn btn-outline"
+                className="px-6 py-2 bg-medical-gray-100 border-2 border-medical-gray-200 text-medical-gray-800 rounded-lg font-medium hover:bg-medical-gray-200 transition-colors"
                 disabled={isLoading}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="px-6 py-2 bg-gradient-to-r from-medical-primary to-medical-secondary text-white rounded-lg font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isLoading}
               >
                 {isLoading
                   ? 'Guardando...'
                   : isEditing
                   ? 'Actualizar Paciente'
-                  : 'Crear Paciente'}
+                  : 'Guardar Paciente'}
               </button>
             </div>
           </form>

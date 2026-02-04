@@ -54,22 +54,23 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   initialize: async () => {
-    set({ isLoading: true });
     const token = authService.getStoredToken();
     const user = authService.getStoredUser();
 
     if (token && user) {
+      // Carga optimista: mostrar app de inmediato con el usuario guardado
+      set({
+        token,
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      // Verificar perfil en segundo plano (sin bloquear la UI)
       try {
-        // Verify token is still valid by fetching profile
         const currentUser = await authService.getProfile();
-        set({
-          token,
-          user: currentUser,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-      } catch (error) {
-        // Token invalid, clear storage
+        set({ user: currentUser });
+      } catch {
+        // Si falla (token expirado, red, etc.), cerrar sesión
         await authService.logout();
         set({
           user: null,

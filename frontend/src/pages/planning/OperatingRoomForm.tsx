@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { operatingRoomService } from '@/services/operating-room.service';
+import { getApiErrorMessage } from '@/utils/errors';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 const operatingRoomSchema = z.object({
@@ -38,7 +39,6 @@ const OperatingRoomFormPage = () => {
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
   } = useForm<OperatingRoomFormData>({
     resolver: zodResolver(operatingRoomSchema),
     defaultValues: {
@@ -104,7 +104,6 @@ const OperatingRoomFormPage = () => {
   };
 
   const isLoading = loadingRoom || createMutation.isPending || updateMutation.isPending;
-  const isActive = watch('isActive');
 
   return (
     <div className="space-y-6">
@@ -307,13 +306,10 @@ const OperatingRoomFormPage = () => {
 
             {(createMutation.error || updateMutation.error) && (
               <div className="bg-medical-danger/10 border border-medical-danger text-medical-danger px-4 py-3 rounded-lg">
-                {createMutation.error instanceof Error
-                  ? createMutation.error.message
-                  : updateMutation.error instanceof Error
-                  ? updateMutation.error.message
-                  : isEditing
-                  ? 'Error al actualizar el quirófano'
-                  : 'Error al crear el quirófano'}
+                {getApiErrorMessage(
+                  createMutation.error || updateMutation.error,
+                  isEditing ? 'Error al actualizar el quirófano' : 'Error al crear el quirófano',
+                )}
               </div>
             )}
 

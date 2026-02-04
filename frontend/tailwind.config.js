@@ -8,25 +8,25 @@ export default {
     extend: {
       colors: {
         medical: {
-          primary: '#2C5F7C',      // Azul médico principal
-          secondary: '#4A90A4',    // Azul médico secundario
-          accent: '#6BB6B8',       // Turquesa médico
-          success: '#5CB85C',      // Verde éxito
-          warning: '#F0AD4E',      // Amarillo advertencia
-          danger: '#D9534F',       // Rojo peligro
-          light: '#E8F4F8',        // Azul claro
-          dark: '#1A3A4A',        // Azul oscuro
+          primary: '#0052A3',      // Azul médico principal (del mockup)
+          secondary: '#0066CC',    // Azul médico secundario (del mockup)
+          accent: '#E3F2FD',        // Azul claro (del mockup)
+          success: '#28A745',       // Verde éxito (del mockup)
+          warning: '#FFC107',       // Amarillo advertencia (del mockup)
+          danger: '#DC3545',        // Rojo peligro (del mockup)
+          light: '#E3F2FD',         // Azul claro
+          dark: '#2C3E50',          // Gris oscuro (del mockup)
           white: '#FFFFFF',
           gray: {
-            50: '#F9FAFB',
-            100: '#F3F4F6',
-            200: '#E5E7EB',
+            50: '#F5F7FA',          // Fondo claro (del mockup)
+            100: '#F8F9FA',
+            200: '#E0E0E0',          // Borde (del mockup)
             300: '#D1D5DB',
             400: '#9CA3AF',
-            500: '#6B7280',
+            500: '#6C757D',          // Texto claro (del mockup)
             600: '#4B5563',
             700: '#374151',
-            800: '#1F2937',
+            800: '#2C3E50',          // Texto oscuro (del mockup)
             900: '#111827',
           },
         },

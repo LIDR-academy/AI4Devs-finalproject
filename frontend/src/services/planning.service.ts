@@ -32,6 +32,11 @@ export interface Surgery {
   startTime?: string;
   endTime?: string;
   operatingRoomId?: string;
+  operatingRoom?: {
+    id: string;
+    name: string;
+    code?: string;
+  };
   preopNotes?: string;
   postopNotes?: string;
   riskScores?: {
@@ -120,6 +125,8 @@ export interface CreateSurgeryDto {
   procedure: string;
   type: SurgeryType;
   scheduledDate?: string;
+  startTime?: string;
+  endTime?: string;
   operatingRoomId?: string;
   preopNotes?: string;
   riskScores?: {
@@ -134,20 +141,28 @@ class PlanningService {
     patientId?: string;
     surgeonId?: string;
     status?: SurgeryStatus;
+    operatingRoomId?: string;
+    from?: string;
+    to?: string;
   }): Promise<Surgery[]> {
-    const response = await api.get<any>('/planning/surgeries', { params });
-    
-    // Manejar respuesta transformada
-    let surgeries: Surgery[] = [];
-    if (response.data) {
-      if (response.data.data && Array.isArray(response.data.data)) {
-        surgeries = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        surgeries = response.data;
+    try {
+      const response = await api.get<any>('/planning/surgeries', { params });
+      
+      // Manejar respuesta transformada
+      let surgeries: Surgery[] = [];
+      if (response.data) {
+        // El TransformInterceptor envuelve la respuesta en { data: ..., statusCode: ..., timestamp: ... }
+        if (response.data.data && Array.isArray(response.data.data)) {
+          surgeries = response.data.data;
+        } else if (Array.isArray(response.data)) {
+          // Si la respuesta es directamente un array (sin transformar)
+          surgeries = response.data;
+        }
       }
+      return surgeries;
+    } catch (error) {
+      throw error;
     }
-    
-    return surgeries;
   }
 
   async getSurgeryById(id: string): Promise<Surgery> {
@@ -170,9 +185,17 @@ class PlanningService {
     return response.data?.data || response.data;
   }
 
-  async getPlanningBySurgeryId(surgeryId: string): Promise<SurgicalPlanning> {
-    const response = await api.get<any>(`/planning/plannings/surgery/${surgeryId}`);
-    return response.data?.data || response.data;
+  async getPlanningBySurgeryId(surgeryId: string): Promise<SurgicalPlanning | null> {
+    try {
+      const response = await api.get<any>(`/planning/plannings/surgery/${surgeryId}`);
+      return response.data?.data || response.data;
+    } catch (error: any) {
+      // Si es un 404, significa que no hay planificación (no es un error)
+      if (error?.response?.status === 404) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async createPlanning(planning: any): Promise<SurgicalPlanning> {
@@ -211,7 +234,6 @@ class PlanningService {
       body.checked = checked;
       body.notes = notes;
     }
-    
     const response = await api.put<any>(`/planning/surgeries/${surgeryId}/checklist/phase`, body);
     return response.data?.data || response.data;
   }
@@ -222,6 +244,16 @@ class PlanningService {
     custom?: number;
   }> {
     const response = await api.get<any>(`/planning/surgeries/${surgeryId}/risk-score`);
+    return response.data?.data || response.data;
+  }
+
+  async analyzeDicomSeries(seriesId: string): Promise<any> {
+    const response = await api.post<any>(`/planning/dicom/analyze/${seriesId}`);
+    return response.data?.data || response.data;
+  }
+
+  async generate3DReconstruction(seriesId: string): Promise<any> {
+    const response = await api.post<any>(`/planning/dicom/reconstruct-3d/${seriesId}`);
     return response.data?.data || response.data;
   }
 }

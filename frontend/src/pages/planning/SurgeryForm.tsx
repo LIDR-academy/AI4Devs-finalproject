@@ -1,27 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { planningService, SurgeryType, SurgeryStatus } from '@/services/planning.service';
+import { planningService, SurgeryType, type CreateSurgeryDto } from '@/services/planning.service';
 import { hceService } from '@/services/hce.service';
 import { operatingRoomService } from '@/services/operating-room.service';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { getApiErrorMessage } from '@/utils/errors';
 
-const surgerySchema = z.object({
-  patientId: z.string().uuid('Debe ser un UUID válido'),
-  procedure: z.string().min(3, 'El procedimiento debe tener al menos 3 caracteres'),
-  type: z.nativeEnum(SurgeryType, { required_error: 'El tipo de cirugía es requerido' }),
-  scheduledDate: z.string().optional(),
-  operatingRoomId: z.string().uuid('Debe ser un UUID válido').optional().or(z.literal('')).nullable(),
-  preopNotes: z.string().optional(),
-  riskScores: z.object({
-    asa: z.number().min(1).max(6).optional(),
-    possum: z.number().min(0).optional(),
-    custom: z.number().optional(),
-  }).optional(),
-});
+const surgerySchema = z
+  .object({
+    patientId: z.string().uuid('Debe ser un UUID válido'),
+    procedure: z.string().min(3, 'El procedimiento debe tener al menos 3 caracteres'),
+    type: z.nativeEnum(SurgeryType, { required_error: 'El tipo de cirugía es requerido' }),
+    scheduledDate: z.string().optional(),
+    startTime: z.string().optional(),
+    endTime: z.string().optional(),
+    operatingRoomId: z.string().uuid('Debe ser un UUID válido').optional().or(z.literal('')).nullable(),
+    preopNotes: z.string().optional(),
+    riskScores: z
+      .object({
+        asa: z.number().min(1).max(6).optional(),
+        possum: z.number().min(0).optional(),
+        custom: z.number().optional(),
+      })
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      if (!data.startTime || !data.endTime) return true;
+      return new Date(data.endTime).getTime() > new Date(data.startTime).getTime();
+    },
+    { message: 'La hora de fin debe ser posterior a la de inicio', path: ['endTime'] },
+  );
 
 type SurgeryFormData = z.infer<typeof surgerySchema>;
 
@@ -36,7 +49,6 @@ const SurgeryFormPage = () => {
     handleSubmit,
     formState: { errors },
     reset,
-    watch,
   } = useForm<SurgeryFormData>({
     resolver: zodResolver(surgerySchema),
   });
@@ -63,25 +75,26 @@ const SurgeryFormPage = () => {
     enabled: !!id,
   });
 
+  const toDatetimeLocal = (iso: string | undefined): string => {
+    if (!iso) return '';
+    const date = new Date(iso);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${d}T${h}:${min}`;
+  };
+
   useEffect(() => {
     if (surgery) {
-      // Formatear fecha para input datetime-local (YYYY-MM-DDTHH:mm)
-      let formattedDate = '';
-      if (surgery.scheduledDate) {
-        const date = new Date(surgery.scheduledDate);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
-      }
-
       reset({
         patientId: surgery.patientId,
         procedure: surgery.procedure,
         type: surgery.type,
-        scheduledDate: formattedDate || undefined,
+        scheduledDate: toDatetimeLocal(surgery.scheduledDate),
+        startTime: toDatetimeLocal(surgery.startTime),
+        endTime: toDatetimeLocal(surgery.endTime),
         operatingRoomId: surgery.operatingRoomId || '',
         preopNotes: surgery.preopNotes || '',
         riskScores: surgery.riskScores || undefined,
@@ -90,7 +103,7 @@ const SurgeryFormPage = () => {
   }, [surgery, reset]);
 
   const createMutation = useMutation({
-    mutationFn: (data: SurgeryFormData) => planningService.createSurgery(data),
+    mutationFn: (data: CreateSurgeryDto) => planningService.createSurgery(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['surgeries'] });
       queryClient.invalidateQueries({ queryKey: ['surgery', id] });
@@ -99,7 +112,7 @@ const SurgeryFormPage = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: SurgeryFormData) => planningService.updateSurgery(id!, data),
+    mutationFn: (data: Partial<CreateSurgeryDto>) => planningService.updateSurgery(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['surgeries'] });
       queryClient.invalidateQueries({ queryKey: ['surgery', id] });
@@ -108,18 +121,23 @@ const SurgeryFormPage = () => {
   });
 
   const onSubmit = (data: SurgeryFormData) => {
-    // Limpiar campos vacíos
-    const cleanData: any = {
+    const payload: CreateSurgeryDto = {
       ...data,
+      patientId: data.patientId,
+      procedure: data.procedure,
+      type: data.type,
       scheduledDate: data.scheduledDate || undefined,
-      operatingRoomId: data.operatingRoomId || undefined,
+      startTime: data.startTime ? new Date(data.startTime).toISOString() : undefined,
+      endTime: data.endTime ? new Date(data.endTime).toISOString() : undefined,
+      operatingRoomId: data.operatingRoomId ?? undefined,
       preopNotes: data.preopNotes || undefined,
+      riskScores: data.riskScores,
     };
 
     if (isEditing) {
-      updateMutation.mutate(cleanData);
+      updateMutation.mutate(payload);
     } else {
-      createMutation.mutate(cleanData);
+      createMutation.mutate(payload);
     }
   };
 
@@ -229,6 +247,38 @@ const SurgeryFormPage = () => {
               </div>
 
               <div>
+                <label htmlFor="startTime" className="block text-sm font-medium text-medical-gray-700 mb-1">
+                  Hora de inicio (quirófano)
+                </label>
+                <input
+                  id="startTime"
+                  type="datetime-local"
+                  {...register('startTime')}
+                  className="input"
+                  disabled={isLoading}
+                />
+                <p className="mt-1 text-xs text-medical-gray-500">
+                  Opcional. Si se indica quirófano, evita conflictos de horario.
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="endTime" className="block text-sm font-medium text-medical-gray-700 mb-1">
+                  Hora de fin (quirófano)
+                </label>
+                <input
+                  id="endTime"
+                  type="datetime-local"
+                  {...register('endTime')}
+                  className="input"
+                  disabled={isLoading}
+                />
+                {errors.endTime && (
+                  <p className="mt-1 text-sm text-medical-danger">{errors.endTime.message}</p>
+                )}
+              </div>
+
+              <div>
                 <label htmlFor="operatingRoomId" className="block text-sm font-medium text-medical-gray-700 mb-1">
                   Quirófano
                 </label>
@@ -309,13 +359,10 @@ const SurgeryFormPage = () => {
 
             {(createMutation.error || updateMutation.error) && (
               <div className="bg-medical-danger/10 border border-medical-danger text-medical-danger px-4 py-3 rounded-lg">
-                {createMutation.error instanceof Error
-                  ? createMutation.error.message
-                  : updateMutation.error instanceof Error
-                  ? updateMutation.error.message
-                  : isEditing
-                  ? 'Error al actualizar la cirugía'
-                  : 'Error al crear la cirugía'}
+                {getApiErrorMessage(
+                  createMutation.error || updateMutation.error,
+                  isEditing ? 'Error al actualizar la cirugía' : 'Error al crear la cirugía',
+                )}
               </div>
             )}
 

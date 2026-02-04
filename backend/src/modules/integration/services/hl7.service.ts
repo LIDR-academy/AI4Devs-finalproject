@@ -201,14 +201,17 @@ export class HL7Service {
    */
   async healthCheck(): Promise<boolean> {
     if (!this.baseUrl) {
+      this.logger.log('[Integration:FHIR] Health check: FHIR_SERVER_URL no configurado');
       return false;
     }
 
     try {
       const response = await this.axiosInstance.get('/metadata');
-      return response.status === 200;
+      const ok = response.status === 200;
+      this.logger.log(`[Integration:FHIR] Health check: ${ok ? 'OK' : 'FAIL'}`);
+      return ok;
     } catch (error: any) {
-      this.logger.error(`Error en health check de FHIR: ${error.message}`);
+      this.logger.warn(`[Integration:FHIR] Health check fallido: ${error.message}`);
       return false;
     }
   }

@@ -1,8 +1,11 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { planningService, SurgeryStatus, SurgeryType } from '@/services/planning.service';
-import { ArrowLeftIcon, PencilIcon, CalendarIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { resourcesService } from '@/services/resources.service';
+import authService from '@/services/auth.service';
+import { ArrowLeftIcon, PencilIcon, ClipboardDocumentCheckIcon, CubeIcon, DocumentTextIcon, CalendarDaysIcon, UserPlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
 
 const statusLabels: Record<SurgeryStatus, string> = {
   [SurgeryStatus.PLANNED]: 'Planificada',
@@ -70,8 +73,41 @@ const SurgeryDetailPage = () => {
     }
   };
 
-  const canEditStatus = user?.roles?.some((role) => ['cirujano', 'administrador'].includes(role));
+  const canEditStatus = user?.roles?.some((role: string) => ['cirujano', 'administrador'].includes(role));
   const availableStatuses = surgery ? getAvailableStatuses(surgery.status) : [];
+  const canManageStaff = user?.roles?.some((role: string) => ['cirujano', 'administrador'].includes(role));
+
+  const { data: staffAssignmentsRaw, refetch: refetchStaff } = useQuery({
+    queryKey: ['staff-assignments', id],
+    queryFn: () => resourcesService.getAssignmentsBySurgery(id!),
+    enabled: !!id,
+  });
+  const staffAssignments = Array.isArray(staffAssignmentsRaw) ? staffAssignmentsRaw : [];
+
+  const [assignUserId, setAssignUserId] = useState('');
+  const [assignRole, setAssignRole] = useState('surgeon');
+  const addAssignmentMutation = useMutation({
+    mutationFn: () =>
+      resourcesService.createStaffAssignment({
+        surgeryId: id!,
+        userId: assignUserId.trim(),
+        role: assignRole,
+      }),
+    onSuccess: () => {
+      refetchStaff();
+      setAssignUserId('');
+    },
+  });
+  const removeAssignmentMutation = useMutation({
+    mutationFn: (assignmentId: string) => resourcesService.removeStaffAssignment(assignmentId),
+    onSuccess: () => refetchStaff(),
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['auth-users'],
+    queryFn: () => authService.getUsers(),
+    enabled: !!id,
+  });
 
   if (isLoading) {
     return (
@@ -114,13 +150,46 @@ const SurgeryDetailPage = () => {
             <p className="text-medical-gray-600 mt-2">Detalles de la cirugía</p>
           </div>
         </div>
-        <Link
-          to={`/planning/surgeries/${surgery.id}/edit`}
-          className="btn btn-primary flex items-center gap-2"
-        >
-          <PencilIcon className="w-5 h-5" />
-          Editar
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/checklist/${surgery.id}`}
+            className="btn btn-secondary flex items-center gap-2"
+          >
+            <ClipboardDocumentCheckIcon className="w-5 h-5" />
+            Checklist WHO
+          </Link>
+          <Link
+            to={`/documentation/surgeries/${surgery.id}`}
+            className="btn btn-secondary flex items-center gap-2"
+          >
+            <DocumentTextIcon className="w-5 h-5" />
+            Documentación
+          </Link>
+          <Link
+            to={`/followup/surgeries/${surgery.id}`}
+            className="btn btn-secondary flex items-center gap-2"
+          >
+            <CalendarDaysIcon className="w-5 h-5" />
+            Seguimiento / Alta
+          </Link>
+          <Link
+            to={`/planning/surgeries/${surgery.id}/3d-viewer`}
+            className={`btn flex items-center gap-2 ${
+              surgery.planning ? 'btn-outline' : 'btn-outline opacity-75'
+            }`}
+            title={surgery.planning ? 'Visualizar planificación 3D' : 'Crear planificación para habilitar visualización 3D'}
+          >
+            <CubeIcon className="w-5 h-5" />
+            Visualizador 3D
+          </Link>
+          <Link
+            to={`/planning/surgeries/${surgery.id}/edit`}
+            className="btn btn-primary flex items-center gap-2"
+          >
+            <PencilIcon className="w-5 h-5" />
+            Editar
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -210,7 +279,11 @@ const SurgeryDetailPage = () => {
               {surgery.operatingRoomId && (
                 <div>
                   <label className="text-sm font-medium text-medical-gray-500">Quirófano</label>
-                  <p className="text-medical-gray-900 mt-1">{surgery.operatingRoomId}</p>
+                  <p className="text-medical-gray-900 mt-1">
+                    {surgery.operatingRoom
+                      ? [surgery.operatingRoom.name, surgery.operatingRoom.code].filter(Boolean).join(' ')
+                      : surgery.operatingRoomId}
+                  </p>
                 </div>
               )}
             </div>
@@ -293,6 +366,99 @@ const SurgeryDetailPage = () => {
               </div>
             ) : (
               <p className="text-medical-gray-400">Información del paciente no disponible</p>
+            )}
+          </div>
+
+          <div className="card">
+            <h2 className="text-xl font-bold text-medical-gray-900 mb-4">Personal asignado</h2>
+            <p className="text-sm text-medical-gray-500 mb-3">
+              Al asignar a un usuario, recibirá una notificación.
+            </p>
+            {staffAssignments.length > 0 ? (
+              <ul className="space-y-2 mb-4">
+                {staffAssignments.map((a) => {
+                  const u = users.find((x) => x.id === a.userId);
+                  const fullName = u ? [u.firstName, u.lastName].filter(Boolean).join(' ') : null;
+                  const displayName = fullName || u?.email || `Usuario (${a.userId.slice(0, 8)}…)`;
+                  const roleLabel = a.role === 'surgeon' ? 'Cirujano' : a.role === 'nurse' ? 'Enfermería' : a.role === 'anesthetist' ? 'Anestesista' : a.role === 'assistant' ? 'Asistente' : a.role;
+                  return (
+                  <li
+                    key={a.id}
+                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-medical-gray-50 border border-medical-gray-100"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium text-medical-gray-900">{displayName}</span>
+                      <span className="text-xs text-medical-gray-500">{fullName && u?.email ? `${u.email} · ${roleLabel}` : roleLabel}</span>
+                    </div>
+                    {canManageStaff && (
+                      <button
+                        type="button"
+                        onClick={() => removeAssignmentMutation.mutate(a.id)}
+                        disabled={removeAssignmentMutation.isPending}
+                        className="p-1 text-medical-danger hover:bg-medical-danger/10 rounded"
+                        title="Quitar asignación"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    )}
+                  </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-sm text-medical-gray-500 mb-4">Ningún personal asignado aún.</p>
+            )}
+            {canManageStaff && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (assignUserId) addAssignmentMutation.mutate();
+                }}
+                className="flex flex-col gap-2"
+              >
+                <select
+                  value={assignUserId}
+                  onChange={(e) => setAssignUserId(e.target.value)}
+                  className="input input-sm"
+                  title="Usuario a asignar"
+                >
+                  <option value="">Seleccionar usuario</option>
+                  {users.map((u) => {
+                    const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+                    return (
+                      <option key={u.id} value={u.id}>
+                        {name} ({u.email})
+                      </option>
+                    );
+                  })}
+                </select>
+                <select
+                  value={assignRole}
+                  onChange={(e) => setAssignRole(e.target.value)}
+                  className="input input-sm"
+                >
+                  <option value="surgeon">Cirujano</option>
+                  <option value="nurse">Enfermería</option>
+                  <option value="anesthetist">Anestesista</option>
+                  <option value="assistant">Asistente</option>
+                  <option value="other">Otro</option>
+                </select>
+                <button
+                  type="submit"
+                  disabled={!assignUserId || addAssignmentMutation.isPending}
+                  className="btn btn-primary btn-sm flex items-center justify-center gap-2"
+                >
+                  <UserPlusIcon className="w-4 h-4" />
+                  {addAssignmentMutation.isPending ? 'Asignando…' : 'Asignar personal'}
+                </button>
+                {addAssignmentMutation.error && (
+                  <p className="text-xs text-medical-danger">
+                    {addAssignmentMutation.error instanceof Error
+                      ? addAssignmentMutation.error.message
+                      : 'Error al asignar'}
+                  </p>
+                )}
+              </form>
             )}
           </div>
 

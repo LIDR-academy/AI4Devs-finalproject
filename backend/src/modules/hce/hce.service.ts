@@ -14,8 +14,12 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { CreateAllergyDto } from './dto/create-allergy.dto';
 import { CreateMedicationDto } from './dto/create-medication.dto';
+import { UpdateMedicalRecordDto } from './dto/update-medical-record.dto';
+import { UpdateAllergyDto } from './dto/update-allergy.dto';
+import { UpdateMedicationDto } from './dto/update-medication.dto';
 import { SearchPatientDto } from './dto/search-patient.dto';
 import { EncryptionService } from './services/encryption.service';
+import { MetricsService } from '../monitoring/metrics.service';
 
 @Injectable()
 export class HceService {
@@ -31,6 +35,7 @@ export class HceService {
     @InjectRepository(Medication)
     private medicationRepository: Repository<Medication>,
     private encryptionService: EncryptionService,
+    private metricsService: MetricsService,
   ) {}
 
   /**
@@ -71,7 +76,7 @@ export class HceService {
       await this.medicalRecordRepository.save(medicalRecord);
 
       this.logger.log(`Paciente creado: ${savedPatient.id} por usuario ${userId}`);
-
+      this.metricsService.recordPatientCreated();
       return savedPatient;
     } catch (error) {
       this.logger.error(`Error creando paciente: ${error.message}`, error.stack);
@@ -201,6 +206,89 @@ export class HceService {
     });
 
     return this.medicationRepository.save(medication);
+  }
+
+  /**
+   * Actualizar registro médico (antecedentes) del paciente.
+   * Si el paciente no tiene registro médico (p. ej. creado antes de implementar HCE), se crea uno.
+   */
+  async updateMedicalRecord(
+    patientId: string,
+    updateDto: UpdateMedicalRecordDto,
+  ): Promise<MedicalRecord> {
+    await this.findPatientById(patientId); // asegura que el paciente existe
+    let record = await this.medicalRecordRepository.findOne({
+      where: { patientId },
+    });
+    if (!record) {
+      record = this.medicalRecordRepository.create({ patientId });
+      record = await this.medicalRecordRepository.save(record);
+    }
+    if (updateDto.medicalHistory !== undefined) record.medicalHistory = updateDto.medicalHistory;
+    if (updateDto.familyHistory !== undefined) record.familyHistory = updateDto.familyHistory;
+    if (updateDto.currentCondition !== undefined) record.currentCondition = updateDto.currentCondition;
+    return this.medicalRecordRepository.save(record);
+  }
+
+  /**
+   * Actualizar alergia
+   */
+  async updateAllergy(allergyId: string, updateDto: UpdateAllergyDto): Promise<Allergy> {
+    const allergy = await this.allergyRepository.findOne({ where: { id: allergyId } });
+    if (!allergy) {
+      throw new NotFoundException(`Alergia con ID ${allergyId} no encontrada`);
+    }
+    if (updateDto.allergen !== undefined) allergy.allergen = updateDto.allergen;
+    if (updateDto.severity !== undefined) allergy.severity = updateDto.severity;
+    if (updateDto.notes !== undefined) allergy.notes = updateDto.notes;
+    return this.allergyRepository.save(allergy);
+  }
+
+  /**
+   * Eliminar alergia
+   */
+  async deleteAllergy(allergyId: string): Promise<void> {
+    const allergy = await this.allergyRepository.findOne({ where: { id: allergyId } });
+    if (!allergy) {
+      throw new NotFoundException(`Alergia con ID ${allergyId} no encontrada`);
+    }
+    await this.allergyRepository.remove(allergy);
+  }
+
+  /**
+   * Actualizar medicación
+   */
+  async updateMedication(
+    medicationId: string,
+    updateDto: UpdateMedicationDto,
+  ): Promise<Medication> {
+    const medication = await this.medicationRepository.findOne({
+      where: { id: medicationId },
+    });
+    if (!medication) {
+      throw new NotFoundException(`Medicación con ID ${medicationId} no encontrada`);
+    }
+    if (updateDto.name !== undefined) medication.name = updateDto.name;
+    if (updateDto.dosage !== undefined) medication.dosage = updateDto.dosage;
+    if (updateDto.frequency !== undefined) medication.frequency = updateDto.frequency;
+    if (updateDto.startDate !== undefined) medication.startDate = new Date(updateDto.startDate);
+    if (updateDto.endDate !== undefined) {
+      medication.endDate = updateDto.endDate ? new Date(updateDto.endDate) : null;
+    }
+    return this.medicationRepository.save(medication);
+  }
+
+  /**
+   * Eliminar medicación
+   */
+  async deleteMedication(medicationId: string): Promise<void> {
+    const medication = await this.medicationRepository.findOne({
+      where: { id: medicationId },
+    });
+    if (!medication) {
+      throw new NotFoundException(`Medicación con ID ${medicationId} no encontrada`);
+    }
+    await this.medicationRepository.remove(medication);
   }
 
   /**

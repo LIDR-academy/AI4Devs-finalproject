@@ -13,6 +13,13 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 import { KeycloakService } from './services/keycloak.service';
 
+/** Usuarios de desarrollo para listado y login con ID estable (notificaciones, asignaciones). UUID v4 válidos. */
+const DEV_USERS = [
+  { id: '11111111-1111-4111-8111-111111111111', email: 'ana@hospital.com', firstName: 'Ana', lastName: 'García', roles: ['cirujano', 'administrador'] },
+  { id: '22222222-2222-4222-8222-222222222222', email: 'pedro@hospital.com', firstName: 'Pedro', lastName: 'López', roles: ['cirujano', 'enfermeria'] },
+  { id: '33333333-3333-4333-8333-333333333333', email: 'maria@hospital.com', firstName: 'María', lastName: 'Ruiz', roles: ['enfermeria'] },
+];
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -28,11 +35,12 @@ export class AuthService {
    */
   async login(loginDto: LoginDto) {
     try {
-      if (!loginDto.email || !loginDto.password) {
-        throw new BadRequestException('Email y contraseña son requeridos');
+      const email = (loginDto.email ?? loginDto.username ?? '').trim();
+      if (!email || !loginDto.password) {
+        throw new BadRequestException('Email (o username) y contraseña son requeridos');
       }
 
-      this.logger.log(`Intentando autenticar usuario: ${loginDto.email}`);
+      this.logger.log(`Intentando autenticar usuario: ${email}`);
 
       // Modo desarrollo: Si Keycloak no está disponible, generar token de prueba
       // Si NODE_ENV no está definido, asumimos desarrollo
@@ -44,14 +52,12 @@ export class AuthService {
         const keycloakAvailable = await this.keycloakService.isAvailable().catch(() => false);
         
         if (!keycloakAvailable) {
-          // Keycloak no disponible en desarrollo - generar token de prueba
+          // Keycloak no disponible en desarrollo - usar usuario de lista o generar token de prueba
           this.logger.warn('Keycloak no disponible, generando token de desarrollo');
-          
-          const user = {
-            id: uuidv4(), // Usar UUID válido en lugar de timestamp
-            email: loginDto.email,
-            roles: ['cirujano', 'administrador'], // Roles de desarrollo
-          };
+          const devUser = DEV_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+          const user = devUser
+            ? { id: devUser.id, email: devUser.email, roles: devUser.roles }
+            : { id: uuidv4(), email: email, roles: ['cirujano', 'administrador'] };
 
           const tokens = await this.generateTokens(user);
 
@@ -60,12 +66,14 @@ export class AuthService {
             refreshToken: tokens.refreshToken,
             expiresIn: this.configService.get<string>('auth.jwt.expiresIn') || '15m',
             requiresMfa: false,
-            devMode: true, // Indicador de modo desarrollo
+            devMode: true,
             user: {
               id: user.id,
               email: user.email,
               roles: user.roles,
-              username: user.email, // Usar email como username para compatibilidad
+              username: user.email,
+              firstName: devUser?.firstName,
+              lastName: devUser?.lastName,
             },
           };
         }
@@ -74,7 +82,7 @@ export class AuthService {
       // Intentar autenticar con Keycloak
       try {
         const keycloakTokens = await this.keycloakService.authenticate(
-          loginDto.email,
+          email,
           loginDto.password,
         );
 
@@ -112,12 +120,10 @@ export class AuthService {
         // Si estamos en desarrollo y Keycloak falla, generar token de prueba
         if (isDevelopment) {
           this.logger.warn('Keycloak falló, generando token de desarrollo como fallback');
-          
-          const user = {
-            id: uuidv4(), // Usar UUID válido
-            email: loginDto.email,
-            roles: ['cirujano', 'administrador'],
-          };
+          const devUser = DEV_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+          const user = devUser
+            ? { id: devUser.id, email: devUser.email, roles: devUser.roles }
+            : { id: uuidv4(), email: email, roles: ['cirujano', 'administrador'] };
 
           const tokens = await this.generateTokens(user);
 
@@ -131,7 +137,9 @@ export class AuthService {
               id: user.id,
               email: user.email,
               roles: user.roles,
-              username: user.email, // Usar email como username para compatibilidad
+              username: user.email,
+              firstName: devUser?.firstName,
+              lastName: devUser?.lastName,
             },
           };
         }
@@ -291,6 +299,18 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException('Token inválido');
     }
+  }
+
+  /**
+   * Lista usuarios para asignaciones (desarrollo: lista fija; producción: Keycloak)
+   */
+  async getUsers(): Promise<Array<{ id: string; email: string; firstName?: string; lastName?: string }>> {
+    return DEV_USERS.map((u) => ({
+      id: u.id,
+      email: u.email,
+      firstName: u.firstName,
+      lastName: u.lastName,
+    }));
   }
 
   /**

@@ -12,6 +12,7 @@ import {
 import { Patient } from '../../hce/entities/patient.entity';
 import { SurgicalPlanning } from './surgical-planning.entity';
 import { Checklist } from './checklist.entity';
+import { OperatingRoom } from './operating-room.entity';
 
 export enum SurgeryStatus {
   PLANNED = 'planned',
@@ -62,6 +63,10 @@ export class Surgery {
 
   @Column({ type: 'uuid', name: 'operating_room_id', nullable: true })
   operatingRoomId: string;
+
+  @ManyToOne(() => OperatingRoom, { nullable: true })
+  @JoinColumn({ name: 'operating_room_id' })
+  operatingRoom: OperatingRoom;
 
   @Column({ type: 'text', nullable: true, name: 'preop_notes' })
   preopNotes: string;

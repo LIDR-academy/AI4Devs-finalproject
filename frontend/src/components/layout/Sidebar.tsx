@@ -4,8 +4,10 @@ import {
   HomeIcon,
   UserGroupIcon,
   CalendarIcon,
+  CalendarDaysIcon,
   ClipboardDocumentCheckIcon,
   DocumentTextIcon,
+  BellAlertIcon,
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
@@ -32,6 +34,12 @@ const Sidebar = () => {
       roles: ['cirujano', 'administrador'],
     },
     {
+      path: '/planning/calendar',
+      label: 'Calendario Quirófanos',
+      icon: CalendarDaysIcon,
+      roles: ['cirujano', 'enfermeria', 'administrador'],
+    },
+    {
       path: '/checklist',
       label: 'Checklist WHO',
       icon: ClipboardDocumentCheckIcon,
@@ -43,6 +51,12 @@ const Sidebar = () => {
       icon: UserGroupIcon,
       roles: ['cirujano', 'enfermeria', 'administrador'],
     },
+    {
+      path: '/notifications',
+      label: 'Notificaciones',
+      icon: BellAlertIcon,
+      roles: ['cirujano', 'enfermeria', 'administrador'],
+    },
   ];
 
   const visibleItems = menuItems.filter((item) =>
@@ -50,9 +64,9 @@ const Sidebar = () => {
   );
 
   return (
-    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-medical-gray-200 pt-6">
+    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-medical-dark text-white pt-6 rounded-r-lg">
       <nav className="px-4">
-        <ul className="space-y-2">
+        <ul className="space-y-1">
           {visibleItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -60,10 +74,10 @@ const Sidebar = () => {
                 <NavLink
                   to={item.path}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                       isActive
-                        ? 'bg-medical-primary text-white'
-                        : 'text-medical-gray-700 hover:bg-medical-light'
+                        ? 'bg-medical-primary text-white border-l-4 border-medical-secondary'
+                        : 'text-white/80 hover:bg-white/10 hover:text-white'
                     }`
                   }
                 >

@@ -37,6 +37,8 @@ Se ha implementado el módulo completo de planificación quirúrgica con las sig
 
 1. **PlanningService** (`planning.service.ts`)
    - Crear y gestionar cirugías
+   - **Validación de conflictos de horarios**: al crear o actualizar una cirugía con `operatingRoomId`, `startTime` y `endTime`, se comprueba que no exista otra cirugía (no cancelada) en el mismo quirófano con horario solapado; en caso de conflicto se devuelve `400 Bad Request`.
+   - **Disponibilidad de quirófano**: `getRoomAvailability(roomId, from, to)` devuelve las cirugías programadas en un quirófano en un rango de fechas (para calendario).
    - Crear y actualizar planificaciones quirúrgicas
    - Asociar imágenes DICOM a planificaciones
    - Calcular scores de riesgo
@@ -51,10 +53,14 @@ Se ha implementado el módulo completo de planificación quirúrgica con las sig
 ### Endpoints API
 
 #### Cirugías
-- `POST /api/v1/planning/surgeries` - Crear nueva cirugía
-- `GET /api/v1/planning/surgeries` - Listar cirugías (con filtros)
+- `POST /api/v1/planning/surgeries` - Crear nueva cirugía (opcional: `startTime`, `endTime`, `operatingRoomId`; valida conflictos de horario)
+- `GET /api/v1/planning/surgeries` - Listar cirugías (filtros: `patientId`, `surgeonId`, `status`, `operatingRoomId`, `from`, `to`)
 - `GET /api/v1/planning/surgeries/:id` - Obtener cirugía por ID
+- `PUT /api/v1/planning/surgeries/:id` - Actualizar cirugía (valida conflictos si se cambia room/horario)
 - `PUT /api/v1/planning/surgeries/:id/status` - Actualizar estado de cirugía
+
+#### Quirófanos (calendario)
+- `GET /api/v1/planning/operating-rooms/:id/availability?from=ISO&to=ISO` - Ocupación del quirófano en un rango de fechas
 
 #### Planificaciones
 - `POST /api/v1/planning/plannings` - Crear planificación quirúrgica

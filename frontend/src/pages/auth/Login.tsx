@@ -85,64 +85,76 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-medical-primary to-medical-secondary">
+    <div className="min-h-screen flex items-center justify-center bg-medical-gray-50">
       <div className="max-w-md w-full mx-4">
-        <div className="card">
-          <div className="card-header">
-            <h2 className="text-2xl font-bold text-medical-primary text-center">
-              Sistema Integral de Gestión Quirúrgica
+        <div className="bg-white rounded-xl shadow-lg p-10">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-medical-primary to-medical-secondary rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl font-bold text-white">⚕️</span>
+            </div>
+            <h2 className="text-2xl font-semibold text-medical-primary mb-2">
+              SIGQ
             </h2>
-            <p className="text-center text-medical-gray-600 mt-2">
+            <p className="text-medical-gray-500">
+              Sistema Integral de Gestión Quirúrgica
+            </p>
+            <p className="text-sm text-medical-gray-400 mt-2">
               Inicia sesión para continuar
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-              <div className="bg-medical-danger/10 border border-medical-danger text-medical-danger px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
+                  {error && (
+                    <div className="bg-red-50 border-l-4 border-medical-danger text-medical-danger px-4 py-3 rounded">
+                      {error}
+                    </div>
+                  )}
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-medical-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                {...register('email')}
-                className="input"
-                placeholder="Ingresa tu email"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-medical-danger">{errors.email.message}</p>
-              )}
-            </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-medical-gray-800 mb-2">
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      {...register('email')}
+                      className="w-full px-4 py-3 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
+                      placeholder="cirujano@hospital.com"
+                    />
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-medical-danger">{errors.email.message}</p>
+                    )}
+                  </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-medical-gray-700 mb-1">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                {...register('password')}
-                className="input"
-                placeholder="Ingresa tu contraseña"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-medical-danger">{errors.password.message}</p>
-              )}
-            </div>
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-medical-gray-800 mb-2">
+                      Contraseña
+                    </label>
+                    <input
+                      id="password"
+                      type="password"
+                      {...register('password')}
+                      className="w-full px-4 py-3 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
+                      placeholder="••••••••"
+                    />
+                    {errors.password && (
+                      <p className="mt-1 text-sm text-medical-danger">{errors.password.message}</p>
+                    )}
+                  </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn btn-primary w-full"
-            >
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-            </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-medical-primary to-medical-secondary text-white rounded-lg font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                  </button>
+                  
+                  <div className="text-center mt-4">
+                    <div className="inline-flex items-center gap-2 bg-medical-accent/20 text-medical-primary px-4 py-2 rounded-full text-xs font-semibold">
+                      🔒 Autenticación MFA Requerida
+                    </div>
+                  </div>
           </form>
         </div>
       </div>

@@ -9,6 +9,7 @@ import { Medication } from './entities/medication.entity';
 import { LabResult } from './entities/lab-result.entity';
 import { Image } from './entities/image.entity';
 import { EncryptionService } from './services/encryption.service';
+import { MonitoringModule } from '../monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { EncryptionService } from './services/encryption.service';
       LabResult,
       Image,
     ]),
+    MonitoringModule,
   ],
   controllers: [HceController],
   providers: [HceService, EncryptionService],

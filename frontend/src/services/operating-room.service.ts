@@ -1,4 +1,5 @@
 import api from '@/utils/api';
+import type { Surgery } from '@/services/planning.service';
 
 export interface OperatingRoom {
   id: string;
@@ -79,6 +80,23 @@ class OperatingRoomService {
 
   async deleteOperatingRoom(id: string): Promise<void> {
     await api.delete(`/planning/operating-rooms/${id}`);
+  }
+
+  /**
+   * Obtener ocupación del quirófano en un rango de fechas (para calendario).
+   * Devuelve cirugías programadas con startTime/endTime en el rango.
+   */
+  async getRoomAvailability(
+    roomId: string,
+    from: string,
+    to: string,
+  ): Promise<Surgery[]> {
+    const response = await api.get<any>(
+      `/planning/operating-rooms/${roomId}/availability`,
+      { params: { from, to } },
+    );
+    const data = response.data?.data ?? response.data;
+    return Array.isArray(data) ? data : [];
   }
 }
 

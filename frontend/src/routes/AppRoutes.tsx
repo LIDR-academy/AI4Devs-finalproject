@@ -6,13 +6,23 @@ import DashboardPage from '@/pages/Dashboard';
 import PatientListPage from '@/pages/hce/PatientList';
 import PatientFormPage from '@/pages/hce/PatientForm';
 import PatientDetailPage from '@/pages/hce/PatientDetail';
+import MedicalHistoryFormPage from '@/pages/hce/MedicalHistoryForm';
+import PatientAllergiesPage from '@/pages/hce/PatientAllergies';
+import PatientMedicationsPage from '@/pages/hce/PatientMedications';
+import PatientFullHistoryPage from '@/pages/hce/PatientFullHistory';
 import PlanningPage from '@/pages/planning/PlanningPage';
 import SurgeryDetailPage from '@/pages/planning/SurgeryDetail';
 import SurgeryFormPage from '@/pages/planning/SurgeryForm';
+import Planning3DViewerPage from '@/pages/planning/Planning3DViewer';
 import OperatingRoomListPage from '@/pages/planning/OperatingRoomList';
 import OperatingRoomFormPage from '@/pages/planning/OperatingRoomForm';
 import OperatingRoomDetailPage from '@/pages/planning/OperatingRoomDetail';
+import OperatingRoomCalendarPage from '@/pages/planning/OperatingRoomCalendar';
 import ChecklistPage from '@/pages/checklist/ChecklistPage';
+import ChecklistListPage from '@/pages/checklist/ChecklistListPage';
+import DocumentationPage from '@/pages/documentation/DocumentationPage';
+import FollowupPage from '@/pages/followup/FollowupPage';
+import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import Layout from '@/components/layout/Layout';
 
 const AppRoutes = () => {
@@ -92,6 +102,46 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/hce/patients/:id/medical-history/edit"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <MedicalHistoryFormPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hce/patients/:id/allergies"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PatientAllergiesPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hce/patients/:id/medications"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PatientMedicationsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hce/patients/:id/full-history"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <PatientFullHistoryPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
 
       {/* Planning Routes */}
       <Route
@@ -140,6 +190,28 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <Layout>
               <SurgeryDetailPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/planning/surgeries/:surgeryId/3d-viewer"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Planning3DViewerPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Planning Calendar */}
+      <Route
+        path="/planning/calendar"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <OperatingRoomCalendarPage />
             </Layout>
           </ProtectedRoute>
         }
@@ -193,7 +265,53 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Layout>
+              <ChecklistListPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/checklist/:surgeryId"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <ChecklistPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Documentation Routes */}
+      <Route
+        path="/documentation/surgeries/:surgeryId"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <DocumentationPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Followup / Plan de alta */}
+      <Route
+        path="/followup/surgeries/:surgeryId"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <FollowupPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Notificaciones */}
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <NotificationsPage />
             </Layout>
           </ProtectedRoute>
         }

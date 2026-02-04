@@ -24,6 +24,9 @@ import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { CreateAllergyDto } from './dto/create-allergy.dto';
 import { CreateMedicationDto } from './dto/create-medication.dto';
+import { UpdateMedicalRecordDto } from './dto/update-medical-record.dto';
+import { UpdateAllergyDto } from './dto/update-allergy.dto';
+import { UpdateMedicationDto } from './dto/update-medication.dto';
 import { SearchPatientDto } from './dto/search-patient.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -98,6 +101,19 @@ export class HceController {
     return this.hceService.getPatientMedicalHistory(id);
   }
 
+  @Put('patients/:id/medical-record')
+  @Roles('cirujano', 'administrador')
+  @ApiOperation({ summary: 'Actualizar antecedentes médicos del paciente' })
+  @ApiParam({ name: 'id', description: 'ID del paciente (UUID)' })
+  @ApiResponse({ status: 200, description: 'Registro médico actualizado' })
+  @ApiResponse({ status: 404, description: 'Paciente o registro no encontrado' })
+  async updateMedicalRecord(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateDto: UpdateMedicalRecordDto,
+  ) {
+    return this.hceService.updateMedicalRecord(id, updateDto);
+  }
+
   @Put('patients/:id')
   @Roles('cirujano', 'administrador')
   @ApiOperation({ summary: 'Actualizar paciente' })
@@ -143,6 +159,30 @@ export class HceController {
     return this.hceService.addAllergy(createAllergyDto);
   }
 
+  @Put('allergies/:allergyId')
+  @Roles('cirujano', 'administrador')
+  @ApiOperation({ summary: 'Actualizar alergia' })
+  @ApiParam({ name: 'allergyId', description: 'ID de la alergia (UUID)' })
+  @ApiResponse({ status: 200, description: 'Alergia actualizada' })
+  @ApiResponse({ status: 404, description: 'Alergia no encontrada' })
+  async updateAllergy(
+    @Param('allergyId', ParseUUIDPipe) allergyId: string,
+    @Body() updateDto: UpdateAllergyDto,
+  ) {
+    return this.hceService.updateAllergy(allergyId, updateDto);
+  }
+
+  @Delete('allergies/:allergyId')
+  @Roles('cirujano', 'administrador')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Eliminar alergia' })
+  @ApiParam({ name: 'allergyId', description: 'ID de la alergia (UUID)' })
+  @ApiResponse({ status: 204, description: 'Alergia eliminada' })
+  @ApiResponse({ status: 404, description: 'Alergia no encontrada' })
+  async deleteAllergy(@Param('allergyId', ParseUUIDPipe) allergyId: string) {
+    await this.hceService.deleteAllergy(allergyId);
+  }
+
   @Post('medications')
   @Roles('cirujano', 'administrador')
   @HttpCode(HttpStatus.CREATED)
@@ -153,5 +193,29 @@ export class HceController {
   })
   async addMedication(@Body() createMedicationDto: CreateMedicationDto) {
     return this.hceService.addMedication(createMedicationDto);
+  }
+
+  @Put('medications/:medicationId')
+  @Roles('cirujano', 'administrador')
+  @ApiOperation({ summary: 'Actualizar medicación' })
+  @ApiParam({ name: 'medicationId', description: 'ID de la medicación (UUID)' })
+  @ApiResponse({ status: 200, description: 'Medicación actualizada' })
+  @ApiResponse({ status: 404, description: 'Medicación no encontrada' })
+  async updateMedication(
+    @Param('medicationId', ParseUUIDPipe) medicationId: string,
+    @Body() updateDto: UpdateMedicationDto,
+  ) {
+    return this.hceService.updateMedication(medicationId, updateDto);
+  }
+
+  @Delete('medications/:medicationId')
+  @Roles('cirujano', 'administrador')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Eliminar medicación' })
+  @ApiParam({ name: 'medicationId', description: 'ID de la medicación (UUID)' })
+  @ApiResponse({ status: 204, description: 'Medicación eliminada' })
+  @ApiResponse({ status: 404, description: 'Medicación no encontrada' })
+  async deleteMedication(@Param('medicationId', ParseUUIDPipe) medicationId: string) {
+    await this.hceService.deleteMedication(medicationId);
   }
 }

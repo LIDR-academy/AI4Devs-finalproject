@@ -49,17 +49,20 @@ const PatientListPage = () => {
       </div>
 
       <div className="card">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 mb-6">
           <div className="flex-1 relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-medical-gray-400" />
             <input
               type="text"
-              placeholder="Buscar por nombre, apellido o ID..."
+              placeholder="Buscar por nombre, SSN, ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input pl-10 w-full"
+              className="w-full px-4 py-3 pl-10 border-2 border-medical-gray-200 rounded-lg focus:outline-none focus:border-medical-secondary transition-colors"
             />
           </div>
+          <button className="px-4 py-3 bg-medical-secondary text-white rounded-lg hover:bg-medical-primary transition-colors">
+            <MagnifyingGlassIcon className="w-5 h-5" />
+          </button>
         </div>
 
         {isLoading ? (
@@ -92,43 +95,49 @@ const PatientListPage = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-medical-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-900">Nombre</th>
-                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-900">Fecha de Nacimiento</th>
-                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-900">Género</th>
-                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-900">Email</th>
-                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-900">Teléfono</th>
-                  <th className="text-right py-3 px-4 font-semibold text-medical-gray-900">Acciones</th>
+                <tr className="bg-medical-gray-100">
+                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-800 border-b-2 border-medical-gray-200">ID</th>
+                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-800 border-b-2 border-medical-gray-200">Nombre</th>
+                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-800 border-b-2 border-medical-gray-200">Fecha Nac.</th>
+                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-800 border-b-2 border-medical-gray-200">Última Visita</th>
+                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-800 border-b-2 border-medical-gray-200">Estado</th>
+                  <th className="text-left py-3 px-4 font-semibold text-medical-gray-800 border-b-2 border-medical-gray-200">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {patients.map((patient) => (
                   <tr
                     key={patient.id}
-                    className="border-b border-medical-gray-100 hover:bg-medical-light transition-colors"
+                    className="border-b border-medical-gray-100 hover:bg-medical-gray-50 transition-colors"
                   >
+                    <td className="py-3 px-4 text-medical-gray-600">#{patient.id.slice(0, 8)}</td>
                     <td className="py-3 px-4">
                       <Link
                         to={`/hce/patients/${patient.id}`}
-                        className="font-medium text-medical-primary hover:text-medical-secondary"
+                        className="font-semibold text-medical-gray-800 hover:text-medical-primary"
                       >
                         {patient.firstName} {patient.lastName}
                       </Link>
                     </td>
-                    <td className="py-3 px-4 text-medical-gray-700">
+                    <td className="py-3 px-4 text-medical-gray-600">
                       {new Date(patient.dateOfBirth).toLocaleDateString('es-ES')}
                     </td>
-                    <td className="py-3 px-4 text-medical-gray-700">{patient.gender}</td>
-                    <td className="py-3 px-4 text-medical-gray-700">{patient.email || '-'}</td>
-                    <td className="py-3 px-4 text-medical-gray-700">{patient.phone || '-'}</td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-medical-gray-600">
+                      {new Date(patient.updatedAt).toLocaleDateString('es-ES')}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                        Activo
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
                       <Link
                         to={`/hce/patients/${patient.id}`}
-                        className="text-medical-primary hover:text-medical-secondary text-sm font-medium"
+                        className="px-3 py-1 bg-white border border-medical-gray-200 rounded text-sm hover:bg-medical-gray-50 transition-colors"
                       >
-                        Ver detalles →
+                        Ver
                       </Link>
                     </td>
                   </tr>

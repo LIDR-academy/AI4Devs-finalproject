@@ -1,12 +1,15 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+// En desarrollo, usar el proxy de Vite (relativo) para evitar problemas de CORS
+// En producción, usar la URL absoluta configurada en VITE_API_URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Importante para CORS con cookies/credentials
 });
 
 // Request interceptor to add auth token

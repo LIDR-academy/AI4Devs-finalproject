@@ -1,450 +1,210 @@
-# Guía de Pruebas - SIGQ Backend
+# Guía de Testing - SIGQ Backend
 
-## Verificación de Errores
+Esta guía describe cómo ejecutar y escribir tests para el backend de SIGQ.
 
-### 1. Verificar Compilación TypeScript
+## Tipos de Tests
 
-```bash
-cd backend
-npm run build
-```
+### 1. Tests Unitarios
+Prueban componentes individuales (servicios, controladores) de forma aislada.
 
-Si hay errores de compilación, se mostrarán aquí.
+**Ubicación**: `src/**/*.spec.ts`
 
-### 2. Verificar Linter
-
-```bash
-npm run lint
-```
-
-### 3. Verificar Tests
-
+**Ejecutar**:
 ```bash
 npm test
+npm test -- --watch  # Modo watch
+npm test -- --coverage  # Con cobertura
 ```
 
-## Configuración Inicial
+### 2. Tests de Integración
+Prueban la interacción entre múltiples componentes.
 
-### 1. Instalar Dependencias
+**Ubicación**: `src/**/*.spec.ts` (mismo formato que unitarios)
 
-```bash
-cd backend
-npm install
-```
+### 3. Tests E2E (End-to-End)
+Prueban flujos completos desde el punto de vista del usuario.
 
-### 2. Configurar Variables de Entorno
+**Ubicación**: `test/**/*.e2e-spec.ts`
 
-Crea un archivo `.env` en `backend/` con:
-
-```env
-# PostgreSQL (debe coincidir con docker-compose.yml)
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=sigq_user
-POSTGRES_PASSWORD=sigq_password_change_in_prod
-POSTGRES_DB=sigq_db
-
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# Keycloak
-KEYCLOAK_URL=http://localhost:8080
-KEYCLOAK_REALM=sistema-quirurgico
-KEYCLOAK_CLIENT_ID=backend-api
-KEYCLOAK_CLIENT_SECRET=change-this-in-production
-KEYCLOAK_ADMIN_USER=admin
-KEYCLOAK_ADMIN_PASSWORD=admin_change_in_prod
-
-# JWT
-JWT_SECRET=change-this-secret-in-production-use-strong-secret-min-32-chars
-JWT_EXPIRATION=15m
-JWT_REFRESH_EXPIRATION=7d
-
-# API
-NODE_ENV=development
-API_PORT=3000
-CORS_ORIGIN=http://localhost:5173,http://localhost:3000
-
-# Encriptación
-ENCRYPTION_KEY=change-this-encryption-key-32-chars-minimum
-
-# Orthanc
-ORTHANC_URL=http://localhost:8042
-ORTHANC_USERNAME=orthanc
-ORTHANC_PASSWORD=orthanc
-
-# HL7 FHIR (opcional)
-FHIR_SERVER_URL=
-FHIR_CLIENT_ID=
-FHIR_CLIENT_SECRET=
-
-# Logging
-LOG_LEVEL=debug
-LOG_FORMAT=json
-```
-
-### 3. Iniciar Servicios Docker
-
-```bash
-cd ../docker
-docker compose up -d
-```
-
-Espera a que todos los servicios estén corriendo:
-```bash
-docker compose ps
-```
-
-## Iniciar el Backend
-
-### Modo Desarrollo
-
-```bash
-cd backend
-npm run start:dev
-```
-
-El servidor estará disponible en: http://localhost:3000
-
-## Pruebas Manuales
-
-### 1. Health Check
-
-```bash
-# Verificar que el servidor está corriendo
-curl http://localhost:3000/health
-
-# Ver información de la API
-curl http://localhost:3000/
-```
-
-**Respuesta esperada:**
-```json
-{
-  "status": "ok",
-  "timestamp": "2024-01-16T...",
-  "uptime": 123.45,
-  "environment": "development"
-}
-```
-
-### 2. Documentación Swagger
-
-Abre en el navegador:
-```
-http://localhost:3000/api/docs
-```
-
-Aquí puedes ver y probar todos los endpoints interactivamente.
-
-### 3. Autenticación
-
-#### 3.1 Login (simulado - requiere Keycloak configurado)
-
-```bash
-curl -X POST http://localhost:3000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "password123"
-  }'
-```
-
-**Nota**: Este endpoint requiere que Keycloak esté configurado. Por ahora retorna tokens simulados.
-
-#### 3.2 Obtener Perfil (requiere token)
-
-```bash
-# Primero obtén un token del login
-TOKEN="tu-token-aqui"
-
-curl http://localhost:3000/api/v1/auth/profile \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-### 4. Módulo HCE - Pacientes
-
-#### 4.1 Crear Paciente
-
-```bash
-TOKEN="tu-token-aqui"
-
-curl -X POST http://localhost:3000/api/v1/hce/patients \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "Juan",
-    "lastName": "Pérez García",
-    "dateOfBirth": "1985-05-15",
-    "gender": "M",
-    "ssn": "12345678A",
-    "phone": "+34 600 123 456",
-    "address": "Calle Principal 123, Madrid"
-  }'
-```
-
-**Respuesta esperada:**
-```json
-{
-  "data": {
-    "id": "uuid-del-paciente",
-    "firstName": "Juan",
-    "lastName": "Pérez García",
-    ...
-  },
-  "statusCode": 201,
-  "timestamp": "2024-01-16T..."
-}
-```
-
-#### 4.2 Buscar Pacientes
-
-```bash
-TOKEN="tu-token-aqui"
-
-# Buscar por nombre
-curl "http://localhost:3000/api/v1/hce/patients?firstName=Juan" \
-  -H "Authorization: Bearer $TOKEN"
-
-# Buscar por apellidos
-curl "http://localhost:3000/api/v1/hce/patients?lastName=Pérez" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-#### 4.3 Obtener Paciente por ID
-
-```bash
-TOKEN="tu-token-aqui"
-PATIENT_ID="uuid-del-paciente"
-
-curl "http://localhost:3000/api/v1/hce/patients/$PATIENT_ID" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-#### 4.4 Obtener Historia Clínica Completa
-
-```bash
-TOKEN="tu-token-aqui"
-PATIENT_ID="uuid-del-paciente"
-
-curl "http://localhost:3000/api/v1/hce/patients/$PATIENT_ID/medical-history" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-#### 4.5 Agregar Alergia
-
-```bash
-TOKEN="tu-token-aqui"
-PATIENT_ID="uuid-del-paciente"
-
-curl -X POST http://localhost:3000/api/v1/hce/allergies \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patientId": "'$PATIENT_ID'",
-    "allergen": "Penicilina",
-    "severity": "High",
-    "notes": "Reacción severa observada"
-  }'
-```
-
-#### 4.6 Agregar Medicación
-
-```bash
-TOKEN="tu-token-aqui"
-PATIENT_ID="uuid-del-paciente"
-
-curl -X POST http://localhost:3000/api/v1/hce/medications \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patientId": "'$PATIENT_ID'",
-    "name": "Paracetamol",
-    "dosage": "500mg",
-    "frequency": "Cada 8 horas",
-    "startDate": "2024-01-15"
-  }'
-```
-
-### 5. Módulo de Integración
-
-#### 5.1 Verificar Estado de Integraciones
-
-```bash
-TOKEN="tu-token-aqui"
-
-curl http://localhost:3000/api/v1/integration/status \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-**Respuesta esperada:**
-```json
-{
-  "data": {
-    "orthanc": true,
-    "fhir": false
-  },
-  "statusCode": 200,
-  "timestamp": "2024-01-16T..."
-}
-```
-
-#### 5.2 Listar Pacientes en Orthanc
-
-```bash
-TOKEN="tu-token-aqui"
-
-curl http://localhost:3000/api/v1/integration/orthanc/patients \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-#### 5.3 Sincronizar Datos de Paciente
-
-```bash
-TOKEN="tu-token-aqui"
-PATIENT_ID="uuid-del-paciente"
-
-curl -X POST "http://localhost:3000/api/v1/integration/sync/patient/$PATIENT_ID" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-#### 5.4 Subir Archivo DICOM
-
-```bash
-TOKEN="tu-token-aqui"
-
-curl -X POST http://localhost:3000/api/v1/integration/orthanc/upload \
-  -H "Authorization: Bearer $TOKEN" \
-  -F "file=@/ruta/a/tu/archivo.dcm"
-```
-
-## Pruebas con Postman/Insomnia
-
-### Importar Colección
-
-1. Abre Swagger: http://localhost:3000/api/docs
-2. En la parte superior derecha, busca "Export" o "Download"
-3. Descarga el archivo OpenAPI/Swagger JSON
-4. Importa en Postman o Insomnia
-
-### Configurar Variables
-
-Crea variables de entorno en tu cliente HTTP:
-- `base_url`: `http://localhost:3000`
-- `token`: (se obtiene del login)
-
-## Verificación de Base de Datos
-
-### Conectar a PostgreSQL
-
-```bash
-docker compose exec postgres psql -U sigq_user -d sigq_db
-```
-
-### Verificar Tablas Creadas
-
-```sql
-\dt
-```
-
-Deberías ver:
-- `patients`
-- `medical_records`
-- `allergies`
-- `medications`
-- `lab_results`
-- `images`
-
-### Ver Pacientes Creados
-
-```sql
-SELECT id, "firstName", "lastName", "dateOfBirth", gender 
-FROM patients 
-LIMIT 10;
-```
-
-## Troubleshooting
-
-### Error: "Cannot connect to database"
-
-1. Verifica que PostgreSQL esté corriendo:
-   ```bash
-   docker compose ps
-   ```
-
-2. Verifica las credenciales en `.env`
-
-3. Prueba la conexión:
-   ```bash
-   docker compose exec postgres psql -U sigq_user -d sigq_db -c "SELECT version();"
-   ```
-
-### Error: "Keycloak connection failed"
-
-1. Verifica que Keycloak esté corriendo:
-   ```bash
-   curl http://localhost:8080/health/ready
-   ```
-
-2. Verifica las credenciales en `.env`
-
-### Error: "Orthanc connection failed"
-
-1. Verifica que Orthanc esté corriendo:
-   ```bash
-   curl http://localhost:8042/system
-   ```
-
-2. Verifica las credenciales en `.env`
-
-### Error: "Port 3000 already in use"
-
-Cambia el puerto en `.env`:
-```env
-API_PORT=3001
-```
-
-## Pruebas Automatizadas
-
-### Ejecutar Tests Unitarios
-
-```bash
-npm test
-```
-
-### Ejecutar Tests con Cobertura
-
-```bash
-npm run test:cov
-```
-
-### Ejecutar Tests E2E
-
+**Ejecutar**:
 ```bash
 npm run test:e2e
 ```
 
-## Checklist de Verificación
+## Estructura de Tests
 
-- [ ] Backend compila sin errores (`npm run build`)
-- [ ] No hay errores de linter (`npm run lint`)
-- [ ] Servidor inicia correctamente (`npm run start:dev`)
-- [ ] Health check responde (`curl http://localhost:3000/health`)
-- [ ] Swagger está accesible (`http://localhost:3000/api/docs`)
-- [ ] PostgreSQL está conectado (verificar logs)
-- [ ] TypeORM crea las tablas automáticamente (en desarrollo)
-- [ ] Endpoints de autenticación responden
-- [ ] Endpoints de HCE responden (con token)
-- [ ] Endpoints de integración responden (con token)
+### Test Unitario Ejemplo
 
-## Próximos Pasos
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { Service } from './service';
 
-Una vez que todo funcione:
+describe('Service', () => {
+  let service: Service;
 
-1. Configurar Keycloak completamente (realm, clientes, usuarios)
-2. Crear usuarios de prueba en Keycloak
-3. Probar autenticación real con Keycloak
-4. Subir archivos DICOM de prueba a Orthanc
-5. Configurar servidor FHIR (si está disponible)
-6. Implementar tests automatizados
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [Service],
+    }).compile();
+
+    service = module.get<Service>(Service);
+  });
+
+  it('debería estar definido', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('método', () => {
+    it('debería hacer algo', async () => {
+      const result = await service.método();
+      expect(result).toBeDefined();
+    });
+  });
+});
+```
+
+### Test E2E Ejemplo
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../src/app.module';
+
+describe('Controller (e2e)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('/endpoint (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/endpoint')
+      .expect(200);
+  });
+});
+```
+
+## Tests Disponibles
+
+### Servicios
+- ✅ `AuthService` - Autenticación y autorización
+- ✅ `HceService` - Gestión de pacientes
+- ✅ `PlanningService` - Planificación quirúrgica
+- ✅ `AuditService` - Auditoría y logging
+- ✅ `BackupService` - Backups automáticos
+
+### Controladores E2E
+- ✅ `AppController` - Health check y endpoints básicos
+- ✅ `AuthController` - Flujos de autenticación
+- ✅ `HceController` - CRUD de pacientes
+- ✅ `Security` - Tests de seguridad y rate limiting
+
+## Cobertura de Código
+
+### Ver Cobertura
+```bash
+npm run test:cov
+```
+
+Esto genera un reporte en `coverage/` que puedes abrir en el navegador.
+
+### Cobertura Objetivo
+- **Servicios críticos**: >80%
+- **Controladores**: >70%
+- **Módulos completos**: >75%
+
+## Mejores Prácticas
+
+### 1. Nombres Descriptivos
+```typescript
+it('debería crear un paciente con todos los campos requeridos', async () => {
+  // ...
+});
+```
+
+### 2. Arrange-Act-Assert
+```typescript
+it('debería actualizar un paciente', async () => {
+  // Arrange: Preparar datos
+  const patientId = uuidv4();
+  const updateDto = { firstName: 'Nuevo' };
+  
+  // Act: Ejecutar acción
+  const result = await service.updatePatient(patientId, updateDto);
+  
+  // Assert: Verificar resultado
+  expect(result.firstName).toBe('Nuevo');
+});
+```
+
+### 3. Mocks y Stubs
+```typescript
+const mockRepository = {
+  findOne: jest.fn(),
+  save: jest.fn(),
+};
+
+// En el test
+mockRepository.findOne.mockResolvedValue(mockData);
+```
+
+### 4. Limpieza
+```typescript
+afterEach(() => {
+  jest.clearAllMocks();
+});
+```
+
+## Tests de Seguridad
+
+Los tests de seguridad verifican:
+- ✅ Autenticación (tokens válidos/inválidos)
+- ✅ Autorización (roles y permisos)
+- ✅ Validación de entrada (DTOs)
+- ✅ Rate limiting
+- ✅ CORS
+
+## Troubleshooting
+
+### Error: "Cannot find module"
+Asegúrate de que las rutas en `moduleNameMapper` en `jest.config` sean correctas.
+
+### Error: "Database connection"
+Los tests E2E pueden requerir una base de datos de prueba. Configura variables de entorno de test.
+
+### Tests Lentos
+- Usa mocks en lugar de conexiones reales cuando sea posible
+- Ejecuta tests en paralelo (Jest lo hace por defecto)
+- Usa `--maxWorkers` para limitar paralelismo si es necesario
+
+## CI/CD
+
+Para integración continua, ejecuta:
+
+```bash
+# Tests unitarios con cobertura
+npm run test:cov
+
+# Tests E2E
+npm run test:e2e
+
+# Linter
+npm run lint
+```
+
+## Recursos
+
+- [Jest Documentation](https://jestjs.io/docs/getting-started)
+- [NestJS Testing](https://docs.nestjs.com/fundamentals/testing)
+- [Supertest](https://github.com/visionmedia/supertest)

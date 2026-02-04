@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { StreamableFile } from '@nestjs/common';
 
 export interface Response<T> {
   data: T;
@@ -24,19 +25,23 @@ export class TransformInterceptor<T>
   ): Observable<Response<T>> {
     const request = context.switchToHttp().getRequest();
     const url = request.url;
-    
+
     // Excluir endpoints de autenticación del transformador
-    // Estos endpoints tienen su propio formato de respuesta
     const authEndpoints = ['/auth/login', '/auth/refresh', '/auth/logout', '/auth/verify-mfa'];
-    const isAuthEndpoint = authEndpoints.some(endpoint => url.includes(endpoint));
-    
-    if (isAuthEndpoint) {
-      // Para endpoints de auth, retornar la respuesta tal cual
+    const isAuthEndpoint = authEndpoints.some((endpoint) => url.includes(endpoint));
+
+    // Excluir respuestas binarias (PDF, etc.): no envolver en { data, statusCode }
+    const isBinaryEndpoint = url.includes('/pdf') || url.endsWith('.pdf');
+    if (isAuthEndpoint || isBinaryEndpoint) {
       return next.handle();
     }
-    
+
     return next.handle().pipe(
       map((data) => {
+        // No transformar si es StreamableFile (descarga de archivo)
+        if (data instanceof StreamableFile) {
+          return data;
+        }
         // Si la respuesta ya tiene formato estándar, retornarla tal cual
         if (data && typeof data === 'object' && 'statusCode' in data) {
           return {

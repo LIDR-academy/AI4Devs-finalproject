@@ -120,12 +120,48 @@ services:
       - "9090:9090"
     volumes:
       - ../infrastructure/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../infrastructure/monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     networks:
       - sigq-network
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+
+  # Loki - Sistema de logging
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: sigq-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+      - ../infrastructure/monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+    networks:
+      - sigq-network
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Promtail - Agente de recolección de logs
+  promtail:
+    image: grafana/promtail:latest
+    container_name: sigq-promtail
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ../infrastructure/monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+    networks:
+      - sigq-network
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
     restart: unless-stopped
 
   # Grafana - Dashboards y visualización
@@ -141,10 +177,12 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ../infrastructure/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../infrastructure/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
     networks:
       - sigq-network
     depends_on:
       - prometheus
+      - loki
     restart: unless-stopped
 
 volumes:
@@ -161,6 +199,8 @@ volumes:
   orthanc_config:
     driver: local
   prometheus_data:
+    driver: local
+  loki_data:
     driver: local
   grafana_data:
     driver: local

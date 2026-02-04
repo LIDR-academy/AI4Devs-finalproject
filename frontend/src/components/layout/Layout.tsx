@@ -12,7 +12,7 @@ const Layout = ({ children }: LayoutProps) => {
       <Header />
       <div className="flex pt-16">
         <Sidebar />
-        <main className="flex-1 p-6 ml-64 mt-0">
+        <main className="flex-1 p-6 ml-64 mt-0 bg-white rounded-l-lg min-h-[calc(100vh-4rem)]">
           {children}
         </main>
       </div>

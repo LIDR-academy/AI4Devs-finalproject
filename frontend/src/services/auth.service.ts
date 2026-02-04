@@ -4,12 +4,8 @@ import { LoginCredentials, LoginResponse, User } from '@/types';
 class AuthService {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      console.log('Intentando login con:', { email: credentials.email });
       const response = await api.post<any>('/auth/login', credentials);
-      
-      console.log('Respuesta completa del servidor:', response);
-      console.log('response.data:', response.data);
-      
+
       // El TransformInterceptor puede envolver la respuesta en { data: {...} }
       // Necesitamos manejar ambos casos: respuesta directa o envuelta
       let responseData = response.data;
@@ -74,9 +70,35 @@ class AuthService {
     }
   }
 
+  async getUsers(): Promise<Array<{ id: string; email: string; firstName?: string; lastName?: string }>> {
+    const response = await api.get<Array<{ id: string; email: string; firstName?: string; lastName?: string }>>('/auth/users');
+    const data = (response.data as any)?.data ?? response.data;
+    return Array.isArray(data) ? data : [];
+  }
+
   async getProfile(): Promise<User> {
-    const response = await api.get<User>('/auth/profile');
-    return response.data;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    try {
+      const response = await api.get<{ data?: { userId?: string; email?: string; roles?: string[] }; userId?: string; email?: string; roles?: string[] }>('/auth/profile', {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      const raw = response.data?.data ?? response.data;
+      const r = raw as { userId?: string; sub?: string; id?: string; email?: string; roles?: string[] } | undefined;
+      const userId = r?.userId ?? r?.sub ?? r?.id;
+      const email = r?.email ?? '';
+      const roles = Array.isArray(r?.roles) ? r.roles : ['usuario'];
+      return {
+        id: userId ?? email,
+        email,
+        roles,
+        username: email,
+      };
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
   }
 
   async refreshToken(): Promise<string> {

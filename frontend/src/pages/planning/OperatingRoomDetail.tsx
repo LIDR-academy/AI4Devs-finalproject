@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { operatingRoomService } from '@/services/operating-room.service';
-import { ArrowLeftIcon, PencilIcon, CheckCircleIcon, XCircleIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, PencilIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 const OperatingRoomDetailPage = () => {
   const { id } = useParams<{ id: string }>();

@@ -19,12 +19,15 @@ export default registerAs(
       database: process.env.POSTGRES_DB || process.env.DATABASE_NAME || 'sigq_db',
       // Buscar entidades en dist/modules/**/*.entity.js (o src/modules/**/*.entity.ts en desarrollo)
       entities: [join(rootPath, 'modules', '**', '*.entity{.ts,.js}')],
-      // Synchronize: crear tablas automáticamente en desarrollo
-      // Si NODE_ENV no está definido, asumimos desarrollo
-      synchronize: process.env.NODE_ENV !== 'production',
+      // Synchronize: DESACTIVADO por defecto para evitar pérdida de datos
+      // ⚠️ ADVERTENCIA: synchronize: true puede borrar datos al recrear tablas
+      // Solo activar explícitamente con DB_SYNCHRONIZE=true para setup inicial
+      // En producción, SIEMPRE usar migraciones (migrationsRun: true)
+      synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.NODE_ENV !== 'production',
       migrations: [join(rootPath, 'database', 'migrations', '*.{.ts,.js}')],
-      migrationsRun: false,
+      // Ejecutar migraciones automáticamente al iniciar (recomendado para producción)
+      migrationsRun: process.env.DB_MIGRATIONS_RUN === 'true',
     };
   },
 );

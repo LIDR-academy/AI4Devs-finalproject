@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { planningService, SurgeryStatus, SurgeryType } from '@/services/planning.service';
-import { PlusIcon, CalendarIcon, ClockIcon, UserIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 
 const statusLabels: Record<SurgeryStatus, string> = {
@@ -28,20 +28,18 @@ const typeLabels: Record<SurgeryType, string> = {
 };
 
 const SurgeryListPage = () => {
-  const { user } = useAuth();
+  useAuth(); // auth context for protected route
   const [statusFilter, setStatusFilter] = useState<SurgeryStatus | ''>('');
 
   const { data: surgeries, isLoading, error } = useQuery({
-    queryKey: ['surgeries', statusFilter, user?.id],
+    queryKey: ['surgeries', statusFilter],
     queryFn: () => {
       const params: any = {};
       if (statusFilter) {
         params.status = statusFilter;
       }
-      // Filtrar por cirujano si el usuario tiene ese rol
-      if (user?.roles?.includes('cirujano')) {
-        params.surgeonId = user.id;
-      }
+      // Nota: No filtramos por surgeonId por defecto para mostrar todas las cirugías
+      // Si se necesita filtrar por cirujano, se puede agregar un filtro adicional en la UI
       return planningService.getSurgeries(params);
     },
   });
@@ -54,6 +52,13 @@ const SurgeryListPage = () => {
           <p className="text-medical-gray-600 mt-2">Gestión de cirugías y planificación preoperatoria</p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            to="/planning/calendar"
+            className="btn btn-outline flex items-center gap-2"
+          >
+            <CalendarIcon className="w-5 h-5" />
+            Calendario
+          </Link>
           <Link
             to="/planning/operating-rooms"
             className="btn btn-outline flex items-center gap-2"

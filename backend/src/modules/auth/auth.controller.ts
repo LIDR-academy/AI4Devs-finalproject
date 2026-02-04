@@ -9,11 +9,14 @@ import {
   Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { VerifyMfaDto } from './dto/verify-mfa.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -25,6 +28,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 intentos por minuto
   @ApiOperation({ 
     summary: 'Iniciar sesión',
     description: 'En modo desarrollo, si Keycloak no está disponible, genera un token de prueba automáticamente.'
@@ -124,5 +128,16 @@ export class AuthController {
       email: user.email,
       roles: user.roles,
     };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('users')
+  @Roles('cirujano', 'enfermeria', 'administrador')
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Listar usuarios (para asignación y visualización de personal)' })
+  @ApiResponse({ status: 200, description: 'Lista de usuarios con id, email y nombre' })
+  @ApiResponse({ status: 401, description: 'No autenticado' })
+  getUsers() {
+    return this.authService.getUsers();
   }
 }

@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { KeycloakService } from './services/keycloak.service';
 import { LoginDto } from './dto/login.dto';
 import { VerifyMfaDto } from './dto/verify-mfa.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -30,7 +31,28 @@ describe('AuthService', () => {
     }),
   };
 
+  const mockKeycloakService = {
+    isAvailable: jest.fn().mockResolvedValue(false),
+    authenticate: jest.fn(),
+    getUserInfo: jest.fn(),
+    getRolesFromUserInfo: jest.fn(),
+    verifyMfa: jest.fn(),
+  };
+
   beforeEach(async () => {
+    mockConfigService.get.mockImplementation((key: string) => {
+      const config: Record<string, any> = {
+        'auth.jwt.secret': 'test-secret',
+        'auth.jwt.expiresIn': '15m',
+        'auth.jwt.refreshExpiresIn': '7d',
+        'auth.keycloak.baseUrl': 'http://localhost:8080',
+        'auth.keycloak.realm': 'sistema-quirurgico',
+        NODE_ENV: 'development',
+      };
+      return config[key];
+    });
+    mockKeycloakService.isAvailable.mockResolvedValue(false);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -41,6 +63,10 @@ describe('AuthService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: KeycloakService,
+          useValue: mockKeycloakService,
         },
       ],
     }).compile();
@@ -96,19 +122,13 @@ describe('AuthService', () => {
       await expect(service.verifyMfa(verifyMfaDto)).rejects.toThrow(BadRequestException);
     });
 
-    it('debería generar tokens al verificar MFA exitosamente', async () => {
+    it('debería lanzar BadRequestException cuando MFA no está implementado', async () => {
       const verifyMfaDto: VerifyMfaDto = {
         code: '123456',
         sessionToken: 'session-token',
       };
 
-      mockJwtService.signAsync.mockResolvedValueOnce('access-token');
-      mockJwtService.signAsync.mockResolvedValueOnce('refresh-token');
-
-      const result = await service.verifyMfa(verifyMfaDto);
-
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
+      await expect(service.verifyMfa(verifyMfaDto)).rejects.toThrow(BadRequestException);
     });
   });
 

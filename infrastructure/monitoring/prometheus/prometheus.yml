@@ -11,9 +11,9 @@ alerting:
     - static_configs:
         - targets: []
 
-# Reglas de alertas (opcional)
+# Reglas de alertas
 rule_files:
-  # - "alerts.yml"
+  - "/etc/prometheus/alerts.yml"
 
 # Configuración de scraping (recolección de métricas)
 scrape_configs:

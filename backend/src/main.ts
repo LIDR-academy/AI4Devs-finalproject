@@ -9,24 +9,77 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // CORS - Debe configurarse ANTES de helmet
-  const corsOrigins = process.env.CORS_ORIGIN?.split(',') || [
+  const corsOrigins = process.env.CORS_ORIGIN?.split(',').map((origin) => origin.trim()) || [
     'http://localhost:5173',
-    'http://localhost:3000',
     'http://localhost:5174',
+    'http://localhost:5182',
+    'http://localhost:5183',
+    'http://localhost:5184',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:5182',
+    'http://127.0.0.1:3000',
   ];
-  app.enableCors({
-    origin: corsOrigins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Accept'],
-    exposedHeaders: ['X-Request-ID'],
-  });
 
-  // Seguridad - Configurar helmet para no bloquear CORS
+  // En desarrollo, permitir cualquier origen localhost
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const corsOptions = {
+    origin: isDevelopment
+      ? (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+          // Permitir requests sin origin (ej: Postman, curl)
+          if (!origin) {
+            return callback(null, true);
+          }
+          // Permitir cualquier localhost o 127.0.0.1
+          if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+            return callback(null, true);
+          }
+          // Verificar si está en la lista de orígenes permitidos
+          if (corsOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+          callback(new Error('No permitido por CORS'));
+        }
+      : corsOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Request-ID',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
+    exposedHeaders: ['X-Request-ID', 'Authorization'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  };
+
+  app.enableCors(corsOptions);
+
+  // Seguridad - Configurar helmet con políticas de seguridad mejoradas
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+        },
+      },
+      hsts: {
+        maxAge: 31536000, // 1 año
+        includeSubDomains: true,
+        preload: true,
+      },
+      noSniff: true,
+      xssFilter: true,
+      frameguard: { action: 'deny' },
     }),
   );
   app.use(compression());

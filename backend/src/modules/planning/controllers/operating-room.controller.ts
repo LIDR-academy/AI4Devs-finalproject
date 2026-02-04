@@ -20,19 +20,24 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { OperatingRoomService } from '../services/operating-room.service';
+import { PlanningService } from '../planning.service';
 import { CreateOperatingRoomDto } from '../dto/create-operating-room.dto';
 import { UpdateOperatingRoomDto } from '../dto/update-operating-room.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { ParseUUIDPipe } from '../../../common/pipes/parse-uuid.pipe';
+import { BadRequestException } from '@nestjs/common';
 
 @ApiTags('Quirófanos')
 @Controller('planning/operating-rooms')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth('bearer')
 export class OperatingRoomController {
-  constructor(private readonly operatingRoomService: OperatingRoomService) {}
+  constructor(
+    private readonly operatingRoomService: OperatingRoomService,
+    private readonly planningService: PlanningService,
+  ) {}
 
   @Post()
   @Roles('administrador')
@@ -63,6 +68,38 @@ export class OperatingRoomController {
   async findAll(@Query('activeOnly') activeOnly?: string) {
     const activeOnlyBool = activeOnly === 'true';
     return this.operatingRoomService.findAll(activeOnlyBool);
+  }
+
+  @Get(':id/availability')
+  @Roles('cirujano', 'enfermeria', 'administrador')
+  @ApiOperation({ summary: 'Disponibilidad del quirófano en un rango de fechas (calendario)' })
+  @ApiParam({ name: 'id', description: 'ID del quirófano (UUID)' })
+  @ApiQuery({ name: 'from', required: true, description: 'Fecha inicio ISO (ej. 2024-02-01T00:00:00.000Z)' })
+  @ApiQuery({ name: 'to', required: true, description: 'Fecha fin ISO (ej. 2024-02-28T23:59:59.999Z)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de cirugías programadas en el quirófano en el rango',
+  })
+  @ApiResponse({ status: 400, description: 'Parámetros from/to requeridos o inválidos' })
+  @ApiResponse({ status: 404, description: 'Quirófano no encontrado' })
+  async getAvailability(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    if (!from || !to) {
+      throw new BadRequestException('Los parámetros "from" y "to" (fechas ISO) son obligatorios.');
+    }
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      throw new BadRequestException('Las fechas "from" y "to" deben ser válidas (ISO 8601).');
+    }
+    if (toDate.getTime() <= fromDate.getTime()) {
+      throw new BadRequestException('La fecha "to" debe ser posterior a "from".');
+    }
+    await this.operatingRoomService.findOne(id); // 404 si no existe
+    return this.planningService.getRoomAvailability(id, fromDate, toDate);
   }
 
   @Get(':id')

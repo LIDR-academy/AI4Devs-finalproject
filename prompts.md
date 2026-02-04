@@ -11,6 +11,7 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [Conversación de implementación (tareas recientes)](#8-conversación-de-implementación-tareas-recientes)
 
 ---
 
@@ -485,6 +486,60 @@ Dadas las respuestas rellena @readme.md Desde la seccion 1 a la 7
 **Prompt 3:**
 ```
 revisa por favor que la arquitectura esté propuesta correctamente
+```**Contexto**: Durante la revisión de arquitectura, se verificó que los pull requests fueran coherentes con la arquitectura modular propuesta y que cubrieran todos los módulos necesarios.**Resultado**: Se confirmó que los PRs cubren todos los módulos del sistema (Auth, HCE, Planning, Integration, Documentation, Resources, Followup, Audit) y que las dependencias entre PRs son lógicas y coherentes.
+
+---
+
+## 8. Conversación de implementación (tareas recientes)
+
+Transcripción de la conversación en la que se ejecutaron las siguientes tareas a partir del estado en `ESTADO-TICKETS-PLANIFICACION.md`.
+
+---
+
+**Prompt 1:**
+```
+procede con la siguiente tarea
 ```
 
-**Contexto**: Durante la revisión de arquitectura, se verificó que los pull requests fueran coherentes con la arquitectura modular propuesta y que cubrieran todos los módulos necesarios.**Resultado**: Se confirmó que los PRs cubren todos los módulos del sistema (Auth, HCE, Planning, Integration, Documentation, Resources, Followup, Audit) y que las dependencias entre PRs son lógicas y coherentes.
+**Contexto**: Tras cerrar tickets anteriores (CORS, migraciones, HL7/DICOM, planificación, checklist WHO, documentación, followup), la siguiente tarea priorizada era el **Ticket 2: HCE - Registro de pacientes** (backend): validación de duplicados por SSN y cobertura de tests >80%.
+
+**Resultado**:
+- Se verificó que la validación de SSN ya existía en create (BadRequest si ya existe) y en update (excluyendo al propio paciente con `existingPatient.id !== id`).
+- Se añadieron tests en `hce.service.spec.ts`: (1) updatePatient con mismo SSN (mismo paciente) no debe lanzar; (2) updatePatient con SSN de otro paciente debe lanzar BadRequestException con mensaje "Ya existe otro paciente con este número de seguridad social".
+- Se configuró el mock de `patientRepository.find()` para `findPatientBySSN` (por defecto `[]`) y se corrigió el test de create con SSN duplicado para usar `find` en lugar de `findOne`.
+- Se añadieron tests para: searchPatients (3), deletePatient (2), addAllergy, addMedication, updateMedicalRecord (2), updateAllergy (2), deleteAllergy, updateMedication (2), deleteMedication, getPatientMedicalHistory (2). Total 27 tests en `hce.service.spec.ts`; cobertura de `hce.service.ts` ~91% statements / 96% lines.
+- Se actualizó `ESTADO-TICKETS-PLANIFICACION.md` marcando el Ticket 2 como completado (Pendiente: ninguno).
+
+---
+
+**Prompt 2:**
+```
+procede con la siguiente tarea
+```
+
+**Contexto**: Siguiente tarea: **Ticket 10: HCE - Registro de pacientes (Frontend)** — formulario antecedentes completo, gestión alergias/medicación en vistas dedicadas, vista "historia clínica completa" unificada.
+
+**Resultado**:
+- Se creó la vista unificada **PatientFullHistory** (`/hce/patients/:id/full-history`): una sola página con datos del paciente, antecedentes médicos, alergias y medicación activa, usando `hceService.getMedicalHistory(id)`; se añadió botón Imprimir (`window.print`) y enlace "Ver ficha del paciente".
+- Se añadió la ruta en `AppRoutes.tsx` y el botón "Historia clínica completa" en `PatientDetail.tsx` (enlace a la nueva vista).
+- **Correcciones posteriores**: (1) Error "PatientFullHistoryPage is not defined": faltaba el import `import PatientFullHistoryPage from '@/pages/hce/PatientFullHistory'` en `AppRoutes.tsx`. (2) Error "DocumentMagnifyingGlassIcon is not defined": el icono no estaba importado; se sustituyó por `DocumentTextIcon` ya usado en la página y se eliminó la referencia a `DocumentMagnifyingGlassIcon`.
+- Formulario antecedentes y vistas alergias/medicación ya existían (MedicalHistoryForm, PatientAllergies, PatientMedications). Se actualizó `ESTADO-TICKETS-PLANIFICACION.md` para el Ticket 10 (Pendiente: ninguno).
+
+---
+
+**Prompt 3:**
+```
+procede con la siguiente tarea
+```
+
+**Contexto**: Siguiente tarea: **Ticket 12: Checklist WHO (Frontend)** — optimización explícita para tablet y tests E2E/unit.
+
+**Resultado**:
+- **Optimización para tablet**  
+  - **ChecklistPage**: Fases con `min-h-[72px]`/`md:min-h-[80px]`, `p-4`/`md:p-5`, `touch-manipulation`, `role="button"` y `tabIndex={0}`; ítems con botón checkbox `min-w-[44px] min-h-[44px]`, label con `min-h-[44px]` y `py-2`, filas con `min-h-[56px]`/`md:min-h-[64px]`; botón Volver con `min-h-[44px]`.  
+  - **ChecklistListPage**: Botones de filtro con `min-h-[44px]` y `touch-manipulation`; enlaces "Nueva Cirugía" y "Ver Checklist" con `min-h-[44px]`; filas de cirugía con `p-4`/`md:p-5`, `min-h-[72px]` y `touch-manipulation`.
+- **Tests unitarios**:  
+  - **ChecklistPage.spec.tsx** (6 tests): estado de carga, error sin checklist, título y progreso general, tres fases e ítems visibles, cambio de fase (preIncision), dos botones de checkbox en la fase activa.  
+  - **ChecklistListPage.spec.tsx** (6 tests): estado de carga, título y lista de cirugías, filtros (Todos, Historial, En progreso, Sin iniciar), filtro por completados, enlaces "Ver Checklist", mensaje cuando no hay cirugías.  
+  Total 12 tests, todos pasando.
+- Se actualizó `ESTADO-TICKETS-PLANIFICACION.md` para el Ticket 12; pendiente opcional: tests E2E del checklist.
