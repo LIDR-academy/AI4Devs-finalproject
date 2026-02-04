@@ -1,0 +1,217 @@
+# SDD — Etapa 4: Prompts Consolidados (Arquitectura y Componentes IA-First)
+
+## Proposito del documento
+
+Este archivo consolida **todos los prompts utilizados durante la Etapa 4 del proceso SDD**.
+Los prompts estan disenados para ser reutilizados con ChatGPT, Cursor y spec-kit,
+y permiten reconstruir o extender la arquitectura logica del sistema **sin definir tecnologia**.
+
+---
+
+## Prompt 0 — Contexto base de Etapa 4
+
+Estamos trabajando bajo un enfoque SDD.
+Nos encontramos en la Etapa 4: Arquitectura y Componentes.
+
+Contexto del sistema:
+- Sistema interno que reemplaza Whaticket, OTRS/Znuny y SIHR
+- Usuarios solo internos
+- Areas: DII, Soporte TI, Procesos
+- Tipos de trabajo fijos con subtipos configurables
+- Ciclos de vida configurables por Admin
+- Reglas duras: sin saltos, sin retrocesos
+- Reasignacion permitida sin cambiar estado
+- SLA multiples y metricas estandar
+- Cierre automatico por inactividad del usuario
+
+Objetivo de la etapa:
+Definir la arquitectura logica del sistema (boundaries, componentes y eventos),
+preparada para consumo por agentes IA, sin decisiones tecnicas.
+
+---
+
+## Prompt 1 — Definicion de Boundaries del sistema
+
+Define los boundaries funcionales de un sistema de gestion de casos interno.
+
+Cada boundary debe incluir:
+- responsabilidad principal
+- que incluye
+- que excluye
+- invariantes (reglas que nunca se rompen)
+
+No definas:
+- tecnologia
+- microservicios
+- despliegue
+
+El resultado debe servir como base para arquitectura IA-first.
+
+---
+
+## Prompt 2 — Principios IA-First para arquitectura
+
+Define un conjunto de principios IA-first para una arquitectura funcional,
+pensada para ser interpretada por agentes de IA sin contexto externo.
+
+Los principios deben:
+- evitar ambiguedades
+- forzar responsabilidades explicitas
+- diferenciar lo configurable de lo invariante
+
+---
+
+## Prompt 3 — Derivacion de componentes desde boundaries
+
+A partir de los boundaries definidos, deriva componentes funcionales.
+
+Para cada componente define:
+- nombre
+- responsabilidad
+- entradas tipicas
+- salidas tipicas (eventos)
+- reglas duras
+
+No definas tecnologia ni patrones de implementacion.
+
+---
+
+## Prompt 4 — Catalogo canonico de eventos
+
+Define un catalogo canonico de eventos para el sistema.
+
+Para cada evento incluye:
+- nombre unico
+- descripcion funcional
+- datos minimos
+- componente productor
+- componentes consumidores
+
+Considera eventos relacionados con:
+- creacion de casos
+- cambios de estado
+- asignaciones
+- primera accion
+- SLA
+- cierre automatico
+
+---
+
+## Prompt 5 — Definicion funcional de Primera Accion
+
+Define de forma canonica que se considera la primera accion sobre un Caso.
+
+Considera como posibles acciones:
+- nota interna
+- mensaje al solicitante
+- imputacion de tiempo
+- cambio de estado
+- adjuntar evidencia
+
+Define reglas claras:
+- cuando se emite el evento
+- cuantos eventos se permiten por Caso
+- datos minimos del evento
+
+---
+
+## Prompt 6 — Modelado de alertas SLA
+
+Modela el comportamiento funcional de las alertas SLA.
+
+Considera:
+- alerta por proximo a vencer
+- alerta por SLA incumplido
+- umbrales configurables por Admin
+
+Define:
+- cuando se emiten
+- que datos contienen
+- que nunca deben hacer (invariantes)
+
+---
+
+## Prompt 7 — Cierre automatico por inactividad
+
+Define la regla funcional de cierre automatico por inactividad del usuario.
+
+Considera:
+- plazo en dias configurable
+- estados elegibles configurables
+- trazabilidad obligatoria
+
+Define:
+- eventos involucrados
+- comportamiento esperado
+- invariantes
+
+---
+
+## Prompt 8 — Configurabilidad vs Invariantes
+
+Construye una matriz clara que separe:
+- elementos configurables por Admin
+- invariantes del sistema
+
+Asegura que:
+- la configuracion no pueda romper reglas duras
+- los historiales no se vean afectados por cambios futuros
+
+---
+
+## Prompt 9 — Versionado de configuracion
+
+Define un modelo logico de versionado de configuracion.
+
+Incluye:
+- concepto de ConfiguracionVigente
+- reglas de versionado
+- como se asocia la configuracion a los eventos de un Caso
+
+No definas persistencia ni tecnologia.
+
+---
+
+## Prompt 10 — Diagrama logico IA-first
+
+Genera un diagrama Mermaid que represente:
+- componentes funcionales
+- eventos entre ellos
+- relacion de observacion (eventos)
+
+El diagrama debe:
+- ser legible por humanos
+- ser interpretable por agentes IA
+- no implicar tecnologia ni despliegue
+
+---
+
+## Prompt 11 — Puente a historias, casos de uso y tickets
+
+Define como la arquitectura funcional (Etapa 4) se transforma en:
+- historias de usuario
+- casos de uso
+- tickets de implementacion
+
+Indica:
+- en que momento del proceso ocurre
+- que informacion se reutiliza
+- buenas practicas IA-first
+
+---
+
+## Prompt 12 — Checklist de cierre de Etapa 4
+
+Construye un checklist de consistencia final para cerrar Etapa 4.
+
+Debe validar:
+- invariantes protegidos
+- eventos canonicos definidos
+- configurabilidad clara
+- reglas clave confirmadas (primera accion, alertas, cierre automatico)
+
+Indica si la etapa puede considerarse completa.
+
+---
+
+## Fin del documento
