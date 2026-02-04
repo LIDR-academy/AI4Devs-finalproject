@@ -86,6 +86,20 @@ export async function generateText(
 }
 
 /**
+ * Capability 3 (global): AI Text Generation/Enhancement (no composition required)
+ */
+export async function generateTextGlobal(
+  request?: GenerateTextRequest
+): Promise<TextContentResponse> {
+  const response = await fetch(`${BASE_URL}/compositions/text/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request ?? {}),
+  });
+  return handleResponse<TextContentResponse>(response);
+}
+
+/**
  * Capability 4: AI Image Generation
  * Generates AI image when no image is selected
  */

@@ -87,19 +87,19 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /compositions/{compositionId}/text/generate:
+
+  /v1/compositions/text/generate:
     post:
       tags:
         - AI Generation
-      summary: Generate or enhance meditation text with AI
+      summary: Generate or enhance meditation text with AI (global, no composition required)
       description: |
         Capability 3: AI Text Generation/Enhancement.
         Works with empty field, keywords, or existing content.
         Unified endpoint for both "from scratch" and "enhancement".
+        No composition required.
         Maps to Scenario 3: "AI text generation and enhancement"
-      operationId: generateText
-      parameters:
-        - $ref: '#/components/parameters/CompositionId'
+      operationId: generateTextGlobal
       requestBody:
         required: false
         content:
@@ -115,8 +115,6 @@ paths:
                 $ref: '#/components/schemas/TextContentResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimitExceeded'
         '503':

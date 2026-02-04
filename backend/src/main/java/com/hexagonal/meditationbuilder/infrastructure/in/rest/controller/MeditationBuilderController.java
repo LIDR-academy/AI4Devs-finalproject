@@ -104,21 +104,19 @@ public class MeditationBuilderController {
 
     // ========== Capability 3: AI Text Generation ==========
 
+
+    // ========== Capability 3 (global): AI Text Generation without composition ===========
+
     /**
-     * POST /compositions/{compositionId}/text/generate - Generate or enhance text with AI.
-     * 
-     * Capability 3: AI Text Generation/Enhancement.
+     * POST /v1/compositions/text/generate - Generate or enhance meditation text with AI (no composition required).
+     * Capability 3: AI Text Generation/Enhancement (global).
      * Scenario 3: "AI text generation and enhancement"
      */
-    @PostMapping("/{compositionId}/text/generate")
-    public ResponseEntity<TextContentResponse> generateText(
-            @PathVariable UUID compositionId,
+    @PostMapping("/text/generate")
+    public ResponseEntity<TextContentResponse> generateTextGlobal(
             @RequestBody(required = false) GenerateTextRequest request) {
-        log.info("Generating/enhancing text for composition: {}", compositionId);
-        
-        // Verify composition exists
-        composeContentUseCase.getComposition(compositionId);
-        
+        log.info("Generating/enhancing text (global, no composition)");
+
         TextContent result;
         if (request != null && request.existingText() != null && !request.existingText().isBlank()) {
             // Enhancement mode: enhance existing text
@@ -126,12 +124,12 @@ public class MeditationBuilderController {
             result = generateTextUseCase.enhanceText(existingText);
         } else {
             // Generation mode: generate from context/prompt
-            String prompt = (request != null && request.context() != null) 
-                    ? request.context() 
+            String prompt = (request != null && request.context() != null)
+                    ? request.context()
                     : "Create a calming meditation text";
             result = generateTextUseCase.generateText(prompt);
         }
-        
+
         return ResponseEntity.ok(mapper.toTextContentResponse(result));
     }
 

@@ -34,7 +34,7 @@ retry:
   max-attempts: ${RETRY_MAX_ATTEMPTS:3}
   initial-interval-ms: ${RETRY_INITIAL_INTERVAL:1000}
   multiplier: ${RETRY_MULTIPLIER:2.0}
-  max-interval-ms: ${RETRY_MAX_INTERVAL:10000}
+  port: ${SERVER_PORT:8080}
 
 # Actuator Configuration
 management:

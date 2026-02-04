@@ -7,7 +7,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { generateText } from '@/api/client';
+import { generateText, generateTextGlobal } from '@/api/client';
 import { ApiError, type GenerateTextRequest, type TextContentResponse } from '@/api/types';
 import { useComposerStore } from '@/state/composerStore';
 import { compositionKeys } from './useComposition';
@@ -30,7 +30,10 @@ export function useGenerateText({
   
   return useMutation({
     mutationFn: async (request?: GenerateTextRequest) => {
-      if (!compositionId) throw new Error('No composition ID');
+      if (!compositionId) {
+        // Usar endpoint global si no hay compositionId
+        return generateTextGlobal(request);
+      }
       return generateText(compositionId, request);
     },
     onMutate: () => {
@@ -42,9 +45,11 @@ export function useGenerateText({
       // Update local text with generated content
       setLocalText(data.text);
       // Invalidate composition to refresh server state
-      queryClient.invalidateQueries({ 
-        queryKey: compositionKeys.detail(compositionId!) 
-      });
+      if (compositionId) {
+        queryClient.invalidateQueries({ 
+          queryKey: compositionKeys.detail(compositionId!) 
+        });
+      }
       onSuccess?.(data);
     },
     onError: (error: Error) => {

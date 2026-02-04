@@ -149,7 +149,7 @@ class MeditationBuilderControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /v1/compositions/{id}/text/generate")
+    @DisplayName("POST /v1/text/generate")
     class GenerateTextTests {
 
         @Test
@@ -159,7 +159,7 @@ class MeditationBuilderControllerTest {
             when(composeContentUseCase.getComposition(compositionId)).thenReturn(sampleComposition);
             when(generateTextUseCase.generateText(any())).thenReturn(new TextContent("Generated text"));
 
-            mockMvc.perform(post("/v1/compositions/{id}/text/generate", compositionId)
+            mockMvc.perform(post("/v1/compositions/text/generate")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -173,7 +173,7 @@ class MeditationBuilderControllerTest {
             when(composeContentUseCase.getComposition(compositionId)).thenReturn(sampleComposition);
             when(generateTextUseCase.enhanceText(any())).thenReturn(new TextContent("Enhanced text"));
 
-            mockMvc.perform(post("/v1/compositions/{id}/text/generate", compositionId)
+            mockMvc.perform(post("/v1/text/generate")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -186,7 +186,7 @@ class MeditationBuilderControllerTest {
             when(composeContentUseCase.getComposition(compositionId)).thenReturn(sampleComposition);
             when(generateTextUseCase.generateText(any())).thenReturn(new TextContent("Default generated"));
 
-            mockMvc.perform(post("/v1/compositions/{id}/text/generate", compositionId)
+            mockMvc.perform(post("/v1/text/generate")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}"))
                     .andExpect(status().isOk())

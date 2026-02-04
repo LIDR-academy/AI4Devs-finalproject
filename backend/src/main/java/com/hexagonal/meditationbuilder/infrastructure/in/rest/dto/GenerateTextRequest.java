@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 /**
  * Request DTO for AI text generation or enhancement.
  * 
- * Maps to: POST /compositions/{compositionId}/text/generate
+ * Maps to: POST /v1/compositions/text/generate
  * OpenAPI: GenerateTextRequest
  * 
  * Both fields are optional to support:
