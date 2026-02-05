@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     volumes:
       - ./src/backend:/app
+      - ./tests:/app/tests
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
     depends_on:
