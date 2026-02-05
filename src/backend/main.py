@@ -21,3 +21,7 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "phase": "sprint-0"}
+
+from api.upload import router as upload_router
+app.include_router(upload_router, prefix="/api/upload", tags=["Upload"])
+

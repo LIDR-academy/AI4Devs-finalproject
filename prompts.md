@@ -1218,12 +1218,83 @@ Definiré la estructura completa del monorepo (backend FastAPI + frontend React 
 > 4.  Instrucciones de arranque.
 
 **Resumen de la Respuesta/Acción:**
-Se ha ejecutado el setup inicial del proyecto:
-1.  Creada estructura de directorios (`src/`, `tests/`, `infra/`, `data/`) mediante script bash.
-2.  Generados archivos de configuración backend: `requirements.txt` (incluyendo pytest), `Dockerfile` (Python 3.11), y `main.py` (Health Check).
-3.  Generado `pytest.ini` para detección automática de tests.
-4.  Generado `docker-compose.yml` orquestando Backend, Database y Frontend (base).
-5.  Entorno listo para iniciar TDD con `docker-compose up` y `pytest`.
+
+---
+
+## 024 - T-001: Implementación Fase Roja
+**Fecha:** 2026-02-04 13:50
+
+**Prompt Original:**
+> # Prompt: Inicio del Ticket T-001 (Backend Upload) - FASE ROJA
+>
+> **Role:** Actúa como **Senior QA Engineer**.
+>
+> **Contexto:**
+> Selecciono el ticket activo: **T-001 [BACK] Endpoint Presigned URL**.
+>
+> **Objetivo:**
+> Generar el **TEST DE INTEGRACIÓN** (Fase Roja) para este endpoint.
+> *Aún NO generes el código de implementación del endpoint.*
+>
+> **Instrucciones:**
+> 1.  Crea `tests/integration/test_upload_flow.py`.
+> 2.  Simula petición `POST /api/upload/url` con `TestClient`.
+> 3.  El test debe fallar (404).
+
+**Resumen de la Respuesta/Acción:**
+
+---
+
+## 025 - T-001: Implementación Fase Verde
+**Fecha:** 2026-02-05 10:15
+
+**Prompt Original:**
+> # Prompt: Fase VERDE (Implementación) - Ticket T-001
+>
+> **Role:** Actúa como **Senior Python Developer**.
+>
+> **Contexto:**
+> Estamos en la **Fase Verde** del ciclo TDD para el ticket **T-001 [BACK] Endpoint Presigned URL**.
+>
+> **Objetivo:**
+> Implementar el código necesario en el Backend para que el test pase.
+>
+> **Instrucciones de Ejecución:**
+> 1.  Definir esquemas (`requirements.txt`).
+> 2.  Implementar router `api/upload.py` con lógica mínima (dummy UUID/URL).
+> 3.  Registrar en `main.py`.
+> 4.  Verificar tests.
+
+**Resumen de la Respuesta/Acción:**
+
+---
+
+## 026 - T-001: Refactor y Cierre
+**Fecha:** 2026-02-05 10:35
+
+**Prompt Original:**
+> # Prompt: Fase REFACTOR y CIERRE - Ticket T-001
+>
+> **Role:** Actúa como **Senior Code Reviewer** y **Repository Maintainer**.
+>
+> **Contexto:**
+> El ticket **T-001** está en VERDE.
+>
+> **Objetivo:**
+> 1.  Mejorar código (Docstrings, Typing).
+> 2.  Actualizar documentación (DONE).
+> 3.  Verificar tests.
+
+**Resumen de la Respuesta/Acción:**
+Se ha completado el ciclo TDD para T-001:
+1.  **Refactor:** Añadidos Docstrings estilo Google y type hints a `schemas.py` y `api/upload.py`.
+2.  **Verificación:** `pytest` ejecutado exitosamente con 0 regresiones.
+3.  **Documentación:**
+    - `docs/09-mvp-backlog.md`: Ticket marcado como **[DONE]**.
+    - `memory-bank/productContext.md`: Estado actualizado a "Sprint 1 In Progress".
+
+**ESTADO TICKET:** CERRADO.
+Listo para siguiente tarea.
 
 **Resumen de la Respuesta/Acción:**
 Definición formal del alcance MVP en `docs/09-mvp-backlog.md`, seleccionando 7 historias clave (US-001, 002, 005, 010, 007, 013, 009) y generando tickets técnicos detallados. Actualización de `memory-bank/productContext.md` para reflejar el cambio a fase de Implementación con alcance acotado. Actualización del registro de prompts en `prompts.md`.

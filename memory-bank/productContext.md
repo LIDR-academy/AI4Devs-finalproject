@@ -116,7 +116,7 @@ Alineación con estándares internacionales de gestión BIM para proyectos patri
 **Status**: 🚧 **Phase: Implementation - MVP Scope**
 **Stage**: Building Core Features (The Golden Path)
 **Documentation**: Phase 9 (MVP Backlog) Defined.
-**Current Focus**: Executing US-001, US-002, US-005 (Backbone of the application).
+**Current Focus**: Sprint 1 In Progress. T-001 (Upload URL) Completed. Working on T-001-FRONT and T-020-AGENT.
 **MVP Scope**:
 - CRITICAL: US-001, US-002, US-005, US-010, US-007
 - HIGH: US-013, US-009
