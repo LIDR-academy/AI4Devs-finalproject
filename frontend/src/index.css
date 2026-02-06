@@ -1,3 +1,12 @@
+/* Orange button for local image selection */
+.btn--orange {
+  background: #e65100;
+  color: white;
+}
+
+.btn--orange:hover:not(:disabled) {
+  background: #bf360c;
+}
 .text-editor--error .text-editor__textarea {
   border-color: #e74c3c !important;
   box-shadow: 0 0 0 2px #e74c3c33;

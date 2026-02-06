@@ -7,8 +7,7 @@
  * Disabled/hidden when no image present.
  */
 
-import { useCallback } from 'react';
-import { useComposerStore, useSelectedImageId } from '@/state/composerStore';
+import React from 'react';
 
 interface ImagePreviewProps {
   previewUrl?: string;
@@ -17,23 +16,13 @@ interface ImagePreviewProps {
   onRemove?: () => void;
 }
 
-export function ImagePreview({ 
+const ImagePreview: React.FC<ImagePreviewProps> = ({
   previewUrl,
   imageName = 'Selected Image',
   disabled = false,
   onRemove,
-}: ImagePreviewProps) {
-  const selectedImageId = useSelectedImageId();
-  const clearImage = useComposerStore((state) => state.clearImage);
-  
-  const hasImage = !!selectedImageId;
-  
-  const handleRemove = useCallback(() => {
-    clearImage();
-    onRemove?.();
-  }, [clearImage, onRemove]);
-  
-  if (!hasImage) {
+}) => {
+  if (!previewUrl) {
     return (
       <div className="image-preview" data-testid="image-preview-empty">
         <div className="image-preview__container">
@@ -46,38 +35,56 @@ export function ImagePreview({
       </div>
     );
   }
-  
+  const [imgError, setImgError] = React.useState(false);
   return (
-    <div className="image-preview" data-testid="image-preview">
+    <div className="image-preview" data-testid="image-preview" style={{ position: 'relative' }}>
       <div className="image-preview__container">
-        {previewUrl ? (
-          <img 
-            src={previewUrl} 
+        {!imgError ? (
+          <img
+            src={previewUrl}
             alt={imageName}
             className="image-preview__image"
             loading="eager"
             data-testid="image-preview-img"
+            onError={() => setImgError(true)}
           />
         ) : (
-          <div className="image-preview__placeholder" data-testid="image-preview-placeholder">
-            <span>🖼️</span>
-            <p>{imageName}</p>
+          <div className="image-preview__fallback" data-testid="image-preview-fallback">
+            <span>❌</span>
+            <p>Could not load image</p>
+            <p style={{ fontSize: '0.8em', wordBreak: 'break-all' }}>{previewUrl}</p>
           </div>
         )}
-      </div>
-      <div className="image-preview__actions">
         <button
-          className="btn btn--danger"
-          onClick={handleRemove}
+          type="button"
+          className="image-preview__close"
+          onClick={onRemove}
           disabled={disabled}
           aria-label="Remove image"
-          data-testid="image-remove-button"
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            background: 'rgba(0,0,0,0.5)',
+            border: 'none',
+            color: 'white',
+            borderRadius: '50%',
+            width: 28,
+            height: 28,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: 18,
+            zIndex: 2,
+          }}
+          data-testid="image-remove-x"
         >
-          🗑️ Remove Image
+          ×
         </button>
       </div>
     </div>
   );
-}
+};
 
 export default ImagePreview;

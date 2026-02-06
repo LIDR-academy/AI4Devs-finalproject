@@ -8,6 +8,7 @@ import {
   GenerateTextButton,
   GenerateImageButton,
 } from '@/components';
+import ImageSelectorButton from '@/components/ImageSelectorButton';
 import {
   useCreateComposition,
   useUpdateText,
@@ -28,6 +29,8 @@ import {
 } from '@/state/composerStore';
 
 const AUTO_SAVE_DELAY = 1000;
+
+import React, { useState, useCallback } from 'react';
 
 export function MeditationBuilderPage() {
   const compositionId = useCompositionId();
@@ -68,10 +71,42 @@ export function MeditationBuilderPage() {
     musicName: musicPreview.data?.musicReference ?? selectedMusicId ?? '',
   }), [musicPreview.data, selectedMusicId]);
 
-  const imagePreviewData = useMemo(() => ({
-    previewUrl: imagePreview.data?.previewUrl,
-    imageName: imagePreview.data?.imageReference ?? selectedImageId ?? '',
-  }), [imagePreview.data, selectedImageId]);
+
+  // Estado local para preview de imagen seleccionada
+  const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
+  const [localImageName, setLocalImageName] = useState<string>('');
+
+  const imagePreviewData = useMemo(() => {
+    if (localImageUrl) {
+      return {
+        previewUrl: localImageUrl,
+        imageName: localImageName,
+      };
+    }
+    return {
+      previewUrl: imagePreview.data?.previewUrl,
+      imageName: imagePreview.data?.imageReference ?? selectedImageId ?? '',
+    };
+  }, [localImageUrl, localImageName, imagePreview.data, selectedImageId]);
+
+  // Limpieza de URL local
+  const handleImageSelected = useCallback((file: File) => {
+    if (localImageUrl) {
+      URL.revokeObjectURL(localImageUrl);
+    }
+    const url = URL.createObjectURL(file);
+    setLocalImageUrl(url);
+    setLocalImageName(file.name);
+  }, [localImageUrl]);
+
+  // Limpieza al desmontar
+  React.useEffect(() => {
+    return () => {
+      if (localImageUrl) {
+        URL.revokeObjectURL(localImageUrl);
+      }
+    };
+  }, [localImageUrl]);
 
 useEffect(() => {
   if (compositionId) return;
@@ -143,13 +178,20 @@ useEffect(() => {
           <ImagePreview
             previewUrl={imagePreviewData.previewUrl}
             imageName={imagePreviewData.imageName}
-            onRemove={() => removeImage.mutate()}
+            onRemove={() => {
+              if (localImageUrl) {
+                URL.revokeObjectURL(localImageUrl);
+                setLocalImageUrl(null);
+                setLocalImageName('');
+              } else {
+                removeImage.mutate();
+              }
+            }}
             disabled={removeImage.isPending}
           />
-          <div className="generate-btn-group">
-            <GenerateImageButton
-              isLoading={generateImage.isPending}
-            />
+          <div className="generate-btn-group" style={{ display: 'flex', gap: 8 }}>
+            <ImageSelectorButton onImageSelected={handleImageSelected} />
+            <GenerateImageButton isLoading={generateImage.isPending} />
           </div>
         </div>
       </div>
