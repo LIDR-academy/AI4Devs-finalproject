@@ -58,35 +58,58 @@ CAD:       rhino3dm + glTF/GLB conversion
 
 ### Prerrequisitos
 
-- Node.js >= 18.0.0
-- Python >= 3.11
-- Librerías de sistema para `rhino3dm` (opcional, si se compila desde fuente)
+- Docker (Engine) & Docker Compose
+- GNU Make (o `make` compatible). En Windows puede usarse `test.bat` o WSL.
+- Variables de entorno configuradas en `.env` (ver `.env.example`)
 
-### Instalación
+### Quick Start (Docker + Make)
+
+1. Clonar repositorio y preparar `.env`:
 
 ```bash
-# Clonar repositorio
 git clone https://github.com/sagrada-familia/parts-manager.git
 cd parts-manager
-
-# Instalar dependencias
-cd frontend && npm install
-cd ../backend && pip install -r requirements.txt
-
-# Configurar variables de entorno
 cp .env.example .env
-# Editar .env con valores reales:
-# SUPABASE_URL=https://xyz.supabase.co
-# SUPABASE_ANON_KEY=eyJ...
-# OPENAI_API_KEY=sk-...
-
-
-# Ejecutar en modo desarrollo
-npm run dev  # Frontend (puerto 3000)
-python -m uvicorn main:app --reload  # Backend (puerto 8000)
+# Edita .env con los valores reales (SUPABASE_URL, SUPABASE_KEY, OPENAI_API_KEY, etc.)
 ```
 
-**Más información**: Ver [Getting Started](./docs/00-index.md#-getting-started) en la documentación completa.
+2. Levantar servicios en contenedores (dev):
+
+```bash
+make up
+```
+
+3. Inicializar infra (crear buckets / semillas necesarias):
+
+```bash
+make init-db
+```
+
+4. Ejecutar solo backend (para desarrollo local sin Docker):
+
+```bash
+cd src/backend
+pip install -r requirements.txt
+python -m uvicorn main:app --reload
+```
+
+### Testing
+
+Ejecutar la suite de tests (unit + integration):
+
+```bash
+make test        # Ejecuta todos los tests (unit + integration)
+make test-infra  # Ejecuta tests de infraestructura / integración (p.ej. storage)
+# Alternativa directa con docker-compose:
+docker-compose run --rm backend pytest tests/integration/test_storage_config.py -v
+```
+
+### Notas rápidas
+
+- Para crear o resetear la infraestructura de storage use `make init-db`.
+- Las pruebas de integración requieren que las variables `SUPABASE_URL` y `SUPABASE_KEY` estén disponibles en el entorno donde se ejecutan.
+
+**Más información**: Ver [Documentación técnica](./docs)
 
 ---
 
