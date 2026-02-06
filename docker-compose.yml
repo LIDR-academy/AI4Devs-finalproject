@@ -4,6 +4,8 @@ services:
   backend:
     build: ./src/backend
     container_name: sf-pm-backend
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     volumes:
@@ -11,6 +13,8 @@ services:
       - ./tests:/app/tests
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
     depends_on:
       - db
     networks:
@@ -44,6 +48,7 @@ services:
 
 volumes:
   postgres_data:
+
 
 networks:
   sf-network:

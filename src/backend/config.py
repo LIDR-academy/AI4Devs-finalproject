@@ -1,0 +1,28 @@
+import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
+
+class Settings(BaseSettings):
+    """
+    Project settings and environment variables management.
+    Uses pydantic-settings to automatically load vars from .env and environment.
+    """
+    # Database
+    DATABASE_URL: str = "postgresql://user:password@db:5432/sfpm_db"
+    
+    # Supabase
+    SUPABASE_URL: Optional[str] = os.getenv("SUPABASE_URL")
+    SUPABASE_KEY: Optional[str] = os.getenv("SUPABASE_KEY")
+    
+    # App Settings
+    PROJECT_NAME: str = "SF-PM"
+    DEBUG: bool = False
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
+# Instantiate settings
+settings = Settings()
