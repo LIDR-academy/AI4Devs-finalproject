@@ -1584,3 +1584,78 @@ Generé script SQL (`infra/setup_storage.sql`) para crear bucket `raw-uploads` c
 **Resumen de la Respuesta/Acción:**
 Consolidé la estructura eliminando duplicidad entre `/infra` y `src/backend/infra`. Moví `init_db.py` a `/infra` (script de mantenimiento), eliminé `src/backend/infra/setup_storage.sql` (duplicado), actualicé `docker-compose.yml` para mapear `/infra:/app/infra`, y actualicé `Makefile`. Estructura final: `/infra` contiene solo `setup_storage.sql` e `init_db.py`.
 ---
+
+## 034 - Sprint 1 - Cierre T-005: Refactor de tests de infraestructura y setup de bucket
+**Fecha:** 2026-02-06 11:15
+
+**Prompt Original:**
+> # Prompt: Fase REFACTOR y CIERRE de T-005-INFRA
+> 
+> **Role:** Actúa como **Senior Python Test Engineer** y **Infrastructure Validator**.
+> 
+> **Protocolo Agents:**
+> 1. Consulta el Memory Bank para entender el estado del ticket T-005-INFRA.
+> 2. Al finalizar, actualiza:
+>    - `docs/09-mvp-backlog.md`: Marca T-005-INFRA como [DONE].
+>    - `memory-bank/productContext.md`: Cambia el estado actual a "T-005-INFRA [DONE] ✅".
+> 3. Registra la sesión: `## Sprint 1 - Cierre T-005: Refactor de tests de infraestructura y setup de bucket`
+> 
+> **Contexto:**
+> El ticket T-005-INFRA (Setup de Infraestructura de Storage) está en **FASE VERDE** (tests pasan). Ahora toca **REFACTOR** y **CIERRE**.
+> 
+> **Objetivo:**
+> 1. **Refactorización del Test de Integración (`tests/integration/test_storage_config.py`)**:
+>    - Extrae la inicialización del cliente de Supabase a un **pytest fixture** en `tests/conftest.py`.
+>    - **Justificación:** Reutilización entre múltiples tests de integración, evitar duplicación de lógica de conexión.
+>    - Añade **Type Hints** completos a todos los parámetros de funciones y retornos.
+>    - Mejora la robustez del **cleanup**: Usa una bandera `uploaded: bool = False` para ejecutar el borrado solo si el archivo se subió con éxito (evita intentar borrar un archivo que nunca existió).
+> 
+> 2. **Validación del Workflow de Infraestructura**:
+>    - Comprueba que `make init-db` sigue funcionando correctamente.
+>    - Comprueba que el test refactorizado sigue pasando.
+> 
+> 3. **Actualización del Memory Bank**:
+>    - Marca el ticket como [DONE] en `docs/09-mvp-backlog.md`.
+>    - Actualiza `memory-bank/productContext.md` indicando que T-005-INFRA está completado y los tests de integración están pasando.
+> 
+> **Instrucciones de Ejecución:**
+> 
+> 1. **Crear `tests/conftest.py`** con fixture `supabase_client` (scope `module` para reutilización):
+>    ```python
+>    import os
+>    import pytest
+>    from supabase import create_client, Client
+> 
+>    @pytest.fixture(scope="module")
+>    def supabase_client() -> Client:
+>        url: str | None = os.environ.get("SUPABASE_URL")
+>        key: str | None = os.environ.get("SUPABASE_KEY")
+>        
+>        if not url or not key:
+>            pytest.skip("SUPABASE_URL and SUPABASE_KEY must be configured")
+>        
+>        return create_client(url, key)
+>    ```
+> 
+> 2. **Refactorizar `tests/integration/test_storage_config.py`**:
+>    - Usar el fixture `supabase_client`.
+>    - Añadir type hints: `def test_upload_bucket_access(supabase_client: Client) -> None:`.
+>    - Implementar cleanup robusto con `uploaded: bool = False` en el bloque try-finally.
+> 
+> 3. **Verificar que todo sigue en verde**:
+>    - Ejecuta `make test-storage` (o `docker-compose run --rm backend pytest tests/integration/test_storage_config.py -v`).
+>    - Proporciona el comando para ejecutar el test refactorizado y confirmar que sigue en verde (ej: `make test-infra`).
+> 
+> 4. **Actualizar Documentación**:
+>    - Marca T-005-INFRA como [DONE] en `docs/09-mvp-backlog.md`.
+>    - Actualiza `memory-bank/productContext.md` indicando estado actual `T-005-INFRA [DONE] ✅`.
+> 
+> 5. **Output esperado:**
+>    - Código completo de `conftest.py` con el fixture.
+>    - Código refactorizado de `test_storage_config.py` con type hints.
+>    - Comando de verificación ejecutado con output exitoso.
+>    - Confirmación de actualización del Memory Bank.
+
+**Resumen de la Respuesta/Acción:**
+Refactoricé los tests de integración extrayendo la configuración del cliente Supabase a un fixture en `tests/conftest.py` (scope `module`). Actualicé `test_storage_config.py` con type hints completos (`-> None`, `: Client`, `: str`, `: bytes`, `: bool`, `: list[str]`), mejoré el cleanup con bandera `uploaded` para evitar errores de borrado de archivos no subidos, y añadí docstrings explicativas. Verifiqué que el test sigue pasando (1 passed in 0.61s). Actualicé `docs/09-mvp-backlog.md` (T-005-INFRA [DONE]) y `memory-bank/productContext.md` indicando ticket completado con tests en verde.
+---
