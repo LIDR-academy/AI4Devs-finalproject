@@ -20,12 +20,14 @@ C4Container
         Container(gateway, "API Gateway", "GCP API Gateway", "Single Entry Point, Auth Offloading, Rate Limiting")
         
         Container(routes_service, "Routes Service", "Laravel/PHP", "[Core] Manages Lines, Stops, Schedules. Source of Truth for Network.")
-        Container(sites_service, "Sites Service", "Node.js", "[Core] Manages Corporate Clients, Site Configs (Radius), and Users.")
+        Container(sites_service, "Sites Service", "Node.js", "[Core] Manages Corporate Clients, Site Configs (Radius), and Users (Passengers).")
+        Container(booking_service, "Booking Service", "Node.js (NestJS)", "[Core] Manages Booking Lifecycle, Reservations, and Availability Checks.")
         Container(rates_service, "Rates Service", "Go/Python", "[Support] Manages Pricing Rules, Fares, and Currency Logic.")
         Container(search_service, "Search Service", "Go/PostGIS", "[Generic] Optimized Geospatial Read-Model. Aggregates data for high-perf queries.")
         
         ContainerDb(routes_db, "Routes DB", "Cloud SQL (MySQL)", "Schema: stops, lines, schedules")
         ContainerDb(sites_db, "Sites DB", "Cloud SQL (MySQL)", "Schema: sites, configs, users")
+        ContainerDb(booking_db, "Booking DB", "Cloud SQL (PostgreSQL)", "Schema: bookings, tickets, audit_logs")
         ContainerDb(rates_db, "Rates DB", "Cloud SQL (PostgreSQL)", "Schema: fare_rules, pricing_grids")
         ContainerDb(search_db, "Search DB", "Cloud SQL (PostGIS)", "Schema: spatial_index, flat_routes")
         
@@ -39,16 +41,20 @@ C4Container
     
     Rel(gateway, routes_service, "Proxies /routes", "REST")
     Rel(gateway, sites_service, "Proxies /sites", "REST")
+    Rel(gateway, booking_service, "Proxies /bookings", "REST")
     Rel(gateway, rates_service, "Proxies /rates", "REST")
     Rel(gateway, search_service, "Proxies /search", "REST")
     
     Rel(routes_service, routes_db, "R/W", "SQL")
     Rel(sites_service, sites_db, "R/W", "SQL")
+    Rel(booking_service, booking_db, "R/W", "SQL")
     Rel(rates_service, rates_db, "R/W", "SQL")
     Rel(search_service, search_db, "R/W", "SQL")
     
     Rel(routes_service, pubsub, "Publishes: RouteCreated, StopMoved", "Async")
     Rel(sites_service, pubsub, "Publishes: SiteConfigUpdated", "Async")
+    Rel(booking_service, pubsub, "Publishes: BookingCreated, BookingCancelled", "Async")
+    Rel(booking_service, routes_service, "Sync: Check Availability", "gRPC / REST")
     Rel(pubsub, search_service, "Subscribes: *, Updates Index", "Async")
 ```
 
@@ -57,7 +63,8 @@ C4Container
 | Component | Responsibility | Tech Stack (Proposed) |
 |-----------|----------------|-----------------------|
 | **Routes Service** | **Core Domain**. Manages the transport network definition: Lines, Expeditions, Stops, and Schedules. It owns the "supply" data. | Laravel 10 / PHP 8.1 |
-| **Sites Service** | **Core Domain**. Manages Corporate Clients (Sites), their specific configurations (e.g., search radius constraints), and authorized users. | Node.js (NestJS) |
+| **Sites Service** | **Core Domain**. Manages Corporate Clients (Sites), their specific configurations (e.g., search radius constraints), and **Users (Passengers)**. | Node.js (NestJS) |
+| **Booking Service** | **Core Domain**. Manages the full lifecycle of reservations (from hold to confirmation). Coordinates with Routes for availability and Sites for user validity. | Node.js (NestJS) |
 | **Rates Service** | **Support Domain**. Centralizes pricing logic. Decouples financial rules from operational route data. | Go or Python |
 | **Search Service** | **Generic Subdomain**. A specialized Read-Model optimized for geospatial queries. It allows high-performance searching without burdening the transactional databases. | Go + PostGIS |
 

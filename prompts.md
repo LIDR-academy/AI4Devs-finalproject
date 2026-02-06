@@ -425,9 +425,94 @@ Reference the affected entity or relationship
 
 **Prompt 1:**
 
+Modelo: GEMINI 2.0 Flash Thinking (Antigravity)
+
+```
+Analyze Data Model, System Architecture, and System Description. Based on these, generate a comprehensive implementation_plan.md file that specifies all necessary API endpoints, including methods, paths, and brief functional descriptions.
+```
+
+Context: Requested a work plan for completing the API Specification section (Section 4) of the readme.md.
+
+Output: Generated `implementation_plan.md` proposing 3 critical endpoints and detailed workflow for OpenAPI documentation.
+
+---
+
 **Prompt 2:**
 
+Modelo: GEMINI 2.0 Flash Thinking (Antigravity)
+
+```
+Review architecture documentation to understand microservices structure
+```
+
+Context: Starting the analysis phase by reviewing the microservices architecture to identify potential endpoints per service.
+
+Actions taken:
+- Reviewed `docs/2_Arquitectura_del_Sistema.md` identifying 4 microservices (Routes, Sites, Rates, Search)
+- Reviewed `docs/3_Modelo_de_Datos.md` to understand data entities per service
+- Created `architecture_analysis.md` mapping potential endpoints to each bounded context
+- Analyzed critical user flows from PRD and User Stories
+
+Output: Architecture analysis document identifying endpoint ownership and API Gateway routing patterns.
+
+---
+
 **Prompt 3:**
+
+Modelo: GEMINI 2.0 Flash Thinking (Antigravity)
+
+Implicit continuation of analysis phase completing:
+- PRD analysis to validate endpoint selection against user needs
+- Definition of detailed request/response schemas for 3 endpoints:
+  - `POST /api/v1/search/routes` (Search Service)
+  - `GET /api/v1/routes/{routeId}/schedules` (Routes Service)
+  - `GET /api/v1/sites/{siteId}/config` (Sites Service)
+
+Output: 
+- Created `api_schemas.md` with complete OpenAPI 3.0 schemas
+- Created `docs/4_especificacion_api.md` with formal API documentation
+- Included request/response examples with realistic Spanish corporate context
+- Documented error handling (400, 403, 404) with user-friendly messages
+
+Key Design Decisions:
+1. Separated schedules endpoint from search for better performance
+2. Used HH:mm format for time filters (simpler than ISO 8601)
+3. Explicit journey type enum (outbound, return, roundtrip)
+4. Search radius validation with actionable error messages
+
+Artifacts Generated:
+- `/docs/4_especificacion_api.md` - Main deliverable
+- `architecture_analysis.md` - Analysis document
+- `api_schemas.md` - Schema definitions
+- `walkthrough.md` - Documentation of process and decisions
+
+---
+
+**Prompt 4:**
+
+Modelo: GEMINI 2.0 Flash Thinking (Antigravity)
+
+```
+Update the Data Model, API Specification, and System Description to incorporate a Booking System. You must: 1) Define a 'Passenger' entity with essential profile data; 2) Add all necessary fields and relationships to manage expedition bookings; and 3) Outline the end-to-end booking process. Ensure all documents are consistent with these new requirements.
+```
+
+Context: Requested full integration of a Booking System, requiring updates across Architecture (Section 2), Data Model (Section 3), and API Specs (Section 4).
+
+Actions taken:
+- **Planning:** Created `implementation_plan.md` proposing a new **Booking Service** and placing Users in **Sites Service**.
+- **Architecture (Docs 2):**
+  - Added `Booking Service` container (Node.js/NestJS).
+  - Defined synchronous (Availability Check) and asynchronous (Booking Events) communication flows.
+- **Data Model (Docs 3):**
+  - Created `users` entity in Sites Service.
+  - Defined `bookings` schema (bookings, booking_items, history) in new Booking Service.
+- **API Spec (Docs 4):**
+  - Documented `POST /api/v1/bookings` (Create Booking).
+  - Documented `GET /api/v1/bookings` (List Bookings coverage).
+  - Documented `GET /api/v1/users/me` (Profile).
+- **Readme:** Updated Section 4 summary with new endpoints.
+
+Output: Fully updated documentation stack reflecting the new Booking capability.
 
 ---
 

@@ -118,6 +118,16 @@ erDiagram
     commuting_sites ||--o{ commuting_companies : "contracts"
     commuting_companies ||--o{ commuting_companies_shift : "has_shifts"
     commuting_sites ||--o{ commuting_sites_routes : "subscribes_to"
+    commuting_sites ||--o{ users : "employs"
+
+    users {
+        int id PK
+        int site_id FK
+        string email
+        string name
+        string phone
+        string status
+    }
     
     commuting_sites {
         int id PK
@@ -185,12 +195,58 @@ erDiagram
 | **commuting_sites_routes** | **Join Table managed by Sites**. Defines which Routes are active/published for a specific Site. | `id` | `site_id` FK. `route_id` is a Logical Reference to Routes DB. |
 | **commuting_companies** | Legal entities or sub-divisions operating within a Site. | `id` | `site_id` FK. |
 | **routes_shifts** | Association of Shift times to Routes. Managed here as Shifts belong to Companies. | Composite | `commuting_company_shift_id` FK. `route_id` Logical Ref. |
+| **users** | **Passengers/Employees**. The end-users who make bookings. | `id` | `site_id` FK. `email` Unique. |
 
 > **Note:** `sites` table from legacy schema appears redundant with `commuting_sites` or `commuting_companies`. Mapped `commuting_sites` as the primary aggregate root.
 
 ---
 
-### 3.2.3. Rates Service (Support Domain)
+### 3.2.3. Booking Service (Core Domain)
+Responsible for the lifecycle of passenger reservations.
+
+```mermaid
+erDiagram
+    bookings ||--|{ booking_items : "contains"
+    bookings ||--o{ booking_status_history : "tracks"
+    
+    bookings {
+        uuid id PK
+        int user_id "Logical Ref (Sites Svc)"
+        int route_id "Logical Ref (Routes Svc)"
+        string status "confirmed, cancelled, pending"
+        datetime created_at
+        datetime updated_at
+    }
+
+    booking_items {
+        uuid id PK
+        uuid booking_id FK
+        int track_id "Logical Ref (Routes Svc)"
+        int stop_id "Logical Ref (Routes Svc)"
+        date journey_date
+        string type "outbound/return"
+        decimal price
+    }
+
+    booking_status_history {
+        uuid id PK
+        uuid booking_id FK
+        string status
+        datetime changed_at
+        string reason
+    }
+```
+
+#### Entities Description - Booking Service
+| Entity | Description | PK | Constraints |
+| :--- | :--- | :--- | :--- |
+| **bookings** | Represents a user's reservation for a route. | `id` (UUID) | `user_id` Logical Ref. `route_id` Logical Ref. |
+| **booking_items** | Individual trips within a booking (e.g., specific day/expedition). | `id` (UUID) | `booking_id` FK. |
+| **booking_status_history** | Audit trail for booking status changes. | `id` (UUID) | `booking_id` FK. |
+
+---
+
+### 3.2.4. Rates Service (Support Domain)
 Responsible for Pricing Logic and Fares.
 
 ```mermaid
@@ -229,7 +285,7 @@ erDiagram
 
 ---
 
-### 3.2.4. Search Service (Generic Subdomain)
+### 3.2.5. Search Service (Generic Subdomain)
 This service maintains a **Read-Model**. It does not own the "System of Record" tables but maintains optimized views populated via events (`RouteCreated`, `StopMoved`).
 
 ```mermaid
