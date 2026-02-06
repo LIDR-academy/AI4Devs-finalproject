@@ -54,7 +54,7 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
 | `T-002-BACK` | **Generate Presigned URL** | Endpoint `POST /api/upload/url`. Body: `{ filename, size, checksum }`. Usa `boto3.generate_presigned_url('put_object', Bucket='raw-uploads')`. | **[DONE]** Retorna URL válida de S3 temporal (5min). |
 | `T-003-FRONT` | **Upload Manager (Client)** | Servicio Frontend que usa `axios` o `fetch` para hacer PUT a la signed URL. Evento `onProgress` para la UI. | Archivo aparece en bucket S3 tras upload. |
 | `T-004-BACK` | **Confirm Upload Webhook** | Endpoint `POST /api/upload/confirm`. Body: `{ file_key }`. Verifica existencia en S3 y lanza Celery Task. | Registro en DB `events` creado y Worker disparado. |
-| `T-005-INFRA` | **S3 Bucket Setup** | Configurar Bucket Policy para aceptar PUT desde `localhost` y dominio prod. Lifecycle rule: borrar objetos en `raw-uploads` tras 24h. | Upload desde browser no da error CORS. |
+| `T-005-INFRA` **[DONE]** | **S3 Bucket Setup** | Configurar Bucket Policy para aceptar PUT desde `localhost` y dominio prod. Lifecycle rule: borrar objetos en `raw-uploads` tras 24h. | Upload desde browser no da error CORS. |
 
 **Valoración:** 5 Story Points
 **Dependencias:** N/A

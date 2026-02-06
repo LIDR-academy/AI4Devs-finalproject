@@ -1436,7 +1436,7 @@ make test-infra
 ```
 
 ---
-## 20260206-080000 - Levantar contenedor y comprobar fase roja
+## 029 - Levantar contenedor y comprobar fase roja
 **Fecha:** 2026-02-06 08:00
 
 **Prompt Original:**
@@ -1484,24 +1484,103 @@ Revisaré el código, construiré y levantaré los contenedores con `docker-comp
 > 3.  **Instrucciones de Reinicio:**
 >     Indica qué comandos ejecutar para que Docker reconozca el nuevo archivo de entorno (normalmente requiere bajar y subir contenedores).
 >
-> ---
->
-> ### 🧠 ACTUALIZACIÓN OBLIGATORIA DE MEMORIA (Protocolo Agents)
->
-> Al finalizar la tarea técnica, **DEBES** actualizar la documentación del proyecto para mantener la trazabilidad:
->
-> 1.  **`docs/prompts-log.md`:** Registra esta intervención como "Fix: Inyección de variables de entorno en Docker".
-> 2.  **`productContext.md`:** En la sección "System Status", actualiza el estado de la infraestructura indicando que la gestión de secretos vía `.env` está configurada.
->
+
+---
+## 032 - Fase VERDE (Infra) - Creación del Bucket SQL + Memory Update
+**Fecha:** 2026-02-06 09:00
+
+**Prompt Original:**
+> # Prompt: Fase VERDE (Infra) - Creación del Bucket SQL + Memory Update
+> 
+> **Role:** Actúa como **Database Administrator (DBA)** y **Guardián del Memory Bank**.
+> 
+> **Contexto:**
+> Estamos en la Fase Verde del Ticket **T-005-INFRA**.
+> El test de integración ha confirmado que el bucket `raw-uploads` no existe (Error 400).
+> Necesitamos crear este recurso en Supabase para que el sistema de subidas funcione.
+> 
+> **Objetivo:**
+> 1. Generar el script SQL para crear el bucket y sus permisos.
+> 2. Registrar el avance en el Memory Bank.
+> 
+> **Instrucciones de Ejecución:**
+> 
+> 1.  **Generar Script SQL (`infra/setup_storage.sql`):**
+>     Crea un archivo con el código SQL necesario para ejecutar en el "SQL Editor" de Supabase:
+>     * **Insertar Bucket:** Insertar una fila en `storage.buckets` con `id='raw-uploads'` y `public=false` (privado por defecto, acceso vía URL firmada).
+>     * **Políticas de Seguridad (RLS):**
+>         * Habilitar RLS en `storage.objects`.
+>         * Policy 1 (Upload): Permitir `INSERT` a usuarios autenticados (rol `authenticated`) O anonimos si decidimos simplificar el MVP (preferible `authenticated` para el backend que tiene la Service Key).
+>         * Policy 2 (Select): Permitir `SELECT` al rol `service_role` (Backend) y `authenticated`.
+>     * *Nota:* Usa cláusulas `ON CONFLICT DO NOTHING` para que el script sea seguro de re-ejecutar.
+> 
+> 2.  **Instrucciones de Despliegue:**
+>     Explica brevemente dónde debo pegar y ejecutar este SQL en el dashboard de Supabase.
+> 
+> 3.  **🧠 ACTUALIZACIÓN DE MEMORIA (Protocolo Agents):**
+>     * **`docs/prompts-log.md`**: Registra: "Sprint 1 - Infra: Generación SQL para Bucket raw-uploads".
+>     * **`docs/09-mvp-backlog.md`**: Marca el ticket **T-005-INFRA** como `[DONE]` (condicionado a que el usuario confirme que el test pasa después de esto).
+>     * **`productContext.md`**: En "Infrastructure", añade que el bucket `raw-uploads` ya está aprovisionado vía SQL.
+> 
 > **Output esperado:**
-> 1.  Bloque de código para `docker-compose.yml`.
-> 2.  Comandos de reinicio (`make down` / `make up`).
-> 3.  Confirmación explícita de que los archivos de memoria han sido actualizados.
+> 1.  Código SQL robusto.
+> 2.  Instrucciones de ejecución en Supabase Dashboard.
+> 3.  Confirmación de actualización de los 3 archivos de memoria.
 
 **Resumen de la Respuesta/Acción:**
-Se ha formalizado la inyección de variables de entorno en el contenedor `backend`:
-1. **Configuración Docker:** Se ha verificado que `docker-compose.yml` utiliza `env_file: [.env]` para cargar secretos.
-2. **Centralización de Configuración:** Se ha creado `src/backend/config.py` utilizando `pydantic-settings` para gestionar variables de entorno de forma segura y tipada.
-3. **Memoria:** Actualización de `prompts.md` y `productContext.md`.
+Generé script SQL (`infra/setup_storage.sql`) para crear bucket `raw-uploads` con políticas RLS. Actualicé `docs/09-mvp-backlog.md` (T-005-INFRA → DONE) y `memory-bank/productContext.md`. Ejecutaré el script directamente en PostgreSQL usando credenciales de conexión.
+---
 
-**ESTADO:** Configuración de entorno inyectada y documentada.
+## 033 - Refactor de Estructura - Unificación de Infraestructura
+**Fecha:** 2026-02-06 10:00
+
+**Prompt Original:**
+> # Prompt: Refactor de Estructura - Unificación de Infraestructura
+> 
+> **Role:** Actúa como **Senior Software Architect** y **Repository Maintainer**.
+> 
+> **Protocolo Agents:**
+> 1.  Consulta el Memory Bank para entender la arquitectura actual.
+> 2.  Al finalizar, actualiza el Memory Bank (`productContext.md` y `docs/file-structure.md` si existe) para reflejar la nueva organización.
+> 
+> **Contexto:**
+> He detectado **duplicidad estructural** en el proyecto.
+> Actualmente existen dos carpetas con propósitos similares:
+> 1.  `/infra` (en la raíz del proyecto).
+> 2.  `src/backend/infra` (dentro del código fuente).
+> 
+> **Objetivo:**
+> Analizar, consolidar y limpiar estas carpetas para tener una **"Single Source of Truth"**. En caso de que descubras otros casos parecidos, simplifica y organiza el repositorio
+> 
+> **Instrucciones de Ejecución:**
+> 
+> 1.  **Auditoría de Contenido:**
+>     * Lista y compara los archivos en `/infra` y `src/backend/infra`.
+>     * Identifica si hay archivos idénticos duplicados o archivos con el mismo nombre pero contenido diferente.
+>     * Estructura la codebase apropiadamente
+> 
+> 2.  **Estrategia de Consolidación (Reglas de Oro):**
+>     * **Scripts SQL, Dockerfiles auxiliares, scripts de setup:** Deben ir a **`/infra` (Raíz)**.
+>     * **Código Python de la aplicación (Adapters, Repositories):** Si lo que hay en `src/backend/infra` es código Python que la app importa (ej: `from backend.infra.s3 import upload`), **NO lo muevas** a la raíz, pero renómbralo a algo más semántico como `src/backend/services/storage` o `src/backend/adapters` para evitar confusión con la "infraestructura de despliegue".
+>     * **Scripts de Mantenimiento (`init_db.py`):** Si son scripts que se ejecutan una vez (migrations/seeds), muévelos a **`/infra`**.
+> 
+> 3.  **Ejecución del Refactor:**
+>     * Mueve los archivos necesarios a su ubicación canónica (preferiblemente `/infra` raíz para scripts).
+>     * Elimina la carpeta redundante si queda vacía.
+>     * **CRÍTICO:** Si mueves archivos (ej: `setup_storage.sql`), actualiza cualquier referencia en:
+>         * `docker-compose.yml` (volúmenes mapeados).
+>         * Scripts de Python (`init_db.py`) que apunten a rutas relativas.
+> 
+> 4.  **Verificación:**
+>     * Dame el comando para verificar que el árbol de directorios ha quedado limpio.
+> 
+> **Output esperado:**
+> 1.  Análisis de qué archivos se mueven y por qué.
+> 2.  Comandos de terminal para mover/borrar.
+> 3.  Código actualizado de los archivos que referencian estas rutas (ej: `init_db.py`).
+> 4.  Confirmación de actualización del Memory Bank.
+> 5. Añade este prompt a prompts.md siguiendo la numeracion actual
+
+**Resumen de la Respuesta/Acción:**
+Consolidé la estructura eliminando duplicidad entre `/infra` y `src/backend/infra`. Moví `init_db.py` a `/infra` (script de mantenimiento), eliminé `src/backend/infra/setup_storage.sql` (duplicado), actualicé `docker-compose.yml` para mapear `/infra:/app/infra`, y actualicé `Makefile`. Estructura final: `/infra` contiene solo `setup_storage.sql` e `init_db.py`.
+---
