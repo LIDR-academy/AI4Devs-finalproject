@@ -1,22 +1,40 @@
 # Active Context
 
 ## Current Focus
-✅ **PHASE 8 COMPLETE: Technical Planning & Repository Structure**. Roadmap defined with 4 sprints. Ready to begin implementation (Sprint 0: Walking Skeleton).
+🚀 **SPRINT 2: FRONTEND DEVELOPMENT** - T-003-FRONT (FileUploader) VERDE. Alcanzada fase de tests passing (4/4) con alineación backend-frontend completada.
 
 ## Active Tasks
-- [x] Complete Smart XREF feasibility analysis
-- [x] Complete Semantic Rhino feasibility analysis
-- [x] Complete SmartFabricator feasibility analysis
-- [x] Complete AEC Copilot feasibility analysis
-- [x] Complete AEC-NeuralSync feasibility analysis
-- [x] Complete GH-Copilot feasibility analysis
-- [x] Complete Sagrada Familia Parts Manager analysis
-- [x] **FINAL TFM DECISION**: Sagrada Familia Parts Manager selected
-- [x] Complete documentation phases (Strategy → PRD → Architecture → Agent Design)
-- [x] Define repository structure (Monorepo: backend/frontend/agent/shared)
-- [x] Create technical roadmap (4 sprints: Walking Skeleton → Core → Agent → Viewer)
-- [ ] **NEXT: Begin Sprint 0** - Infrastructure setup (Docker, Database, CI/CD)
-- [ ] Generate configuration files (docker-compose.yml, .gitignore, pyproject.toml, package.json)
+### Completed (Sprint 1)
+- [x] T-002-BACK: Upload endpoint con presigned URLs (FastAPI + Supabase Storage) ✅
+- [x] T-005-INFRA: Bucket configuration y tests de integración ✅
+- [x] Documentation sync: README.md, prompts.md, Memory Bank
+
+### In Progress (Sprint 2 - Frontend Track)
+- [x] ✅ **T-003-FRONT [VERDE]**: FileUploader component
+  - Component implementation (validation, upload flow, progress tracking)
+  - TypeScript interfaces aligned with backend schemas (file_id, filename)
+  - Minimal test suite passing (4/4 tests)
+  - Fixed Docker environment (Alpine→Debian for jsdom stability)
+- [ ] **T-003-FRONT [REFACTOR]**: Code cleanup
+  - Extract constants (MAX_FILE_SIZE, ACCEPTED_EXTENSIONS)
+  - Add JSDoc comments
+  - Ensure accessibility attributes complete
+  - Consider optimizing full test suite (14 tests currently backed up)
+
+### Next Steps
+- [ ] T-004-BACK: Confirm Upload Webhook (`POST /api/upload/confirm`)
+  - Verify file existence in S3
+  - Launch Celery Task for metadata extraction
+  - TDD implementation following same pattern as T-002
+- [ ] T-001-BACK: Metadata Extraction (rhino3dm integration)
+- [ ] End-to-end upload flow testing (Frontend → Backend → Storage → Webhook)
+
+## Current State Checkpoint
+- **Backend**: Upload endpoint operational (:8000/api/upload/url)
+- **Storage**: Supabase bucket `raw-uploads` configured and validated
+- **Frontend**: FileUploader component functional with tests passing
+- **Docker**: Stable environment (node:20-bookworm, FastAPI, PostgreSQL)
+- **Tests**: Backend integration tests green, Frontend minimal suite green (4/4)
 
 ## The Seven-Way Comparison Matrix
 
