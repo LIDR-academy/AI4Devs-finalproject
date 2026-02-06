@@ -1,4 +1,4 @@
-.PHONY: build up down test test-infra test-unit test-integration test-storage shell clean
+.PHONY: build up down init-db test test-infra test-unit test-integration test-storage shell clean
 
 # Start services (database)
 up:
@@ -11,6 +11,10 @@ down:
 # Build Docker images
 build:
 	docker-compose build
+
+# Initialize database infrastructure (create buckets, policies)
+init-db:
+	docker-compose run --rm backend python /app/infra/init_db.py
 
 # Run all tests inside Docker
 test:
@@ -41,6 +45,7 @@ clean:
 help:
 	@echo "Available commands:"
 	@echo "  make build        - Build Docker images"
+	@echo "  make init-db      - Initialize database infrastructure (buckets, policies)"
 	@echo "  make test         - Run all tests"
 	@echo "  make test-infra   - Run integration tests only"
 	@echo "  make test-unit    - Run unit tests only"

@@ -11,6 +11,7 @@ services:
     volumes:
       - ./src/backend:/app
       - ./tests:/app/tests
+      - ./infra:/app/infra
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
       - SUPABASE_URL=${SUPABASE_URL}
