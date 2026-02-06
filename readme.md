@@ -95,17 +95,47 @@ python -m uvicorn main:app --reload
 
 ### Testing
 
-Ejecutar la suite de tests (unit + integration):
+Ejecutar la suite de tests:
 
+**Backend:**
 ```bash
-make test        # Ejecuta todos los tests (unit + integration)
-make test-infra  # Ejecuta tests de infraestructura / integración (p.ej. storage)
-# Alternativa directa con docker-compose:
-docker-compose run --rm backend pytest tests/integration/test_storage_config.py -v
+make test        # Ejecuta todos los tests backend (unit + integration)
+make test-infra  # Ejecuta tests de infraestructura / integración
+make test-storage # Ejecuta test específico de storage
+```
+
+**Frontend:**
+```bash
+make front-install # Instala dependencias npm dentro de Docker
+make test-front    # Ejecuta tests de frontend (Vitest)
+make front-dev     # Inicia servidor de desarrollo Vite
+make front-shell   # Abre shell en contenedor frontend
+```
+
+### Desarrollo Frontend
+
+Para trabajar con el frontend (React + TypeScript + Vite):
+
+1. Instalar dependencias (primera vez):
+```bash
+make front-install
+```
+
+2. Iniciar servidor de desarrollo:
+```bash
+make front-dev
+# Accede a http://localhost:5173
+```
+
+3. Ejecutar tests en modo watch:
+```bash
+make test-front
 ```
 
 ### Notas rápidas
 
+- **Node.js NO requerido en el host**: Todo el desarrollo frontend se ejecuta dentro de Docker.
+- Volumen anónimo `/app/node_modules` evita conflictos entre Windows y contenedor.
 - Para crear o resetear la infraestructura de storage use `make init-db`.
 - Las pruebas de integración requieren que las variables `SUPABASE_URL` y `SUPABASE_KEY` estén disponibles en el entorno donde se ejecutan.
 

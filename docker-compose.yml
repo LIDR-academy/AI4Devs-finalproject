@@ -43,7 +43,11 @@ services:
       - "5173:5173"
     volumes:
       - ./src/frontend:/app
-    command: sh -c "echo 'Frontend container ready. Run npm create vite@latest . to start' && tail -f /dev/null"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
     networks:
       - sf-network
 
