@@ -1909,3 +1909,88 @@ Duration  1.29s
 - T-004-BACK: Confirm Upload Webhook
 ---
 
+## 041 - T-003-FRONT FASE REFACTOR: Service Layer & Component Cleanup
+**Fecha:** 2026-02-06 20:40
+
+**Prompt Original:**
+> # Prompt: Fase REFACTOR y CIERRE - Ticket T-003-FRONT
+> 
+> **Role:** Actúa como **Senior Frontend Architect** y **Technical Writer**.
+> 
+> **Protocolo Agents:**
+> 1.  **Consulta:** Revisa el código actual de `src/frontend/components/FileUploader.tsx`.
+> 2.  **Registro:** Al finalizar, es **OBLIGATORIO** registrar esta intervención en **`prompts.md`** y actualizar el estado del proyecto.
+> 
+> **Contexto:**
+> El componente `FileUploader` funciona y pasa los tests (Fase Verde).
+> Sin embargo, es probable que contenga lógica de negocio (llamadas `fetch` a la API) mezclada con la lógica de UI.
+> Necesitamos refactorizar para desacoplar estas responsabilidades y cerrar el ticket formalmente.
+> 
+> **Objetivo:**
+> 1. Refactorizar el código para separar la lógica de API en un servicio dedicado (`uploadService.ts`).
+> 2. Actualizar la documentación para dar por terminado el ticket **T-003**.
+> 
+> **Instrucciones de Ejecución:**
+> 
+> 1.  **Refactor de Código (Separation of Concerns):**
+>     * **Crear `src/frontend/services/upload.service.ts`:** Mueve aquí las funciones `getPresignedUrl` y `uploadFileToStorage`.
+>     * **Actualizar `src/frontend/components/FileUploader.tsx`:** Importa y usa estas funciones del servicio. El componente solo debe encargarse de estados (loading, error, success) y renderizado, no de peticiones HTTP directas.
+>     * **Mejora de Tipos:** Si hay interfaces definidas dentro del componente, muévelas a un archivo de tipos (`src/frontend/types/upload.d.ts` o similar) si lo ves conveniente para reutilización.
+> 
+> 2.  **Verificación de Regresión:**
+>     * Indica el comando para ejecutar los tests de nuevo (`make test-front`).
+>     * *Nota:* Si moviste lógica, asegura que el test siga pasando (puede que necesites ajustar los mocks en el test si ahora moqueas el servicio en lugar de `fetch` global, o mantener el mock de `fetch` si es test de integración).
+> 
+> 3.  **ACTUALIZACIÓN DE MEMORIA Y DOCUMENTACIÓN (Cierre de Ticket):**
+>     * **`docs/09-mvp-backlog.md`:** Marca el ticket **T-003-FRONT** como **`[DONE]`**.
+>     * **`productContext.md`:** Actualiza la sección "Frontend" indicando que el componente de subida está implementado y conectado al Backend.
+>     * **`prompts.md`:** Añade la entrada final del Sprint: `## Sprint 2 - Cierre T-003: Refactor FileUploader & Service Extraction`.
+
+**Resumen de la Respuesta/Acción:**
+Refactor completo del componente FileUploader aplicando **Separation of Concerns**:
+
+**1. Service Layer Creado** (`src/frontend/src/services/upload.service.ts`):
+- `getPresignedUrl(filename, size, checksum?)` → Solicita URL firmada al backend
+- `uploadToStorage(url, file, onProgress?)` → Sube archivo a S3 con tracking
+- `uploadFile(file, onProgress?)` → Función de conveniencia que combina ambas
+- JSDoc completo con ejemplos de uso
+- Constantes extraídas (UPLOAD_URL_ENDPOINT, RHINO_CONTENT_TYPE)
+
+**2. Component Refactored** (`src/frontend/src/components/FileUploader.tsx`):
+- Eliminadas llamadas directas a axios, ahora usa `uploadFile()` del servicio
+- Constantes de validación extraídas (DEFAULT_MAX_FILE_SIZE, DEFAULT_ACCEPTED_EXTENSIONS)
+- Mensajes de error centralizados en objeto `ERROR_MESSAGES`
+- JSDoc agregado a todas las funciones internas
+- Mejoras de accessibility:
+  * `aria-busy` indica estado de carga
+  * `aria-describedby` conecta input con mensajes de estado
+  * `role="status"` y `aria-live="polite"` para feedback a lectores de pantalla
+- Lógica simplificada: `validateFile()` → `handleFileSelect()` → `handleUpload()`
+
+**3. Tests Verificados:**
+```bash
+make test-front
+✓ FileUploader - Minimal Critical Tests (4)
+  ✓ renders file input with correct accept attribute
+  ✓ rejects files larger than 500MB
+  ✓ rejects non-.3dm files
+  ✓ uploads valid file successfully
+Test Files  1 passed (1)
+Tests  4 passed (4)
+Duration  1.36s
+```
+
+**4. Documentación Actualizada:**
+- ✅ `docs/09-mvp-backlog.md`: T-003-FRONT marcado como [DONE]
+- ✅ `memory-bank/productContext.md`: Sección "Estado Actual de Implementación" agregada con detalles del frontend completo
+- ✅ `prompts.md`: Esta entrada registrada como #041
+
+**Beneficios del Refactor:**
+- **Testability**: El servicio puede ser mockeado independientemente en tests
+- **Reusability**: `upload.service.ts` puede ser usado por otros componentes (ej: DragDropZone futuro)
+- **Maintainability**: Separación clara entre lógica de negocio (servicio) y presentación (componente)
+- **Type Safety**: Interfaces reutilizadas desde `types/upload.ts` garantizan contrato con backend
+
+**Ticket T-003-FRONT: CERRADO ✅**
+---
+
