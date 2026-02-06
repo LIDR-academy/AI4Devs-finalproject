@@ -27,6 +27,8 @@ import java.util.Objects;
  * 
  * @author Meditation Builder Team
  */
+import com.hexagonal.meditationbuilder.infrastructure.config.AiProperties;
+
 public class ImageGenerationAiAdapter implements ImageGenerationPort {
 
     private static final Logger log = LoggerFactory.getLogger(ImageGenerationAiAdapter.class);
@@ -38,6 +40,7 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
     private final RestClient restClient;
     private final String baseUrl;
     private final String apiKey;
+    private final AiProperties aiProperties;
 
     /**
      * Constructor with RestClient, base URL, and API key.
@@ -46,10 +49,11 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
      * @param baseUrl base URL of the AI image generation service
      * @param apiKey API key for authentication
      */
-    public ImageGenerationAiAdapter(RestClient restClient, String baseUrl, String apiKey) {
+    public ImageGenerationAiAdapter(RestClient restClient, String baseUrl, String apiKey, AiProperties aiProperties) {
         this.restClient = Objects.requireNonNull(restClient, "restClient is required");
         this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl is required");
         this.apiKey = Objects.requireNonNull(apiKey, "apiKey is required");
+        this.aiProperties = Objects.requireNonNull(aiProperties, "aiProperties is required");
     }
 
     @Override
@@ -57,14 +61,19 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
         if (prompt == null || prompt.isBlank()) {
             throw new IllegalArgumentException("prompt is required");
         }
+        // Prepend metaprompt if present
+        String metaprompt = aiProperties.getMetaprompt();
+        String finalPrompt = (metaprompt != null && !metaprompt.isBlank())
+                ? metaprompt + "\n" + prompt
+                : prompt;
 
         log.debug("Initiating AI image generation request");
 
         AiImageRequest request = new AiImageRequest(
-                prompt,
-                DEFAULT_N,
-                DEFAULT_SIZE,
-                DEFAULT_QUALITY
+            finalPrompt,
+            DEFAULT_N,
+            DEFAULT_SIZE,
+            DEFAULT_QUALITY
         );
 
         try {

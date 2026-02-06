@@ -118,17 +118,9 @@ public class MeditationBuilderController {
         log.info("Generating/enhancing text (global, no composition)");
 
         TextContent result;
-        if (request != null && request.existingText() != null && !request.existingText().isBlank()) {
-            // Enhancement mode: enhance existing text
-            TextContent existingText = mapper.toTextContent(request.existingText());
-            result = generateTextUseCase.enhanceText(existingText);
-        } else {
-            // Generation mode: generate from context/prompt
-            String prompt = (request != null && request.context() != null)
-                    ? request.context()
-                    : "Create a calming meditation text";
-            result = generateTextUseCase.generateText(prompt);
-        }
+        // Enhancement mode: enhance existing text
+        TextContent existingText = mapper.toTextContent(request.existingText());
+        result = generateTextUseCase.generateText(existingText.value());
 
         return ResponseEntity.ok(mapper.toTextContentResponse(result));
     }

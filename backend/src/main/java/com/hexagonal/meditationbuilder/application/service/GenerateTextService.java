@@ -37,19 +37,6 @@ public class GenerateTextService implements GenerateTextUseCase {
         }
     }
 
-    @Override
-    public TextContent enhanceText(TextContent currentText) {
-        if (currentText == null) {
-            throw new IllegalArgumentException("currentText is required");
-        }
-        
-        try {
-            return textGenerationPort.enhance(currentText);
-        } catch (TextGenerationServiceException e) {
-            throw new TextGenerationException("AI text enhancement failed: " + e.getMessage(), e);
-        }
-    }
-
     private void validatePrompt(String prompt) {
         if (prompt == null || prompt.isBlank()) {
             throw new IllegalArgumentException("prompt is required and cannot be blank");

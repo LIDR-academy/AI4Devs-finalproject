@@ -6,6 +6,7 @@ import com.hexagonal.meditationbuilder.infrastructure.out.service.dto.AiTextRequ
 import com.hexagonal.meditationbuilder.infrastructure.out.service.dto.AiTextResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.hexagonal.meditationbuilder.infrastructure.config.AiProperties;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -33,12 +34,11 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
     
     private static final String GENERATION_SYSTEM_PROMPT = 
             "You are a meditation content writer. Generate calming, mindful meditation text.";
-    private static final String ENHANCEMENT_SYSTEM_PROMPT = 
-            "You are a meditation content editor. Enhance the given text to be more calming and mindful.";
 
     private final RestClient restClient;
     private final String baseUrl;
     private final String apiKey;
+    private final AiProperties aiProperties;
 
     /**
      * Constructor with RestClient, base URL, and API key.
@@ -47,10 +47,11 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
      * @param baseUrl base URL of the AI text generation service
      * @param apiKey API key for authentication
      */
-    public TextGenerationAiAdapter(RestClient restClient, String baseUrl, String apiKey) {
+    public TextGenerationAiAdapter(RestClient restClient, String baseUrl, String apiKey, AiProperties aiProperties) {
         this.restClient = Objects.requireNonNull(restClient, "restClient is required");
         this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl is required");
         this.apiKey = Objects.requireNonNull(apiKey, "apiKey is required");
+        this.aiProperties = Objects.requireNonNull(aiProperties, "aiProperties is required");
     }
 
     @Override
@@ -60,21 +61,13 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
         }
 
         log.debug("Initiating AI text generation request");
-        
-        AiTextRequest request = AiTextRequest.forGeneration(GENERATION_SYSTEM_PROMPT, prompt);
+        // Prepend metaprompt if present
+        String metaprompt = aiProperties.getMetaprompt();
+        String finalPrompt = (metaprompt != null && !metaprompt.isBlank())
+                ? metaprompt + "\n" + prompt
+                : prompt;
+        AiTextRequest request = AiTextRequest.forGeneration(GENERATION_SYSTEM_PROMPT, finalPrompt);
         return executeRequest(request, "generation");
-    }
-
-    @Override
-    public TextContent enhance(TextContent currentText) {
-        if (currentText == null) {
-            throw new IllegalArgumentException("currentText is required");
-        }
-
-        log.debug("Initiating AI text enhancement request");
-        
-        AiTextRequest request = AiTextRequest.forEnhancement(ENHANCEMENT_SYSTEM_PROMPT, currentText.value());
-        return executeRequest(request, "enhancement");
     }
 
     private TextContent executeRequest(AiTextRequest request, String operation) {

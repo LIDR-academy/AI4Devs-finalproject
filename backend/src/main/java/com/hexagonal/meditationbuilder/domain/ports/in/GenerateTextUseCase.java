@@ -28,18 +28,6 @@ public interface GenerateTextUseCase {
     TextContent generateText(String prompt);
 
     /**
-     * Enhances existing meditation text using AI.
-     * 
-     * Business Rule: AI enhances text while preserving original intent.
-     * 
-     * @param currentText current meditation text to enhance
-     * @return enhanced text content
-     * @throws IllegalArgumentException if currentText is null
-     * @throws TextGenerationException if AI enhancement fails
-     */
-    TextContent enhanceText(TextContent currentText);
-
-    /**
      * Exception thrown when text generation fails.
      */
     class TextGenerationException extends RuntimeException {

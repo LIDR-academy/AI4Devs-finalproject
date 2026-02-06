@@ -18,7 +18,7 @@ import com.hexagonal.meditationbuilder.domain.model.TextContent;
 public interface TextGenerationPort {
 
     /**
-     * Generates text using external AI service.
+     * Generates/Enhances text using external AI service.
      * 
      * @param prompt user prompt describing desired content
      * @return AI-generated text content
@@ -26,16 +26,6 @@ public interface TextGenerationPort {
      * @throws TextGenerationServiceException if external service fails
      */
     TextContent generate(String prompt);
-
-    /**
-     * Enhances text using external AI service.
-     * 
-     * @param currentText current text to enhance
-     * @return enhanced text content
-     * @throws IllegalArgumentException if currentText is null
-     * @throws TextGenerationServiceException if external service fails
-     */
-    TextContent enhance(TextContent currentText);
 
     /**
      * Exception thrown when external text generation service fails.

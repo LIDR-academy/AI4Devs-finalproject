@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.hexagonal.meditationbuilder.domain.model.TextContent;
 import com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort.TextGenerationServiceException;
+import com.hexagonal.meditationbuilder.infrastructure.config.AiProperties;
 import org.junit.jupiter.api.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -47,7 +48,9 @@ class TextGenerationAiAdapterIntegrationTest {
                 .requestFactory(requestFactory)
                 .build();
         String baseUrl = "http://localhost:" + wireMockServer.port();
-        adapter = new TextGenerationAiAdapter(restClient, baseUrl, "test-api-key");
+        AiProperties aiProperties = new AiProperties();
+        aiProperties.setMetaprompt(""); // No metaprompt for integration test
+        adapter = new TextGenerationAiAdapter(restClient, baseUrl, "test-api-key", aiProperties);
     }
 
     @Nested
@@ -152,66 +155,5 @@ class TextGenerationAiAdapterIntegrationTest {
         }
     }
 
-    @Nested
-    @DisplayName("enhance()")
-    class EnhanceTests {
-
-        @Test
-        @DisplayName("should enhance existing text")
-        void shouldEnhanceExistingText() {
-            stubFor(post(urlEqualTo("/v1/chat/completions"))
-                    .withHeader("Authorization", equalTo("Bearer test-api-key"))
-                    .willReturn(aResponse()
-                            .withStatus(200)
-                            .withHeader("Content-Type", "application/json")
-                            .withBody("""
-                                    {
-                                        "id": "chatcmpl-456",
-                                        "object": "chat.completion",
-                                        "created": 1677652288,
-                                        "model": "gpt-4o-mini",
-                                        "choices": [{
-                                            "index": 0,
-                                            "message": {
-                                                "role": "assistant",
-                                                "content": "Take a gentle, deep breath. Allow peace to flow through every cell of your being."
-                                            },
-                                            "finishReason": "stop"
-                                        }],
-                                        "usage": {
-                                            "promptTokens": 80,
-                                            "completionTokens": 25,
-                                            "totalTokens": 105
-                                        }
-                                    }
-                                    """)));
-
-            TextContent original = new TextContent("Take a breath. Feel peace.");
-            TextContent result = adapter.enhance(original);
-
-            assertThat(result).isNotNull();
-            assertThat(result.value()).contains("gentle");
-        }
-
-        @Test
-        @DisplayName("should throw exception when text is null")
-        void shouldThrowExceptionWhenTextIsNull() {
-            assertThatThrownBy(() -> adapter.enhance(null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("currentText is required");
-        }
-
-        @Test
-        @DisplayName("should throw exception on rate limit during enhancement")
-        void shouldThrowExceptionOnRateLimitDuringEnhancement() {
-            stubFor(post(urlEqualTo("/v1/chat/completions"))
-                    .willReturn(aResponse()
-                            .withStatus(429)));
-
-            TextContent original = new TextContent("Some text");
-            assertThatThrownBy(() -> adapter.enhance(original))
-                    .isInstanceOf(TextGenerationServiceException.class)
-                    .hasMessageContaining("rate limit");
-        }
-    }
+    // Tests de enhance eliminados: solo se prueba generate
 }

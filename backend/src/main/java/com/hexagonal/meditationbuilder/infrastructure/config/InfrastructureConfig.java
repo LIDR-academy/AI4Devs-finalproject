@@ -34,7 +34,8 @@ import org.springframework.web.client.RestClient;
 @EnableConfigurationProperties({
         OpenAiProperties.class,
         MediaCatalogProperties.class,
-        RetryProperties.class
+        RetryProperties.class,
+        AiProperties.class
 })
 public class InfrastructureConfig {
 
@@ -97,11 +98,13 @@ public class InfrastructureConfig {
     @Bean
     public TextGenerationPort textGenerationPort(
             @Qualifier("aiTextRestClient") RestClient restClient,
-            OpenAiProperties openAiProperties) {
+            OpenAiProperties openAiProperties,
+            AiProperties aiProperties) {
         return new TextGenerationAiAdapter(
                 restClient,
                 openAiProperties.getBaseUrl(),
-                openAiProperties.getApiKey()
+                openAiProperties.getApiKey(),
+                aiProperties
         );
     }
 
@@ -113,11 +116,13 @@ public class InfrastructureConfig {
     @Bean
     public ImageGenerationPort imageGenerationPort(
             @Qualifier("aiImageRestClient") RestClient restClient,
-            OpenAiProperties openAiProperties) {
+            OpenAiProperties openAiProperties,
+            AiProperties aiProperties) {
         return new ImageGenerationAiAdapter(
                 restClient,
                 openAiProperties.getBaseUrl(),
-                openAiProperties.getApiKey()
+                openAiProperties.getApiKey(),
+                aiProperties
         );
     }
 

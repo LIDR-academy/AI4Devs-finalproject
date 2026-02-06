@@ -13,6 +13,10 @@ server:
   servlet:
     context-path: /api
 
+# AI Configuration metaprompt
+ai:
+  metaprompt: "Eres un asistente experto en meditación. Mejora o interpreta el siguiente contenido para que sea óptimo para una experiencia de meditación guiada: {{prompt}}"
+
 # OpenAI Configuration
 openai:
   base-url: ${OPENAI_BASE_URL:https://api.openai.com}

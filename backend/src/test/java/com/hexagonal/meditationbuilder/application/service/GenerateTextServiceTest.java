@@ -96,44 +96,5 @@ class GenerateTextServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("enhanceText()")
-    class EnhanceTextTests {
-
-        @Test
-        @DisplayName("should enhance existing text")
-        void shouldEnhanceExistingText() {
-            TextContent currentText = new TextContent("Simple meditation text");
-            TextContent enhancedText = new TextContent("Enhanced and improved meditation text with better flow...");
-            
-            when(textGenerationPort.enhance(currentText)).thenReturn(enhancedText);
-            
-            TextContent result = service.enhanceText(currentText);
-            
-            assertThat(result).isEqualTo(enhancedText);
-            verify(textGenerationPort).enhance(currentText);
-        }
-
-        @Test
-        @DisplayName("should throw exception when current text is null")
-        void shouldThrowExceptionWhenCurrentTextIsNull() {
-            assertThatThrownBy(() -> service.enhanceText(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("currentText");
-        }
-
-        @Test
-        @DisplayName("should map service exception to business exception")
-        void shouldMapServiceExceptionToBusinessException() {
-            TextContent currentText = new TextContent("Text to enhance");
-            
-            when(textGenerationPort.enhance(currentText))
-                .thenThrow(new TextGenerationServiceException("Rate limit exceeded"));
-            
-            assertThatThrownBy(() -> service.enhanceText(currentText))
-                .isInstanceOf(TextGenerationException.class)
-                .hasMessageContaining("AI")
-                .hasCauseInstanceOf(TextGenerationServiceException.class);
-        }
-    }
+    // Tests for enhanceText() eliminados: solo se prueba generateText()
 }
