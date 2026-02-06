@@ -36,7 +36,7 @@ services:
       - sf-network
 
   frontend:
-    image: node:20-alpine
+    image: node:20-bookworm
     container_name: sf-pm-frontend
     working_dir: /app
     ports:
@@ -45,7 +45,7 @@ services:
       - ./src/frontend:/app
     environment:
       - VITE_API_URL=http://localhost:8000
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: bash -c "npm install && npm run dev -- --host 0.0.0.0"
     depends_on:
       - backend
     networks:

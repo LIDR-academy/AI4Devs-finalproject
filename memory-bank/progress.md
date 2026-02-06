@@ -12,6 +12,8 @@
 - **2025-12-30 22:13**: Completed GH-Copilot feasibility analysis. Most viable "Copilot" variant (70-75% success).
 - **2026-01-13 10:09**: Completed Sagrada Familia Parts Manager analysis. Strong Enterprise/Industry 4.0 contender.
 - **2026-01-20 06:12**: 🚨 **PROJECT SELECTED: Sagrada Familia Parts Manager**. Feasibility Phase CLOSED. Product Definition Phase OPEN.
+- **2026-01-22**: Sprint 1 Execution: T-002-BACK [DONE], T-005-INFRA [DONE]. Backend upload endpoint operational with Supabase Storage integration.
+- **2026-01-23 20:33**: T-003-FRONT [VERDE]: FileUploader component and tests passing. Frontend-backend alignment completed (file_id, filename fields).
 
 ## Status
 - **Memory Bank**: ✅ Active and operational.
@@ -20,12 +22,14 @@
 - **Project Selection**: ✅ **COMPLETE** (Sagrada Familia Parts Manager).
 - **Documentation Phase**: ✅ **COMPLETE** (Phases 1-8).
 - **Current Phase**: 🚀 **EXECUTION & DEVELOPMENT**.
-- **Sprint Status**: Ready for Sprint 0 (Walking Skeleton).
+- **Sprint Status**: 
+  - **Sprint 1**: CLOSED (T-002-BACK ✅, T-005-INFRA ✅)
+  - **Sprint 2**: IN PROGRESS (T-003-FRONT 🟢 VERDE, T-004-BACK pending)
 - **Next Steps**:
-  1. Generate initial configuration files (Docker, Git, Python, Node).
-  2. Setup Supabase project and database schema.
-  3. Initialize backend/frontend/agent services.
-  4. Validate full-stack connectivity (health checks).
+  1. **FASE REFACTOR** para T-003-FRONT (extraer constantes, JSDoc, cleanup)
+  2. T-004-BACK: Implementar Confirm Upload Webhook (`POST /api/upload/confirm`)
+  3. Completar testing end-to-end del flujo de upload completo
+  4. Avanzar a T-001-BACK (Metadata Extraction) según backlog
 
 ## Technical Debt
 - None currently. Pre-planning phase complete.
