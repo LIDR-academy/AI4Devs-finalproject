@@ -398,7 +398,41 @@ Comenzaré con el Lean Canvas adaptado a Enterprise..."
 
 ### Próxima Fase: Implementación del MVP
 
-**FASE 8: Desarrollo e Implementación** (Siguiente Hito)
+**FASE 8: Desarrollo e Implementación** (EN PROGRESO)
+
+**Estado Actual de Implementación (Sprint 1-2):**
+
+✅ **Backend (FastAPI):**
+- Endpoint `POST /api/upload/url` operacional (T-002-BACK)
+- Pydantic schemas para upload flow (`UploadRequest`, `UploadResponse`)
+- Integración con Supabase Storage mediante presigned URLs
+- Tests de integración pasando (pytest)
+
+✅ **Infraestructura (Supabase + Docker):**
+- Bucket `raw-uploads` configurado con políticas CORS (T-005-INFRA)
+- Docker Compose con services: backend (FastAPI), db (PostgreSQL), frontend (Node.js)
+- Imagen base: node:20-bookworm (Debian) para estabilidad de tests jsdom
+
+✅ **Frontend (React + TypeScript):**
+- **FileUploader Component** completamente funcional (T-003-FRONT)
+  - Validación client-side (.3dm extensión, 500MB max size)
+  - Upload flow con progress tracking
+  - Manejo de errores y estados (idle → requesting-url → uploading → success/error)
+  - Accessibility completa (aria-label, aria-busy, aria-live regions)
+- **Upload Service Layer** (`upload.service.ts`)
+  - Separación de responsabilidades (UI vs API logic)
+  - Funciones: `getPresignedUrl()`, `uploadToStorage()`, `uploadFile()`
+  - JSDoc completo para reutilización
+- **TypeScript Interfaces** alineadas con backend schemas Pydantic
+- Tests automatizados (Vitest + Testing Library): 4/4 pasando
+
+**Tickets Completados:**
+- ✅ T-002-BACK: Generate Presigned URL
+- ✅ T-003-FRONT: Upload Manager (Client) + Refactor
+- ✅ T-005-INFRA: S3 Bucket Setup
+
+**En Progreso:**
+- ⏳ T-004-BACK: Confirm Upload Webhook
 
 **Objetivos:**
 1. Setup de proyecto (monorepo Turborepo o Nx)
