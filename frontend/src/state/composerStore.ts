@@ -62,7 +62,7 @@ interface ComposerState {
   // Compound actions
   clearImage: () => void;
   setAiGeneratedImage: (imageId: string) => void;
-  updateOutputType: () => void;
+  updateOutputType: (type: OutputType) => void;
   reset: () => void;
 }
 
@@ -81,7 +81,7 @@ const initialState = {
   generationError: null,
 };
 
-export const useComposerStore = create<ComposerState>((set, get) => ({
+export const useComposerStore = create<ComposerState>((set) => ({
   ...initialState,
   
   setCompositionId: (id) => set({ compositionId: id }),
@@ -102,10 +102,10 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   
   setSelectedMusic: (musicId) => set({ selectedMusicId: musicId }),
   
-  setSelectedImage: (imageId) => {
-    set({ selectedImageId: imageId });
-    get().updateOutputType();
-  },
+   setSelectedImage: (imageId) => {
+     set({ selectedImageId: imageId });
+     // El outputType ahora se gestiona desde MeditationBuilderPage
+   },
   
   setIsGeneratingText: (isGenerating) => set({ isGeneratingText: isGenerating }),
   
@@ -117,22 +117,19 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   
   setGenerationError: (error) => set({ generationError: error }),
   
-  clearImage: () => {
-    set({ selectedImageId: null });
-    get().updateOutputType();
-  },
+   clearImage: () => {
+     set({ selectedImageId: null });
+     // El outputType ahora se gestiona desde MeditationBuilderPage
+   },
   
-  setAiGeneratedImage: (imageId) => {
-    set({ selectedImageId: imageId });
-    get().updateOutputType();
-  },
+   setAiGeneratedImage: (imageId) => {
+     set({ selectedImageId: imageId });
+     // El outputType ahora se gestiona desde MeditationBuilderPage
+   },
   
-  updateOutputType: () => {
-    const { selectedImageId } = get();
-    // FR-019: Output type indicator updates immediately on image add/remove/generate
-    // PODCAST when no image, VIDEO when image present
-    set({ outputType: selectedImageId ? 'VIDEO' : 'PODCAST' });
-  },
+   updateOutputType: (type: OutputType) => {
+     set({ outputType: type });
+   },
   
   reset: () => set(initialState),
 }));

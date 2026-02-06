@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ImagePreview } from '@/components/ImagePreview';
+import ImagePreview from '@/components/ImagePreview';
 import { useComposerStore } from '@/state/composerStore';
 
 describe('ImagePreview', () => {

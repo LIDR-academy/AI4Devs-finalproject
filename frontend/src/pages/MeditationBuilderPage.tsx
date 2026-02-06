@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   TextEditor,
   OutputTypeIndicator,
@@ -30,7 +30,7 @@ import {
 
 const AUTO_SAVE_DELAY = 1000;
 
-import React, { useState, useCallback } from 'react';
+// ...eliminado, ya está importado arriba
 
 export function MeditationBuilderPage() {
   const compositionId = useCompositionId();
@@ -55,6 +55,7 @@ export function MeditationBuilderPage() {
 
   const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
+
 
 
 
@@ -121,13 +122,23 @@ useEffect(() => {
   });
 }, [compositionId]);
 
+
+  // Sincroniza el outputType global con la presencia de imagen local
+  useEffect(() => {
+    if (localImageUrl) {
+      useComposerStore.getState().updateOutputType('VIDEO');
+    } else if (!imagePreview.data?.previewUrl && !selectedImageId) {
+      useComposerStore.getState().updateOutputType('PODCAST');
+    }
+  }, [localImageUrl, imagePreview.data?.previewUrl, selectedImageId]);
+
   // ⬇️ PANTALLA PRINCIPAL
   return (
-  <div className="meditation-builder" data-testid="meditation-builder">
-    <header className="meditation-builder__header">
-      <h1>🧘 Meditation Builder</h1>
-      <p>Create your personalized meditation content</p>
-    </header>
+    <div className="meditation-builder" data-testid="meditation-builder">
+      <header className="meditation-builder__header">
+        <h1>🧘 Meditation Builder</h1>
+        <p>Create your personalized meditation content</p>
+      </header>
 
     {generationError && (
       <div role="alert">⚠️ {generationError}</div>
