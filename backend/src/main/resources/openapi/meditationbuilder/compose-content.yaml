@@ -1,4 +1,14 @@
 openapi: 3.0.3
+components:
+  parameters:
+    CompositionId:
+      name: compositionId
+      in: path
+      required: true
+      description: Unique identifier for the meditation composition
+      schema:
+        type: string
+        format: uuid
 info:
   title: Meditation Builder - Compose Content API
   description: |
@@ -122,18 +132,27 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /compositions/{compositionId}/image/generate:
+
+  /v1/compositions/image/generate:
     post:
       tags:
         - AI Generation
-      summary: Generate AI image for meditation
+      summary: Generate AI image for meditation (global, no composition required)
       description: |
         Capability 4: AI Image Generation.
-        Generates AI image when no image is selected.
+        Generates an AI image from the provided text prompt.
+        Unified global endpoint (no composition required).
         Maps to Scenario 4: "Generate AI image"
-      operationId: generateImage
-      parameters:
-        - $ref: '#/components/parameters/CompositionId'
+      operationId: generateImageGlobal
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              description: Text prompt for AI image generation
+              minLength: 1
+              maxLength: 10000
       responses:
         '200':
           description: Image generated successfully
@@ -143,8 +162,6 @@ paths:
                 $ref: '#/components/schemas/ImageReferenceResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimitExceeded'
         '503':
@@ -336,18 +353,10 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-components:
-  parameters:
-    CompositionId:
-      name: compositionId
-      in: path
-      description: Unique identifier of the composition
-      required: true
-      schema:
-        type: string
-        format: uuid
+
 
   schemas:
+        # GenerateImageRequest schema removed; endpoint now accepts plain string (text/plain)
     CompositionResponse:
       type: object
       required:
@@ -442,6 +451,7 @@ components:
           description: Reference to AI-generated image
       example:
         imageReference: "ai-generated-sunset-beach-12345"
+
 
     SelectMusicRequest:
       type: object

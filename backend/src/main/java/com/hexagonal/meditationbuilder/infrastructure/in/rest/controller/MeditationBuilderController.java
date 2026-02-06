@@ -136,23 +136,15 @@ public class MeditationBuilderController {
     // ========== Capability 4: AI Image Generation ==========
 
     /**
-     * POST /compositions/{compositionId}/image/generate - Generate AI image.
-     * 
-     * Capability 4: AI Image Generation.
-     * Scenario 4: "Generate AI image"
+     * POST /v1/compositions/image/generate - Generate AI image from meditation text (global).
+     * Capability 4: AI Image Generation (global).
+     * Scenario 4: "Generate AI image from text"
      */
-    @PostMapping("/{compositionId}/image/generate")
-    public ResponseEntity<ImageReferenceResponse> generateImage(
-            @PathVariable UUID compositionId) {
-        log.info("Generating image for composition: {}", compositionId);
-        
-        // Verify composition exists and get text for context
-        MeditationComposition composition = composeContentUseCase.getComposition(compositionId);
-        String prompt = "Generate a peaceful meditation image for: " + 
-                composition.textContent().value().substring(0, Math.min(100, composition.textContent().value().length()));
-        
-        ImageReference generated = generateImageUseCase.generateImage(prompt);
-        
+    @PostMapping("/image/generate")
+    public ResponseEntity<ImageReferenceResponse> generateImageGlobal(
+            @RequestBody String text) {
+        log.info("Generating image (global) from text");
+        ImageReference generated = generateImageUseCase.generateImage(text);
         return ResponseEntity.ok(mapper.toImageReferenceResponse(generated));
     }
 

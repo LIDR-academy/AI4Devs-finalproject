@@ -5,32 +5,43 @@
  * Error handling: AI unavailable → user-friendly message
  */
 
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { generateImage } from '@/api/client';
-import { ApiError, type ImageReferenceResponse } from '@/api/types';
+import { ImageReferenceResponse, ApiError } from '@/api/types';
 import { useComposerStore } from '@/state/composerStore';
-import { compositionKeys } from './useComposition';
 
 interface UseGenerateImageOptions {
-  compositionId: string | null;
+  prompt?: string;
   onSuccess?: (data: ImageReferenceResponse) => void;
   onError?: (error: Error) => void;
 }
 
-export function useGenerateImage({ 
-  compositionId, 
-  onSuccess, 
-  onError 
-}: UseGenerateImageOptions) {
+export function useGenerateImage({ prompt, onSuccess, onError }: UseGenerateImageOptions) {
   const queryClient = useQueryClient();
   const setIsGeneratingImage = useComposerStore((state) => state.setIsGeneratingImage);
   const setAiGeneratedImage = useComposerStore((state) => state.setAiGeneratedImage);
   const setGenerationError = useComposerStore((state) => state.setGenerationError);
-  
+
   return useMutation({
-    mutationFn: async () => {
-      if (!compositionId) throw new Error('No composition ID');
-      return generateImage(compositionId);
+    mutationFn: async (promptOverride?: string) => {
+      const textPrompt = promptOverride ?? prompt;
+      if (!textPrompt) throw new Error('No prompt provided');
+      const response = await fetch('/api/v1/compositions/image/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: textPrompt,
+      });
+      if (!response.ok) {
+        let errorBody;
+        try {
+          errorBody = await response.json();
+        } catch {
+          errorBody = { error: 'UNKNOWN_ERROR', message: response.statusText, timestamp: new Date().toISOString() };
+        }
+        throw new ApiError(response.status, errorBody);
+      }
+      const data = await response.json();
+      return { imageReference: data.imageReference } as ImageReferenceResponse;
     },
     onMutate: () => {
       setIsGeneratingImage(true);
@@ -38,27 +49,13 @@ export function useGenerateImage({
     },
     onSuccess: (data) => {
       setIsGeneratingImage(false);
-      // Update local state with AI-generated image
-      // This triggers output type indicator update (FR-019)
       setAiGeneratedImage(data.imageReference);
-      // Invalidate composition and image preview
-      queryClient.invalidateQueries({ 
-        queryKey: compositionKeys.detail(compositionId!) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: compositionKeys.imagePreview(compositionId!) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: compositionKeys.outputType(compositionId!) 
-      });
+      queryClient.invalidateQueries();
       onSuccess?.(data);
     },
     onError: (error: Error) => {
       setIsGeneratingImage(false);
-      
-      // Map errors to user-friendly messages
       let userMessage = 'Failed to generate image. Please try again.';
-      
       if (error instanceof ApiError) {
         switch (error.status) {
           case 429:
@@ -71,7 +68,6 @@ export function useGenerateImage({
             userMessage = error.errorResponse.message;
         }
       }
-      
       setGenerationError(userMessage);
       onError?.(error);
     },

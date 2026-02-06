@@ -48,7 +48,7 @@ export function MeditationBuilderPage() {
   const removeImage = useRemoveImage(compositionId);
 
   const generateText = useGenerateText({ compositionId });
-  const generateImage = useGenerateImage({ compositionId });
+  const generateImage = useGenerateImage({ prompt: localText });
 
   const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
@@ -148,7 +148,6 @@ useEffect(() => {
           />
           <div className="generate-btn-group">
             <GenerateImageButton
-              onGenerate={() => generateImage.mutate()}
               isLoading={generateImage.isPending}
             />
           </div>

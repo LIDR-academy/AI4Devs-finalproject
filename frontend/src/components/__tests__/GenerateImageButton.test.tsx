@@ -97,7 +97,7 @@ describe('GenerateImageButton', () => {
     it('should call onGenerate when clicked and enabled', async () => {
       const user = userEvent.setup();
       const onGenerate = vi.fn();
-      render(<GenerateImageButton onGenerate={onGenerate} />);
+      render(<GenerateImageButton />);
       
       await user.click(screen.getByTestId('generate-image-button'));
       
@@ -108,7 +108,7 @@ describe('GenerateImageButton', () => {
       const user = userEvent.setup();
       const onGenerate = vi.fn();
       useComposerStore.setState({ selectedImageId: 'existing-image' });
-      render(<GenerateImageButton onGenerate={onGenerate} />);
+      render(<GenerateImageButton />);
       
       await user.click(screen.getByTestId('generate-image-button'));
       
