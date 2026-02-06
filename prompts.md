@@ -1090,7 +1090,7 @@ Definiré la estructura completa del monorepo (backend FastAPI + frontend React 
 >        * Actualiza la sección "Current Project State" a: **"Implementation Phase - MVP Scope"**.
 >        * Añade una sección "MVP Scope" listando explícitamente los IDs: US-001, 002, 005, 010, 007, 013, 009.
 >        * Indica que cualquier otra US (ej: US-003, US-012) está en el "Icebox" (fuera de alcance actual).
->    * **`prompts-log.md`**: Registra la creación del Backlog MVP y la acotación del alcance.
+>    * **`prompts.md`**: Registra la creación del Backlog MVP y la acotación del alcance.
 
 ---
 
@@ -1385,7 +1385,7 @@ Creación del test de infraestructura TDD en `tests/integration/test_storage_con
 >
 > **Objetivo:**
 > 1. Configurar `Makefile` y dependencias para Testing.
-> 2. Registrar la intervención en el Memory Bank (`prompts-log.md`).
+> 2. Registrar la intervención en el Memory Bank (`prompts.md`).
 >
 > **Instrucciones de Ejecución:**
 >
@@ -1407,7 +1407,7 @@ Creación del test de infraestructura TDD en `tests/integration/test_storage_con
 >     Proporciona el comando exacto para reconstruir la imagen y aplicar los cambios.
 >
 > 4.  **ACTUALIZACIÓN DE MEMORY BANK (Critico):**
->     * **`docs/prompts-log.md`**: Añade una entrada: `## Sprint 0.5 - Setup de Testing Tooling`. Resume la creación del Makefile.
+>     * **`prompts.md`**: Añade una entrada: `## Sprint 0.5 - Setup de Testing Tooling`. Resume la creación del Makefile.
 >     * **`productContext.md`**: En la sección de "System Status" o "Tech Stack", añade una nota indicando que el entorno de testing está configurado y listo para TDD.
 >
 > **Output esperado:**
@@ -1518,7 +1518,7 @@ Revisaré el código, construiré y levantaré los contenedores con `docker-comp
 >     Explica brevemente dónde debo pegar y ejecutar este SQL en el dashboard de Supabase.
 > 
 > 3.  **🧠 ACTUALIZACIÓN DE MEMORIA (Protocolo Agents):**
->     * **`docs/prompts-log.md`**: Registra: "Sprint 1 - Infra: Generación SQL para Bucket raw-uploads".
+>     * **`prompts.md`**: Registra: "Sprint 1 - Infra: Generación SQL para Bucket raw-uploads".
 >     * **`docs/09-mvp-backlog.md`**: Marca el ticket **T-005-INFRA** como `[DONE]` (condicionado a que el usuario confirme que el test pasa después de esto).
 >     * **`productContext.md`**: En "Infrastructure", añade que el bucket `raw-uploads` ya está aprovisionado vía SQL.
 > 
