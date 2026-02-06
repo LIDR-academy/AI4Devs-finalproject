@@ -1618,6 +1618,52 @@ Consolidé la estructura eliminando duplicidad entre `/infra` y `src/backend/inf
 >    - Marca el ticket como [DONE] en `docs/09-mvp-backlog.md`.
 >    - Actualiza `memory-bank/productContext.md` indicando que T-005-INFRA está completado y los tests de integración están pasando.
 > 
+---
+
+## 035 - Actualización Total de Documentación y README (Cierre Sprint 1)
+**Fecha:** 2026-02-06 11:40
+
+**Prompt Original:**
+> # Prompt: Actualización Total de Documentación y README (Cierre Sprint 1)
+>
+> **Role:** Actúa como **Technical Lead** y **Documentation Manager**.
+>
+> **Contexto:**
+> Hemos completado los tickets **T-002** y **T-005**.
+> El proyecto ha evolucionado significativamente: ahora usamos Docker, `Makefile` para la orquestación, y una estructura de carpetas refactorizada (`/infra`).
+> Necesitamos que TODA la documentación refleje esta nueva realidad operativa.
+>
+> **Objetivo:**
+> Sincronizar `README.md`, `docs/` y el historial de prompts con el estado actual del código.
+>
+> **Instrucciones de Ejecución:**
+>
+> 1.  **ACTUALIZACIÓN CRÍTICA DEL `README.md` (Raíz):**
+>     * **Quick Start:** Reemplaza las instrucciones antiguas de instalación/ejecución. Ahora debe explicar cómo arrancar usando `make up` y `make init-db`.
+>     * **Testing:** Documenta los comandos `make test`, `make test-infra`, etc.
+>     * **Requisitos:** Añade Docker y Make (o el uso de `test.bat` en Windows) como prerrequisitos.
+>     * **Estructura:** Si hay una sección de estructura de carpetas, actualízala para mencionar que `/infra` contiene la IaC y scripts de despliegue.
+>
+> 2.  **Actualizar `docs/09-mvp-backlog.md`:**
+>     * Marca **T-002-BACK** y **T-005-INFRA** como `[DONE]`.
+>
+> 3.  **Actualizar `docs/productContext.md`:**
+>     * **Tech Stack:** Confirma que Supabase Storage está integrado y Dockerizado.
+>     * **DevOps:** Menciona la adopción de `Makefile` como estándar de desarrollo.
+>
+> 4.  **REGISTRO DE PROMPTS (`docs/prompts-log.md`):**
+>     * Añade una nueva entrada al final: `## Cierre Sprint 1 - Infra y Documentación`.
+>     * Describe brevemente: "Setup de Docker/Make, Refactor de Infraestructura, Cierre de tickets de Storage y actualización del README principal".
+>     * **Importante:** Incluye explícitamente una nota indicando que este mismo prompt de documentación ha sido registrado.
+>
+> **Output esperado:**
+> 1.  El contenido actualizado (o diff) para `README.md`.
+> 2.  Confirmación de actualización de los archivos en `docs/`.
+> 3.  Lista de tickets cerrados.
+
+**Resumen de la Respuesta/Acción:**
+Actualicé `README.md` (Quick Start a Docker/Make), marqué `T-002-BACK` y `T-005-INFRA` como [DONE] en `docs/09-mvp-backlog.md`, creé `docs/productContext.md` y `docs/prompts-log.md`, y registré esta sesión como entrada ## 035 en `prompts.md`.
+---
 > **Instrucciones de Ejecución:**
 > 
 > 1. **Crear `tests/conftest.py`** con fixture `supabase_client` (scope `module` para reutilización):
