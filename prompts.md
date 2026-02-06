@@ -1664,6 +1664,89 @@ Consolidé la estructura eliminando duplicidad entre `/infra` y `src/backend/inf
 **Resumen de la Respuesta/Acción:**
 Actualicé `README.md` (Quick Start a Docker/Make), marqué `T-002-BACK` y `T-005-INFRA` como [DONE] en `docs/09-mvp-backlog.md`, creé `docs/productContext.md` y `docs/prompts-log.md`, y registré esta sesión como entrada ## 035 en `prompts.md`.
 ---
+
+## 036 - Inicio Sprint 2 - Frontend: TDD Setup para FileUploader (T-003-FRONT)
+**Fecha:** 2026-02-06 12:00
+
+**Prompt Original:**
+> # Prompt: Inicio TDD - Ticket T-003-FRONT (File Upload Integration)
+>
+> **Role:** Actúa como **Senior Frontend Engineer** especializado en React y Testing.
+>
+> **Protocolo Agents:**
+> 1.  Consulta `docs/09-mvp-backlog.md` para entender el alcance del ticket **T-003-FRONT**.
+> 2.  Consulta `productContext.md` para recordar los endpoints disponibles (`/upload-url`) y el bucket (`raw-uploads`).
+>
+> **Contexto:**
+> El Backend y la Infraestructura están listos. Ahora necesitamos construir el componente de Frontend que permita al usuario subir archivos `.3dm`.
+> Seguiremos TDD (Red-Green-Refactor).
+>
+> **Objetivo:**
+> Crear un componente `FileUploader` que gestione el flujo completo de subida.
+>
+> **Instrucciones de Ejecución (FASE ROJA):**
+>
+> 1.  **Setup de Test (`src/frontend/components/FileUploader.test.tsx`):**
+>     Crea un test que falle (Red) describiendo el comportamiento esperado:
+>     * **Renderizado:** Debe mostrar un input de tipo file o zona de drag & drop.
+>     * **Interacción:** Al seleccionar un archivo, debe llamar a la función de "upload".
+>     * **Mocking:** Simula (Mock) la llamada al backend (`POST /upload-url`) y la subida a Supabase.
+>     * **Estado:** Debe mostrar un estado de "Subiendo..." y luego "Éxito".
+>
+> 2.  **Definición de Tipos/Interfaces:**
+>     Define las interfaces necesarias para las props del componente y la respuesta del backend (que ya definimos en T-002).
+>
+> 3.  **Ejecución:**
+>     Dime qué comando ejecutar para correr los tests del frontend (ej: `npm test` o `vitest`) y confirma que falla porque el componente aún no existe.
+>
+> 4.  **ACTUALIZACIÓN DE MEMORIA:**
+>     * **`prompts.md`:** Registra: "Inicio Sprint 2 - Frontend: TDD Setup para FileUploader".
+>     * **`productContext.md`:** Actualiza el estado del Frontend indicando que estamos comenzando la implementación de la UI de carga.
+>
+> **Output esperado:**
+> 1.  Código del test (`FileUploader.test.tsx`).
+> 2.  Comando para ejecutar el test.
+> 3.  Confirmación de que estamos en **FASE ROJA**.
+
+**Resumen de la Respuesta/Acción:**
+Configuré el proyecto frontend con React 18 + TypeScript + Vitest. Creé interfaces TypeScript en `src/types/upload.ts` (PresignedUrlRequest, PresignedUrlResponse, UploadProgress, etc.). Generé test completo en `src/components/FileUploader.test.tsx` con 14 casos de prueba cubriendo: renderizado, validación de archivos, flujo de upload completo, manejo de progreso, y gestión de errores. El componente FileUploader aún NO existe, por lo que los tests fallan. **FASE ROJA confirmada**.
+---
+
+## 037 - Setup de Frontend Tooling (Docker/Make) + Preparación TDD
+**Fecha:** 2026-02-06 12:30
+
+**Prompt Original:**
+> # Prompt: Setup de Frontend Tooling (Docker/Make) + TDD Start (T-003)
+>
+> **Role:** Actúa como **Fullstack DevOps Engineer** y **Frontend Architect**.
+>
+> **Protocolo Agents:**
+> 1.  Revisa el `docker-compose.yml` y el `Makefile` actuales.
+> 2.  **IMPORTANTE:** Al finalizar, registra esta acción en **`prompts.md`** (NO en prompts-log.md) y actualiza el `README.md`.
+>
+> **Contexto:**
+> El usuario quiere iniciar el desarrollo del Frontend (Ticket **T-003-FRONT**) siguiendo TDD.
+> **Restricción:** No queremos instalar Node.js ni ejecutar `npm` en el sistema operativo anfitrión (Windows). Todo debe ejecutarse dentro de Docker para mantener la higiene del entorno.
+>
+> **Objetivo:**
+> 1. Configurar comandos de `Makefile` para gestionar dependencias y tests de Frontend (`install`, `test`).
+> 2. Crear el primer test (Fase Roja) para el componente `FileUploader`.
+>
+> **Instrucciones de Ejecución:**
+>
+> 1.  **Actualización de `Makefile`:**
+>     Añade los siguientes comandos (asegurando el uso de TABs para la indentación):
+>     * `front-install`: `docker-compose run --rm frontend npm install` (Instala dependencias dentro del contenedor).
+>     * `test-front`: `docker-compose run --rm frontend npm run test` (Ejecuta la suite de tests, ej: Vitest).
+>     * `front-shell`: `docker-compose run --rm frontend /bin/sh` (Acceso a terminal para depuración).
+>
+> 2.  **Verificación de `docker-compose.yml`:**
+>     * Revisa el servicio `frontend`.
+>     * Asegúrate de que existe un volumen anónimo para `/app/node_modules` (o la ruta correspondiente). Esto es **crítico** para que la instalación de Docker no se sobrescriba con la carpeta vacía de Windows, y viceversa.
+
+**Resumen de la Respuesta/Acción:**
+Actualicé `docker-compose.yml`: añadí volumen anónimo `/app/node_modules` al servicio frontend, configuré comando de inicio automático (`npm install && npm run dev`), y añadí dependencia del backend. Actualicé `Makefile`: añadí comandos `front-install`, `test-front`, `front-shell`, `front-dev`. Actualicé `README.md` con comandos de frontend. Sistema listo para desarrollo frontend completo dentro de Docker sin instalar Node.js en el host.
+---
 > **Instrucciones de Ejecución:**
 > 
 > 1. **Crear `tests/conftest.py`** con fixture `supabase_client` (scope `module` para reutilización):
@@ -1705,3 +1788,4 @@ Actualicé `README.md` (Quick Start a Docker/Make), marqué `T-002-BACK` y `T-00
 **Resumen de la Respuesta/Acción:**
 Refactoricé los tests de integración extrayendo la configuración del cliente Supabase a un fixture en `tests/conftest.py` (scope `module`). Actualicé `test_storage_config.py` con type hints completos (`-> None`, `: Client`, `: str`, `: bytes`, `: bool`, `: list[str]`), mejoré el cleanup con bandera `uploaded` para evitar errores de borrado de archivos no subidos, y añadí docstrings explicativas. Verifiqué que el test sigue pasando (1 passed in 0.61s). Actualicé `docs/09-mvp-backlog.md` (T-005-INFRA [DONE]) y `memory-bank/productContext.md` indicando ticket completado con tests en verde.
 ---
+

@@ -116,7 +116,7 @@ Alineación con estándares internacionales de gestión BIM para proyectos patri
 **Status**: 🚧 **Phase: Implementation - MVP Scope**
 **Stage**: Building Core Features (The Golden Path)
 **Documentation**: Phase 9 (MVP Backlog) Defined.
-**Current Focus**: Sprint 1 In Progress. ✅ Ticket T-002-BACK completado (Endpoint Upload operativo). 🔧 **Testing Infrastructure Configured** (Makefile + Docker workflow for TDD). ✅ **Secret Management Configured** (Management via `.env` injected into Docker). ✅ **T-005-INFRA [DONE]:** Bucket `raw-uploads` provisioned via Supabase Storage API (`infra/init_db.py`), integration tests passing. ✅ **Repository Structure Refactored:** Consolidated `/infra` (SQL scripts + maintenance scripts), eliminated duplicates in `src/backend/infra`, updated `docker-compose.yml` volume mappings.
+**Current Focus**: Sprint 2 - Frontend Development. ✅ **Sprint 1 Completed:** T-002-BACK (Upload endpoint), T-005-INFRA (Bucket setup), Testing infrastructure, Repository refactor. 🔧 **Sprint 2 Active (FASE ROJA):** T-003-FRONT File Upload Integration. Frontend structure initialized with React 18 + TypeScript + Vitest. Comprehensive test suite created for `FileUploader` component covering upload flow, validation, progress tracking, and error handling. Component implementation pending (TDD Red Phase).
 **MVP Scope**:
 - CRITICAL: US-001, US-002, US-005, US-010, US-007
 - HIGH: US-013, US-009
