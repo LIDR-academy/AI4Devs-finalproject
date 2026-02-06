@@ -1321,3 +1321,187 @@ Se revisó el código existente de la iteración anterior y se confirmó que cum
 
 **Resumen de la Respuesta/Acción:**
 Definición formal del alcance MVP en `docs/09-mvp-backlog.md`, seleccionando 7 historias clave (US-001, 002, 005, 010, 007, 013, 009) y generando tickets técnicos detallados. Actualización de `memory-bank/productContext.md` para reflejar el cambio a fase de Implementación con alcance acotado. Actualización del registro de prompts en `prompts.md`.
+
+---
+
+## 028 - T-005-INFRA: Test de Infraestructura TDD (Fase ROJA)
+**Fecha:** 2026-02-05 11:01
+
+**Prompt Original:**
+> # Prompt: Fase ROJA (Infra TDD) - Ticket T-005-INFRA
+>
+> **Role:** Actúa como **DevOps Engineer** y **QA Automation Expert**.
+>
+> **Contexto:**
+> Estamos en el Ticket **T-005-INFRA (S3 Bucket Setup)**.
+> Siguiendo nuestro protocolo TDD estricto, antes de configurar nada en Supabase, debemos tener un test que falle confirmando que la infraestructura aún no existe.
+>
+> **Objetivo:**
+> Crear un test de integración que verifique la existencia y accesibilidad del Storage.
+>
+> **Instrucciones de Ejecución:**
+>
+> 1.  **Creación del Test de Infraestructura (`tests/integration/test_storage_config.py`):**
+>     Genera un test usando `pytest` y el cliente `supabase` (que ya está en requirements) o `httpx`.
+>     * **Fixture:** Crea un cliente de Supabase usando las variables de entorno (que simularemos o cargaremos).
+>     * **Test `test_upload_bucket_access`:**
+>         1.  Intenta subir un archivo de texto simple (`test_infra.txt`) al bucket `raw-uploads`.
+>         2.  Intenta verificar que el archivo existe (listar o obtener URL).
+>         3.  Limpia (borra) el archivo de prueba al terminar.
+>     * **Expectativa:** Este test debe fallar ahora mismo porque el bucket `raw-uploads` NO existe.
+>
+> 2.  **Configuración de Entorno de Test:**
+>     Indica qué variables de entorno mínimas necesito para correr este test localmente contra tu instancia de Supabase (ej: `SUPABASE_URL`, `SUPABASE_KEY`).
+>
+> **Output esperado:**
+> El código del archivo `tests/integration/test_storage_config.py`.
+
+**Resumen de la Respuesta/Acción:**
+Creación del test de infraestructura TDD en `tests/integration/test_storage_config.py` usando `pytest` y el cliente `supabase`. El test incluye:
+1. **Fixture `supabase_client`:** Crea cliente Supabase usando variables de entorno `SUPABASE_URL` y `SUPABASE_KEY`.
+2. **Test `test_upload_bucket_access`:** Intenta subir archivo de prueba al bucket `raw-uploads`, verifica existencia mediante listado y URL pública, y limpia el archivo en bloque `finally`.
+3. **Documentación completa:** Artifact `environment_setup.md` con 3 opciones de configuración (.env, inline, export), instrucciones de ejecución, y confirmación de resultado esperado en Fase ROJA (error `Bucket not found`).
+
+**ESTADO:** Test creado. Listo para ejecutar y confirmar fallo (Fase ROJA).
+
+---
+
+## 030 - Sprint 0.5: Setup de Testing Tooling
+**Fecha:** 2026-02-05 23:48
+
+**Prompt Original:**
+> # Prompt: Setup de Tooling (Docker/Makefile) + Protocolo Agents de Sincronización
+>
+> **Role:** Actúa como **DevOps Engineer** y **Guardián del Memory Bank**.
+>
+> **Protocolo de Ejecución (AGENTS PROTOCOL):**
+> Antes de generar ningún código, tu primera acción debe ser consultar el **Memory Bank** (`productContext.md` y `docs/09-mvp-backlog.md`) para situarte en el contexto actual.
+> Al finalizar la tarea técnica, es **OBLIGATORIO** actualizar los archivos de memoria para reflejar los cambios en el entorno.
+>
+> **Contexto:**
+> Estamos bloqueados en el Ticket **T-005-INFRA**.
+> Para aplicar TDD (Fase Roja) en este ticket, necesitamos ejecutar tests dentro de Docker cómodamente.
+> Procedemos a una "Side Quest" técnica: Configurar el entorno de ejecución de pruebas (Tooling).
+>
+> **Objetivo:**
+> 1. Configurar `Makefile` y dependencias para Testing.
+> 2. Registrar la intervención en el Memory Bank (`prompts-log.md`).
+>
+> **Instrucciones de Ejecución:**
+>
+> 1.  **Actualización de `src/backend/requirements.txt`:**
+>     Añade las librerías necesarias para el stack de pruebas:
+>     * `pytest`
+>     * `httpx`
+>     * `pytest-asyncio`
+>     * `supabase`
+>
+> 2.  **Creación de Herramientas de Ejecución (DX):**
+>     * Crea un archivo `Makefile` en la raíz con:
+>         * `test`: `docker-compose run --rm backend pytest`
+>         * `test-infra`: `docker-compose run --rm backend pytest tests/integration`
+>         * `build`: `docker-compose build`
+>     * Crea un `test.bat` (para Windows) con el comando de docker equivalente.
+>
+> 3.  **Instrucciones de Re-Build:**
+>     Proporciona el comando exacto para reconstruir la imagen y aplicar los cambios.
+>
+> 4.  **ACTUALIZACIÓN DE MEMORY BANK (Critico):**
+>     * **`docs/prompts-log.md`**: Añade una entrada: `## Sprint 0.5 - Setup de Testing Tooling`. Resume la creación del Makefile.
+>     * **`productContext.md`**: En la sección de "System Status" o "Tech Stack", añade una nota indicando que el entorno de testing está configurado y listo para TDD.
+>
+> **Output esperado:**
+> 1.  Confirmación de lectura del contexto.
+> 2.  Código de los archivos modificados.
+> 3.  Comandos de terminal.
+> 4.  Confirmación explícita de la actualización de los archivos markdown.
+
+**Resumen de la Respuesta/Acción:**
+Configuración completa del entorno de testing para TDD workflow:
+1. **Tooling DX:** Creado `Makefile` con comandos `build`, `test`, `test-infra`, `test-unit`, `test-storage`, `shell`, `clean`. Creado `test.bat` para Windows con comandos equivalentes.
+2. **Validación de Requirements:** Confirmado que `pytest==8.0.0`, `pytest-asyncio==0.23.5`, `httpx==0.25.2`, y `supabase==2.3.4` ya estaban en `requirements.txt`.
+3. **Documentación Rebuild:** Instrucciones para reconstruir imagen Docker y ejecutar tests.
+4. **Memory Bank:** Actualizado `prompts.md` (este registro), actualizado `task.md` marcando tooling setup como completo.
+
+**COMANDOS DE EJECUCIÓN:**
+```bash
+# Reconstruir imagen Docker con dependencias
+make build
+
+# Ejecutar test de infraestructura (Fase ROJA - Expected FAIL)
+make test-storage
+
+# Alternativa: Todos los tests de integración
+make test-infra
+```
+
+---
+## 20260206-080000 - Levantar contenedor y comprobar fase roja
+**Fecha:** 2026-02-06 08:00
+
+**Prompt Original:**
+> Revisa el codigo e intenta levantar el contenedor para comprobar si se activa la fase roja de este ticket (See <attachments> above for file contents. You may not need to search or read the file again.)
+
+**Resumen de la Respuesta/Acción:**
+Revisaré el código, construiré y levantaré los contenedores con `docker-compose`, recopilaré logs y verificaré si la "fase roja" se activa.
+---
+
+**ESTADO:** Entorno de testing configurado. Listo para TDD.
+
+---
+
+## 031 - Fix: Inyección de variables de entorno en Docker
+**Fecha:** 2026-02-06 00:48
+
+**Prompt Original:**
+> # Prompt: Conectar Variables de Entorno y Actualizar Memoria
+>
+> **Role:** Actúa como **DevOps Engineer** y **Guardián del Contexto**.
+>
+> **Contexto:**
+> Tenemos un archivo `.env` local con credenciales válidas de Supabase (formato JWT `ey...`).
+> Sin embargo, el contenedor `backend` falla en los tests porque no tiene acceso a este archivo, provocando errores de autenticación al iniciar el cliente.
+>
+> **Objetivo:**
+> 1. Configurar `docker-compose.yml` para inyectar el archivo `.env` en el contenedor.
+> 2. Asegurar que el código Python lea estas variables correctamente.
+>
+> **Instrucciones de Ejecución:**
+>
+> 1.  **Modificar `docker-compose.yml`:**
+>     Edita el servicio `backend` para incluir la propiedad `env_file`.
+>     ```yaml
+>     services:
+>       backend:
+>         ...
+>         env_file:
+>           - .env
+>     ```
+>
+> 2.  **Verificación de Configuración (`src/backend/config.py` o `main.py`):**
+>     Revisa el código donde se instancia `supabase.create_client`. Asegúrate de que usa `os.getenv("SUPABASE_URL")` y `os.getenv("SUPABASE_KEY")` (o `SERVICE_ROLE_KEY`).
+>
+> 3.  **Instrucciones de Reinicio:**
+>     Indica qué comandos ejecutar para que Docker reconozca el nuevo archivo de entorno (normalmente requiere bajar y subir contenedores).
+>
+> ---
+>
+> ### 🧠 ACTUALIZACIÓN OBLIGATORIA DE MEMORIA (Protocolo Agents)
+>
+> Al finalizar la tarea técnica, **DEBES** actualizar la documentación del proyecto para mantener la trazabilidad:
+>
+> 1.  **`docs/prompts-log.md`:** Registra esta intervención como "Fix: Inyección de variables de entorno en Docker".
+> 2.  **`productContext.md`:** En la sección "System Status", actualiza el estado de la infraestructura indicando que la gestión de secretos vía `.env` está configurada.
+>
+> **Output esperado:**
+> 1.  Bloque de código para `docker-compose.yml`.
+> 2.  Comandos de reinicio (`make down` / `make up`).
+> 3.  Confirmación explícita de que los archivos de memoria han sido actualizados.
+
+**Resumen de la Respuesta/Acción:**
+Se ha formalizado la inyección de variables de entorno en el contenedor `backend`:
+1. **Configuración Docker:** Se ha verificado que `docker-compose.yml` utiliza `env_file: [.env]` para cargar secretos.
+2. **Centralización de Configuración:** Se ha creado `src/backend/config.py` utilizando `pydantic-settings` para gestionar variables de entorno de forma segura y tipada.
+3. **Memoria:** Actualización de `prompts.md` y `productContext.md`.
+
+**ESTADO:** Configuración de entorno inyectada y documentada.
