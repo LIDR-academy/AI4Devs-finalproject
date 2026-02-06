@@ -62,7 +62,7 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
 
         log.debug("Initiating AI text generation request");
         // Prepend metaprompt if present
-        String metaprompt = aiProperties.getMetaprompt();
+        String metaprompt = aiProperties.getTextMetaprompt();
         String finalPrompt = (metaprompt != null && !metaprompt.isBlank())
                 ? metaprompt + "\n" + prompt
                 : prompt;

@@ -62,7 +62,7 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
             throw new IllegalArgumentException("prompt is required");
         }
         // Prepend metaprompt if present
-        String metaprompt = aiProperties.getMetaprompt();
+        String metaprompt = aiProperties.getImageMetaprompt();
         String finalPrompt = (metaprompt != null && !metaprompt.isBlank())
                 ? metaprompt + "\n" + prompt
                 : prompt;

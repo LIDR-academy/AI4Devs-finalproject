@@ -49,7 +49,7 @@ class TextGenerationAiAdapterIntegrationTest {
                 .build();
         String baseUrl = "http://localhost:" + wireMockServer.port();
         AiProperties aiProperties = new AiProperties();
-        aiProperties.setMetaprompt(""); // No metaprompt for integration test
+        aiProperties.setTextMetaprompt(""); // No metaprompt for integration test
         adapter = new TextGenerationAiAdapter(restClient, baseUrl, "test-api-key", aiProperties);
     }
 

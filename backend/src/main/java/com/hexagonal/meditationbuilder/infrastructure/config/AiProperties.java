@@ -9,14 +9,23 @@ public class AiProperties {
     /**
      * Metaprompt para IA, configurable por properties/yaml.
      */
-    private String metaprompt;
+    private String textMetaprompt;
+    private String imageMetaprompt;
 
-    public String getMetaprompt() {
-        return metaprompt;
+    public String getTextMetaprompt() {
+        return textMetaprompt;
     }
 
-    public void setMetaprompt(String metaprompt) {
-        this.metaprompt = metaprompt;
+    public void setTextMetaprompt(String metaprompt) {
+        this.textMetaprompt = metaprompt;
+    }
+
+    public String getImageMetaprompt() {
+        return imageMetaprompt;
+    }
+
+    public void setImageMetaprompt(String imageMetaprompt) {
+        this.imageMetaprompt = imageMetaprompt;
     }
     
 }

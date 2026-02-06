@@ -15,7 +15,8 @@ server:
 
 # AI Configuration metaprompt
 ai:
-  metaprompt: "Eres un asistente experto en meditación. Mejora o interpreta el siguiente contenido para que sea óptimo para una experiencia de meditación guiada: {{prompt}}"
+  textMetaprompt: "Eres un asistente experto en meditación. Mejora y enriquece el siguiente contenido para que sea óptimo para una experiencia de meditación guiada: "
+  imageMetaprompt: "Eres un asistente experto en meditación. Genera imágenes calmantes y meditativas basadas en la siguiente descripción: "
 
 # OpenAI Configuration
 openai:

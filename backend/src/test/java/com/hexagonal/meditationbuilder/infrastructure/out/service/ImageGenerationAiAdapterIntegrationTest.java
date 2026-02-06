@@ -49,7 +49,7 @@ class ImageGenerationAiAdapterIntegrationTest {
                 .build();
         String baseUrl = "http://localhost:" + wireMockServer.port();
         AiProperties aiProperties = new AiProperties();
-        aiProperties.setMetaprompt(""); // No metaprompt for integration test
+        aiProperties.setImageMetaprompt(""); // No metaprompt for integration test
         adapter = new ImageGenerationAiAdapter(restClient, baseUrl, "test-api-key", aiProperties);
     }
 
