@@ -26,3 +26,36 @@ class UploadResponse(BaseModel):
     upload_url: str = Field(..., description="Presigned URL for S3 upload")
     file_id: str = Field(..., description="Unique identifier for the file")
     filename: str = Field(..., description="Original filename")
+
+
+# ===== T-004-BACK: Confirm Upload Schemas =====
+
+class ConfirmUploadRequest(BaseModel):
+    """
+    Schema for confirming a completed file upload.
+    
+    This request is sent by the frontend after successfully uploading
+    a file to the presigned URL, to trigger backend processing.
+
+    Attributes:
+        file_id (str): The unique identifier returned from the presigned URL request.
+        file_key (str): The S3 object key where the file was uploaded.
+    """
+    file_id: str = Field(..., description="UUID of the uploaded file")
+    file_key: str = Field(..., description="S3 object key (path in bucket)")
+
+
+class ConfirmUploadResponse(BaseModel):
+    """
+    Schema for the confirm upload response.
+    
+    Attributes:
+        success (bool): Whether the confirmation was successful.
+        message (str): Human-readable status message.
+        event_id (Optional[str]): ID of the created event record (if applicable).
+        task_id (Optional[str]): ID of the launched Celery task (if applicable).
+    """
+    success: bool = Field(..., description="Confirmation status")
+    message: str = Field(..., description="Status message")
+    event_id: Optional[str] = Field(None, description="Created event record ID")
+    task_id: Optional[str] = Field(None, description="Celery task ID for processing")

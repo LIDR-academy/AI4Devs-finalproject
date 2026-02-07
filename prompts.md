@@ -1994,3 +1994,63 @@ Duration  1.36s
 **Ticket T-003-FRONT: CERRADO ✅**
 ---
 
+## 042 - T-004-BACK FASE ROJA: Confirm Upload Webhook Tests Created
+**Fecha:** 2026-02-07 21:00
+
+**Prompt Original:**
+> # Prompt: TDD FASE ROJA - Ticket T-004-BACK
+> 
+> **Role:** Actúa como **QA Automation Engineer** y **Software Architect**.
+> 
+> **Protocolo Agents:**
+> 1.  Consulta `docs/09-mvp-backlog.md` para entender el alcance de **T-004-BACK**.
+> 2.  Consulta `productContext.md` para ver qué componentes o endpoints ya existen y pueden reutilizarse.
+> 3.  Al final, registra el inicio de la tarea en **`prompts.md`**.
+> 
+> **Contexto:**
+> Iniciamos el desarrollo de la funcionalidad: Confirm Upload Webhook.
+> Seguimos estrictamente TDD. El código de la implementación AÚN NO EXISTE.
+> 
+> **Objetivo:**
+> 1.  Crear/Actualizar los tipos e interfaces necesarios.
+> 2.  Crear un test que falle (RED) describiendo el comportamiento esperado.
+
+**Resumen de la Respuesta/Acción:**
+Creados schemas Pydantic y test suite completo para T-004-BACK siguiendo TDD (FASE ROJA confirmada).
+
+**1. Schemas Creados** (`src/backend/schemas.py`):
+- `ConfirmUploadRequest`: { file_id: str, file_key: str }
+- `ConfirmUploadResponse`: { success: bool, message: str, event_id?: str, task_id?: str }
+
+**2. Tests de Integración Creados** (`tests/integration/test_confirm_upload.py`):
+- ✅ `test_confirm_upload_happy_path`: Flujo completo exitoso (sube archivo → llama endpoint → verifica 200 OK)
+- ✅ `test_confirm_upload_file_not_found`: Manejo de errores (archivo no existe → 404)
+- ✅ `test_confirm_upload_invalid_payload`: Validación Pydantic (payload incompleto → 422)
+- ✅ `test_confirm_upload_creates_event_record`: Persistencia en DB (verifica registro en tabla `events`)
+
+**3. Ejecución de Tests (FASE ROJA CONFIRMADA):**
+```bash
+docker compose run --rm backend pytest tests/integration/test_confirm_upload.py -v
+
+FAILED test_confirm_upload_happy_path - Expected 200, got 404
+FAILED test_confirm_upload_invalid_payload - Expected 422, got 404
+FAILED test_confirm_upload_creates_event_record - Expected 200, got 404
+PASSED test_confirm_upload_file_not_found - Expected 404, got 404
+
+3/4 tests FAILING → Endpoint /api/upload/confirm NO EXISTE
+```
+
+**Definition of Done (Documentado en Tests):**
+1. Endpoint POST /api/upload/confirm acepta { file_id, file_key }
+2. Valida payload (retorna 422 si inválido)
+3. Verifica existencia en Supabase Storage bucket `raw-uploads`
+4. Crea registro en tabla `events`: { id, file_id, event_type: "upload.confirmed", metadata, created_at }
+5. Retorna 200 OK: { success: true, message, event_id, task_id }
+
+**Próximos Pasos:**
+- FASE VERDE: Implementar endpoint en `src/backend/api/upload.py`
+- Crear tabla `events` en Supabase (migración SQL)
+- Integrar verificación de Storage
+- Pasar los 4 tests
+---
+
