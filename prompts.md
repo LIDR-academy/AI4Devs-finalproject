@@ -203,3 +203,122 @@ Primero realiza los siguientes cambios en la documentación generada hasta ahora
 **Prompt 2:**
 
 **Prompt 3:**
+
+---
+
+## 8. Gestión de Documentación y Workflow de Desarrollo
+
+### **8.1. Configuración del Memory-Bank**
+
+**Prompt 1:**
+
+```
+Es compatible activar un memory-bank con el SDD que estamos implementando en este repositorio? Analiza como tendría que trabajar para no estorbarse y acabar generando documentos duplicados en el memory-bank y en @openspec (concretamente con @openspec/changes ). Como IA experta en desarrollo de software SDD, cuál sería tu opinión al respecto y la mejor práctica a implementar. Puedes dar más de una opción, con los pros y contras de cada una de ella. Y pregúntame las dudas que tengas al respecto para poder generar una respuesta más adecuada a mi contexto
+```
+
+> **Resumen de objetivos alcanzados:** Se analizó la compatibilidad entre memory-bank y OpenSpec, identificando 4 opciones de integración con sus pros y contras. Se recomendó la opción de "Memory-Bank como capa de contexto superior" donde el memory-bank almacena contexto de proyecto persistente (arquitectura, decisiones, stack) mientras OpenSpec maneja cambios específicos por feature. Se clarificaron aspectos clave: uso de directorio `memory-bank/` sin punto, propósito de mantener contexto entre sesiones de IA y documentar decisiones arquitecturales de alto nivel.
+
+---
+
+**Prompt 2:**
+
+```
+Primero te respondo las preguntas de clarificación: 1 - Un directorio memory-bank (sin el punto) 2 - Contexto del proyecto actualizado, incluyendo las decisiones arquitecturales históricas. 3 - Uso Cursor para desarrollo, normalmente en sesiones cortas, para no colapsar la ventana de contexto, y sólo estoy trabajando yo. Respecto a tu última pregunta: a) Mantener contexto entre sesiones de IA (memoria persistente) y b) Documentar decisiones arquitecturales de alto nivel
+```
+
+> **Resumen de objetivos alcanzados:** Se definió el propósito preciso del memory-bank: actuar como memoria persistente entre sesiones cortas de IA y documentar decisiones arquitecturales (ADRs). Se estableció la estrategia de integración con el documento `Adresles_Business.md` usando el memory-bank como capa de síntesis e indexación inteligente que referencia el documento completo, minimizando duplicación.
+
+---
+
+**Prompt 3:**
+
+```
+Puedo integrar @Adresles_Business.md en el memory-bank para no repetir documentación en sitios distintos?
+```
+
+> **Resumen de objetivos alcanzados:** Se diseñó una estrategia de integración donde el memory-bank no duplica el contenido de `Adresles_Business.md`, sino que actúa como capa de navegación y síntesis. Se propuso crear: `README.md` maestro, `overview.md` ejecutivo (80 líneas), `tech-stack.md`, ADRs que referencian secciones específicas del Business.md, y un `business-doc-map.md` para navegación rápida del documento de 2130 líneas.
+
+---
+
+**Prompt 4:**
+
+```
+Crea la estructura inicial del memory-bank y genera los documentos que la deben contener en esta fase, tal y como has descrito, con referencias a @Adresles_Business.md. En Fases posteriores iremos actualizando y evolucionando el memory-bank con información más actualizada.
+```
+
+> **Resumen de objetivos alcanzados:** Se creó la estructura completa del memory-bank con 11 archivos markdown:
+> - `README.md`: Índice maestro con enlaces a todas las secciones
+> - `project-context/overview.md`: Resumen ejecutivo de 80 líneas sobre Adresles
+> - `project-context/tech-stack.md`: Stack tecnológico detallado (NestJS, Supabase, DynamoDB, OpenAI, etc.)
+> - `project-context/domain-glossary.md`: Glosario de términos de dominio
+> - `architecture/_template.md`: Template para futuros ADRs
+> - `architecture/001-monolith-modular.md`: ADR sobre arquitectura modular
+> - `architecture/002-supabase-dynamodb.md`: ADR sobre base de datos híbrida
+> - `architecture/003-nestjs-backend.md`: ADR sobre elección de NestJS
+> - `architecture/004-openai-gpt4.md`: ADR sobre motor conversacional
+> - `references/business-doc-map.md`: Mapa de navegación del Business.md
+> - `patterns/.gitkeep` y `sessions/.gitkeep`: Directorios para futuro crecimiento
+> - `SETUP-COMPLETE.md`: Resumen de setup y guía de uso
+
+---
+
+### **8.2. Integración OpenSpec con Memory-Bank**
+
+**Prompt 1:**
+
+```
+En función del nuevo memory-bank creado: 
+- Revisa y actualiza los documentos en @openspec/specs para que hagan referencia al stack utilizado en este proyecto, pero manteniendo exactamente el mismo formato y estructura, y minimizando los cambios (para no cambiar el comportamiento de openspec, sólo optimizarlo) 
+- Revisa de forma general toda la carpeta @openspec para identificar posibles cambios @openspec/.agents o en los @openspec/.commands para añadir al flujo de openspec que revise primero los documentos del memory-bank, si es que lo consideras realmente necesario. 
+- Revisa y actualiza @openspec/config.yaml de ser necesario para adecuarlo a nuestro flujo de trabajo
+```
+
+> **Resumen de objetivos alcanzados:** Se creó un plan detallado de actualización de OpenSpec con 8 archivos a modificar:
+> 
+> 1. **openspec/config.yaml**: Añadida sección `context` completa con referencias al memory-bank, stack tecnológico (NestJS, Supabase, DynamoDB, OpenAI GPT-4, Google Maps), dominios DDD, y descripción del proyecto Adresles.
+> 
+> 2. **openspec/specs/backend-standards.mdc**: Actualizado de Express a NestJS, PostgreSQL a Supabase+DynamoDB, añadidos servicios externos clave (OpenAI, Google Maps, Redis, BullMQ), actualizada estructura del proyecto para arquitectura modular NestJS con bounded contexts, actualizada sección de DI para NestJS, y cambiado deployment de Serverless a Docker Compose.
+> 
+> 3. **openspec/specs/frontend-standards.mdc**: Clarificadas las dos aplicaciones frontend (Chat App con React+Vite y Dashboard Admin con Next.js), actualizado stack a TanStack Query, Zustand, Socket.io, TailwindCSS, Shadcn/ui, y actualizada estructura del proyecto para ambas apps.
+> 
+> 4. **openspec/specs/development_guide.md**: Reemplazado setup PostgreSQL Docker por Supabase + DynamoDB local + Redis, actualizadas variables de entorno para todas las apps (API, Chat, Dashboard), actualizado setup de backend para NestJS con pnpm, y añadida configuración de Worker BullMQ.
+> 
+> 5. **openspec/specs/data-model.md**: Reemplazado completamente el modelo genérico por el modelo real de Adresles, documentada arquitectura híbrida (Supabase + DynamoDB), incluidas todas las entidades principales con campos y relaciones, añadido diagrama ER completo en Mermaid, y documentados principios clave de diseño.
+> 
+> 6. **openspec/.agents/backend-developer.md**: Actualizada descripción para NestJS + Supabase + DynamoDB + OpenAI, añadida sección "Contexto del Proyecto" al inicio con referencias explícitas al memory-bank, actualizadas todas las secciones de experiencia central para tecnologías de Adresles, y actualizado enfoque de desarrollo para bounded contexts.
+> 
+> 7. **openspec/.agents/frontend-developer.md**: Añadida sección "Contexto del Proyecto" con referencias al memory-bank, documentadas las dos aplicaciones frontend con sus stacks específicos, y actualizados principios arquitectónicos para TanStack Query, Zustand, Socket.io, Next.js.
+> 
+> 8. **openspec/.commands/**: Añadidas notas al inicio de `develop-backend.md` y `develop-frontend.md` para consultar el memory-bank antes de empezar cualquier desarrollo.
+> 
+> **Resultado final**: OpenSpec está ahora completamente alineado con el stack real de Adresles. Todos los artifacts generados usarán automáticamente el contexto correcto del memory-bank y generarán código alineado con la arquitectura NestJS + Supabase + DynamoDB + OpenAI GPT-4 + Next.js del proyecto.
+
+---
+
+### **8.3. Principios de Integración Memory-Bank + OpenSpec**
+
+**Lecciones aprendidas y mejores prácticas:**
+
+1. **Separación clara de responsabilidades**:
+   - **Memory-Bank**: Contexto de proyecto persistente, decisiones arquitecturales (ADRs), glosario de dominio, stack tecnológico
+   - **OpenSpec**: Cambios específicos por feature, artifacts temporales de desarrollo (proposals, specs, design, tasks)
+
+2. **Referencias vs Duplicación**:
+   - El memory-bank no duplica contenido, sino que crea capas de síntesis y navegación
+   - Los ADRs referencian secciones específicas del documento principal (`Adresles_Business.md`)
+   - Los specs de OpenSpec referencian ADRs del memory-bank para contexto detallado
+
+3. **Integración en el flujo de desarrollo**:
+   - El `config.yaml` de OpenSpec carga automáticamente contexto del memory-bank
+   - Los agentes (backend/frontend) leen el memory-bank al inicio de cada tarea
+   - Los comandos incluyen recordatorios explícitos para consultar el memory-bank
+
+4. **Evolución orgánica**:
+   - La estructura inicial es mínima pero extensible
+   - Directorios `patterns/` y `sessions/` preparados para futuro crecimiento
+   - Los ADRs documentan el "por qué" de decisiones técnicas para referencia futura
+
+5. **Optimización para sesiones cortas de IA**:
+   - Documentos concisos (overview de 80 líneas vs Business.md de 2130)
+   - Navegación rápida con índices y mapas
+   - Referencias directas para profundización cuando es necesario

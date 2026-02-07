@@ -1,0 +1,51 @@
+# Sesiones de Desarrollo
+
+Esta carpeta contendrá aprendizajes significativos de sesiones de desarrollo pasadas.
+
+## Formato Sugerido
+
+Cada sesión se documenta con formato:
+
+```
+YYYY-MM-DD-tema-principal.md
+```
+
+### Ejemplo: `2026-02-15-oauth-setup.md`
+
+```markdown
+# Sesión: Setup OAuth con Supabase
+
+**Fecha**: 2026-02-15  
+**Duración**: 2 horas  
+**Contexto**: Implementación de autenticación para Dashboard Admin
+
+## Problema
+
+Necesitábamos integrar OAuth de Google con Supabase pero la documentación era confusa sobre callbacks.
+
+## Solución
+
+[Descripción de la solución]
+
+## Aprendizajes
+
+1. **Callback URLs**: Supabase requiere...
+2. **CORS**: Configuración específica para...
+
+## Referencias
+
+- [Link a PR]
+- [Link a docs]
+```
+
+## Cuándo Documentar
+
+Solo documenta cuando:
+- ✅ Problema complejo que requirió > 1 hora resolver
+- ✅ Solución no obvia o poco documentada
+- ✅ Aprendizaje que puede ahorrar tiempo en futuro
+
+No documentes:
+- ❌ Implementaciones rutinarias
+- ❌ Bugs simples ya resueltos
+- ❌ Información ya en ADRs o standards

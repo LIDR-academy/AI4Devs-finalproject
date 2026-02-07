@@ -1,6 +1,6 @@
 ---
-description: Estándares de desarrollo backend, mejores prácticas y convenciones para la aplicación del Proyecto Final del Máster AI4Devs, Node.js/TypeScript/Express, incluyendo Diseño Dirigido por el Dominio, principios SOLID, patrones de arquitectura, diseño de API y prácticas de pruebas
-globs: ["backend/src/**/*.ts", "backend/prisma/**/*.{prisma,ts}", "backend/jest.config.js", "backend/tsconfig.json", "backend/serverless.yml", "backend/package.json"]
+description: Estándares de desarrollo backend, mejores prácticas y convenciones para Adresles (proyecto SaaS B2B2C), Node.js/TypeScript/NestJS, arquitectura modular DDD, Supabase (PostgreSQL) + DynamoDB, OpenAI GPT-4, incluyendo Diseño Dirigido por el Dominio, principios SOLID, patrones de arquitectura, diseño de API y prácticas de pruebas
+globs: ["backend/src/**/*.ts", "apps/api/src/**/*.ts", "backend/prisma/**/*.{prisma,ts}", "apps/api/prisma/**/*.{prisma,ts}", "backend/jest.config.js", "backend/tsconfig.json", "backend/serverless.yml", "backend/package.json"]
 alwaysApply: true
 ---
 
@@ -64,9 +64,10 @@ alwaysApply: true
   - [Flujo de Trabajo de Git](#flujo-de-trabajo-de-git)
   - [Scripts de Desarrollo](#scripts-de-desarrollo)
   - [Calidad de Código](#calidad-de-código)
-- [Despliegue Serverless](#despliegue-serverless)
-  - [Configuración de AWS Lambda](#configuración-de-aws-lambda)
-  - [Framework Serverless](#framework-serverless)
+- [Deployment en Servidor Dedicado](#deployment-en-servidor-dedicado)
+  - [Containerización](#containerización)
+  - [Orquestación con Docker Compose](#orquestación-con-docker-compose)
+  - [Framework de Deployment](#framework-de-deployment)
 
 ---
 
@@ -77,15 +78,24 @@ Este documento describe las mejores prácticas, convenciones y estándares utili
 ## Stack Tecnológico
 
 ### Tecnologías Centrales
-- **Node.js**: Entorno de ejecución
+- **Node.js**: Entorno de ejecución (v20 LTS)
 - **TypeScript**: Desarrollo con seguridad de tipos y modo estricto
-- **Express.js**: Framework de aplicación web
-- **Prisma**: ORM moderno para acceso a base de datos
+- **NestJS**: Framework backend modular (v10.x) - DDD-friendly
+- **Prisma**: ORM para Supabase (PostgreSQL)
+- **AWS SDK**: Cliente para DynamoDB (v3.x)
 
 ### Base de Datos y ORM
-- **PostgreSQL**: Base de datos relacional (contenedor Docker)
-- **Prisma Client**: Cliente de base de datos con seguridad de tipos
-- **Prisma Migrate**: Herramienta de migración de base de datos
+- **Supabase (PostgreSQL)**: Base de datos relacional con Auth, RLS y Realtime
+- **DynamoDB**: Base de datos NoSQL para mensajes de conversaciones (alta volumetría)
+- **Prisma Client**: Cliente de base de datos con seguridad de tipos para Supabase
+- **AWS SDK v3**: Cliente para operaciones DynamoDB
+- **Redis**: Cache + sistema de colas (BullMQ)
+
+### Servicios Externos Clave
+- **OpenAI API**: Motor conversacional (GPT-4) - Ver [ADR-004](../../memory-bank/architecture/004-openai-gpt4.md)
+- **Google Maps API**: Validación y normalización de direcciones
+- **Supabase**: PostgreSQL managed + Auth + RLS multi-tenant
+- **DynamoDB**: Mensajes de conversaciones con TTL automático
 
 ### Framework de Pruebas
 - **Jest**: Framework de pruebas con soporte para TypeScript
@@ -134,34 +144,83 @@ El backend sigue una arquitectura DDD en capas:
 ### Estructura del Proyecto
 
 ```
-backend/
-├── src/
+apps/api/src/                     # Backend NestJS (Monolito Modular)
+├── conversations/                # Bounded Context: Conversations (NÚCLEO)
 │   ├── domain/
-│   │   ├── models/          # Entidades de dominio
-│   │   └── repositories/    # Interfaces de repositorio
+│   │   ├── entities/
+│   │   ├── value-objects/
+│   │   └── repositories/
 │   ├── application/
-│   │   ├── services/        # Servicios de lógica de negocio
-│   │   └── validator.ts     # Validación de entrada
-│   ├── presentation/
-│   │   └── controllers/     # Manejadores de peticiones HTTP
+│   │   ├── use-cases/
+│   │   └── dtos/
 │   ├── infrastructure/
-│   │   ├── logger.ts        # Utilidades de logging
-│   │   └── prismaClient.ts  # Configuración del cliente Prisma
-│   ├── routes/              # Definiciones de rutas Express
-│   ├── middleware/          # Middleware de Express
-│   ├── index.ts             # Punto de entrada de la aplicación
-│   └── lambda.ts            # Manejador de AWS Lambda
-├── prisma/
-│   ├── schema.prisma        # Esquema de base de datos
-│   └── migrations/          # Migraciones de base de datos
-├── test-utils/
-│   ├── builders/            # Constructores de datos de prueba
-│   └── mocks/               # Helpers de mocks
-├── jest.config.js           # Configuración de Jest
-├── tsconfig.json            # Configuración de TypeScript
-├── serverless.yml           # Configuración de Serverless Framework
-└── package.json             # Dependencias y scripts
+│   │   ├── repositories/
+│   │   ├── openai/
+│   │   └── websockets/
+│   ├── presentation/
+│   │   └── controllers/
+│   └── conversations.module.ts   # Módulo NestJS
+│
+├── orders/                       # Bounded Context: Orders
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   ├── presentation/
+│   └── orders.module.ts
+│
+├── addresses/                    # Bounded Context: Addresses
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   │   └── google-maps/
+│   ├── presentation/
+│   └── addresses.module.ts
+│
+├── users/                        # Bounded Context: Users
+│   └── users.module.ts
+│
+├── stores/                       # Bounded Context: Stores
+│   └── stores.module.ts
+│
+├── shared/                       # Código compartido
+│   ├── filters/                  # Exception filters
+│   ├── guards/                   # Auth guards
+│   ├── interceptors/             # Logging, transform
+│   └── decorators/
+│
+├── infrastructure/               # Servicios de infraestructura
+│   ├── supabase/
+│   │   ├── supabase.service.ts
+│   │   └── supabase.config.ts
+│   ├── dynamodb/
+│   │   ├── dynamodb.service.ts
+│   │   └── dynamodb.config.ts
+│   └── redis/
+│       └── redis.service.ts
+│
+├── app.module.ts                 # Módulo raíz NestJS
+└── main.ts                       # Entry point
+apps/worker/src/                  # Worker BullMQ (procesamiento asíncrono)
+└── processors/
+    └── conversation.processor.ts # Procesa jobs de conversaciones IA
+
+apps/api/prisma/
+├── schema.prisma                 # Esquema de base de datos Supabase
+└── migrations/                   # Migraciones de Supabase
+
+apps/api/test/
+├── unit/                         # Tests unitarios
+├── integration/                  # Tests de integración
+└── e2e/                          # Tests end-to-end
+
+jest.config.js                    # Configuración de Jest
+tsconfig.json                     # Configuración de TypeScript
+package.json                      # Dependencias y scripts (monorepo root)
+pnpm-workspace.yaml               # Configuración de workspaces
+turbo.json                        # Configuración de Turborepo
 ```
+
+**Nota**: Ver [ADR-001](../../memory-bank/architecture/001-monolith-modular.md) para decisión de arquitectura modular.
 
 ## Principios de Diseño Dirigido por el Dominio (DDD)
 
@@ -1145,11 +1204,31 @@ requiredEnvVars.forEach(varName => {
 });
 ```
 
-### Inyección de Dependencias
+### Inyección de Dependencias (NestJS)
 
-- **Inyectar Cliente Prisma**: Inyectar cliente Prisma vía middleware de Express
-- **Evitar Estado Global**: Evitar estado global para conexiones de base de datos
-- **Testabilidad**: Usar inyección de dependencias para mejorar testabilidad
+- **Providers NestJS**: Usar decorador `@Injectable()` para servicios
+- **Módulos NestJS**: Declarar providers, imports, exports en decorador `@Module()`
+- **Inyectar Clientes DB**: 
+  - Supabase: Inyectar `SupabaseService` vía constructor
+  - DynamoDB: Inyectar `DynamoDBService` vía constructor
+- **Evitar Estado Global**: Evitar singletons globales para conexiones DB
+- **Testabilidad**: Usar DI de NestJS para facilitar mocking en tests
+
+```typescript
+// Ejemplo: Service con DI
+@Injectable()
+export class ConversationService {
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly dynamoDBService: DynamoDBService,
+    private readonly openaiService: OpenAIService,
+  ) {}
+  
+  async createConversation(dto: CreateConversationDto) {
+    // Lógica usando servicios inyectados
+  }
+}
+```
 
 ```typescript
 // Middleware para inyectar cliente Prisma
@@ -1195,35 +1274,54 @@ npx prisma db seed       # Poblar base de datos
 - **Todas las Pruebas Pasando**: Asegurar que todas las pruebas pasen antes del despliegue
 - **Revisión de Código**: Revisar código para adherencia a estándares
 
-## Despliegue Serverless
+## Deployment en Servidor Dedicado
 
-### Configuración de AWS Lambda
+### Containerización
 
-- **Manejador Lambda**: El punto de entrada es `src/lambda.ts`
-- **Serverless HTTP**: Usar `serverless-http` para envolver la app Express
-- **Variables de Entorno**: Configurar variables de entorno en `serverless.yml`
+- **Dockerfile**: Aplicación empaquetada en contenedor Docker
+- **Multi-stage Build**: Build de TypeScript en stage separado para optimizar tamaño
+- **Imagen Base**: `node:20-alpine` para producción (mínima y segura)
+- **Variables de Entorno**: Inyectadas vía `.env` y `docker-compose.yml`
+- **Health Checks**: Endpoint `/health` para validar estado del servicio
 
-### Framework Serverless
+### Orquestación con Docker Compose
 
-- **Archivo de Configuración**: `serverless.yml` define la configuración de Lambda
-- **Comando de Compilación**: Usar `npm run build:lambda` para compilaciones de Lambda
-- **Despliegue**: Desplegar usando CLI de Serverless Framework
+- **Servicios Definidos**: API, Worker, Redis en `docker-compose.yml`
+- **Reverse Proxy**: Traefik maneja routing, SSL automático (Let's Encrypt) y load balancing
+- **Networking**: Red interna Docker para comunicación segura entre servicios
+- **Volumes**: Persistencia para Redis y logs
+- **Restart Policies**: `unless-stopped` para alta disponibilidad
 
-```typescript
-// lambda.ts
-import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
-import serverless from 'serverless-http';
-import { app } from './index';
+### Framework de Deployment
 
-const serverlessHandler = serverless(app);
+- **Docker**: Containerización de aplicaciones
+- **Docker Compose**: Orquestación multi-servicio
+- **Traefik**: Reverse proxy con SSL automático
+- **GitHub Actions**: CI/CD automatizado
 
-export const handler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  context.callbackWaitsForEmptyEventLoop = false;
-  return await serverlessHandler(event, context) as APIGatewayProxyResult;
-};
+```yaml
+# docker-compose.yml (simplificado)
+services:
+  api:
+    build: ./apps/api
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - DYNAMODB_TABLE=${DYNAMODB_TABLE}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.adresles.com`)"
+  
+  worker:
+    build: ./apps/worker
+    depends_on:
+      - redis
+  
+  redis:
+    image: redis:7-alpine
 ```
 
-Este documento sirve como la base para mantener calidad y consistencia de código en toda la aplicación backend del Proyecto Final del Máster AI4Devs. Todos los miembros del equipo deben seguir estas prácticas para asegurar una base de código mantenible, escalable y testeable.
+Ver detalles completos: [Adresles_Business.md - Sección 4.6-4.7](../../Adresles_Business.md#46-diagrama-de-infraestructura-y-deployment)
+
+---
+
+Este documento sirve como la base para mantener calidad y consistencia de código en toda la aplicación backend de Adresles. Todos los miembros del equipo deben seguir estas prácticas para asegurar una base de código mantenible, escalable y testeable.

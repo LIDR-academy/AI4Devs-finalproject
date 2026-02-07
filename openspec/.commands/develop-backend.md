@@ -1,3 +1,8 @@
+**IMPORTANTE**: Antes de empezar, consulta:
+
+- [memory-bank/README.md](../../memory-bank/README.md) para contexto del proyecto
+- Los ADRs relevantes en [memory-bank/architecture/](../../memory-bank/architecture/)
+
 Por favor analiza y soluciona el ticket: $ARGUMENTS.
 
 Sigue estos pasos:

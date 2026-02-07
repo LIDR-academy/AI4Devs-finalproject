@@ -1,415 +1,284 @@
-# Documentación del Modelo de Datos
-
-Este documento describe el modelo de datos para el Proyecto Final del Máster AI4Devs, incluyendo descripciones de entidades, definiciones de campos, relaciones y un diagrama entidad-relación.
-
-**PENDIENTE DE DEFINICIÓN, A GENERAR SEGÚN EJEMPLO INDICADO A CONTINUACIÓN:**
-
-## Descripciones de Modelo
-
-### 1. Candidate
-
-Representa un candidato de trabajo que puede aplicar a posiciones dentro del sistema.
-
-**Campos:**
-
-- `id`: Identificador único para el candidato (Clave Primaria)
-- `firstName`: Primer nombre del candidato (máx 100 caracteres)
-- `lastName`: Apellido del candidato (máx 100 caracteres)
-- `email`: Dirección de email única del candidato (máx 255 caracteres)
-- `phone`: Número de teléfono del candidato (opcional, máx 15 caracteres)
-- `address`: Dirección del candidato (opcional, máx 100 caracteres)
-
-**Reglas de Validación:**
-
-- Primer nombre y apellido son requeridos, 2-100 caracteres, solo letras
-- Email es requerido, debe ser único y seguir formato de email válido
-- Teléfono es opcional pero debe seguir formato español (6|7|9)XXXXXXXX si se proporciona
-- Dirección es opcional pero no puede exceder 100 caracteres
-- Máximo de 3 registros de educación por candidato
-
-**Relaciones:**
-
-- `educations`: Relación uno-a-muchos con el modelo Education
-- `workExperiences`: Relación uno-a-muchos con el modelo WorkExperience
-- `resumes`: Relación uno-a-muchos con el modelo Resume
-- `applications`: Relación uno-a-muchos con el modelo Application
-
-### 2. Education
-
-Representa información de antecedentes educativos para candidatos.
-
-**Campos:**
-
-- `id`: Identificador único para el registro de educación (Clave Primaria)
-- `institution`: Nombre de la institución educativa (máx 100 caracteres)
-- `title`: Título de grado o certificación obtenida (máx 250 caracteres)
-- `startDate`: Fecha de inicio del período educativo
-- `endDate`: Fecha de fin del período educativo (opcional, null si está en curso)
-- `candidateId`: Clave foránea que referencia al Candidate
-
-**Reglas de Validación:**
-
-- Institución es requerida y no puede exceder 100 caracteres
-- Título es requerido y no puede exceder 250 caracteres
-- Fecha de inicio es requerida y debe estar en formato de fecha válido
-- Fecha de fin es opcional pero debe ser válida si se proporciona
-- Máximo de 3 registros de educación por candidato
-
-**Relaciones:**
-
-- `candidate`: Relación muchos-a-uno con el modelo Candidate
-
-### 3. WorkExperience
-
-Representa historial laboral y experiencia profesional para candidatos.
-
-**Campos:**
-
-- `id`: Identificador único para el registro de experiencia laboral (Clave Primaria)
-- `company`: Nombre de la empresa u organización (máx 100 caracteres)
-- `position`: Título de trabajo o posición ocupada (máx 100 caracteres)
-- `description`: Descripción de responsabilidades y logros (opcional, máx 200 caracteres)
-- `startDate`: Fecha de inicio de la experiencia laboral
-- `endDate`: Fecha de fin de la experiencia laboral (opcional, null si es actual)
-- `candidateId`: Clave foránea que referencia al Candidate
-
-**Reglas de Validación:**
-
-- Nombre de empresa es requerido y no puede exceder 100 caracteres
-- Posición es requerida y no puede exceder 100 caracteres
-- Descripción es opcional pero no puede exceder 200 caracteres si se proporciona
-- Fecha de inicio es requerida y debe estar en formato de fecha válido
-- Fecha de fin es opcional pero debe ser válida si se proporciona
-
-**Relaciones:**
-
-- `candidate`: Relación muchos-a-uno con el modelo Candidate
-
-### 4. Resume
-
-Representa archivos de currículum cargados asociados con candidatos.
-
-**Campos:**
-
-- `id`: Identificador único para el registro de currículum (Clave Primaria)
-- `filePath`: Ruta del sistema de archivos al currículum cargado (máx 500 caracteres)
-- `fileType`: Tipo MIME o extensión de archivo del currículum (máx 50 caracteres)
-- `uploadDate`: Fecha y hora cuando se cargó el currículum
-- `candidateId`: Clave foránea que referencia al Candidate
-
-**Reglas de Validación:**
-
-- Ruta de archivo es requerida y no puede exceder 500 caracteres
-- Tipo de archivo es requerido y no puede exceder 50 caracteres
-- Fecha de carga se establece automáticamente cuando se carga el archivo
-- Tipos de archivo soportados: PDF y DOCX (máx 10MB)
-
-**Relaciones:**
-
-- `candidate`: Relación muchos-a-uno con el modelo Candidate
-
-### 5. Company
-
-Representa empresas que publican posiciones de trabajo y emplean personal.
-
-**Campos:**
-
-- `id`: Identificador único para la empresa (Clave Primaria)
-- `name`: Nombre único de empresa
-
-**Relaciones:**
-
-- `employees`: Relación uno-a-muchos con el modelo Employee
-- `positions`: Relación uno-a-muchos con el modelo Position
-
-### 6. Employee
-
-Representa empleados dentro de empresas que pueden conducir entrevistas.
-
-**Campos:**
-
-- `id`: Identificador único para el empleado (Clave Primaria)
-- `name`: Nombre completo del empleado
-- `email`: Dirección de email única del empleado
-- `role`: Rol o título de trabajo del empleado
-- `isActive`: Booleano que indica si el empleado está actualmente activo
-- `companyId`: Clave foránea que referencia a Company
-
-**Relaciones:**
-
-- `company`: Relación muchos-a-uno con el modelo Company
-- `interviews`: Relación uno-a-muchos con el modelo Interview
-
-### 7. InterviewType
-
-Define diferentes tipos de entrevistas que pueden conducirse.
-
-**Campos:**
-
-- `id`: Identificador único para el tipo de entrevista (Clave Primaria)
-- `name`: Nombre del tipo de entrevista (ej., "Technical", "HR", "Behavioral")
-- `description`: Descripción detallada del tipo de entrevista (opcional)
-
-**Relaciones:**
-
-- `interviewSteps`: Relación uno-a-muchos con el modelo InterviewStep
-
-### 8. InterviewFlow
-
-Representa una secuencia de pasos de entrevista que definen el proceso de contratación.
-
-**Campos:**
-
-- `id`: Identificador único para el flujo de entrevista (Clave Primaria)
-- `description`: Descripción del proceso de flujo de entrevista (opcional)
-
-**Relaciones:**
-
-- `interviewSteps`: Relación uno-a-muchos con el modelo InterviewStep
-- `positions`: Relación uno-a-muchos con el modelo Position
-
-### 9. InterviewStep
-
-Representa pasos individuales dentro de un flujo de entrevista.
-
-**Campos:**
-
-- `id`: Identificador único para el paso de entrevista (Clave Primaria)
-- `name`: Nombre del paso de entrevista
-- `orderIndex`: Orden numérico de este paso dentro del flujo
-- `interviewFlowId`: Clave foránea que referencia al InterviewFlow
-- `interviewTypeId`: Clave foránea que referencia al InterviewType
-
-**Relaciones:**
-
-- `interviewFlow`: Relación muchos-a-uno con el modelo InterviewFlow
-- `interviewType`: Relación muchos-a-uno con el modelo InterviewType
-- `applications`: Relación uno-a-muchos con el modelo Application
-- `interviews`: Relación uno-a-muchos con el modelo Interview
-
-### 10. Position
-
-Representa posiciones de trabajo disponibles para aplicación.
-
-**Campos:**
-
-- `id`: Identificador único para la posición (Clave Primaria)
-- `companyId`: Clave foránea que referencia a Company (requerido)
-- `interviewFlowId`: Clave foránea que referencia al InterviewFlow (requerido)
-- `title`: Título del trabajo (requerido, máx 100 caracteres)
-- `description`: Breve descripción de la posición (requerido)
-- `status`: Estado actual de la posición (predeterminado: "Draft", valores válidos: Open, Contratado, Cerrado, Borrador)
-- `isVisible`: Booleano que indica si la posición es públicamente visible (predeterminado: false)
-- `location`: Ubicación del trabajo (requerido)
-- `jobDescription`: Descripción detallada del trabajo (requerido)
-- `requirements`: Requisitos y calificaciones del trabajo (opcional)
-- `responsibilities`: Responsabilidades del trabajo (opcional)
-- `salaryMin`: Rango mínimo de salario (opcional, debe ser >= 0)
-- `salaryMax`: Rango máximo de salario (opcional, debe ser >= 0 y >= salaryMin)
-- `employmentType`: Tipo de empleo (ej., "Full-time", "Part-time", "Contract") (opcional)
-- `benefits`: Descripción de beneficios del trabajo (opcional)
-- `companyDescription`: Descripción de la empresa contratante (opcional)
-- `applicationDeadline`: Fecha límite para aplicaciones (opcional, debe ser una fecha futura)
-- `contactInfo`: Información de contacto para consultas (opcional)
-
-**Reglas de Validación:**
-
-- Título es requerido y no puede exceder 100 caracteres
-- Descripción, ubicación y jobDescription son campos requeridos
-- Estado debe ser uno de: Open, Contratado, Cerrado, Borrador
-- Referencias de empresa y flujo de entrevista deben existir en la base de datos
-- Valores de salario deben ser números no negativos
-- Fecha límite de aplicación debe ser una fecha futura si se proporciona
-
-**Relaciones:**
-
-- `company`: Relación muchos-a-uno con el modelo Company
-- `interviewFlow`: Relación muchos-a-uno con el modelo InterviewFlow
-- `applications`: Relación uno-a-muchos con el modelo Application
-
-### 11. Application
-
-Representa la aplicación de un candidato a una posición específica.
-
-**Campos:**
-
-- `id`: Identificador único para la aplicación (Clave Primaria)
-- `applicationDate`: Fecha cuando se envió la aplicación
-- `currentInterviewStep`: Paso actual en el proceso de entrevista
-- `notes`: Notas adicionales sobre la aplicación (opcional)
-- `positionId`: Clave foránea que referencia a Position
-- `candidateId`: Clave foránea que referencia a Candidate
-- `interviewStepId`: Clave foránea que referencia al InterviewStep actual
-
-**Relaciones:**
-
-- `position`: Relación muchos-a-uno con el modelo Position
-- `candidate`: Relación muchos-a-uno con el modelo Candidate
-- `interviewStep`: Relación muchos-a-uno con el modelo InterviewStep
-- `interviews`: Relación uno-a-muchos con el modelo Interview
-
-### 12. Interview
-
-Representa sesiones individuales de entrevista conducidas como parte de una aplicación.
-
-**Campos:**
-
-- `id`: Identificador único para la entrevista (Clave Primaria)
-- `interviewDate`: Fecha y hora de la entrevista
-- `result`: Resultado o desenlace de la entrevista (opcional)
-- `score`: Puntuación numérica o calificación de la entrevista (opcional)
-- `notes`: Notas de entrevista y retroalimentación (opcional)
-- `applicationId`: Clave foránea que referencia a Application
-- `interviewStepId`: Clave foránea que referencia al InterviewStep
-- `employeeId`: Clave foránea que referencia al Employee conductor
-
-**Relaciones:**
-
-- `application`: Relación muchos-a-uno con el modelo Application
-- `interviewStep`: Relación muchos-a-uno con el modelo InterviewStep
-- `employee`: Relación muchos-a-uno con el modelo Employee
-
-## Diagrama Entidad-Relación
+# Documentación del Modelo de Datos - Adresles
+
+Este documento describe el modelo de datos para **Adresles**, incluyendo descripciones de entidades, definiciones de campos, relaciones y diagramas entidad-relación.
+
+**Ver modelo completo y detallado**: [Adresles_Business.md - Sección 3.2-3.3](../../Adresles_Business.md#32-modelo-entidad-relación)
+
+## Arquitectura de Base de Datos Híbrida
+
+Adresles utiliza dos sistemas de base de datos optimizados para diferentes tipos de datos:
+
+### Supabase (PostgreSQL)
+**Propósito**: Datos relacionales con transacciones ACID
+
+Entidades principales:
+- `ecommerce` - Plataformas de comercio electrónico registradas
+- `store` - Tiendas individuales de un eCommerce
+- `user` - Usuarios finales (compradores/destinatarios)
+- `address` - Direcciones de entrega guardadas
+- `order` - Pedidos realizados
+- `order_address` - Snapshot inmutable de dirección del pedido
+- `gift_recipient` - Información de destinatario regalo
+- `plugin_config` - Configuración de plugins por tienda
+- `conversation` - Metadata de conversaciones
+- `conversation_metadata` - Metadata persistente (2 años)
+
+### DynamoDB
+**Propósito**: Mensajes de conversaciones (alta volumetría, TTL automático)
+
+Tabla:
+- `adresles-messages` - Mensajes de chat IA-usuario
+  - Partition Key: `conversation_id`
+  - Sort Key: `timestamp`
+  - TTL: 90 días automático
+
+**Decisión arquitectural**: Ver [ADR-002](../../memory-bank/architecture/002-supabase-dynamodb.md)
+
+## Entidades Principales (Supabase)
+
+### 1. User
+
+Representa usuarios finales del sistema (compradores y destinatarios de regalos).
+
+**Campos**:
+- `id`: UUID (PK)
+- `phone`: VARCHAR(20) (UNIQUE, NOT NULL) - Identificador único del usuario
+- `phone_country`: VARCHAR(2) (NOT NULL) - Código país
+- `first_name`: VARCHAR(100)
+- `last_name`: VARCHAR(100)
+- `email`: VARCHAR(255)
+- `preferred_language`: VARCHAR(5) - Idioma detectado
+- `is_registered`: BOOLEAN (DEFAULT false)
+- `registered_at`: TIMESTAMPTZ
+- `created_at`: TIMESTAMPTZ (NOT NULL, DEFAULT now())
+- `updated_at`: TIMESTAMPTZ (NOT NULL, DEFAULT now())
+
+**Reglas de Validación**:
+- Teléfono es el identificador único (no email)
+- Teléfono debe incluir código de país
+- Usuario puede existir sin estar registrado formalmente
+
+**Relaciones**:
+- `addresses`: Uno-a-muchos con Address
+- `orders`: Uno-a-muchos con Order (como comprador)
+
+### 2. Address
+
+Representa direcciones de entrega guardadas en la libreta del usuario.
+
+**Campos**:
+- `id`: UUID (PK)
+- `user_id`: UUID (FK → user, NOT NULL)
+- `label`: VARCHAR(100) - Etiqueta amigable (Casa, Trabajo, etc.)
+- `full_address`: VARCHAR(500) (NOT NULL)
+- `street`: VARCHAR(255) (NOT NULL)
+- `number`: VARCHAR(20)
+- `block`: VARCHAR(20)
+- `staircase`: VARCHAR(20)
+- `floor`: VARCHAR(20)
+- `door`: VARCHAR(20)
+- `additional_info`: VARCHAR(255)
+- `postal_code`: VARCHAR(20) (NOT NULL)
+- `city`: VARCHAR(100) (NOT NULL)
+- `province`: VARCHAR(100)
+- `country`: VARCHAR(2) (NOT NULL) - Código ISO
+- `gmaps_place_id`: VARCHAR(255) - ID de Google Maps
+- `latitude`: DECIMAL(10,8)
+- `longitude`: DECIMAL(11,8)
+- `is_default`: BOOLEAN (DEFAULT false)
+- `is_deleted`: BOOLEAN (DEFAULT false) - Soft delete
+- `created_at`: TIMESTAMPTZ
+
+**Validación inteligente**:
+- Integración con Google Maps API para normalización
+- Detección de datos faltantes (escalera, bloque, piso, puerta) mediante IA
+
+**Relaciones**:
+- `user`: Muchos-a-uno con User
+
+### 3. Order
+
+Representa pedidos realizados en tiendas eCommerce integradas.
+
+**Campos**:
+- `id`: UUID (PK)
+- `store_id`: UUID (FK → store, NOT NULL)
+- `user_id`: UUID (FK → user, NOT NULL)
+- `external_order_id`: VARCHAR(100) (NOT NULL) - ID en el eCommerce
+- `external_order_number`: VARCHAR(50)
+- `total_amount`: DECIMAL(12,2) (NOT NULL)
+- `currency`: VARCHAR(3) (NOT NULL)
+- `fee_percentage`: DECIMAL(5,2) (NOT NULL)
+- `fee_amount`: DECIMAL(12,2) (NOT NULL)
+- `status`: ENUM - PENDING_ADDRESS, ADDRESS_CONFIRMED, SYNCED, FAILED, CANCELLED
+- `is_gift`: BOOLEAN (DEFAULT false)
+- `items_summary`: JSONB
+- `webhook_received_at`: TIMESTAMPTZ (NOT NULL)
+- `address_confirmed_at`: TIMESTAMPTZ
+- `synced_at`: TIMESTAMPTZ
+
+**Estados del pedido**:
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING_ADDRESS: Webhook recibido
+    PENDING_ADDRESS --> ADDRESS_CONFIRMED: Usuario confirma dirección
+    ADDRESS_CONFIRMED --> SYNCED: Dirección sincronizada con eCommerce
+    PENDING_ADDRESS --> FAILED: Error en proceso
+    PENDING_ADDRESS --> CANCELLED: Usuario cancela
+    SYNCED --> [*]
+    FAILED --> [*]
+    CANCELLED --> [*]
+```
+
+**Relaciones**:
+- `store`: Muchos-a-uno con Store
+- `user`: Muchos-a-uno con User (comprador)
+- `order_address`: Uno-a-uno con OrderAddress (snapshot inmutable)
+- `gift_recipient`: Uno-a-uno con GiftRecipient (si is_gift = true)
+- `conversation`: Uno-a-muchos con Conversation
+
+### 4. Conversation
+
+Representa metadata de una conversación entre usuario y agente IA.
+
+**Campos**:
+- `id`: UUID (PK)
+- `order_id`: UUID (FK → order, NOT NULL)
+- `user_id`: UUID (FK → user, NOT NULL)
+- `conversation_type`: ENUM - INFORMATION, GET_ADDRESS, REGISTER, GIFT_NOTIFICATION, SUPPORT
+- `user_type`: ENUM - BUYER, RECIPIENT
+- `status`: ENUM - ACTIVE, WAITING_USER, COMPLETED, ESCALATED, TIMEOUT
+- `started_at`: TIMESTAMPTZ (NOT NULL)
+- `completed_at`: TIMESTAMPTZ
+- `is_registered_adresles`: BOOLEAN
+- `is_registered_ecommerce`: BOOLEAN
+- `has_address_adresles`: BOOLEAN
+- `has_address_ecommerce`: BOOLEAN
+
+**Mensajes**: Almacenados en DynamoDB (`adresles-messages`)
+
+**Relaciones**:
+- `order`: Muchos-a-uno con Order
+- `user`: Muchos-a-uno con User
+
+## Mensajes de Conversaciones (DynamoDB)
+
+### Tabla: adresles-messages
+
+**Esquema**:
+
+```typescript
+{
+  PK: string;              // conversation_id (Partition Key)
+  SK: string;              // timestamp ISO (Sort Key)
+  message_id: string;      // UUID
+  conversation_id: string;
+  order_id: string;        // Para GSI
+  user_id: string;         // Para GSI
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  metadata: {
+    model?: string;
+    tokens?: number;
+    // ...
+  };
+  ttl: number;             // Unix timestamp (90 días)
+}
+```
+
+**Índices GSI**:
+1. `user_id-timestamp-index` - Buscar mensajes por usuario
+2. `order_id-timestamp-index` - Buscar mensajes por pedido
+
+**Política de retención**: Ver [Adresles_Business.md - Sección 3.4](../../Adresles_Business.md#34-política-de-retención-de-datos)
+
+## Diagrama Entidad-Relación Simplificado
 
 ```mermaid
 erDiagram
-    Candidate {
-        Int id PK
-        String firstName
-        String lastName
-        String email UK
-        String phone
-        String address
+    ECOMMERCE ||--o{ STORE : "has"
+    STORE ||--o{ PLUGIN_CONFIG : "configures"
+    STORE ||--o{ ORDER : "receives"
+    
+    USER ||--o{ ADDRESS : "saves"
+    USER ||--o{ ORDER : "places"
+    USER ||--o{ CONVERSATION : "participates"
+    
+    ORDER ||--|| ORDER_ADDRESS : "has_snapshot"
+    ORDER ||--o| GIFT_RECIPIENT : "may_have"
+    ORDER ||--o{ CONVERSATION : "generates"
+    
+    CONVERSATION }o--|| ORDER : "belongs_to"
+    CONVERSATION }o--|| USER : "with"
+    
+    ECOMMERCE {
+        uuid id PK
+        string name UK
     }
-    Education {
-        Int id PK
-        String institution
-        String title
-        DateTime startDate
-        DateTime endDate
-        Int candidateId FK
+    
+    STORE {
+        uuid id PK
+        uuid ecommerce_id FK
+        string name
+        string url UK
     }
-    WorkExperience {
-        Int id PK
-        String company
-        String position
-        String description
-        DateTime startDate
-        DateTime endDate
-        Int candidateId FK
+    
+    USER {
+        uuid id PK
+        string phone UK
+        string first_name
+        string last_name
+        boolean is_registered
     }
-    Resume {
-        Int id PK
-        String filePath
-        String fileType
-        DateTime uploadDate
-        Int candidateId FK
+    
+    ADDRESS {
+        uuid id PK
+        uuid user_id FK
+        string full_address
+        string gmaps_place_id
+        boolean is_default
     }
-    Company {
-        Int id PK
-        String name UK
+    
+    ORDER {
+        uuid id PK
+        uuid store_id FK
+        uuid user_id FK
+        string external_order_id
+        decimal total_amount
+        string status
+        boolean is_gift
     }
-    Employee {
-        Int id PK
-        String name
-        String email UK
-        String role
-        Boolean isActive
-        Int companyId FK
+    
+    ORDER_ADDRESS {
+        uuid id PK
+        uuid order_id FK
+        string full_address
+        string recipient_name
     }
-    InterviewType {
-        Int id PK
-        String name
-        String description
+    
+    CONVERSATION {
+        uuid id PK
+        uuid order_id FK
+        uuid user_id FK
+        string conversation_type
+        string status
     }
-    InterviewFlow {
-        Int id PK
-        String description
-    }
-    InterviewStep {
-        Int id PK
-        String name
-        Int orderIndex
-        Int interviewFlowId FK
-        Int interviewTypeId FK
-    }
-    Position {
-        Int id PK
-        String title
-        String description
-        String status
-        Boolean isVisible
-        String location
-        String jobDescription
-        String requirements
-        String responsibilities
-        Float salaryMin
-        Float salaryMax
-        String employmentType
-        String benefits
-        String companyDescription
-        DateTime applicationDeadline
-        String contactInfo
-        Int companyId FK
-        Int interviewFlowId FK
-    }
-    Application {
-        Int id PK
-        DateTime applicationDate
-        Int currentInterviewStep
-        String notes
-        Int positionId FK
-        Int candidateId FK
-        Int interviewStepId FK
-    }
-    Interview {
-        Int id PK
-        DateTime interviewDate
-        String result
-        Int score
-        String notes
-        Int applicationId FK
-        Int interviewStepId FK
-        Int employeeId FK
-    }
-
-    Candidate ||--o{ Education : "has"
-    Candidate ||--o{ WorkExperience : "has"
-    Candidate ||--o{ Resume : "has"
-    Candidate ||--o{ Application : "submits"
-
-    Company ||--o{ Employee : "employs"
-    Company ||--o{ Position : "offers"
-
-    InterviewType ||--o{ InterviewStep : "defines"
-    InterviewFlow ||--o{ InterviewStep : "includes"
-    InterviewFlow ||--o{ Position : "guides"
-
-    Position ||--o{ Application : "receives"
-    Application ||--o{ Interview : "includes"
-
-    InterviewStep ||--o{ Application : "current_step"
-    InterviewStep ||--o{ Interview : "conducted_at"
-
-    Employee ||--o{ Interview : "conducts"
 ```
+
+**Nota**: Los mensajes individuales se almacenan en DynamoDB, no en el diagrama E-R de Supabase.
 
 ## Principios Clave de Diseño
 
-1. **Integridad Referencial**: Todas las relaciones de claves foráneas aseguran consistencia de datos a través del sistema.
+1. **Arquitectura Híbrida**: Datos relacionales en Supabase, mensajes alta volumetría en DynamoDB
+2. **Multi-tenant**: Row Level Security (RLS) en Supabase por `store_id`
+3. **Inmutabilidad**: OrderAddress es snapshot inmutable (no se modifica si usuario cambia dirección después)
+4. **TTL Automático**: DynamoDB elimina mensajes automáticamente tras 90 días
+5. **Teléfono como ID**: El número de teléfono es el identificador único del usuario (no email)
+6. **Soft Delete**: Addresses usan `is_deleted` en lugar de eliminación física
+7. **Audit Trail**: Timestamps completos en todas las entidades
 
-2. **Flexibilidad**: El sistema de flujo de entrevista permite procesos de contratación personalizables por posición.
+## Referencias
 
-3. **Rastro de Auditoría**: Las fechas de aplicación y entrevista proporcionan una línea de tiempo completa del proceso de contratación.
-
-4. **Extensibilidad**: El diseño modular permite fácil adición de nuevas funcionalidades y puntos de datos.
-
-5. **Normalización de Datos**: El modelo sigue principios de normalización de base de datos para minimizar redundancia y asegurar integridad de datos.
-
-## Notas
-
-- Todos los campos `id` sirven como claves primarias con funcionalidad de auto-incremento
-- Las relaciones de clave foránea mantienen integridad referencial
-- Los campos opcionales permiten entrada de datos flexible mientras mantienen información central requerida
-- El sistema de entrevista soporta procesos de contratación de múltiples pasos con diferentes tipos de entrevistas
-- Los campos de email tienen restricciones únicas para prevenir cuentas duplicadas
+- **Modelo completo**: [Adresles_Business.md - Sección 3](../../Adresles_Business.md#fase-3-modelado-de-datos)
+- **Decisión DB híbrida**: [ADR-002](../../memory-bank/architecture/002-supabase-dynamodb.md)
+- **Diccionario de datos detallado**: [Adresles_Business.md - Sección 3.3](../../Adresles_Business.md#33-diccionario-de-datos)

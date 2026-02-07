@@ -1,0 +1,14 @@
+# Patrones y Convenciones
+
+Esta carpeta contendrá patrones y convenciones del proyecto que emerjan durante la implementación.
+
+## Contenido Futuro
+
+- `ddd-boundaries.md` - Límites de agregados y bounded contexts
+- `error-handling.md` - Estrategia de manejo de errores
+- `testing-strategy.md` - Pirámide de tests y convenciones
+- `api-conventions.md` - Convenciones de diseño de API REST
+- `logging-standards.md` - Estándares de logging
+- `validation-patterns.md` - Patrones de validación de datos
+
+Estos documentos se crearán conforme se establezcan patrones durante el desarrollo.

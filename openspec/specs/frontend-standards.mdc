@@ -1,12 +1,17 @@
 ---
-description: Estándares de desarrollo frontend, mejores prácticas y convenciones para la aplicación React del Proyecto Final del Máster AI4Devs, incluyendo patrones de componentes, gestión de estado, directrices de UI/UX y prácticas de pruebas
+description: Estándares de desarrollo frontend, mejores prácticas y convenciones para Adresles, React (Chat App) + Next.js (Dashboard Admin), TypeScript, TanStack Query, Zustand, Socket.io, Tailwind CSS, Shadcn/ui, incluyendo patrones de componentes, gestión de estado, directrices de UI/UX y prácticas de pruebas
 globs:
     [
         "frontend/src/**/*.{js,jsx,ts,tsx}",
+        "apps/web-chat/src/**/*.{js,jsx,ts,tsx}",
+        "apps/web-admin/src/**/*.{js,jsx,ts,tsx}",
         "frontend/playwright/**/*.{ts,js}",
+        "apps/*/playwright/**/*.{ts,js}",
         "frontend/tsconfig.json",
+        "apps/*/tsconfig.json",
         "frontend/playwright.config.ts",
         "frontend/package.json",
+        "apps/*/package.json",
     ]
 alwaysApply: true
 ---
@@ -56,29 +61,54 @@ alwaysApply: true
 
 ## Visión General
 
-Este documento describe las mejores prácticas, convenciones y estándares utilizados en la aplicación frontend del Proyecto Final del Máster de AI4Devs. Estas prácticas aseguran consistencia de código, mantenibilidad y experiencia de desarrollo óptima.
+Este documento describe las mejores prácticas, convenciones y estándares utilizados en las aplicaciones frontend de Adresles. Estas prácticas aseguran consistencia de código, mantenibilidad y experiencia de desarrollo óptima.
+
+## Aplicaciones Frontend de Adresles
+
+El proyecto Adresles tiene **dos aplicaciones frontend independientes**:
+
+### 1. Chat App (React + Vite)
+
+- **Propósito**: Aplicación conversacional para usuarios finales
+- **Stack**: React 18, Vite, TypeScript, TanStack Query, Zustand, Socket.io
+- **Características**: SPA interactiva, tiempo real, PWA-ready
+- **Ubicación**: `apps/web-chat/`
+
+### 2. Dashboard Admin (Next.js)
+
+- **Propósito**: Panel de administración para eCommerce
+- **Stack**: Next.js 14, React 18, TypeScript, TailwindCSS, Shadcn/ui
+- **Características**: SSR, Server Components, SEO optimizado
+- **Ubicación**: `apps/web-admin/`
+- **Deployment**: Vercel (free tier)
+
+Ver [ADR-001](../../memory-bank/architecture/001-monolith-modular.md) para decisiones arquitecturales.
 
 ## Stack Tecnológico
 
 ### Tecnologías Centrales
 
-- **React 18.3.1**: React moderno con componentes funcionales y hooks
-- **TypeScript 4.9.5**: Para seguridad de tipos y mejor experiencia de desarrollo
-- **Create React App 5.0.1**: Herramientas de compilación y servidor de desarrollo
-- **React Router DOM 6.23.1**: Enrutamiento y navegación del lado del cliente
+- **React**: Librería UI (v18.x) - Ambas apps
+- **TypeScript**: Lenguaje principal (strict mode) - Ambas apps
+- **Vite**: Build tool para Chat App (v5.x)
+- **Next.js**: Framework para Dashboard Admin (v14.x)
 
-### Framework de UI
+### Data Fetching y Estado (Chat App)
 
-- **Bootstrap 5.3.3**: Framework CSS para diseño responsivo
-- **React Bootstrap 2.10.2**: Componentes Bootstrap para React
-- **React Bootstrap Icons 1.11.4**: Biblioteca de iconos
-- **React DatePicker 6.9.0**: Componentes de entrada de fecha
+- **TanStack Query (v5.x)**: Data fetching, cache, sincronización con servidor
+- **Zustand (v4.x)**: State management global ligero (usuario actual, preferencias)
+- **React Hooks**: useState, useEffect para estado local de componentes
 
-### Gestión de Estado y Flujo de Datos
+### Real-time y Comunicación
 
-- **React Hooks**: useState, useEffect para gestión de estado local
-- **React Beautiful DND 13.1.1**: Funcionalidad de arrastrar y soltar
-- **Axios**: Cliente HTTP para comunicación con API
+- **Socket.io Client (v4.x)**: WebSocket connection para chat en tiempo real (Chat App)
+- **Axios**: Cliente HTTP para comunicación con API REST (ambas apps)
+
+### UI y Estilos
+
+- **TailwindCSS (v3.x)**: Utility-first CSS (Dashboard Admin)
+- **Shadcn/ui**: Componentes UI accesibles y customizables (Dashboard Admin)
+- **React Router DOM (v6.x)**: Routing en Chat App
 
 ### Framework de Pruebas
 
@@ -94,22 +124,49 @@ Este documento describe las mejores prácticas, convenciones y estándares utili
 
 ## Estructura del Proyecto
 
+### Chat App (apps/web-chat/)
+
 ```
-frontend/
-├── public/                 # Recursos estáticos
+apps/web-chat/
 ├── src/
-│   ├── components/        # Componentes UI reutilizables
-│   ├── services/         # Capa de servicio de API
-│   ├── pages/           # Componentes de página (organización futura)
-│   ├── assets/          # Imágenes, fuentes, recursos estáticos
-│   ├── App.js           # Componente principal de aplicación
-│   ├── index.tsx        # Punto de entrada de aplicación
-│   └── index.css        # Estilos globales
-├── playwright/
-│   └── e2e/            # Archivos de pruebas end-to-end
-├── package.json         # Dependencias y scripts
-├── tsconfig.json       # Configuración de TypeScript
-└── playwright.config.ts   # Configuración de Playwright
+│   ├── components/          # Componentes UI reutilizables
+│   │   ├── ui/             # Componentes base (Button, Input, Card)
+│   │   └── chat/           # Componentes específicos de chat
+│   ├── services/           # API services (axios)
+│   ├── hooks/              # Custom hooks
+│   ├── stores/             # Zustand stores (user, preferences)
+│   ├── lib/                # Utilidades y helpers
+│   ├── types/              # TypeScript types/interfaces
+│   ├── App.tsx             # Componente raíz con Router
+│   ├── main.tsx            # Entry point (Vite)
+│   └── index.css           # Estilos globales
+├── public/                 # Assets estáticos
+├── index.html              # HTML entry (Vite)
+├── vite.config.ts          # Configuración Vite
+├── tsconfig.json           # TypeScript config
+└── package.json            # Dependencies
+```
+
+### Dashboard Admin (apps/web-admin/)
+
+```
+apps/web-admin/
+├── src/
+│   ├── app/                # Next.js App Router
+│   │   ├── (auth)/        # Grupo de rutas autenticadas
+│   │   ├── api/           # API Routes (Next.js)
+│   │   ├── layout.tsx     # Root layout
+│   │   └── page.tsx       # Home page
+│   ├── components/         # React components
+│   │   ├── ui/            # Shadcn/ui components
+│   │   └── features/      # Feature-specific components
+│   ├── lib/                # Utilidades
+│   └── types/              # TypeScript types
+├── public/                 # Assets estáticos
+├── next.config.js          # Next.js config
+├── tailwind.config.ts      # Tailwind config
+├── tsconfig.json           # TypeScript config
+└── package.json            # Dependencies
 ```
 
 ## Estándares de Codificación
