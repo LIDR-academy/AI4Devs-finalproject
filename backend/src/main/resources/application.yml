@@ -21,6 +21,7 @@ ai:
 # OpenAI Configuration
 openai:
   base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+  model: ${OPENAI_MODEL:gpt-4o-mini}
   api-key: ${OPENAI_API_KEY:}
   temperature: ${OPENAI_TEMPERATURE:1.0}
   max-tokens: ${OPENAI_MAX_TOKENS:1024}

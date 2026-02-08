@@ -34,17 +34,6 @@ public final class AiTextMapper {
     }
 
     /**
-     * Creates a text enhancement request from existing content.
-     * 
-     * @param systemPrompt instructions for the AI
-     * @param textContent existing text to enhance
-     * @return AI service request DTO
-     */
-    public static AiTextRequest toEnhancementRequest(String systemPrompt, TextContent textContent) {
-        return AiTextRequest.forEnhancement(systemPrompt, textContent.value());
-    }
-
-    /**
      * Extracts TextContent from AI service response.
      * 
      * @param response AI service response

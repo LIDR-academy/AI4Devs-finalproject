@@ -72,6 +72,7 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
 
     private TextContent executeRequest(AiTextRequest request, String operation) {
         try {
+            //AiTextResponse response = buildMockResponse(request); // Simula una respuesta de la API para pruebas
             AiTextResponse response = restClient
                     .post()
                     .uri(baseUrl + "/v1/chat/completions")
@@ -96,6 +97,8 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
                     })
                     .body(AiTextResponse.class);
 
+            System.out.println("reponse from OpenAI: " + response);
+
             if (response == null || response.choices() == null || response.choices().isEmpty()) {
                 log.error("Empty response from AI service during {}", operation);
                 throw new TextGenerationServiceException("AI service returned empty response");
@@ -117,4 +120,43 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
                     "Failed to communicate with AI service: " + e.getMessage(), e);
         }
     }
+
+    //TODO BORRAR: método de construcción de respuesta simulada para pruebas sin conexión a la API real
+    // Construye un AiTextResponse de prueba con contenido válido
+private AiTextResponse buildMockResponse(AiTextRequest request) {
+    // Opcional: usa el último mensaje del usuario para personalizar la respuesta simulada
+    String userPrompt = request.messages().stream()
+            .filter(m -> "user".equalsIgnoreCase(m.role()))
+            .map(AiTextRequest.Message::content)
+            .reduce((first, second) -> second)
+            .orElse("prompt vacío");
+
+    String mockContent = "[MOCK] Respuesta simulada para: " + userPrompt;
+
+    AiTextResponse.Message msg = new AiTextResponse.Message(
+            "assistant",
+            mockContent
+    );
+
+    AiTextResponse.Choice choice = new AiTextResponse.Choice(
+            0,
+            msg,
+            "stop" // finishReason
+    );
+
+    AiTextResponse.Usage usage = new AiTextResponse.Usage(
+            12,  // promptTokens
+            42,  // completionTokens
+            54   // totalTokens
+    );
+
+    return new AiTextResponse(
+            "cmpl-mock-123",
+            "chat.completion",
+            System.currentTimeMillis() / 1000L, // created en segundos
+            "gpt-4o-mini",
+            java.util.List.of(choice),
+            usage
+    );
+}
 }

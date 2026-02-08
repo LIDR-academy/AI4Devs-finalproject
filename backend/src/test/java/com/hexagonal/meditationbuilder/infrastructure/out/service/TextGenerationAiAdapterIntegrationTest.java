@@ -5,6 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.hexagonal.meditationbuilder.domain.model.TextContent;
 import com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort.TextGenerationServiceException;
 import com.hexagonal.meditationbuilder.infrastructure.config.AiProperties;
+import com.hexagonal.meditationbuilder.infrastructure.config.OpenAiProperties;
+import com.hexagonal.meditationbuilder.infrastructure.out.service.dto.AiTextRequest;
 import org.junit.jupiter.api.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -21,6 +23,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @DisplayName("TextGenerationAiAdapter Integration Tests")
 class TextGenerationAiAdapterIntegrationTest {
+
+    @BeforeAll
+    static void initAiTextRequestProps() {
+        OpenAiProperties props = new OpenAiProperties();
+        props.setModel("gpt-4o-mini");
+        props.setApiKey("test-api-key");
+        props.setBaseUrl("http://localhost");
+        props.setTemperature(0.7);
+        props.setMaxTokens(256);
+        props.setTopP(1.0);
+        props.setFrequencyPenalty(0.0);
+        props.setPresencePenalty(0.0);
+        AiTextRequest.setProperties(props);
+    }
 
     private static WireMockServer wireMockServer;
     private TextGenerationAiAdapter adapter;

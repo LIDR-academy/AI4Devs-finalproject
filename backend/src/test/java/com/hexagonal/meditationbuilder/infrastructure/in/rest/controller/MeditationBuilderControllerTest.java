@@ -167,8 +167,6 @@ class MeditationBuilderControllerTest {
                 .andExpect(jsonPath("$.text").value("Generated text"));
         }
 
-        // Test de enhanceText eliminado: solo se prueba generateText
-
         @Test
         @DisplayName("should generate with default prompt when no request body")
         void shouldGenerateWithDefaultPromptWhenNoRequestBody() throws Exception {
@@ -187,7 +185,7 @@ class MeditationBuilderControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /v1/compositions/{id}/image/generate")
+    @DisplayName("POST /v1/image/generate")
     class GenerateImageTests {
 
         @Test
@@ -197,7 +195,7 @@ class MeditationBuilderControllerTest {
             when(generateImageUseCase.generateImage(any()))
                     .thenReturn(new ImageReference("ai-generated-123"));
 
-            mockMvc.perform(post("/v1/compositions/{id}/image/generate", compositionId))
+            mockMvc.perform(post("/v1/image/generate", compositionId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.imageReference").value("ai-generated-123"));
         }

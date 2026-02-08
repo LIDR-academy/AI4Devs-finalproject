@@ -1,13 +1,10 @@
 package com.hexagonal.meditationbuilder.infrastructure.out.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /**
- * AiTextResponse - DTO for AI text generation service response.
- * 
- * Follows OpenAI Chat Completions API response format.
- * 
- * @author Meditation Builder Team
+ * AiTextResponse - DTO for OpenAI Chat Completions response.
  */
 public record AiTextResponse(
         String id,
@@ -17,33 +14,20 @@ public record AiTextResponse(
         List<Choice> choices,
         Usage usage
 ) {
-
-    /**
-     * Individual choice in the response.
-     */
-    public record Choice(
+    public static record Choice(
             int index,
             Message message,
-            String finishReason
-    ) {
-    }
+            @JsonProperty("finish_reason") String finishReason
+    ) {}
 
-    /**
-     * Message content from AI.
-     */
-    public record Message(
+    public static record Message(
             String role,
             String content
-    ) {
-    }
+    ) {}
 
-    /**
-     * Token usage statistics.
-     */
-    public record Usage(
-            int promptTokens,
-            int completionTokens,
-            int totalTokens
-    ) {
-    }
+    public static record Usage(
+            @JsonProperty("prompt_tokens") int promptTokens,
+            @JsonProperty("completion_tokens") int completionTokens,
+            @JsonProperty("total_tokens") int totalTokens
+    ) {}
 }

@@ -3,9 +3,12 @@ package com.hexagonal.meditationbuilder.infrastructure.out.service.mapper;
 import com.hexagonal.meditationbuilder.domain.model.TextContent;
 import com.hexagonal.meditationbuilder.infrastructure.out.service.dto.AiTextRequest;
 import com.hexagonal.meditationbuilder.infrastructure.out.service.dto.AiTextResponse;
+import com.hexagonal.meditationbuilder.infrastructure.config.OpenAiProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.BeforeAll;
 
 import java.util.List;
 
@@ -17,6 +20,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @DisplayName("AiTextMapper")
 class AiTextMapperTest {
+
+        @BeforeAll
+        static void initAiTextRequestProps() {
+                OpenAiProperties props = new OpenAiProperties();
+                props.setModel("gpt-4o-mini");
+                props.setApiKey("test-api-key");
+                props.setBaseUrl("http://localhost");
+                props.setTemperature(0.7);
+                props.setMaxTokens(256);
+                props.setTopP(1.0);
+                props.setFrequencyPenalty(0.0);
+                props.setPresencePenalty(0.0);
+                AiTextRequest.setProperties(props);
+        }
 
     @Nested
     @DisplayName("toGenerationRequest()")
@@ -36,27 +53,6 @@ class AiTextMapperTest {
             assertThat(request.messages().get(0).content()).isEqualTo("You are a meditation writer");
             assertThat(request.messages().get(1).role()).isEqualTo("user");
             assertThat(request.messages().get(1).content()).isEqualTo("Write about peace");
-        }
-    }
-
-    @Nested
-    @DisplayName("toEnhancementRequest()")
-    class ToEnhancementRequestTests {
-
-        @Test
-        @DisplayName("should create enhancement request with text to enhance")
-        void shouldCreateEnhancementRequest() {
-            TextContent text = new TextContent("Original meditation text");
-            AiTextRequest request = AiTextMapper.toEnhancementRequest(
-                    "You are an editor",
-                    text
-            );
-
-            assertThat(request).isNotNull();
-            assertThat(request.messages()).hasSize(2);
-            assertThat(request.messages().get(0).role()).isEqualTo("system");
-            assertThat(request.messages().get(1).role()).isEqualTo("user");
-            assertThat(request.messages().get(1).content()).contains("Original meditation text");
         }
     }
 
