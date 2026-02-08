@@ -114,17 +114,18 @@ public class InfrastructureConfig {
      * <p>Implements {@link ImageGenerationPort} for the domain layer.</p>
      */
     @Bean
-    public ImageGenerationPort imageGenerationPort(
-            @Qualifier("aiImageRestClient") RestClient restClient,
-            OpenAiProperties openAiProperties,
-            AiProperties aiProperties) {
+        public ImageGenerationPort imageGenerationPort(
+                @Qualifier("aiImageRestClient") RestClient restClient,
+                OpenAiProperties openAiProperties,
+                AiProperties aiProperties) {
         return new ImageGenerationAiAdapter(
                 restClient,
                 openAiProperties.getBaseUrl(),
                 openAiProperties.getApiKey(),
-                aiProperties
+                aiProperties,
+                openAiProperties
         );
-    }
+        }
 
     /**
      * Media catalog adapter for accessing pre-defined media assets.

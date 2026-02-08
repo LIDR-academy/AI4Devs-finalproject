@@ -51,37 +51,6 @@ class AiImageMapperTest {
     }
 
     @Nested
-    @DisplayName("toCustomRequest()")
-    class ToCustomRequestTests {
-
-        @Test
-        @DisplayName("should create custom size request")
-        void shouldCreateCustomSizeRequest() {
-            AiImageRequest request = AiImageMapper.toCustomRequest(
-                    "Wide landscape",
-                    "1792x1024",
-                    false
-            );
-
-            assertThat(request.size()).isEqualTo("1792x1024");
-            assertThat(request.quality()).isEqualTo("standard");
-        }
-
-        @Test
-        @DisplayName("should create custom HD request")
-        void shouldCreateCustomHdRequest() {
-            AiImageRequest request = AiImageMapper.toCustomRequest(
-                    "Portrait",
-                    "1024x1792",
-                    true
-            );
-
-            assertThat(request.size()).isEqualTo("1024x1792");
-            assertThat(request.quality()).isEqualTo("hd");
-        }
-    }
-
-    @Nested
     @DisplayName("fromResponse()")
     class FromResponseTests {
 

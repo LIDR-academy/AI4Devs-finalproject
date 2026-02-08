@@ -30,6 +30,13 @@
     </properties>
 
     <dependencies>
+                <!-- Lombok for automatic getters/setters -->
+                <dependency>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok</artifactId>
+                    <version>1.18.32</version>
+                    <scope>compile</scope>
+                </dependency>
         <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

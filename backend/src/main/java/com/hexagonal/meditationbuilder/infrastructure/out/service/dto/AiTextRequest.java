@@ -37,16 +37,16 @@ public record AiTextRequest(
         }
 
         return new AiTextRequest(
-                props.getModel(),
+                props.getText().getModel(),
                 List.of(
                         Message.system(systemPrompt),
                         Message.user(userPrompt)
                 ),
-                props.getTemperature(),
-                props.getMaxTokens(),
-                props.getTopP(),
-                props.getFrequencyPenalty(),
-                props.getPresencePenalty()
+                props.getText().getTemperature(),
+                props.getText().getMaxTokens(),
+                props.getText().getTopP(),
+                props.getText().getFrequencyPenalty(),
+                props.getText().getPresencePenalty()
         );
     }
 }

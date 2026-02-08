@@ -24,14 +24,14 @@ class AiTextMapperTest {
         @BeforeAll
         static void initAiTextRequestProps() {
                 OpenAiProperties props = new OpenAiProperties();
-                props.setModel("gpt-4o-mini");
+                props.getText().setModel("gpt-4o-mini");
                 props.setApiKey("test-api-key");
                 props.setBaseUrl("http://localhost");
-                props.setTemperature(0.7);
-                props.setMaxTokens(256);
-                props.setTopP(1.0);
-                props.setFrequencyPenalty(0.0);
-                props.setPresencePenalty(0.0);
+                props.getText().setTemperature(0.7);
+                props.getText().setMaxTokens(256);
+                props.getText().setTopP(1.0);
+                props.getText().setFrequencyPenalty(0.0);
+                props.getText().setPresencePenalty(0.0);
                 AiTextRequest.setProperties(props);
         }
 

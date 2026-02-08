@@ -14,10 +14,6 @@ import com.hexagonal.meditationbuilder.infrastructure.out.service.dto.AiTextResp
  */
 public final class AiTextMapper {
 
-    private static final String DEFAULT_MODEL = "gpt-4o-mini";
-    private static final double DEFAULT_TEMPERATURE = 0.7;
-    private static final int DEFAULT_MAX_TOKENS = 2000;
-
     private AiTextMapper() {
         // Utility class - prevent instantiation
     }

@@ -5,6 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.hexagonal.meditationbuilder.domain.model.ImageReference;
 import com.hexagonal.meditationbuilder.domain.ports.out.ImageGenerationPort.ImageGenerationServiceException;
 import com.hexagonal.meditationbuilder.infrastructure.config.AiProperties;
+import com.hexagonal.meditationbuilder.infrastructure.config.OpenAiProperties;
+
 import org.junit.jupiter.api.*;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -50,7 +52,7 @@ class ImageGenerationAiAdapterIntegrationTest {
         String baseUrl = "http://localhost:" + wireMockServer.port();
         AiProperties aiProperties = new AiProperties();
         aiProperties.setImageMetaprompt(""); // No metaprompt for integration test
-        adapter = new ImageGenerationAiAdapter(restClient, baseUrl, "test-api-key", aiProperties);
+        adapter = new ImageGenerationAiAdapter(restClient, baseUrl, "test-api-key", aiProperties, new OpenAiProperties());
     }
 
     @Nested
