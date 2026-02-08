@@ -9,6 +9,8 @@ import {
   GenerateImageButton,
 } from '@/components';
 import ImageSelectorButton from '@/components/ImageSelectorButton';
+import MusicSelectorButton from '@/components/MusicSelectorButton';
+import LocalMusicItem from '@/components/LocalMusicItem';
 import {
   useCreateComposition,
   useUpdateText,
@@ -67,11 +69,22 @@ export function MeditationBuilderPage() {
     return () => clearTimeout(t);
   }, [localText, compositionId]);
 
-  const musicPreviewData = useMemo(() => ({
-    previewUrl: musicPreview.data?.previewUrl,
-    musicName: musicPreview.data?.musicReference ?? selectedMusicId ?? '',
-  }), [musicPreview.data, selectedMusicId]);
+  // Estado local para preview de audio seleccionado
+  const [localAudioUrl, setLocalAudioUrl] = useState<string | null>(null);
+  const [localAudioName, setLocalAudioName] = useState<string>('');
 
+  const musicPreviewData = useMemo(() => {
+    if (localAudioUrl) {
+      return {
+        previewUrl: localAudioUrl,
+        musicName: localAudioName,
+      };
+    }
+    return {
+      previewUrl: musicPreview.data?.previewUrl,
+      musicName: musicPreview.data?.musicReference ?? selectedMusicId ?? '',
+    };
+  }, [localAudioUrl, localAudioName, musicPreview.data, selectedMusicId]);
 
   // Estado local para preview de imagen seleccionada
   const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
@@ -90,7 +103,17 @@ export function MeditationBuilderPage() {
     };
   }, [localImageUrl, localImageName, imagePreview.data, selectedImageId]);
 
-  // Limpieza de URL local
+  // Limpieza de URL local de audio
+  const handleAudioSelected = useCallback((file: File) => {
+    if (localAudioUrl) {
+      URL.revokeObjectURL(localAudioUrl);
+    }
+    const url = URL.createObjectURL(file);
+    setLocalAudioUrl(url);
+    setLocalAudioName(file.name);
+  }, [localAudioUrl]);
+
+  // Limpieza de URL local de imagen
   const handleImageSelected = useCallback((file: File) => {
     if (localImageUrl) {
       URL.revokeObjectURL(localImageUrl);
@@ -100,7 +123,16 @@ export function MeditationBuilderPage() {
     setLocalImageName(file.name);
   }, [localImageUrl]);
 
-  // Limpieza al desmontar
+  // Limpieza al desmontar - audio
+  React.useEffect(() => {
+    return () => {
+      if (localAudioUrl) {
+        URL.revokeObjectURL(localAudioUrl);
+      }
+    };
+  }, [localAudioUrl]);
+
+  // Limpieza al desmontar - imagen
   React.useEffect(() => {
     return () => {
       if (localImageUrl) {
@@ -165,15 +197,42 @@ useEffect(() => {
 
         <div className="card">
           <h2 className="card__title">Background Music</h2>
-          <MusicSelector
-            onSelect={(id) =>
-              selectMusic.mutate({ musicReference: id })
-            }
-          />
-          <MusicPreview
-            previewUrl={musicPreviewData.previewUrl}
-            musicName={musicPreviewData.musicName}
-          />
+          
+          {localAudioUrl ? (
+            <LocalMusicItem 
+              previewUrl={localAudioUrl}
+              musicName={localAudioName}
+              onRemove={() => {
+                URL.revokeObjectURL(localAudioUrl);
+                setLocalAudioUrl(null);
+                setLocalAudioName('');
+                useComposerStore.getState().setIsMusicPlaying(false);
+              }}
+            />
+          ) : (
+            <>
+              <MusicSelector
+                onSelect={(id) =>
+                  selectMusic.mutate({ musicReference: id })
+                }
+              />
+              <MusicPreview
+                previewUrl={musicPreviewData.previewUrl}
+                musicName={musicPreviewData.musicName}
+                onRemove={() => {
+                  if (localAudioUrl) {
+                    URL.revokeObjectURL(localAudioUrl);
+                    setLocalAudioUrl(null);
+                    setLocalAudioName('');
+                  }
+                }}
+              />
+            </>
+          )}
+          
+          <div style={{ marginTop: '8px' }}>
+            <MusicSelectorButton onAudioSelected={handleAudioSelected} />
+          </div>
         </div>
       </div>
 

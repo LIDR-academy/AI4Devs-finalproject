@@ -10,11 +10,7 @@ import { useComposerStore, useSelectedMusicId, type MusicTrack } from '@/state/c
 
 // Mock data - in real app would come from media catalog API
 const AVAILABLE_MUSIC: MusicTrack[] = [
-  { id: 'calm-ocean-waves', name: 'Calm Ocean Waves', duration: '3:45' },
-  { id: 'forest-ambience', name: 'Forest Ambience', duration: '4:20' },
-  { id: 'gentle-rain', name: 'Gentle Rain', duration: '5:00' },
-  { id: 'tibetan-bowls', name: 'Tibetan Singing Bowls', duration: '6:15' },
-  { id: 'wind-chimes', name: 'Wind Chimes', duration: '3:30' },
+  // Empty list - users will select local audio files
 ];
 
 interface MusicSelectorProps {
@@ -30,6 +26,11 @@ export function MusicSelector({ disabled = false, onSelect }: MusicSelectorProps
     setSelectedMusic(musicId);
     onSelect?.(musicId);
   }, [setSelectedMusic, onSelect]);
+  
+  // Don't render anything if no music available
+  if (AVAILABLE_MUSIC.length === 0) {
+    return null;
+  }
   
   return (
     <div className="music-selector" data-testid="music-selector">

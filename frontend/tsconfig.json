@@ -22,6 +22,7 @@
 
     /* Paths */
     "baseUrl": ".",
+    "types": ["jest"],
     "paths": {
       "@/*": ["src/*"],
       "@api/*": ["src/api/*"],

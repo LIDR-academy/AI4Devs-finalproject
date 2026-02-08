@@ -14,12 +14,14 @@ interface MusicPreviewProps {
   previewUrl?: string;
   musicName?: string;
   disabled?: boolean;
+  onRemove?: () => void;
 }
 
 export function MusicPreview({ 
   previewUrl, 
   musicName = 'Selected Track',
   disabled = false,
+  onRemove,
 }: MusicPreviewProps) {
   const selectedMusicId = useSelectedMusicId();
   const isMusicPlaying = useIsMusicPlaying();
@@ -69,6 +71,34 @@ export function MusicPreview({
   
   return (
     <div className="music-preview" data-testid="music-preview">
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="music-preview__remove"
+          aria-label="Remove music"
+          data-testid="music-remove-button"
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            background: 'rgba(0, 0, 0, 0.5)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '24px',
+            height: '24px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '14px',
+            lineHeight: '1',
+            padding: 0,
+          }}
+        >
+          ✕
+        </button>
+      )}
       {previewUrl && (
         <audio 
           ref={audioRef} 

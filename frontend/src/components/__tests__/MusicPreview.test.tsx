@@ -3,9 +3,9 @@
  * Verifies playback controls (SC-006: preview within 2 seconds)
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-// import userEvent from '@testing-library/user-event';
+import userEvent from '@testing-library/user-event';
 import { MusicPreview } from '@/components/MusicPreview';
 import { useComposerStore } from '@/state/composerStore';
 
@@ -111,6 +111,43 @@ describe('MusicPreview', () => {
       render(<MusicPreview previewUrl="https://example.com/preview.mp3" />);
       
       expect(screen.getByLabelText('Pause music')).toBeInTheDocument();
+    });
+  });
+
+  describe('Remove Button', () => {
+    beforeEach(() => {
+      useComposerStore.setState({ selectedMusicId: 'calm-ocean-waves' });
+    });
+
+    it('should not show remove button when onRemove is not provided', () => {
+      render(<MusicPreview previewUrl="https://example.com/preview.mp3" />);
+      
+      expect(screen.queryByTestId('music-remove-button')).not.toBeInTheDocument();
+    });
+
+    it('should show remove button when onRemove is provided', () => {
+      const mockOnRemove = vi.fn();
+      render(<MusicPreview previewUrl="https://example.com/preview.mp3" onRemove={mockOnRemove} />);
+      
+      expect(screen.getByTestId('music-remove-button')).toBeInTheDocument();
+    });
+
+    it('should call onRemove when remove button is clicked', async () => {
+      const user = userEvent.setup();
+      const mockOnRemove = vi.fn();
+      render(<MusicPreview previewUrl="https://example.com/preview.mp3" onRemove={mockOnRemove} />);
+      
+      const removeButton = screen.getByTestId('music-remove-button');
+      await user.click(removeButton);
+      
+      expect(mockOnRemove).toHaveBeenCalledTimes(1);
+    });
+
+    it('should have accessible label for remove button', () => {
+      const mockOnRemove = vi.fn();
+      render(<MusicPreview previewUrl="https://example.com/preview.mp3" onRemove={mockOnRemove} />);
+      
+      expect(screen.getByLabelText('Remove music')).toBeInTheDocument();
     });
   });
 });
