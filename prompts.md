@@ -2524,3 +2524,28 @@ make test
 **Resultado:** CI/CD ahora funcional en GitHub Actions. Backend container incluye pytest correctamente, tests pasan 7/7. Warnings de docker-compose eliminados.
 ---
 
+## 052 - Fix CI Error: .env file not found in GitHub Actions
+**Fecha:** 2026-02-09 20:00
+
+**Prompt Original:**
+> Run docker compose down -v
+> time="2026-02-09T07:45:37Z" level=warning msg="The \"SUPABASE_URL\" variable is not set. Defaulting to a blank string."
+> time="2026-02-09T07:45:37Z" level=warning msg="The \"SUPABASE_KEY\" variable is not set. Defaulting to a blank string."
+> env file /home/runner/work/AI4Devs-finalproject/AI4Devs-finalproject/.env not found: stat /home/runner/work/AI4Devs-finalproject/AI4Devs-finalproject/.env: no such file or directory
+> Error: Process completed with exit code 1.
+
+**Resumen de la Respuesta/Acción:**
+Diagnóstico y fix del error ".env not found" en cleanup steps de GitHub Actions. **Root cause**: docker-compose.yml tiene `env_file: - .env` configurado, entonces `docker compose down -v` intenta leer el archivo .env incluso durante cleanup, pero el .env solo existe durante la ejecución de tests (creado en step específico). **Solución aplicada**: (1) Agregado creación de .env dummy en TODOS los cleanup steps (backend-tests, frontend-tests, docker-validation), (2) Frontend cleanup ahora solo elimina imagen de test en lugar de usar docker compose, (3) Creada guía completa SECRETS-SETUP.md con instrucciones detalladas paso a paso para configurar los 3 secrets en GitHub (SUPABASE_URL, SUPABASE_KEY, SUPABASE_DATABASE_URL) con troubleshooting, verificación, y best practices de seguridad.
+
+**Archivos Modificados:**
+- ✅ .github/workflows/ci.yml (agregado .env dummy creation en 3 cleanup steps)
+- ✅ .github/SECRETS-SETUP.md (nuevo archivo, guía completa de 350 líneas)
+
+**Secrets Pendientes de Configuración en GitHub**:
+1. `SUPABASE_URL` = `https://ebqapsoyjmdkhdxnkikz.supabase.co`
+2. `SUPABASE_KEY` = (service_role key de .env local)
+3. `SUPABASE_DATABASE_URL` = (connection string de .env local)
+
+**Resultado:** Workflow CI/CD ahora maneja correctamente el ciclo de vida del .env file. Cleanup steps no fallarán por .env missing. Guía detallada disponible para configurar secrets en GitHub antes del próximo push.
+---
+
