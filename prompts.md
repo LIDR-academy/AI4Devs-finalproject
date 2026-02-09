@@ -2549,3 +2549,54 @@ Diagnóstico y fix del error ".env not found" en cleanup steps de GitHub Actions
 **Resultado:** Workflow CI/CD ahora maneja correctamente el ciclo de vida del .env file. Cleanup steps no fallarán por .env missing. Guía detallada disponible para configurar secrets en GitHub antes del próximo push.
 ---
 
+## 053 - Fix CI Error: Frontend tests not found (dockerignore bloqueando tests)
+**Fecha:** 2026-02-09 20:15
+
+**Prompt Original:**
+> Run docker run --rm sf-pm-frontend:test npm test
+>
+> > sf-pm-frontend@0.1.0 test
+> > vitest run --reporter=verbose
+>
+>
+>  RUN  v1.6.1 /app
+>
+> include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+> exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+> watch exclude:  **/node_modules/**, **/dist/**
+>
+> No test files found, exiting with code 1
+> Error: Process completed with exit code 1.
+> 1s
+> Run echo "=== Frontend tests failed ==="
+> === Frontend tests failed ===
+>
+> > sf-pm-frontend@0.1.0 test
+> > vitest run --reporter=verbose --reporter=verbose
+>
+>
+>  RUN  v1.6.1 /app
+>
+> include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+> exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+> watch exclude:  **/node_modules/**, **/dist/**
+>
+> No test files found, exiting with code 1
+> Error: Process completed with exit code 1.
+
+**Resumen de la Respuesta/Acción:**
+Diagnóstico y fix del error "No test files found" en frontend-tests job de GitHub Actions. **Root cause**: src/frontend/.dockerignore excluye archivos de test (`**/*.test.tsx`, `**/*.test.ts`, `src/test/`) del Docker build, entonces cuando CI ejecuta `docker build --target dev` la imagen resultante NO contiene tests. En local funciona porque docker-compose.yml usa volume mounts (`./src/frontend:/app`) que ignoran .dockerignore. **Solución aplicada**: Cambiar CI workflow de `docker build + docker run` a `docker compose run --rm frontend npm test` para mantener consistencia total entre local y CI. Esto reutiliza la infraestructura ya validada en backend-tests y respeta la filosofía de que .dockerignore DEBE excluir tests de builds de producción.
+
+**Archivos Modificados:**
+- ✅ .github/workflows/ci.yml (frontend-tests job refactorizado: eliminado docker build, agregado docker compose run)
+- ✅ prompts.md (registro de #053)
+
+**Verificación Local:**
+```bash
+docker compose run --rm frontend npm test
+# Esperado: 4/4 tests passing (FileUploader.test.tsx)
+```
+
+**Resultado:** Frontend tests ahora ejecutables en CI usando mismo mecanismo que local (docker compose con volume mounts). .dockerignore permanece sin cambios (correcto excluir tests de producción). Consistencia backend-tests ↔ frontend-tests mantenida.
+---
+

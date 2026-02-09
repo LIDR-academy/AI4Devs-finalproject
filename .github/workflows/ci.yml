@@ -89,38 +89,44 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
+      - name: Cache Docker layers (node_modules)
         uses: actions/cache@v4
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-frontend-${{ hashFiles('src/frontend/package*.json') }}
+          path: src/frontend/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('src/frontend/package*.json') }}
           restore-keys: |
-            ${{ runner.os }}-buildx-frontend-
+            ${{ runner.os }}-node-modules-
 
-      - name: Build frontend Docker image for testing
+      - name: Create .env file from secrets
         run: |
-          docker build -t sf-pm-frontend:test \
-            --target dev \
-            --file src/frontend/Dockerfile \
-            src/frontend
-        env:
-          DOCKER_BUILDKIT: 1
+          cat > .env << EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+          SUPABASE_DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }}
+          EOF
 
-      - name: Run frontend tests
-        run: |
-          docker run --rm sf-pm-frontend:test npm test
+      - name: Pull base image
+        run: docker pull node:20-bookworm
+
+      - name: Run frontend tests (install deps + test in single container)
+        run: docker compose run --rm frontend bash -c "npm ci --quiet && npm test"
 
       - name: Show test logs on failure
         if: failure()
         run: |
           echo "=== Frontend tests failed ==="
-          docker run --rm sf-pm-frontend:test npm run test -- --reporter=verbose
+          docker compose run --rm frontend npm run test -- --reporter=verbose
 
       - name: Cleanup
         if: always()
         run: |
-          # Remove test image
-          docker rmi sf-pm-frontend:test || true
+          # Create minimal .env for docker compose down (it reads env_file)
+          cat > .env << EOF
+          SUPABASE_URL=dummy
+          SUPABASE_KEY=dummy
+          SUPABASE_DATABASE_URL=dummy
+          EOF
+          docker compose down -v
 
   docker-validation:
     runs-on: ubuntu-latest
