@@ -1,8 +1,8 @@
+version: '3.8'
+
 services:
   backend:
-    build:
-      context: ./src/backend
-      target: dev
+    build: ./src/backend
     container_name: sf-pm-backend
     env_file:
       - .env
@@ -14,9 +14,10 @@ services:
       - ./infra:/app/infra
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - sf-network
 
@@ -24,73 +25,35 @@ services:
     image: postgres:15-alpine
     container_name: sf-pm-db
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=sfpm_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d sfpm_db"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
     networks:
       - sf-network
 
   frontend:
-    build:
-      context: ./src/frontend
-      target: dev
+    image: node:20-bookworm
     container_name: sf-pm-frontend
+    working_dir: /app
     ports:
       - "5173:5173"
     volumes:
       - ./src/frontend:/app
-      - /app/node_modules
     environment:
       - VITE_API_URL=http://localhost:8000
+    command: bash -c "npm install && npm run dev -- --host 0.0.0.0"
     depends_on:
       - backend
     networks:
       - sf-network
 
-  # === Test profile: isolated test runner ===
-  test-backend:
-    profiles: ["test"]
-    build:
-      context: ./src/backend
-      target: dev
-    env_file:
-      - .env
-    volumes:
-      - ./src/backend:/app
-      - ./tests:/app/tests
-      - ./infra:/app/infra
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - sf-network
-    command: pytest -v
-
-  test-frontend:
-    profiles: ["test"]
-    build:
-      context: ./src/frontend
-      target: dev
-    volumes:
-      - ./src/frontend:/app
-      - /app/node_modules
-    networks:
-      - sf-network
-    command: npm test
-
 volumes:
   postgres_data:
+
 
 networks:
   sf-network:

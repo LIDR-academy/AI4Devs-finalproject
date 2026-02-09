@@ -35,6 +35,10 @@ clean:
 init-db:
 	docker compose run --rm backend python /app/infra/init_db.py
 
+# Setup events table for T-004-BACK (automated via psycopg2)
+setup-events:
+	docker compose run --rm backend python /app/infra/setup_events_table.py
+
 # Run all tests inside Docker
 test:
 	docker compose run --rm backend pytest -v
@@ -95,6 +99,7 @@ help:
 	@echo ""
 	@echo "  Backend:"
 	@echo "    make init-db       - Initialize DB infrastructure (buckets, policies)"
+	@echo "    make setup-events  - Create events table in Supabase (T-004-BACK)"
 	@echo "    make test          - Run all backend tests"
 	@echo "    make test-unit     - Run unit tests only"
 	@echo "    make test-infra    - Run integration tests only"
