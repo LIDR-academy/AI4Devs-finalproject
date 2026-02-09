@@ -332,6 +332,103 @@ timeout 60 bash -c 'until docker compose exec -T db pg_isready -U user; do sleep
 - Actualiza dependencias con vulnerabilidades
 - O marca el job como `continue-on-error: true` temporalmente
 
+### Problema: "Could not resolve entry module 'index.html'" (Frontend Production Build)
+
+**Causa**: El proyecto frontend solo tenía componentes aislados sin estructura completa de aplicación React+Vite.
+
+**Explicación**: Vite requiere tres archivos esenciales para builds de producción:
+1. `index.html` - Punto de entrada HTML (debe estar en raíz de proyecto)
+2. `src/main.tsx` - Entry point React que monta App
+3. `src/App.tsx` - Root component (opcional pero recomendado)
+
+**Diagnóstico**:
+```bash
+# Verificar que existen los archivos
+ls src/frontend/index.html               # Debe existir
+ls src/frontend/src/main.tsx            # Debe existir
+ls src/frontend/src/App.tsx             # Recomendado
+
+# Verificar que index.html referencia main.tsx
+grep 'main.tsx' src/frontend/index.html  
+# Debe mostrar: <script type="module" src="/src/main.tsx"></script>
+```
+
+**Solución**: Crear estructura completa:
+
+```html
+<!-- src/frontend/index.html -->
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tu App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+```tsx
+// src/frontend/src/main.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+```
+
+```tsx
+// src/frontend/src/App.tsx
+import YourComponent from './components/YourComponent';
+
+function App() {
+  return <YourComponent />;
+}
+
+export default App;
+```
+
+**Validación**:
+```bash
+# Build should now succeed
+docker build --target prod -t sf-pm-frontend:prod \
+  --file src/frontend/Dockerfile src/frontend
+```
+
+### Problema: ".dockerignore blocking test files" (Frontend Tests Not Found)
+
+**Causa**: `.dockerignore` excluye `**/*.test.tsx` y `src/test/` del build de Docker.
+
+**Explicación**: Esto es CORRECTO para builds de producción (no queremos tests en prod), pero causa problemas si intentas ejecutar tests dentro de un contenedor construido con `docker build`.
+
+**Solución**: En CI, usar `docker compose run` en lugar de `docker build` para tests:
+
+```yaml
+# ❌ NO FUNCIONA - docker build respeta .dockerignore
+- name: Build test image
+  run: docker build -t frontend:test --target dev .
+- name: Run tests
+  run: docker run --rm frontend:test npm test  # Error: No test files found
+
+# ✅ FUNCIONA - docker compose usa volume mounts (ignora .dockerignore)
+- name: Run tests
+  run: docker compose run --rm frontend bash -c "npm ci --quiet && npm test"
+```
+
+**Nota**: Si realmente necesitas tests en imagen Docker, crea `.dockerignore.test` específico:
+```bash
+docker build -f Dockerfile --target dev \
+  --ignore-file=.dockerignore.test \
+  -t frontend:test .
+```
+
 ---
 
 ## 📚 Recursos
@@ -342,6 +439,6 @@ timeout 60 bash -c 'until docker compose exec -T db pg_isready -U user; do sleep
 
 ---
 
-**Última actualización**: 2026-02-09  
+**Última actualización**: 2026-02-09 20:30  
 **Mantenedor**: Pedro Cortes  
 **Archivo Workflow**: `.github/workflows/ci.yml`
