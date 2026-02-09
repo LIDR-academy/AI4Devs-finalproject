@@ -70,7 +70,7 @@ CAD:       rhino3dm + glTF/GLB conversion
 git clone https://github.com/sagrada-familia/parts-manager.git
 cd parts-manager
 cp .env.example .env
-# Edita .env con los valores reales (SUPABASE_URL, SUPABASE_KEY, OPENAI_API_KEY, etc.)
+# Edita .env con los valores reales (SUPABASE_URL, SUPABASE_KEY, SUPABASE_DATABASE_URL, OPENAI_API_KEY, etc.)
 ```
 
 2. Levantar servicios en contenedores (dev):

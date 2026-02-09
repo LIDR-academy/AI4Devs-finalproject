@@ -36,6 +36,12 @@ def test_confirm_upload_happy_path(supabase_client: Client):
     test_file_key = "test/confirm_upload_test.3dm"
     test_content = b"Mock .3dm file content for testing"
     
+    # Clean up: Remove test file if it exists from previous run
+    try:
+        supabase_client.storage.from_(bucket_name).remove([test_file_key])
+    except Exception:
+        pass  # File doesn't exist, continue
+    
     # Upload test file to Supabase Storage
     upload_response = supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
@@ -140,6 +146,12 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
     bucket_name = "raw-uploads"
     test_file_key = "test/event_test.3dm"
     test_content = b"Event creation test content"
+    
+    # Clean up: Remove test file if it exists from previous run
+    try:
+        supabase_client.storage.from_(bucket_name).remove([test_file_key])
+    except Exception:
+        pass  # File doesn't exist, continue
     
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,

@@ -2054,3 +2054,218 @@ PASSED test_confirm_upload_file_not_found - Expected 404, got 404
 - Pasar los 4 tests
 ---
 
+## 043 - T-004-BACK FASE VERDE: Confirm Upload Endpoint Implementation
+**Fecha:** 2026-02-07 21:15
+
+**Prompt Original:**
+> # Prompt: TDD FASE VERDE - Ticket T-004-BACK
+> 
+> **Role:** Actúa como **Senior Developer** (Python/React).
+> 
+> **Contexto:**
+> Estamos en TDD. Tenemos tests fallando para **T-004-BACK**.
+> 
+> **Objetivo:**
+> Escribir la implementación MÍNIMA necesaria para que el test pase (GREEN).
+
+**Resumen de la Respuesta/Acción:**
+Implementada FASE VERDE completa para T-004-BACK con infraestructura de Supabase.
+
+**1. Módulo de Cliente Supabase** (`src/backend/infra/supabase_client.py`):
+- Función `get_supabase_client()` singleton para reutilizar conexión
+- Manejo de credenciales desde variables de entorno
+
+**2. Endpoint POST /api/upload/confirm** (`src/backend/api/upload.py`):
+```python
+@router.post("/confirm", response_model=ConfirmUploadResponse)
+async def confirm_upload(request: ConfirmUploadRequest)
+```
+Funcionalidad implementada:
+- ✅ Verificación de archivo en Supabase Storage bucket `raw-uploads`
+- ✅ Creación de registro en tabla `events` con UUID autogenerado
+- ✅ Manejo de errores: 404 si archivo no existe, 500 si falla DB
+- ✅ Retorna: { success, message, event_id, task_id }
+
+**3. Migración SQL** (`infra/create_events_table.sql`):
+```sql
+CREATE TABLE events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    file_id UUID NOT NULL,
+    event_type VARCHAR(100) NOT NULL,
+    metadata JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+Índices creados:
+- idx_events_file_id (búsqueda por archivo)
+- idx_events_event_type (filtrado por tipo)
+- idx_events_created_at (ordenamiento temporal)
+
+**4. Fixture de Test** (`tests/conftest.py`):
+- Added `setup_events_table` fixture que verifica existencia de tabla
+- Skip automático si tabla no existe con mensaje instructivo
+
+**5. Documentación y Scripts**:
+- `infra/T-004-BACK-SETUP.md`: Guía completa de setup
+- `infra/setup_events_table.py`: Script helper para mostrar SQL
+- `Makefile`: Nuevo comando `make setup-events`
+
+**Comandos de Verificación:**
+
+1. **Crear tabla events en Supabase** (PASO OBLIGATORIO):
+   ```bash
+   # Ver el SQL a ejecutar
+   make setup-events
+   
+   # Copiar el SQL y ejecutarlo en Supabase SQL Editor
+   # Dashboard → SQL Editor → New Query → Paste → Run
+   ```
+
+2. **Ejecutar tests:**
+   ```bash
+   # Tests específicos de T-004-BACK
+   docker compose run --rm backend pytest tests/integration/test_confirm_upload.py -v
+   
+   # Todos los tests
+   make test
+   ```
+
+**Resultado Esperado (FASE VERDE):**
+```
+test_confirm_upload_happy_path PASSED
+test_confirm_upload_file_not_found PASSED
+test_confirm_upload_invalid_payload PASSED
+test_confirm_upload_creates_event_record PASSED
+
+4 passed
+```
+
+**Archivos Creados/Modificados:**
+- ✅ src/backend/infra/supabase_client.py (nuevo)
+- ✅ src/backend/api/upload.py (endpoint /confirm agregado)
+- ✅ infra/create_events_table.sql (migración SQL)
+- ✅ infra/setup_events_table.py (script helper)
+- ✅ infra/T-004-BACK-SETUP.md (documentación)
+- ✅ tests/conftest.py (fixture setup_events_table)
+- ✅ Makefile (comando setup-events)
+
+**Nota Importante:**
+⚠️ El usuario debe ejecutar el SQL en Supabase **ANTES** de correr los tests, o los tests fallarán con "Events table not found". El fixture detecta esto y muestra mensaje claro.
+
+**Próximos Pasos:**
+- Usuario ejecuta SQL en Supabase Dashboard
+- Usuario verifica tests con `make test`
+- FASE REFACTOR (si necesario)
+- Actualizar documentación del proyecto
+---
+
+## 044 - Automatización completa de migraciones SQL (eliminando dependencia manual de Supabase Dashboard)
+**Fecha:** 2026-02-08 
+**Prompt Original:**
+> Por que me indicas que tengo que ir a subabase, cuando quiero que todo se realice a traves de codigo
+
+**Resumen de la Respuesta/Acción:**
+El usuario tiene razón - la migración debe ser 100% automatizada vía código. Implementé:
+1. **Agregado psycopg2-binary** a requirements.txt para conexión directa a PostgreSQL
+2. **Reescrito infra/setup_events_table.py** para ejecutar SQL automáticamente via conexión directa a PostgreSQL (no usando cliente Supabase que no soporta DDL)
+3. **Actualizado Makefile** para que `make setup-events` ejecute el script Python automatizado
+4. **Agregado SUPABASE_DATABASE_URL** como nueva variable de entorno (separada de DATABASE_URL local de Docker)
+5. **Creado guía completa** de cómo obtener SUPABASE_DATABASE_URL desde Supabase Dashboard
+6. **Actualizado toda la documentación** para reflejar el proceso automatizado
+
+**Archivos Modificados:**
+- ✅ src/backend/requirements.txt (añadido psycopg2-binary==2.9.9)
+- ✅ .env.example (añadido SUPABASE_DATABASE_URL)
+- ✅ infra/setup_events_table.py (reescrito completamente - conexión directa + ejecución SQL)
+- ✅ infra/T-004-BACK-SETUP.md (actualizado para reflejar automatización)
+- ✅ infra/SUPABASE_DATABASE_URL_GUIDE.md (nueva guía paso a paso)
+- ✅ Makefile (setup-events ejecuta script Python)
+- ✅ README.md (menciona SUPABASE_DATABASE_URL en setup)
+
+**Resultado:**
+Ahora el proceso es: `make setup-events` → Conexión directa a Supabase PostgreSQL → Ejecución automática del DDL → Verificación de tabla creada → Todo sin intervención manual.
+---
+
+## 045 - Error psycopg2-binary no instalado en contenedor (imagen Docker no reconstruida)
+**Fecha:** 2026-02-08
+**Prompt Original:**
+> tengo este error 
+> 
+> docker compose run --rm backend python /app/infra/setup_events_table.py
+> [+] Creating 1/1
+>  ✔ Container sf-pm-db  Running               0.0s 
+> ❌ ERROR: psycopg2-binary not installed
+>    Run: pip install psycopg2-binary
+>    Or: make install (if using Docker)
+> 
+> recuerda que quiero todo containerizado
+
+**Resumen de la Respuesta/Acción:**
+El problema es que aunque añadimos `psycopg2-binary==2.9.9` a requirements.txt en el prompt #044, nunca reconstruimos la imagen Docker del backend. El contenedor sigue usando una imagen antigua sin esa dependencia. Solución: Reconstruir la imagen backend con `docker compose build backend` y luego ejecutar `make setup-events`.
+---
+
+## 046 - Refactor script Python para Producción (Environment Agnostic siguiendo 12-Factor Apps)
+**Fecha:** 2026-02-09
+**Prompt Original:**
+> # Prompt: Refactor script Python para Producción (Environment Agnostic)
+> 
+> **Role:** Actúa como **Senior Backend Engineer** experto en 12-Factor Apps.
+> 
+> **Contexto:**
+> El script `infra/setup_events_table.py` está fallando porque comprueba explícitamente la existencia del archivo `/app/.env`.
+> Esto es incorrecto para producción. Queremos que el script funcione tanto si existe el archivo (Local) como si las variables ya están en el entorno (Producción/Docker).
+> 
+> **Objetivo:**
+> Refactorizar `infra/setup_events_table.py` para leer la configuración de manera robusta.
+> 
+> **Instrucciones de Cambio:**
+> 
+> 1.  **Eliminar la validación de archivo:**
+>     Borra cualquier línea que haga `if not os.path.exists(...)` o lance un error si falta el archivo `.env`.
+> 
+> 2.  **Implementar carga flexible:**
+>     Usa la librería `dotenv`:
+>     ```python
+>     from dotenv import load_dotenv
+>     import os
+> 
+>     # Carga el .env si existe, si no, no hace nada (silencioso)
+>     load_dotenv()
+>     ```
+> 
+> 3.  **Validar la Variable (No el archivo):**
+>     El usuario ha estandarizado el nombre de la variable a **`SUPABASE_DATABASE_URL`**.
+>     El script debe intentar leerla:
+>     ```python
+>     DB_URL = os.getenv("SUPABASE_DATABASE_URL")
+>     
+>     if not DB_URL:
+>         # Intento de fallback por si acaso se llama DATABASE_URL
+>         DB_URL = os.getenv("DATABASE_URL")
+> 
+>     if not DB_URL:
+>         raise ValueError("❌ Error Crítico: La variable de entorno 'SUPABASE_DATABASE_URL' no está definida.")
+>     ```
+> 
+> 4.  **Ejecución:**
+>     Mantén la lógica de conexión a la base de datos (psycopg2) pero usando esta nueva variable `DB_URL`.
+> 
+> **Output esperado:**
+> 1.  El código completo y corregido de `infra/setup_events_table.py`.
+> 
+> **Importante**
+> Añade este prompt al archivo `prompts.md` con la numeracion correcta
+
+**Resumen de la Respuesta/Acción:**
+Refactorizado `setup_events_table.py` siguiendo principios de 12-Factor Apps:
+1. Eliminada validación de existencia de archivo `.env`
+2. Implementado `load_dotenv()` silencioso (carga si existe, no falla si no existe)
+3. Validación de VARIABLE DE ENTORNO en lugar de archivo
+4. Fallback a `DATABASE_URL` si `SUPABASE_DATABASE_URL` no existe
+5. Mensajes de error más claros indicando que es la VARIABLE lo que falta, no el archivo
+
+**Archivos Modificados:**
+- ✅ infra/setup_events_table.py (refactorizado para environment-agnostic)
+- ✅ prompts.md (registrado prompt #046)
+---
+
