@@ -8,13 +8,13 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AiTextRequest(
-        String model,
-        List<Message> messages,
-        Double temperature,
-        @JsonProperty("max_tokens") Integer maxTokens,
-        @JsonProperty("top_p") Double topP,
-        @JsonProperty("frequency_penalty") Double frequencyPenalty,
-        @JsonProperty("presence_penalty") Double presencePenalty
+    String model,
+    List<Message> messages,
+    Double temperature,
+    @JsonProperty("max_completion_tokens") Integer maxCompletionTokens,
+    @JsonProperty("top_p") Double topP,
+    @JsonProperty("frequency_penalty") Double frequencyPenalty,
+    @JsonProperty("presence_penalty") Double presencePenalty
 ) {
     /** Holder estático de propiedades **/
     private static OpenAiProperties props;
@@ -37,16 +37,16 @@ public record AiTextRequest(
         }
 
         return new AiTextRequest(
-                props.getText().getModel(),
-                List.of(
-                        Message.system(systemPrompt),
-                        Message.user(userPrompt)
-                ),
-                props.getText().getTemperature(),
-                props.getText().getMaxTokens(),
-                props.getText().getTopP(),
-                props.getText().getFrequencyPenalty(),
-                props.getText().getPresencePenalty()
+            props.getText().getModel(),
+            List.of(
+                Message.system(systemPrompt),
+                Message.user(userPrompt)
+            ),
+            props.getText().getTemperature(),
+            props.getText().getMaxTokens(), // Renamed field, value stays
+            props.getText().getTopP(),
+            props.getText().getFrequencyPenalty(),
+            props.getText().getPresencePenalty()
         );
     }
 }

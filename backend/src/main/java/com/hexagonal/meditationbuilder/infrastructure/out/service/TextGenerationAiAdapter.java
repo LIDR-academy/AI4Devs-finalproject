@@ -72,40 +72,52 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
 
     private TextContent executeRequest(AiTextRequest request, String operation) {
         try {
-            //AiTextResponse response = buildMockResponse(request); // Simula una respuesta de la API para pruebas
             AiTextResponse response = restClient
                     .post()
                     .uri(baseUrl + "/v1/chat/completions")
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Content-Type", "application/json")
+                    .header("Accept", "application/json") // <-- añadir
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
-                        if (res.getStatusCode().value() == 429) {
-                            log.warn("AI service rate limit exceeded during {}", operation);
+                        String body = safeReadBody(res); // <-- leer cuerpo
+                        int code = res.getStatusCode().value();
+                        if (code == 429) {
+                            log.warn("AI service rate limit exceeded during {}: {}", operation, body);
                             throw new TextGenerationServiceException(
                                     "AI service rate limit exceeded. Please try again later.");
                         }
-                        log.error("AI service client error during {}: {}", operation, res.getStatusCode());
-                        throw new TextGenerationServiceException(
-                                "AI service request failed: " + res.getStatusCode());
+                        if (code == 401 || code == 403) {
+                            log.error("Auth error during {}: {} - {}", operation, code, body);
+                            throw new TextGenerationServiceException(
+                                    "Authentication/authorization failed against AI service.");
+                        }
+                        log.error("AI service client error during {}: {} - {}", operation, res.getStatusCode(), body);
+                        throw new TextGenerationServiceException("AI service request failed: " + res.getStatusCode());
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
-                        log.error("AI service unavailable during {}: {}", operation, res.getStatusCode());
+                        String body = safeReadBody(res); // <-- leer cuerpo
+                        log.error("AI service unavailable during {}: {} - {}", operation, res.getStatusCode(), body);
                         throw new TextGenerationServiceException(
                                 "AI service unavailable. Please try again later.");
                     })
                     .body(AiTextResponse.class);
-
-            System.out.println("reponse from OpenAI: " + response);
 
             if (response == null || response.choices() == null || response.choices().isEmpty()) {
                 log.error("Empty response from AI service during {}", operation);
                 throw new TextGenerationServiceException("AI service returned empty response");
             }
 
-            String generatedText = response.choices().getFirst().message().content();
-            
+            var first = response.choices().get(0);
+            log.debug("finish_reason={}, usage={}/{}/{}",
+                first.finishReason(),
+                response.usage() != null ? response.usage().promptTokens() : -1,
+                response.usage() != null ? response.usage().completionTokens() : -1,
+                response.usage() != null ? response.usage().totalTokens() : -1
+            );
+
+            String generatedText = response.choices().get(0).message().content(); // <-- get(0)
             if (generatedText == null || generatedText.isBlank()) {
                 log.error("AI service returned blank content during {}", operation);
                 throw new TextGenerationServiceException("AI service returned blank content");
@@ -115,9 +127,19 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
             return new TextContent(generatedText.trim());
 
         } catch (RestClientException e) {
-            log.error("Network error during AI text {}", operation);
+            log.error("Network error during AI text {}", operation, e);
             throw new TextGenerationServiceException(
                     "Failed to communicate with AI service: " + e.getMessage(), e);
+        }
+    }
+
+    /** Lee el cuerpo del error sin romper si ya está consumido */
+    private String safeReadBody(org.springframework.http.client.ClientHttpResponse res) {
+        try (var is = res.getBody()) {
+            if (is == null) return "";
+            return new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception ex) {
+            return "";
         }
     }
 
