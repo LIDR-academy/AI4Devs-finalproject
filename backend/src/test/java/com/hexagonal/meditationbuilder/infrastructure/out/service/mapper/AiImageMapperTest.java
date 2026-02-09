@@ -31,7 +31,11 @@ class AiImageMapperTest {
             assertThat(request.prompt()).isEqualTo("A peaceful sunset");
             assertThat(request.n()).isEqualTo(1);
             assertThat(request.size()).isEqualTo("1024x1024");
-            assertThat(request.quality()).isEqualTo("standard");
+            // El valor por defecto en el mapper es "low" (no "standard")
+            assertThat(request.quality()).isEqualTo("low");
+            assertThat(request.outputFormat()).isNull();
+            assertThat(request.background()).isNull();
+            assertThat(request.responseFormat()).isEqualTo("url");
         }
     }
 
@@ -40,13 +44,17 @@ class AiImageMapperTest {
     class ToHighQualityRequestTests {
 
         @Test
-        @DisplayName("should create HD quality request")
-        void shouldCreateHdQualityRequest() {
+        @DisplayName("should create high quality request")
+        void shouldCreateHighQualityRequest() {
             AiImageRequest request = AiImageMapper.toHighQualityRequest("Mountain landscape");
 
             assertThat(request).isNotNull();
             assertThat(request.prompt()).isEqualTo("Mountain landscape");
-            assertThat(request.quality()).isEqualTo("hd");
+            // El valor por defecto en el mapper es "high" (no "hd")
+            assertThat(request.quality()).isEqualTo("high");
+            assertThat(request.outputFormat()).isNull();
+            assertThat(request.background()).isNull();
+            assertThat(request.responseFormat()).isEqualTo("url");
         }
     }
 
@@ -58,12 +66,18 @@ class AiImageMapperTest {
         @DisplayName("should extract ImageReference from valid response")
         void shouldExtractImageReferenceFromValidResponse() {
             AiImageResponse response = new AiImageResponse(
-                    1677652288L,
-                    List.of(new AiImageResponse.ImageData(
-                            "https://example.com/image.png",
-                            "A serene sunset",
-                            null
-                    ))
+                1677652288L,
+                null, // background
+                null, // outputFormat
+                null, // quality
+                null, // size
+                List.of(new AiImageResponse.ImageData(
+                    "https://example.com/image.png",
+                    null,
+                    null
+                )),
+                null, // usage
+                null  // error
             );
 
             ImageReference result = AiImageMapper.fromResponse(response);
@@ -83,34 +97,46 @@ class AiImageMapperTest {
         @Test
         @DisplayName("should throw exception when data is null")
         void shouldThrowExceptionWhenDataIsNull() {
-            AiImageResponse response = new AiImageResponse(1677652288L, null);
+            AiImageResponse response = new AiImageResponse(
+                1677652288L,
+                null, null, null, null,
+                null, // data
+                null, null
+            );
 
             assertThatThrownBy(() -> AiImageMapper.fromResponse(response))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("no data");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no data");
         }
 
         @Test
         @DisplayName("should throw exception when data is empty")
         void shouldThrowExceptionWhenDataIsEmpty() {
-            AiImageResponse response = new AiImageResponse(1677652288L, List.of());
+            AiImageResponse response = new AiImageResponse(
+                1677652288L,
+                null, null, null, null,
+                List.of(),
+                null, null
+            );
 
             assertThatThrownBy(() -> AiImageMapper.fromResponse(response))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("no data");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no data");
         }
 
         @Test
         @DisplayName("should throw exception when URL is blank")
         void shouldThrowExceptionWhenUrlIsBlank() {
             AiImageResponse response = new AiImageResponse(
-                    1677652288L,
-                    List.of(new AiImageResponse.ImageData("   ", null, null))
+                1677652288L,
+                null, null, null, null,
+                List.of(new AiImageResponse.ImageData("   ", null, null)),
+                null, null
             );
 
             assertThatThrownBy(() -> AiImageMapper.fromResponse(response))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("no image URL");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no image URL");
         }
     }
 
@@ -122,12 +148,14 @@ class AiImageMapperTest {
         @DisplayName("should return revised prompt when available")
         void shouldReturnRevisedPrompt() {
             AiImageResponse response = new AiImageResponse(
-                    1677652288L,
-                    List.of(new AiImageResponse.ImageData(
-                            "https://example.com/image.png",
-                            "Enhanced: A serene sunset with calm waters",
-                            null
-                    ))
+                1677652288L,
+                null, null, null, null,
+                List.of(new AiImageResponse.ImageData(
+                    "https://example.com/image.png",
+                    "Enhanced: A serene sunset with calm waters",
+                    null
+                )),
+                null, null
             );
 
             String result = AiImageMapper.getRevisedPrompt(response);
@@ -139,12 +167,14 @@ class AiImageMapperTest {
         @DisplayName("should return null when revised prompt not available")
         void shouldReturnNullWhenNotAvailable() {
             AiImageResponse response = new AiImageResponse(
-                    1677652288L,
-                    List.of(new AiImageResponse.ImageData(
-                            "https://example.com/image.png",
-                            null,
-                            null
-                    ))
+                1677652288L,
+                null, null, null, null,
+                List.of(new AiImageResponse.ImageData(
+                    "https://example.com/image.png",
+                    null,
+                    null
+                )),
+                null, null
             );
 
             assertThat(AiImageMapper.getRevisedPrompt(response)).isNull();
@@ -165,12 +195,14 @@ class AiImageMapperTest {
         @DisplayName("should return true when base64 image exists")
         void shouldReturnTrueWhenBase64Exists() {
             AiImageResponse response = new AiImageResponse(
-                    1677652288L,
-                    List.of(new AiImageResponse.ImageData(
-                            null,
-                            null,
-                            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-                    ))
+                1677652288L,
+                null, null, null, null,
+                List.of(new AiImageResponse.ImageData(
+                    null,
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+                    null
+                )),
+                null, null
             );
 
             assertThat(AiImageMapper.hasBase64Image(response)).isTrue();
@@ -180,12 +212,14 @@ class AiImageMapperTest {
         @DisplayName("should return false when no base64 image")
         void shouldReturnFalseWhenNoBase64() {
             AiImageResponse response = new AiImageResponse(
-                    1677652288L,
-                    List.of(new AiImageResponse.ImageData(
-                            "https://example.com/image.png",
-                            null,
-                            null
-                    ))
+                1677652288L,
+                null, null, null, null,
+                List.of(new AiImageResponse.ImageData(
+                    "https://example.com/image.png",
+                    null,
+                    null
+                )),
+                null, null
             );
 
             assertThat(AiImageMapper.hasBase64Image(response)).isFalse();
@@ -207,8 +241,10 @@ class AiImageMapperTest {
         void shouldReturnBase64Image() {
             String base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAY=";
             AiImageResponse response = new AiImageResponse(
-                    1677652288L,
-                    List.of(new AiImageResponse.ImageData(null, null, base64))
+                1677652288L,
+                null, null, null, null,
+                List.of(new AiImageResponse.ImageData(null, base64, null)),
+                null, null
             );
 
             assertThat(AiImageMapper.getBase64Image(response)).isEqualTo(base64);
@@ -218,8 +254,10 @@ class AiImageMapperTest {
         @DisplayName("should return null when no base64 image")
         void shouldReturnNullWhenNoBase64() {
             AiImageResponse response = new AiImageResponse(
-                    1677652288L,
-                    List.of(new AiImageResponse.ImageData("url", null, null))
+                1677652288L,
+                null, null, null, null,
+                List.of(new AiImageResponse.ImageData("url", null, null)),
+                null, null
             );
 
             assertThat(AiImageMapper.getBase64Image(response)).isNull();

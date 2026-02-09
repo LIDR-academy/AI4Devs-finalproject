@@ -10,75 +10,96 @@ import java.util.Objects;
 /**
  * AiImageMapper - Maps between domain types and AI image service DTOs.
  *
- * Encapsulates the mapping logic between domain model and external API formats.
- * Follows hexagonal architecture by keeping infrastructure details out of domain.
+ * Adaptado para soportar GPT Image y DALL·E:
+ *  - GPT Image: usa 'output_format' y 'background'. Calidad: low|medium|high|auto
+ *  - DALL·E:    usa 'response_format'. Calidad: standard|hd
  *
- * NOTE:
- * - OpenAI Image API requires 'model' in the request. If no model is provided here,
- *   ensure your adapter injects it from configuration.
- * - Response may contain either a URL (response_format=url) or base64 (response_format=b64_json).
+ * NOTAS:
+ *  - Si conoces el modelo, usa los helpers específicos: toGptImageRequest(...) o toDalleRequest(...).
+ *  - El método toCustomRequest(...) es "model-aware" y limpia/normaliza los campos en función del modelo.
+ *  - Los métodos antiguos se marcan @Deprecated para mantener compatibilidad.
  *
  * @author Meditation Builder Team
  */
 public final class AiImageMapper {
 
-    // Defaults razonables para la Image API (puedes cambiarlos si lo prefieres)
+    /* ------------------------ Defaults y utilidades ------------------------ */
+
     private static final String DEFAULT_SIZE = "1024x1024";
-    private static final String DEFAULT_QUALITY = "low";       // "low" | "medium" | "high" (GPT Image)
-    private static final String DEFAULT_RESPONSE_FORMAT = "url"; // "url" | "b64_json"
+
+    // GPT Image
+    private static final String DEFAULT_GPT_QUALITY = "low";        // low|medium|high|auto
+    private static final String DEFAULT_OUTPUT_FORMAT = "png";       // png|jpeg|webp
+    private static final String DEFAULT_BACKGROUND = "auto";         // transparent|opaque|auto
+
+    // DALL·E
+    private static final String DEFAULT_DALLE_QUALITY = "standard";  // standard|hd
+    private static final String DEFAULT_RESPONSE_FORMAT = "url";     // url|b64_json
+
     private static final int DEFAULT_N = 1;
 
-    private AiImageMapper() {
-        // Utility class - prevent instantiation
+    private AiImageMapper() {}
+
+    private static boolean isGptImageModel(String model) {
+        return model != null && model.startsWith("gpt-image");
+    }
+
+    private static boolean isDalleModel(String model) {
+        return model != null && model.startsWith("dall-e");
+    }
+
+    private static String nonBlankOr(String val, String def) {
+        return (val == null || val.isBlank()) ? def : val;
+    }
+
+    private static Integer positiveOr(Integer val, int def) {
+        return (val == null || val <= 0) ? def : val;
     }
 
     /* -------------------------------------------------------------------------
-     * REQUEST MAPPING
+     * REQUEST MAPPING (RECOMENDADOS)
      * ---------------------------------------------------------------------- */
 
     /**
-     * Creates a standard image generation request for a given prompt with sane defaults.
-     * IMPORTANT: This does NOT set the 'model'. Make sure your adapter fills it from config.
+     * Construye una petición para modelos GPT Image (p.ej., gpt-image-1-mini).
+     * - Usa output_format/background (NO response_format).
      */
-    public static AiImageRequest toRequest(String prompt) {
+    public static AiImageRequest toGptImageRequest(
+            String model,
+            String prompt,
+            Integer n,
+            String size,
+            String quality,
+            String outputFormat,
+            String background
+    ) {
         Objects.requireNonNull(prompt, "prompt is required");
+
+        // Defaults propios de GPT Image
+        int nVal = positiveOr(n, DEFAULT_N);
+        String sizeVal = nonBlankOr(size, DEFAULT_SIZE);
+        String qualityVal = nonBlankOr(quality, DEFAULT_GPT_QUALITY);
+        String outputFormatVal = nonBlankOr(outputFormat, DEFAULT_OUTPUT_FORMAT);
+        String backgroundVal = nonBlankOr(background, DEFAULT_BACKGROUND);
+
         return new AiImageRequest(
-                /* model = */ null, // el adapter debería completar esto desde properties
+                model,
                 prompt,
-                DEFAULT_N,
-                DEFAULT_SIZE,
-                DEFAULT_QUALITY,
-                DEFAULT_RESPONSE_FORMAT
+                nVal,
+                sizeVal,
+                qualityVal,
+                /* output_format */ outputFormatVal,
+                /* background    */ backgroundVal,
+                /* response_format (solo DALL·E) */ null
         );
     }
 
     /**
-     * Creates a high-quality image generation request (quality = "high").
-     * IMPORTANT: This does NOT set the 'model'. Make sure your adapter fills it from config.
+     * Construye una petición para modelos DALL·E (p.ej., dall-e-3).
+     * - Usa response_format (NO output_format/background).
+     * - Para dall-e-3, n debe ser 1.
      */
-    public static AiImageRequest toHighQualityRequest(String prompt) {
-        Objects.requireNonNull(prompt, "prompt is required");
-        return new AiImageRequest(
-                /* model = */ null,
-                prompt,
-                DEFAULT_N,
-                DEFAULT_SIZE,
-                "high",
-                DEFAULT_RESPONSE_FORMAT
-        );
-    }
-
-    /**
-     * Fully customizable image generation request.
-     *
-     * @param model           model id (e.g., "gpt-image-1-mini", "gpt-image-1")
-     * @param prompt          image description
-     * @param n               images to generate
-     * @param size            e.g., "1024x1024", "1792x1024", "1024x1792"
-     * @param quality         "low"|"medium"|"high" (GPT Image) o "standard"/"hd" (DALL·E 3)
-     * @param responseFormat  "url"|"b64_json"
-     */
-    public static AiImageRequest toCustomRequest(
+    public static AiImageRequest toDalleRequest(
             String model,
             String prompt,
             Integer n,
@@ -88,25 +109,138 @@ public final class AiImageMapper {
     ) {
         Objects.requireNonNull(prompt, "prompt is required");
 
+        int nVal = positiveOr(n, DEFAULT_N);
+        if ("dall-e-3".equals(model)) {
+            nVal = 1; // restricción del servicio
+        }
+
+        String sizeVal = nonBlankOr(size, DEFAULT_SIZE);
+        String qualityVal = nonBlankOr(quality, DEFAULT_DALLE_QUALITY);
+        String responseFormatVal = nonBlankOr(responseFormat, DEFAULT_RESPONSE_FORMAT);
+
+        return new AiImageRequest(
+                model,
+                prompt,
+                nVal,
+                sizeVal,
+                qualityVal,
+                /* output_format */ null,     // no aplica
+                /* background    */ null,     // no aplica
+                /* response_format */ responseFormatVal
+        );
+    }
+
+    /**
+     * Mapeo "model-aware" totalmente configurable. Normaliza los campos dependiendo
+     * de la familia del modelo y limpia los que no apliquen.
+     *
+     * @param model           "gpt-image-1(-mini)" o "dall-e-3" / "dall-e-2"
+     * @param prompt          descripción de imagen
+     * @param n               nº de imágenes
+     * @param size            1024x1024 | 1024x1792 | 1792x1024
+     * @param quality         GPT Image: low|medium|high|auto ; DALL·E: standard|hd
+     * @param outputFormat    GPT Image: png|jpeg|webp
+     * @param background      GPT Image: transparent|opaque|auto
+     * @param responseFormat  DALL·E: url|b64_json
+     */
+    public static AiImageRequest toCustomRequest(
+            String model,
+            String prompt,
+            Integer n,
+            String size,
+            String quality,
+            String outputFormat,
+            String background,
+            String responseFormat
+    ) {
+        Objects.requireNonNull(prompt, "prompt is required");
+
+        if (isGptImageModel(model)) {
+            // Para GPT Image ignoramos response_format y aplicamos defaults propios
+            return toGptImageRequest(
+                    model,
+                    prompt,
+                    n,
+                    nonBlankOr(size, DEFAULT_SIZE),
+                    nonBlankOr(quality, DEFAULT_GPT_QUALITY),
+                    nonBlankOr(outputFormat, DEFAULT_OUTPUT_FORMAT),
+                    nonBlankOr(background, DEFAULT_BACKGROUND)
+            );
+        } else if (isDalleModel(model)) {
+            // Para DALL·E ignoramos output_format/background y aplicamos defaults propios
+            return toDalleRequest(
+                    model,
+                    prompt,
+                    n,
+                    nonBlankOr(size, DEFAULT_SIZE),
+                    nonBlankOr(quality, DEFAULT_DALLE_QUALITY),
+                    nonBlankOr(responseFormat, DEFAULT_RESPONSE_FORMAT)
+            );
+        }
+
+        // Si no sabemos la familia, elegimos un set seguro y no invasivo:
+        // - dejamos n y size con defaults
+        // - NO seteamos campos específicos (output/background/responseFormat)
         return new AiImageRequest(
                 (model != null && !model.isBlank()) ? model : null,
                 prompt,
-                (n != null && n > 0) ? n : DEFAULT_N,
-                (size != null && !size.isBlank()) ? size : DEFAULT_SIZE,
-                (quality != null && !quality.isBlank()) ? quality : DEFAULT_QUALITY,
-                (responseFormat != null && !responseFormat.isBlank()) ? responseFormat : DEFAULT_RESPONSE_FORMAT
+                positiveOr(n, DEFAULT_N),
+                nonBlankOr(size, DEFAULT_SIZE),
+                nonBlankOr(quality, DEFAULT_GPT_QUALITY), // valor neutro; el adapter puede sobreescribir
+                null, // output_format
+                null, // background
+                null  // response_format
         );
     }
 
     /* -------------------------------------------------------------------------
-     * RESPONSE MAPPING
+     * Métodos "legacy" (mantener si tienes código que aún los usa)
      * ---------------------------------------------------------------------- */
 
     /**
-     * Extracts ImageReference from AI service response.
-     * Supports both URL (response_format=url) and base64 (response_format=b64_json).
-     *
-     * If base64 is present and URL is absent, returns a data URL: "data:image/png;base64,<b64>".
+     * @deprecated Usa toGptImageRequest(...) o toDalleRequest(...) según el modelo.
+     */
+    @Deprecated
+    public static AiImageRequest toRequest(String prompt) {
+        Objects.requireNonNull(prompt, "prompt is required");
+        // Devolvemos un request minimalista y neutro (el adapter debería completar/normalizar).
+        return new AiImageRequest(
+                /* model */ null,
+                prompt,
+                DEFAULT_N,
+                DEFAULT_SIZE,
+                DEFAULT_GPT_QUALITY,
+                /* output_format */ null,
+                /* background    */ null,
+                /* response_format */ null
+        );
+    }
+
+    /**
+     * @deprecated Usa toGptImageRequest(..., quality="high") o toDalleRequest(..., quality="hd").
+     */
+    @Deprecated
+    public static AiImageRequest toHighQualityRequest(String prompt) {
+        Objects.requireNonNull(prompt, "prompt is required");
+        return new AiImageRequest(
+                /* model */ null,
+                prompt,
+                DEFAULT_N,
+                DEFAULT_SIZE,
+                "high",        // alto para GPT Image; el adapter puede traducir si fuese DALL·E
+                /* output_format */ null,
+                /* background    */ null,
+                /* response_format */ null
+        );
+    }
+
+    /* -------------------------------------------------------------------------
+     * RESPONSE MAPPING (sin cambios relevantes)
+     * ---------------------------------------------------------------------- */
+
+    /**
+     * Extrae ImageReference del response (URL o base64).
+     * Si sólo hay base64, devuelve un data URL "data:image/png;base64,<b64>".
      */
     public static ImageReference fromResponse(AiImageResponse response) {
         if (response == null) {
@@ -120,16 +254,13 @@ public final class AiImageMapper {
 
         AiImageResponse.ImageData imageData = data.get(0);
 
-        // Preferir URL si existe
         String url = imageData.url();
         if (url != null && !url.isBlank()) {
             return new ImageReference(url);
         }
 
-        // Si no hay URL, intentar base64
         String b64 = imageData.b64Json();
         if (b64 != null && !b64.isBlank()) {
-            // data URL para que el front pueda renderizar sin storage externo
             String dataUrl = "data:image/png;base64," + b64;
             return new ImageReference(dataUrl);
         }
@@ -138,9 +269,7 @@ public final class AiImageMapper {
     }
 
     /**
-     * Extracts the revised prompt from AI service response if available (e.g., DALL·E 3).
-     *
-     * @return revised prompt, or null if not available
+     * Devuelve el revised prompt si el proveedor lo aporta (p.ej., DALL·E 3).
      */
     public static String getRevisedPrompt(AiImageResponse response) {
         if (response == null) return null;
@@ -152,7 +281,7 @@ public final class AiImageMapper {
     }
 
     /**
-     * Checks if the response contains a base64 encoded image.
+     * ¿El response contiene imagen en base64?
      */
     public static boolean hasBase64Image(AiImageResponse response) {
         if (response == null) return false;
@@ -164,9 +293,7 @@ public final class AiImageMapper {
     }
 
     /**
-     * Extracts base64 image data from response (without the "data:" prefix).
-     *
-     * @return base64 encoded image, or null if not available
+     * Extrae la imagen en base64 (sin prefijo data:).
      */
     public static String getBase64Image(AiImageResponse response) {
         if (response == null) return null;

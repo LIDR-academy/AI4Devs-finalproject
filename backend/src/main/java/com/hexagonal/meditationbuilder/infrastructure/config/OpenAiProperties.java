@@ -12,6 +12,9 @@ public class OpenAiProperties {
     private String apiKey;
     private Text text = new Text();
     private Image image = new Image();
+    private String outputFormat; // sólo GPT Image
+    private String background;   // sólo GPT Image
+    private String responseFormat; // sólo DALL·E
 
     @Data
     public static class Text {

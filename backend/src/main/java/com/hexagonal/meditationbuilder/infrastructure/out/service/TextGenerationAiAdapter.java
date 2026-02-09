@@ -133,7 +133,6 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
         }
     }
 
-    /** Lee el cuerpo del error sin romper si ya está consumido */
     private String safeReadBody(org.springframework.http.client.ClientHttpResponse res) {
         try (var is = res.getBody()) {
             if (is == null) return "";
@@ -143,42 +142,4 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
         }
     }
 
-    //TODO BORRAR: método de construcción de respuesta simulada para pruebas sin conexión a la API real
-    // Construye un AiTextResponse de prueba con contenido válido
-private AiTextResponse buildMockResponse(AiTextRequest request) {
-    // Opcional: usa el último mensaje del usuario para personalizar la respuesta simulada
-    String userPrompt = request.messages().stream()
-            .filter(m -> "user".equalsIgnoreCase(m.role()))
-            .map(AiTextRequest.Message::content)
-            .reduce((first, second) -> second)
-            .orElse("prompt vacío");
-
-    String mockContent = "[MOCK] Respuesta simulada para: " + userPrompt;
-
-    AiTextResponse.Message msg = new AiTextResponse.Message(
-            "assistant",
-            mockContent
-    );
-
-    AiTextResponse.Choice choice = new AiTextResponse.Choice(
-            0,
-            msg,
-            "stop" // finishReason
-    );
-
-    AiTextResponse.Usage usage = new AiTextResponse.Usage(
-            12,  // promptTokens
-            42,  // completionTokens
-            54   // totalTokens
-    );
-
-    return new AiTextResponse(
-            "cmpl-mock-123",
-            "chat.completion",
-            System.currentTimeMillis() / 1000L, // created en segundos
-            "gpt-4o-mini",
-            java.util.List.of(choice),
-            usage
-    );
-}
 }

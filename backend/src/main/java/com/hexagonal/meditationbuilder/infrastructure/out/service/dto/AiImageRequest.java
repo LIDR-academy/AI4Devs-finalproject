@@ -9,6 +9,10 @@ public record AiImageRequest(
         String prompt,
         Integer n,
         String size,
-        String quality,
-        @JsonProperty("response_format") String responseFormat
+        String quality,                 // GPT Image: low|medium|high|auto ; DALL·E 3: standard|hd ; DALL·E 2: standard
+        // Para GPT Image
+        @JsonProperty("output_format") String outputFormat,   // "png" | "jpeg" | "webp"
+        String background,                                     // "transparent" | "opaque" | "auto"
+        // Para DALL·E (legacy)
+        @JsonProperty("response_format") String responseFormat // "url" | "b64_json"
 ) {}
