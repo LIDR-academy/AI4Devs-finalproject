@@ -84,3 +84,8 @@ data/processed/*
 *.3dm
 *.glb
 *.gltf
+
+# Backup files
+*.backup
+*.bak
+*.old

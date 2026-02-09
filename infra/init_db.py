@@ -8,6 +8,10 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Import centralized constants
+sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "backend"))
+from constants import STORAGE_BUCKET_RAW_UPLOADS
+
 # Load environment variables from .env
 load_dotenv()
 
@@ -41,7 +45,7 @@ def main():
         return 1
     
     # Create storage bucket
-    bucket_name = "raw-uploads"
+    bucket_name = STORAGE_BUCKET_RAW_UPLOADS
     print(f"📦 Creating storage bucket '{bucket_name}'...")
     
     try:
