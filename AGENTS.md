@@ -90,4 +90,131 @@ Antes de cerrar, verifica que los artifacts reflejan la realidad del código:
  
 > **Regla de Oro:** El código es volátil, el Memory Bank acumulativo y permanente. Actualiza primero la memoria, luego el código.
 
+## 5. SEGURIDAD: SANITIZACIÓN DE CREDENCIALES EN DOCUMENTACIÓN
+**Regla CRÍTICA:** NUNCA incluir credenciales, passwords, tokens o secretos reales en archivos que serán commiteados a Git.
+
+### A. Tipos de Información Sensible a PROTEGER
+
+**🔴 PROHIBIDO incluir en archivos de código/documentación:**
+- Passwords de bases de datos (ej: `Farolina-14-Supabase`)
+- API Keys reales (ej: `sk_live_abc123...`)
+- JWT Tokens completos (especialmente service_role keys)
+- Database Connection Strings con passwords
+- Project References específicos de Supabase/Firebase
+- URLs completas que expongan project IDs internos
+- SSH Private Keys
+- OAuth Client Secrets
+- Encryption Keys
+
+### B. Plantillas de Sanitización OBLIGATORIAS
+
+Cuando crees documentación con ejemplos, usa SIEMPRE placeholders genéricos:
+
+#### ❌ INCORRECTO (Expone credenciales reales):
+```yaml
+SUPABASE_URL=https://ebqapsoyjmdkhdxnkikz.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVicWFwc295am1ka2hkeG5raWt6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDMyOTAwMiwiZXhwIjoyMDg1OTA1MDAyfQ.JEKDxZGbHhq3fp_AUCXvCW6mj3XCXjpJbYWuLhNgGZQ
+SUPABASE_DB_PASSWORD=Farolina-14-Supabase
+SUPABASE_DATABASE_URL=postgresql://postgres.ebqapsoyjmdkhdxnkikz:Farolina-14-Supabase@aws-1-eu-central-1.pooler.supabase.com:6543/postgres
+```
+
+#### ✅ CORRECTO (Usa placeholders):
+```yaml
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IllPVVJfUFJPSkVDVF9SRUYiLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjAwMDAwMDAwLCJleHAiOjE5MDA...[REDACTED]
+SUPABASE_DB_PASSWORD=your-secure-database-password
+SUPABASE_DATABASE_URL=postgresql://postgres.YOUR_PROJECT_REF:YOUR_DB_PASSWORD@aws-0-region.pooler.supabase.com:6543/postgres
+```
+
+### C. Reglas de Redacción de Documentación
+
+1. **Antes de escribir CUALQUIER ejemplo**:
+   - Pregúntate: "¿Este valor es genérico o específico de MI proyecto?"
+   - Si es específico → Reemplázalo con placeholder
+
+2. **Patrones de Placeholders Estándar**:
+   - Project IDs: `YOUR_PROJECT_ID`, `YOUR_PROJECT_REF`
+   - Passwords: `your-password-here`, `YOUR_SECURE_PASSWORD`
+   - Tokens: Mostrar solo inicio + `...[REDACTED]`
+   - URLs: `https://example.com` o `https://your-project.service.com`
+   - UUIDs: `00000000-0000-0000-0000-000000000000`
+
+3. **En prompts.md**:
+   - Al registrar comandos que incluyen credenciales, sanitiza ANTES de escribir
+   - Si el prompt del usuario contenía credenciales, NO las copies literalmente
+   - Añade nota: `[CREDENTIALS REDACTED FOR SECURITY]`
+
+4. **Verificación antes de commit**:
+   ```bash
+   # Comando de auto-verificación antes de commit
+   git diff --cached | grep -iE "(password|secret|token|key.*=)" 
+   # Si devuelve algo → REVISAR
+   ```
+
+### D. Respuesta a Detección de Credenciales Expuestas
+
+Si GitGuardian, Snyk u otra herramienta detecta exposición:
+
+1. **INMEDIATO** (hacer antes de cualquier cosa):
+   - ❌ NO hacer más commits/pushes
+   - ✅ Sanitizar archivos localmente
+   - ✅ Crear documento de respuesta a incidente
+
+2. **URGENTE** (primeras 24 horas):
+   - Rotar credenciales comprometidas
+   - Limpiar historial de Git (BFG Repo-Cleaner)
+   - Actualizar GitHub Secrets con credenciales nuevas
+
+3. **PREVENTIVO** (siguientes 48 horas):
+   - Instalar pre-commit hooks (git-secrets, detect-secrets)
+   - Revisar TODA la documentación existente
+   - Actualizar este AGENTS.md si identificas nuevos patterns
+
+### E. Herramientas de Prevención (RECOMENDADAS)
+
+```bash
+# 1. Instalar git-secrets (previene commits con secretos)
+brew install git-secrets  # macOS
+git secrets --install
+git secrets --register-aws  # Detecta AWS keys
+git secrets --add 'password\s*=\s*.+'  # Custom patterns
+
+# 2. Instalar detect-secrets (Yelp)
+pip install detect-secrets
+detect-secrets scan > .secrets.baseline
+# Agregar a .pre-commit-config.yaml
+
+# 3. Usar .gitignore SIEMPRE para .env
+echo ".env" >> .gitignore
+echo ".env.*" >> .gitignore
+git add .gitignore
+```
+
+### F. Checklist de Seguridad Pre-Commit
+
+Antes de hacer `git commit`, verifica:
+
+- [ ] ¿Algún archivo nuevo contiene ejemplos con credenciales?
+- [ ] ¿Los `.env` están en .gitignore y NO trackeados?
+- [ ] ¿Los archivos .md usan placeholders genéricos?
+- [ ] ¿Los archivos YAML/JSON de configuración están sanitizados?
+- [ ] ¿Ejecuté `git diff --cached` y revisé cambios manualmente?
+
+**Si UNA SOLA respuesta es "No estoy seguro" → DETENTE y revisa.**
+
+### G. Referencias Rápidas
+
+**Incidentes de Seguridad Registrados**:
+- `SECURITY-INCIDENT-2026-02-09.md`: PostgreSQL URI expuesto en `.github/SECRETS-SETUP.md`
+- Prompt #055 en `prompts.md`: Credenciales Supabase comprometidas
+
+**Plantillas Aprobadas**:
+- `.env.example`: Usa SIEMPRE valores dummy/placeholder
+- `.github/SECRETS-SETUP.md`: Ejemplos sanitizados ✅
+- `README.md`: URLs genéricas tipo `https://example.com`
+
+---
+
+> **⚠️ ADVERTENCIA FINAL**: Un solo commit con credenciales puede comprometer TODO el proyecto, incluso después de rotarlas. La limpieza de historial es costosa y arriesgada. **PREVENIR es 100x más barato que remediar.**
+
 ---
