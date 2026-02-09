@@ -2600,3 +2600,35 @@ docker compose run --rm frontend npm test
 **Resultado:** Frontend tests ahora ejecutables en CI usando mismo mecanismo que local (docker compose con volume mounts). .dockerignore permanece sin cambios (correcto excluir tests de producción). Consistencia backend-tests ↔ frontend-tests mantenida.
 ---
 
+## 054 - Fix Production Build: Falta index.html y estructura React
+**Fecha:** 2026-02-09 20:30
+
+**Prompt Original:**
+> Run docker build --target prod
+> [...]
+> #14 [build 6/6] RUN npm run build
+> #14 1.599 error during build:
+> #14 1.599 Could not resolve entry module "index.html".
+> #14 ERROR: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1
+
+**Resumen de la Respuesta/Acción:**
+Diagnóstico y fix del error "Could not resolve entry module 'index.html'" en production build de frontend. **Root cause**: El proyecto frontend solo tenía componente FileUploader aislado pero faltaba estructura completa de aplicación React+Vite (index.html, main.tsx, App.tsx). Vite requiere index.html como punto de entrada para builds de producción. **Solución aplicada**: (1) Creado index.html en src/frontend/ con referencia a /src/main.tsx, (2) Creado src/main.tsx como entry point React que renderiza App component, (3) Creado src/App.tsx como root component que integra FileUploader con UI completa (header, progress bar, success state, footer). Corregidos tipos TypeScript: onUploadError ahora recibe UploadError (no Error genérico), onProgress recibe UploadProgress (no number). Build de producción validado exitosamente: imagen sf-pm-frontend:prod generada en 40s. Tests frontend siguen pasando 4/4 tras cambios.
+
+**Archivos Creados:**
+- ✅ src/frontend/index.html (HTML entry point para Vite)
+- ✅ src/frontend/src/main.tsx (React entry point)
+- ✅ src/frontend/src/App.tsx (Root component con FileUploader + UI)
+
+**Validación:**
+```bash
+docker build --target prod -t sf-pm-frontend:prod --file src/frontend/Dockerfile src/frontend
+# ✅ BUILD SUCCESSFUL (40s)
+
+docker compose run --rm frontend bash -c "npm ci --quiet && npm test"
+# ✅ 4/4 tests passing
+```
+
+**Resultado:** Frontend ahora tiene estructura completa de aplicación React. Production build funcional. CI/CD pipeline completo: backend tests ✅, frontend tests ✅, docker-validation ✅, frontend prod build ✅. Listo para push a GitHub tras configurar secrets.
+---
+
+
