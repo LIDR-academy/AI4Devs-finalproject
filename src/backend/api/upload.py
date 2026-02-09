@@ -2,7 +2,8 @@ import uuid
 from fastapi import APIRouter, HTTPException
 from schemas import UploadRequest, UploadResponse, ConfirmUploadRequest, ConfirmUploadResponse
 from infra.supabase_client import get_supabase_client
-from datetime import datetime
+from services import UploadService
+from constants import ALLOWED_EXTENSION
 
 router = APIRouter()
 
@@ -24,8 +25,8 @@ async def generate_upload_url(request: UploadRequest) -> UploadResponse:
         HTTPException: If the filename does not end with '.3dm'.
     """
     # Validation logic
-    if not request.filename.lower().endswith('.3dm'):
-        raise HTTPException(status_code=400, detail="Only .3dm files are allowed")
+    if not request.filename.lower().endswith(ALLOWED_EXTENSION):
+        raise HTTPException(status_code=400, detail=f"Only {ALLOWED_EXTENSION} files are allowed")
 
     # Generate unique ID and mock URL
     file_id: str = str(uuid.uuid4())
@@ -56,70 +57,26 @@ async def confirm_upload(request: ConfirmUploadRequest) -> ConfirmUploadResponse
         ConfirmUploadResponse: Confirmation status with event_id
 
     Raises:
-        HTTPException: 404 if file not found in storage
+        HTTPException: 404 if file not found in storage, 500 for database errors
     """
-    # Get Supabase client
+    # Get service instance
     supabase = get_supabase_client()
+    upload_service = UploadService(supabase)
     
-    # Step 1: Verify file exists in storage
-    bucket_name = "raw-uploads"
+    # Execute confirmation via service
+    success, event_id, error_msg = upload_service.confirm_upload(
+        file_id=request.file_id,
+        file_key=request.file_key
+    )
     
-    try:
-        # Check if file exists by listing it
-        # Note: Supabase Storage doesn't have a direct "exists" method,
-        # so we attempt to list the specific file
-        files = supabase.storage.from_(bucket_name).list(path=request.file_key.rsplit('/', 1)[0] if '/' in request.file_key else '')
-        
-        # Check if our file is in the list
-        file_name = request.file_key.split('/')[-1]
-        file_exists = any(f.get('name') == file_name for f in files)
-        
-        if not file_exists:
-            raise HTTPException(
-                status_code=404,
-                detail=f"File not found in storage: {request.file_key}"
-            )
+    # Handle errors
+    if not success:
+        if "not found" in error_msg.lower():
+            raise HTTPException(status_code=404, detail=error_msg)
+        else:
+            raise HTTPException(status_code=500, detail=error_msg)
     
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise
-        # If storage check fails for other reasons, assume file doesn't exist
-        raise HTTPException(
-            status_code=404,
-            detail=f"File not found in storage: {request.file_key}"
-        )
-    
-    # Step 2: Create event record in database
-    event_id = str(uuid.uuid4())
-    event_data = {
-        "id": event_id,
-        "file_id": request.file_id,
-        "event_type": "upload.confirmed",
-        "metadata": {
-            "file_key": request.file_key,
-            "confirmed_at": datetime.utcnow().isoformat()
-        },
-        "created_at": datetime.utcnow().isoformat()
-    }
-    
-    try:
-        # Insert event into events table
-        result = supabase.table("events").insert(event_data).execute()
-        
-        if not result.data:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to create event record"
-            )
-    
-    except Exception as e:
-        # If events table doesn't exist or insert fails
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database error: {str(e)}"
-        )
-    
-    # Step 3: Return success response
+    # Return success response
     # TODO: In future, launch Celery task here and return task_id
     return ConfirmUploadResponse(
         success=True,

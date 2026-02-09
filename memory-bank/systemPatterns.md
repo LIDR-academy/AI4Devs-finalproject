@@ -56,6 +56,66 @@ interface PresignedUrlResponse {
 
 **Historical Note**: Initial implementation used `file_key` instead of `file_id`, which caused test failures. Fixed in prompt #040 to align with backend reality.
 
+## Backend Architecture Patterns
+
+### Clean Architecture (Implemented in T-004-BACK)
+**Pattern**: Separation of Concerns with three-layer architecture.
+
+**Structure**:
+```text
+src/backend/
+├── api/              # API Layer (Controllers)
+│   └── upload.py     # Endpoints, request/response handling only
+├── services/         # Business Logic Layer
+│   └── upload_service.py  # Core business logic
+├── constants.py      # Centralized configuration
+└── schemas.py        # Pydantic models (DTOs)
+```
+
+**Responsibilities**:
+- **API Layer** (`api/`): HTTP handling, validation delegation, error mapping
+- **Service Layer** (`services/`): Business logic, orchestration, data persistence
+- **Constants** (`constants.py`): All magic strings/numbers centralized
+
+**Example** (`T-004-BACK` - Confirm Upload):
+```python
+# api/upload.py (thin controller)
+@router.post("/confirm")
+async def confirm_upload(request: ConfirmUploadRequest):
+    upload_service = UploadService(supabase_client)
+    success, event_id, error = upload_service.confirm_upload(...)
+    if not success:
+        raise HTTPException(...)
+    return ConfirmUploadResponse(event_id=event_id)
+
+# services/upload_service.py (business logic)
+class UploadService:
+    def confirm_upload(self, file_id, file_key):
+        # 1. Verify file in storage
+        # 2. Create event record
+        # 3. Return result tuple
+        ...
+```
+
+**Benefits**:
+- Testable: Services can be unit tested without HTTP layer
+- Reusable: Business logic accessible from CLI/workers/API
+- Maintainable: Changes to business rules don't affect routing
+
+### Constants Centralization
+**Pattern**: All hardcoded values in `src/backend/constants.py`.
+
+```python
+# constants.py
+STORAGE_BUCKET_RAW_UPLOADS = "raw-uploads"
+EVENT_TYPE_UPLOAD_CONFIRMED = "upload.confirmed"
+TABLE_EVENTS = "events"
+ALLOWED_EXTENSION = ".3dm"
+MAX_FILE_SIZE_MB = 500
+```
+
+**Enforcement**: Router and services MUST import from constants, never hardcode strings.
+
 ### Testing Patterns
 - **Backend**: pytest with integration tests for Supabase Storage
 - **Frontend**: Vitest + @testing-library/react

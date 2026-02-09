@@ -14,6 +14,7 @@
 - **2026-01-20 06:12**: 🚨 **PROJECT SELECTED: Sagrada Familia Parts Manager**. Feasibility Phase CLOSED. Product Definition Phase OPEN.
 - **2026-01-22**: Sprint 1 Execution: T-002-BACK [DONE], T-005-INFRA [DONE]. Backend upload endpoint operational with Supabase Storage integration.
 - **2026-01-23 20:33**: T-003-FRONT [VERDE]: FileUploader component and tests passing. Frontend-backend alignment completed (file_id, filename fields).
+- **2026-02-09 07:00**: T-004-BACK [VERDE + REFACTOR COMPLETE]: Confirm Upload Webhook operacional con Clean Architecture. Service layer implementado, constantes centralizadas, 7/7 tests pasando.
 
 ## Status
 - **Memory Bank**: ✅ Active and operational.
@@ -24,12 +25,12 @@
 - **Current Phase**: 🚀 **EXECUTION & DEVELOPMENT**.
 - **Sprint Status**: 
   - **Sprint 1**: CLOSED (T-002-BACK ✅, T-005-INFRA ✅)
-  - **Sprint 2**: IN PROGRESS (T-003-FRONT 🟢 VERDE, T-004-BACK pending)
+  - **Sprint 2**: CLOSED (T-003-FRONT ✅, T-004-BACK ✅)
 - **Next Steps**:
-  1. **FASE REFACTOR** para T-003-FRONT (extraer constantes, JSDoc, cleanup)
-  2. T-004-BACK: Implementar Confirm Upload Webhook (`POST /api/upload/confirm`)
+  1. T-001-BACK: Implementar Metadata Extraction (`POST /api/metadata/extract`) con rhino3dm
+  2. (Opcional) T-003-FRONT [REFACTOR]: Extraer constantes, JSDoc, cleanup
   3. Completar testing end-to-end del flujo de upload completo
-  4. Avanzar a T-001-BACK (Metadata Extraction) según backlog
+  4. Avanzar a US-002 (Validation Errors) según backlog
 
 ## Technical Debt
 - None currently. Pre-planning phase complete.
