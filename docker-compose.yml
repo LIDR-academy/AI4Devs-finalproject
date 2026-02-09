@@ -1,8 +1,8 @@
-version: '3.8'
-
 services:
   backend:
-    build: ./src/backend
+    build:
+      context: ./src/backend
+      target: dev
     container_name: sf-pm-backend
     env_file:
       - .env
@@ -49,6 +49,7 @@ services:
       - "5173:5173"
     volumes:
       - ./src/frontend:/app
+      - /app/node_modules  # Anonymous volume to prevent host overwriting node_modules
     environment:
       - VITE_API_URL=http://localhost:8000
     command: bash -c "npm install && npm run dev -- --host 0.0.0.0"

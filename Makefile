@@ -8,9 +8,8 @@ build:
 
 # Build production images
 build-prod:
-	docker compose build --no-cache
-	docker build --target prod -t sf-pm-backend:prod ./src/backend
-	docker build --target prod -t sf-pm-frontend:prod ./src/frontend
+	docker build --target prod -t sf-pm-backend:prod --file src/backend/Dockerfile src/backend
+	docker build --target prod -t sf-pm-frontend:prod --file src/frontend/Dockerfile src/frontend
 
 # Start services (database + backend)
 up:

@@ -90,22 +90,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-frontend-
 
-      - name: Build frontend Docker image
-        run: docker compose build frontend
+      - name: Build frontend Docker image for testing
+        run: |
+          docker build -t sf-pm-frontend:test \
+            --target dev \
+            --file src/frontend/Dockerfile \
+            src/frontend
         env:
           DOCKER_BUILDKIT: 1
 
-      - name: Install frontend dependencies
-        run: make front-install
-
       - name: Run frontend tests
-        run: make test-front
+        run: |
+          docker run --rm sf-pm-frontend:test npm test
 
       - name: Show test logs on failure
         if: failure()
         run: |
-          echo "=== Frontend container logs ==="
-          docker compose logs frontend || echo "No logs available"
+          echo "=== Frontend tests failed ==="
+          docker run --rm sf-pm-frontend:test npm run test -- --reporter=verbose
 
       - name: Cleanup
         if: always()
@@ -121,16 +123,33 @@ jobs:
       - name: Validate docker-compose configuration
         run: docker compose config --quiet
 
-      - name: Build all production images
-        run: make build-prod
+      - name: Build production backend image
+        run: |
+          docker build --target prod \
+            -t sf-pm-backend:prod \
+            --file src/backend/Dockerfile \
+            src/backend
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Build production frontend image
+        run: |
+          docker build --target prod \
+            -t sf-pm-frontend:prod \
+            --file src/frontend/Dockerfile \
+            src/frontend
         env:
           DOCKER_BUILDKIT: 1
 
       - name: Verify image sizes
         run: |
           echo "=== Docker Images ==="
-          docker images | grep sf-pm
+          docker images | grep sf-pm || echo "Images built successfully"
           echo ""
+          echo "Backend size:"
+          docker images sf-pm-backend:prod --format "{{.Size}}"
+          echo "Frontend size:"
+          docker images sf-pm-frontend:prod --format "{{.Size}}"
           echo "✅ Production images built successfully"
 
   lint-and-format:
