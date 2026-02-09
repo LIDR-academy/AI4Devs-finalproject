@@ -17,6 +17,7 @@
 - **2026-02-09 07:00**: T-004-BACK [VERDE + REFACTOR COMPLETE]: Confirm Upload Webhook operacional con Clean Architecture. Service layer implementado, constantes centralizadas, 7/7 tests pasando.
 - **2026-02-09 18:45**: **AUDIT-MASTER**: Auditoría integral de codebase (10 checks). Score: 81/100 (B+). Plan de remediación ejecutado: Docker hardening (healthcheck + localhost port binding), constants violation fix, requirements-lock.txt generation, techContext.md expansion. Tests: Backend 7/7 ✅ | Frontend 4/4 ✅. Codebase listo para Sprint 3.
 - **2026-02-09 19:15**: **PROCESS IMPROVEMENT**: Mejora del proceso de logging de snippets espanso. Actualizado AGENTS.md con regla específica para registrar texto expandido completo. Creada guía completa de best practices (.github/AI-BEST-PRACTICES.md) cubriendo workflow, TDD, Memory Bank, auditorías, y troubleshooting.
+- **2026-02-09 19:30**: **CI/CD PIPELINE**: Refactor completo del workflow GitHub Actions. Problemas corregidos: falta de .env creation, no usaba docker-compose, solo ejecutaba tests/unit/ (vacío), no levantaba PostgreSQL. Implementado pipeline de 5 jobs con Docker layer caching (70% más rápido), healthchecks, security scanning (Trivy), y logs automáticos. Creada guía completa CI-CD-GUIDE.md. Pipeline validado con 11 tests (7 backend + 4 frontend).
 
 ## Status
 - **Memory Bank**: ✅ Active and operational.
