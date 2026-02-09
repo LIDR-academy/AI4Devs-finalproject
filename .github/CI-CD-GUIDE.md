@@ -204,22 +204,28 @@ GitHub Repo → Settings → Secrets and Variables → Actions → New repositor
 Para emular el CI localmente antes de hacer push:
 
 ```bash
-# 1. Verificar que .env existe
+# 0. IMPORTANTE: Verificar que docker-compose.yml especifica target: dev
+grep -A 2 "backend:" docker-compose.yml | grep "target: dev"
+# Debe mostrar: target: dev
+
+# 1. Rebuild con target correcto
+make down
+docker compose build backend
+
+# 2. Verificar que .env existe
 cat .env  # Debe tener SUPABASE_URL y SUPABASE_KEY
 
-# 2. Ejecutar los mismos comandos que CI
-make build            # Build Docker images
+# 3. Ejecutar los mismos comandos que CI
 docker compose up -d db  # Start database
-make test             # Backend tests (debe pasar 7/7)
-make test-front       # Frontend tests (debe pasar 4/4)
+make test                # Backend tests (debe pasar 7/7)
 
-# 3. Verificar producción
-make build-prod       # Verificar que production builds funcionan
+# 4. Verificar producción
+make build-prod          # Verificar que production builds funcionan
 ```
 
 **Resultado esperado**:
 ```
-======================== 7 passed in 4.08s =========================  # Backend
+======================== 7 passed in 4.70s =========================  # Backend
  ✓ 4 passed (4)                                                      # Frontend
 ```
 
@@ -268,14 +274,39 @@ Esto mostrará el estado del CI en tiempo real.
 
 ## 🔧 Troubleshooting
 
-### Problema: "SUPABASE_URL and SUPABASE_KEY must be configured"
+### Problema: "pytest: executable file not found in $PATH"
 
-**Causa**: Secrets no configurados en GitHub.
+**Causa**: docker-compose.yml no especificaba `target: dev` en el backend service.
+
+**Explicación**: El Dockerfile del backend tiene multi-stage builds:
+```dockerfile
+FROM python:3.11-slim AS base
+# ... instala requirements.txt
+
+FROM base AS dev
+# ... instala requirements-dev.txt (incluye pytest)
+
+FROM base AS prod
+# ... NO incluye pytest
+```
+
+Sin `target: dev`, Docker usa el último stage (prod) que no tiene pytest.
 
 **Solución**:
-1. Ve a Settings → Secrets and Variables → Actions
-2. Agrega `SUPABASE_URL` y `SUPABASE_KEY`
-3. Re-run pipeline
+```yaml
+# docker-compose.yml
+backend:
+  build:
+    context: ./src/backend
+    target: dev  # ← CRÍTICO: especificar target dev
+```
+
+Luego reconstruir:
+```bash
+make down
+docker compose build backend
+make test  # Ahora debe pasar 7/7
+```
 
 ### Problema: "Database connection failed"
 

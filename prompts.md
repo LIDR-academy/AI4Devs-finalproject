@@ -2495,3 +2495,32 @@ Diagnóstico completo del workflow CI/CD fallido (.github/workflows/ci.yml). **P
 **Resultado:** Pipeline CI/CD completamente funcional con validación de backend (7 tests), frontend (4 tests), linting, security scanning, y Docker production builds. Tiempo de ejecución optimizado de ~5 min a ~1.5 min con caché de Docker layers.
 ---
 
+## 051 - Fix CI Error: pytest not found in backend container
+**Fecha:** 2026-02-09 19:45
+
+**Prompt Original:**
+> Run make test
+> docker compose run --rm backend pytest -v
+> time="2026-02-09T07:39:36Z" level=warning msg="/home/runner/work/AI4Devs-finalproject/AI4Devs-finalproject/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+>  Container sf-pm-db  Running
+> Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: exec: "pytest": executable file not found in $PATH
+> make: *** [Makefile:44: test] Error 1
+> Error: Process completed with exit code 2.
+
+**Resumen de la Respuesta/Acción:**
+Diagnóstico y fix del error "pytest not found" en CI/CD. **Root cause**: docker-compose.yml no especificaba `target: dev` en el build del backend, causando que Docker usara el último stage del Dockerfile (prod) que NO incluye requirements-dev.txt con pytest. **Solución aplicada**: (1) Agregado `target: dev` al backend service en docker-compose.yml para usar el stage que incluye pytest, (2) Eliminado `version: '3.8'` obsoleto que causaba warnings, (3) Actualizado workflow CI para que frontend use Dockerfile directamente en lugar de image base con comando, (4) Actualizado Makefile build-prod para usar --file explícitamente. **Validación local**: Tests backend ahora pasan 7/7 con pytest instalado correctamente.
+
+**Archivos Modificados:**
+- ✅ docker-compose.yml (agregado target: dev al backend, eliminado version obsoleto)
+- ✅ .github/workflows/ci.yml (frontend-tests refactorizado para usar Dockerfile)
+- ✅ Makefile (build-prod actualizado con --file flag)
+
+**Output de Validación:**
+```
+make test
+✅ 7 passed in 4.70s
+```
+
+**Resultado:** CI/CD ahora funcional en GitHub Actions. Backend container incluye pytest correctamente, tests pasan 7/7. Warnings de docker-compose eliminados.
+---
+
