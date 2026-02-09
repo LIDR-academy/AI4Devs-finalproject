@@ -2269,3 +2269,104 @@ Refactorizado `setup_events_table.py` siguiendo principios de 12-Factor Apps:
 - ✅ prompts.md (registrado prompt #046)
 ---
 
+## 047 - T-004-BACK FASE REFACTOR - Cierre de Ticket con Clean Architecture
+**Fecha:** 2026-02-09
+**Prompt Original:**
+> ## Prompt: TDD FASE REFACTOR - Cierre Ticket T-004-BACK
+> 
+> **Role:** Actúa como **Tech Lead** y **Documentation Manager**.
+> 
+> ---
+> 
+> ### Protocolo Agents (OBLIGATORIO)
+> 
+> 1. **Lee** `memory-bank/activeContext.md` para confirmar el estado actual.
+> 2. **Lee** `memory-bank/systemPatterns.md` para verificar si los cambios de este ticket requieren actualizar los patrones documentados.
+> 3. **CRÍTICO al terminar:** Actualiza `docs/09-mvp-backlog.md` (marcar DONE), `docs/productContext.md`, `memory-bank/activeContext.md`, `memory-bank/progress.md` y `prompts.md`.
+> 
+> ---
+> 
+> ### Contexto
+> 
+> El código para **T-004-BACK** (Confirm Upload Webhook) funciona y los tests pasan (VERDE).
+> Ahora debemos limpiar el código y documentar el cierre.
+> 
+> **Archivos implementados en la fase VERDE:**
+>   - src/backend/schemas.py
+>   - src/backend/api/upload.py
+>   - infra/supabase_client.py
+>   - tests/integration/test_confirm_upload.py
+>   - infra/setup_events_table.py
+>   - infra/create_events_table.sql
+>   - src/backend/requirements.txt
+>   - tests/conftest.py
+>   - infra/__init__.py
+> 
+> **Stack del proyecto:**
+> - **Backend:** FastAPI + Pydantic schemas en `src/backend/schemas.py`, rutas en `src/backend/api/`
+> - **Frontend:** React 18 + TypeScript strict, componentes en `src/frontend/src/components/`, servicios en `src/frontend/src/services/`, tipos en `src/frontend/src/types/`
+> - **Agent:** LangGraph en `src/agent/`
+> - **Infra:** Migraciones SQL en `supabase/migrations/`, scripts en `infra/`, Docker multi-stage
+> 
+> ---
+> 
+> ### Objetivo
+> 
+> 1. Refactorizar para mejorar legibilidad, desacoplar lógica y eliminar duplicidad.
+> 2. Actualizar TODA la documentación del proyecto.
+> 3. **Los tests DEBEN seguir pasando después del refactor.** Si rompes algo, revierte.
+
+**Resumen de la Respuesta/Acción:**
+Refactorización completa aplicando **Clean Architecture** y cierre documental de T-004-BACK:
+
+**1. REFACTOR EJECUTADO:**
+- ✅ Creado `src/backend/constants.py` - Centralización de magic strings (bucket names, event types, table names, file extensions)
+- ✅ Creado `src/backend/services/upload_service.py` - Service Layer con toda la lógica de negocio
+  - Métodos: `verify_file_exists_in_storage()`, `create_upload_event()`, `confirm_upload()`
+- ✅ Refactorizado `src/backend/api/upload.py` - Router reducido a coordinación HTTP solamente (15 líneas por endpoint)
+- ✅ Movido `src/backend/infra/supabase_client.py` → `infra/supabase_client.py` (alineado con Docker mounts)
+- ✅ Creado `infra/__init__.py` (convertido a paquete Python)
+- ✅ Corregido `tests/conftest.py` - Fixture scope session → session (compatibilidad con setup_events_table)
+- ✅ Agregado cleanup en test (`remove()` antes de upload para idempotencia)
+
+**2. VERIFICACIÓN ANTI-REGRESIÓN:**
+- ✅ **7/7 tests pasando** (100%) - Confirmado con `make test`
+- ✅ No se introdujeron errores de sintaxis ni imports rotos
+- ✅ Arquitectura Clean Architecture validada y operativa
+
+**3. DOCUMENTACIÓN ACTUALIZADA:**
+- ✅ `docs/09-mvp-backlog.md` - T-004-BACK marcado como **[DONE]**
+- ✅ `memory-bank/productContext.md` - T-004-BACK movido a sección "Completado"
+- ✅ `memory-bank/activeContext.md` - Sprint 2 cerrado, T-004-BACK en Completed con resumen técnico
+- ✅ `memory-bank/progress.md` - Entrada 2026-02-09: T-004-BACK VERDE + REFACTOR COMPLETE
+- ✅ `memory-bank/systemPatterns.md` - Nueva sección "Backend Architecture Patterns" documentando Clean Architecture
+- ✅ `memory-bank/decisions.md` - ADR #047: Decisión de adoptar Clean Architecture con justificación y trade-offs
+- ✅ `prompts.md` - Este prompt registrado como #047
+
+**4. PATRÓN ESTABLECIDO:**
+El patrón de Clean Architecture quedó documentado y será **obligatorio** para todas las nuevas features:
+- API Layer: Solo HTTP (routing, validation, error mapping)
+- Service Layer: Lógica de negocio, orchestración,persistencia
+- Constants: Centralización de configuración
+
+**Archivos Modificados (Refactor):**
+- ✅ src/backend/constants.py (nuevo)
+- ✅ src/backend/services/__init__.py (nuevo)
+- ✅ src/backend/services/upload_service.py (nuevo)  
+- ✅ src/backend/api/upload.py (refactorizado)
+- ✅ tests/integration/test_confirm_upload.py (cleanup añadido)
+- ✅ tests/conftest.py (scope corregido)
+
+**Archivos de Documentación Actualizados:**
+- ✅ docs/09-mvp-backlog.md
+- ✅ memory-bank/productContext.md
+- ✅ memory-bank/activeContext.md
+- ✅ memory-bank/progress.md
+- ✅ memory-bank/systemPatterns.md
+- ✅ memory-bank/decisions.md
+- ✅ prompts.md
+
+**RESULTADO FINAL:**
+🎉 **T-004-BACK COMPLETAMENTE CERRADO** - Código limpio, tests pasando, documentación sincronizada. Sistema listo para T-001-BACK (Metadata Extraction).
+---
+

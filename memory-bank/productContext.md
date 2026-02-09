@@ -429,10 +429,11 @@ Comenzaré con el Lean Canvas adaptado a Enterprise..."
 **Tickets Completados:**
 - ✅ T-002-BACK: Generate Presigned URL
 - ✅ T-003-FRONT: Upload Manager (Client) + Refactor
+- ✅ T-004-BACK: Confirm Upload Webhook (Clean Architecture refactor)
 - ✅ T-005-INFRA: S3 Bucket Setup
 
 **En Progreso:**
-- ⏳ T-004-BACK: Confirm Upload Webhook
+- ⏳ T-001-BACK: Metadata Extraction (rhino3dm integration)
 
 **Objetivos:**
 1. Setup de proyecto (monorepo Turborepo o Nx)

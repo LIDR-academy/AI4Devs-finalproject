@@ -230,6 +230,38 @@ Este archivo documenta todas las decisiones importantes tomadas durante el desar
 
 ---
 
+## 2026-02-09 - Adopción de Clean Architecture para Backend (T-004-BACK Refactor)
+- **Contexto:** El código de T-0004-BACK tenía toda la lógica de negocio (verificación de storage, creación de eventos) mezclada directamente en el endpoint del router. Esto viola el principio de Separation of Concerns y hace difícil:
+  - Unit testing de lógica de negocio sin levantar servidor HTTP
+  - Reutilizar lógica desde workers/CLI/otros contextos
+  - Mantener y evolucionar código a medida que crece el proyecto
+- **Decisión:** Refactorizar backend siguiendo **Clean Architecture con tres capas**:
+  1. **API Layer (`api/`)**: Solo manejo de HTTP (routing, validation, error mapping)
+  2. **Service Layer (`services/`)**: Toda la lógica de negocio y orquestación
+  3. **Constants (`constants.py`)**: Centralización de magic strings/numbers
+- **Implementación Concreta**:
+  - Creado `src/backend/services/upload_service.py` con clase `UploadService`
+  - Extraídos métodos: `verify_file_exists_in_storage()`, `create_upload_event()`, `confirm_upload()`
+  - Creado `src/backend/constants.py` con: `STORAGE_BUCKET_RAW_UPLOADS`, `EVENT_TYPE_UPLOAD_CONFIRMED`, `TABLE_EVENTS`, `ALLOWED_EXTENSION`
+  - Reducido endpoint `/confirm` a 15 líneas (coordinación HTTP solamente)
+- **Consecuencias:**
+  - ✅ **Ganamos:**
+    - **Testabilidad**: Servicios probables sin HTTP layer (unit tests aislados)
+    - **Reusabilidad**: Lógica accesible desde Celery workers, CLI tools, otros endpoints
+    - **Mantenibilidad**: Cambios de reglas de negocio no afectan routing
+    - **Escalabilidad**: Patrón replicable para todas las features futuras (T-001-BACK, etc.)
+    - **Code Review**: Funciones pequeñas, responsabilidades claras  
+  - ⚠️ **Trade-offs**:
+    - Más archivos (complejidad aparente inicial para proyecto pequeño)
+    - Requiere disciplina para no volver a mezclar lógica en routers
+  - ✅ **Validación**: 7/7 tests siguen pasando post-refactor (verificación anti-regresión exitosa)
+- **Enforcement Going Forward**: 
+  - Todo nuevo endpoint DEBE seguir este patrón
+  - Code review rechazará lógica de negocio en routers
+  - `systemPatterns.md` actualizado con ejemplos y guías
+
+---
+
 ## Plantilla para Nuevas Decisiones
 ```markdown
 ## [FECHA] - [TÍTULO CORTO]

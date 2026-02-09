@@ -4,30 +4,29 @@
 🚀 **SPRINT 2: FRONTEND DEVELOPMENT** - T-003-FRONT (FileUploader) VERDE. Alcanzada fase de tests passing (4/4) con alineación backend-frontend completada.
 
 ## Active Tasks
-### Completed (Sprint 1)
+## Active Tasks
+### Completed (Sprint 1 & 2)
 - [x] T-002-BACK: Upload endpoint con presigned URLs (FastAPI + Supabase Storage) ✅
 - [x] T-005-INFRA: Bucket configuration y tests de integración ✅
+- [x] T-003-FRONT [VERDE]: FileUploader component con tests passing (4/4) ✅
+- [x] T-004-BACK [VERDE]: Confirm Upload Webhook con Clean Architecture ✅
+  - Endpoint `/confirm` operacional
+  - Service layer implementado (separation of concerns)
+  - Constantes centralizadas
+  - Events table creada y operativa
+  - 7/7 tests pasando
 - [x] Documentation sync: README.md, prompts.md, Memory Bank
 
-### In Progress (Sprint 2 - Frontend Track)
-- [x] ✅ **T-003-FRONT [VERDE]**: FileUploader component
-  - Component implementation (validation, upload flow, progress tracking)
-  - TypeScript interfaces aligned with backend schemas (file_id, filename)
-  - Minimal test suite passing (4/4 tests)
-  - Fixed Docker environment (Alpine→Debian for jsdom stability)
-- [ ] **T-003-FRONT [REFACTOR]**: Code cleanup
+### Next Steps
+- [ ] T-001-BACK: Metadata Extraction (`POST /api/metadata/extract`)
+  - Integrar rhino3dm para extraer geometría y metadatos
+  - Implementar validación de nombresISO-19650
+  - TDD implementation following same pattern as T-004
+- [ ] T-003-FRONT [REFACTOR]: Code cleanup (opcional)
   - Extract constants (MAX_FILE_SIZE, ACCEPTED_EXTENSIONS)
   - Add JSDoc comments
   - Ensure accessibility attributes complete
-  - Consider optimizing full test suite (14 tests currently backed up)
-
-### Next Steps
-- [ ] T-004-BACK: Confirm Upload Webhook (`POST /api/upload/confirm`)
-  - Verify file existence in S3
-  - Launch Celery Task for metadata extraction
-  - TDD implementation following same pattern as T-002
-- [ ] T-001-BACK: Metadata Extraction (rhino3dm integration)
-- [ ] End-to-end upload flow testing (Frontend → Backend → Storage → Webhook)
+- [ ] End-to-end upload flow testing (Frontend → Backend → Storage → Webhook → Processing)
 
 ## Current State Checkpoint
 - **Backend**: Upload endpoint operational (:8000/api/upload/url)
