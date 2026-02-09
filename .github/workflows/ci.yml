@@ -71,7 +71,14 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker compose down -v
+        run: |
+          # Create minimal .env for docker compose down (it reads env_file)
+          cat > .env << EOF
+          SUPABASE_URL=dummy
+          SUPABASE_KEY=dummy
+          SUPABASE_DATABASE_URL=dummy
+          EOF
+          docker compose down -v
 
   frontend-tests:
     runs-on: ubuntu-latest
@@ -111,7 +118,9 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker compose down -v
+        run: |
+          # Remove test image
+          docker rmi sf-pm-frontend:test || true
 
   docker-validation:
     runs-on: ubuntu-latest
@@ -119,6 +128,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Create minimal .env for validation
+        run: |
+          cat > .env << EOF
+          SUPABASE_URL=dummy
+          SUPABASE_KEY=dummy
+          SUPABASE_DATABASE_URL=dummy
+          EOF
 
       - name: Validate docker-compose configuration
         run: docker compose config --quiet

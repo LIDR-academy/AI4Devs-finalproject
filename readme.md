@@ -152,6 +152,13 @@ Este proyecto utiliza **GitHub Copilot** (Claude Sonnet 4.5) como asistente de d
 - **[AI Best Practices](./.github/AI-BEST-PRACTICES.md)**: Guía de mejores prácticas para trabajo eficiente con el AI
 - **[prompts.md](./prompts.md)**: Registro completo de todos los prompts utilizados (trazabilidad)
 
+### CI/CD Pipeline
+- **[CI/CD Guide](./.github/CI-CD-GUIDE.md)**: Documentación completa del pipeline GitHub Actions
+- **[Secrets Setup](./.github/SECRETS-SETUP.md)**: ⚠️ **ACCIÓN REQUERIDA** - Configurar secrets antes de merge
+
+**Estado del CI/CD**: ⏸️ **Pending secrets configuration**  
+Para activar el pipeline, sigue las instrucciones en [SECRETS-SETUP.md](./.github/SECRETS-SETUP.md)
+
 ### Memory Bank
 Sistema de estado compartido para trabajo multi-agente:
 - **[memory-bank/activeContext.md](./memory-bank/activeContext.md)**: Contexto actual y tareas activas
