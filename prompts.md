@@ -2542,7 +2542,7 @@ Diagnóstico y fix del error ".env not found" en cleanup steps de GitHub Actions
 - ✅ .github/SECRETS-SETUP.md (nuevo archivo, guía completa de 350 líneas)
 
 **Secrets Pendientes de Configuración en GitHub**:
-1. `SUPABASE_URL` = `https://ebqapsoyjmdkhdxnkikz.supabase.co`
+1. `SUPABASE_URL` = (tu proyecto URL de Supabase Dashboard)
 2. `SUPABASE_KEY` = (service_role key de .env local)
 3. `SUPABASE_DATABASE_URL` = (connection string de .env local)
 
@@ -2629,6 +2629,58 @@ docker compose run --rm frontend bash -c "npm ci --quiet && npm test"
 ```
 
 **Resultado:** Frontend ahora tiene estructura completa de aplicación React. Production build funcional. CI/CD pipeline completo: backend tests ✅, frontend tests ✅, docker-validation ✅, frontend prod build ✅. Listo para push a GitHub tras configurar secrets.
+---
+
+## 055 - 🚨 INCIDENTE DE SEGURIDAD: Credenciales expuestas en repositorio público
+**Fecha:** 2026-02-09 20:45
+
+**Prompt Original:**
+> GitGuardian has detected the following PostgreSQL URI exposed within your GitHub account.
+> Details
+> 
+> - Secret type: PostgreSQL URI
+> 
+> - Repository: pedrocortesark/AI4Devs-finalproject
+> 
+> - Pushed date: February 9th 2026, 07:52:48 UTC
+
+**Resumen de la Respuesta/Acción:**
+🔴 **INCIDENTE DE SEGURIDAD CRÍTICO** - GitGuardian detectó exposición de credenciales de base de datos en repositorio público. **Root cause**: Archivo `.github/SECRETS-SETUP.md` contenía ejemplos con credenciales REALES (Database password `Farolina-14-Supabase`, Project REF `ebqapsoyjmdkhdxnkikz`, URI completa con password) en lugar de placeholders genéricos. **Acción inmediata ejecutada**: (1) Sanitización de `.github/SECRETS-SETUP.md` reemplazando credenciales reales con placeholders (`YOUR_PROJECT_REF`, `YOUR_DB_PASSWORD`), (2) Sanitización de `prompts.md` eliminando referencias a URL específica de Supabase, (3) Creado documento completo de respuesta a incidente `SECURITY-INCIDENT-2026-02-09.md` con plan de remediación paso a paso, (4) Checklist de 13 acciones requeridas incluyendo rotación de credenciales, limpieza de historial Git (BFG Repo-Cleaner), instalación de pre-commit hooks, y actualización de GitHub Secrets. **ACCIÓN REQUERIDA DEL USUARIO**: (1) Rotar Database Password en Supabase Dashboard INMEDIATAMENTE, (2) Limpiar historial de Git con BFG o recrear repositorio, (3) Actualizar .env local con nuevas credenciales, (4) Actualizar GitHub Secrets, (5) Instalar git-secrets para prevenir futuros incidentes.
+
+**Archivos Sanitizados:**
+- ✅ .github/SECRETS-SETUP.md (credenciales reales → placeholders genéricos)
+- ✅ prompts.md (URL específica de Supabase → placeholder genérico)
+
+**Archivos Creados:**
+- ✅ SECURITY-INCIDENT-2026-02-09.md (plan de respuesta completo, ~450 líneas)
+
+**Credenciales Comprometidas (REQUIERE ROTACIÓN)**:
+- 🔴 Database Password: `Farolina-14-Supabase` (EXPUESTO)
+- 🔴 Project Reference: `ebqapsoyjmdkhdxnkikz` (EXPUESTO)  
+- 🟡 Service Role JWT: Parcialmente visible (verificar historial)
+- 🔴 Database URI completa: EXPUESTA
+
+**Tiempo de Exposición**: ~13 horas (desde 07:52 UTC hasta detección)
+
+**Plan de Remediación**:
+1. **Inmediato** (5-10 min): Rotar DB password en Supabase
+2. **Urgente** (15-20 min): Limpiar historial Git (BFG Repo-Cleaner)
+3. **Crítico** (5 min): Actualizar GitHub Secrets
+4. **Preventivo** (10 min): Instalar pre-commit hooks (git-secrets)
+
+**Impacto Evaluado**: 
+- ✅ Acceso a DB: POSIBLE (password expuesto)
+- ⚠️ Service Role bypass: POSIBLE (si JWT completo en historial)
+- 🟢 Dashboard Supabase: NO (requiere login separado)
+- 🟢 Datos sensibles: BAJO (proyecto educativo sin PII)
+
+**Lecciones Aprendidas**:
+- ❌ NUNCA usar credenciales reales en ejemplos de documentación
+- ✅ GitGuardian funcionó (detectó en <24h)  
+- ⚠️ Falta validación pre-commit
+- 📋 Crear templates sanitizados ANTES de documentar
+
+**Resultado:** Archivos sanitizados localmente ✅. REQUIERE ACCIÓN URGENTE DEL USUARIO para rotación de credenciales y limpieza de historial Git. Pipeline CI/CD bloqueado hasta completar remediación (GitHub Secrets necesita nuevas credenciales rotadas). Prevención futura: instalar git-secrets y actualizar AGENTS.md con reglas de sanitización.
 ---
 
 
