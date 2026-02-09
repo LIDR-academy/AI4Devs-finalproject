@@ -17,7 +17,8 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - sf-network
 
@@ -25,11 +26,16 @@ services:
     image: postgres:15-alpine
     container_name: sf-pm-db
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"  # Only expose to localhost for security
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=sfpm_db
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:

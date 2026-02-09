@@ -2370,3 +2370,33 @@ El patrón de Clean Architecture quedó documentado y será **obligatorio** para
 🎉 **T-004-BACK COMPLETAMENTE CERRADO** - Código limpio, tests pasando, documentación sincronizada. Sistema listo para T-001-BACK (Metadata Extraction).
 ---
 
+## 048 - :audit-master - Auditoría Integral de Codebase Pre-Sprint 3
+**Fecha:** 2026-02-09 18:45
+
+**Prompt Original:**
+> :audit-master
+
+**Resumen de la Respuesta/Acción:**
+Auditoría sistemática de 10 puntos sobre la calidad del codebase antes de iniciar T-001-BACK. Incluye: alineación de contratos Pydantic↔TypeScript, verificación de Clean Architecture, detección de código muerto, salud de dependencias, infraestructura Docker, consistencia del Memory Bank, seguridad básica, documentación obsoleta y salud de tests. Se generó reporte detallado con marcadores ✅/❌ y comandos de remediación específicos.
+
+**Score Global Auditoría:** 81/100 (B+ / Good)
+
+**Plan de Remediación Ejecutado (100% Completado):**
+1. ✅ Archivos backup huérfanos ya eliminados previamente
+2. ✅ Fix constants violation en infra/init_db.py (ahora importa STORAGE_BUCKET_RAW_UPLOADS)
+3. ✅ Docker hardening: PostgreSQL port restringido a localhost (127.0.0.1:5432:5432)
+4. ✅ Docker healthcheck agregado al servicio db (pg_isready cada 10s)
+5. ✅ Docker depends_on actualizado con condition: service_healthy
+6. ✅ Generado requirements-lock.txt con pip freeze (48 dependencias)
+7. ✅ Expandido techContext.md con stack completo (Backend, Frontend, Infrastructure)
+8. ✅ Tests verificados: Backend 7/7 ✅ | Frontend 4/4 ✅
+
+**Archivos Modificados:**
+- infra/init_db.py (importa constants.STORAGE_BUCKET_RAW_UPLOADS)
+- docker-compose.yml (healthcheck, port binding, depends_on)
+- memory-bank/techContext.md (expandido de 10 a 84 líneas)
+- src/backend/requirements-lock.txt (nuevo archivo con 48 dependencias)
+
+**Resultado:** Codebase hardened y listo para T-001-BACK (Metadata Extraction).
+---
+
