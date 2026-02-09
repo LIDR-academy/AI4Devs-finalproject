@@ -28,6 +28,17 @@ Si el archivo ya existe:
 **Fecha:** YYYY-MM-DD HH:MM
 **Prompt Original:**
 > [Aquí pega el contenido LITERAL y COMPLETO del prompt del usuario. NO resumir.]
+> 
+> **IMPORTANTE - Snippets de Espanso:**
+> Si detectas un trigger como `:comando`, debes registrar el TEXTO EXPANDIDO COMPLETO que ves en el userRequest.
+> Nunca registres solo el trigger (ej. `:audit-master`) sin el contenido real.
+> Formato preferido cuando detectes snippet:
+> ```
+> **Prompt Original (Snippet expandido):**
+> > :trigger-name
+> >
+> > [Texto completo expandido del snippet]
+> ```
 
 **Resumen de la Respuesta/Acción:**
 [Aquí escribirás un resumen muy breve (1-2 líneas) de la solución que vas a plantear]

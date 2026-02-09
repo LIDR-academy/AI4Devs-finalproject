@@ -262,6 +262,47 @@ Este archivo documenta todas las decisiones importantes tomadas durante el desar
 
 ---
 
+## 2026-02-09 - Mejora del Proceso de Logging con Snippets de Espanso
+- **Contexto:** Durante auditoría de codebase (prompt #048), se detectó que el prompt original fue registrado como `:audit-master` (trigger de espanso) en lugar del texto expandido completo. Esto genera pérdida de contexto en prompts.md, violando el principio de trazabilidad completa del proyecto.
+- **Root Cause:** AGENTS.md no tenía regla específica sobre cómo manejar snippets de text expansion. El AI intentó "adivinar" si era un snippet pero registró el formato incorrecto.
+- **Decisión:** Estandarizar el manejo de snippets de espanso en el workflow de logging:
+  1. **Regla en AGENTS.md**: AI DEBE registrar SIEMPRE el texto expandido completo que ve en userRequest, NUNCA solo el trigger
+  2. **Formato Estándar** para snippets:
+     ```markdown
+     **Prompt Original (Snippet expandido):**
+     > :trigger-name
+     >
+     > [Texto completo expandido del snippet]
+     ```
+  3. **Guía de Best Practices**: Crear `.github/AI-BEST-PRACTICES.md` con patrones para:
+     - Uso correcto de snippets en prompts
+     - Workflow TDD (RED → GREEN → REFACTOR)
+     - Validación de cambios
+     - Memory Bank management
+     - Auditorías periódicas
+     - Troubleshooting
+- **Implementación**:
+  - ✅ Actualizado AGENTS.md sección 1.B con nota "IMPORTANTE - Snippets de Espanso"
+  - ✅ Creado `.github/AI-BEST-PRACTICES.md` (335 líneas, 10 secciones)
+  - ✅ Actualizado README.md con sección "Desarrollo Asistido por IA" referenciando guías
+  - ✅ Corregido prompt #048 con texto expandido completo
+- **Consecuencias:**
+  - ✅ **Ganamos:**
+    - **Trazabilidad completa**: Prompts registrados con contexto completo
+    - **Onboarding mejorado**: Nuevos colaboradores/agentes pueden seguir best practices documentadas
+    - **Menos errores de proceso**: Reglas claras reducen ambigüedad
+    - **Escalabilidad del workflow**: Guía replicable para otros proyectos
+  - ⚠️ **Trade-offs**:
+    - Requiere que usuario informe al AI si detecta errores de registro
+    - Documentación adicional a mantener
+  - ✅ **Validación**: Formato de prompt #048 corregido y verificado
+- **Enforcement Going Forward**:
+  - AI verificará presencia de triggers (`:nombre`) y registrará texto completo
+  - Usuario puede usar formato de nota explícita cuando use snippets complejos
+  - Code review de prompts.md verificará que entradas tengan contexto completo
+
+---
+
 ## Plantilla para Nuevas Decisiones
 ```markdown
 ## [FECHA] - [TÍTULO CORTO]

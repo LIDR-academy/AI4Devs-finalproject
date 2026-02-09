@@ -143,6 +143,24 @@ make test-front
 
 ---
 
+## 🤖 Desarrollo Asistido por IA
+
+Este proyecto utiliza **GitHub Copilot** (Claude Sonnet 4.5) como asistente de desarrollo. 
+
+### Guías de Trabajo
+- **[AGENTS.MD](./AGENTS.md)**: Reglas globales del AI Assistant (logging, workflow, definition of done)
+- **[AI Best Practices](./.github/AI-BEST-PRACTICES.md)**: Guía de mejores prácticas para trabajo eficiente con el AI
+- **[prompts.md](./prompts.md)**: Registro completo de todos los prompts utilizados (trazabilidad)
+
+### Memory Bank
+Sistema de estado compartido para trabajo multi-agente:
+- **[memory-bank/activeContext.md](./memory-bank/activeContext.md)**: Contexto actual y tareas activas
+- **[memory-bank/systemPatterns.md](./memory-bank/systemPatterns.md)**: Patrones arquitectónicos
+- **[memory-bank/techContext.md](./memory-bank/techContext.md)**: Stack tecnológico completo
+- **[memory-bank/decisions.md](./memory-bank/decisions.md)**: ADRs (Architecture Decision Records)
+
+---
+
 ## 📊 Estado del Proyecto
 
 ✅ **Completado**: Documentación técnica completa (Fases 1-7)  

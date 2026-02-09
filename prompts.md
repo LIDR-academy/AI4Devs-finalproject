@@ -2370,11 +2370,26 @@ El patrón de Clean Architecture quedó documentado y será **obligatorio** para
 🎉 **T-004-BACK COMPLETAMENTE CERRADO** - Código limpio, tests pasando, documentación sincronizada. Sistema listo para T-001-BACK (Metadata Extraction).
 ---
 
-## 048 - :audit-master - Auditoría Integral de Codebase Pre-Sprint 3
+## 048 - Auditoría Integral de Codebase Pre-Sprint 3
 **Fecha:** 2026-02-09 18:45
 
 **Prompt Original:**
 > :audit-master
+> 
+> (Expandido por espanso a:)
+> Realizar auditoría completa del codebase antes de iniciar T-001-BACK. Verificar:
+> 1. Alineación de contratos Pydantic↔TypeScript
+> 2. Clean Architecture correctamente implementada
+> 3. Arquitectura frontend (service layer, state management)
+> 4. Dead code (archivos orphan, código sin usar)
+> 5. Salud de dependencias (prod/dev separation, versioning)
+> 6. Infraestructura Docker (healthchecks, multi-stage builds, security)
+> 7. Consistencia Memory Bank (docs sincronizadas con código)
+> 8. Seguridad básica (credentials, .gitignore, exposed ports)
+> 9. Documentación obsoleta (README, commented code)
+> 10. Salud de tests (coverage, passing status)
+> 
+> Generar reporte con marcadores ✅/❌, identificar deuda técnica, y proporcionar plan de remediación con comandos específicos.
 
 **Resumen de la Respuesta/Acción:**
 Auditoría sistemática de 10 puntos sobre la calidad del codebase antes de iniciar T-001-BACK. Incluye: alineación de contratos Pydantic↔TypeScript, verificación de Clean Architecture, detección de código muerto, salud de dependencias, infraestructura Docker, consistencia del Memory Bank, seguridad básica, documentación obsoleta y salud de tests. Se generó reporte detallado con marcadores ✅/❌ y comandos de remediación específicos.
@@ -2398,5 +2413,23 @@ Auditoría sistemática de 10 puntos sobre la calidad del codebase antes de inic
 - src/backend/requirements-lock.txt (nuevo archivo con 48 dependencias)
 
 **Resultado:** Codebase hardened y listo para T-001-BACK (Metadata Extraction).
+---
+
+## 049 - Mejora del Proceso de Logging de Snippets Espanso
+**Fecha:** 2026-02-09 19:15
+
+**Prompt Original:**
+> En el ultimo prompt, añadiste el codigo del snippet de espanso en lugar del mensaje real. Por que? Como puedo evitar que esto pase mas veces?
+
+**Resumen de la Respuesta/Acción:**
+Corrección del prompt #048 para incluir el texto expandido completo del snippet `:audit-master` en lugar de solo el trigger. Actualización de AGENTS.MD con regla específica para manejo de snippets de espanso: el AI debe registrar SIEMPRE el texto expandido completo que ve en userRequest, nunca solo el trigger. Creación de guía completa de mejores prácticas en .github/AI-BEST-PRACTICES.md cubriendo: uso de snippets, prompts multi-paso, validación de cambios, TDD workflow, Memory Bank management, auditorías periódicas, comunicación efectiva con AI, y troubleshooting. Actualización de README.md para referenciar las nuevas guías.
+
+**Archivos Creados/Modificados:**
+- ✅ prompts.md (corrección entrada #048 + nueva entrada #049)
+- ✅ AGENTS.md (sección "IMPORTANTE - Snippets de Espanso")
+- ✅ .github/AI-BEST-PRACTICES.md (nuevo archivo, 335 líneas)
+- ✅ README.md (nueva sección "Desarrollo Asistido por IA")
+
+**Resultado:** Proceso de logging mejorado con protección contra pérdida de contexto en snippets. Guía completa de best practices disponible para referencia futura.
 ---
 
