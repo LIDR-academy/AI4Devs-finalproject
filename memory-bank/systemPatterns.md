@@ -123,6 +123,120 @@ MAX_FILE_SIZE_MB = 500
   - **Issue**: Alpine Linux (musl) causes fatal JavaScript memory errors with jsdom
   - **Solution**: Use glibc-based images (Debian/Ubuntu) for frontend testing
 
+## Frontend Architecture Patterns
+
+### Component Organization (Implemented in T-001-FRONT)
+**Pattern**: Separation of Concerns with constants extraction (mirrors backend pattern).
+
+**Structure**:
+```text
+src/frontend/src/components/
+├── UploadZone.tsx            # Component logic (presentation + behavior)
+├── UploadZone.constants.ts   # Centralized configuration
+└── UploadZone.test.tsx       # Test suite
+```
+
+**Responsibilities**:
+- **Component** (`.tsx`): React component logic, hooks, JSX rendering
+- **Constants** (`.constants.ts`): Configuration values, styles, error messages, helpers
+- **Tests** (`.test.tsx`): Component behavior verification
+
+### Constants Extraction Pattern
+**Pattern**: Extract all magic values to dedicated constants file (same as backend).
+
+**Example** (`T-001-FRONT` - UploadZone):
+```typescript
+// UploadZone.constants.ts
+export const UPLOAD_ZONE_DEFAULTS = {
+  MAX_FILE_SIZE: 500 * 1024 * 1024,  // 500MB
+  ACCEPTED_MIME_TYPES: ['application/x-rhino', 'application/octet-stream'],
+  ACCEPTED_EXTENSIONS: ['.3dm'],
+} as const;
+
+export const ERROR_MESSAGES = {
+  FILE_TOO_LARGE: (maxSizeMB: number) => 
+    `File is too large. Maximum size is ${maxSizeMB}MB.`,
+  INVALID_FILE_TYPE: (extensions: string[]) => 
+    `Invalid file type. Only ${extensions.join(', ')} files are accepted.`,
+  TOO_MANY_FILES: 'Only one file can be uploaded at a time.',
+  INVALID_FILE_OBJECT: 'Invalid file object.',
+} as const;
+
+export const CLASS_NAMES = {
+  CONTAINER: 'upload-zone-container',
+  DROPZONE: 'upload-zone',
+  ACTIVE: 'upload-zone--active',
+  DISABLED: 'upload-zone--disabled',
+  ERROR: 'upload-zone--error',
+  ERROR_MESSAGE: 'upload-zone-error',
+} as const;
+
+export const STYLES = {
+  dropzone: {
+    base: { border: '2px dashed #ccc', borderRadius: '8px', ... },
+    idle: { backgroundColor: '#fafafa', borderColor: '#ccc', ... },
+    active: { backgroundColor: '#f0f8ff', borderColor: '#4299e1', ... },
+    error: { backgroundColor: '#fff5f5', borderColor: '#fc8181', ... },
+    disabled: { opacity: 0.5, cursor: 'not-allowed' },
+  },
+  message: {
+    active: { margin: 0, color: '#4299e1', fontWeight: 500 },
+    idle: {
+      primary: { margin: '0 0 8px 0', fontSize: '16px', color: '#2d3748' },
+      secondary: { margin: 0, fontSize: '14px', color: '#718096' },
+    },
+  },
+  error: {
+    container: { marginTop: '12px', padding: '12px 16px', ... },
+  },
+} as const;
+
+// Helper functions
+export function formatSizeInMB(bytes: number): number {
+  return Math.round(bytes / (1024 * 1024));
+}
+
+export function buildDropzoneStyles(isDragActive, hasError, isDisabled) {
+  // Compute styles based on state
+}
+```
+
+**Usage in Component**:
+```typescript
+// UploadZone.tsx
+import {
+  UPLOAD_ZONE_DEFAULTS,
+  ERROR_MESSAGES,
+  CLASS_NAMES,
+  STYLES,
+  formatSizeInMB,
+  buildDropzoneStyles,
+} from './UploadZone.constants';
+
+export function UploadZone({ maxFileSize = UPLOAD_ZONE_DEFAULTS.MAX_FILE_SIZE }) {
+  const handleError = () => {
+    setErrorMessage(ERROR_MESSAGES.FILE_TOO_LARGE(formatSizeInMB(maxFileSize)));
+  };
+  
+  return (
+    <div className={CLASS_NAMES.CONTAINER}>
+      <div className={CLASS_NAMES.DROPZONE} style={buildDropzoneStyles(...)}>
+        {/* ... */}
+      </div>
+    </div>
+  );
+}
+```
+
+**Benefits**:
+- **Maintainability**: Change config in one place (e.g., 500MB → 1GB)
+- **Consistency**: Error messages use same templates everywhere
+- **Testability**: Constants importable in tests for validation
+- **Reduced Complexity**: Component logic separated from configuration
+- **Type Safety**: `as const` ensures immutability and better inference
+
+**Historical Note**: Original implementation (Prompt #059) had 206 lines with inline styles/config. Refactored to 160 lines in Prompt #060 (22% reduction) by extracting 127-line constants file.
+
 ## Folder Structure
 ```text
 /memory-bank/   -> Documentation root
