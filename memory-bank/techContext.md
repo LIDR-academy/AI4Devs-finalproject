@@ -31,8 +31,15 @@
 - **TypeScript** (strict mode) - Type-safe JavaScript
 - **Vite** - Build tool and dev server
 
+### UI Components & File Handling
+- **react-dropzone** 14.2.3 - Drag & drop file upload with validation (T-001-FRONT)
+
 ### Testing
-- **Vitest** - Unit and integration testing (Vite-native)
+- **Vitest** 1.6.1 - Unit and integration testing (Vite-native)
+- **@testing-library/react** 14.1.2 - Component testing utilities
+- **jsdom** - DOM environment for Node.js tests
+  - **Limitation**: DataTransfer API incomplete, no drag & drop event simulation
+  - **Workaround**: Tests focus on DOM structure, not interaction (see T-001-FRONT)
 
 ### Planned (Not Yet Implemented)
 - **Zustand** - Global state management
@@ -63,6 +70,9 @@
 - **Component-Driven Design** - Atomic design pattern
 - **Service Layer Pattern** - API calls abstracted from components
 - **Type Safety** - Strict TypeScript + Pydantic schema alignment
+- **Constants Extraction** - Configuration, styles, and messages separated from components (T-001-FRONT)
+  - Pattern: `Component.tsx` + `Component.constants.ts` + `Component.test.tsx`
+  - Benefits: DRY, Single Source of Truth, improved testability
 
 ## Development Tools
 - **Standard shell commands** - bash/zsh for automation

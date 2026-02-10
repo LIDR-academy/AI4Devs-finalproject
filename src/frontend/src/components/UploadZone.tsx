@@ -1,10 +1,14 @@
 import { useCallback, useState } from 'react';
 import { useDropzone, type DropEvent, type FileError } from 'react-dropzone';
 import type { UploadZoneProps, FileRejection, FileRejectionError, FileRejectionErrorCode } from '../types/upload';
-
-const DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB in bytes
-const DEFAULT_ACCEPTED_MIME_TYPES = ['application/x-rhino', 'application/octet-stream'];
-const DEFAULT_ACCEPTED_EXTENSIONS = ['.3dm'];
+import {
+  UPLOAD_ZONE_DEFAULTS,
+  ERROR_MESSAGES,
+  CLASS_NAMES,
+  STYLES,
+  formatSizeInMB,
+  buildDropzoneStyles,
+} from './UploadZone.constants';
 
 /**
  * UploadZone Component
@@ -26,9 +30,9 @@ const DEFAULT_ACCEPTED_EXTENSIONS = ['.3dm'];
 export function UploadZone({
   onFilesAccepted,
   onFilesRejected,
-  maxFileSize = DEFAULT_MAX_FILE_SIZE,
-  acceptedMimeTypes = DEFAULT_ACCEPTED_MIME_TYPES,
-  acceptedExtensions = DEFAULT_ACCEPTED_EXTENSIONS,
+  maxFileSize = UPLOAD_ZONE_DEFAULTS.MAX_FILE_SIZE,
+  acceptedMimeTypes = UPLOAD_ZONE_DEFAULTS.ACCEPTED_MIME_TYPES,
+  acceptedExtensions = UPLOAD_ZONE_DEFAULTS.ACCEPTED_EXTENSIONS,
   multiple = false,
   disabled = false,
   className = '',
@@ -46,7 +50,7 @@ export function UploadZone({
       if (!file || !file.name) {
         return {
           code: 'file-invalid-type' as FileRejectionErrorCode,
-          message: 'Invalid file object.',
+          message: ERROR_MESSAGES.INVALID_FILE_OBJECT,
         };
       }
 
@@ -57,7 +61,7 @@ export function UploadZone({
       if (!acceptedExtensions.includes(fileExtension)) {
         return {
           code: 'file-invalid-type' as FileRejectionErrorCode,
-          message: `Invalid file type. Only ${acceptedExtensions.join(', ')} files are accepted.`,
+          message: ERROR_MESSAGES.INVALID_FILE_TYPE(acceptedExtensions),
         };
       }
 
@@ -95,12 +99,11 @@ export function UploadZone({
         const firstError = firstRejection.errors[0];
         
         if (firstError.code === 'file-too-large') {
-          const maxSizeMB = Math.round(maxFileSize / (1024 * 1024));
-          setErrorMessage(`File is too large. Maximum size is ${maxSizeMB}MB.`);
+          setErrorMessage(ERROR_MESSAGES.FILE_TOO_LARGE(formatSizeInMB(maxFileSize)));
         } else if (firstError.code === 'file-invalid-type') {
-          setErrorMessage(`Invalid file type. Only ${acceptedExtensions.join(', ')} files are accepted.`);
+          setErrorMessage(ERROR_MESSAGES.INVALID_FILE_TYPE(acceptedExtensions));
         } else if (firstError.code === 'too-many-files') {
-          setErrorMessage('Only one file can be uploaded at a time.');
+          setErrorMessage(ERROR_MESSAGES.TOO_MANY_FILES);
         } else {
           setErrorMessage(firstError.message);
         }
@@ -137,46 +140,36 @@ export function UploadZone({
    * Build CSS classes
    */
   const rootClasses = [
-    'upload-zone',
-    isDragActive && 'upload-zone--active',
-    disabled && 'upload-zone--disabled',
-    errorMessage && 'upload-zone--error',
+    CLASS_NAMES.DROPZONE,
+    isDragActive && CLASS_NAMES.ACTIVE,
+    disabled && CLASS_NAMES.DISABLED,
+    errorMessage && CLASS_NAMES.ERROR,
     className,
   ]
     .filter(Boolean)
     .join(' ');
 
   return (
-    <div className="upload-zone-container">
+    <div className={CLASS_NAMES.CONTAINER}>
       <div
         {...getRootProps()}
         className={rootClasses}
         data-testid="upload-dropzone"
-        style={{
-          border: '2px dashed #ccc',
-          borderRadius: '8px',
-          padding: '40px 20px',
-          textAlign: 'center',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          backgroundColor: isDragActive ? '#f0f8ff' : errorMessage ? '#fff5f5' : '#fafafa',
-          borderColor: isDragActive ? '#4299e1' : errorMessage ? '#fc8181' : '#ccc',
-          opacity: disabled ? 0.5 : 1,
-          transition: 'all 0.2s ease-in-out',
-        }}
+        style={buildDropzoneStyles(isDragActive, !!errorMessage, disabled)}
       >
         <input {...getInputProps()} />
         
         {isDragActive ? (
-          <p style={{ margin: 0, color: '#4299e1', fontWeight: 500 }}>
+          <p style={STYLES.message.active}>
             Drop the file here...
           </p>
         ) : (
           <div>
-            <p style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#2d3748' }}>
+            <p style={STYLES.message.idle.primary}>
               Drag & drop your .3dm file here, or click to select
             </p>
-            <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
-              Maximum file size: {Math.round(maxFileSize / (1024 * 1024))}MB
+            <p style={STYLES.message.idle.secondary}>
+              Maximum file size: {formatSizeInMB(maxFileSize)}MB
             </p>
           </div>
         )}
@@ -184,17 +177,9 @@ export function UploadZone({
 
       {errorMessage && (
         <div
-          className="upload-zone-error"
+          className={CLASS_NAMES.ERROR_MESSAGE}
           data-testid="upload-error-message"
-          style={{
-            marginTop: '12px',
-            padding: '12px 16px',
-            backgroundColor: '#fed7d7',
-            border: '1px solid #fc8181',
-            borderRadius: '6px',
-            color: '#c53030',
-            fontSize: '14px',
-          }}
+          style={STYLES.error.container}
           role="alert"
         >
           {errorMessage}

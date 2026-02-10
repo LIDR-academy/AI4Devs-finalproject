@@ -2930,3 +2930,117 @@ Implementación completa de UploadZone.tsx usando react-dropzone, con cambio de 
 
 **Resultado:** TDD FASE VERDE completada ✅. Componente funcional con 14/14 tests pasando. Ready para integración.
 ---
+
+## 060 - TDD FASE REFACTOR - Cierre T-001-FRONT
+**Fecha:** 2026-02-10 12:00
+
+**Prompt Original:**
+> TDD FASE REFACTOR - Cierre Ticket t-001-front
+
+**Resumen de la Respuesta/Acción:**
+Refactorizar componente UploadZone.tsx aplicando principios de Clean Architecture y extraer configuración a archivo de constantes. Actualizar documentación completa del proyecto y cerrar ticket T-001-FRONT.
+
+**Análisis del Código Pre-Refactor:**
+- **UploadZone.tsx original:** 206 líneas con múltiples anti-patterns:
+  - Magic numbers hardcoded (500MB = 500 * 1024 * 1024)
+  - Cadenas de MIME types inline: `['application/x-rhino', 'application/octet-stream']`
+  - ~60 líneas de estilos inline en JSX
+  - Mensajes de error construidos manualmente con template strings
+  - Nombres de clases CSS hardcoded como strings
+  - Cálculo de MB duplicado (`Math.round(maxFileSize / (1024 * 1024))`)
+
+**Patrón Aplicado:**
+Siguiendo el patrón de Clean Architecture documentado en `systemPatterns.md` (T-004-BACK):
+```
+Backend Pattern:              Frontend Pattern (NUEVO):
+api/upload.py       →         UploadZone.tsx (component logic)
+services/storage.py →         [No service layer yet]
+constants.py        →         UploadZone.constants.ts ✅
+schemas.py          →         types/upload.ts (existing)
+```
+
+**Archivos Modificados:**
+
+1. **CREADO: `src/frontend/src/components/UploadZone.constants.ts`** (127 líneas):
+   ```typescript
+   // Validation constraints
+   export const UPLOAD_ZONE_DEFAULTS = {
+     MAX_FILE_SIZE: 500 * 1024 * 1024, // 500MB in bytes
+     ACCEPTED_MIME_TYPES: ['application/x-rhino', 'application/octet-stream'],
+     ACCEPTED_EXTENSIONS: ['.3dm'],
+   } as const;
+
+   // Error message factories (tipo backend's constants.py)
+   export const ERROR_MESSAGES = {
+     FILE_TOO_LARGE: (maxSizeMB: number) => 
+       `File is too large. Maximum size is ${maxSizeMB}MB.`,
+     INVALID_FILE_TYPE: (extensions: string[]) => 
+       `Invalid file type. Only ${extensions.join(', ')} files are accepted.`,
+     TOO_MANY_FILES: 'Only one file can be uploaded at a time.',
+     INVALID_FILE_OBJECT: 'Invalid file object.',
+   } as const;
+
+   // CSS class names
+   export const CLASS_NAMES = {
+     CONTAINER: 'upload-zone-container',
+     DROPZONE: 'upload-zone',
+     ACTIVE: 'upload-zone--active',
+     DISABLED: 'upload-zone--disabled',
+     ERROR: 'upload-zone--error',
+     ERROR_MESSAGE: 'upload-zone-error',
+   } as const;
+
+   // Nested style objects (base, idle, active, error, disabled states)
+   export const STYLES = { /* ... */ };
+
+   // Helper functions
+   export function formatSizeInMB(bytes: number): number;
+   export function buildDropzoneStyles(isDragActive, hasError, isDisabled);
+   ```
+
+2. **REFACTORIZADO: `src/frontend/src/components/UploadZone.tsx`** (206 → ~160 líneas, reducción 22%):
+   
+   **Cambios principales:**
+   ```typescript
+   // ANTES:
+   const DEFAULT_MAX_FILE_SIZE = 500 * 1024 * 1024;
+   setErrorMessage(`File is too large. Maximum size is ${maxSizeMB}MB.`);
+   className="upload-zone"
+   style={{ border: '2px dashed #ccc', ... }}
+   
+   // DESPUÉS:
+   import { UPLOAD_ZONE_DEFAULTS, ERROR_MESSAGES, CLASS_NAMES, STYLES, formatSizeInMB, buildDropzoneStyles } from './UploadZone.constants';
+   
+   const { MAX_FILE_SIZE } = UPLOAD_ZONE_DEFAULTS;
+   setErrorMessage(ERROR_MESSAGES.FILE_TOO_LARGE(formatSizeInMB(maxFileSize)));
+   className={CLASS_NAMES.DROPZONE}
+   style={buildDropzoneStyles(isDragActive, !!errorMessage, disabled)}
+   ```
+
+   **Mejoras de Calidad:**
+   - ✅ Eliminado código duplicado (DRY principle)
+   - ✅ Constantes centralizadas (Single Source of Truth)
+   - ✅ Estilos separados de lógica de negocio (Separation of Concerns)
+   - ✅ Mensajes de error consistentes (Error Handling Pattern)
+   - ✅ Reducción de complejidad ciclomática en componente
+   - ✅ Mejor testabilidad (constantes importables en tests)
+
+**Verificación Anti-Regresión:**
+
+```bash
+$ make test-front
+# ✅ Test Files  2 passed (2)
+# ✅ Tests  18 passed (18)
+#    - 4 FileUploader tests
+#    - 14 UploadZone tests (NO BROKEN)
+# ✅ Duration: 529ms
+```
+
+**Resultado:** Refactorización exitosa sin romper tests. Código más limpio, mantenible y alineado con patrones arquitectónicos del proyecto.
+
+**Próximos pasos (post-refactor):**
+1. ✅ Actualizar 7 archivos de documentación
+2. ✅ Marcar T-001-FRONT como [DONE] en backlog
+3. ⏭️ Pasar a T-001-BACK (Metadata Extraction con rhino3dm)
+---
+

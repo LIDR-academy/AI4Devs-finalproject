@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Focus
-✅ **SPRINT 3: IN PROGRESS** - T-001-FRONT (UploadZone Component) completado ✅. Siguiente: T-001-BACK (Metadata Extraction con rhino3dm).
+✅ **SPRINT 3: IN PROGRESS** - T-001-FRONT (UploadZone Component) completado con TDD completo (RED → GREEN → REFACTOR) ✅. Siguiente: T-001-BACK (Metadata Extraction con rhino3dm).
 
 ## Sprint Status
 ### ✅ Sprint 1 - CLOSED
@@ -13,7 +13,16 @@
 - T-004-BACK: Confirm Upload Webhook + Clean Architecture refactor (7/7 tests) ✅
 
 ### 🔄 Sprint 3 - IN PROGRESS
-- **Completed**: T-001-FRONT (UploadZone Component con react-dropzone - 14/14 tests) ✅
+- **Completed**: T-001-FRONT (UploadZone Component) **[DONE]** ✅
+  - **TDD Phases:**
+    - RED (Prompt #058): 14 failing tests created
+    - GREEN (Prompt #059): Implementation with react-dropzone@14.2.3, 14/14 tests passing
+    - REFACTOR (Prompt #060): Constants extraction + Clean Architecture pattern, 14/14 tests still passing
+  - **Quality Improvements:**
+    - Extracted `UploadZone.constants.ts` (127 lines) - centralized config, styles, error messages
+    - Reduced component complexity: 206 → ~160 lines (22% reduction)
+    - Applied Same pattern as backend (API → Service → Constants)
+  - **Coverage:** Drag & drop visual, .3dm validation, 500MB limit, accessibility
 - **Next Task**: T-001-BACK (Metadata Extraction con rhino3dm)
 
 ## Active Tasks
@@ -25,10 +34,13 @@
   - Constants violation fix (init_db.py)
   - Requirements locking (requirements-lock.txt)
   - Documentation expansion (techContext.md)
-- [x] **T-001-FRONT**: UploadZone Component con react-dropzone (14/14 tests) ✅
+- [x] **T-001-FRONT**: UploadZone Component **[DONE]** ✅ (14/14 tests)
+  - TDD complete: RED (failing tests) → GREEN (implementation) → REFACTOR (constants extraction)
   - Drag & drop visual con validación de .3dm y 500MB
   - Estados visuales (idle, active, error, disabled)
   - Tests simplificados enfocados en DOM observable (jsdom limitations)
+  - **Refactored:** Constants extracted to `UploadZone.constants.ts` (Clean Architecture pattern)
+  - Component size reduced 22% (206 → ~160 lines), improved maintainability
 
 ### Next Steps (Sprint 3)
 - [ ] **T-001-BACK: Metadata Extraction** (`POST /api/metadata/extract`)
