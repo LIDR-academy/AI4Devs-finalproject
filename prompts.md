@@ -2683,4 +2683,132 @@ docker compose run --rm frontend bash -c "npm ci --quiet && npm test"
 **Resultado:** Archivos sanitizados localmente ✅. REQUIERE ACCIÓN URGENTE DEL USUARIO para rotación de credenciales y limpieza de historial Git. Pipeline CI/CD bloqueado hasta completar remediación (GitHub Secrets necesita nuevas credenciales rotadas). Prevención futura: instalar git-secrets y actualizar AGENTS.md con reglas de sanitización.
 ---
 
+## 058 - TDD FASE ROJA - T-001-FRONT: UploadZone Component
+**Fecha:** 2026-02-10 09:30
+
+**Prompt Original:**
+> ## Prompt: TDD FASE ROJA - Ticket T-001-FRONT
+>
+> **Role:** Actúa como QA Automation Engineer y Software Architect.
+>
+> ### Protocolo Agents (OBLIGATORIO antes de escribir código)
+> 1. **Lee** `memory-bank/activeContext.md` para entender el estado actual del sprint.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar los contratos API y patrones existentes.
+> 3. **Consulta** `docs/09-mvp-backlog.md` y busca el ticket `T-001-FRONT` para entender su alcance exacto, criterios de aceptación y DoD.
+> 4. **Consulta** `docs/productContext.md` para ver qué componentes o endpoints ya existen y pueden reutilizarse.
+> 5. **Al finalizar**, registra el inicio de esta tarea en `prompts.md`.
+>
+> ### Contexto
+> Iniciamos el desarrollo de la funcionalidad: **UploadZone Component** (Ticket `T-001-FRONT`).
+> Seguimos estrictamente TDD. El código de la implementación **AÚN NO EXISTE**.
+> [... solicitud completa de TDD FASE ROJA ...]
+
+**Análisis del Ticket:**
+- **Ticket ID**: T-001-FRONT
+- **Título**: UploadZone Component (Drag & Drop Upload)
+- **Tech Spec**: Componente con `react-dropzone` para drag&drop visual, validación MIME type `application/x-rhino` o extensión `.3dm`
+- **DoD**: Dropzone rechaza archivos .txt y >500MB
+- **User Story**: US-001 (Upload de archivo .3dm válido)
+- **Dependencias**: Ninguna (base del flujo de upload)
+
+**Criterios de Aceptación Implementados en Tests (US-001):**
+
+1. **Scenario 1 - Happy Path: Direct Upload**
+   - ✅ Test: `accepts valid .3dm file within size limit`
+   - ✅ Test: `accepts file with .3dm extension even if MIME type is generic`
+   - ✅ Test: `provides visual feedback when dragging over dropzone`
+
+2. **Scenario 2 - Edge Case: Limit Size**
+   - ✅ Test: `rejects file larger than 500MB with correct error`
+   - ✅ Test: `displays error message when file is too large`
+   - ✅ Test: `accepts file exactly at 500MB limit`
+
+3. **Scenario 3 - Error Handling: Invalid Types**
+   - ✅ Test: `rejects non-.3dm file with correct error`
+   - ✅ Test: `displays error message for invalid file type`
+
+**Acciones Ejecutadas:**
+
+1. **Tipos TypeScript Actualizados** (`src/frontend/src/types/upload.ts`):
+   ```typescript
+   export interface UploadZoneProps {
+     onFilesAccepted: (files: File[]) => void;
+     onFilesRejected?: (rejections: FileRejection[]) => void;
+     maxFileSize?: number;
+     acceptedMimeTypes?: string[];
+     acceptedExtensions?: string[];
+     multiple?: boolean;
+     disabled?: boolean;
+     className?: string;
+   }
+
+   export interface FileRejection {
+     file: File;
+     errors: FileRejectionError[];
+   }
+
+   export type FileRejectionErrorCode =
+     | 'file-too-large'
+     | 'file-invalid-type'
+     | 'too-many-files';
+   ```
+
+2. **Test Suite Creado** (`src/frontend/src/components/UploadZone.test.tsx`):
+   - 17 test cases cubriendo happy paths, edge cases y validaciones
+   - Grupos de tests:
+     - Scenario 1 - Happy Path: Valid File Acceptance (4 tests)
+     - Scenario 2 - Edge Case: File Size Limit (3 tests)
+     - Scenario 3 - Validation: File Type Restrictions (2 tests)
+     - Additional Edge Cases (3 tests)
+     - Custom Configuration (2 tests)
+
+3. **Confirmación FASE ROJA**:
+   ```bash
+   docker compose run --rm frontend bash -c "npm install && npx vitest run src/components/UploadZone.test.tsx --reporter=verbose"
+   
+   # Error Output (ESPERADO):
+   Error: Failed to resolve import "./UploadZone" from "src/components/UploadZone.test.tsx". 
+   Does the file exist?
+   
+   Test Files  1 failed (1)
+   Tests  no tests
+   ```
+
+**Razón del Fallo:** ImportError - El módulo `UploadZone` no existe (comportamiento esperado en FASE ROJA).
+
+**Diferencias con Componentes Existentes:**
+- `FileUploader.tsx` (T-003-FRONT): Usa `<input type="file">` básico, NO tiene drag&drop visual
+- `UploadZone.tsx` (T-001-FRONT): Componente visual con `react-dropzone` para arrastrar archivos
+
+**Dependencias Requeridas para FASE VERDE:**
+```json
+{
+  "dependencies": {
+    "react-dropzone": "^14.2.3"
+  }
+}
+```
+
+**Contratos de Interfaz:**
+- Props alineadas con `FileUploaderProps` existente (mismo patrón de callbacks)
+- Error codes basados en estándar de react-dropzone
+- MIME type validation compatible con backend (T-002-BACK espera .3dm)
+
+**Next Steps (FASE VERDE):**
+1. Instalar `react-dropzone` en package.json
+2. Crear componente `UploadZone.tsx` implementando:
+   - Hook `useDropzone` de react-dropzone
+   - Validación client-side de extensión y tamaño
+   - Estados visuales (idle, active, rejected, accepted)
+   - Mensaje de error dinámico basado en rejection codes
+3. Ejecutar tests hasta que pasen (17/17 green)
+4. Refactorizar para DRY y claridad (si necesario)
+
+**Archivos Creados/Modificados:**
+- ✅ `src/frontend/src/types/upload.ts` (tipos ampliados con UploadZoneProps)
+- ✅ `src/frontend/src/components/UploadZone.test.tsx` (17 tests en ROJO)
+
+**Resultado:** FASE ROJA confirmada ✅. Tests fallan por ImportError (módulo no existe). Ready para handoff a FASE VERDE.
+---
+
 

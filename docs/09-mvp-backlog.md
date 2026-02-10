@@ -50,7 +50,7 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
 **Desglose de Tickets Técnicos:**
 | ID Ticket | Título | Tech Spec | DoD |
 |-----------|--------|-----------|-----|
-| `T-001-FRONT` | **UploadZone Component** | `react-dropzone` para manejo de drag&drop. Validación mime-type `application/x-rhino` o extensión `.3dm`. | Dropzone rechaza .txt y >500MB. |
+| `T-001-FRON** | `react-dropzone` para manejo de drag&drop. Validación mime-type `application/x-rhino` o extensión `.3dm`. | Dropzone rechaza .txt y >500MB. |
 | `T-002-BACK` | **Generate Presigned URL** | Endpoint `POST /api/upload/url`. Body: `{ filename, size, checksum }`. Usa `boto3.generate_presigned_url('put_object', Bucket='raw-uploads')`. | **[DONE]** Retorna URL válida de S3 temporal (5min). |
 | `T-003-FRONT` **[DONE]** | **Upload Manager (Client)** | Servicio Frontend que usa `axios` o `fetch` para hacer PUT a la signed URL. Evento `onProgress` para la UI. Refactorizado con separación de responsabilidades (service layer). | **[DONE]** FileUploader component con validación client-side, upload service dedicado, tests passing (4/4). |
 | `T-004-BACK` **[DONE]** | **Confirm Upload Webhook** | Endpoint `POST /api/upload/confirm`. Body: `{ file_id, file_key }`. Verifica existencia en Storage y crea evento en tabla `events`. | **[DONE]** Tests 7/7 pasando. Implementado con Clean Architecture (service layer). |
