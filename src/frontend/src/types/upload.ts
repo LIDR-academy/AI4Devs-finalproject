@@ -82,3 +82,75 @@ export interface FileUploaderProps {
    */
   acceptedExtensions?: string[];
 }
+
+/**
+ * Props for UploadZone component (T-001-FRONT)
+ * Drag & Drop zone using react-dropzone
+ */
+export interface UploadZoneProps {
+  /**
+   * Callback invoked when files are accepted (pass validation)
+   * @param files - Array of accepted File objects
+   */
+  onFilesAccepted: (files: File[]) => void;
+
+  /**
+   * Callback invoked when files are rejected (fail validation)
+   * @param rejections - Array of file rejection details
+   */
+  onFilesRejected?: (rejections: FileRejection[]) => void;
+
+  /**
+   * Maximum file size in bytes (default: 500MB)
+   */
+  maxFileSize?: number;
+
+  /**
+   * Accepted MIME types (default: ['application/x-rhino'])
+   */
+  acceptedMimeTypes?: string[];
+
+  /**
+   * Accepted file extensions (default: ['.3dm'])
+   */
+  acceptedExtensions?: string[];
+
+  /**
+   * Allow multiple files (default: false)
+   */
+  multiple?: boolean;
+
+  /**
+   * Disabled state (default: false)
+   */
+  disabled?: boolean;
+
+  /**
+   * Custom class name for styling
+   */
+  className?: string;
+}
+
+/**
+ * File rejection from react-dropzone
+ */
+export interface FileRejection {
+  file: File;
+  errors: FileRejectionError[];
+}
+
+/**
+ * Error details for rejected file
+ */
+export interface FileRejectionError {
+  code: FileRejectionErrorCode;
+  message: string;
+}
+
+/**
+ * Error codes for file validation failures
+ */
+export type FileRejectionErrorCode =
+  | 'file-too-large'
+  | 'file-invalid-type'
+  | 'too-many-files';
