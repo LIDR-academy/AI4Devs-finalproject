@@ -1,4 +1,3 @@
-import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
@@ -9,10 +8,10 @@ class Settings(BaseSettings):
     """
     # Database
     DATABASE_URL: str = "postgresql://user:password@db:5432/sfpm_db"
-    
+
     # Supabase
-    SUPABASE_URL: Optional[str] = os.getenv("SUPABASE_URL")
-    SUPABASE_KEY: Optional[str] = os.getenv("SUPABASE_KEY")
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_KEY: Optional[str] = None
     
     # App Settings
     PROJECT_NAME: str = "SF-PM"
