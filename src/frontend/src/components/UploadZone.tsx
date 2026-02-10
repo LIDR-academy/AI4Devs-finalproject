@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useDropzone, type DropEvent, type FileError } from 'react-dropzone';
-import type { UploadZoneProps, FileRejection, FileRejectionError, FileRejectionErrorCode } from '../types/upload';
+import { useDropzone, type FileError } from 'react-dropzone';
+import type { UploadZoneProps, FileRejection, FileRejectionErrorCode } from '../types/upload';
 import {
   UPLOAD_ZONE_DEFAULTS,
   ERROR_MESSAGES,
@@ -31,8 +31,8 @@ export function UploadZone({
   onFilesAccepted,
   onFilesRejected,
   maxFileSize = UPLOAD_ZONE_DEFAULTS.MAX_FILE_SIZE,
-  acceptedMimeTypes = UPLOAD_ZONE_DEFAULTS.ACCEPTED_MIME_TYPES,
-  acceptedExtensions = UPLOAD_ZONE_DEFAULTS.ACCEPTED_EXTENSIONS,
+  acceptedMimeTypes = UPLOAD_ZONE_DEFAULTS.ACCEPTED_MIME_TYPES as unknown as string[],
+  acceptedExtensions = UPLOAD_ZONE_DEFAULTS.ACCEPTED_EXTENSIONS as unknown as string[],
   multiple = false,
   disabled = false,
   className = '',
@@ -74,7 +74,7 @@ export function UploadZone({
    * Handle file drop/selection
    */
   const onDrop = useCallback(
-    (acceptedFiles: File[], fileRejections: any[], event: DropEvent) => {
+    (acceptedFiles: File[], fileRejections: any[]) => {
       // Clear previous error messages when new files are dropped
       setErrorMessage('');
 
