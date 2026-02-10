@@ -160,15 +160,15 @@ export function UploadZone({
         <input {...getInputProps()} />
         
         {isDragActive ? (
-          <p style={STYLES.message.active}>
+          <p style={STYLES.dragText}>
             Drop the file here...
           </p>
         ) : (
           <div>
-            <p style={STYLES.message.idle.primary}>
+            <p style={STYLES.instructionText.primary}>
               Drag & drop your .3dm file here, or click to select
             </p>
-            <p style={STYLES.message.idle.secondary}>
+            <p style={STYLES.instructionText.secondary}>
               Maximum file size: {formatSizeInMB(maxFileSize)}MB
             </p>
           </div>
@@ -179,7 +179,7 @@ export function UploadZone({
         <div
           className={CLASS_NAMES.ERROR_MESSAGE}
           data-testid="upload-error-message"
-          style={STYLES.error.container}
+          style={STYLES.errorContainer}
           role="alert"
         >
           {errorMessage}

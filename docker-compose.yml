@@ -42,7 +42,9 @@ services:
       - sf-network
 
   frontend:
-    image: node:20-bookworm
+    build:
+      context: ./src/frontend
+      target: dev
     container_name: sf-pm-frontend
     working_dir: /app
     ports:
