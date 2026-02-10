@@ -9,7 +9,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Import centralized constants
-sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "backend"))
+# In Docker: constants.py is at /app/constants.py (backend root)
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from constants import STORAGE_BUCKET_RAW_UPLOADS
 
 # Load environment variables from .env

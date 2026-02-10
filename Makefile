@@ -70,7 +70,7 @@ front-install:
 
 # Run frontend tests (TDD workflow)
 test-front:
-	docker compose run --rm frontend npm test
+	docker compose run --rm frontend bash -c "npm install && npm test"
 
 # Open a shell inside the frontend container
 front-shell:
