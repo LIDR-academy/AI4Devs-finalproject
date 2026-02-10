@@ -108,8 +108,21 @@ jobs:
       - name: Pull base image
         run: docker pull node:20-bookworm
 
-      - name: Run frontend tests (install deps + test in single container)
-        run: docker compose run --rm frontend bash -c "npm ci --quiet && npm test"
+      - name: Build frontend Docker image
+        run: docker compose build frontend
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Run frontend tests
+        run: |
+          docker compose run --rm frontend bash -c "
+            set -e
+            echo '📦 Installing dependencies...'
+            npm ci
+            echo '✅ Dependencies installed'
+            echo '🧪 Running tests...'
+            npm test
+          "
 
       - name: Show test logs on failure
         if: failure()
