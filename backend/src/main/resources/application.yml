@@ -21,6 +21,7 @@ ai:
 # OpenAI Configuration
 openai:
   base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+  api-key: ${OPENAI_API_KEY}
 
   text:
     model: ${OPENAI_TEXT_MODEL:gpt-5-nano}
@@ -31,10 +32,14 @@ openai:
     presence-penalty: ${OPENAI_PRESENCE_PENALTY:0.0}
 
   image:
-    model: ${OPENAI_IMAGE_MODEL:gpt-image-1-mini} # barato para pruebas
-    size: ${OPENAI_IMAGE_SIZE:1024x1024}          # 512x512, 1024x1024, 1024x1792, 1792x1024
-    quality: ${OPENAI_IMAGE_QUALITY:low}          # low|medium|high (depende de modelo)
-    response-format: ${OPENAI_IMAGE_RESPONSE_FORMAT:url} # url|b64_json
+    model: ${OPENAI_IMAGE_MODEL:gpt-image-1-mini}
+    size: ${OPENAI_IMAGE_SIZE:1024x1024}
+    quality: ${OPENAI_IMAGE_QUALITY:low}
+    # Para GPT Image (se usan solo si el modelo empieza por gpt-image)
+    output-format: ${OPENAI_IMAGE_OUTPUT_FORMAT:png}
+    background: ${OPENAI_IMAGE_BACKGROUND:auto}
+    # Para DALL·E (se usa solo si el modelo empieza por dall-e)
+    response-format: ${OPENAI_IMAGE_RESPONSE_FORMAT:url} # url | b64_json
     n: ${OPENAI_IMAGE_N:1}
 
 # Media Catalog Service Configuration
