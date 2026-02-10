@@ -90,6 +90,7 @@ export function MeditationBuilderPage() {
   const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
   const [localImageName, setLocalImageName] = useState<string>('');
 
+  // Unifica preview: local (blob) o IA (base64 en selectedImageId)
   const imagePreviewData = useMemo(() => {
     if (localImageUrl) {
       return {
@@ -97,6 +98,14 @@ export function MeditationBuilderPage() {
         imageName: localImageName,
       };
     }
+    // Si selectedImageId es un data:image (IA generada), úsalo como preview
+    if (selectedImageId && selectedImageId.startsWith('data:image/')) {
+      return {
+        previewUrl: selectedImageId,
+        imageName: 'AI generated image',
+      };
+    }
+    // Si hay imagen de servidor (catálogo), usa la previewUrl
     return {
       previewUrl: imagePreview.data?.previewUrl,
       imageName: imagePreview.data?.imageReference ?? selectedImageId ?? '',
@@ -141,23 +150,14 @@ export function MeditationBuilderPage() {
     };
   }, [localImageUrl]);
 
-useEffect(() => {
-  if (compositionId) return;
-
-  createComposition.mutate('', {
-    onSuccess: (data) => {
-      setCompositionId(data.id);
-      setLocalText(data.textContent ?? '');
-      if (data.musicReference) setSelectedMusic(data.musicReference);
-      if (data.imageReference) setSelectedImage(data.imageReference);
-    },
-  });
-}, [compositionId]);
 
 
-  // Sincroniza el outputType global con la presencia de imagen local
+
+  // Sincroniza el outputType global con la presencia de imagen local o IA generada
   useEffect(() => {
     if (localImageUrl) {
+      useComposerStore.getState().updateOutputType('VIDEO');
+    } else if (selectedImageId && selectedImageId.startsWith('data:image/')) {
       useComposerStore.getState().updateOutputType('VIDEO');
     } else if (!imagePreview.data?.previewUrl && !selectedImageId) {
       useComposerStore.getState().updateOutputType('PODCAST');
@@ -182,15 +182,14 @@ useEffect(() => {
         <div className="card">
           <h2 className="card__title">Meditation Text</h2>
           <TextEditor
-            disabled={generateText.isPending}
+            disabled={generateText.isPending || generateImage.isPending}
             placeholder="Enter your meditation text here, or use AI to generate it..."
           />
           <div className="generate-btn-group">
             <GenerateTextButton
-              onGenerate={() =>
-                generateText.mutate({ existingText: localText })
-              }
+              onGenerate={() => generateText.mutate({ existingText: localText })}
               isLoading={generateText.isPending}
+              disabled={generateText.isPending || generateImage.isPending || !localText.trim()}
             />
           </div>
         </div>
@@ -231,7 +230,7 @@ useEffect(() => {
           )}
           
           <div style={{ marginTop: '8px' }}>
-            <MusicSelectorButton onAudioSelected={handleAudioSelected} />
+            <MusicSelectorButton onAudioSelected={handleAudioSelected} disabled={generateText.isPending || generateImage.isPending} />
           </div>
         </div>
       </div>
@@ -253,6 +252,9 @@ useEffect(() => {
                 URL.revokeObjectURL(localImageUrl);
                 setLocalImageUrl(null);
                 setLocalImageName('');
+              } else if (selectedImageId && selectedImageId.startsWith('data:image/')) {
+                // Elimina imagen IA generada
+                useComposerStore.getState().setSelectedImage(null);
               } else {
                 removeImage.mutate();
               }
@@ -260,8 +262,11 @@ useEffect(() => {
             disabled={removeImage.isPending}
           />
           <div className="generate-btn-group" style={{ display: 'flex', gap: 8 }}>
-            <ImageSelectorButton onImageSelected={handleImageSelected} />
-            <GenerateImageButton isLoading={generateImage.isPending} />
+            <ImageSelectorButton onImageSelected={handleImageSelected} disabled={generateText.isPending || generateImage.isPending} />
+            <GenerateImageButton
+              isLoading={generateImage.isPending}
+              disabled={generateText.isPending || generateImage.isPending || !!(selectedImageId && selectedImageId.startsWith('data:image/'))}
+            />
           </div>
         </div>
       </div>

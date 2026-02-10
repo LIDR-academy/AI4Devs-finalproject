@@ -30,10 +30,9 @@ export function GenerateTextButton({
   // Use external loading state if provided, otherwise use store state
   const isLoading = externalLoading ?? isGeneratingText;
 
-  // Determine button text based on current text state
-  const hasExistingText = localText.trim().length > 0;
-  const buttonText = hasExistingText ? 'Enhance with AI' : 'Generate with AI';
-  const loadingText = hasExistingText ? 'Enhancing...' : 'Generating...';
+  // El botón siempre muestra 'Enhance with AI'
+  const buttonText = 'Enhance with AI';
+  const loadingText = 'Enhancing...';
 
   // FR-014: Button disabled during generation
   const isDisabled = disabled || isLoading;
