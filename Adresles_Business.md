@@ -210,6 +210,10 @@ Usuario no registrado en ningún sistema → Se solicita dirección + invitació
 
 ### 1.7 Flujo de Reminders
 
+> ⚠️ **NOTA MVP**: El sistema de reminders automáticos se implementará en una fase posterior al MVP. Para el MVP mockeado, las conversaciones permanecerán activas hasta que el usuario responda o se escale manualmente a soporte cuando sea necesario. Esta decisión simplifica el desarrollo inicial y permite enfocarse en la funcionalidad core de conversación con IA y validación de direcciones.
+
+**Diseño para fase post-MVP:**
+
 Cuando el usuario no responde en 15 minutos:
 
 ```mermaid
@@ -249,89 +253,182 @@ Si 10 < X < 100: fee = 5 - (2.5 × (X - 10) / 90)
 
 | Actor | Tipo | Descripción |
 |-------|------|-------------|
-| **Comprador** | Principal | Usuario que realiza una compra en un eCommerce integrado |
+| **Comprador** | Principal | Usuario que realiza una compra y proporciona su dirección mediante conversación |
 | **Regalado** | Principal | Persona que recibe un regalo y debe proporcionar su dirección |
-| **Administrador eCommerce** | Principal | Gestiona la integración y monitoriza pedidos |
-| **Sistema eCommerce** | Secundario | Plataforma de tienda online (WooCommerce, etc.) |
-| **Agente IA (GPT-4.0)** | Secundario | Motor de conversación inteligente |
-| **Google Maps API** | Secundario | Servicio de validación de direcciones |
-| **Sistema de Soporte** | Secundario | Recibe escalados cuando la IA no puede resolver |
+| **Administrador/Mock UI** | Principal | Ingresa manualmente JSON de compra mock para simular integración con eCommerce |
+| **Sistema Mock eCommerce** | Secundario | Simulación de plataforma de tienda online para recibir actualizaciones de dirección (mock) |
+| **Agente IA (GPT-4.0)** | Secundario | Motor de conversación inteligente para obtener y validar direcciones |
+| **Google Maps API** | Secundario | Servicio de validación y normalización de direcciones (implementación real) |
+| **Sistema de Soporte** | Secundario | Recibe escalados manuales cuando la IA no puede resolver |
+| **Sistema Adresles Backend** | Secundario | Procesa pedidos, gestiona conversaciones y coordina validaciones |
 
-### 2.2 Caso de Uso 1: Checkout Adresles
+### 2.2 Caso de Uso 1: Procesar Compra desde eCommerce (Mock)
 
-**CU-01: Realizar Compra con Checkout Adresles**
+**CU-01: Procesar Compra desde eCommerce (Mock)**
 
 | Campo | Descripción |
 |-------|-------------|
 | **ID** | CU-01 |
-| **Nombre** | Realizar Compra con Checkout Adresles |
+| **Nombre** | Procesar Compra desde eCommerce (Mock) |
 | **Actor Principal** | Comprador |
-| **Actores Secundarios** | Sistema eCommerce, Adresles Backend |
-| **Precondiciones** | El eCommerce tiene el plugin Adresles instalado y activo |
-| **Postcondiciones** | Pedido creado pendiente de dirección, conversación iniciada |
-| **Trigger** | El comprador selecciona "Checkout Adresles" en el proceso de pago |
+| **Actores Secundarios** | Sistema Mock, Agente IA (GPT-4.0), Adresles Backend |
+| **Precondiciones** | Sistema mock recibe JSON con datos de compra |
+| **Postcondiciones** | Pedido procesado, conversación(es) iniciada(s), dirección confirmada/simulada actualización a eCommerce |
+| **Trigger** | Entrada manual de JSON mock con datos de compra en el sistema |
 
-#### Flujo Principal
+#### Flujo Principal (Modo Adresles sin dirección)
 
-1. El Comprador añade productos al carrito en el eCommerce
-2. El Comprador accede al checkout
-3. El Sistema muestra opción "Checkout Adresles" junto al checkout tradicional
-4. El Comprador selecciona "Checkout Adresles"
-5. El Sistema solicita: Nombre, Apellidos, Teléfono
-6. El Comprador introduce los datos mínimos
-7. El Comprador completa el pago
-8. El Sistema eCommerce envía webhook a Adresles con datos del pedido
-9. Adresles crea registro de pedido pendiente de dirección
-10. Adresles inicia conversación con el Comprador (ver CU-02)
-11. El Comprador confirma la Dirección de Entrega en la conversación
-12. Adresles actualiza la Dirección de Entrega al Sistema ECommerce.
-13. Adresles confirma al Comprador la Dirección de Entrega finalmente seleccionada.
-14. Si el Comprador no está registrado en Adresles, Adresles inicia conversación ofreciendo el registro.
+1. El Sistema recibe JSON mock con datos de compra que incluye:
+   - Tienda online (nombre, URL)
+   - Número de pedido en la tienda
+   - Datos del comprador (nombre, apellidos, teléfono, email)
+   - Modo de compra: "adresles" (sin dirección de entrega)
+   - Datos de los productos comprados
+   - Importe total y moneda
+2. Adresles valida el JSON y crea registro de pedido con estado PENDING_ADDRESS
+3. Adresles busca o crea usuario por número de teléfono
+4. Adresles inicia conversación con el Comprador (ver CU-02)
+5. El Comprador proporciona y confirma la Dirección de Entrega en la conversación
+6. Adresles valida la dirección con Google Maps API
+7. Adresles crea registro OrderAddress con la dirección confirmada
+8. Adresles actualiza estado del pedido a ADDRESS_CONFIRMED
+9. Adresles simula la actualización de la dirección al Sistema eCommerce (mock - log estructurado)
+10. Adresles actualiza estado del pedido a SYNCED
+11. Adresles confirma al Comprador la Dirección de Entrega finalmente seleccionada
+12. Si el Comprador no está registrado en Adresles, Adresles inicia conversación ofreciendo el registro (ver CU-03)
 
 #### Flujos Alternativos
 
-**FA-1: Checkout con opción Regalo**
-- En paso 5, el Comprador marca "Es un regalo"
-- El Sistema solicita adicionalmente: Nombre y Teléfono del Regalado
-- Continúa en paso 6 con datos adicionales
-- En paso 10, se inician dos conversaciones paralelas (ver CU-03)
+**FA-1: Compra con Modo Regalo**
 
-**FA-2: Fallo en el pago**
-- En paso 7, el pago es rechazado
-- El Sistema notifica al Comprador
-- El Comprador puede reintentar o abandonar
-- No se envía webhook a Adresles
+- En paso 1, el JSON indica `is_gift: true` e incluye datos del regalado (nombre, apellidos, teléfono, nota opcional)
+- En paso 2, Adresles identifica el pedido como regalo y crea registro GiftRecipient
+- En paso 4, el Sistema inicia DOS conversaciones en paralelo e independientes:
+
+**Conversación con Comprador (informativa):**
+
+4a. Agente IA saluda al Comprador, confirmando la compra regalo
+
+5a. Agente IA informa que se está contactando al Regalado para obtener su dirección de entrega
+
+6a. Agente IA mantiene al Comprador informado del progreso (sin revelar la dirección del Regalado por protección de datos)
+
+7a. Cuando el Regalado confirma su dirección, Agente IA notifica al Comprador que la dirección fue obtenida exitosamente
+
+8a. Agente IA confirma que el pedido está en proceso y será enviado al destinatario
+
+9a. Si el Comprador no está registrado en Adresles, Agente IA inicia conversación de invitación a registro (ver CU-03)
+
+**Conversación con Regalado (obtención de dirección):**
+
+4b. Agente IA saluda al Regalado informando que tiene un regalo pendiente
+
+5b. El Sistema verifica estado del Regalado:
+- Si registrado en Adresles con dirección favorita → Agente IA propone su dirección favorita
+- Si registrado en eCommerce con dirección → Agente IA propone dirección del eCommerce
+- Si no tiene dirección → Agente IA solicita nueva dirección
+
+6b. El Regalado proporciona o confirma la dirección de entrega
+
+7b. Adresles valida la dirección con Google Maps API (mismo proceso que CU-02 pasos 5-8)
+
+8b. Si la dirección parece un edificio sin detalles completos → Agente IA solicita escalera/bloque/piso/puerta
+
+9b. Agente IA confirma dirección completa al Regalado
+
+10b. Regalado aprueba la dirección
+
+11b. Agente IA confirma que el regalo será enviado a la dirección indicada
+
+12b. Si el Regalado no está registrado en Adresles, Agente IA inicia conversación de invitación a registro (ver CU-03)
+
+- Continúa en paso 7 del flujo principal (crear OrderAddress)
+- Las conversaciones avanzan independientemente a su propio ritmo
+
+**Subflujo FA-1.1: Comprador conoce dirección del Regalado**
+- En paso 1, el JSON incluye `gift_address_provided: true` con datos completos de dirección del regalado
+- Se omite la conversación con el Regalado (4b-12b)
+- Solo se ejecuta la conversación informativa con el Comprador (4a-9a)
+- Se valida la dirección proporcionada con Google Maps API
+- Continúa en paso 7 del flujo principal
+
+**Subflujo FA-1.2: Regalado no responde**
+- Durante la conversación con el Regalado, si no hay respuesta, la conversación queda en estado WAITING_RESPONSE
+- El Comprador es notificado del estado a través de su conversación informativa
+- El sistema puede escalar manualmente a soporte si es necesario
+- (Nota: Reminders automáticos no implementados en MVP)
+
+**FA-2: Compra Tradicional con Dirección**
+
+- En paso 1, el JSON indica `mode: "tradicional"` e incluye dirección de entrega completa
+- En paso 2, Adresles crea pedido con estado ADDRESS_CONFIRMED (no PENDING_ADDRESS)
+- Adresles crea inmediatamente OrderAddress con la dirección proporcionada
+- Agente IA inicia conversación informativa con el Comprador:
+  - Saluda y confirma la compra realizada
+  - Informa: tienda, número de pedido, dirección de entrega indicada
+  - Confirma que el pedido será enviado a la dirección
+- Adresles simula la actualización al eCommerce (mock)
+- Adresles actualiza estado del pedido a SYNCED
+- Si el Comprador no está registrado en Adresles, Agente IA invita a registrarse para futuras compras más rápidas (ver CU-03)
 
 #### Diagrama de Caso de Uso
 
 ```plantuml
-@startuml CU-01 Checkout Adresles
+@startuml CU-01 Procesar Compra Mock
 left to right direction
 skinparam packageStyle rectangle
 
 actor "Comprador" as comprador
-actor "Sistema eCommerce" as ecommerce
-actor "Pasarela Pago" as pasarela
+actor "Regalado" as regalado
+actor "Sistema Mock" as mock
+actor "Agente IA\n(GPT-4.0)" as agente
+actor "Google Maps API" as gmaps
 actor "Adresles Backend" as adresles
 
-rectangle "CU-01: Checkout Adresles" {
-    usecase "Realizar Compra\nCheckout Adresles" as UC1
-    usecase "Validar Datos\nMínimos" as UC2
-    usecase "Procesar Pago" as UC3
-    usecase "Notificar Pedido\na Adresles" as UC4
-    usecase "Marcar como\nRegalo" as UC5
+rectangle "CU-01: Procesar Compra desde eCommerce (Mock)" {
+    usecase "Recibir JSON\nMock de Compra" as UC1
+    usecase "Validar y Crear\nPedido" as UC2
+    usecase "Conversación\nObtener Dirección" as UC3
+    usecase "Validar Dirección\nGoogle Maps" as UC4
+    usecase "Simular Actualización\neCommerce" as UC5
+    usecase "Invitar a\nRegistro Adresles" as UC6
 }
 
-comprador --> UC1
-ecommerce --> UC1
-UC1 ..> UC2 : <<include>>
-UC1 ..> UC3 : <<include>>
-UC3 <-- pasarela
-UC1 ..> UC4 : <<include>>
-UC4 <-- adresles
-UC1 ..> UC5 : <<extend>>
+rectangle "FA-1: Modo Regalo" {
+    usecase "Conversación\nComprador (info)" as UC7
+    usecase "Conversación\nRegalado (dirección)" as UC8
+}
 
-note right of UC5 : Solo si es regalo
+rectangle "FA-2: Compra Tradicional" {
+    usecase "Conversación\nInformativa" as UC9
+}
+
+mock --> UC1
+adresles --> UC1
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 <-- comprador
+UC3 <-- agente
+UC3 ..> UC4 : <<include>>
+UC4 <-- gmaps
+UC2 ..> UC5 : <<include>>
+UC2 ..> UC6 : <<extend>>
+
+UC2 ..> UC7 : <<extend>>
+UC2 ..> UC8 : <<extend>>
+UC7 <-- comprador
+UC7 <-- agente
+UC8 <-- regalado
+UC8 <-- agente
+UC8 ..> UC4 : <<include>>
+
+UC2 ..> UC9 : <<extend>>
+UC9 <-- comprador
+UC9 <-- agente
+
+note right of UC7 : Si is_gift=true\nConversaciones\nparalelas
+note right of UC9 : Si mode=tradicional
+note right of UC6 : Si usuario no\nregistrado
 @enduml
 ```
 
@@ -348,8 +445,8 @@ note right of UC5 : Solo si es regalo
 | **Actor Principal** | Comprador |
 | **Actores Secundarios** | Agente IA (GPT-4.0), Google Maps API, Sistema de Soporte |
 | **Precondiciones** | Existe pedido pendiente de dirección (CU-01 completado) |
-| **Postcondiciones** | Dirección validada y actualizada en eCommerce |
-| **Trigger** | Adresles inicia conversación tras recibir webhook de pedido |
+| **Postcondiciones** | Dirección validada, confirmada y simulada la actualización en eCommerce (mock) |
+| **Trigger** | Adresles inicia conversación tras recibir JSON mock de pedido |
 
 #### Flujo Principal
 
@@ -366,10 +463,10 @@ note right of UC5 : Solo si es regalo
     - Comprador proporciona detalles adicionales
 7. Agente IA confirma dirección completa al Comprador
 8. Comprador aprueba la dirección
-9. Adresles actualiza la dirección en el eCommerce via API
+9. Adresles simula la actualización de la dirección en el eCommerce (mock - log estructurado o notificación)
 10. Agente IA confirma que el pedido será enviado a la dirección indicada
 11. Si el Comprador no está registrado en Adresles:
-    - Agente IA invita a registrarse para futuras compras más rápidas
+    - Agente IA invita a registrarse para futuras compras más rápidas (ver CU-03)
 
 #### Flujos Alternativos
 
@@ -384,18 +481,13 @@ note right of UC5 : Solo si es regalo
 - Comprador proporciona dirección corregida
 - Vuelve a paso 5
 
-**FA-3: Sin respuesta en 15 minutos**
-- El Sistema envía Reminder 1
-- Si sin respuesta en 30 min → Reminder 2
-- Si sin respuesta en 60 min → Escala a Soporte por email
-
-**FA-4: IA no puede resolver la situación**
+**FA-3: IA no puede resolver la situación**
 - Agente IA detecta que no puede ayudar
 - El Sistema genera resumen de la incidencia
 - El Sistema envía email a soporte@adresles.com
 - Agente IA informa al Comprador que soporte contactará pronto
 
-**FA-5: Múltiples pedidos pendientes del mismo usuario**
+**FA-4: Múltiples pedidos pendientes del mismo usuario**
 - En paso 2, el Sistema detecta varios pedidos sin dirección
 - Agente IA lista los pedidos pendientes
 - Comprador puede asignar misma dirección a todos o diferentes
@@ -419,10 +511,9 @@ rectangle "CU-02: Obtención de Dirección por Conversación" {
     usecase "Solicitar Nueva\nDirección" as UC3
     usecase "Validar\nDirección" as UC4
     usecase "Solicitar Detalles\nEdificio" as UC5
-    usecase "Actualizar\neCommerce" as UC6
+    usecase "Simular Actualización\neCommerce (Mock)" as UC6
     usecase "Invitar a Registro\nAdresles" as UC7
-    usecase "Enviar\nReminders" as UC8
-    usecase "Escalar a\nSoporte" as UC9
+    usecase "Escalar a\nSoporte" as UC8
 }
 
 comprador --> UC1
@@ -435,123 +526,119 @@ UC4 ..> UC5 : <<extend>>
 UC1 ..> UC6 : <<include>>
 UC1 ..> UC7 : <<extend>>
 UC1 ..> UC8 : <<extend>>
-UC1 ..> UC9 : <<extend>>
-UC9 --> soporte
+UC8 --> soporte
 
 note right of UC5 : Si parece edificio\nsin detalles completos
 note right of UC7 : Si usuario no\nregistrado en Adresles
-note right of UC8 : Si no hay respuesta\nen 15/30/60 min
+note right of UC8 : Si IA no puede\nresolver
 @enduml
 ```
 
 ---
 
-### 2.4 Caso de Uso 3: Compra Regalo
+### 2.4 Caso de Uso 3: Solicitud de Registro Voluntario en Adresles
 
-**CU-03: Realizar Compra como Regalo**
+**CU-03: Solicitar Registro Voluntario en Adresles**
 
 | Campo | Descripción |
 |-------|-------------|
 | **ID** | CU-03 |
-| **Nombre** | Realizar Compra como Regalo |
-| **Actor Principal** | Comprador |
-| **Actores Secundarios** | Regalado, Agente IA (GPT-4.0), Sistema eCommerce |
-| **Precondiciones** | El eCommerce tiene plugin Adresles con opción regalo habilitada |
-| **Postcondiciones** | Pedido con dirección del Regalado, ambos informados |
-| **Trigger** | Comprador marca "Es un regalo" durante Checkout Adresles |
+| **Nombre** | Solicitar Registro Voluntario en Adresles |
+| **Actor Principal** | Comprador o Regalado |
+| **Actores Secundarios** | Agente IA (GPT-4.0), Sistema Adresles |
+| **Precondiciones** | Usuario ha completado una compra (modo Adresles o tradicional) y NO está registrado en Adresles (is_registered = false) |
+| **Postcondiciones** | Usuario registrado en Adresles (is_registered = true) o ha rechazado el registro conscientemente |
+| **Trigger** | Finalización de CU-02 (tras confirmar dirección) o después de confirmar compra tradicional (FA-2 de CU-01) |
 
 #### Flujo Principal
 
-1. El Comprador realiza Checkout Adresles marcando "Es un regalo"
-2. El Sistema solicita datos del Regalado: Nombre, Apellidos, Teléfono y Nota opcional
-3. El Comprador proporciona datos del Regalado
-4. El Comprador completa el pago
-5. Adresles recibe webhook e identifica pedido como regalo
-6. El Sistema inicia DOS conversaciones paralelas:
-
-**Conversación con Regalado:**
-
-7a. Agente IA saluda al Regalado (por su nombre si ya está registrado), informando que tiene un regalo pendiente
-
-8a. Si Regalado está registrado en Adresles con dirección favorita:
-
-- Agente IA propone su dirección favorita
-- Regalado confirma o proporciona alternativa
-
-9a. Si no tiene dirección:
-
-- Agente IA solicita dirección de entrega
-- Regalado proporciona dirección
-
-10a. Se valida dirección (mismo proceso que CU-02 pasos 5-8)
-
-11a. Agente IA confirma que el regalo será enviado
-
-**Conversación con Comprador:**
-
-7b. Agente IA saluda al Comprador, confirmando compra regalo
-
-8b. Agente IA informa que se ha contactado al Regalado
-
-9b. Cuando Regalado confirma dirección:
-
-- Agente IA notifica al Comprador que dirección fue obtenida
-- (Sin revelar la dirección para mantener Protección de Datos)
-
-10b. Agente IA confirma que el pedido está en proceso
-
-12. Adresles actualiza dirección en eCommerce
-13. Pedido listo para envío
+1. El Sistema verifica que el usuario no está registrado en Adresles (`is_registered = false`)
+2. Agente IA inicia conversación de invitación a registro
+3. Agente IA explica beneficios del registro en Adresles:
+   - Futuras compras más rápidas en cualquier tienda integrada
+   - Libreta de direcciones centralizada accesible desde cualquier eCommerce
+   - Reutilizar direcciones guardadas sin tener que repetirlas
+   - Gestión unificada de direcciones de entrega
+4. Agente IA solicita confirmación: "¿Desea registrarse en Adresles para disfrutar de estos beneficios?"
+5. Usuario acepta el registro
+6. Sistema crea/actualiza cuenta de usuario en Adresles:
+   - Marca `is_registered = true`
+   - Establece `registered_at = now()`
+   - Mantiene datos existentes (teléfono, nombre, email si existe)
+7. Si el usuario proporcionó dirección en esta compra, Agente IA pregunta: "¿Desea guardar esta dirección para futuras compras?"
+8. Si usuario acepta guardar dirección:
+   - Sistema crea registro en tabla `Address` con datos de la dirección
+   - Marca `is_default = true` (primera dirección guardada)
+   - Vincula dirección al usuario
+9. Agente IA confirma registro exitoso y beneficios activados:
+   - "¡Registro completado! Ya puede usar Adresles en cualquier tienda integrada"
+   - "Su dirección ha sido guardada y estará disponible en su próxima compra"
+10. Sistema actualiza `last_interaction_at` del usuario
+11. Conversación finalizada
 
 #### Flujos Alternativos
 
-**FA-1: Regalado no responde**
-- Se aplica flujo de reminders al Regalado
-- El Comprador es notificado del estado
-- Tras 60 min sin respuesta → Escala a soporte
+**FA-1: Usuario rechaza registro**
+- En paso 5, el Usuario indica que no desea registrarse
+- Agente IA agradece y respeta la decisión: "Entendido. Puede registrarse cuando lo desee desde cualquier compra futura"
+- Agente IA confirma que puede seguir usando Adresles sin registrarse
+- Sistema no modifica el estado `is_registered` (permanece false)
+- Conversación finalizada
 
-**FA-2: Comprador quiere indicar dirección del Regalado**
-- En paso 2, Comprador indica que conoce la dirección
-- El Sistema permite introducir dirección del regalo
-- Se salta conversación con Regalado (7a-11a)
-- Solo se informa al Comprador
+**FA-2: Usuario quiere más información**
+- En paso 5, el Usuario solicita más información sobre privacidad, uso de datos o funcionamiento
+- Agente IA proporciona información adicional:
+  - Política de privacidad: datos solo para facilitar compras, no compartidos con terceros
+  - Datos almacenados: nombre, teléfono, email opcional, direcciones guardadas
+  - Compatibilidad: lista de tiendas online integradas con Adresles
+  - Gestión de datos: puede actualizar o eliminar su cuenta en cualquier momento
+- Agente IA vuelve a preguntar si desea registrarse
+- Continúa en paso 5
+
+**FA-3: Usuario no proporcionó dirección en esta compra**
+- En paso 7, si la compra no incluyó captura de dirección (caso poco común)
+- Se omiten pasos 7-8
+- Agente IA confirma registro sin mención a guardado de dirección
+- Continúa en paso 9
+
+**FA-4: Usuario ya tiene direcciones guardadas**
+- En paso 8, si el usuario ya tiene direcciones en Adresles (migración o uso previo)
+- Sistema pregunta si desea marcar esta dirección como favorita o simplemente agregarla
+- Sistema crea registro en `Address` con `is_default` según preferencia del usuario
+- Continúa en paso 9
 
 #### Diagrama de Caso de Uso
 
 ```plantuml
-@startuml CU-03 Compra Regalo
+@startuml CU-03 Registro Adresles
 left to right direction
 skinparam packageStyle rectangle
 
-actor "Comprador" as comprador
-actor "Regalado" as regalado
-actor "Sistema eCommerce" as ecommerce
+actor "Comprador\no Regalado" as usuario
 actor "Agente IA\n(GPT-4.0)" as agente
-actor "Google Maps API" as gmaps
+actor "Sistema Adresles" as sistema
 
-rectangle "CU-03: Compra Regalo" {
-    usecase "Realizar Compra\ncomo Regalo" as UC1
-    usecase "Proporcionar Datos\ndel Regalado" as UC2
-    usecase "Conversación con\nComprador (info)" as UC3
-    usecase "Conversación con\nRegalado (dirección)" as UC4
-    usecase "Validar\nDirección" as UC5
-    usecase "Notificar Estado\nal Comprador" as UC6
-    usecase "Actualizar\neCommerce" as UC7
+rectangle "CU-03: Solicitud de Registro Voluntario" {
+    usecase "Invitar a\nRegistro" as UC1
+    usecase "Explicar\nBeneficios" as UC2
+    usecase "Crear/Actualizar\nCuenta Usuario" as UC3
+    usecase "Guardar Dirección\nen Libreta" as UC4
+    usecase "Confirmar Registro\nExitoso" as UC5
+    usecase "Proporcionar Información\nAdicional" as UC6
 }
 
-comprador --> UC1
-ecommerce --> UC1
+usuario --> UC1
+agente --> UC1
 UC1 ..> UC2 : <<include>>
 UC1 ..> UC3 : <<include>>
-UC1 ..> UC4 : <<include>>
-UC4 <-- regalado
-UC4 <-- agente
-UC4 ..> UC5 : <<include>>
-UC5 <-- gmaps
-UC3 ..> UC6 : <<include>>
-UC1 ..> UC7 : <<include>>
+UC3 <-- sistema
+UC1 ..> UC4 : <<extend>>
+UC4 <-- sistema
+UC1 ..> UC5 : <<include>>
+UC1 ..> UC6 : <<extend>>
 
-note right of UC4 : Conversaciones\nparalelas
+note right of UC4 : Si usuario acepta\nguardar dirección
+note right of UC6 : Si usuario solicita\nmás información
 @enduml
 ```
 
@@ -561,18 +648,22 @@ note right of UC4 : Conversaciones\nparalelas
 
 | Requisito | CU-01 | CU-02 | CU-03 |
 |-----------|-------|-------|-------|
-| Checkout sin dirección | ✓ | | ✓ |
-| Conversación IA | | ✓ | ✓ |
-| Validación Google Maps | | ✓ | ✓ |
-| Detección datos faltantes edificio | | ✓ | ✓ |
-| Proponer dirección favorita | | ✓ | ✓ |
-| Sistema de reminders | | ✓ | ✓ |
-| Escalado a soporte | | ✓ | ✓ |
-| Modo regalo | ✓ | | ✓ |
-| Multi-idioma | | ✓ | ✓ |
-| Actualización eCommerce | | ✓ | ✓ |
-| Invitación registro | | ✓ | ✓ |
+| Mock de integración eCommerce | ✓ | | |
+| Entrada manual de JSON | ✓ | | |
+| Checkout sin dirección (modo Adresles) | ✓ | | |
+| Compra tradicional con dirección | ✓ | | |
+| Modo regalo | ✓ | | |
+| Conversación IA | ✓ | ✓ | ✓ |
+| Validación Google Maps | ✓ | ✓ | |
+| Detección datos faltantes edificio | | ✓ | |
+| Proponer dirección favorita | | ✓ | |
+| Escalado a soporte | | ✓ | |
+| Multi-idioma | ✓ | ✓ | ✓ |
+| Actualización eCommerce (mock) | ✓ | ✓ | |
+| Invitación registro | ✓ | ✓ | ✓ |
 | Múltiples pedidos | | ✓ | |
+| Registro voluntario usuario | | | ✓ |
+| Guardado de dirección en libreta | | | ✓ |
 
 ---
 
@@ -1568,30 +1659,30 @@ networks:
 
 ### 4.8 Diagramas de Secuencia
 
-#### Secuencia 1: Checkout Adresles Completo
+#### Secuencia 1: Procesar Compra Mock - Flujo Completo
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant U as Usuario
-    participant EC as eCommerce
+    participant Admin as Admin/MockUI
     participant API as Adresles API
     participant Q as Redis Queue
     participant W as Worker
     participant AI as OpenAI
+    participant GM as Google Maps
     participant DB as Supabase
     participant DDB as DynamoDB
+    participant U as Usuario
+    participant Mock as Mock eCommerce
     
-    U->>EC: Completa checkout (nombre, teléfono)
-    EC->>EC: Procesa pago
-    EC->>API: POST /webhooks/woocommerce
+    Admin->>API: POST /api/mock/orders (JSON compra)
     
-    API->>API: Valida webhook signature
+    API->>API: Validar JSON
     API->>DB: Buscar/Crear User por teléfono
     API->>DB: Crear Order (PENDING_ADDRESS)
     API->>DDB: Crear Conversation
     API->>Q: Encolar job: process-conversation
-    API-->>EC: 200 OK
+    API-->>Admin: 200 OK (pedido creado)
     
     Q->>W: Consume job
     W->>DDB: Leer contexto conversación
@@ -1609,8 +1700,9 @@ sequenceDiagram
     API->>Q: Encolar job: process-response
     
     Q->>W: Consume job
-    W->>W: Validar dirección con GMaps
-    W->>AI: Confirmar dirección
+    W->>GM: Validar dirección
+    GM-->>W: Dirección validada/normalizada
+    W->>AI: Confirmar dirección al usuario
     AI-->>W: Mensaje confirmación
     W->>DDB: Guardar mensaje
     W->>API: Notificar
@@ -1620,65 +1712,13 @@ sequenceDiagram
     
     API->>DB: Crear OrderAddress (snapshot)
     API->>DB: Update Order (ADDRESS_CONFIRMED)
-    API->>EC: PUT /orders/{id} (sync dirección)
-    EC-->>API: 200 OK
+    API->>Mock: Simular sync dirección (log/notif)
+    Mock-->>API: Mock OK
     API->>DB: Update Order (SYNCED)
+    API->>U: Confirmar dirección sincronizada
 ```
 
-#### Secuencia 2: Flujo de Reminders
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant W as Worker
-    participant Q as Redis Queue
-    participant DDB as DynamoDB
-    participant API as API
-    participant U as Usuario
-    participant S as Soporte
-    
-    Note over W: Job inicial enviado
-    W->>Q: Schedule reminder (15 min delay)
-    
-    Note over Q: Pasan 15 minutos sin respuesta
-    Q->>W: Trigger reminder-1
-    W->>DDB: Check conversation status
-    
-    alt Usuario ya respondió
-        W->>W: Cancel reminder flow
-    else Sin respuesta
-        W->>DDB: Update reminder_count = 1
-        W->>DDB: Guardar mensaje reminder
-        W->>API: Notificar
-        API->>U: Push reminder 1
-        W->>Q: Schedule reminder-2 (15 min)
-    end
-    
-    Note over Q: Pasan otros 15 min (total 30)
-    Q->>W: Trigger reminder-2
-    W->>DDB: Check status + reminder_count
-    
-    alt Sin respuesta
-        W->>DDB: Update reminder_count = 2
-        W->>DDB: Guardar mensaje reminder 2
-        W->>API: Notificar
-        API->>U: Push reminder 2
-        W->>Q: Schedule escalation (30 min)
-    end
-    
-    Note over Q: Pasan otros 30 min (total 60)
-    Q->>W: Trigger escalation
-    W->>DDB: Check status
-    
-    alt Sin respuesta
-        W->>DDB: Update status = ESCALATED
-        W->>W: Generar resumen incidencia
-        W->>S: Enviar email soporte
-        W->>DDB: Guardar mensaje timeout
-        W->>API: Notificar
-        API->>U: Push mensaje escalado
-    end
-```
+> **Nota**: La Secuencia 2 (Flujo de Reminders) ha sido eliminada, ya que los reminders automáticos no se implementarán en el MVP. Ver sección 1.7 para más detalles.
 
 ### 4.9 CI/CD Pipeline (GitHub Actions)
 

@@ -1,7 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-07
+> **Última actualización**: 2026-02-10  
+> ⚠️ **Actualizado**: Casos de Uso redefinidos para MVP con enfoque Mock
 
 ## 📖 Inicio Rápido
 
@@ -36,8 +37,9 @@ Aquí se documentarán:
 
 ### Documentación Principal
 
-- **[Adresles_Business.md](../Adresles_Business.md)** (2130 líneas)  
-  Documento completo de diseño del sistema (Fases 1-4)
+- **[Adresles_Business.md](../Adresles_Business.md)** (2170 líneas - v1.3)  
+  Documento completo de diseño del sistema (Fases 1-4)  
+  **v1.3**: Casos de Uso actualizados para MVP Mock
 
 - **[Backend Standards](../openspec/specs/backend-standards.mdc)** (1230 líneas)  
   Estándares técnicos, DDD, SOLID, testing
@@ -128,6 +130,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-07  
+**Última revisión**: 2026-02-10  
 **Mantenido por**: Sergio (desarrollo individual)  
+**Cambios recientes**: Actualización v1.3 - MVP redefinido con enfoque mock  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

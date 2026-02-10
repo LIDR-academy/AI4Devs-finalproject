@@ -1,7 +1,8 @@
 # Adresles - Visión General del Proyecto
 
-> **Última actualización**: 2026-02-07  
-> **Documento fuente**: [Adresles_Business.md](../../Adresles_Business.md) - Secciones 1.1-1.6
+> **Última actualización**: 2026-02-10  
+> **Documento fuente**: [Adresles_Business.md](../../Adresles_Business.md) - Secciones 1.1-1.6  
+> ⚠️ **MVP Actualizado**: Enfoque mock para integración con eCommerce
 
 ---
 
@@ -65,10 +66,10 @@ El comprador completa el checkout indicando únicamente **nombre** y **teléfono
 - ✅ API REST para integración custom
 
 ### Inteligencia del Sistema
-- ✅ **Validación con Google Maps API** (normalización + geocoding)
-- ✅ **Detección inteligente de datos faltantes** (escalera, bloque, piso, puerta)
-- ✅ **Sistema de Reminders** (tras 15 min sin respuesta)
-- ✅ **Escalado a Soporte** (email cuando IA no puede resolver)
+- ✅ **Validación con Google Maps API** (normalización + geocoding) - **Implementación real**
+- ✅ **Detección inteligente de datos faltantes** (escalera, bloque, piso, puerta) - **Implementación real**
+- 🔄 **Sistema de Reminders** (tras 15 min sin respuesta) - **Pendiente post-MVP**
+- ✅ **Escalado a Soporte** (manual cuando IA no puede resolver)
 
 **Detalle completo**: Ver [Adresles_Business.md - Sección 1.4](../../Adresles_Business.md#14-funciones-principales)
 
@@ -116,30 +117,42 @@ IA solicita dirección + invita a registrarse para futuras compras
 
 ## 🌍 Alcance y Roadmap
 
-### Alcance Inicial (MVP)
-- ✅ Global desde el inicio (multi-idioma, multi-moneda)
-- ✅ Plugin WooCommerce (Fase 1)
+### Alcance Inicial (MVP) - Enfoque Mock
+
+> ⚠️ **Actualización v1.3**: Para el MVP, se mockea la integración con tiendas online
+
+**Implementación Real (Core del Producto)**:
+- ✅ Conversación IA con OpenAI GPT-4 (implementación completa)
+- ✅ Validación de direcciones con Google Maps API (implementación completa)
 - ✅ App conversacional propia (no WhatsApp inicialmente)
 - ✅ Backend Node.js + NestJS
 - ✅ Frontend React + Next.js
 
-### Roadmap de Plataformas
-1. **Fase 1**: WooCommerce
-2. **Fase 2**: PrestaShop
-3. **Fase 3**: Magento
-4. **Fase 4**: Shopify
+**Implementación Mock (Para MVP)**:
+- 🔄 Entrada manual de JSON para simular compras del eCommerce
+- 🔄 Simulación de actualización de dirección al eCommerce (log/notificación)
+- 🔄 Sin sistema de reminders automáticos (se implementará post-MVP)
+
+### Roadmap de Integraciones
+1. **MVP (Fase 0)**: Integración Mock - Entrada manual JSON
+2. **Fase 1**: Plugin WooCommerce real
+3. **Fase 2**: PrestaShop
+4. **Fase 3**: Magento
+5. **Fase 4**: Shopify
 
 ---
 
-## 🎯 Actores del Sistema
+## 🎯 Actores del Sistema (MVP Mock)
 
 | Actor | Descripción |
 |-------|-------------|
-| **Buyer** | Comprador que realiza el pedido |
+| **Buyer** | Comprador que realiza el pedido y proporciona dirección |
 | **Recipient** | Destinatario del pedido (en modo regalo) |
-| **Store Admin** | Dueño/administrador de la tienda eCommerce |
+| **Admin/Mock UI** | **[MVP]** Ingresa manualmente JSON de compra mock |
+| **Mock eCommerce** | **[MVP]** Simulación de tienda online para actualizaciones |
 | **Adresles System** | Sistema backend (orquestador, IA, validador) |
-| **External Services** | OpenAI, Google Maps, eCommerce platforms |
+| **OpenAI GPT-4** | **[Real]** Motor de conversación inteligente |
+| **Google Maps API** | **[Real]** Validación y normalización de direcciones |
 
 **Detalle completo**: Ver [Adresles_Business.md - Sección 2.1](../../Adresles_Business.md#21-actores-del-sistema)
 
@@ -216,6 +229,7 @@ Para análisis exhaustivo, arquitectura detallada, diagramas C4 completos, y esp
 
 ---
 
-**Última actualización**: 2026-02-07  
+**Última actualización**: 2026-02-10  
 **Mantenido por**: Sergio  
-**Documento fuente**: Adresles_Business.md v1.2 (30 enero 2026)
+**Documento fuente**: Adresles_Business.md v1.3 (10 febrero 2026)  
+**Cambios v1.3**: MVP redefinido con enfoque mock para integración eCommerce, enfocándose en el core (IA + validación)

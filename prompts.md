@@ -80,6 +80,32 @@ Vamos a ir documentando todo en un único documento Markdown (.md) con el nombre
 
 ---
 
+**Prompt 3:**
+
+```
+En @Adresles_Business.md hay 3 casos de uso definidos, pero no se está teniendo en cuenta que vamos a "mockear" toda la interacción con la tiendas online. A nuestra aplicación sólo le va a llegar un json con los datos de la compra (la tienda online, el número de pedido en la tienda, los datos del comprador, los datos de la dirección de entrega si existen, soi la compra se ha hecho en modo adresles o tradicional, si es para regalo, los datos del regalado si existen, etc.), es decir, todos los datos extraídos en fase del checkout de la compra realizada en la Tienda Online. Y nosotros queremos desarrollar la aplicación para, mediante el uso de GPT, ponernos en contacto con el comprador y solicitar o confirmar la dirección de entrega, para luego simular una vez más la actualización de estos datos en el ECommerce.
+Entoces el Caso CU-01 se reduciría a mockear la llegada de datos a nuestra aplicación, la simulación de conversación y confirmación de dirección con el cliente (que es básicamente el Caso CU-02), simular la entrega del la dirección al EComemrce, y por último, la simulación de conversasción para solictar el registro voluntario del cliente en Adresles.
+El CU-02 se desarrollaría al completo, con toda la configuración necesaria con los servicios de OPENAI (para la conversación) y GMAPS (para la validación de la dirección).
+El CU-03 yo lo integraría como flujo alternativo al CU-01, simplemente que en este caso se simularía una compra con regalo, y se tendrían que simular dos conversaciones síncronas, una con el comprador y otra con el regalado.
+Y añadiría otro caso de uso CU-04 para desarrollar la solicitud de registro a Adresles por Conversación.
+Revisa en profundidad @Adresles_Business.md , y, como IA experta en desarrollo de producto con más de 20 años de experiencia, actualiza los Casos de Uso definidos en función de lo explicado.
+Pregúntame todo lo que se necesario para poder ejecutar la tarea perfctamente.
+```
+
+> **Resumen de objetivos alcanzados:** Se redefinió el MVP con enfoque mock. Se creó plan detallado para actualizar los 3 casos de uso: CU-01 cambió a "Procesar Compra Mock" con entrada JSON manual, viejo CU-03 (Modo Regalo) se integró como FA-1 en CU-01, se eliminó sección 2.4 completa del viejo CU-03, se creó nuevo CU-03 "Solicitud de Registro Voluntario" en nueva sección 2.4. Se eliminó flujo de reminders automáticos (marcado pendiente post-MVP). Se actualizaron todos los diagramas PlantUML y de secuencia. Documento actualizado de v1.2 a v1.3 (2170 líneas).
+
+---
+
+**Prompt 4:**
+
+```
+Revisa y actualiza @memory-bank con los cambios realizados en @Adresles_Business.md
+```
+
+> **Resumen de objetivos alcanzados:** Se actualizó completamente el memory-bank para reflejar cambios en v1.3: `business-doc-map.md` con nuevos CU y referencias actualizadas, `overview.md` con sección MVP Mock diferenciando implementación real (OpenAI, GMaps) vs mock (entrada JSON, simulación), `domain-glossary.md` con 6 nuevos términos específicos de MVP Mock, y `README.md` con versión y fechas actualizadas.
+
+---
+
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura:**

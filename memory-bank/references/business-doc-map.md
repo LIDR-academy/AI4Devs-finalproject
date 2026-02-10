@@ -1,7 +1,8 @@
 # Business Document Map - Adresles
 
 > **Mapa navegable del documento [Adresles_Business.md](../../Adresles_Business.md)**  
-> **Documento fuente**: 2130 líneas - v1.2 (30 enero 2026)
+> **Documento fuente**: 2170 líneas - v1.3 (10 febrero 2026)  
+> **Última actualización**: Casos de Uso redefinidos para MVP con enfoque Mock
 
 Este mapa te ayuda a encontrar rápidamente información específica en el documento de diseño completo.
 
@@ -25,19 +26,21 @@ Este mapa te ayuda a encontrar rápidamente información específica en el docum
 | Journey | Sección | Contenido |
 |---------|---------|-----------|
 | **Journeys completos** | [1.6 User Journeys Detallados](../../Adresles_Business.md#16-user-journeys-detallados) | 5 journeys principales con diagramas |
-| **Flujo de reminders** | [1.7 Flujo de Reminders](../../Adresles_Business.md#17-flujo-de-reminders) | Timeout 15 min, sistema de recordatorios |
+| **Flujo de reminders** | [1.7 Flujo de Reminders](../../Adresles_Business.md#17-flujo-de-reminders) | ⚠️ **Pendiente para fase post-MVP** |
 
 ---
 
-## 🎭 Casos de Uso
+## 🎭 Casos de Uso (MVP Mock)
+
+> ⚠️ **Actualización v1.3**: Casos de Uso rediseñados para MVP con integración mock al eCommerce
 
 | Caso de Uso | Sección | Contenido |
 |-------------|---------|-----------|
-| **Actores del sistema** | [2.1 Actores del Sistema](../../Adresles_Business.md#21-actores-del-sistema) | Buyer, Recipient, Store Admin, System |
-| **CU-01: Checkout Adresles** | [2.2 Caso de Uso 1](../../Adresles_Business.md#22-caso-de-uso-1-checkout-adresles) | Flujo completo con diagrama PlantUML |
-| **CU-02: Conversación IA** | [2.3 Caso de Uso 2](../../Adresles_Business.md#23-caso-de-uso-2-obtención-de-dirección-por-conversación) | Obtención de dirección, validación Google Maps |
-| **CU-03: Modo Regalo** | [2.4 Caso de Uso 3](../../Adresles_Business.md#24-caso-de-uso-3-compra-regalo) | Flujo paralelo Comprador-Regalado |
-| **Matriz de trazabilidad** | [2.5 Matriz de Trazabilidad](../../Adresles_Business.md#25-matriz-de-trazabilidad-casos-de-uso---requisitos) | Relación casos de uso - requisitos |
+| **Actores del sistema** | [2.1 Actores del Sistema](../../Adresles_Business.md#21-actores-del-sistema) | Incluye Mock UI/Admin, Sistema Mock eCommerce |
+| **CU-01: Procesar Compra Mock** | [2.2 Caso de Uso 1](../../Adresles_Business.md#22-caso-de-uso-1-procesar-compra-desde-ecommerce-mock) | Entrada JSON mock, incluye FA-1 Modo Regalo y FA-2 Compra Tradicional |
+| **CU-02: Conversación IA** | [2.3 Caso de Uso 2](../../Adresles_Business.md#23-caso-de-uso-2-obtención-de-dirección-por-conversación) | Obtención dirección, validación Google Maps real, sin reminders automáticos |
+| **CU-03: Registro Voluntario** | [2.4 Caso de Uso 3](../../Adresles_Business.md#24-caso-de-uso-3-solicitud-de-registro-voluntario-en-adresles) | **NUEVO**: Invitación a registro en Adresles post-compra |
+| **Matriz de trazabilidad** | [2.5 Matriz de Trazabilidad](../../Adresles_Business.md#25-matriz-de-trazabilidad-casos-de-uso---requisitos) | Actualizada con nuevos requisitos mock |
 
 ---
 
@@ -78,7 +81,7 @@ Este mapa te ayuda a encontrar rápidamente información específica en el docum
 | **Estructura del proyecto** | [4.5 Estructura del Proyecto](../../Adresles_Business.md#45-estructura-del-proyecto) | Monorepo pnpm + Turborepo, carpetas completas |
 | **Infraestructura** | [4.6 Diagrama de Infraestructura](../../Adresles_Business.md#46-diagrama-de-infraestructura-y-deployment) | Servidor dedicado, Docker, Traefik, servicios managed |
 | **Docker Compose** | [4.7 Docker Compose](../../Adresles_Business.md#47-docker-compose---configuración) | Configuración completa YAML |
-| **Diagramas de secuencia** | [4.8 Diagramas de Secuencia](../../Adresles_Business.md#48-diagramas-de-secuencia) | Checkout completo, Reminders |
+| **Diagramas de secuencia** | [4.8 Diagramas de Secuencia](../../Adresles_Business.md#48-diagramas-de-secuencia) | Secuencia 1: Procesar Compra Mock (actualizado), Secuencia 2 eliminada |
 | **CI/CD Pipeline** | [4.9 CI/CD Pipeline](../../Adresles_Business.md#49-cicd-pipeline-github-actions) | GitHub Actions workflow completo |
 | **Seguridad** | [4.10 Seguridad](../../Adresles_Business.md#410-seguridad) | RLS, API Keys, Webhooks, HTTPS, Rate limiting |
 | **Monitorización** | [4.11 Monitorización](../../Adresles_Business.md#411-monitorización-y-observabilidad) | Estrategia futura (Grafana, Prometheus) |
@@ -109,11 +112,13 @@ Este mapa te ayuda a encontrar rápidamente información específica en el docum
 
 ### Funcionalidades
 
-- **Checkout Adresles**: [1.4](../../Adresles_Business.md#14-funciones-principales), [2.2 CU-01](../../Adresles_Business.md#22-caso-de-uso-1-checkout-adresles)
+- **Procesar Compra Mock**: [2.2 CU-01](../../Adresles_Business.md#22-caso-de-uso-1-procesar-compra-desde-ecommerce-mock) - Entrada manual JSON
 - **Conversación IA**: [2.3 CU-02](../../Adresles_Business.md#23-caso-de-uso-2-obtención-de-dirección-por-conversación), [4.4 C4 Componentes](../../Adresles_Business.md#44-diagrama-c4---nivel-3-componentes-módulo-conversations)
-- **Modo Regalo**: [1.4](../../Adresles_Business.md#14-funciones-principales), [2.4 CU-03](../../Adresles_Business.md#24-caso-de-uso-3-compra-regalo)
-- **Validación de direcciones**: [1.3](../../Adresles_Business.md#13-ventajas-competitivas), [2.3 CU-02](../../Adresles_Business.md#23-caso-de-uso-2-obtención-de-dirección-por-conversación)
-- **Sistema de Reminders**: [1.7](../../Adresles_Business.md#17-flujo-de-reminders), [4.8 Secuencia](../../Adresles_Business.md#48-diagramas-de-secuencia)
+- **Modo Regalo**: [2.2 CU-01 FA-1](../../Adresles_Business.md#22-caso-de-uso-1-procesar-compra-desde-ecommerce-mock) - Integrado como flujo alternativo
+- **Compra Tradicional**: [2.2 CU-01 FA-2](../../Adresles_Business.md#22-caso-de-uso-1-procesar-compra-desde-ecommerce-mock) - Con dirección incluida
+- **Registro Voluntario**: [2.4 CU-03](../../Adresles_Business.md#24-caso-de-uso-3-solicitud-de-registro-voluntario-en-adresles) - **NUEVO**
+- **Validación de direcciones**: [1.3](../../Adresles_Business.md#13-ventajas-competitivas), [2.3 CU-02](../../Adresles_Business.md#23-caso-de-uso-2-obtención-de-dirección-por-conversación) - Google Maps real
+- **Sistema de Reminders**: [1.7](../../Adresles_Business.md#17-flujo-de-reminders) - ⚠️ Pendiente post-MVP
 - **Libreta de Direcciones**: [1.3](../../Adresles_Business.md#13-ventajas-competitivas), [3.2 Modelo E-R](../../Adresles_Business.md#32-modelo-entidad-relación)
 - **Multi-idioma**: [1.1](../../Adresles_Business.md#11-descripción-del-software), [1.3](../../Adresles_Business.md#13-ventajas-competitivas)
 - **Multi-tenant (RLS)**: [3.1](../../Adresles_Business.md#31-análisis-de-base-de-datos-dynamodb-vs-alternativas), [4.10](../../Adresles_Business.md#410-seguridad)
@@ -140,14 +145,14 @@ Este mapa te ayuda a encontrar rápidamente información específica en el docum
 - **Diagrama C4 Nivel 2**: [4.3](../../Adresles_Business.md#43-diagrama-c4---nivel-2-contenedores)
 - **Diagrama C4 Nivel 3**: [4.4](../../Adresles_Business.md#44-diagrama-c4---nivel-3-componentes-módulo-conversations)
 - **Infraestructura**: [4.6](../../Adresles_Business.md#46-diagrama-de-infraestructura-y-deployment)
-- **Secuencia Checkout**: [4.8](../../Adresles_Business.md#48-diagramas-de-secuencia)
-- **Secuencia Reminders**: [4.8](../../Adresles_Business.md#48-diagramas-de-secuencia)
+- **Secuencia Procesar Compra Mock**: [4.8](../../Adresles_Business.md#48-diagramas-de-secuencia) - Actualizado con Mock UI
+- **Secuencia Reminders**: ~~Eliminada~~ - Pendiente post-MVP
 
 ### Diagramas PlantUML
 
-- **Casos de Uso CU-01**: [2.2](../../Adresles_Business.md#22-caso-de-uso-1-checkout-adresles)
-- **Casos de Uso CU-02**: [2.3](../../Adresles_Business.md#23-caso-de-uso-2-obtención-de-dirección-por-conversación)
-- **Casos de Uso CU-03**: [2.4](../../Adresles_Business.md#24-caso-de-uso-3-compra-regalo)
+- **Casos de Uso CU-01**: [2.2](../../Adresles_Business.md#22-caso-de-uso-1-procesar-compra-desde-ecommerce-mock) - Procesar Compra Mock
+- **Casos de Uso CU-02**: [2.3](../../Adresles_Business.md#23-caso-de-uso-2-obtención-de-dirección-por-conversación) - Conversación IA
+- **Casos de Uso CU-03**: [2.4](../../Adresles_Business.md#24-caso-de-uso-3-solicitud-de-registro-voluntario-en-adresles) - **NUEVO**: Registro Voluntario
 
 ### Diagramas ASCII
 
@@ -173,6 +178,13 @@ Este mapa te ayuda a encontrar rápidamente información específica en el docum
 
 ---
 
-**Última actualización**: 2026-02-07  
-**Documento fuente**: Adresles_Business.md v1.2 (30 enero 2026)  
+**Última actualización**: 2026-02-10  
+**Documento fuente**: Adresles_Business.md v1.3 (10 febrero 2026)  
+**Cambios principales v1.3**:
+- CU-01 redefinido como "Procesar Compra Mock" con entrada JSON manual
+- Viejo CU-03 (Modo Regalo) integrado como FA-1 dentro de CU-01
+- Nuevo CU-03: "Solicitud de Registro Voluntario en Adresles"
+- Sistema de Reminders marcado como pendiente para post-MVP
+- Actores actualizados con Mock UI/Admin y Sistema Mock eCommerce
+
 **Mantenido por**: Sergio

@@ -1,7 +1,8 @@
 # Glosario del Dominio - Adresles
 
-> **Última actualización**: 2026-02-07  
-> **Documento fuente**: [Adresles_Business.md - Glosario](../../Adresles_Business.md#glosario)
+> **Última actualización**: 2026-02-10  
+> **Documento fuente**: [Adresles_Business.md - Glosario](../../Adresles_Business.md#glosario)  
+> ⚠️ **Actualizado**: Términos relacionados con MVP Mock añadidos
 
 ---
 
@@ -31,11 +32,11 @@ Módulo de integración que se instala en el eCommerce para habilitar el checkou
 
 ### Flujos y Procesos
 
-#### **Checkout Adresles**
-Proceso de compra simplificado donde el usuario solo introduce nombre y teléfono (sin dirección).
+#### **Checkout Adresles** (Modo Adresles)
+Proceso de compra simplificado donde el usuario solo introduce nombre y teléfono (sin dirección). En el MVP, se simula mediante entrada JSON con `mode: "adresles"`.
 
-#### **Checkout Tradicional**
-Proceso de compra estándar donde el usuario introduce manualmente todos los datos, incluyendo la dirección completa.
+#### **Checkout Tradicional** (Modo Tradicional)
+Proceso de compra estándar donde el usuario introduce manualmente todos los datos, incluyendo la dirección completa. En el MVP, se simula mediante entrada JSON con `mode: "tradicional"` y dirección incluida.
 
 #### **Conversation** (Conversación)
 Interacción entre el usuario y el agente IA para obtener la dirección de entrega. Se estructura en mensajes (messages).
@@ -44,10 +45,16 @@ Interacción entre el usuario y el agente IA para obtener la dirección de entre
 Camino específico que sigue un usuario según su contexto (registrado/no registrado, con/sin dirección guardada, compra normal/regalo).
 
 #### **Modo Regalo** (Gift Mode)
-Funcionalidad que permite al comprador enviar un pedido a otra persona sin conocer su dirección. El sistema contacta al destinatario para obtenerla.
+Funcionalidad que permite al comprador enviar un pedido a otra persona sin conocer su dirección. El sistema contacta al destinatario para obtenerla. En el MVP, se simula mediante JSON con `is_gift: true`.
 
 #### **Reminder Flow** (Flujo de Recordatorios)
-Sistema automático que envía recordatorios al usuario si no responde tras 15 minutos de inactividad en la conversación.
+> ⚠️ **Pendiente post-MVP**: Sistema automático que enviaría recordatorios al usuario si no responde tras 15 minutos. No implementado en MVP inicial.
+
+#### **Mock Order Entry** (Entrada Mock de Pedido)
+Proceso de ingresar manualmente un JSON con datos de compra simulando la llegada desde un eCommerce real. Incluye: tienda, número de pedido, datos del comprador, dirección (opcional), modo de compra, datos del regalo (opcional).
+
+#### **Mock eCommerce Update** (Actualización Mock al eCommerce)
+Simulación de la actualización de dirección al sistema eCommerce, implementado como log estructurado o notificación en el MVP.
 
 ---
 
@@ -85,7 +92,12 @@ Copia inmutable de la dirección de un pedido. Persiste incluso si el usuario mo
 Mensaje individual dentro de una conversación. Puede ser del usuario o del agente IA.
 
 #### **Conversation Type**
-Tipo de conversación: `INFORMATION`, `GET_ADDRESS`, `REGISTER`, `GIFT_NOTIFICATION`, `SUPPORT`.
+Tipo de conversación: 
+- `INFORMATION` - Conversación informativa (ej: compra tradicional)
+- `GET_ADDRESS` - Obtener dirección de entrega
+- `REGISTER` - Invitar/completar registro en Adresles
+- `GIFT_NOTIFICATION` - Notificar al comprador sobre estado del regalo
+- `SUPPORT` - Escalado a soporte humano
 
 #### **User Type**
 Rol del usuario en una conversación: `BUYER` (comprador) o `RECIPIENT` (destinatario regalo).
@@ -105,10 +117,10 @@ Estados del pedido:
 #### **Conversation Status**
 Estados de la conversación:
 - `ACTIVE`: Conversación en curso
-- `WAITING_USER`: Esperando respuesta del usuario
+- `WAITING_RESPONSE`: Esperando respuesta del usuario (sin timeout automático en MVP)
 - `COMPLETED`: Conversación finalizada exitosamente
-- `ESCALATED`: Escalada a soporte humano
-- `TIMEOUT`: Sin respuesta tras múltiples reminders
+- `ESCALATED`: Escalada manualmente a soporte humano
+- `TIMEOUT`: ~~Sin respuesta tras múltiples reminders~~ (No implementado en MVP)
 
 ---
 
@@ -185,6 +197,31 @@ Soporte de múltiples monedas (EUR, USD, GBP, etc.) desde el inicio del proyecto
 
 ---
 
+## 🆕 Términos Específicos del MVP Mock
+
+#### **Mock UI / Admin Interface**
+Interfaz administrativa que permite ingresar manualmente JSONs de compra para simular pedidos del eCommerce durante el MVP.
+
+#### **JSON Order Mock**
+Estructura JSON que contiene todos los datos de una compra simulada:
+- `store_name`, `store_url`: Identificación de la tienda
+- `order_id`, `order_number`: Identificación del pedido
+- `buyer`: Datos del comprador (nombre, teléfono, email)
+- `mode`: "adresles" o "tradicional"
+- `delivery_address`: (opcional) Dirección si modo tradicional
+- `is_gift`: Boolean indicando si es regalo
+- `gift_recipient`: (opcional) Datos del regalado
+- `items`: Lista de productos
+- `total_amount`, `currency`: Importe y moneda
+
+#### **Fase 0 (MVP Mock)**
+Fase inicial del proyecto donde se mockean las integraciones con eCommerce, enfocándose en validar el core del producto (conversación IA + validación de direcciones con Google Maps).
+
+#### **Registro Voluntario** (Voluntary Registration)
+Proceso donde el usuario puede optar por registrarse en Adresles después de completar una compra, para aprovechar beneficios como libreta de direcciones y checkouts más rápidos en futuras compras.
+
+---
+
 ## 🔗 Referencias
 
 - **Glosario completo**: [Adresles_Business.md - Sección 6](../../Adresles_Business.md#glosario)
@@ -194,6 +231,7 @@ Soporte de múltiples monedas (EUR, USD, GBP, etc.) desde el inicio del proyecto
 
 ---
 
-**Última actualización**: 2026-02-07  
+**Última actualización**: 2026-02-10  
 **Mantenido por**: Sergio  
+**Cambios v1.3**: Términos mock añadidos, estados actualizados para MVP sin reminders  
 **Evoluciona con**: Cada nuevo término del dominio que surja durante el desarrollo
