@@ -3044,3 +3044,66 @@ $ make test-front
 3. ⏭️ Pasar a T-001-BACK (Metadata Extraction con rhino3dm)
 ---
 
+## 061 - Implementación Real - Supabase Storage Presigned URL
+**Fecha:** 2026-02-10 18:00
+
+**Prompt Original:**
+> # Prompt: Implementación Real - Supabase Storage Presigned URL
+>
+> ## Rol
+> Eres un Backend Engineer senior especializado en Python/FastAPI con experiencia en Supabase Storage API.
+>
+> ## Contexto
+> El endpoint `POST /api/upload/url` actualmente devuelve una URL mock de S3:
+> ```python
+> mock_url = f"https://s3.amazonaws.com/bucket/{file_id}/{request.filename}?signature=mock"
+> ```
+> Esto causa un error 500 cuando el frontend intenta hacer PUT a esa URL inexistente.
+>
+> ## Objetivo
+> Reemplazar la URL mock por una **signed upload URL real** de Supabase Storage usando el método `create_signed_upload_url()`.
+>
+> ## Instrucciones técnicas
+> 1. **Service Layer**: Añadir método `generate_presigned_url()` a `UploadService` que llame a `supabase.storage.from_(STORAGE_BUCKET_RAW_UPLOADS).create_signed_upload_url(file_key)`
+> 2. **Endpoint**: Refactorizar `POST /api/upload/url` para usar el service en lugar de la URL mock
+> 3. **Tests**: Actualizar `test_upload_flow.py` para validar que la URL contiene `supabase.co`
+> 4. **Verificación**: Tests + curl + browser
+>
+> ## Restricciones
+> - Seguir Clean Architecture (API → Service → Constants)
+> - No modificar frontend (ya compatible con PUT + Content-Type)
+> - Mantener 7/7 tests backend + 18/18 tests frontend
+
+**Resumen de la Respuesta/Acción:**
+Implementación exitosa del reemplazo de URL mock por signed upload URL real de Supabase Storage.
+
+**Archivos Modificados:**
+
+1. **`src/backend/services/upload_service.py`** — Nuevo método `generate_presigned_url()`:
+   ```python
+   def generate_presigned_url(self, file_id: str, filename: str) -> Tuple[str, str]:
+       file_key = f"uploads/{file_id}/{filename}"
+       result = self.supabase.storage.from_(STORAGE_BUCKET_RAW_UPLOADS).create_signed_upload_url(file_key)
+       return result["signed_url"], file_key
+   ```
+
+2. **`src/backend/api/upload.py`** — Endpoint refactorizado:
+   - Eliminada URL mock de S3
+   - Añadido `UploadService.generate_presigned_url()` con try/except → HTTPException 500
+   - Sigue patrón Clean Architecture del endpoint `/confirm`
+
+3. **`tests/integration/test_upload_flow.py`** — Assertion actualizado:
+   - Antes: `assert "https://" in data["upload_url"]`
+   - Después: `assert "supabase.co" in data["upload_url"]`
+
+**Verificación:**
+```bash
+$ make test
+# ✅ Backend: 7/7 passed
+$ make test-front
+# ✅ Frontend: 18/18 passed
+```
+
+**Resultado:** Upload flow funcional end-to-end. Frontend puede subir archivos .3dm directamente a Supabase Storage via signed URL.
+---
+

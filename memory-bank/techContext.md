@@ -22,7 +22,7 @@
 
 ### Testing
 - **pytest** 8.0.0 - Testing framework
-- **pytest-asyncio** 0.23.4 - Async test support
+- **pytest-asyncio** 0.23.5 - Async test support
 - **httpx** 0.27.2 - HTTP client for testing API endpoints
 
 ## Frontend Stack
@@ -49,7 +49,7 @@
 ## Infrastructure
 ### Containerization
 - **Docker** - Containerization platform
-- **Docker Compose** 3.8 - Multi-container orchestration
+- **Docker Compose** v2 - Multi-container orchestration (no `version` key)
 
 ### Container Images
 - **Backend**: `python:3.11-slim` (multi-stage: base/dev/prod)
