@@ -90,7 +90,7 @@ const mockAIRoutes = async (page: Page) => {
       });
     } else if (method === 'PUT') {
       // Determine what's being updated based on URL
-      let response = {
+      let response: any = {
         id: 'test-composition-id',
         text: 'Updated text',
         musicReference: null,

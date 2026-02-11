@@ -103,7 +103,7 @@ const mockMediaAPIs = async (page: Page) => {
         }),
       });
     } else if (method === 'PUT') {
-      let response = {
+      let response: any = {
         id: 'test-composition-id',
         text: 'Test meditation',
         musicReference: null,
