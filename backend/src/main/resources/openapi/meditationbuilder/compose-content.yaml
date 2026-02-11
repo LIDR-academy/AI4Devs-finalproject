@@ -1,14 +1,4 @@
 openapi: 3.0.3
-components:
-  parameters:
-    CompositionId:
-      name: compositionId
-      in: path
-      required: true
-      description: Unique identifier for the meditation composition
-      schema:
-        type: string
-        format: uuid
 info:
   title: Meditation Builder - Compose Content API
   description: |
@@ -53,6 +43,12 @@ paths:
         Creates an empty composition with mandatory text field.
         Maps to Scenario 1: "Access Meditation Builder and see text field"
       operationId: createComposition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompositionRequest'
       responses:
         '201':
           description: Composition created successfully
@@ -353,10 +349,19 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-
+components:
+  parameters:
+    CompositionId:
+      name: compositionId
+      in: path
+      required: true
+      description: Unique identifier for the meditation composition
+      schema:
+        type: string
+        format: uuid
 
   schemas:
-        # GenerateImageRequest schema removed; endpoint now accepts plain string (text/plain)
+    # GenerateImageRequest schema removed; endpoint now accepts plain string (text/plain)
     CompositionResponse:
       type: object
       required:
@@ -398,6 +403,19 @@ paths:
         outputType: "PODCAST"
         createdAt: "2026-01-28T20:00:00Z"
         updatedAt: "2026-01-28T20:05:00Z"
+
+    CreateCompositionRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: Initial meditation text content
+          minLength: 1
+          maxLength: 10000
+      example:
+        text: "Start your meditation journey"
 
     UpdateTextRequest:
       type: object
