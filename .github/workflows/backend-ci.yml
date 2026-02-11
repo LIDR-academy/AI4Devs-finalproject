@@ -1,0 +1,232 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, 'feature/*', '**-compose-meditation-content' ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  # Gate 1: BDD Tests
+  bdd-tests:
+    name: Gate 1 - BDD Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Run BDD Tests (Cucumber)
+        run: mvn test -Dtest="**/*BDD*,**/*Cucumber*,**/*Feature*" -DfailIfNoTests=false
+      
+      - name: Publish BDD Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: BDD Test Results
+          path: backend/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
+  # Gate 2: Unit Tests
+  unit-tests:
+    name: Gate 2 - Unit Tests
+    runs-on: ubuntu-latest
+    needs: bdd-tests
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Run Unit Tests (Domain + Application)
+        run: mvn test -Dtest="com.hexagonal.meditationbuilder.domain.**,com.hexagonal.meditationbuilder.application.**" -DfailIfNoTests=false
+      
+      - name: Publish Unit Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Results
+          path: backend/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
+  # Gate 3: Infrastructure Tests
+  infrastructure-tests:
+    name: Gate 3 - Infrastructure Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Run Infrastructure Tests
+        run: mvn test -Dtest="com.hexagonal.meditationbuilder.infrastructure.**" -DfailIfNoTests=false
+      
+      - name: Publish Infrastructure Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Infrastructure Test Results
+          path: backend/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
+  # Gate 4: Contract Tests
+  contract-tests:
+    name: Gate 4 - Contract Tests (OpenAPI)
+    runs-on: ubuntu-latest
+    needs: infrastructure-tests
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Run Contract Tests
+        run: mvn test -Dtest="**/*Contract*" -DfailIfNoTests=false
+      
+      - name: Publish Contract Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Contract Test Results
+          path: backend/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
+  # Gate 5: E2E Tests
+  e2e-tests:
+    name: Gate 5 - E2E Tests
+    runs-on: ubuntu-latest
+    needs: contract-tests
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Run E2E Tests
+        run: mvn test -Dtest="**/*E2E*" -DfailIfNoTests=false
+      
+      - name: Publish E2E Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: E2E Test Results
+          path: backend/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
+  # Gate 6: Build
+  build:
+    name: Gate 6 - Build
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: backend/target/*.jar
+          retention-days: 7
+
+  # Summary job - reports overall status
+  backend-ci-summary:
+    name: Backend CI Summary
+    runs-on: ubuntu-latest
+    needs: [bdd-tests, unit-tests, infrastructure-tests, contract-tests, e2e-tests, build]
+    if: always()
+    
+    steps:
+      - name: Check all gates passed
+        run: |
+          echo "=== Backend CI Pipeline Results ==="
+          echo "BDD Tests: ${{ needs.bdd-tests.result }}"
+          echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "Infrastructure Tests: ${{ needs.infrastructure-tests.result }}"
+          echo "Contract Tests: ${{ needs.contract-tests.result }}"
+          echo "E2E Tests: ${{ needs.e2e-tests.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          
+          if [ "${{ needs.bdd-tests.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.infrastructure-tests.result }}" != "success" ] || \
+             [ "${{ needs.contract-tests.result }}" != "success" ] || \
+             [ "${{ needs.e2e-tests.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ One or more gates failed. Pipeline blocked."
+            exit 1
+          fi
+          
+          echo "✅ All gates passed successfully!"
