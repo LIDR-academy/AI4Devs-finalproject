@@ -20,13 +20,12 @@ def test_generate_presigned_url_happy_path():
     response = client.post("/api/upload/url", json=payload)
 
     # 3. Assertions
-    # NOTE: En fase ROJA esperamos que esto falle con 404, pero el test define QUÉ esperamos en VERDE.
     assert response.status_code == 200
-    
+
     data = response.json()
     assert "upload_url" in data
     assert "file_id" in data
-    assert "https://" in data["upload_url"]  # Debe ser una URL válida (aunque sea mock en test)
+    assert "supabase.co" in data["upload_url"]  # Must be a real Supabase Storage signed URL
     assert data["filename"] == payload["filename"]
 
 def test_generate_presigned_url_invalid_extension():

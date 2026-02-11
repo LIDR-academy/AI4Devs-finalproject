@@ -33,6 +33,21 @@ class UploadService:
         """
         self.supabase = supabase_client
     
+    def generate_presigned_url(self, file_id: str, filename: str) -> Tuple[str, str]:
+        """
+        Generate a signed upload URL for Supabase Storage.
+
+        Args:
+            file_id: UUID identifying the upload
+            filename: Original filename
+
+        Returns:
+            Tuple of (signed_url, file_key)
+        """
+        file_key = f"uploads/{file_id}/{filename}"
+        result = self.supabase.storage.from_(STORAGE_BUCKET_RAW_UPLOADS).create_signed_upload_url(file_key)
+        return result["signed_url"], file_key
+
     def verify_file_exists_in_storage(self, file_key: str) -> bool:
         """
         Verify that a file exists in Supabase Storage.

@@ -8,14 +8,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run Commands
 
-All development runs through Docker. The Makefile wraps docker-compose commands:
+All development runs through Docker. The Makefile wraps `docker compose` commands:
 
 ```bash
 # Setup
-cp .env.example .env              # Then fill in SUPABASE_URL and SUPABASE_KEY
+cp .env.example .env              # Then fill in SUPABASE_URL, SUPABASE_KEY, SUPABASE_DATABASE_URL
 make build                        # Build Docker images
 make up                           # Start database (postgres:15)
 make init-db                      # Initialize Supabase buckets & policies
+make setup-events                 # Create events table (T-004-BACK)
 
 # Frontend (React/Vite on :5173)
 make front-dev                    # Start dev server
@@ -24,6 +25,7 @@ make front-shell                  # Shell into frontend container
 
 # Backend (FastAPI on :8000)
 make shell                        # Shell into backend container
+make up-all                       # Start all services (db + backend + frontend)
 
 # Teardown
 make down                         # Stop services (keep volumes)
@@ -46,20 +48,20 @@ make test-front                   # Run once
 
 To run a single backend test file:
 ```bash
-docker-compose run --rm backend pytest tests/integration/test_storage_config.py -v
+docker compose run --rm backend pytest tests/integration/test_storage_config.py -v
 ```
 
 To run a single frontend test:
 ```bash
-docker-compose run --rm frontend npx vitest run src/components/FileUploader.test.tsx
+docker compose run --rm frontend bash -c "npm install && npx vitest run src/components/FileUploader.test.tsx"
 ```
 
 ## Architecture
 
 **Monorepo** with four modules under `src/`:
 
-- **`src/backend/`** — Python 3.11, FastAPI. Entry point: `main.py`. Routes in `api/`, Pydantic schemas in `schemas.py`, settings via pydantic-settings in `config.py`. Uses Supabase client for storage and auth.
-- **`src/frontend/`** — React 18, TypeScript (strict), Vite. Components in `src/components/`, API service layer in `src/services/`, shared types in `src/types/`.
+- **`src/backend/`** — Python 3.11, FastAPI. Entry point: `main.py`. Routes in `api/`, business logic in `services/`, Pydantic schemas in `schemas.py`, centralized constants in `constants.py`, settings via pydantic-settings in `config.py`. Supabase client singleton in `infra/supabase_client.py`.
+- **`src/frontend/`** — React 18, TypeScript (strict), Vite. Components in `src/components/` with co-located `.constants.ts` files, API service layer in `src/services/`, shared types in `src/types/`.
 - **`src/agent/`** — LangGraph AI agent (planned, not yet implemented).
 - **`src/shared/`** — Shared utilities (planned).
 
@@ -93,6 +95,7 @@ This project uses a **Memory Bank** (`memory-bank/`) as single source of truth f
 Required in `.env` (see `.env.example`):
 - `SUPABASE_URL` — Supabase project URL
 - `SUPABASE_KEY` — Supabase service role key
+- `SUPABASE_DATABASE_URL` — Direct PostgreSQL connection to Supabase (used by `setup-events`)
 - `DATABASE_URL` — Overridden in Docker to `postgresql://user:password@db:5432/sfpm_db`
 
 ## Documentation
