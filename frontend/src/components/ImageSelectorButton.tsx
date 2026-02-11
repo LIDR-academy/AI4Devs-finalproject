@@ -2,9 +2,10 @@ import React from "react";
 
 interface ImageSelectorButtonProps {
   onImageSelected: (file: File) => void;
+  disabled?: boolean;
 }
 
-const ImageSelectorButton: React.FC<ImageSelectorButtonProps> = ({ onImageSelected }) => {
+const ImageSelectorButton: React.FC<ImageSelectorButtonProps> = ({ onImageSelected, disabled = false }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleButtonClick = () => {
@@ -24,6 +25,7 @@ const ImageSelectorButton: React.FC<ImageSelectorButtonProps> = ({ onImageSelect
         type="button"
         className="btn btn--orange"
         onClick={handleButtonClick}
+        disabled={disabled}
       >
         📁 Select image
       </button>

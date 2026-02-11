@@ -2,12 +2,13 @@ import React, { useRef } from 'react';
 
 interface MusicSelectorButtonProps {
   onAudioSelected: (file: File) => void;
+  disabled?: boolean;
 }
 
 const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'];
 
-export function MusicSelectorButton({ onAudioSelected }: MusicSelectorButtonProps) {
+export function MusicSelectorButton({ onAudioSelected, disabled = false }: MusicSelectorButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +53,7 @@ export function MusicSelectorButton({ onAudioSelected }: MusicSelectorButtonProp
         onClick={handleButtonClick}
         className="music-selector-button"
         type="button"
+        disabled={disabled}
         data-testid="music-selector-button"
         style={{
           backgroundColor: '#9b59b6',
@@ -59,7 +61,8 @@ export function MusicSelectorButton({ onAudioSelected }: MusicSelectorButtonProp
           border: 'none',
           padding: '8px 16px',
           borderRadius: '4px',
-          cursor: 'pointer',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
           display: 'flex',
           alignItems: 'center',
           gap: '8px',

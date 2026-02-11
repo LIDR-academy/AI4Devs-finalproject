@@ -12,7 +12,6 @@ import ImageSelectorButton from '@/components/ImageSelectorButton';
 import MusicSelectorButton from '@/components/MusicSelectorButton';
 import LocalMusicItem from '@/components/LocalMusicItem';
 import {
-  useCreateComposition,
   useUpdateText,
   useSelectMusic,
   useRemoveImage,
@@ -41,13 +40,6 @@ export function MeditationBuilderPage() {
   const selectedImageId = useSelectedImageId();
   const generationError = useGenerationError();
 
-  const setCompositionId = useComposerStore((s) => s.setCompositionId);
-  const setLocalText = useComposerStore((s) => s.setLocalText);
-  const setSelectedMusic = useComposerStore((s) => s.setSelectedMusic);
-  const setSelectedImage = useComposerStore((s) => s.setSelectedImage);
-
-
-  const createComposition = useCreateComposition();
   const updateText = useUpdateText(compositionId);
   const selectMusic = useSelectMusic(compositionId);
   const removeImage = useRemoveImage(compositionId);
