@@ -3107,3 +3107,61 @@ $ make test-front
 **Resultado:** Upload flow funcional end-to-end. Frontend puede subir archivos .3dm directamente a Supabase Storage via signed URL.
 ---
 
+## 062 - Codebase Review & Sanity Check (Auditoría #2)
+**Fecha:** 2026-02-11 06:00
+
+**Prompt Original:**
+> # Prompt: Codebase Review & Sanity Check
+>
+> **Role:** Actúa como **Code Quality Auditor** especializado en el stack de SF-PM (FastAPI + React/TypeScript + Supabase + Docker).
+>
+> **Protocolo:** Lee memory-bank, explora estructura real, ejecuta 10 checks (Contract Alignment, Clean Architecture, Frontend Architecture, Dead Code, Dependency Health, Docker/Infra Drift, Memory Bank Consistency, Security Basics, Documentation Staleness, Test Health). Marca cada check con ✅ o ❌ y propón solución concreta.
+>
+> **Checks ejecutados:**
+> 1. Contract Alignment (Pydantic ↔ TypeScript)
+> 2. Clean Architecture (Backend)
+> 3. Frontend Architecture
+> 4. Dead Code & Orphaned Files
+> 5. Dependency Health
+> 6. Docker & Infrastructure Drift
+> 7. Memory Bank Consistency
+> 8. Security Basics
+> 9. Documentation Staleness
+> 10. Test Health
+
+**Resumen de la Respuesta/Acción:**
+Auditoría completa con resultado 5/10 checks passing. Remediación ejecutada inmediatamente.
+
+**Problemas Detectados y Corregidos:**
+
+1. **Contract Alignment** ❌ → ✅ CORREGIDO
+   - Faltaban interfaces `ConfirmUploadRequest` y `ConfirmUploadResponse` en TypeScript
+   - Añadidas en `src/frontend/src/types/upload.ts`
+   - Añadida función `confirmUpload()` en `src/frontend/src/services/upload.service.ts`
+
+2. **Clean Architecture** ❌ → ✅ CORREGIDO
+   - Path `"uploads/"` hardcodeado en `upload_service.py`
+   - Extraído a `STORAGE_UPLOAD_PATH_PREFIX` en `constants.py`
+
+3. **Dependency Health** ❌ → ✅ CORREGIDO
+   - `httpx` estaba en `requirements.txt` (producción) pero solo se usa en tests
+   - Movido a `requirements-dev.txt`
+
+4. **Memory Bank Consistency** ❌ → ✅ CORREGIDO
+   - `activeContext.md` y `progress.md` no reflejaban: presigned URL real, fix de Vite port, fix de proxy Docker
+   - Añadidas 3 entradas nuevas en `progress.md`, actualizado checkpoint en `activeContext.md`
+
+5. **Dead Code** ⚠️ PARCIAL
+   - `src/backend/tests/` directorio vacío — sin permisos para eliminar (requiere acción manual)
+   - `config.py` no importado — conservado para uso futuro
+
+**Checks que pasaron sin problemas:**
+- ✅ Check 3: Frontend Architecture (service layer, tipos, cobertura tests)
+- ✅ Check 6: Docker & Infrastructure (healthchecks, multi-stage, .dockerignore)
+- ✅ Check 8: Security Basics (.env gitignored, sin secrets hardcodeados, pydantic-settings)
+- ✅ Check 9: Documentation Staleness (CLAUDE.md alineado, backlog 95% preciso)
+- ✅ Check 10: Test Health (7/7 backend + 18/18 frontend, imports válidos)
+
+**Score post-remediación:** ~8/10
+---
+

@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Focus
-✅ **SPRINT 3: IN PROGRESS** - T-001-FRONT (UploadZone Component) completado con TDD completo (RED → GREEN → REFACTOR) ✅. Siguiente: T-001-BACK (Metadata Extraction con rhino3dm).
+✅ **SPRINT 3: IN PROGRESS** - T-001-FRONT (UploadZone Component) completado con TDD completo (RED → GREEN → REFACTOR) ✅. Upload presigned URL real implementado (Supabase Storage). Siguiente: T-001-BACK (Metadata Extraction con rhino3dm).
 
 ## Sprint Status
 ### ✅ Sprint 1 - CLOSED
@@ -50,22 +50,28 @@
   - Aplicar Clean Architecture (API → Service → Constants)
 - [ ] End-to-end upload flow testing (Frontend → Backend → Storage → Webhook → Processing)
 
-## Current State Checkpoint (Post-T-001-FRONT - 2026-02-10)
-- **Backend**: 
-  - Upload endpoint operational (`:8000/api/upload/url`)
+## Current State Checkpoint (Post-Audit - 2026-02-11)
+- **Backend**:
+  - Upload endpoint returns **real Supabase Storage signed URL** (`:8000/api/upload/url`)
   - Confirm webhook operational (`:8000/api/upload/confirm`)
   - Clean Architecture implemented (API → Service → Constants)
   - Events table created and operational
 - **Storage**: Supabase bucket `raw-uploads` configured and validated
-- **Frontend**: 
+- **Frontend**:
   - FileUploader component functional (4/4 tests passing)
-  - **UploadZone component functional (14/14 tests passing)** ✅ NEW
+  - **UploadZone component functional (14/14 tests passing)** ✅
     - react-dropzone@14.2.3 integrated
     - .3dm validation + 500MB size limit
     - Visual drag & drop states
+  - Vite proxy fixed: `http://backend:8000` (Docker DNS)
 - **Infrastructure**:
   - Docker hardened (healthcheck, localhost-only PostgreSQL port)
   - Requirements locked (48 dependencies in requirements-lock.txt)
+  - Vite port fixed: 5173 (matches docker-compose mapping)
 - **Tests**: Backend 7/7 ✅ | Frontend 18/18 ✅ (4 FileUploader + 14 UploadZone)
 - **Documentation**: Memory Bank synchronized, techContext.md expanded
-- **Audit Score**: 81/100 (B+ / Good) - Codebase ready for production development
+- **Recent Fixes (2026-02-11)**:
+  - Replaced mock S3 URL with real Supabase Storage `create_signed_upload_url()`
+  - Fixed Vite dev server port (3000→5173)
+  - Fixed Vite proxy target (localhost→backend for Docker DNS)
+  - Codebase audit: 5/10 checks passing, remediation in progress

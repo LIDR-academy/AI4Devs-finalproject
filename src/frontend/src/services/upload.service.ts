@@ -8,6 +8,8 @@ import axios from 'axios';
 import type {
   PresignedUrlRequest,
   PresignedUrlResponse,
+  ConfirmUploadRequest,
+  ConfirmUploadResponse,
   UploadProgress,
 } from '../types/upload';
 
@@ -15,6 +17,11 @@ import type {
  * API endpoint for requesting presigned upload URLs
  */
 const UPLOAD_URL_ENDPOINT = '/api/upload/url';
+
+/**
+ * API endpoint for confirming a completed upload
+ */
+const CONFIRM_UPLOAD_ENDPOINT = '/api/upload/confirm';
 
 /**
  * Content type for .3dm Rhino files
@@ -94,6 +101,32 @@ export async function uploadToStorage(
       }
     },
   });
+}
+
+/**
+ * Confirm a completed upload with the backend
+ *
+ * @param fileId - UUID returned from getPresignedUrl
+ * @param fileKey - Storage path where file was uploaded
+ * @returns Promise resolving to confirmation response
+ *
+ * @throws {Error} If backend confirmation fails
+ */
+export async function confirmUpload(
+  fileId: string,
+  fileKey: string
+): Promise<ConfirmUploadResponse> {
+  const payload: ConfirmUploadRequest = {
+    file_id: fileId,
+    file_key: fileKey,
+  };
+
+  const response = await axios.post<ConfirmUploadResponse>(
+    CONFIRM_UPLOAD_ENDPOINT,
+    payload
+  );
+
+  return response.data;
 }
 
 /**

@@ -11,6 +11,7 @@ from supabase import Client
 
 from constants import (
     STORAGE_BUCKET_RAW_UPLOADS,
+    STORAGE_UPLOAD_PATH_PREFIX,
     EVENT_TYPE_UPLOAD_CONFIRMED,
     TABLE_EVENTS
 )
@@ -44,7 +45,7 @@ class UploadService:
         Returns:
             Tuple of (signed_url, file_key)
         """
-        file_key = f"uploads/{file_id}/{filename}"
+        file_key = f"{STORAGE_UPLOAD_PATH_PREFIX}/{file_id}/{filename}"
         result = self.supabase.storage.from_(STORAGE_BUCKET_RAW_UPLOADS).create_signed_upload_url(file_key)
         return result["signed_url"], file_key
 
