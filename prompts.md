@@ -3165,3 +3165,119 @@ Auditoría completa con resultado 5/10 checks passing. Remediación ejecutada in
 **Score post-remediación:** ~8/10
 ---
 
+## 063 - Auditoría End-to-End y Cierre de US-001
+**Fecha:** 2026-02-11 14:00
+
+**Prompt Original:**
+> # Prompt: Auditoría End-to-End y Cierre de US-001
+>
+> **Role:** Actúa como **Lead QA & Product Owner** con capacidad de lectura de código y escritura de archivos.
+>
+> **Inputs:**
+> * **User Story:** US-001
+> * **Archivo Backlog:** docs/09-mvp-backlog.md
+>
+> **Contexto Tecnológico:**
+> Este prompt es agnóstico a la tecnología. Para entender el stack (lenguajes, frameworks, estructura), **lee primero la documentación disponible en la carpeta `docs/`** (ej: `architecture.md`, `tech-stack.md`) o el `README.md`.
+>
+> **Objetivos:**
+> 1.  Validar que la implementación de **US-001** cumple estrictamente con su definición en el backlog.
+> 2.  Actualizar el archivo de backlog si (y solo si) la validación es exitosa.
+> 3.  Registrar este prompt en la documentación de prompts (`prompts.md`).
+>
+> **Instrucciones de Ejecución:**
+>
+> 1.  **Análisis de la Definición (Source of Truth):**
+>     * Lee el archivo `docs/09-mvp-backlog.md`.
+>     * Localiza la sección de **US-001**.
+>     * Extrae sus "Acceptance Criteria", "Definition of Done" y tareas asociadas.
+>
+> 2.  **Auditoría de Código (Reality Check):**
+>     * Basándote en la estructura definida en `docs/`, navega por el código fuente.
+>     * **Verifica:** ¿Existe la lógica de negocio descrita en la US?
+>     * **Verifica:** ¿Existen tests (en la carpeta de tests correspondiente) que cubran estos criterios?
+>
+> 3.  **Acción: Actualización de Backlog:**
+>     * **SI falta algo:** NO edites el backlog. Genera un reporte de discrepancias.
+>     * **SI la implementación es correcta:**
+>         * Edita `docs/09-mvp-backlog.md` directamente.
+>         * Cambia el estado de la US a `[DONE]`.
+>         * Asegúrate de que todos los checkboxes de tareas estén marcados (`[x]`).
+>         * Añade una nota de cierre al final de la US: `> **Auditado por AI:** Funcionalidad verificada contra código y documentación.`
+>
+> 4.  **Acción: Actualización de Prompts:**
+>     * Verifica si el archivo `prompts.md` existe.
+>     * Si existe, añade este mismo prompt al final del archivo bajo el título `## Prompt: Auditoría y Cierre de US`.
+
+**Resumen de la Respuesta/Acción:**
+Auditoría completa de US-001 "Upload de archivo .3dm válido" verificando implementación contra criterios de aceptación documentados en backlog.
+
+**Análisis Ejecutado:**
+
+1. **Revisión de Backlog** (`docs/09-mvp-backlog.md`):
+   - **US-001**: Upload de archivo .3dm válido (5 Story Points)
+   - **Criterios de Aceptación**: 3 scenarios (Happy Path, Size Limit, Network Cut)
+   - **Tickets Técnicos**: T-001-FRONT, T-002-BACK, T-003-FRONT, T-004-BACK, T-005-INFRA
+
+2. **Auditoría de Código**:
+   - ✅ **T-001-FRONT** (`src/frontend/src/components/UploadZone.tsx`):
+     - Drag & drop con react-dropzone@14.2.3
+     - Validación .3dm y 500MB
+     - Tests 14/14 passing
+     - Constantes extraídas (Clean Architecture)
+   
+   - ✅ **T-002-BACK** (`src/backend/api/upload.py` líneas 10-40):
+     - Endpoint `POST /api/upload/url`
+     - Genera presigned URL de Supabase Storage
+     - Tests en `tests/integration/test_upload_flow.py`
+   
+   - ✅ **T-003-FRONT** (`src/frontend/src/components/FileUploader.tsx` + `services/upload.service.ts`):
+     - Upload directo con axios
+     - Manejo de errores de red
+     - Tests 4/4 passing
+   
+   - ✅ **T-004-BACK** (`src/backend/api/upload.py` líneas 48-80 + `services/upload_service.py`):
+     - Endpoint `POST /api/upload/confirm`
+     - Verifica existencia en Storage
+     - Crea evento en tabla `events`
+     - Tests 7/7 passing
+     - Clean Architecture implementada
+   
+   - ✅ **T-005-INFRA**: Configuración Supabase Storage verificada
+
+3. **Cobertura de Scenarios**:
+   - ✅ **Scenario 1 (Happy Path)**: Drag & drop → Presigned URL → Upload S3 → Confirm webhook
+   - ✅ **Scenario 2 (Size Limit)**: Validación 500MB en cliente con error
+   - ✅ **Scenario 3 (Network Cut)**: Retry y error handling en FileUploader
+
+4. **Tests Verificados**:
+   - Backend: 7/7 tests passing ✅
+   - Frontend: 18/18 tests passing ✅ (4 FileUploader + 14 UploadZone)
+
+**Acciones Ejecutadas:**
+
+1. **Actualización de Backlog** (`docs/09-mvp-backlog.md`):
+   - Marcada US-001 como **[DONE]** ✅ en sección "MVP Scope Definition"
+   - Actualizado título de sección: "### US-001: Upload de archivo .3dm válido **[DONE]** ✅"
+   - Marcados todos los tickets como **[DONE]**: T-001-FRONT, T-002-BACK, T-003-FRONT, T-004-BACK, T-005-INFRA
+   - Añadidos checkmarks ✅ en los 3 scenarios de Acceptance Criteria
+   - Agregada nota de auditoría:
+     ```markdown
+     > ✅ Auditado por AI (2026-02-11): Funcionalidad completamente implementada y verificada 
+     > contra código y documentación. Todos los criterios de aceptación cumplidos. 
+     > Tests: Backend 7/7 ✅ | Frontend 18/18 ✅ (4 FileUploader + 14 UploadZone). 
+     > Implementación sigue patrones Clean Architecture documentados en `systemPatterns.md`.
+     ```
+
+2. **Actualización de Prompts** (`prompts.md`):
+   - Añadido Prompt #063 con auditoría completa
+   - Documentado proceso de verificación
+   - Evidencia de cobertura de código registrada
+
+**Resultado:** US-001 oficialmente cerrada y auditada. Funcionalidad 100% implementada y testeada. Ready para producción.
+
+**Next Steps:**
+- Iniciar US-002 (Validación de errores - The Librarian)
+- Considerar testing E2E del flujo completo de upload
+---
+

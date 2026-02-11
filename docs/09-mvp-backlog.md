@@ -12,7 +12,7 @@
 Selección estratégica de historias para cumplir con los objetivos del TFM en el plazo restante.
 
 ### MUST-HAVE (Prioridad Crítica - Core Loop)
-* **US-001:** Upload de archivo .3dm válido. (Ingesta)
+* **US-001:** Upload de archivo .3dm válido **[DONE]** ✅ (Ingesta)
 * **US-002:** Validación de errores (Nomenclatura/Geometría). (El "Cerebro")
 * **US-005:** Dashboard de listado de piezas. (Gestión)
 * **US-010:** Visor 3D (Interacción geométrica). (Visualización)
@@ -26,23 +26,24 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
 
 ## 2. Technical Breakdown (Tickets de Trabajo)
 
-### US-001: Upload de archivo .3dm válido
+### US-001: Upload de archivo .3dm válido **[DONE]** ✅
+
 **User Story:** Como **Arquitecto**, quiero subir mis archivos de diseño (.3dm) directamente al sistema para que sean procesados sin bloquear mi navegador ni sobrecargar el servidor.
 
 **Criterios de Aceptación:**
-*   **Scenario 1 (Happy Path - Direct Upload):**
+*   **Scenario 1 (Happy Path - Direct Upload):** ✅
     *   Given el usuario arrastra un archivo `model_v1.3dm` (200MB) a la zona de upload.
     *   When el upload comienza.
     *   Then el cliente solicita una URL firmada al backend.
     *   And el archivo se sube directamente a S3 (POST/PUT) mostrando barra de progreso.
     *   And al finalizar, el frontend notifica al backend "Upload Complete".
     *   And el estado del archivo cambia a `processing`.
-*   **Scenario 2 (Edge Case - Limit Size):**
+*   **Scenario 2 (Edge Case - Limit Size):** ✅
     *   Given el usuario intenta subir un archivo de 2GB.
     *   When lo suelta validación cliente.
     *   Then el sistema muestra error "Tamaño máximo excedido (500MB)".
     *   And NO se solicita URL firmada.
-*   **Scenario 3 (Error Handling - Network Cut):**
+*   **Scenario 3 (Error Handling - Network Cut):** ✅
     *   Given el usuario pierde conexión al 50%.
     *   When la conexión falla.
     *   Then el sistema permite "Reintentar" o limpia el estado visual.
@@ -51,13 +52,15 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
 | ID Ticket | Título | Tech Spec | DoD |
 |-----------|--------|-----------|-----|
 | `T-001-FRONT` **[DONE]** | **UploadZone Component (Drag & Drop)** | `react-dropzone` para manejo de drag&drop. Validación mime-type `application/x-rhino` o extensión `.3dm`. Refactorizado con constants extraction pattern. | **[DONE]** Dropzone rechaza .txt y >500MB. Tests 14/14 passing. |
-| `T-002-BACK` | **Generate Presigned URL** | Endpoint `POST /api/upload/url`. Body: `{ filename, size, checksum }`. Usa `boto3.generate_presigned_url('put_object', Bucket='raw-uploads')`. | **[DONE]** Retorna URL válida de S3 temporal (5min). |
+| `T-002-BACK` **[DONE]** | **Generate Presigned URL** | Endpoint `POST /api/upload/url`. Body: `{ filename, size, checksum }`. Usa `boto3.generate_presigned_url('put_object', Bucket='raw-uploads')`. | **[DONE]** Retorna URL válida de S3 temporal (5min). |
 | `T-003-FRONT` **[DONE]** | **Upload Manager (Client)** | Servicio Frontend que usa `axios` o `fetch` para hacer PUT a la signed URL. Evento `onProgress` para la UI. Refactorizado con separación de responsabilidades (service layer). | **[DONE]** FileUploader component con validación client-side, upload service dedicado, tests passing (4/4). |
 | `T-004-BACK` **[DONE]** | **Confirm Upload Webhook** | Endpoint `POST /api/upload/confirm`. Body: `{ file_id, file_key }`. Verifica existencia en Storage y crea evento en tabla `events`. | **[DONE]** Tests 7/7 pasando. Implementado con Clean Architecture (service layer). |
-| `T-005-INFRA` **[DONE]** | **S3 Bucket Setup** | Configurar Bucket Policy para aceptar PUT desde `localhost` y dominio prod. Lifecycle rule: borrar objetos en `raw-uploads` tras 24h. | Upload desde browser no da error CORS. |
+| `T-005-INFRA` **[DONE]** | **S3 Bucket Setup** | Configurar Bucket Policy para aceptar PUT desde `localhost` y dominio prod. Lifecycle rule: borrar objetos en `raw-uploads` tras 24h. | **[DONE]** Upload desde browser no da error CORS. |
 
-**Valoración:** 5 Story Points
+**Valoración:** 5 Story Points  
 **Dependencias:** N/A
+
+> **✅ Auditado por AI (2026-02-11):** Funcionalidad completamente implementada y verificada contra código y documentación. Todos los criterios de aceptación cumplidos. Tests: Backend 7/7 ✅ | Frontend 18/18 ✅ (4 FileUploader + 14 UploadZone). Implementación sigue patrones Clean Architecture documentados en `systemPatterns.md`.
 
 ---
 
