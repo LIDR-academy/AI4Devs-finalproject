@@ -12,12 +12,12 @@ import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
  * Cucumber BDD Test Runner
  *
  * This runner executes all BDD scenarios in the compose-content.feature file.
- * Expected state: YELLOW (pending) until step definitions are implemented.
+ * Now includes Spring Boot context for integration testing.
  */
 @Suite
 @IncludeEngines("cucumber")
 @SelectClasspathResource("meditationbuilder")
-@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.hexagonal.meditationbuilder.bdd.steps")
+@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.hexagonal.meditationbuilder.bdd")
 @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, html:target/cucumber-reports/cucumber.html, json:target/cucumber-reports/cucumber.json")
 public class ComposeContentBDDTest {
 }

@@ -7,32 +7,41 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
-# OpenAI - Mock configuration for tests
-ai:
-  openai:
-    base-url: http://localhost:${wiremock.server.port:8089}
-    api-key: test-api-key-for-integration-tests
-    text:
-      connect-timeout-ms: 5000
-      read-timeout-ms: 5000
-    image:
-      connect-timeout-ms: 5000
-      read-timeout-ms: 5000
+# Media preview configuration
+media:
+  preview:
+    base-url: http://localhost:8081/api/media/preview
 
-# Media Catalog - Mock configuration for tests
+# OpenAI - Will be overridden by @DynamicPropertySource in tests
+openai:
+  base-url: http://localhost:8089
+  api-key: test-api-key-for-integration-tests
+  text:
+    model: gpt-4
+  image:
+    model: dall-e-3
+
+# AI properties for prompt templates
+ai:
+  text:
+    system-prompt: "You are a meditation script writer."
+  image:
+    style-prompt: "peaceful meditation scene"
+
+# Media Catalog - Will be overridden by @DynamicPropertySource in tests
 media-catalog:
-  base-url: http://localhost:${wiremock.server.port:8089}
+  base-url: http://localhost:8089
   connect-timeout-ms: 5000
-  read-timeout-ms: 5000
+  read-timeout-ms: 10000
 
 # Retry - Faster retries for tests
 retry:
   max-attempts: 2
-  initial-interval-ms: 100
+  initial-interval: 100ms
   multiplier: 1.5
-  max-interval-ms: 500
+  max-interval: 500ms
 
-# Test logging
+# Logging configuration
 logging:
   level:
     root: WARN
