@@ -3279,5 +3279,62 @@ Auditoría completa de US-001 "Upload de archivo .3dm válido" verificando imple
 **Next Steps:**
 - Iniciar US-002 (Validación de errores - The Librarian)
 - Considerar testing E2E del flujo completo de upload
+
+---
+
+## 064 - Análisis y Enriquecimiento Pre-Desarrollo de US-002
+**Fecha:** 2026-02-11 14:30
+
+**Prompt Original:**
+> # Prompt: Análisis y Enriquecimiento de US-002
+> 
+> **Role:** Actúa como **Senior Product Owner** y **Software Architect**.
+> 
+> **Inputs:**
+> * **Target US:** US-002
+> * **Backlog File:** docs/09-mvp-backlog.md
+> 
+> **Objetivo:**
+> Analizar la User Story seleccionada antes de comenzar el desarrollo, identificar lagunas en la definición y proponer mejoras técnicas o funcionales para asegurar una implementación robusta ("Do It Right First Time").
+> 
+> **Solicitud Adicional del Usuario:**
+> "Quiero que el agente revise también el número de user strings que tiene cada objeto como metadata. Esto no sé si está contemplado en algún ticket"
+
+**Análisis Ejecutado:**
+1. **Gap Analysis Crítico**: Identificados 8 gaps en US-002 (infraestructura worker, triggers, DB schema, user strings, notificaciones, error handling, test fixtures, observability)
+2. **Detección de Missing Feature**: User strings extraction NO estaba contemplado pese a ser crítico para proyectos BIM/ISO-19650
+3. **Reorganización Completa**: Backlog refactorizado con 14 tickets (vs 5 originales)
+4. **Ordenamiento por Dependencias**: Tickets organizados en 5 secciones lógicas (A-E)
+
+**Acciones Realizadas:**
+1. ✅ Actualizado `docs/09-mvp-backlog.md` US-002 section
+2. ✅ Añadidos 9 tickets nuevos (T-020 a T-023: infra, T-025: user strings, T-029: trigger, T-030: endpoint, T-031: realtime, T-033: logging)
+3. ✅ Renumeración limpia T-020 → T-033 (sin decimales)
+4. ✅ Añadido Scenario 4 para metadata extraction
+5. ✅ Actualizada estimación: 8 → 13 Story Points
+6. ✅ Añadida sección de riesgos críticos
+
+**Tickets Más Críticos Añadidos:**
+- **T-020-DB**: validation_report column (prerequisito para guardar resultados)
+- **T-022-INFRA**: Redis/Celery setup (sin esto, no hay workers)
+- **T-025-AGENT**: User strings extraction (gap detectado por usuario)
+- **T-029-BACK**: Trigger validation job (integración US-001 → US-002)
+- **T-031-FRONT**: Real-time notifications (UX asíncrona)
+
+**Resultado Final:**
+US-002 completamente redefinida con arquitectura robusta y todos los gaps cerrados. Ready para implementación sin sorpresas técnicas.
+
+**Update (2026-02-11 15:00):**
+Usuario proporcionó especificación detallada de 46 user strings requeridos a nivel InstanceObject. Creado documento técnico completo: `docs/T-025-AGENT-UserStrings-Spec.md` con:
+- ✅ Schema Pydantic completo (46 campos categorizados)
+- ✅ 9 Enums definidos (FaseProj, MaterialType, GrauEstructural, etc.)
+- ✅ Validaciones cross-field (Matricula=Codi, Volum<=VolumBrut)
+- ✅ Función extract_user_strings_from_instance_objects()
+- ✅ 5 unit tests especificados
+- ✅ Requisitos de fixtures Rhino
+- ✅ Integración con T-024 validation task
+
+Ticket T-025-AGENT ahora 100% implementable con criterios de aceptación verificables.
+
 ---
 
