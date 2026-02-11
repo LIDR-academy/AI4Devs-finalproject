@@ -605,52 +605,126 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ## Phase 13: Observability & Polish
 
-**Focus**: Logging, metrics, and final refinements
+**Focus**: Structured logging, distributed tracing, metrics, and final refinements
 
-### Observability Tasks
+### OpenTelemetry Setup Tasks
 
-- [ ] T070 [P] Add logging to ComposeContentService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/ComposeContentService.java`
-  - **Criteria**: Log composition created, text updated, music/image selected
-  - **Criteria**: Log level: INFO for business events, WARN for errors
-  - **Criteria**: No sensitive data (prompts, AI responses) logged
-  - **Dependencies**: T026
+- [ ] T070 [P] Add OpenTelemetry dependencies in `/backend/pom.xml`
+  - **Criteria**: Add `opentelemetry-bom`, `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `micrometer-tracing-bridge-otel`
+  - **Criteria**: Add `opentelemetry-exporter-otlp` for traces/metrics export
+  - **Criteria**: Version managed via BOM (compatible with Spring Boot 3.x)
+  - **Dependencies**: None
 
-- [ ] T071 [P] Add logging to GenerateTextService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateTextService.java`
-  - **Criteria**: Log AI text generation requests (without prompt content)
-  - **Criteria**: Log AI failures with error codes
-  - **Dependencies**: T028
+- [ ] T071 [P] Configure OpenTelemetry in `/backend/src/main/resources/application.yml`
+  - **Criteria**: Configure `management.tracing.sampling.probability` (0.1 for production, 1.0 for local)
+  - **Criteria**: Configure OTLP exporter endpoint via `OTEL_EXPORTER_OTLP_ENDPOINT` env var
+  - **Criteria**: Set service name: `meditation-builder`
+  - **Criteria**: Enable Prometheus metrics endpoint at `/actuator/prometheus`
+  - **Dependencies**: T070
 
-- [ ] T072 [P] Add logging to GenerateImageService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateImageService.java`
-  - **Criteria**: Log AI image generation requests
-  - **Criteria**: Log AI failures with error codes
-  - **Dependencies**: T029
+### Structured Logging Tasks
 
-- [ ] T073 [P] Add logging to adapters in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/`
-  - **Criteria**: Log external service calls (AI text, AI image, media catalog)
-  - **Criteria**: Log latency for AI generation (for performance monitoring)
-  - **Dependencies**: T030, T031, T032
+- [ ] T072 [P] Add structured logging to ComposeContentService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/ComposeContentService.java`
+  - **Criteria**: Use SLF4J with MDC for `compositionId` correlation
+  - **Criteria**: Log business events: `composition.created`, `composition.text.updated`, `composition.music.selected`, `composition.image.set`
+  - **Criteria**: Log level: INFO for business events, WARN for validation errors
+  - **Criteria**: **No sensitive data**: Do NOT log user prompts, AI responses, or media URLs
+  - **Criteria**: Include trace/span IDs automatically (OpenTelemetry auto-instrumentation)
+  - **Dependencies**: T026, T071
 
-- [ ] T074 [P] Add metrics instrumentation (Micrometer/Prometheus)
-  - **Criteria**: Metrics: composition_created_total, ai_text_generation_duration_seconds, ai_image_generation_duration_seconds, ai_generation_failures_total
-  - **Criteria**: Metrics exposed on /actuator/metrics
-  - **Dependencies**: T070, T071, T072, T073
+- [ ] T073 [P] Add structured logging to GenerateTextService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateTextService.java`
+  - **Criteria**: Log event: `ai.text.generation.requested` (with compositionId, NO prompt content)
+  - **Criteria**: Log event: `ai.text.generation.completed` (with latency)
+  - **Criteria**: Log AI failures: `ai.text.generation.failed` with error code (503, 429)
+  - **Criteria**: Include OpenTelemetry span attributes for AI provider
+  - **Dependencies**: T028, T071
+
+- [ ] T074 [P] Add structured logging to GenerateImageService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateImageService.java`
+  - **Criteria**: Log event: `ai.image.generation.requested` (with compositionId)
+  - **Criteria**: Log event: `ai.image.generation.completed` (with latency)
+  - **Criteria**: Log AI failures: `ai.image.generation.failed` with error code
+  - **Dependencies**: T029, T071
+
+- [ ] T075 [P] Add structured logging to adapters in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/`
+  - **Criteria**: Log external HTTP calls: `external.service.call.start` and `external.service.call.end`
+  - **Criteria**: Include service name (OpenAI Text, OpenAI Image, Media Catalog), HTTP status, latency
+  - **Criteria**: **Security**: Do NOT log API keys, authorization headers, or request bodies
+  - **Dependencies**: T030, T031, T032, T071
+
+### Distributed Tracing Tasks
+
+- [ ] T076 [P] Add custom spans for business operations in application services
+  - **Files**: 
+    - `ComposeContentService.java`
+    - `GenerateTextService.java`
+    - `GenerateImageService.java`
+  - **Criteria**: Use `@WithSpan` annotation on key methods (createComposition, generateText, generateImage)
+  - **Criteria**: Add span attributes: `composition.id`, `operation.type`, `ai.provider`
+  - **Criteria**: Propagate trace context to infrastructure adapters (automatic via OpenTelemetry)
+  - **Dependencies**: T072, T073, T074
+
+- [ ] T077 [P] Configure trace sampling and baggage propagation in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/ObservabilityConfig.java`
+  - **Criteria**: Custom `Sampler` for environment-based sampling (100% local, 10% prod)
+  - **Criteria**: Configure baggage propagation for `composition.id` across services
+  - **Criteria**: Add span processors for sensitive data redaction
+  - **Dependencies**: T071, T076
+
+### Metrics & Instrumentation Tasks
+
+- [ ] T078 [P] Add custom metrics using Micrometer in application services
+  - **Files**:
+    - `ComposeContentService.java`
+    - `GenerateTextService.java`
+    - `GenerateImageService.java`
+  - **Criteria**: Counter: `meditation.composition.created` (tags: `output_type`)
+  - **Criteria**: Timer: `meditation.ai.text.generation.duration` (tags: `ai_provider`, `status`)
+  - **Criteria**: Timer: `meditation.ai.image.generation.duration` (tags: `ai_provider`, `status`)
+  - **Criteria**: Counter: `meditation.ai.generation.failures` (tags: `ai_provider`, `operation`, `error_code`)
+  - **Criteria**: Metrics follow Prometheus naming conventions
+  - **Dependencies**: T070, T072, T073, T074
+
+- [ ] T079 [P] Add HTTP client metrics for external services in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/InfrastructureConfig.java`
+  - **Criteria**: Instrument RestClient beans with `ObservationRegistry`
+  - **Criteria**: Metrics: `http.client.requests` (tags: `service`, `status`, `method`)
+  - **Criteria**: Include latency percentiles (p50, p95, p99)
+  - **Dependencies**: T033f, T070
+
+- [ ] T080 Verify metrics endpoint exposes custom metrics
+  - **Criteria**: GET `/actuator/prometheus` returns all custom metrics
+  - **Criteria**: Metrics include labels/tags for filtering
+  - **Criteria**: Integration test validates metric presence
+  - **Dependencies**: T078, T079
+
+### Observability Testing Tasks
+
+- [ ] T081 [P] Create observability integration tests in `/backend/src/test/java/com/hexagonal/meditationbuilder/infrastructure/observability/`
+  - **Files**: 
+    - `LoggingIntegrationTest.java` - Verify structured logs with MDC
+    - `TracingIntegrationTest.java` - Verify span creation and propagation
+    - `MetricsIntegrationTest.java` - Verify metric increments
+  - **Criteria**: Use TestObservationRegistry for metric assertions
+  - **Criteria**: Verify sensitive data NOT logged (prompts, API keys)
+  - **Criteria**: Verify trace context propagated to adapters
+  - **Dependencies**: T072-T079
 
 ### Polish Tasks
 
-- [ ] T072 Review and remove all TODO comments
+- [ ] T082 Review and remove all TODO comments
   - **Criteria**: No TODO comments in production code
   - **Criteria**: All deferred work captured in future user stories
 
-- [ ] T075 Review and verify no skipped tests
+- [ ] T083 Review and verify no skipped tests
   - **Criteria**: No @Disabled or @Ignore annotations
   - **Criteria**: All tests executable and passing
 
-- [ ] T076 Code review and refactoring pass
+- [ ] T084 Code review and refactoring pass
   - **Criteria**: No code smells (God Objects, duplicated classes)
   - **Criteria**: All naming follows conventions (ports, use cases, adapters, controllers, DTOs)
 
-- [ ] T077 Update documentation: README with feature overview and architecture diagram
-  - **Criteria**: README includes: feature description, architecture diagram (hexagonal), how to run tests, how to run locally
+- [ ] T085 Update documentation: README with observability setup
+  - **Criteria**: README includes: OpenTelemetry setup, Prometheus metrics endpoint, Grafana dashboard examples
+  - **Criteria**: Document environment variables: `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME`
+  - **Criteria**: Feature description, architecture diagram (hexagonal), how to run tests, how to run locally
 
 ---
 
@@ -667,7 +741,8 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 7. **Frontend** (T038-T050) → E2E frontend tests
 8. **BDD Green** (T051-T057) → Contract & E2E tests
 9. **All Tests** (T058-T066) → CI/CD gates
-10. **CI/CD** (T067-T069) → Production deployment
+10. **CI/CD** (T067-T069) → Observability & Production deployment
+11. **Observability** (T070-T085) → Production-ready monitoring
 
 ### Scenario-Based Execution Order
 
@@ -713,13 +788,16 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 - T063, T064, T065 (frontend E2E)
 
 **Within Observability** (can run in parallel):
-- T070, T071, T072, T073 (logging for different services)
+- T070, T071 (OpenTelemetry setup)
+- T072, T073, T074, T075 (structured logging for different services)
+- T076, T077 (distributed tracing)
+- T078, T079, T081 (metrics and testing)
 
 ---
 
 ## Task Summary
 
-**Total Tasks**: 77
+**Total Tasks**: 85
 
 **Tasks by Phase**:
 - Phase 1: Setup → 8 tasks
@@ -734,7 +812,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 - Phase 10: Contract Testing → 2 tasks
 - Phase 11: E2E Testing → 7 tasks
 - Phase 12: CI/CD Gates → 3 tasks
-- Phase 13: Observability & Polish → 8 tasks
+- Phase 13: Observability & Polish → 16 tasks
 
 **Tasks by Scenario Coverage**:
 - Scenario 1 (Access builder): 12 tasks (setup + domain + frontend basics)
@@ -745,9 +823,9 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 - Scenario 6 (Video output): 4 tasks (domain + frontend indicator)
 - Scenario 7 (Music preview): 5 tasks (domain + frontend preview)
 - Scenario 8 (Image preview): 5 tasks (domain + frontend preview)
-- Cross-cutting (BDD, tests, CI/CD, observability): 27 tasks
+- Cross-cutting (BDD, tests, CI/CD, observability): 35 tasks
 
-**Parallel Opportunities**: ~32 tasks marked [P] can execute in parallel within their phase
+**Parallel Opportunities**: ~40 tasks marked [P] can execute in parallel within their phase
 
 **Independent Test Milestones**:
 - **Scenarios 1-2**: User can access builder and compose meditation text manually
@@ -761,8 +839,8 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 ## Format Validation
 
 ✅ All tasks follow mandatory checklist format: `- [ ] [TaskID] [P?] [Story?] Description with file path`  
-✅ Sequential Task IDs (T001-T075)  
-✅ [P] marker only on parallelizable tasks (30 tasks)  
+✅ Sequential Task IDs (T001-T085)  
+✅ [P] marker only on parallelizable tasks (~40 tasks)  
 ✅ [Story] label on user story phase tasks (18 US1, 4 US2, 8 US3, 3 US4, 3 US5, 3 US6)  
 ✅ File paths included in all implementation tasks  
 ✅ Setup/Foundational/Polish tasks have no story labels  
