@@ -136,7 +136,7 @@ class AiImageMapperTest {
 
             assertThatThrownBy(() -> AiImageMapper.fromResponse(response))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no image URL");
+                    .hasMessageContaining("neither image URL nor base64");
         }
     }
 
@@ -152,8 +152,8 @@ class AiImageMapperTest {
                 null, null, null, null,
                 List.of(new AiImageResponse.ImageData(
                     "https://example.com/image.png",
-                    "Enhanced: A serene sunset with calm waters",
-                    null
+                    null,  // b64Json
+                    "Enhanced: A serene sunset with calm waters"  // revisedPrompt
                 )),
                 null, null
             );

@@ -203,7 +203,7 @@ public final class AiImageMapper {
     @Deprecated
     public static AiImageRequest toRequest(String prompt) {
         Objects.requireNonNull(prompt, "prompt is required");
-        // Devolvemos un request minimalista y neutro (el adapter debería completar/normalizar).
+        // Devolvemos un request compatible con DALL-E por defecto (backward compatibility)
         return new AiImageRequest(
                 /* model */ null,
                 prompt,
@@ -212,7 +212,7 @@ public final class AiImageMapper {
                 DEFAULT_GPT_QUALITY,
                 /* output_format */ null,
                 /* background    */ null,
-                /* response_format */ null
+                /* response_format */ DEFAULT_RESPONSE_FORMAT  // "url" para compatibilidad
         );
     }
 
@@ -230,7 +230,7 @@ public final class AiImageMapper {
                 "high",        // alto para GPT Image; el adapter puede traducir si fuese DALL·E
                 /* output_format */ null,
                 /* background    */ null,
-                /* response_format */ null
+                /* response_format */ DEFAULT_RESPONSE_FORMAT  // "url" para compatibilidad
         );
     }
 

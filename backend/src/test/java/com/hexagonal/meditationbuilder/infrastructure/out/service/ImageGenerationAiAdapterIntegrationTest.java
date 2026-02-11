@@ -109,7 +109,7 @@ class ImageGenerationAiAdapterIntegrationTest {
 
             assertThatThrownBy(() -> adapter.generate("test prompt"))
                     .isInstanceOf(ImageGenerationServiceException.class)
-                    .hasMessageContaining("rate limit");
+                    .hasMessageContaining("Rate limit");
         }
 
         @Test
@@ -141,7 +141,7 @@ class ImageGenerationAiAdapterIntegrationTest {
 
             assertThatThrownBy(() -> adapter.generate("test prompt"))
                     .isInstanceOf(ImageGenerationServiceException.class)
-                    .hasMessageContaining("empty response");
+                    .hasMessageContaining("empty data");
         }
 
         @Test
@@ -163,7 +163,7 @@ class ImageGenerationAiAdapterIntegrationTest {
 
             assertThatThrownBy(() -> adapter.generate("test prompt"))
                     .isInstanceOf(ImageGenerationServiceException.class)
-                    .hasMessageContaining("blank image URL");
+                    .hasMessageContaining("neither URL nor base64");
         }
 
         @Test

@@ -176,7 +176,7 @@ class MeditationBuilderControllerTest {
             // Adaptado: enviar existingText válido para evitar error 500
             GenerateTextRequest request = new GenerateTextRequest("Texto por defecto", null);
 
-            mockMvc.perform(post("/v1/text/generate")
+            mockMvc.perform(post("/v1/compositions/text/generate")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -191,11 +191,12 @@ class MeditationBuilderControllerTest {
         @Test
         @DisplayName("should generate image and return 200")
         void shouldGenerateImageAndReturn200() throws Exception {
-            when(composeContentUseCase.getComposition(compositionId)).thenReturn(sampleComposition);
             when(generateImageUseCase.generateImage(any()))
                     .thenReturn(new ImageReference("ai-generated-123"));
 
-            mockMvc.perform(post("/v1/image/generate", compositionId))
+            mockMvc.perform(post("/v1/compositions/image/generate")
+                            .contentType(MediaType.TEXT_PLAIN)
+                            .content("Sample text for image generation"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.imageReference").value("ai-generated-123"));
         }
