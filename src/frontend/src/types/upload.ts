@@ -23,6 +23,26 @@ export interface PresignedUrlResponse {
 }
 
 /**
+ * Request payload for confirming a completed upload
+ * Matches backend ConfirmUploadRequest (T-004-BACK)
+ */
+export interface ConfirmUploadRequest {
+  file_id: string;
+  file_key: string;
+}
+
+/**
+ * Response from backend after confirming upload
+ * Matches backend ConfirmUploadResponse (T-004-BACK)
+ */
+export interface ConfirmUploadResponse {
+  success: boolean;
+  message: string;
+  event_id?: string;
+  task_id?: string;
+}
+
+/**
  * Upload progress event for UI feedback
  */
 export interface UploadProgress {
