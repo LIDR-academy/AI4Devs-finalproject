@@ -69,9 +69,9 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
 
 **Criterios de Aceptación:**
 *   **Scenario 1 (Happy Path - Valid File):**
-    *   Given un archivo en S3 con capas correctas (ej: `SF-C12-M-001`).
+    *   Given un archivo en S3 con capas correctas (ej: `SF-C12-M-001`) y user strings válidos.
     *   When el agente lo procesa con `rhino3dm`.
-    *   Then extrae metadatos y confirma validez.
+    *   Then extrae metadatos (capas, objetos, user strings) y confirma validez.
     *   And cambia estado a `validated`.
 *   **Scenario 2 (Validation Fail - Bad Naming):**
     *   Given un archivo capa llamada `bloque_test`.
@@ -82,18 +82,54 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
     *   Given un archivo .3dm corrupto (header incompleto).
     *   When `File3dm.Read()` falla.
     *   Then captura excepción y marca estado `error_processing`.
+*   **Scenario 4 (Metadata Extraction):**
+    *   Given un archivo con user strings en objetos y capas.
+    *   When el agente procesa el archivo.
+    *   Then extrae y almacena user strings en `blocks.rhino_metadata`.
+    *   And metadata incluye clasificación, materiales y propiedades personalizadas.
 
-**Desglose de Tickets Técnicos:**
-| ID Ticket | Título | Tech Spec | DoD |
-|-----------|--------|-----------|-----|
-| `T-020-AGENT` | **Rhino Ingestion Service** | Worker Python. Usa `rhino3dm.File3dm.Read(path)`. Descarga archivo de S3 a `/tmp` del worker antes de leer. | Lee correctamente un .3dm y lista sus capas en log. |
-| `T-021-AGENT` | **Nomenclature Validator** | Función que itera `model.Layers` y `model.Objects`. Aplica Regex estricta sobre `Name`. | Unit tests con nombres válidos e inválidos pasando. |
-| `T-022-AGENT` | **Geometry Auditor** | Función que chequea `object.Geometry.IsValid` y `BoundingBox.IsValid`. Rechaza Volume ~= 0 si es posible calcularlo (Brep/Mesh). | Detecta y flaggea objetos nulos/vacíos. |
-| `T-023-BACK` | **Validation Report Model** | Esquema Pydantic `ValidationResult`. Campos: `is_valid (bool)`, `errors (List[ValidationError])`, `metadata (Dict)`. Guardado en columna JSONB. | DB almacena el reporte estructurado sin error. |
-| `T-024-FRONT` | **Report Visualizer** | Componente Modal que consume el JSON de reporte. Muestra lista roja de errores bloqueantes. | Usuario ve por qué se rechazó su archivo. |
+**Desglose de Tickets Técnicos (Ordenados por Dependencias):**
 
-**Valoración:** 8 Story Points
-**Dependencias:** US-001
+**A. Infraestructura Base (Prerequisitos)**
+| ID Ticket | Título | Tech Spec | DoD | Prioridad |
+|-----------|--------|-----------|-----|-----------|
+| `T-020-DB` | **Add Validation Report Column** | Migración SQL: `ALTER TABLE blocks ADD COLUMN validation_report JSONB`. Índice GIN: `CREATE INDEX idx_blocks_validation_errors ON blocks USING GIN ((validation_report->'errors'))`. | Columna existe en DB y acepta JSON estructurado. | 🔴 CRÍTICA |
+| `T-021-DB` | **Extend Block Status Enum** | Migración SQL: `ALTER TYPE block_status ADD VALUE 'processing'`, `ADD VALUE 'rejected'`, `ADD VALUE 'error_processing'`. | Estados nuevos disponibles en tipo ENUM. | 🔴 CRÍTICA |
+| `T-022-INFRA` | **Redis & Celery Worker Setup** | Configurar Redis como broker. Dockerfile para worker con `celery -A agent.tasks worker`. Variables: `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`. Docker Compose service `agent-worker`. | `docker-compose up agent-worker` ejecuta sin errores. Task dummy funciona. | 🔴 CRÍTICA |
+| `T-023-TEST` | **Create .3dm Test Fixtures** | Crear 3 archivos Rhino: `valid_model.3dm` (capas SF-C12-M-001 + user strings), `invalid_naming.3dm` (capa bloque_test), `corrupted.3dm` (archivo truncado). | Fixtures disponibles en `tests/fixtures/`. | 🟡 ALTA |
+
+**B. Agente de Validación (Core Logic)**
+| ID Ticket | Título | Tech Spec | DoD | Prioridad |
+|-----------|--------|-----------|-----|-----------|
+| `T-024-AGENT` | **Rhino Ingestion Service** | Worker Python. Task Celery: `@celery_app.task def validate_file(part_id, s3_key)`. Descarga .3dm de S3 a `/tmp`. Usa `rhino3dm.File3dm.Read(path)`. Timeout 10min. Retry policy: 3 intentos. | Lee .3dm correctamente y lista capas en logs estructurados. | 🔴 CRÍTICA |
+| `T-025-AGENT` | **Metadata Extractor (User Strings)** | Función: `extract_user_strings(file3dm) -> dict`. Itera `model.Objects`, `model.Layers`, `model.Strings`. Extrae `obj.Attributes.GetUserStrings()`. Retorna JSON con estructura: `{ "document": {...}, "layers": {...}, "objects": {...} }`. | Unit test extrae user strings de fixture. JSON válido con campos dinámicos. | 🟡 ALTA |
+| `T-026-AGENT` | **Nomenclature Validator** | Función: `validate_nomenclature(file3dm) -> List[ValidationError]`. Itera capas y objetos. Regex: `^[A-Z]{2,3}-[A-Z0-9]{3,4}-[A-Z]{1,2}-\d{3}$`. Retorna lista de errores con `layer_name` y `error_msg`. | Unit tests: nombres válidos pasan, inválidos fallan. | 🔴 CRÍTICA |
+| `T-027-AGENT` | **Geometry Auditor** | Función: `validate_geometry(file3dm) -> List[ValidationError]`. Chequea: `obj.Geometry.IsValid`, `BoundingBox.IsValid`, `Volume > 0` (si Brep/Mesh). Detecta geometría degenerada/nula. | Unit test detecta objetos inválidos. Fixture con geometría rota devuelve errores. | 🔴 CRÍTICA |
+
+**C. Backend Integration**
+| ID Ticket | Título | Tech Spec | DoD | Prioridad |
+|-----------|--------|-----------|-----|-----------|
+| `T-028-BACK` | **Validation Report Model** | Esquema Pydantic: `ValidationResult(is_valid: bool, errors: List[ValidationError], metadata: dict, validated_at: datetime, validated_by: str)`. Método `save_to_db(part_id)` que actualiza `blocks.validation_report`. | Model serializa a JSON. Guarda en DB sin errores. | 🔴 CRÍTICA |
+| `T-029-BACK` | **Trigger Validation from Confirm Endpoint** | Modificar `POST /api/upload/confirm`. Después de crear evento, ejecutar: `celery_app.send_task('agent.tasks.validate_file', args=[part_id, s3_key])`. Actualizar estado a `processing`. | Endpoint encola job exitosamente. Redis muestra task pendiente. | 🔴 CRÍTICA |
+| `T-030-BACK` | **Get Validation Status Endpoint** | Endpoint `GET /api/parts/{id}/validation`. Retorna `validation_report` JSONB + estado actual. Si estado=`processing`, incluir `job_id` para tracking. | Endpoint retorna JSON con reporte completo. | 🟡 ALTA |
+
+**D. Frontend Visualization**
+| ID Ticket | Título | Tech Spec | DoD | Prioridad |
+|-----------|--------|-----------|-----|-----------|
+| `T-031-FRONT` | **Real-Time Status Listener** | Hook `useSupabaseRealtime('blocks', part_id)`. Escucha cambios en columna `status`. Cuando cambia de `processing` → `validated`/`rejected`, dispara toast notification y refetch de datos. | UI actualiza automáticamente sin polling. Toast aparece al terminar validación. | 🟡 ALTA |
+| `T-032-FRONT` | **Validation Report Visualizer** | Componente Modal `<ValidationReportModal report={validationReport} />`. Renderiza: ✅ Checks passed (green), ❌ Errors (red list), 📊 Metadata extraída (tabla expandible). Tabs: Nomenclature / Geometry / Metadata. | Usuario ve errores detallados. Clicks en error highlightean objeto problemático (nice-to-have). | 🔴 CRÍTICA |
+
+**E. Observability (Opcional pero Recomendado)**
+| ID Ticket | Título | Tech Spec | DoD | Prioridad |
+|-----------|--------|-----------|-----|-----------|
+| `T-033-INFRA` | **Worker Logging & Monitoring** | Configurar `structlog` en worker. Logs JSON a stdout. Métricas: `validation_duration`, `success_rate`, `error_types`. Dashboard Grafana/Railway Metrics (opcional MVP). | Logs estructurados visibles en Railway. Errores trazables. | 🟢 BAJA |
+
+**Valoración Actualizada:** 13 Story Points (original 8 + infraestructura 5)  
+**Dependencias:** US-001  
+**Riesgos Críticos:**  
+- ⚠️ rhino3dm puede fallar con archivos >500MB (OOM) → Mitigación: timeout + retry + límite estricto  
+- ⚠️ Workers se caen y jobs se pierden → Mitigación: Celery result backend + monitoring (T-033)  
+- ⚠️ Regex ISO-19650 con falsos positivos → Mitigación: LLM fallback (post-MVP)
 
 ---
 
