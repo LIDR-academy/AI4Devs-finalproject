@@ -56,6 +56,49 @@ interface PresignedUrlResponse {
 
 **Historical Note**: Initial implementation used `file_key` instead of `file_id`, which caused test failures. Fixed in prompt #040 to align with backend reality.
 
+#### Validation Report Contract (T-020-DB ↔ T-023-TEST)
+
+**Backend Schema** (`src/backend/schemas.py`):
+```python
+class ValidationErrorItem(BaseModel):
+    category: str
+    target: Optional[str]
+    message: str
+
+class ValidationReport(BaseModel):
+    is_valid: bool
+    errors: List[ValidationErrorItem]
+    metadata: Dict[str, Any]
+    validated_at: Optional[datetime]
+    validated_by: Optional[str]
+```
+
+**Frontend Interface** (`src/frontend/src/types/validation.ts`):
+```typescript
+interface ValidationErrorItem {
+  category: string;
+  target?: string;
+  message: string;
+}
+
+interface ValidationReport {
+  is_valid: boolean;
+  errors: ValidationErrorItem[];
+  metadata: Record<string, any>;
+  validated_at?: string;  // ISO datetime string
+  validated_by?: string;
+}
+```
+
+**Usage Context**: This contract supports async validation of .3dm files by "The Librarian" agent (T-024-AGENT). `ValidationReport` is stored as JSONB in `blocks.validation_report` column (T-020-DB) and displayed in frontend validation UI (T-032-FRONT).
+
+**Design Decisions**:
+- `category`: Error types ("nomenclature", "geometry", "io") for grouping/filtering
+- `target`: Optional identifier (layer name, object ID) for error localization
+- `metadata`: Flexible schema for extracted Rhino user strings and layer info
+- `validated_at`: Timestamp for audit trail and debugging
+- `validated_by`: Worker identifier for troubleshooting distributed validation
+
 ## Backend Architecture Patterns
 
 ### Clean Architecture (Implemented in T-004-BACK)
