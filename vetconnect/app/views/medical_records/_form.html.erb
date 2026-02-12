@@ -1,0 +1,27 @@
+<% if @appointment.present? %>
+  <%= form_with(model: [@appointment, medical_record], local: true, class: "space-y-6") do |f| %>
+    <%= render 'form_fields', f: f, medical_record: medical_record %>
+  <% end %>
+<% elsif @pet.present? %>
+  <%= form_with(model: [@pet, medical_record], local: true, class: "space-y-6") do |f| %>
+    <%= render 'form_fields', f: f, medical_record: medical_record %>
+  <% end %>
+<% else %>
+  <%= form_with(model: medical_record, local: true, class: "space-y-6") do |f| %>
+    <!-- Pet Selection -->
+    <div>
+      <%= f.label :pet_id, "Mascota", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+        Mascota <span class="text-red-500" aria-label="requerido">*</span>
+      <% end %>
+      <%= f.collection_select :pet_id, 
+          @pets || Pet.active.includes(:user), 
+          :id, 
+          :name, 
+          { prompt: "Seleccionar mascota" }, 
+          { class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all min-h-[44px]",
+            required: true,
+            aria: { required: true } } %>
+    </div>
+    <%= render 'form_fields', f: f, medical_record: medical_record %>
+  <% end %>
+<% end %>

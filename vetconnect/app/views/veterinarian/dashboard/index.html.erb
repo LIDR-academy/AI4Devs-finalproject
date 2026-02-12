@@ -1,0 +1,225 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="animate-fade-in">
+    <h1 class="text-3xl font-bold tracking-tight text-gray-900">Panel del Veterinario 👨‍⚕️</h1>
+    <p class="mt-2 text-lg text-gray-600">Bienvenido, Dr. <%= current_user.last_name %></p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 animate-fade-in">
+    <!-- Today's Appointments -->
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 card-hover">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="rounded-lg bg-blue-100 p-3">
+              <span class="text-3xl">📅</span>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Citas Hoy</dt>
+              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @today_appointments&.count || 0 %></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Appointments -->
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 card-hover">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="rounded-lg bg-yellow-100 p-3">
+              <span class="text-3xl">⏰</span>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Pendientes</dt>
+              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @pending_appointments&.count || 0 %></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed This Week -->
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 card-hover">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="rounded-lg bg-green-100 p-3">
+              <span class="text-3xl">✅</span>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Esta Semana</dt>
+              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @week_completed&.count || 0 %></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Patients -->
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 card-hover">
+      <div class="p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="rounded-lg bg-purple-100 p-3">
+              <span class="text-3xl">🐾</span>
+            </div>
+          </div>
+          <div class="ml-5 w-0 flex-1">
+            <dl>
+              <dt class="text-sm font-medium text-gray-500 truncate">Pacientes</dt>
+              <dd class="mt-1 text-3xl font-semibold text-gray-900"><%= @total_patients || 0 %></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Schedule -->
+  <div class="mt-10 animate-fade-in">
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+      <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">🕐 Agenda de Hoy</h2>
+          <%= link_to veterinarian_appointments_path, class: "text-sm font-medium text-purple-600 hover:text-purple-500" do %>
+            Ver todas →
+          <% end %>
+        </div>
+      </div>
+      <div class="px-6 py-5">
+        <% if @today_appointments.any? %>
+          <div class="flow-root">
+            <ul role="list" class="-mb-8">
+              <% @today_appointments.each_with_index do |appointment, idx| %>
+                <li>
+                  <div class="relative pb-8">
+                    <% unless idx == @today_appointments.length - 1 %>
+                      <span class="absolute left-5 top-5 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                    <% end %>
+                    <div class="relative flex items-start space-x-3">
+                      <div class="relative">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-400 ring-8 ring-white">
+                          <span class="text-xl"><%= appointment.pet.species == 'dog' ? '🐕' : appointment.pet.species == 'cat' ? '🐈' : '🐾' %></span>
+                        </div>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div>
+                          <div class="text-sm">
+                            <span class="font-medium text-gray-900"><%= appointment.appointment_date.strftime('%H:%M') %></span>
+                            <span class="mx-1 text-gray-400">•</span>
+                            <span class="font-semibold text-gray-900"><%= appointment.pet.name %></span>
+                            <span class="mx-1 text-gray-400">•</span>
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium status-<%= appointment.status %>">
+                              <%= appointment.status.humanize %>
+                            </span>
+                          </div>
+                          <p class="mt-1 text-sm text-gray-500">
+                            <%= appointment.reason %>
+                          </p>
+                          <p class="mt-1 text-xs text-gray-400">
+                            Dueño: <%= appointment.owner.full_name %> • <%= appointment.duration_minutes %> min
+                          </p>
+                        </div>
+                        <div class="mt-2 flex gap-2">
+                          <%= link_to veterinarian_appointment_path(appointment), class: "text-xs font-medium text-purple-600 hover:text-purple-500" do %>
+                            Ver detalles →
+                          <% end %>
+                          <% if appointment.status_scheduled? || appointment.status_confirmed? %>
+                            <%= link_to complete_appointment_path(appointment), method: :post, class: "text-xs font-medium text-green-600 hover:text-green-500" do %>
+                              ✓ Completar
+                            <% end %>
+                          <% end %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% else %>
+          <div class="text-center py-12">
+            <span class="text-6xl">🎉</span>
+            <h3 class="mt-4 text-sm font-semibold text-gray-900">No hay citas programadas para hoy</h3>
+            <p class="mt-2 text-sm text-gray-500">Disfruta de tu día libre o revisa las citas próximas.</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming Appointments -->
+  <% if @upcoming_appointments.any? %>
+    <div class="mt-8 animate-fade-in">
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-900">📆 Próximas Citas</h2>
+        </div>
+        <div class="px-6 py-5">
+          <div class="divide-y divide-gray-100">
+            <% @upcoming_appointments.first(5).each do |appointment| %>
+              <div class="py-4 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center min-w-0 gap-x-4">
+                    <div class="flex-shrink-0">
+                      <div class="h-10 w-10 rounded-lg bg-blue-100 flex flex-col items-center justify-center">
+                        <span class="text-xs font-semibold text-blue-600"><%= appointment.appointment_date.strftime('%b').upcase %></span>
+                        <span class="text-sm font-bold text-blue-700"><%= appointment.appointment_date.day %></span>
+                      </div>
+                    </div>
+                    <div class="min-w-0 flex-auto">
+                      <p class="text-sm font-semibold leading-6 text-gray-900">
+                        <%= appointment.pet.name %> • <%= appointment.appointment_date.strftime('%H:%M') %>
+                      </p>
+                      <p class="mt-1 text-xs leading-5 text-gray-500">
+                        <%= truncate(appointment.reason, length: 50) %>
+                      </p>
+                    </div>
+                  </div>
+                  <%= link_to veterinarian_appointment_path(appointment), class: "text-sm font-medium text-purple-600 hover:text-purple-500" do %>
+                    Ver →
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Quick Actions -->
+  <div class="mt-8 animate-fade-in">
+    <div class="rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 p-6 shadow-sm ring-1 ring-purple-100">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center">
+          <span class="text-4xl mr-4">⚡</span>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Acciones Rápidas</h3>
+            <p class="text-sm text-gray-600">Accede a las funciones más usadas</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <%= link_to veterinarian_appointments_path, class: "inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors" do %>
+            📅 Mis Citas
+          <% end %>
+          <%= link_to veterinarian_medical_records_path, class: "inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors" do %>
+            📋 Registros Médicos
+          <% end %>
+          <%= link_to pets_path, class: "inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors" do %>
+            🐾 Pacientes
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

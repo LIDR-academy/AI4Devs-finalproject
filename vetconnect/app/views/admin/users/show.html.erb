@@ -1,0 +1,172 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8 animate-fade-in">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Detalles del Usuario 👤</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Información completa del usuario
+        </p>
+      </div>
+      <div class="mt-4 sm:mt-0 flex gap-2">
+        <%= link_to edit_admin_user_path(@user), 
+            class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+          <span class="mr-2" aria-hidden="true">✏️</span> Editar
+        <% end %>
+        <%= link_to admin_users_path, 
+            class: "inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors min-h-[44px]" do %>
+          <span class="mr-2" aria-hidden="true">←</span> Volver
+        <% end %>
+      </div>
+    </div>
+
+    <div class="space-y-6 animate-fade-in">
+      <!-- Personal Info Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-900">👤 Información Personal</h2>
+        </div>
+        <div class="px-6 py-5">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">ID</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @user.id %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Nombre Completo</dt>
+              <dd class="mt-1 text-sm font-semibold text-gray-900"><%= @user.full_name %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Email</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <a href="mailto:<%= @user.email %>" class="text-indigo-600 hover:text-indigo-500">
+                  <%= @user.email %>
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Teléfono</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <% if @user.phone.present? %>
+                  <a href="tel:<%= @user.phone %>" class="text-indigo-600 hover:text-indigo-500">
+                    <%= @user.phone %>
+                  </a>
+                <% else %>
+                  <span class="text-gray-400">No proporcionado</span>
+                <% end %>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Rol</dt>
+              <dd class="mt-1">
+                <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800 capitalize">
+                  <%= @user.role.humanize %>
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Account Status Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-900">📊 Estado de la Cuenta</h2>
+        </div>
+        <div class="px-6 py-5">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Estado</dt>
+              <dd class="mt-1">
+                <% if @user.confirmed? %>
+                  <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                    ✓ Confirmado
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                    ⏳ Pendiente Confirmación
+                  </span>
+                <% end %>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Fecha de Registro</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @user.created_at.strftime('%d/%m/%Y a las %H:%M') %></dd>
+            </div>
+            <% if @user.confirmed_at %>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Confirmado el</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @user.confirmed_at.strftime('%d/%m/%Y a las %H:%M') %></dd>
+              </div>
+            <% end %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Último Acceso</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= @user.current_sign_in_at ? @user.current_sign_in_at.strftime('%d/%m/%Y a las %H:%M') : 'Nunca' %>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Role-specific Stats -->
+      <% if @user.owner? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">🐾 Mascotas Registradas</h2>
+          </div>
+          <div class="px-6 py-5">
+            <p class="text-sm text-gray-900">
+              <span class="text-2xl font-bold text-indigo-600"><%= @user.pets.count %></span>
+              <span class="ml-2 text-gray-600">mascota<%= 's' if @user.pets.count != 1 %></span>
+            </p>
+            <% if @user.pets.any? %>
+              <div class="mt-4">
+                <%= link_to owner_pets_path, 
+                    class: "text-sm font-medium text-indigo-600 hover:text-indigo-500" do %>
+                  Ver todas las mascotas →
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% elsif @user.veterinarian? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">📊 Estadísticas como Veterinario</h2>
+          </div>
+          <div class="px-6 py-5">
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Citas Atendidas</dt>
+                <dd class="mt-1 text-2xl font-bold text-indigo-600"><%= @user.appointments_as_vet.count %></dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Registros Médicos</dt>
+                <dd class="mt-1 text-2xl font-bold text-indigo-600"><%= @user.medical_records_created.count %></dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <%= link_to edit_admin_user_path(@user), 
+            class: "flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors min-h-[44px] flex items-center justify-center" do %>
+          ✏️ Editar Usuario
+        <% end %>
+        <%= button_to admin_user_path(@user), 
+            method: :delete,
+            data: { turbo: false, confirm: '¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.' },
+            class: "flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors min-h-[44px] flex items-center justify-center" do %>
+          🗑️ Eliminar Usuario
+        <% end %>
+        <%= link_to admin_users_path, 
+            class: "flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors min-h-[44px] flex items-center justify-center" do %>
+          ← Volver a Usuarios
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

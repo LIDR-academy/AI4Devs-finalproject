@@ -1,0 +1,254 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe Vaccination, type: :model do
+  describe 'associations' do
+    it { should belong_to(:pet) }
+    it { should belong_to(:veterinarian).class_name('User') }
+    it { should belong_to(:medical_record).optional }
+  end
+
+  describe 'validations' do
+    subject { build(:vaccination) }
+
+    it { should validate_presence_of(:vaccine_name) }
+    it { should validate_length_of(:vaccine_name).is_at_most(100) }
+    it { should validate_presence_of(:vaccine_type) }
+    it { should validate_presence_of(:administered_at) }
+    it { should validate_presence_of(:dose_number) }
+    it { should validate_presence_of(:veterinarian_id) }
+
+    it { should validate_numericality_of(:dose_number).is_greater_than(0).only_integer }
+
+    it 'validates administered_at is not in the future' do
+      vaccination = build(:vaccination, administered_at: 1.day.from_now)
+      expect(vaccination).not_to be_valid
+      expect(vaccination.errors[:administered_at]).to include('no puede ser en el futuro')
+    end
+
+    it 'validates expires_at is after administered_at' do
+      vaccination = build(:vaccination,
+        administered_at: Date.today,
+        expires_at: 1.day.ago
+      )
+      expect(vaccination).not_to be_valid
+      expect(vaccination.errors[:expires_at]).to include('debe ser posterior a la fecha de administración')
+    end
+
+    it 'validates next_due_date is after administered_at' do
+      vaccination = build(:vaccination,
+        administered_at: Date.today,
+        next_due_date: 1.day.ago
+      )
+      expect(vaccination).not_to be_valid
+      expect(vaccination.errors[:next_due_date]).to include('debe ser posterior a la fecha de administración')
+    end
+
+    it 'validates veterinarian is a vet or admin' do
+      owner = create(:user, role: :owner)
+      vaccination = build(:vaccination, veterinarian: owner)
+      expect(vaccination).not_to be_valid
+      expect(vaccination.errors[:veterinarian]).to include('debe ser un veterinario o administrador')
+    end
+
+    it 'accepts veterinarian role' do
+      vet = create(:user, role: :veterinarian)
+      vaccination = build(:vaccination, veterinarian: vet)
+      expect(vaccination).to be_valid
+    end
+
+    it 'accepts admin role' do
+      admin = create(:user, role: :admin)
+      vaccination = build(:vaccination, veterinarian: admin)
+      expect(vaccination).to be_valid
+    end
+  end
+
+  describe 'enums' do
+    it 'defines vaccine_type enum' do
+      expect(Vaccination.vaccine_types.keys).to include(
+        'rabies', 'dhpp', 'bordetella', 'leptospirosis',
+        'feline_distemper', 'feline_leukemia', 'other'
+      )
+    end
+  end
+
+  describe 'scopes' do
+    let!(:recent_vaccination) { create(:vaccination, administered_at: 1.day.ago) }
+    let!(:old_vaccination) { create(:vaccination, administered_at: 1.month.ago) }
+    let!(:upcoming_vaccination) { create(:vaccination, next_due_date: 1.week.from_now) }
+    let!(:overdue_vaccination) { create(:vaccination, :overdue) }
+    let!(:due_soon_vaccination) { create(:vaccination, :due_soon) }
+    let(:pet) { create(:pet) }
+    let!(:pet_vaccination) { create(:vaccination, pet: pet) }
+    let!(:rabies_vaccination) { create(:vaccination, vaccine_type: 'rabies') }
+
+    describe '.recent' do
+      it 'orders by administered_at descending' do
+        vaccinations = Vaccination.recent
+        expect(vaccinations.first).to eq(recent_vaccination)
+        expect(vaccinations.last).to eq(old_vaccination)
+      end
+    end
+
+    describe '.upcoming' do
+      it 'returns vaccinations with next_due_date >= today' do
+        upcoming = Vaccination.upcoming
+        expect(upcoming).to include(upcoming_vaccination)
+        expect(upcoming).not_to include(overdue_vaccination)
+      end
+    end
+
+    describe '.overdue' do
+      it 'returns vaccinations with next_due_date < today' do
+        overdue = Vaccination.overdue
+        expect(overdue).to include(overdue_vaccination)
+        expect(overdue).not_to include(upcoming_vaccination)
+      end
+    end
+
+    describe '.due_soon' do
+      it 'returns vaccinations due within 30 days' do
+        due_soon = Vaccination.due_soon
+        expect(due_soon).to include(due_soon_vaccination)
+        expect(due_soon).not_to include(overdue_vaccination)
+      end
+    end
+
+    describe '.for_pet' do
+      it 'filters by pet_id' do
+        pet_vaccinations = Vaccination.for_pet(pet.id)
+        expect(pet_vaccinations).to include(pet_vaccination)
+        expect(pet_vaccinations).not_to include(rabies_vaccination)
+      end
+    end
+
+    describe '.for_vaccine_type' do
+      it 'filters by vaccine_type' do
+        rabies_vaccinations = Vaccination.for_vaccine_type('rabies')
+        expect(rabies_vaccinations).to include(rabies_vaccination)
+        expect(rabies_vaccinations).not_to include(pet_vaccination)
+      end
+    end
+
+    describe '.by_veterinarian' do
+      let(:vet) { create(:user, role: :veterinarian) }
+      let!(:vet_vaccination) { create(:vaccination, veterinarian: vet) }
+
+      it 'filters by veterinarian_id' do
+        vet_vaccinations = Vaccination.by_veterinarian(vet.id)
+        expect(vet_vaccinations).to include(vet_vaccination)
+        expect(vet_vaccinations).not_to include(pet_vaccination)
+      end
+    end
+  end
+
+  describe 'callbacks' do
+    let(:pet) { create(:pet, :dog, birth_date: 1.year.ago) }
+    let!(:protocol) do
+      create(:vaccination_protocol,
+        species: 'dog',
+        vaccine_type: 'dhpp',
+        dose_number: 2,
+        next_dose_interval_weeks: 4
+      )
+    end
+
+    it 'calculates next_due_date before save if blank' do
+      vaccination = build(:vaccination,
+        pet: pet,
+        vaccine_type: 'dhpp',
+        dose_number: 1,
+        administered_at: Date.today,
+        next_due_date: nil
+      )
+      vaccination.save
+      expect(vaccination.next_due_date).to eq(Date.today + 4.weeks)
+    end
+
+    it 'does not override existing next_due_date' do
+      custom_date = 6.months.from_now.to_date
+      vaccination = build(:vaccination,
+        pet: pet,
+        vaccine_type: 'dhpp',
+        dose_number: 1,
+        administered_at: Date.today,
+        next_due_date: custom_date
+      )
+      vaccination.save
+      expect(vaccination.next_due_date).to eq(custom_date)
+    end
+  end
+
+  describe 'instance methods' do
+    let(:owner) { create(:user, role: :owner) }
+    let(:pet) { create(:pet, user: owner) }
+
+    describe '#overdue?' do
+      it 'returns true if next_due_date is in the past' do
+        vaccination = create(:vaccination, :overdue, pet: pet)
+        expect(vaccination.overdue?).to be true
+      end
+
+      it 'returns false if next_due_date is in the future' do
+        vaccination = create(:vaccination, next_due_date: 1.week.from_now, pet: pet)
+        expect(vaccination.overdue?).to be false
+      end
+
+      it 'returns false if next_due_date is nil' do
+        vaccination = build(:vaccination, next_due_date: nil, pet: pet)
+        expect(vaccination.overdue?).to be false
+      end
+    end
+
+    describe '#due_soon?' do
+      it 'returns true if next_due_date is within 30 days' do
+        vaccination = create(:vaccination, :due_soon, pet: pet)
+        expect(vaccination.due_soon?).to be true
+      end
+
+      it 'returns false if next_due_date is more than 30 days away' do
+        vaccination = create(:vaccination, next_due_date: 2.months.from_now, pet: pet)
+        expect(vaccination.due_soon?).to be false
+      end
+
+      it 'returns false if next_due_date is nil' do
+        vaccination = build(:vaccination, next_due_date: nil, pet: pet)
+        expect(vaccination.due_soon?).to be false
+      end
+    end
+
+    describe '#owner' do
+      it 'returns the pet owner' do
+        vaccination = create(:vaccination, pet: pet)
+        expect(vaccination.owner).to eq(owner)
+      end
+    end
+
+    describe '#display_name' do
+      it 'returns vaccine_name with humanized vaccine_type' do
+        vaccination = create(:vaccination,
+          vaccine_name: 'Nobivac Rabia',
+          vaccine_type: 'rabies'
+        )
+        expect(vaccination.display_name).to eq('Nobivac Rabia (Rabies)')
+      end
+    end
+
+    describe '#days_until_due' do
+      it 'calculates days until next_due_date' do
+        vaccination = create(:vaccination,
+          next_due_date: 10.days.from_now.to_date,
+          pet: pet
+        )
+        expect(vaccination.days_until_due).to be_between(9, 11)
+      end
+
+      it 'returns nil if next_due_date is nil' do
+        vaccination = build(:vaccination, next_due_date: nil, pet: pet)
+        expect(vaccination.days_until_due).to be_nil
+      end
+    end
+  end
+end

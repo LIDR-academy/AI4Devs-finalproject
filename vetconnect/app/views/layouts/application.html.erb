@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-gray-50">
+  <head>
+    <title><%= content_for?(:title) ? yield(:title) + ' - VetConnect' : 'VetConnect - Plataforma de Gestión Veterinaria' %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="VetConnect conecta dueños de mascotas con clínicas veterinarias para una gestión de salud sin complicaciones">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+      * { font-family: 'Inter', sans-serif; }
+      .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+      .card-hover { transition: all 0.3s ease; }
+      .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+      
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+      
+      .status-scheduled { @apply bg-blue-100 text-blue-800; }
+      .status-confirmed { @apply bg-green-100 text-green-800; }
+      .status-completed { @apply bg-gray-100 text-gray-800; }
+      .status-cancelled { @apply bg-red-100 text-red-800; }
+      .status-no_show { @apply bg-yellow-100 text-yellow-800; }
+    </style>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="h-full">
+    <div class="min-h-full">
+      <%= render "shared/navbar" if user_signed_in? %>
+      
+      <%= render "shared/flash_messages" %>
+      
+      <main class="<%= user_signed_in? ? 'lg:pl-72' : '' %>">
+        <div class="<%= user_signed_in? ? 'py-10' : '' %>">
+          <%= yield %>
+        </div>
+      </main>
+    </div>
+
+    <%= render "shared/footer" unless user_signed_in? %>
+  </body>
+</html>

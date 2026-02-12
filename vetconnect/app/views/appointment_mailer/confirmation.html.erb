@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #2196F3; color: white; padding: 20px; text-align: center; }
+    .content { background-color: #f9f9f9; padding: 20px; margin: 20px 0; }
+    .details { background-color: white; padding: 15px; margin: 10px 0; border-left: 4px solid #2196F3; }
+    .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Confirmación de Cita - VetConnect</h1>
+    </div>
+    
+    <div class="content">
+      <h2>Hola <%= @owner.first_name %>,</h2>
+      
+      <p>Tu cita ha sido agendada exitosamente para <strong><%= @pet.name %></strong>.</p>
+      
+      <div class="details">
+        <h3>Detalles de la Cita:</h3>
+        <ul>
+          <li><strong>Mascota:</strong> <%= @pet.name %> (<%= @pet.species.humanize %>)</li>
+          <li><strong>Fecha y Hora:</strong> <%= l(@appointment.appointment_date, format: :long) %></li>
+          <li><strong>Duración:</strong> <%= @appointment.duration_minutes %> minutos</li>
+          <li><strong>Veterinario:</strong> Dr. <%= @veterinarian.full_name %></li>
+          <li><strong>Motivo:</strong> <%= @appointment.reason %></li>
+          <li><strong>Clínica:</strong> <%= @clinic.name %></li>
+          <li><strong>Dirección:</strong> <%= @clinic.address %></li>
+        </ul>
+      </div>
+      
+      <p>Recibirás un recordatorio 24 horas antes de tu cita. Por favor, llega 10 minutos antes.</p>
+    </div>
+    
+    <div class="footer">
+      <p>VetConnect - Cuidando a tu mascota</p>
+      <p>Clínica: <%= @clinic.phone %></p>
+    </div>
+  </div>
+</body>
+</html>

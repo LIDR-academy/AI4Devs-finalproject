@@ -1,0 +1,211 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8 animate-fade-in">
+      <div class="flex items-center gap-x-4">
+        <div class="h-20 w-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-5xl">
+          <%= @pet.species == 'dog' ? '🐕' : @pet.species == 'cat' ? '🐈' : '🐾' %>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight text-gray-900"><%= @pet.name %></h1>
+          <p class="mt-1 text-sm text-gray-600">
+            <%= @pet.species.humanize %> • <%= @pet.age %> años
+            <% if @pet.breed.present? %>
+              • <%= @pet.breed %>
+            <% end %>
+          </p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to pets_path, class: "inline-flex items-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors" do %>
+          ← Volver
+        <% end %>
+        <% if policy(@pet).update? %>
+          <%= link_to edit_pet_path(@pet), class: "inline-flex items-center rounded-lg gradient-bg px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" do %>
+            ✏️ Editar
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Main Info Grid -->
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 animate-fade-in">
+      <!-- Pet Details Card -->
+      <div class="lg:col-span-1">
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-base font-semibold text-gray-900">📋 Información</h2>
+          </div>
+          <div class="px-6 py-5">
+            <dl class="space-y-4">
+              <div>
+                <dt class="text-xs font-medium text-gray-500">Nombre</dt>
+                <dd class="mt-1 text-sm font-semibold text-gray-900"><%= @pet.name %></dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium text-gray-500">Especie</dt>
+                <dd class="mt-1">
+                  <span class="inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 capitalize">
+                    <%= @pet.species.humanize %>
+                  </span>
+                </dd>
+              </div>
+              <% if @pet.breed.present? %>
+                <div>
+                  <dt class="text-xs font-medium text-gray-500">Raza</dt>
+                  <dd class="mt-1 text-sm text-gray-900"><%= @pet.breed %></dd>
+                </div>
+              <% end %>
+              <div>
+                <dt class="text-xs font-medium text-gray-500">Género</dt>
+                <dd class="mt-1 text-sm text-gray-900 capitalize"><%= @pet.gender == 'male' ? '♂️ Macho' : '♀️ Hembra' %></dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium text-gray-500">Fecha de Nacimiento</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                  <%= @pet.birth_date.strftime('%d/%m/%Y') %> (<%= @pet.age %> años)
+                </dd>
+              </div>
+              <% if @pet.color.present? %>
+                <div>
+                  <dt class="text-xs font-medium text-gray-500">Color</dt>
+                  <dd class="mt-1 text-sm text-gray-900"><%= @pet.color %></dd>
+                </div>
+              <% end %>
+              <% if @pet.weight.present? %>
+                <div>
+                  <dt class="text-xs font-medium text-gray-500">Peso</dt>
+                  <dd class="mt-1 text-sm text-gray-900"><%= number_with_precision(@pet.weight, precision: 1) %> kg</dd>
+                </div>
+              <% end %>
+              <% if @pet.microchip_number.present? %>
+                <div>
+                  <dt class="text-xs font-medium text-gray-500">Microchip</dt>
+                  <dd class="mt-1 text-sm text-gray-900 font-mono"><%= @pet.microchip_number %></dd>
+                </div>
+              <% end %>
+              <div>
+                <dt class="text-xs font-medium text-gray-500">Dueño</dt>
+                <dd class="mt-1 text-sm text-gray-900"><%= @pet.user.full_name %></dd>
+              </div>
+            </dl>
+
+            <% if @pet.special_notes.present? %>
+              <div class="mt-6 pt-6 border-t border-gray-200">
+                <dt class="text-xs font-medium text-gray-500 mb-2">Notas Especiales</dt>
+                <dd class="text-sm text-gray-700 bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
+                  <%= @pet.special_notes %>
+                </dd>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Recent Appointments -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-base font-semibold text-gray-900">📅 Citas Recientes</h2>
+              <%= link_to new_pet_appointment_path(@pet), class: "text-sm font-medium text-purple-600 hover:text-purple-500" do %>
+                + Nueva Cita
+              <% end %>
+            </div>
+          </div>
+          <div class="px-6 py-5">
+            <% if @recent_appointments.any? %>
+              <ul class="divide-y divide-gray-100">
+                <% @recent_appointments.each do |appointment| %>
+                  <li class="py-4 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="min-w-0 flex-auto">
+                        <p class="text-sm font-semibold leading-6 text-gray-900">
+                          <%= appointment.appointment_date.strftime('%d %b %Y - %H:%M') %>
+                        </p>
+                        <p class="mt-1 text-xs leading-5 text-gray-500">
+                          <%= truncate(appointment.reason, length: 60) %>
+                        </p>
+                      </div>
+                      <div class="flex items-center gap-x-3">
+                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium status-<%= appointment.status %>">
+                          <%= appointment.status.humanize %>
+                        </span>
+                        <%= link_to appointment_path(appointment), class: "text-sm font-medium text-purple-600 hover:text-purple-500" do %>
+                          Ver →
+                        <% end %>
+                      </div>
+                    </div>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <div class="text-center py-8">
+                <span class="text-5xl">📅</span>
+                <p class="mt-2 text-sm text-gray-500">No hay citas registradas</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Medical Records -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-base font-semibold text-gray-900">📋 Historial Médico</h2>
+              <% if policy(MedicalRecord).create? %>
+                <%= link_to new_pet_medical_record_path(@pet), class: "text-sm font-medium text-purple-600 hover:text-purple-500" do %>
+                  + Nuevo Registro
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+          <div class="px-6 py-5">
+            <% if @medical_records.any? %>
+              <ul class="divide-y divide-gray-100">
+                <% @medical_records.each do |record| %>
+                  <li class="py-4 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="min-w-0 flex-auto">
+                        <p class="text-sm font-semibold leading-6 text-gray-900">
+                          <%= record.visit_date.strftime('%d %b %Y') %> - <%= record.record_type.humanize %>
+                        </p>
+                        <p class="mt-1 text-xs leading-5 text-gray-500">
+                          <%= truncate(record.diagnosis, length: 80) %>
+                        </p>
+                      </div>
+                      <%= link_to medical_record_path(record), class: "text-sm font-medium text-purple-600 hover:text-purple-500" do %>
+                        Ver →
+                      <% end %>
+                    </div>
+                  </li>
+                <% end %>
+              </ul>
+            <% else %>
+              <div class="text-center py-8">
+                <span class="text-5xl">📋</span>
+                <p class="mt-2 text-sm text-gray-500">No hay registros médicos</p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Next Vaccination -->
+        <% if @next_vaccination.present? %>
+          <div class="rounded-lg bg-blue-50 p-6 shadow-sm ring-1 ring-blue-100">
+            <div class="flex">
+              <span class="text-2xl mr-3">💉</span>
+              <div>
+                <h3 class="text-sm font-semibold text-blue-900">Próxima Vacunación</h3>
+                <p class="mt-1 text-sm text-blue-700">
+                  Programada para: <%= @next_vaccination.strftime('%d de %B de %Y') %>
+                </p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
