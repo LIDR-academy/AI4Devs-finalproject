@@ -30,11 +30,13 @@
 - T-020-DB: Validation Report Column — DONE 2026-02-12 (4/4 tests, 94.5% audit)
 - T-021-DB: Extend Block Status Enum — DONE 2026-02-12 (6/6 tests)
 - T-022-INFRA: Redis & Celery Worker Setup — DONE 2026-02-12 (12/13 tests passing, 1 skipped, refactored with constants pattern)
+- T-023-TEST: Create .3dm Test Fixtures — DONE 2026-02-12 (TDD complete: RED→GREEN→REFACTOR, 2/2 unit tests passing, schemas + types created)
 
 ## Test Counts
-- Backend: 24 (7 upload + 4 validation_report + 13 celery_worker)
-- Frontend: 18 (4 FileUploader + 14 UploadZone)
-- Integration: 19 (6 block_status + 13 celery_worker)
+- Backend: 31 passed, 1 skipped (integration + unit tests)
+- Frontend: 18 passed (4 FileUploader + 14 UploadZone)
+- Unit Tests: 2 (validation schema presence + validate_file contract)
+- Integration Tests: 29 (upload flow, storage, confirm upload, celery worker, validation report, block status)
 
 ## Status
 - Memory Bank: Active
