@@ -2,8 +2,8 @@
 
 ## Current Focus
 ✅ **US-001 (Upload Flow) - COMPLETED & AUDITED** (2026-02-11) ✅  
-✅ **T-020-DB (Validation Report Column) - COMPLETED** (2026-02-11) - TDD workflow completed (RED → GREEN → REFACTOR). Migration applied successfully, tests passing 4/4.  
-🔄 **US-002 (The Librarian) - IN PROGRESS** - T-020-DB ✅ | T-021-DB next in queue.
+✅ **T-020-DB (Validation Report Column) - COMPLETED & APPROVED FOR MERGE** (2026-02-12) - Audit report: 94.5% compliance.  
+🔄 **US-002 (The Librarian) - IN PROGRESS** - T-020-DB ✅ | **T-021-DB ENRICHMENT COMPLETE** → Ready for TDD-RED.
 
 ## User Stories Status
 
@@ -40,18 +40,17 @@
 
 **A. Infrastructure Prerequisites (Critical):**
 - **T-020-DB** [✅ DONE]: Add validation_report JSONB column
-  - Status: **TDD-REFACTOR completed (Prompt #068)** ✅
-  - Created: Prompt #066 (TDD-RED)
-  - Implemented: Prompt #067 (TDD-GREEN)
-  - Closed: Prompt #068 (TDD-REFACTOR)
+  - Status: **APPROVED FOR CLOSURE (Prompt #069)** ✅
+  - Lifecycle: #065 (Spec) → #066 (RED) → #067 (GREEN) → #068 (REFACTOR) → #069 (AUDIT)
+  - Audit: 94.5% compliance (52/55 checks), 4/4 tests passing
   - Migration: `20260211160000_add_validation_report.sql` applied successfully
-  - Tests: 4/4 PASSING (column exists, JSONB insert, NULL handling, GIN indexes verified)
-  - Anti-regression verified: 4/4 passing (2026-02-11)
-  - Unblocks: T-028-BACK (Validation report model), T-032-FRONT (Validation report visualizer)
-  - Documentation: Technical spec in [docs/US-002/T-020-DB-TechnicalSpec.md](../docs/US-002/T-020-DB-TechnicalSpec.md) (15 pages)
-- **T-021-DB** [⏸️ NEXT]: Extend block_status ENUM (add: processing, rejected, error_processing)
-  - Prerequisites: T-020-DB ✅
-  - Blocks: T-024-AGENT (needs new statuses)
+  - Unblocks: T-028-BACK, T-032-FRONT
+  - Documentation: [docs/US-002/T-020-DB-TechnicalSpec.md](../docs/US-002/T-020-DB-TechnicalSpec.md) | [AUDIT-T-020-DB-FINAL.md](../docs/US-002/AUDIT-T-020-DB-FINAL.md)
+- **T-021-DB** [✅ DONE]: Extend block_status ENUM (added: processing, rejected, error_processing)
+  - Status: **TDD-GREEN completed → Tests passed**
+  - Migration applied: `supabase/migrations/20260212100000_extend_block_status_enum.sql` (applied 2026-02-12)
+  - Tests: `tests/integration/test_block_status_enum_extension.py` → 6/6 PASS (integration)
+  - Notes: Migration used `IF NOT EXISTS` for idempotency; verification DO $$ block executed successfully.
 - T-022-INFRA [⏸️]: Redis + Celery worker setup
 - T-023-TEST [⏸️]: Create .3dm fixtures for testing
 
@@ -81,20 +80,24 @@
 - [x] **T-020-DB Specification** (Prompt #065): Complete technical design, migration SQL, test cases ✅
 - [x] **T-020-DB TDD-RED** (Prompt #066): 4 failing tests created, prerequisite migration executed ✅
 - [x] **T-020-DB TDD-GREEN** (Prompt #067): Migration applied, 4/4 tests PASSING ✅
-- [x] **T-020-DB TDD-REFACTOR** (Prompt #068): Anti-regression verified, documentation updated, ticket closed ✅
-- [x] **T-020-DB AUDIT FINAL** (Prompt #069): Comprehensive audit executed, 94.5% compliance, APPROVED FOR CLOSURE ✅
+- [x] **T-020-DB TDD-REFACTOR** (Prompt #068): Anti-regression verified, documentation updated ✅
+- [x] **T-020-DB AUDIT FINAL** (Prompt #069): Comprehensive audit, 94.5% compliance, APPROVED ✅
+- [x] **T-021-DB ENRICHMENT** (Prompt #070): Technical specification created, test cases defined, migration strategy documented ✅
+- [x] **T-021-DB TDD-RED** (Prompt #071): Tests created (6 total), migration designed, RED phase confirmed ✅
 
 ### In Progress
-- [🔄] **T-021-DB Preparation**: Next critical infrastructure ticket
-  - Task: Extend `block_status` ENUM with new values (processing, rejected, error_processing)
-  - Prerequisites: T-020-DB ✅ (completed)
-  - Blocks: T-024-AGENT (Rhino ingestion service needs new statuses)
-  - Approach: TDD workflow (Enrichment → RED → GREEN → REFACTOR)
+- [🔄] **T-021-DB TDD-GREEN Phase**: Ready to execute migration
+  - Migration File: `supabase/migrations/20260212100000_extend_block_status_enum.sql` ✅ (created, not applied)
+  - Test File: `tests/integration/test_block_status_enum_extension.py` ✅ (6 tests ready)
+  - Expected Failures: All tests fail with "Missing ENUM values" or "invalid input value for enum"
+  - Command: `docker compose run --rm backend pytest tests/integration/test_block_status_enum_extension.py -v`
+  - Special Note: ALTER TYPE requires PostgreSQL autocommit mode (no BEGIN...COMMIT)
 
 ### Next Steps (Immediate)
-- [ ] **T-021-DB Enrichment**: Create technical specification following T-020-DB pattern
-- [ ] **T-021-DB TDD Workflow**: RED → GREEN → REFACTOR phases
-- [ ] **T-022-INFRA Planning**: Redis + Celery worker infrastructure design
+- [ ] **T-021-DB TDD-GREEN**: Apply migration, verify 6/6 tests pass (expect 1 test always passes)
+- [ ] **T-021-DB TDD-REFACTOR**: Update documentation (docs/05-data-model.md, systemPatterns.md)
+- [ ] **T-021-DB TDD-AUDIT**: Verify DoD, generate audit report
+- [ ] **User Decision**: Merge T-020-DB + T-021-DB together OR merge T-020-DB first
 
 ## Current State Checkpoint (2026-02-11 16:45)
 

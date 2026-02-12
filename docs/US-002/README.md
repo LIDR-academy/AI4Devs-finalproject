@@ -20,6 +20,17 @@
 - **Tests:** 4/4 passing
 - **Descripción:** Migración SQL que añade columna JSONB `validation_report` a tabla `blocks` con índices GIN para búsquedas eficientes.
 
+### Tickets Especificados (Ready for TDD)
+
+#### T-021-DB: Extend Block Status Enum 📋
+- **Spec:** [T-021-DB-TechnicalSpec.md](T-021-DB-TechnicalSpec.md)
+- **Status:** ENRICHMENT COMPLETE (2026-02-12) → Awaiting TDD-RED approval
+- **Migration:** `supabase/migrations/20260212100000_extend_block_status_enum.sql` (designed)
+- **Description:** Extend `block_status` ENUM with 3 new values: `processing`, `rejected`, `error_processing`. PostgreSQL ENUM extension pattern with special non-transactional handling.
+- **Test Cases:** 14 defined (4 critical for TDD-RED)
+- **Estimated Effort:** 1.5 hours
+- **Blocks:** T-024-AGENT, T-026-AGENT, T-031-FRONT
+
 #### T-025-AGENT: Metadata Extractor (User Strings) 📋
 - **Spec:** [T-025-AGENT-UserStrings-Spec.md](T-025-AGENT-UserStrings-Spec.md)
 - **Status:** SPEC READY (pendiente implementación)
@@ -27,7 +38,6 @@
 
 ### Tickets Pendientes
 
-- **T-021-DB:** Extend Block Status Enum (⏭️ NEXT)
 - **T-022-INFRA:** Redis & Celery Worker Setup
 - **T-023-TEST:** Create .3dm Test Fixtures
 - **T-024-AGENT:** Rhino Ingestion Service
@@ -47,9 +57,10 @@
 ```
 US-002/
 ├── README.md (este archivo)
-├── T-020-DB-TechnicalSpec.md          # Spec técnica: columna validation_report
-├── AUDIT-T-020-DB-FINAL.md            # Auditoría final T-020-DB
-├── T-025-AGENT-UserStrings-Spec.md    # Spec técnica: user strings extraction
+├── T-020-DB-TechnicalSpec.md          # Spec técnica: columna validation_report ✅
+├── AUDIT-T-020-DB-FINAL.md            # Auditoría final T-020-DB ✅
+├── T-021-DB-TechnicalSpec.md          # Spec técnica: extend block_status ENUM 📋
+├── T-025-AGENT-UserStrings-Spec.md    # Spec técnica: user strings extraction 📋
 └── (futuros documentos de tickets...)
 ```
 

@@ -74,50 +74,79 @@ def db_connection() -> connection:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_events_table(supabase_client: Client):
+def setup_database_schema(db_connection: connection):
     """
-    Create events table if it doesn't exist.
+    Create essential database schema for integration tests.
     
-    This fixture runs once per test session and ensures the events
-    table is available for T-004-BACK tests.
-    
-    The table is created with the following schema:
-    - id: UUID primary key
-    - file_id: UUID reference to uploaded file
-    - event_type: VARCHAR(100) event classification
-    - metadata: JSONB for flexible event data
-    - created_at: TIMESTAMP with timezone
+    This fixture runs once per test session and ensures the basic
+    tables (profiles, blocks) are available for tests that need them.
     """
-    # SQL to create events table (idempotent)
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS events (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        file_id UUID NOT NULL,
-        event_type VARCHAR(100) NOT NULL,
-        metadata JSONB,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
+    cursor = db_connection.cursor()
     
-    CREATE INDEX IF NOT EXISTS idx_events_file_id ON events(file_id);
-    CREATE INDEX IF NOT EXISTS idx_events_event_type ON events(event_type);
-    CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at DESC);
-    """
-    
-    # Note: Supabase Python client v2 doesn't support direct SQL execution
-    # The table must be created manually in Supabase SQL Editor or via API
-    # This fixture serves as documentation of the required schema
-    
-    # For test purposes, we'll attempt to query the table to verify it exists
     try:
-        # Try to query events table (will fail if doesn't exist)
-        supabase_client.table("events").select("*").limit(1).execute()
+        # Create profiles table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS profiles (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id UUID,
+                name TEXT,
+                email TEXT,
+                role TEXT,
+                workshop_id UUID,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+        """)
+        
+        # Create block_status ENUM if not exists
+        cursor.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'block_status') THEN
+                    CREATE TYPE block_status AS ENUM (
+                        'uploaded', 'validated', 'in_fabrication', 'completed', 'archived'
+                    );
+                END IF;
+            END $$;
+        """)
+        
+        # Create blocks table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS blocks (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                iso_code TEXT UNIQUE,
+                status block_status DEFAULT 'uploaded',
+                tipologia TEXT,
+                zone_id UUID,
+                workshop_id UUID,
+                created_by UUID REFERENCES profiles(id),
+                updated_by UUID REFERENCES profiles(id),
+                url_original TEXT,
+                url_glb TEXT,
+                rhino_metadata JSONB,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                is_archived BOOLEAN DEFAULT FALSE
+            );
+        """)
+        
+        # Insert a test profile for FK references
+        cursor.execute("""
+            INSERT INTO profiles (id, name, email, role)
+            VALUES ('00000000-0000-0000-0000-000000000001', 'Test User', 'test@example.com', 'architect')
+            ON CONFLICT (id) DO NOTHING;
+        """)
+        
+        db_connection.commit()
+        
     except Exception as e:
-        pytest.skip(
-            f"Events table not found. Please run the SQL in infra/create_events_table.sql\n"
-            f"Error: {str(e)}"
-        )
+        db_connection.rollback()
+        pytest.skip(f"Failed to setup database schema: {e}")
     
     yield
     
-    # Cleanup: optionally delete test events after session
-    # Note: In production, events should be append-only for audit trail
+    # Cleanup: optionally drop tables after session (not recommended for integration tests)
+    # cursor.execute("DROP TABLE IF EXISTS blocks;")
+    # cursor.execute("DROP TABLE IF EXISTS profiles;")
+    # cursor.execute("DROP TYPE IF EXISTS block_status;")
+    # db_connection.commit()
