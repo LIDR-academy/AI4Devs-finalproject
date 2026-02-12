@@ -12,6 +12,7 @@ services:
       - ./src/backend:/app
       - ./tests:/app/tests
       - ./infra:/app/infra
+      - ./src/agent:/app/src/agent  # Mount agent module for test imports
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
       - SUPABASE_URL=${SUPABASE_URL}
@@ -61,8 +62,57 @@ services:
     networks:
       - sf-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: sf-pm-redis
+    ports:
+      - "127.0.0.1:6379:6379"  # Localhost only for security
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sf-network
+
+  agent-worker:
+    build:
+      context: ./src/agent
+      target: dev
+    container_name: sf-pm-agent-worker
+    env_file:
+      - .env
+    volumes:
+      - ./src/agent:/app
+      - ./tests:/app/tests
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - sf-network
+    command: celery -A celery_app worker --loglevel=info --concurrency=2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A celery_app inspect ping -d celery@$$HOSTNAME"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
 volumes:
   postgres_data:
+  redis_data:
 
 
 networks:

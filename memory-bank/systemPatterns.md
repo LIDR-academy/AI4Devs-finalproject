@@ -237,6 +237,87 @@ export function UploadZone({ maxFileSize = UPLOAD_ZONE_DEFAULTS.MAX_FILE_SIZE })
 
 **Historical Note**: Original implementation (Prompt #059) had 206 lines with inline styles/config. Refactored to 160 lines in Prompt #060 (22% reduction) by extracting 127-line constants file.
 
+## Agent (Celery Worker) Architecture Patterns
+
+### Agent Module Structure (Implemented in T-022-INFRA)
+**Pattern**: Clean Architecture with constants centralization (consistent with backend/frontend).
+
+**Structure**:
+```text
+src/agent/
+├── celery_app.py       # Celery instance configuration
+├── config.py           # Environment-based settings (Pydantic)
+├── constants.py        # Centralized configuration values
+├── tasks.py            # Celery task definitions
+├── requirements.txt    # Dependencies
+└── Dockerfile          # Multi-stage build (dev/prod)
+```
+
+**Responsibilities**:
+- **celery_app.py**: Initialize Celery app, configure broker/backend, import tasks
+- **config.py**: Environment variables validation (CELERY_BROKER_URL, DATABASE_URL, etc.)
+- **constants.py**: Task timeouts, retry policies, task names (immutable config)
+- **tasks.py**: Business logic for async tasks (@celery_app.task decorators)
+
+### Constants Centralization (Agent Specific)
+**Pattern**: All timeout values, retry policies, and task names in `src/agent/constants.py`.
+
+**Implementation** (`T-022-INFRA` Refactor):
+```python
+# constants.py
+CELERY_APP_NAME = "sf_pm_agent"
+TASK_TIME_LIMIT_SECONDS = 600  # 10min hard kill (.3dm files up to 500MB)
+TASK_SOFT_TIME_LIMIT_SECONDS = 540  # 9min warning (allows cleanup)
+WORKER_PREFETCH_MULTIPLIER = 1  # One task at a time (isolate large files)
+RESULT_EXPIRES_SECONDS = 3600  # 1 hour auto-cleanup
+TASK_MAX_RETRIES = 3
+TASK_RETRY_DELAY_SECONDS = 60  # 1min between retries
+TASK_HEALTH_CHECK = "agent.tasks.health_check"  # Type-safe task names
+TASK_VALIDATE_FILE = "agent.tasks.validate_file"
+```
+
+**Usage**:
+```python
+# celery_app.py
+from constants import TASK_TIME_LIMIT_SECONDS, WORKER_PREFETCH_MULTIPLIER
+
+celery_app.conf.update(
+    task_time_limit=TASK_TIME_LIMIT_SECONDS,
+    worker_prefetch_multiplier=WORKER_PREFETCH_MULTIPLIER,
+)
+
+# tasks.py
+from constants import TASK_HEALTH_CHECK, TASK_MAX_RETRIES, TASK_RETRY_DELAY_SECONDS
+
+@celery_app.task(
+    name=TASK_HEALTH_CHECK,
+    max_retries=TASK_MAX_RETRIES,
+    default_retry_delay=TASK_RETRY_DELAY_SECONDS
+)
+def health_check(self):
+    ...
+```
+
+**Benefits**:
+- **Consistency**: Same pattern as backend/frontend (team familiarity)
+- **Maintainability**: Timeout adjustments in one place
+- **Type Safety**: Task names as constants (refactoring support)
+- **Testing**: Constants importable in tests for validation
+
+**Conditional Imports Pattern**:
+Agent modules support both direct execution (worker) and module imports (tests):
+```python
+# Support both /app execution and src.agent imports
+try:
+    import constants
+    if hasattr(constants, 'CELERY_APP_NAME'):
+        from constants import TASK_HEALTH_CHECK
+    else:
+        raise ImportError("Wrong constants module")  # Avoid backend/constants.py collision
+except (ImportError, ModuleNotFoundError):
+    from src.agent.constants import TASK_HEALTH_CHECK
+```
+
 ## Folder Structure
 ```text
 /memory-bank/   -> Documentation root

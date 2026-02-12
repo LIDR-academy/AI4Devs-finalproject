@@ -29,11 +29,12 @@
 ### Sprint 4 / US-002 (in progress)
 - T-020-DB: Validation Report Column — DONE 2026-02-12 (4/4 tests, 94.5% audit)
 - T-021-DB: Extend Block Status Enum — DONE 2026-02-12 (6/6 tests)
+- T-022-INFRA: Redis & Celery Worker Setup — DONE 2026-02-12 (12/13 tests passing, 1 skipped, refactored with constants pattern)
 
 ## Test Counts
-- Backend: 11 (7 upload + 4 validation_report)
+- Backend: 24 (7 upload + 4 validation_report + 13 celery_worker)
 - Frontend: 18 (4 FileUploader + 14 UploadZone)
-- Integration: 6 (block_status enum)
+- Integration: 19 (6 block_status + 13 celery_worker)
 
 ## Status
 - Memory Bank: Active
