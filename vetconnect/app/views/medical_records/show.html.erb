@@ -1,0 +1,160 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8 animate-fade-in">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Registro Médico 📋</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Detalles completos del registro médico
+        </p>
+      </div>
+      <div class="mt-4 sm:mt-0 flex gap-2">
+        <% if policy(@medical_record).update? %>
+          <%= link_to edit_medical_record_path(@medical_record), 
+              class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+            <span class="mr-2" aria-hidden="true">✏️</span> Editar
+          <% end %>
+        <% end %>
+        <%= link_to medical_records_path(pet_id: @medical_record.pet_id), 
+            class: "inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors min-h-[44px]" do %>
+          <span class="mr-2" aria-hidden="true">←</span> Volver
+        <% end %>
+      </div>
+    </div>
+
+    <div class="space-y-6 animate-fade-in">
+      <!-- General Info Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-900">📋 Información General</h2>
+        </div>
+        <div class="px-6 py-5">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Mascota</dt>
+              <dd class="mt-1 text-sm font-semibold text-gray-900">
+                <%= link_to @medical_record.pet.name, pet_path(@medical_record.pet), 
+                    class: "text-indigo-600 hover:text-indigo-500" %>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Fecha de Visita</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @medical_record.visit_date.strftime('%d/%m/%Y') %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Tipo de Registro</dt>
+              <dd class="mt-1">
+                <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                  <%= @medical_record.record_type.humanize %>
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Veterinario</dt>
+              <dd class="mt-1 text-sm text-gray-900">Dr. <%= @medical_record.veterinarian.full_name %></dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Clinical Data Card -->
+      <% if @medical_record.weight.present? || @medical_record.temperature.present? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">🩺 Datos Clínicos</h2>
+          </div>
+          <div class="px-6 py-5">
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <% if @medical_record.weight.present? %>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Peso</dt>
+                  <dd class="mt-1 text-sm text-gray-900"><%= number_with_precision(@medical_record.weight, precision: 1) %> kg</dd>
+                </div>
+              <% end %>
+              <% if @medical_record.temperature.present? %>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Temperatura</dt>
+                  <dd class="mt-1 text-sm text-gray-900"><%= @medical_record.temperature %> °C</dd>
+                </div>
+              <% end %>
+            </dl>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Diagnosis Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-900">🔍 Diagnóstico</h2>
+        </div>
+        <div class="px-6 py-5">
+          <p class="text-sm text-gray-900 whitespace-pre-wrap"><%= @medical_record.diagnosis %></p>
+        </div>
+      </div>
+
+      <!-- Treatment Card -->
+      <% if @medical_record.treatment.present? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">💊 Tratamiento</h2>
+          </div>
+          <div class="px-6 py-5">
+            <p class="text-sm text-gray-900 whitespace-pre-wrap"><%= @medical_record.treatment %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Prescription Card -->
+      <% if @medical_record.prescription.present? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">💉 Prescripción</h2>
+          </div>
+          <div class="px-6 py-5">
+            <p class="text-sm text-gray-900 whitespace-pre-wrap"><%= @medical_record.prescription %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Additional Notes Card -->
+      <% if @medical_record.notes.present? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">📝 Notas Adicionales</h2>
+          </div>
+          <div class="px-6 py-5">
+            <p class="text-sm text-gray-900 whitespace-pre-wrap"><%= @medical_record.notes %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Documents Section -->
+      <% if @documents.any? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">📎 Documentos Asociados</h2>
+          </div>
+          <div class="px-6 py-5">
+            <div class="space-y-3">
+              <% @documents.each do |doc| %>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center gap-3">
+                    <span class="text-2xl">📄</span>
+                    <div>
+                      <p class="text-sm font-medium text-gray-900"><%= doc.title %></p>
+                      <p class="text-xs text-gray-500"><%= doc.document_type.humanize %></p>
+                    </div>
+                  </div>
+                  <%= link_to document_path(doc), 
+                      class: "text-sm font-medium text-indigo-600 hover:text-indigo-500" do %>
+                    Ver →
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

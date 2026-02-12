@@ -1,0 +1,170 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe VaccinationProtocol, type: :model do
+  describe 'validations' do
+    subject { build(:vaccination_protocol) }
+
+    it { should validate_presence_of(:species) }
+    it { should validate_presence_of(:vaccine_type) }
+    it { should validate_presence_of(:dose_number) }
+    it { should validate_presence_of(:minimum_age_weeks) }
+    it { should validate_presence_of(:next_dose_interval_weeks) }
+
+    it { should validate_numericality_of(:dose_number).is_greater_than(0) }
+    it { should validate_numericality_of(:minimum_age_weeks).is_greater_than_or_equal_to(0) }
+    it { should validate_numericality_of(:next_dose_interval_weeks).is_greater_than(0) }
+
+    it 'validates uniqueness of species, vaccine_type, and dose_number combination' do
+      create(:vaccination_protocol, 
+        species: 'dog',
+        vaccine_type: 'rabies',
+        dose_number: 1
+      )
+
+      duplicate = build(:vaccination_protocol,
+        species: 'dog',
+        vaccine_type: 'rabies',
+        dose_number: 1
+      )
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:species]).to be_present
+    end
+
+    it 'allows same species and vaccine_type with different dose_number' do
+      create(:vaccination_protocol,
+        species: 'dog',
+        vaccine_type: 'rabies',
+        dose_number: 1
+      )
+
+      different_dose = build(:vaccination_protocol,
+        species: 'dog',
+        vaccine_type: 'rabies',
+        dose_number: 2
+      )
+
+      expect(different_dose).to be_valid
+    end
+  end
+
+  describe 'scopes' do
+    let!(:dog_rabies) { create(:vaccination_protocol, species: 'dog', vaccine_type: 'rabies') }
+    let!(:cat_rabies) { create(:vaccination_protocol, species: 'cat', vaccine_type: 'rabies') }
+    let!(:dog_dhpp) { create(:vaccination_protocol, :dhpp, species: 'dog') }
+
+    describe '.for_species' do
+      it 'filters by species' do
+        dog_protocols = VaccinationProtocol.for_species('dog')
+        expect(dog_protocols).to include(dog_rabies, dog_dhpp)
+        expect(dog_protocols).not_to include(cat_rabies)
+      end
+    end
+
+    describe '.for_vaccine_type' do
+      it 'filters by vaccine_type' do
+        rabies_protocols = VaccinationProtocol.for_vaccine_type('rabies')
+        expect(rabies_protocols).to include(dog_rabies, cat_rabies)
+        expect(rabies_protocols).not_to include(dog_dhpp)
+      end
+    end
+
+    describe '.by_dose_number' do
+      it 'filters by dose_number' do
+        dose_1_protocols = VaccinationProtocol.by_dose_number(1)
+        expect(dose_1_protocols).to include(dog_rabies, cat_rabies, dog_dhpp)
+      end
+    end
+  end
+
+  describe 'class methods' do
+    describe '.find_protocol' do
+      let!(:protocol) do
+        create(:vaccination_protocol,
+          species: 'dog',
+          vaccine_type: 'rabies',
+          dose_number: 1
+        )
+      end
+
+      it 'finds protocol by species, vaccine_type, and dose_number' do
+        found = VaccinationProtocol.find_protocol(
+          species: 'dog',
+          vaccine_type: 'rabies',
+          dose_number: 1
+        )
+        expect(found).to eq(protocol)
+      end
+
+      it 'returns nil if protocol not found' do
+        found = VaccinationProtocol.find_protocol(
+          species: 'cat',
+          vaccine_type: 'rabies',
+          dose_number: 1
+        )
+        expect(found).to be_nil
+      end
+
+      it 'handles string and symbol inputs' do
+        found = VaccinationProtocol.find_protocol(
+          species: :dog,
+          vaccine_type: :rabies,
+          dose_number: 1
+        )
+        expect(found).to eq(protocol)
+      end
+    end
+
+    describe '.next_dose_interval' do
+      let!(:protocol) do
+        create(:vaccination_protocol,
+          species: 'dog',
+          vaccine_type: 'dhpp',
+          dose_number: 2,
+          next_dose_interval_weeks: 4
+        )
+      end
+
+      it 'returns next dose interval weeks' do
+        interval = VaccinationProtocol.next_dose_interval(
+          species: 'dog',
+          vaccine_type: 'dhpp',
+          current_dose: 1
+        )
+        expect(interval).to eq(4)
+      end
+
+      it 'returns nil if protocol not found' do
+        interval = VaccinationProtocol.next_dose_interval(
+          species: 'cat',
+          vaccine_type: 'dhpp',
+          current_dose: 1
+        )
+        expect(interval).to be_nil
+      end
+    end
+  end
+
+  describe 'instance methods' do
+    let(:protocol) do
+      create(:vaccination_protocol,
+        minimum_age_weeks: 12,
+        next_dose_interval_weeks: 52
+      )
+    end
+
+    describe '#minimum_age_days' do
+      it 'converts weeks to days' do
+        expect(protocol.minimum_age_days).to eq(84) # 12 weeks * 7 days
+      end
+    end
+
+    describe '#next_dose_interval_days' do
+      it 'converts weeks to days' do
+        expect(protocol.next_dose_interval_days).to eq(364) # 52 weeks * 7 days
+      end
+    end
+  end
+end

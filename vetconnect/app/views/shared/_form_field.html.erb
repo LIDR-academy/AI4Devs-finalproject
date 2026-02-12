@@ -1,0 +1,106 @@
+<%# 
+  Reusable Form Field Component
+  Usage:
+  <%= render 'shared/form_field', 
+      form: f,
+      field: :name,
+      label: 'Nombre',
+      type: :text_field,
+      required: true,
+      placeholder: 'Ingresa el nombre',
+      help_text: 'Este campo es obligatorio',
+      errors: @pet.errors[:name]
+  %>
+%>
+<% 
+  field_name = field
+  field_type ||= :text_field
+  field_id = "#{form.object_name}_#{field_name}"
+  label_text = label || field_name.to_s.humanize
+  required ||= false
+  help_text ||= nil
+  field_errors ||= []
+  placeholder ||= nil
+  options ||= {}
+%>
+<div class="form-group">
+  <%= form.label field_name, label_text, 
+      class: "block text-sm font-medium leading-6 text-gray-900",
+      for: field_id do %>
+    <%= label_text %>
+    <% if required %>
+      <span class="text-red-500" aria-label="requerido">*</span>
+    <% end %>
+  <% end %>
+  
+  <div class="mt-2">
+    <% case field_type %>
+    <% when :text_field %>
+      <%= form.text_field field_name, 
+          id: field_id,
+          class: "block w-full rounded-lg border-2 border-gray-300 py-2.5 px-3 text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm sm:leading-6 transition-all",
+          placeholder: placeholder,
+          required: required,
+          aria: { required: required, describedby: help_text ? "#{field_id}-help" : nil, invalid: field_errors.any? } %>
+    <% when :email_field %>
+      <%= form.email_field field_name,
+          id: field_id,
+          class: "block w-full rounded-lg border-2 border-gray-300 py-2.5 px-3 text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm sm:leading-6 transition-all",
+          placeholder: placeholder,
+          required: required,
+          aria: { required: required, describedby: help_text ? "#{field_id}-help" : nil, invalid: field_errors.any? } %>
+    <% when :password_field %>
+      <%= form.password_field field_name,
+          id: field_id,
+          class: "block w-full rounded-lg border-2 border-gray-300 py-2.5 px-3 text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm sm:leading-6 transition-all",
+          placeholder: placeholder,
+          required: required,
+          aria: { required: required, describedby: help_text ? "#{field_id}-help" : nil, invalid: field_errors.any? } %>
+    <% when :number_field %>
+      <%= form.number_field field_name,
+          id: field_id,
+          class: "block w-full rounded-lg border-2 border-gray-300 py-2.5 px-3 text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm sm:leading-6 transition-all",
+          placeholder: placeholder,
+          required: required,
+          **options,
+          aria: { required: required, describedby: help_text ? "#{field_id}-help" : nil, invalid: field_errors.any? } %>
+    <% when :date_field %>
+      <%= form.date_field field_name,
+          id: field_id,
+          class: "block w-full rounded-lg border-2 border-gray-300 py-2.5 px-3 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm sm:leading-6 transition-all",
+          required: required,
+          **options,
+          aria: { required: required, describedby: help_text ? "#{field_id}-help" : nil, invalid: field_errors.any? } %>
+    <% when :select %>
+      <%= form.select field_name,
+          options[:choices] || [],
+          { prompt: options[:prompt] },
+          { 
+            id: field_id,
+            class: "block w-full rounded-lg border-2 border-gray-300 py-2.5 px-3 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm sm:leading-6 transition-all",
+            required: required,
+            aria: { required: required, describedby: help_text ? "#{field_id}-help" : nil, invalid: field_errors.any? }
+          } %>
+    <% when :text_area %>
+      <%= form.text_area field_name,
+          id: field_id,
+          class: "block w-full rounded-lg border-2 border-gray-300 py-2.5 px-3 text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm sm:leading-6 transition-all",
+          placeholder: placeholder,
+          required: required,
+          rows: options[:rows] || 3,
+          aria: { required: required, describedby: help_text ? "#{field_id}-help" : nil, invalid: field_errors.any? } %>
+    <% end %>
+  </div>
+  
+  <% if field_errors.any? %>
+    <p class="mt-1 text-sm text-red-600" id="<%= field_id %>-error" role="alert">
+      <%= field_errors.first %>
+    </p>
+  <% end %>
+  
+  <% if help_text.present? %>
+    <p class="mt-1 text-xs text-gray-500" id="<%= field_id %>-help">
+      <%= help_text %>
+    </p>
+  <% end %>
+</div>

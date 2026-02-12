@@ -1,0 +1,19 @@
+---
+EnableDefaultLinters: true
+linters:
+  ErbSafety:
+    enabled: true
+  RightToLeft:
+    enabled: true
+  AllowedScriptType:
+    enabled: true
+  NoUnusedDisable:
+    enabled: true
+  RequireInputLabel:
+    enabled: false
+  DeprecatedClasses:
+    enabled: true
+  SpaceAroundErbTag:
+    enabled: true
+  ClosingErbTagIndent:
+    enabled: true

@@ -1,0 +1,154 @@
+<div class="bg-white">
+  <!-- Hero Section -->
+  <div class="relative isolate px-6 pt-14 lg:px-8">
+    <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+      <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-purple-400 to-pink-400 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
+    </div>
+    
+    <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
+      <div class="text-center animate-fade-in">
+        <div class="flex justify-center mb-8">
+          <div class="rounded-full gradient-bg p-6 shadow-2xl">
+            <span class="text-7xl">🐾</span>
+          </div>
+        </div>
+        
+        <h1 class="text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl">
+          VetConnect
+        </h1>
+        <p class="mt-6 text-xl leading-8 text-gray-600 max-w-2xl mx-auto">
+          Plataforma integral de gestión veterinaria que conecta dueños de mascotas con clínicas veterinarias para un cuidado de salud sin complicaciones.
+        </p>
+        
+        <div class="mt-10 flex items-center justify-center gap-x-6">
+          <%= link_to new_user_session_path, class: "rounded-lg gradient-bg px-6 py-3 text-base font-semibold text-white shadow-sm hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 transition-all" do %>
+            Iniciar Sesión
+          <% end %>
+          <%= link_to clinics_path, class: "text-base font-semibold leading-6 text-gray-900 hover:text-purple-600 transition-colors" do %>
+            Ver Clínicas <span aria-hidden="true">→</span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <div class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]">
+      <div class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-purple-400 to-pink-400 opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"></div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="py-24 sm:py-32 bg-gray-50">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl lg:text-center">
+        <h2 class="text-base font-semibold leading-7 text-purple-600">Todo lo que necesitas</h2>
+        <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          Gestión completa de salud veterinaria
+        </p>
+        <p class="mt-6 text-lg leading-8 text-gray-600">
+          Una plataforma diseñada para simplificar la gestión de la salud de tus mascotas
+        </p>
+      </div>
+      
+      <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+        <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+          <!-- Feature 1 -->
+          <div class="flex flex-col items-start card-hover bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-900/5">
+            <div class="rounded-lg bg-purple-100 p-4 ring-1 ring-purple-200">
+              <span class="text-4xl">📅</span>
+            </div>
+            <dt class="mt-4 font-semibold text-gray-900 text-lg">Agendamiento Inteligente</dt>
+            <dd class="mt-2 leading-7 text-gray-600 text-sm">
+              Agenda citas fácilmente con disponibilidad en tiempo real. Sistema que previene conflictos y optimiza los horarios.
+            </dd>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="flex flex-col items-start card-hover bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-900/5">
+            <div class="rounded-lg bg-green-100 p-4 ring-1 ring-green-200">
+              <span class="text-4xl">📋</span>
+            </div>
+            <dt class="mt-4 font-semibold text-gray-900 text-lg">Historial Médico Digital</dt>
+            <dd class="mt-2 leading-7 text-gray-600 text-sm">
+              Accede al historial médico completo de tus mascotas en cualquier momento. Todo centralizado y seguro.
+            </dd>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="flex flex-col items-start card-hover bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-900/5">
+            <div class="rounded-lg bg-blue-100 p-4 ring-1 ring-blue-200">
+              <span class="text-4xl">🔔</span>
+            </div>
+            <dt class="mt-4 font-semibold text-gray-900 text-lg">Recordatorios Automáticos</dt>
+            <dd class="mt-2 leading-7 text-gray-600 text-sm">
+              Recibe notificaciones por email sobre citas próximas, vacunas y chequeos importantes.
+            </dd>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="flex flex-col items-start card-hover bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-900/5">
+            <div class="rounded-lg bg-pink-100 p-4 ring-1 ring-pink-200">
+              <span class="text-4xl">🐾</span>
+            </div>
+            <dt class="mt-4 font-semibold text-gray-900 text-lg">Gestión de Mascotas</dt>
+            <dd class="mt-2 leading-7 text-gray-600 text-sm">
+              Registra múltiples mascotas con toda su información. Perfiles completos con fotos y datos médicos.
+            </dd>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="flex flex-col items-start card-hover bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-900/5">
+            <div class="rounded-lg bg-yellow-100 p-4 ring-1 ring-yellow-200">
+              <span class="text-4xl">🏥</span>
+            </div>
+            <dt class="mt-4 font-semibold text-gray-900 text-lg">Múltiples Clínicas</dt>
+            <dd class="mt-2 leading-7 text-gray-600 text-sm">
+              Accede a una red de clínicas veterinarias. Compara horarios y servicios para elegir la mejor opción.
+            </dd>
+          </div>
+
+          <!-- Feature 6 -->
+          <div class="flex flex-col items-start card-hover bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-900/5">
+            <div class="rounded-lg bg-indigo-100 p-4 ring-1 ring-indigo-200">
+              <span class="text-4xl">🔐</span>
+            </div>
+            <dt class="mt-4 font-semibold text-gray-900 text-lg">Seguro y Privado</dt>
+            <dd class="mt-2 leading-7 text-gray-600 text-sm">
+              Tus datos y los de tus mascotas están protegidos. Sistema con autorización por roles y encriptación.
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="relative isolate overflow-hidden bg-gradient-to-br from-purple-600 to-pink-600">
+    <div class="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          ¿Listo para comenzar?
+        </h2>
+        <p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-purple-100">
+          Contacta a tu administrador para obtener acceso a VetConnect y comenzar a gestionar la salud de tus mascotas de manera profesional.
+        </p>
+        <div class="mt-10 flex items-center justify-center gap-x-6">
+          <%= link_to new_user_session_path, class: "rounded-lg bg-white px-6 py-3 text-base font-semibold text-purple-600 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all" do %>
+            Iniciar Sesión
+          <% end %>
+          <%= link_to clinics_path, class: "text-base font-semibold leading-6 text-white hover:text-purple-100 transition-colors" do %>
+            Ver Clínicas <span aria-hidden="true">→</span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    <svg viewBox="0 0 1024 1024" class="absolute left-1/2 top-1/2 -z-10 h-[64rem] w-[64rem] -translate-x-1/2 [mask-image:radial-gradient(closest-side,white,transparent)]" aria-hidden="true">
+      <circle cx="512" cy="512" r="512" fill="url(#gradient)" fill-opacity="0.7" />
+      <defs>
+        <radialGradient id="gradient">
+          <stop stop-color="#7c3aed" />
+          <stop offset="1" stop-color="#ec4899" />
+        </radialGradient>
+      </defs>
+    </svg>
+  </div>
+</div>

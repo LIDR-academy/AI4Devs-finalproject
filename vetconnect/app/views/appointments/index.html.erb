@@ -1,0 +1,126 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Citas 📅</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Gestiona todas las citas programadas
+      </p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <%= link_to new_appointment_path, class: "inline-flex items-center rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" do %>
+        <span class="mr-2">➕</span> Nueva Cita
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="mt-6 flex flex-wrap gap-2 animate-fade-in">
+    <%= link_to appointments_path, class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:status].blank? ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors" do %>
+      Todas
+    <% end %>
+    <%= link_to appointments_path(status: :scheduled), class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:status] == 'scheduled' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors" do %>
+      Programadas
+    <% end %>
+    <%= link_to appointments_path(status: :confirmed), class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:status] == 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors" do %>
+      Confirmadas
+    <% end %>
+    <%= link_to appointments_path(status: :completed), class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:status] == 'completed' ? 'bg-gray-100 text-gray-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors" do %>
+      Completadas
+    <% end %>
+  </div>
+
+  <!-- Table -->
+  <% if @appointments.any? %>
+    <div class="mt-8 flow-root animate-fade-in">
+      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <div class="overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-xl">
+            <table class="min-w-full divide-y divide-gray-300 bg-white" role="table" aria-label="Lista de citas veterinarias">
+              <caption class="sr-only">Tabla de citas veterinarias con información de fecha, mascota, veterinario, clínica, motivo y estado. Usa las flechas del teclado para navegar.</caption>
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                    <span class="sr-only sm:not-sr-only">Fecha y </span>Hora
+                  </th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mascota</th>
+                  <th scope="col" class="hidden sm:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Veterinario</th>
+                  <th scope="col" class="hidden lg:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Clínica</th>
+                  <th scope="col" class="hidden md:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Motivo</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Estado</th>
+                  <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                    <span class="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <% @appointments.each do |appointment| %>
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                      <div class="font-medium text-gray-900">
+                        <%= appointment.appointment_date.strftime('%d %b %Y') %>
+                      </div>
+                      <div class="text-gray-500">
+                        <%= appointment.appointment_date.strftime('%H:%M') %> • <%= appointment.duration_minutes %> min
+                      </div>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm">
+                      <div class="flex items-center">
+                        <div class="h-10 w-10 flex-shrink-0">
+                          <div class="h-10 w-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-lg">
+                            <%= appointment.pet.species == 'dog' ? '🐕' : appointment.pet.species == 'cat' ? '🐈' : '🐾' %>
+                          </div>
+                        </div>
+                        <div class="ml-3">
+                          <div class="font-medium text-gray-900"><%= appointment.pet.name %></div>
+                          <div class="text-gray-500"><%= appointment.pet.species.humanize %></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                      <div class="font-medium">Dr. <%= appointment.veterinarian.last_name %></div>
+                      <div class="text-gray-500 text-xs"><%= appointment.veterinarian.email %></div>
+                    </td>
+                    <td class="hidden lg:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                      <%= appointment.clinic.name %>
+                    </td>
+                    <td class="hidden md:table-cell px-3 py-4 text-sm text-gray-500 max-w-xs">
+                      <div class="truncate" title="<%= appointment.reason %>"><%= appointment.reason %></div>
+                      <div class="text-xs text-gray-400 capitalize"><%= appointment.appointment_type.humanize %></div>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm">
+                      <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium status-<%= appointment.status %>">
+                        <%= appointment.status.humanize %>
+                      </span>
+                    </td>
+                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                      <%= link_to appointment_path(appointment), 
+                          class: "text-indigo-600 hover:text-indigo-900 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded px-2 py-1",
+                          aria: { label: "Ver detalles de la cita de #{appointment.pet.name}" } do %>
+                        Ver detalles →
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <% if @appointments.respond_to?(:total_pages) && @appointments.total_pages > 1 %>
+      <div class="mt-6 flex items-center justify-center">
+        <%= paginate @appointments, theme: 'twitter-bootstrap-4' %>
+      </div>
+    <% end %>
+  <% else %>
+    <!-- Empty State -->
+    <%= render 'shared/empty_state', 
+        icon: '📅',
+        title: 'No hay citas',
+        message: params[:status].present? ? 'No hay citas con el estado seleccionado.' : 'Comienza agendando la primera cita veterinaria.',
+        action: { text: 'Agendar Primera Cita', path: new_appointment_path, icon: '➕' } %>
+  <% end %>
+</div>

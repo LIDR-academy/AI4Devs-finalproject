@@ -1,0 +1,108 @@
+<!-- Sidebar for desktop -->
+<div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
+  <div class="flex grow flex-col gap-y-5 overflow-y-auto gradient-bg px-6 pb-4">
+    <!-- Logo -->
+    <div class="flex h-16 shrink-0 items-center">
+      <%= link_to root_path, class: "flex items-center space-x-3" do %>
+        <span class="text-3xl">🐾</span>
+        <span class="text-2xl font-bold text-white">VetConnect</span>
+      <% end %>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex flex-1 flex-col">
+      <ul role="list" class="flex flex-1 flex-col gap-y-7">
+        <li>
+          <ul role="list" class="-mx-2 space-y-1">
+            <% if current_user.owner? %>
+              <%= render 'shared/nav_item', title: 'Dashboard', path: owner_root_path, icon: '🏠', current_page: owner_root_path %>
+              <%= render 'shared/nav_item', title: 'Mis Mascotas', path: owner_pets_path, icon: '🐕', current_page: owner_pets_path %>
+              <%= render 'shared/nav_item', title: 'Mis Citas', path: owner_appointments_path, icon: '📅', current_page: owner_appointments_path %>
+              <%= render 'shared/nav_item', title: 'Agendar Cita', path: new_appointment_path, icon: '➕', current_page: new_appointment_path %>
+              <%= render 'shared/nav_item', title: 'Clínicas', path: clinics_path, icon: '🏥', current_page: clinics_path %>
+            <% elsif current_user.veterinarian? %>
+              <%= render 'shared/nav_item', title: 'Dashboard', path: veterinarian_root_path, icon: '🏠', current_page: veterinarian_root_path %>
+              <%= render 'shared/nav_item', title: 'Citas', path: veterinarian_appointments_path, icon: '📅', current_page: veterinarian_appointments_path %>
+              <%= render 'shared/nav_item', title: 'Registros Médicos', path: veterinarian_medical_records_path, icon: '📋', current_page: veterinarian_medical_records_path %>
+              <%= render 'shared/nav_item', title: 'Todas las Mascotas', path: pets_path, icon: '🐕', current_page: pets_path %>
+            <% elsif current_user.admin? %>
+              <%= render 'shared/nav_item', title: 'Dashboard', path: admin_root_path, icon: '🏠', current_page: admin_root_path %>
+              <%= render 'shared/nav_item', title: 'Usuarios', path: admin_users_path, icon: '👥', current_page: admin_users_path %>
+              <%= render 'shared/nav_item', title: 'Reportes', path: admin_reports_path, icon: '📊', current_page: admin_reports_path %>
+              <%= render 'shared/nav_item', title: 'Configuración', path: admin_clinic_settings_path, icon: '⚙️', current_page: admin_clinic_settings_path %>
+              <%= render 'shared/nav_item', title: 'Clínicas', path: clinics_path, icon: '🏥', current_page: clinics_path %>
+            <% end %>
+          </ul>
+        </li>
+
+        <!-- User profile section -->
+        <li class="mt-auto">
+          <div class="bg-white bg-opacity-10 rounded-lg p-4">
+            <div class="flex items-center gap-x-4">
+              <div class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-2xl">
+                <%= current_user.role == 'owner' ? '👤' : current_user.role == 'veterinarian' ? '👨‍⚕️' : '👔' %>
+              </div>
+              <div class="text-sm leading-6">
+                <p class="font-semibold text-white"><%= current_user.full_name %></p>
+                <p class="text-gray-200 text-xs capitalize"><%= current_user.role.humanize %></p>
+              </div>
+            </div>
+            <%= button_to destroy_user_session_path, method: :delete, 
+                data: { turbo: false },
+                class: "mt-4 flex w-full items-center justify-center rounded-md bg-white bg-opacity-10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-opacity-20 transition-colors min-h-[44px]" do %>
+              <span class="mr-2" aria-hidden="true">🚪</span> Cerrar Sesión
+            <% end %>
+          </div>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Mobile menu button -->
+<div class="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-sm sm:px-6 lg:hidden">
+  <button type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+    <span class="sr-only">Abrir menú</span>
+    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    </svg>
+  </button>
+  <div class="flex-1 text-sm font-semibold leading-6 text-gray-900">
+    🐾 VetConnect
+  </div>
+  <span class="inline-flex items-center rounded-md bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 capitalize">
+    <%= current_user.role.humanize %>
+  </span>
+</div>
+
+<!-- Mobile menu -->
+<div id="mobile-menu" class="hidden lg:hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-75">
+  <div class="fixed inset-y-0 left-0 w-full max-w-xs gradient-bg">
+    <div class="flex h-16 items-center justify-between px-6">
+      <span class="text-2xl font-bold text-white">🐾 VetConnect</span>
+      <button type="button" onclick="document.getElementById('mobile-menu').classList.add('hidden')" class="text-white">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <nav class="px-6 mt-6">
+      <ul class="space-y-2">
+        <% if current_user.owner? %>
+          <%= render 'shared/nav_item', title: 'Dashboard', path: owner_root_path, icon: '🏠', current_page: owner_root_path %>
+          <%= render 'shared/nav_item', title: 'Mis Mascotas', path: owner_pets_path, icon: '🐕', current_page: owner_pets_path %>
+          <%= render 'shared/nav_item', title: 'Mis Citas', path: owner_appointments_path, icon: '📅', current_page: owner_appointments_path %>
+          <%= render 'shared/nav_item', title: 'Agendar Cita', path: new_appointment_path, icon: '➕', current_page: new_appointment_path %>
+        <% elsif current_user.veterinarian? %>
+          <%= render 'shared/nav_item', title: 'Dashboard', path: veterinarian_root_path, icon: '🏠', current_page: veterinarian_root_path %>
+          <%= render 'shared/nav_item', title: 'Citas', path: veterinarian_appointments_path, icon: '📅', current_page: veterinarian_appointments_path %>
+          <%= render 'shared/nav_item', title: 'Registros Médicos', path: veterinarian_medical_records_path, icon: '📋', current_page: veterinarian_medical_records_path %>
+        <% elsif current_user.admin? %>
+          <%= render 'shared/nav_item', title: 'Dashboard', path: admin_root_path, icon: '🏠', current_page: admin_root_path %>
+          <%= render 'shared/nav_item', title: 'Usuarios', path: admin_users_path, icon: '👥', current_page: admin_users_path %>
+          <%= render 'shared/nav_item', title: 'Reportes', path: admin_reports_path, icon: '📊', current_page: admin_reports_path %>
+        <% end %>
+      </ul>
+    </nav>
+  </div>
+</div>

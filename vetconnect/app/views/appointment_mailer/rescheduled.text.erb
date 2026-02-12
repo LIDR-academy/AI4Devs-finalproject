@@ -1,0 +1,25 @@
+CITA REPROGRAMADA - VetConnect
+===============================
+
+Hola <%= @owner.first_name %>,
+
+Tu cita para <%= @pet.name %> ha sido reprogramada.
+
+NUEVA FECHA Y HORA:
+------------------
+Mascota: <%= @pet.name %> (<%= @pet.species.humanize %>)
+Fecha y Hora: <%= l(@appointment.appointment_date, format: :long) %>
+Duración: <%= @appointment.duration_minutes %> minutos
+Veterinario: Dr. <%= @veterinarian.full_name %>
+Motivo: <%= @appointment.reason %>
+
+CLÍNICA:
+--------
+<%= @clinic.name %>
+<%= @clinic.address %>
+Teléfono: <%= @clinic.phone %>
+
+Recibirás un nuevo recordatorio 24 horas antes de la cita. Por favor, llega 10 minutos antes.
+
+---
+VetConnect - Cuidando a tu mascota

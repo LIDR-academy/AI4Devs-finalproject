@@ -1,0 +1,126 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Vacunaciones 💉</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        <% if @pet %>
+          Historial de vacunaciones de <%= @pet.name %>
+        <% else %>
+          Gestiona todas las vacunaciones registradas
+        <% end %>
+      </p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <% if @pet %>
+        <%= link_to new_pet_vaccination_path(@pet), class: "inline-flex items-center rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" do %>
+          <span class="mr-2">➕</span> Nueva Vacunación
+        <% end %>
+      <% else %>
+        <%= link_to new_vaccination_path, class: "inline-flex items-center rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity" do %>
+          <span class="mr-2">➕</span> Nueva Vacunación
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="mt-6 flex flex-wrap gap-2 animate-fade-in">
+    <%= link_to @pet ? pet_vaccinations_path(@pet) : vaccinations_path, 
+        class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:filter].blank? ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors" do %>
+      Todas
+    <% end %>
+    <%= link_to (@pet ? pet_vaccinations_path(@pet, filter: 'upcoming') : vaccinations_path(filter: 'upcoming')), 
+        class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:filter] == 'upcoming' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors" do %>
+      Próximas
+    <% end %>
+    <%= link_to (@pet ? pet_vaccinations_path(@pet, filter: 'due_soon') : vaccinations_path(filter: 'due_soon')), 
+        class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:filter] == 'due_soon' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors" do %>
+      Por Vencer
+    <% end %>
+    <%= link_to (@pet ? pet_vaccinations_path(@pet, filter: 'overdue') : vaccinations_path(filter: 'overdue')), 
+        class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:filter] == 'overdue' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors" do %>
+      Vencidas
+    <% end %>
+  </div>
+
+  <!-- Table -->
+  <% if @vaccinations.any? %>
+    <div class="mt-8 flow-root animate-fade-in">
+      <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <div class="overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-xl">
+            <table class="min-w-full divide-y divide-gray-300 bg-white" role="table" aria-label="Lista de vacunaciones">
+              <caption class="sr-only">Tabla de vacunaciones con información de fecha, vacuna, mascota, veterinario y próxima dosis.</caption>
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Fecha</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Vacuna</th>
+                  <% unless @pet %><th scope="col" class="hidden sm:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Mascota</th><% end %>
+                  <th scope="col" class="hidden lg:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Veterinario</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Próxima Dosis</th>
+                  <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Estado</th>
+                  <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6"><span class="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 bg-white">
+                <% @vaccinations.each do |vaccination| %>
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6">
+                      <%= vaccination.administered_at.strftime('%d/%m/%Y') %>
+                    </td>
+                    <td class="px-3 py-4 text-sm">
+                      <div class="font-medium text-gray-900"><%= vaccination.vaccine_name %></div>
+                      <div class="text-gray-500"><%= vaccination.vaccine_type.humanize %></div>
+                    </td>
+                    <% unless @pet %>
+                      <td class="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                        <%= link_to vaccination.pet.name, vaccination.pet, class: "text-indigo-600 hover:text-indigo-900" %>
+                      </td>
+                    <% end %>
+                    <td class="hidden lg:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <%= vaccination.veterinarian.full_name %>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                      <% if vaccination.next_due_date %>
+                        <%= vaccination.next_due_date.strftime('%d/%m/%Y') %>
+                        <% if vaccination.overdue? %>
+                          <span class="ml-2 text-xs text-red-600">⚠️ Vencida</span>
+                        <% elsif vaccination.due_soon? %>
+                          <span class="ml-2 text-xs text-yellow-600">⚠️ Por vencer</span>
+                        <% end %>
+                      <% else %>
+                        <span class="text-gray-400">N/A</span>
+                      <% end %>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm">
+                      <% if vaccination.overdue? %>
+                        <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Vencida</span>
+                      <% elsif vaccination.due_soon? %>
+                        <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">Por Vencer</span>
+                      <% else %>
+                        <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Al Día</span>
+                      <% end %>
+                    </td>
+                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                      <%= link_to vaccination_path(vaccination), class: "text-indigo-600 hover:text-indigo-900" do %>
+                        Ver<span class="sr-only">, <%= vaccination.vaccine_name %></span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <%= render 'shared/empty_state', 
+        icon: '💉',
+        title: 'No hay vacunaciones registradas',
+        message: 'Comienza registrando la primera vacunación para esta mascota.',
+        action: (@pet ? new_pet_vaccination_path(@pet) : new_vaccination_path),
+        action_text: 'Nueva Vacunación' %>
+  <% end %>
+</div>

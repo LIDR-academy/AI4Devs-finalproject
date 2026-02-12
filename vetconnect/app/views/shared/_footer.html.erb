@@ -1,0 +1,54 @@
+<footer class="bg-gray-900 mt-auto">
+  <div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+    <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Brand -->
+      <div>
+        <div class="flex items-center space-x-2 mb-4">
+          <span class="text-3xl">🐾</span>
+          <span class="text-xl font-bold text-white">VetConnect</span>
+        </div>
+        <p class="text-sm text-gray-400">
+          Plataforma integral de gestión veterinaria para el cuidado de tus mascotas.
+        </p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h3 class="text-sm font-semibold text-white mb-4">Enlaces Rápidos</h3>
+        <ul class="space-y-2">
+          <li><%= link_to "Inicio", root_path, class: "text-sm text-gray-400 hover:text-white transition-colors" %></li>
+          <li><%= link_to "Clínicas", clinics_path, class: "text-sm text-gray-400 hover:text-white transition-colors" %></li>
+          <% if user_signed_in? %>
+            <li><%= link_to "Dashboard", root_path, class: "text-sm text-gray-400 hover:text-white transition-colors" %></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Resources -->
+      <div>
+        <h3 class="text-sm font-semibold text-white mb-4">Recursos</h3>
+        <ul class="space-y-2">
+          <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Ayuda</a></li>
+          <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Términos de Servicio</a></li>
+          <li><a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Privacidad</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h3 class="text-sm font-semibold text-white mb-4">Contacto</h3>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li>📧 info@vetconnect.com</li>
+          <li>📞 +1 (555) 123-4567</li>
+          <li>📍 Madrid, España</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-8 border-t border-gray-800 pt-8">
+      <p class="text-center text-sm text-gray-400">
+        &copy; <%= Date.today.year %> VetConnect. Todos los derechos reservados.
+      </p>
+    </div>
+  </div>
+</footer>
