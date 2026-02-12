@@ -97,7 +97,68 @@ La documentación técnica está organizada en **7 fases** que siguen la metodol
 
 ---
 
-## 🚀 Getting Started
+## � Technical Documentation by User Story
+
+### 🟢 US-001: Upload Flow (COMPLETED ✅)
+**Status:** COMPLETED & AUDITED (2026-02-11) | **Story Points:** 5 SP
+
+Upload de archivos .3dm con drag & drop, validación client-side, y upload directo a Supabase Storage.
+
+📂 **[US-001 Technical Docs](US-001/)** 
+
+**Tickets Completed:**
+- T-001-FRONT: UploadZone Component ✅ (14/14 tests)
+- T-002-BACK: Generate Presigned URL ✅ (7/7 tests)
+- T-003-FRONT: Upload Manager ✅ (4/4 tests)
+- T-004-BACK: Confirm Upload Webhook ✅ (7/7 tests)
+- T-005-INFRA: S3 Bucket Setup ✅
+
+**Features Delivered:**
+- Drag & drop interface with react-dropzone@14.2.3
+- Client-side validation (MIME type + extension .3dm)
+- 500MB file size limit
+- Direct upload to Supabase Storage (presigned URLs)
+- Progress tracking and error handling
+- Clean Architecture pattern (service layer)
+
+---
+
+### 🔵 US-002: The Librarian - Validation System (IN PROGRESS 🔄)
+**Status:** IN PROGRESS | **Story Points:** 13 SP | **Priority:** 🔴 CRITICAL
+
+Validación automática de archivos .3dm con reporte detallado de errores de nomenclatura ISO-19650 y geometría.
+
+📂 **[US-002 Technical Docs](US-002/)** - Specs, audits & implementation docs
+
+**Tickets Completed:**
+- ✅ **T-020-DB:** Add Validation Report Column ([Spec](US-002/T-020-DB-TechnicalSpec.md) | [Audit](US-002/AUDIT-T-020-DB-FINAL.md))
+  - JSONB column `validation_report` in `blocks` table
+  - GIN indexes for efficient error filtering
+  - 4/4 integration tests passing
+  - Migration: `20260211160000_add_validation_report.sql`
+  
+- 📋 **T-025-AGENT:** User Strings Extraction ([Spec](US-002/T-025-AGENT-UserStrings-Spec.md))
+  - 46 user strings documented in 9 enums
+  - Pydantic schemas + TypeScript interfaces defined
+  - Ready for implementation
+
+**Tickets Pending:**
+- ⏭️ **T-021-DB:** Extend Block Status Enum (NEXT)
+- T-022-INFRA: Redis & Celery Worker
+- T-023-TEST: .3dm Test Fixtures
+- T-024-AGENT: Rhino Ingestion Service
+- T-026-AGENT: Nomenclature Validator
+- T-027-AGENT: Geometry Auditor
+- T-028-BACK: Validation Report Model
+- T-029-BACK: Trigger Validation Job
+- T-030-BACK: Get Validation Status
+- T-031-FRONT: Real-Time Listener
+- T-032-FRONT: Report Visualizer
+- T-033-INFRA: Logging & Monitoring
+
+---
+
+## �🚀 Getting Started
 
 > **Nota**: Esta sección será completada en la siguiente fase de desarrollo (implementación del MVP).
 
