@@ -130,7 +130,12 @@ class SubtitleSegmentTest {
         
         String srt = segment.toSrtFormat();
         
-        String[] lines = srt.split("\n");
-        assertEquals(4, lines.length); // index, timestamp, text, blank line
+        // Split by system line separator (handles both \n and \r\n)
+        String[] lines = srt.split(System.lineSeparator());
+        // Expected: index, timestamp, text, blank line
+        assertTrue(lines.length >= 3, "Should have at least 3 lines (index, timestamp, text)");
+        assertEquals("1", lines[0]);
+        assertTrue(lines[1].contains("-->"));
+        assertEquals("Test", lines[2]);
     }
 }

@@ -101,7 +101,7 @@ class MediaReferenceTest {
     }
 
     @Test
-    void shouldRecognizeS3Style Reference() {
+    void shouldRecognizeS3StyleReference() {
         MediaReference mediaRef = new MediaReference("s3://bucket/key/file.mp3");
         
         // s3:// is not http(s)://, so treated as local/custom protocol
