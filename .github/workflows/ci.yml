@@ -34,6 +34,8 @@ jobs:
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
           SUPABASE_DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }}
+          CELERY_BROKER_URL=redis://redis:6379/0
+          CELERY_RESULT_BACKEND=redis://redis:6379/0
           EOF
           echo "✅ .env file created with credentials from GitHub Secrets"
 
@@ -42,14 +44,31 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
 
-      - name: Start database service
-        run: docker compose up -d db
+      - name: Build agent-worker Docker image
+        run: docker compose build agent-worker
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Start infrastructure services
+        run: docker compose up -d db redis agent-worker
 
       - name: Wait for database to be ready
         run: |
           echo "Waiting for PostgreSQL to be ready..."
           timeout 30 bash -c 'until docker compose exec -T db pg_isready -U user; do sleep 1; done'
           echo "✅ PostgreSQL is ready"
+
+      - name: Wait for Redis to be ready
+        run: |
+          echo "Waiting for Redis to be ready..."
+          timeout 30 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 1; done'
+          echo "✅ Redis is ready"
+
+      - name: Wait for Celery worker to be ready
+        run: |
+          echo "Waiting for Celery worker to be ready..."
+          timeout 45 bash -c 'until docker compose logs agent-worker | grep -q "celery@.*ready"; do sleep 2; done'
+          echo "✅ Celery worker is ready"
 
       - name: Run backend integration tests
         run: make test
@@ -68,6 +87,10 @@ jobs:
           docker compose logs backend
           echo "=== Database container logs ==="
           docker compose logs db
+          echo "=== Redis container logs ==="
+          docker compose logs redis
+          echo "=== Agent worker container logs ==="
+          docker compose logs agent-worker
 
       - name: Cleanup
         if: always()
@@ -77,6 +100,8 @@ jobs:
           SUPABASE_URL=dummy
           SUPABASE_KEY=dummy
           SUPABASE_DATABASE_URL=dummy
+          CELERY_BROKER_URL=redis://redis:6379/0
+          CELERY_RESULT_BACKEND=redis://redis:6379/0
           EOF
           docker compose down -v
 
@@ -103,6 +128,8 @@ jobs:
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
           SUPABASE_DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }}
+          CELERY_BROKER_URL=redis://redis:6379/0
+          CELERY_RESULT_BACKEND=redis://redis:6379/0
           EOF
 
       - name: Pull base image
@@ -138,6 +165,8 @@ jobs:
           SUPABASE_URL=dummy
           SUPABASE_KEY=dummy
           SUPABASE_DATABASE_URL=dummy
+          CELERY_BROKER_URL=redis://redis:6379/0
+          CELERY_RESULT_BACKEND=redis://redis:6379/0
           EOF
           docker compose down -v
 
@@ -154,6 +183,8 @@ jobs:
           SUPABASE_URL=dummy
           SUPABASE_KEY=dummy
           SUPABASE_DATABASE_URL=dummy
+          CELERY_BROKER_URL=redis://redis:6379/0
+          CELERY_RESULT_BACKEND=redis://redis:6379/0
           EOF
 
       - name: Validate docker-compose configuration

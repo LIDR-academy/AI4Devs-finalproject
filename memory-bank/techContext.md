@@ -114,3 +114,27 @@
 - **Standard shell commands** - bash/zsh for automation
 - **Environment management** - `.env` files with `.env.example` templates
 - **Dependency locking** - `requirements-lock.txt` for reproducible builds
+
+## CI/CD Pipeline
+### GitHub Actions
+- **Workflow File**: `.github/workflows/ci.yml`
+- **Triggers**: Push to `main` or `feature-*` branches; PRs to `main`
+- **Jobs**:
+  1. **backend-tests** - Runs all backend tests (unit + integration)
+     - Services: `db`, `redis`, `agent-worker` (added in T-022-INFRA fix)
+     - Healthchecks: PostgreSQL, Redis, Celery worker
+     - Test command: `make test`
+  2. **frontend-tests** - Runs Vitest tests
+  3. **docker-validation** - Validates docker-compose config and builds prod images
+
+### Environment Variables in CI
+- **Secrets**: `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_DATABASE_URL` (GitHub Secrets)
+- **Required for T-022-INFRA**: `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`
+- **Created dynamically**: `.env` file generated in each job
+
+### Service Dependencies
+- Integration tests require **ALL infrastructure services** running:
+  - Database (PostgreSQL)
+  - Redis (message broker)
+  - Celery worker (task executor)
+- **Critical**: CI must replicate local docker-compose environment for test parity
