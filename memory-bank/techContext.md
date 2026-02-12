@@ -25,6 +25,21 @@
 - **pytest-asyncio** 0.23.5 - Async test support
 - **httpx** 0.27.2 - HTTP client for testing API endpoints
 
+## Agent Stack (NEW - T-022-INFRA)
+### Task Queue & Orchestration
+- **Celery** 5.3.4 - Distributed task queue system
+- **Redis** 5.0.1 (Python client) - Message broker client library
+- **Redis Server** 7-alpine - In-memory data store (message broker + result backend)
+
+### Configuration & Utilities
+- **Pydantic** 2.6.1 - Config validation (mirrors backend)
+- **pydantic-settings** 2.1.0 - Environment-based settings
+- **structlog** 24.1.0 - Structured JSON logging
+
+### Future Dependencies (Not Yet Implemented)
+- **rhino3dm** 8.4.0 - Rhino file parsing (T-024-AGENT)
+- **flower** 2.0.1 - Celery monitoring UI (T-033-INFRA, optional)
+
 ## Frontend Stack
 ### Core Framework
 - **React** 18 - UI library
@@ -55,6 +70,8 @@
 - **Backend**: `python:3.11-slim` (multi-stage: base/dev/prod)
 - **Frontend**: `node:20-bookworm` (multi-stage: dev/build/prod-nginx)
 - **Database**: `postgres:15-alpine` (local development only)
+- **Agent Worker**: `python:3.11-slim` (multi-stage: base/dev/prod) - NEW (T-022-INFRA)
+- **Redis**: `redis:7-alpine` (message broker + result backend) - NEW (T-022-INFRA)
 
 ### Build Tools
 - **GNU Make** - Task automation (Makefile for common commands)
@@ -62,7 +79,14 @@
 
 ## Architecture Patterns
 ### Backend
-- **Clean Architecture** - 3-layer separation (API → Service → Constants)
+- **Clean Architecture** - 3-layer separation (API → Service → Constan
+
+### Agent (NEW - T-022-INFRA)
+- **Asynchronous Task Processing** - Celery workers for background jobs
+- **Retry Policies** - Automatic task retries with exponential backoff
+- **Task Isolation** - Prefetch multiplier = 1 (one task per worker at a time)
+- **Structured Logging** - JSON logs via structlog for observability
+- **Security-First Serialization** - JSON only (no pickle) to prevent code injectionts)
 - **12-Factor Apps** - Environment-agnostic configuration
 - **Contract-First Development** - Pydantic schemas as source of truth
 
