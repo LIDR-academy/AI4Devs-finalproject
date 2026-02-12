@@ -28,9 +28,10 @@ class MeditationOutputTest {
         String userId = "user-123";
         String text = "Close your eyes and breathe";
         MediaReference music = new MediaReference("calm-ocean");
+        String idempotencyKey = "test-key-audio";
         
         MeditationOutput output = MeditationOutput.createAudio(
-            compositionId, userId, text, music, FIXED_CLOCK
+            compositionId, userId, text, music, idempotencyKey, FIXED_CLOCK
         );
         
         assertNotNull(output);
@@ -40,6 +41,7 @@ class MeditationOutputTest {
         assertEquals(MediaType.AUDIO, output.type());
         assertEquals(text, output.textSnapshot());
         assertEquals(music, output.musicReference());
+        assertEquals(idempotencyKey, output.idempotencyKey());
         assertTrue(output.imageReference().isEmpty());
         assertTrue(output.mediaUrl().isEmpty());
         assertTrue(output.subtitleUrl().isEmpty());
@@ -56,9 +58,10 @@ class MeditationOutputTest {
         String text = "Welcome to your meditation";
         MediaReference music = new MediaReference("nature-sounds");
         MediaReference image = new MediaReference("peaceful-landscape");
+        String idempotencyKey = "test-key-video";
         
         MeditationOutput output = MeditationOutput.createVideo(
-            compositionId, userId, text, music, image, FIXED_CLOCK
+            compositionId, userId, text, music, image, idempotencyKey, FIXED_CLOCK
         );
         
         assertNotNull(output);
@@ -68,6 +71,7 @@ class MeditationOutputTest {
         assertEquals(MediaType.VIDEO, output.type());
         assertEquals(text, output.textSnapshot());
         assertEquals(music, output.musicReference());
+        assertEquals(idempotencyKey, output.idempotencyKey());
         assertTrue(output.imageReference().isPresent());
         assertEquals(image, output.imageReference().get());
         assertTrue(output.mediaUrl().isEmpty());
@@ -91,6 +95,7 @@ class MeditationOutputTest {
                 "Text",
                 music,
                 java.util.Optional.empty(), // VIDEO requires image
+                "test-key",
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
@@ -108,6 +113,7 @@ class MeditationOutputTest {
             "user-123",
             "Text",
             new MediaReference("music"),
+            "test-key",
             FIXED_CLOCK
         );
         
@@ -141,6 +147,7 @@ class MeditationOutputTest {
             "user-123",
             "Text",
             new MediaReference("music"),
+            "test-key",
             FIXED_CLOCK
         );
         
@@ -164,6 +171,7 @@ class MeditationOutputTest {
             "user-123",
             "Text",
             new MediaReference("music"),
+            "test-key",
             FIXED_CLOCK
         );
         
@@ -185,6 +193,7 @@ class MeditationOutputTest {
             "user-123",
             "Text",
             new MediaReference("music"),
+            "test-key",
             FIXED_CLOCK
         );
         
@@ -207,6 +216,7 @@ class MeditationOutputTest {
             "user-123",
             "Text",
             new MediaReference("music"),
+            "test-key",
             FIXED_CLOCK
         );
         
@@ -221,6 +231,7 @@ class MeditationOutputTest {
             "user-123",
             "Text",
             new MediaReference("music"),
+            "test-key",
             FIXED_CLOCK
         );
         
@@ -241,6 +252,7 @@ class MeditationOutputTest {
                 "text",
                 new MediaReference("music"),
                 java.util.Optional.empty(),
+                "test-key",
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
@@ -259,6 +271,7 @@ class MeditationOutputTest {
                 null,
                 "text",
                 new MediaReference("music"),
+                "test-key",
                 FIXED_CLOCK
             );
         });
@@ -272,6 +285,7 @@ class MeditationOutputTest {
                 "  ",
                 "text",
                 new MediaReference("music"),
+                "test-key",
                 FIXED_CLOCK
             );
         });
@@ -285,6 +299,7 @@ class MeditationOutputTest {
                 "user",
                 null,
                 new MediaReference("music"),
+                "test-key",
                 FIXED_CLOCK
             );
         });
@@ -298,6 +313,7 @@ class MeditationOutputTest {
                 "user",
                 "text",
                 null,
+                "test-key",
                 FIXED_CLOCK
             );
         });
@@ -310,6 +326,7 @@ class MeditationOutputTest {
             "user-123",
             "Text",
             new MediaReference("music"),
+            "test-key",
             FIXED_CLOCK
         );
         

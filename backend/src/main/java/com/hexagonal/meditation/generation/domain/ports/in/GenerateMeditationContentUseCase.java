@@ -27,34 +27,48 @@ public interface GenerateMeditationContentUseCase {
      * @throws com.hexagonal.meditation.generation.domain.exception.GenerationTimeoutException if processing time exceeds threshold
      * @throws com.hexagonal.meditation.generation.domain.exception.InvalidContentException if content validation fails
      */
-    MeditationOutput generate(GenerationRequest request);
+    GenerationResponse generate(GenerationRequest request);
 
     /**
      * Request object for meditation generation (domain layer).
      */
     record GenerationRequest(
         java.util.UUID compositionId,
-        String userId,
-        String text,
+        java.util.UUID userId,
+        String narrationText,
         String musicReference,
-        java.util.Optional<String> imageReference
+        String imageReference
     ) {
         public GenerationRequest {
             if (compositionId == null) {
                 throw new IllegalArgumentException("Composition ID cannot be null");
             }
-            if (userId == null || userId.isBlank()) {
-                throw new IllegalArgumentException("User ID cannot be null or blank");
+            if (userId == null) {
+                throw new IllegalArgumentException("User ID cannot be null");
             }
-            if (text == null || text.isBlank()) {
-                throw new IllegalArgumentException("Text cannot be null or blank");
+            if (narrationText == null || narrationText.isBlank()) {
+                throw new IllegalArgumentException("Narration text cannot be null or blank");
             }
             if (musicReference == null || musicReference.isBlank()) {
                 throw new IllegalArgumentException("Music reference cannot be null or blank");
             }
-            if (imageReference == null) {
-                throw new IllegalArgumentException("Image reference Optional cannot be null");
-            }
+            // imageReference can be null for audio-only generation
         }
     }
+    
+    /**
+     * Response object for meditation generation (domain layer).
+     */
+    record GenerationResponse(
+        java.util.UUID id,
+        java.util.UUID compositionId,
+        java.util.UUID userId,
+        com.hexagonal.meditation.generation.domain.enums.GenerationStatus status,
+        com.hexagonal.meditation.generation.domain.enums.MediaType mediaType,
+        java.util.Optional<String> mediaUrl,
+        java.util.Optional<String> subtitleUrl,
+        java.util.Optional<Integer> durationSeconds,
+        java.time.Instant createdAt,
+        java.util.Optional<java.time.Instant> completedAt
+    ) {}
 }

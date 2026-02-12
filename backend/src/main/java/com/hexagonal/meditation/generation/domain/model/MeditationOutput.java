@@ -28,6 +28,7 @@ public record MeditationOutput(
     String textSnapshot,
     MediaReference musicReference,
     Optional<MediaReference> imageReference,
+    String idempotencyKey,
     Optional<String> mediaUrl,
     Optional<String> subtitleUrl,
     Optional<Integer> durationSeconds,
@@ -61,6 +62,9 @@ public record MeditationOutput(
         if (imageReference == null) {
             throw new IllegalArgumentException("Image reference Optional cannot be null");
         }
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("Idempotency key cannot be null or blank");
+        }
         if (mediaUrl == null) {
             throw new IllegalArgumentException("Media URL Optional cannot be null");
         }
@@ -93,6 +97,7 @@ public record MeditationOutput(
      * @param userId user ID
      * @param textSnapshot meditation text
      * @param musicReference music reference
+     * @param idempotencyKey unique key for deduplication
      * @param clock clock for timestamps
      * @return new MeditationOutput in PROCESSING status
      */
@@ -101,6 +106,7 @@ public record MeditationOutput(
         String userId,
         String textSnapshot,
         MediaReference musicReference,
+        String idempotencyKey,
         Clock clock
     ) {
         Instant now = clock.instant();
@@ -112,6 +118,7 @@ public record MeditationOutput(
             textSnapshot,
             musicReference,
             Optional.empty(), // no image
+            idempotencyKey,
             Optional.empty(), // media URL set after generation
             Optional.empty(), // subtitle URL set after generation
             Optional.empty(), // duration set after generation
@@ -129,6 +136,7 @@ public record MeditationOutput(
      * @param textSnapshot meditation text
      * @param musicReference music reference
      * @param imageReference image reference
+     * @param idempotencyKey unique key for deduplication
      * @param clock clock for timestamps
      * @return new MeditationOutput in PROCESSING status
      */
@@ -138,6 +146,7 @@ public record MeditationOutput(
         String textSnapshot,
         MediaReference musicReference,
         MediaReference imageReference,
+        String idempotencyKey,
         Clock clock
     ) {
         Instant now = clock.instant();
@@ -149,6 +158,7 @@ public record MeditationOutput(
             textSnapshot,
             musicReference,
             Optional.of(imageReference), // image present
+            idempotencyKey,
             Optional.empty(), // media URL set after generation
             Optional.empty(), // subtitle URL set after generation
             Optional.empty(), // duration set after generation
@@ -181,6 +191,7 @@ public record MeditationOutput(
             this.textSnapshot,
             this.musicReference,
             this.imageReference,
+            this.idempotencyKey,
             Optional.of(mediaUrl),
             Optional.of(subtitleUrl),
             Optional.of(durationSeconds),
@@ -205,6 +216,7 @@ public record MeditationOutput(
             this.textSnapshot,
             this.musicReference,
             this.imageReference,
+            this.idempotencyKey,
             this.mediaUrl,
             this.subtitleUrl,
             this.durationSeconds,
@@ -229,6 +241,7 @@ public record MeditationOutput(
             this.textSnapshot,
             this.musicReference,
             this.imageReference,
+            this.idempotencyKey,
             this.mediaUrl,
             this.subtitleUrl,
             this.durationSeconds,

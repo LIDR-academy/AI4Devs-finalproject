@@ -177,8 +177,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/application/validator/TextLengthEstimator.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/application/validator/TextLengthEstimatorTest.java`
 **Criterios de aceptación:**
-- [ ] `estimateProcessingTime(text)` (s) con heurística conservadora (~150 wpm + overhead)
-- [ ] Umbral configurable (default 30s)
+- [x] `estimateProcessingTime(text)` (s) con heurística conservadora (~150 wpm + overhead)
+- [x] Umbral configurable (default 30s)
 **Evidencias:** Unit tests green  
 **Dependencias:** T007
 
@@ -188,9 +188,9 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Capa:** application  
 **Artefactos:** `/backend/src/main/java/com/hexagonal/meditation/generation/application/service/GenerateMeditationContentService.java`  
 **Criterios de aceptación:**
-- [ ] Implementa `GenerateMeditationContentUseCase`
-- [ ] Orquesta: validar → estimar → TTS → subtítulos → (vídeo|audio) → store → persist
-- [ ] Mapea errores a excepciones de dominio
+- [x] Implementa `GenerateMeditationContentUseCase`
+- [x] Orquesta: validar → estimar → TTS → subtítulos → (vídeo|audio) → store → persist
+- [x] Mapea errores a excepciones de dominio
 **Evidencias:** Compila  
 **Dependencias:** T008, T010
 
@@ -200,8 +200,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Capa:** application  
 **Artefactos:** (ampliar) `/backend/src/main/java/com/hexagonal/meditation/generation/application/service/GenerateMeditationContentService.java`  
 **Criterios de aceptación:**
-- [ ] `idempotencyKey = SHA-256(userId|text|musicRef|imageRefOpt)` con separador fijo y orden estable
-- [ ] Consulta previa `ContentRepositoryPort.findByIdempotencyKey`
+- [x] `idempotencyKey = SHA-256(userId|text|musicRef|imageRefOpt)` con separador fijo y orden estable
+- [x] Consulta previa `ContentRepositoryPort.findByIdempotencyKey`
 **Evidencias:** Tests en T013  
 **Dependencias:** T011
 
@@ -211,10 +211,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Capa:** application  
 **Artefactos:** `/backend/src/test/java/com/hexagonal/meditation/generation/application/service/GenerateMeditationContentServiceTest.java`  
 **Criterios de aceptación:**
-- [ ] Happy path vídeo y audio; timeout antes de TTS si >30s
-- [ ] Idempotencia (misma petición → mismo resultado)
-- [ ] Errores TTS/Render/Storage mapeados
-- [ ] Mockito verifica secuencia de puertos
+- [x] Happy path vídeo y audio; timeout antes de TTS si >30s
+- [x] Idempotencia (misma petición → mismo resultado)
+- [x] Errores TTS/Render/Storage mapeados
+- [x] Mockito verifica secuencia de puertos
 **Evidencias:** Cobertura >90% application  
 **Dependencias:** T012
 
