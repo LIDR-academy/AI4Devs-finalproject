@@ -1,9 +1,10 @@
 # Implementation Plan: Generate Guided Meditation (Video/Podcast) with Narration
 
 **Feature Branch**: `002-generate-meditation-audio-video`  
+**Bounded Context**: **Generation** (separado de Composition/US2 y Playback/US4)  
 **Created**: February 12, 2026  
 **Status**: Draft (refinado)  
-**Based on**: `specs/US3/spec.md`  
+**Based on**: `specs/002-generate-meditation-audio-video/spec.md`  
 **Governed by**: `.specify/memory/constitution.md`, `.specify/instructions/*`
 
 ---
@@ -14,10 +15,12 @@
 Descomponer **US3 — Generate Guided Meditation** en tickets secuenciales según la arquitectura hexagonal definida en la Constitution. Cada ticket afecta **una sola capa**, define criterios de aceptación, artefactos esperados y evidencia de validación.
 
 ### Scope
-- **In scope**: Backend para generación de contenido con narración profesional, subtítulos sincronizados y renderizado de audio/vídeo.
+- **In scope**: Backend BC **Generation** para generación de contenido con narración profesional, subtítulos sincronizados y renderizado de audio/vídeo.
 - **In scope**: Integraciones externas (narración, renderizado, almacenamiento).
+- **In scope**: **Postgres real** (Docker + Testcontainers con schema `generation`) y **S3 LocalStack** (Docker + Testcontainers con prefijo `generation/`).
 - **In scope**: Pirámide de tests completa (unit → integration → contract → E2E) y CI gates.
-- **Out of scope**: Cambios de UI (solo integración mínima si se solicita).
+- **In scope**: Frontend integrado en **página de Composition (BC distinto/US2)** llamando al endpoint del **BC Generation**.
+- **Out of scope**: JWT real (bloqueado por US1 → bypass solo en test).
 - **Out of scope**: Streaming de progreso, batch/queue, edición manual.
 
 ### Success Criteria
@@ -58,17 +61,20 @@ Descomponer **US3 — Generate Guided Meditation** en tickets secuenciales segú
 - Port: **SubtitleSyncPort** → `SubtitleSyncService` (infra)
 
 **Almacenamiento**  
-- Outputs generados: AWS S3 (`meditation-outputs/`)  
+- Outputs generados: AWS S3 (bucket `meditation-outputs`, prefijo **`generation/`**)  
+- **MVP**: **LocalStack S3** (Docker local + Testcontainers tests)  
 - URLs de acceso: firmadas (TTL configurable)  
 - Port: **MediaStoragePort** → `S3MediaStorageAdapter`
 
 **Persistencia**  
-- Postgres / migraciones con Flyway  
+- Postgres (Docker local + Testcontainers tests) con **schema `generation`** / tabla `meditation`  
+- Migraciones: Flyway `V002__create_generation_meditation.sql`  
 - Port: **ContentRepositoryPort** → `PostgresMeditationRepository`  
 - **Cohesión con US2**: reutilizar `MeditationComposition` como **entrada**; `MeditationOutput` **referencia** `compositionId`. Mantener **fotografía del texto** en Output para trazabilidad.
 
 **Autenticación**  
-- JWT (US1). Controllers validan y extraen `userId`.
+- JWT (US1) **[BLOCKED]**. Controllers validan y extraen `userId` en producción.  
+- **MVP**: Bypass de auth **solo en test** (`TestSecurityConfig` no empaquetado en prod).
 
 **Políticas de tiempo e idempotencia**  
 - Timeout funcional objetivo: **30s**.  
@@ -93,19 +99,19 @@ Descomponer **US3 — Generate Guided Meditation** en tickets secuenciales segú
 5. ✅ **Hexagonal Guide**: separación estricta.  
 6. ✅ **Testing instructions**: pirámide completa.
 
-### Ubicaciones obligatorias
-/backend/src/main/java/com/hexagonal/meditationbuilder/
+### Ubicaciones obligatorias (BC: Generation)
+/backend/src/main/java/com/hexagonal/meditation/generation/
 domain/                    # models / ports / exceptions / enums
 application/               # use cases / validators
 infrastructure/
 in/rest/                 # controllers / dto / mapper
 out/                     # adapters (tts, rendering, storage, persistence, subtitle)
 ...
-/backend/src/main/resources/openapi/meditationbuilder/
+/backend/src/main/resources/openapi/generation/
 generate-meditation.yaml   # contrato (fase previa a controller)
-/backend/src/test/resources/features/meditationbuilder/
+/backend/src/test/resources/features/generation/
 generate-meditation.feature
-/backend/src/test/java/com/hexagonal/meditationbuilder/
+/backend/src/test/java/com/hexagonal/meditation/generation/
 domain/ application/ infrastructure/ bdd/steps/ e2e/ ...
 
 ### CI gates (bloqueantes)
@@ -122,7 +128,7 @@ domain/ application/ infrastructure/ bdd/steps/ e2e/ ...
 
 ### Phase 1 — BDD First
 - **Deliverables**: `.feature` con 3 escenarios (vídeo, audio, timeout) en **ROJO**.  
-- **Ubicación**: `/backend/src/test/resources/features/meditationbuilder/generate-meditation.feature`.
+- **Ubicación**: `/backend/src/test/resources/features/generation/generate-meditation.feature`.
 
 ### Phase 2 — Capability Sketch (API First mínimo)
 - Documento de **capacidades** derivadas de BDD (sin paths HTTP aún).  
@@ -155,196 +161,298 @@ domain/ application/ infrastructure/ bdd/steps/ e2e/ ...
 - Pruebas unitarias con mocks de ports.
 
 ### Phase 5 — Infrastructure (Adapters Out)
-- `GoogleTtsAdapter`  → `VoiceSynthesisPort` (retry 429, map 503).  
+- `GoogleTtsAdapter`  → `VoiceSynthesisPort` (retry 429, map 503; WireMock en tests).  
 - `SubtitleSyncService` → `SubtitleSyncPort` (SRT a partir de timings).  
-- `FfmpegVideoRendererAdapter` → `VideoRenderingPort`.  
-- `FfmpegAudioRendererAdapter` → `AudioRenderingPort`.  
-- `S3MediaStorageAdapter` → `MediaStoragePort` (Signed URL TTL, carpeta `userId/meditationId/`).  
-- `PostgresMeditationRepository` → `ContentRepositoryPort` (Flyway para schema).  
+- `FfmpegVideoRendererAdapter` → `VideoRenderingPort` (assets mínimos en IT).  
+- `FfmpegAudioRendererAdapter` → `AudioRenderingPort` (assets mínimos en IT).  
+- `S3MediaStorageAdapter` → `MediaStoragePort` (**LocalStack Docker + Testcontainers**; prefijo `generation/`; Signed URL TTL).  
+- `PostgresMeditationRepository` → `ContentRepositoryPort` (**Postgres Docker + Testcontainers**; schema `generation`; Flyway `V002__create_generation_meditation.sql`).  
 - **TempFilesPolicy**: carpeta temporal por request y cleanup robusto.  
 - **Observability**: contadores/timers por adapter + errores.
 
 ### Phase 6 — API First (Contrato concreto)
-- Definir **YAML completo** (`generate-meditation.yaml`) con paths, request/response y errores (`400/401/408/503`).  
+- Definir **YAML completo** (`generate-meditation.yaml`) con paths, request/response y errores (`400/408/503`).  
+- **401 omitido** hasta que US1 (JWT) esté implementado; en test se permite `security: []`.  
 - Lint OK. Base para generación de cliente frontend.
 
 ### Phase 7 — Controllers (REST Adapters In)
-- `MeditationGenerationController`: valida JWT, mapea DTO ⇄ comando, sin lógica.  
+- `MeditationGenerationController`: mapea DTO ⇄ comando, sin lógica.  
+- **Auth bypass solo en test** (`TestSecurityConfig` no empaquetado).  
 - Tests de controller (use case mockeado).
 
 ### Phase 8 — Contract Tests
 - Validar implementación contra OpenAPI (Atlassian validator).
 
 ### Phase 9 — E2E Tests
-- Arranque Spring Boot (perfil test), WireMock (TTS), LocalStack (S3), Testcontainers (Postgres), FFmpeg disponible.  
-- Validar: vídeo, audio, timeout, persistencia y URLs firmadas.
+- Arranque Spring Boot (perfil test), WireMock (TTS), **Testcontainers (Postgres + LocalStack S3)**, FFmpeg disponible.  
+- Validar: vídeo, audio, timeout, persistencia en **schema `generation`**, URLs firmadas de **S3 LocalStack** y duración estimada.
 
 ### Phase 10 — CI/CD Gates
 - Integrar gates y secretos, FFmpeg en runner, servicios test (Postgres/S3).
 
 ---
 
-## 4. Implementation Tickets (Sequential)
+## 4. Implementation Tickets (Sequential) — 34 MVP Tasks
 
-> **Formato por ticket**: *ID & título · Propósito · Alcance · Criterios de aceptación · Artefactos · Evidencia · Dependencias · DoD.*
+> **Formato por ticket**: *ID & título · Propósito · Alcance · Criterios de aceptación · Artefactos · Evidencia · Dependencias · DoD.*  
+> **Hard Limits**: 34 tareas MVP (T001–T034, con T018.1/T018.2 sub-tareas); 8 diferidas/bloqueadas (T035–T042).
 
-### US3-01 — BDD Feature File & Scenarios (RED)
-- **Propósito**: Definir comportamiento observable.  
-- **Criterios**: 3 escenarios del spec, lenguaje negocio, pending.  
+### T001-T004 — Phase 1: BDD & API First
+
+**T001 — BDD Feature File (3 scenarios RED)**  
+- **Propósito**: Definir comportamiento observable en estado PENDING.  
+- **Criterios**: 3 escenarios del spec (vídeo, audio, timeout); lenguaje 100% negocio.  
 - **Artefactos**:  
-  - `/backend/src/test/resources/features/meditationbuilder/generate-meditation.feature`  
-  - `/backend/src/test/java/.../bdd/steps/GenerateMeditationSteps.java` (stubs)  
+  - `/backend/src/test/resources/features/generation/generate-meditation.feature`  
+  - `/backend/src/test/java/com/hexagonal/meditation/generation/bdd/steps/GenerateMeditationSteps.java` (stubs con `PendingException`)  
 - **Evidencia**: Cucumber detecta 3 PENDING.  
-- **DoD**: CI gate BDD ejecuta en rojo.
+- **DoD**: 3 escenarios en PENDING legibles por PO/QA.
 
-### US3-02 — Domain Model (MeditationOutput + VO/Enums)
-- **Propósito**: Modelo inmutable con invariantes + fotos de entrada.  
-- **Criterios**: Records, Clock, Optional accessors, TDD 100% reglas.  
-- **Artefactos**: records/enums/exceptions; tests TDD.  
-- **DoD**: sin dependencias de framework; green.
+**T002 — OpenAPI Contract (capabilities + schemas)**  
+- **Propósito**: Contrato OpenAPI del BC Generation.  
+- **Artefactos**: `/backend/src/main/resources/openapi/generation/generate-meditation.yaml`  
+- **Criterios**: Request (text, musicReference, imageReference opt); Response (meditationId, type, mediaUrl, status, message); Errores 400/408/503; bearerAuth definido pero `security: []` en test.  
+- **Evidencia**: Lint OK.  
+- **Dependencias**: T001.
 
-### US3-03 — Domain Ports
-- **Propósito**: Interfaces `in/out`.  
-- **Criterios**: UseCase + ports (voz, subtítulos, vídeo, audio, storage, repo).  
-- **Nota**: **Reusar `MediaCatalogPort`** de US2 para música.  
-- **DoD**: compila sin dependencias externas.
+**T003 — OpenAPI Paths & Operations**  
+- **Propósito**: Definir path/operación HTTP del BC Generation.  
+- **Criterios**: Path `/api/v1/generation/meditations`; método POST; operationId `generateMeditationContent`; schemas en components.  
+- **Evidencia**: Validator OK.  
+- **Dependencias**: T002.
 
-### US3-04 — Application Use Case (GenerateMeditationContentService)
-- **Propósito**: Orquestación + `TextLengthEstimator` + timeout policy.  
-- **Criterios**: rechazo temprano si estimado >30s; mocks; secuencia verificada.  
-- **DoD**: tests unit 100% orquestación; sin infra directa.
+**T004 — Validate OpenAPI & Generate Stubs**  
+- **Propósito**: Validar contrato; generar DTOs si procede.  
+- **Criterios**: `openapi-generator validate` pasa; sin breaking vs T002/T003.  
+- **Evidencia**: Build Maven green.  
+- **Dependencies**: T003.
 
-### US3-05 — Adapter: GoogleTtsAdapter (VoiceSynthesisPort)
-- **Propósito**: Narración + timings.  
-- **Criterios**: voz `es-ES-Neural2-Diana`, rate ~0.85, retry 429, map 503; WireMock IT.  
-- **DoD**: IT green; config externalizada; métricas (requests/latency/error).
+### T005-T009 — Phase 2: Domain Layer
 
-### US3-06 — Service: SubtitleSyncService (SubtitleSyncPort)
-- **Propósito**: SRT a partir de timings.  
-- **Criterios**: alineación <200ms; sin solapes; unit+IT con data de ejemplo.  
-- **DoD**: salida parseable; edge cases cubiertos.
+**T005 — Domain Enums (MediaType, GenerationStatus)**  
+- **Artefactos**: `MediaType.java`, `GenerationStatus.java` (AUDIO/VIDEO; PROCESSING/COMPLETED/FAILED/TIMEOUT).  
+- **Evidencia**: Tests simples green.  
+- **Dependencias**: —
 
-### US3-07 — Adapter: FfmpegVideoRendererAdapter (VideoRenderingPort)
-- **Propósito**: MP4 con imagen+voz+música+subs “quemados”.  
-- **Criterios**: mix claro (voz primaria, música -12dB aprox.); subtítulos visibles; IT con assets mock.  
-- **DoD**: output reproducible; métricas render/video.
+**T006 — Domain Value Objects (NarrationScript, SubtitleSegment, MediaReference)**  
+- **Criterios**: Records Java 21 con validación en compact constructor; `SubtitleSegment` sin solapes.  
+- **Artefactos**: `NarrationScript.java`, `SubtitleSegment.java`, `MediaReference.java` + tests.  
+- **Evidencia**: TDD green.  
+- **Dependencias**: T005.
 
-### US3-08 — Adapter: FfmpegAudioRendererAdapter (AudioRenderingPort)
-- **Propósito**: MP3 voz+música para podcast.  
-- **Criterios**: mezcla equilibrada; IT con assets mock.  
-- **DoD**: output reproducible; métricas render/audio.
+**T007 — Domain Aggregate (MeditationOutput)**  
+- **Criterios**: Record con id, compositionId, userId, type, textSnapshot, musicRef, imageRefOpt, mediaUrlOpt, subtitleUrlOpt, durationSecondsOpt, status, createdAt, updatedAt; factories `createAudio/createVideo`; Clock inyectado; Optional en campos no obligatorios.  
+- **Evidencia**: TDD >95% domain.  
+- **Dependencias**: T006.
 
-### US3-09 — Adapter: S3MediaStorageAdapter (MediaStoragePort)
-- **Propósito**: Upload a S3 + Signed URL (TTL).  
-- **Criterios**: estructura `userId/meditationId/`; TTL configurable; LocalStack IT.  
-- **DoD**: URLs no logueadas en INFO; métricas upload.
+**T008 — Domain Ports (in/out)**  
+- **Criterios**: `GenerateMeditationContentUseCase` (in); `VoiceSynthesisPort`, `SubtitleSyncPort`, `VideoRenderingPort`, `AudioRenderingPort`, `MediaStoragePort`, `ContentRepositoryPort` (out); **Reutiliza `MediaCatalogPort` de BC Composition/US2** (no crear `MusicPort`).  
+- **Evidencia**: Compila sin dependencias de framework.  
+- **Dependencias**: T007.
 
-### US3-10 — Repository: PostgresMeditationRepository (ContentRepositoryPort)
-- **Propósito**: Persistir `MeditationOutput`.  
-- **Criterios**: save/findById/findByUserId; mapping fiel; Testcontainers IT.  
-- **DoD**: IT green; sin pérdidas de campos.
+**T009 — Domain Exceptions (GenerationTimeout, InvalidContent)**  
+- **Criterios**: RuntimeException con mensajes claros.  
+- **Evidencia**: Compila.  
+- **Dependencias**: —
 
-### US3-11 — Idempotency Guard
-- **Propósito**: evitar renders duplicados.  
-- **Criterios**: calcular `idempotencyKey = hash(userId,text,music,image)`; reuse si `COMPLETED/PROCESSING`.  
-- **DoD**: tests app con mocks; IT repo (búsqueda por key).
+### T010-T013 — Phase 3: Application Layer
 
-### US3-12 — Temp Files Policy
-- **Propósito**: gestionar temporales FFmpeg/TTS.  
-- **Criterios**: carpeta por request; cleanup on success/error; tests de fuga.  
-- **DoD**: no quedan archivos tras tests.
+**T010 — Application Validator (TextLengthEstimator)**  
+- **Criterios**: `estimateProcessingTime(text)` con heurística conservadora (~150 wpm + overhead); umbral configurable (default 30s).  
+- **Evidencia**: Unit tests green.  
+- **Dependencias**: T007.
 
-### US3-13 — Flyway Migration V001
-- **Propósito**: versionar esquema `meditation`.  
-- **SQL** (campos clave, ajustable):  
-  - `id UUID PK`, `composition_id UUID`, `user_id UUID`, `type VARCHAR(10)`,  
-  - `text_snapshot TEXT`, `music_reference VARCHAR(255)`, `image_reference VARCHAR(255)`,  
-  - `media_url TEXT`, `subtitle_url TEXT`, `duration_seconds INT`,  
-  - `status VARCHAR(20)`, `idempotency_key VARCHAR(64)`,  
-  - `created_at TIMESTAMP`, `updated_at TIMESTAMP`.  
-- **DoD**: testcontainers aplica migración; rollback verificado.
+**T011 — Application Use Case (GenerateMeditationContentService)**  
+- **Criterios**: Implementa `GenerateMeditationContentUseCase`; orquesta validar → estimar → TTS → subtítulos → (vídeo|audio) → store → persist; mapea errores a excepciones de dominio.  
+- **Evidencia**: Compila.  
+- **Dependencias**: T008, T010.
 
-### US3-14 — Observability Pack (Métricas/Logs)
-- **Propósito**: trazabilidad mínima.  
-- **Criterios**: counters/timers por adapter (`tts.requests`, `tts.latency`, `render.latency`, `storage.uploads`, errores tipificados); MDC con `userId`, `compositionId`, `meditationId`.  
-- **DoD**: métricas expuestas; tests mínimos.
+**T012 — Application Idempotency Guard**  
+- **Criterios**: `idempotencyKey = SHA-256(userId|text|musicRef|imageRefOpt)`; consulta previa `ContentRepositoryPort.findByIdempotencyKey`.  
+- **Evidencia**: Tests en T013.  
+- **Dependencias**: T011.
 
-### Phase 6 concreta (API First YAML) — US3-15
-- **Propósito**: contrato completo antes de controller.  
-- **Criterios**: request (text,music,image?); response (ids,type,mediaUrl,status,msg); errores `400/401/408/503`; lint OK.  
-- **Artefacto**: `/backend/src/main/resources/openapi/meditationbuilder/generate-meditation.yaml`.  
-- **DoD**: lista para generar cliente.
+**T013 — Application Unit Tests (orchestration + idempotency)**  
+- **Criterios**: Happy path vídeo/audio; timeout; idempotencia; errores TTS/Render/Storage mapeados; Mockito verifica secuencia.  
+- **Evidencia**: Cobertura >90% application.  
+- **Dependencias**: T012.
 
-### US3-16 — REST Controller (OpenAPI‑driven)
-- **Propósito**: adaptar HTTP a use case.  
-- **Criterios**: valida JWT; mapea DTO⇄comando; mapea excepciones (408 timeout, 400 invalid, 503 externos); tests con use case mock.  
-- **DoD**: sin lógica de negocio.
+### T014-T020 — Phase 4: Infrastructure (MVP) — TTS/Render/S3/Repo
 
-### US3-17 — Contract Tests (OpenAPI)
-- **Propósito**: cumplimiento estricto del contrato.  
-- **DoD**: validator green; casos negativos detectan violaciones.
+**T014 — Infra Adapter: GoogleTtsAdapter (VoiceSynthesisPort)**  
+- **Criterios**: Voz `es-ES-Neural2-Diana`, rate ~0.85; retry 429 (x3); 503 → excepción dominio; métricas `tts.requests.total`, `tts.latency`, `tts.error.*`.  
+- **Evidencia**: IT WireMock 200/429/503 green.  
+- **Dependencias**: T008.
 
-### US3-18 — Application Orchestration Tests (ampliación)
-- **Propósito**: cubrir happy/edge paths con mocks.  
-- **Criterios**: vídeo/audio; errores TTS/render/storage; orden de invocaciones; timeout.  
-- **DoD**: green.
+**T015 — Infra Service: SubtitleSyncService (SubtitleSyncPort)**  
+- **Criterios**: Genera SRT (índice, hh:mm:ss,mmm, texto); sin overlaps; precisión <200ms; métricas básicas.  
+- **Evidencia**: Unit tests green.  
+- **Dependencias**: T008.
 
-### US3-19 — BDD Steps (GREEN)
-- **Propósito**: implementar steps de US3‑01.  
-- **Criterios**: arrancar Spring test; WireMock TTS; LocalStack S3; validar outputs observables.  
-- **DoD**: 3 escenarios BDD en verde.
+**T016 — Infra Adapter: FfmpegVideoRendererAdapter (VideoRenderingPort)**  
+- **Criterios**: Comando determinista; 48kHz stereo 1280x720; amix voz primaria / música approx. −12dB; subtítulos "burned"; métricas `render.video.latency`, `render.video.error.*`; IT con assets mínimos (PNG 640×360; audios 1–2s).  
+- **Evidencia**: MP4 reproducible; IT green.  
+- **Dependencias**: T008.
 
-### US3-20 — E2E (Spring Boot)
-- **Propósito**: flujo completo integrado.  
-- **Criterios**: vídeo/audio/timeout; persistencia y URLs firmadas; asserts sobre DB y S3.  
-- **DoD**: green.
+**T017 — Infra Adapter: FfmpegAudioRendererAdapter (AudioRenderingPort)**  
+- **Criterios**: Comando determinista; 48kHz stereo; mezcla estable (amix/loudnorm simple); assets mínimos; métricas `render.audio.latency`, `render.audio.error.*`.  
+- **Evidencia**: MP3 reproducible; IT green.  
+- **Dependencias**: T008.
 
-### US3-21 — API Client Front (Opcional mínimo)
-- **Propósito**: botón “Generate Meditation” (sin lógica negocio).  
-- **DoD**: cliente generado de OpenAPI; llamada al endpoint; estados loading/success/error; tests component.
+**T018 — Infra Adapter: S3MediaStorageAdapter (MediaStoragePort)**  
+- **Criterios**: Bucket `${BUCKET_NAME:meditation-outputs}`; clave S3 con **prefijo BC `generation/{userId}/{meditationId}/(video.mp4|audio.mp3|subs.srt)`**; upload `PutObjectRequest`; Signed URL (TTL configurable); **IT LocalStack (Testcontainers)**: create bucket, put, head, get presign; métricas `storage.uploads.total`, `storage.latency`, `storage.error.*`.  
+- **Evidencia**: IT green.  
+- **Dependencias**: T008.
 
-### US3-22 — CI Pipeline
-- **Propósito**: gates y entorno.  
-- **Criterios**: secrets fake para tests; FFmpeg disponible; servicios (Postgres/S3) en CI; orden de gates.  
-- **DoD**: pipeline en verde en la feature branch.
+**T018.1 — Docker Compose: Postgres + LocalStack (desarrollo local)**  
+- **Criterios**: `docker compose up -d` levanta Postgres (5432) y LocalStack (4566); perfil `local` apunta a Postgres y S3 LocalStack; Flyway migra al arrancar; script/init crea bucket `meditation-outputs`.  
+- **Evidencia**: App `local` levanta, migra y crea bucket.  
+- **Dependencias**: T019, T018.
 
-### US3-23 — ADR: TTS & Rendering Choice
-- **Propósito**: documentar decisión Google TTS + FFmpeg.  
-- **DoD**: `docs/architecture-decisions/ADR-00X.md` con contexto/decisión/consecuencias.
+**T018.2 — Testcontainers: LocalStack S3 (tests)**  
+- **Criterios**: Inicia LocalStack S3 en tests; registra `endpointOverride` en AWS SDK; crea bucket `meditation-outputs` en setup.  
+- **Evidencia**: Tests de S3 (T018) y E2E (T031) usan LocalStack.  
+- **Dependencias**: T018.
 
-### US3-24 — Accessibility Acceptance
-- **Propósito**: legibilidad de subtítulos (longitud línea, ruptura por frase).  
-- **DoD**: heurísticas validadas; muestra QA en 3 ejemplos.
+**T019 — Infra Repository: PostgresMeditationRepository (ContentRepositoryPort)**  
+- **Criterios**: **Schema `generation`** y tabla `meditation`; `@Table(name="meditation", schema="generation")`; repo `save`, `findById`, `findByUserId`, **`findByIdempotencyKey`**; Flyway aplica `V002__create_generation_meditation.sql`; **Testcontainers Postgres** para IT.  
+- **Evidencia**: IT green; migración aplicada; CRUD + idempotency OK.  
+- **Dependencias**: T008.
 
-### US3-25 — i18n Readiness (config)
-- **Propósito**: parametrizar locale/voice/rate por configuración.  
-- **DoD**: propiedades externas; test rápido con ES/EN (si aplica).
+**T020 — Infra Util: TempFileManager (cleanup policy)**  
+- **Criterios**: `createTempDir(requestId)` bajo `${java.io.tmpdir}/meditations`; `cleanup(path)` elimina archivos/directorios; garantía de limpieza (try-with-resources / finally).  
+- **Evidencia**: Tests sin fugas de ficheros.  
+- **Dependencias**: —
 
-### US3-26 — Performance Smoke
-- **Propósito**: validar objetivo 30s con textos 3–5 min.  
-- **DoD**: perfil por etapa; informe en CI (no bloqueante) y acciones si excede.
+### T021-T022 — Phase 5: Controllers
+
+**T021 — Controller DTO & Mapper (sin auth real)**  
+- **Criterios**: Schemas alineados con OpenAPI; mapper sin lógica de negocio.  
+- **Evidencia**: Compila.  
+- **Dependencias**: T003, T007.
+
+**T022 — Controller REST (bypass auth SOLO en test)**  
+- **Criterios**: `@PostMapping("/api/v1/generation/meditations")` conforme a OpenAPI; DTO → use case; excepciones → 408/400/503; **bypass auth en test** (mock userId/header simulado); `TestSecurityConfig` **no** se empaqueta en prod.  
+- **Evidencia**: Tests controller green.  
+- **Dependencias**: T011, T021.
+
+### T023-T027 — Phase 6: Frontend
+
+**T023 — Frontend: regenerar cliente OpenAPI tipado**  
+- **Criterios**: Cliente generado desde `/openapi/generation/generate-meditation.yaml`; tipos expuestos y reutilizables en hooks.  
+- **Evidencia**: build frontend compila.  
+- **Dependencias**: T004.
+
+**T024 — Frontend: hook useGenerateMeditation**  
+- **Criterios**: API `start({ text, musicReference, imageReference? })`; estado `idle | creating | success | error`, `progress?`, `result?`, `error?`; soporta llamada única (síncrona) y status/polling; cancela polling al desmontar.  
+- **Evidencia**: tests unitarios del hook (mock API).  
+- **Dependencias**: T023.
+
+**T025 — Frontend: barra de estado "creating"**  
+- **Criterios**: Render de barra/indicador con label "creating"; progreso indeterminado o determinado; accesible (`aria-busy`, `aria-live="polite"`).  
+- **Evidencia**: tests RTL.  
+- **Dependencias**: T024.
+
+**T026 — Frontend: integración en página de composición (US2)**  
+- **Criterios**: Botón "Generate video/podcast" dispara `useGenerateMeditation.start(...)`; muestra `GenerationStatusBar` mientras `creating`; éxito: pantalla final + botón de descarga (`href` = `mediaUrl`); error: pantalla fallo + detalle + reintento; botón deshabilitado mientras `creating`.  
+- **Evidencia**: tests de integración de componentes.  
+- **Dependencias**: T024, T025.
+
+**T027 — Frontend: pruebas (unit/integration)**  
+- **Criterios**: Click en Generate → estado "creating" → finaliza en success/error; en éxito: botón descarga con `href` correcto (presigned URL); en error: mensaje fallo con detalle.  
+- **Evidencia**: tests RTL/Vitest green.  
+- **Dependencias**: T026.
+
+### T028-T033 — Phase 7: Testing Pyramid
+
+**T028 — Contract Tests (OpenAPI compliance)**  
+- **Criterios**: Request/response conformes; errores 400/408/503 correctos; **401 omitido** hasta US1.  
+- **Evidencia**: Contract tests green.  
+- **Dependencias**: T022.
+
+**T029 — BDD Steps Implementation (scenarios GREEN)**  
+- **Criterios**: Given user authenticated → bypass (mock userId); POST → controller; WireMock TTS verificado; verifica SRT, render (MP4/MP3), **upload S3 (LocalStack)**, **persistencia Postgres**; timeout → 408.  
+- **Evidencia**: 3 escenarios GREEN.  
+- **Dependencias**: T001, T022, T018, T019.
+
+**T030 — Integration Tests Infrastructure (adapters)**  
+- **Criterios**: TTS WireMock 200/429/503; SRT correcto; MP4/MP3 reproducibles (assets mínimos); **S3 LocalStack** put/head/get presign OK; **Postgres Testcontainers** CRUD + idempotency OK.  
+- **Evidencia**: IT/UT green.  
+- **Dependencias**: T014–T020.
+
+**T031 — E2E Tests (full flow con Postgres + LocalStack S3)**  
+- **Criterios**: Vídeo 200 OK; `mediaUrl` presign S3; objeto existe (HEAD); Audio 200 OK; **duración (`durationSeconds`) ≈ rango esperado**; persistencia en Postgres verificada; subtítulos presentes; idempotencia: 2ª petición → mismo `meditationId`.  
+- **Evidencia**: E2E green.  
+- **Dependencias**: T029.
+
+**T032 — Unit Tests Domain (recap)**  
+- **Criterios**: Cobertura >95% domain.  
+- **Evidencia**: Reporte coverage.  
+- **Dependencias**: T006–T007.
+
+**T033 — Unit Tests Application (recap)**  
+- **Criterios**: Cobertura >90% application.  
+- **Evidencia**: Reporte coverage.  
+- **Dependencias**: T013.
+
+### T034 — Phase 8: CI/CD
+
+**T034 — CI Workflow Backend (gates + entorno)**  
+- **Criterios**: **Instalar FFmpeg** (`apt-get update && apt-get install -y ffmpeg`); usar **Docker** del runner para **Testcontainers** (Postgres + LocalStack S3); gates: BDD → API → Unit domain → Unit application → Infra IT → Contract → E2E → Build JAR; variables mock (`GOOGLE_TTS_API_KEY=fake`, `BUCKET_NAME=meditation-outputs`); limpieza de temporales.  
+- **Evidencia**: Pipeline green sin servicios externos reales.  
+- **Dependencias**: T031.
+
+## Diferidas / Blocked (fuera de MVP)
+
+**T035 — [BLOCKED BY US1] Controller con JWT real**  
+Sustituir bypass por validación JWT; extraer `userId` de claims; activar `security` obligatorio en OpenAPI.
+
+**T036 — [BLOCKED BY US1] E2E con JWT real**  
+Añadir token real en Authorization; actualizar contract tests para 401.
+
+**T037 — AWS S3 real (producción)**  
+Configurar cuenta/bucket/IAM y apuntar el adapter a endpoint AWS real (mismos tests deberían pasar).
+
+**T038 — CI con perfiles prod y secretos gestionados (post‑MVP)**  
+Añadir secretos y validaciones adicionales si aplica.
+
+**T039 — Docs: ADR TTS & FFmpeg**  
+Registrar decisión tecnológica; prós/contras.
+
+**T040 — i18n: Voice & Locale Config**  
+Parametrizar voz y locale (ES/EN).
+
+**T041 — Performance: Baseline & Smoke Test**  
+Perfil por etapa; informe CI; alertas >30s.
+
+**T042 — Accessibility: Subtitle Heuristics & QA**  
+Heurísticas (longitud de línea/ruptura por frase) + QA manual.
 
 ---
 
-## 5. Dependency Map
-US3-01 (BDD RED)
+## 5. Dependency Map (34 MVP Tasks)
+T001 (BDD RED)
 ↓
-US3-02 (Domain Model) → US3-03 (Ports)
-↓                   ↘
-US3-04 (Use Case)      → US3-11 (Idempotency) → US3-12 (TempFiles)
+T002-T004 (OpenAPI)
 ↓
-US3-05 (TTS)  US3-06 (Subtitle)  US3-07 (Video)  US3-08 (Audio)  US3-09 (S3)  US3-10 (Repo)  US3-13 (Flyway)  US3-14 (Obs)
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+T005-T007 (Domain Enums/VOs/Aggregate) → T008 (Ports) → T009 (Exceptions)
+↓                                       ↘
+T010 (Estimator) → T011 (Use Case) → T012 (Idempotency) → T013 (App Tests)
 ↓
-US3-15 (API First YAML) → US3-16 (Controller) → US3-17 (Contract Tests) → US3-19 (BDD GREEN)
+T014 (TTS) T015 (Subtitle) T016 (Video) T017 (Audio) T018 (S3) T019 (Repo) T020 (TempFiles)
+│                                                        │           │
+└─── T018.1 (Docker Compose) ────────────────────────┘           │
+     T018.2 (Testcontainers S3) ───────────────────────────────┘
 ↓
-US3-20 (E2E)
+T021 (DTO/Mapper) → T022 (Controller)
 ↓
-US3-22 (CI)
+T023 (Frontend API) → T024 (Hook) → T025 (StatusBar) → T026 (Integration) → T027 (Tests)
 ↓
-US3-21 (Front, opc.)
+T028 (Contract) → T029 (BDD GREEN) → T030 (Infra IT recap) → T031 (E2E) → T032-T033 (Coverage)
 ↓
-US3-23/24/25/26 (Docs/Acc/i18n/Perf)
+T034 (CI/CD)
+↓
+[DEFERRED/BLOCKED] T035-T042
 
 ---
 
@@ -352,31 +460,28 @@ US3-23/24/25/26 (Docs/Acc/i18n/Perf)
 
 | Ticket | Test Type | Evidence | Gate |
 |---|---|---|---|
-| US3-01 | BDD (RED) | 3 scenarios pending | BDD |
-| US3-02 | Unit | TDD dominio 100% reglas | Unit |
-| US3-03 | Compile | Ports sin dependencias externas | — |
-| US3-04 | Unit (Mock) | Orquestación verificada | Unit |
-| US3-05 | Integration (WireMock) | TTS IT green | Infra |
-| US3-06 | Unit+Integration | SRT correcto y alineado | Infra |
-| US3-07 | Integration | MP4 válido + subs visibles | Infra |
-| US3-08 | Integration | MP3 válido, mezcla correcta | Infra |
-| US3-09 | Integration (LocalStack) | Upload + Signed URL | Infra |
-| US3-10 | Integration (Testcontainers) | Repo OK | Infra |
-| US3-11 | Unit (Mock) | Idempotencia verificada | Unit |
-| US3-12 | Unit | Cleanup temporales | Unit |
-| US3-13 | Migration | Flyway en Testcontainers | Infra |
-| US3-14 | Metrics | Métricas expuestas | — |
-| US3-15 | Lint | OpenAPI válido | API |
-| US3-16 | Unit (Mock) | Controller OK | Unit |
-| US3-17 | Contract | OpenAPI compliance | Contract |
-| US3-19 | BDD (GREEN) | 3 escenarios pasan | BDD |
-| US3-20 | E2E | Flujo integrado | E2E |
-| US3-21 | Front unit | Botón/hook OK | Front |
-| US3-22 | CI | Gates en verde | Build |
-| US3-23 | Docs | ADR publicado | — |
-| US3-24 | QA check | Acc subtítulos OK | — |
-| US3-25 | Config test | ES/EN parametrizable | — |
-| US3-26 | Perf report | Informe CI | — |
+| T001 | BDD (RED) | 3 scenarios pending | BDD |
+| T002-T004 | Lint | OpenAPI válido | API |
+| T005-T009 | Unit/Compile | Domain >95% cov; ports sin deps ext | Unit |
+| T010-T013 | Unit (Mock) | Orquestación >90% cov | Unit |
+| T014 | Integration (WireMock) | TTS IT green | Infra |
+| T015 | Unit+Integration | SRT correcto y alineado | Infra |
+| T016 | Integration | MP4 válido + subs visibles | Infra |
+| T017 | Integration | MP3 válido, mezcla correcta | Infra |
+| T018 | Integration (LocalStack) | Upload + Signed URL | Infra |
+| T018.1 | Docker Compose | App local levanta | — |
+| T018.2 | Testcontainers | LocalStack S3 disponible | — |
+| T019 | Integration (Testcontainers) | Repo OK + migración | Infra |
+| T020 | Unit | Cleanup temporales | Unit |
+| T021-T022 | Unit (Mock) | Controller OK | Unit |
+| T023-T027 | Front unit/integration | API/hook/componentes OK | Front |
+| T028 | Contract | OpenAPI compliance | Contract |
+| T029 | BDD (GREEN) | 3 escenarios pasan | BDD |
+| T030 | Integration | Infra adapters recap | Infra |
+| T031 | E2E | Flujo integrado | E2E |
+| T032-T033 | Coverage | Domain >95%, App >90% | Unit |
+| T034 | CI | Gates en verde | Build |
+| T035-T042 | N/A | Diferidas/bloqueadas | — |
 
 ---
 
@@ -419,11 +524,20 @@ US3-23/24/25/26 (Docs/Acc/i18n/Perf)
 
 ## 11. Definition of Done (Feature‑Level)
 
-- ✅ BDD (3) GREEN; contrato OpenAPI válido; controladores conformes.  
-- ✅ Dominio y aplicación con coberturas objetivo; infra con IT críticos.  
-- ✅ Outputs accesibles, persistencia correcta, idempotencia garantizada.  
-- ✅ CI gates en verde; logs/métricas mínimas; temporales limpios.  
-- ✅ ADR publicado; accesibilidad mínima de subtítulos validada.
+**34 tareas MVP (T001–T034) completas:**
+- ✅ BDD 3 scenarios GREEN (T001, T029)  
+- ✅ OpenAPI contract (BC Generation) validado (T002-T004)  
+- ✅ Domain inmutable (TDD >95% cov) (T005-T009, T032)  
+- ✅ Use case con idempotencia (T010-T013, T033)  
+- ✅ Infra: TTS (WireMock), Render (FFmpeg), **Storage S3 (LocalStack; prefijo `generation/`)**, Repo Postgres real (**schema `generation`**) (T014-T020, T030)  
+- ✅ Controller con bypass auth SOLO en test (T021-T022)  
+- ✅ **Frontend** (en BC Composition/US2): botón "Generate video/podcast", **barra "creating"** con progreso, pantalla **éxito con descarga** o **error** con detalle (T023-T027)  
+- ✅ Contract + E2E green (Testcontainers: Postgres + LocalStack) (T028, T031)  
+- ✅ CI gates green (BDD → E2E) y build JAR (T034)
+
+**8 tareas diferidas/bloqueadas (T035–T042):**
+- 🚫 T035-T036: Bloqueadas por US1 (JWT real)  
+- 📅 T037-T042: Post-MVP (S3 prod, CI prod, ADR, i18n, performance, accessibility)
 
 ---
 
@@ -440,7 +554,9 @@ US3-23/24/25/26 (Docs/Acc/i18n/Perf)
 ## 13. References
 
 - Constitution & Playbooks: `.specify/memory/constitution.md`, `.specify/instructions/*`  
-- Specs: `specs/US3/spec.md`, `specs/US2/spec.md`  
+- Specs: `specs/002-generate-meditation-audio-video/spec.md`, `specs/002-generate-meditation-audio-video/tasks.md`  
 - Docs externas: Google TTS, FFmpeg, SRT, AWS S3 SDK.
 
 ---
+
+**END OF PLAN — 34 MVP Tasks + 8 Deferred/Blocked**
