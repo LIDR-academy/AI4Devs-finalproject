@@ -26,6 +26,7 @@ Este documento resume el contexto del producto con foco técnico y operativo.
 ## Estado Actual (Sprint 1)
 - T-002-BACK: [DONE] - Endpoint para generar presigned URLs implementado y verificado.
 - T-005-INFRA: [DONE] - Bucket `raw-uploads` provisionado y tests de integración pasando.
+ - T-021-DB: [DONE] - `block_status` ENUM extended with processing/rejected/error_processing; migration applied and integration tests passing (2026-02-12).
 - Repositorio reorganizado: `/infra` contiene scripts de mantenimiento e IaC auxiliares.
 
 ## Recomendaciones
