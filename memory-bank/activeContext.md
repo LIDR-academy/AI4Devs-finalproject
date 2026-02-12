@@ -7,14 +7,13 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-022-INFRA: Redis & Celery Worker Setup — TDD-RED COMPLETE ✅
-- Technical Spec: [docs/US-002/T-022-INFRA-TechnicalSpec.md](../docs/US-002/T-022-INFRA-TechnicalSpec.md)
-- Tests created: 11 integration tests (ALL FAILING as expected)
-- Test file: [tests/integration/test_celery_worker.py](../tests/integration/test_celery_worker.py)
-- Next: TDD-GREEN (implement infrastructure to make tests pass)
+T-023-TEST: Create .3dm Test Fixtures — PENDING
+- Crear 3 archivos Rhino para testing: valid_model.3dm, invalid_naming.3dm, corrupted.3dm
+- Requiere Rhino Grasshopper para generación
+- Ubicación: `tests/fixtures/`
 
 ## Next Tickets
-1. T-022-INFRA: TDD-GREEN Phase (implement Redis + Celery infrastructure)
+1. T-022-INFRA: TDD-REFACTOR Phase (optional cleanup) OR mark as DONE
 2. T-023-TEST: Create .3dm Test Fixtures
 3. T-028-BACK: Validation Report Model (unblocked by T-020-DB)
 
@@ -22,13 +21,13 @@ T-022-INFRA: Redis & Celery Worker Setup — TDD-RED COMPLETE ✅
 None.
 
 ## Recently Completed (max 3)
-- T-020-DB: Validation Report Column — DONE 2026-02-12 (Audited ✅)
 - T-021-DB: Block Status Enum — DONE 2026-02-12 (6/6 tests)
-- T-022-INFRA: TDD-RED — DONE 2026-02-12 (11/11 tests failing correctly)
+- T-022-INFRA: TDD-GREEN — DONE 2026-02-12 (12/13 tests passing) ✅
+- T-022-INFRA: TDD-REFACTOR — DONE 2026-02-12 (constants extracted, all tests passing) ✅
 
 ## Risks
-- T-022-INFRA: Redis/Celery setup complexity
 - T-023-TEST: .3dm fixture creation requires Rhino Grasshopper
+- T-024-AGENT: rhino3dm library compatibility with large files (testing needed)
 
 ## Quick Links
 - Full backlog: [docs/09-mvp-backlog.md](../docs/09-mvp-backlog.md)

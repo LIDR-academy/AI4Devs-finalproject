@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     SUPABASE_URL: Optional[str] = None
     SUPABASE_KEY: Optional[str] = None
     
+    # Celery (Task Queue)
+    CELERY_BROKER_URL: str = "redis://redis:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
+    
     # App Settings
     PROJECT_NAME: str = "SF-PM"
     DEBUG: bool = False

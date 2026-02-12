@@ -4543,3 +4543,50 @@ docker compose run --rm backend pytest tests/integration/test_celery_worker.py -
 **Próximo paso:** TDD-GREEN (implementar infraestructura)
 
 ---
+## 077 - TDD FASE VERDE - Ticket T-022-INFRA
+**Fecha:** 2026-02-12 15:30
+
+**Prompt Original:**
+> ## Prompt: TDD FASE VERDE - Ticket T-022-INFRA
+>
+> **Role:** Actúa como **Senior Developer** (Python/FastAPI para backend, React/TypeScript para frontend).
+>
+> [Full TDD-GREEN workflow prompt for implementing Redis & Celery infrastructure]
+
+**Resumen de la Respuesta/Acción:**
+Ejecutando fase TDD-GREEN para T-022-INFRA. Implementando infraestructura completa:
+
+**Archivos Creados (6):**
+- src/agent/__init__.py
+- src/agent/celery_app.py (Celery instance con config segura)
+- src/agent/config.py (Settings con Pydantic)
+- src/agent/tasks.py (health_check + validate_file placeholder)
+- src/agent/requirements.txt (celery, redis, structlog, etc.)
+- src/agent/Dockerfile (multi-stage: dev/prod)
+
+**Archivos Modificados (3):**
+- docker-compose.yml (redis + agent-worker services)
+- src/backend/config.py (CELERY_* variables)
+- .env.example (documentación Celery)
+
+**Resultado esperado:** 11/11 tests PASSING
+
+---
+
+## 079 - TDD FASE REFACTOR - Cierre Ticket T-022-INFRA
+**Fecha:** 2026-02-12 16:10
+
+**Resumen:** Refactor de código + actualización completa de documentación para cerrar T-022-INFRA.
+
+**Refactorizaciones:**
+- Constants centralization: src/agent/constants.py (32 líneas)
+- Conditional imports mejorados (hasattr check para evitar colisiones)
+- Tests actualizados con type-safe task names
+
+**Tests Anti-Regresión:** 29 PASSED, 1 SKIPPED (0 FAILURES)
+
+**Documentación Actualizada:** 7 archivos (backlog, productContext, activeContext, progress, systemPatterns, techContext, prompts)
+
+**Status:** T-022-INFRA DONE ✅
+
+---
