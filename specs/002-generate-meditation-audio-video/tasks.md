@@ -103,8 +103,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Artefactos:**
 - `/backend/src/main/java/com/hexagonal/meditation/generation/domain/enums/MediaType.java`
 - `/backend/src/main/java/com/hexagonal/meditation/generation/domain/enums/GenerationStatus.java`
-**Criterios de aceptación:** AUDIO/VIDEO y PROCESSING/COMPLETED/FAILED/TIMEOUT  
-**Evidencias:** Tests simples  
+**Criterios de aceptación:** [x] AUDIO/VIDEO y PROCESSING/COMPLETED/FAILED/TIMEOUT  
+**Evidencias:** [x] Tests simples  
 **Dependencias:** —  
 
 ---
@@ -118,10 +118,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/test/java/com/hexagonal/meditation/generation/domain/model/NarrationScriptTest.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/domain/model/SubtitleSegmentTest.java`
 **Criterios de aceptación:**
-- [ ] Records Java 21 con validación en compact constructor
-- [ ] `SubtitleSegment`: `start < end`, sin solape
-- [ ] `MediaReference`: path/URL válida
-**Evidencias:** TDD green  
+- [x] Records Java 21 con validación en compact constructor
+- [x] `SubtitleSegment`: `start < end`, sin solape
+- [x] `MediaReference`: path/URL válida
+**Evidencias:** [x] TDD green  
 **Dependencias:** T005
 
 ---
@@ -132,10 +132,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/domain/model/MeditationOutput.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/domain/model/MeditationOutputTest.java`
 **Criterios de aceptación:**
-- [ ] Record con: `id`, `compositionId`, `userId`, `type`, `textSnapshot`, `musicRef`, `imageRefOpt`, `mediaUrlOpt`, `subtitleUrlOpt`, `durationSecondsOpt`, `status`, `createdAt`, `updatedAt`
-- [ ] Factories `createAudio(...)` / `createVideo(...)`
-- [ ] `Clock` inyectado; `Optional` en campos no obligatorios
-**Evidencias:** TDD >95% domain  
+- [x] Record con: `id`, `compositionId`, `userId`, `type`, `textSnapshot`, `musicRef`, `imageRefOpt`, `mediaUrlOpt`, `subtitleUrlOpt`, `durationSecondsOpt`, `status`, `createdAt`, `updatedAt`
+- [x] Factories `createAudio(...)` / `createVideo(...)`
+- [x] `Clock` inyectado; `Optional` en campos no obligatorios
+**Evidencias:** [x] TDD >95% domain  
 **Dependencias:** T006
 
 ---
@@ -151,9 +151,9 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/domain/ports/out/MediaStoragePort.java`
 - `/backend/src/main/java/com/hexagonal/meditation/generation/domain/ports/out/ContentRepositoryPort.java`
 **Criterios de aceptación:**
-- [ ] Reutiliza `MediaCatalogPort` (BC Composition/US2) para música (no crear `MusicPort`)
-- [ ] Solo tipos de dominio (sin HTTP/JPA/etc.)
-**Evidencias:** Compila  
+- [x] Reutiliza `MediaCatalogPort` (BC Composition/US2) para música (no crear `MusicPort`)
+- [x] Solo tipos de dominio (sin HTTP/JPA/etc.)
+**Evidencias:** [x] Compila  
 **Dependencias:** T007
 
 ---
@@ -163,8 +163,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Artefactos:**
 - `/backend/src/main/java/com/hexagonal/meditation/generation/domain/exception/GenerationTimeoutException.java`
 - `/backend/src/main/java/com/hexagonal/meditation/generation/domain/exception/InvalidContentException.java`
-**Criterios de aceptación:** RuntimeException; mensajes claros  
-**Evidencias:** Compila  
+**Criterios de aceptación:** [x] RuntimeException; mensajes claros  
+**Evidencias:** [x] Compila  
 **Dependencias:** —  
 
 ---
