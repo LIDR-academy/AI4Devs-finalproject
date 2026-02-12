@@ -25,16 +25,28 @@
 - **pytest-asyncio** 0.23.5 - Async test support
 - **httpx** 0.27.2 - HTTP client for testing API endpoints
 
-## Agent Stack (NEW - T-022-INFRA)
+## Agent Stack (Implemented - T-022-INFRA ✅)
 ### Task Queue & Orchestration
 - **Celery** 5.3.4 - Distributed task queue system
+  - Configuration: JSON serialization (security), task timeouts (600s hard, 540s soft)
+  - Worker: Prefetch multiplier = 1 (isolate large file processing)
+  - Result expiration: 1 hour (auto-cleanup)
 - **Redis** 5.0.1 (Python client) - Message broker client library
 - **Redis Server** 7-alpine - In-memory data store (message broker + result backend)
+  - AOF persistence enabled
+  - Port: 127.0.0.1:6379 (localhost only, security)
+  - Docker health checks configured
 
 ### Configuration & Utilities
 - **Pydantic** 2.6.1 - Config validation (mirrors backend)
 - **pydantic-settings** 2.1.0 - Environment-based settings
 - **structlog** 24.1.0 - Structured JSON logging
+
+### Architecture Patterns
+- **Constants Module** (`src/agent/constants.py`) - Centralized configuration values
+  - Task timeouts, retry policies, task names
+  - Following Clean Architecture pattern (separation from env-based config)
+- **Conditional Imports** - Support both worker execution and module imports in tests
 
 ### Future Dependencies (Not Yet Implemented)
 - **rhino3dm** 8.4.0 - Rhino file parsing (T-024-AGENT)
