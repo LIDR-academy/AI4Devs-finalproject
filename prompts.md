@@ -4617,3 +4617,21 @@ Ejecutando fase TDD-GREEN para T-022-INFRA. Implementando infraestructura comple
 - **Decision:** Ticket marcado como **DONE** y aprobado para merge a `develop`/`main` tras revisión de CI.
 
 ---
+
+## 080 - FIX CI - Fallos en GitHub Actions (T-022-INFRA)
+**Fecha:** 2026-02-12 17:00
+
+**Prompt Original:**
+> Error en github:
+> =========================== short test summary info ============================
+> FAILED tests/integration/test_celery_worker.py::TestRedisConnectivity::test_redis_connection_works
+> FAILED tests/integration/test_celery_worker.py::TestTaskExecution::test_health_check_task_structure
+> ============= 2 failed, 27 passed, 1 skipped, 3 warnings in 25.88s =============
+> 
+> make: *** [Makefile:43: test] Error 1
+> Error: Process completed with exit code 2.
+
+**Resumen de la Respuesta/Acción:**
+Los tests de integración de T-022-INFRA fallan en CI porque el workflow solo arranca `db`, no `redis` ni `agent-worker`. Solución: modificar `.github/workflows/ci.yml` para arrancar Redis y worker antes de ejecutar tests, y añadir variables de entorno CELERY_*.
+
+---

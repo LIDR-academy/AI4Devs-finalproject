@@ -7,15 +7,15 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-023-TEST: Create .3dm Test Fixtures — PENDING
-- Crear 3 archivos Rhino para testing: valid_model.3dm, invalid_naming.3dm, corrupted.3dm
-- Requiere Rhino Grasshopper para generación
-- Ubicación: `tests/fixtures/`
+T-022-INFRA: Redis & Celery Workers Setup — CI FIX IN PROGRESS
+- Modificado workflow de CI (.github/workflows/ci.yml) para arrancar Redis y agent-worker
+- Tests locales: ✅ PASSED (2/2 tests previamente fallidos)
+- Estado: Esperando validación en GitHub Actions
 
 ## Next Tickets
-1. T-022-INFRA: TDD-REFACTOR Phase (optional cleanup) OR mark as DONE
-2. T-023-TEST: Create .3dm Test Fixtures
-3. T-028-BACK: Validation Report Model (unblocked by T-020-DB)
+1. T-023-TEST: Create .3dm Test Fixtures (tras confirmar CI verde)
+2. T-024-AGENT: Implement validate_file task
+3. T-028-BACK: Validation Report Model
 
 ## Blockers
 None.
