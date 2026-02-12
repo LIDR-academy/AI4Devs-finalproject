@@ -4761,3 +4761,33 @@ Auditoría exhaustiva completada para T-023-TEST (Create .3dm Test Fixtures - Va
 **Siguiente paso:** T-024-AGENT (Implement validate_file task con rhino3dm).
 
 ---
+
+## 083 - Workflow Step 1: Enrichment - T-024-AGENT
+**Fecha:** 2026-02-12 19:00
+
+**Prompt Original:**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-024-AGENT
+> 
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+> 
+> [Prompt completo ejecutado - ver AGENTS.md para protocolo detallado]
+
+**Resumen de la Respuesta/Acción:**
+Iniciada fase de Enrichment para T-024-AGENT (Rhino Ingestion Service).
+
+**Technical Specification Generada:**
+- **Alcance:** Implementar task Celery `validate_file` que descarga .3dm de S3, parsea con rhino3dm, extrae capas básicas, actualiza DB con ValidationReport
+- **Nueva dependencia:** rhino3dm==8.4.0
+- **Archivos a crear:** models.py, services/ (file_download, rhino_parser, db_service), tests unit/integration
+- **Test cases:** 14 casos definidos (happy path, edge cases, security, integration)
+- **Pattern seguido:** Clean Architecture (service layer), constants centralization, structured logging
+
+**Dependencias verificadas:**
+- T-020-DB ✅ (validation_report JSONB)
+- T-021-DB ✅ (block_status enum)
+- T-022-INFRA ✅ (Celery worker healthy)
+- T-023-TEST ✅ (ValidationReport schemas)
+
+**Estado:** Spec técnica completa. Listo para fase TDD-RED.
+
+---

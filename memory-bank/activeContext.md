@@ -7,10 +7,10 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-024-AGENT: Implement validate_file task — NEXT IN QUEUE
-- Objetivo: Implementar la lógica de validación de archivos .3dm usando rhino3dm
-- Dependencias: T-023-TEST (schemas ValidationReport) ✅ DONE
-- Estado: Bloqueado hasta completar audit de T-023-TEST
+T-024-AGENT: Rhino Ingestion Service — ENRICHMENT COMPLETE
+- Objetivo: Implementar la lógica de validación de archivos .3dm usando rhino3dm (descarga S3, parseo, extracción capas, DB update)
+- Dependencias: T-020-DB ✅, T-021-DB ✅, T-022-INFRA ✅, T-023-TEST ✅ (todas completadas)
+- Estado: Technical Specification generada. Lista para TDD-RED phase.
 
 ## Next Tickets
 1. T-024-AGENT: Rhino Ingestion Service (validate_file task implementation)
