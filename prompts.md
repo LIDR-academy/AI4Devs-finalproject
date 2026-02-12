@@ -4222,5 +4222,273 @@ Ejecutada fase TDD-RED para T-021-DB. Creados 2 archivos:
 
 ---
 
+## 075 - ENRIQUECIMIENTO TÉCNICO - Ticket T-022-INFRA
+**Fecha:** 2026-02-12 14:30
+
+**Prompt Original:**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-022-INFRA
+>
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+>
+> ---
+>
+> ### Protocolo Agents (OBLIGATORIO antes de diseñar)
+>
+> 1. **Lee** `docs/09-mvp-backlog.md` y localiza el ticket `T-022-INFRA` para entender alcance, criterios de aceptación y DoD.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API existentes y patrones arquitectónicos del proyecto.
+> 3. **Lee** `memory-bank/techContext.md` para conocer el stack completo, librerías permitidas y decisiones técnicas previas.
+> 4. **Lee** `docs/productContext.md` para identificar componentes/endpoints existentes que pueden reutilizarse.
+> 5. **Al finalizar**, registra este prompt en `prompts.md` bajo la sección "## Workflow Step 1: Enrichment".
+>
+> ---
+>
+> ### Contexto del Workflow
+>
+> Estamos en **Step 1/5: Enriquecer Ticket** (Pre-TDD).
+> Acabamos de crear la rama `feature/T-022-INFRA`.
+> El objetivo es definir el **"Contrato Técnico"** detallado ANTES de escribir el primer test (Step 2: TDD-Red).
+>
+> **Stack del proyecto:**
+> - **Backend:** FastAPI (Python 3.11) + Pydantic schemas (`src/backend/schemas.py`), rutas en `src/backend/api/`
+> - **Frontend:** React 18 + TypeScript strict + Vite, componentes en `src/frontend/src/components/`, tipos en `src/frontend/src/types/`
+> - **Agent:** LangGraph (Python) en `src/agent/`
+> - **Infra:** Docker multi-stage, Supabase Storage (S3-compatible), PostgreSQL 15, migraciones en `supabase/migrations/`
+> - **Docs:** `docs/`, `memory-bank/`, backlog en `docs/09-mvp-backlog.md`
+>
+> **Patrón de contrato (CRÍTICO):** Las interfaces TypeScript (`src/frontend/src/types/`) DEBEN coincidir exactamente con los Pydantic schemas (`src/backend/schemas.py`). Verifica ambos antes de proponer nuevos tipos.
+>
+> ---
+>
+> ### Objetivo
+>
+> Generar una **Technical Specification** completa para `T-022-INFRA` que sirva como blueprint para el desarrollo TDD, sin escribir código de implementación todavía.
+>
+> ---
+>
+> ### Instrucciones de Ejecución
+>
+> #### 1. Análisis del contexto (Read-Only)
+>
+> **Identificar tipo de ticket:**
+> - Por sufijo: `T-XXX-FRONT`, `T-XXX-BACK`, `T-XXX-AGENT`, `T-XXX-INFRA`, `T-XXX-DB`
+> - Si toca múltiples capas (ej: crear endpoint + UI consumiéndolo), especificar todas
+>
+> **Revisar documentación:**
+> - Criterios de aceptación en `docs/09-mvp-backlog.md`
+> - Contratos API existentes en `memory-bank/systemPatterns.md`
+> - Dependencias del ticket (si otras US deben completarse primero)
+>
+> **Inventario de reutilización:**
+> - ¿Qué componentes/endpoints/schemas ya existen y pueden reutilizarse?
+> - ¿Qué patrones/hooks/utils del proyecto aplican a este ticket?
+>
+> #### 2. Diseño de la Solución (Contract-First)
+>
+> **Para cada capa afectada, define:**
+>
+> **A) BACKEND (si aplica):**
+> - **Request Schema (Pydantic):** Campos obligatorios/opcionales, validaciones, ejemplos
+> - **Response Schema (Pydantic):** Estructura exitosa (200) y casos de error (400, 401, 404, 500)
+> - **Endpoint:** Método HTTP, ruta, autenticación requerida
+> - **Lógica de negocio:** Descripción en pseudocódigo (sin implementar todavía)
+> - **Dependencias externas:** Supabase Storage, tablas DB, servicios externos
+>
+> **B) FRONTEND (si aplica):**
+> - **Props del componente (TypeScript):** Interfaces completas con tipos estrictos
+> - **Estados locales vs globales:** Qué va en `useState`, qué en Zustand/Context
+> - **Llamadas API:** Qué endpoints se consumen, qué servicio en `src/services/` manejará la llamada
+> - **UX/Interacciones:** Loading states, error handling, validaciones del formulario
+>
+> **C) BASE DE DATOS (si aplica):**
+> - **Cambios de esquema:** Nuevas tablas, columnas, índices, foreign keys
+> - **Migraciones SQL:** Ruta propuesta (`supabase/migrations/YYYYMMDDHHMMSS_<nombre>.sql`)
+> - **Row Level Security:** Políticas necesarias para proteger los datos
+> - **Seed data:** Si se necesitan datos iniciales para testing
+>
+> **D) INFRAESTRUCTURA (si aplica):**
+> - **Buckets/Storage:** Nuevos buckets en Supabase, políticas de acceso
+> - **Variables de entorno:** Nuevas env vars necesarias en `.env` y `docker-compose.yml`
+> - **Dependencias:** Nuevos paquetes Python/npm que deban instalarse
+>
+> #### 3. Estrategia de Testing (Pre-TDD Checklist)
+>
+> Genera una **lista de test cases** específica para este ticket:
+>
+> **✅ Happy Path (flujo principal):**
+> - Caso 1: [Descripción del comportamiento esperado con entrada válida]
+> - Caso 2: [Otro escenario del flujo feliz]
+>
+> **⚠️ Edge Cases (casos límite):**
+> - Valores nulos, strings vacíos, arrays vacíos
+> - Límites de tamaño (archivos grandes, textos muy largos)
+> - IDs que no existen, recursos ya eliminados
+>
+> **🛡️ Security/Error Handling:**
+> - Validaciones que deben fallar (campos requeridos ausentes, formatos incorrectos)
+> - Códigos HTTP esperados en cada caso de error (400, 401, 403, 404, 500)
+> - Timeouts, errores de red, servicios externos caídos
+>
+> **🔗 Integration (si aplica):**
+> - Verificar que la migración SQL se aplica correctamente
+> - Verificar que el bucket S3 existe y es accesible
+> - Verificar que el contrato BACK→FRONT coincide campo por campo
+>
+> #### 4. Definición de Contratos (Critical)
+>
+> **Si el ticket toca BACK + FRONT:**
+> - Define AMBOS schemas (Pydantic + TypeScript) lado a lado
+> - Marca en **negrita** cualquier campo que difiera entre ambos (NO debería haber ninguno)
+> - Proporciona un ejemplo JSON completo que ambos lados acepten
+>
+> **Si se crea un nuevo patrón:**
+> - Documenta si este contrato debe añadirse a `memory-bank/systemPatterns.md` para reutilización futura
+>
+> ---
+>
+> ### Output Esperado
+>
+> Genera un bloque Markdown con esta estructura exacta:
+>
+> ```markdown
+> # Technical Specification: T-022-INFRA
+>
+> ## 1. Ticket Summary
+> - **Tipo:** [FRONT/BACK/AGENT/INFRA/DB]
+> - **Alcance:** [Brief description from backlog]
+> - **Dependencias:** [Otros tickets o componentes necesarios]
+>
+> ## 2. Data Structures & Contracts
+>
+> ### Backend Schema (Pydantic)
+> \`\`\`python
+> # src/backend/schemas.py (o módulo específico)
+> # [NO implementar todavía, solo definir la interfaz]
+> \`\`\`
+>
+> ### Frontend Types (TypeScript)
+> \`\`\`typescript
+> // src/frontend/src/types/[nombre].ts
+> // [NO implementar todavía, solo definir la interfaz]
+> \`\`\`
+>
+> ### Database Changes (SQL)
+> \`\`\`sql
+> -- supabase/migrations/YYYYMMDDHHMMSS_[nombre].sql
+> -- [Solo si aplica]
+> \`\`\`
+>
+> ## 3. API Interface (si aplica)
+>
+> - **Endpoint:** `[METHOD] /api/v1/[ruta]`
+> - **Auth:** [Required/Optional/Public]
+> - **Request:**
+>   \`\`\`json
+>   { "example": "request payload" }
+>   \`\`\`
+> - **Response 200:**
+>   \`\`\`json
+>   { "example": "success response" }
+>   \`\`\`
+> - **Response 4xx/5xx:**
+>   \`\`\`json
+>   { "detail": "Error message examples" }
+>   \`\`\`
+>
+> ## 4. Component Contract (si aplica)
+>
+> - **Component Name:** `[ComponentName]`
+> - **File:** `src/frontend/src/components/[path]/[Component].tsx`
+> - **Props:**
+>   \`\`\`typescript
+>   interface [ComponentName]Props {
+>     // Props definidas aquí
+>   }
+>   \`\`\`
+> - **Behaviors:**
+>   - [Comportamiento 1]
+>   - [Comportamiento 2]
+>
+> ## 5. Test Cases Checklist
+>
+> ### Happy Path
+> - [ ] Test 1: [Descripción]
+> - [ ] Test 2: [Descripción]
+>
+> ### Edge Cases
+> - [ ] Test 3: [Descripción]
+> - [ ] Test 4: [Descripción]
+>
+> ### Security/Errors
+> - [ ] Test 5: [Descripción]
+> - [ ] Test 6: [Descripción]
+>
+> ### Integration (si aplica)
+> - [ ] Test 7: [Descripción de test de infra/DB]
+>
+> ## 6. Files to Create/Modify
+>
+> **Create:**
+> - `[path/to/new/file1]`
+> - `[path/to/new/file2]`
+>
+> **Modify:**
+> - `[path/to/existing/file1]` → Añadir [qué]
+> - `[path/to/existing/file2]` → Modificar [qué]
+>
+> ## 7. Reusable Components/Patterns
+>
+> - [Componente o patrón existente 1] → puede reutilizarse para [qué]
+> - [Componente o patrón existente 2] → puede reutilizarse para [qué]
+>
+> ## 8. Next Steps
+>
+> Esta spec está lista para iniciar TDD-Red. Usar `:tdd-red` con los siguientes datos:
+> ```
+>
+> **Handoff para FASE TDD-RED:**
+> ```
+> =============================================
+> READY FOR TDD-RED PHASE - Copy these values:
+> =============================================
+> Ticket ID:       T-022-INFRA
+> Feature name:    [Nombre corto de la funcionalidad]
+> Key test cases:  [Lista de los 3-4 test cases principales del checklist]
+> Files to create:
+>   - [path de archivo 1]
+>   - [path de archivo 2]
+> =============================================
+> ```
+>
+> ---
+>
+> ### Recordatorios Finales
+>
+> - **NO escribas código de implementación** en este paso. Solo schemas, interfaces, y contratos.
+> - **NO escribas tests** todavía. Solo define la lista de test cases que escribiremos en TDD-Red.
+> - **SÍ verifica** que los contratos Pydantic y TypeScript coinciden campo por campo si el ticket toca ambas capas.
+> - **SÍ registra** este prompt en `prompts.md` con la fecha y ticket ID.
+> - **SÍ actualiza** `memory-bank/activeContext.md` para reflejar que `T-022-INFRA` está en fase "Enrichment".
+
+**Resumen de la Respuesta/Acción:**
+Ejecutando fase de ENRICHMENT para T-022-INFRA (Redis & Celery Worker Setup). Generando especificación técnica completa con:
+
+**Archivos a Crear:**
+- docker-compose.yml (servicios redis + agent-worker)
+- src/agent/Dockerfile (multi-stage Python worker)
+- src/agent/celery_app.py (configuración Celery)
+- src/agent/tasks.py (task dummy)
+- src/agent/requirements.txt
+- tests/integration/test_celery_worker.py
+
+**Archivos a Modificar:**
+- src/backend/config.py (variables CELERY_*)
+- .env.example (documentación)
+
+**Test Strategy:**
+- Test conexión Redis funcional
+- Test worker levanta sin errores
+- Test task dummy se ejecuta
+- Test integración backend→Celery (preparatorio T-029)
+
 ---
 
