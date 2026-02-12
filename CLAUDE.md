@@ -77,17 +77,37 @@ docker compose run --rm frontend bash -c "npm install && npx vitest run src/comp
 
 ## Memory Bank System
 
-This project uses a **Memory Bank** (`memory-bank/`) as single source of truth for multi-agent coordination. Before making changes:
+This project uses a **Memory Bank** (`memory-bank/`) for multi-agent coordination.
 
-1. **Read first**: `memory-bank/activeContext.md` (current focus), `memory-bank/systemPatterns.md` (architecture), `memory-bank/techContext.md` (tooling).
-2. **Log decisions**: Any architectural or technical decision must be recorded in `memory-bank/decisions.md`.
-3. **Update on completion**: Update `activeContext.md` and `progress.md` after finishing tasks.
+### On session start (read 2 files):
+1. `memory-bank/activeContext.md` — Current ticket and next steps (~40 lines)
+2. `memory-bank/techContext.md` — Stack and tooling (~80 lines)
+
+### On ticket completion (update 2 files):
+1. `memory-bank/activeContext.md` — Move ticket to "Recently Completed", update "Active Ticket"
+2. `memory-bank/progress.md` — Add 1-2 line entry in current sprint section
+
+### On architecture change (update additionally):
+- `memory-bank/systemPatterns.md` — New patterns or structural changes
+- `memory-bank/decisions.md` — Record ADR for significant decisions
+
+### Reference files (read only when relevant):
+- `memory-bank/productContext.md` — Product identity, personas, constraints
+- `memory-bank/decisions.md` — Historical architectural decisions
+- `docs/09-mvp-backlog.md` — Full ticket specs and acceptance criteria
+
+### DO NOT:
+- Duplicate ticket details from backlog into activeContext
+- Copy test counts or migration filenames into multiple files
+- Update `docs/00-index.md` on every ticket (only on US completion)
+- Update US README files with narrative content (keep as TOCs)
+- Work on more than one ticket at a time (Single Ticket Mode)
 
 ## Agent Rules (AGENTS.md)
 
 - Register complex prompts in `prompts.md` at the repo root.
 - Present a plan and get user approval before writing code.
-- On task completion, update memory-bank files and verify documentation reflects code reality.
+- On task completion, update memory-bank files per the protocol above.
 - Do not invent commands not listed in `techContext.md` or modify architecture without updating `systemPatterns.md`.
 
 ## Environment Variables
