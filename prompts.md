@@ -4650,3 +4650,14 @@ Los tests de integración de T-022-INFRA fallan en CI porque el workflow solo ar
 Se inició la fase de Enrichment para `T-023-TEST`. Se verificaron los patrones de arquitectura (`memory-bank/systemPatterns.md`) y el contexto técnico (`memory-bank/techContext.md`). `docs/productContext.md` no existe en el repo actual; se procedió sin él. Se actualizó `memory-bank/activeContext.md` para marcar `T-023-TEST` en fase de Enrichment.
 
 ---
+
+## TDD-RED Start: T-023-TEST
+**Fecha:** 2026-02-12 17:35
+
+Se inicia la fase ROJA (TDD-RED) para `T-023-TEST`. Se han añadido dos tests unitarios en `tests/unit/` que representan el contrato esperado:
+- `tests/unit/test_validation_schema_presence.py` (espera que `ValidationReport` exista en `src/backend/schemas.py` — ImportError en RED)
+- `tests/unit/test_validate_file_red.py` (marca RED para `validate_file` — AssertionError intencional)
+
+Estos tests están diseñados para FALLAR (ImportError / AssertionError) hasta que se implemente la especificación técnica y la lógica del agente.
+
+---
