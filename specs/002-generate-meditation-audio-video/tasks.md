@@ -46,8 +46,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/test/resources/features/generation/generate-meditation.feature`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/bdd/steps/GenerateMeditationSteps.java` (stubs con `PendingException`)
 **Criterios de aceptación:**
-- [ ] 3 escenarios del spec.md en lenguaje 100% negocio
-- [ ] Steps anotados `@Given/@When/@Then`
+- [x] 3 escenarios del spec.md en lenguaje 100% negocio
+- [x] Steps anotados `@Given/@When/@Then`
 **Evidencias:** Cucumber detecta 3 PENDING  
 **Dependencias:** —  
 **Definition of Done:** 3 escenarios en PENDING legibles por PO/QA
@@ -59,12 +59,12 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Descripción:** Contrato OpenAPI del BC Generation (capacidad “Generate meditation content”, request/response y errores).  
 **Artefactos:** `/backend/src/main/resources/openapi/generation/generate-meditation.yaml`  
 **Criterios de aceptación:**
-- [ ] Request: `text` (req), `musicReference` (req), `imageReference` (opt)
-- [ ] Response: `meditationId`, `type`, `mediaUrl`, `status`, `message`
-- [ ] Errores: 400 (validación), 408 (timeout), 503 (servicio externo)
-- [ ] `components.securitySchemes.bearerAuth` definido (JWT)
-- [ ] **En test se permite `security: []`** para no exigir JWT real
-- [ ] Lint/validator OK
+- [x] Request: `text` (req), `musicReference` (req), `imageReference` (opt)
+- [x] Response: `meditationId`, `type`, `mediaUrl`, `status`, `message`
+- [x] Errores: 400 (validación), 408 (timeout), 503 (servicio externo)
+- [x] `components.securitySchemes.bearerAuth` definido (JWT)
+- [x] **En test se permite `security: []`** para no exigir JWT real
+- [x] Lint/validator OK
 **Evidencias:** Lint OK  
 **Dependencias:** T001
 
@@ -75,10 +75,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Descripción:** Definir path/operación HTTP concreta del BC Generation.  
 **Artefactos:** (ampliar) `/backend/src/main/resources/openapi/generation/generate-meditation.yaml`  
 **Criterios de aceptación:**
-- [ ] Path: `/api/v1/generation/meditations`
-- [ ] Método: `POST`, `operationId: generateMeditationContent`
-- [ ] Schemas en `components/schemas`
-- [ ] Header Authorization documentado; en test se acepta `security: []`
+- [x] Path: `/api/v1/generation/meditations`
+- [x] Método: `POST`, `operationId: generateMeditationContent`
+- [x] Schemas en `components/schemas`
+- [x] Header Authorization documentado; en test se acepta `security: []`
 **Evidencias:** Validator OK  
 **Dependencias:** T002
 
@@ -89,8 +89,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Descripción:** Validar contrato; generar DTOs si procede.  
 **Artefactos:** `/backend/target/generated-sources/` (si plugin activo)  
 **Criterios de aceptación:**
-- [ ] `openapi-generator validate` pasa
-- [ ] Sin breaking vs T002/T003
+- [x] `openapi-generator validate` pasa
+- [x] Sin breaking vs T002/T003
 **Evidencias:** Build Maven green  
 **Dependencias:** T003
 
