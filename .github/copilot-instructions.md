@@ -48,7 +48,10 @@ Copilot MUST:
 - Respect repository paths according to Constitution/Hexagonal Guide:
   - Backend: `backend/src/main/java/com/hexagonal/<boundedContext>/...`
   - OpenAPI: `backend/src/main/resources/openapi/<boundedContext>/...`
-  - Backend tests: `backend/tests/bdd`, `backend/tests/contracts`, `backend/tests/e2e`
+  - Backend BDD features: `backend/src/test/resources/features/<boundedContext>/`
+  - Backend BDD steps: `backend/src/test/java/.../bdd/`
+  - Backend E2E: `backend/src/test/java/.../e2e/`
+  - Backend contracts: `backend/src/test/contracts/`
   - Frontend: `frontend/src`, `frontend/tests/e2e`
 - Always divide tasks by layer (never mix domain, application, infra, controllers, frontend in the same task).
 

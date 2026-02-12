@@ -66,7 +66,7 @@ Objetivo: **entregar valor observable** por historia sin introducir lógica de n
 - Hooks: `useCamelCase`, p. ej., `useGenerateMeditationText.ts`.
 - Slices Zustand: `camelCase` + selector explícito, p. ej., `useComposerStore()`.
 - API: módulos autogenerados; cualquier wrapper manual va en `src/api/client.ts` o `src/api/adapters.ts`.
-- Tests: `*.spec.ts(x)` (unit/integration) y `*.e2e.ts` (Playwright).
+- Tests: `*.test.ts(x)` (unit - ubicados en `__tests__` dentro de cada carpeta) y `*.spec.ts` (E2E Playwright).
 
 ---
 
@@ -104,7 +104,7 @@ Ningún fallo permite merge a `main`.
 ## 9. Artefactos por fase
 - **Cliente OpenAPI**: `src/api/*` (autogenerado).  
 - **UI**: `src/pages/*`, `src/components/*`, `src/hooks/*`, `src/state/*`.  
-- **Tests**: `tests/unit/*`, `tests/integration/*`, `tests/e2e/*`.
+- **Tests**: `src/**/__tests__/*.test.tsx` (unit), `tests/e2e/*.spec.ts` (E2E Playwright).
 
 ---
 

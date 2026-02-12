@@ -19,30 +19,39 @@ Definir **estructura, dependencias y responsabilidades** de la arquitectura hexa
   domain/
     enums/
     model/
+    exception/
     ports/
       in/
       out/
   infrastructure/
     in/
-      kafka/
-      rest/
+      rest/                    # Adaptadores REST (implementado)
         controller/
         dto/
         mapper/
+      kafka/                   # (ejemplo - no implementado aún)
     out/
-      kafka/
-      mongodb/
+      persistence/             # Adaptadores de persistencia (implementado)
         impl/
         mapper/
         model/
         repository/
-      service/
-shared/
+      service/                 # Adaptadores a servicios externos (implementado)
+        dto/
+        mapper/
+      mongodb/                 # (ejemplo - no implementado aún)
+        impl/
+        mapper/
+        model/
+        repository/
+      kafka/                   # (ejemplo - no implementado aún)
+    config/                    # Configuración de infraestructura
+
+shared/                        # Módulo transversal
   errorhandler/
     dto/
     enums/
     exception/
-  kafka/
   observability/
   openapi/
   security/
@@ -52,6 +61,8 @@ shared/
   common/
   <boundedContext>/
 ```
+
+**Note**: Current implementation uses `rest/` for inbound adapters and `persistence/` + `service/` for outbound adapters. Kafka and MongoDB are shown as examples of potential future technology choices.
 
 ---
 
@@ -67,8 +78,8 @@ shared/
 - **Objetivo**: coordinar dominio a través de puertos; preparar datos.
 
 ### 2.3 Infraestructura (`infrastructure`)
-- **in/** adapters de **entrada** (REST/Kafka/CLI): traducen protocolo ↔ comandos.
-- **out/** adapters de **salida** (DB/Kafka/servicios externos): implementan puertos out.
+- **in/** adapters de **entrada** (REST implementado; Kafka/CLI como ejemplos futuros): traducen protocolo ↔ comandos.
+- **out/** adapters de **salida** (persistence/service implementados; DB/Kafka como ejemplos): implementan puertos out.
 - **Objetivo**: detalles técnicos con pruebas de integración.
 
 ### 2.4 Shared (`shared`)
@@ -95,10 +106,11 @@ shared/
 ---
 
 ## 5. Persistencia y mensajería
-- Repositorios en `infrastructure/out/<tech>/repository` implementan puertos out.
-- Mappers persistencia en `infrastructure/out/<tech>/mapper`.
-- Modelos de persistencia en `infrastructure/out/<tech>/model` (no son entidades de dominio).
-- Kafka in/out según dirección en `infrastructure/in|out/kafka`.
+- Repositorios en `infrastructure/out/persistence/` (actual: in-memory) implementan puertos out.
+- Mappers persistencia en `infrastructure/out/persistence/mapper/`.
+- Modelos de persistencia en `infrastructure/out/persistence/model/` (no son entidades de dominio).
+- Adaptadores a servicios externos en `infrastructure/out/service/` (actual: OpenAI, MediaCatalog).
+- Mensajería (Kafka) se ubicaría en `infrastructure/in|out/kafka/` según dirección (no implementado aún).
 
 ---
 

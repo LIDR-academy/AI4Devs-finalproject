@@ -11,8 +11,9 @@ Definir **cómo** se prueban los comportamientos y las capas del sistema para qu
 
 ## 1. BDD (Backend)
 - **Framework**: Cucumber + JUnit 5.
-- **Ubicación**: `/backend/src/test/bdd/<context>/<feature>.feature`.
-- **Runner** (JUnit Platform): `@Suite` + `@IncludeEngines("cucumber")` + `@SelectClasspathResource("tests/bdd")`.
+- **Ubicación features**: `/backend/src/test/resources/features/<context>/<feature>.feature`.
+- **Ubicación step definitions**: `/backend/src/test/java/com/hexagonal/<bc>/bdd/steps/`.
+- **Runner** (JUnit Platform): `@Suite` + `@IncludeEngines("cucumber")` en `/backend/src/test/java/.../bdd/`.
 - **Reglas**: lenguaje 100% de negocio; sin HTTP/JSON/DB/UI.
 - **Ciclo**: debe empezar en **rojo** (steps pending) y acabar en verde.
 
@@ -48,10 +49,12 @@ Definir **cómo** se prueban los comportamientos y las capas del sistema para qu
 ---
 
 ## 5. E2E tests
-- **Backend**: Cucumber sobre artefacto real en `/backend/src/test/e2e`.
-- **Frontend**: Playwright en `/frontend/tests/e2e`.
+- **Backend**: Spring Boot E2E tests en `/backend/src/test/java/.../e2e/` (ejecutan contra app completa).
+- **Frontend**: Playwright en `/frontend/tests/e2e/*.spec.ts`.
 - Ejecutan los escenarios críticos definidos en BDD.
 - Usar contenedores/mocks locales; **no** servicios externos reales.
+
+**Note**: Cucumber BDD (.feature) sirve como especificación, mientras que los E2E tests validan la implementación completa.
 
 ---
 

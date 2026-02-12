@@ -71,35 +71,46 @@ Todo backend vive bajo:
   domain/
     enums/
     model/
+    exception/
     ports/
        in/
        out/
   infrastructure/
     in/
-      kafka/
-      rest/
+      rest/                  # Adaptadores HTTP REST
         controller/
         dto/
         mapper/
+      kafka/                 # (ejemplo - no implementado aún)
     out/
-      kafka/
-      mongodb/
+      persistence/           # Adaptadores de persistencia
         impl/
         mapper/
         model/
         repository/
-      service/
-shared/
+      service/               # Adaptadores a servicios externos (AI, APIs)
+        dto/
+        mapper/
+      mongodb/               # (ejemplo - no implementado aún)
+        impl/
+        mapper/
+        model/
+        repository/
+      kafka/                 # (ejemplo - no implementado aún)
+    config/                  # Configuración de infraestructura
+
+shared/                      # Módulo transversal
   errorhandler/
     dto/
     enums/
     exception/
-  kafka/
   observability/
   openapi/
   security/
   utils/
 ```
+
+**Note**: `kafka/` and `mongodb/` are examples of potential adapters. Current implementation uses `rest/` for inbound adapters and `persistence/` + `service/` for outbound adapters.
 
 ## 2.2 OpenAPI
 ```
@@ -110,10 +121,11 @@ shared/
 
 ## 2.3 Testing backend
 ```
-/backend/src/test/bdd/...
-/backend/src/test/contracts/...
-/backend/src/test/e2e/...
-/backend/src/test/java/... (unit + integration)
+/backend/src/test/resources/features/<boundedContext>/  # .feature files (BDD)
+/backend/src/test/java/com/hexagonal/<bc>/bdd/          # Step definitions & runners
+/backend/src/test/java/com/hexagonal/<bc>/e2e/          # E2E tests (Spring Boot)
+/backend/src/test/contracts/                             # Contract tests (empty for now)
+/backend/src/test/java/...                               # Unit + integration tests
 ```
 
 ---
@@ -137,9 +149,10 @@ Cada Historia **DEBE** recorrer estas fases en orden:
 
 # 4. Fase 1 — BDD FIRST
 ## Entregables mínimos:
-- Archivo `.feature` en `/backend/src/test/bdd/<context>/<feature>.feature`
+- Archivo `.feature` en `/backend/src/test/resources/features/<boundedContext>/<feature>.feature`
+- Step definitions en `/backend/src/test/java/com/hexagonal/<bc>/bdd/steps/`
 - Escenarios Given–When–Then orientados a negocio
-- Step definitions pending
+- Step definitions pending (inicialmente)
 
 ## Reglas:
 - Prohibido HTTP/JSON/DTOs/repositorios o UI
@@ -243,14 +256,15 @@ bdd → api → unit → infra → contract → e2e → build → deploy
 # 13. Artefactos obligatorios por fase
 | Fase | Artefacto | Ubicación |
 |------|-----------|-----------|
-| BDD | `.feature` | `/backend/src/test/bdd/...` |
-| API | OpenAPI | `/backend/src/main/resources/openapi/...` |
-| Dominio | entidades/VOs/puertos | `/backend/.../domain` |
-| Aplicación | use cases | `/backend/.../application` |
-| Infra | adapters | `/backend/.../infrastructure` |
-| Controllers | REST | `/backend/.../rest/controller` |
-| Contratos | tests | `/backend/src/test/contracts` |
-| E2E | cucumber | `/backend/src/test/e2e` |
+| BDD | `.feature` | `/backend/src/test/resources/features/<bc>/...` |
+| BDD Steps | Step defs | `/backend/src/test/java/.../bdd/steps/` |
+| API | OpenAPI | `/backend/src/main/resources/openapi/<bc>/...` |
+| Dominio | entidades/VOs/puertos | `/backend/src/main/java/.../domain/` |
+| Aplicación | use cases | `/backend/src/main/java/.../application/` |
+| Infra | adapters | `/backend/src/main/java/.../infrastructure/` |
+| Controllers | REST | `/backend/src/main/java/.../infrastructure/in/rest/controller/` |
+| Contratos | tests | `/backend/src/test/contracts/` (pending) |
+| E2E | Spring Boot tests | `/backend/src/test/java/.../e2e/` |
 
 ---
 
