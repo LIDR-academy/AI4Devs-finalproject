@@ -4492,3 +4492,54 @@ Ejecutando fase de ENRICHMENT para T-022-INFRA (Redis & Celery Worker Setup). Ge
 
 ---
 
+## 076 - TDD FASE ROJA - Ticket T-022-INFRA
+**Fecha:** 2026-02-12 15:00
+
+**Prompt Original:**
+> ## Prompt: TDD FASE ROJA - Ticket T-022-INFRA
+>
+> **Role:** Actúa como QA Automation Engineer y Software Architect.
+>
+> ---
+>
+> ### Protocolo Agents (OBLIGATORIO antes de escribir código)
+>
+> 1. **Lee** `memory-bank/activeContext.md` para entender el estado actual del sprint.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar los contratos API y patrones existentes.
+> 3. **Consulta** `docs/09-mvp-backlog.md` y busca el ticket `T-022-INFRA` para entender su alcance exacto, criterios de aceptación y DoD.
+> 4. **Consulta** `docs/productContext.md` para ver qué componentes o endpoints ya existen y pueden reutilizarse.
+> 5. **Al finalizar**, registra el inicio de esta tarea en `prompts.md`.
+>
+> [Full prompt content with test strategy and TDD rules]
+
+**Resumen de la Respuesta/Acción:**
+Ejecutada fase TDD-RED para T-022-INFRA. Creado archivo de tests de integración:
+
+**Tests Creados (10 test cases):**
+1. test_redis_ping_responds → Verifica conectividad Redis
+2. test_redis_not_accessible_externally → Security check (port binding)
+3. test_worker_starts_without_errors → Worker lifecycle
+4. test_health_check_task_executes → Task básico funciona
+5. test_task_retry_policy_works → Retry mechanism
+6. test_serializer_rejects_pickle → Security (JSON only)
+7. test_backend_can_send_task_to_worker → Integration backend→worker
+8. test_worker_can_write_to_database → Integration worker→DB
+9. test_worker_can_read_from_storage → Integration worker→Supabase Storage
+10. test_celery_config_variables_set → Environment variables validation
+
+**Archivo creado:**
+- `tests/integration/test_celery_worker.py` (280 líneas)
+
+**Estado TDD-RED:** ✅ CONFIRMADO
+- Tests fallan con ModuleNotFoundError (src.agent.celery_app no existe)
+- Tests fallan con docker-compose service not found (redis, agent-worker)
+- Configuración de servicios no existe en docker-compose.yml
+
+**Comando de ejecución:**
+```bash
+docker compose run --rm backend pytest tests/integration/test_celery_worker.py -v
+```
+
+**Próximo paso:** TDD-GREEN (implementar infraestructura)
+
+---
