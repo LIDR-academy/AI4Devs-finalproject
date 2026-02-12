@@ -12,8 +12,13 @@ T-022-INFRA: Redis & Celery Workers Setup — CI FIX IN PROGRESS
 - Tests locales: ✅ PASSED (2/2 tests previamente fallidos)
 - Estado: Esperando validación en GitHub Actions
 
+T-023-TEST: Create .3dm Test Fixtures — ENRICHMENT IN PROGRESS
+- Objetivo: Definir contrato técnico y listados de fixtures (`valid_model.3dm`, `invalid_naming.3dm`, `corrupted.3dm`) en `tests/fixtures/`.
+- Estado: Enrichment (Step 1/5). Especificación técnica generada.
+
+
 ## Next Tickets
-1. T-023-TEST: Create .3dm Test Fixtures (tras confirmar CI verde)
+1. T-023-TEST: Create .3dm Test Fixtures (ENRICHMENT IN PROGRESS)
 2. T-024-AGENT: Implement validate_file task
 3. T-028-BACK: Validation Report Model
 
