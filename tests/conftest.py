@@ -7,6 +7,8 @@ multiple test modules in the integration and unit test suites.
 import os
 import pytest
 from supabase import create_client, Client
+import psycopg2
+from psycopg2.extensions import connection
 
 
 @pytest.fixture(scope="session")
@@ -35,6 +37,40 @@ def supabase_client() -> Client:
         pytest.skip("SUPABASE_URL and SUPABASE_KEY must be configured in environment")
     
     return create_client(url, key)
+
+
+@pytest.fixture(scope="session")
+def db_connection() -> connection:
+    """
+    Create a direct PostgreSQL connection to the local test database.
+    
+    This fixture provides a psycopg2 connection for tests that need
+    to execute raw SQL or verify database schema directly.
+    Useful for DB migration tests (e.g., T-020-DB).
+    
+    Environment variables:
+        DATABASE_URL: PostgreSQL connection string (default: from docker-compose)
+    
+    Returns:
+        psycopg2.connection: Active database connection
+        
+    Yields:
+        connection: Connection object for test use
+        
+    Cleanup:
+        Closes connection after test session ends
+    """
+    database_url = os.environ.get(
+        "DATABASE_URL",
+        "postgresql://user:password@db:5432/sfpm_db"
+    )
+    
+    conn = psycopg2.connect(database_url)
+    conn.autocommit = False  # Manual transaction control
+    
+    yield conn
+    
+    conn.close()
 
 
 @pytest.fixture(scope="session", autouse=True)
