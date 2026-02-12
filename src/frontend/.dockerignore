@@ -7,8 +7,3 @@ dist/
 *.md
 coverage/
 .cache/
-**/*.test.tsx
-**/*.test.ts
-**/*.spec.tsx
-**/*.spec.ts
-src/test/

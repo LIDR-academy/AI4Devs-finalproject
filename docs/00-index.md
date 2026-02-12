@@ -136,6 +136,15 @@ Validación automática de archivos .3dm con reporte detallado de errores de nom
   - GIN indexes for efficient error filtering
   - 4/4 integration tests passing
   - Migration: `20260211160000_add_validation_report.sql`
+  - Status: APPROVED FOR CLOSURE (94.5% compliance)
+
+**Tickets Specified (Ready for TDD):**
+- 📋 **T-021-DB:** Extend Block Status Enum ([Spec](US-002/T-021-DB-TechnicalSpec.md))
+  - Add 3 new values: `processing`, `rejected`, `error_processing`
+  - PostgreSQL ENUM extension pattern
+  - Migration: `20260212100000_extend_block_status_enum.sql`
+  - 14 test cases defined, estimated 1.5 hours
+  - Blocks: T-024-AGENT, T-026-AGENT, T-031-FRONT
   
 - 📋 **T-025-AGENT:** User Strings Extraction ([Spec](US-002/T-025-AGENT-UserStrings-Spec.md))
   - 46 user strings documented in 9 enums
@@ -143,7 +152,6 @@ Validación automática de archivos .3dm con reporte detallado de errores de nom
   - Ready for implementation
 
 **Tickets Pending:**
-- ⏭️ **T-021-DB:** Extend Block Status Enum (NEXT)
 - T-022-INFRA: Redis & Celery Worker
 - T-023-TEST: .3dm Test Fixtures
 - T-024-AGENT: Rhino Ingestion Service
