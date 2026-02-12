@@ -71,6 +71,9 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
     }
 
     private TextContent executeRequest(AiTextRequest request, String operation) {
+        long startTime = System.currentTimeMillis();
+        log.info("external.service.call.start: service=OpenAI-Text, operation={}", operation);
+        
         try {
             AiTextResponse response = restClient
                     .post()
@@ -81,8 +84,11 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
+                        long latencyMs = System.currentTimeMillis() - startTime;
                         String body = safeReadBody(res); // <-- leer cuerpo
                         int code = res.getStatusCode().value();
+                        log.error("external.service.call.end: service=OpenAI-Text, httpStatus={}, latencyMs={}", 
+                            code, latencyMs);
                         if (code == 429) {
                             log.warn("AI service rate limit exceeded during {}: {}", operation, body);
                             throw new TextGenerationServiceException(
@@ -97,12 +103,18 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
                         throw new TextGenerationServiceException("AI service request failed: " + res.getStatusCode());
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
+                        long latencyMs = System.currentTimeMillis() - startTime;
                         String body = safeReadBody(res); // <-- leer cuerpo
+                        log.error("external.service.call.end: service=OpenAI-Text, httpStatus={}, latencyMs={}", 
+                            res.getStatusCode().value(), latencyMs);
                         log.error("AI service unavailable during {}: {} - {}", operation, res.getStatusCode(), body);
                         throw new TextGenerationServiceException(
                                 "AI service unavailable. Please try again later.");
                     })
                     .body(AiTextResponse.class);
+
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.info("external.service.call.end: service=OpenAI-Text, httpStatus=200, latencyMs={}", latencyMs);
 
             if (response == null || response.choices() == null || response.choices().isEmpty()) {
                 log.error("Empty response from AI service during {}", operation);
@@ -127,6 +139,9 @@ public class TextGenerationAiAdapter implements TextGenerationPort {
             return new TextContent(generatedText.trim());
 
         } catch (RestClientException e) {
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.error("external.service.call.end: service=OpenAI-Text, httpStatus=error, latencyMs={}, error={}", 
+                latencyMs, e.getMessage());
             log.error("Network error during AI text {}", operation, e);
             throw new TextGenerationServiceException(
                     "Failed to communicate with AI service: " + e.getMessage(), e);

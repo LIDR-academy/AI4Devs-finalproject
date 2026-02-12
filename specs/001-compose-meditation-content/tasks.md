@@ -609,13 +609,13 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### OpenTelemetry Setup Tasks
 
-- [ ] T070 [P] Add OpenTelemetry dependencies in `/backend/pom.xml`
+- [X] T070 [P] Add OpenTelemetry dependencies in `/backend/pom.xml`
   - **Criteria**: Add `opentelemetry-bom`, `spring-boot-starter-actuator`, `micrometer-registry-prometheus`, `micrometer-tracing-bridge-otel`
   - **Criteria**: Add `opentelemetry-exporter-otlp` for traces/metrics export
   - **Criteria**: Version managed via BOM (compatible with Spring Boot 3.x)
   - **Dependencies**: None
 
-- [ ] T071 [P] Configure OpenTelemetry in `/backend/src/main/resources/application.yml`
+- [X] T071 [P] Configure OpenTelemetry in `/backend/src/main/resources/application.yml`
   - **Criteria**: Configure `management.tracing.sampling.probability` (0.1 for production, 1.0 for local)
   - **Criteria**: Configure OTLP exporter endpoint via `OTEL_EXPORTER_OTLP_ENDPOINT` env var
   - **Criteria**: Set service name: `meditation-builder`
@@ -624,7 +624,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Structured Logging Tasks
 
-- [ ] T072 [P] Add structured logging to ComposeContentService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/ComposeContentService.java`
+- [X] T072 [P] Add structured logging to ComposeContentService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/ComposeContentService.java`
   - **Criteria**: Use SLF4J with MDC for `compositionId` correlation
   - **Criteria**: Log business events: `composition.created`, `composition.text.updated`, `composition.music.selected`, `composition.image.set`
   - **Criteria**: Log level: INFO for business events, WARN for validation errors
@@ -632,20 +632,20 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Include trace/span IDs automatically (OpenTelemetry auto-instrumentation)
   - **Dependencies**: T026, T071
 
-- [ ] T073 [P] Add structured logging to GenerateTextService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateTextService.java`
+- [X] T073 [P] Add structured logging to GenerateTextService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateTextService.java`
   - **Criteria**: Log event: `ai.text.generation.requested` (with compositionId, NO prompt content)
   - **Criteria**: Log event: `ai.text.generation.completed` (with latency)
   - **Criteria**: Log AI failures: `ai.text.generation.failed` with error code (503, 429)
   - **Criteria**: Include OpenTelemetry span attributes for AI provider
   - **Dependencies**: T028, T071
 
-- [ ] T074 [P] Add structured logging to GenerateImageService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateImageService.java`
+- [X] T074 [P] Add structured logging to GenerateImageService in `/backend/src/main/java/com/hexagonal/meditationbuilder/application/service/GenerateImageService.java`
   - **Criteria**: Log event: `ai.image.generation.requested` (with compositionId)
   - **Criteria**: Log event: `ai.image.generation.completed` (with latency)
   - **Criteria**: Log AI failures: `ai.image.generation.failed` with error code
   - **Dependencies**: T029, T071
 
-- [ ] T075 [P] Add structured logging to adapters in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/`
+- [X] T075 [P] Add structured logging to adapters in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/out/service/`
   - **Criteria**: Log external HTTP calls: `external.service.call.start` and `external.service.call.end`
   - **Criteria**: Include service name (OpenAI Text, OpenAI Image, Media Catalog), HTTP status, latency
   - **Criteria**: **Security**: Do NOT log API keys, authorization headers, or request bodies
@@ -653,7 +653,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Distributed Tracing Tasks
 
-- [ ] T076 [P] Add custom spans for business operations in application services
+- [X] T076 [P] Add custom spans for business operations in application services
   - **Files**: 
     - `ComposeContentService.java`
     - `GenerateTextService.java`
@@ -663,7 +663,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Propagate trace context to infrastructure adapters (automatic via OpenTelemetry)
   - **Dependencies**: T072, T073, T074
 
-- [ ] T077 [P] Configure trace sampling and baggage propagation in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/ObservabilityConfig.java`
+- [X] T077 [P] Configure trace sampling and baggage propagation in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/ObservabilityConfig.java`
   - **Criteria**: Custom `Sampler` for environment-based sampling (100% local, 10% prod)
   - **Criteria**: Configure baggage propagation for `composition.id` across services
   - **Criteria**: Add span processors for sensitive data redaction
@@ -671,7 +671,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Metrics & Instrumentation Tasks
 
-- [ ] T078 [P] Add custom metrics using Micrometer in application services
+- [X] T078 [P] Add custom metrics using Micrometer in application services
   - **Files**:
     - `ComposeContentService.java`
     - `GenerateTextService.java`
@@ -683,13 +683,13 @@ Tasks that prepare the project structure and foundational infrastructure needed 
   - **Criteria**: Metrics follow Prometheus naming conventions
   - **Dependencies**: T070, T072, T073, T074
 
-- [ ] T079 [P] Add HTTP client metrics for external services in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/InfrastructureConfig.java`
+- [X] T079 [P] Add HTTP client metrics for external services in `/backend/src/main/java/com/hexagonal/meditationbuilder/infrastructure/config/InfrastructureConfig.java`
   - **Criteria**: Instrument RestClient beans with `ObservationRegistry`
   - **Criteria**: Metrics: `http.client.requests` (tags: `service`, `status`, `method`)
   - **Criteria**: Include latency percentiles (p50, p95, p99)
   - **Dependencies**: T033f, T070
 
-- [ ] T080 Verify metrics endpoint exposes custom metrics
+- [X] T080 Verify metrics endpoint exposes custom metrics
   - **Criteria**: GET `/actuator/prometheus` returns all custom metrics
   - **Criteria**: Metrics include labels/tags for filtering
   - **Criteria**: Integration test validates metric presence
@@ -697,7 +697,7 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Observability Testing Tasks
 
-- [ ] T081 [P] Create observability integration tests in `/backend/src/test/java/com/hexagonal/meditationbuilder/infrastructure/observability/`
+- [X] T081 [P] Create observability integration tests in `/backend/src/test/java/com/hexagonal/meditationbuilder/infrastructure/observability/`
   - **Files**: 
     - `LoggingIntegrationTest.java` - Verify structured logs with MDC
     - `TracingIntegrationTest.java` - Verify span creation and propagation
@@ -709,19 +709,19 @@ Tasks that prepare the project structure and foundational infrastructure needed 
 
 ### Polish Tasks
 
-- [ ] T082 Review and remove all TODO comments
+- [X] T082 Review and remove all TODO comments
   - **Criteria**: No TODO comments in production code
   - **Criteria**: All deferred work captured in future user stories
 
-- [ ] T083 Review and verify no skipped tests
+- [X] T083 Review and verify no skipped tests
   - **Criteria**: No @Disabled or @Ignore annotations
   - **Criteria**: All tests executable and passing
 
-- [ ] T084 Code review and refactoring pass
+- [X] T084 Code review and refactoring pass
   - **Criteria**: No code smells (God Objects, duplicated classes)
   - **Criteria**: All naming follows conventions (ports, use cases, adapters, controllers, DTOs)
 
-- [ ] T085 Update documentation: README with observability setup
+- [X] T085 Update documentation: README with observability setup
   - **Criteria**: README includes: OpenTelemetry setup, Prometheus metrics endpoint, Grafana dashboard examples
   - **Criteria**: Document environment variables: `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME`
   - **Criteria**: Feature description, architecture diagram (hexagonal), how to run tests, how to run locally

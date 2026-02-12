@@ -94,6 +94,9 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
                 responseFormat
         );
 
+        long startTime = System.currentTimeMillis();
+        log.info("external.service.call.start: service=OpenAI-Image, model={}", model);
+
         try {
             AiImageResponse response = restClient
                 .post()
@@ -105,8 +108,11 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
                 .body(request)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
+                    long latencyMs = System.currentTimeMillis() - startTime;
                     String body = safeReadBody(res);
                     int code = res.getStatusCode().value();
+                    log.error("external.service.call.end: service=OpenAI-Image, httpStatus={}, latencyMs={}", 
+                        code, latencyMs);
                     log.error("AI image service client error: {} - {}", code, body); // <--- log del body
                     if (code == 401 || code == 403) {
                         throw new ImageGenerationServiceException("Auth failed against image API.");
@@ -117,11 +123,17 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
                     throw new ImageGenerationServiceException("Image API request failed: " + res.getStatusCode());
                 })
                 .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
+                    long latencyMs = System.currentTimeMillis() - startTime;
                     String body = safeReadBody(res); // <-- leer cuerpo
+                    log.error("external.service.call.end: service=OpenAI-Image, httpStatus={}, latencyMs={}", 
+                        res.getStatusCode().value(), latencyMs);
                     log.error("AI image service unavailable: {} - {}", res.getStatusCode(), body);
                     throw new ImageGenerationServiceException("Image API unavailable. Please try again later.");
                 })
                 .body(AiImageResponse.class);
+                
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.info("external.service.call.end: service=OpenAI-Image, httpStatus=200, latencyMs={}", latencyMs);
                 
             // Manejar error blando en 2xx
             if (response.error() != null) {
@@ -155,6 +167,9 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
             throw new ImageGenerationServiceException("AI service returned neither URL nor base64 image");
 
         } catch (RestClientException e) {
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.error("external.service.call.end: service=OpenAI-Image, httpStatus=error, latencyMs={}, error={}", 
+                latencyMs, e.getMessage());
             throw new ImageGenerationServiceException(
                     "Failed to communicate with AI image service: " + e.getMessage(), e);
         }

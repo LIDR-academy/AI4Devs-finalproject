@@ -77,6 +77,103 @@
 
 > Describe brevemente algunos de los tests realizados
 
+### **2.7. Observability**
+
+El proyecto implementa una estrategia completa de observabilidad utilizando **OpenTelemetry** y **Micrometer**, proporcionando visibilidad total sobre el rendimiento, comportamiento y salud de la aplicación.
+
+#### Métricas
+
+La aplicación expone métricas personalizadas en formato Prometheus disponibles en `/actuator/prometheus`:
+
+**Métricas de Negocio:**
+- `meditation.composition.created` (Counter) - Composiciones creadas, etiquetadas por `output_type`
+- `meditation.ai.text.generation.duration` (Timer) - Duración de generación de texto AI, etiquetadas por `ai_provider` y `status`
+- `meditation.ai.image.generation.duration` (Timer) - Duración de generación de imágenes AI, etiquetadas por `ai_provider` y `status`
+- `meditation.ai.generation.failures` (Counter) - Fallos en generación AI, etiquetadas por `ai_provider`, `operation` y `error_code`
+
+**Métricas HTTP:**
+- `http.client.requests` - Métricas automáticas de llamadas HTTP salientes (auto-instrumentadas via ObservationRegistry)
+
+#### Trazas Distribuidas
+
+Las trazas se envían a un recolector OTLP (OpenTelemetry Protocol) configurado por defecto en `http://localhost:4318/v1/traces`.
+
+**Configuración de Sampling:**
+- **Local/Desarrollo**: 100% de trazas (AlwaysOnSampler)
+- **Producción**: Configurable via variable `OTEL_SAMPLING_PROBABILITY` (default: 1.0)
+
+**Custom Spans:**
+Todos los métodos críticos de negocio están instrumentados con `@Observed`:
+- `composition.create` - Creación de composiciones
+- `composition.update-text` - Actualización de texto
+- `composition.select-music` - Selección de música
+- `composition.set-image` - Configuración de imagen
+- `ai.text.generate` - Generación de texto AI
+- `ai.image.generate` - Generación de imagen AI
+
+#### Logging Estructurado
+
+**Eventos de Negocio:**
+- `composition.created` - Incluye `compositionId` y `outputType`
+- `composition.text.updated` - Incluye `compositionId` y `textLength`
+- `composition.music.selected` - Incluye `compositionId` y `musicId`
+- `composition.image.set` - Incluye `compositionId` y `outputType`
+- `ai.text.generation.requested/completed/failed` - Incluye `promptLength`, `latencyMs`, `errorCode`
+- `ai.image.generation.requested/completed/failed` - Incluye `promptLength`, `latencyMs`
+
+**Eventos de Infraestructura:**
+- `external.service.call.start/end` - Llamadas HTTP a servicios externos
+  - Tags: `service`, `operation`, `httpStatus`, `latencyMs`
+  - Servicios monitorizados: MediaCatalog, OpenAI-Text, OpenAI-Image
+
+**Correlation ID:**
+Todos los logs relacionados con la misma operación comparten el mismo `compositionId` en MDC (Mapped Diagnostic Context), facilitando el rastreo de transacciones completas.
+
+#### Configuración
+
+```yaml
+# application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  tracing:
+    sampling:
+      probability: ${OTEL_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+    metrics:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/metrics}
+```
+
+#### Stack de Monitoreo Recomendado
+
+**desarrollo Local:**
+```bash
+# Docker Compose con Grafana + Tempo + Prometheus
+docker-compose -f observability/docker-compose.yml up
+```
+
+**Producción:**
+- **Métricas**: Azure Monitor / Prometheus + Grafana Cloud
+- **Trazas**: Azure Application Insights / Jaeger / Tempo
+- **Logs**: Azure Log Analytics / ELK Stack / Loki
+
+#### Testing
+
+Los tests de integración de observabilidad verifican:
+- Registro correcto de métricas personalizadas
+- Presencia de tags/etiquetas en métricas
+- Disponibilidad del endpoint de Prometheus
+- Funcionalidad del MeterRegistry
+
+Ejecutar tests de observabilidad:
+```bash
+mvn test -Dtest=ObservabilityIntegrationTest
+```
+
 ---
 
 ## 3. Modelo de Datos

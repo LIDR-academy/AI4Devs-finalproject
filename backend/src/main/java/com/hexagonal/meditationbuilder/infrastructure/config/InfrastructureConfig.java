@@ -1,11 +1,13 @@
 package com.hexagonal.meditationbuilder.infrastructure.config;
 
+import com.hexagonal.meditationbuilder.domain.ports.out.CompositionRepositoryPort;
 import com.hexagonal.meditationbuilder.domain.ports.out.ImageGenerationPort;
 import com.hexagonal.meditationbuilder.domain.ports.out.MediaCatalogPort;
 import com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort;
 import com.hexagonal.meditationbuilder.infrastructure.out.service.ImageGenerationAiAdapter;
 import com.hexagonal.meditationbuilder.infrastructure.out.service.MediaCatalogAdapter;
 import com.hexagonal.meditationbuilder.infrastructure.out.service.TextGenerationAiAdapter;
+import io.micrometer.observation.ObservationRegistry;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -44,47 +46,51 @@ public class InfrastructureConfig {
         /**
          * RestClient configured for OpenAI text generation.
          * Uses default timeouts (connect: 5000ms, read: 30000ms).
+         * Instrumented with ObservationRegistry for metrics and tracing.
          */
         @Bean
         @Qualifier("aiTextRestClient")
-        public RestClient aiTextRestClient(OpenAiProperties openAiProperties) {
+        public RestClient aiTextRestClient(OpenAiProperties openAiProperties, ObservationRegistry observationRegistry) {
                 SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
                 requestFactory.setConnectTimeout(5000); // default connect timeout
                 requestFactory.setReadTimeout(30000);   // default read timeout
 
                 return RestClient.builder()
                                 .requestFactory(requestFactory)
+                                .observationRegistry(observationRegistry)
                                 .build();
         }
 
         /**
          * RestClient configured for OpenAI image generation.
          * Uses longer timeouts (connect: 5000ms, read: 60000ms).
+         * Instrumented with ObservationRegistry for metrics and tracing.
          */
         @Bean
         @Qualifier("aiImageRestClient")
-        public RestClient aiImageRestClient(OpenAiProperties openAiProperties) {
+        public RestClient aiImageRestClient(OpenAiProperties openAiProperties, ObservationRegistry observationRegistry) {
                 SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
                 requestFactory.setConnectTimeout(5000); // default connect timeout
                 requestFactory.setReadTimeout(60000);   // longer read timeout for images
 
                 return RestClient.builder()
                                 .requestFactory(requestFactory)
+                                .observationRegistry(observationRegistry)
                                 .build();
         }
 
-    /**
-     * RestClient configured for Media Catalog service.
+    /* Instrumented with ObservationRegistry for metrics and tracing.
      */
     @Bean
     @Qualifier("mediaCatalogRestClient")
-    public RestClient mediaCatalogRestClient(MediaCatalogProperties mediaCatalogProperties) {
+    public RestClient mediaCatalogRestClient(MediaCatalogProperties mediaCatalogProperties, ObservationRegistry observationRegistry) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(mediaCatalogProperties.connectTimeoutMs());
         requestFactory.setReadTimeout(mediaCatalogProperties.readTimeoutMs());
 
         return RestClient.builder()
                 .requestFactory(requestFactory)
+                .observationRegistry(observationRegistry)
                 .build();
     }
 
@@ -142,39 +148,43 @@ public class InfrastructureConfig {
         );
     }
 
-        /**
-         * ComposeContentService bean (implements ComposeContentUseCase).
-         * Registers the application service as a Spring bean for controller injection.
-         */
-        @Bean
-        public com.hexagonal.meditationbuilder.domain.ports.in.ComposeContentUseCase composeContentUseCase(
-                        MediaCatalogPort mediaCatalogPort,
-                        com.hexagonal.meditationbuilder.domain.ports.out.CompositionRepositoryPort compositionRepositoryPort,
-                        java.time.Clock clock) {
-                return new com.hexagonal.meditationbuilder.application.service.ComposeContentService(
-                                mediaCatalogPort,
-                                compositionRepositoryPort,
-                                clock
-                );
-        }
+    /**
+     * ComposeContentService bean (implements ComposeContentUseCase).
+     * Registers the application service as a Spring bean for controller injection.
+     */
+    @Bean
+    public com.hexagonal.meditationbuilder.domain.ports.in.ComposeContentUseCase composeContentUseCase(
+            MediaCatalogPort mediaCatalogPort,
+            CompositionRepositoryPort compositionRepositoryPort,
+            java.time.Clock clock,
+            io.micrometer.core.instrument.MeterRegistry meterRegistry) {
+        return new com.hexagonal.meditationbuilder.application.service.ComposeContentService(
+                mediaCatalogPort,
+                compositionRepositoryPort,
+                clock,
+                meterRegistry
+        );
+    }
 
-        /**
-         * GenerateTextService bean (implements GenerateTextUseCase).
-         * Registers the application service as a Spring bean for controller injection.
-         */
-        @Bean
-        public com.hexagonal.meditationbuilder.domain.ports.in.GenerateTextUseCase generateTextUseCase(
-                        com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort textGenerationPort) {
-                return new com.hexagonal.meditationbuilder.application.service.GenerateTextService(textGenerationPort);
-        }
+    /**
+     * GenerateTextService bean (implements GenerateTextUseCase).
+     * Registers the application service as a Spring bean for controller injection.
+     */
+    @Bean
+    public com.hexagonal.meditationbuilder.domain.ports.in.GenerateTextUseCase generateTextUseCase(
+            com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort textGenerationPort,
+            io.micrometer.core.instrument.MeterRegistry meterRegistry) {
+        return new com.hexagonal.meditationbuilder.application.service.GenerateTextService(textGenerationPort, meterRegistry);
+    }
 
-                /**
-         * GenerateImageService bean (implements GenerateImageUseCase).
-         * Registers the application service as a Spring bean for controller injection.
-         */
-        @Bean
-        public com.hexagonal.meditationbuilder.domain.ports.in.GenerateImageUseCase generateImageUseCase(
-                        com.hexagonal.meditationbuilder.domain.ports.out.ImageGenerationPort imageGenerationPort) {
-                return new com.hexagonal.meditationbuilder.application.service.GenerateImageService(imageGenerationPort);
-        }
+    /**
+     * GenerateImageService bean (implements GenerateImageUseCase).
+     * Registers the application service as a Spring bean for controller injection.
+     */
+    @Bean
+    public com.hexagonal.meditationbuilder.domain.ports.in.GenerateImageUseCase generateImageUseCase(
+            com.hexagonal.meditationbuilder.domain.ports.out.ImageGenerationPort imageGenerationPort,
+            io.micrometer.core.instrument.MeterRegistry meterRegistry) {
+        return new com.hexagonal.meditationbuilder.application.service.GenerateImageService(imageGenerationPort, meterRegistry);
+    }
 }
