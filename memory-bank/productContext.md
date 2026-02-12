@@ -14,6 +14,8 @@ Sistema Enterprise de Digital Twin Activo que desacopla metadata critica de la g
 ### Core Features
 1. **Hybrid Extraction Pipeline**: Procesamiento dual — Metadata (rhino3dm rapido) + Geometria 3D (asincrono para visualizacion web)
 2. **"The Librarian" AI Agent**: LangGraph agent — validacion ISO-19650, clasificacion tipologias, enriquecimiento de metadatos, deteccion de anomalias
+   - **Async Task Queue** (Redis + Celery): Procesamiento en background de archivos .3dm pesados sin bloquear UI
+   - **Worker Isolation**: Un worker dedicado por archivo para evitar OOM con modelos de 500MB+
 3. **Instanced 3D Viewer**: Three.js con instancing y LOD para 10,000+ piezas en navegador
 4. **Lifecycle Traceability**: Log inmutable de eventos (Disenada → Validada → Fabricada → Enviada → Instalada)
 
