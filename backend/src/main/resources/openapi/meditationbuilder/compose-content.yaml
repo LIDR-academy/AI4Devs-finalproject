@@ -61,40 +61,9 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /compositions/{compositionId}/text:
-    put:
-      tags:
-        - Composition
-      summary: Update meditation text
-      description: |
-        Capability 2: Define Meditation Text.
-        Updates composition text, preserving it exactly as provided.
-        Maps to Scenario 2: "Enter and preserve manual text"
-      operationId: updateText
-      parameters:
-        - $ref: '#/components/parameters/CompositionId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateTextRequest'
-      responses:
-        '200':
-          description: Text updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CompositionResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
 
-  /v1/compositions/text/generate:
+  /compositions/text/generate:
     post:
       tags:
         - AI Generation
@@ -129,7 +98,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
 
-  /v1/compositions/image/generate:
+  /compositions/image/generate:
     post:
       tags:
         - AI Generation

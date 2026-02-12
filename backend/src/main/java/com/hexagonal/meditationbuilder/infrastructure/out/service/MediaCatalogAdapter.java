@@ -4,6 +4,8 @@ import com.hexagonal.meditationbuilder.domain.model.ImageReference;
 import com.hexagonal.meditationbuilder.domain.model.MusicReference;
 import com.hexagonal.meditationbuilder.domain.ports.out.MediaCatalogPort;
 import com.hexagonal.meditationbuilder.infrastructure.out.service.dto.MediaCatalogResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -22,6 +24,8 @@ import java.util.Objects;
  */
 public class MediaCatalogAdapter implements MediaCatalogPort {
 
+    private static final Logger log = LoggerFactory.getLogger(MediaCatalogAdapter.class);
+
     private final RestClient restClient;
     private final String baseUrl;
 
@@ -38,12 +42,20 @@ public class MediaCatalogAdapter implements MediaCatalogPort {
 
     @Override
     public List<MusicReference> getAvailableMusic() {
+        long startTime = System.currentTimeMillis();
+        log.info("external.service.call.start: service=MediaCatalog, operation=getMusic");
+        
         try {
             MediaCatalogResponse.MusicListResponse response = restClient
                     .get()
                     .uri(baseUrl + "/api/media/music")
                     .retrieve()
                     .body(MediaCatalogResponse.MusicListResponse.class);
+
+            long latencyMs = System.currentTimeMillis() - startTime;
+            int count = (response != null && response.items() != null) ? response.items().size() : 0;
+            log.info("external.service.call.end: service=MediaCatalog, httpStatus=200, latencyMs={}, itemCount={}", 
+                latencyMs, count);
 
             if (response == null || response.items() == null) {
                 return List.of();
@@ -53,18 +65,29 @@ public class MediaCatalogAdapter implements MediaCatalogPort {
                     .map(item -> new MusicReference(item.id()))
                     .toList();
         } catch (RestClientException e) {
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.error("external.service.call.end: service=MediaCatalog, httpStatus=error, latencyMs={}, error={}", 
+                latencyMs, e.getMessage());
             throw new MediaCatalogServiceException("Failed to fetch available music", e);
         }
     }
 
     @Override
     public List<ImageReference> getAvailableImages() {
+        long startTime = System.currentTimeMillis();
+        log.info("external.service.call.start: service=MediaCatalog, operation=getImages");
+        
         try {
             MediaCatalogResponse.ImageListResponse response = restClient
                     .get()
                     .uri(baseUrl + "/api/media/images")
                     .retrieve()
                     .body(MediaCatalogResponse.ImageListResponse.class);
+
+            long latencyMs = System.currentTimeMillis() - startTime;
+            int count = (response != null && response.items() != null) ? response.items().size() : 0;
+            log.info("external.service.call.end: service=MediaCatalog, httpStatus=200, latencyMs={}, itemCount={}", 
+                latencyMs, count);
 
             if (response == null || response.items() == null) {
                 return List.of();
@@ -74,6 +97,9 @@ public class MediaCatalogAdapter implements MediaCatalogPort {
                     .map(item -> new ImageReference(item.id()))
                     .toList();
         } catch (RestClientException e) {
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.error("external.service.call.end: service=MediaCatalog, httpStatus=error, latencyMs={}, error={}", 
+                latencyMs, e.getMessage());
             throw new MediaCatalogServiceException("Failed to fetch available images", e);
         }
     }
@@ -84,15 +110,25 @@ public class MediaCatalogAdapter implements MediaCatalogPort {
             throw new IllegalArgumentException("musicReference is required");
         }
 
+        long startTime = System.currentTimeMillis();
+        log.info("external.service.call.start: service=MediaCatalog, operation=checkMusicExists, musicId={}", 
+            musicReference.value());
+
         try {
             restClient
                     .head()
                     .uri(baseUrl + "/api/media/music/{id}", musicReference.value())
                     .retrieve()
                     .toBodilessEntity();
+            
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.info("external.service.call.end: service=MediaCatalog, httpStatus=200, latencyMs={}, exists=true", 
+                latencyMs);
             return true;
         } catch (RestClientException e) {
-            // 404 or other errors mean music doesn't exist
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.info("external.service.call.end: service=MediaCatalog, httpStatus=404, latencyMs={}, exists=false", 
+                latencyMs);
             return false;
         }
     }
@@ -103,15 +139,25 @@ public class MediaCatalogAdapter implements MediaCatalogPort {
             throw new IllegalArgumentException("imageReference is required");
         }
 
+        long startTime = System.currentTimeMillis();
+        log.info("external.service.call.start: service=MediaCatalog, operation=checkImageExists, imageId={}", 
+            imageReference.value());
+
         try {
             restClient
                     .head()
                     .uri(baseUrl + "/api/media/images/{id}", imageReference.value())
                     .retrieve()
                     .toBodilessEntity();
+            
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.info("external.service.call.end: service=MediaCatalog, httpStatus=200, latencyMs={}, exists=true", 
+                latencyMs);
             return true;
         } catch (RestClientException e) {
-            // 404 or other errors mean image doesn't exist
+            long latencyMs = System.currentTimeMillis() - startTime;
+            log.info("external.service.call.end: service=MediaCatalog, httpStatus=404, latencyMs={}, exists=false", 
+                latencyMs);
             return false;
         }
     }

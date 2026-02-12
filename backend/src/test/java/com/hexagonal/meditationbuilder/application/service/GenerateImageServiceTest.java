@@ -4,6 +4,8 @@ import com.hexagonal.meditationbuilder.domain.model.ImageReference;
 import com.hexagonal.meditationbuilder.domain.ports.in.GenerateImageUseCase.ImageGenerationException;
 import com.hexagonal.meditationbuilder.domain.ports.out.ImageGenerationPort;
 import com.hexagonal.meditationbuilder.domain.ports.out.ImageGenerationPort.ImageGenerationServiceException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -30,11 +32,13 @@ class GenerateImageServiceTest {
     @Mock
     private ImageGenerationPort imageGenerationPort;
 
+    private MeterRegistry meterRegistry;
     private GenerateImageService service;
 
     @BeforeEach
     void setUp() {
-        service = new GenerateImageService(imageGenerationPort);
+        meterRegistry = new SimpleMeterRegistry();
+        service = new GenerateImageService(imageGenerationPort, meterRegistry);
     }
 
     @Nested

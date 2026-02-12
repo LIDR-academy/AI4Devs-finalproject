@@ -8,6 +8,8 @@ import com.hexagonal.meditationbuilder.domain.model.MusicReference;
 import com.hexagonal.meditationbuilder.domain.model.TextContent;
 import com.hexagonal.meditationbuilder.domain.ports.out.CompositionRepositoryPort;
 import com.hexagonal.meditationbuilder.domain.ports.out.MediaCatalogPort;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -46,11 +48,13 @@ class ComposeContentServiceTest {
     @Mock
     private CompositionRepositoryPort compositionRepositoryPort;
 
+    private MeterRegistry meterRegistry;
     private ComposeContentService service;
 
     @BeforeEach
     void setUp() {
-        service = new ComposeContentService(mediaCatalogPort, compositionRepositoryPort, FIXED_CLOCK);
+        meterRegistry = new SimpleMeterRegistry();
+        service = new ComposeContentService(mediaCatalogPort, compositionRepositoryPort, FIXED_CLOCK, meterRegistry);
     }
 
     @Nested

@@ -4,6 +4,8 @@ import com.hexagonal.meditationbuilder.domain.model.TextContent;
 import com.hexagonal.meditationbuilder.domain.ports.in.GenerateTextUseCase.TextGenerationException;
 import com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort;
 import com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort.TextGenerationServiceException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,11 +34,13 @@ class GenerateTextServiceTest {
     @Mock
     private TextGenerationPort textGenerationPort;
 
+    private MeterRegistry meterRegistry;
     private GenerateTextService service;
 
     @BeforeEach
     void setUp() {
-        service = new GenerateTextService(textGenerationPort);
+        meterRegistry = new SimpleMeterRegistry();
+        service = new GenerateTextService(textGenerationPort, meterRegistry);
     }
 
     @Nested
