@@ -4590,3 +4590,30 @@ Ejecutando fase TDD-GREEN para T-022-INFRA. Implementando infraestructura comple
 **Status:** T-022-INFRA DONE ✅
 
 ---
+
+### 2026-02-12 16:30 - Auditoría Final Ticket T-022-INFRA
+
+- **Ticket:** T-022-INFRA - Redis & Celery Workers Setup
+- **Status:** ✅ APROBADO / LISTO PARA MERGE
+- **Archivos implementados:**
+  - src/agent/__init__.py
+  - src/agent/celery_app.py
+  - src/agent/config.py
+  - src/agent/tasks.py
+  - src/agent/constants.py
+  - src/agent/requirements.txt
+  - src/agent/Dockerfile
+  - docker-compose.yml (modificado)
+  - src/backend/requirements.txt (modificado)
+  - src/backend/config.py (modificado)
+  - .env.example (modificado)
+  - tests/integration/test_celery_worker.py (modificado)
+  - docs/09-mvp-backlog.md (modificado)
+
+- **Tests (anti-regresión):** 29 passed, 1 skipped, 0 failures
+- **Servicios verificados:** sf-pm-db (healthy), sf-pm-redis (healthy), sf-pm-agent-worker (healthy)
+- **Notas:** Constants centralized in `src/agent/constants.py`; conditional imports added to avoid name collisions; tasks registered and worker ready.
+
+- **Decision:** Ticket marcado como **DONE** y aprobado para merge a `develop`/`main` tras revisión de CI.
+
+---
