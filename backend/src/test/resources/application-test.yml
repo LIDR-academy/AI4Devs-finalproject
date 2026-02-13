@@ -7,6 +7,27 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
+  # H2 in-memory database for integration tests
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA with H2 - auto-generate schema
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+
+  # Disable Flyway in tests - use JPA auto-schema instead
+  flyway:
+    enabled: false
+
 # Media preview configuration
 media:
   preview:
