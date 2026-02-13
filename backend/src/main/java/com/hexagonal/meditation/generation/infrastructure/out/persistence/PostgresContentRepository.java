@@ -1,7 +1,7 @@
 package com.hexagonal.meditation.generation.infrastructure.out.persistence;
 
 import com.hexagonal.meditation.generation.domain.model.GeneratedMeditationContent;
-import com.hexagonal.meditation.generation.domain.port.out.ContentRepositoryPort;
+import com.hexagonal.meditation.generation.domain.ports.out.ContentRepositoryPort;
 import com.hexagonal.meditation.generation.infrastructure.out.persistence.entity.MeditationOutputEntity;
 import com.hexagonal.meditation.generation.infrastructure.out.persistence.mapper.MeditationOutputMapper;
 import com.hexagonal.meditation.generation.infrastructure.out.persistence.repository.JpaMeditationOutputRepository;
@@ -53,19 +53,19 @@ public class PostgresContentRepository implements ContentRepositoryPort {
     }
     
     @Override
+    public java.util.List<GeneratedMeditationContent> findByUserId(String userId) {
+        logger.debug("Finding meditation outputs by userId: {}", userId);
+        
+        return jpaRepository.findByUserId(UUID.fromString(userId)).stream()
+            .map(mapper::toDomain)
+            .toList();
+    }
+    
+    @Override
     public Optional<GeneratedMeditationContent> findByIdempotencyKey(String idempotencyKey) {
         logger.debug("Finding meditation output by idempotency key: {}", idempotencyKey);
         
         return jpaRepository.findByIdempotencyKey(idempotencyKey)
             .map(mapper::toDomain);
-    }
-    
-    @Override
-    public void delete(UUID meditationId) {
-        logger.info("Deleting meditation output: {}", meditationId);
-        
-        jpaRepository.deleteById(meditationId);
-        
-        logger.debug("Meditation output deleted successfully: {}", meditationId);
     }
 }

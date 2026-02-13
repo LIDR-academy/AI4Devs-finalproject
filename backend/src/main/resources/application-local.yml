@@ -3,6 +3,30 @@
 # Profile: local
 # Usage: Set SPRING_PROFILES_ACTIVE=local or use default
 
+spring:
+  # H2 in-memory database for local development
+  # Alternative: Use Docker PostgreSQL (see docker-compose.yml)
+  datasource:
+    url: jdbc:h2:mem:meditationdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA with H2 - auto-generate schema for local development
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+
+  # Disable Flyway in local - use JPA auto-schema instead
+  # Enable Flyway when using Docker PostgreSQL
+  flyway:
+    enabled: false
+
 # OpenAI - Use real API for local development
 # Set OPENAI_API_KEY environment variable with your key
 ai:

@@ -35,6 +35,14 @@ export const generationKeys = {
 export type GenerationState = 'idle' | 'creating' | 'success' | 'error';
 
 /**
+ * Request with composition ID for context
+ */
+export interface GenerateMeditationParams {
+  request: GenerateMeditationRequest;
+  compositionId?: string;
+}
+
+/**
  * Hook to generate meditation content
  * 
  * Usage:
@@ -43,9 +51,12 @@ export type GenerationState = 'idle' | 'creating' | 'success' | 'error';
  * 
  * // Start generation
  * generation.mutate({
- *   text: "Breathe deeply...",
- *   musicReference: "music-123",
- *   imageReference: "image-456" // Optional - omit for audio
+ *   request: {
+ *     text: "Breathe deeply...",
+ *     musicReference: "music-123",
+ *     imageReference: "image-456" // Optional - omit for audio
+ *   },
+ *   compositionId: "comp-uuid"
  * });
  * 
  * // Access state
@@ -66,8 +77,8 @@ export function useGenerateMeditation() {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (request: GenerateMeditationRequest): Promise<GenerationResponse> => {
-      return generateMeditationContent(request);
+    mutationFn: async ({ request, compositionId }: GenerateMeditationParams): Promise<GenerationResponse> => {
+      return generateMeditationContent(request, compositionId);
     },
     onSuccess: (data) => {
       // Cache successful generation result

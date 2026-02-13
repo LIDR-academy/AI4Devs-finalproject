@@ -23,6 +23,14 @@ public interface JpaMeditationOutputRepository extends JpaRepository<MeditationO
     Optional<MeditationOutputEntity> findByIdempotencyKey(String idempotencyKey);
     
     /**
+     * Find all meditation outputs created by a specific user.
+     * 
+     * @param userId the user ID
+     * @return list of meditation outputs for the user
+     */
+    java.util.List<MeditationOutputEntity> findByUserId(UUID userId);
+    
+    /**
      * Check if meditation output exists with given idempotency key.
      * 
      * @param idempotencyKey unique hash of request parameters

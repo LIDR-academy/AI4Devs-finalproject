@@ -1,5 +1,7 @@
 package com.hexagonal.meditation.generation.infrastructure.out.adapter.ffmpeg;
 
+import com.hexagonal.meditation.generation.domain.ports.out.AudioRenderingPort.AudioRenderRequest;
+import com.hexagonal.meditation.generation.domain.ports.out.AudioRenderingPort.AudioConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +31,14 @@ class FfmpegAudioRendererAdapterTest {
         Path musicPath = tempDir.resolve("music.mp3");
         Path outputPath = tempDir.resolve("output.mp3");
         
-        Path result = adapter.renderAudio(narrationPath, musicPath, outputPath);
+        AudioRenderRequest request = new AudioRenderRequest(
+            narrationPath,
+            musicPath,
+            outputPath,
+            AudioConfig.meditationAudio()
+        );
+        
+        Path result = adapter.renderAudio(request);
         
         assertThat(result).isEqualTo(outputPath);
     }
@@ -40,9 +49,16 @@ class FfmpegAudioRendererAdapterTest {
         Path narrationPath = tempDir.resolve("narration.mp3");
         Path outputPath = tempDir.resolve("output-no-music.mp3");
         
-        Path result = adapter.renderAudio(narrationPath, null, outputPath);
-        
-        assertThat(result).isEqualTo(outputPath);
+        // Note: The record validates music is not null, 
+        // so this test validates that the business rule requires music
+        assertThatThrownBy(() -> new AudioRenderRequest(
+            narrationPath,
+            null,
+            outputPath,
+            AudioConfig.meditationAudio()
+        ))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Music audio path cannot be null");
     }
     
     @Test
@@ -51,9 +67,14 @@ class FfmpegAudioRendererAdapterTest {
         Path musicPath = tempDir.resolve("music.mp3");
         Path outputPath = tempDir.resolve("output.mp3");
         
-        assertThatThrownBy(() -> adapter.renderAudio(null, musicPath, outputPath))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Narration audio path cannot be null");
+        assertThatThrownBy(() -> new AudioRenderRequest(
+            null,
+            musicPath,
+            outputPath,
+            AudioConfig.meditationAudio()
+        ))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Narration audio path cannot be null");
     }
     
     @Test
@@ -62,26 +83,13 @@ class FfmpegAudioRendererAdapterTest {
         Path narrationPath = tempDir.resolve("narration.mp3");
         Path musicPath = tempDir.resolve("music.mp3");
         
-        assertThatThrownBy(() -> adapter.renderAudio(narrationPath, musicPath, null))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Output path cannot be null");
-    }
-    
-    @Test
-    @DisplayName("Should validate FFmpeg installation")
-    void shouldValidateFfmpegInstalled() {
-        boolean isInstalled = adapter.validateFfmpegInstalled();
-        
-        // Stub implementation always returns true
-        assertThat(isInstalled).isTrue();
-    }
-    
-    @Test
-    @DisplayName("Should return FFmpeg version string")
-    void shouldReturnFfmpegVersion() {
-        String version = adapter.getFfmpegVersion();
-        
-        assertThat(version).isNotNull();
-        assertThat(version).isNotEmpty();
+        assertThatThrownBy(() -> new AudioRenderRequest(
+            narrationPath,
+            musicPath,
+            null,
+            AudioConfig.meditationAudio()
+        ))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Output path cannot be null");
     }
 }

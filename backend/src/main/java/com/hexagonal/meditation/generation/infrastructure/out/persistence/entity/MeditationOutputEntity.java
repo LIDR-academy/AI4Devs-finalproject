@@ -9,10 +9,10 @@ import java.util.UUID;
 
 /**
  * JPA entity for meditation generation persistence.
- * Maps to `generation.meditation_output` table.
+ * Maps to `meditation_output` table.
  */
 @Entity
-@Table(name = "meditation_output", schema = "generation")
+@Table(name = "meditation_output")
 public class MeditationOutputEntity {
     
     @Id

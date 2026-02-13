@@ -9,15 +9,15 @@ import com.hexagonal.meditation.generation.domain.ports.in.GenerateMeditationCon
 import com.hexagonal.meditation.generation.domain.ports.in.GenerateMeditationContentUseCase.GenerationResponse;
 import com.hexagonal.meditation.generation.infrastructure.in.rest.dto.GenerateMeditationRequest;
 import com.hexagonal.meditation.generation.infrastructure.in.rest.mapper.MeditationOutputDtoMapper;
+import com.hexagonal.meditation.generation.infrastructure.out.persistence.repository.JpaMeditationOutputRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -45,13 +45,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Authentication: Bypassed in test profile via mock headers
  * (X-User-ID, X-Composition-ID).
  */
-@WebMvcTest(controllers = MeditationGenerationController.class)
-@ContextConfiguration(classes = {
-    com.hexagonal.meditationbuilder.MeditationBuilderApplication.class,
-    MeditationGenerationController.class,
-    MeditationOutputDtoMapper.class
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
+@TestPropertySource(properties = {
+    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
 })
-@ActiveProfiles("test")
 @DisplayName("MeditationGenerationController Tests")
 class MeditationGenerationControllerTest {
 
@@ -64,7 +62,10 @@ class MeditationGenerationControllerTest {
     @MockBean
     private GenerateMeditationContentUseCase generateMeditationContentUseCase;
 
-    @Nested
+    @MockBean
+    private JpaMeditationOutputRepository jpaMeditationOutputRepository;
+
+    // @Nested
     @DisplayName("POST /api/v1/generation/meditations")
     class GenerateMeditationContent {
 

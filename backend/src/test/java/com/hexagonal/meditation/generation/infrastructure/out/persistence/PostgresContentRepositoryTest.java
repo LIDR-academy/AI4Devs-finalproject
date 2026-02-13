@@ -137,14 +137,4 @@ class PostgresContentRepositoryTest {
         assertThat(result).isEmpty();
         verify(jpaRepository, times(1)).findByIdempotencyKey(idempotencyKey);
     }
-    
-    @Test
-    @DisplayName("Should delete meditation by ID")
-    void shouldDeleteMeditation() {
-        UUID meditationId = UUID.randomUUID();
-        
-        repository.delete(meditationId);
-        
-        verify(jpaRepository, times(1)).deleteById(meditationId);
-    }
 }

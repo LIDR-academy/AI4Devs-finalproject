@@ -1,5 +1,7 @@
 package com.hexagonal.meditation.generation.infrastructure.out.adapter.ffmpeg;
 
+import com.hexagonal.meditation.generation.domain.ports.out.VideoRenderingPort.VideoRenderRequest;
+import com.hexagonal.meditation.generation.domain.ports.out.VideoRenderingPort.VideoConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,16 @@ class FfmpegVideoRendererAdapterTest {
         Path musicPath = tempDir.resolve("music.mp3");
         Path outputPath = tempDir.resolve("output.mp4");
         
-        Path result = adapter.renderVideo(narrationPath, imagePath, srtPath, musicPath, outputPath);
+        VideoRenderRequest request = new VideoRenderRequest(
+            narrationPath,
+            musicPath,
+            imagePath,
+            srtPath,
+            outputPath,
+            VideoConfig.hdMeditationVideo()
+        );
+        
+        Path result = adapter.renderVideo(request);
         
         assertThat(result).isEqualTo(outputPath);
     }
@@ -44,9 +55,17 @@ class FfmpegVideoRendererAdapterTest {
         Path srtPath = tempDir.resolve("subtitles.srt");
         Path outputPath = tempDir.resolve("output-no-music.mp4");
         
-        Path result = adapter.renderVideo(narrationPath, imagePath, srtPath, null, outputPath);
-        
-        assertThat(result).isEqualTo(outputPath);
+        // The record validates that music is not null, so this test validates the business rule
+        assertThatThrownBy(() -> new VideoRenderRequest(
+            narrationPath,
+            null,
+            imagePath,
+            srtPath,
+            outputPath,
+            VideoConfig.hdMeditationVideo()
+        ))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Music audio path cannot be null");
     }
     
     @Test
@@ -54,11 +73,19 @@ class FfmpegVideoRendererAdapterTest {
     void shouldRejectNullNarration() {
         Path imagePath = tempDir.resolve("background.jpg");
         Path srtPath = tempDir.resolve("subtitles.srt");
+        Path musicPath = tempDir.resolve("music.mp3");
         Path outputPath = tempDir.resolve("output.mp4");
         
-        assertThatThrownBy(() -> adapter.renderVideo(null, imagePath, srtPath, null, outputPath))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Narration audio path cannot be null");
+        assertThatThrownBy(() -> new VideoRenderRequest(
+            null,
+            musicPath,
+            imagePath,
+            srtPath,
+            outputPath,
+            VideoConfig.hdMeditationVideo()
+        ))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Narration audio path cannot be null");
     }
     
     @Test
@@ -66,11 +93,19 @@ class FfmpegVideoRendererAdapterTest {
     void shouldRejectNullImage() {
         Path narrationPath = tempDir.resolve("narration.mp3");
         Path srtPath = tempDir.resolve("subtitles.srt");
+        Path musicPath = tempDir.resolve("music.mp3");
         Path outputPath = tempDir.resolve("output.mp4");
         
-        assertThatThrownBy(() -> adapter.renderVideo(narrationPath, null, srtPath, null, outputPath))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Background image path cannot be null");
+        assertThatThrownBy(() -> new VideoRenderRequest(
+            narrationPath,
+            musicPath,
+            null,
+            srtPath,
+            outputPath,
+            VideoConfig.hdMeditationVideo()
+        ))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Image path cannot be null");
     }
     
     @Test
@@ -78,11 +113,19 @@ class FfmpegVideoRendererAdapterTest {
     void shouldRejectNullSubtitles() {
         Path narrationPath = tempDir.resolve("narration.mp3");
         Path imagePath = tempDir.resolve("background.jpg");
+        Path musicPath = tempDir.resolve("music.mp3");
         Path outputPath = tempDir.resolve("output.mp4");
         
-        assertThatThrownBy(() -> adapter.renderVideo(narrationPath, imagePath, null, null, outputPath))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("SRT subtitles path cannot be null");
+        assertThatThrownBy(() -> new VideoRenderRequest(
+            narrationPath,
+            musicPath,
+            imagePath,
+            null,
+            outputPath,
+            VideoConfig.hdMeditationVideo()
+        ))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Subtitle path cannot be null");
     }
     
     @Test
@@ -91,27 +134,17 @@ class FfmpegVideoRendererAdapterTest {
         Path narrationPath = tempDir.resolve("narration.mp3");
         Path imagePath = tempDir.resolve("background.jpg");
         Path srtPath = tempDir.resolve("subtitles.srt");
+        Path musicPath = tempDir.resolve("music.mp3");
         
-        assertThatThrownBy(() -> adapter.renderVideo(narrationPath, imagePath, srtPath, null, null))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Output path cannot be null");
-    }
-    
-    @Test
-    @DisplayName("Should validate FFmpeg installation")
-    void shouldValidateFfmpegInstalled() {
-        boolean isInstalled = adapter.validateFfmpegInstalled();
-        
-        // Stub implementation always returns true
-        assertThat(isInstalled).isTrue();
-    }
-    
-    @Test
-    @DisplayName("Should return FFmpeg version string")
-    void shouldReturnFfmpegVersion() {
-        String version = adapter.getFfmpegVersion();
-        
-        assertThat(version).isNotNull();
-        assertThat(version).isNotEmpty();
+        assertThatThrownBy(() -> new VideoRenderRequest(
+            narrationPath,
+            musicPath,
+            imagePath,
+            srtPath,
+            null,
+            VideoConfig.hdMeditationVideo()
+        ))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Output path cannot be null");
     }
 }

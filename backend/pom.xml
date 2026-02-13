@@ -81,11 +81,11 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 Database for testing -->
+        <!-- H2 Database for testing and local development -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Flyway for database migrations -->

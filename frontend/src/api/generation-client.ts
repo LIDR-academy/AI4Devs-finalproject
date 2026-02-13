@@ -43,9 +43,15 @@ const generationApiConfig = new Configuration({
 const generationApi = new GenerationApi(generationApiConfig);
 
 /**
+ * MVP User ID (hardcoded until US1 authentication is implemented)
+ */
+const MVP_USER_ID = '550e8400-e29b-41d4-a716-446655440000';
+
+/**
  * Generate meditation content with narration and subtitles
  * 
  * @param request - Generation request with text, music, and optional image
+ * @param compositionId - Composition ID (optional, will generate random UUID if not provided)
  * @returns Generation response with URLs and metadata
  * @throws GenerationApiError on failure
  * 
@@ -56,11 +62,14 @@ const generationApi = new GenerationApi(generationApiConfig);
  * 
  * Example:
  * ```ts
- * const response = await generateMeditationContent({
- *   text: "Breathe deeply...",
- *   musicReference: "music-123",
- *   imageReference: "image-456" // Optional - omit for audio
- * });
+ * const response = await generateMeditationContent(
+ *   {
+ *     text: "Breathe deeply...",
+ *     musicReference: "music-123",
+ *     imageReference: "image-456" // Optional - omit for audio
+ *   },
+ *   'composition-uuid'
+ * );
  * 
  * if (response.status === 'SUCCESS') {
  *   console.log('Video URL:', response.mediaUrl);
@@ -69,12 +78,28 @@ const generationApi = new GenerationApi(generationApiConfig);
  * ```
  */
 export async function generateMeditationContent(
-  request: GenerateMeditationRequest
+  request: GenerateMeditationRequest,
+  compositionId?: string
 ): Promise<GenerationResponse> {
   try {
-    const response = await generationApi.generateMeditationContent({
-      generateMeditationRequest: request,
-    });
+    // Build headers with required X-User-ID and X-Composition-ID
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-User-ID': MVP_USER_ID,
+    };
+    
+    if (compositionId) {
+      headers['X-Composition-ID'] = compositionId;
+    }
+    
+    const response = await generationApi.generateMeditationContent(
+      {
+        generateMeditationRequest: request,
+      },
+      {
+        headers,
+      }
+    );
     return response;
   } catch (error: any) {
     // Convert fetch errors to consistent API error format

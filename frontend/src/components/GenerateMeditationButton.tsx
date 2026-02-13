@@ -59,12 +59,18 @@ export function GenerateMeditationButton({
 
   const isDisabled = disabled || isLoading;
 
+  const handleClick = () => {
+    if (onClick && !isDisabled) {
+      onClick();
+    }
+  };
+
   return (
     <button
       className={`btn btn--primary btn--large generate-meditation-button ${
         isLoading ? 'btn--loading' : ''
       }`}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={isDisabled}
       aria-label={isLoading ? loadingText : buttonText}
       aria-busy={isLoading}

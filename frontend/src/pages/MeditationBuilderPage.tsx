@@ -238,7 +238,35 @@ export function MeditationBuilderPage() {
       <div className="meditation-builder__right">
         <div className="card">
           <h2 className="card__title">Output Type</h2>
-          <OutputTypeIndicator />
+          <OutputTypeIndicator
+            onClick={() => {
+              generation.start({
+                request: {
+                  text: localText,
+                  musicReference: selectedMusicId || localAudioUrl || 'default-music',
+                  imageReference: selectedImageId || undefined,
+                },
+                compositionId: compositionId || undefined,
+              });
+            }}
+            disabled={
+              !localText.trim() || 
+              !(selectedMusicId || localAudioUrl) ||
+              generateText.isPending || 
+              generateImage.isPending ||
+              generation.isCreating
+            }
+            isLoading={generation.isCreating}
+          />
+          
+          {generation.isCreating && (
+            <div style={{ marginTop: '16px' }}>
+              <GenerationStatusBar
+                progress={generation.progress}
+                message="Creating your meditation content..."
+              />
+            </div>
+          )}
         </div>
 
         <div className="card">
@@ -271,37 +299,6 @@ export function MeditationBuilderPage() {
       </div>
     </div>
 
-    {/* Generation Section (US3) */}
-    <div className="meditation-builder__generation">
-      {generation.isCreating && (
-        <GenerationStatusBar
-          progress={generation.progress}
-          message="Creating your meditation content..."
-        />
-      )}
-      
-      {!generation.isCreating && (
-        <GenerateMeditationButton
-          onClick={() => {
-            generation.start({
-              text: localText,
-              musicReference: selectedMusicId || 'default-music', // TODO: Handle missing music
-              imageReference: selectedImageId || localImageUrl || undefined,
-            });
-          }}
-          disabled={
-            !localText.trim() || 
-            !(selectedMusicId || localAudioUrl) ||
-            generateText.isPending || 
-            generateImage.isPending ||
-            generation.isCreating
-          }
-          isLoading={generation.isCreating}
-          outputType={selectedImageId || localImageUrl ? 'VIDEO' : 'PODCAST'}
-        />
-      )}
-    </div>
-
     {/* Generation Result Modal */}
     <GenerationResultModal
       isOpen={generation.isCompleted || generation.isFailed}
@@ -310,9 +307,12 @@ export function MeditationBuilderPage() {
       onClose={() => generation.reset()}
       onRetry={() => {
         generation.start({
-          text: localText,
-          musicReference: selectedMusicId || 'default-music',
-          imageReference: selectedImageId || localImageUrl || undefined,
+          request: {
+            text: localText,
+            musicReference: selectedMusicId || localAudioUrl || 'default-music',
+            imageReference: selectedImageId || undefined,
+          },
+          compositionId: compositionId || undefined,
         });
       }}
     />

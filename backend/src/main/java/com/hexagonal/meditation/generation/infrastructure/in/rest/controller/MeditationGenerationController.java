@@ -37,7 +37,7 @@ import java.util.UUID;
  * - Tests: bypassed via TestSecurityConfig (mock userId from header)
  */
 @RestController
-@RequestMapping("/api/v1/generation/meditations")
+@RequestMapping("/v1/generation/meditations")
 public class MeditationGenerationController {
 
     private static final Logger log = LoggerFactory.getLogger(MeditationGenerationController.class);

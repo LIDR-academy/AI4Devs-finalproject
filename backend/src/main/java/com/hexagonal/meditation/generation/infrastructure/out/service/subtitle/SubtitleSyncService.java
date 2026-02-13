@@ -1,7 +1,7 @@
 package com.hexagonal.meditation.generation.infrastructure.out.service.subtitle;
 
 import com.hexagonal.meditation.generation.domain.model.SubtitleSegment;
-import com.hexagonal.meditation.generation.domain.port.out.SubtitleSyncPort;
+import com.hexagonal.meditation.generation.domain.ports.out.SubtitleSyncPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,44 +20,35 @@ import java.util.List;
 public class SubtitleSyncService implements SubtitleSyncPort {
     
     private static final Logger logger = LoggerFactory.getLogger(SubtitleSyncService.class);
-    private static final double MAX_OVERLAP_MS = 200.0;
     
     @Override
-    public List<SubtitleSegment> generateSubtitles(String narrationText, double totalDurationSeconds) {
-        logger.info("Generating subtitles for narration (duration: {}s)", totalDurationSeconds);
+    public List<SubtitleSegment> generateSubtitles(Path narrationAudioPath, String text) {
+        logger.info("Generating subtitles for narration: audio={}", narrationAudioPath);
         
-        if (narrationText == null || narrationText.isBlank()) {
-            throw new IllegalArgumentException("Narration text cannot be empty");
+        if (narrationAudioPath == null) {
+            throw new IllegalArgumentException("Narration audio path cannot be null");
+        }
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("Text cannot be empty");
         }
         
-        if (totalDurationSeconds <= 0) {
-            throw new IllegalArgumentException("Total duration must be positive");
-        }
+        // TODO: Analyze audio duration using FFmpeg or audio library
+        double estimatedDuration = text.length() / 150.0 * 60.0; // ~150 wpm
         
-        // Split text into sentences (simple heuristic: split by ., !, ?)
-        String[] sentences = narrationText.split("(?<=[.!?])\\s+");
+        // Split text into sentences
+        String[] sentences = text.split("(?<=[.!?])\\s+");
         List<SubtitleSegment> segments = new ArrayList<>();
         
-        double segmentDuration = totalDurationSeconds / sentences.length;
+        double segmentDuration = estimatedDuration / sentences.length;
         double currentStart = 0.0;
         
         for (int i = 0; i < sentences.length; i++) {
             String sentence = sentences[i].trim();
-            if (sentence.isEmpty()) {
-                continue;
-            }
+            if (sentence.isEmpty()) continue;
             
-            double startTime = currentStart;
-            double endTime = Math.min(currentStart + segmentDuration, totalDurationSeconds);
-            
-            // Ensure no overlap (gap of at least 1ms)
-            if (i > 0 && segments.get(segments.size() - 1).endSeconds() >= startTime) {
-                startTime = segments.get(segments.size() - 1).endSeconds() + 0.001;
-            }
-            
-            SubtitleSegment segment = new SubtitleSegment(i + 1, startTime, endTime, sentence);
+            double endTime = Math.min(currentStart + segmentDuration, estimatedDuration);
+            SubtitleSegment segment = new SubtitleSegment(i + 1, currentStart, endTime, sentence);
             segments.add(segment);
-            
             currentStart = endTime;
         }
         
@@ -66,57 +57,23 @@ public class SubtitleSyncService implements SubtitleSyncPort {
     }
     
     @Override
-    public Path writeSrtFile(List<SubtitleSegment> segments, Path outputPath) {
-        logger.info("Writing SRT file to: {}", outputPath);
+    public Path exportToSrt(List<SubtitleSegment> segments, Path outputPath) {
+        logger.info("Exporting SRT file to: {}", outputPath);
         
         if (segments == null || segments.isEmpty()) {
-            throw new IllegalArgumentException("Segments list cannot be empty");
+            throw new IllegalArgumentException("Segments cannot be empty");
         }
         
         try {
-            StringBuilder srtContent = new StringBuilder();
-            
+            StringBuilder srt = new StringBuilder();
             for (SubtitleSegment segment : segments) {
-                srtContent.append(segment.toSrtFormat()).append(System.lineSeparator());
+                srt.append(segment.toSrtFormat()).append(System.lineSeparator());
             }
-            
-            Files.writeString(outputPath, srtContent.toString());
-            logger.info("Successfully wrote {} segments to SRT file", segments.size());
-            
+            Files.writeString(outputPath, srt.toString());
+            logger.info("SRT file written successfully: {}", outputPath);
             return outputPath;
         } catch (IOException e) {
-            logger.error("Failed to write SRT file: {}", outputPath, e);
-            throw new RuntimeException("Failed to write SRT file", e);
+            throw new RuntimeException("Failed to write SRT file: " + e.getMessage(), e);
         }
-    }
-    
-    @Override
-    public boolean validateTiming(List<SubtitleSegment> segments) {
-        if (segments == null || segments.isEmpty()) {
-            return false;
-        }
-        
-        for (int i = 0; i < segments.size() - 1; i++) {
-            SubtitleSegment current = segments.get(i);
-            SubtitleSegment next = segments.get(i + 1);
-            
-            // Check for overlap
-            double gap = (next.startSeconds() - current.endSeconds()) * 1000; // Convert to ms
-            if (gap < 0 && Math.abs(gap) > MAX_OVERLAP_MS) {
-                logger.warn("Overlap detected between segments {} and {}: {}ms", 
-                    current.index(), next.index(), gap);
-                return false;
-            }
-            
-            // Check indexes are consecutive
-            if (next.index() != current.index() + 1) {
-                logger.warn("Non-consecutive indexes: {} -> {}", 
-                    current.index(), next.index());
-                return false;
-            }
-        }
-        
-        logger.debug("Subtitle timing validation passed for {} segments", segments.size());
-        return true;
     }
 }
