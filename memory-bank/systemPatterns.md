@@ -370,3 +370,133 @@ except (ImportError, ModuleNotFoundError):
 /infra/         -> Infrastructure as code
 /tests/         -> Integration tests
 ```
+
+---
+
+## User String Extraction Pattern (T-025-AGENT)
+
+### Overview
+Rhino .3dm files support embedding custom metadata as "User Strings" (key-value pairs) at three levels:
+1. **Document-level**: Project metadata (e.g., `ProjectID`, `BIM_Manager`)
+2. **Layer-level**: Manufacturing specs per layer (e.g., `Workshop`, `MaterialType`)
+3. **Object-level**: Part-specific data (e.g., `ISO_Code`, `Mass`, `QA_Inspector`)
+
+This pattern extracts and structures user strings for ISO-19650 compliance and manufacturing traceability.
+
+### Data Model (`src/agent/models.py`)
+
+**UserStringCollection** (Pydantic v2):
+```python
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Dict
+
+class UserStringCollection(BaseModel):
+    """Sparse dictionaries for user string metadata."""
+    document: Dict[str, str] = Field(default_factory=dict)
+    layers: Dict[str, Dict[str, str]] = Field(default_factory=dict)  # layer_name → strings
+    objects: Dict[str, Dict[str, str]] = Field(default_factory=dict)  # object_uuid → strings
+    
+    model_config = ConfigDict(
+        json_schema_extra={"example": {
+            "document": {"ProjectID": "SF-2026", "BIM_Manager": "Pedro Cortés"},
+            "layers": {"SF-C12-M-001": {"Workshop": "Granollers", "MaterialType": "UHPC"}},
+            "objects": {"3f2504e0...": {"ISO_Code": "SF-C12-M-001", "Mass": "450kg"}}
+        }}
+    )
+```
+
+**FileProcessingResult** (updated):
+```python
+class FileProcessingResult(BaseModel):
+    success: bool
+    layers: List[LayerInfo]
+    file_metadata: Dict[str, Any]
+    user_strings: Optional[Dict[str, Any]] = None  # UserStringCollection as dict
+    
+    model_config = ConfigDict(from_attributes=True)
+```
+
+### Service Architecture
+
+**UserStringExtractor** (`src/agent/services/user_string_extractor.py`):
+- **Method**: `extract(model: File3dm) -> UserStringCollection`
+- **Defensive patterns**:
+  - `hasattr()` checks before accessing rhino3dm API properties
+  - Per-item try-except (failures don't break entire extraction)
+  - Graceful handling of `None` returns from `GetUserStrings()`
+  - Sparse dictionaries (only include items with strings)
+- **Logging**: Structured logs with context (`document_keys`, `layer_count`, `object_count`)
+
+**Example Implementation**:
+```python
+def _extract_layer_strings(self, model) -> Dict[str, Dict[str, str]]:
+    result = {}
+    for layer in model.Layers:
+        try:
+            if not hasattr(layer, 'GetUserStrings'):
+                continue
+            strings_dict = layer.GetUserStrings()
+            if strings_dict is None or not hasattr(strings_dict, 'Keys'):
+                continue
+            layer_strings = {key: strings_dict[key] for key in strings_dict.Keys}
+            if layer_strings:  # Sparse: only add if has strings
+                result[layer.Name] = layer_strings
+        except Exception as e:
+            logger.warning("layer_string_extraction_failed", layer=layer.Name, error=str(e))
+            continue  # Don't break extraction for one bad layer
+    return result
+```
+
+### Integration with RhinoParserService
+
+**Location**: `src/agent/services/rhino_parser_service.py`
+```python
+# After extracting layers and file_metadata:
+extractor = UserStringExtractor()
+user_strings = extractor.extract(model)
+
+return FileProcessingResult(
+    success=True,
+    layers=layers,
+    file_metadata=file_metadata,
+    user_strings=user_strings.model_dump()  # Convert to dict for Pydantic v2 compatibility
+)
+```
+
+### Pydantic v2 Migration Note
+
+**Issue**: Nested Pydantic models require `model_dump()` when passed to parent model constructors.
+**Solution**: `UserStringCollection` is created in service, then serialized to `Dict[str, Any]` before assigning to `FileProcessingResult.user_strings`.
+**Benefit**: Avoids Pydantic validation errors while maintaining type safety in service layer.
+
+### Testing Strategy (TDD Complete)
+
+**Unit Tests** (`tests/unit/test_user_string_extractor.py`): 8 tests
+- Happy path: document, layer, object extraction
+- Edge cases: empty strings, None returns, missing attributes
+- Error handling: API exceptions, corrupt data
+
+**Integration Tests** (`tests/integration/test_user_strings_e2e.py`): 3 tests
+- E2E workflow: RhinoParserService → UserStringExtractor → FileProcessingResult
+- Sparse object validation (only objects with strings in result)
+- Empty file handling (empty dicts, not None)
+
+**Results**: 11/11 PASS (2026-02-13), no regression in T-024-AGENT (6 passed, 4 skipped)
+
+### rhino3dm API Quirks Documented
+
+| API Method | Behavior | Defensive Strategy |
+|------------|----------|-------------------|
+| `model.Strings` | Can be missing in old .3dm versions | `hasattr()` check |
+| `layer.GetUserStrings()` | Returns `None` if no strings | Explicit `None` check |
+| `obj.Attributes.GetUserStrings()` | May throw `AttributeError` | Try-except wrapper |
+| `NameValueDictionary.Keys` | Iterator (not list) | Convert to list/iterate directly |
+| `obj.Attributes.Id` | Returns rhino3dm UUID object | Cast to `str()` for dict keys |
+
+### Use Cases
+1. **Sagrada Familia Project**: 46 user strings defined (ISO codes, materials, workshop assignments)
+2. **ISO-19650 Compliance**: Document/layer metadata for audit trail
+3. **Manufacturing Integration**: Object-level part numbers, QA notes, mass calculations
+4. **Validation Rules**: Future nomenclature validation can reference extracted user strings
+
+---
