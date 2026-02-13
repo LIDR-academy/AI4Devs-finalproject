@@ -5443,4 +5443,97 @@ Generado en: `docs/US-002/audits/AUDIT-T-025-AGENT-FINAL.md`
 
 ---
 
+## 092 - ENRICHMENT - T-026-AGENT (Nomenclature Validator)
+**Fecha:** 2026-02-14 10:15
+
+**Prompt Original (Snippet expandido):**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-026-AGENT
+>
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+>
+> ### Protocolo Agents (OBLIGATORIO antes de diseñar)
+>
+> 1. **Lee** `docs/09-mvp-backlog.md` y localiza el ticket `T-026-AGENT` para entender alcance, criterios de aceptación y DoD.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API existentes y patrones arquitectónicos del proyecto.
+> 3. **Lee** `memory-bank/techContext.md` para conocer el stack completo, librerías permitidas y decisiones técnicas previas.
+> 4. **Lee** `memory-bank/productContext.md` para identificar componentes/endpoints existentes que pueden reutilizarse.
+> 5. **Al finalizar**, registra este prompt en `prompts.md` bajo la sección "## Workflow Step 1: Enrichment".
+>
+> ### Objetivo
+> Generar una **Technical Specification** completa para `T-026-AGENT` que sirva como blueprint para el desarrollo TDD, sin escribir código de implementación todavía.
+>
+> ### Requisitos de la Especificación Técnica
+>
+> La especificación debe incluir:
+>
+> 1. **Análisis de Contexto:**
+>    - Resumen del ticket (qué hace, por qué es necesario).
+>    - Dependencias con otros tickets (ej: `T-024-AGENT`, `T-025-AGENT`).
+>    - Identificación de componentes/servicios existentes que se reutilizarán.
+>    - Diagrama de flujo de datos (opcional si ayuda a claridad).
+>
+> 2. **Decisiones de Diseño (Architecture Decision Records - ADRs):**
+>    - Decisión 1: ¿Qué patrón arquitectónico aplicar? (Service Layer, Strategy, Validator, etc.)
+>    - Decisión 2: ¿Dónde validar? (En RhinoParserService, servicio separado, decorador, etc.)
+>    - Decisión 3: ¿Qué contratos usar? (Pydantic models existentes vs nuevos).
+>    - Decisión 4: ¿Cómo gestionar errores? (Excepciones, Error accumulators, Result types).
+>
+> 3. **Contratos de Datos (Schemas/Models):**
+>    - Definir **nuevos** modelos Pydantic necesarios (si aplica).
+>    - Documentar **modificaciones** a modelos existentes (FileProcessingResult, ValidationReport, etc.).
+>    - Especificar tipos de entrada/salida de cada función.
+>
+> 4. **Test Strategy (Checklist Completo):**
+>    - **Happy Path**: Casos de éxito con nombres válidos.
+>    - **Edge Cases**: Nombres inválidos, layers vacíos, caracteres especiales, etc.
+>    - **Security/Error Handling**: Inputs maliciosos, archivos corruptos, timeouts.
+>    - Especificar fixtures a crear (mocked rhino3dm objects, test .3dm files).
+>
+> 5. **Archivos a Crear/Modificar:**
+>    - Lista exacta de archivos nuevos (ej: `nomenclature_validator.py`, tests).
+>    - Lista de archivos a modificar (ej: `models.py`, `constants.py`, `rhino_parser_service.py`).
+>    - Especificar ubicación exacta en el árbol de directorios.
+>
+> 6. **Definición de Done (DoD) Checklist:**
+>    - [ ] Todos los unit tests pasan (incluyendo edge cases).
+>    - [ ] Integración con RhinoParserService completada.
+>    - [ ] ValidationReport incluye errores de nomenclatura.
+>    - [ ] Documentación (docstrings) completa.
+>    - [ ] CI/CD pasa sin errores.
+>
+> ### Output Esperado
+>
+> Un documento Markdown estructurado como:
+>
+> ```markdown
+> # Technical Specification: T-026-AGENT - Nomenclature Validator
+>
+> ## 1. Context & Dependencies
+> ...
+>
+> ## 2. Architecture Decision Records (ADRs)
+> ...
+>
+> ## 3. Data Contracts
+> ...
+>
+> ## 4. Test Strategy
+> ...
+>
+> ## 5. Files to Create/Modify
+> ...
+>
+> ## 6. Definition of Done
+> ...
+> ```
+>
+> ### Nota Final
+> - **NO implementes código todavía**. Este es un ejercicio de diseño.
+> - Si detectas ambigüedades en el ticket original, documéntalas en una sección "Open Questions" y propón soluciones.
+
+**Resumen de la Respuesta/Acción:**
+[Se completará después de ejecutar el enrichment siguiendo el plan aprobado por el usuario]
+
+---
+
 
