@@ -6382,3 +6382,40 @@ docker compose run --rm backend pytest tests/integration/test_upload_flow.py tes
 **Estado:** ✅ **FASE VERDE CONFIRMADA - LISTO PARA REFACTOR** 🟢
 
 ---
+
+## [106] - FIX CI/CD Pipeline - Exclusión Tests Backend
+**Fecha:** 2026-02-14 
+
+**Prompt Original:**
+> [Error de CI/CD pipeline mostrado por usuario]
+> ```
+> ERROR tests/unit/test_validation_report_service.py
+> !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+> make: *** [Makefile:50: test-agent] Error 2
+> ```
+
+**Resumen de la Respuesta/Acción:**
+Diagnóstico: `make test-agent` ejecuta TODOS los tests en `tests/unit/` dentro del contenedor `agent-worker`, incluyendo `test_validation_report_service.py` (test de BACKEND). El contenedor agent no tiene dependencias de backend (`src/backend/services`, `src/backend/schemas`), causando fallo de importación durante colección de tests.
+
+**Solución aplicada:**
+1. Modificado `Makefile` (líneas 42 y 50):
+   - `make test`: Añadido `--ignore=tests/unit/test_validation_report_service.py` al comando de agent tests
+   - `make test-agent`: Añadido `--ignore=tests/unit/test_validation_report_service.py`
+2. Documentado decisión técnica en `memory-bank/decisions.md` (entrada 2026-02-14)
+   - Short-term fix: exclusión explícita con --ignore
+   - Long-term debt: refactorizar a `tests/backend/unit/` y `tests/agent/unit/`
+3. Marcado como deuda técnica post-MVP
+
+**Archivos modificados:**
+- Makefile (2 líneas, añadido --ignore flag)
+- memory-bank/decisions.md (entrada nueva sobre separación de tests)
+- prompts.md (esta entrada #106)
+
+**Justificación:**
+- ✅ Fix inmediato: permite continuar pipeline CI/CD
+- ⚠️ Deuda técnica: estructura mixta no sigue Clean Architecture
+- 🔧 Refactor futuro: crear estructura `tests/{backend,agent}/{unit,integration}/`
+
+**Estado:** ✅ Pipeline CI/CD desbloqueado, pendiente refactor post-MVP
+
+---
