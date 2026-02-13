@@ -7,10 +7,11 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-026-AGENT: Nomenclature Validator — READY TO START
+T-026-AGENT: Nomenclature Validator — TDD-RED PHASE COMPLETE 🔴
 - Objetivo: Validar nombres de capas y objetos con regex ISO-19650
 - Dependencias: T-025-AGENT ✅ (UserStringExtractor completado)
-- Estado: Preparado para implementar
+- Estado: Tests creados (9 FAILED), servicio placeholder listo
+- Fase: TDD-RED completada, listo para GREEN phase
 
 ## Next Tickets
 1. T-027-AGENT: Geometry Auditor

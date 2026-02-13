@@ -26,3 +26,13 @@ TASK_RETRY_DELAY_SECONDS = 60  # 1 minute between retries
 # Task Names (for type safety and refactoring)
 TASK_HEALTH_CHECK = "agent.tasks.health_check"
 TASK_VALIDATE_FILE = "agent.tasks.validate_file"
+
+# Validation Patterns
+# ISO-19650 nomenclature:  [PREFIX]-[ZONE/CODE]-[TYPE]-[ID]
+# Examples: SF-NAV-COL-001, SFC-NAV1-A-999
+# Pattern breakdown:
+#   - [A-Z]{2,3}: 2-3 uppercase letters (project prefix)
+#   - [A-Z0-9]{3,4}: 3-4 alphanumeric uppercase (zone/code)
+#   - [A-Z]{1,2}: 1-2 uppercase letters (element type)
+#   - \d{3}: exactly 3 digits (sequential ID)
+ISO_19650_LAYER_NAME_PATTERN = r"^[A-Z]{2,3}-[A-Z0-9]{3,4}-[A-Z]{1,2}-\d{3}$"

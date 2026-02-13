@@ -5536,4 +5536,100 @@ Generado en: `docs/US-002/audits/AUDIT-T-025-AGENT-FINAL.md`
 
 ---
 
+## 093 - TDD FASE RED - Ticket T-026-AGENT
+**Fecha:** 2026-02-14 11:30
+
+**Prompt Original:**
+> ## Prompt: TDD FASE ROJA - Ticket T-026-AGENT
+>
+> **Role:** Actúa como QA Automation Engineer y Software Architect.
+>
+> ### Protocolo Agents (OBLIGATORIO antes de escribir código)
+>
+> 1. **Lee** `memory-bank/activeContext.md` para entender el estado actual del sprint.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar los contratos API y patrones existentes.
+> 3. **Consulta** `docs/09-mvp-backlog.md` y busca el ticket `T-026-AGENT` para entender su alcance exacto, criterios de aceptación y DoD.
+> 4. **Consulta** `docs/productContext.md` para ver qué componentes o endpoints ya existen y pueden reutilizarse.
+> 5. **Al finalizar**, registra el inicio de esta tarea en `prompts.md`.
+>
+> ### Objetivo
+> 1. **Crear/Actualizar los tipos e interfaces** necesarios para `T-026-AGENT`.
+> 2. **Crear tests que fallen (RED)** describiendo el comportamiento esperado.
+> 3. El test DEBE fallar por `ImportError` (módulo no existe) o `AssertionError` (lógica no implementada), NO por errores de sintaxis.
+
+**Resumen de la Respuesta/Acción:**
+Fase TDD-RED completada para T-026-AGENT (Nomenclature Validator):
+
+**Contexto Analizado:**
+- **Ticket:** T-026-AGENT - Validación nomenclatura ISO-19650 con regex
+- **Dependencias verificadas:**
+  - ✅ T-025-AGENT (UserStringExtractor completado)
+  - ✅ ValidationErrorItem contract (src/backend/schemas.py)
+  - ✅ LayerInfo model (src/agent/models.py) con campo `name`
+- **Alcance:** Validar nombres de capas contra pattern `^[A-Z]{2,3}-[A-Z0-9]{3,4}-[A-Z]{1,2}-\d{3}$`
+- **Reuso identificado:**
+  - ValidationErrorItem schema (category="nomenclature", target=layer_name)
+  - LayerInfo model como input
+  - Constants pattern para almacenar regex
+
+**Constantes Añadidas:**
+- `src/agent/constants.py`:
+  - **ADDED:** `ISO_19650_LAYER_NAME_PATTERN` → Regex pattern con documentación inline
+  - Ejemplo válidos: `SF-NAV-COL-001`, `SFC-NAV1-A-999`
+  - Ejemplo inválidos: `sf-nav-col-001` (minúsculas), `SF_NAV_COL_001` (underscores)
+
+**Servicio Placeholder Creado:**
+- `src/agent/services/nomenclature_validator.py`:
+  - Clase `NomenclatureValidator` con método `validate_nomenclature(layers: List[LayerInfo]) -> List[ValidationErrorItem]`
+  - Constructor compila regex pattern (performance optimization)
+  - **Lanza `NotImplementedError` (placeholder para GREEN phase)**
+  - Logging estructurado (structlog) con pattern registrado
+
+**Tests Unitarios Creados:**
+- `tests/unit/test_nomenclature_validator.py` → **9 test cases**:
+
+  **Happy Path (2 tests):**
+  - `test_validate_nomenclature_all_valid_layers` → 3 layers válidos → retorna []
+  - `test_validate_nomenclature_empty_list` → Lista vacía → retorna []
+
+  **Edge Cases (4 tests):**
+  - `test_validate_nomenclature_all_invalid_layers` → 2 layers inválidos → retorna 2 ValidationErrorItems
+  - `test_validate_nomenclature_mixed_valid_invalid` → 2 válidos + 2 inválidos → retorna solo errores de inválidos
+  - `test_validate_nomenclature_case_sensitivity` → Layers en minúsculas → retorna errores
+  - `test_validate_nomenclature_special_characters` → @, espacios, ! → retorna errores
+
+  **Security/Error Handling (2 tests):**
+  - `test_validate_nomenclature_none_input` → None input → retorna [] o TypeError
+  - `test_validate_nomenclature_unicode_emoji` → Emojis, acentos, caracteres chinos → retorna errores
+
+  **Boundary Tests (1 test):**
+  - `test_validate_nomenclature_regex_boundaries` → Límites del pattern (2-3 letras prefix, 3-4 zone, etc.) → 7 casos invalidan, 2 validan
+
+**Resultado Ejecución Tests:**
+```
+========================= 9 failed, 1 warning in 0.10s =========================
+FAILED test_validate_nomenclature_all_valid_layers
+FAILED test_validate_nomenclature_empty_list
+FAILED test_validate_nomenclature_all_invalid_layers
+FAILED test_validate_nomenclature_mixed_valid_invalid
+FAILED test_validate_nomenclature_case_sensitivity
+FAILED test_validate_nomenclature_special_characters
+FAILED test_validate_nomenclature_none_input
+FAILED test_validate_nomenclature_unicode_emoji
+FAILED test_validate_nomenclature_regex_boundaries
+
+Error:
+  NotImplementedError: validate_nomenclature not implemented yet (TDD-RED phase)
+```
+
+**Estado:** ✅ **TDD-RED COMPLETO - 9/9 tests FALLAN con NotImplementedError** 🔴
+
+**Próximos Pasos:**
+1. Implementar lógica en `validate_nomenclature()` (GREEN phase)
+2. Verificar 9/9 tests pasan
+3. Refactorizar si necesario (REFACTOR phase)
+4. Integrar con RhinoParserService
+
+---
+
 
