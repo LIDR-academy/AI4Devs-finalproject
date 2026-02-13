@@ -30,21 +30,26 @@ def mock_rhino_file():
     mock_layer1.Name = "SF-C12-M-001"
     mock_layer1.Visible = True
     mock_layer1.Color = Mock(A=255, R=128, G=0, B=255)
+    mock_layer1.GetUserStrings = Mock(return_value=None)  # No user strings
     
     mock_layer2 = Mock()
     mock_layer2.Name = "SF-C12-M-002"
     mock_layer2.Visible = True
     mock_layer2.Color = Mock(A=255, R=0, G=128, B=255)
+    mock_layer2.GetUserStrings = Mock(return_value=None)  # No user strings
     
     mock_file.Layers = [mock_layer1, mock_layer2]
     
     # Mock objects
     mock_obj1 = Mock()
     mock_obj1.Attributes.LayerIndex = 0
+    mock_obj1.Attributes.GetUserStrings = Mock(return_value=None)
     mock_obj2 = Mock()
     mock_obj2.Attributes.LayerIndex = 0
+    mock_obj2.Attributes.GetUserStrings = Mock(return_value=None)
     mock_obj3 = Mock()
     mock_obj3.Attributes.LayerIndex = 1
+    mock_obj3.Attributes.GetUserStrings = Mock(return_value=None)
     
     mock_file.Objects = [mock_obj1, mock_obj2, mock_obj3]
     
@@ -53,6 +58,10 @@ def mock_rhino_file():
     mock_file.Settings.ModelAbsoluteTolerance = 0.01
     mock_file.ApplicationName = "Rhino"
     mock_file.ApplicationVersion = "7.0"
+    
+    # Mock document strings (empty for basic tests)
+    mock_file.Strings = Mock()
+    mock_file.Strings.Keys = []
     
     return mock_file
 
