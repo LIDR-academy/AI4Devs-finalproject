@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 import structlog
 from src.agent.models import FileProcessingResult, LayerInfo
+from src.agent.services.user_string_extractor import UserStringExtractor
 
 logger = structlog.get_logger()
 
@@ -122,18 +123,24 @@ class RhinoParserService:
             if hasattr(model, 'ApplicationVersion'):
                 file_metadata['application_version'] = model.ApplicationVersion
             
+            # Extract user strings (custom metadata embedded in .3dm file)
+            extractor = UserStringExtractor()
+            user_strings = extractor.extract(model)
+            
             logger.info(
                 "rhino_parser.parse_file.success",
                 file_path=file_path,
                 layer_count=len(layers),
-                object_count=len(model.Objects)
+                object_count=len(model.Objects),
+                user_strings_extracted=bool(user_strings.document or user_strings.layers or user_strings.objects)
             )
             
             return FileProcessingResult(
                 success=True,
                 error_message=None,
                 layers=layers,
-                file_metadata=file_metadata
+                file_metadata=file_metadata,
+                user_strings=user_strings.model_dump()
             )
             
         except Exception as e:
