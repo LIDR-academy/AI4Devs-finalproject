@@ -400,8 +400,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/frontend/src/api/...` (código autogenerado)
 - `package.json` (script `generate:api` si aplica)
 **Criterios de aceptación:**
-- [ ] Cliente generado desde `/openapi/generation/generate-meditation.yaml`
-- [ ] Tipos expuestos y reutilizables en hooks
+- [X] Cliente generado desde `/openapi/generation/generate-meditation.yaml`
+- [X] Tipos expuestos y reutilizables en hooks
 **Evidencias:** build frontend compila  
 **Dependencias:** T004
 
@@ -412,10 +412,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Artefactos:**
 - `/frontend/src/hooks/useGenerateMeditation.ts`
 **Criterios de aceptación:**
-- [ ] API: `start({ text, musicReference, imageReference? })`
-- [ ] Estado: `idle | creating | success | error`, `progress?`, `result?`, `error?`
-- [ ] Soporta **llamada única** (síncrona) y **status/polling** si el backend lo requiere
-- [ ] Cancela polling al desmontar
+- [X] API: `start({ text, musicReference, imageReference? })`
+- [X] Estado: `idle | creating | success | error`, `progress?`, `result?`, `error?`
+- [X] Soporta **llamada única** (síncrona) y **status/polling** si el backend lo requiere
+- [X] Cancela polling al desmontar
 **Evidencias:** tests unitarios del hook (mock API)  
 **Dependencias:** T023
 
@@ -427,9 +427,9 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/frontend/src/components/GenerationStatusBar.tsx`
 - `/frontend/src/components/__tests__/GenerationStatusBar.test.tsx`
 **Criterios de aceptación:**
-- [ ] Render de barra/indicador con label **“creating”**
-- [ ] Progreso indeterminado si no hay %, o determinado si hay `progress`
-- [ ] Accesible: `aria-busy`, `aria-live="polite"`
+- [X] Render de barra/indicador con label **"creating"**
+- [X] Progreso indeterminado si no hay %, o determinado si hay `progress`
+- [X] Accesible: `aria-busy`, `aria-live="polite"`
 **Evidencias:** tests RTL  
 **Dependencias:** T024
 
@@ -442,11 +442,11 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/frontend/src/components/GenerateMeditationButton.tsx`
 - `/frontend/src/pages/GenerationResultPage.tsx` (o modal equivalente)
 **Criterios de aceptación:**
-- [ ] **Botón “Generate video/podcast”** dispara `useGenerateMeditation.start(...)` con el contenido compuesto
-- [ ] Muestra **GenerationStatusBar** mientras `creating`
-- [ ] **Éxito**: pantalla *“el proceso ha finalizado correctamente”* + **botón de descarga** (`href` = `mediaUrl`)
-- [ ] **Error**: pantalla *“El proceso ha fallado”* con detalle del error y reintento
-- [ ] Botón deshabilitado mientras `creating` (y/o idempotencia en backend)
+- [X] **Botón "Generate video/podcast"** dispara `useGenerateMeditation.start(...)` con el contenido compuesto
+- [X] Muestra **GenerationStatusBar** mientras `creating`
+- [X] **Éxito**: pantalla *"el proceso ha finalizado correctamente"* + **botón de descarga** (`href` = `mediaUrl`)
+- [X] **Error**: pantalla *"El proceso ha fallado"* con detalle del error y reintento
+- [X] Botón deshabilitado mientras `creating` (y/o idempotencia en backend)
 **Evidencias:** tests de integración de componentes  
 **Dependencias:** T024, T025
 
@@ -459,9 +459,9 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/frontend/src/pages/__tests__/MeditationBuilderPage.test.tsx`
 - `/frontend/src/pages/__tests__/GenerationResultPage.test.tsx`
 **Criterios de aceptación:**
-- [ ] Click en **Generate** → estado “creating” visible → finaliza en **success**/**error**
-- [ ] En éxito: se renderiza botón de **descarga** con `href` correcto (presigned URL)
-- [ ] En error: se renderiza mensaje *“El proceso ha fallado”* con detalle
+- [X] Click en **Generate** → estado "creating" visible → finaliza en **success**/**error**
+- [X] En éxito: se renderiza botón de **descarga** con `href` correcto (presigned URL)
+- [X] En error: se renderiza mensaje *"El proceso ha fallado"* con detalle
 **Evidencias:** tests RTL/Vitest green  
 **Dependencias:** T026
 

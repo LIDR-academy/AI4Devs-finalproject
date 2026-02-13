@@ -166,7 +166,7 @@ function getErrorMessage(error: unknown): string {
  */
 export function useIsGenerationReady(result?: GenerationResponse): boolean {
   if (!result) return false;
-  return result.status === GenerationStatus.Success && !!result.mediaUrl;
+  return result.status === GenerationStatus.Completed && !!result.mediaUrl;
 }
 
 /**
@@ -175,8 +175,7 @@ export function useIsGenerationReady(result?: GenerationResponse): boolean {
 export function useHasGenerationError(result?: GenerationResponse): boolean {
   if (!result) return false;
   return (
-    result.status === GenerationStatus.ValidationError ||
-    result.status === GenerationStatus.ProcessingTimeoutError ||
-    result.status === GenerationStatus.ExternalServiceError
+    result.status === GenerationStatus.Failed ||
+    result.status === GenerationStatus.Timeout
   );
 }

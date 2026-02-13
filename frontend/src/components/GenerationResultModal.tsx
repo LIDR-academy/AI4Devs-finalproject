@@ -18,8 +18,6 @@
  * />
  * ```
  */
-
-import React from 'react';
 import type { GenerationResponse } from '@/api/generation-client';
 
 export interface GenerationResultModalProps {

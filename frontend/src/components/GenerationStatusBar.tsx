@@ -21,8 +21,6 @@
  * ```
  */
 
-import React from 'react';
-
 export interface GenerationStatusBarProps {
   /**
    * Progress percentage (0-100) or undefined for indeterminate

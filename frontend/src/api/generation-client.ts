@@ -93,11 +93,11 @@ export async function generateMeditationContent(
 
 /**
  * Re-export types for convenience
+ * Note: ErrorResponse is not exported to avoid conflict with types.ts
  */
 export type {
   GenerateMeditationRequest,
   GenerationResponse,
-  ErrorResponse,
 } from './generated/generation/src';
 
 export {

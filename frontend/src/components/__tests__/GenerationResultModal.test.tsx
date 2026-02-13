@@ -17,7 +17,7 @@ describe('GenerationResultModal', () => {
     mediaUrl: 'https://example.com/video.mp4',
     subtitleUrl: 'https://example.com/subtitles.srt',
     durationSeconds: 125,
-    status: GenerationStatus.Success,
+    status: GenerationStatus.Completed,
     message: 'Generation completed successfully',
   };
 

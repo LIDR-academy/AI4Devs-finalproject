@@ -283,9 +283,6 @@ export function MeditationBuilderPage() {
       {!generation.isCreating && (
         <GenerateMeditationButton
           onClick={() => {
-            // Determine output type based on image presence
-            const outputType = selectedImageId || localImageUrl ? 'VIDEO' : 'PODCAST';
-            
             generation.start({
               text: localText,
               musicReference: selectedMusicId || 'default-music', // TODO: Handle missing music

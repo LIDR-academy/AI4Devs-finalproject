@@ -17,8 +17,6 @@
  * ```
  */
 
-import React from 'react';
-
 export interface GenerateMeditationButtonProps {
   /**
    * Handle button click (trigger generation)
