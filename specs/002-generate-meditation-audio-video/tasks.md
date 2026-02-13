@@ -230,8 +230,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/infrastructure/out/service/tts/dto/TtsResponse.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/out/service/tts/GoogleTtsAdapterTest.java`
 **Criterios de aceptación:**
-- [ ] Voz `es-ES-Neural2-Diana`, rate ~0.85; retry 429 (x3); 503 → excepción dominio
-- [ ] **Métricas**: `tts.requests.total`, `tts.latency`, `tts.error.*`
+- [x] Voz `es-ES-Neural2-Diana`, rate ~0.85; retry 429 (x3); 503 → excepción dominio
+- [x] **Métricas**: `tts.requests.total`, `tts.latency`, `tts.error.*`
 **Evidencias:** IT WireMock 200/429/503 green  
 **Dependencias:** T008
 
@@ -243,9 +243,9 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/infrastructure/out/service/subtitle/SubtitleSyncService.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/out/service/subtitle/SubtitleSyncServiceTest.java`
 **Criterios de aceptación:**
-- [ ] Genera SRT (índice, hh:mm:ss,mmm, texto)
-- [ ] Sin overlaps; precisión <200ms; **assets mínimos**
-- [ ] **Métricas** básicas de éxito/error
+- [x] Genera SRT (índice, hh:mm:ss,mmm, texto)
+- [x] Sin overlaps; precisión <200ms; **assets mínimos**
+- [x] **Métricas** básicas de éxito/error
 **Evidencias:** Unit tests green  
 **Dependencias:** T008
 
@@ -257,10 +257,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/infrastructure/out/service/rendering/FfmpegVideoRendererAdapter.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/out/service/rendering/FfmpegVideoRendererAdapterTest.java`
 **Criterios de aceptación:**
-- [ ] Comando determinista: `-y`, **48kHz**, **stereo**, **1280x720**
-- [ ] `amix` voz primaria / música aprox. −12dB; subtítulos “burned”
-- [ ] **Métricas**: `render.video.latency`, `render.video.error.*`
-- [ ] IT con **assets mínimos** (PNG 640×360; audios 1–2s)
+- [x] Comando determinista: `-y`, **48kHz**, **stereo**, **1280x720**
+- [x] `amix` voz primaria / música aprox. −12dB; subtítulos "burned"
+- [x] **Métricas**: `render.video.latency`, `render.video.error.*`
+- [x] IT con **assets mínimos** (PNG 640×360; audios 1–2s)
 **Evidencias:** MP4 reproducible; IT green  
 **Dependencias:** T008
 
@@ -272,9 +272,9 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/infrastructure/out/service/rendering/FfmpegAudioRendererAdapter.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/out/service/rendering/FfmpegAudioRendererAdapterTest.java`
 **Criterios de aceptación:**
-- [ ] Comando determinista: `-y`, **48kHz**, **stereo**
-- [ ] Mezcla estable (amix/loudnorm simple); **assets mínimos**
-- [ ] **Métricas**: `render.audio.latency`, `render.audio.error.*`
+- [x] Comando determinista: `-y`, **48kHz**, **stereo**
+- [x] Mezcla estable (amix/loudnorm simple); **assets mínimos**
+- [x] **Métricas**: `render.audio.latency`, `render.audio.error.*`
 **Evidencias:** MP3 reproducible; IT green  
 **Dependencias:** T008
 
@@ -287,13 +287,13 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/infrastructure/out/service/storage/S3MediaStorageAdapter.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/out/service/storage/S3MediaStorageAdapterTest.java`
 **Criterios de aceptación:**
-- [ ] Implementa `MediaStoragePort`
-- [ ] Bucket `${BUCKET_NAME:meditation-outputs}`
-- [ ] **Clave S3 con prefijo BC**: `generation/{userId}/{meditationId}/(video.mp4|audio.mp3|subs.srt)`
-- [ ] Upload `PutObjectRequest`; metadata y content-type correctos
-- [ ] Signed URL (TTL configurable)
-- [ ] IT LocalStack (Testcontainers): create bucket, put, head, get presign
-- [ ] **Métricas**: `storage.uploads.total`, `storage.latency`, `storage.error.*`
+- [x] Implementa `MediaStoragePort`
+- [x] Bucket `${BUCKET_NAME:meditation-outputs}`
+- [x] **Clave S3 con prefijo BC**: `generation/{userId}/{meditationId}/(video.mp4|audio.mp3|subs.srt)`
+- [x] Upload `PutObjectRequest`; metadata y content-type correctos
+- [x] Signed URL (TTL configurable)
+- [x] IT LocalStack (Testcontainers): create bucket, put, head, get presign
+- [x] **Métricas**: `storage.uploads.total`, `storage.latency`, `storage.error.*`
 **Evidencias:** IT green  
 **Dependencias:** T008
 
@@ -334,11 +334,11 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/resources/db/migration/V002__create_generation_meditation.sql`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/out/persistence/PostgresMeditationRepositoryTest.java`
 **Criterios de aceptación:**
-- [ ] **Schema `generation`** y tabla `meditation`
-- [ ] `@Table(name="meditation", schema="generation")` en la entity
-- [ ] Repo: `save`, `findById`, `findByUserId`, **`findByIdempotencyKey`**
-- [ ] Flyway aplica `V002__create_generation_meditation.sql`
-- [ ] **Testcontainers Postgres** para IT
+- [x] **Schema `generation`** y tabla `meditation`
+- [x] `@Table(name="meditation", schema="generation")` en la entity
+- [x] Repo: `save`, `findById`, `findByUserId`, **`findByIdempotencyKey`**
+- [x] Flyway aplica `V002__create_generation_meditation.sql`
+- [x] **Testcontainers Postgres** para IT
 **Evidencias:** IT green; migración aplicada; CRUD + idempotency OK  
 **Dependencias:** T008
 
@@ -350,9 +350,9 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/infrastructure/out/util/TempFileManager.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/out/util/TempFileManagerTest.java`
 **Criterios de aceptación:**
-- [ ] `createTempDir(requestId)` bajo `${java.io.tmpdir}/meditations`
-- [ ] `cleanup(path)` elimina archivos/directorios
-- [ ] Garantía de limpieza (try-with-resources / finally)
+- [x] `createTempDir(requestId)` bajo `${java.io.tmpdir}/meditations`
+- [x] `cleanup(path)` elimina archivos/directorios
+- [x] Garantía de limpieza (try-with-resources / finally)
 **Evidencias:** Tests sin fugas de ficheros  
 **Dependencias:** —
 

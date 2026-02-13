@@ -75,7 +75,7 @@ class GenerateMeditationContentServiceTest {
         when(textLengthEstimator.validateAndEstimate(text)).thenReturn(60);
         when(idempotencyKeyGenerator.generate(userId, text, music, null)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
-        when(contentRepositoryPort.save(any(MeditationOutput.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contentRepositoryPort.save(any(GeneratedMeditationContent.class))).thenAnswer(inv -> inv.getArgument(0));
         
         // Act
         GenerateMeditationContentUseCase.GenerationResponse response = service.generate(request);
@@ -92,7 +92,7 @@ class GenerateMeditationContentServiceTest {
         verify(textLengthEstimator).validateAndEstimate(text);
         verify(idempotencyKeyGenerator).generate(userId, text, music, null);
         verify(contentRepositoryPort).findByIdempotencyKey(idempotencyKey);
-        verify(contentRepositoryPort).save(any(MeditationOutput.class));
+        verify(contentRepositoryPort).save(any(GeneratedMeditationContent.class));
     }
     
     @Test
@@ -114,7 +114,7 @@ class GenerateMeditationContentServiceTest {
         when(textLengthEstimator.validateAndEstimate(text)).thenReturn(90);
         when(idempotencyKeyGenerator.generate(userId, text, music, image)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
-        when(contentRepositoryPort.save(any(MeditationOutput.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contentRepositoryPort.save(any(GeneratedMeditationContent.class))).thenAnswer(inv -> inv.getArgument(0));
         
         // Act
         GenerateMeditationContentUseCase.GenerationResponse response = service.generate(request);
@@ -131,7 +131,7 @@ class GenerateMeditationContentServiceTest {
         verify(textLengthEstimator).validateAndEstimate(text);
         verify(idempotencyKeyGenerator).generate(userId, text, music, image);
         verify(contentRepositoryPort).findByIdempotencyKey(idempotencyKey);
-        verify(contentRepositoryPort).save(any(MeditationOutput.class));
+        verify(contentRepositoryPort).save(any(GeneratedMeditationContent.class));
     }
     
     @Test
@@ -150,12 +150,12 @@ class GenerateMeditationContentServiceTest {
                 compositionId, userId, text, music, null
             );
         
-        MeditationOutput existingOutput = MeditationOutput.createAudio(
+        GeneratedMeditationContent existingOutput = GeneratedMeditationContent.createAudio(
+            UUID.randomUUID(),
             compositionId,
-            userId.toString(),
-            text,
-            new MediaReference(music),
+            userId,
             idempotencyKey,
+            new NarrationScript(text),
             clock
         );
         
@@ -301,17 +301,17 @@ class GenerateMeditationContentServiceTest {
         when(textLengthEstimator.validateAndEstimate(text)).thenReturn(60);
         when(idempotencyKeyGenerator.generate(userId, text, music, image)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
-        when(contentRepositoryPort.save(any(MeditationOutput.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contentRepositoryPort.save(any(GeneratedMeditationContent.class))).thenAnswer(inv -> inv.getArgument(0));
         
         // Act
         service.generate(request);
         
         // Assert - verify save was called with correct aggregate
         verify(contentRepositoryPort).save(argThat(output -> 
-            output.type() == MediaType.VIDEO &&
+            output.mediaType() == MediaType.VIDEO &&
             output.status() == GenerationStatus.PROCESSING &&
             output.compositionId().equals(compositionId) &&
-            output.userId().equals(userId.toString())
+            output.userId().equals(userId)
         ));
     }
     
@@ -333,7 +333,7 @@ class GenerateMeditationContentServiceTest {
         when(textLengthEstimator.validateAndEstimate(text)).thenReturn(60);
         when(idempotencyKeyGenerator.generate(userId, text, music, null)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
-        when(contentRepositoryPort.save(any(MeditationOutput.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contentRepositoryPort.save(any(GeneratedMeditationContent.class))).thenAnswer(inv -> inv.getArgument(0));
         
         // Act
         GenerateMeditationContentUseCase.GenerationResponse response = service.generate(request);
@@ -342,8 +342,8 @@ class GenerateMeditationContentServiceTest {
         assertThat(response.mediaType()).isEqualTo(MediaType.AUDIO);
         
         verify(contentRepositoryPort).save(argThat(output -> 
-            output.type() == MediaType.AUDIO &&
-            output.imageReference().isEmpty()
+            output.mediaType() == MediaType.AUDIO &&
+            output.backgroundImage().isEmpty()
         ));
     }
 }

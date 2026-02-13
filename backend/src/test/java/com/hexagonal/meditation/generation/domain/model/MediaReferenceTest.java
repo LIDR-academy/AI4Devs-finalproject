@@ -104,8 +104,9 @@ class MediaReferenceTest {
     void shouldRecognizeS3StyleReference() {
         MediaReference mediaRef = new MediaReference("s3://bucket/key/file.mp3");
         
-        // s3:// is not http(s)://, so treated as local/custom protocol
-        assertTrue(mediaRef.isLocalPath());
+        // s3:// is S3 protocol, not HTTP(S) URL, not local path
+        assertTrue(mediaRef.isS3());
         assertFalse(mediaRef.isUrl());
+        assertFalse(mediaRef.isLocalPath());
     }
 }

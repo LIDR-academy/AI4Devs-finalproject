@@ -31,11 +31,29 @@ public record MediaReference(String reference) {
     }
 
     /**
+     * Checks if reference is an S3 URL.
+     * 
+     * @return true if reference starts with s3://
+     */
+    public boolean isS3() {
+        return reference.startsWith("s3://");
+    }
+
+    /**
+     * Gets the URL/reference string.
+     * 
+     * @return the reference string
+     */
+    public String url() {
+        return reference;
+    }
+
+    /**
      * Checks if reference is a local path.
      * 
-     * @return true if reference does not start with http(s)://
+     * @return true if reference does not start with http(s):// or s3://
      */
     public boolean isLocalPath() {
-        return !isUrl();
+        return !isUrl() && !isS3();
     }
 }

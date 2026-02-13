@@ -1,0 +1,132 @@
+# Docker Compose for Meditation Builder - Generation BC (US3) Local Development
+# Services: PostgreSQL, LocalStack (S3), FFmpeg
+
+version: '3.8'
+
+services:
+  # PostgreSQL database for meditation_output persistence
+  postgres:
+    image: postgres:16-alpine
+    container_name: meditation-postgres
+    environment:
+      POSTGRES_DB: meditation
+      POSTGRES_USER: meditation_user
+      POSTGRES_PASSWORD: meditation_pass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meditation_user -d meditation"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - meditation-network
+
+  # LocalStack for S3-compatible storage (dev/test)
+  localstack:
+    image: localstack/localstack:3.0
+    container_name: meditation-localstack
+    environment:
+      SERVICES: s3
+      DEBUG: 0
+      DATA_DIR: /tmp/localstack/data
+      AWS_DEFAULT_REGION: us-east-1
+      EDGE_PORT: 4566
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - meditation-network
+
+  # FFmpeg container for audio/video rendering (optional for tests)
+  ffmpeg:
+    image: jrottenberg/ffmpeg:6.1-alpine
+    container_name: meditation-ffmpeg
+    entrypoint: ["tail", "-f", "/dev/null"]  # Keep container running
+    volumes:
+      - ffmpeg_tmp:/tmp/meditation
+    networks:
+      - meditation-network
+
+  # Application container (Spring Boot)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meditation-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/meditation
+      SPRING_DATASOURCE_USERNAME: meditation_user
+      SPRING_DATASOURCE_PASSWORD: meditation_pass
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      S3_BUCKET_NAME: meditation-media
+      FFMPEG_PATH: /usr/bin/ffmpeg
+      TTS_PROVIDER: google
+      TTS_GOOGLE_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT:-meditation-builder-dev}
+      TTS_GOOGLE_CREDENTIALS_PATH: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/config/gcp-credentials.json}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/app/config:ro
+      - app_tmp:/tmp
+    networks:
+      - meditation-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  postgres_data:
+    driver: local
+  localstack_data:
+    driver: local
+  ffmpeg_tmp:
+    driver: local
+  app_tmp:
+    driver: local
+
+networks:
+  meditation-network:
+    driver: bridge
+
+# Usage:
+#   Start all services:     docker-compose up -d
+#   View logs:              docker-compose logs -f
+#   Stop services:          docker-compose down
+#   Reset all data:         docker-compose down -v
+#
+#   Start only dependencies (for local IDE development):
+#     docker-compose up -d postgres localstack
+#
+#   Initialize S3 bucket in LocalStack:
+#     aws --endpoint-url=http://localhost:4566 s3 mb s3://meditation-media
+#     aws --endpoint-url=http://localhost:4566 s3 ls
+#
+#   Connect to PostgreSQL:
+#     docker exec -it meditation-postgres psql -U meditation_user -d meditation
+#
+#   View database migrations:
+#     SELECT * FROM flyway_schema_history ORDER BY installed_rank;

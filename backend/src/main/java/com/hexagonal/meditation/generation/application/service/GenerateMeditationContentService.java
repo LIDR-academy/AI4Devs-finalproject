@@ -4,9 +4,18 @@ import com.hexagonal.meditation.generation.application.validator.TextLengthEstim
 import com.hexagonal.meditation.generation.domain.enums.MediaType;
 import com.hexagonal.meditation.generation.domain.exception.GenerationTimeoutException;
 import com.hexagonal.meditation.generation.domain.exception.InvalidContentException;
-import com.hexagonal.meditation.generation.domain.model.*;
+import com.hexagonal.meditation.generation.domain.model.GeneratedMeditationContent;
+import com.hexagonal.meditation.generation.domain.model.MediaReference;
+import com.hexagonal.meditation.generation.domain.model.NarrationScript;
 import com.hexagonal.meditation.generation.domain.ports.in.GenerateMeditationContentUseCase;
-import com.hexagonal.meditation.generation.domain.ports.out.*;
+import com.hexagonal.meditation.generation.domain.ports.in.GenerateMeditationContentUseCase.GenerationRequest;
+import com.hexagonal.meditation.generation.domain.ports.in.GenerateMeditationContentUseCase.GenerationResponse;
+import com.hexagonal.meditation.generation.domain.ports.out.AudioRenderingPort;
+import com.hexagonal.meditation.generation.domain.ports.out.ContentRepositoryPort;
+import com.hexagonal.meditation.generation.domain.ports.out.MediaStoragePort;
+import com.hexagonal.meditation.generation.domain.ports.out.SubtitleSyncPort;
+import com.hexagonal.meditation.generation.domain.ports.out.VideoRenderingPort;
+import com.hexagonal.meditation.generation.domain.ports.out.VoiceSynthesisPort;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -69,17 +78,17 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             request.imageReference()
         );
         
-        Optional<MeditationOutput> existing = contentRepositoryPort.findByIdempotencyKey(idempotencyKey);
+        Optional<GeneratedMeditationContent> existing = contentRepositoryPort.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
             return mapToResponse(existing.get());
         }
         
         // 3. Create domain aggregate based on media type
         MediaType mediaType = request.imageReference() != null ? MediaType.VIDEO : MediaType.AUDIO;
-        MeditationOutput output = createDomainAggregate(request, mediaType, idempotencyKey);
+        GeneratedMeditationContent output = createDomainAggregate(request, mediaType, idempotencyKey);
         
         // 4. Save initial state (PROCESSING)
-        MeditationOutput saved = contentRepositoryPort.save(output);
+        GeneratedMeditationContent saved = contentRepositoryPort.save(output);
         
         // 5. Return immediate response with PROCESSING status
         return mapToResponse(saved);
@@ -89,37 +98,37 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
      * Creates the domain aggregate for the meditation output.
      * Validates that video requests include an image reference.
      */
-    private MeditationOutput createDomainAggregate(
+    private GeneratedMeditationContent createDomainAggregate(
             GenerationRequest request,
             MediaType mediaType,
             String idempotencyKey) {
         
         NarrationScript narrationScript = new NarrationScript(request.narrationText());
-        MediaReference musicReference = new MediaReference(request.musicReference());
+        UUID meditationId = UUID.randomUUID();
         
         if (mediaType == MediaType.VIDEO) {
             if (request.imageReference() == null || request.imageReference().isBlank()) {
-                throw new InvalidContentException("Image reference required for video generation", "imageReference");
+                throw new InvalidContentException("imageReference", "Image reference required for video generation");
             }
             
             MediaReference imageMediaReference = new MediaReference(request.imageReference());
             
-            return MeditationOutput.createVideo(
+            return GeneratedMeditationContent.createVideo(
+                meditationId,
                 request.compositionId(),
-                request.userId().toString(),
-                narrationScript.text(),
-                musicReference,
-                imageMediaReference,
+                request.userId(),
                 idempotencyKey,
+                narrationScript,
+                imageMediaReference,
                 clock
             );
         } else {
-            return MeditationOutput.createAudio(
+            return GeneratedMeditationContent.createAudio(
+                meditationId,
                 request.compositionId(),
-                request.userId().toString(),
-                narrationScript.text(),
-                musicReference,
+                request.userId(),
                 idempotencyKey,
+                narrationScript,
                 clock
             );
         }
@@ -128,23 +137,18 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
     /**
      * Maps domain aggregate to response DTO.
      */
-    private GenerationResponse mapToResponse(MeditationOutput output) {
-        // completedAt is updatedAt when status is COMPLETED
-        Optional<Instant> completedAt = output.status() == com.hexagonal.meditation.generation.domain.enums.GenerationStatus.COMPLETED
-            ? Optional.of(output.updatedAt())
-            : Optional.empty();
-        
+    private GenerationResponse mapToResponse(GeneratedMeditationContent content) {
         return new GenerationResponse(
-            output.id(),
-            output.compositionId(),
-            UUID.fromString(output.userId()),
-            output.status(),
-            output.type(),
-            output.mediaUrl(),
-            output.subtitleUrl(),
-            output.durationSeconds(),
-            output.createdAt(),
-            completedAt
+            content.meditationId(),
+            content.compositionId(),
+            content.userId(),
+            content.status(),
+            content.mediaType(),
+            content.outputMedia().map(MediaReference::url),
+            content.subtitleFile().map(MediaReference::url),
+            Optional.of((int) content.narrationScript().estimateDurationSeconds()),
+            content.createdAt(),
+            content.completedAt()
         );
     }
 }
