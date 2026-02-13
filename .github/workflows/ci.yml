@@ -45,7 +45,7 @@ jobs:
           DOCKER_BUILDKIT: 1
 
       - name: Build agent-worker Docker image
-        run: docker compose build agent-worker
+        run: docker compose build --no-cache agent-worker
         env:
           DOCKER_BUILDKIT: 1
 
@@ -76,6 +76,13 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+      - name: Debug - Verify rhino_parser_service.py has module-level import
+        run: |
+          echo "=== Checking rhino_parser_service.py import location ==="
+          docker compose run --rm agent-worker head -20 /app/src/agent/services/rhino_parser_service.py
+          echo "=== Checking if rhino3dm is installed ==="
+          docker compose run --rm agent-worker python -c "import rhino3dm; print(f'rhino3dm version: {rhino3dm.__version__}')" || echo "⚠️ rhino3dm NOT installed"
 
       - name: Run agent tests (T-025-AGENT)
         run: make test-agent
