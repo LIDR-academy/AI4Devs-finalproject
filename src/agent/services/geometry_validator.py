@@ -77,9 +77,6 @@ class GeometryValidator:
             List of ValidationErrorItem for objects with invalid geometry.
             Empty list if all geometry is valid.
             
-        Raises:
-            NotImplementedError: This method is implemented in TDD-GREEN phase
-            
         Examples:
             >>> validator = GeometryValidator()
             >>> model = rhino3dm.File3dm.Read("valid_model.3dm")
@@ -87,5 +84,68 @@ class GeometryValidator:
             >>> len(errors)
             0
         """
-        # TDD-RED: This implementation MUST fail
-        raise NotImplementedError("validate_geometry() to be implemented in TDD-GREEN phase")
+        errors = []
+        
+        # Defensive programming
+        if model is None:
+            logger.warning("geometry_validator.validate_geometry.none_input")
+            return errors
+        
+        logger.info("geometry_validator.validate_geometry.started", object_count=len(model.Objects))
+        
+        for obj in model.Objects:
+            # Check 1: Null geometry
+            if obj.Geometry is None:
+                errors.append(ValidationErrorItem(
+                    category=GEOMETRY_CATEGORY_NAME,
+                    target=str(obj.Attributes.Id),
+                    message=GEOMETRY_ERROR_NULL
+                ))
+                continue  # Skip further checks
+            
+            # Check 2: Invalid geometry
+            if not obj.Geometry.IsValid:
+                errors.append(ValidationErrorItem(
+                    category=GEOMETRY_CATEGORY_NAME,
+                    target=str(obj.Attributes.Id),
+                    message=GEOMETRY_ERROR_INVALID
+                ))
+                logger.debug("geometry_validator.validation_failed", 
+                            object_id=str(obj.Attributes.Id), 
+                            failure_reason="invalid_geometry")
+            
+            # Check 3: Degenerate bounding box
+            bbox = obj.Geometry.GetBoundingBox(False)
+            if not bbox.IsValid:
+                errors.append(ValidationErrorItem(
+                    category=GEOMETRY_CATEGORY_NAME,
+                    target=str(obj.Attributes.Id),
+                    message=GEOMETRY_ERROR_DEGENERATE_BBOX
+                ))
+                logger.debug("geometry_validator.validation_failed",
+                            object_id=str(obj.Attributes.Id),
+                            failure_reason="degenerate_bbox")
+            
+            # Check 4: Zero volume (solo Brep/Mesh)
+            # Check if geometry is Brep or Mesh (supports both real rhino3dm and mocks)
+            geom_type_name = obj.Geometry.__class__.__name__
+            is_brep_or_mesh = geom_type_name in ('Brep', 'Mesh')
+            
+            if is_brep_or_mesh:
+                volume = (bbox.Max.X - bbox.Min.X) * (bbox.Max.Y - bbox.Min.Y) * (bbox.Max.Z - bbox.Min.Z)
+                if volume < MIN_VALID_VOLUME:
+                    errors.append(ValidationErrorItem(
+                        category=GEOMETRY_CATEGORY_NAME,
+                        target=str(obj.Attributes.Id),
+                        message=GEOMETRY_ERROR_ZERO_VOLUME.format(min_volume=MIN_VALID_VOLUME)
+                    ))
+                    logger.debug("geometry_validator.validation_failed",
+                                object_id=str(obj.Attributes.Id),
+                                failure_reason="zero_volume",
+                                volume=volume)
+        
+        logger.info("geometry_validator.validate_geometry.completed",
+                    objects_checked=len(model.Objects),
+                    errors_found=len(errors))
+        
+        return errors
