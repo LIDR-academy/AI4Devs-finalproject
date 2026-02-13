@@ -6131,3 +6131,79 @@ Auditoría exhaustiva completada para T-027-AGENT (Geometry Validator Service):
 **Estado:** ✅ **T-027-AGENT CERRADO Y AUDITADO - LISTO PARA PRODUCCIÓN** 🚀
 
 ---
+
+## [102] - ENRIQUECIMIENTO TÉCNICO - Ticket T-028-BACK
+**Fecha:** 2026-02-14 01:30
+**Prompt Original:**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-028-BACK
+> 
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+> 
+> ### Protocolo Agents (OBLIGATORIO antes de diseñar)
+> 
+> 1. **Lee** `docs/09-mvp-backlog.md` y localiza el ticket `T-028-BACK` para entender alcance, criterios de aceptación y DoD.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API existentes y patrones arquitectónicos del proyecto.
+> 3. **Lee** `memory-bank/techContext.md` para conocer el stack completo, librerías permitidas y decisiones técnicas previas.
+> 4. **Lee** `docs/productContext.md` para identificar componentes/endpoints existentes que pueden reutilizarse.
+> 5. **Al finalizar**, registra este prompt en `prompts.md` bajo la sección "## Workflow Step 1: Enrichment".
+> 
+> [Instrucciones completas de enriquecimiento técnico con 9 secciones...]
+
+**Resumen de la Especificación:**
+Especificación técnica completa generada para T-028-BACK (Validation Report Service):
+
+**1. Análisis de Contexto:**
+- Ticket tipo: BACK (Service Layer only, no endpoints)
+- Dependencias: T-020-DB ✅, T-023-TEST ✅, T-026-AGENT ✅, T-027-AGENT ✅
+- Reutilización: Schemas ValidationErrorItem, ValidationReport YA EXISTEN (T-023-TEST)
+
+**2. Diseño de Solución:**
+- **Service:** ValidationReportService con 3 métodos:
+  - `create_report(errors, metadata, validated_by) -> ValidationReport`
+  - `save_to_db(block_id, report) -> (bool, Optional[str])`
+  - `get_report(block_id) -> (Optional[ValidationReport], Optional[str])`
+
+**3. Patrones Aplicados:**
+- Clean Architecture (sigue patrón UploadService de T-004-BACK)
+- Return tuples (success, error) para error handling
+- Constants centralization (TABLE_BLOCKS en constants.py)
+- Pydantic model_dump(mode='json') para serialización
+
+**4. Archivos a Crear:**
+- `src/backend/services/validation_report_service.py` (service class)
+- `tests/unit/test_validation_report_service.py` (10 unit tests)
+- `tests/integration/test_validation_report_persistence.py` (2 integration tests)
+
+**5. Archivos a Modificar:**
+- `src/backend/services/__init__.py` (export ValidationReportService)
+- `src/backend/constants.py` (añadir TABLE_BLOCKS si no existe)
+
+**6. Test Cases (12 total):**
+- Happy Path: 4 tests (create no errors, create with errors, save success, get success)
+- Edge Cases: 4 tests (empty metadata, block not found, no report yet, update existing)
+- Security/Errors: 3 tests (invalid UUID, None metadata, JSON serialization)
+- Integration: 2 tests (roundtrip save/retrieve, JSONB querying)
+
+**7. Decisiones de Diseño:**
+- **NO se crean nuevos schemas** (reutiliza ValidationReport existente)
+- **NO se crean endpoints** (solo service layer, endpoints en T-030-BACK)
+- **NO se requieren migraciones** (columna validation_report ya existe de T-020-DB)
+- Metadata es Dict[str, Any] flexible (permite extensión sin cambios de schema)
+- validated_by identifica worker para debugging distribuido
+
+**Handoff para TDD-RED:**
+```
+Ticket ID:       T-028-BACK
+Feature name:    Validation Report Service
+Key test cases:  HP-1 (no errors), HP-2 (with errors), HP-3 (save), EC-2 (not found), INT-1 (roundtrip)
+Files to create:
+  - src/backend/services/validation_report_service.py
+  - tests/unit/test_validation_report_service.py
+  - tests/integration/test_validation_report_persistence.py
+```
+
+**Spec completa:** [T-028-BACK-ValidationReportService-Spec.md](docs/US-002/T-028-BACK-ValidationReportService-Spec.md)
+
+**Estado:** ✅ **ENRICHMENT COMPLETADO - LISTO PARA TDD-RED** 📋
+
+---
