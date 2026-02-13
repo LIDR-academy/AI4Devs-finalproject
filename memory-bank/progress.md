@@ -34,12 +34,13 @@
 - T-024-AGENT: Rhino Ingestion Service — DONE 2026-02-13 (6 passed, 4 skipped integration tests)
 - T-025-AGENT: User String Metadata Extractor — DONE 2026-02-13 (11/11 tests passing: 8 unit + 3 E2E, Pydantic v2 migration, no regression)
 - T-026-AGENT: Nomenclature Validator — DONE 2026-02-14 (9/9 tests passing, TDD RED→GREEN→REFACTOR complete, error messages refactored)
+- T-027-AGENT: Geometry Validator — DONE 2026-02-14 (9/9 tests passing, TDD RED→GREEN→REFACTOR complete, 4 checks geométricos, helper method _get_object_id)
 
 ## Test Counts
 - Backend: 31 passed, 1 skipped (integration + unit tests)
 - Frontend: 18 passed (4 FileUploader + 14 UploadZone)
-- Agent: 26 passed, 4 skipped (9 nomenclature_validator + 8 unit user_string_extractor + 3 E2E user_strings + 6 validate_file_task)
-- Unit Tests: 19 (validation schema presence + validate_file contract + 8 user_string_extractor + 9 nomenclature_validator)
+- Agent: 36 passed, 1 skipped (9 nomenclature_validator + 8 user_string_extractor + 3 E2E user_strings + 6 validate_file_task + 9 geometry_validator + 1 rhino_parser skipped)
+- Unit Tests: 28 (validation schema presence + validate_file contract + 8 user_string_extractor + 9 nomenclature_validator + 9 geometry_validator)
 - Integration Tests: 35 (upload flow, storage, confirm upload, celery worker, validation report, block status, validate_file_task, user_strings_e2e)
 
 ## Status

@@ -63,6 +63,18 @@ class GeometryValidator:
         """Initialize geometry validator with logging."""
         logger.info("geometry_validator.initialized")
     
+    def _get_object_id(self, obj) -> str:
+        """
+        Extract object ID from Rhino object attributes.
+        
+        Args:
+            obj: Rhino File3dmObject
+            
+        Returns:
+            String representation of object UUID
+        """
+        return str(obj.Attributes.Id)
+    
     def validate_geometry(
         self, 
         model  # rhino3dm.File3dm (type hint omitted for test compatibility)
@@ -94,11 +106,13 @@ class GeometryValidator:
         logger.info("geometry_validator.validate_geometry.started", object_count=len(model.Objects))
         
         for obj in model.Objects:
+            object_id = self._get_object_id(obj)
+            
             # Check 1: Null geometry
             if obj.Geometry is None:
                 errors.append(ValidationErrorItem(
                     category=GEOMETRY_CATEGORY_NAME,
-                    target=str(obj.Attributes.Id),
+                    target=object_id,
                     message=GEOMETRY_ERROR_NULL
                 ))
                 continue  # Skip further checks
@@ -107,11 +121,11 @@ class GeometryValidator:
             if not obj.Geometry.IsValid:
                 errors.append(ValidationErrorItem(
                     category=GEOMETRY_CATEGORY_NAME,
-                    target=str(obj.Attributes.Id),
+                    target=object_id,
                     message=GEOMETRY_ERROR_INVALID
                 ))
                 logger.debug("geometry_validator.validation_failed", 
-                            object_id=str(obj.Attributes.Id), 
+                            object_id=object_id, 
                             failure_reason="invalid_geometry")
             
             # Check 3: Degenerate bounding box
@@ -119,11 +133,11 @@ class GeometryValidator:
             if not bbox.IsValid:
                 errors.append(ValidationErrorItem(
                     category=GEOMETRY_CATEGORY_NAME,
-                    target=str(obj.Attributes.Id),
+                    target=object_id,
                     message=GEOMETRY_ERROR_DEGENERATE_BBOX
                 ))
                 logger.debug("geometry_validator.validation_failed",
-                            object_id=str(obj.Attributes.Id),
+                            object_id=object_id,
                             failure_reason="degenerate_bbox")
             
             # Check 4: Zero volume (solo Brep/Mesh)
@@ -136,11 +150,11 @@ class GeometryValidator:
                 if volume < MIN_VALID_VOLUME:
                     errors.append(ValidationErrorItem(
                         category=GEOMETRY_CATEGORY_NAME,
-                        target=str(obj.Attributes.Id),
+                        target=object_id,
                         message=GEOMETRY_ERROR_ZERO_VOLUME.format(min_volume=MIN_VALID_VOLUME)
                     ))
                     logger.debug("geometry_validator.validation_failed",
-                                object_id=str(obj.Attributes.Id),
+                                object_id=object_id,
                                 failure_reason="zero_volume",
                                 volume=volume)
         
