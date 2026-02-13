@@ -12,10 +12,10 @@ from typing import List
 
 # Conditional imports for agent vs backend context
 try:
-    from constants import ISO_19650_LAYER_NAME_PATTERN
+    from constants import ISO_19650_LAYER_NAME_PATTERN, ISO_19650_PATTERN_DESCRIPTION
     from models import LayerInfo
 except ModuleNotFoundError:
-    from src.agent.constants import ISO_19650_LAYER_NAME_PATTERN
+    from src.agent.constants import ISO_19650_LAYER_NAME_PATTERN, ISO_19650_PATTERN_DESCRIPTION
     from src.agent.models import LayerInfo
 
 # Import backend schema for validation errors
@@ -89,12 +89,13 @@ class NomenclatureValidator:
                 error = ValidationErrorItem(
                     category="nomenclature",
                     target=layer.name,
-                    message=f"Layer name '{layer.name}' does not match ISO-19650 pattern"
+                    message=f"Layer name '{layer.name}' does not match ISO-19650 pattern. Expected format: {ISO_19650_PATTERN_DESCRIPTION}"
                 )
                 errors.append(error)
                 logger.debug(
                     "nomenclature_validator.validation_failed",
-                    layer_name=layer.name
+                    layer_name=layer.name,
+                    expected_pattern=ISO_19650_PATTERN_DESCRIPTION
                 )
         
         logger.info(

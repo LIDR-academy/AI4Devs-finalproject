@@ -74,6 +74,7 @@ def test_validate_nomenclature_all_invalid_layers():
     assert errors[0].category == "nomenclature"
     assert errors[0].target == "bloque_test"
     assert "ISO-19650" in errors[0].message or "pattern" in errors[0].message.lower()
+    assert "Expected format" in errors[0].message or "[PREFIX]-[ZONE]-[TYPE]-[ID]" in errors[0].message
     
     # Verify second error
     assert errors[1].category == "nomenclature"
