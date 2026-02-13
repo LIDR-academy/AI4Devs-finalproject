@@ -27,7 +27,7 @@ def test_validate_nomenclature_all_valid_layers():
     validator = NomenclatureValidator()
     
     valid_layers = [
-        LayerInfo(name="SF-NAV-COL-001", index=0, object_count=10, is_visible=True),
+        LayerInfo(name="SF-NAV-CO-001", index=0, object_count=10, is_visible=True),
         LayerInfo(name="SFC-NAV1-A-999", index=1, object_count=5, is_visible=True),
         LayerInfo(name="AB-CD12-XY-123", index=2, object_count=20, is_visible=False),
     ]
@@ -89,10 +89,10 @@ def test_validate_nomenclature_mixed_valid_invalid():
     validator = NomenclatureValidator()
     
     mixed_layers = [
-        LayerInfo(name="SF-NAV-COL-001", index=0, object_count=10, is_visible=True),  # Valid
+        LayerInfo(name="SF-NAV-CO-001", index=0, object_count=10, is_visible=True),  # Valid
         LayerInfo(name="invalid_name", index=1, object_count=5, is_visible=True),     # Invalid
         LayerInfo(name="ABC-DEFG-AB-999", index=2, object_count=8, is_visible=True),  # Valid
-        LayerInfo(name="SF-NAV-COL-01", index=3, object_count=3, is_visible=True),    # Invalid (2 digits)
+        LayerInfo(name="SF-NAV-CO-01", index=3, object_count=3, is_visible=True),    # Invalid (2 digits)
     ]
     
     errors = validator.validate_nomenclature(mixed_layers)
@@ -102,8 +102,8 @@ def test_validate_nomenclature_mixed_valid_invalid():
     # Verify errors are for the invalid layers only
     error_targets = [err.target for err in errors]
     assert "invalid_name" in error_targets
-    assert "SF-NAV-COL-01" in error_targets
-    assert "SF-NAV-COL-001" not in error_targets
+    assert "SF-NAV-CO-01" in error_targets
+    assert "SF-NAV-CO-001" not in error_targets
     assert "ABC-DEFG-AB-999" not in error_targets
 
 
@@ -116,8 +116,8 @@ def test_validate_nomenclature_case_sensitivity():
     validator = NomenclatureValidator()
     
     lowercase_layers = [
-        LayerInfo(name="sf-nav-col-001", index=0, object_count=5, is_visible=True),  # All lowercase
-        LayerInfo(name="SF-nav-COL-001", index=1, object_count=3, is_visible=True),  # Mixed case
+        LayerInfo(name="sf-nav-co-001", index=0, object_count=5, is_visible=True),  # All lowercase
+        LayerInfo(name="SF-nav-CO-001", index=1, object_count=3, is_visible=True),  # Mixed case
     ]
     
     errors = validator.validate_nomenclature(lowercase_layers)
@@ -135,9 +135,9 @@ def test_validate_nomenclature_special_characters():
     validator = NomenclatureValidator()
     
     special_char_layers = [
-        LayerInfo(name="SF@NAV-COL-001", index=0, object_count=5, is_visible=True),  # @ symbol
-        LayerInfo(name="SF-NAV COL-001", index=1, object_count=3, is_visible=True),  # Space instead of dash
-        LayerInfo(name="SF-NAV-COL-001!", index=2, object_count=2, is_visible=True), # Exclamation at end
+        LayerInfo(name="SF@NAV-CO-001", index=0, object_count=5, is_visible=True),  # @ symbol
+        LayerInfo(name="SF-NAV CO-001", index=1, object_count=3, is_visible=True),  # Space instead of dash
+        LayerInfo(name="SF-NAV-CO-001!", index=2, object_count=2, is_visible=True), # Exclamation at end
     ]
     
     errors = validator.validate_nomenclature(special_char_layers)
@@ -174,9 +174,9 @@ def test_validate_nomenclature_unicode_emoji():
     validator = NomenclatureValidator()
     
     unicode_layers = [
-        LayerInfo(name="SF-NAV-COL-001🔥", index=0, object_count=5, is_visible=True),  # Emoji
-        LayerInfo(name="SF-NÃV-COL-001", index=1, object_count=3, is_visible=True),    # Accented char
-        LayerInfo(name="层-NAV-COL-001", index=2, object_count=2, is_visible=True),     # Chinese char
+        LayerInfo(name="SF-NAV-CO-001🔥", index=0, object_count=5, is_visible=True),  # Emoji
+        LayerInfo(name="SF-NÃV-CO-001", index=1, object_count=3, is_visible=True),    # Accented char
+        LayerInfo(name="层-NAV-CO-001", index=2, object_count=2, is_visible=True),     # Chinese char
     ]
     
     errors = validator.validate_nomenclature(unicode_layers)
@@ -219,3 +219,6 @@ def test_validate_nomenclature_regex_boundaries():
     error_targets = [err.target for err in errors]
     assert "AB-CDE-F-000" not in error_targets, "Minimum valid should not error"
     assert "ABC-DEFG-XY-999" not in error_targets, "Maximum valid should not error"
+    
+    # Verify FGH (3 chars) is in errors
+    assert "AB-CDE-FGH-000" in error_targets, "Type with 3 chars should error"

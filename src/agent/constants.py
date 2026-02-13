@@ -29,7 +29,7 @@ TASK_VALIDATE_FILE = "agent.tasks.validate_file"
 
 # Validation Patterns
 # ISO-19650 nomenclature:  [PREFIX]-[ZONE/CODE]-[TYPE]-[ID]
-# Examples: SF-NAV-COL-001, SFC-NAV1-A-999
+# Examples: SF-NAV-CO-001, SFC-NAV1-A-999, AB-CD12-XY-123
 # Pattern breakdown:
 #   - [A-Z]{2,3}: 2-3 uppercase letters (project prefix)
 #   - [A-Z0-9]{3,4}: 3-4 alphanumeric uppercase (zone/code)

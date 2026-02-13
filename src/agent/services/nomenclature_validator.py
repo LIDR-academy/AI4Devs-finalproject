@@ -72,4 +72,35 @@ class NomenclatureValidator:
             >>> errors[0].category
             'nomenclature'
         """
-        raise NotImplementedError("validate_nomenclature not implemented yet (TDD-RED phase)")
+        errors = []
+        
+        # Handle None input gracefully
+        if layers is None:
+            logger.warning("nomenclature_validator.validate_nomenclature.none_input")
+            return errors
+        
+        logger.info(
+            "nomenclature_validator.validate_nomenclature.started",
+            layer_count=len(layers)
+        )
+        
+        for layer in layers:
+            if not self.pattern.match(layer.name):
+                error = ValidationErrorItem(
+                    category="nomenclature",
+                    target=layer.name,
+                    message=f"Layer name '{layer.name}' does not match ISO-19650 pattern"
+                )
+                errors.append(error)
+                logger.debug(
+                    "nomenclature_validator.validation_failed",
+                    layer_name=layer.name
+                )
+        
+        logger.info(
+            "nomenclature_validator.validate_nomenclature.completed",
+            layers_checked=len(layers),
+            errors_found=len(errors)
+        )
+        
+        return errors
