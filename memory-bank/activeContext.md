@@ -7,12 +7,15 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-028-BACK: Validation Report Model — IN ENRICHMENT
+T-028-BACK: Validation Report Model — IN TDD-GREEN ✅
 - Objetivo: Crear ValidationReportService para construir y persistir reportes de validación
-- Fase: Step 1/5 - Enrichment (Technical Specification)
+- Fase: Step 3/5 - TDD-Green (Implementation Passing)
 - Dependencias: T-027-AGENT ✅, T-020-DB ✅, T-023-TEST ✅
 - Spec: [T-028-BACK-ValidationReportService-Spec.md](../docs/US-002/T-028-BACK-ValidationReportService-Spec.md)
-- Next: Proceder a TDD-RED phase (escribir 12 tests failing)
+- Implementation: ValidationReportService con 3 métodos (create_report, save_to_db, get_report) ✅
+- Tests: 13/13 passing (10 unit + 3 integration) 🟢
+- Status: Implementación completa, todos los tests en VERDE
+- Next: Proceder a TDD-REFACTOR phase (limpieza de código, DRY, documentación)
 
 ## Next Tickets
 1. T-029-BACK: Trigger Validation from Confirm Endpoint

@@ -4,5 +4,6 @@ Services package - Business logic layer.
 This package contains all business logic separated from the API routing layer.
 """
 from services.upload_service import UploadService
+from services.validation_report_service import ValidationReportService
 
-__all__ = ["UploadService"]
+__all__ = ["UploadService", "ValidationReportService"]

@@ -12,8 +12,8 @@ Test Coverage:
 import pytest
 from datetime import datetime
 from uuid import uuid4
-from src.backend.services.validation_report_service import ValidationReportService
-from src.backend.schemas import ValidationErrorItem, ValidationReport
+from services.validation_report_service import ValidationReportService
+from schemas import ValidationErrorItem, ValidationReport
 
 
 @pytest.fixture
@@ -25,9 +25,12 @@ def test_block_id(supabase_client):
     """
     # Create a test block record
     block_id = str(uuid4())
+    iso_code = f"TEST-{uuid4().hex[:8].upper()}-XX-001"
     result = supabase_client.table("blocks").insert({
         "id": block_id,
+        "iso_code": iso_code,
         "status": "uploaded",
+        "tipologia": "test",
         "validation_report": None
     }).execute()
     
@@ -143,10 +146,10 @@ def test_jsonb_query_on_validation_status(supabase_client):
     
     # Create blocks
     supabase_client.table("blocks").insert([
-        {"id": valid_block_id, "status": "validated"},
-        {"id": invalid_block_id_1, "status": "rejected"},
-        {"id": invalid_block_id_2, "status": "rejected"},
-        {"id": no_report_block_id, "status": "uploaded"}
+        {"id": valid_block_id, "iso_code": f"TEST-{uuid4().hex[:8].upper()}-A-001", "status": "validated", "tipologia": "test"},
+        {"id": invalid_block_id_1, "iso_code": f"TEST-{uuid4().hex[:8].upper()}-B-002", "status": "rejected", "tipologia": "test"},
+        {"id": invalid_block_id_2, "iso_code": f"TEST-{uuid4().hex[:8].upper()}-C-003", "status": "rejected", "tipologia": "test"},
+        {"id": no_report_block_id, "iso_code": f"TEST-{uuid4().hex[:8].upper()}-D-004", "status": "uploaded", "tipologia": "test"}
     ]).execute()
     
     try:

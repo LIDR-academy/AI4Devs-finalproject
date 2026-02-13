@@ -6207,3 +6207,178 @@ Files to create:
 **Estado:** ✅ **ENRICHMENT COMPLETADO - LISTO PARA TDD-RED** 📋
 
 ---
+
+## [103] - TDD FASE ROJA - Ticket T-028-BACK
+**Fecha:** 2026-02-14 02:00
+**Prompt Original:**
+> ## Prompt: TDD FASE ROJA - Ticket T-028-BACK
+> 
+> **Role:** Actúa como QA Automation Engineer y Software Architect.
+> 
+> ### Protocolo Agents (OBLIGATORIO antes de escribir código)
+> 
+> 1. **Lee** `memory-bank/activeContext.md` para entender el estado actual del sprint.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar los contratos API y patrones existentes.
+> 3. **Consulta** `docs/09-mvp-backlog.md` y busca el ticket `T-028-BACK` para entender su alcance exacto, criterios de aceptación y DoD.
+> 4. **Consulta** `docs/productContext.md` para ver qué componentes o endpoints ya existen y pueden reutilizarse.
+> 5. **Al finalizar**, registra el inicio de esta tarea en `prompts.md`.
+> 
+> ### Objetivo
+> 
+> 1. **Crear/Actualizar los tipos e interfaces** necesarios para `T-028-BACK`.
+> 2. **Crear tests que fallen (RED)** describiendo el comportamiento esperado.
+> 3. El test DEBE fallar por `ImportError` (módulo no existe) o `AssertionError` (lógica no implementada), NO por errores de sintaxis.
+> 
+> [Instrucciones completas TDD-RED con 4 secciones de análisis, definición de tipos, test cases e infraestructura...]
+
+**Resumen de la Implementación:**
+
+**1. Archivos Creados:**
+
+- ✅ `tests/unit/test_validation_report_service.py` (9 tests unitarios)
+  - Happy Path: 4 tests (create no errors, create with errors, save success, get success)
+  - Edge Cases: 4 tests (empty metadata, block not found, no report yet, update existing)
+  - Security/Errors: 1 test (invalid UUID, serialization JSON)
+  
+- ✅ `tests/integration/test_validation_report_persistence.py` (3 tests integración)
+  - Roundtrip save/retrieve (data integrity verification)
+  - JSONB querying (index usage verification)
+  - Block not found error handling
+
+**2. Archivos Modificados:**
+
+- ✅ `src/backend/constants.py` - Añadida constante `TABLE_BLOCKS = "blocks"`
+
+**3. Verificación FASE ROJA:**
+
+Ejecutado comando: `docker compose run --rm backend pytest tests/unit/test_validation_report_service.py -v`
+
+**Resultado:**
+```
+ModuleNotFoundError: No module named 'src.backend.services.validation_report_service'
+ERROR collecting tests/unit/test_validation_report_service.py
+```
+
+✅ **Confirmado:** Tests fallan por la razón correcta (módulo NO existe)
+
+**4. Tests Implementados (12 total):**
+
+**Unit Tests (9):**
+- `test_create_report_with_no_errors` - is_valid=True cuando errors=[]
+- `test_create_report_with_errors` - is_valid=False con 3 ValidationErrorItems
+- `test_save_report_to_db_success` - Mock Supabase, verifica (True, None)
+- `test_get_report_success` - Mock Supabase, deserializa ValidationReport
+- `test_create_report_with_empty_metadata` - Acepta metadata={}
+- `test_save_report_block_not_found` - Retorna (False, "Block not found")
+- `test_get_report_no_report_yet` - Retorna (None, "No validation report")
+- `test_update_existing_report` - Replace existing report correctamente
+- `test_save_report_with_invalid_block_id_format` - Manejo de excepciones UUID
+
+**Integration Tests (3):**
+- `test_save_and_retrieve_report_roundtrip` - Verifica integridad JSONB serialization
+- `test_jsonb_query_on_validation_status` - Verifica índice GIN funcional
+- `test_get_report_block_not_found` - Error handling con DB real
+
+**5. Patrones de Testing Aplicados:**
+- **Mocking:** unittest.mock.Mock para Supabase client (unit tests)
+- **Fixtures:** supabase_client, test_block_id con cleanup (integration tests)
+- **Assertions:** Given-When-Then pattern en docstrings
+- **Coverage:** Happy Path + Edge Cases + Security + Integration
+
+**Estado:** ✅ **FASE ROJA CONFIRMADA - LISTO PARA FASE VERDE** 🔴
+
+---
+
+## [104] - TDD FASE VERDE - Ticket T-028-BACK
+**Fecha:** 2026-02-14 02:30
+**Prompt Original:**
+> ## Prompt: TDD FASE VERDE - Ticket T-028-BACK
+> 
+> **Role:** Actúa como **Senior Developer** (Python/FastAPI para backend, React/TypeScript para frontend).
+> 
+> ### Protocolo Agents (OBLIGATORIO)
+> 
+> 1. **Lee** `memory-bank/activeContext.md` para confirmar el estado actual del sprint.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API y patrones existentes.
+> 3. **Revisa el test en ROJA** para entender exactamente qué se espera de la implementación.
+> 4. **Al finalizar**, registra el avance en `prompts.md`.
+> 
+> [Instrucciones completas TDD-GREEN con 3 secciones: análisis del error, implementación mínima, verificación...]
+
+**Resumen de la Implementación:**
+
+**1. Archivos Creados:**
+
+- ✅ `src/backend/services/validation_report_service.py` (~160 líneas)
+  - Class: ValidationReportService
+  - Method `__init__(supabase_client)` - Dependency injection de Supabase client
+  - Method `create_report(errors, metadata, validated_by)` - Construye ValidationReport con is_valid basado en si errors está vacío
+  - Method `save_to_db(block_id, report)` - Persiste a blocks.validation_report usando model_dump(mode='json')
+  - Method `get_report(block_id)` - Recupera de DB y deserializa con model_validate()
+  - Return tuples: (success, error) para error handling al estilo Clean Architecture
+
+**2. Archivos Modificados:**
+
+- ✅ `src/backend/services/__init__.py` - Export añadido: `from services.validation_report_service import ValidationReportService`
+- ✅ `tests/unit/test_validation_report_service.py` - Fixed imports: `from services...` en lugar de `from src.backend...`
+- ✅ `tests/integration/test_validation_report_persistence.py` - Fixed imports + añadidos campos NOT NULL (`iso_code`, `tipologia`) en fixtures
+
+**3. Verificación FASE VERDE:**
+
+**Comando ejecutado:**
+```bash
+docker compose run --rm backend pytest tests/unit/test_validation_report_service.py tests/integration/test_validation_report_persistence.py -v
+```
+
+**Resultado:**
+```
+======================== 13 passed, 1 warning in 1.28s =========================
+```
+
+✅ **Confirmado:** Todos los tests pasan (10 unit + 3 integration)
+
+**4. No-Regression Verificada:**
+
+**Tests de backend existentes (US-001):**
+```bash
+docker compose run --rm backend pytest tests/integration/test_upload_flow.py tests/integration/test_confirm_upload.py -v
+```
+
+**Resultado:**
+```
+======================== 6 passed, 3 warnings in 3.42s =========================
+```
+
+✅ **Confirmado:** Sin regresiones en upload flow
+
+**5. Patrones Implementados:**
+
+- **Clean Architecture:** Service layer con inyección de dependencias (sigue patrón UploadService)
+- **Error Handling:** Return tuples `(success: bool, error: Optional[str])` en lugar de excepciones
+- **Serialization:** Pydantic `model_dump(mode='json')` para persistencia, `model_validate()` para deserialización
+- **Constants:** Uso de `TABLE_BLOCKS` de constants.py
+- **Business Logic:** is_valid determinado por longitud de errors list (0 = True, >0 = False)
+- **Timestamps:** datetime.utcnow() para validated_at
+
+**6. Tests Coverage (13 total):**
+
+**Unit Tests (10):**
+- ✅ test_create_report_with_no_errors
+- ✅ test_create_report_with_errors
+- ✅ test_save_report_to_db_success
+- ✅ test_get_report_success
+- ✅ test_create_report_with_empty_metadata
+- ✅ test_save_report_block_not_found
+- ✅ test_get_report_no_report_yet
+- ✅ test_update_existing_report
+- ✅ test_save_report_with_invalid_block_id_format
+- ✅ test_serialization_to_json
+
+**Integration Tests (3):**
+- ✅ test_save_and_retrieve_report_roundtrip
+- ✅ test_jsonb_query_on_validation_status
+- ✅ test_get_report_block_not_found
+
+**Estado:** ✅ **FASE VERDE CONFIRMADA - LISTO PARA REFACTOR** 🟢
+
+---
