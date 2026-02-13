@@ -12,8 +12,8 @@ Test Coverage:
 import pytest
 from datetime import datetime
 from unittest.mock import Mock, MagicMock
-from src.backend.services.validation_report_service import ValidationReportService
-from src.backend.schemas import ValidationErrorItem, ValidationReport
+from services.validation_report_service import ValidationReportService
+from schemas import ValidationErrorItem, ValidationReport
 
 
 # ===== HAPPY PATH TESTS =====
