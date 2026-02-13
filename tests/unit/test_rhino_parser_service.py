@@ -69,8 +69,9 @@ def mock_rhino_file():
 class TestRhinoParserServiceHappyPath:
     """Test successful .3dm file parsing scenarios."""
     
+    @patch('pathlib.Path.exists', return_value=True)
     @patch('src.agent.services.rhino_parser_service.rhino3dm')
-    def test_parse_valid_3dm_file(self, mock_rhino3dm, mock_rhino_file):
+    def test_parse_valid_3dm_file(self, mock_rhino3dm, mock_path_exists, mock_rhino_file):
         """
         SCENARIO: Parse a valid .3dm file with multiple layers.
         GIVEN: A well-formed .3dm file exists at local path
@@ -90,8 +91,9 @@ class TestRhinoParserServiceHappyPath:
         assert len(result.layers) == 2
         assert all(isinstance(layer, LayerInfo) for layer in result.layers)
     
+    @patch('pathlib.Path.exists', return_value=True)
     @patch('src.agent.services.rhino_parser_service.rhino3dm')
-    def test_extract_layer_metadata(self, mock_rhino3dm, mock_rhino_file):
+    def test_extract_layer_metadata(self, mock_rhino3dm, mock_path_exists, mock_rhino_file):
         """
         SCENARIO: Extract detailed layer properties.
         GIVEN: A .3dm file with layers having names, colors, and objects
@@ -111,8 +113,9 @@ class TestRhinoParserServiceHappyPath:
         assert first_layer.index == 0
         assert first_layer.object_count == 2  # 2 objects in layer 0
     
+    @patch('pathlib.Path.exists', return_value=True)
     @patch('src.agent.services.rhino_parser_service.rhino3dm')
-    def test_extract_file_units_and_metadata(self, mock_rhino3dm, mock_rhino_file):
+    def test_extract_file_units_and_metadata(self, mock_rhino3dm, mock_path_exists, mock_rhino_file):
         """
         SCENARIO: Extract global file properties (units, tolerance).
         GIVEN: A .3dm file with custom units (e.g., Meters)
