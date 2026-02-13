@@ -7,25 +7,23 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-027-AGENT: Geometry Auditor — TDD-GREEN PHASE COMPLETED ✅
-- Objetivo: Validar integridad geométrica (IsValid, Volume > 0, BoundingBox.IsValid)
-- Dependencias: T-026-AGENT ✅ (NomenclatureValidator completado), T-024-AGENT ✅ (RhinoParserService)
-- Estado: TDD-GREEN completada, 9/9 tests PASSING, no regression (27/28 passing)
-- Implementación: 4 checks secuenciales (null→invalid→degenerate_bbox→zero_volume)
-- Handoff: READY FOR TDD-REFACTOR (prompt #099 en prompts.md)
+T-028-BACK: Validation Report Model — READY TO START
+- Objetivo: Crear Pydantic model ValidationResult para almacenar resultados de validación
+- Dependencias: T-027-AGENT ✅ (GeometryValidator completado)
+- Estado: Esperando inicio
+- Handoff: Spec disponible en backlog (T-028-BACK)
 
 ## Next Tickets
-1. T-028-BACK: Validation Report Model
-2. T-029-BACK: Trigger Validation from Confirm Endpoint
-3. T-030-BACK: Get Validation Status Endpoint
+1. T-029-BACK: Trigger Validation from Confirm Endpoint
+2. T-030-BACK: Get Validation Status Endpoint
 
 ## Blockers
 None.
 
 ## Recently Completed (max 3)
+- T-027-AGENT: Geometry Validator — DONE 2026-02-14 (9/9 tests passing, 4 checks geométricos secuenciales) ✅
 - T-026-AGENT: Nomenclature Validator — DONE 2026-02-14 (9/9 tests passing, refactored with improved error messages) ✅
 - T-025-AGENT: User String Metadata Extractor — DONE 2026-02-13 (11/11 tests passing) ✅
-- T-024-AGENT: Rhino Ingestion Service — DONE 2026-02-13 (parser + integration tests validated) ✅
 
 ## Risks
 - T-024-AGENT: rhino3dm library compatibility with large files (testing needed)
