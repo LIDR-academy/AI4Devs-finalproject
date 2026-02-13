@@ -6,14 +6,28 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @DisplayName("S3MediaStorageAdapter Tests")
+@ExtendWith(MockitoExtension.class)
 class S3MediaStorageAdapterTest {
+    
+    @Mock
+    private S3Client s3Client;
     
     private S3MediaStorageAdapter adapter;
     
@@ -22,13 +36,20 @@ class S3MediaStorageAdapterTest {
     
     @BeforeEach
     void setUp() {
-        adapter = new S3MediaStorageAdapter();
+        // LocalStack endpoint for testing
+        adapter = new S3MediaStorageAdapter(s3Client, "http://localhost:4566");
+        
+        // Mock S3 upload response
+        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
+            .thenReturn(PutObjectResponse.builder().build());
     }
     
     @Test
-    @DisplayName("Should upload media and return presigned URL")
-    void shouldUploadMedia() {
+    @DisplayName("Should upload media and return LocalStack URL")
+    void shouldUploadMedia() throws IOException {
         Path localFile = tempDir.resolve("video.mp4");
+        Files.writeString(localFile, "test video content");
+        
         String userId = UUID.randomUUID().toString();
         UUID meditationId = UUID.randomUUID();
         
@@ -40,12 +61,14 @@ class S3MediaStorageAdapterTest {
             3600L // 1 hour TTL
         );
         
-        String presignedUrl = adapter.uploadMedia(request);
+        String url = adapter.uploadMedia(request);
         
-        assertThat(presignedUrl).isNotNull();
-        assertThat(presignedUrl).startsWith("https://");
-        assertThat(presignedUrl).contains(userId);
-        assertThat(presignedUrl).contains(meditationId.toString());
+        assertThat(url).isNotNull();
+        assertThat(url).startsWith("http://localhost:4566");
+        assertThat(url).contains("meditation-media");
+        assertThat(url).contains(userId);
+        assertThat(url).contains(meditationId.toString());
+        assertThat(url).contains("video.mp4");
     }
     
     @Test

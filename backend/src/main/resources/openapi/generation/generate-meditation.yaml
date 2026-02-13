@@ -119,6 +119,40 @@ paths:
           $ref: '#/components/responses/ServiceUnavailable'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  
+  /generation/meditations/{meditationId}:
+    get:
+      tags:
+        - Generation
+      summary: Get meditation generation status
+      description: |
+        Poll generation status and retrieve download URLs when complete.
+        Used for async generation workflow.
+      operationId: getMeditationStatus
+      security:
+        - bearerAuth: []
+        - {} # Allow no auth in tests
+      parameters:
+        - name: meditationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Meditation ID returned from POST request
+      responses:
+        '200':
+          description: Generation status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationResponse'
+        '404':
+          description: Meditation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:

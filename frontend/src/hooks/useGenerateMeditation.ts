@@ -9,8 +9,10 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { 
   generateMeditationContent,
+  getMeditationStatus,
   GenerationApiError,
   type GenerateMeditationRequest,
   type GenerationResponse,
@@ -75,6 +77,7 @@ export interface GenerateMeditationParams {
  */
 export function useGenerateMeditation() {
   const queryClient = useQueryClient();
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const mutation = useMutation({
     mutationFn: async ({ request, compositionId }: GenerateMeditationParams): Promise<GenerationResponse> => {
@@ -84,6 +87,11 @@ export function useGenerateMeditation() {
       // Cache successful generation result
       if (data.meditationId) {
         queryClient.setQueryData(generationKeys.meditation(data.meditationId), data);
+      }
+      
+      // Start polling if status is PROCESSING
+      if (data.status === GenerationStatus.Processing) {
+        startPolling(data.meditationId);
       }
     },
     // Optional: Configure retry behavior for network errors
@@ -100,13 +108,72 @@ export function useGenerateMeditation() {
   });
 
   /**
-   * Computed state based on mutation status
+   * Poll meditation status until completion or failure
    */
-  const state: GenerationState = mutation.isPending
+  const startPolling = (meditationId: string) => {
+    // Clear any existing polling interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+
+    // Poll every 2 seconds
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        const status = await getMeditationStatus(meditationId);
+        
+        // Update cached data
+        queryClient.setQueryData(generationKeys.meditation(meditationId), status);
+        
+        // Update mutation data to trigger UI updates
+        mutation.mutate = mutation.mutate; // Force re-render
+        (mutation as any).data = status; // Update internal data
+        
+        // Stop polling if completed or failed
+        if (
+          status.status === GenerationStatus.Completed ||
+          status.status === GenerationStatus.Failed ||
+          status.status === GenerationStatus.Timeout
+        ) {
+          stopPolling();
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+        // Don't stop polling on network errors, backend might recover
+      }
+    }, 2000);
+  };
+
+  /**
+   * Stop polling
+   */
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      stopPolling();
+    };
+  }, []);
+
+  /**
+   * Computed state based on mutation status AND response status
+   */
+  const isResponseCompleted = mutation.data?.status === GenerationStatus.Completed;
+  const isResponseProcessing = mutation.data?.status === GenerationStatus.Processing;
+  const isResponseFailed = 
+    mutation.data?.status === GenerationStatus.Failed || 
+    mutation.data?.status === GenerationStatus.Timeout;
+
+  const state: GenerationState = mutation.isPending || isResponseProcessing
     ? 'creating'
-    : mutation.isSuccess
+    : isResponseCompleted
     ? 'success'
-    : mutation.isError
+    : mutation.isError || isResponseFailed
     ? 'error'
     : 'idle';
 
@@ -114,13 +181,15 @@ export function useGenerateMeditation() {
    * Progress computation (if backend supports it in the future)
    * For MVP: indeterminate progress while creating
    */
-  const progress = mutation.isPending ? undefined : 100;
+  const progress = (mutation.isPending || isResponseProcessing) ? undefined : 100;
 
   /**
    * User-friendly error message
    */
   const errorMessage = mutation.error
     ? getErrorMessage(mutation.error)
+    : isResponseFailed && mutation.data?.message
+    ? mutation.data.message
     : undefined;
 
   return {
@@ -130,18 +199,21 @@ export function useGenerateMeditation() {
     // Enhanced state
     state,
     progress,
-    result: mutation.data,
+    result: isResponseCompleted ? mutation.data : undefined,
     errorMessage,
     
     // Convenience methods
     start: mutation.mutate,
     startAsync: mutation.mutateAsync,
-    reset: mutation.reset,
+    reset: () => {
+      stopPolling();
+      mutation.reset();
+    },
     
     // Status flags (for convenience)
     isIdle: state === 'idle',
     isCreating: state === 'creating',
-    isCompleted: state === 'success',
+    isCompleted: isResponseCompleted,
     isFailed: state === 'error',
   };
 }

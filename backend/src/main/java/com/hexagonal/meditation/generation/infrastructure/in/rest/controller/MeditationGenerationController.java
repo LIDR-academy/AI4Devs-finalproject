@@ -2,8 +2,10 @@ package com.hexagonal.meditation.generation.infrastructure.in.rest.controller;
 
 import com.hexagonal.meditation.generation.domain.exception.GenerationTimeoutException;
 import com.hexagonal.meditation.generation.domain.exception.InvalidContentException;
+import com.hexagonal.meditation.generation.domain.model.GeneratedMeditationContent;
 import com.hexagonal.meditation.generation.domain.ports.in.GenerateMeditationContentUseCase;
 import com.hexagonal.meditation.generation.domain.ports.in.GenerateMeditationContentUseCase.GenerationRequest;
+import com.hexagonal.meditation.generation.domain.ports.out.ContentRepositoryPort;
 import com.hexagonal.meditation.generation.infrastructure.in.rest.dto.GenerateMeditationRequest;
 import com.hexagonal.meditation.generation.infrastructure.in.rest.dto.GenerationResponse;
 import com.hexagonal.meditation.generation.infrastructure.in.rest.mapper.MeditationOutputDtoMapper;
@@ -43,12 +45,15 @@ public class MeditationGenerationController {
     private static final Logger log = LoggerFactory.getLogger(MeditationGenerationController.class);
 
     private final GenerateMeditationContentUseCase generateMeditationContentUseCase;
+    private final ContentRepositoryPort contentRepositoryPort;
     private final MeditationOutputDtoMapper mapper;
 
     public MeditationGenerationController(
             GenerateMeditationContentUseCase generateMeditationContentUseCase,
+            ContentRepositoryPort contentRepositoryPort,
             MeditationOutputDtoMapper mapper) {
         this.generateMeditationContentUseCase = generateMeditationContentUseCase;
+        this.contentRepositoryPort = contentRepositoryPort;
         this.mapper = mapper;
     }
 
@@ -110,6 +115,28 @@ public class MeditationGenerationController {
     }
 
     /**
+     * GET /api/v1/generation/meditations/{meditationId} - Get meditation generation status.
+     * 
+     * Used for polling generation status until completion.
+     * 
+     * @param meditationId meditation ID
+     * @return 200 OK with current status and URLs (if completed)
+     *         404 Not Found if meditation doesn't exist
+     */
+    @GetMapping("/{meditationId}")
+    public ResponseEntity<GenerationResponse> getMeditationStatus(
+            @PathVariable UUID meditationId) {
+        
+        log.info("Getting meditation status for meditationId={}", meditationId);
+
+        var domainResponse = contentRepositoryPort.findById(meditationId)
+                .map(this::mapContentToResponse)
+                .orElseThrow(() -> new MeditationNotFoundException(meditationId));
+
+        return ResponseEntity.ok(domainResponse);
+        }
+
+    /**
      * Maps domain GenerationResponse to DTO GenerationResponse.
      */
     private GenerationResponse toGenerationResponse(
@@ -129,12 +156,79 @@ public class MeditationGenerationController {
      * Formats status message based on generation status.
      */
     private String formatStatusMessage(GenerateMeditationContentUseCase.GenerationResponse response) {
-        return switch (response.status()) {
-            case PROCESSING -> "Generation in progress";
-            case COMPLETED -> "Generation completed successfully";
-            case FAILED -> "Generation failed";
-            case TIMEOUT -> "Processing time exceeded";
-        };
+                switch (response.status()) {
+                        case PROCESSING:
+                                return "Generation in progress";
+                        case COMPLETED:
+                                return "Generation completed successfully";
+                        case FAILED:
+                                return "Generation failed";
+                        case TIMEOUT:
+                                return "Processing time exceeded";
+                        default:
+                                return "Unknown status";
+                }
+    }
+
+    /**
+     * Maps domain GeneratedMeditationContent to DTO GenerationResponse.
+     */
+    private GenerationResponse mapContentToResponse(GeneratedMeditationContent content) {
+        return new GenerationResponse(
+                content.meditationId(),
+                content.mediaType().name(),
+                content.outputMedia().map(ref -> ref.url()).orElse(null),
+                content.subtitleFile().map(ref -> ref.url()).orElse(null),
+                (int) content.narrationScript().estimateDurationSeconds(),
+                content.status().name(),
+                formatContentStatusMessage(content)
+        );
+    }
+
+    /**
+     * Formats status message for domain content.
+     */
+    private String formatContentStatusMessage(GeneratedMeditationContent content) {
+                switch (content.status()) {
+                        case PROCESSING:
+                                return "Generation in progress";
+                        case COMPLETED:
+                                return "Generation completed successfully";
+                        case FAILED:
+                                return "Generation failed";
+                        case TIMEOUT:
+                                return "Processing time exceeded";
+                        default:
+                                return "Unknown status";
+                }
+    }
+
+    /**
+     * Custom exception for meditation not found (404).
+     */
+    private static class MeditationNotFoundException extends RuntimeException {
+        public MeditationNotFoundException(UUID meditationId) {
+            super("Meditation not found: " + meditationId);
+        }
+    }
+
+    /**
+     * Exception handler for MeditationNotFoundException.
+     * Maps to 404 Not Found.
+     */
+    @ExceptionHandler(MeditationNotFoundException.class)
+    public ResponseEntity<com.hexagonal.meditationbuilder.infrastructure.in.rest.dto.ErrorResponse> handleNotFoundException(
+            MeditationNotFoundException ex) {
+        log.warn("Meditation not found: {}", ex.getMessage());
+        
+        var errorResponse = new com.hexagonal.meditationbuilder.infrastructure.in.rest.dto.ErrorResponse(
+                "MEDITATION_NOT_FOUND",
+                ex.getMessage()
+        );
+        
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(errorResponse);
     }
 
     /**

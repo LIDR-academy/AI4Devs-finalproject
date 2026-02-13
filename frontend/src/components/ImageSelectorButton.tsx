@@ -5,7 +5,10 @@ interface ImageSelectorButtonProps {
   disabled?: boolean;
 }
 
-const ImageSelectorButton: React.FC<ImageSelectorButtonProps> = ({ onImageSelected, disabled = false }) => {
+const ImageSelectorButton: React.FC<ImageSelectorButtonProps> = ({ 
+  onImageSelected, 
+  disabled = false 
+}) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleButtonClick = () => {

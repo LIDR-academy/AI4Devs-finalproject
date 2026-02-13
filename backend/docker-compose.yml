@@ -28,19 +28,15 @@ services:
 
   # LocalStack for S3-compatible storage (dev/test)
   localstack:
-    image: localstack/localstack:3.0
+    image: localstack/localstack:latest
     container_name: meditation-localstack
     environment:
       SERVICES: s3
       DEBUG: 0
-      DATA_DIR: /tmp/localstack/data
       AWS_DEFAULT_REGION: us-east-1
       EDGE_PORT: 4566
     ports:
       - "4566:4566"
-    volumes:
-      - localstack_data:/tmp/localstack
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s

@@ -8,12 +8,12 @@ import {
   GenerateTextButton,
   GenerateImageButton,
   GenerationStatusBar,
-  GenerateMeditationButton,
   GenerationResultModal,
 } from '@/components';
 import ImageSelectorButton from '@/components/ImageSelectorButton';
 import MusicSelectorButton from '@/components/MusicSelectorButton';
 import LocalMusicItem from '@/components/LocalMusicItem';
+import { useUploadImage, useUploadMusic } from '@/hooks/useFileUpload';
 import {
   useUpdateText,
   useSelectMusic,
@@ -54,6 +54,10 @@ export function MeditationBuilderPage() {
   // Generation hook (US3 - Generate Meditation Audio/Video)
   const generation = useGenerateMeditation();
 
+  // File upload hooks (solo se usan al hacer Generate, no al seleccionar)
+  const uploadImage = useUploadImage();
+  const uploadMusic = useUploadMusic();
+
   const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
 
@@ -68,9 +72,11 @@ export function MeditationBuilderPage() {
     return () => clearTimeout(t);
   }, [localText, compositionId]);
 
-  // Estado local para preview de audio seleccionado
+  // Estado local para preview de audio seleccionado (blob URL para preview)
   const [localAudioUrl, setLocalAudioUrl] = useState<string | null>(null);
   const [localAudioName, setLocalAudioName] = useState<string>('');
+  // Estado para guardar el File object (se subirá al hacer Generate)
+  const [localAudioFile, setLocalAudioFile] = useState<File | null>(null);
 
   const musicPreviewData = useMemo(() => {
     if (localAudioUrl) {
@@ -85,9 +91,11 @@ export function MeditationBuilderPage() {
     };
   }, [localAudioUrl, localAudioName, musicPreview.data, selectedMusicId]);
 
-  // Estado local para preview de imagen seleccionada
+  // Estado local para preview de imagen seleccionada (blob URL para preview)
   const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
   const [localImageName, setLocalImageName] = useState<string>('');
+  // Estado para guardar el File object (se subirá al hacer Generate)
+  const [localImageFile, setLocalImageFile] = useState<File | null>(null);
 
   // Unifica preview: local (blob) o IA (base64 en selectedImageId)
   const imagePreviewData = useMemo(() => {
@@ -111,7 +119,7 @@ export function MeditationBuilderPage() {
     };
   }, [localImageUrl, localImageName, imagePreview.data, selectedImageId]);
 
-  // Limpieza de URL local de audio
+  // Cuando el usuario selecciona un archivo de audio (solo preview)
   const handleAudioSelected = useCallback((file: File) => {
     if (localAudioUrl) {
       URL.revokeObjectURL(localAudioUrl);
@@ -119,9 +127,10 @@ export function MeditationBuilderPage() {
     const url = URL.createObjectURL(file);
     setLocalAudioUrl(url);
     setLocalAudioName(file.name);
+    setLocalAudioFile(file); // Guardar el File para subirlo después
   }, [localAudioUrl]);
 
-  // Limpieza de URL local de imagen
+  // Cuando el usuario selecciona un archivo de imagen (solo preview)
   const handleImageSelected = useCallback((file: File) => {
     if (localImageUrl) {
       URL.revokeObjectURL(localImageUrl);
@@ -129,6 +138,7 @@ export function MeditationBuilderPage() {
     const url = URL.createObjectURL(file);
     setLocalImageUrl(url);
     setLocalImageName(file.name);
+    setLocalImageFile(file); // Guardar el File para subirlo después
   }, [localImageUrl]);
 
   // Limpieza al desmontar - audio
@@ -204,6 +214,7 @@ export function MeditationBuilderPage() {
                 URL.revokeObjectURL(localAudioUrl);
                 setLocalAudioUrl(null);
                 setLocalAudioName('');
+                setLocalAudioFile(null); // Limpiar el File object
                 useComposerStore.getState().setIsMusicPlaying(false);
               }}
             />
@@ -222,6 +233,7 @@ export function MeditationBuilderPage() {
                     URL.revokeObjectURL(localAudioUrl);
                     setLocalAudioUrl(null);
                     setLocalAudioName('');
+                    setLocalAudioFile(null);
                   }
                 }}
               />
@@ -229,7 +241,10 @@ export function MeditationBuilderPage() {
           )}
           
           <div style={{ marginTop: '8px' }}>
-            <MusicSelectorButton onAudioSelected={handleAudioSelected} disabled={generateText.isPending || generateImage.isPending} />
+            <MusicSelectorButton 
+              onAudioSelected={handleAudioSelected}
+              disabled={generateText.isPending || generateImage.isPending} 
+            />
           </div>
         </div>
       </div>
@@ -239,22 +254,48 @@ export function MeditationBuilderPage() {
         <div className="card">
           <h2 className="card__title">Output Type</h2>
           <OutputTypeIndicator
-            onClick={() => {
-              generation.start({
-                request: {
-                  text: localText,
-                  musicReference: selectedMusicId || localAudioUrl || 'default-music',
-                  imageReference: selectedImageId || undefined,
-                },
-                compositionId: compositionId || undefined,
-              });
+            onClick={async () => {
+              try {
+                // 1. Subir archivos locales a S3 si existen
+                let musicRef = selectedMusicId || 'default-music';
+                let imageRef = selectedImageId || undefined;
+
+                // Subir música si hay un archivo local
+                if (localAudioFile) {
+                  const uploadResult = await uploadMusic.mutateAsync(localAudioFile);
+                  musicRef = uploadResult.fileUrl;
+                  console.log('Music uploaded to S3:', musicRef);
+                }
+
+                // Subir imagen si hay un archivo local
+                if (localImageFile) {
+                  const uploadResult = await uploadImage.mutateAsync(localImageFile);
+                  imageRef = uploadResult.fileUrl;
+                  console.log('Image uploaded to S3:', imageRef);
+                }
+
+                // 2. Iniciar generación con las URLs de S3
+                generation.start({
+                  request: {
+                    text: localText,
+                    musicReference: musicRef,
+                    imageReference: imageRef,
+                  },
+                  compositionId: compositionId || undefined,
+                });
+              } catch (error) {
+                console.error('Failed to upload files:', error);
+                alert('Failed to upload files. Please try again.');
+              }
             }}
             disabled={
               !localText.trim() || 
               !(selectedMusicId || localAudioUrl) ||
               generateText.isPending || 
               generateImage.isPending ||
-              generation.isCreating
+              generation.isCreating ||
+              uploadImage.isPending ||
+              uploadMusic.isPending
             }
             isLoading={generation.isCreating}
           />
@@ -279,6 +320,7 @@ export function MeditationBuilderPage() {
                 URL.revokeObjectURL(localImageUrl);
                 setLocalImageUrl(null);
                 setLocalImageName('');
+                setLocalImageFile(null);
               } else if (selectedImageId && selectedImageId.startsWith('data:image/')) {
                 // Elimina imagen IA generada
                 useComposerStore.getState().setSelectedImage(null);
@@ -289,7 +331,10 @@ export function MeditationBuilderPage() {
             disabled={removeImage.isPending}
           />
           <div className="generate-btn-group" style={{ display: 'flex', gap: 8 }}>
-            <ImageSelectorButton onImageSelected={handleImageSelected} disabled={generateText.isPending || generateImage.isPending} />
+            <ImageSelectorButton 
+              onImageSelected={handleImageSelected}
+              disabled={generateText.isPending || generateImage.isPending} 
+            />
             <GenerateImageButton
               isLoading={generateImage.isPending}
               disabled={generateText.isPending || generateImage.isPending || !!(selectedImageId && selectedImageId.startsWith('data:image/'))}
@@ -305,15 +350,34 @@ export function MeditationBuilderPage() {
       result={generation.result}
       error={generation.errorMessage}
       onClose={() => generation.reset()}
-      onRetry={() => {
-        generation.start({
-          request: {
-            text: localText,
-            musicReference: selectedMusicId || localAudioUrl || 'default-music',
-            imageReference: selectedImageId || undefined,
-          },
-          compositionId: compositionId || undefined,
-        });
+      onRetry={async () => {
+        try {
+          // Subir archivos locales a S3 si existen
+          let musicRef = selectedMusicId || 'default-music';
+          let imageRef = selectedImageId || undefined;
+
+          if (localAudioFile) {
+            const uploadResult = await uploadMusic.mutateAsync(localAudioFile);
+            musicRef = uploadResult.fileUrl;
+          }
+
+          if (localImageFile) {
+            const uploadResult = await uploadImage.mutateAsync(localImageFile);
+            imageRef = uploadResult.fileUrl;
+          }
+
+          generation.start({
+            request: {
+              text: localText,
+              musicReference: musicRef,
+              imageReference: imageRef,
+            },
+            compositionId: compositionId || undefined,
+          });
+        } catch (error) {
+          console.error('Failed to upload files on retry:', error);
+          alert('Failed to upload files. Please try again.');
+        }
       }}
     />
 

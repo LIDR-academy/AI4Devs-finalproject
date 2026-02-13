@@ -129,3 +129,39 @@ export {
   GenerationStatus,
   MediaType,
 } from './generated/generation/src';
+
+/**
+ * Poll meditation generation status
+ * 
+ * @param meditationId - Meditation ID returned from generateMeditationContent
+ * @returns Current generation status with URLs if completed
+ * @throws GenerationApiError on failure
+ * 
+ * Example:
+ * ```ts
+ * const status = await getMeditationStatus('abc-123');
+ * if (status.status === GenerationStatus.Completed) {
+ *   console.log('Download URL:', status.mediaUrl);
+ * }
+ * ```
+ */
+export async function getMeditationStatus(
+  meditationId: string
+): Promise<GenerationResponse> {
+  try {
+    const response = await generationApi.getMeditationStatus({ meditationId });
+    return response;
+  } catch (error: any) {
+    // Convert fetch errors to consistent API error format
+    if (error.response) {
+      const errorBody: ErrorResponse = await error.response.json().catch(() => ({
+        error: 'UNKNOWN_ERROR',
+        message: error.message || 'An unexpected error occurred',
+        timestamp: new Date().toISOString(),
+      }));
+      throw new GenerationApiError(error.response.status, errorBody);
+    }
+    // Re-throw network or other errors
+    throw error;
+  }
+}

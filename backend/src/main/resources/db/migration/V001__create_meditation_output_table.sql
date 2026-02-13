@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS generation.meditation_output (
 );
 
 -- Create indexes
-CREATE INDEX idx_meditation_output_composition_id ON generation.meditation_output(composition_id);
-CREATE INDEX idx_meditation_output_user_id ON generation.meditation_output(user_id);
-CREATE INDEX idx_meditation_output_status ON generation.meditation_output(status);
-CREATE INDEX idx_meditation_output_created_at ON generation.meditation_output(created_at);
-CREATE UNIQUE INDEX idx_meditation_output_idempotency_key ON generation.meditation_output(idempotency_key);
+CREATE INDEX IF NOT EXISTS idx_meditation_output_composition_id ON generation.meditation_output(composition_id);
+CREATE INDEX IF NOT EXISTS idx_meditation_output_user_id ON generation.meditation_output(user_id);
+CREATE INDEX IF NOT EXISTS idx_meditation_output_status ON generation.meditation_output(status);
+CREATE INDEX IF NOT EXISTS idx_meditation_output_created_at ON generation.meditation_output(created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_meditation_output_idempotency_key ON generation.meditation_output(idempotency_key);
 
 -- Add comments for documentation
 COMMENT ON TABLE generation.meditation_output IS 'Stores meditation generation results including narration, subtitles, and media URLs';

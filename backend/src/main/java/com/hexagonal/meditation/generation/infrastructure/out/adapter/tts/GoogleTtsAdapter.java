@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -23,10 +25,17 @@ public class GoogleTtsAdapter implements VoiceSynthesisPort {
             script.text().length(), voiceConfig.voiceName(), voiceConfig.languageCode());
         
         // TODO: Implement actual Google Cloud TTS integration
-        // For now, return a stub path
-        Path outputPath = Path.of("/tmp/narration-" + System.currentTimeMillis() + ".mp3");
-        logger.info("TTS synthesis completed: {}", outputPath);
-        
-        return outputPath;
+        // For now, return a dummy file in the system temp directory
+        try {
+            Path outputPath = Files.createTempFile("narration-", ".mp3");
+            // Write a tiny bit of dummy data so it's not totally empty (some tools dislike empty files)
+            Files.write(outputPath, new byte[]{0, 0, 0, 0});
+            
+            logger.info("TTS synthesis completed (DUMMY): {}", outputPath);
+            return outputPath;
+        } catch (IOException e) {
+            logger.error("Failed to create dummy TTS file", e);
+            throw new RuntimeException("Failed to create dummy TTS file", e);
+        }
     }
 }

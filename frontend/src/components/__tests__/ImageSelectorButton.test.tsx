@@ -7,7 +7,7 @@ describe('ImageSelectorButton', () => {
     const { getByText, container } = render(
       <ImageSelectorButton onImageSelected={onImageSelected} />
     );
-    const button = getByText(/seleccionar imagen/i);
+    const button = getByText(/select image/i);
     fireEvent.click(button);
     const input = container.querySelector('input[type="file"]')!;
     const file = new File(['dummy'], 'test.png', { type: 'image/png' });
@@ -20,7 +20,7 @@ describe('ImageSelectorButton', () => {
     const { getByText, container } = render(
       <ImageSelectorButton onImageSelected={onImageSelected} />
     );
-    const button = getByText(/seleccionar imagen/i);
+    const button = getByText(/select image/i);
     fireEvent.click(button);
     const input = container.querySelector('input[type="file"]')!;
     const file = new File(['dummy'], 'test.txt', { type: 'text/plain' });

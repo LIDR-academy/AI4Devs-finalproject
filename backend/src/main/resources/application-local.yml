@@ -4,28 +4,44 @@
 # Usage: Set SPRING_PROFILES_ACTIVE=local or use default
 
 spring:
-  # H2 in-memory database for local development
-  # Alternative: Use Docker PostgreSQL (see docker-compose.yml)
+  # PostgreSQL database - Docker container (same as production)
+  # Start with: docker-compose up -d postgres
   datasource:
-    url: jdbc:h2:mem:meditationdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/meditation
+    driver-class-name: org.postgresql.Driver
+    username: meditation_user
+    password: meditation_pass
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
 
-  # JPA with H2 - auto-generate schema for local development
+  # File upload limits (for music and images)
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  # JPA with PostgreSQL - same as production
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
+        default_schema: generation
+        jdbc:
+          lob:
+            non_contextual_creation: true
 
-  # Disable Flyway in local - use JPA auto-schema instead
-  # Enable Flyway when using Docker PostgreSQL
+  # Flyway for database migrations - same as production
   flyway:
-    enabled: false
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    default-schema: generation
 
 # OpenAI - Use real API for local development
 # Set OPENAI_API_KEY environment variable with your key
@@ -36,6 +52,16 @@ ai:
 # Media Catalog - Local mock or development service
 media-catalog:
   base-url: ${MEDIA_CATALOG_URL:http://localhost:8081}
+
+# AWS S3 - LocalStack for local development
+aws:
+  region: us-east-1
+  s3:
+    endpoint: ${AWS_ENDPOINT_URL:http://localhost:4566}
+    bucket-name: ${S3_BUCKET_NAME:meditation-media}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY_ID:test}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:test}
 
 # Development logging - more verbose
 logging:

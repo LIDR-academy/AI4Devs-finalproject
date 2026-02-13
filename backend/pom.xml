@@ -189,6 +189,13 @@
             <version>${atlassian-oai-validator.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- AWS SDK v2 for S3 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.20.26</version>
+        </dependency>
     </dependencies>
 
     <build>

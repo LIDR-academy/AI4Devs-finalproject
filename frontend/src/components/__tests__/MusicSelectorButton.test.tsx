@@ -15,7 +15,7 @@ describe('MusicSelectorButton', () => {
     
     const button = screen.getByTestId('music-selector-button');
     expect(button).toBeInTheDocument();
-    expect(button).toHaveTextContent('Select Local Audio');
+    expect(button).toHaveTextContent('Select music');
   });
 
   it('renders hidden file input with correct accept attribute', () => {
@@ -93,15 +93,15 @@ describe('MusicSelectorButton', () => {
     expect(mockOnAudioSelected).toHaveBeenCalledWith(file);
   });
 
-  it('rejects files larger than 10MB with alert', async () => {
+  it('rejects files larger than 50MB with alert', async () => {
     const user = userEvent.setup();
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     
     render(<MusicSelectorButton onAudioSelected={mockOnAudioSelected} />);
     
-    // Create a 11MB file
+    // Create a 51MB file
     const largeFile = new File(
-      [new ArrayBuffer(11 * 1024 * 1024)], 
+      [new ArrayBuffer(51 * 1024 * 1024)], 
       'large.mp3', 
       { type: 'audio/mpeg' }
     );
@@ -110,7 +110,7 @@ describe('MusicSelectorButton', () => {
     await user.upload(fileInput, largeFile);
     
     expect(alertSpy).toHaveBeenCalledWith(
-      expect.stringContaining('File size exceeds 10MB limit')
+      expect.stringContaining('File size exceeds 50MB limit')
     );
     expect(mockOnAudioSelected).not.toHaveBeenCalled();
     

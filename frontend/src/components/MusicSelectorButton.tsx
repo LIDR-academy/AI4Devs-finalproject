@@ -5,10 +5,13 @@ interface MusicSelectorButtonProps {
   disabled?: boolean;
 }
 
-const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB
 const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a'];
 
-export function MusicSelectorButton({ onAudioSelected, disabled = false }: MusicSelectorButtonProps) {
+export function MusicSelectorButton({ 
+  onAudioSelected, 
+  disabled = false 
+}: MusicSelectorButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,7 +26,7 @@ export function MusicSelectorButton({ onAudioSelected, disabled = false }: Music
 
     // Validate file size
     if (file.size > MAX_AUDIO_SIZE) {
-      alert(`File size exceeds 10MB limit. Selected file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      alert(`File size exceeds 50MB limit. Selected file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
       return;
     }
 

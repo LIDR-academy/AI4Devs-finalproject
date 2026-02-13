@@ -68,6 +68,7 @@ public interface MediaStoragePort {
     enum MediaFileType {
         VIDEO("video.mp4", "video/mp4"),
         AUDIO("audio.mp3", "audio/mpeg"),
+        IMAGE("image.jpg", "image/jpeg"),
         SUBTITLE("subs.srt", "text/srt");
 
         private final String filename;
