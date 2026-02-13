@@ -386,18 +386,20 @@ class TestRhinoParserServiceEdgeCases:
         assert result.success is True
         assert len(result.layers) == 0  # Valid file but no user-created layers
     
-    @patch('pathlib.Path.exists', return_value=True)
-    def test_parse_file_with_special_characters_in_layer_names(self, mock_path_exists):
+    def test_parse_file_with_special_characters_in_layer_names(self):
         """
         SCENARIO: Parse file with Unicode or special chars in layer names.
         GIVEN: A .3dm file with layer named "Capa-España-™"
         WHEN: parse_file() extracts layers
         THEN: Layer names are preserved as UTF-8 strings
-        """
-        # This test documents expected behavior for international characters
-        parser = RhinoParserService()
-        test_file = Path(__file__).parent.parent / "fixtures" / "test-model.3dm"
         
+        NOTE: This is an integration test using real rhino3dm library and fixture.
+        """
+        test_file = Path(__file__).parent.parent / "fixtures" / "test-model.3dm"
+        if not test_file.exists():
+            pytest.skip(f"Test fixture not found: {test_file}")
+        
+        parser = RhinoParserService()
         result = parser.parse_file(str(test_file))
         
         # Just verify parsing doesn't crash with Unicode layers
@@ -409,20 +411,21 @@ class TestRhinoParserServiceEdgeCases:
 class TestRhinoParserServiceSecurity:
     """Test security and resource limit handling."""
     
-    @patch('pathlib.Path.exists', return_value=True)
-    def test_parse_large_file_within_timeout(self, mock_path_exists):
+    def test_parse_large_file_within_timeout(self):
         """
         SCENARIO: Parse a large .3dm file (100MB+) without timeout.
         GIVEN: Task has 10min timeout (TASK_TIME_LIMIT_SECONDS=600)
         WHEN: parse_file() is called on large file
         THEN: Completes within soft time limit (9min)
         
-        NOTE: This test uses a mock/small file but documents expected behavior.
+        NOTE: This is an integration test using real rhino3dm library and fixture.
         Real large file testing requires integration test with actual fixtures.
         """
-        parser = RhinoParserService()
-        # For unit test, just verify method doesn't have built-in blocking
         test_file = Path(__file__).parent.parent / "fixtures" / "test-model.3dm"
+        if not test_file.exists():
+            pytest.skip(f"Test fixture not found: {test_file}")
+        
+        parser = RhinoParserService()
         
         import time
         start = time.time()
