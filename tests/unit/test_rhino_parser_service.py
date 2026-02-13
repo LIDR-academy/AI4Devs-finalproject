@@ -386,7 +386,8 @@ class TestRhinoParserServiceEdgeCases:
         assert result.success is True
         assert len(result.layers) == 0  # Valid file but no user-created layers
     
-    def test_parse_file_with_special_characters_in_layer_names(self):
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_parse_file_with_special_characters_in_layer_names(self, mock_path_exists):
         """
         SCENARIO: Parse file with Unicode or special chars in layer names.
         GIVEN: A .3dm file with layer named "Capa-España-™"
@@ -408,7 +409,8 @@ class TestRhinoParserServiceEdgeCases:
 class TestRhinoParserServiceSecurity:
     """Test security and resource limit handling."""
     
-    def test_parse_large_file_within_timeout(self):
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_parse_large_file_within_timeout(self, mock_path_exists):
         """
         SCENARIO: Parse a large .3dm file (100MB+) without timeout.
         GIVEN: Task has 10min timeout (TASK_TIME_LIMIT_SECONDS=600)
