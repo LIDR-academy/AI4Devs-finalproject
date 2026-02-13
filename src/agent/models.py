@@ -9,9 +9,62 @@ Agent models are internal to worker processes, while backend schemas
 define API contracts for client-server communication.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+
+
+class UserStringCollection(BaseModel):
+    """
+    User strings extracted from a Rhino .3dm file.
+    
+    Rhino allows attaching custom key-value pairs to documents, layers, and objects.
+    These are critical for ISO-19650 compliance and manufacturing traceability.
+    
+    Attributes:
+        document: Document-level user strings (project metadata)
+        layers: Dict mapping layer_name -> user strings dict
+        objects: Dict mapping object_uuid -> user strings dict
+    """
+    document: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Document-level user strings (global metadata)"
+    )
+    layers: Dict[str, Dict[str, str]] = Field(
+        default_factory=dict,
+        description="Layer-level user strings keyed by layer name"
+    )
+    objects: Dict[str, Dict[str, str]] = Field(
+        default_factory=dict,
+        description="Object-level user strings keyed by object UUID"
+    )
+    
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "document": {
+                    "Project": "SF-Sagrada-Familia",
+                    "RevisionDate": "2026-01-15",
+                    "BIM_Manager": "Pedro Cortés"
+                },
+                "layers": {
+                    "SF-C12-M-001": {
+                        "Workshop": "Granollers",
+                        "MaterialType": "UHPC",
+                        "ApprovalStatus": "Pending"
+                    }
+                },
+                "objects": {
+                    "3f2504e0-4f89-11d3-9a0c-0305e82c3301": {
+                        "ISO_Code": "SF-C12-M-001",
+                        "Mass": "450kg",
+                        "ManufacturingNotes": "Pre-stress required",
+                        "QA_Inspector": "Maria Garcia"
+                    }
+                }
+            }
+        }
+    )
 
 
 class LayerInfo(BaseModel):
@@ -56,13 +109,18 @@ class FileProcessingResult(BaseModel):
         default_factory=dict,
         description="Additional file properties (units, tolerance, application_version)"
     )
+    user_strings: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Extracted user strings from document/layers/objects (UserStringCollection structure)"
+    )
     parsed_at: datetime = Field(
         default_factory=datetime.utcnow,
         description="Processing timestamp"
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "success": True,
                 "error_message": None,
@@ -83,3 +141,4 @@ class FileProcessingResult(BaseModel):
                 "parsed_at": "2026-02-12T19:00:00Z"
             }
         }
+    )

@@ -7,23 +7,23 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-024-AGENT: Rhino Ingestion Service — DONE 2026-02-13
-- Objetivo: Implementar la lógica de validación de archivos .3dm usando rhino3dm (descarga S3, parseo, extracción capas, DB update)
-- Dependencias: T-020-DB ✅, T-021-DB ✅, T-022-INFRA ✅, T-023-TEST ✅ (todas completadas)
-- Estado: Implementación completada. Parser y servicios validados; tests de integración ejecutados: 6 passed, 4 skipped. Fixes aplicados: color parsing, timestamps, celery eager test harness.
+T-026-AGENT: Nomenclature Validator — READY TO START
+- Objetivo: Validar nombres de capas y objetos con regex ISO-19650
+- Dependencias: T-025-AGENT ✅ (UserStringExtractor completado)
+- Estado: Preparado para implementar
 
 ## Next Tickets
-1. T-024-AGENT: Rhino Ingestion Service (validate_file task implementation)
-2. T-025-AGENT: Metadata Extractor (User Strings)
-3. T-026-AGENT: Nomenclature Validator
+1. T-027-AGENT: Geometry Auditor
+2. T-028-BACK: Validation Report Model
+3. T-029-BACK: Trigger Validation from Confirm Endpoint
 
 ## Blockers
 None.
 
 ## Recently Completed (max 3)
+- T-025-AGENT: User String Metadata Extractor — DONE 2026-02-13 (11/11 tests passing) ✅
 - T-024-AGENT: Rhino Ingestion Service — DONE 2026-02-13 (parser + integration tests validated) ✅
 - T-022-INFRA: TDD-REFACTOR — DONE 2026-02-12 (constants extracted, all tests passing) ✅
-- T-023-TEST: Create .3dm Test Fixtures — DONE 2026-02-12 (TDD complete: RED→GREEN→REFACTOR) ✅
 
 ## Risks
 - T-024-AGENT: rhino3dm library compatibility with large files (testing needed)
