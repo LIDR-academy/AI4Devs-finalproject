@@ -8,14 +8,17 @@ app = FastAPI(
 )
 
 # CORS Config
-origins = ["*"]  # Valid command for MVP, restrict in prod
+origins = [
+    "http://localhost:5173",   # Vite dev server
+    "http://localhost:3000",   # Alternative dev port
+]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 @app.get("/health")

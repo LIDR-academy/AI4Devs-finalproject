@@ -48,8 +48,10 @@
   - Following Clean Architecture pattern (separation from env-based config)
 - **Conditional Imports** - Support both worker execution and module imports in tests
 
+### File Processing
+- **rhino3dm** 8.4.0 - Rhino .3dm file parsing and geometry validation (T-024/T-025/T-026/T-027)
+
 ### Future Dependencies (Not Yet Implemented)
-- **rhino3dm** 8.4.0 - Rhino file parsing (T-024-AGENT)
 - **flower** 2.0.1 - Celery monitoring UI (T-033-INFRA, optional)
 
 ## Frontend Stack
@@ -91,14 +93,14 @@
 
 ## Architecture Patterns
 ### Backend
-- **Clean Architecture** - 3-layer separation (API → Service → Constan
+- **Clean Architecture** - 3-layer separation (API → Service → Constants)
 
 ### Agent (NEW - T-022-INFRA)
 - **Asynchronous Task Processing** - Celery workers for background jobs
 - **Retry Policies** - Automatic task retries with exponential backoff
 - **Task Isolation** - Prefetch multiplier = 1 (one task per worker at a time)
 - **Structured Logging** - JSON logs via structlog for observability
-- **Security-First Serialization** - JSON only (no pickle) to prevent code injectionts)
+- **Security-First Serialization** - JSON only (no pickle) to prevent code injection
 - **12-Factor Apps** - Environment-agnostic configuration
 - **Contract-First Development** - Pydantic schemas as source of truth
 
@@ -126,6 +128,8 @@
      - Test command: `make test`
   2. **frontend-tests** - Runs Vitest tests
   3. **docker-validation** - Validates docker-compose config and builds prod images
+  4. **lint-and-format** - Ruff (Python) + ESLint (TypeScript), non-blocking
+  5. **security-scan** - Trivy vulnerability scanner (CRITICAL/HIGH), non-blocking
 
 ### Environment Variables in CI
 - **Secrets**: `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_DATABASE_URL` (GitHub Secrets)

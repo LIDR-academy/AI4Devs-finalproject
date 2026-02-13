@@ -12,15 +12,14 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
-
 # === Dev: hot-reload + test dependencies ===
+# Source code provided via volume mount in docker-compose (no COPY needed)
 FROM base AS dev
-# No additional dependencies yet (tests in T-024+)
-CMD ["celery", "-A", "agent.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
+CMD ["celery", "-A", "celery_app", "worker", "--loglevel=info", "--concurrency=2"]
 
-# === Prod: non-root user, production concurrency ===
+# === Prod: copy source, non-root user, production concurrency ===
 FROM base AS prod
+COPY . .
 RUN useradd -m agentuser
 USER agentuser
-CMD ["celery", "-A", "agent.celery_app", "worker", "--loglevel=warning", "--concurrency=4"]
+CMD ["celery", "-A", "celery_app", "worker", "--loglevel=warning", "--concurrency=4"]
