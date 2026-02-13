@@ -7,12 +7,12 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-027-AGENT: Geometry Auditor — ENRICHMENT PHASE
+T-027-AGENT: Geometry Auditor — TDD-RED PHASE COMPLETED ✅
 - Objetivo: Validar integridad geométrica (IsValid, Volume > 0, BoundingBox.IsValid)
 - Dependencias: T-026-AGENT ✅ (NomenclatureValidator completado), T-024-AGENT ✅ (RhinoParserService)
-- Estado: Technical Specification COMPLETA, listo para TDD-RED
-- Spec: 9 test cases definidos, 2 archivos nuevos + 2 modificaciones
-- Handoff: READY FOR TDD-RED (prompt #097 en prompts.md)
+- Estado: TDD-RED completada, 9/9 tests FAILING con NotImplementedError
+- Archivos: 2 creados (geometry_validator.py, test_geometry_validator.py), 2 modificados (constants.py, __init__.py)
+- Handoff: READY FOR TDD-GREEN (prompt #098 en prompts.md, spec completa en docs/US-002/)
 
 ## Next Tickets
 1. T-028-BACK: Validation Report Model
