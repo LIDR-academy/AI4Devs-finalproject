@@ -7,24 +7,23 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-026-AGENT: Nomenclature Validator — TDD-GREEN PHASE COMPLETE 🟢
-- Objetivo: Validar nombres de capas y objetos con regex ISO-19650
-- Dependencias: T-025-AGENT ✅ (UserStringExtractor completado)
-- Estado: Implementación completa, 9/9 tests passing
-- Fase: TDD-GREEN completada, listo para REFACTOR (opcional) o integración
+T-027-AGENT: Geometry Auditor — READY TO START
+- Objetivo: Validar integridad geométrica (IsValid, Volume > 0, BoundingBox.IsValid)
+- Dependencias: T-026-AGENT ✅ (NomenclatureValidator completado)
+- Estado: Preparado para TDD-RED
 
 ## Next Tickets
-1. T-027-AGENT: Geometry Auditor
-2. T-028-BACK: Validation Report Model
-3. T-029-BACK: Trigger Validation from Confirm Endpoint
+1. T-028-BACK: Validation Report Model
+2. T-029-BACK: Trigger Validation from Confirm Endpoint
+3. T-030-BACK: Get Validation Status Endpoint
 
 ## Blockers
 None.
 
 ## Recently Completed (max 3)
+- T-026-AGENT: Nomenclature Validator — DONE 2026-02-14 (9/9 tests passing, refactored with improved error messages) ✅
 - T-025-AGENT: User String Metadata Extractor — DONE 2026-02-13 (11/11 tests passing) ✅
 - T-024-AGENT: Rhino Ingestion Service — DONE 2026-02-13 (parser + integration tests validated) ✅
-- T-022-INFRA: TDD-REFACTOR — DONE 2026-02-12 (constants extracted, all tests passing) ✅
 
 ## Risks
 - T-024-AGENT: rhino3dm library compatibility with large files (testing needed)

@@ -36,3 +36,4 @@ TASK_VALIDATE_FILE = "agent.tasks.validate_file"
 #   - [A-Z]{1,2}: 1-2 uppercase letters (element type)
 #   - \d{3}: exactly 3 digits (sequential ID)
 ISO_19650_LAYER_NAME_PATTERN = r"^[A-Z]{2,3}-[A-Z0-9]{3,4}-[A-Z]{1,2}-\d{3}$"
+ISO_19650_PATTERN_DESCRIPTION = "[PREFIX]-[ZONE]-[TYPE]-[ID] (e.g., SF-NAV-CO-001)"

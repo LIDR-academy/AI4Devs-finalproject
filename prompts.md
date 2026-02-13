@@ -5699,4 +5699,46 @@ PASSED test_validate_nomenclature_regex_boundaries
 
 ---
 
+## 095 - TDD FASE REFACTOR - Cierre Ticket T-026-AGENT
+**Fecha:** 2026-02-14 11:30
+
+**Prompt Original:**
+> ## Prompt: TDD FASE REFACTOR - Cierre Ticket T-026-AGENT
+>
+> **Objetivo:** Refactorizar código del NomenclatureValidator para mejorar UX + cerrar ticket con auditoría completa
+>
+> **Cambios Solicitados:**
+> 1. **Refactor:** Mejorar mensajes de error para incluir formato esperado ISO-19650
+> 2. **Anti-Regresión:** Ejecutar tests de T-024 y T-025 para verificar no rompimos nada
+> 3. **Documentación:** Actualizar backlog, activeContext, progress.md
+> 4. **Handoff:** Generar bloque AUDIT con resumen de implementación
+>
+> **Checklist de Cierre:**
+> - [x] Código refactorizado (mensajes de error descriptivos)
+> - [x] Tests verificados (9/9 + no regresión)
+> - [x] Documentación actualizada (backlog + activeContext + progress)
+> - [x] prompts.md actualizado
+> - [x] AUDIT handoff generado
+
+**Resumen de la Respuesta/Acción:**
+Refactorizada validación de nomenclatura con mejora en UX:
+1. **Código:**
+   - Añadido `ISO_19650_PATTERN_DESCRIPTION` a constants.py: "[PREFIX]-[ZONE]-[TYPE]-[ID] (e.g., SF-NAV-CO-001)"
+   - Mejorados mensajes de error: incluyen "Expected format: {description}"
+   - Enhanced logging con expected_pattern field
+
+2. **Tests:**
+   - 9/9 tests passing para T-026-AGENT ✅
+   - 18 passed, 1 skipped para T-024 + T-025 (no regression) ✅
+   - Test assertions actualizadas para verificar "Expected format" en mensajes
+
+3. **Documentación:**
+   - backlog.md: T-026-AGENT → **[DONE]** ✅
+   - activeContext.md: T-026 → "Recently Completed", T-027 → Active
+   - progress.md: T-026 añadido a Sprint 4, test counts actualizados (Agent: 17→26, Unit: 10→19)
+
+**Estado:** ✅ **TDD-REFACTOR COMPLETO - TICKET CERRADO**
+
+---
+
 
