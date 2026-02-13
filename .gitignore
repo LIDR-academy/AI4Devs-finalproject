@@ -85,6 +85,14 @@ data/processed/*
 *.glb
 *.gltf
 
+# SSL/TLS Certificates and Keys
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
 # Backup files
 *.backup
 *.bak

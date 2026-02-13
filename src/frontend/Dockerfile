@@ -15,8 +15,8 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# === Prod: nginx serves static files ===
-FROM nginx:alpine AS prod
+# === Prod: nginx serves static files (non-root) ===
+FROM nginxinc/nginx-unprivileged:alpine AS prod
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
