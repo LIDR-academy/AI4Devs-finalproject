@@ -5808,4 +5808,73 @@ Auditoría COMPLETA ejecutada con resultado: ✅ **APROBADO PARA CIERRE Y MERGE*
 
 ---
 
+## 097 - ENRIQUECIMIENTO TÉCNICO - Ticket T-027-AGENT
+**Fecha:** 2026-02-14 13:00
+
+**Prompt Original:**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-027-AGENT
+>
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+>
+> **Protocolo AGENTS.md ejecutado:**
+> 1. Leer backlog (T-027-AGENT: Geometry Auditor)
+> 2. Leer systemPatterns.md (ValidationErrorItem existente, patrones Agent)
+> 3. Leer techContext.md (stack Agent: rhino3dm, structlog, Celery)
+> 4. Leer productContext.md (componentes reutilizables)
+> 5. Registrar en prompts.md
+>
+> **Objetivo:** Generar Technical Specification completa para T-027-AGENT como blueprint para TDD, sin código de implementación.
+
+**Resumen de la Respuesta/Acción:**
+Technical Specification COMPLETA generada para T-027-AGENT (Geometry Validator):
+
+**1. Análisis de Contexto:**
+- **Tipo:** AGENT (servicio interno Python, NO API endpoints)
+- **Alcance:** Validar integridad geométrica (IsValid, BoundingBox, Volume)
+- **Dependencias verificadas:** T-024-AGENT ✅, T-026-AGENT ✅, ValidationErrorItem schema ✅
+
+**2. Contratos Definidos:**
+- **Input:** `rhino3dm.File3dm` (from RhinoParserService)
+- **Output:** `List[ValidationErrorItem]` (category="geometry")
+- **No new Pydantic models:** Reutiliza ValidationErrorItem existente
+- **No API contracts:** Servicio interno del agente
+
+**3. Data Structures:**
+- ValidationErrorItem (EXISTING - reuse)
+- Constants añadidos: GEOMETRY_CATEGORY_NAME, MIN_VALID_VOLUME, error message templates
+- Service interface: `GeometryValidator.validate_geometry(model) -> List[ValidationErrorItem]`
+
+**4. Test Cases Checklist (9 tests definidos):**
+- Happy Path: all valid geometry, empty model
+- Edge Cases: all invalid, mixed valid/invalid, null geometry, degenerate bbox, zero-volume
+- Security: None input, objects without attributes
+
+**5. Archivos a Crear/Modificar:**
+- CREATE: `src/agent/services/geometry_validator.py` (~120 lines)
+- CREATE: `tests/unit/test_geometry_validator.py` (~300 lines, 9-10 tests)
+- MODIFY: `src/agent/constants.py` (añadir GEOMETRY_* constants)
+- MODIFY: `src/agent/services/__init__.py` (export GeometryValidator)
+
+**6. Patrones Reutilizados:**
+- Service structure de T-026-AGENT (NomenclatureValidator)
+- Constants extraction pattern (Clean Architecture)
+- Structured logging con structlog
+- Defensive programming (None input handling)
+
+**7. rhino3dm API Research:**
+- `obj.Geometry.IsValid` (bool)
+- `obj.Geometry.GetBoundingBox()` (bbox.IsValid check)
+- Volume calculation para Brep/Mesh (bbox heuristic)
+- Object type detection (Brep, Mesh, Curve, Point)
+
+**Estado:** ✅ **SPEC COMPLETA - LISTO PARA TDD-RED** 📋
+
+**Handoff generado para TDD-RED:**
+- 9 key test cases identificados
+- 2 archivos a crear, 2 a modificar
+- Dependencies verificadas (rhino3dm, ValidationErrorItem)
+- Estimación: ~3-4 hours (siguiendo patrón T-026)
+
+---
+
 
