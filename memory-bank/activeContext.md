@@ -7,10 +7,10 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-024-AGENT: Rhino Ingestion Service — ENRICHMENT COMPLETE
+T-024-AGENT: Rhino Ingestion Service — DONE 2026-02-13
 - Objetivo: Implementar la lógica de validación de archivos .3dm usando rhino3dm (descarga S3, parseo, extracción capas, DB update)
 - Dependencias: T-020-DB ✅, T-021-DB ✅, T-022-INFRA ✅, T-023-TEST ✅ (todas completadas)
-- Estado: Technical Specification generada. Lista para TDD-RED phase.
+- Estado: Implementación completada. Parser y servicios validados; tests de integración ejecutados: 6 passed, 4 skipped. Fixes aplicados: color parsing, timestamps, celery eager test harness.
 
 ## Next Tickets
 1. T-024-AGENT: Rhino Ingestion Service (validate_file task implementation)
@@ -21,9 +21,9 @@ T-024-AGENT: Rhino Ingestion Service — ENRICHMENT COMPLETE
 None.
 
 ## Recently Completed (max 3)
+- T-024-AGENT: Rhino Ingestion Service — DONE 2026-02-13 (parser + integration tests validated) ✅
 - T-022-INFRA: TDD-REFACTOR — DONE 2026-02-12 (constants extracted, all tests passing) ✅
 - T-023-TEST: Create .3dm Test Fixtures — DONE 2026-02-12 (TDD complete: RED→GREEN→REFACTOR) ✅
-- CI Fix for T-022-INFRA — DONE 2026-02-12 (GitHub Actions workflow updated) ✅
 
 ## Risks
 - T-024-AGENT: rhino3dm library compatibility with large files (testing needed)
