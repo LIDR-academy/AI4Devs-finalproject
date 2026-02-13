@@ -367,8 +367,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/main/java/com/hexagonal/meditation/generation/infrastructure/in/rest/dto/GenerationResponse.java`
 - `/backend/src/main/java/com/hexagonal/meditation/generation/infrastructure/in/rest/mapper/MeditationOutputDtoMapper.java`
 **Criterios de aceptación:**
-- [ ] Schemas alineados con OpenAPI
-- [ ] Mapper sin lógica de negocio
+- [x] Schemas alineados con OpenAPI
+- [x] Mapper sin lógica de negocio
 **Evidencias:** Compila  
 **Dependencias:** T003, T007
 
@@ -381,10 +381,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/in/rest/controller/MeditationGenerationControllerTest.java`
 - `/backend/src/test/java/com/hexagonal/meditation/generation/infrastructure/config/TestSecurityConfig.java` (**solo en test**)
 **Criterios de aceptación:**
-- [ ] `@PostMapping("/api/v1/generation/meditations")` conforme a OpenAPI
-- [ ] DTO → use case; excepciones → 408/400/503
-- [ ] **Bypass auth** en test: mock `userId`/header simulado
-- [ ] `TestSecurityConfig` **no** se empaqueta en prod
+- [x] `@PostMapping("/api/v1/generation/meditations")` conforme a OpenAPI
+- [x] DTO → use case; excepciones → 408/400/503
+- [x] **Bypass auth** en test: mock `userId`/header simulado
+- [x] `TestSecurityConfig` **no** se empaqueta en prod
 **Evidencias:** Tests controller green  
 **Dependencias:** T011, T021
 
