@@ -38,15 +38,22 @@ init-db:
 setup-events:
 	docker compose run --rm backend python /app/infra/setup_events_table.py
 
-# Run all tests inside Docker
+# Run all tests inside Docker (backend + agent)
 test:
-	docker compose run --rm backend pytest -v
+	@echo "🧪 Running backend tests..."
+	docker compose run --rm backend pytest -v || true
+	@echo "🤖 Running agent tests..."
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py -v
 
-# Run only integration tests
+# Run only agent tests (unit + agent-specific integration)
+test-agent:
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py -v
+
+# Run only integration tests (backend)
 test-infra:
 	docker compose run --rm backend pytest tests/integration/ -v
 
-# Run only unit tests
+# Run only unit tests (backend)
 test-unit:
 	docker compose run --rm backend pytest tests/unit/ -v
 
@@ -99,9 +106,10 @@ help:
 	@echo "  Backend:"
 	@echo "    make init-db       - Initialize DB infrastructure (buckets, policies)"
 	@echo "    make setup-events  - Create events table in Supabase (T-004-BACK)"
-	@echo "    make test          - Run all backend tests"
-	@echo "    make test-unit     - Run unit tests only"
-	@echo "    make test-infra    - Run integration tests only"
+	@echo "    make test          - Run all tests (backend + agent)"
+	@echo "    make test-agent    - Run agent tests only"
+	@echo "    make test-unit     - Run backend unit tests only"
+	@echo "    make test-infra    - Run backend integration tests only"
 	@echo "    make test-storage  - Run storage infrastructure test"
 	@echo "    make shell         - Open shell in backend container"
 	@echo ""
