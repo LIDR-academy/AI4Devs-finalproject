@@ -87,13 +87,16 @@ services:
       - .env
     volumes:
       - ./src/agent:/app
+      - ./src:/app/src  # Mount src parent for test imports (src.agent.*)
       - ./tests:/app/tests
+      - ./infra:/app/infra  # Required for supabase_client imports in tests
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
       - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
+      - PYTHONPATH=/app  # Ensure proper Python import paths
     depends_on:
       redis:
         condition: service_healthy
