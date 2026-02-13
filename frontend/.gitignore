@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+loglevel.log
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+dist-ssr
+
+# Test outputs
+coverage
+.nyc_output
+playwright-report
+test-results
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# OpenAPI Generated Clients (keep only tracked wrappers)
+# The generated/ folders contain auto-generated code that should not be committed
+# We only commit the wrapper files (client.ts, generation-client.ts, etc.)
+src/api/generated/

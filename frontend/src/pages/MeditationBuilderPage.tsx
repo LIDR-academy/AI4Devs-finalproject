@@ -7,6 +7,9 @@ import {
   ImagePreview,
   GenerateTextButton,
   GenerateImageButton,
+  GenerationStatusBar,
+  GenerateMeditationButton,
+  GenerationResultModal,
 } from '@/components';
 import ImageSelectorButton from '@/components/ImageSelectorButton';
 import MusicSelectorButton from '@/components/MusicSelectorButton';
@@ -17,6 +20,7 @@ import {
   useRemoveImage,
   useMusicPreview,
   useImagePreview,
+  useGenerateMeditation,
 } from '@/hooks';
 import { useGenerateText } from '@/hooks/useGenerateText';
 import { useGenerateImage } from '@/hooks/useGenerateImage';
@@ -46,6 +50,9 @@ export function MeditationBuilderPage() {
 
   const generateText = useGenerateText({ compositionId });
   const generateImage = useGenerateImage({ prompt: localText });
+  
+  // Generation hook (US3 - Generate Meditation Audio/Video)
+  const generation = useGenerateMeditation();
 
   const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
@@ -263,6 +270,55 @@ export function MeditationBuilderPage() {
         </div>
       </div>
     </div>
+
+    {/* Generation Section (US3) */}
+    <div className="meditation-builder__generation">
+      {generation.isCreating && (
+        <GenerationStatusBar
+          progress={generation.progress}
+          message="Creating your meditation content..."
+        />
+      )}
+      
+      {!generation.isCreating && (
+        <GenerateMeditationButton
+          onClick={() => {
+            // Determine output type based on image presence
+            const outputType = selectedImageId || localImageUrl ? 'VIDEO' : 'PODCAST';
+            
+            generation.start({
+              text: localText,
+              musicReference: selectedMusicId || 'default-music', // TODO: Handle missing music
+              imageReference: selectedImageId || localImageUrl || undefined,
+            });
+          }}
+          disabled={
+            !localText.trim() || 
+            !(selectedMusicId || localAudioUrl) ||
+            generateText.isPending || 
+            generateImage.isPending ||
+            generation.isCreating
+          }
+          isLoading={generation.isCreating}
+          outputType={selectedImageId || localImageUrl ? 'VIDEO' : 'PODCAST'}
+        />
+      )}
+    </div>
+
+    {/* Generation Result Modal */}
+    <GenerationResultModal
+      isOpen={generation.isCompleted || generation.isFailed}
+      result={generation.result}
+      error={generation.errorMessage}
+      onClose={() => generation.reset()}
+      onRetry={() => {
+        generation.start({
+          text: localText,
+          musicReference: selectedMusicId || 'default-music',
+          imageReference: selectedImageId || localImageUrl || undefined,
+        });
+      }}
+    />
 
     {updateText.isPending && (
       <div className="meditation-builder__save-indicator">
