@@ -11,6 +11,13 @@ import structlog
 from src.agent.models import FileProcessingResult, LayerInfo
 from src.agent.services.user_string_extractor import UserStringExtractor
 
+# Import rhino3dm at module level for testability
+# Mock in unit tests with: @patch('src.agent.services.rhino_parser_service.rhino3dm')
+try:
+    import rhino3dm
+except ImportError:
+    rhino3dm = None  # Will be handled in parse_file()
+
 logger = structlog.get_logger()
 
 
@@ -32,10 +39,8 @@ class RhinoParserService:
         Returns:
             FileProcessingResult with parsed data or error information
         """
-        # Import rhino3dm locally to allow mocking in tests
-        try:
-            import rhino3dm
-        except ImportError:
+        # Check rhino3dm availability
+        if rhino3dm is None:
             logger.error("rhino_parser.rhino3dm_not_installed")
             return FileProcessingResult(
                 success=False,
