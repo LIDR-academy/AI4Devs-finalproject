@@ -303,12 +303,27 @@ Este archivo documenta todas las decisiones importantes tomadas durante el desar
 
 ---
 
-## Plantilla para Nuevas Decisiones
-```markdown
-## [FECHA] - [TÍTULO CORTO]
-- **Contexto:** Qué problema teníamos.
-- **Decisión:** Qué elegimos (ej. usar Tailwind en lugar de CSS puro).
-- **Consecuencias:** 
+## 2026-02-14 - Exclusión de Tests Backend del Pipeline Agent
+- **Contexto:** Durante T-028-BACK (Validation Report Service), se creó `tests/unit/test_validation_report_service.py` (test de backend) en el directorio `tests/unit/` que también contiene tests de agent. El comando `make test-agent` ejecuta TODOS los tests en `tests/unit/` dentro del contenedor `agent-worker`, causando fallo de pipeline CI/CD porque ese contenedor no tiene dependencias de backend (`src/backend/services`, `src/backend/schemas`).
+- **Decisión:** **Short-term fix:** Modificar Makefile para que `make test-agent` excluya explícitamente `test_validation_report_service.py` usando `--ignore=tests/unit/test_validation_report_service.py`. **Long-term debt:** Refactorizar estructura de tests a `tests/backend/unit/` y `tests/agent/unit/` (Clean Architecture).
+- **Consecuencias:**
+  - ✅ **Ganamos:**
+    - Pipeline CI/CD funciona inmediatamente
+    - No requiere reestructuración de directorios ahora
+    - Tests de backend siguen ejecutándose en `make test` (contenedor backend)
+  - ⚠️ **Perdemos:**
+    - Deuda técnica: estructura de tests mixta (no sigue Clean Architecture)
+    - Fragilidad: cada nuevo test backend en `tests/unit/` requiere --ignore adicional
+    - Confusión: no es obvio por nombre de archivo que pertenece a capa backend
+  - 🔧 **Acción Futura (Post-MVP):**
+    - Crear `tests/backend/unit/` y `tests/backend/integration/`
+    - Crear `tests/agent/unit/` y `tests/agent/integration/`
+    - Mover tests existentes a sus directorios correctos
+    - Actualizar Makefile con `make test-backend` y `make test-agent` limpios
+    - Referencia: T-028-BACK prompts.md #105
+
+---
+
   - ✅ **Ganamos:** [beneficios]
   - ⚠️ **Perdemos:** [trade-offs]
 ```

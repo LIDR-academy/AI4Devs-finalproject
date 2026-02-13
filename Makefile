@@ -43,11 +43,12 @@ test:
 	@echo "🧪 Running backend tests..."
 	docker compose run --rm backend pytest -v || true
 	@echo "🤖 Running agent tests..."
-	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py -v
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py --ignore=tests/unit/test_validation_report_service.py -v
 
 # Run only agent tests (unit + agent-specific integration)
+# Note: Excludes backend-specific unit tests (test_validation_report_service.py)
 test-agent:
-	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py -v
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py --ignore=tests/unit/test_validation_report_service.py -v
 
 # Run only integration tests (backend)
 test-infra:
