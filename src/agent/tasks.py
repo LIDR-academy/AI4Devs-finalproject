@@ -68,23 +68,170 @@ def health_check(self):
 )
 def validate_file(self, part_id: str, s3_key: str):
     """
-    PLACEHOLDER - To be implemented in T-024-AGENT.
+    Validate .3dm file from S3.
     
-    This task will:
-    1. Download .3dm from S3 to /tmp
-    2. Parse with rhino3dm.File3dm.Read()
-    3. Extract metadata (T-025)
-    4. Validate nomenclature (T-026)
-    5. Validate geometry (T-027)
-    6. Update blocks table with validation_report
+    This task:
+    1. Updates block status to 'processing'
+    2. Downloads .3dm from S3 to /tmp
+    3. Parses with rhino3dm.File3dm.Read()
+    4. Extracts layer metadata
+    5. Saves validation report to database
+    6. Updates block status to 'validated' or 'error_processing'
+    7. Cleans up temporary files
     
     Args:
         part_id: UUID of the part in database
         s3_key: S3 object key for the .3dm file
     
-    Raises:
-        NotImplementedError: Placeholder for T-024-AGENT
+    Returns:
+        dict: Result with success status and metadata
     """
     logger.info("validate_file.started", part_id=part_id, s3_key=s3_key)
-    # Implementation in T-024
-    raise NotImplementedError("Placeholder for T-024-AGENT")
+    
+    # Import services
+    try:
+        from services.file_download_service import FileDownloadService
+        from services.rhino_parser_service import RhinoParserService
+        from services.db_service import DBService
+    except ModuleNotFoundError:
+        from src.agent.services.file_download_service import FileDownloadService
+        from src.agent.services.rhino_parser_service import RhinoParserService
+        from src.agent.services.db_service import DBService
+    
+    # Initialize services
+    file_download = FileDownloadService()
+    rhino_parser = RhinoParserService()
+    db_service = DBService()
+    
+    # Worker identifier for audit trail
+    worker_id = self.request.hostname or "unknown-worker"
+    
+    try:
+        # Step 1: Update status to processing
+        db_service.update_block_status(part_id, "processing")
+        
+        # Step 2: Download file from S3
+        success, local_path, download_error = file_download.download_from_s3(s3_key)
+        
+        if not success:
+            logger.error("validate_file.download_failed", part_id=part_id, error=download_error)
+            
+            # Save error to validation report
+            db_service.save_validation_report(
+                part_id=part_id,
+                is_valid=False,
+                errors=[{
+                    "category": "io",
+                    "target": s3_key,
+                    "message": download_error
+                }],
+                metadata={},
+                validated_by=worker_id
+            )
+            
+            # Update status to error
+            db_service.update_block_status(part_id, "error_processing")
+            
+            return {
+                "success": False,
+                "error": download_error
+            }
+        
+        # Step 3: Parse .3dm file
+        parse_result = rhino_parser.parse_file(local_path)
+        
+        # Step 4: Cleanup temp file
+        file_download.cleanup_temp_file(local_path)
+        
+        # Step 5: Process results
+        if not parse_result.success:
+            logger.error("validate_file.parse_failed", part_id=part_id, error=parse_result.error_message)
+            
+            # Save error to validation report
+            db_service.save_validation_report(
+                part_id=part_id,
+                is_valid=False,
+                errors=[{
+                    "category": "io",
+                    "target": s3_key,
+                    "message": parse_result.error_message
+                }],
+                metadata={},
+                validated_by=worker_id
+            )
+            
+            # Update status to error
+            db_service.update_block_status(part_id, "error_processing")
+            
+            return {
+                "success": False,
+                "error": parse_result.error_message
+            }
+        
+        # Step 6: Build metadata from parsed layers
+        layers_metadata = [
+            {
+                "name": layer.name,
+                "index": layer.index,
+                "object_count": layer.object_count,
+                "color": layer.color,
+                "is_visible": layer.is_visible
+            }
+            for layer in parse_result.layers
+        ]
+        
+        metadata = {
+            "layers": layers_metadata,
+            **parse_result.file_metadata
+        }
+        
+        # Step 7: Save validation report (no errors for MVP - T-026/T-027 add validation)
+        db_service.save_validation_report(
+            part_id=part_id,
+            is_valid=True,
+            errors=[],
+            metadata=metadata,
+            validated_by=worker_id
+        )
+        
+        # Step 8: Update status to validated
+        db_service.update_block_status(part_id, "validated")
+        
+        logger.info(
+            "validate_file.success",
+            part_id=part_id,
+            layer_count=len(parse_result.layers)
+        )
+        
+        return {
+            "success": True,
+            "part_id": part_id,
+            "layer_count": len(parse_result.layers),
+            "metadata": metadata
+        }
+        
+    except Exception as e:
+        logger.exception("validate_file.unexpected_error", part_id=part_id, error=str(e))
+        
+        # Save error to validation report
+        try:
+            db_service.save_validation_report(
+                part_id=part_id,
+                is_valid=False,
+                errors=[{
+                    "category": "io",
+                    "target": s3_key,
+                    "message": f"Unexpected error: {str(e)}"
+                }],
+                metadata={},
+                validated_by=worker_id
+            )
+            
+            db_service.update_block_status(part_id, "error_processing")
+        except Exception as db_error:
+            logger.exception("validate_file.db_error_during_error_handling", error=str(db_error))
+        
+        return {
+            "success": False,
+            "error": str(e)
+        }
