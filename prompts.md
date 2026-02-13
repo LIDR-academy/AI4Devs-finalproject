@@ -5948,4 +5948,65 @@ docker compose run --rm agent-worker pytest tests/unit/test_geometry_validator.p
 
 ---
 
+## [099] - TDD FASE VERDE - Ticket T-027-AGENT
+**Fecha:** 2026-02-14 00:15
+**Prompt Original:**
+> ## Prompt: TDD FASE VERDE - Ticket T-027-AGENT
+> 
+> **Role:** Actúa como Senior Developer (Python/FastAPI para backend, React/TypeScript para frontend).
+> 
+> ### Protocolo Agents (OBLIGATORIO)
+> 
+> 1. Lee memory-bank/activeContext.md para confirmar el estado actual del sprint.
+> 2. Lee memory-bank/systemPatterns.md para respetar contratos API y patrones existentes.
+> 3. Revisa el test en ROJA para entender exactamente qué se espera de la implementación.
+> 4. Al finalizar, registra el avance en prompts.md.
+> 
+> ### Contexto: Estamos en TDD. Tenemos tests fallando para el ticket T-027-AGENT (Geometry Validator).
+> Error actual del test: NotImplementedError: validate_geometry() to be implemented in TDD-GREEN phase
+> 
+> [Instrucciones completas para implementación mínima siguiendo blueprint de spec sección 4.3...]
+
+**Resumen de la Respuesta/Acción:**
+Implementada lógica de validación geométrica siguiendo spec (sección 4.3) con 4 checks secuenciales:
+
+**1. Implementación (src/agent/services/geometry_validator.py):**
+- Método validate_geometry() completado (~100 lines total)
+- Check 1: Null geometry (obj.Geometry is None) → early exit con error
+- Check 2: Invalid geometry (obj.Geometry.IsValid == False) → error + structured log
+- Check 3: Degenerate bbox (bbox.IsValid == False) → error + structured log
+- Check 4: Zero volume Brep/Mesh (volume < MIN_VALID_VOLUME) → error + structured log
+- Defensive programming: None model input → return [] (graceful handling)
+- Structured logging: started/completed/failed events con object_count, errors_found
+
+**2. Compatibilidad Mock Testing:**
+- Detección de tipos por __class__.__name__ (soporta mocks y rhino3dm real)
+- Volume calculation: (bbox.Max.X - Min.X) * (Max.Y - Min.Y) * (Max.Z - Min.Z)
+- Sin dependencia estricta de rhino3dm module para unit tests
+
+**3. Resultado Tests:**
+- ✅ 9/9 tests PASSING (test_geometry_validator.py)
+- test_validate_geometry_all_valid_objects: PASSED
+- test_validate_geometry_empty_model: PASSED
+- test_validate_geometry_all_invalid_objects: PASSED
+- test_validate_geometry_mixed_valid_invalid: PASSED
+- test_validate_geometry_null_geometry: PASSED
+- test_validate_geometry_degenerate_bounding_box: PASSED
+- test_validate_geometry_zero_volume_solid: PASSED ✅ (ajustado tipo detection)
+- test_validate_geometry_none_model_input: PASSED
+- test_validate_geometry_object_without_attributes: PASSED
+
+**4. Regression Tests:**
+- ✅ 27/28 tests PASSING (T-024/T-025/T-026 no regression)
+- T-026-AGENT (NomenclatureValidator): 9 passed
+- T-025-AGENT (UserStringExtractor): 8 passed
+- T-024-AGENT (RhinoParserService): 10 passed, 1 skipped
+
+**5. Archivos Modificados:**
+- src/agent/services/geometry_validator.py: Implementación completa del método validate_geometry()
+
+**Estado:** ✅ **FASE VERDE COMPLETADA - LISTO PARA TDD-REFACTOR** 🟢
+
+---
+
 
