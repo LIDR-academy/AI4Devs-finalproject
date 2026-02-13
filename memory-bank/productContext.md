@@ -65,3 +65,41 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
 - Visor 3D: >30fps con 5,000 piezas visibles
 - Reduccion 70% tiempo busqueda de piezas
 - 95% cobertura de trazabilidad
+---
+
+## Current Implementation Status (Feb 2026)
+
+### ✅ Completed Features
+
+**US-001: File Upload Flow (DONE)**
+- Direct S3 upload with presigned URLs (no backend bottleneck)
+- Client-side validation (mime-type, size limits)
+- Event tracking on upload confirmation
+- Backend service layer with Clean Architecture pattern
+- Full test coverage (18 frontend + 7 backend tests)
+
+**US-002: Validation Infrastructure (PARTIAL)**
+- ✅ Database schema: `validation_report` JSONB column in `blocks` table
+- ✅ Extended `block_status` enum: `processing`, `rejected`, `error_processing`
+- ✅ Redis + Celery worker setup for async validation tasks
+- ✅ ValidationReport API contract (Pydantic + TypeScript schemas)
+- ✅ Agent validators:
+  - T-024: Rhino file parser (rhino3dm integration)
+  - T-025: User strings extractor (metadata extraction)
+  - T-026: Nomenclature validator (ISO-19650 regex)
+  - T-027: Geometry validator (IsValid checks)
+- ✅ **T-028: Validation Report Service** (Backend integration)
+  - Service layer for creating/persisting validation reports
+  - JSONB serialization/deserialization with Pydantic
+  - Clean Architecture with return tuples pattern
+  - Full test coverage (13 tests: 10 unit + 3 integration)
+
+### 🔄 In Progress
+- T-029: Trigger validation from upload confirm endpoint
+- T-030: GET endpoint for validation status
+
+### 📋 Next Milestones
+- US-005: Dashboard with parts listing
+- US-010: 3D Web Viewer (Three.js)
+- US-007: Lifecycle state machine
+- US-013: Authentication (Supabase Auth)

@@ -21,6 +21,7 @@ EVENT_TYPE_VALIDATION_FAILED = "validation.failed"
 TABLE_EVENTS = "events"
 TABLE_FILES = "files"
 TABLE_PARTS = "parts"
+TABLE_BLOCKS = "blocks"
 
 # ===== File Validation =====
 ALLOWED_EXTENSION = ".3dm"
