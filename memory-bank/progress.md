@@ -35,13 +35,14 @@
 - T-025-AGENT: User String Metadata Extractor — DONE 2026-02-13 (11/11 tests passing: 8 unit + 3 E2E, Pydantic v2 migration, no regression)
 - T-026-AGENT: Nomenclature Validator — DONE 2026-02-14 (9/9 tests passing, TDD RED→GREEN→REFACTOR complete, error messages refactored)
 - T-027-AGENT: Geometry Validator — DONE 2026-02-14 (9/9 tests passing, TDD RED→GREEN→REFACTOR complete, 4 checks geométricos, helper method _get_object_id)
+- T-028-BACK: Validation Report Service — DONE 2026-02-14 (13/13 tests passing: 10 unit + 3 integration, Clean Architecture service layer, TDD RED→GREEN→REFACTOR complete)
 
 ## Test Counts
-- Backend: 31 passed, 1 skipped (integration + unit tests)
+- Backend: 44 passed, 1 skipped (validation report service 13 + upload flow 6 + previous 25)
 - Frontend: 18 passed (4 FileUploader + 14 UploadZone)
 - Agent: 36 passed, 1 skipped (9 nomenclature_validator + 8 user_string_extractor + 3 E2E user_strings + 6 validate_file_task + 9 geometry_validator + 1 rhino_parser skipped)
-- Unit Tests: 28 (validation schema presence + validate_file contract + 8 user_string_extractor + 9 nomenclature_validator + 9 geometry_validator)
-- Integration Tests: 35 (upload flow, storage, confirm upload, celery worker, validation report, block status, validate_file_task, user_strings_e2e)
+- Unit Tests: 38 (10 validation_report_service + 28 previous)
+- Integration Tests: 38 (3 validation_report_persistence + 35 previous)
 
 ## Status
 - Memory Bank: Active
