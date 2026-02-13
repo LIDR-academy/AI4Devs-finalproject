@@ -1,11 +1,14 @@
 package com.hexagonal.meditation.generation.infrastructure.out.adapter.ffmpeg;
 
 import com.hexagonal.meditation.generation.domain.ports.out.AudioRenderingPort;
+import com.hexagonal.meditation.generation.infrastructure.config.FfmpegConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -21,6 +24,12 @@ public class FfmpegAudioRendererAdapter implements AudioRenderingPort {
     
     private static final Logger logger = LoggerFactory.getLogger(FfmpegAudioRendererAdapter.class);
     
+    private final FfmpegConfig ffmpegConfig;
+    
+    public FfmpegAudioRendererAdapter(FfmpegConfig ffmpegConfig) {
+        this.ffmpegConfig = ffmpegConfig;
+    }
+    
     @Override
     public Path renderAudio(AudioRenderRequest request) {
         logger.info("Rendering audio: narration={}, music={}, output={}", 
@@ -34,7 +43,7 @@ public class FfmpegAudioRendererAdapter implements AudioRenderingPort {
 
             // Build command
             List<String> command = new ArrayList<>();
-            command.add("ffmpeg");
+            command.add(ffmpegConfig.getPath());
             command.add("-y"); // Overwrite output
             command.add("-i");
             command.add(request.narrationAudioPath().toAbsolutePath().toString());
@@ -64,24 +73,53 @@ public class FfmpegAudioRendererAdapter implements AudioRenderingPort {
             pb.redirectErrorStream(true);
             Process process = pb.start();
             
-            // In a real environment, we would read the output stream to avoid blocking
+            // Read output to avoid blocking
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                    logger.debug("FFmpeg: {}", line);
+                }
+            }
+            
             int exitCode = process.waitFor();
             
             if (exitCode == 0) {
                 logger.info("Audio rendering completed via FFmpeg: {}", request.outputPath());
+                if (Files.exists(request.outputPath())) {
+                    long fileSize = Files.size(request.outputPath());
+                    logger.info("Audio file size: {} bytes", fileSize);
+                }
                 return request.outputPath();
             } else {
-                logger.warn("FFmpeg failed with exit code {}. Falling back to copy.", exitCode);
+                logger.error("FFmpeg failed with exit code {}. Output:\n{}", exitCode, output);
+                logger.error("FFmpeg command was: {}", String.join(" ", command));
+                if (ffmpegConfig.isEnableFallback()) {
+                    logger.warn("Falling back to copy mode");
+                } else {
+                    throw new RuntimeException("FFmpeg failed with exit code " + exitCode);
+                }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error("FFmpeg process interrupted", e);
+            if (!ffmpegConfig.isEnableFallback()) {
+                throw new RuntimeException("Audio rendering failed: FFmpeg process interrupted", e);
+            }
         } catch (IOException e) {
-            logger.warn("FFmpeg not found or IO error: {}. Falling back to copy for development.", e.getMessage());
+            logger.error("FFmpeg not found or IO error: {}", e.getMessage(), e);
+            if (!ffmpegConfig.isEnableFallback()) {
+                throw new RuntimeException("Audio rendering failed: " + e.getMessage() + ". Please install FFmpeg or set ffmpeg.path in application.yml", e);
+            } else {
+                logger.warn("Falling back to copy mode for development");
+            }
         }
 
-        // FALLBACK: If FFmpeg is missing or fails, just copy the narration file to the output path
-        // so the pipeline can continue during development.
+        // FALLBACK: If FFmpeg is missing or fails AND fallback is enabled
+        if (!ffmpegConfig.isEnableFallback()) {
+            throw new RuntimeException("Audio rendering failed and fallback is disabled");
+        }
         try {
             Files.copy(request.narrationAudioPath(), request.outputPath());
             logger.info("Audio rendering completed via FALLBACK (copy): {}", request.outputPath());

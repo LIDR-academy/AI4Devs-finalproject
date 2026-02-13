@@ -1,6 +1,7 @@
 package com.hexagonal.meditation.generation.infrastructure.out.adapter.ffmpeg;
 
 import com.hexagonal.meditation.generation.domain.ports.out.AudioRenderingPort.AudioRenderRequest;
+import com.hexagonal.meditation.generation.infrastructure.config.FfmpegConfig;
 import com.hexagonal.meditation.generation.domain.ports.out.AudioRenderingPort.AudioConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,7 @@ class FfmpegAudioRendererAdapterTest {
     
     @BeforeEach
     void setUp() {
-        adapter = new FfmpegAudioRendererAdapter();
+        adapter = new FfmpegAudioRendererAdapter(new FfmpegConfig());
     }
     
     @Test

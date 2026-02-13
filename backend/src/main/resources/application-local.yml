@@ -63,6 +63,11 @@ aws:
     access-key: ${AWS_ACCESS_KEY_ID:test}
     secret-key: ${AWS_SECRET_ACCESS_KEY:test}
 
+# FFmpeg - Local development (expects FFmpeg in PATH or custom path)
+ffmpeg:
+  path: ${FFMPEG_PATH:ffmpeg}
+  enable-fallback: true
+
 # Development logging - more verbose
 logging:
   level:

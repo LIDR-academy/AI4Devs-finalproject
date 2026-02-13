@@ -36,10 +36,25 @@ public class PostgresContentRepository implements ContentRepositoryPort {
     public GeneratedMeditationContent save(GeneratedMeditationContent content) {
         logger.info("Saving meditation output: id={}, status={}", 
             content.meditationId(), content.status());
-        
+
         MeditationOutputEntity entity = mapper.toEntity(content);
-        MeditationOutputEntity savedEntity = jpaRepository.save(entity);
+
+        // Log all media URLs before saving for debugging length issues
+        logger.debug("Media URL lengths - output_media_url: {}, subtitle_url: {}, background_image_url: {}, background_music_url: {}",
+            entity.getOutputMediaUrl() != null ? entity.getOutputMediaUrl().length() : 0,
+            entity.getSubtitleUrl() != null ? entity.getSubtitleUrl().length() : 0,
+            entity.getBackgroundImageUrl() != null ? entity.getBackgroundImageUrl().length() : 0,
+            entity.getBackgroundMusicUrl() != null ? entity.getBackgroundMusicUrl().length() : 0);
         
+        if (logger.isTraceEnabled()) {
+            logger.trace("output_media_url: {}", entity.getOutputMediaUrl());
+            logger.trace("subtitle_url: {}", entity.getSubtitleUrl());
+            logger.trace("background_image_url: {}", entity.getBackgroundImageUrl());
+            logger.trace("background_music_url: {}", entity.getBackgroundMusicUrl());
+        }
+
+        MeditationOutputEntity savedEntity = jpaRepository.save(entity);
+
         logger.debug("Meditation output saved successfully: {}", savedEntity.getMeditationId());
         return mapper.toDomain(savedEntity);
     }

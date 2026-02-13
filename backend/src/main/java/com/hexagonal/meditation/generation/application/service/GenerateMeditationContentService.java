@@ -320,7 +320,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
     
     /**
      * Resolve image path from reference.
-     * Supports: file paths, HTTP/HTTPS URLs.
+     * Supports: file paths, HTTP/HTTPS URLs, base64 data URIs.
      * Rejects: blob URLs (browser-only).
      */
     private Path resolveImagePath(String imageReference, Path tempDir) throws IOException {
@@ -332,6 +332,12 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
         if (imageReference.startsWith("blob:")) {
             throw new InvalidContentException("imageReference", 
                 "Blob URLs are not supported. Please upload the image file to S3 or provide an HTTP/HTTPS URL.");
+        }
+        
+        // Handle base64 data URIs (e.g., data:image/png;base64,iVBORw0KG...)
+        if (imageReference.startsWith("data:image/")) {
+            log.info("Decoding base64 image data URI (length: {})", imageReference.length());
+            return decodeBase64Image(imageReference, tempDir);
         }
         
         // Handle HTTP/HTTPS URLs - download to temp directory
@@ -352,7 +358,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
         }
         
         throw new InvalidContentException("imageReference", 
-            "Image file not found. Provide a valid file path or HTTP/HTTPS URL: " + imageReference);
+            "Image file not found. Provide a valid file path, HTTP/HTTPS URL, or base64 data URI: " + imageReference);
     }
     
     /**
@@ -400,6 +406,90 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
     }
     
     /**
+     * Decode base64 data URI to image file.
+     * Format: data:image/<format>;base64,<base64-encoded-data>
+     */
+    private Path decodeBase64Image(String dataUri, Path tempDir) throws IOException {
+        try {
+            // Extract MIME type and base64 data
+            if (!dataUri.contains(",")) {
+                throw new InvalidContentException("imageReference", "Invalid base64 data URI format: missing comma separator");
+            }
+            
+            String[] parts = dataUri.split(",", 2);
+            String header = parts[0]; // data:image/<format>;base64
+            String base64Data = parts[1];
+            
+            // Extract image format (png, jpeg, etc.)
+            String format = "png"; // default
+            if (header.contains("image/")) {
+                int start = header.indexOf("image/") + 6;
+                int end = header.indexOf(";", start);
+                if (end > start) {
+                    format = header.substring(start, end);
+                }
+            }
+            
+            // Decode base64 to bytes
+            byte[] imageBytes = java.util.Base64.getDecoder().decode(base64Data);
+            
+            // Write to temp file
+            Path imagePath = tempDir.resolve("image." + format);
+            Files.write(imagePath, imageBytes);
+            
+            log.info("Base64 image decoded successfully: {} ({} bytes)", imagePath, imageBytes.length);
+            return imagePath;
+            
+        } catch (IllegalArgumentException e) {
+            throw new InvalidContentException("imageReference", "Invalid base64 encoding: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decode base64 image: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Sanitize image reference for database storage.
+     * Replaces base64 data URIs with a short descriptor to avoid DB length limits.
+     */
+    private String sanitizeImageReference(String imageReference) {
+        if (imageReference == null || imageReference.isBlank()) {
+            return imageReference;
+        }
+        
+        // If it's a base64 data URI, replace with descriptor
+        if (imageReference.startsWith("data:image/")) {
+            // Extract format if possible
+            String format = "image";
+            int formatStart = imageReference.indexOf("image/") + 6;
+            int formatEnd = imageReference.indexOf(";", formatStart);
+            if (formatEnd > formatStart && formatEnd < formatStart + 10) {
+                format = imageReference.substring(formatStart, formatEnd);
+            }
+            return "data:image/" + format + ";base64" + " (generated)";
+        }
+        
+        // For URLs and paths, return as-is (already short)
+        return imageReference;
+    }
+    
+    /**
+     * Sanitize music reference for database storage.
+     * Ensures reference doesn't exceed DB length limits.
+     */
+    private String sanitizeMusicReference(String musicReference) {
+        if (musicReference == null || musicReference.isBlank()) {
+            return musicReference;
+        }
+        
+        // For now, just truncate if too long
+        if (musicReference.length() > 450) {
+            return musicReference.substring(0, 447) + "...";
+        }
+        
+        return musicReference;
+    }
+    
+    /**
      * Cleanup temporary directory and all files.
      */
     private void cleanupTempDirectory(Path tempDir) {
@@ -438,7 +528,9 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
                 throw new InvalidContentException("imageReference", "Image reference required for video generation");
             }
             
-            MediaReference imageMediaReference = new MediaReference(request.imageReference());
+            // Sanitize image reference to avoid DB length issues with base64
+            String sanitizedImageRef = sanitizeImageReference(request.imageReference());
+            MediaReference imageMediaReference = new MediaReference(sanitizedImageRef);
             
             return GeneratedMeditationContent.createVideo(
                 meditationId,

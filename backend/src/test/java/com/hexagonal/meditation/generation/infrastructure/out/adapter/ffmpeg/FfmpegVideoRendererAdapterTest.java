@@ -1,6 +1,7 @@
 package com.hexagonal.meditation.generation.infrastructure.out.adapter.ffmpeg;
 
 import com.hexagonal.meditation.generation.domain.ports.out.VideoRenderingPort.VideoRenderRequest;
+import com.hexagonal.meditation.generation.infrastructure.config.FfmpegConfig;
 import com.hexagonal.meditation.generation.domain.ports.out.VideoRenderingPort.VideoConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,7 @@ class FfmpegVideoRendererAdapterTest {
     
     @BeforeEach
     void setUp() {
-        adapter = new FfmpegVideoRendererAdapter();
+        adapter = new FfmpegVideoRendererAdapter(new FfmpegConfig());
     }
     
     @Test
