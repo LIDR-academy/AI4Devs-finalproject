@@ -12,6 +12,45 @@ from psycopg2.extensions import connection
 
 
 @pytest.fixture(scope="session")
+def celery_config():
+    """
+    Configure Celery for testing with eager mode.
+    
+    In eager mode, tasks execute synchronously instead of being
+    sent to the broker, making tests deterministic and faster.
+    """
+    return {
+        'task_always_eager': True,
+        'task_eager_propagates': True,
+    }
+
+
+@pytest.fixture(scope="function", autouse=True)
+def celery_eager_mode():
+    """
+    Enable Celery eager mode for all tests automatically.
+    
+    This makes validate_file.apply_async() execute synchronously,
+    allowing tests to run without a background worker.
+    """
+    from src.agent.celery_app import celery_app
+    
+    # Store original config
+    original_always_eager = celery_app.conf.task_always_eager
+    original_eager_propagates = celery_app.conf.task_eager_propagates
+    
+    # Enable eager mode
+    celery_app.conf.task_always_eager = True
+    celery_app.conf.task_eager_propagates = True
+    
+    yield
+    
+    # Restore original config
+    celery_app.conf.task_always_eager = original_always_eager
+    celery_app.conf.task_eager_propagates = original_eager_propagates
+
+
+@pytest.fixture(scope="session")
 def supabase_client() -> Client:
     """
     Create a Supabase client instance using environment variables.

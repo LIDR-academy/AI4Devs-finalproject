@@ -19,8 +19,8 @@ BEGIN
     VALUES ('raw-uploads', 'raw-uploads', false, now(), now())
     ON CONFLICT (id) DO NOTHING;
 
-    -- 2) Ensure RLS is enabled on storage.objects
-    ALTER TABLE IF EXISTS storage.objects ENABLE ROW LEVEL SECURITY;
+    -- 2) Note: RLS is already enabled by default on storage.objects in Supabase Cloud
+    -- (Removed ALTER TABLE statement that requires OWNER privileges)
 
     -- 3) Policy: allow INSERT by authenticated users or service_role
     IF NOT EXISTS (

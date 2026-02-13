@@ -2,9 +2,11 @@
 FROM python:3.11-slim AS base
 WORKDIR /app
 
-# Install system dependencies for rhino3dm (future T-024)
+# Install system dependencies for rhino3dm (T-024-AGENT)
+# CMake required for rhino3dm compilation (C++ bindings)
 RUN apt-get update && apt-get install -y \
     build-essential \
+    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
