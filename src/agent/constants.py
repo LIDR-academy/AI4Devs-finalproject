@@ -37,3 +37,13 @@ TASK_VALIDATE_FILE = "agent.tasks.validate_file"
 #   - \d{3}: exactly 3 digits (sequential ID)
 ISO_19650_LAYER_NAME_PATTERN = r"^[A-Z]{2,3}-[A-Z0-9]{3,4}-[A-Z]{1,2}-\d{3}$"
 ISO_19650_PATTERN_DESCRIPTION = "[PREFIX]-[ZONE]-[TYPE]-[ID] (e.g., SF-NAV-CO-001)"
+
+# Geometry Validation
+GEOMETRY_CATEGORY_NAME = "geometry"
+MIN_VALID_VOLUME = 1e-6  # Minimum volume in cubic units (avoid near-zero volumes)
+
+# Geometry Error Messages Templates
+GEOMETRY_ERROR_INVALID = "Geometry is marked as invalid by Rhino (obj.Geometry.IsValid = False)"
+GEOMETRY_ERROR_NULL = "Geometry is null or missing"
+GEOMETRY_ERROR_DEGENERATE_BBOX = "Bounding box is degenerate or invalid"
+GEOMETRY_ERROR_ZERO_VOLUME = "Solid geometry has zero or near-zero volume (< {min_volume} cubic units)"

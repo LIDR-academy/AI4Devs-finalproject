@@ -5877,4 +5877,75 @@ Technical Specification COMPLETA generada para T-027-AGENT (Geometry Validator):
 
 ---
 
+## [098] - TDD FASE ROJA - Ticket T-027-AGENT
+**Fecha:** 2026-02-14 00:00
+**Prompt Original:**
+> ## Prompt: TDD FASE ROJA - Ticket T-027-AGENT
+> 
+> **Role:** Actúa como QA Automation Engineer y Software Architect.
+> 
+> ### Protocolo Agents (OBLIGATORIO antes de escribir código)
+> 
+> 1. **Lee** `memory-bank/activeContext.md` para entender el estado actual del sprint.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar los contratos API y patrones existentes.
+> 3. **Consulta** `docs/09-mvp-backlog.md` y busca el ticket `T-027-AGENT` para entender su alcance exacto, criterios de aceptación y DoD.
+> 4. **Consulta** `docs/productContext.md` para ver qué componentes o endpoints ya existen y pueden reutilizarse.
+> 5. **Al finalizar**, registra el inicio de esta tarea en `prompts.md`.
+> 
+> ### Contexto
+> 
+> Iniciamos el desarrollo de la funcionalidad: **Geometry Validator** (Ticket `T-027-AGENT`).
+> Seguimos estrictamente TDD. El código de la implementación **AÚN NO EXISTE**.
+> 
+> **Stack relevante del proyecto:** FastAPI, React 18+TS, LangGraph, Docker, Supabase, PostgreSQL 15
+> 
+> ### Objetivo
+> 
+> 1. **Crear/Actualizar los tipos e interfaces** necesarios para `T-027-AGENT`.
+> 2. **Crear tests que fallen (RED)** describiendo el comportamiento esperado.
+> 3. El test DEBE fallar por `ImportError` (módulo no existe) o `AssertionError` (lógica no implementada), NO por errores de sintaxis.
+> 
+> [Instrucciones completas de creación de tipos, test cases, infraestructura, y output esperado con handoff block...]
+
+**Resumen de la Respuesta/Acción:**
+Ejecutado protocolo AGENTS.md completo (5 docs leídos). Creados 4 archivos siguiendo patrón T-026-AGENT:
+
+**1. Archivos CREADOS:**
+- `src/agent/services/geometry_validator.py` (~91 lines): Clase con método `validate_geometry()` que lanza `NotImplementedError` ✅
+- `tests/unit/test_geometry_validator.py` (~368 lines): 9 tests comprehensivos (HP-1, HP-2, EC-1 a EC-5, SE-1, SE-2) ✅
+
+**2. Archivos MODIFICADOS:**
+- `src/agent/constants.py`: Añadidos 6 constants GEOMETRY_* (CATEGORY_NAME, MIN_VALID_VOLUME, 4 error templates) ✅
+- `src/agent/services/__init__.py`: Export GeometryValidator en __all__ ✅
+
+**3. Test Mocking Strategy:**
+- Fixtures para mock rhino3dm objects (valid_geometry, invalid_geometry, degenerate_bbox, zero_volume)
+- Mock File3dmObject con Attributes.Id y Geometry properties
+- Mock File3dm model con Objects list
+- Sin dependencia de rhino3dm binario (CMake-free testing)
+
+**4. Tipo de Errores:** Todos los tests fallan correctamente con `NotImplementedError: validate_geometry() to be implemented in TDD-GREEN phase` ✅
+
+**5. Test Coverage Definido:**
+- **Happy Path:** 2 tests (all valid, empty model)
+- **Edge Cases:** 5 tests (all invalid, mixed, null geometry, degenerate bbox, zero volume)
+- **Security:** 2 tests (None input, object without attributes)
+
+**6. Comando de Ejecución:**
+```bash
+docker compose run --rm agent-worker pytest tests/unit/test_geometry_validator.py -v
+```
+
+**7. Resultado Fase ROJA:** ✅ **9/9 tests FAILING** (exit code 1)
+
+**8. Handoff para TDD-GREEN:**
+- Test error sample: `NotImplementedError: validate_geometry() to be implemented in TDD-GREEN phase`
+- Test files: `tests/unit/test_geometry_validator.py`
+- Implementation blueprint: Spec section 4.3 en `docs/US-002/T-027-AGENT-GeometryValidator-Spec.md`
+- rhino3dm API calls documented: IsValid, GetBoundingBox(), volume calculation
+
+**Estado:** 🔴 **FASE ROJA COMPLETADA - LISTO PARA TDD-GREEN** 🚀
+
+---
+
 
