@@ -105,6 +105,28 @@ Para mantener este registro manejable:
 
 ---
 
+## 075 - Workflow Step 1: Enrichment - T-029-BACK
+**Fecha:** 2026-02-14
+
+### Contexto
+- **Ticket:** T-029-BACK - Trigger Validation from Confirm Endpoint
+- **Fase:** Enrichment (Pre-TDD)
+- **Herramienta:** Claude Code (Opus 4.6)
+
+### Accion
+Generada Technical Specification completa para T-029-BACK:
+- Analisis de flujo actual vs propuesto
+- Decision: crear registro `blocks` con datos minimos antes de encolar tarea Celery
+- Singleton pattern para Celery client (`infra/celery_client.py`)
+- 10 test cases definidos (happy path, edge cases, security, integration)
+- Diagrama de secuencia Frontend → Backend → Redis → Agent Worker
+
+### Output
+- Spec: `docs/US-002/T-029-BACK-TechnicalSpec.md`
+- activeContext.md actualizado
+
+---
+
 ## 074 - TDD FASE AUDIT - Cierre Final Ticket T-021-DB
 **Fecha:** 2026-02-12 11:40
 
