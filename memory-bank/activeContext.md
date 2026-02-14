@@ -7,7 +7,14 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-030-BACK: Get Validation Status Endpoint — NOT STARTED
+T-030-BACK: Get Validation Status Endpoint — ENRICHMENT PHASE COMPLETE ✅ (TDD-RED next)
+
+## Technical Spec Generated
+- `/docs/US-002/T-030-BACK-TechnicalSpec.md` — Complete API contract + 13 test cases + schemas + SQL query
+- Endpoint: `GET /api/parts/{id}/validation` (returns ValidationStatusResponse with block metadata + validation_report JSONB)
+- Dependencies verified: ValidationReport schema (T-028), blocks table (T-020), block_status ENUM (T-021)
+- Reusable assets: ValidationReport, TABLE_BLOCKS constant, Supabase client singleton
+- Next: TDD-RED phase (8 unit tests + 5 integration tests)
 
 ## Next Tickets
 1. T-030-BACK: Get Validation Status Endpoint
