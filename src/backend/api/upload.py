@@ -2,6 +2,7 @@ import uuid
 from fastapi import APIRouter, HTTPException
 from schemas import UploadRequest, UploadResponse, ConfirmUploadRequest, ConfirmUploadResponse
 from infra.supabase_client import get_supabase_client
+from infra.celery_client import get_celery_client
 from services import UploadService
 from constants import ALLOWED_EXTENSION
 
@@ -47,43 +48,41 @@ async def generate_upload_url(request: UploadRequest) -> UploadResponse:
 @router.post("/confirm", response_model=ConfirmUploadResponse)
 async def confirm_upload(request: ConfirmUploadRequest) -> ConfirmUploadResponse:
     """
-    Confirm a completed file upload and trigger processing.
-    
-    This endpoint is called by the frontend after successfully uploading
-    a file to the presigned URL. It verifies the file exists in storage,
-    creates an event record, and (in future) triggers async processing.
+    Confirm a completed file upload and trigger async validation.
+
+    Verifies the file exists in storage, creates an event record,
+    creates a block record, and enqueues a Celery validation task.
 
     Args:
         request (ConfirmUploadRequest): Contains file_id and file_key
 
     Returns:
-        ConfirmUploadResponse: Confirmation status with event_id
+        ConfirmUploadResponse: Confirmation status with event_id and task_id
 
     Raises:
-        HTTPException: 404 if file not found in storage, 500 for database errors
+        HTTPException: 404 if file not found, 500 for database/enqueue errors
     """
-    # Get service instance
+    # Get service instances
     supabase = get_supabase_client()
-    upload_service = UploadService(supabase)
-    
+    celery = get_celery_client()
+    upload_service = UploadService(supabase, celery_client=celery)
+
     # Execute confirmation via service
-    success, event_id, error_msg = upload_service.confirm_upload(
+    success, event_id, task_id, error_msg = upload_service.confirm_upload(
         file_id=request.file_id,
         file_key=request.file_key
     )
-    
+
     # Handle errors
     if not success:
-        if "not found" in error_msg.lower():
+        if error_msg and "not found" in error_msg.lower():
             raise HTTPException(status_code=404, detail=error_msg)
         else:
             raise HTTPException(status_code=500, detail=error_msg)
-    
-    # Return success response
-    # TODO: In future, launch Celery task here and return task_id
+
     return ConfirmUploadResponse(
         success=True,
-        message="Upload confirmed successfully",
+        message="Upload confirmed and validation enqueued",
         event_id=event_id,
-        task_id=None  # MVP: No Celery integration yet
+        task_id=task_id,
     )

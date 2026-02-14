@@ -13,7 +13,11 @@ from constants import (
     STORAGE_BUCKET_RAW_UPLOADS,
     STORAGE_UPLOAD_PATH_PREFIX,
     EVENT_TYPE_UPLOAD_CONFIRMED,
-    TABLE_EVENTS
+    TABLE_EVENTS,
+    TABLE_BLOCKS,
+    TASK_VALIDATE_FILE,
+    BLOCK_TIPOLOGIA_PENDING,
+    BLOCK_ISO_CODE_PREFIX,
 )
 
 
@@ -25,14 +29,16 @@ class UploadService:
     including storage verification and event creation.
     """
     
-    def __init__(self, supabase_client: Client):
+    def __init__(self, supabase_client: Client, celery_client=None):
         """
         Initialize the upload service.
-        
+
         Args:
             supabase_client: Configured Supabase client instance
+            celery_client: Optional Celery client for enqueuing tasks
         """
         self.supabase = supabase_client
+        self.celery = celery_client
     
     def generate_presigned_url(self, file_id: str, filename: str) -> Tuple[str, str]:
         """
@@ -114,36 +120,94 @@ class UploadService:
         
         return event_id
     
+    def create_block_record(self, file_id: str, file_key: str) -> str:
+        """
+        Create a block record with temporary pending values.
+
+        Args:
+            file_id: UUID of the uploaded file
+            file_key: S3 object key where file was uploaded
+
+        Returns:
+            str: UUID of the created block
+
+        Raises:
+            Exception: If INSERT fails
+        """
+        iso_code = f"{BLOCK_ISO_CODE_PREFIX}-{file_id[:8]}"
+        block_data = {
+            "iso_code": iso_code,
+            "tipologia": BLOCK_TIPOLOGIA_PENDING,
+            "url_original": file_key,
+        }
+
+        result = self.supabase.table(TABLE_BLOCKS).insert(block_data).execute()
+        return result.data[0]["id"]
+
+    def enqueue_validation(self, block_id: str, file_key: str) -> str:
+        """
+        Send a Celery task to validate the uploaded file.
+
+        Args:
+            block_id: UUID of the block record
+            file_key: S3 object key where file was uploaded
+
+        Returns:
+            str: Celery task ID
+
+        Raises:
+            RuntimeError: If no celery client is configured
+        """
+        if self.celery is None:
+            raise RuntimeError("Celery client not configured")
+
+        result = self.celery.send_task(
+            TASK_VALIDATE_FILE,
+            args=[block_id, file_key]
+        )
+        return result.id
+
     def confirm_upload(
         self,
         file_id: str,
         file_key: str
-    ) -> Tuple[bool, Optional[str], Optional[str]]:
+    ) -> Tuple[bool, Optional[str], Optional[str], Optional[str]]:
         """
         Confirm a completed file upload.
-        
+
         This method orchestrates the full confirmation process:
         1. Verify file exists in storage
         2. Create event record in database
-        3. (Future) Trigger processing task
-        
+        3. Create block record
+        4. Enqueue validation task
+
         Args:
             file_id: UUID of the uploaded file
             file_key: S3 object key where file was uploaded
-            
+
         Returns:
-            Tuple of (success, event_id, error_message)
-            - success: True if confirmation succeeded
-            - event_id: UUID of created event (or None if failed)
-            - error_message: Error description (or None if succeeded)
+            Tuple of (success, event_id, task_id, error_message)
         """
         # Step 1: Verify file exists
         if not self.verify_file_exists_in_storage(file_key):
-            return False, None, f"File not found in storage: {file_key}"
-        
+            return False, None, None, f"File not found in storage: {file_key}"
+
         # Step 2: Create event record
         try:
             event_id = self.create_upload_event(file_id, file_key)
-            return True, event_id, None
         except Exception as e:
-            return False, None, f"Database error: {str(e)}"
+            return False, None, None, f"Database error: {str(e)}"
+
+        # Step 3: Create block record
+        try:
+            block_id = self.create_block_record(file_id, file_key)
+        except Exception as e:
+            return False, event_id, None, f"Block creation error: {str(e)}"
+
+        # Step 4: Enqueue validation task
+        try:
+            task_id = self.enqueue_validation(block_id, file_key)
+        except Exception as e:
+            return True, event_id, None, f"Enqueue error: {str(e)}"
+
+        return True, event_id, task_id, None
