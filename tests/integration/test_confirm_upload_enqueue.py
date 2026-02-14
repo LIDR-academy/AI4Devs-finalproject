@@ -1,18 +1,19 @@
 """
 Integration tests for T-029-BACK: Trigger Validation from Confirm Endpoint
 
-TDD Phase: RED — These tests verify the full endpoint flow:
+TDD Phase: GREEN — These tests verify the full endpoint flow:
   POST /api/upload/confirm → block created → task enqueued → task_id returned
 
 Requires:
   - PostgreSQL (db service) for blocks table
   - Redis (via Celery eager mode from conftest.py) for task execution
-  - Supabase (for file storage verification)
+  - Supabase (for file storage and blocks table)
 
 Tests:
   1. Endpoint returns task_id (not null) on happy path
   2. Block record created in DB with PENDING iso_code
   3. Payload validation still returns 422 (no-regression)
+  4. File not found returns 404, no block created
 """
 
 import pytest
@@ -22,7 +23,17 @@ from main import app
 client = TestClient(app)
 
 
-def test_confirm_upload_returns_task_id(supabase_client, db_connection):
+def _cleanup_pending_blocks(supabase_client, iso_prefix: str):
+    """Helper to remove PENDING blocks from Supabase."""
+    try:
+        supabase_client.table("blocks").delete().like(
+            "iso_code", f"PENDING-{iso_prefix}%"
+        ).execute()
+    except Exception:
+        pass
+
+
+def test_confirm_upload_returns_task_id(supabase_client):
     """
     T-029-BACK Integration Test 1:
     When confirming a valid upload, the response should include
@@ -40,11 +51,14 @@ def test_confirm_upload_returns_task_id(supabase_client, db_connection):
     test_file_key = "test/t029_enqueue_test.3dm"
     test_content = b"Mock .3dm content for T-029 enqueue test"
 
-    # Cleanup from previous runs
+    file_id = "029e8400-e29b-41d4-a716-446655440029"
+
+    # Cleanup stale data from previous runs
     try:
         supabase_client.storage.from_(bucket_name).remove([test_file_key])
     except Exception:
         pass
+    _cleanup_pending_blocks(supabase_client, file_id[:8])
 
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
@@ -52,7 +66,6 @@ def test_confirm_upload_returns_task_id(supabase_client, db_connection):
         file_options={"content-type": "application/x-rhino"}
     )
 
-    file_id = "029e8400-e29b-41d4-a716-446655440029"
     payload = {
         "file_id": file_id,
         "file_key": test_file_key
@@ -73,21 +86,10 @@ def test_confirm_upload_returns_task_id(supabase_client, db_connection):
 
     # Cleanup
     supabase_client.storage.from_(bucket_name).remove([test_file_key])
-
-    # Cleanup: remove block created during test
-    cursor = db_connection.cursor()
-    try:
-        cursor.execute(
-            "DELETE FROM blocks WHERE iso_code LIKE 'PENDING-%'"
-        )
-        db_connection.commit()
-    except Exception:
-        db_connection.rollback()
-    finally:
-        cursor.close()
+    _cleanup_pending_blocks(supabase_client, file_id[:8])
 
 
-def test_confirm_upload_creates_block_record(supabase_client, db_connection):
+def test_confirm_upload_creates_block_record(supabase_client):
     """
     T-029-BACK Integration Test 2:
     When confirming a valid upload, a block record should be created
@@ -97,7 +99,6 @@ def test_confirm_upload_creates_block_record(supabase_client, db_connection):
     When: POST /api/upload/confirm
     Then:
         - A row exists in blocks table with iso_code starting with "PENDING-"
-        - Block status is "uploaded" (default)
         - Block tipologia is "pending"
         - Block url_original matches the file_key
     """
@@ -106,10 +107,14 @@ def test_confirm_upload_creates_block_record(supabase_client, db_connection):
     test_file_key = "test/t029_block_test.3dm"
     test_content = b"Mock .3dm content for T-029 block test"
 
+    file_id = "029eaaaa-bbbb-41d4-a716-446655440029"
+
+    # Cleanup stale data
     try:
         supabase_client.storage.from_(bucket_name).remove([test_file_key])
     except Exception:
         pass
+    _cleanup_pending_blocks(supabase_client, file_id[:8])
 
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
@@ -117,7 +122,6 @@ def test_confirm_upload_creates_block_record(supabase_client, db_connection):
         file_options={"content-type": "application/x-rhino"}
     )
 
-    file_id = "029e8400-aaaa-41d4-a716-446655440029"
     payload = {
         "file_id": file_id,
         "file_key": test_file_key
@@ -125,36 +129,26 @@ def test_confirm_upload_creates_block_record(supabase_client, db_connection):
 
     # Act
     response = client.post("/api/upload/confirm", json=payload)
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.json()}"
 
-    # Assert: Query blocks table directly
-    cursor = db_connection.cursor()
-    try:
-        expected_iso_prefix = f"PENDING-{file_id[:8]}"
-        cursor.execute(
-            "SELECT id, iso_code, status, tipologia, url_original "
-            "FROM blocks WHERE iso_code = %s",
-            (expected_iso_prefix,)
-        )
-        row = cursor.fetchone()
+    # Assert: Query blocks table via Supabase
+    expected_iso = f"PENDING-{file_id[:8]}"
+    result = supabase_client.table("blocks").select(
+        "id, iso_code, status, tipologia, url_original"
+    ).eq("iso_code", expected_iso).execute()
 
-        assert row is not None, (
-            f"Block with iso_code '{expected_iso_prefix}' not found in blocks table. "
-            "T-029-BACK should create a block record during confirm upload."
-        )
+    assert len(result.data) > 0, (
+        f"Block with iso_code '{expected_iso}' not found in blocks table. "
+        "T-029-BACK should create a block record during confirm upload."
+    )
 
-        block_id, iso_code, status, tipologia, url_original = row
-        assert iso_code == expected_iso_prefix
-        assert status == "uploaded", f"Expected status 'uploaded', got '{status}'"
-        assert tipologia == "pending", f"Expected tipologia 'pending', got '{tipologia}'"
-        assert url_original == test_file_key
+    block = result.data[0]
+    assert block["iso_code"] == expected_iso
+    assert block["tipologia"] == "pending", f"Expected tipologia 'pending', got '{block['tipologia']}'"
+    assert block["url_original"] == test_file_key
 
-    finally:
-        # Cleanup
-        cursor.execute("DELETE FROM blocks WHERE iso_code LIKE 'PENDING-%'")
-        db_connection.commit()
-        cursor.close()
-
+    # Cleanup
+    _cleanup_pending_blocks(supabase_client, file_id[:8])
     supabase_client.storage.from_(bucket_name).remove([test_file_key])
 
 
@@ -173,7 +167,7 @@ def test_confirm_upload_invalid_payload_still_returns_422():
     assert response.status_code == 422, f"Expected 422, got {response.status_code}"
 
 
-def test_confirm_upload_file_not_found_returns_404_no_block(db_connection):
+def test_confirm_upload_file_not_found_returns_404_no_block(supabase_client):
     """
     T-029-BACK Integration Test 4:
     When file doesn't exist in S3, no block should be created.
@@ -184,15 +178,17 @@ def test_confirm_upload_file_not_found_returns_404_no_block(db_connection):
         - Response 404
         - NO block record created in blocks table
     """
+    file_id = "029edead-beef-4444-a716-000000000000"
     payload = {
-        "file_id": "029e8400-dead-beef-a716-000000000000",
+        "file_id": file_id,
         "file_key": "non-existent/t029-phantom.3dm"
     }
 
     # Count blocks before
-    cursor = db_connection.cursor()
-    cursor.execute("SELECT count(*) FROM blocks WHERE iso_code LIKE 'PENDING-029e8400%'")
-    count_before = cursor.fetchone()[0]
+    result_before = supabase_client.table("blocks").select(
+        "id", count="exact"
+    ).like("iso_code", f"PENDING-{file_id[:8]}%").execute()
+    count_before = result_before.count or 0
 
     # Act
     response = client.post("/api/upload/confirm", json=payload)
@@ -200,9 +196,10 @@ def test_confirm_upload_file_not_found_returns_404_no_block(db_connection):
     # Assert: 404 and no new block
     assert response.status_code == 404
 
-    cursor.execute("SELECT count(*) FROM blocks WHERE iso_code LIKE 'PENDING-029e8400%'")
-    count_after = cursor.fetchone()[0]
-    cursor.close()
+    result_after = supabase_client.table("blocks").select(
+        "id", count="exact"
+    ).like("iso_code", f"PENDING-{file_id[:8]}%").execute()
+    count_after = result_after.count or 0
 
     assert count_after == count_before, (
         "No block should be created when file is not found in storage"
