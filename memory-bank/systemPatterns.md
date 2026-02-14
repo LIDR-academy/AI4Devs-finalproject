@@ -120,23 +120,27 @@ src/backend/
 - **Service Layer** (`services/`): Business logic, orchestration, data persistence
 - **Constants** (`constants.py`): All magic strings/numbers centralized
 
-**Example** (`T-004-BACK` - Confirm Upload):
+**Example** (`T-029-BACK` - Confirm Upload with Celery enqueue):
 ```python
-# api/upload.py (thin controller)
+# api/upload.py (thin controller — dependency injection only)
 @router.post("/confirm")
 async def confirm_upload(request: ConfirmUploadRequest):
-    upload_service = UploadService(supabase_client)
-    success, event_id, error = upload_service.confirm_upload(...)
+    supabase = get_supabase_client()
+    celery = get_celery_client()
+    upload_service = UploadService(supabase, celery_client=celery)
+    success, event_id, task_id, error = upload_service.confirm_upload(...)
     if not success:
         raise HTTPException(...)
-    return ConfirmUploadResponse(event_id=event_id)
+    return ConfirmUploadResponse(event_id=event_id, task_id=task_id)
 
 # services/upload_service.py (business logic)
 class UploadService:
     def confirm_upload(self, file_id, file_key):
         # 1. Verify file in storage
         # 2. Create event record
-        # 3. Return result tuple
+        # 3. Create block record (PENDING)
+        # 4. Enqueue validation task via Celery
+        # Return (success, event_id, task_id, error)
         ...
 ```
 
@@ -158,6 +162,28 @@ MAX_FILE_SIZE_MB = 500
 ```
 
 **Enforcement**: Router and services MUST import from constants, never hardcode strings.
+
+### Infrastructure Singletons (T-029-BACK)
+**Pattern**: Singleton factory functions for shared infrastructure clients.
+
+**Implementations**:
+- `infra/supabase_client.py` → `get_supabase_client()` — Supabase REST API
+- `infra/celery_client.py` → `get_celery_client()` — Celery task dispatch (backend → agent)
+
+```python
+# infra/celery_client.py (send-only client, no task execution)
+_celery_client = None
+
+def get_celery_client() -> Celery:
+    global _celery_client
+    if _celery_client is None:
+        broker_url = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
+        _celery_client = Celery("sf-pm-backend", broker=broker_url)
+        _celery_client.conf.update(task_serializer="json", ...)
+    return _celery_client
+```
+
+**Key distinction**: Backend's celery_client only sends tasks via `send_task()`. Agent's `celery_app.py` runs tasks via `@celery_app.task` decorators. They share the same broker URL but serve different roles.
 
 ### Testing Patterns
 - **Backend**: pytest with integration tests for Supabase Storage

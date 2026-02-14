@@ -48,20 +48,19 @@ async def generate_upload_url(request: UploadRequest) -> UploadResponse:
 @router.post("/confirm", response_model=ConfirmUploadResponse)
 async def confirm_upload(request: ConfirmUploadRequest) -> ConfirmUploadResponse:
     """
-    Confirm a completed file upload and trigger processing.
-    
-    This endpoint is called by the frontend after successfully uploading
-    a file to the presigned URL. It verifies the file exists in storage,
-    creates an event record, and (in future) triggers async processing.
+    Confirm a completed file upload and trigger async validation.
+
+    Verifies the file exists in storage, creates an event record,
+    creates a block record, and enqueues a Celery validation task.
 
     Args:
         request (ConfirmUploadRequest): Contains file_id and file_key
 
     Returns:
-        ConfirmUploadResponse: Confirmation status with event_id
+        ConfirmUploadResponse: Confirmation status with event_id and task_id
 
     Raises:
-        HTTPException: 404 if file not found in storage, 500 for database errors
+        HTTPException: 404 if file not found, 500 for database/enqueue errors
     """
     # Get service instances
     supabase = get_supabase_client()

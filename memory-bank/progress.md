@@ -36,13 +36,14 @@
 - T-026-AGENT: Nomenclature Validator — DONE 2026-02-14 (9/9 tests passing, TDD RED→GREEN→REFACTOR complete, error messages refactored)
 - T-027-AGENT: Geometry Validator — DONE 2026-02-14 (9/9 tests passing, TDD RED→GREEN→REFACTOR complete, 4 checks geométricos, helper method _get_object_id)
 - T-028-BACK: Validation Report Service — DONE 2026-02-14 (13/13 tests passing: 10 unit + 3 integration, Clean Architecture service layer, TDD RED→GREEN→REFACTOR complete)
+- T-029-BACK: Trigger Validation from Confirm Endpoint — DONE 2026-02-14 (13/13 tests: 9 unit + 4 integration, TDD RED→GREEN→REFACTOR complete, celery_client singleton, block creation + Celery enqueue)
 
 ## Test Counts
-- Backend: 44 passed, 1 skipped (validation report service 13 + upload flow 6 + previous 25)
+- Backend: 57 passed, 5 skipped (T-029 enqueue 13 + validation report 13 + upload flow 6 + previous 25)
 - Frontend: 18 passed (4 FileUploader + 14 UploadZone)
 - Agent: 36 passed, 1 skipped (9 nomenclature_validator + 8 user_string_extractor + 3 E2E user_strings + 6 validate_file_task + 9 geometry_validator + 1 rhino_parser skipped)
-- Unit Tests: 38 (10 validation_report_service + 28 previous)
-- Integration Tests: 38 (3 validation_report_persistence + 35 previous)
+- Unit Tests: 47 (9 upload_service_enqueue + 10 validation_report_service + 28 previous)
+- Integration Tests: 42 (4 confirm_upload_enqueue + 3 validation_report_persistence + 35 previous)
 
 ## Status
 - Memory Bank: Active
