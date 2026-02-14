@@ -6523,3 +6523,49 @@ Ejecuté auditoría completa siguiendo protocolo de 5 pasos. Detecté **2 BLOCKE
 **Verificación Final:** Ambos blockers resueltos. T-029-BACK aprobado para merge con calificación 100/100.
 
 ---
+
+## [110] - TDD FASE ROJA - Ticket T-030-BACK
+**Fecha:** 2026-02-14 23:25
+**Prompt Original:**
+> ## Prompt: TDD FASE ROJA - Ticket T-030-BACK
+> 
+> **Role:** Actúa como QA Automation Engineer y Software Architect.
+> 
+> ---
+> 
+> ### Protocolo Agents (OBLIGATORIO antes de escribir código)
+> 
+> 1. **Lee** `memory-bank/activeContext.md` para entender el estado actual del sprint.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar los contratos API y patrones existentes.
+> 3. **Consulta** `docs/09-mvp-backlog.md` y busca el ticket `T-030-BACK` para entender su alcance exacto, criterios de aceptación y DoD.
+> 4. **Consulta** `docs/productContext.md` para ver qué componentes o endpoints ya existen y pueden reutilizarse.
+> 5. **Al finalizar**, registra el inicio de esta tarea en `prompts.md`.
+> 
+> ---
+> 
+> ### Contexto
+> 
+> Iniciamos el desarrollo de la funcionalidad: **Get Validation Status Endpoint** (Ticket `T-030-BACK`).
+> Seguimos estrictamente TDD. El código de la implementación **AÚN NO EXISTE**.
+> 
+> **Stack relevante del proyecto:**
+> - **Backend:** FastAPI (Python 3.11) con Pydantic schemas, tests en `tests/` con pytest
+> - **Frontend:** React 18 + TypeScript strict + Vite, tests con Vitest + @testing-library/react
+> - **Agent:** LangGraph (Python), tests con pytest
+> - **Infra:** Docker multi-stage, Supabase Storage (S3-compatible), PostgreSQL 15, migraciones en `supabase/migrations/`
+> - **Ejecución:** Todo corre dentro de Docker. Tests vía `make test` (backend) o `make test-front` (frontend)
+> 
+> **Patrón de contrato (CRÍTICO):** Las interfaces TypeScript en `src/frontend/src/types/` DEBEN coincidir exactamente con los Pydantic schemas en `src/backend/schemas.py`. Revisa ambos antes de crear tipos nuevos.
+> 
+> ---
+> 
+> ### Objetivo
+> 
+> 1. **Crear/Actualizar los tipos e interfaces** necesarios para `T-030-BACK`.
+> 2. **Crear tests que fallen (RED)** describiendo el comportamiento esperado.
+> 3. El test DEBE fallar por `ImportError` (módulo no existe) o `AssertionError` (lógica no implementada), NO por errores de sintaxis.
+> (... resto del prompt omitido para brevedad)
+
+**Resumen de la Respuesta/Acción:**
+Ejecuté protocolo TDD-RED completando: (1) Creé schemas Pydantic BlockStatus ENUM (8 valores) + ValidationStatusResponse en schemas.py (líneas ~110-180), (2) Añadí interfaces TypeScript BlockStatus + ValidationStatusResponse en src/frontend/src/types/validation.ts alineadas 100% con Pydantic, (3) Creé 8 unit tests en tests/unit/test_validation_service.py (happy path: validated/unvalidated/rejected/processing blocks, edge cases: not found/invalid UUID, errors: DB connection/missing columns) → FALLAN con ModuleNotFoundError: No module named 'services.validation_service', (4) Creé 5 integration tests en tests/integration/test_get_validation_status.py (validated/unvalidated blocks, not found, invalid UUID, E2E flow) → 4 FALLAN con 404 Not Found (endpoint no existe), 1 PASA (verifica 404), (5) Corregí schema DB (añadí 'tipologia' NOT NULL requerido por blocks table), (6) Estado RED confirmado: Unit tests fallan por ImportError, Integration tests fallan por endpoint missing. Tests escritos correctamente, listos para fase GREEN. Archivos: src/backend/schemas.py (+70 líneas), src/frontend/src/types/validation.ts (+30 líneas), tests/unit/test_validation_service.py (320 líneas, 8 tests), tests/integration/test_get_validation_status.py (270 líneas, 5 tests).
+---

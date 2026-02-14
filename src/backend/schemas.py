@@ -98,3 +98,79 @@ class ValidationReport(BaseModel):
     validated_at: Optional[datetime] = Field(None, description="Validation timestamp")
     validated_by: Optional[str] = Field(None, description="Validator identifier")
 
+
+# ===== T-030-BACK: Get Validation Status Endpoint Schemas =====
+
+from enum import Enum
+from uuid import UUID
+
+
+class BlockStatus(str, Enum):
+    """
+    Lifecycle states for blocks (parts).
+    
+    Synchronized with PostgreSQL ENUM block_status (T-021-DB).
+    
+    Valid transitions:
+        uploaded -> processing -> validated | rejected | error_processing
+        validated -> in_fabrication -> completed -> archived
+        rejected -> uploaded (after fixes)
+        error_processing -> uploaded (after manual review)
+    """
+    UPLOADED = "uploaded"
+    PROCESSING = "processing"
+    VALIDATED = "validated"
+    REJECTED = "rejected"
+    ERROR_PROCESSING = "error_processing"
+    IN_FABRICATION = "in_fabrication"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+
+
+class ValidationStatusResponse(BaseModel):
+    """
+    Response schema for GET /api/parts/{id}/validation endpoint.
+    
+    Combines block metadata with validation report for frontend display.
+    
+    Attributes:
+        block_id (UUID): Unique identifier of the block.
+        iso_code (str): ISO code of the block (e.g., "PENDING-a1b2c3d4", "SAGR-Z1-001").
+        status (BlockStatus): Current lifecycle state of the block.
+        validation_report (Optional[ValidationReport]): Complete validation report (NULL if not validated yet).
+        job_id (Optional[str]): Celery task ID if status=processing (for progress tracking).
+    """
+    block_id: UUID = Field(..., description="UUID of the block")
+    iso_code: str = Field(..., description="ISO code identifier")
+    status: BlockStatus = Field(..., description="Current block status")
+    validation_report: Optional[ValidationReport] = Field(
+        None, 
+        description="Validation report (NULL if not validated)"
+    )
+    job_id: Optional[str] = Field(
+        None, 
+        description="Celery task ID for tracking (only if status=processing)"
+    )
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "block_id": "550e8400-e29b-41d4-a716-446655440000",
+                "iso_code": "PENDING-a1b2c3d4",
+                "status": "validated",
+                "validation_report": {
+                    "is_valid": True,
+                    "errors": [],
+                    "metadata": {
+                        "total_objects": 42,
+                        "valid_objects": 42,
+                        "invalid_objects": 0,
+                        "user_strings_extracted": 15
+                    },
+                    "validated_at": "2026-02-14T23:15:00Z",
+                    "validated_by": "librarian-v1.0.0"
+                },
+                "job_id": None
+            }
+        }
+
