@@ -1,8 +1,7 @@
 """
 Unit tests for T-029-BACK: Trigger Validation from Confirm Endpoint
 
-TDD Phase: RED — These tests define the expected behavior for
-UploadService's new methods: create_block_record() and enqueue_validation().
+Tests for UploadService's new methods: create_block_record() and enqueue_validation().
 All tests use mocks (no real DB or Celery).
 
 Tests:
@@ -17,20 +16,10 @@ Tests:
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from services import UploadService
-from constants import TABLE_BLOCKS
-
-# T-029-BACK constants — will fail import until implemented
-try:
-    from constants import TASK_VALIDATE_FILE, BLOCK_TIPOLOGIA_PENDING, BLOCK_ISO_CODE_PREFIX
-except ImportError:
-    # RED phase: constants don't exist yet — define expected values for tests
-    TASK_VALIDATE_FILE = "agent.tasks.validate_file"
-    BLOCK_TIPOLOGIA_PENDING = "pending"
-    BLOCK_ISO_CODE_PREFIX = "PENDING"
-    pytestmark = pytest.mark.xfail(reason="T-029-BACK constants not implemented yet")
+from constants import TABLE_BLOCKS, TASK_VALIDATE_FILE, BLOCK_TIPOLOGIA_PENDING, BLOCK_ISO_CODE_PREFIX
 
 
 # --- Fixtures ---

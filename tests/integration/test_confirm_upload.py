@@ -35,6 +35,7 @@ def test_confirm_upload_happy_path(supabase_client: Client):
     bucket_name = "raw-uploads"
     test_file_key = "test/confirm_upload_test.3dm"
     test_content = b"Mock .3dm file content for testing"
+    file_id = "550e8400-e29b-41d4-a716-446655440000"
     
     # Clean up: Remove test file if it exists from previous run
     try:
@@ -42,15 +43,22 @@ def test_confirm_upload_happy_path(supabase_client: Client):
     except Exception:
         pass  # File doesn't exist, continue
     
+    # Clean up: Remove block if it exists from previous run (T-029-BACK creates blocks automatically)
+    iso_code = f"PENDING-{file_id[:8]}"
+    try:
+        blocks = supabase_client.table("blocks").select("id").eq("iso_code", iso_code).execute()
+        if blocks.data:
+            block_id = blocks.data[0]["id"]
+            supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass  # Block doesn't exist or already deleted
+    
     # Upload test file to Supabase Storage
     upload_response = supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
         file=test_content,
         file_options={"content-type": "application/x-rhino"}
     )
-    
-    # Generate a mock file_id (in real flow, this comes from /api/upload/url)
-    file_id = "550e8400-e29b-41d4-a716-446655440000"
     
     # ARRANGE: Prepare confirmation payload
     payload = {
@@ -77,6 +85,16 @@ def test_confirm_upload_happy_path(supabase_client: Client):
     
     # CLEANUP: Remove test file from storage
     supabase_client.storage.from_(bucket_name).remove([test_file_key])
+    
+    # CLEANUP: Remove created block record (T-029-BACK creates blocks automatically)
+    iso_code = f"PENDING-{file_id[:8]}"
+    try:
+        blocks = supabase_client.table("blocks").select("id").eq("iso_code", iso_code).execute()
+        if blocks.data:
+            block_id = blocks.data[0]["id"]
+            supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass  # Block doesn't exist or already deleted
 
 
 def test_confirm_upload_file_not_found():
@@ -146,6 +164,7 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
     bucket_name = "raw-uploads"
     test_file_key = "test/event_test.3dm"
     test_content = b"Event creation test content"
+    file_id = "660e8400-e29b-41d4-a716-446655440000"
     
     # Clean up: Remove test file if it exists from previous run
     try:
@@ -153,13 +172,21 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
     except Exception:
         pass  # File doesn't exist, continue
     
+    # Clean up: Remove block if it exists from previous run (T-029-BACK creates blocks automatically)
+    iso_code = f"PENDING-{file_id[:8]}"
+    try:
+        blocks = supabase_client.table("blocks").select("id").eq("iso_code", iso_code).execute()
+        if blocks.data:
+            block_id = blocks.data[0]["id"]
+            supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass  # Block doesn't exist or already deleted
+    
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
         file=test_content,
         file_options={"content-type": "application/x-rhino"}
     )
-    
-    file_id = "660e8400-e29b-41d4-a716-446655440000"
     payload = {
         "file_id": file_id,
         "file_key": test_file_key
@@ -182,5 +209,15 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
     assert event_record["file_id"] == file_id, "Event should reference correct file_id"
     assert event_record["event_type"] == "upload.confirmed", "Event type should be 'upload.confirmed'"
     
-    # CLEANUP
+    # CLEANUP: Remove test file from storage
     supabase_client.storage.from_(bucket_name).remove([test_file_key])
+    
+    # CLEANUP: Remove created block record (T-029-BACK creates blocks automatically)
+    iso_code = f"PENDING-{file_id[:8]}"
+    try:
+        blocks = supabase_client.table("blocks").select("id").eq("iso_code", iso_code).execute()
+        if blocks.data:
+            block_id = blocks.data[0]["id"]
+            supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass  # Block doesn't exist or already deleted
