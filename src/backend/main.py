@@ -26,5 +26,8 @@ async def health_check():
     return {"status": "ok", "phase": "sprint-0"}
 
 from api.upload import router as upload_router
+from api.validation import router as validation_router
+
 app.include_router(upload_router, prefix="/api/upload", tags=["Upload"])
+app.include_router(validation_router)
 
