@@ -7,14 +7,10 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-029-BACK: Trigger Validation from Confirm Endpoint — PENDING
-- Objetivo: Integrar ValidationReportService con endpoint de confirmación de upload
-- Fase: Pending - Waiting to start
-- Dependencias: T-028-BACK ✅, T-027-AGENT ✅
-- Spec: Pendiente de creación
-- Tech Stack: FastAPI, Celery, ValidationReportService
-- Expected Work: Modificar POST /api/upload/confirm para enqueue validation task
-- Next: Crear spec técnica TDD-Enrichment
+T-029-BACK: Trigger Validation from Confirm Endpoint — ENRICHMENT COMPLETE
+- Fase: Spec completa → Ready for TDD-Red
+- Spec: [docs/US-002/T-029-BACK-TechnicalSpec.md](../docs/US-002/T-029-BACK-TechnicalSpec.md)
+- Next: TDD-Red (escribir tests que fallen)
 
 ## Next Tickets
 1. T-030-BACK: Get Validation Status Endpoint
