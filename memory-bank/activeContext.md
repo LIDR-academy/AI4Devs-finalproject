@@ -7,10 +7,11 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-T-029-BACK: Trigger Validation from Confirm Endpoint — ENRICHMENT COMPLETE
-- Fase: Spec completa → Ready for TDD-Red
+T-029-BACK: Trigger Validation from Confirm Endpoint — TDD-RED COMPLETE
+- Fase: RED done → Ready for TDD-Green (implementar)
 - Spec: [docs/US-002/T-029-BACK-TechnicalSpec.md](../docs/US-002/T-029-BACK-TechnicalSpec.md)
-- Next: TDD-Red (escribir tests que fallen)
+- Tests RED: 8 unit XFAIL + 2 integration FAILED (+ 2 no-regression PASSED)
+- Next: TDD-Green (implementar celery_client, constants, service methods)
 
 ## Next Tickets
 1. T-030-BACK: Get Validation Status Endpoint
