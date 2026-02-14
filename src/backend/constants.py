@@ -31,3 +31,10 @@ MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 # ===== Upload Configuration =====
 STORAGE_UPLOAD_PATH_PREFIX = "uploads"
 PRESIGNED_URL_EXPIRATION_SECONDS = 300  # 5 minutes
+
+# ===== Celery Task Names =====
+TASK_VALIDATE_FILE = "agent.tasks.validate_file"
+
+# ===== Block Defaults =====
+BLOCK_TIPOLOGIA_PENDING = "pending"
+BLOCK_ISO_CODE_PREFIX = "PENDING"
