@@ -7,19 +7,18 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-None (T-030-BACK completed - awaiting AUDIT)
+T-032-FRONT: Validation Report Visualizer — NEXT IN QUEUE
 
 ## Next Tickets
-1. T-031-FRONT: Real-Time Status Listener
-2. T-032-FRONT: Validation Report Visualizer
+1. T-032-FRONT: Validation Report Visualizer
 
 ## Blockers
 None.
 
 ## Recently Completed (max 3)
+- T-031-FRONT: Real-Time Block Status Listener — DONE 2026-02-15 (24/24 tests: 4 supabase.client + 8 notification.service + 12 hook, Dependency Injection pattern, @supabase/supabase-js@^2.39.0) ✅
 - T-030-BACK: Get Validation Status Endpoint — DONE 2026-02-15 (13/13 tests: 8 unit + 5 integration, GET /api/parts/{id}/validation, ValidationService, 0 regression) ✅
 - T-029-BACK: Trigger Validation from Confirm Endpoint — DONE 2026-02-14 (13/13 tests: 9 unit + 4 integration, celery_client singleton, block creation + enqueue) ✅
-- T-028-BACK: Validation Report Service — DONE 2026-02-14 (13/13 tests: 10 unit + 3 integration, Clean Architecture service layer) ✅
 
 ## Risks
 - T-024-AGENT: rhino3dm library compatibility with large files (testing needed)

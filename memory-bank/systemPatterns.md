@@ -194,117 +194,145 @@ def get_celery_client() -> Celery:
 
 ## Frontend Architecture Patterns
 
-### Component Organization (Implemented in T-001-FRONT)
-**Pattern**: Separation of Concerns with constants extraction (mirrors backend pattern).
+### Dependency Injection Pattern for Services (T-031-FRONT)
+**Pattern**: Constructor injection for testable, decoupled service clients.
 
-**Structure**:
-```text
-src/frontend/src/components/
-├── UploadZone.tsx            # Component logic (presentation + behavior)
-├── UploadZone.constants.ts   # Centralized configuration
-└── UploadZone.test.tsx       # Test suite
-```
+**Problem**: Environment variables can't be stubbed with `vi.stubEnv()` in Vitest ESM without issues. Mock factories create complexity. Tests need clean state between runs.
 
-**Responsibilities**:
-- **Component** (`.tsx`): React component logic, hooks, JSX rendering
-- **Constants** (`.constants.ts`): Configuration values, styles, error messages, helpers
-- **Tests** (`.test.tsx`): Component behavior verification
+**Solution**: Accept optional config parameter in singleton factory.
 
-### Constants Extraction Pattern
-**Pattern**: Extract all magic values to dedicated constants file (same as backend).
-
-**Example** (`T-001-FRONT` - UploadZone):
+**Implementation** (`src/frontend/src/services/supabase.client.ts`):
 ```typescript
-// UploadZone.constants.ts
-export const UPLOAD_ZONE_DEFAULTS = {
-  MAX_FILE_SIZE: 500 * 1024 * 1024,  // 500MB
-  ACCEPTED_MIME_TYPES: ['application/x-rhino', 'application/octet-stream'],
-  ACCEPTED_EXTENSIONS: ['.3dm'],
-} as const;
-
-export const ERROR_MESSAGES = {
-  FILE_TOO_LARGE: (maxSizeMB: number) => 
-    `File is too large. Maximum size is ${maxSizeMB}MB.`,
-  INVALID_FILE_TYPE: (extensions: string[]) => 
-    `Invalid file type. Only ${extensions.join(', ')} files are accepted.`,
-  TOO_MANY_FILES: 'Only one file can be uploaded at a time.',
-  INVALID_FILE_OBJECT: 'Invalid file object.',
-} as const;
-
-export const CLASS_NAMES = {
-  CONTAINER: 'upload-zone-container',
-  DROPZONE: 'upload-zone',
-  ACTIVE: 'upload-zone--active',
-  DISABLED: 'upload-zone--disabled',
-  ERROR: 'upload-zone--error',
-  ERROR_MESSAGE: 'upload-zone-error',
-} as const;
-
-export const STYLES = {
-  dropzone: {
-    base: { border: '2px dashed #ccc', borderRadius: '8px', ... },
-    idle: { backgroundColor: '#fafafa', borderColor: '#ccc', ... },
-    active: { backgroundColor: '#f0f8ff', borderColor: '#4299e1', ... },
-    error: { backgroundColor: '#fff5f5', borderColor: '#fc8181', ... },
-    disabled: { opacity: 0.5, cursor: 'not-allowed' },
-  },
-  message: {
-    active: { margin: 0, color: '#4299e1', fontWeight: 500 },
-    idle: {
-      primary: { margin: '0 0 8px 0', fontSize: '16px', color: '#2d3748' },
-      secondary: { margin: 0, fontSize: '14px', color: '#718096' },
-    },
-  },
-  error: {
-    container: { marginTop: '12px', padding: '12px 16px', ... },
-  },
-} as const;
-
-// Helper functions
-export function formatSizeInMB(bytes: number): number {
-  return Math.round(bytes / (1024 * 1024));
+/**
+ * SupabaseConfig for dependency injection
+ */
+export interface SupabaseConfig {
+  url: string;
+  anonKey: string;
 }
 
-export function buildDropzoneStyles(isDragActive, hasError, isDisabled) {
-  // Compute styles based on state
-}
-```
+let supabaseInstance: SupabaseClient | null = null;
 
-**Usage in Component**:
-```typescript
-// UploadZone.tsx
-import {
-  UPLOAD_ZONE_DEFAULTS,
-  ERROR_MESSAGES,
-  CLASS_NAMES,
-  STYLES,
-  formatSizeInMB,
-  buildDropzoneStyles,
-} from './UploadZone.constants';
-
-export function UploadZone({ maxFileSize = UPLOAD_ZONE_DEFAULTS.MAX_FILE_SIZE }) {
-  const handleError = () => {
-    setErrorMessage(ERROR_MESSAGES.FILE_TOO_LARGE(formatSizeInMB(maxFileSize)));
+/**
+ * Get or create the Supabase client instance (singleton pattern).
+ * 
+ * Mode 1 (Production): Reads from import.meta.env
+ * Mode 2 (Testing): Accepts explicit config
+ */
+export function getSupabaseClient(config?: SupabaseConfig): SupabaseClient {
+  if (supabaseInstance) return supabaseInstance;
+  
+  const finalConfig = config || {
+    url: import.meta.env.VITE_SUPABASE_URL,
+    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
   };
   
-  return (
-    <div className={CLASS_NAMES.CONTAINER}>
-      <div className={CLASS_NAMES.DROPZONE} style={buildDropzoneStyles(...)}>
-        {/* ... */}
-      </div>
-    </div>
+  if (!finalConfig.url || !finalConfig.anonKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+  
+  supabaseInstance = createClient(finalConfig.url, finalConfig.anonKey);
+  return supabaseInstance;
+}
+
+/**
+ * Reset singleton (testing only)
+ */
+export function resetSupabaseClient(): void {
+  supabaseInstance = null;
+}
+```
+
+**Usage in Tests**:
+```typescript
+// supabase.client.test.ts
+beforeEach(() => {
+  resetSupabaseClient();
+});
+
+it('should create client with config', () => {
+  const client = getSupabaseClient({
+    url: 'https://test.supabase.co',
+    anonKey: 'test-key'
+  });
+  expect(client).toBeDefined();
+});
+```
+
+**Benefits**:
+- **Testability**: No env var mocking needed; pass config directly
+- **Isolation**: `resetSupabaseClient()` clears state between tests
+- **Production Safety**: Defaults to env vars when no config provided
+- **Architecture**: Reusable for SSR, Storybook, or other frameworks
+- **Type Safety**: TypeScript enforces config contract
+
+**Trade-off**: +5 lines of code for much cleaner tests.
+
+### Constants Extraction Pattern (Frontend)
+**Pattern**: Separation of all hardcoded values from components.
+
+**Example** (`T-031-FRONT` - Notification Service):
+```typescript
+// Constants for toast behavior
+const TOAST_AUTO_REMOVE_MS = 5000;
+const TOAST_ANIMATION_MS = 300;
+const TOAST_TOTAL_DISPLAY_MS = TOAST_AUTO_REMOVE_MS + TOAST_ANIMATION_MS;
+const TOAST_Z_INDEX = 9999;
+
+// Configuration dictionary
+export const NOTIFICATION_CONFIG: Record<StatusTransition, NotificationConfig> = {
+  processing_to_validated: {
+    title: '✓ Validation Complete',
+    message: 'Block {iso_code} has passed all validations',
+    borderColor: '#4caf50',
+  },
+  // ...
+};
+
+// Helper function to create toast
+function createToastElement(content: string, borderColor: string): HTMLDivElement {
+  // Reusable logic separated from showStatusNotification
+}
+
+// Public API
+export function showStatusNotification(transition: StatusTransition, isoCode: string): void {
+  const config = NOTIFICATION_CONFIG[transition];
+  const message = config.message.replace('{iso_code}', isoCode);
+  const toast = createToastElement(`${config.title} — ${message}`, config.borderColor);
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), TOAST_TOTAL_DISPLAY_MS);
+}
+```
+
+**Realtime Hook Constants** (`useBlockStatusListener`):
+```typescript
+// Realtime channel configuration constants
+const REALTIME_SCHEMA = 'public';
+const REALTIME_TABLE = 'blocks';
+const REALTIME_EVENT = 'UPDATE';
+
+function getChannelName(blockId: string): string {
+  return `block-${blockId}`;
+}
+
+export function useBlockStatusListener(options: UseBlockStatusListenerOptions): UseBlockStatusListenerReturn {
+  const channelName = getChannelName(blockId);
+  const realtimeChannel = supabase.channel(channelName);
+  
+  realtimeChannel.on(
+    'postgres_changes',
+    {
+      event: REALTIME_EVENT,
+      schema: REALTIME_SCHEMA,
+      table: REALTIME_TABLE,
+      filter: `id=eq.${blockId}`,
+    },
+    // ...
   );
 }
 ```
 
-**Benefits**:
-- **Maintainability**: Change config in one place (e.g., 500MB → 1GB)
-- **Consistency**: Error messages use same templates everywhere
-- **Testability**: Constants importable in tests for validation
-- **Reduced Complexity**: Component logic separated from configuration
-- **Type Safety**: `as const` ensures immutability and better inference
-
-**Historical Note**: Original implementation (Prompt #059) had 206 lines with inline styles/config. Refactored to 160 lines in Prompt #060 (22% reduction) by extracting 127-line constants file.
+**Component Organization (T-001-FRONT, continued)**:
 
 ## Agent (Celery Worker) Architecture Patterns
 

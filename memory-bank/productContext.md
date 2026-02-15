@@ -107,9 +107,17 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   - NULL-safe validation_report parsing for unvalidated blocks
   - Schema limitation documented: job_id tracking requires future migration
   - Full test coverage (13 tests: 8 unit + 5 integration, 0 regression)
+- ✅ **T-031: Real-Time Block Status Listener** (Frontend real-time updates)
+  - Custom React hook useBlockStatusListener with Supabase Realtime
+  - Dependency Injection pattern for Supabase client (SupabaseConfig interface)
+  - Toast notification service with ARIA accessibility (auto-remove 5s)
+  - Constants extraction pattern (NOTIFICATION_CONFIG, REALTIME_SCHEMA/TABLE/EVENT)
+  - Service layer separation: supabase.client.ts, notification.service.ts
+  - Test utilities: resetSupabaseClient() for test isolation
+  - Full test coverage (24 tests: 4 client + 8 notification + 12 hook, 0 regression)
 
 ### 🔄 In Progress
-- T-031: Real-time status listener (Frontend)
+- T-032: Validation Report Visualizer (Frontend)
 
 ### 📋 Next Milestones
 - US-005: Dashboard with parts listing
