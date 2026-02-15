@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { GoogleMap, Marker, InfoWindow, useLoadScript } from '@react-google-maps/api';
 import { useQuery } from '@tanstack/react-query';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -22,6 +22,8 @@ interface SearchFormData {
 export default function DoctorSearch() {
   const t = useTranslations('search');
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'es';
   const { accessToken } = useAuthStore();
   const { location: userLocation, requestLocation, loading: locationLoading, error: locationError } = useGeolocation();
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
@@ -370,13 +372,15 @@ export default function DoctorSearch() {
                       </div>
                       <div className="flex gap-2 mt-4 md:mt-0">
                         <button
-                          onClick={() => router.push(`/doctors/${doctor.id}`)}
+                          onClick={() => router.push(`/${locale}/doctors/${doctor.id}`)}
                           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                         >
                           {t('viewProfile')}
                         </button>
                         <button
-                          onClick={() => router.push(`/doctors/${doctor.id}/availability`)}
+                          onClick={() =>
+                            router.push(`/${locale}/doctors/${doctor.id}/availability`)
+                          }
                           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                         >
                           {t('viewAvailability')}

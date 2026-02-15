@@ -9,9 +9,11 @@ import {
   ManyToMany,
   JoinTable,
   Index,
+  OneToMany,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Specialty } from './specialty.entity';
+import { DoctorSchedule } from './doctor-schedule.entity';
 
 export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
@@ -93,6 +95,19 @@ export class Doctor {
   })
   totalReviews!: number;
 
+  @Column({ name: 'verified_by', length: 36, nullable: true })
+  verifiedBy?: string | null;
+
+  @OneToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'verified_by', referencedColumnName: 'id' })
+  verifier?: User | null;
+
+  @Column({ name: 'verified_at', type: 'datetime', nullable: true })
+  verifiedAt?: Date | null;
+
+  @Column({ name: 'verification_notes', type: 'text', nullable: true })
+  verificationNotes?: string | null;
+
   @ManyToMany(() => Specialty, (specialty) => specialty.doctors)
   @JoinTable({
     name: 'DOCTOR_SPECIALTIES',
@@ -106,6 +121,9 @@ export class Doctor {
     },
   })
   specialties!: Specialty[];
+
+  @OneToMany(() => DoctorSchedule, (schedule) => schedule.doctor)
+  schedules?: DoctorSchedule[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

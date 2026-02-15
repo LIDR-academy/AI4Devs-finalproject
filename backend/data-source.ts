@@ -4,6 +4,12 @@ import { User } from './src/models/user.entity';
 import { AuditLog } from './src/models/audit-log.entity';
 import { Doctor } from './src/models/doctor.entity';
 import { Specialty } from './src/models/specialty.entity';
+import { Slot } from './src/models/slot.entity';
+import { Appointment } from './src/models/appointment.entity';
+import { AppointmentHistory } from './src/models/appointment-history.entity';
+import { VerificationDocument } from './src/models/verification-document.entity';
+import { DoctorSchedule } from './src/models/doctor-schedule.entity';
+import { Review } from './src/models/review.entity';
 
 dotenv.config();
 
@@ -16,7 +22,18 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || 'citaya_dev',
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
-  entities: [User, AuditLog, Doctor, Specialty],
+  entities: [
+    User,
+    AuditLog,
+    Doctor,
+    Specialty,
+    Slot,
+    DoctorSchedule,
+    Appointment,
+    AppointmentHistory,
+    VerificationDocument,
+    Review,
+  ],
   migrations: ['src/migrations/**/*.ts'],
   migrationsTableName: 'migrations',
   extra: {

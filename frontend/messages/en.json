@@ -59,5 +59,241 @@
     "previous": "Previous",
     "next": "Next",
     "pageInfo": "Page {current} of {total} ({count} results)"
+  },
+  "appointments": {
+    "title": "Book appointment",
+    "selectDate": "Select a date",
+    "selectSlot": "Select a time slot",
+    "loadingSlots": "Loading available times...",
+    "noSlots": "No available times for this date.",
+    "reserving": "Reserving...",
+    "confirmAppointment": "Confirm appointment",
+    "cancel": "Cancel",
+    "notesPlaceholder": "Optional note (max 500 characters)",
+    "successTitle": "Appointment booked!",
+    "successMessage": "Your appointment has been successfully booked.",
+    "backToSearch": "Back to search",
+    "errorSlotUnavailable": "The selected slot is not available. Choose another time.",
+    "errorActiveAppointment": "You already have an active appointment. Cancel or reschedule before creating a new one.",
+    "errorSlotTaken": "This time was just booked by another patient. Choose another slot.",
+    "doctorInfo": "Doctor information",
+    "appointmentSummary": "Appointment summary"
+  },
+  "appointmentsManagement": {
+    "title": "My appointments",
+    "loading": "Loading...",
+    "loadingAppointments": "Loading your appointments...",
+    "empty": "You have no appointments for the selected filters.",
+    "appointmentDate": "Date and time (Mexico City)",
+    "cancelReason": "Cancellation reason",
+    "statusAll": "All",
+    "statusConfirmed": "Confirmed",
+    "statusPending": "Pending",
+    "statusCompleted": "Completed",
+    "statusCancelled": "Cancelled",
+    "cancelTitle": "Cancel appointment",
+    "cancelConfirm": "This action will release the slot for other patients. Do you want to continue?",
+    "cancelReasonPlaceholder": "Cancellation reason (optional, max 500 characters)",
+    "rescheduleTitle": "Reschedule appointment",
+    "rescheduleHelper": "Select a new date and time slot from the same doctor.",
+    "loadingSlots": "Loading available slots...",
+    "noSlotsAvailable": "No available slots for this date.",
+    "close": "Close",
+    "processing": "Processing...",
+    "cancelAction": "Cancel appointment",
+    "rescheduleAction": "Reschedule",
+    "reviewAction": "Write review",
+    "statusLabel": {
+      "confirmed": "Confirmed",
+      "pending": "Pending",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "no_show": "No show"
+    }
+  },
+  "reviews": {
+    "loading": "Loading...",
+    "createTitle": "Write review",
+    "subtitle": "Share your experience about the completed appointment.",
+    "loadingReviewStatus": "Checking whether a review already exists...",
+    "rating": "Rating",
+    "ratingValue": "{value} stars",
+    "ratingRequired": "Select a rating between 1 and 5",
+    "comment": "Comment",
+    "commentPlaceholder": "Write your review (minimum 10 characters)",
+    "commentMin": "Comment must have at least 10 characters",
+    "commentMax": "Comment cannot exceed 1000 characters",
+    "charactersCount": "{count}/1000 characters",
+    "submit": "Submit review",
+    "sending": "Submitting...",
+    "pendingModeration": "Your review has been submitted and is pending moderation",
+    "alreadyReviewed": "A review already exists for this appointment.",
+    "backToAppointments": "Back to my appointments",
+    "errors": {
+      "forbidden": "You do not have permission to create a review for this appointment",
+      "notFound": "Appointment or review not found",
+      "invalidData": "Invalid review data",
+      "alreadyExists": "A review already exists for this appointment",
+      "generic": "An error occurred while processing the review"
+    }
+  },
+  "doctorProfile": {
+    "title": "My doctor profile",
+    "loading": "Loading profile...",
+    "loadError": "Could not load doctor profile.",
+    "saveSuccess": "Profile updated successfully.",
+    "saveError": "Could not update profile.",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "email": "Email",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "bio": "Professional bio",
+    "address": "Address",
+    "postalCode": "Postal code",
+    "manageSchedules": "Manage schedules",
+    "validation": {
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "phoneE164": "Phone must use E.164 format (e.g. +521234567890)",
+      "bioMax": "Bio cannot exceed 1000 characters",
+      "addressRequired": "Address is required",
+      "postalCodeRequired": "Postal code is required",
+      "addressPostalTogether": "Address and postal code are required together"
+    }
+  },
+  "doctorSchedules": {
+    "title": "Schedule management",
+    "loading": "Loading schedules...",
+    "newSchedule": "New schedule",
+    "createTitle": "Create schedule",
+    "editTitle": "Edit schedule",
+    "close": "Close",
+    "create": "Create schedule",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this schedule?",
+    "emptyDay": "No schedules configured for this day.",
+    "timezoneHint": "Timezone: America/Mexico_City (CDMX)",
+    "slotLabel": "Duration: {duration} min | Break: {break} min",
+    "fields": {
+      "day": "Day of week",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "slotDuration": "Slot duration (min)",
+      "breakDuration": "Break between slots (min)",
+      "isActive": "Active schedule"
+    },
+    "validation": {
+      "endAfterStart": "End time must be greater than start time"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "errors": {
+      "overlap": "Schedule overlaps with another schedule on the same day",
+      "forbidden": "You do not have permission to manage schedules",
+      "generic": "Could not complete schedule operation"
+    },
+    "days": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    }
+  },
+  "doctorVerification": {
+    "title": "Document verification",
+    "loading": "Loading...",
+    "uploadTitle": "Upload new document",
+    "documentTypeLabel": "Document type",
+    "fileLabel": "File",
+    "fileHint": "Allowed formats: PDF, JPG, JPEG, PNG. Max size: 10MB.",
+    "uploadButton": "Upload document",
+    "uploading": "Uploading...",
+    "success": "Document uploaded, pending review",
+    "listTitle": "Submitted documents",
+    "emptyList": "You have not uploaded verification documents yet.",
+    "documentTypeOptions": {
+      "cedula": "ID card",
+      "diploma": "Diploma",
+      "other": "Other"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "errors": {
+      "missingFile": "You must select a file.",
+      "invalidType": "Invalid file type. Only PDF/JPG/PNG are allowed.",
+      "fileTooLarge": "The file exceeds the maximum allowed size (10MB).",
+      "malwareDetected": "The file was rejected for security reasons (malware detected).",
+      "loadDocuments": "Could not load your documents.",
+      "generic": "An error occurred while processing the request."
+    }
+  },
+  "adminDashboard": {
+    "title": "Admin dashboard",
+    "common": {
+      "loading": "Loading...",
+      "error": "An error occurred while loading dashboard",
+      "empty": "No data available for selected period",
+      "staleData": "Showing latest available snapshot"
+    },
+    "metrics": {
+      "totalReservations": "Total reservations",
+      "totalCompletedAppointments": "Completed appointments",
+      "totalCancellations": "Cancellations",
+      "cancellationRate": "Cancellation rate",
+      "averageRating": "Average rating",
+      "activeDoctors": "Active doctors",
+      "activePatients": "Active patients"
+    },
+    "charts": {
+      "reservationsTitle": "Reservations (last 4 weeks)",
+      "cancellationsTitle": "Cancellations (last 4 weeks)",
+      "ratingsTitle": "Ratings by specialty"
+    },
+    "verification": {
+      "title": "Doctor verification",
+      "documentsTitle": "Doctor documents",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "specialty": "Specialty",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "viewDocs": "View docs",
+        "openSignedUrl": "Open signed URL",
+        "approve": "Approve",
+        "reject": "Reject",
+        "rejectPrompt": "Write rejection note"
+      }
+    },
+    "reviews": {
+      "title": "Reviews moderation",
+      "columns": {
+        "patient": "Patient",
+        "doctor": "Doctor",
+        "rating": "Rating",
+        "comment": "Comment",
+        "actions": "Actions"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "rejectPrompt": "Write moderation note"
+      }
+    }
   }
 }

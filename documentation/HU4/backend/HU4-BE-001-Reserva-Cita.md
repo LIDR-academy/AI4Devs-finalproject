@@ -43,8 +43,9 @@ Implementar endpoint POST `/api/v1/appointments` que crea una cita médica usand
 
 ### CA6: Notificaciones
 - [ ] Encolar email de confirmación (SendGrid) en Bull
-- [ ] Encolar Web Push notification (si habilitado)
 - [ ] Notificaciones asíncronas (no bloquean respuesta)
+
+> **Nota MVP**: Las notificaciones Web Push quedan fuera del alcance del MVP. Ver [documentation/MVP_SCOPE.md](../../MVP_SCOPE.md) y [Limitaciones del MVP](../../ARQUITECTURA_MVP.md#limitaciones-conocidas).
 
 ## Pasos Técnicos Detallados
 
@@ -158,13 +159,16 @@ export class AppointmentService {
 }
 ```
 
-## Archivos a Crear/Modificar
+## Archivos Creados/Modificados (Implementación)
 
-1. `backend/src/services/appointment.service.ts` - Servicio de citas
+1. `backend/src/services/appointment.service.ts` - Servicio de citas (transacción ACID)
 2. `backend/src/controllers/appointments.controller.ts` - Controlador
-3. `backend/src/entities/appointment.entity.ts` - Entidad Appointment
-4. `backend/src/entities/slot.entity.ts` - Entidad Slot
-5. `backend/src/entities/appointment-history.entity.ts` - Entidad AppointmentHistory
+3. `backend/src/routes/appointments.routes.ts` - Rutas con auth
+4. `backend/src/models/appointment.entity.ts` - Entidad Appointment
+5. `backend/src/models/slot.entity.ts` - Entidad Slot
+6. `backend/src/models/appointment-history.entity.ts` - Entidad AppointmentHistory
+7. `backend/src/dto/appointments/create-appointment.dto.ts` - DTO validación
+8. `backend/src/config/queue.ts` - Cola Bull para notificaciones
 
 ## Testing
 

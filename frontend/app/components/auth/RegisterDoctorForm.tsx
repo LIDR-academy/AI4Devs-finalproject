@@ -1,27 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-// Importación condicional de Google Maps
-let useLoadScript: any;
-let GoogleMap: any;
-let Marker: any;
-
-try {
-  const googleMapsModule = require('@react-google-maps/api');
-  useLoadScript = googleMapsModule.useLoadScript;
-  GoogleMap = googleMapsModule.GoogleMap;
-  Marker = googleMapsModule.Marker;
-} catch (e) {
-  // Si no está instalado, se manejará más adelante
-  console.warn('@react-google-maps/api no está instalado');
-}
+import { useLoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 import { useAuthStore } from '@/store/authStore';
+
+interface GoogleMapsWindow extends Window {
+  google?: {
+    maps: {
+      Geocoder: new () => {
+        geocode: (request: { address: string }) => Promise<{
+          results: Array<{
+            geometry: { location: { lat: () => number; lng: () => number } };
+          }>;
+        }>;
+      };
+    };
+  };
+}
 
 // Schema de validación con Zod
 const registerDoctorSchema = z.object({
@@ -62,13 +63,10 @@ export default function RegisterDoctorForm() {
   const [geocodingLoading, setGeocodingLoading] = useState(false);
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-  const googleMapsAvailable = typeof useLoadScript !== 'undefined';
 
-  const { isLoaded, loadError } = googleMapsAvailable
-    ? useLoadScript({
-        googleMapsApiKey,
-      })
-    : { isLoaded: false, loadError: true };
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: googleMapsApiKey || 'dummy',
+  });
 
   const {
     register,
@@ -89,6 +87,42 @@ export default function RegisterDoctorForm() {
   const postalCode = watch('postalCode');
   const bio = watch('bio');
 
+  const geocodeAddress = useCallback(
+    async (fullAddress: string) => {
+      if (!isLoaded || !googleMapsApiKey || typeof window === 'undefined') {
+        return;
+      }
+      const g = (window as GoogleMapsWindow).google;
+      if (!g?.maps?.Geocoder) {
+        return;
+      }
+
+      setGeocodingLoading(true);
+      setGeocodingError(null);
+
+      try {
+        const geocoder = new g.maps.Geocoder();
+        const result = await geocoder.geocode({ address: fullAddress });
+
+        if (result.results.length > 0) {
+          const location = result.results[0].geometry.location;
+          setCoordinates({ lat: location.lat(), lng: location.lng() });
+          setGeocodingError(null);
+        } else {
+          setGeocodingError(t('geocodingFailed'));
+          setCoordinates(null);
+        }
+      } catch (err) {
+        console.error('Error en geocodificación:', err);
+        setGeocodingError(t('geocodingFailed'));
+        setCoordinates(null);
+      } finally {
+        setGeocodingLoading(false);
+      }
+    },
+    [isLoaded, googleMapsApiKey, t]
+  );
+
   // Geocodificar cuando cambien dirección o código postal
   useEffect(() => {
     if (address && postalCode && isLoaded && googleMapsApiKey) {
@@ -101,36 +135,8 @@ export default function RegisterDoctorForm() {
       setCoordinates(null);
       setGeocodingError(null);
     }
-  }, [address, postalCode, isLoaded, googleMapsApiKey]);
+  }, [address, postalCode, isLoaded, googleMapsApiKey, geocodeAddress]);
 
-  const geocodeAddress = async (fullAddress: string) => {
-    if (!isLoaded || !googleMapsApiKey || typeof window === 'undefined' || !(window as any).google) {
-      return;
-    }
-
-    setGeocodingLoading(true);
-    setGeocodingError(null);
-
-    try {
-      const geocoder = new (window as any).google.maps.Geocoder();
-      const result = await geocoder.geocode({ address: fullAddress });
-
-      if (result.results.length > 0) {
-        const location = result.results[0].geometry.location;
-        setCoordinates({ lat: location.lat(), lng: location.lng() });
-        setGeocodingError(null);
-      } else {
-        setGeocodingError(t('geocodingFailed'));
-        setCoordinates(null);
-      }
-    } catch (err) {
-      console.error('Error en geocodificación:', err);
-      setGeocodingError(t('geocodingFailed'));
-      setCoordinates(null);
-    } finally {
-      setGeocodingLoading(false);
-    }
-  };
 
   const onSubmit = async (data: RegisterDoctorFormData) => {
     setIsSubmitting(true);
@@ -388,7 +394,7 @@ export default function RegisterDoctorForm() {
       </div>
 
       {/* Mapa con marcador si hay coordenadas */}
-      {isLoaded && coordinates && googleMapsAvailable && GoogleMap && Marker && (
+      {isLoaded && coordinates && GoogleMap && Marker && (
         <div className="h-64 w-full rounded-md overflow-hidden border border-gray-300">
           <GoogleMap
             zoom={15}

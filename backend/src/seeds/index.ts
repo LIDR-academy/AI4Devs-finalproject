@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { seedSpecialties } from './seed-specialties';
 import { seedDoctors } from './seed-doctors';
 import { seedPatient } from './seed-patient';
+import { seedSlots } from './seed-slots';
 
 async function runSeeds() {
   try {
@@ -18,6 +19,7 @@ async function runSeeds() {
     await seedSpecialties();
     await seedDoctors();
     await seedPatient();
+    await seedSlots();
 
     logger.info('✅ Seeds completados exitosamente');
   } catch (error) {

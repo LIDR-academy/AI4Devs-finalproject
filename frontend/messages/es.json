@@ -59,5 +59,241 @@
     "previous": "Anterior",
     "next": "Siguiente",
     "pageInfo": "Página {current} de {total} ({count} resultados)"
+  },
+  "appointments": {
+    "title": "Reservar cita",
+    "selectDate": "Selecciona una fecha",
+    "selectSlot": "Selecciona un horario",
+    "loadingSlots": "Cargando horarios disponibles...",
+    "noSlots": "No hay horarios disponibles para esta fecha.",
+    "reserving": "Reservando...",
+    "confirmAppointment": "Confirmar cita",
+    "cancel": "Cancelar",
+    "notesPlaceholder": "Nota opcional (máximo 500 caracteres)",
+    "successTitle": "¡Cita reservada!",
+    "successMessage": "Tu cita ha sido reservada correctamente.",
+    "backToSearch": "Volver a búsqueda",
+    "errorSlotUnavailable": "El slot seleccionado no está disponible. Elige otro horario.",
+    "errorActiveAppointment": "Ya tienes una cita activa. Cancela o reprograma antes de crear una nueva.",
+    "errorSlotTaken": "Este horario acaba de ser reservado por otro paciente. Elige otro slot.",
+    "doctorInfo": "Información del médico",
+    "appointmentSummary": "Resumen de tu cita"
+  },
+  "appointmentsManagement": {
+    "title": "Mis citas",
+    "loading": "Cargando...",
+    "loadingAppointments": "Cargando tus citas...",
+    "empty": "No tienes citas para los filtros seleccionados.",
+    "appointmentDate": "Fecha y hora (CDMX)",
+    "cancelReason": "Motivo de cancelación",
+    "statusAll": "Todas",
+    "statusConfirmed": "Confirmadas",
+    "statusPending": "Pendientes",
+    "statusCompleted": "Completadas",
+    "statusCancelled": "Canceladas",
+    "cancelTitle": "Cancelar cita",
+    "cancelConfirm": "Esta acción liberará el horario para otros pacientes. ¿Deseas continuar?",
+    "cancelReasonPlaceholder": "Motivo de cancelación (opcional, máximo 500 caracteres)",
+    "rescheduleTitle": "Reprogramar cita",
+    "rescheduleHelper": "Selecciona una nueva fecha y horario del mismo médico.",
+    "loadingSlots": "Cargando horarios disponibles...",
+    "noSlotsAvailable": "No hay horarios disponibles para esta fecha.",
+    "close": "Cerrar",
+    "processing": "Procesando...",
+    "cancelAction": "Cancelar cita",
+    "rescheduleAction": "Reprogramar",
+    "reviewAction": "Crear reseña",
+    "statusLabel": {
+      "confirmed": "Confirmada",
+      "pending": "Pendiente",
+      "completed": "Completada",
+      "cancelled": "Cancelada",
+      "no_show": "No asistió"
+    }
+  },
+  "reviews": {
+    "loading": "Cargando...",
+    "createTitle": "Crear reseña",
+    "subtitle": "Comparte tu experiencia sobre la cita completada.",
+    "loadingReviewStatus": "Verificando si ya existe una reseña...",
+    "rating": "Calificación",
+    "ratingValue": "{value} estrellas",
+    "ratingRequired": "Selecciona una calificación entre 1 y 5",
+    "comment": "Comentario",
+    "commentPlaceholder": "Escribe tu reseña (mínimo 10 caracteres)",
+    "commentMin": "El comentario debe tener al menos 10 caracteres",
+    "commentMax": "El comentario no puede exceder 1000 caracteres",
+    "charactersCount": "{count}/1000 caracteres",
+    "submit": "Enviar reseña",
+    "sending": "Enviando...",
+    "pendingModeration": "Tu reseña ha sido enviada y está pendiente de moderación",
+    "alreadyReviewed": "Ya existe una reseña para esta cita.",
+    "backToAppointments": "Volver a mis citas",
+    "errors": {
+      "forbidden": "No tienes permiso para crear una reseña de esta cita",
+      "notFound": "Cita o reseña no encontrada",
+      "invalidData": "Datos inválidos para crear la reseña",
+      "alreadyExists": "Ya existe una reseña para esta cita",
+      "generic": "Ocurrió un error al procesar la reseña"
+    }
+  },
+  "doctorProfile": {
+    "title": "Mi perfil médico",
+    "loading": "Cargando perfil...",
+    "loadError": "No se pudo cargar el perfil del médico.",
+    "saveSuccess": "Perfil actualizado correctamente.",
+    "saveError": "No se pudo actualizar el perfil.",
+    "save": "Guardar cambios",
+    "saving": "Guardando...",
+    "email": "Correo",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "phone": "Teléfono",
+    "bio": "Biografía profesional",
+    "address": "Dirección",
+    "postalCode": "Código postal",
+    "manageSchedules": "Gestionar horarios",
+    "validation": {
+      "firstNameRequired": "El nombre es obligatorio",
+      "lastNameRequired": "El apellido es obligatorio",
+      "phoneE164": "El teléfono debe usar formato E.164 (ej: +521234567890)",
+      "bioMax": "La bio no puede exceder 1000 caracteres",
+      "addressRequired": "La dirección es obligatoria",
+      "postalCodeRequired": "El código postal es obligatorio",
+      "addressPostalTogether": "Dirección y código postal son obligatorios"
+    }
+  },
+  "doctorSchedules": {
+    "title": "Gestión de horarios",
+    "loading": "Cargando horarios...",
+    "newSchedule": "Nuevo horario",
+    "createTitle": "Crear horario",
+    "editTitle": "Editar horario",
+    "close": "Cerrar",
+    "create": "Crear horario",
+    "save": "Guardar cambios",
+    "saving": "Guardando...",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Seguro que deseas eliminar este horario?",
+    "emptyDay": "Sin horarios configurados para este día.",
+    "timezoneHint": "Zona horaria: America/Mexico_City (CDMX)",
+    "slotLabel": "Duración: {duration} min | Pausa: {break} min",
+    "fields": {
+      "day": "Día de la semana",
+      "startTime": "Hora inicio",
+      "endTime": "Hora fin",
+      "slotDuration": "Duración de slot (min)",
+      "breakDuration": "Pausa entre slots (min)",
+      "isActive": "Horario activo"
+    },
+    "validation": {
+      "endAfterStart": "La hora de fin debe ser posterior a la hora de inicio"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "errors": {
+      "overlap": "El horario se solapa con otro horario existente en el mismo día",
+      "forbidden": "No tienes permisos para gestionar horarios",
+      "generic": "No se pudo completar la operación de horarios"
+    },
+    "days": {
+      "0": "Domingo",
+      "1": "Lunes",
+      "2": "Martes",
+      "3": "Miércoles",
+      "4": "Jueves",
+      "5": "Viernes",
+      "6": "Sábado"
+    }
+  },
+  "doctorVerification": {
+    "title": "Verificación de documentos",
+    "loading": "Cargando...",
+    "uploadTitle": "Subir nuevo documento",
+    "documentTypeLabel": "Tipo de documento",
+    "fileLabel": "Archivo",
+    "fileHint": "Formatos permitidos: PDF, JPG, JPEG, PNG. Tamaño máximo: 10MB.",
+    "uploadButton": "Subir documento",
+    "uploading": "Subiendo...",
+    "success": "Documento subido, pendiente de revisión",
+    "listTitle": "Documentos enviados",
+    "emptyList": "Aún no has subido documentos de verificación.",
+    "documentTypeOptions": {
+      "cedula": "Cédula",
+      "diploma": "Diploma",
+      "other": "Otro"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "errors": {
+      "missingFile": "Debes seleccionar un archivo.",
+      "invalidType": "Tipo de archivo no permitido. Solo PDF/JPG/PNG.",
+      "fileTooLarge": "El archivo excede el tamaño máximo permitido (10MB).",
+      "malwareDetected": "El archivo fue rechazado por seguridad (malware detectado).",
+      "loadDocuments": "No se pudieron cargar tus documentos.",
+      "generic": "Ocurrió un error al procesar la solicitud."
+    }
+  },
+  "adminDashboard": {
+    "title": "Dashboard administrativo",
+    "common": {
+      "loading": "Cargando...",
+      "error": "Ocurrió un error al cargar el dashboard",
+      "empty": "No hay datos disponibles para el período seleccionado",
+      "staleData": "Mostrando último snapshot disponible"
+    },
+    "metrics": {
+      "totalReservations": "Reservas totales",
+      "totalCompletedAppointments": "Citas completadas",
+      "totalCancellations": "Cancelaciones",
+      "cancellationRate": "Tasa de cancelación",
+      "averageRating": "Calificación promedio",
+      "activeDoctors": "Médicos activos",
+      "activePatients": "Pacientes activos"
+    },
+    "charts": {
+      "reservationsTitle": "Reservas (últimas 4 semanas)",
+      "cancellationsTitle": "Cancelaciones (últimas 4 semanas)",
+      "ratingsTitle": "Ratings por especialidad"
+    },
+    "verification": {
+      "title": "Verificación de médicos",
+      "documentsTitle": "Documentos del médico",
+      "columns": {
+        "name": "Nombre",
+        "email": "Email",
+        "specialty": "Especialidad",
+        "status": "Estado",
+        "actions": "Acciones"
+      },
+      "actions": {
+        "viewDocs": "Ver docs",
+        "openSignedUrl": "Abrir URL firmada",
+        "approve": "Aprobar",
+        "reject": "Rechazar",
+        "rejectPrompt": "Escribe una nota de rechazo"
+      }
+    },
+    "reviews": {
+      "title": "Moderación de reseñas",
+      "columns": {
+        "patient": "Paciente",
+        "doctor": "Médico",
+        "rating": "Rating",
+        "comment": "Comentario",
+        "actions": "Acciones"
+      },
+      "actions": {
+        "approve": "Aprobar",
+        "reject": "Rechazar",
+        "rejectPrompt": "Escribe una nota de moderación"
+      }
+    }
   }
 }

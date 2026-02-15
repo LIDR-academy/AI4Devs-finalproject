@@ -26,7 +26,10 @@ const mockGeolocation = {
   clearWatch: jest.fn(),
 };
 
-global.navigator.geolocation = mockGeolocation as any;
+Object.defineProperty(global.navigator, 'geolocation', {
+  value: mockGeolocation as Geolocation,
+  configurable: true,
+});
 
 // Mock de la API
 jest.mock('@/lib/api/doctors', () => ({
@@ -35,12 +38,10 @@ jest.mock('@/lib/api/doctors', () => ({
 }));
 
 // Mock de useAuthStore
-const mockUseAuthStore = jest.fn(() => ({
-  accessToken: 'test-token',
-}));
-
 jest.mock('@/store/authStore', () => ({
-  useAuthStore: mockUseAuthStore,
+  useAuthStore: jest.fn(() => ({
+    accessToken: 'test-token',
+  })),
 }));
 
 // Mock de useRouter
@@ -126,12 +127,22 @@ describe('DoctorSearch Component', () => {
       coords: {
         latitude: 19.4326,
         longitude: -99.1332,
+        accuracy: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+        toJSON: () => ({}),
       },
+      timestamp: Date.now(),
+      toJSON: () => ({}),
     };
 
-    mockGeolocation.getCurrentPosition.mockImplementation((success) => {
+    mockGeolocation.getCurrentPosition.mockImplementation(
+      (success: PositionCallback) => {
       success(mockPosition);
-    });
+      }
+    );
 
     render(<DoctorSearch />, { wrapper: createWrapper() });
 
@@ -178,6 +189,10 @@ describe('DoctorSearch Component', () => {
 
     render(<DoctorSearch />, { wrapper: createWrapper() });
 
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Cardiología' })).toBeInTheDocument();
+    });
+
     // Seleccionar especialidad
     const specialtySelect = screen.getByLabelText(/Especialidad/);
     fireEvent.change(specialtySelect, { target: { value: '1' } });
@@ -185,6 +200,10 @@ describe('DoctorSearch Component', () => {
     // Ingresar código postal
     const postalCodeInput = screen.getByPlaceholderText('Ej: 06000');
     fireEvent.change(postalCodeInput, { target: { value: '06000' } });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Buscar' })).not.toBeDisabled();
+    });
 
     // Enviar formulario
     const searchButton = screen.getByText('Buscar');
@@ -212,11 +231,19 @@ describe('DoctorSearch Component', () => {
 
     render(<DoctorSearch />, { wrapper: createWrapper() });
 
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Cardiología' })).toBeInTheDocument();
+    });
+
     const specialtySelect = screen.getByLabelText(/Especialidad/);
     fireEvent.change(specialtySelect, { target: { value: '1' } });
 
     const postalCodeInput = screen.getByPlaceholderText('Ej: 06000');
     fireEvent.change(postalCodeInput, { target: { value: '06000' } });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Buscar' })).not.toBeDisabled();
+    });
 
     const searchButton = screen.getByText('Buscar');
     fireEvent.click(searchButton);
@@ -227,9 +254,19 @@ describe('DoctorSearch Component', () => {
   });
 
   it('debe manejar errores de geolocalización', async () => {
-    mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
-      error({ code: 1, message: 'Permission denied' });
-    });
+    mockGeolocation.getCurrentPosition.mockImplementation(
+      (_success: PositionCallback, error?: PositionErrorCallback) => {
+        if (error) {
+          error({
+            code: 1,
+            message: 'Permission denied',
+            PERMISSION_DENIED: 1,
+            POSITION_UNAVAILABLE: 2,
+            TIMEOUT: 3,
+          } as GeolocationPositionError);
+        }
+      }
+    );
 
     render(<DoctorSearch />, { wrapper: createWrapper() });
 

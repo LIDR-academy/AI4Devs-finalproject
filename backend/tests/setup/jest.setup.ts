@@ -6,6 +6,8 @@ dotenv.config({ path: '.env.test' });
 
 // Configurar variables de entorno para tests ANTES de importar cualquier módulo
 // Esto asegura que AppDataSource use la configuración correcta
+process.env.NODE_ENV = 'test';
+process.env.DISABLE_BULL_QUEUE = 'true';
 if (!process.env.DB_HOST) {
   process.env.DB_HOST = 'localhost';
 }
@@ -24,3 +26,13 @@ if (!process.env.DB_NAME) {
 
 // Aumentar timeout para tests de base de datos
 jest.setTimeout(30000);
+
+// Silenciar logger de aplicación durante tests
+jest.mock('../../src/utils/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));

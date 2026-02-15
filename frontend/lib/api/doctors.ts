@@ -107,3 +107,149 @@ export async function getSpecialties(): Promise<Specialty[]> {
   const data = await response.json();
   return data.specialties || [];
 }
+
+export interface DoctorDetail {
+  id: string;
+  firstName: string;
+  lastName: string;
+  specialties: Array<{
+    id: string;
+    nameEs: string;
+    nameEn: string;
+  }>;
+  address: string;
+  postalCode: string;
+  ratingAverage?: number;
+  totalReviews: number;
+  verificationStatus: string;
+}
+
+export interface SlotResponse {
+  id: string;
+  startTime: string;
+  endTime: string;
+  isAvailable: boolean;
+  lockedUntil: string | null;
+}
+
+export interface DoctorProfile {
+  id: string;
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  bio?: string;
+  address: string;
+  postalCode: string;
+  latitude?: number;
+  longitude?: number;
+  verificationStatus: string;
+  ratingAverage?: number;
+  totalReviews: number;
+  specialties: Array<{
+    id: string;
+    nameEs: string;
+    nameEn: string;
+  }>;
+  updatedAt: string;
+}
+
+export interface UpdateDoctorProfilePayload {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  bio?: string;
+  address?: string;
+  postalCode?: string;
+}
+
+export interface UpdateDoctorProfileResponse {
+  message: string;
+  doctor: DoctorProfile;
+  warnings?: string[];
+}
+
+export async function getDoctorById(
+  doctorId: string,
+  token: string
+): Promise<DoctorDetail> {
+  const response = await fetch(`${API_URL}/api/v1/doctors/${doctorId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Médico no encontrado');
+    }
+    const error = await response.json().catch(() => ({ error: 'Error desconocido' }));
+    throw new Error(error.error || 'Error al obtener médico');
+  }
+
+  return response.json();
+}
+
+export async function getDoctorSlots(
+  doctorId: string,
+  date: string,
+  token: string
+): Promise<SlotResponse[]> {
+  const params = new URLSearchParams({ date });
+  const response = await fetch(
+    `${API_URL}/api/v1/doctors/${doctorId}/slots?${params}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Error desconocido' }));
+    throw new Error(error.error || 'Error al obtener slots');
+  }
+
+  const data = await response.json();
+  return data.slots || [];
+}
+
+export async function getMyDoctorProfile(token: string): Promise<DoctorProfile> {
+  const response = await fetch(`${API_URL}/api/v1/doctors/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Error desconocido' }));
+    throw new Error(error.error || 'Error al obtener perfil médico');
+  }
+
+  return response.json();
+}
+
+export async function updateMyDoctorProfile(
+  payload: UpdateDoctorProfilePayload,
+  token: string
+): Promise<UpdateDoctorProfileResponse> {
+  const response = await fetch(`${API_URL}/api/v1/doctors/me`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Error desconocido' }));
+    throw new Error(error.error || 'Error al actualizar perfil médico');
+  }
+
+  return response.json();
+}

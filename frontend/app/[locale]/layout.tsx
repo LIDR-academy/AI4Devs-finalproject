@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales } from '../../lib/i18n/config';
 import ReCaptchaProvider from '../components/ReCaptchaProvider';
@@ -19,9 +19,12 @@ export default async function LocaleLayout({
   const { locale } = params;
 
   // Validar locale
-  if (!locales.includes(locale as any)) {
+  if (!(locales as readonly string[]).includes(locale)) {
     notFound();
   }
+
+  // Habilitar renderizado estático (evita lectura de headers)
+  setRequestLocale(locale);
 
   // Cargar mensajes para el locale
   const messages = await getMessages();

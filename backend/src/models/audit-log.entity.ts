@@ -37,6 +37,12 @@ export class AuditLog {
   @Column({ length: 45 })
   ipAddress!: string;
 
+  @Column({ name: 'old_values', type: 'text', nullable: true })
+  oldValues?: string;
+
+  @Column({ name: 'new_values', type: 'text', nullable: true })
+  newValues?: string;
+
   @CreateDateColumn({ name: 'timestamp' })
   timestamp!: Date;
 }

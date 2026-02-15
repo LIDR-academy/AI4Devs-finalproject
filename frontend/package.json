@@ -31,12 +31,14 @@
     "react-dom": "^18.3.0",
     "react-google-recaptcha-v3": "^1.10.0",
     "react-hook-form": "^7.48.0",
+    "recharts": "^3.7.0",
     "zod": "^3.22.4",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",

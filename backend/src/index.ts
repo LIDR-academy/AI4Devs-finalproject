@@ -12,6 +12,10 @@ import healthRoutes from './routes/health.routes';
 import authRoutes from './routes/auth.routes';
 import doctorsRoutes from './routes/doctors.routes';
 import specialtiesRoutes from './routes/specialties.routes';
+import appointmentsRoutes from './routes/appointments.routes';
+import verificationRoutes from './routes/verification.routes';
+import adminRoutes from './routes/admin.routes';
+import { startAdminMetricsJob } from './jobs/admin-metrics.job';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -44,6 +48,9 @@ app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/doctors', doctorsRoutes);
 app.use('/api/v1/specialties', specialtiesRoutes);
+app.use('/api/v1/appointments', appointmentsRoutes);
+app.use('/api/v1/verification-documents', verificationRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // Manejo de errores
 app.use(errorHandler);
@@ -74,6 +81,10 @@ async function startServer() {
       logger.info(`🚀 Servidor corriendo en puerto ${PORT}`);
       logger.info(`📡 API disponible en http://localhost:${PORT}/api/v1`);
     });
+
+    if (process.env.NODE_ENV !== 'test') {
+      startAdminMetricsJob();
+    }
   } catch (error) {
     logger.error('❌ Error al iniciar servidor:', error);
     process.exit(1);

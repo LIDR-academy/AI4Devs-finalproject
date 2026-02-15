@@ -130,9 +130,6 @@ describe('Doctors Search API (Integration)', () => {
       });
 
       // Asignar especialidad a los médicos
-      // Esperar un poco para asegurar que los doctores estén completamente guardados
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
       // Verificar que los doctores existen antes de asignar especialidades
       const doctorRepository = testDataSource.getRepository(Doctor);
       const reloadedDoctor1 = await doctorRepository.findOne({ where: { id: doctor1.id } });
@@ -383,7 +380,7 @@ describe('Doctors Search API (Integration)', () => {
       expect(response.body.doctors.length).toBeLessThanOrEqual(20);
     });
 
-    it('debe respetar el límite máximo de 50 resultados por página', async () => {
+    it('debe retornar 400 cuando el límite de página supera 50', async () => {
       // Crear algunos médicos para la prueba
       const user = await createTestUser(testDataSource, {
         email: 'doctor-limit@test.com',
@@ -409,10 +406,10 @@ describe('Doctors Search API (Integration)', () => {
           limit: 100, // Intento de exceder el máximo
         })
         .set('Authorization', `Bearer ${patientToken}`)
-        .expect(200);
+        .expect(400);
 
-      expect(response.body.pagination.limit).toBeLessThanOrEqual(50);
-      expect(response.body.doctors.length).toBeLessThanOrEqual(50);
+      expect(response.body.code).toBe('INVALID_SEARCH_PARAMS');
+      expect(response.body.details.limit).toBeDefined();
     });
   });
 

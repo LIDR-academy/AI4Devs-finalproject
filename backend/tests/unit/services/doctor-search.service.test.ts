@@ -1,8 +1,5 @@
 import { DoctorSearchService } from '../../../src/services/doctor-search.service';
 import { AppDataSource } from '../../../src/config/database';
-import { Doctor } from '../../../src/models/doctor.entity';
-import { User } from '../../../src/models/user.entity';
-import { Specialty } from '../../../src/models/specialty.entity';
 import { SearchFiltersDto } from '../../../src/dto/doctors/search-filters.dto';
 import {
   createTestUser,
@@ -10,7 +7,6 @@ import {
   createTestSpecialty,
   assignSpecialtyToDoctor,
 } from '../../helpers/factories';
-import redisClient from '../../../src/config/redis';
 
 // Mock de Redis
 jest.mock('../../../src/config/redis', () => ({

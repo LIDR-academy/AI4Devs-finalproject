@@ -4,6 +4,9 @@ import { User } from '../../src/models/user.entity';
 import { AuditLog } from '../../src/models/audit-log.entity';
 import { Doctor } from '../../src/models/doctor.entity';
 import { Specialty } from '../../src/models/specialty.entity';
+import { Slot } from '../../src/models/slot.entity';
+import { Appointment } from '../../src/models/appointment.entity';
+import { DoctorSchedule } from '../../src/models/doctor-schedule.entity';
 
 export async function createTestUser(
   dataSource: DataSource,
@@ -149,4 +152,88 @@ export async function assignSpecialtyToDoctor(
       throw error;
     }
   }
+}
+
+export async function createTestSlot(
+  dataSource: DataSource,
+  doctorId: string,
+  overrides: Partial<Slot> = {},
+): Promise<Slot> {
+  const slotRepository = dataSource.getRepository(Slot);
+
+  const startTime = new Date();
+  startTime.setDate(startTime.getDate() + 1);
+  startTime.setHours(10, 0, 0, 0);
+
+  const endTime = new Date(startTime);
+  endTime.setMinutes(endTime.getMinutes() + 30);
+
+  const defaultSlot = {
+    doctorId,
+    startTime,
+    endTime,
+    isAvailable: true,
+    ...overrides,
+  };
+
+  return await slotRepository.save(slotRepository.create(defaultSlot));
+}
+
+export async function createTestSchedule(
+  dataSource: DataSource,
+  doctorId: string,
+  overrides: Partial<DoctorSchedule> = {},
+): Promise<DoctorSchedule> {
+  const scheduleRepository = dataSource.getRepository(DoctorSchedule);
+  const defaultSchedule = {
+    doctorId,
+    dayOfWeek: 1,
+    startTime: '09:00:00',
+    endTime: '12:00:00',
+    slotDurationMinutes: 30,
+    breakDurationMinutes: 0,
+    isActive: true,
+    ...overrides,
+  };
+
+  return await scheduleRepository.save(scheduleRepository.create(defaultSchedule));
+}
+
+export async function createTestAppointment(
+  dataSource: DataSource,
+  overrides: Partial<Appointment> & {
+    patientId: string;
+    doctorId: string;
+    slotId: string;
+  },
+): Promise<Appointment> {
+  const appointmentRepository = dataSource.getRepository(Appointment);
+  const slotRepository = dataSource.getRepository(Slot);
+
+  const { patientId, doctorId, slotId, appointmentDate, ...rest } = overrides;
+
+  const startTime = new Date();
+  startTime.setDate(startTime.getDate() + 7);
+  startTime.setHours(10, 0, 0, 0);
+
+  const defaultAppointment = {
+    patientId,
+    doctorId,
+    slotId,
+    appointmentDate: appointmentDate ?? startTime,
+    status: 'confirmed' as const,
+    reminderSent: false,
+    ...rest,
+  };
+
+  const appointment = await appointmentRepository.save(
+    appointmentRepository.create(defaultAppointment),
+  );
+
+  await slotRepository.update(
+    { id: slotId },
+    { isAvailable: false },
+  );
+
+  return appointment;
 }

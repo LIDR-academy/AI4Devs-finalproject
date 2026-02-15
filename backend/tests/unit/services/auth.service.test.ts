@@ -59,6 +59,35 @@ describe('AuthService', () => {
     // Configurar AppDataSource mock
     const { AppDataSource } = require('../../../src/config/database');
     AppDataSource.getRepository = mockDataSource.getRepository;
+    const transactionalEntityManager = {
+      findOne: jest.fn((entity, options) => {
+        if (entity === User) {
+          return userRepository.findOne(options);
+        }
+        return null;
+      }),
+      create: jest.fn((entity, payload) => {
+        if (entity === User) {
+          return userRepository.create(payload);
+        }
+        if (entity === AuditLog) {
+          return payload;
+        }
+        return payload;
+      }),
+      save: jest.fn((entity, payload) => {
+        if (entity === User) {
+          return userRepository.save(payload);
+        }
+        if (entity === AuditLog) {
+          return auditLogRepository.save(payload);
+        }
+        return Promise.resolve(payload);
+      }),
+    };
+    AppDataSource.transaction = jest.fn(async (callback) =>
+      callback(transactionalEntityManager)
+    );
 
     authService = new AuthService();
 

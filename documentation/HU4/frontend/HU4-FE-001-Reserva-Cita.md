@@ -217,11 +217,18 @@ export default function SlotSelector({ doctorId }: { doctorId: string }) {
 }
 ```
 
-## Archivos a Crear/Modificar
+## Archivos Creados/Modificados (Implementación)
 
-1. `frontend/src/components/appointments/SlotSelector.tsx` - Selector de slots
-2. `frontend/src/components/appointments/AppointmentConfirmation.tsx` - Confirmación
-3. `frontend/src/app/appointments/new/page.tsx` - Página de nueva cita
+1. `frontend/app/components/appointments/SlotSelector.tsx` - Selector de slots + panel de confirmación
+2. `frontend/app/[locale]/doctors/[doctorId]/availability/page.tsx` - Página de reserva
+3. `frontend/lib/api/doctors.ts` - getDoctorById, getDoctorSlots
+4. `frontend/lib/api/appointments.ts` - createAppointment
+5. `frontend/messages/es.json`, `messages/en.json` - Traducciones appointments
+6. `frontend/app/components/search/DoctorSearch.tsx` - Navegación con locale
+
+**Backend (prerrequisito)**:
+- `GET /api/v1/doctors/:doctorId` - Detalle de médico
+- `GET /api/v1/doctors/:doctorId/slots?date=yyyy-MM-dd` - Slots disponibles
 
 ## Testing
 
