@@ -7,11 +7,12 @@ US-002: The Librarian (Async Validation) | 13 SP | IN PROGRESS
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Active Ticket
-None (T-030-BACK completed - awaiting AUDIT)
+T-031-FRONT: Real-Time Status Listener — ENRICHMENT PHASE (2026-02-15)
+- Tech spec created: [docs/US-002/T-031-FRONT-TechnicalSpec.md](../docs/US-002/T-031-FRONT-TechnicalSpec.md)
+- Next: TDD-RED phase (write failing tests)
 
 ## Next Tickets
-1. T-031-FRONT: Real-Time Status Listener
-2. T-032-FRONT: Validation Report Visualizer
+1. T-032-FRONT: Validation Report Visualizer
 
 ## Blockers
 None.

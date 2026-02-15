@@ -6642,3 +6642,52 @@ Ejecuté fase TDD-GREEN exitosamente: (1) Creé ValidationService (src/backend/s
 **Resumen de la Respuesta/Acción:**
 Ejecuté fase REFACTOR completando: (1) **Análisis de código:** Identifiqué 3 oportunidades de mejora (validación UUID redundante con FastAPI, job_id usando mock event_id, logging redundante en router), (2) **Refactor ValidationService (src/backend/services/validation_service.py):** Simplifiqué docstrings con ejemplos claros de casos producción vs tests, documenté Schema Limitation de job_id (requiere migración para añadir blocks.task_id o events.metadata.task_id), mantuve validación UUID defensiva para reutilización service en contextos no-API (CLI/workers) con raises ValueError/TypeError, limpié lógica job_id a block.get("event_id") solo para mocks unitarios con comentario explicativo, (3) **Refactor validation router (src/backend/api/validation.py):** Mejoré module docstring con descripción completa del propósito, removí import logging y todo logging del router (service layer ya hace logging), expandí endpoint docstring con 70 líneas de documentación detallada (Path Parameters, Response Model campos individuales, Status Codes 200/404/422/500, Error Responses con ejemplos JSON, Example Requests con 2 scenarios - validated/unvalidated blocks, Integration context con links a T-031-FRONT/T-024-AGENT/T-020-DB, See Also con referencias a schemas/service/US-002), simplifiqué comentarios inline a "Service layer handles..." y "Map service errors...", (4) **Tests anti-regresión:** Ejecuté 13 tests T-030 → 13/13 PASS (8 unit + 5 integration), ejecuté suite completa backend → 70 passed, 1 skipped, 0 regresiones confirmadas, (5) **Documentación actualizada (4 archivos):** docs/09-mvp-backlog.md → T-030-BACK [DONE] con tech spec completo + DoD (13 tests, schema limitation, 2026-02-15), memory-bank/activeContext.md → T-030-BACK movido a "Recently Completed", active ticket = None (awaiting AUDIT), memory-bank/progress.md → T-030-BACK añadido con detalles (13 tests, GET endpoint, ValidationService), test counts actualizados (70 backend, 55 unit, 47 integration), memory-bank/productContext.md → sección "In Progress" actualizada con T-030 completado, descripción de query layer con limitación job_id documentada. **Decisiones técnicas:** Mantuve validación UUID en service (defensive programming para reuso), documenté limitación schema job_id (NO implementar ahora - requiere migración futura), removí logging de router (delegado a service layer), mejoré docstrings a nivel production-ready (ejemplos, error cases, integration context). **Estado:** T-030-BACK REFACTOR COMPLETO → Listo para AUDIT.
 ---
+
+## [113] - WORKFLOW STEP 1: ENRICHMENT - Ticket T-031-FRONT
+**Fecha:** 2026-02-15 18:30
+
+**Prompt Original (Snippet expandido):**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-031-FRONT
+>
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+>
+> ---
+>
+> ### Protocolo Agents (OBLIGATORIO antes de diseñar)
+>
+> 1. **Lee** `docs/09-mvp-backlog.md` y localiza el ticket `T-031-FRONT` para entender alcance, criterios de aceptación y DoD.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API existentes y patrones arquitectónicos del proyecto.
+> 3. **Lee** `memory-bank/techContext.md` para conocer el stack completo, librerías permitidas y decisiones técnicas previas.
+> 4. **Lee** `docs/productContext.md` para identificar componentes/endpoints existentes que pueden reutilizarse.
+> 5. **Al finalizar**, registra este prompt en `prompts.md` bajo la sección "## Workflow Step 1: Enrichment".
+>
+> ---
+>
+> ### Contexto del Workflow
+>
+> Estamos en **Step 1/5: Enriquecer Ticket** (Pre-TDD).
+> Acabamos de crear la rama `feature/T-031-FRONT`.
+> El objetivo es definir el **"Contrato Técnico"** detallado ANTES de escribir el primer test (Step 2: TDD-Red).
+>
+> **Stack del proyecto:**
+> - **Backend:** FastAPI (Python 3.11) + Pydantic schemas (`src/backend/schemas.py`), rutas en `src/backend/api/`
+> - **Frontend:** React 18 + TypeScript strict + Vite, componentes en `src/frontend/src/components/`, tipos en `src/frontend/src/types/`
+> - **Agent:** LangGraph (Python) en `src/agent/`
+> - **Infra:** Docker multi-stage, Supabase Storage (S3-compatible), PostgreSQL 15, migraciones en `supabase/migrations/`
+> - **Docs:** `docs/`, `memory-bank/`, backlog en `docs/09-mvp-backlog.md`
+>
+> **Patrón de contrato (CRÍTICO):** Las interfaces TypeScript (`src/frontend/src/types/`) DEBEN coincidir exactamente con los Pydantic schemas (`src/backend/schemas.py`). Verifica ambos antes de proponer nuevos tipos.
+>
+> ---
+>
+> ### Objetivo
+>
+> Generar una **Technical Specification** completa para `T-031-FRONT` que sirva como blueprint para el desarrollo TDD, sin escribir código de implementación todavía.
+>
+> ---
+>
+> [... resto del prompt según template completo ...]
+
+**Resumen de la Respuesta/Acción:**
+Generé especificación técnica completa de T-031-FRONT (Real-Time Status Listener) siguiendo protocolo de enriquecimiento: (1) **Análisis de contexto:** Leí backlog (US-002, T-031-FRONT), systemPatterns.md (Singleton, Service Layer, Constants Extraction), techContext.md (Stack React 18 + TypeScript, NO Supabase client aún), productContext.md (T-030-BACK completado, ValidationStatusResponse disponible), identifiqué que necesita instalación nueva de @supabase/supabase-js y configuración Realtime en Supabase dashboard, (2) **Diseño de solución - 4 componentes nuevos:** supabase.client.ts (Singleton factory siguiendo patrón backend, env vars VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY), types/realtime.ts (BlockRealtimePayload, StatusTransition, StatusNotification), hooks/useBlockStatusListener.ts (Custom hook con useEffect suscripción Realtime, manejo de estados isConnected/isLoading/error, callback onStatusChange, cleanup automático), services/notification.service.ts (Toast system MVP con DOM manipulation, constantes NOTIFICATION_CONFIG extraídas, accessibilidad WAI-ARIA), (3) **Contratos de datos:** TypeScript BlockRealtimePayload (eventType, new, old), UseBlockStatusListenerOptions (blockId, onStatusChange, enabled), UseBlockStatusListenerReturn (isConnected, isLoading, error, unsubscribe), reutiliza BlockStatus/ValidationReport de T-030-BACK, NO cambios backend (solo consume), (4) **Tests planificados (12 tests):** 4 Happy Path (subscribe success, processing→validated toast, processing→rejected toast, channel cleanup), 4 Edge Cases (missing env vars, wrong block ID filter, timeout handling, disabled hook), 2 Security (anon key read-only verify, ignore non-status updates), 2 Integration (E2E con Supabase real, multi-client broadcast), (5) **Archivos nuevos (6):** supabase.client.ts, types/realtime.ts, hooks/useBlockStatusListener.ts + .test.tsx, services/notification.service.ts + .test.ts, (6) **Modificar:** package.json (añadir @supabase/supabase-js@^2.39.0), .env.example (VITE_SUPABASE_URL/ANON_KEY), .gitignore (verificar .env ignorado), (7) **Infra manual:** Habilitar Realtime on blocks table en Supabase dashboard, verificar RLS policies permiten SELECT con anon key, (8) **Patrones reutilizables documentados:** Singleton (supabase client), Constants Extraction (NOTIFICATION_CONFIG), Service Layer (notification.service), Custom Hook pattern (useBlockStatusListener similar a useQuery API), documenté reuso futuro para US-013 Auth, US-005 Dashboard Realtime, T-032-FRONT validation details, (9) **Riesgos identificados:** Quota Realtime free tier (2M events/month) → mitigación: throttle 10 events/s, Memory leaks si no cleanup → mitigación: strict useEffect return cleanup + E2E leak tests, Env vars missing en producción → mitigation: validation en Dockerfile fail-fast, (10) **DoD checklist completo (16 criterios):** 12 tests pass, TypeScript strict 0 errors, Toast visible 5s + accessible, E2E manual test (update en SQL editor → toast en browser), RLS policies verify (anon no write), No memory leaks Chrome DevTools, docs actualización (systemPatterns Realtime pattern, techContext nuevas deps, prompts.md entry, activeContext status). **Entregables:** docs/US-002/T-031-FRONT-TechnicalSpec.md (700+ líneas) con 12 secciones (Summary, Requirements, Contracts, Architecture, Tests, Files, Patterns, Handoff TDD-RED, Risks, Performance Budget, Documentation, DoD), Handoff data para fase TDD-RED con valores copy-paste ready (Ticket ID, feature name, 5 key test cases, lista de archivos a crear, dependencias a instalar, configuración externa Supabase).
+---
