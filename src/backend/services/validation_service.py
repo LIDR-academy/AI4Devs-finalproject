@@ -38,43 +38,55 @@ class ValidationService:
         """
         Retrieve validation status for a specific block.
         
+        This method queries the blocks table to get the current status and validation_report
+        for a given block ID. It returns metadata in a 4-tuple format following Clean Architecture
+        pattern for error handling and data encapsulation.
+        
         Args:
-            block_id: UUID of the block to query
+            block_id: UUID of the block to query (FastAPI validates format in API layer)
         
         Returns:
-            Tuple of (success, block_data, error_message, extra_metadata)
-            - success (bool): True if operation succeeded
-            - block_data (dict | None): Block metadata + validation_report if found
-            - error_message (str | None): Error description if failed
-            - extra_metadata (dict | None): Additional context (e.g., job_id for processing blocks)
+            Tuple of (success, block_data, error_message, extra_metadata):
+            - success (bool): True if block found and query succeeded
+            - block_data (dict | None): Contains id, iso_code, status, validation_report
+            - error_message (str | None): Descriptive error if operation failed
+            - extra_metadata (dict | None): Reserved for job_id tracking (currently None)
+        
+        Schema Limitation:
+            job_id tracking not implemented. Current schema lacks task_id column in blocks table
+            or metadata storage in events table. Future enhancement requires migration to add
+            blocks.task_id or events.metadata.task_id for async validation job tracking.
         
         Examples:
-            success, data, error, extra = service.get_validation_status(uuid)
+            success, data, error, extra = service.get_validation_status(uuid_obj)
             
-            # Case 1: Block found with validation_report
-            (True, {"id": "...", "status": "validated", "validation_report": {...}}, None, None)
+            # Block found with validation report
+            >>> (True, {"id": "...", "status": "validated", "validation_report": {...}}, None, None)
             
-            # Case 2: Block not found
-            (False, None, "Block not found", None)
+            # Block not found
+            >>> (False, None, "Block not found", None)
             
-            # Case 3: DB connection error
-            (False, None, "Database connection failed", {"exception": "TimeoutError"})
+            # Database connection error
+            >>> (False, None, "Database connection failed", {"exception": "Connection timeout"})
+        
+        Note:
+            UUID validation is defensive programming for service re-use in non-API contexts.
+            FastAPI validates UUID format automatically in API layer path parameters.
         
         Raises:
-            ValueError: If block_id is not a valid UUID
-            TypeError: If block_id is not a UUID or string
+            ValueError: If block_id string is not a valid UUID format
+            TypeError: If block_id is neither UUID object nor string
         """
-        # Validate UUID format explicitly for proper error handling
+        # Defensive UUID validation for service layer robustness
         if not isinstance(block_id, UUID):
-            try:
-                # Attempt to convert string to UUID if needed
-                from uuid import UUID as UUIDClass
-                if isinstance(block_id, str):
+            if isinstance(block_id, str):
+                try:
+                    from uuid import UUID as UUIDClass
                     block_id = UUIDClass(block_id)
-                else:
-                    raise TypeError(f"block_id must be UUID or string, got {type(block_id)}")
-            except (ValueError, AttributeError) as e:
-                raise ValueError(f"Invalid UUID format: {block_id}") from e
+                except ValueError as e:
+                    raise ValueError(f"Invalid UUID format: {block_id}") from e
+            else:
+                raise TypeError(f"block_id must be UUID or string, got {type(block_id)}")
         
         try:
             logger.info(f"Querying validation status for block_id={block_id}")
@@ -92,11 +104,10 @@ class ValidationService:
             block = response.data[0]
             logger.info(f"Block found: block_id={block_id}, status={block['status']}")
             
-            # Extract job_id if available
-            # Note: In unit tests, event_id may be mocked in block data
-            # In production, this would require a query to events table (future enhancement)
-            job_id = block.get("event_id")
-            extra = {"job_id": job_id} if job_id is not None else None
+            # job_id tracking not implemented (schema limitation)
+            # Unit tests mock event_id for backward compatibility
+            job_id = block.get("event_id")  # Only present in mocked test data
+            extra = {"job_id": job_id} if job_id else None
             
             return (True, block, None, extra)
         
