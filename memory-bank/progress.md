@@ -37,13 +37,14 @@
 - T-027-AGENT: Geometry Validator — DONE 2026-02-14 (9/9 tests passing, TDD RED→GREEN→REFACTOR complete, 4 checks geométricos, helper method _get_object_id)
 - T-028-BACK: Validation Report Service — DONE 2026-02-14 (13/13 tests passing: 10 unit + 3 integration, Clean Architecture service layer, TDD RED→GREEN→REFACTOR complete)
 - T-029-BACK: Trigger Validation from Confirm Endpoint — DONE 2026-02-14 (13/13 tests: 9 unit + 4 integration, TDD RED→GREEN→REFACTOR complete, celery_client singleton, block creation + Celery enqueue)
+- T-030-BACK: Get Validation Status Endpoint — DONE 2026-02-15 (13/13 tests: 8 unit + 5 integration, TDD ENRICH→RED→GREEN→REFACTOR complete, GET /api/parts/{id}/validation, ValidationService + validation router, job_id schema limitation documented)
 
 ## Test Counts
-- Backend: 57 passed, 5 skipped (T-029 enqueue 13 + validation report 13 + upload flow 6 + previous 25)
+- Backend: 70 passed, 1 skipped (T-030 validation 13 + T-029 enqueue 13 + validation report 13 + upload flow 6 + previous 25)
 - Frontend: 18 passed (4 FileUploader + 14 UploadZone)
 - Agent: 36 passed, 1 skipped (9 nomenclature_validator + 8 user_string_extractor + 3 E2E user_strings + 6 validate_file_task + 9 geometry_validator + 1 rhino_parser skipped)
-- Unit Tests: 47 (9 upload_service_enqueue + 10 validation_report_service + 28 previous)
-- Integration Tests: 42 (4 confirm_upload_enqueue + 3 validation_report_persistence + 35 previous)
+- Unit Tests: 55 (8 validation_service + 9 upload_service_enqueue + 10 validation_report_service + 28 previous)
+- Integration Tests: 47 (5 get_validation_status + 4 confirm_upload_enqueue + 3 validation_report_persistence + 35 previous)
 
 ## Status
 - Memory Bank: Active
