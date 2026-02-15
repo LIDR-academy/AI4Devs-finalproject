@@ -93,10 +93,23 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   - JSONB serialization/deserialization with Pydantic
   - Clean Architecture with return tuples pattern
   - Full test coverage (13 tests: 10 unit + 3 integration)
+- ✅ **T-029: Trigger Validation from Confirm Endpoint** (Async orchestration)
+  - Celery singleton pattern for task enqueue
+  - UploadService methods: create_block_record() + enqueue_validation()
+  - Block creation with PENDING-{file_id} iso_code
+  - API returns task_id for async tracking
+  - Full test coverage (13 tests: 9 unit + 4 integration)
+- ✅ **T-030: Get Validation Status Endpoint** (Query layer complete)
+  - GET /api/parts/{id}/validation endpoint
+  - ValidationService for business logic layer
+  - Returns ValidationStatusResponse with block metadata + validation_report JSONB
+  - Handles block not found (404), DB errors (500), invalid UUID (422)
+  - NULL-safe validation_report parsing for unvalidated blocks
+  - Schema limitation documented: job_id tracking requires future migration
+  - Full test coverage (13 tests: 8 unit + 5 integration, 0 regression)
 
 ### 🔄 In Progress
-- T-029: Trigger validation from upload confirm endpoint
-- T-030: GET endpoint for validation status
+- T-031: Real-time status listener (Frontend)
 
 ### 📋 Next Milestones
 - US-005: Dashboard with parts listing
