@@ -77,7 +77,7 @@ export function useBlockStatusListener(
 
     // Configure postgres_changes listener
     realtimeChannel.on(
-      'postgres_changes',
+      'postgres_changes' as any,
       {
         event: REALTIME_EVENT,
         schema: REALTIME_SCHEMA,
