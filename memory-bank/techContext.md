@@ -60,6 +60,9 @@
 - **TypeScript** (strict mode) - Type-safe JavaScript
 - **Vite** - Build tool and dev server
 
+### Real-Time Communication
+- **@supabase/supabase-js** 2.39.0+ - Supabase client for Realtime subscriptions (T-031-FRONT)
+
 ### UI Components & File Handling
 - **react-dropzone** 14.2.3 - Drag & drop file upload with validation (T-001-FRONT)
 
