@@ -18,6 +18,24 @@ import { getSupabaseClient } from '../services/supabase.client';
 import { showStatusNotification } from '../services/notification.service';
 
 /**
+ * Constants for Realtime channel configuration
+ */
+const REALTIME_SCHEMA = 'public';
+const REALTIME_TABLE = 'blocks';
+const REALTIME_EVENT = 'UPDATE';
+
+/**
+ * Generate channel name for a specific block.
+ * 
+ * @param blockId - The block ID to subscribe to
+ * @returns Formatted channel name
+ * @internal
+ */
+function getChannelName(blockId: string): string {
+  return `block-${blockId}`;
+}
+
+/**
  * Hook for listening to block status changes in real-time.
  * 
  * @param options - Configuration options
@@ -54,15 +72,16 @@ export function useBlockStatusListener(
     const supabase = getSupabaseClient();
 
     // Create channel for this block
-    const realtimeChannel = supabase.channel(`block-${blockId}`);
+    const channelName = getChannelName(blockId);
+    const realtimeChannel = supabase.channel(channelName);
 
     // Configure postgres_changes listener
     realtimeChannel.on(
       'postgres_changes',
       {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'blocks',
+        event: REALTIME_EVENT,
+        schema: REALTIME_SCHEMA,
+        table: REALTIME_TABLE,
         filter: `id=eq.${blockId}`,
       },
       (payload: BlockRealtimePayload) => {
