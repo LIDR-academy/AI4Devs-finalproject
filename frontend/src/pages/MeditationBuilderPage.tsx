@@ -8,7 +8,6 @@ import {
   GenerateTextButton,
   GenerateImageButton,
   GenerationStatusBar,
-  GenerationResultModal,
 } from '@/components';
 import ImageSelectorButton from '@/components/ImageSelectorButton';
 import MusicSelectorButton from '@/components/MusicSelectorButton';
@@ -61,9 +60,6 @@ export function MeditationBuilderPage() {
   const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
 
-
-
-
   useEffect(() => {
     if (!compositionId) return;
     const t = setTimeout(() => {
@@ -90,6 +86,28 @@ export function MeditationBuilderPage() {
       musicName: musicPreview.data?.musicReference ?? selectedMusicId ?? '',
     };
   }, [localAudioUrl, localAudioName, musicPreview.data, selectedMusicId]);
+
+  // Track music duration
+  const [musicDuration, setMusicDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (musicPreviewData.previewUrl) {
+      const audio = new Audio(musicPreviewData.previewUrl);
+      const handleLoadedMetadata = () => {
+        setMusicDuration(Math.ceil(audio.duration));
+      };
+      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+      // Forzar carga de metadata si ya está listo (caché)
+      if (audio.readyState >= 1) {
+        handleLoadedMetadata();
+      }
+      return () => {
+        audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      };
+    } else {
+      setMusicDuration(null);
+    }
+  }, [musicPreviewData.previewUrl]);
 
   // Estado local para preview de imagen seleccionada (blob URL para preview)
   const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
@@ -118,6 +136,17 @@ export function MeditationBuilderPage() {
       imageName: imagePreview.data?.imageReference ?? selectedImageId ?? '',
     };
   }, [localImageUrl, localImageName, imagePreview.data, selectedImageId]);
+
+  // Calcula la duración estimada
+  const estimatedDuration = useMemo(() => {
+    // Si hay música seleccionada, devolvemos su duración real
+    if (musicDuration) return musicDuration;
+
+    // Si no, estimamos por texto
+    if (!localText.trim()) return 0;
+    const wordCount = localText.trim().split(/\s+/).length;
+    return Math.ceil(wordCount / 2.5); // 150 words per minute = 2.5 words per second
+  }, [localText, musicDuration]);
 
   // Cuando el usuario selecciona un archivo de audio (solo preview)
   const handleAudioSelected = useCallback((file: File) => {
@@ -179,6 +208,66 @@ export function MeditationBuilderPage() {
       <header className="meditation-builder__header">
         <h1>🧘 Meditation Builder</h1>
         <p>Create your personalized meditation content</p>
+        
+        {/* Status indicator in header */}
+        <div style={{ marginTop: '1rem' }}>
+          {generation.isCompleted ? (
+            <div className="generation-result--success-header" style={{
+              fontSize: '1.2rem',
+              color: '#4caf50',
+              backgroundColor: '#1a1a1a',
+              padding: '1rem',
+              borderRadius: '8px',
+              display: 'inline-block',
+              border: '1px solid #4caf50'
+            }}>
+              <div style={{ marginBottom: '8px' }}>
+                ✅ <strong>Generation Complete!</strong> Duration: <strong>{formatDuration(generation.result?.durationSeconds || 0)}</strong>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                {generation.result?.mediaUrl && (
+                  <a href={generation.result.mediaUrl} download className="btn btn--primary btn--small" style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem' }}>
+                    📥 Download {generation.result.type === 'VIDEO' ? 'Video' : 'Audio'}
+                  </a>
+                )}
+                {generation.result?.subtitleUrl && (
+                  <a href={generation.result.subtitleUrl} download className="btn btn--secondary btn--small" style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem' }}>
+                    📄 Subtitles
+                  </a>
+                )}
+                <button onClick={() => generation.reset()} className="btn btn--text" style={{ fontSize: '0.9rem', marginLeft: '8px', color: '#888' }}>
+                  Clear
+                </button>
+              </div>
+            </div>
+          ) : generation.isFailed ? (
+            <div style={{
+              fontSize: '1.2rem',
+              color: '#f44336',
+              backgroundColor: '#1a1a1a',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              display: 'inline-block',
+              border: '1px solid #f44336'
+            }}>
+              ❌ <strong>Generation Failed</strong>
+              <button onClick={() => generation.reset()} className="btn btn--text" style={{ fontSize: '0.9rem', marginLeft: '12px', color: '#ffc107' }}>
+                Try Again
+              </button>
+            </div>
+          ) : estimatedDuration > 0 ? (
+            <div className="meditation-builder__estimated-duration" style={{ 
+              fontSize: '1.2rem', 
+              color: '#646cff',
+              backgroundColor: '#1a1a1a',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              display: 'inline-block'
+            }}>
+              <span>Estimated Duration: <strong>{formatDuration(estimatedDuration)}</strong></span>
+            </div>
+          ) : null}
+        </div>
       </header>
 
     {generationError && (
@@ -344,42 +433,7 @@ export function MeditationBuilderPage() {
       </div>
     </div>
 
-    {/* Generation Result Modal */}
-    <GenerationResultModal
-      isOpen={generation.isCompleted || generation.isFailed}
-      result={generation.result}
-      error={generation.errorMessage}
-      onClose={() => generation.reset()}
-      onRetry={async () => {
-        try {
-          // Subir archivos locales a S3 si existen
-          let musicRef = selectedMusicId || 'default-music';
-          let imageRef = selectedImageId || undefined;
-
-          if (localAudioFile) {
-            const uploadResult = await uploadMusic.mutateAsync(localAudioFile);
-            musicRef = uploadResult.fileUrl;
-          }
-
-          if (localImageFile) {
-            const uploadResult = await uploadImage.mutateAsync(localImageFile);
-            imageRef = uploadResult.fileUrl;
-          }
-
-          generation.start({
-            request: {
-              text: localText,
-              musicReference: musicRef,
-              imageReference: imageRef,
-            },
-            compositionId: compositionId || undefined,
-          });
-        } catch (error) {
-          console.error('Failed to upload files on retry:', error);
-          alert('Failed to upload files. Please try again.');
-        }
-      }}
-    />
+    {/* Generation Result Modal removed - moved to header per user request */}
 
     {updateText.isPending && (
       <div className="meditation-builder__save-indicator">
@@ -390,4 +444,17 @@ export function MeditationBuilderPage() {
 );
 }
 
-export default MeditationBuilderPage;
+/**
+ * Format duration in seconds to human-readable format
+ */
+function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  
+  if (minutes === 0) {
+    return `${remainingSeconds}s`;
+  }
+  
+  return `${minutes}m ${remainingSeconds}s`;
+}
+

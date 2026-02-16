@@ -78,30 +78,32 @@ export function GenerationResultModal({
       >
         {/* Success State */}
         {isSuccess && result && (
-          <div className="generation-result generation-result--success">
-            <div className="generation-result__icon">✅</div>
-            <h2 id="generation-result-title" className="generation-result__title">
-              Generation Complete!
-            </h2>
-            <p className="generation-result__message">
-              Your {result.type === 'VIDEO' ? 'video' : 'podcast'} meditation has been created successfully.
-            </p>
 
-            {/* Meditation Details */}
-            <div className="generation-result__details">
-              <div className="generation-result__detail">
-                <span className="label">Type:</span>
-                <span className="value">{result.type}</span>
-              </div>
+            <div className="generation-result generation-result--success">
+              {/* Duración arriba de todo */}
               {result.durationSeconds && (
-                <div className="generation-result__detail">
+                <div className="generation-result__detail" style={{ marginBottom: 8, fontSize: '1.1rem' }}>
                   <span className="label">Duration:</span>
-                  <span className="value">
+                  <span className="value" style={{ fontWeight: 'bold', marginLeft: 4 }}>
                     {formatDuration(result.durationSeconds)}
                   </span>
                 </div>
               )}
-            </div>
+              <div className="generation-result__icon">✅</div>
+              <h2 id="generation-result-title" className="generation-result__title">
+                Generation Complete!
+              </h2>
+              <p className="generation-result__message">
+                Your {result.type === 'VIDEO' ? 'video' : 'podcast'} meditation has been created successfully.
+              </p>
+
+              {/* Meditation Details */}
+              <div className="generation-result__details">
+                <div className="generation-result__detail">
+                  <span className="label">Type:</span>
+                  <span className="value">{result.type}</span>
+                </div>
+              </div>
 
             {/* Download Buttons */}
             <div className="generation-result__actions">

@@ -28,6 +28,17 @@ public interface SubtitleSyncPort {
     List<SubtitleSegment> generateSubtitles(Path narrationAudioPath, String text);
 
     /**
+     * Generate synchronized subtitles distributed across a specific total duration.
+     * Useful when subtitles should span the entire music duration.
+     * 
+     * @param text original meditation text
+     * @param totalDurationSeconds total duration to distribute subtitles across
+     * @return list of subtitle segments with timing information
+     * @throws RuntimeException if subtitle generation fails
+     */
+    List<SubtitleSegment> generateSubtitles(String text, double totalDurationSeconds);
+
+    /**
      * Export subtitles to SRT file format.
      * 
      * @param segments subtitle segments with timing

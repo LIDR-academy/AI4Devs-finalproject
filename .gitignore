@@ -138,3 +138,16 @@ $RECYCLE.BIN/
 *.pem
 *.key
 secrets/
+
+# Google Cloud credentials
+**/google-*.json
+**/*credentials*.json
+**/*-credentials.json
+**/*.credentials.json
+.gcp/
+gcp-*.json
+service-account*.json
+
+# AWS credentials
+.aws/
+aws-credentials.json

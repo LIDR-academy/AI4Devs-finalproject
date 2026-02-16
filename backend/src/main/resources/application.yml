@@ -21,7 +21,7 @@ ai:
 # OpenAI Configuration
 openai:
   base-url: ${OPENAI_BASE_URL:https://api.openai.com}
-  api-key: ${OPENAI_API_KEY}
+  api-key: ${OPENAI_API_KEY:}
 
   text:
     model: ${OPENAI_TEXT_MODEL:gpt-5-nano}
@@ -77,10 +77,39 @@ management:
     metrics:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/metrics}
 
+# FFmpeg Configuration
+ffmpeg:
+  path: ${FFMPEG_PATH:ffmpeg}
+  enable-fallback: ${FFMPEG_ENABLE_FALLBACK:true}
+
+# Google Cloud Text-to-Speech Configuration
+google-cloud:
+  tts:
+    # Enable/disable Google Cloud TTS (if false, uses FFmpeg silent audio fallback)
+    enabled: ${GOOGLE_TTS_ENABLED:false}
+    # Path to Google Cloud credentials JSON file
+    credentials-path: ${GOOGLE_APPLICATION_CREDENTIALS:C:/Github copilot/meditation-487517-ce210ad855ee.json}
+    # Alternative: Base64-encoded credentials JSON (for containerized environments)
+    credentials-json: ${GOOGLE_CREDENTIALS_JSON:}
+    # Default voice configuration
+    voice:
+      language-code: ${GOOGLE_TTS_LANGUAGE:es-ES}
+      name: ${GOOGLE_TTS_VOICE_NAME:es-ES-Standard-B}  # Female: A, Male: B, C, D
+      gender: ${GOOGLE_TTS_GENDER:MALE}  # MALE, FEMALE, NEUTRAL
+    # Audio configuration
+    audio:
+      encoding: ${GOOGLE_TTS_ENCODING:MP3}  # MP3, LINEAR16, OGG_OPUS
+      sample-rate: ${GOOGLE_TTS_SAMPLE_RATE:48000}
+      speaking-rate: ${GOOGLE_TTS_SPEAKING_RATE:0.85}  # 0.25 to 4.0 (slower for meditation)
+      pitch: ${GOOGLE_TTS_PITCH:0.0}  # -20.0 to 20.0
+      volume-gain-db: ${GOOGLE_TTS_VOLUME:0.0}  # -96.0 to 16.0
+
 # Logging Configuration
 logging:
   level:
     root: INFO
-    com.hexagonal.meditationbuilder: INFO
+    com.hexagonal.meditationbuilder: DEBUG
+    # FFmpeg adapters - enable to debug rendering issues
+    com.hexagonal.meditation.generation.infrastructure.out.adapter.ffmpeg: DEBUG
     # Never log AI prompts or responses (security)
     com.hexagonal.meditationbuilder.infrastructure.out.service: WARN

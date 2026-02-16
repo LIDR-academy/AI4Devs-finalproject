@@ -10,6 +10,7 @@ import com.hexagonal.meditation.generation.domain.ports.out.MediaStoragePort;
 import com.hexagonal.meditation.generation.domain.ports.out.SubtitleSyncPort;
 import com.hexagonal.meditation.generation.domain.ports.out.VideoRenderingPort;
 import com.hexagonal.meditation.generation.domain.ports.out.VoiceSynthesisPort;
+import com.hexagonal.meditation.generation.infrastructure.out.service.audio.AudioMetadataService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -41,6 +42,7 @@ public class GenerationConfig {
      * @param videoRenderingPort out port for video rendering (FFmpeg adapter)
      * @param mediaStoragePort out port for S3 storage (AWS S3/LocalStack adapter)
      * @param contentRepositoryPort out port for persistence (JPA adapter)
+     * @param audioMetadataService service for analyzing audio file metadata (duration, bitrate, etc.)
      * @param clock system clock for timestamps (UTC)
      * @return configured use case instance
      */
@@ -54,6 +56,7 @@ public class GenerationConfig {
             VideoRenderingPort videoRenderingPort,
             MediaStoragePort mediaStoragePort,
             ContentRepositoryPort contentRepositoryPort,
+            AudioMetadataService audioMetadataService,
             Clock clock) {
         return new GenerateMeditationContentService(
                 textLengthEstimator,
@@ -64,6 +67,7 @@ public class GenerationConfig {
                 videoRenderingPort,
                 mediaStoragePort,
                 contentRepositoryPort,
+                audioMetadataService,
                 clock
         );
     }

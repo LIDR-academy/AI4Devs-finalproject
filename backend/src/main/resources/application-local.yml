@@ -68,8 +68,32 @@ ffmpeg:
   path: ${FFMPEG_PATH:ffmpeg}
   enable-fallback: true
 
+# Google Cloud Text-to-Speech Configuration
+# When disabled, the system uses FFmpeg silent audio fallback for development
+google-cloud:
+  tts:
+    enabled: ${GOOGLE_TTS_ENABLED:true}
+    # Credentials file path (if enabled)
+    credentials-path: ${GOOGLE_APPLICATION_CREDENTIALS:C:/Github copilot/meditation-487517-ce210ad855ee.json}
+    # Or base64-encoded credentials (for Docker)
+    credentials-json: ${GOOGLE_CREDENTIALS_JSON:}
+    # Voice configuration
+    voice:
+      language-code: es-ES
+      name: es-ES-Standard-B
+      gender: MALE
+    # Audio configuration
+    audio:
+      encoding: MP3
+      sample-rate: 48000
+      speaking-rate: 0.85
+      pitch: 0.0
+      volume-gain-db: 0.0
+
 # Development logging - more verbose
 logging:
   level:
     com.hexagonal.meditationbuilder: DEBUG
     org.springframework.web.client: DEBUG
+    com.hexagonal.meditation.generation: DEBUG
+    com.hexagonal.meditation.generation.infrastructure.out.adapter.tts: DEBUG

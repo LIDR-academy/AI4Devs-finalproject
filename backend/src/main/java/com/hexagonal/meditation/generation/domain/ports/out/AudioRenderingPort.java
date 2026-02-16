@@ -28,7 +28,7 @@ public interface AudioRenderingPort {
      */
     record AudioRenderRequest(
         Path narrationAudioPath,
-        Path musicAudioPath,
+        Path musicAudioPath, // Can be null for narration-only audio
         Path outputPath,
         AudioConfig config
     ) {
@@ -36,9 +36,7 @@ public interface AudioRenderingPort {
             if (narrationAudioPath == null) {
                 throw new IllegalArgumentException("Narration audio path cannot be null");
             }
-            if (musicAudioPath == null) {
-                throw new IllegalArgumentException("Music audio path cannot be null");
-            }
+            // musicAudioPath can be null - optional background music
             if (outputPath == null) {
                 throw new IllegalArgumentException("Output path cannot be null");
             }
@@ -53,15 +51,15 @@ public interface AudioRenderingPort {
      */
     record AudioConfig(
         int sampleRate,
-        String channels,
+        int channels, // 1 = mono, 2 = stereo
         double musicVolumeDb
     ) {
         public AudioConfig {
             if (sampleRate <= 0) {
                 throw new IllegalArgumentException("Sample rate must be positive");
             }
-            if (channels == null || channels.isBlank()) {
-                throw new IllegalArgumentException("Channels cannot be null or blank");
+            if (channels <= 0 || channels > 2) {
+                throw new IllegalArgumentException("Channels must be 1 (mono) or 2 (stereo)");
             }
         }
 
@@ -71,7 +69,7 @@ public interface AudioRenderingPort {
         public static AudioConfig meditationAudio() {
             return new AudioConfig(
                 48000,
-                "stereo",
+                2, // stereo
                 -12.0 // music 12dB lower than narration
             );
         }

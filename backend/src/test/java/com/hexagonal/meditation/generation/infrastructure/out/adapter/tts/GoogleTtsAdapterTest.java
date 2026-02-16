@@ -23,7 +23,7 @@ class GoogleTtsAdapterTest {
     
     @BeforeEach
     void setUp() {
-        adapter = new GoogleTtsAdapter();
+        adapter = new GoogleTtsAdapter(null, null, null);
     }
     
     @Test

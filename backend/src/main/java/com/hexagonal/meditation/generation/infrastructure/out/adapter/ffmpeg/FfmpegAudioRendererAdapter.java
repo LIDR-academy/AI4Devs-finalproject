@@ -35,6 +35,22 @@ public class FfmpegAudioRendererAdapter implements AudioRenderingPort {
         logger.info("Rendering audio: narration={}, music={}, output={}", 
             request.narrationAudioPath(), request.musicAudioPath(), request.outputPath());
         
+        // Log music file existence
+        if (request.musicAudioPath() != null) {
+            boolean musicExists = Files.exists(request.musicAudioPath());
+            logger.info("Music file exists: {} (path: {})", musicExists, request.musicAudioPath());
+            if (musicExists) {
+                try {
+                    long musicSize = Files.size(request.musicAudioPath());
+                    logger.info("Music file size: {} bytes", musicSize);
+                } catch (IOException e) {
+                    logger.warn("Could not get music file size: {}", e.getMessage());
+                }
+            }
+        } else {
+            logger.warn("Music audio path is NULL - rendering narration only");
+        }
+        
         try {
             // Ensure input files exist before calling ffmpeg
             if (!Files.exists(request.narrationAudioPath())) {
@@ -45,20 +61,23 @@ public class FfmpegAudioRendererAdapter implements AudioRenderingPort {
             List<String> command = new ArrayList<>();
             command.add(ffmpegConfig.getPath());
             command.add("-y"); // Overwrite output
-            command.add("-i");
-            command.add(request.narrationAudioPath().toAbsolutePath().toString());
             
             if (request.musicAudioPath() != null && Files.exists(request.musicAudioPath())) {
+                // Music first (input 0) so it determines duration
                 command.add("-i");
                 command.add(request.musicAudioPath().toAbsolutePath().toString());
+                command.add("-i");
+                command.add(request.narrationAudioPath().toAbsolutePath().toString());
                 command.add("-filter_complex");
-                // Mix narration and music, normalize volume
-                command.add("[0:a][1:a]amix=inputs=2:duration=longest,loudnorm[aout]");
+                // Mix music (50% volume) and narration (100% volume), use music duration
+                // [0:a] = music (background), [1:a] = narration (foreground)
+                // Using higher music volume (0.5) to ensure it's audible
+                command.add("[0:a]volume=0.5[music];[1:a]volume=1.0[speech];[music][speech]amix=inputs=2:duration=first:dropout_transition=0[aout]");
                 command.add("-map");
                 command.add("[aout]");
             } else {
-                command.add("-af");
-                command.add("loudnorm");
+                command.add("-i");
+                command.add(request.narrationAudioPath().toAbsolutePath().toString());
             }
             
             command.add("-ar");
@@ -67,7 +86,8 @@ public class FfmpegAudioRendererAdapter implements AudioRenderingPort {
             command.add(String.valueOf(request.config().channels()));
             command.add(request.outputPath().toAbsolutePath().toString());
 
-            logger.debug("Executing FFmpeg command: {}", String.join(" ", command));
+            String fullCommand = String.join(" ", command);
+            logger.info("Executing FFmpeg command: {}", fullCommand);
             
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
@@ -79,7 +99,12 @@ public class FfmpegAudioRendererAdapter implements AudioRenderingPort {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     output.append(line).append("\n");
-                    logger.debug("FFmpeg: {}", line);
+                    // Log FFmpeg output at INFO level to see warnings
+                    if (line.contains("Error") || line.contains("error") || line.contains("Warning") || line.contains("warning")) {
+                        logger.warn("FFmpeg: {}", line);
+                    } else {
+                        logger.debug("FFmpeg: {}", line);
+                    }
                 }
             }
             

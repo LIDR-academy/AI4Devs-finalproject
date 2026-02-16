@@ -27,6 +27,7 @@ public record GeneratedMeditationContent(
     Optional<MediaReference> subtitleFile,
     Optional<MediaReference> backgroundImage,
     Optional<MediaReference> backgroundMusic,
+    Optional<Integer> durationSeconds,
     Optional<String> errorMessage,
     Instant createdAt,
     Optional<Instant> completedAt
@@ -69,6 +70,9 @@ public record GeneratedMeditationContent(
         if (backgroundMusic == null) {
             throw new IllegalArgumentException("Background music Optional cannot be null");
         }
+        if (durationSeconds == null) {
+            throw new IllegalArgumentException("Duration seconds Optional cannot be null");
+        }
         if (errorMessage == null) {
             throw new IllegalArgumentException("Error message Optional cannot be null");
         }
@@ -109,6 +113,7 @@ public record GeneratedMeditationContent(
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             clock.instant(),
             Optional.empty()
         );
@@ -139,6 +144,7 @@ public record GeneratedMeditationContent(
             Optional.of(backgroundImage),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             clock.instant(),
             Optional.empty()
         );
@@ -150,6 +156,7 @@ public record GeneratedMeditationContent(
     public GeneratedMeditationContent markCompleted(
         MediaReference outputMedia,
         MediaReference subtitleFile,
+        Integer durationSeconds,
         Clock clock
     ) {
         return new GeneratedMeditationContent(
@@ -164,6 +171,7 @@ public record GeneratedMeditationContent(
             Optional.of(subtitleFile),
             backgroundImage,
             backgroundMusic,
+            Optional.ofNullable(durationSeconds),
             Optional.empty(),
             createdAt,
             Optional.of(clock.instant())
@@ -186,6 +194,7 @@ public record GeneratedMeditationContent(
             subtitleFile,
             backgroundImage,
             backgroundMusic,
+            durationSeconds,
             Optional.of(errorMessage),
             createdAt,
             Optional.of(clock.instant())
@@ -208,6 +217,7 @@ public record GeneratedMeditationContent(
             subtitleFile,
             backgroundImage,
             backgroundMusic,
+            durationSeconds,
             Optional.of(errorMessage),
             createdAt,
             Optional.of(clock.instant())
@@ -230,6 +240,7 @@ public record GeneratedMeditationContent(
             subtitleFile,
             backgroundImage,
             Optional.of(musicReference),
+            durationSeconds,
             errorMessage,
             createdAt,
             completedAt

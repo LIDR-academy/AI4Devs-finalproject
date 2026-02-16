@@ -37,6 +37,7 @@ public class MeditationOutputMapper {
         domain.subtitleFile().ifPresent(subtitle -> entity.setSubtitleUrl(subtitle.url()));
         domain.backgroundImage().ifPresent(image -> entity.setBackgroundImageUrl(image.url()));
         domain.backgroundMusic().ifPresent(music -> entity.setBackgroundMusicUrl(music.url()));
+        domain.durationSeconds().ifPresent(entity::setDurationSeconds);
         domain.errorMessage().ifPresent(entity::setErrorMessage);
         domain.completedAt().ifPresent(entity::setCompletedAt);
         
@@ -64,6 +65,8 @@ public class MeditationOutputMapper {
         Optional<MediaReference> backgroundMusic = Optional.ofNullable(entity.getBackgroundMusicUrl())
             .map(MediaReference::new);
         
+        Optional<Integer> durationSeconds = Optional.ofNullable(entity.getDurationSeconds());
+        
         Optional<String> errorMessage = Optional.ofNullable(entity.getErrorMessage());
         
         Optional<java.time.Instant> completedAt = Optional.ofNullable(entity.getCompletedAt());
@@ -80,6 +83,7 @@ public class MeditationOutputMapper {
             subtitleFile,
             backgroundImage,
             backgroundMusic,
+            durationSeconds,
             errorMessage,
             entity.getCreatedAt(),
             completedAt

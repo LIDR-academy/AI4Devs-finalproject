@@ -53,14 +53,15 @@ public class FfmpegVideoRendererAdapter implements VideoRenderingPort {
             command.add("1");
             command.add("-i");
             command.add(request.imagePath().toAbsolutePath().toString());
-            command.add("-i");
-            command.add(request.narrationAudioPath().toAbsolutePath().toString());
             
             boolean hasMusic = request.musicAudioPath() != null && Files.exists(request.musicAudioPath());
             if (hasMusic) {
+                // Music first (input 1) so it determines duration
                 command.add("-i");
                 command.add(request.musicAudioPath().toAbsolutePath().toString());
             }
+            command.add("-i");
+            command.add(request.narrationAudioPath().toAbsolutePath().toString());
             
             // Filters
             StringBuilder vf = new StringBuilder();
@@ -75,7 +76,11 @@ public class FfmpegVideoRendererAdapter implements VideoRenderingPort {
             
             if (hasMusic) {
                 command.add("-filter_complex");
-                command.add("[1:a][2:a]amix=inputs=2:duration=longest[aout]");
+                // Mix music (50% volume) and narration (100% volume), use music duration
+                // [1:a] = music (first audio input, determines duration, background)
+                // [2:a] = narration (second audio input, foreground)
+                // Using higher music volume (0.5) to ensure it's audible
+                command.add("[1:a]volume=0.5[music];[2:a]volume=1.0[speech];[music][speech]amix=inputs=2:duration=first:dropout_transition=0[aout]");
                 command.add("-map");
                 command.add("0:v");
                 command.add("-map");

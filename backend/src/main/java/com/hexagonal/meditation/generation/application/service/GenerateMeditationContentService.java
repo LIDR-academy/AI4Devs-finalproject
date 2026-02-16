@@ -24,14 +24,18 @@ import com.hexagonal.meditation.generation.domain.ports.out.VideoRenderingPort.V
 import com.hexagonal.meditation.generation.domain.ports.out.VideoRenderingPort.VideoRenderRequest;
 import com.hexagonal.meditation.generation.domain.ports.out.VoiceSynthesisPort;
 import com.hexagonal.meditation.generation.domain.ports.out.VoiceSynthesisPort.VoiceConfig;
+import com.hexagonal.meditation.generation.infrastructure.out.service.audio.AudioMetadataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,6 +76,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
     private final VideoRenderingPort videoRenderingPort;
     private final MediaStoragePort mediaStoragePort;
     private final ContentRepositoryPort contentRepositoryPort;
+    private final AudioMetadataService audioMetadataService;
     private final Clock clock;
     
     public GenerateMeditationContentService(
@@ -83,6 +88,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             VideoRenderingPort videoRenderingPort,
             MediaStoragePort mediaStoragePort,
             ContentRepositoryPort contentRepositoryPort,
+            AudioMetadataService audioMetadataService,
             Clock clock) {
         this.textLengthEstimator = textLengthEstimator;
         this.idempotencyKeyGenerator = idempotencyKeyGenerator;
@@ -92,6 +98,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
         this.videoRenderingPort = videoRenderingPort;
         this.mediaStoragePort = mediaStoragePort;
         this.contentRepositoryPort = contentRepositoryPort;
+        this.audioMetadataService = audioMetadataService;
         this.clock = clock;
     }
     
@@ -164,7 +171,8 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
     
     /**
      * Execute the complete generation pipeline:
-     * - Synthesize narration voice (TTS)
+     * - Resolve music and get duration
+     * - Synthesize narration voice (TTS) with target duration matching music
      * - Generate synchronized subtitles
      * - Render video or audio
      * - Upload to S3
@@ -183,32 +191,77 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
         try {
             log.info("Starting generation pipeline in temp directory: {}", tempDir);
             
-            // Step 1: Synthesize voice narration
-            log.info("Step 1/5: Synthesizing voice narration");
-            Path narrationAudio = voiceSynthesisPort.synthesizeVoice(
-                content.narrationScript(),
-                DEFAULT_VOICE_CONFIG
-            );
-            log.info("Voice synthesis completed: {}", narrationAudio);
+            // Step 1: Resolve music file and get duration
+            log.info("Step 1/6: Resolving music file and analyzing duration");
+            Path musicPath = resolveMusicPath(request.musicReference(), tempDir);
             
-            // Step 2: Generate synchronized subtitles
-            log.info("Step 2/5: Generating synchronized subtitles");
-            List<SubtitleSegment> subtitleSegments = subtitleSyncPort.generateSubtitles(
-                narrationAudio,
-                request.narrationText()
-            );
+            double musicDuration = 0.0;
+            try {
+                musicDuration = audioMetadataService.getDurationSeconds(musicPath);
+                log.info("Music resolved: {} (duration: {} seconds)", musicPath, musicDuration);
+            } catch (Exception e) {
+                log.warn("Could not determine music duration: {}", e.getMessage());
+                log.info("Music resolved: {}", musicPath);
+            }
+            
+            // Step 2: Synthesize voice narration with pauses distributed across music duration
+            log.info("Step 2/6: Synthesizing voice narration");
+            Path narrationAudio;
+            if (musicDuration > 0) {
+                // Synthesize with target duration to match music
+                narrationAudio = voiceSynthesisPort.synthesizeVoice(
+                    content.narrationScript(),
+                    DEFAULT_VOICE_CONFIG,
+                    musicDuration
+                );
+                log.info("Voice synthesis completed with target duration {} seconds: {}", musicDuration, narrationAudio);
+                
+                // Verify narration duration doesn't exceed music duration
+                try {
+                    double narrationDuration = audioMetadataService.getDurationSeconds(narrationAudio);
+                    log.info("Narration actual duration: {} seconds (music: {} seconds)", narrationDuration, musicDuration);
+                    
+                    if (narrationDuration > musicDuration + 0.5) { // Allow 0.5s tolerance
+                        log.warn("Narration duration ({} s) exceeds music duration ({} s). Truncating narration to match music.", 
+                            narrationDuration, musicDuration);
+                        narrationAudio = truncateAudio(narrationAudio, musicDuration, tempDir);
+                        log.info("Narration truncated to {} seconds", musicDuration);
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not verify narration duration: {}", e.getMessage());
+                }
+            } else {
+                // Synthesize with natural duration
+                narrationAudio = voiceSynthesisPort.synthesizeVoice(
+                    content.narrationScript(),
+                    DEFAULT_VOICE_CONFIG
+                );
+                log.info("Voice synthesis completed with natural duration: {}", narrationAudio);
+            }
+            
+            // Step 3: Generate synchronized subtitles distributed across music duration
+            log.info("Step 3/6: Generating synchronized subtitles");
+            List<SubtitleSegment> subtitleSegments;
+            if (musicDuration > 0) {
+                // Distribute subtitles across entire music duration
+                subtitleSegments = subtitleSyncPort.generateSubtitles(
+                    request.narrationText(),
+                    musicDuration
+                );
+            } else {
+                // Use narration audio duration
+                subtitleSegments = subtitleSyncPort.generateSubtitles(
+                    narrationAudio,
+                    request.narrationText()
+                );
+            }
             
             Path subtitleFile = tempDir.resolve(meditationId + ".srt");
             Path finalSubtitleFile = subtitleSyncPort.exportToSrt(subtitleSegments, subtitleFile);
             log.info("Subtitles generated: {} segments, file: {}", subtitleSegments.size(), finalSubtitleFile);
             
-            // Step 3: Download music file (assuming musicReference is a URL or path)
-            // For MVP, we assume musicReference is already a valid path to the music file
-            Path musicPath = resolveMusicPath(request.musicReference(), tempDir);
-            log.info("Music resolved: {}", musicPath);
-            
             // Step 4: Render video or audio
-            log.info("Step 3/5: Rendering {} output", content.mediaType());
+            log.info("Step 4/6: Rendering {} output", content.mediaType());
             Path outputMedia;
             MediaFileType mediaFileType;
             
@@ -233,6 +286,15 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             } else {
                 // Render audio
                 Path audioOutput = tempDir.resolve(meditationId + ".mp3");
+                
+                // Log music path before creating request
+                log.info("Creating audio render request with music: {}", musicPath);
+                if (musicPath != null && Files.exists(musicPath)) {
+                    log.info("Music file confirmed exists: {} (size: {} bytes)", musicPath, Files.size(musicPath));
+                } else {
+                    log.warn("Music file is null or does not exist: {}", musicPath);
+                }
+                
                 AudioRenderRequest audioRequest = new AudioRenderRequest(
                     narrationAudio,
                     musicPath,
@@ -245,7 +307,17 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             }
             
             // Step 5: Upload to S3
-            log.info("Step 4/5: Uploading media to S3");
+            log.info("Step 5/6: Uploading media to S3");
+            
+            // Capture real duration before uploading and deleting local file
+            double realDurationSeconds = 0;
+            try {
+                realDurationSeconds = audioMetadataService.getDurationSeconds(outputMedia);
+                log.info("Captured real output duration: {}s", realDurationSeconds);
+            } catch (Exception e) {
+                log.warn("Failed to capture real duration from local file {}: {}", outputMedia, e.getMessage());
+            }
+
             String mediaUrl = mediaStoragePort.uploadMedia(new UploadRequest(
                 outputMedia,
                 userId.toString(),
@@ -255,7 +327,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             ));
             log.info("Media uploaded: {}", mediaUrl);
             
-            log.info("Step 5/5: Uploading subtitles to S3");
+            log.info("Step 6/6: Uploading subtitles to S3");
             String subtitleUrl = mediaStoragePort.uploadMedia(new UploadRequest(
                 finalSubtitleFile,
                 userId.toString(),
@@ -270,8 +342,9 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             MediaReference subtitleRef = new MediaReference(subtitleUrl);
             
             // Mark as completed
-            GeneratedMeditationContent completed = content.markCompleted(mediaRef, subtitleRef, clock);
-            log.info("Generation pipeline completed successfully");
+            Integer finalDurationSeconds = realDurationSeconds > 0 ? (int) Math.round(realDurationSeconds) : null;
+            GeneratedMeditationContent completed = content.markCompleted(mediaRef, subtitleRef, finalDurationSeconds, clock);
+            log.info("Generation pipeline completed successfully. Real duration: {}s", finalDurationSeconds);
             
             return completed;
             
@@ -490,6 +563,57 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
     }
     
     /**
+     * Truncate audio file to specified duration using FFmpeg.
+     * This ensures narration doesn't exceed music duration.
+     */
+    private Path truncateAudio(Path inputAudio, double maxDurationSeconds, Path tempDir) throws IOException {
+        Path outputPath = tempDir.resolve("narration-truncated.mp3");
+        
+        List<String> command = new ArrayList<>();
+        command.add("ffmpeg");
+        command.add("-y");
+        command.add("-i");
+        command.add(inputAudio.toAbsolutePath().toString());
+        command.add("-t");
+        command.add(String.format("%.2f", maxDurationSeconds));
+        command.add("-c");
+        command.add("copy");
+        command.add(outputPath.toAbsolutePath().toString());
+        
+        try {
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            
+            // Read output
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+            }
+            
+            int exitCode = process.waitFor();
+            
+            if (exitCode == 0) {
+                // Delete original and return truncated version
+                Files.deleteIfExists(inputAudio);
+                return outputPath;
+            } else {
+                log.error("FFmpeg truncation failed with exit code {}. Output:\n{}", exitCode, output);
+                // Return original if truncation fails
+                return inputAudio;
+            }
+            
+        } catch (Exception e) {
+            log.error("Failed to truncate audio: {}", e.getMessage(), e);
+            // Return original if truncation fails
+            return inputAudio;
+        }
+    }
+    
+    /**
      * Cleanup temporary directory and all files.
      */
     private void cleanupTempDirectory(Path tempDir) {
@@ -557,6 +681,9 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
      * Maps domain aggregate to response DTO.
      */
     private GenerationResponse mapToResponse(GeneratedMeditationContent content) {
+        log.info("Mapping to response: meditationId={}, status={}, duration={}", 
+            content.meditationId(), content.status(), content.durationSeconds().orElse(null));
+            
         return new GenerationResponse(
             content.meditationId(),
             content.compositionId(),
@@ -565,7 +692,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             content.mediaType(),
             content.outputMedia().map(MediaReference::url),
             content.subtitleFile().map(MediaReference::url),
-            Optional.of((int) content.narrationScript().estimateDurationSeconds()),
+            content.durationSeconds().isPresent() ? content.durationSeconds() : Optional.of((int) content.narrationScript().estimateDurationSeconds()),
             content.createdAt(),
             content.completedAt()
         );

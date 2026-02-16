@@ -27,6 +27,22 @@ public interface VoiceSynthesisPort {
     Path synthesizeVoice(NarrationScript script, VoiceConfig voiceConfig);
 
     /**
+     * Synthesize narration audio with a target duration.
+     * If targetDurationSeconds is specified and longer than the natural speech duration,
+     * the implementation should add pauses (using SSML or audio extension) to reach the target.
+     * 
+     * This is useful for synchronizing speech with background music duration.
+     * 
+     * @param script narration script with text content
+     * @param voiceConfig voice configuration (language, speed, pitch)  
+     * @param targetDurationSeconds desired audio duration in seconds (must be >= natural duration)
+     * @return path to generated audio file (temporary)
+     * @throws com.hexagonal.meditation.generation.domain.exception.InvalidContentException if TTS service rejects text
+     * @throws RuntimeException if TTS service is unavailable or fails
+     */
+    Path synthesizeVoice(NarrationScript script, VoiceConfig voiceConfig, double targetDurationSeconds);
+
+    /**
      * Voice configuration for TTS.
      */
     record VoiceConfig(

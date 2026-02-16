@@ -37,10 +37,11 @@ class GenerateMeditationContentServiceTest {
     @Mock private VideoRenderingPort videoRenderingPort;
     @Mock private MediaStoragePort mediaStoragePort;
     @Mock private ContentRepositoryPort contentRepositoryPort;
+    @Mock private com.hexagonal.meditation.generation.infrastructure.out.service.audio.AudioMetadataService audioMetadataService;
     
     private Clock clock;
     private GenerateMeditationContentService service;
-    
+
     @BeforeEach
     void setUp() {
         clock = Clock.fixed(Instant.parse("2024-01-15T10:00:00Z"), ZoneId.of("UTC"));
@@ -53,6 +54,7 @@ class GenerateMeditationContentServiceTest {
             videoRenderingPort,
             mediaStoragePort,
             contentRepositoryPort,
+            audioMetadataService,
             clock
         );
     }

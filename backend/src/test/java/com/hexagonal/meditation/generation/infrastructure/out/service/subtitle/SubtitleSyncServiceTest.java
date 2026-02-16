@@ -1,19 +1,29 @@
 package com.hexagonal.meditation.generation.infrastructure.out.service.subtitle;
 
 import com.hexagonal.meditation.generation.domain.model.SubtitleSegment;
+import com.hexagonal.meditation.generation.infrastructure.out.service.audio.AudioMetadataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 @DisplayName("SubtitleSyncService Tests")
 class SubtitleSyncServiceTest {
+    
+    @Mock
+    private AudioMetadataService audioMetadataService;
     
     private SubtitleSyncService service;
     
@@ -22,14 +32,17 @@ class SubtitleSyncServiceTest {
     
     @BeforeEach
     void setUp() {
-        service = new SubtitleSyncService();
+        service = new SubtitleSyncService(audioMetadataService);
     }
     
     @Test
     @DisplayName("Should generate subtitles from narration text")
-    void shouldGenerateSubtitles() {
+    void shouldGenerateSubtitles() throws Exception {
         Path audioPath = tempDir.resolve("narration.mp3");
         String narration = "Breathe in deeply. Hold for three seconds. Breathe out slowly.";
+        
+        // Mock audio duration
+        when(audioMetadataService.getDurationSeconds(any())).thenReturn(10.0);
         
         List<SubtitleSegment> segments = service.generateSubtitles(audioPath, narration);
         
@@ -41,9 +54,12 @@ class SubtitleSyncServiceTest {
     
     @Test
     @DisplayName("Should distribute segments evenly across duration")
-    void shouldDistributeSegmentsEvenly() {
+    void shouldDistributeSegmentsEvenly() throws Exception {
         Path audioPath = tempDir.resolve("narration.mp3");
         String narration = "First sentence. Second sentence.";
+        
+        // Mock audio duration
+        when(audioMetadataService.getDurationSeconds(any())).thenReturn(8.0);
         
         List<SubtitleSegment> segments = service.generateSubtitles(audioPath, narration);
         
@@ -56,9 +72,12 @@ class SubtitleSyncServiceTest {
     
     @Test
     @DisplayName("Should not exceed total duration")
-    void shouldNotExceedTotalDuration() {
+    void shouldNotExceedTotalDuration() throws Exception {
         Path audioPath = tempDir.resolve("narration.mp3");
         String narration = "One. Two. Three. Four.";
+        
+        // Mock audio duration
+        when(audioMetadataService.getDurationSeconds(any())).thenReturn(12.0);
         
         List<SubtitleSegment> segments = service.generateSubtitles(audioPath, narration);
         
@@ -69,9 +88,12 @@ class SubtitleSyncServiceTest {
     
     @Test
     @DisplayName("Should assign sequential numbers to segments")
-    void shouldAssignSequentialNumbers() {
+    void shouldAssignSequentialNumbers() throws Exception {
         Path audioPath = tempDir.resolve("narration.mp3");
         String narration = "First. Second. Third.";
+        
+        // Mock audio duration
+        when(audioMetadataService.getDurationSeconds(any())).thenReturn(9.0);
         
         List<SubtitleSegment> segments = service.generateSubtitles(audioPath, narration);
         

@@ -53,6 +53,9 @@ public class MeditationOutputEntity {
     
     @Column(name = "background_music_url", length = 500)
     private String backgroundMusicUrl;
+
+    @Column(name = "duration_seconds")
+    private Integer durationSeconds;
     
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
@@ -177,6 +180,14 @@ public class MeditationOutputEntity {
     
     public void setBackgroundMusicUrl(String backgroundMusicUrl) {
         this.backgroundMusicUrl = backgroundMusicUrl;
+    }
+
+    public Integer getDurationSeconds() {
+        return durationSeconds;
+    }
+
+    public void setDurationSeconds(Integer durationSeconds) {
+        this.durationSeconds = durationSeconds;
     }
     
     public String getErrorMessage() {

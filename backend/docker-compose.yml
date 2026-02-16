@@ -1,8 +1,6 @@
 # Docker Compose for Meditation Builder - Generation BC (US3) Local Development
 # Services: PostgreSQL, LocalStack (S3), FFmpeg
 
-version: '3.8'
-
 services:
   # PostgreSQL database for meditation_output persistence
   postgres:
@@ -37,6 +35,9 @@ services:
       EDGE_PORT: 4566
     ports:
       - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./init-localstack.sh:/etc/localstack/init/ready.d/init-s3.sh
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 10s
@@ -55,53 +56,12 @@ services:
     networks:
       - meditation-network
 
-  # Application container (Spring Boot)
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: meditation-app
-    depends_on:
-      postgres:
-        condition: service_healthy
-      localstack:
-        condition: service_healthy
-    environment:
-      SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/meditation
-      SPRING_DATASOURCE_USERNAME: meditation_user
-      SPRING_DATASOURCE_PASSWORD: meditation_pass
-      AWS_ENDPOINT_URL: http://localstack:4566
-      AWS_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
-      S3_BUCKET_NAME: meditation-media
-      FFMPEG_PATH: /usr/bin/ffmpeg
-      TTS_PROVIDER: google
-      TTS_GOOGLE_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT:-meditation-builder-dev}
-      TTS_GOOGLE_CREDENTIALS_PATH: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/config/gcp-credentials.json}
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./config:/app/config:ro
-      - app_tmp:/tmp
-    networks:
-      - meditation-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
-
 volumes:
   postgres_data:
     driver: local
   localstack_data:
     driver: local
   ffmpeg_tmp:
-    driver: local
-  app_tmp:
     driver: local
 
 networks:
@@ -117,9 +77,10 @@ networks:
 #   Start only dependencies (for local IDE development):
 #     docker-compose up -d postgres localstack
 #
-#   Initialize S3 bucket in LocalStack:
-#     aws --endpoint-url=http://localhost:4566 s3 mb s3://meditation-media
-#     aws --endpoint-url=http://localhost:4566 s3 ls
+#   S3 Bucket (LocalStack):
+#     The 'meditation-media' bucket is created automatically via init-localstack.sh
+#     Manual creation (if needed): .\create-s3-bucket.ps1
+#     List buckets: aws --endpoint-url=http://localhost:4566 s3 ls
 #
 #   Connect to PostgreSQL:
 #     docker exec -it meditation-postgres psql -U meditation_user -d meditation
