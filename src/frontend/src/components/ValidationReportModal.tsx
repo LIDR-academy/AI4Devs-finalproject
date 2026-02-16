@@ -7,15 +7,59 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import type { ValidationReportModalProps, TabName } from '../types/validation-modal';
+import type { ValidationReportModalProps, TabName, GroupedErrors } from '../types/validation-modal';
+import type { ValidationErrorItem } from '../types/validation';
 import { groupErrorsByCategory, formatValidatedAt, getErrorCountForCategory } from '../utils/validation-report.utils';
 import { TAB_LABELS, ICON_MAP, COLOR_SCHEME, ARIA_LABELS, MODAL_CONFIG } from './validation-report-modal.constants';
+
+/**
+ * Helper function to render error list for a category
+ * @param errors - Array of validation errors
+ * @param categoryName - Name of the category for accessibility
+ */
+function renderErrorList(errors: ValidationErrorItem[], categoryName: string): JSX.Element {
+  return (
+    <div>
+      {errors.map((error, index) => (
+        <div 
+          key={index} 
+          style={{ 
+            marginBottom: '8px', 
+            padding: '8px', 
+            border: `1px solid ${COLOR_SCHEME.error}`, 
+            borderRadius: '4px' 
+          }}
+        >
+          <div style={{ color: COLOR_SCHEME.error }}>
+            {ICON_MAP.error} {error.target ? <code>{error.target}</code> : null}
+          </div>
+          <div>{error.message}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Helper function to render success message when no errors exist
+ * @param categoryName - Name of the category (e.g., "nomenclature", "geometry")
+ */
+function renderSuccessMessage(categoryName: string): JSX.Element {
+  return (
+    <div style={{ color: COLOR_SCHEME.success }}>
+      {ICON_MAP.success} All {categoryName} checks passed
+    </div>
+  );
+}
 
 /**
  * ValidationReportModal component.
  * 
  * Displays a modal with validation results organized in tabs.
  * Supports keyboard navigation and accessibility features.
+ * 
+ * @param props - Component props
+ * @returns Modal portal or null if not open
  */
 export function ValidationReportModal(props: ValidationReportModalProps): JSX.Element | null {
   const { report, isOpen, onClose, blockId, isoCode } = props;
@@ -161,22 +205,10 @@ export function ValidationReportModal(props: ValidationReportModalProps): JSX.El
     if (activeTab === 'nomenclature') {
       return (
         <div role="tabpanel" aria-labelledby="tab-nomenclature" style={{ padding: '16px' }}>
-          {groupedErrors.nomenclature.length === 0 ? (
-            <div style={{ color: COLOR_SCHEME.success }}>
-              {ICON_MAP.success} All nomenclature checks passed
-            </div>
-          ) : (
-            <div>
-              {groupedErrors.nomenclature.map((error, index) => (
-                <div key={index} style={{ marginBottom: '8px', padding: '8px', border: `1px solid ${COLOR_SCHEME.error}`, borderRadius: '4px' }}>
-                  <div style={{ color: COLOR_SCHEME.error }}>
-                    {ICON_MAP.error} {error.target ? <code>{error.target}</code> : null}
-                  </div>
-                  <div>{error.message}</div>
-                </div>
-              ))}
-            </div>
-          )}
+          {groupedErrors.nomenclature.length === 0 
+            ? renderSuccessMessage('nomenclature')
+            : renderErrorList(groupedErrors.nomenclature, 'nomenclature')
+          }
         </div>
       );
     }
@@ -184,22 +216,10 @@ export function ValidationReportModal(props: ValidationReportModalProps): JSX.El
     if (activeTab === 'geometry') {
       return (
         <div role="tabpanel" aria-labelledby="tab-geometry" style={{ padding: '16px' }}>
-          {groupedErrors.geometry.length === 0 ? (
-            <div style={{ color: COLOR_SCHEME.success }}>
-              {ICON_MAP.success} All geometry checks passed
-            </div>
-          ) : (
-            <div>
-              {groupedErrors.geometry.map((error, index) => (
-                <div key={index} style={{ marginBottom: '8px', padding: '8px', border: `1px solid ${COLOR_SCHEME.error}`, borderRadius: '4px' }}>
-                  <div style={{ color: COLOR_SCHEME.error }}>
-                    {ICON_MAP.error} {error.target ? <code>{error.target}</code> : null}
-                  </div>
-                  <div>{error.message}</div>
-                </div>
-              ))}
-            </div>
-          )}
+          {groupedErrors.geometry.length === 0 
+            ? renderSuccessMessage('geometry')
+            : renderErrorList(groupedErrors.geometry, 'geometry')
+          }
         </div>
       );
     }
