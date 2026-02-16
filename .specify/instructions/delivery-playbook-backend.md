@@ -1,12 +1,18 @@
 
 # 🧭 Backend Delivery Playbook — Meditation Builder
-**Versión:** 2.0.0 (Reescritura completa, alineada con Constitución)
+**Versión:** 2.1.0 (Actualizado con estado real: 2 bounded contexts implementados)
 **Ámbito:** `/backend` – Microservicio Java 21 + Spring Boot + Arquitectura Hexagonal
 
 ---
 
 # 0. Propósito del Playbook
 Este documento define **cómo debe entregarse cualquier Historia de Usuario** en el backend del proyecto Meditation Builder.
+
+**Estado actual del proyecto (Febrero 2026)**:
+- ✅ **BC 1: `meditationbuilder`** (US2 - Compose Content) - Completado
+- ✅ **BC 2: `meditation.generation`** (US3 - A/V Generation) - Completado
+- ❌ **BC 3**: Auth (US1 - Pendiente)
+- ❌ **BC 4**: List & Play (US4 - Pendiente)
 
 Alinea el trabajo técnico con:
 - La **Constitución del proyecto**
@@ -110,7 +116,14 @@ shared/                      # Módulo transversal
   utils/
 ```
 
-**Note**: `kafka/` and `mongodb/` are examples of potential adapters. Current implementation uses `rest/` for inbound adapters and `persistence/` + `service/` for outbound adapters.
+**Note**: `kafka/` and `mongodb/` are **examples** of potential future technology choices for messaging/persistence adapters. 
+
+**Current implementation** uses:
+- **Inbound adapters**: `rest/` (HTTP REST Controllers)
+- **Outbound adapters**: 
+  - `persistence/` (InMemoryRepository for BC meditationbuilder, PostgreSQL/JPA for BC meditation.generation)
+  - `service/` (OpenAI adapters for BC meditationbuilder, Google TTS + FFmpeg + S3 for BC meditation.generation)
+  - `adapter/` (Google TTS, FFmpeg, S3 for BC meditation.generation)
 
 ## 2.2 OpenAPI
 ```
@@ -124,7 +137,7 @@ shared/                      # Módulo transversal
 /backend/src/test/resources/features/<boundedContext>/  # .feature files (BDD)
 /backend/src/test/java/com/hexagonal/<bc>/bdd/          # Step definitions & runners
 /backend/src/test/java/com/hexagonal/<bc>/e2e/          # E2E tests (Spring Boot)
-/backend/src/test/contracts/                             # Contract tests (empty for now)
+/backend/src/test/contracts/                             # Contract tests (implemented and active in CI)
 /backend/src/test/java/...                               # Unit + integration tests
 ```
 
@@ -141,7 +154,7 @@ Cada Historia **DEBE** recorrer estas fases en orden:
 6) Controllers
 7) Contratos
 8) E2E
-9) CI/CD gates
+9) CI/CD gates (8 gates bloqueantes)
 10) Done = deployable
 ```
 
@@ -245,11 +258,24 @@ Cada Historia **DEBE** recorrer estas fases en orden:
 
 ---
 
-# 12. Fase 9 — CI/CD (gates bloqueantes)
-Pipeline estricto:
+# 12. Fase 9 — CI/CD (8 gates bloqueantes)
+Pipeline estricto **ACTUAL**:
 ```
-bdd → api → unit → infra → contract → e2e → build → deploy
+1. BDD Tests (Cucumber)
+2. API Validation (OpenAPI lint)
+3. Unit Domain Tests
+4. Unit Application Tests
+5. Infrastructure Integration Tests (Testcontainers si aplica)
+6. Contract Tests (OpenAPI compliance)
+7. E2E Tests (Spring Boot + mocks)
+8. Build (Maven clean install + JAR)
 ```
+
+**Configuración especial para BC Generation**:
+- FFmpeg instalado en CI environment
+- LocalStack para S3 (Testcontainers)
+- PostgreSQL (Testcontainers)
+- Google TTS API mock (WireMock)
 
 ---
 
@@ -263,16 +289,7 @@ bdd → api → unit → infra → contract → e2e → build → deploy
 | Aplicación | use cases | `/backend/src/main/java/.../application/` |
 | Infra | adapters | `/backend/src/main/java/.../infrastructure/` |
 | Controllers | REST | `/backend/src/main/java/.../infrastructure/in/rest/controller/` |
-| Contratos | tests | `/backend/src/test/contracts/` (pending) |
-| E2E | Spring Boot tests | `/backend/src/test/java/.../e2e/` |
-
----
-
-# 14. Anti‑patrones prohibidos
-- Lógica negocio fuera de dominio
-- Endpoints no definidos en BDD
-- Saltarse TDD
-- Usar servicios cloud reales en tests
+| Contratos | tests | `/backend/src/test/contracts/` (implemented, active in CI Gate 6) |
 - Enormes métodos/controllers
 
 ---

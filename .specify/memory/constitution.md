@@ -1,7 +1,7 @@
 
 # Project Constitution — Meditation Builder  
-**Versión: 3.0.0 (Actualizada con Estado Real del Proyecto)**  
-**Última actualización:** 12 de Febrero de 2026  
+**Versión: 4.0.0 (Actualizada con Estado Real del Proyecto)**  
+**Última actualización:** 16 de Febrero de 2026  
 **Ubicación:** `.specify/memory/constitution.md`  
 **Ámbito:** Backend (Java 21 + Spring Boot 3.5.10) y Frontend (React 18 + TypeScript + Vite)
 
@@ -20,20 +20,32 @@ Define la arquitectura, el flujo de trabajo, la jerarquía normativa, los princi
 
 **Proyecto**: Plataforma MVP de generación de meditaciones guiadas con asistencia de IA  
 **Repositorio**: AI4Devs-finalproject (LIDR-academy)  
-**Branch actual**: `001-compose-meditation-content`  
+**Branches implementados**: `001-compose-meditation-content`, `002-generate-meditation-audio-video`  
 **Branch principal**: `main`
 
 ### Features Implementadas:
-1. ✅ **US1 (001-compose-meditation-content)**: Composición de contenido de meditación con ayuda opcional de IA
+1. ✅ **US2 (Compose Content - Branch: 001-compose-meditation-content)**  
+   Bounded Context: `meditationbuilder`
    - 8 escenarios BDD implementados
    - Backend completo con arquitectura hexagonal
    - Frontend con React Query + Zustand
    - Tests unitarios, integración y E2E backend/frontend
-   - CI/CD con 5 gates (BDD, Unit, Infra, E2E, Build)
+   - CI/CD con 8 gates (BDD → API → Unit Domain → Unit App → Infra IT → Contract → E2E → Build)
+
+2. ✅ **US3 (Generate Meditation A/V - Branch: 002-generate-meditation-audio-video)**  
+   Bounded Context: `meditation.generation`
+   - 3 escenarios BDD implementados
+   - Narración con Google TTS (es-ES-Neural2-Diana)
+   - Renderizado de audio/video con FFmpeg
+   - Almacenamiento en S3 (LocalStack para dev/test)
+   - Persistencia con PostgreSQL (JPA)
+   - Generación con timeout de 187 segundos (decisión de negocio)
+   - Idempotencia basada en SHA-256
+   - Subtítulos sincronizados (SRT)
+   - CI/CD con 8 gates completos
 
 ### Features Pendientes (según PRD):
-- US2: Autenticación segura con AWS Cognito
-- US3: Generación asíncrona de video/podcast
+- US1: Autenticación segura con AWS Cognito + JWT
 - US4: Listado y reproducción de meditaciones
 
 Su objetivo es garantizar:
@@ -84,7 +96,9 @@ El código es una **materialización técnica** de un comportamiento ya acordado
 - **DDD táctico** con aggregates, value objects y entities
 - **TDD obligatorio** en dominio (tests antes que implementación)
 - **API First** con OpenAPI/Swagger
-- **Bounded Context actual**: `meditationbuilder`
+- **Bounded Contexts implementados**: 
+  1. `meditationbuilder` (US2 - Composition)
+  2. `meditation.generation` (US3 - A/V Generation)
 
 **Stack tecnológico backend**:
 - Java 21 (Amazon Corretto)
@@ -161,60 +175,76 @@ AI4Devs-finalproject/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/hexagonal/
-│   │   │   │   └── meditationbuilder/   # Bounded Context actual
-│   │   │   │       ├── MeditationBuilderApplication.java
-│   │   │   │       ├── application/     # Capa de aplicación (use cases)
-│   │   │   │       │   ├── mapper/
-│   │   │   │       │   ├── service/     # ComposeContentService, GenerateImageService, GenerateTextService
-│   │   │   │       │   └── validator/   # TextLengthValidator
-│   │   │   │       ├── domain/          # Capa de dominio (puro)
-│   │   │   │       │   ├── enums/       # OutputType
-│   │   │   │       │   ├── exception/   # CompositionNotFoundException, MusicNotFoundException, etc.
-│   │   │   │       │   ├── model/       # Aggregate: MeditationComposition, VOs: TextContent, ImageReference, MusicReference
-│   │   │   │       │   └── ports/
-│   │   │   │       │       ├── in/      # ComposeContentUseCase, GenerateImageUseCase, GenerateTextUseCase
-│   │   │   │       │       └── out/     # CompositionRepositoryPort, ImageGenerationPort, TextGenerationPort, MediaCatalogPort
-│   │   │   │       └── infrastructure/  # Capa de infraestructura
-│   │   │   │           ├── in/
-│   │   │   │           │   └── rest/
-│   │   │   │           │       ├── controller/  # MeditationBuilderController
-│   │   │   │           │       ├── dto/         # DTOs de request/response
-│   │   │   │           │       └── mapper/      # CompositionDtoMapper
-│   │   │   │           └── out/
-│   │   │   │               ├── persistence/     # InMemoryCompositionRepository
-│   │   │   │               └── service/         # Adaptadores a OpenAI, MediaCatalog
-│   │   │   │                   ├── ImageGenerationAiAdapter
-│   │   │   │                   ├── TextGenerationAiAdapter
-│   │   │   │                   ├── MediaCatalogAdapter
-│   │   │   │                   ├── dto/         # DTOs para APIs externas
-│   │   │   │                   └── mapper/      # Mappers entre API externa y dominio
+│   │   │   │   ├── meditationbuilder/   # BC 1: Composition (US2)
+│   │   │   │   │   ├── MeditationBuilderApplication.java
+│   │   │   │   │   ├── application/     # Capa de aplicación (use cases)
+│   │   │   │   │   ├── domain/          # Capa de dominio (puro)
+│   │   │   │   │   │   ├── enums/       # OutputType
+│   │   │   │   │   │   ├── exception/
+│   │   │   │   │   │   ├── model/       # MeditationComposition, TextContent, etc.
+│   │   │   │   │   │   └── ports/
+│   │   │   │   │   └── infrastructure/  # Capa de infraestructura
+│   │   │   │   │       ├── in/rest/     # Controllers, DTOs
+│   │   │   │   │       └── out/         # Adapters (OpenAI, InMemory)
+│   │   │   │   │
+│   │   │   │   └── meditation/
+│   │   │   │       └── generation/      # BC 2: Generation (US3)
+│   │   │   │           ├── application/     # GenerateMeditationContentService, IdempotencyKeyGenerator, TextLengthEstimator
+│   │   │   │           ├── domain/          # GeneratedMeditationContent, NarrationScript, MeditationOutput, SubtitleSegment
+│   │   │   │           │   ├── enums/       # GenerationStatus, MediaType
+│   │   │   │           │   ├── exception/   # GenerationTimeoutException, InvalidContentException
+│   │   │   │           │   ├── model/       # Aggregates y Value Objects
+│   │   │   │           │   └── ports/
+│   │   │   │           │       ├── in/      # GenerateMeditationContentUseCase
+│   │   │   │           │       └── out/     # VoiceSynthesisPort, AudioRenderingPort, VideoRenderingPort, MediaStoragePort, SubtitleSyncPort, ContentRepositoryPort
+│   │   │   │           └── infrastructure/
+│   │   │   │               ├── in/rest/     # MeditationGenerationController, FileUploadController
+│   │   │   │               ├── out/
+│   │   │   │               │   ├── adapter/  # GoogleTtsAdapter, FfmpegAudioRendererAdapter, FfmpegVideoRendererAdapter, S3MediaStorageAdapter
+│   │   │   │               │   ├── persistence/  # PostgresContentRepository (JPA)
+│   │   │   │               │   └── service/      # SubtitleSyncService, TempFileManager, AudioMetadataService
+│   │   │   │               └── config/   # S3Config, GoogleCloudTtsConfig
+│   │   │   │
 │   │   │   └── resources/
 │   │   │       ├── application.yml              # Configuración principal
 │   │   │       ├── application-local.yml        # Profile local
 │   │   │       ├── application-test.yml         # Profile test
 │   │   │       └── openapi/
-│   │   │           └── meditationbuilder/
-│   │   │               └── compose-content.yaml # Contrato OpenAPI
+│   │   │           ├── meditationbuilder/
+│   │   │           │   └── compose-content.yaml # Contrato OpenAPI BC1 (US2)
+│   │   │           └── generation/
+│   │   │               └── generate-meditation.yaml # Contrato OpenAPI BC2 (US3)
 │   │   └── test/
 │   │       ├── contracts/                       # Tests de contrato (vacío por ahora)
 │   │       ├── e2e/                             # Tests E2E (vacío por ahora)
-│   │       ├── java/com/hexagonal/meditationbuilder/
-│   │       │   ├── application/                 # Tests de servicios de aplicación
-│   │       │   ├── domain/                      # Tests de dominio TDD
-│   │       │   ├── infrastructure/              # Tests de adaptadores
-│   │       │   ├── observability/               # Tests de observabilidad
-│   │       │   ├── bdd/                         # Tests BDD (Cucumber)
-│   │       │   │   ├── CucumberTestRunner.java
-│   │       │   │   └── steps/
-│   │       │   │       └── ComposeContentSteps.java
-│   │       │   └── e2e/                         # Tests E2E Spring Boot
-│   │       │       ├── AiGenerationE2ETest.java
-│   │       │       └── ManualCompositionE2ETest.java
+│   │       ├── java/com/hexagonal/
+│   │       │   ├── meditationbuilder/           # Tests BC1
+│   │       │   │   ├── application/
+│   │       │   │   ├── domain/
+│   │       │   │   ├── infrastructure/
+│   │       │   │   ├── observability/
+│   │       │   │   ├── bdd/
+│   │       │   │   │   ├── CucumberTestRunner.java
+│   │       │   │   │   └── steps/
+│   │       │   │   └── e2e/
+│   │       │   │       ├── AiGenerationE2ETest.java
+│   │       │   │       └── ManualCompositionE2ETest.java
+│   │       │   └── meditation/generation/       # Tests BC2
+│   │       │       ├── application/
+│   │       │       ├── domain/
+│   │       │       ├── infrastructure/
+│   │       │       ├── bdd/
+│   │       │       │   ├── CucumberSpringConfiguration.java
+│   │       │       │   └── steps/
+│   │       │       └── e2e/
+│   │       │           └── GenerateMeditationE2ETest.java
 │   │       └── resources/
 │   │           ├── application-test.yml
 │   │           └── features/                    # Archivos .feature BDD
-│   │               └── meditationbuilder/
-│   │                   └── compose-content.feature
+│   │               ├── meditationbuilder/
+│   │               │   └── compose-content.feature
+│   │               └── generation/
+│   │                   └── generate-meditation.feature
 │   └── target/                                  # Artefactos compilados (generados)
 │
 ├── frontend/
@@ -265,11 +295,15 @@ AI4Devs-finalproject/
 │   └── 07.US4-TIckets.md                        # Tickets US4 (List & Play)
 │
 ├── specs/
-│   └── 001-compose-meditation-content/         # Spec actual
+│   ├── 001-compose-meditation-content/         # Spec US2 (BC: meditationbuilder)
+│   │   ├── spec.md                              # Spec BDD de negocio
+│   │   ├── plan.md                              # Plan de implementación
+│   │   ├── tasks.md                             # Tareas detalladas
+│   │   └── checklists/                          # Checklists de progreso
+│   └── 002-generate-meditation-audio-video/    # Spec US3 (BC: meditation.generation)
 │       ├── spec.md                              # Spec BDD de negocio
 │       ├── plan.md                              # Plan de implementación
-│       ├── tasks.md                             # Tareas detalladas
-│       └── checklists/                          # Checklists de progreso
+│       └── tasks.md                             # Tareas detalladas
 │
 ├── prompts/
 │   └── 01-doc-prompts.md                        # Prompts de documentación
@@ -482,9 +516,324 @@ public record MeditationComposition(
 
 ---
 
-# 5. Frontend implementado
+# 5. Bounded Context: Meditation.Generation (implementado - US3)
 
-## 5.1 Estructura real
+## 5.1 Descripción
+El bounded context `meditation.generation` implementa la generación de contenido narrado profesional (audio/video) a partir de texto de meditación.  
+Responsable de: síntesis de voz (Google TTS), renderizado multimedia (FFmpeg), sincronización de subtítulos, y almacenamiento (S3/LocalStack).
+
+**User Story:** US3 - Generate Guided Meditation (Video/Podcast) with Professional Narration  
+**Branch:** `002-generate-meditation-audio-video`  
+**Spec folder:** `/specs/002-generate-meditation-audio-video/`
+
+## 5.2 Estructura backend completa
+
+```
+backend/src/main/java/com/hexagonal/meditation/generation/
+├── application/                         # CAPA DE APLICACIÓN
+│   ├── service/
+│   │   ├── GenerateMeditationContentService.java   # Use Case principal (orquestación)
+│   │   └── IdempotencyKeyGenerator.java            # SHA-256 hashing para idempotencia
+│   └── validator/
+│       └── TextLengthEstimator.java                # Validación de duración (max 187s)
+│
+├── domain/                              # CAPA DE DOMINIO (puro)
+│   ├── enums/
+│   │   ├── GenerationStatus.java                   # PENDING | PROCESSING | COMPLETED | FAILED
+│   │   └── MediaType.java                          # AUDIO | VIDEO
+│   ├── exception/
+│   │   ├── InvalidContentException.java
+│   │   └── GenerationTimeoutException.java
+│   ├── model/
+│   │   ├── GeneratedMeditationContent.java         # Aggregate Root (record)
+│   │   ├── NarrationScript.java                    # Value Object (record)
+│   │   ├── MeditationOutput.java                   # Entity (record)
+│   │   ├── MediaReference.java                     # Value Object (record)
+│   │   └── SubtitleSegment.java                    # Value Object (record)
+│   └── ports/
+│       ├── in/                          # Puertos de entrada
+│       │   └── GenerateMeditationContentUseCase.java
+│       └── out/                         # Puertos de salida
+│           ├── VoiceSynthesisPort.java
+│           ├── AudioRenderingPort.java
+│           ├── VideoRenderingPort.java
+│           ├── MediaStoragePort.java
+│           ├── SubtitleSyncPort.java
+│           └── ContentRepositoryPort.java
+│
+└── infrastructure/                      # CAPA DE INFRAESTRUCTURA
+    ├── in/                              # Adaptadores de entrada
+    │   └── rest/
+    │       ├── controller/
+    │       │   ├── MeditationGenerationController.java  # REST Controller principal
+    │       │   └── FileUploadController.java            # Upload de archivos media
+    │       ├── dto/                     # DTOs Request/Response
+    │       └── mapper/
+    │           └── MeditationOutputDtoMapper.java
+    ├── out/                             # Adaptadores de salida
+    │   ├── adapter/
+    │   │   ├── tts/
+    │   │   │   └── GoogleTtsAdapter.java                # Google Cloud TTS (es-ES-Neural2-Diana)
+    │   │   ├── ffmpeg/
+    │   │   │   ├── FfmpegAudioRendererAdapter.java      # Renderizado audio (MP3)
+    │   │   │   └── FfmpegVideoRendererAdapter.java      # Renderizado video (MP4)
+    │   │   └── storage/
+    │   │       └── S3MediaStorageAdapter.java           # S3/LocalStack storage
+    │   ├── persistence/
+    │   │   ├── PostgresContentRepository.java           # JPA repository implementation
+    │   │   ├── entity/
+    │   │   │   └── MeditationOutputEntity.java          # JPA entity
+    │   │   ├── repository/
+    │   │   │   └── JpaMeditationOutputRepository.java   # Spring Data JPA
+    │   │   └── mapper/
+    │   │       └── MeditationOutputMapper.java          # Entity ↔ Domain
+    │   └── service/
+    │       ├── subtitle/
+    │       │   └── SubtitleSyncService.java             # SRT subtitle generation
+    │       ├── file/
+    │       │   └── TempFileManager.java                 # Gestión archivos temporales
+    │       └── audio/
+    │           └── AudioMetadataService.java            # Metadatos de audio (duración, etc.)
+    └── config/
+        ├── S3Config.java                                # AWS S3/LocalStack config
+        └── GoogleCloudTtsConfig.java                    # Google TTS config
+
+backend/src/main/resources/openapi/generation/
+└── generate-meditation.yaml                             # Contrato OpenAPI BC Generation
+```
+
+## 5.3 Modelo de dominio implementado
+
+### Aggregate Root: GeneratedMeditationContent
+```java
+public record GeneratedMeditationContent(
+    UUID id,
+    NarrationScript script,          // Texto narrado
+    MediaReference music,             // Música de fondo
+    MediaReference backgroundImage,   // Imagen opcional (null = AUDIO)
+    MediaType mediaType,              // AUDIO | VIDEO (derivado de backgroundImage)
+    String idempotencyKey,            // SHA-256 del contenido (previene duplicados)
+    Instant createdAt
+)
+```
+
+**Reglas de negocio**:
+- ID generado como UUID
+- MediaType derivado: sin imagen → AUDIO, con imagen → VIDEO
+- IdempotencyKey SHA-256 de (script + music + image) previene regeneraciones duplicadas
+- Inmutable (record)
+- Factory method: `create(..., Clock)` con generación de ID y timestamp
+
+### Entity: MeditationOutput
+```java
+public record MeditationOutput(
+    UUID id,
+    UUID contentId,                   // Referencia a GeneratedMeditationContent
+    String outputUrl,                 // URL del archivo generado (S3)
+    String subtitlesUrl,              // URL del archivo SRT (S3)
+    GenerationStatus status,          // PENDING | PROCESSING | COMPLETED | FAILED
+    MediaType mediaType,
+    Instant createdAt,
+    Instant completedAt
+)
+```
+
+### Value Objects:
+- **NarrationScript**: record con texto validado (length estimation < 187s)
+- **MediaReference**: record con URL y metadata
+- **SubtitleSegment**: record con (startTime, endTime, text) para SRT
+
+### Enums:
+- **GenerationStatus**: PENDING | PROCESSING | COMPLETED | FAILED
+- **MediaType**: AUDIO | VIDEO
+
+## 5.4 Puertos implementados
+
+### Puertos IN (Use Cases):
+1. **GenerateMeditationContentUseCase**:
+   - `generate(GeneratedMeditationContent)`: MeditationOutput
+   - Orquesta: validación → TTS → mixing → rendering → storage → persistencia
+
+### Puertos OUT (Interfaces secundarias):
+1. **VoiceSynthesisPort**:
+   - `synthesize(String text, String languageCode, String voiceName)`: byte[] (audio MP3)
+   
+2. **AudioRenderingPort**:
+   - `renderAudio(byte[] narration, String musicPath)`: File (MP3 final)
+   
+3. **VideoRenderingPort**:
+   - `renderVideo(File audio, String imagePath, int durationSeconds)`: File (MP4 final)
+   
+4. **MediaStoragePort**:
+   - `store(File file, String objectKey)`: String (URL)
+   - `exists(String objectKey)`: boolean
+   
+5. **SubtitleSyncPort**:
+   - `generateSubtitles(String text, int durationSeconds)`: List<SubtitleSegment>
+   - `saveSrt(List<SubtitleSegment>, File)`: File
+   
+6. **ContentRepositoryPort**:
+   - `save(MeditationOutput)`: MeditationOutput
+   - `findByIdempotencyKey(String)`: Optional<MeditationOutput>
+
+## 5.5 OpenAPI Contract
+
+**Archivo**: `/backend/src/main/resources/openapi/generation/generate-meditation.yaml`
+
+**Endpoints principales**:
+1. `POST /v1/generations` - Generate meditation content (narrated audio or video)
+2. `POST /v1/generations/upload/music` - Upload custom music file
+3. `POST /v1/generations/upload/image` - Upload custom image file
+4. `GET /v1/generations/{id}` - Get generation status and URLs
+
+**Esquemas principales**:
+- GenerateMeditationRequest (text, musicUrl, imageUrl, mediaType)
+- MeditationOutputResponse (outputUrl, subtitlesUrl, status, mediaType)
+- ErrorResponse (código, mensaje, timestamp)
+
+**Restricciones documentadas**:
+- Texto: max 467 palabras (~187s @ 150 wpm)
+- Formatos música: MP3, WAV
+- Formatos imagen: JPG, PNG
+- Timeout total: 187 segundos
+
+## 5.6 Decisiones técnicas clave
+
+### 1. Timeout de 187 segundos
+**Decisión de negocio**: Límite máximo de duración de meditación narrada  
+**Cálculo**: 467 palabras @ 150 wpm prompt rate = ~186.8s narración  
+**Ubicaciones**:
+- `TextLengthEstimator.java`: `MAXIMUM_DURATION_SECONDS = 187`
+- `GenerateMeditationContentService.java`: `MAX_GENERATION_TIMEOUT_SECONDS = 187`
+- OpenAPI spec: descripción y examples
+- Validación pre-TTS (fail-fast si excede)
+
+### 2. Idempotencia con SHA-256
+**Problema**: Evitar regeneraciones costosas del mismo contenido  
+**Solución**: Calcular SHA-256(script + music + image) y verificar antes de procesar  
+**Implementación**: `IdempotencyKeyGenerator.java`  
+**Beneficios**: 
+- Ahorro de costos (Google TTS, FFmpeg CPU)
+- Respuesta instantánea si ya existe
+- Consistencia de URLs
+
+### 3. Google Cloud TTS
+**Configuración implementada**:
+- Voice: es-ES-Neural2-Diana (español España, voz femenina neural)
+- Speaking rate: 0.95 (95% velocidad normal, más pausado para meditación)
+- Audio encoding: MP3 @ 64kbps (balance calidad/tamaño)
+- Credentials: Service Account JSON via env var `GOOGLE_APPLICATION_CREDENTIALS`
+
+### 4. FFmpeg rendering
+**Audio pipeline**:
+```
+narration.mp3 + music.mp3 → mix (narración 100%, música 30% volumen) → output.mp3
+```
+
+**Video pipeline**:
+```
+audio.mp3 + image.jpg → video.mp4 (H.264, 1920x1080, imagen estática con audio)
+```
+
+**Gestión de archivos temporales**:
+- `/tmp/meditation-XXXX/` directories (auto-cleanup)
+- `TempFileManager` con try-with-resources pattern
+
+### 5. S3 Storage (LocalStack para dev/test)
+**Buckets**:
+- `meditation-outputs/`: Archivos finales (MP3/MP4)
+- `meditation-subtitles/`: Archivos SRT
+
+**Configuración profiles**:
+- **local/test**: LocalStack (http://localhost:4566)
+- **prod**: AWS S3 real (region configurable)
+
+**Naming strategy**:
+```
+{idempotencyKey}/{type}/{timestamp}.{ext}
+```
+
+### 6. PostgreSQL persistence
+**Schema**:
+```sql
+CREATE TABLE meditation_outputs (
+  id UUID PRIMARY KEY,
+  content_id UUID NOT NULL,
+  output_url VARCHAR(512) NOT NULL,
+  subtitles_url VARCHAR(512),
+  status VARCHAR(50) NOT NULL,
+  media_type VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  completed_at TIMESTAMP,
+  UNIQUE (content_id)
+);
+
+CREATE INDEX idx_meditation_outputs_status ON meditation_outputs(status);
+CREATE INDEX idx_meditation_outputs_created_at ON meditation_outputs(created_at DESC);
+```
+
+**Justificación**: 
+- Persistencia real (vs in-memory en BC Composition)
+- Tracking de jobs y status (async ready)
+- Audit trail para generaciones costosas
+
+### 7. Subtítulos sincronizados (SRT)
+**Generación**:
+- Split texto en segmentos por puntos/comas
+- Distribuir uniformemente en duración total
+- Formato SRT estándar:
+```
+1
+00:00:00,000 --> 00:00:05,000
+Close your eyes and breathe deeply.
+
+2
+00:00:05,000 --> 00:00:12,000
+Focus on the gentle rhythm of your breath.
+```
+
+## 5.7 Configuración e integraciones externas
+
+### Servicios externos configurados:
+1. **Google Cloud TTS**:
+   - Credentials: Service Account JSON
+   - Voice: es-ES-Neural2-Diana
+   - Rate: 0.95 (pausado para meditación)
+   - Encoding: MP3 @ 64kbps
+   - Timeouts: 30s connect, 60s read
+
+2. **AWS S3 / LocalStack**:
+   - Endpoint: Configurable (LocalStack vs AWS)
+   - Bucket: `meditation-outputs`
+   - Region: `us-east-1` (configurable)
+   - Access: Access Key + Secret Key
+
+3. **PostgreSQL**:
+   - JDBC URL: `jdbc:postgresql://localhost:5432/meditation`
+   - Driver: PostgreSQL 42.x
+   - Pool: HikariCP (Spring Boot default)
+   - Dialect: PostgreSQLDialect
+
+4. **FFmpeg**:
+   - Binary path: `/usr/bin/ffmpeg` (Linux), auto-detect (Windows/Mac)
+   - Codecs: libmp3lame (audio), libx264 (video)
+   - Resolución video: 1920x1080
+   - FPS: 1 (imagen estática)
+
+### Observabilidad implementada:
+- Logs estructurados con MDC (idempotencyKey, status, mediaType)
+- Métricas custom (Micrometer):
+  - Contadores: `generation.started`, `generation.completed`, `generation.failed`, `generation.cached`
+  - Timers: `tts.duration`, `ffmpeg.audio.duration`, `ffmpeg.video.duration`, `s3.upload.duration`
+  - Tags: mediaType, status, cached (boolean)
+- Health check: Actuator endpoints
+- OpenTelemetry ready (trazas de generación end-to-end)
+
+---
+
+# 6. Frontend implementado
+
+## 6.1 Estructura real
 
 ```
 frontend/src/
@@ -587,14 +936,15 @@ interface ComposerState {
 - Base URL configurable via env vars
 
 ---
-# 6. Ciclo de vida por historia (orden estricto e inmutable)
+
+# 7. Ciclo de vida por historia (orden estricto e inmutable)
 
 Cada Historia debe recorrer todas estas fases —**sin saltos, sin paralelismos indebidos y sin mezclar capas**.  
 Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y con el **Delivery Playbook**.
 
 ---
 
-## 6.1 Paso 0 — Historia candidata (Three Amigos pre‑BDD)
+## 7.1 Paso 0 — Historia candidata (Three Amigos pre‑BDD)
 
 **Responsables:** PO + QA + Backend + Frontend  
 
@@ -610,7 +960,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.2 Paso 1 — BDD FIRST (única fuente de verdad del comportamiento)
+## 7.2 Paso 1 — BDD FIRST (única fuente de verdad del comportamiento)
 
 **Responsables:** PO (input negocio), QA (dueño calidad), Backend + Frontend (colaboran)
 
@@ -629,7 +979,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.3 Paso 2 — API FIRST mínimo (derivado exclusivamente del BDD)
+## 7.3 Paso 2 — API FIRST mínimo (derivado exclusivamente del BDD)
 
 **Responsables:** Backend (owner), Frontend + QA (consumidores)
 
@@ -646,7 +996,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.4 Paso 3 — Dominio (DDD + TDD puro)
+## 7.4 Paso 3 — Dominio (DDD + TDD puro)
 
 **Responsables:** Backend (dominio)
 
@@ -667,7 +1017,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.5 Paso 4 — Aplicación (Use Cases)
+## 7.5 Paso 4 — Aplicación (Use Cases)
 
 **Responsables:** Backend (aplicación)
 
@@ -688,7 +1038,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.6 Paso 5 — Infraestructura (Adaptadores)
+## 7.6 Paso 5 — Infraestructura (Adaptadores)
 
 **Responsables:** Backend (infra)
 
@@ -708,7 +1058,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.7 Paso 6 — Controllers / REST Adapters
+## 7.7 Paso 6 — Controllers / REST Adapters
 
 **Responsables:** Backend (entrada)
 
@@ -728,7 +1078,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.8 Paso 7 — Frontend (UI + cliente + estado)
+## 7.8 Paso 7 — Frontend (UI + cliente + estado)
 
 **Responsables:** Frontend
 
@@ -749,7 +1099,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.9 Paso 8 — Contratos (provider/consumer)
+## 7.9 Paso 8 — Contratos (provider/consumer)
 
 **Responsables:** Backend + QA
 
@@ -763,7 +1113,7 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.10 Paso 9 — E2E (Backend + Frontend)
+## 7.10 Paso 9 — E2E (Backend + Frontend)
 
 **Responsables:** QA + Frontend + Backend
 
@@ -786,28 +1136,34 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 
 ---
 
-## 6.11 Paso 10 — CI/CD Gates (bloqueantes)
+## 7.11 Paso 10 — CI/CD Gates (bloqueantes)
 
 ### Pipeline Backend (`.github/workflows/backend-ci.yml`)
 
-**ESTADO ACTUAL**: 5 gates activos (Contract Tests eliminado temporalmente)
+**ESTADO ACTUAL**: 8 gates activos (completo)
 
-1. ✅ **Gate 1 - BDD Tests**: Cucumber scenarios
-2. ✅ **Gate 2 - Unit Tests**: Domain + Application layers
-3. ✅ **Gate 3 - Infrastructure Tests**: Adapters e infraestructura
-4. ✅ **Gate 4 - E2E Tests**: Tests end-to-end backend
-5. ✅ **Gate 5 - Build**: Maven clean install
+1. ✅ **Gate 1 - BDD Tests**: Cucumber scenarios en verde
+2. ✅ **Gate 2 - API Validation**: OpenAPI lint y schema validation
+3. ✅ **Gate 3 - Unit Domain**: Tests de dominio (TDD)
+4. ✅ **Gate 4 - Unit Application**: Tests de servicios de aplicación
+5. ✅ **Gate 5 - Infrastructure Tests**: Adapters e infraestructura + IT con Testcontainers
+6. ✅ **Gate 6 - Contract Tests**: Validación OpenAPI contracts
+7. ✅ **Gate 7 - E2E Tests**: Tests end-to-end backend completos
+8. ✅ **Gate 8 - Build**: Maven clean install + JAR generation
 
 **Triggers**:
-- Push a `main`, `feature/*`, `**-compose-meditation-content`
+- Push a `main`, `feature/*`, `002-generate-meditation-audio-video`
 - PR a `main`
 - Solo si cambian archivos en `backend/**`
 
-**Configuración**:
+**Configuración especial para Generation BC**:
+- FFmpeg instalado en CI environment
+- LocalStack para S3 (Testcontainers)
+- PostgreSQL (Testcontainers)
+- Google TTS API mock (WireMock)
 - JDK 21 (Amazon Corretto)
 - Maven cache habilitado
 - Test reports con dorny/test-reporter
-- Fail-on-error en todos los gates
 
 ### Pipeline Frontend (`.github/workflows/frontend-ci.yml`)
 
@@ -820,20 +1176,21 @@ Este pipeline está sincronizado con **Spec‑Kit (spec → plan → tasks)** y 
 - Upload de artifacts (playwright-report)
 
 ### Reglas actuales
-- ❌ Contract Tests temporalmente deshabilitados (carpeta vacía)
+- ✅ 8 gates completos y activos
 - ✅ Ningún fallo permite merge
 - ✅ Build once, deploy many
 - ✅ Artefacto inmutable (JAR generado en target/)
+- ✅ FFmpeg + LocalStack + PostgreSQL en CI
 
 ### Pendiente implementar:
 - Deployment automático a entornos
 - Integración con SonarQube/code quality
 - Security scanning (Snyk, Trivy)
-- Contract tests completos
+- Performance testing en CI
 
 ---
 
-## 6.12 Paso 11 — Done = Deployable
+## 7.12 Paso 11 — Done = Deployable
 
 Una historia solo está DONE si:
 
@@ -851,7 +1208,7 @@ Una historia solo está DONE si:
 - Nada fuera del BDD
 
 ---
-# 7. Artefactos obligatorios (estado real del proyecto)
+# 8. Artefactos obligatorios (estado real del proyecto)
 
 | Fase | Artefacto | Ubicación Real | Estado |
 |------|-----------|----------------|--------|
@@ -898,16 +1255,16 @@ Una historia solo está DONE si:
 - ✅ E2E: Backend y Frontend implementados
 
 ---
-# 8. Normas para agentes AI (GitHub Copilot, Claude, Spec-Kit)
+# 9. Normas para agentes AI (GitHub Copilot, Claude, Spec-Kit)
 
-## 8.1 Generación de specs (spec.md)
+## 9.1 Generación de specs (spec.md)
 - ✅ Solo narrativa y BDD de negocio
 - ✅ Lenguaje 100% negocio (sin HTTP, JSON, DTOs, arquitectura)
 - ✅ Given-When-Then puro
 - ❌ NO incluir métricas técnicas, performance, formatos
 - ❌ NO mencionar tecnologías, frameworks, persistencia
 
-## 8.2 Generación de planes (plan.md)
+## 9.2 Generación de planes (plan.md)
 - ✅ Describir pipeline completo fase por fase siguiendo Constitution
 - ✅ Listar capacidades abstractas derivadas de BDD When clauses
 - ✅ Usar rutas exactas definidas en Constitution
@@ -916,7 +1273,7 @@ Una historia solo está DONE si:
 - ❌ NO nombres concretos de clases Java/TypeScript
 - ❌ NO herramientas específicas no aprobadas
 
-## 8.3 Generación de tareas (tasks.md)
+## 9.3 Generación de tareas (tasks.md)
 - ✅ Microtareas por capa (domain / application / infra / controllers / frontend / tests)
 - ✅ Una tarea = un artefacto en una ubicación exacta
 - ✅ Criterios de aceptación medibles
@@ -926,7 +1283,7 @@ Una historia solo está DONE si:
 - ❌ NO anticipar features futuras
 - ❌ NO añadir endpoints no definidos en BDD
 
-## 8.4 Generación de código
+## 9.4 Generación de código
 Copilot/Claude/Agentes pueden generar código SOLO cuando:
 
 1. ✅ Existe `.feature` ejecutable en estado RED
@@ -951,7 +1308,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ✅ Playwright para E2E
 - ✅ TypeScript strict
 
-## 8.5 Reglas de paths (absolutas)
+## 9.5 Reglas de paths (absolutas)
 
 ### Backend:
 ```
@@ -985,7 +1342,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 /frontend/tests/e2e/
 ```
 
-## 8.6 Prohibiciones absolutas para agentes
+## 9.6 Prohibiciones absolutas para agentes
 - ❌ Generar endpoints no presentes en BDD aprobado
 - ❌ Añadir campos a DTOs sin estar en OpenAPI
 - ❌ Crear nuevas reglas de negocio
@@ -998,7 +1355,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ❌ Crear tareas que mezclen múltiples capas
 
 ---
-# 9. Conformidad técnica (stack real implementado)
+# 10. Conformidad técnica (stack real implementado)
 
 ## Backend Stack:
 - ✅ **Java 21** (Amazon Corretto 21.0.9)
@@ -1059,9 +1416,9 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ✅ **Degradación graceful** (fallbacks en servicios AI)
 
 ---
-# 10. Observabilidad y requisitos no funcionales (implementados)
+# 11. Observabilidad y requisitos no funcionales (implementados)
 
-## 10.1 Logging
+## 11.1 Logging
 - ✅ **SLF4J** como facade
 - ✅ **Logback** como implementación
 - ✅ Logs estructurados en JSON (production profile)
@@ -1083,7 +1440,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
   - `ai.image.generation.completed`
   - `ai.image.generation.failed`
 
-## 10.2 Métricas (Micrometer)
+## 11.2 Métricas (Micrometer)
 - ✅ **Counters**:
   - `composition.created.total` (tags: outputType)
   - `ai.text.generated.total` (tags: status)
@@ -1095,7 +1452,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ✅ **Gauges**: (disponibles via actuator)
 - ✅ Registry: SimpleMeterRegistry (test), Prometheus ready
 
-## 10.3 Health Checks
+## 11.3 Health Checks
 - ✅ `/actuator/health` endpoint activo
 - ✅ Health indicators:
   - Application status
@@ -1104,7 +1461,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ⚠️ Pendiente: OpenAI health check
 - ⚠️ Pendiente: MediaCatalog health check
 
-## 10.4 Resiliencia
+## 11.4 Resiliencia
 - ✅ **Retry policy** (OpenAI):
   - Max attempts: 3
   - Backoff: exponential
@@ -1119,7 +1476,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ✅ **Rate limiting** detection y manejo
 - ✅ **Graceful degradation**: fallbacks en AI services
 
-## 10.5 Seguridad
+## 11.5 Seguridad
 - ⚠️ **Authentication**: Pendiente (US1 - AWS Cognito)
 - ⚠️ **Authorization**: Pendiente
 - ✅ **API Key management**: Configurado via env vars
@@ -1127,14 +1484,14 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ⚠️ **HTTPS**: Pendiente en producción
 - ⚠️ **Rate limiting**: Pendiente implementar
 
-## 10.6 Performance
+## 11.6 Performance
 - ✅ **In-memory storage**: Rápido pero no persistente
 - ⚠️ **Caching**: Pendiente implementar
 - ✅ **Async operations**: Preparado (WebClient)
 - ⚠️ **Connection pooling**: Default Spring
 - ⚠️ **Database indexing**: N/A (in-memory)
 
-## 10.7 Build & Deploy
+## 11.7 Build & Deploy
 - ✅ **Build once, deploy many**: JAR único
 - ✅ **Executable JAR**: Spring Boot maven plugin
 - ✅ **Profiles**: local, test (production pendiente)
@@ -1144,9 +1501,9 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ⚠️ **Infrastructure as Code**: Pendiente (Terraform/CDK)
 
 ---
-# 11. Antipatrones detectados y evitados
+# 12. Antipatrones detectados y evitados
 
-## 11.1 Arquitectura
+## 12.1 Arquitectura
 - ✅ **Evitado**: God Objects → Aggregate pequeño, responsabilidad única
 - ✅ **Evitado**: Lógica negocio en controllers → Controllers solo HTTP translation
 - ✅ **Evitado**: Lógica negocio en infrastructure → Adapters solo traducción
@@ -1154,7 +1511,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ✅ **Evitado**: Mezcla de capas → Separación estricta domain/application/infrastructure
 - ✅ **Evitado**: Anemic domain → Aggregate con comportamiento (withX methods, getOutputType)
 
-## 11.2 Dominio
+## 12.2 Dominio
 - ✅ **Evitado**: Entidades mutables → Records inmutables
 - ✅ **Evitado**: String IDs → UUID tipado
 - ✅ **Evitado**: `Instant.now()` directo → Clock inyectado (testable)
@@ -1162,7 +1519,7 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ✅ **Evitado**: Excepciones genéricas → Excepciones de dominio específicas
 - ✅ **Evitado**: Getters/setters → Records con métodos de negocio
 
-## 11.3 Testing
+## 12.3 Testing
 - ✅ **Evitado**: Tests sin assertions → AssertJ fluent assertions
 - ✅ **Evitado**: Tests con servicios reales → Mocks (WireMock para HTTP)
 - ✅ **Evitado**: Tests sin arrange → Given-When-Then clara
@@ -1170,37 +1527,37 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ✅ **Evitado**: Tests acoplados al tiempo → Timestamps controlados
 - ✅ **Evitado**: Tests sin DisplayName → Nombres descriptivos
 
-## 11.4 Frontend
+## 12.4 Frontend
 - ✅ **Evitado**: Lógica de negocio en UI → Solo presentación
 - ✅ **Evitado**: Llamadas API manuales → Cliente autogenerado
 - ✅ **Evitado**: Estado server en UI → React Query
 - ✅ **Evitado**: Props drilling → Zustand para UI state
 - ✅ **Evitado**: Any types → TypeScript strict
 
-## 11.5 API & Contratos
+## 12.5 API & Contratos
 - ✅ **Evitado**: Endpoints no documentados → OpenAPI first
 - ✅ **Evitado**: DTOs != OpenAPI → Strict mapping
 - ✅ **Evitado**: Cambios breaking sin versioning → Contract tests (cuando se implementen)
 - ✅ **Evitado**: Error responses genéricas → Error DTOs específicos
 
-## 11.6 Configuración
+## 12.6 Configuración
 - ✅ **Evitado**: Hardcoded values → Externalized config (application.yml)
 - ✅ **Evitado**: Secrets en código → Environment variables
 - ✅ **Evitado**: Profiles mezclados → Separación clara (local, test, prod)
 
-## 11.7 Observabilidad
+## 12.7 Observabilidad
 - ✅ **Evitado**: Logs sin contexto → MDC enriquecido
 - ✅ **Evitado**: Métricas sin tags → Tags significativos
 - ✅ **Evitado**: System.out.println → SLF4J
 - ✅ **Evitado**: Errores silenciosos → Logging + métricas de errores
 
-## 11.8 Diseño horizontal (evitado)
+## 12.8 Diseño horizontal (evitado)
 - ✅ **NO**: Crear toda la infraestructura de persistencia primero
 - ✅ **NO**: Implementar todos los endpoints antes del dominio
 - ✅ **NO**: Construir todo el frontend antes de tener backend
 - ✅ **SÍ**: Vertical slices (BDD → API → Domain → App → Infra → UI)
 
-## 11.9 Over-engineering (evitado)
+## 12.9 Over-engineering (evitado)
 - ✅ **NO**: Event sourcing innecesario
 - ✅ **NO**: CQRS complejo para MVP
 - ✅ **NO**: Microservicios prematuros
@@ -1208,31 +1565,31 @@ Copilot/Claude/Agentes pueden generar código SOLO cuando:
 - ✅ **SÍ**: Simple in-memory repository (adecuado para MVP)
 - ✅ **SÍ**: Monolito modular con bounded contexts claros
 
-## 11.10 Dependencias (evitado)
+## 12.10 Dependencias (evitado)
 - ✅ **NO**: Lombok en dominio → Solo en DTOs/config
 - ✅ **NO**: Spring annotations en dominio → Dominio puro
 - ✅ **NO**: Jackson en dominio → Mappers en infrastructure
 - ✅ **NO**: HTTP tipos en application → Ports abstractos
 
 ---
-# 12. Definition of Done (DoD) - Feature Completa
+# 13. Definition of Done (DoD) - Feature Completa
 
 Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 
-## 12.1 BDD & Specs
+## 13.1 BDD & Specs
 - ✅ `.feature` file completo y aprobado por PO/QA
 - ✅ Todos los escenarios Cucumber están en GREEN
 - ✅ `spec.md` actualizado con narrativa de negocio
 - ✅ `plan.md` refleja la implementación real
 - ✅ `tasks.md` marca todas las tareas como completadas
 
-## 12.2 API First
+## 13.2 API First
 - ✅ OpenAPI YAML validado (sin errores de lint)
 - ✅ Todos los endpoints documentados
 - ✅ Request/Response schemas completos
 - ✅ Error responses definidos (400, 404, 503, etc.)
 
-## 12.3 Dominio
+## 13.3 Dominio
 - ✅ Entities/Aggregates implementados (inmutables)
 - ✅ Value Objects validados
 - ✅ Puertos IN (use cases) definidos
@@ -1241,13 +1598,13 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - ✅ NO dependencias de frameworks
 - ✅ NO tipos de infraestructura
 
-## 12.4 Aplicación
+## 13.4 Aplicación
 - ✅ Use Cases implementados (orquestación pura)
 - ✅ Validadores implementados
 - ✅ Tests unitarios con mocks: >90% coverage
 - ✅ NO lógica de negocio (delegada a dominio)
 
-## 12.5 Infraestructura
+## 13.5 Infraestructura
 - ✅ Adaptadores OUT implementados (DB, APIs externas, etc.)
 - ✅ Controllers REST implementados
 - ✅ DTOs mappean exactamente con OpenAPI
@@ -1255,7 +1612,7 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - ✅ Tests de integración: >85% coverage
 - ✅ WireMock para servicios externos
 
-## 12.6 Frontend
+## 13.6 Frontend
 - ✅ Cliente API autogenerado desde OpenAPI
 - ✅ Componentes implementados y testeados
 - ✅ React Query para server-state
@@ -1263,24 +1620,27 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - ✅ Tests unitarios componentes (RTL)
 - ✅ NO lógica de negocio en UI
 
-## 12.7 Tests E2E
+## 13.7 Tests E2E
 - ✅ Backend E2E tests (Spring Boot + WireMock)
 - ✅ Frontend E2E tests (Playwright)
 - ✅ Todos los flujos críticos cubiertos
 - ✅ Tests ejecutan contra backend real (frontend E2E)
 
-## 12.8 CI/CD
-- ✅ Pipeline Backend: 5 gates GREEN
+## 13.8 CI/CD
+- ✅ Pipeline Backend: 8 gates GREEN
   - Gate 1: BDD Tests ✅
-  - Gate 2: Unit Tests ✅
-  - Gate 3: Infrastructure Tests ✅
-  - Gate 4: E2E Tests ✅
-  - Gate 5: Build ✅
+  - Gate 2: API Validation ✅
+  - Gate 3: Unit Domain ✅
+  - Gate 4: Unit Application ✅
+  - Gate 5: Infrastructure Tests ✅
+  - Gate 6: Contract Tests ✅
+  - Gate 7: E2E Tests ✅
+  - Gate 8: Build ✅
 - ✅ Pipeline Frontend: GREEN
 - ✅ No warnings críticos
 - ✅ Artefactos generados (JAR, bundles)
 
-## 12.9 Observabilidad
+## 13.9 Observabilidad
 - ✅ Logs estructurados con MDC context
 - ✅ Métricas custom implementadas:
   - Counters de eventos de negocio
@@ -1289,26 +1649,26 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - ✅ Health checks functionando
 - ✅ Actuator endpoints habilitados
 
-## 12.10 Código limpio
+## 13.10 Código limpio
 - ✅ NO código comentado (excepto Javadoc)
 - ✅ NO TODOs sin tracking
 - ✅ NO duplicación de código
 - ✅ Naming consistente
 - ✅ Formateo consistente (checkstyle/eslint)
 
-## 12.11 Documentación
+## 13.11 Documentación
 - ✅ README actualizado si aplica
 - ✅ OpenAPI documentado con examples
 - ✅ Javadoc en interfaces públicas
 - ✅ Comments explicando "por qué" no "qué"
 
-## 12.12 Deuda técnica
+## 13.12 Deuda técnica
 - ✅ NO deuda técnica introducida sin justificar
-- ✅ Contract tests implementados (o exceptuados conscientemente)
+- ✅ Contract tests implementados
 - ✅ Performance acceptable (no degradación)
 - ✅ Security básica (API keys, CORS, validaciones)
 
-## 12.13 Aprobaciones
+## 13.13 Aprobaciones
 - ✅ Code review aprobado (al menos 1 reviewer)
 - ✅ PO/QA sign-off en BDD scenarios
 - ✅ No breaking changes sin migración path
@@ -1317,9 +1677,9 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 **Si falta CUALQUIERA de estos ítems → NO ESTÁ DONE**
 
 ---
-# 13. Governance y gestión de cambios
+# 14. Governance y gestión de cambios
 
-## 13.1 Modificaciones a esta Constitution
+## 14.1 Modificaciones a esta Constitution
 - ✅ Requieren **Pull Request** al archivo constitution.md
 - ✅ Requieren **consenso** de al menos:
   - 1 Backend developer
@@ -1328,12 +1688,12 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - ✅ Versionado semántico (major.minor.patch)
 - ✅ Changelog obligatorio en el PR
 
-## 13.2 Modificaciones a Playbooks/Guidelines
+## 14.2 Modificaciones a Playbooks/Guidelines
 - ✅ PR con justificación técnica
 - ✅ Alineación con Constitution
 - ✅ Review por al menos 1 developer + 1 architect
 
-## 13.3 Adición de tecnologías nuevas
+## 14.3 Adición de tecnologías nuevas
 - ✅ Justificación de negocio/técnica
 - ✅ Evaluación de alternativas
 - ✅ POC si es cambio significativo
@@ -1341,80 +1701,128 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - ✅ Actualización de CI/CD
 - ✅ Training plan si aplica
 
-## 13.4 Decisiones arquitectónicas (ADRs)
+## 14.4 Decisiones arquitectónicas (ADRs)
 - ⚠️ **Pendiente**: Sistema formal de ADRs
 - ✅ **Mientras tanto**: Decisiones en PRs con tag `[ADR]`
 - ✅ Documentar en `/docs/architecture-decisions/`
 
-## 13.5 Excepciones a las reglas
+## 14.5 Excepciones a las reglas
 - ✅ Requieren **justificación explícita** en PR
 - ✅ Tag `[EXCEPTION]` en commit/PR
 - ✅ Tracking como tech debt si es temporal
 - ✅ Plan de remediación si impacta arquitectura
 
-## 13.6 Resolución de conflictos
+## 14.6 Resolución de conflictos
 1. Consultar jerarquía normativa (sección 1)
 2. Si persiste ambigüedad → discusión en PR/issue
 3. Decisión documentada y agregada a Constitution/Guidelines
 
 ---
-# 14. Información importante para futuros agentes/colaboradores
+# 15. Información importante para futuros agentes/colaboradores
 
-## 14.1 Conocimiento crítico del proyecto
+## 15.1 Conocimiento crítico del proyecto
 
-### Estado actual (Febrero 2026):
-- ✅ **Feature 001** (Compose Content) implementada al 100%
-- ✅ MVP funcional: usuario puede componer meditación manualmente o con AI
-- ⚠️ **Autenticación**: NO implementada (planned US1)
-- ⚠️ **Persistencia**: In-memory (planned migration a PostgreSQL US3)
-- ⚠️ **Video generation**: NO implementada (planned US3)
-- ⚠️ **Listado/Play**: NO implementado (planned US4)
+### Estado actual (17 Febrero 2026):
+- ✅ **US2 (Compose Content - Branch 001-compose-meditation-content)** implementada al 100%
+  - BC: `meditationbuilder`
+  - 8 escenarios BDD + arquitectura hexagonal completa
+  - Frontend React + OpenAI integration
+  - In-memory persistence (suficiente para composición temporal)
+  
+- ✅ **US3 (Generation - Branch 002-generate-meditation-audio-video)** implementada al 100%
+  - BC: `meditation.generation`
+  - 3 escenarios BDD + arquitectura hexagonal completa
+  - Google TTS (es-ES-Neural2-Diana) + FFmpeg rendering
+  - PostgreSQL persistence + S3 storage (LocalStack dev/test)
+  - **TIMEOUT 187 segundos** (decisión de negocio crítica)
+  - Idempotencia SHA-256 + subtítulos sincronizados
+
+- ❌ **US1 (Authentication)**: NO implementada (pending - AWS Cognito + JWT)
+- ❌ **US4 (List & Play)**: NO implementada (pending)
 
 ### Decisiones arquitectónicas clave:
-1. **Hexagonal Architecture**: No negociable, estrictamente aplicada
-2. **Java 21 Records**: Preferidos para inmutabilidad (dominio y VOs)
-3. **Clock injection**: Obligatorio para testabilidad temporal
-4. **In-memory repo**: Temporal, suficiente para MVP, migrar en US3
-5. **OpenAPI First**: Contrato antes que implementación
-6. **Contract Tests**: Deshabilitados temporalmente, reactivar antes de producción
+1. **Dos Bounded Contexts independientes**: `meditationbuilder` (composition) + `meditation.generation` (A/V generation)
+2. **Hexagonal Architecture**: No negociable, estrictamente aplicada en ambos BCs
+3. **Java 21 Records**: Usado extensivamente para inmutabilidad (aggregates y VOs)
+4. **Clock injection**: Obligatorio para testabilidad temporal
+5. **Persistencia diferenciada**: In-memory para BC Composition (temporal), PostgreSQL para BC Generation (permanente)
+6. **Timeout 187s**: Límite de negocio para narración (~467 palabras @ 150 wpm)
+7. **OpenAPI First**: Contrato antes que implementación (2 specs: compose-content.yaml, generate-meditation.yaml)
+8. **CI/CD 8 gates**: BDD → API → Unit Domain → Unit App → Infra → Contract → E2E → Build
 
 ### Bottlenecks conocidos:
-- ⚠️ OpenAI API: Rate limits (429) manejados con retry + circuit breaker
-- ⚠️ OpenAI API: Latency variable (3-10s típico)
-- ✅ Degradación graceful implementada
-- ⚠️ In-memory storage: No escala, no persiste (aceptable para MVP)
+- ⚠️ **OpenAI API**: Rate limits (429) manejados con retry + circuit breaker
+- ⚠️ **OpenAI API**: Latency variable (3-10s típico)
+- ⚠️ **Google TTS**: Latency 5-15s dependiendo de texto length
+- ⚠️ **FFmpeg rendering**: CPU-intensive, ~10-30s para video completo
+- ✅ **Degradación graceful** implementada en ambos BCs
+- ✅ **S3 LocalStack**: Dev/test fast, migración a AWS S3 productivo
 
-### Integraciones externas:
-1. **OpenAI** (text + image generation):
+### Integraciones externas implementadas:
+1. **OpenAI** (BC: meditationbuilder - text + image generation):
    - Models: gpt-5-nano, gpt-image-1-mini
    - Auth: API Key via env var
    - Resilience: Retry (3x) + Circuit Breaker
-2. **Media Catalog** (mock):
+
+2. **Google Cloud TTS** (BC: meditation.generation - voice synthesis):
+   - Voice: es-ES-Neural2-Diana (neural voice)
+   - Speaking rate: 0.95 (pausado para meditación)
+   - Auth: Service Account JSON (GOOGLE_APPLICATION_CREDENTIALS)
+   - Output: MP3 @ 64kbps
+
+3. **AWS S3 / LocalStack** (BC: meditation.generation - storage):
+   - LocalStack: Dev/test (http://localhost:4566)
+   - AWS S3: Production (configurable)
+   - Buckets: meditation-outputs, meditation-subtitles
+
+4. **PostgreSQL** (BC: meditation.generation - persistence):
+   - Schema: meditation_outputs table (id, content_id, urls, status, timestamps)
+   - JPA + Spring Data
+   - Testcontainers en CI
+
+5. **FFmpeg** (BC: meditation.generation - rendering):
+   - Audio: Mix narration + music (narración 100%, música 30%)
+   - Video: Static image + audio (H.264, 1920x1080, 1fps)
+   - Gestión archivos temp con auto-cleanup
+
+6. **Media Catalog** (BC: meditationbuilder - mock):
    - Mock interno para MVP
    - Reemplazar con servicio real en futuro
 
+### Tech Debt resuelto (vs. versión anterior):
+- ✅ **Contract Tests**: Ahora ACTIVOS (Gate 6 en CI/CD)
+- ✅ **Persistencia PostgreSQL**: IMPLEMENTADA en BC Generation
+- ✅ **Video/Audio generation**: IMPLEMENTADA completamente (US3)
+- ✅ **FFmpeg integration**: COMPLETA con tests
+- ✅ **S3 Storage**: IMPLEMENTADO (LocalStack)
+
 ### Tech Debt pendiente:
-- ⚠️ Contract tests vacíos → Implementar antes de producción
-- ⚠️ Health checks para OpenAI/MediaCatalog
-- ⚠️ Autenticación/Autorización (US1 pendiente)
-- ⚠️ Persistencia real (US3 pending)
-- ⚠️ Containerización (Dockerfile pending)
-- ⚠️ IaC (Terraform/CDK pending)
-- ⚠️ Observability export (Prometheus/Grafana)
+- ⚠️ **Autenticación/Autorización**: US1 pendiente (Cognito + JWT)
+- ⚠️ **Health checks completos**: Añadir checks para OpenAI, Google TTS, S3
+- ⚠️ **Containerización**: Dockerfile + Docker Compose pendientes
+- ⚠️ **IaC**: Terraform/CDK para infraestructura cloud
+- ⚠️ **Observability export**: Prometheus + Grafana + distributed tracing
+- ⚠️ **Async processing**: US3 es sync actualmente, considerar async/queues para workloads largos
 
 ### Próximos pasos recomendados (en orden):
-1. **US1**: Implementar Cognito authentication
-2. **Reactivar Contract Tests**: Implementar tests de contrato para API
-3. **US3**: Procesamiento asíncrono video/audio + persistencia PostgreSQL
-4. **US4**: Listado y reproducción de meditaciones
-5. **Production Hardening**:
-   - Health checks completos
-   - Security scanning
-   - Performance testing
-   - Containerización
-   - IaC
+1. **US1**: Implementar Cognito authentication + JWT validation
+2. **US4**: Listado y reproducción de meditaciones generadas
+3. **Production Hardening**:
+   - Health checks completos (OpenAI, Google TTS, S3, PostgreSQL)
+   - Containerization (Dockerfile multi-stage)
+   - IaC (Terraform para AWS resources)
+   - Security scanning (Snyk, Trivy)
+   - Performance testing con carga
+4. **Async Processing**: 
+   - Refactor Generation BC para async (SQS/SNS o similar)
+   - Webhooks para notificar completion
+   - Polling endpoint para status checking
+5. **Observability**:
+   - Export métricas a Prometheus
+   - Dashboards Grafana
+   - Distributed tracing completo (OpenTelemetry → Jaeger/Zipkin)
 
-## 14.2 Patterns y convenciones establecidas
+## 15.2 Patterns y convenciones establecidas
 
 ### Naming:
 - Aggregates: sustantivo (MeditationComposition)
@@ -1443,7 +1851,7 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - Hotfixes: `hotfix-descripcion`
 - Main: `main` (protected, requires PR + CI green)
 
-## 14.3 Contactos y responsables (placeholder)
+## 15.3 Contactos y responsables (placeholder)
 - **Architect**: [TBD]
 - **Backend Lead**: [TBD]
 - **Frontend Lead**: [TBD]
@@ -1451,7 +1859,7 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - **DevOps**: [TBD]
 
 ---
-# 15. Principio final
+# 16. Principio final
 
 **Cada historia atraviesa el sistema verticalmente, de punta a punta:**
 
@@ -1483,5 +1891,5 @@ DONE (deployable)
 
 **FIN DE CONSTITUTION v3.0.0**
 
-*Última actualización: 12 de Febrero de 2026*  
-*Actualizado con estado real del proyecto tras implementación completa de US001*
+*Última actualización: 16 de Febrero de 2026*  
+*Actualizado con estado real del proyecto tras implementación completa de US002*

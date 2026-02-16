@@ -158,13 +158,14 @@ Copilot must follow `testing.instructions.md` when suggesting tests:
 
 Copilot must consider the gates defined in Constitution and Testing Instructions as blocking:
 
-1. BDD
-2. API
-3. Unit
-4. Infra
-5. Contract
-6. E2E backend
-7. E2E frontend
+1. **BDD** (Cucumber acceptance tests)
+2. **API** (OpenAPI contract validation)
+3. **Unit Domain** (Domain model tests)
+4. **Unit App** (Application service tests)
+5. **Infra IT** (Infrastructure integration tests with Testcontainers)
+6. **Contract** (OpenAPI contract tests with WireMock)
+7. **E2E** (End-to-end tests)
+8. **Build** (Maven package generation)
 
 ---
 

@@ -1,11 +1,17 @@
 
 # ⬡ Hexagonal Architecture Guide — Meditation Builder (Backend)
-**Versión:** 2.0.0
+**Versión:** 2.1.0 (Actualizado con 2 bounded contexts implementados)
 
 ---
 
 ## 0. Propósito
 Definir **estructura, dependencias y responsabilidades** de la arquitectura hexagonal en el backend (`/backend`).
+
+**Estado actual del proyecto (Febrero 2026)**:
+- ✅ **BC 1: `meditationbuilder`** (US2) - In-memory persistence, OpenAI adapters
+- ✅ **BC 2: `meditation.generation`** (US3) - PostgreSQL persistence, Google TTS, FFmpeg, S3
+- ❌ **BC 3**: Auth (US1) - Pendiente
+- ❌ **BC 4**: List & Play (US4) - Pendiente
 
 ---
 
@@ -62,7 +68,19 @@ shared/                        # Módulo transversal
   <boundedContext>/
 ```
 
-**Note**: Current implementation uses `rest/` for inbound adapters and `persistence/` + `service/` for outbound adapters. Kafka and MongoDB are shown as examples of potential future technology choices.
+**Note**: `kafka/` and `mongodb/` are **examples** of potential future technology choices for messaging and alternative persistence.
+
+**Current implementation** across bounded contexts:
+- **Inbound adapters**: `rest/` (HTTP REST Controllers for all BCs)
+- **Outbound adapters - BC meditationbuilder**:
+  - `persistence/` → InMemoryRepository (temporal composition storage)
+  - `service/` → OpenAI adapters (text + image generation)
+- **Outbound adapters - BC meditation.generation**:
+  - `persistence/` → PostgreSQL via JPA (permanent generation storage)
+  - `adapter/tts/` → Google Cloud TTS (voice synthesis)
+  - `adapter/ffmpeg/` → FFmpeg (audio/video rendering)
+  - `adapter/storage/` → AWS S3 / LocalStack (media file storage)
+  - `service/subtitle/` → Subtitle synchronization (SRT generation)
 
 ---
 
@@ -106,19 +124,28 @@ shared/                        # Módulo transversal
 ---
 
 ## 5. Persistencia y mensajería
-- Repositorios en `infrastructure/out/persistence/` (actual: in-memory) implementan puertos out.
+- Repositorios en `infrastructure/out/persistence/` implementan puertos out:
+  - **BC meditationbuilder**: `InMemoryCompositionRepository` (temporal, suficiente para composición)
+  - **BC meditation.generation**: `PostgresContentRepository` (JPA, persistencia permanente)
 - Mappers persistencia en `infrastructure/out/persistence/mapper/`.
-- Modelos de persistencia en `infrastructure/out/persistence/model/` (no son entidades de dominio).
-- Adaptadores a servicios externos en `infrastructure/out/service/` (actual: OpenAI, MediaCatalog).
-- Mensajería (Kafka) se ubicaría en `infrastructure/in|out/kafka/` según dirección (no implementado aún).
+- Modelos de persistencia en `infrastructure/out/persistence/model/` o `entity/` (no son entidades de dominio).
+- Adaptadores a servicios externos:
+  - **BC meditationbuilder**: `infrastructure/out/service/` (OpenAI text+image, MediaCatalog mock)
+  - **BC meditation.generation**: `infrastructure/out/adapter/` (Google TTS, FFmpeg, S3)
+- Mensajería (Kafka) se ubicaríaPor en `infrastructure/in|out/kafka/` según dirección (**NO IMPLEMENTADO - ejemplo futuro**).
 
 ---
 
-## 6. HTTP clientes externos
-- Usar **RestClient** (imperativo) para llamadas síncronas.
+## 6. HTTP clientes externos y otros adaptadores
+- Usar **RestClient** (imperativo) para llamadas síncronas HTTP.
 - Usar **WebClient** **solo** para streaming/reactivo.
 - Timeouts y retries razonables; circuit breaker si aplica.
 - **No** loguear prompts ni respuestas IA.
+
+**Adaptadores no HTTP implementados (BC generation)**:
+- **Google Cloud TTS SDK**: Síntesis de voz (biblioteca nativa Java)
+- **FFmpeg CLI**: Renderizado audio/video (process execution)
+- **AWS S3 SDK**: Almacenamiento objetos (biblioteca nativa Java + LocalStack para test)
 
 ---
 

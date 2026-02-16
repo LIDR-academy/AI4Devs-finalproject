@@ -66,13 +66,14 @@ Definir **cómo** se prueban los comportamientos y las capas del sistema para qu
 ---
 
 ## 7. CI/CD Gates (orden bloqueante)
-1. `bdd` (puede empezar rojo)  
-2. `api` (lint + schema)  
-3. `unit` (dominio + aplicación + frontend unit)  
-4. `infra` (integración backend + integración frontend)  
-5. `contract`  
-6. `e2e` backend  
-7. `e2e` frontend
+1. **BDD** (Cucumber acceptance tests - puede empezar rojo)  
+2. **API** (OpenAPI lint + schema validation)  
+3. **Unit Domain** (Domain model tests)  
+4. **Unit App** (Application service tests)  
+5. **Infra IT** (Infrastructure integration tests with Testcontainers)  
+6. **Contract** (OpenAPI contract tests with WireMock)  
+7. **E2E** (End-to-end tests - backend + frontend)  
+8. **Build** (Maven package generation)
 
 **Fast‑fail**: cualquier fallo bloquea el merge.
 
