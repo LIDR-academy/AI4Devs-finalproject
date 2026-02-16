@@ -6743,3 +6743,39 @@ Ejecuté FASE REFACTOR completando: (1) **Refactor del código - Constants Extra
 **Resumen de la Respuesta/Acción:**
 Ejecuté AUDITORÍA FINAL completando: (1) **Auditoría de código:** 12/12 requisitos de spec implementados (100%), 11/11 criterios Clean Code PASS (sin debug code, JSDoc completo, constants extraction), código excepcional con DI pattern, helper functions, @internal tags, (2) **Auditoría de tests:** 24/24 tests passing ✅ (784ms duration), 8/10 core test cases cubiertos (100% considerando MVP constraints), tests adicionales no en spec (bonus coverage para error_processing, manual unsubscribe, ARIA, auto-removal), tests 9/11/12 fuera de scope (integration tests con Supabase real), (3) **Auditoría de documentación:** 9/10 archivos actualizados (90%), issue menor encontrado: prompts.md incompleto (faltaban entradas 114 RED y 116 REFACTOR), 7 archivos PASS (backlog, activeContext, productContext, progress, systemPatterns, techContext), (4) **Verificación acceptance criteria:** 10/10 criterios cumplidos (100%), hook implementado, Realtime postgres_changes, ARIA toasts, DI pattern, service layer, @supabase dependency, documentation, JSDoc, all tests, (5) **Definition of Done:** 9/11 criterios PASS (82%), código funcional, tests passing, refactoring completo, documentation 90% (prompts.md incompleto), sin debug code, (6) **Decisión final:** ✅ TICKET APROBADO CON CORRECCIONES MENORES, calificación 98/100, highlights: arquitectura excepcional (DI pattern), clean code perfecto, test coverage superior (24 tests vs 12 spec), separation of concerns, issues menores: prompts.md incompleto (se corrigió en esta auditoría), (7) **Acciones correctivas ejecutadas:** Añadidas entradas 114 (RED), 116 (REFACTOR), 117 (AUDIT) en prompts.md, creado AUDIT-T-031-FRONT-FINAL.md con informe detallado, actualizado backlog con nota de auditoría. **Estado:** T-031-FRONT AUDIT COMPLETA → APROBADO PARA MERGE → Calificación: 98/100 → Ready for production.
 ---
+
+## [118] - WORKFLOW STEP 1: ENRICHMENT - Ticket T-032-FRONT
+**Fecha:** 2026-02-16 10:30
+
+**Prompt Original (Snippet expandido):**
+> :enrichment
+> 
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-032-FRONT
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+> 
+> ### Protocolo Agents (OBLIGATORIO antes de diseñar)
+> 1. **Lee** `docs/09-mvp-backlog.md` y localiza el ticket `T-032-FRONT` para entender alcance, criterios de aceptación y DoD.
+> 2. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API existentes y patrones arquitectónicos del proyecto.
+> 3. **Lee** `memory-bank/techContext.md` para conocer el stack completo, librerías permitidas y decisiones técnicas previas.
+> 4. **Lee** `docs/productContext.md` para identificar componentes/endpoints existentes que pueden reutilizarse.
+> 5. **Al finalizar**, registra este prompt en `prompts.md` bajo la sección "## Workflow Step 1: Enrichment".
+> 
+> ### Contexto del Workflow
+> Estamos en **Step 1/5: Enriquecer Ticket** (Pre-TDD).
+> Acabamos de crear la rama `feature/T-032-FRONT`.
+> El objetivo es definir el **"Contrato Técnico"** detallado ANTES de escribir el primer test (Step 2: TDD-Red).
+> 
+> **Stack del proyecto:**
+> - **Backend:** FastAPI (Python 3.11) + Pydantic schemas (`src/backend/schemas.py`)
+> - **Frontend:** React 18 + TypeScript strict + Vite, componentes en `src/frontend/src/components/`
+> - **Docs:** `docs/`, `memory-bank/`, backlog en `docs/09-mvp-backlog.md`
+> 
+> **Patrón de contrato (CRÍTICO):** Las interfaces TypeScript (`src/frontend/src/types/`) DEBEN coincidir exactamente con los Pydantic schemas (`src/backend/schemas.py`).
+> 
+> ### Objetivo
+> Generar una **Technical Specification** completa para `T-032-FRONT` que sirva como blueprint para el desarrollo TDD, sin escribir código de implementación todavía.
+> [FULL ENRICHMENT PROTOCOL AS PER USER'S REQUEST]
+
+**Resumen de la Respuesta/Acción:**
+Ejecuté ENRICHMENT PHASE completando: (1) **Análisis del contexto:** T-032-FRONT identificado como FRONT component (React Modal), dependencias verificadas (ValidationReport types pre-existentes, T-030-BACK endpoint GET /api/parts/{id}/validation disponible, T-031-FRONT hooks de notificación reutilizables), User Story criterios analizados (visualización de ValidationReport con tabs, error highlighting, metadata expandible), (2) **Diseño de la solución:** Component Contract definido (ValidationReportModal con props: report ValidationReport, isOpen boolean, onClose callback, blockId optional), structure diseñada con Tabs component (Nomenclature/Geometry/Metadata sections), visual patterns establecidos (✅/❌ icons, color coding green/red, badge counts, expandible metadata table), accessibility patterns (ARIA roles, keyboard navigation, focus trap, ESC key handling), (3) **Estrategia de testing:** 15 test cases definidos (Happy Path: display validation summary, render tabs, show passed checks, list errors with details, render metadata table; Edge Cases: empty errors array, null metadata, missing target field; Security/Error: missing required props, close on ESC, close on backdrop click; Accessibility: ARIA labels, keyboard nav, focus trap, color-blind friendly), (4) **Definición de contratos:** ValidationReport interface verificada (100% match entre Pydantic y TypeScript), ValidationReportModalProps interface diseñada con optional/required fields, TabName type creado ('nomenclature'|'geometry'|'metadata'), (5) **Files to create:** ValidationReportModal.tsx, ValidationReportModal.test.tsx, tab-navigation.utils.ts (helper for keyboard nav), validation-report-modal.constants.ts (ARIA labels, icon mappings, color schemes), (6) **Reusable patterns identified:** Constants extraction pattern (T-031-FRONT), DI pattern considerations (none needed, pure UI component), Service layer pattern (consume GET /api/parts/{id}/validation via future hook), (7) **Documentation updates planned:** docs/09-mvp-backlog.md (T-032-FRONT status), memory-bank/activeContext.md (current ticket), docs/US-002/T-032-FRONT-TechnicalSpec.md (this spec document created). **Estado:** T-032-FRONT ENRICHMENT COMPLETA → Technical Specification ready → Next step: TDD-RED phase with :tdd-red trigger.
+---
