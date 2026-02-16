@@ -39,10 +39,11 @@
 - T-029-BACK: Trigger Validation from Confirm Endpoint — DONE 2026-02-14 (13/13 tests: 9 unit + 4 integration, TDD RED→GREEN→REFACTOR complete, celery_client singleton, block creation + Celery enqueue)
 - T-030-BACK: Get Validation Status Endpoint — DONE 2026-02-15 (13/13 tests: 8 unit + 5 integration, TDD ENRICH→RED→GREEN→REFACTOR complete, GET /api/parts/{id}/validation, ValidationService + validation router, job_id schema limitation documented)
 - T-031-FRONT: Real-Time Block Status Listener — DONE 2026-02-15 (24/24 tests: 4 supabase.client + 8 notification.service + 12 hook, TDD ENRICH→RED→GREEN(DI Refactor)→REFACTOR complete, Dependency Injection pattern, @supabase/supabase-js@^2.39.0)
+- T-032-FRONT: Validation Report Modal UI — DONE 2026-02-16 (34/35 tests: 26 component + 8 utils, TDD ENRICH→RED→GREEN→REFACTOR complete, React Portal, tabs keyboard nav ArrowLeft/Right, focus trap, ARIA accessibility, constants extraction, code refactored DRY)
 
 ## Test Counts
 - Backend: 70 passed, 1 skipped (T-030 validation 13 + T-029 enqueue 13 + validation report 13 + upload flow 6 + previous 25)
-- Frontend: 42 passed (24 T-031 realtime + 4 FileUploader + 14 UploadZone)
+- Frontend: 76 passed, 1 failed (34 T-032 modal: 26 component + 8 utils, 1 test bug not impl bug + 24 T-031 realtime + 4 FileUploader + 14 UploadZone)
 - Agent: 36 passed, 1 skipped (9 nomenclature_validator + 8 user_string_extractor + 3 E2E user_strings + 6 validate_file_task + 9 geometry_validator + 1 rhino_parser skipped)
 - Unit Tests: 55 (8 validation_service + 9 upload_service_enqueue + 10 validation_report_service + 28 previous)
 - Integration Tests: 47 (5 get_validation_status + 4 confirm_upload_enqueue + 3 validation_report_persistence + 35 previous)
