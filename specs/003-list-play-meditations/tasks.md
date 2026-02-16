@@ -18,7 +18,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Initialize branch, verify infrastructure prerequisites
 
-- [ ] **T001 - Setup Playback BC Structure**  
+- [x] **T001 - Setup Playback BC Structure**  
   **Description**: Create branch `003-list-play-meditations` from `develop`, initialize bounded context directory structure  
   **Artifacts**:
   - `backend/src/main/java/com/hexagonal/playback/`
@@ -31,7 +31,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - No compilation errors  
   **Dependencies**: None
 
-- [ ] **T002 - Verify Database Infrastructure (US3 Dependency)**  
+- [x] **T002 - Verify Database Infrastructure (US3 Dependency)**  
   **Description**: Verify PostgreSQL schema `generation.meditations` exists from US3, create indexes if missing  
   **Artifacts**:
   - Database verification script
