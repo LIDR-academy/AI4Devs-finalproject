@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import type { ValidationReportModalProps, TabName, GroupedErrors } from '../types/validation-modal';
+import type { ValidationReportModalProps, TabName } from '../types/validation-modal';
 import type { ValidationErrorItem } from '../types/validation';
 import { groupErrorsByCategory, formatValidatedAt, getErrorCountForCategory } from '../utils/validation-report.utils';
 import { TAB_LABELS, ICON_MAP, COLOR_SCHEME, ARIA_LABELS, MODAL_CONFIG } from './validation-report-modal.constants';
@@ -15,9 +15,9 @@ import { TAB_LABELS, ICON_MAP, COLOR_SCHEME, ARIA_LABELS, MODAL_CONFIG } from '.
 /**
  * Helper function to render error list for a category
  * @param errors - Array of validation errors
- * @param categoryName - Name of the category for accessibility
+ * @param _categoryName - Name of the category for accessibility (reserved for future use)
  */
-function renderErrorList(errors: ValidationErrorItem[], categoryName: string): JSX.Element {
+function renderErrorList(errors: ValidationErrorItem[], _categoryName: string): JSX.Element {
   return (
     <div>
       {errors.map((error, index) => (
@@ -62,7 +62,7 @@ function renderSuccessMessage(categoryName: string): JSX.Element {
  * @returns Modal portal or null if not open
  */
 export function ValidationReportModal(props: ValidationReportModalProps): JSX.Element | null {
-  const { report, isOpen, onClose, blockId, isoCode } = props;
+  const { report, isOpen, onClose, isoCode } = props;
   
   // Group errors by category
   const groupedErrors = report ? groupErrorsByCategory(report.errors) : {

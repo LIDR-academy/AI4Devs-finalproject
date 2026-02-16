@@ -7,6 +7,9 @@
 
 import type { ValidationReport, ValidationErrorItem } from './validation';
 
+// Re-export ValidationErrorItem for use in utils
+export type { ValidationErrorItem };
+
 /**
  * Props for ValidationReportModal component.
  * 
