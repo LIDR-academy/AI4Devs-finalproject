@@ -9,6 +9,13 @@ export const loginRequestSchema = z.object({
 // Login response schema
 export const loginResponseSchema = z.object({
     token: z.string(),
+    user: z.object({
+        id: z.string(),
+        email: z.string(),
+        role: z.enum(['PLAYER', 'ADMIN']),
+        active: z.boolean(),
+        createdAt: z.string(),
+    }),
 });
 
 // Types
