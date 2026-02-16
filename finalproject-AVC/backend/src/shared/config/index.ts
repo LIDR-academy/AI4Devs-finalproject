@@ -17,6 +17,6 @@ export const config = {
     },
     payment: {
         defaultAmount: 50.0, // Fixed amount for Phase 0 (USD)
-        mockGatewayUrl: 'https://mock-payment-gateway.com',
+        mockGatewayUrl: process.env.MOCK_GATEWAY_URL || 'http://localhost:5173/mock-payment-gateway',
     },
 } as const;

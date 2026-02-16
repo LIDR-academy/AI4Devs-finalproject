@@ -8,10 +8,11 @@ export class MockPaymentGateway {
     /**
      * Generate a mock payment URL
      * @param paymentId - Payment ID
-     * @returns Mock payment URL
+     * @param amount - Payment amount (optional, defaults to 50.00)
+     * @returns Mock payment URL with query parameters
      */
-    generatePaymentUrl(paymentId: string): string {
-        return `${config.payment.mockGatewayUrl}/pay/${paymentId}`;
+    generatePaymentUrl(paymentId: string, amount: number = 50.0): string {
+        return `${config.payment.mockGatewayUrl}?paymentId=${paymentId}&amount=${amount.toFixed(2)}`;
     }
 
     /**

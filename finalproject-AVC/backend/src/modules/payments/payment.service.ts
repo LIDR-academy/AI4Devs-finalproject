@@ -63,8 +63,8 @@ export class PaymentService {
             },
         });
 
-        // Generate payment URL
-        const paymentUrl = mockPaymentGateway.generatePaymentUrl(payment.id);
+        // Generate payment URL with amount (convert Decimal to number)
+        const paymentUrl = mockPaymentGateway.generatePaymentUrl(payment.id, payment.amount.toNumber());
 
         // Return payment with URL and userId from reservation
         return {
@@ -125,8 +125,8 @@ export class PaymentService {
             }),
         ]);
 
-        // Generate payment URL for response
-        const paymentUrl = mockPaymentGateway.generatePaymentUrl(paymentId);
+        // Generate payment URL for response (convert Decimal to number)
+        const paymentUrl = mockPaymentGateway.generatePaymentUrl(paymentId, updatedPayment.amount.toNumber());
 
         return {
             payment: {
