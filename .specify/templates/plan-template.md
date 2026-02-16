@@ -1,181 +1,80 @@
-# IMPL_PLAN Template — Generic Feature
-**Para**: `speckit.plan`  
-**Versión**: 1.0.0
+# IMPL_PLAN Template — Generic Feature (v2)
 
----
+**Para**: `speckit.plan`  
+**Versión**: 2.0.0
 
 # Implementation Plan: [Feature Title from spec.md]
 
-**Branch**: `[BRANCH_NAME]`  
-**Spec**: [spec.md](./spec.md)
+**Branch**: `[<US-ID>-<kebab-case-title>]`  
+**Spec**: ./spec.md
 
 ## Pipeline Overview
 
-| Fase | Artefactos | Dependencias |
-|------|------------|--------------|
-| 1. BDD First | `/backend/tests/bdd/[boundedContext]/[feature].feature` | Ninguna |
-| 2. API First | `/backend/src/main/resources/openapi/[boundedContext]/[feature].yaml` | 1.BDD |
-| 3. Domain | `/backend/src/main/java/com/hexagonal/[boundedContext]/domain/` | 2.API |
-| 4. Application | `/backend/src/main/java/com/hexagonal/[boundedContext]/application/` | 3.Domain |
-| 5. Infrastructure | `/backend/src/main/java/com/hexagonal/[boundedContext]/infrastructure/` | 4.Application |
-| 6. Controllers | `/backend/src/main/java/com/hexagonal/[boundedContext]/infrastructure/in/rest/` | 5.Infrastructure |
-| 7. Frontend | `/frontend/src/{api,components,pages,hooks,state}/` | 6.Controllers |
-| 8. Contracts | `/backend/tests/contracts/` | 7.Frontend |
-| 9. E2E | `/backend/tests/e2e/ + /frontend/tests/e2e/` | 8.Contracts |
-| 10. CI/CD | `.github/workflows/` | 9.E2E |
+| Fase | Entregables (alto nivel) | Depende de |
+|------|---------------------------|------------|
+| 1. BDD First | `features/${boundedContext}/${userStoryId}.feature` | — |
+| 2. API First | `openapi/${boundedContext}/${userStoryId}.yaml` (capacidades abstractas) | 1 |
+| 3. Domain | `${basePackage}/${boundedContext}/domain/` (modelo, reglas, puertos) | 2 |
+| 4. Application | `${basePackage}/${boundedContext}/application/` (use cases) | 3 |
+| 5. Infrastructure | `${basePackage}/${boundedContext}/infrastructure/` (adapters) | 4 |
+| 6. Controllers | `${basePackage}/${boundedContext}/infrastructure/in/rest/` | 5 |
+| 7. Frontend | `/frontend/src/…` (si aplica) | 6 |
+| 8. Contracts | `/backend/tests/contracts/` | 7 |
+| 9. E2E | `/backend/tests/e2e/`, `/frontend/tests/e2e/` | 8 |
+| 10. CI/CD | `.github/workflows/` | 9 |
 
-## Fases Detalladas
-
-### Phase 1: BDD First
-**Artefactos**:
-- `/backend/tests/bdd/[boundedContext]/[feature].feature`
-
-**Herramientas**: Cucumber
-
-**Criterios**:
-- Escenarios Given/When/Then extraídos de spec.md
-- Steps pending (Cucumber YELLOW)
-- Lenguaje 100% negocio
-
-**Prohibido**:
-- Implementar steps
-- Términos técnicos (HTTP, JSON, DB)
-
-### Phase 2: API First
-**Artefactos**:
-- `/backend/src/main/resources/openapi/[boundedContext]/[feature].yaml`
-
-**Capacidades** (SOLO derivadas de BDD When):
-1. [Capacidad 1] ← Scenario X spec.md
-2. [Capacidad 2] ← Scenario Y spec.md  
-   [... completar según BDD]
-
-**Criterios**:
-- Cada When clause = 1 capacidad abstracta
-- Sin paths HTTP, métodos ni DTOs
-
-**Prohibido**:
-- Endpoints no derivados de BDD
-- Campos/esquemas concretos
-
-### Phase 3: Domain
-**Artefactos**:
-- `/backend/src/main/java/com/hexagonal/[boundedContext]/domain/{model/,ports/in/,ports/out/}`
-
-**Herramientas**: JUnit 5
-
-**Criterios**:
-- Entidades/VOs/puertos según capacidades de Phase 2
-- TDD: tests primero
-- Sin Spring ni infra dependencies
-
-**Prohibido**:
-- Lógica de infra (HTTP, DB)
-- Frameworks en domain
-
-### Phase 4: Application
-**Artefactos**:
-- `/backend/src/main/java/com/hexagonal/[boundedContext]/application/{service/,mapper/,validator/}`
-
-**Herramientas**: JUnit 5, Mockito
-
-**Criterios**:
-- Use cases que orquestan domain a través de ports
-- Sin reglas de negocio
-
-**Prohibido**:
-- Lógica de negocio
-- Acceso directo a infra
-
-### Phase 5: Infrastructure
-**Artefactos**:
-- `/backend/src/main/java/com/hexagonal/[boundedContext]/infrastructure/{in/,out/}`
-
-**Herramientas**: Spring RestClient, Testcontainers
-
-**Criterios**:
-- Adapters implementan ports out
-- Tests de integración
-
-**Prohibido**:
-- Lógica de negocio en adapters
-- Servicios reales en tests
-
-### Phase 6: Controllers
-**Artefactos**:
-- `/backend/src/main/java/com/hexagonal/[boundedContext]/infrastructure/in/rest/{controller/,dto/,mapper/}`
-
-**Herramientas**: Spring MVC, MockMvc
-
-**Criterios**:
-- Cumplen OpenAPI exactamente
-- Delegan a use cases
-
-**Prohibido**:
-- Lógica de negocio
-- Desviarse de OpenAPI
-
-### Phase 7: Frontend
-**Artefactos**:
-- `/frontend/src/{api,components,pages,hooks,state}/`
-
-**Herramientas**: React Query, Zustand, Jest/RTL
-
-**Criterios**:
-- Cliente OpenAPI autogenerado
-- React Query para server-state
-- Zustand para UI-state
-
-**Prohibido**:
-- Lógica de negocio en UI
-- Fetch manual
-
-### Phase 8: Contracts
-**Artefactos**:
-- `/backend/tests/contracts/`
-
-**Herramientas**: Contract testing tools
-
-**Criterios**:
-- Valida backend contra OpenAPI
-
-**Prohibido**:
-- Permitir drift de OpenAPI
-
-### Phase 9: E2E
-**Artefactos**:
-- `/backend/tests/e2e/`
-- `/frontend/tests/e2e/`
-
-**Herramientas**: Cucumber, Playwright
-
-**Criterios**:
-- BDD escenarios contra backend real
-- Flujos críticos en Playwright
-
-**Prohibido**:
-- Servicios reales en E2E
-
-### Phase 10: CI/CD
-**Artefactos**:
-- `.github/workflows/`
-
-**Herramientas**: GitHub Actions
-
-**Criterios**:
-- Gates: bdd → api → unit → infra → contract → e2e → build
-
-**Prohibido**:
-- Saltar gates
+> **NOTAS CRÍTICAS**
+> - **No listar archivos concretos** (clases, DTOs, mappers, repos, etc.).  
+> - Describir **capacidades** (qué hace la capa), no tecnología (HTTP, DB, S3, queries).
+> - Naming: `feature = <US-ID>` (no usar el título funcional en nombres de artefactos).
 
 ---
 
-## Definition of Done
+## Fases Detalladas (alto nivel)
 
-- [ ] BDD verde
-- [ ] OpenAPI validado
-- [ ] Domain TDD 100%
-- [ ] Pipeline CI/CD gates verde
-- [ ] No deuda técnica
+### Phase 1 — BDD First
+- Derivar escenarios **exclusivamente** de `spec.md` (Given/When/Then).
+- Entregable: `features/${boundedContext}/${userStoryId}.feature`
+- Prohibido: implementar steps.
 
-**Plan Status**: READY FOR TASKS
+### Phase 2 — API First (abstracta)
+- Derivar **capacidades** de los `When` del BDD.
+- Entregable: `openapi/${boundedContext}/${userStoryId}.yaml` (sin paths/métodos concretos).
+- Prohibido: endpoints, DTOs, esquemas.
+
+### Phase 3 — Domain
+- Modelo, reglas, **ports** in/out conforme a capacidades.
+- Prohibido: dependencias de frameworks / infra.
+
+### Phase 4 — Application
+- **Use cases** que orquestan domain por ports.
+- Prohibido: reglas de negocio en application.
+
+### Phase 5 — Infrastructure
+- **Adapters** que implementan ports out.
+- Tests de integración a la capa (sin detallar tecnología aquí).
+
+### Phase 6 — Controllers
+- Adaptadores de entrada (REST, etc.) que honran OpenAPI.
+- Prohibido: lógica de negocio.
+
+### Phase 7 — Frontend (si aplica)
+- Páginas, componentes, hooks alineados a capacidades.
+
+### Phase 8 — Contracts
+- Provider/consumer tests contra OpenAPI.
+
+### Phase 9 — E2E
+- Escenarios end‑to‑end basados en BDD.
+
+### Phase 10 — CI/CD
+- Gates en orden: bdd → api → unit → infra → contract → e2e → build.
+
+---
+
+## Definition of Done (alto nivel)
+- BDD GREEN
+- OpenAPI validado
+- Domain TDD completo
+- Gates CI/CD GREEN
+- Sin deuda crítica

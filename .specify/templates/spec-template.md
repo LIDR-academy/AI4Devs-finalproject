@@ -5,111 +5,117 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
-## User Scenarios & Testing *(mandatory)*
+# Template specs/US<US-ID>/spec.md
 
-<!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
--->
+# <US-ID> — <Título en lenguaje negocio>
 
-### User Story 1 - [Brief Title] (Priority: P1)
+**Objetivo del Feature**  
+[Una sola frase que explique el resultado visible para el usuario]
 
-[Describe this user journey in plain language]
+**User Story**  
+Como <rol del usuario>, quiero <acción> para <beneficio claro y medible para el usuario>.
 
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+> **Regla:** La User Story debe describir un único comportamiento observable (no un flujo completo ni múltiples funcionalidades).
 
 ---
 
-### User Story 2 - [Brief Title] (Priority: P2)
+**Descripción (negocio)**  
+[Breve explicación del comportamiento desde la perspectiva del usuario, exclusivamente observable. No describir procesos internos.]
 
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+**Reglas**
+- Describir solo comportamientos visibles para el usuario.
+- Prohibido mencionar detalles técnicos (endpoints, HTTP, JSON, bases de datos, S3, microservicios, JWT, etc.).
+- Evitar métricas técnicas o internas (latencia, throughput, colas, jobs, tablas, columnas, tipos de datos).
 
 ---
 
-### User Story 3 - [Brief Title] (Priority: P3)
+**Criterios de aceptación (BDD, lenguaje de negocio)**
+```gherkin
+textFeature: <Nombre funcional en lenguaje del dominio>
 
-[Describe this user journey in plain language]
+  Scenario: <Escenario principal 1>
+    Given <estado inicial del usuario>
+    When <acción del usuario>
+    Then <resultado observable por el usuario>
+    And <comportamiento adicional visible>
 
-**Why this priority**: [Explain the value and why it has this priority level]
+  Scenario: <Escenario principal 2>
+    Given <estado inicial>
+    When <acción>
+    Then <resultado>
 
-**Independent Test**: [Describe how this can be tested independently]
+  # Agrega más escenarios según sea necesario dentro del mismo bloque textFeature
+```
 
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+**Reglas de redacción Gherkin**
+- Los pasos **Given/When/Then** se redactan desde la **perspectiva del usuario**, nunca del sistema.  
+  - ❌ Incorrecto: “Then el sistema crea un registro”  
+  - ✅ Correcto: “Then aparece la meditación en su lista”
+- Mantener lenguaje natural y del dominio (sin términos técnicos).
+- Usar **un único bloque `textFeature:`** por especificación.
 
 ---
 
-[Add more user stories as needed, each with an assigned priority]
+**Reglas de negocio (inmutables)**
+- [Comportamientos que siempre deben cumplirse, independientes del flujo]
+- [Ej.: Una meditación debe tener siempre un estado visible para el usuario]
 
-### Edge Cases
+---
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
+**Notas de negocio (no técnicas)**
+- **Supuestos del negocio:**  
+  [Supuestos que condicionan el comportamiento observable]
+- **Mensajes visibles para el usuario:**  
+  [Textos, confirmaciones, errores legibles]
+- **Comportamientos en casos vacíos o especiales:**  
+  [Listas vacías, límites, duplicados, estados inexistentes]
+- **Restricciones de negocio visibles:**  
+  [Límites de tamaño, número máximo, condiciones para habilitar acciones]
+- **Variantes por rol o permisos:**  
+  [Diferencias de comportamiento según rol: usuario, editor, admin, etc.]
 
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
+---
 
-## Requirements *(mandatory)*
+**Fuera de alcance (Out of Scope)**
+- [Explicar explícitamente lo que este feature NO cubre]
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
+---
 
-### Functional Requirements
+**Metadatos del Feature**
+- **Feature Branch:** <US-ID>-<kebab-case-titulo>
+- **Created:** <FECHA ACTUAL>
+- **Status:** Draft
+- **Bounded Context:** [Nombre del BC, ej.: Generation, Composition, Playback]
+- **Business Trigger:** [Acción explícita del usuario | Evento automático | Regla de negocio]
+- **Input (opcional):** User description: "$ARGUMENTS"
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+---
 
-*Example of marking unclear requirements:*
+## REGLAS DE VALIDACIÓN (para el generador de IA — NO incluir en spec final)
+- **Idioma:** Todo en español excepto `textFeature:`, `Scenario:`, `Given`, `When`, `Then`, `And`.
+- **Solo observable:** NO mencionar HTTP, JSON, bases de datos, S3, Postgres, microservicios, JWT, endpoints, tablas, tipos de dato, logs, colas.
+- **Formato estricto:**
+  - Un solo bloque Gherkin `textFeature:`.
+  - No usar “User Story 1/2”, no listas FR-xxx, no entidades técnicas, no “Success Criteria” técnicos.
+- **Bounded Context:** Usar paths contextuales:
+  - `/features/<bc>/`
+  - `/openapi/<bc>/`
+  - `<basePackage>.<bc>.domain`
+- **Constitución:** Hexagonal (ports/adapters), API First, BDD First, Domain First, SDD.
+- **Paths obligatorios:**
+```
+${projectRoot}/src/test/resources/features/${bc}/${userStoryId}.feature
+${projectRoot}/src/main/resources/openapi/${bc}/${userStoryId}.yaml
+${projectRoot}/src/main/java/${basePackage}/${bc}/domain/...
+```
 
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+---
 
-### Key Entities *(include if feature involves data)*
-
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
-
-## Success Criteria *(mandatory)*
-
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
-### Measurable Outcomes
-
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+## PROHIBIDO
+```
+❌ Secciones: "User Scenarios & Testing", "Requirements", "Functional Requirements", "Key Entities", "Success Criteria"
+❌ Listas numeradas tipo FR-001, SC-001
+❌ Lenguaje técnico: endpoint, HTTP, JSON, S3, Postgres, JWT, microservicio, tabla, columna, latencia, throughput, logs
+❌ Múltiples bloques Gherkin separados
+❌ Perspectiva del sistema en los Then (usar siempre perspectiva del usuario)
+```
