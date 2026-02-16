@@ -49,7 +49,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Define business behavior and abstract API capabilities
 
-- [ ] **T003 - BDD Feature Definition**  
+- [x] **T003 - BDD Feature Definition**  
   **Description**: Create Cucumber feature file with 2 scenarios from spec.md  
   **Artifacts**:
   - `backend/src/test/resources/features/playback/list-play-meditations.feature`  
@@ -60,7 +60,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - Steps PENDING (Cucumber YELLOW)  
   **Dependencies**: T002
 
-- [ ] **T004 - OpenAPI Specification**  
+- [x] **T004 - OpenAPI Specification**  
   **Description**: Define abstract API capabilities for playback BC  
   **Artifacts**:
   - `backend/src/main/resources/openapi/playback/list-play-meditations.yaml`  

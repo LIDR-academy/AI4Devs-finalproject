@@ -1,0 +1,354 @@
+openapi: 3.0.3
+info:
+  title: Meditation Builder - Playback API
+  description: |
+    API for listing and playing generated meditation content.
+    
+    Bounded Context: **Playback** (separate from Composition/US2 and Generation/US3)
+    
+    Core capabilities:
+    - List User Meditations: Retrieve all meditations for the authenticated user with current processing states
+    - Play Completed Meditation: Access multimedia content for playback (only COMPLETED meditations)
+    
+    Architecture: Hexagonal (Ports & Adapters)
+    BDD-First, API-First approach
+    
+    MVP Infrastructure:
+    - Persistence: PostgreSQL (schema: generation, table: meditations) - READ-ONLY from US3
+    - Storage: Media URLs point to S3 (managed by Generation BC/US3)
+    
+    Business Rules:
+    - Users can only see their own meditations (userId isolation enforced)
+    - Only meditations with state COMPLETED can be played
+    - State labels visible to users: "En cola", "Generando", "Completada", "Fallida"
+    
+    Authentication: JWT (blocked by US1 - bypass in tests via TestSecurityConfig)
+  version: 1.0.0
+  contact:
+    name: Meditation Builder Team
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Playback
+    description: Meditation playback and library management
+
+paths:
+  /playback/meditations:
+    get:
+      tags:
+        - Playback
+      summary: List user meditations with processing states
+      description: |
+        Retrieve all meditations created by the authenticated user.
+        
+        Returns:
+        - All meditations regardless of state (PENDING, PROCESSING, COMPLETED, FAILED)
+        - Ordered by creation date (most recent first)
+        - Includes current processing state for each meditation
+        - Includes media URLs (for COMPLETED meditations)
+        
+        State Labels:
+        - PENDING → "En cola"
+        - PROCESSING → "Generando"
+        - COMPLETED → "Completada"
+        - FAILED → "Fallida"
+        
+        Business Rules:
+        - Only meditations belonging to the authenticated user are returned
+        - No pagination in v1 (all meditations returned)
+        - Empty list if user has no meditations
+        
+        Maps to BDD Scenario 1: "Listar las meditaciones del usuario con su estado"
+      operationId: listUserMeditations
+      security:
+        - bearerAuth: []
+        - {} # Allow no auth in tests (TestSecurityConfig bypass)
+      responses:
+        '200':
+          description: List of meditations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeditationListResponse'
+              examples:
+                withMeditations:
+                  summary: User has meditations in various states
+                  value:
+                    meditations:
+                      - id: "550e8400-e29b-41d4-a716-446655440000"
+                        title: "Morning Mindfulness"
+                        state: "COMPLETED"
+                        stateLabel: "Completada"
+                        createdAt: "2026-02-16T10:30:00Z"
+                        mediaUrls:
+                          audioUrl: "https://meditation-outputs.s3.amazonaws.com/.../audio.mp3"
+                          videoUrl: "https://meditation-outputs.s3.amazonaws.com/.../video.mp4"
+                          subtitlesUrl: "https://meditation-outputs.s3.amazonaws.com/.../subs.srt"
+                      - id: "550e8400-e29b-41d4-a716-446655440001"
+                        title: "Evening Relaxation"
+                        state: "PROCESSING"
+                        stateLabel: "Generando"
+                        createdAt: "2026-02-16T18:45:00Z"
+                        mediaUrls: null
+                      - id: "550e8400-e29b-41d4-a716-446655440002"
+                        title: "Quick Breath Work"
+                        state: "PENDING"
+                        stateLabel: "En cola"
+                        createdAt: "2026-02-16T19:00:00Z"
+                        mediaUrls: null
+                      - id: "550e8400-e29b-41d4-a716-446655440003"
+                        title: "Deep Sleep"
+                        state: "FAILED"
+                        stateLabel: "Fallida"
+                        createdAt: "2026-02-15T22:00:00Z"
+                        mediaUrls: null
+                emptyList:
+                  summary: User has no meditations yet
+                  value:
+                    meditations: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /playback/meditations/{meditationId}:
+    get:
+      tags:
+        - Playback
+      summary: Get playback information for a meditation
+      description: |
+        Retrieve detailed playback information for a specific meditation.
+        
+        Returns:
+        - Meditation details (id, title, state, creation date)
+        - Media URLs for playback (audio, video, subtitles)
+        
+        Validation:
+        - Meditation must exist and belong to the authenticated user (404 if not)
+        - Meditation must be in COMPLETED state (409 if not playable)
+        
+        Use Cases:
+        - User clicks "Play" button on a completed meditation
+        - Frontend needs media URLs to initialize player
+        
+        Maps to BDD Scenario 2: "Reproducir una meditación completada"
+      operationId: getPlaybackInfo
+      security:
+        - bearerAuth: []
+        - {} # Allow no auth in tests (TestSecurityConfig bypass)
+      parameters:
+        - name: meditationId
+          in: path
+          required: true
+          description: UUID of the meditation to play
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Playback information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybackInfoResponse'
+              examples:
+                audioMeditation:
+                  summary: Audio-only meditation
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
+                    title: "Morning Mindfulness"
+                    state: "COMPLETED"
+                    stateLabel: "Completada"
+                    createdAt: "2026-02-16T10:30:00Z"
+                    mediaUrls:
+                      audioUrl: "https://meditation-outputs.s3.amazonaws.com/generation/user-123/550e8400.../audio.mp3?X-Amz-Algorithm=..."
+                      videoUrl: null
+                      subtitlesUrl: null
+                videoMeditation:
+                  summary: Video meditation with subtitles
+                  value:
+                    id: "550e8400-e29b-41d4-a716-446655440001"
+                    title: "Evening Relaxation"
+                    state: "COMPLETED"
+                    stateLabel: "Completada"
+                    createdAt: "2026-02-16T18:45:00Z"
+                    mediaUrls:
+                      audioUrl: null
+                      videoUrl: "https://meditation-outputs.s3.amazonaws.com/generation/user-456/550e8400.../video.mp4?X-Amz-Algorithm=..."
+                      subtitlesUrl: "https://meditation-outputs.s3.amazonaws.com/generation/user-456/550e8400.../subs.srt?X-Amz-Algorithm=..."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/MeditationNotFound'
+        '409':
+          $ref: '#/components/responses/MeditationNotPlayable'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication (blocked by US1 - bypass in tests)
+
+  schemas:
+    MeditationListResponse:
+      type: object
+      required:
+        - meditations
+      properties:
+        meditations:
+          type: array
+          description: List of all meditations for the authenticated user, ordered by createdAt DESC
+          items:
+            $ref: '#/components/schemas/MeditationItem'
+
+    MeditationItem:
+      type: object
+      required:
+        - id
+        - title
+        - state
+        - stateLabel
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique meditation identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          description: Meditation title
+          example: "Morning Mindfulness"
+        state:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+          description: Current processing state (technical)
+          example: "COMPLETED"
+        stateLabel:
+          type: string
+          description: User-friendly state label in Spanish
+          enum: ["En cola", "Generando", "Completada", "Fallida"]
+          example: "Completada"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when meditation was created
+          example: "2026-02-16T10:30:00Z"
+        mediaUrls:
+          $ref: '#/components/schemas/MediaUrls'
+          nullable: true
+          description: Media URLs for playback (null if state != COMPLETED)
+
+    PlaybackInfoResponse:
+      type: object
+      required:
+        - id
+        - title
+        - state
+        - stateLabel
+        - createdAt
+        - mediaUrls
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique meditation identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          description: Meditation title
+          example: "Evening Relaxation"
+        state:
+          type: string
+          enum: [COMPLETED]
+          description: Processing state (always COMPLETED for playback)
+          example: "COMPLETED"
+        stateLabel:
+          type: string
+          description: User-friendly state label
+          enum: ["Completada"]
+          example: "Completada"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when meditation was created
+          example: "2026-02-16T10:30:00Z"
+        mediaUrls:
+          $ref: '#/components/schemas/MediaUrls'
+          description: Media URLs for playback (always present for COMPLETED state)
+
+    MediaUrls:
+      type: object
+      description: URLs to access generated multimedia content
+      properties:
+        audioUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to audio file (podcast format)
+          example: "https://meditation-outputs.s3.amazonaws.com/generation/user-123/audio.mp3?X-Amz-Algorithm=..."
+        videoUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to video file (video format with subtitles burned in)
+          example: "https://meditation-outputs.s3.amazonaws.com/generation/user-123/video.mp4?X-Amz-Algorithm=..."
+        subtitlesUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to subtitles file (SRT format)
+          example: "https://meditation-outputs.s3.amazonaws.com/generation/user-123/subs.srt?X-Amz-Algorithm=..."
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+        - timestamp
+      properties:
+        message:
+          type: string
+          description: Human-readable error message
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        details:
+          type: string
+          description: Additional error details (optional)
+
+  responses:
+    Unauthorized:
+      description: User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Authentication required"
+            timestamp: "2026-02-16T12:00:00Z"
+
+    MeditationNotFound:
+      description: Meditation not found or does not belong to the authenticated user
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Meditación no encontrada"
+            timestamp: "2026-02-16T12:00:00Z"
+
+    MeditationNotPlayable:
+      description: Meditation is not in COMPLETED state and cannot be played
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Esta meditación aún se está procesando. Por favor, espera a que esté lista."
+            timestamp: "2026-02-16T12:00:00Z"
+            details: "Current state: PROCESSING"
