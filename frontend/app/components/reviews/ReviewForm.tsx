@@ -78,7 +78,7 @@ export default function ReviewForm({ appointmentId, onCreated }: ReviewFormProps
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" data-testid="review-form">
       <div>
         <p className="block text-sm font-medium text-gray-700 mb-2">{t('rating')}</p>
         <div className="flex gap-2">
@@ -86,6 +86,7 @@ export default function ReviewForm({ appointmentId, onCreated }: ReviewFormProps
             <button
               key={value}
               type="button"
+              data-testid={`review-rating-${value}`}
               aria-label={t('ratingValue', { value })}
               onClick={() => {
                 setSelectedRating(value);
@@ -108,6 +109,7 @@ export default function ReviewForm({ appointmentId, onCreated }: ReviewFormProps
         </label>
         <textarea
           id="comment"
+          data-testid="review-comment"
           rows={5}
           {...register('comment')}
           placeholder={t('commentPlaceholder')}
@@ -142,6 +144,7 @@ export default function ReviewForm({ appointmentId, onCreated }: ReviewFormProps
 
       <button
         type="submit"
+        data-testid="review-submit"
         disabled={createReview.isPending}
         className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
       >

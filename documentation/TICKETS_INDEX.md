@@ -15,7 +15,7 @@ Cada HU tiene la siguiente estructura:
 Los tickets siguen el formato: `HU{N}-{TIPO}-{NUMERO}-{DESCRIPCION}.md`
 
 Donde:
-- `{N}` = Número de Historia de Usuario (1-10)
+- `{N}` = Número de Historia de Usuario (1-12)
 - `{TIPO}` = FE (Frontend), BE (Backend), DB (Database), TEST (Testing)
 - `{NUMERO}` = Número secuencial del ticket
 - `{DESCRIPCION}` = Descripción breve del ticket
@@ -91,11 +91,21 @@ Donde:
   - Estimación: 12 horas
   - Dependencias: HU3-BE-001, HU3-DB-001
 
+- **HU3-FE-002**: Ajustes UX Home/Search y Estado Inicial
+  - Prioridad: Alta
+  - Estimación: 6 horas
+  - Dependencias: HU3-BE-002, HU3-FE-001
+
 ### Backend
 - **HU3-BE-001**: Endpoint de Búsqueda de Médicos
   - Prioridad: Alta
   - Estimación: 15 horas
   - Dependencias: HU3-DB-001, HU2-DB-001
+
+- **HU3-BE-002**: Fallback Automático Geolocalización -> Código Postal y Endpoint Latest
+  - Prioridad: Alta
+  - Estimación: 8 horas
+  - Dependencias: HU3-BE-001, HU2-DB-001
 
 ### Database
 - **HU3-DB-001**: Migración - Crear Tabla SPECIALTIES y relación con DOCTORS
@@ -108,6 +118,11 @@ Donde:
   - Prioridad: Alta
   - Estimación: 10 horas
   - Dependencias: HU3-FE-001, HU3-BE-001, HU3-DB-001
+
+- **HU3-TEST-002**: Testing - Home Search, Fallback y Listado Inicial
+  - Prioridad: Alta
+  - Estimación: 6 horas
+  - Dependencias: HU3-FE-002, HU3-BE-002
 
 ---
 
@@ -307,17 +322,61 @@ Donde:
 
 ---
 
+## HU11: Confirmación de Cita Pendiente por Médico
+
+### Frontend
+- **HU11-FE-001**: Confirmación de Citas Pendientes en Perfil Médico
+  - Prioridad: Alta
+  - Estimación: 8 horas
+  - Dependencias: HU11-BE-001, HU4-DB-001
+
+### Backend
+- **HU11-BE-001**: Endpoint de Confirmación de Cita por Médico
+  - Prioridad: Alta
+  - Estimación: 10 horas
+  - Dependencias: HU4-DB-001, HU5-BE-001
+
+### Testing
+- **HU11-TEST-001**: Testing - Confirmación de Cita por Médico
+  - Prioridad: Alta
+  - Estimación: 8 horas
+  - Dependencias: HU11-FE-001, HU11-BE-001
+
+---
+
+## HU12: Cancelación de Cita por Médico
+
+### Frontend
+- **HU12-FE-001**: Cancelación de Citas en Perfil Médico
+  - Prioridad: Alta
+  - Estimación: 8 horas
+  - Dependencias: HU12-BE-001, HU11-FE-001
+
+### Backend
+- **HU12-BE-001**: Endpoint de Cancelación de Cita por Médico
+  - Prioridad: Alta
+  - Estimación: 10 horas
+  - Dependencias: HU4-DB-001, HU11-BE-001
+
+### Testing
+- **HU12-TEST-001**: Testing - Cancelación de Cita por Médico
+  - Prioridad: Alta
+  - Estimación: 8 horas
+  - Dependencias: HU12-FE-001, HU12-BE-001
+
+---
+
 ## Resumen de Estimaciones
 
 ### Por Tipo de Trabajo
-- **Frontend**: ~127 horas (~21 story points)
-- **Backend**: ~162 horas (~27 story points)
+- **Frontend**: ~149 horas (~24 story points)
+- **Backend**: ~190 horas (~32 story points)
 - **Database**: ~26 horas (~4 story points)
-- **Testing**: ~111 horas (~18 story points)
+- **Testing**: ~133 horas (~21 story points)
 
 ### Total Estimado
-- **Total**: ~426 horas (~70 story points)
-- **Semanas estimadas** (asumiendo 40 horas/semana): ~11 semanas
+- **Total**: ~498 horas (~81 story points)
+- **Semanas estimadas** (asumiendo 40 horas/semana): ~13 semanas
 
 ---
 
@@ -341,6 +400,10 @@ Donde:
 ### Fase 4: Administración (Semanas 10-11)
 10. HU10: Dashboard Administrativo
 
+### Fase 5: Operación Clínica (Semana 12)
+11. HU11: Confirmación de Cita Pendiente por Médico
+12. HU12: Cancelación de Cita por Médico
+
 ---
 
 ## Notas Importantes
@@ -352,5 +415,5 @@ Donde:
 
 ---
 
-**Última actualización**: 2026-01-20
-**Versión**: 1.0
+**Última actualización**: 2026-02-15
+**Versión**: 1.3

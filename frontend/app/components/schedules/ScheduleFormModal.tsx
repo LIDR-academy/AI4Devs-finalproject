@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -67,15 +67,32 @@ export default function ScheduleFormModal({
     },
   });
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-lg bg-white p-5 shadow-lg">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      data-testid="schedule-form-modal"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="schedule-modal-title"
+        className="w-full max-w-lg rounded-lg bg-white p-5 shadow-lg"
+      >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
+          <h2 id="schedule-modal-title" className="text-lg font-semibold">
             {mode === 'create' ? t('createTitle') : t('editTitle')}
           </h2>
           <button
@@ -95,6 +112,7 @@ export default function ScheduleFormModal({
 
         <form
           className="space-y-3"
+          data-testid="schedule-form"
           onSubmit={handleSubmit(async (values) => {
             await onSubmit({
               dayOfWeek: values.dayOfWeek,
@@ -112,6 +130,7 @@ export default function ScheduleFormModal({
             </label>
             <select
               id="dayOfWeek"
+              data-testid="schedule-dayOfWeek"
               {...register('dayOfWeek')}
               className="w-full rounded-md border border-gray-300 px-3 py-2"
             >
@@ -133,6 +152,7 @@ export default function ScheduleFormModal({
               <input
                 id="startTime"
                 type="time"
+                data-testid="schedule-startTime"
                 {...register('startTime')}
                 className="w-full rounded-md border border-gray-300 px-3 py-2"
               />
@@ -144,6 +164,7 @@ export default function ScheduleFormModal({
               <input
                 id="endTime"
                 type="time"
+                data-testid="schedule-endTime"
                 {...register('endTime')}
                 className="w-full rounded-md border border-gray-300 px-3 py-2"
               />
@@ -167,6 +188,7 @@ export default function ScheduleFormModal({
               <input
                 id="slotDurationMinutes"
                 type="number"
+                data-testid="schedule-slotDurationMinutes"
                 min={1}
                 {...register('slotDurationMinutes')}
                 className="w-full rounded-md border border-gray-300 px-3 py-2"
@@ -182,6 +204,7 @@ export default function ScheduleFormModal({
               <input
                 id="breakDurationMinutes"
                 type="number"
+                data-testid="schedule-breakDurationMinutes"
                 min={0}
                 {...register('breakDurationMinutes')}
                 className="w-full rounded-md border border-gray-300 px-3 py-2"
@@ -196,7 +219,7 @@ export default function ScheduleFormModal({
           )}
 
           <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" {...register('isActive')} />
+            <input type="checkbox" data-testid="schedule-isActive" {...register('isActive')} />
             {t('fields.isActive')}
           </label>
 
@@ -204,6 +227,7 @@ export default function ScheduleFormModal({
 
           <button
             type="submit"
+            data-testid="schedule-submit"
             disabled={isSubmitting}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
           >

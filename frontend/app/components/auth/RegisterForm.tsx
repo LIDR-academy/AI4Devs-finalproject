@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { useAuthStore } from '@/store/authStore';
 
@@ -38,6 +38,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterForm() {
   const t = useTranslations('auth');
   const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || 'es';
   const { executeRecaptcha } = useGoogleReCaptcha();
   const { setToken, setUser } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,7 +94,10 @@ export default function RegisterForm() {
       }
 
       // Llamar al endpoint de registro
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(
+        /\/api\/v1\/?$/,
+        ''
+      );
       const url = `${apiUrl}/api/v1/auth/register`;
       console.log('Enviando petición a:', url);
       
@@ -134,8 +139,8 @@ export default function RegisterForm() {
 
       // El refreshToken se guarda automáticamente en cookie httpOnly por el backend
 
-      // Redirigir al dashboard
-      router.push('/dashboard/patient');
+      // Redirigir al flujo principal de paciente
+      router.push(`/${locale}/search`);
     } catch (err) {
       console.error('Error en registro:', err);
       const errorMessage = err instanceof Error ? err.message : t('registerError');
@@ -146,7 +151,7 @@ export default function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" data-testid="register-form">
       {/* Email */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -155,6 +160,7 @@ export default function RegisterForm() {
         <input
           id="email"
           type="email"
+          data-testid="register-email"
           {...register('email')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.email ? 'border-red-500' : 'border-gray-300'
@@ -174,6 +180,7 @@ export default function RegisterForm() {
         <input
           id="password"
           type="password"
+          data-testid="register-password"
           {...register('password')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.password ? 'border-red-500' : 'border-gray-300'
@@ -193,6 +200,7 @@ export default function RegisterForm() {
         <input
           id="firstName"
           type="text"
+          data-testid="register-firstName"
           {...register('firstName')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.firstName ? 'border-red-500' : 'border-gray-300'
@@ -212,6 +220,7 @@ export default function RegisterForm() {
         <input
           id="lastName"
           type="text"
+          data-testid="register-lastName"
           {...register('lastName')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.lastName ? 'border-red-500' : 'border-gray-300'
@@ -231,6 +240,7 @@ export default function RegisterForm() {
         <input
           id="phone"
           type="tel"
+          data-testid="register-phone"
           {...register('phone')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.phone ? 'border-red-500' : 'border-gray-300'
@@ -247,7 +257,10 @@ export default function RegisterForm() {
 
       {/* Error general */}
       {error && (
-        <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+        <div
+          className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-md"
+          data-testid="register-error"
+        >
           {error}
         </div>
       )}
@@ -255,6 +268,7 @@ export default function RegisterForm() {
       {/* Submit Button */}
       <button
         type="submit"
+        data-testid="register-submit"
         disabled={isSubmitting}
         className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >

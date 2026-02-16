@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import CancelModal from '@/app/components/appointments/CancelModal';
 import RescheduleModal from '@/app/components/appointments/RescheduleModal';
+import PageHeader from '@/app/components/ui/PageHeader';
+import StateMessage from '@/app/components/ui/StateMessage';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentItem } from '@/lib/api/appointments';
@@ -40,13 +42,7 @@ export default function AppointmentsPage() {
   }, [isAuthenticated, loading, locale, router]);
 
   if (loading) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-600">{t('loading')}</div>
-        </div>
-      </div>
-    );
+    return <div className="mx-auto max-w-5xl p-4 text-slate-600">{t('loading')}</div>;
   }
 
   if (!isAuthenticated) {
@@ -57,53 +53,54 @@ export default function AppointmentsPage() {
     status === 'confirmed' || status === 'pending';
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-        >
-          <option value="all">{t('statusAll')}</option>
-          <option value="confirmed">{t('statusConfirmed')}</option>
-          <option value="pending">{t('statusPending')}</option>
-          <option value="completed">{t('statusCompleted')}</option>
-          <option value="cancelled">{t('statusCancelled')}</option>
-        </select>
-      </div>
+    <div className="mx-auto max-w-5xl p-4 sm:p-6" data-testid="appointments-page">
+      <PageHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        action={
+          <select
+            data-testid="appointments-status-filter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="all">{t('statusAll')}</option>
+            <option value="confirmed">{t('statusConfirmed')}</option>
+            <option value="pending">{t('statusPending')}</option>
+            <option value="completed">{t('statusCompleted')}</option>
+            <option value="cancelled">{t('statusCancelled')}</option>
+          </select>
+        }
+      />
 
       {isLoading ? (
-        <div className="text-gray-600">{t('loadingAppointments')}</div>
+        <StateMessage message={t('loadingAppointments')} />
       ) : isError ? (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md">
-          {(error as Error).message}
-        </div>
+        <StateMessage message={(error as Error).message} variant="error" />
       ) : appointments.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 text-gray-600 p-4 rounded-md">
-          {t('empty')}
-        </div>
+        <StateMessage message={t('empty')} />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3" data-testid="appointments-list">
           {appointments.map((appointment) => (
             <div
               key={appointment.id}
-              className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+              data-testid={`appointment-card-${appointment.id}`}
+              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
             >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <p className="text-sm text-gray-500">{t('appointmentDate')}</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-slate-500">{t('appointmentDate')}</p>
+                  <p className="font-medium text-slate-900">
                     {formatMexicoCityDate(appointment.appointmentDate)}
                   </p>
                 </div>
-                <span className="inline-block text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                <span className="inline-block rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">
                   {t(`statusLabel.${appointment.status}`)}
                 </span>
               </div>
 
               {appointment.cancellationReason && (
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="mt-2 text-sm text-slate-600">
                   {t('cancelReason')}: {appointment.cancellationReason}
                 </p>
               )}
@@ -112,14 +109,16 @@ export default function AppointmentsPage() {
                 <div className="mt-3 flex gap-2">
                   <button
                     type="button"
-                    className="px-3 py-2 rounded-md bg-red-100 text-red-700 hover:bg-red-200 text-sm"
+                    data-testid={`appointment-cancel-${appointment.id}`}
+                    className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 hover:bg-red-200"
                     onClick={() => setSelectedToCancel(appointment.id)}
                   >
                     {t('cancelAction')}
                   </button>
                   <button
                     type="button"
-                    className="px-3 py-2 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm"
+                    data-testid={`appointment-reschedule-${appointment.id}`}
+                    className="rounded-md bg-brand-50 px-3 py-2 text-sm text-brand-700 hover:bg-brand-100"
                     onClick={() => setSelectedToReschedule(appointment)}
                   >
                     {t('rescheduleAction')}
@@ -131,7 +130,8 @@ export default function AppointmentsPage() {
                 <div className="mt-3">
                   <Link
                     href={`/${locale}/appointments/${appointment.id}/review`}
-                    className="inline-flex px-3 py-2 rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 text-sm"
+                    data-testid={`appointment-review-${appointment.id}`}
+                    className="inline-flex rounded-md bg-emerald-100 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-200"
                   >
                     {t('reviewAction')}
                   </Link>

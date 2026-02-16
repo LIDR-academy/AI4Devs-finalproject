@@ -23,6 +23,16 @@ dotenv.config();
 const app = express();
 const PORT = process.env.API_PORT || 4000;
 
+const defaultAllowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const envAllowedOrigins = [
+  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_URLS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+].filter(Boolean) as string[];
+const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])];
+
 // Middleware de seguridad
 app.use(helmet());
 app.use(compression());
@@ -30,7 +40,15 @@ app.use(compression());
 // CORS
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Permite requests sin Origin (curl, health checks, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
     credentials: true,
   })
 );

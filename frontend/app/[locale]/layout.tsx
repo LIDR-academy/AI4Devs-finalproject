@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { locales } from '../../lib/i18n/config';
 import ReCaptchaProvider from '../components/ReCaptchaProvider';
 import QueryProvider from '../components/QueryProvider';
+import AppShell from '../components/layout/AppShell';
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -35,7 +36,7 @@ export default async function LocaleLayout({
     <QueryProvider>
       <ReCaptchaProvider locale={locale}>
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <AppShell>{children}</AppShell>
         </NextIntlClientProvider>
       </ReCaptchaProvider>
     </QueryProvider>

@@ -2,6 +2,42 @@
   "common": {
     "welcome": "Bienvenido"
   },
+  "appShell": {
+    "skipToContent": "Saltar al contenido principal",
+    "mobileNavLabel": "Navegación móvil",
+    "logout": "Cerrar sesión",
+    "nav": {
+      "searchDoctors": "Buscar médicos",
+      "myAppointments": "Mis citas",
+      "doctorProfile": "Perfil médico",
+      "doctorSchedules": "Horarios",
+      "doctorVerification": "Verificación",
+      "adminDashboard": "Dashboard admin",
+      "login": "Iniciar sesión",
+      "registerPatient": "Registro paciente",
+      "registerDoctor": "Registro médico"
+    },
+    "footer": {
+      "rights": "© 2026 CitaYa. Todos los derechos reservados.",
+      "market": "MVP beta para México"
+    }
+  },
+  "home": {
+    "eyebrow": "Citas médicas presenciales",
+    "title": "Encuentra especialistas confiables y agenda en minutos",
+    "subtitle": "Compara médicos por especialidad y ubicación, reserva tu horario y gestiona todo en una sola plataforma.",
+    "ctaSearch": "Buscar especialistas",
+    "ctaDoctor": "Soy médico",
+    "kpiDoctors": "Médicos en la plataforma",
+    "kpiAppointments": "Citas gestionadas",
+    "kpiSpecialties": "Especialidades disponibles",
+    "feature1Title": "Búsqueda inteligente",
+    "feature1Body": "Filtra por especialidad y ubicación para encontrar opciones relevantes cerca de ti.",
+    "feature2Title": "Reserva clara y rápida",
+    "feature2Body": "Selecciona un horario disponible y confirma tu cita con una experiencia guiada.",
+    "feature3Title": "Confianza y transparencia",
+    "feature3Body": "Perfiles médicos verificados y reseñas moderadas para facilitar tu decisión."
+  },
   "auth": {
     "email": "Correo electrónico",
     "emailPlaceholder": "tu@email.com",
@@ -30,6 +66,11 @@
     "emailExists": "Este email ya está registrado",
     "rateLimitExceeded": "Has excedido el límite de intentos. Intenta nuevamente en {minutes} minutos",
     "registerError": "Error al registrar. Por favor intenta nuevamente",
+    "loginTitle": "Iniciar sesión",
+    "loginHint": "También puedes usar paciente de prueba: patient@test.com / password123",
+    "noAccountYet": "¿Aún no tienes cuenta?",
+    "createPatientAccount": "Crear cuenta de paciente",
+    "createDoctorAccount": "Registrar cuenta de médico",
     "geocodingFailed": "No se pudo geocodificar la dirección. El registro continuará sin coordenadas.",
     "geocodingWarning": "Puedes continuar con el registro. La geocodificación se intentará nuevamente en el backend.",
     "geocodingLoading": "Geocodificando dirección...",
@@ -37,6 +78,7 @@
   },
   "search": {
     "title": "Buscar Médicos",
+    "searchHint": "Encuentra especialistas por especialidad y ubicación en segundos.",
     "specialty": "Especialidad",
     "selectSpecialty": "Selecciona una especialidad",
     "useMyLocation": "Usar mi ubicación",
@@ -51,6 +93,8 @@
     "yourLocation": "Tu ubicación",
     "resultsFound": "{count, plural, =0 {No se encontraron resultados} one {Se encontró # resultado} other {Se encontraron # resultados}}",
     "noResults": "No se encontraron médicos con los criterios especificados. Intenta ampliar el radio de búsqueda o cambiar la especialidad.",
+    "latestDoctorsFound": "{count, plural, =0 {No hay médicos recientes para mostrar} one {Último médico registrado (#)} other {Últimos médicos registrados (#)}}",
+    "noLatestDoctors": "Aún no hay médicos recientes para mostrar.",
     "searchError": "Error al buscar médicos. Por favor intenta nuevamente.",
     "googleMapsError": "Error al cargar Google Maps. Por favor verifica tu conexión.",
     "reviews": "reseñas",
@@ -77,10 +121,21 @@
     "errorActiveAppointment": "Ya tienes una cita activa. Cancela o reprograma antes de crear una nueva.",
     "errorSlotTaken": "Este horario acaba de ser reservado por otro paciente. Elige otro slot.",
     "doctorInfo": "Información del médico",
-    "appointmentSummary": "Resumen de tu cita"
+    "appointmentSummary": "Resumen de tu cita",
+    "selectSlotToContinue": "Selecciona un horario para continuar.",
+    "bookingFor": "¿Para quién es la cita?",
+    "forMe": "Para mí",
+    "forOther": "Para otra persona",
+    "contactPhone": "Tu número telefónico",
+    "contactEmail": "Tu correo electrónico",
+    "confirmEmail": "Confirma tu correo electrónico",
+    "consentTerms": "Doy mi consentimiento para el tratamiento de datos de salud para usar los servicios.",
+    "consentMarketing": "Quiero recibir comunicaciones comerciales (opcional).",
+    "marketingNote": "Puedes cambiar esta preferencia desde tu perfil cuando el módulo esté habilitado."
   },
   "appointmentsManagement": {
     "title": "Mis citas",
+    "subtitle": "Consulta, reprograma o cancela tus citas activas desde un solo lugar.",
     "loading": "Cargando...",
     "loadingAppointments": "Cargando tus citas...",
     "empty": "No tienes citas para los filtros seleccionados.",
@@ -121,7 +176,7 @@
     "ratingRequired": "Selecciona una calificación entre 1 y 5",
     "comment": "Comentario",
     "commentPlaceholder": "Escribe tu reseña (mínimo 10 caracteres)",
-    "commentMin": "El comentario debe tener al menos 10 caracteres",
+    "commentMin": "El comentario debe tener un mínimo de 10 caracteres",
     "commentMax": "El comentario no puede exceder 1000 caracteres",
     "charactersCount": "{count}/1000 caracteres",
     "submit": "Enviar reseña",
@@ -153,6 +208,39 @@
     "address": "Dirección",
     "postalCode": "Código postal",
     "manageSchedules": "Gestionar horarios",
+    "appointments": {
+      "title": "Citas asociadas",
+      "subtitle": "Consulta las citas de tus pacientes y su estado actual.",
+      "loading": "Cargando citas asociadas...",
+      "loadError": "No se pudieron cargar las citas del médico.",
+      "empty": "No hay citas para el filtro seleccionado.",
+      "filters": {
+        "pending": "Pendientes de aprobación",
+        "confirmed": "Confirmadas"
+      },
+      "confirm": {
+        "action": "Confirmar cita",
+        "processing": "Confirmando...",
+        "success": "Cita confirmada correctamente.",
+        "error": "No se pudo confirmar la cita."
+      },
+      "cancel": {
+        "action": "Cancelar cita",
+        "confirm": "Esta acción cancelará la cita y liberará el horario. ¿Deseas continuar?",
+        "processing": "Cancelando...",
+        "success": "Cita cancelada correctamente.",
+        "error": "No se pudo cancelar la cita.",
+        "defaultReason": "Cita cancelada por médico"
+      },
+      "fields": {
+        "patient": "Paciente",
+        "email": "Correo",
+        "phone": "Teléfono",
+        "notes": "Notas"
+      },
+      "withoutNotes": "Sin notas",
+      "notAvailable": "No disponible"
+    },
     "validation": {
       "firstNameRequired": "El nombre es obligatorio",
       "lastNameRequired": "El apellido es obligatorio",
@@ -211,6 +299,7 @@
   },
   "doctorVerification": {
     "title": "Verificación de documentos",
+    "subtitle": "Sube tu documentación profesional para completar la validación manual.",
     "loading": "Cargando...",
     "uploadTitle": "Subir nuevo documento",
     "documentTypeLabel": "Tipo de documento",
@@ -242,6 +331,7 @@
   },
   "adminDashboard": {
     "title": "Dashboard administrativo",
+    "subtitle": "Monitorea métricas clave, verificaciones pendientes y moderación de reseñas.",
     "common": {
       "loading": "Cargando...",
       "error": "Ocurrió un error al cargar el dashboard",
@@ -265,6 +355,20 @@
     "verification": {
       "title": "Verificación de médicos",
       "documentsTitle": "Documentos del médico",
+      "tableCaption": "Tabla de verificación de médicos por estado",
+      "modalDescription": "Confirma la acción y agrega notas cuando sea necesario.",
+      "documentsSummary": "{approved} aprobados / {pending} pendientes / {rejected} rechazados (total {total})",
+      "status": {
+        "pending": "Pendiente",
+        "approved": "Aprobado",
+        "rejected": "Rechazado"
+      },
+      "statusHints": {
+        "pendingDocuments": "Hay {pending} documento(s) pendiente(s) de revisión.",
+        "rejectedDocuments": "Hay {rejected} documento(s) rechazado(s); requiere nueva carga.",
+        "allDocumentsApproved": "Todos los documentos están aprobados.",
+        "doctorRejected": "El médico fue rechazado en la validación."
+      },
       "columns": {
         "name": "Nombre",
         "email": "Email",
@@ -277,11 +381,15 @@
         "openSignedUrl": "Abrir URL firmada",
         "approve": "Aprobar",
         "reject": "Rechazar",
-        "rejectPrompt": "Escribe una nota de rechazo"
+        "rejectPrompt": "Escribe una nota de rechazo",
+        "confirm": "Confirmar acción",
+        "cancel": "Cancelar"
       }
     },
     "reviews": {
       "title": "Moderación de reseñas",
+      "tableCaption": "Tabla de reseñas pendientes de moderación",
+      "modalDescription": "Revisa la reseña y registra notas de moderación si aplica.",
       "columns": {
         "patient": "Paciente",
         "doctor": "Médico",
@@ -292,7 +400,9 @@
       "actions": {
         "approve": "Aprobar",
         "reject": "Rechazar",
-        "rejectPrompt": "Escribe una nota de moderación"
+        "rejectPrompt": "Escribe una nota de moderación",
+        "confirm": "Confirmar acción",
+        "cancel": "Cancelar"
       }
     }
   }

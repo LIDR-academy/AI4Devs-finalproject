@@ -12,6 +12,7 @@ import doctorsRoutes from '../../../../src/routes/doctors.routes';
 import verificationRoutes from '../../../../src/routes/verification.routes';
 import { errorHandler } from '../../../../src/middleware/error-handler.middleware';
 import { AuditLog } from '../../../../src/models/audit-log.entity';
+import { Doctor } from '../../../../src/models/doctor.entity';
 import { VerificationDocument } from '../../../../src/models/verification-document.entity';
 import { createTestDoctor, createTestUser } from '../../../helpers/factories';
 
@@ -139,6 +140,32 @@ describe('Verification Documents API (Integration)', () => {
 
     const stat = await fs.stat(dbDoc.filePath);
     expect(stat.isFile()).toBe(true);
+  });
+
+  it('POST /api/v1/doctors/verification debe poner doctor en pending al subir nuevo documento', async () => {
+    const doctorRepo = AppDataSource.getRepository(Doctor);
+    const doctor = await doctorRepo.findOneOrFail({ where: { userId: doctorUserId } });
+
+    doctor.verificationStatus = 'approved';
+    doctor.verifiedBy = null;
+    doctor.verifiedAt = null;
+    doctor.verificationNotes = 'Aprobado anteriormente';
+    await doctorRepo.save(doctor);
+
+    await request(app)
+      .post('/api/v1/doctors/verification')
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .field('documentType', 'cedula')
+      .attach('document', VALID_PDF_BUFFER, {
+        filename: 'nueva-cedula.pdf',
+        contentType: 'application/pdf',
+      })
+      .expect(201);
+
+    const updatedDoctor = await doctorRepo.findOneOrFail({ where: { id: doctor.id } });
+    expect(updatedDoctor.verificationStatus).toBe('pending');
+    expect(updatedDoctor.verifiedBy).toBeNull();
+    expect(updatedDoctor.verifiedAt).toBeNull();
   });
 
   it('POST /api/v1/doctors/verification debe rechazar tipo inválido', async () => {

@@ -42,9 +42,8 @@ export function useCreateAppointmentReview() {
       return createAppointmentReview(appointmentId, payload, accessToken);
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ['appointment-review', variables.appointmentId],
-      });
+      // Mantener estable la vista actual para mostrar el mensaje de éxito
+      // sin que un refetch inmediato desmonte el formulario.
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
   });

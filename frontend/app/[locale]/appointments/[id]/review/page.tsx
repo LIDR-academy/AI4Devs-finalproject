@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -15,10 +15,9 @@ export default function AppointmentReviewPage() {
   const { isAuthenticated, loading } = useAuth();
   const locale = params.locale as string;
   const appointmentId = params.id as string;
-  const [createdNow, setCreatedNow] = useState(false);
 
   const reviewQuery = useAppointmentReview(appointmentId);
-  const reviewExists = reviewQuery.data || createdNow;
+  const reviewExists = !!reviewQuery.data;
   const isReviewMissing = (reviewQuery.error as { status?: number } | undefined)?.status === 404;
 
   useEffect(() => {
@@ -47,7 +46,7 @@ export default function AppointmentReviewPage() {
           {t('alreadyReviewed')}
         </div>
       ) : isReviewMissing ? (
-        <ReviewForm appointmentId={appointmentId} onCreated={() => setCreatedNow(true)} />
+        <ReviewForm appointmentId={appointmentId} />
       ) : (
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
           {t('errors.generic')}

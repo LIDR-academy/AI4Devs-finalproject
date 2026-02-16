@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { useLoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 import { useAuthStore } from '@/store/authStore';
@@ -54,6 +54,8 @@ type RegisterDoctorFormData = z.infer<typeof registerDoctorSchema>;
 export default function RegisterDoctorForm() {
   const t = useTranslations('auth');
   const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || 'es';
   const { executeRecaptcha } = useGoogleReCaptcha();
   const { setToken, setUser } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,7 +177,10 @@ export default function RegisterDoctorForm() {
       }
 
       // Llamar al endpoint de registro
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(
+        /\/api\/v1\/?$/,
+        ''
+      );
       const url = `${apiUrl}/api/v1/auth/register`;
       console.log('Enviando petición a:', url);
 
@@ -223,7 +228,7 @@ export default function RegisterDoctorForm() {
       // El refreshToken se guarda automáticamente en cookie httpOnly por el backend
 
       // Redirigir al panel de médico con mensaje de verificación pendiente
-      router.push('/dashboard/doctor?pendingVerification=true');
+      router.push(`/${locale}/doctors/verification?pendingVerification=true`);
     } catch (err) {
       console.error('Error en registro:', err);
       const errorMessage = err instanceof Error ? err.message : t('registerError');
@@ -234,7 +239,11 @@ export default function RegisterDoctorForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4"
+      data-testid="register-doctor-form"
+    >
       {/* Email */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -243,6 +252,7 @@ export default function RegisterDoctorForm() {
         <input
           id="email"
           type="email"
+          data-testid="register-doctor-email"
           {...register('email')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.email ? 'border-red-500' : 'border-gray-300'
@@ -262,6 +272,7 @@ export default function RegisterDoctorForm() {
         <input
           id="password"
           type="password"
+          data-testid="register-doctor-password"
           {...register('password')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.password ? 'border-red-500' : 'border-gray-300'
@@ -281,6 +292,7 @@ export default function RegisterDoctorForm() {
         <input
           id="firstName"
           type="text"
+          data-testid="register-doctor-firstName"
           {...register('firstName')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.firstName ? 'border-red-500' : 'border-gray-300'
@@ -300,6 +312,7 @@ export default function RegisterDoctorForm() {
         <input
           id="lastName"
           type="text"
+          data-testid="register-doctor-lastName"
           {...register('lastName')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.lastName ? 'border-red-500' : 'border-gray-300'
@@ -319,6 +332,7 @@ export default function RegisterDoctorForm() {
         <input
           id="address"
           type="text"
+          data-testid="register-doctor-address"
           {...register('address')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.address ? 'border-red-500' : 'border-gray-300'
@@ -338,6 +352,7 @@ export default function RegisterDoctorForm() {
         <input
           id="postalCode"
           type="text"
+          data-testid="register-doctor-postalCode"
           {...register('postalCode')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.postalCode ? 'border-red-500' : 'border-gray-300'
@@ -357,6 +372,7 @@ export default function RegisterDoctorForm() {
         <input
           id="phone"
           type="tel"
+          data-testid="register-doctor-phone"
           {...register('phone')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.phone ? 'border-red-500' : 'border-gray-300'
@@ -376,6 +392,7 @@ export default function RegisterDoctorForm() {
         <textarea
           id="bio"
           rows={4}
+          data-testid="register-doctor-bio"
           {...register('bio')}
           className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             errors.bio ? 'border-red-500' : 'border-gray-300'
@@ -395,7 +412,10 @@ export default function RegisterDoctorForm() {
 
       {/* Mapa con marcador si hay coordenadas */}
       {isLoaded && coordinates && GoogleMap && Marker && (
-        <div className="h-64 w-full rounded-md overflow-hidden border border-gray-300">
+        <div
+          className="h-64 w-full rounded-md overflow-hidden border border-gray-300"
+          data-testid="register-doctor-map"
+        >
           <GoogleMap
             zoom={15}
             center={coordinates}
@@ -408,7 +428,10 @@ export default function RegisterDoctorForm() {
 
       {/* Advertencia de geocodificación */}
       {geocodingError && (
-        <div className="bg-yellow-50 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md">
+        <div
+          className="bg-yellow-50 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md"
+          data-testid="register-doctor-geocoding-warning"
+        >
           <p className="text-sm">{geocodingError}</p>
           <p className="text-xs mt-1">{t('geocodingWarning')}</p>
         </div>
@@ -423,7 +446,10 @@ export default function RegisterDoctorForm() {
 
       {/* Error si Google Maps no está disponible */}
       {loadError && (
-        <div className="bg-yellow-50 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md text-sm">
+        <div
+          className="bg-yellow-50 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md text-sm"
+          data-testid="register-doctor-maps-unavailable"
+        >
           {t('googleMapsNotAvailable')}
         </div>
       )}
@@ -433,7 +459,10 @@ export default function RegisterDoctorForm() {
 
       {/* Error general */}
       {error && (
-        <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+        <div
+          className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-md"
+          data-testid="register-doctor-error"
+        >
           {error}
         </div>
       )}
@@ -441,6 +470,7 @@ export default function RegisterDoctorForm() {
       {/* Submit Button */}
       <button
         type="submit"
+        data-testid="register-doctor-submit"
         disabled={isSubmitting}
         className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >

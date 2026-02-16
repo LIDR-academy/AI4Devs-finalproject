@@ -1,6 +1,6 @@
 # Historias de Usuario - CitaYa MVP
 
-Este documento contiene 10 historias de usuario propuestas para el MVP de CitaYa. Selecciona las 7 que mejor se ajusten a tus necesidades.
+Este documento contiene 12 historias de usuario propuestas para el MVP de CitaYa.
 
 ---
 
@@ -189,7 +189,19 @@ Un paciente autenticado debe poder buscar médicos filtrando por especialidad y 
   - Se muestra campo de código postal como obligatorio
   - Se usa código postal para búsqueda fallback
 
-#### CA4: Búsqueda por Proximidad (con coordenadas)
+#### CA4: Entrada desde Home y Navegación a Search
+- [ ] En la home se muestra formulario de búsqueda embebido en el banner principal
+- [ ] El botón "Soy médico" permanece visible en el banner
+- [ ] Al enviar búsqueda desde home, se navega a `/search` con query params
+- [ ] Si existe geolocalización, se envían `lat` y `lng`
+- [ ] Si el usuario captura código postal, se envía `postalCode` como fallback
+
+#### CA5: Estado Inicial de la Página Search
+- [ ] Si `/search` carga sin búsqueda previa, se muestran los 5 últimos médicos registrados
+- [ ] El listado inicial solo incluye médicos con `verification_status='approved'`
+- [ ] Al ejecutar una búsqueda, el listado inicial se reemplaza por resultados filtrados
+
+#### CA6: Búsqueda por Proximidad (con coordenadas)
 - [ ] Si se proporcionan coordenadas (lat, lng):
   - Se calcula distancia usando fórmula Haversine en MySQL
   - Se filtran médicos dentro del radio especificado (por defecto 5km)
@@ -198,20 +210,21 @@ Un paciente autenticado debe poder buscar médicos filtrando por especialidad y 
 - [ ] Solo se muestran médicos con `verification_status='approved'`
 - [ ] Solo se muestran médicos con `deleted_at IS NULL`
 
-#### CA5: Búsqueda por Código Postal (fallback)
+#### CA7: Búsqueda por Código Postal (fallback)
 - [ ] Si no hay coordenadas pero hay código postal:
   - Se usa código postal para filtrar médicos
   - Se ordenan por especialidad y rating promedio
   - No se muestra distancia (no aplicable)
 - [ ] Se debe mostrar mensaje indicando que se está usando búsqueda por código postal
+- [ ] Si no hay resultados por geolocalización y se recibió `postalCode`, el backend debe reintentar automáticamente con `postalCode`
 
-#### CA6: Filtro por Disponibilidad
+#### CA8: Filtro por Disponibilidad
 - [ ] Si se proporciona fecha en el filtro:
   - Se muestran solo médicos con slots disponibles en esa fecha
   - Se verifica que los slots tengan `is_available=true`
   - Se verifica que los slots no estén bloqueados (`locked_until < NOW()` o `locked_until IS NULL`)
 
-#### CA7: Resultados de Búsqueda
+#### CA9: Resultados de Búsqueda
 - [ ] Cada resultado debe mostrar:
   - Nombre completo del médico (firstName + lastName)
   - Especialidades (con nombre en idioma seleccionado)
@@ -222,7 +235,7 @@ Un paciente autenticado debe poder buscar médicos filtrando por especialidad y 
   - Estado de verificación (solo "approved" debe aparecer)
   - Botón "Ver perfil" y "Ver disponibilidad"
 
-#### CA8: Visualización en Mapa
+#### CA10: Visualización en Mapa
 - [ ] Se debe mostrar mapa de Google Maps con:
   - Marcador del usuario (si hay geolocalización)
   - Marcadores de todos los médicos encontrados
@@ -230,30 +243,35 @@ Un paciente autenticado debe poder buscar médicos filtrando por especialidad y 
   - Zoom automático para mostrar todos los marcadores
 - [ ] El mapa debe ser interactivo y permitir hacer clic en marcadores
 
-#### CA9: Paginación
+#### CA11: Paginación
 - [ ] Los resultados deben estar paginados:
   - Por defecto: 20 resultados por página
   - Máximo: 50 resultados por página
   - Debe incluir información de paginación: página actual, total de páginas, total de resultados
 
-#### CA10: Cache
+#### CA12: Cache
 - [ ] Los resultados deben cachearse en Redis:
   - Key: `doctors:{specialty}:{lat}:{lng}:{radius}:{date}`
   - TTL: 10 minutos
   - Si hay cache hit, se retornan resultados desde cache sin consultar BD
 
-#### CA11: Manejo de Errores
+#### CA13: Validaciones de Disparo de Búsqueda
+- [ ] Frontend debe bloquear submit si no existe especialidad
+- [ ] Frontend debe bloquear submit si no existe ni geolocalización ni código postal
+- [ ] El backend debe rechazar búsquedas sin ubicación ni código postal con error 400
+
+#### CA14: Manejo de Errores
 - [ ] Si no se encuentran médicos:
   - Se muestra mensaje: "No se encontraron médicos con los criterios especificados"
   - Se sugiere ampliar el radio de búsqueda o cambiar especialidad
 - [ ] Si falla la geocodificación:
   - Se muestra mensaje de error pero se permite búsqueda por código postal
 
-#### CA12: Internacionalización
+#### CA15: Internacionalización
 - [ ] Todos los textos deben estar disponibles en español e inglés
 - [ ] Los nombres de especialidades deben mostrarse en el idioma seleccionado
 
-#### CA13: Performance
+#### CA16: Performance
 - [ ] La búsqueda debe completarse en menos de 500ms (P95)
 - [ ] Se deben usar índices adecuados en BD para optimizar consultas geográficas
 
@@ -1065,6 +1083,142 @@ Un administrador autenticado debe poder acceder a un dashboard que muestre métr
 
 ---
 
+## Historia de Usuario 11: Confirmación de Cita Pendiente por Médico
+
+**Como** médico autenticado  
+**Quiero** confirmar citas pendientes asignadas a mi perfil  
+**Para** validar mi disponibilidad final y asegurar la atención al paciente
+
+### Descripción
+Un médico autenticado debe poder revisar sus citas con estado `pending` y confirmar cada una. La confirmación cambia el estado a `confirmed`, registra historial/auditoría y refleja el cambio inmediatamente en el panel del médico.
+
+### Criterios de Aceptación
+
+#### CA1: Autenticación y Autorización
+- [ ] El endpoint requiere autenticación JWT (Bearer token)
+- [ ] Solo usuarios con role="doctor" pueden confirmar citas pendientes
+- [ ] Si el usuario no es doctor, debe retornar error 403
+
+#### CA2: Ownership de la Cita
+- [ ] El médico solo puede confirmar citas de su propio perfil (`appointment.doctor_id`)
+- [ ] Si intenta confirmar una cita de otro médico, retorna 403 con mensaje claro
+
+#### CA3: Estado Permitido
+- [ ] Solo se permiten confirmaciones para citas con estado `pending`
+- [ ] Si la cita está en estado `confirmed`, `completed`, `cancelled` o `no_show`, retorna 400
+
+#### CA4: Actualización de Estado
+- [ ] Al confirmar una cita pendiente:
+  - Se actualiza `status='confirmed'` en `APPOINTMENTS`
+  - Se limpia `cancellation_reason` en caso de estar presente
+  - Se actualiza `updated_at`
+
+#### CA5: Historial de Cambios
+- [ ] Se crea registro en `APPOINTMENT_HISTORY` con:
+  - `old_status='pending'`
+  - `new_status='confirmed'`
+  - `change_reason='Cita confirmada por médico'`
+  - `changed_by` con el ID del usuario médico autenticado
+
+#### CA6: Auditoría
+- [ ] Se registra en `audit_logs`:
+  - Acción: `confirm_appointment_by_doctor`
+  - Entity_type: `appointment`
+  - Entity_id: ID de la cita confirmada
+  - User_id: ID del médico autenticado
+  - IP de la solicitud
+
+#### CA7: Respuesta Exitosa
+- [ ] La respuesta debe incluir:
+  - `id` de la cita
+  - `status: "confirmed"`
+  - `updatedAt`
+  - Mensaje de éxito
+- [ ] Se retorna código 200 OK
+
+#### CA8: Manejo de Errores
+- [ ] Si la cita no existe: 404 "Cita no encontrada"
+- [ ] Si no pertenece al médico: 403 "No puedes confirmar una cita que no está asignada a tu perfil"
+- [ ] Si el estado no es pending: 400 con código `INVALID_APPOINTMENT_STATUS`
+
+#### CA9: UI en Perfil del Médico
+- [ ] En el perfil del médico se muestran citas pendientes y confirmadas
+- [ ] Cada cita pendiente muestra botón "Confirmar cita"
+- [ ] Al confirmar:
+  - Se muestra estado de carga
+  - Se actualiza la lista de citas sin recargar manualmente
+  - Se muestra mensaje de éxito/error
+
+#### CA10: Internacionalización
+- [ ] Los textos de la acción (botón, loading, éxito y error) deben estar en ES/EN
+
+---
+
+## Historia de Usuario 12: Cancelación de Cita por Médico
+
+**Como** médico autenticado  
+**Quiero** cancelar citas asignadas a mi perfil cuando no podré atenderlas  
+**Para** liberar el horario y notificar correctamente el cambio al paciente
+
+### Descripción
+Un médico autenticado debe poder cancelar citas activas (`pending` o `confirmed`) de su agenda. La cancelación actualiza el estado, libera el slot, deja trazabilidad en historial y auditoría, y se refleja inmediatamente en el perfil del médico.
+
+### Criterios de Aceptación
+
+#### CA1: Autenticación y Autorización
+- [ ] El endpoint requiere autenticación JWT (Bearer token)
+- [ ] Solo usuarios con role="doctor" pueden cancelar citas de su agenda
+- [ ] Si el usuario no es doctor y pretende cancelar como médico, retorna 403
+
+#### CA2: Ownership de la Cita
+- [ ] El médico solo puede cancelar citas de su perfil (`appointment.doctor_id`)
+- [ ] Si intenta cancelar cita de otro médico, retorna 403 con mensaje claro
+
+#### CA3: Estados Permitidos
+- [ ] Solo se pueden cancelar citas en estado `pending` o `confirmed`
+- [ ] Si está `completed`, `cancelled` o `no_show`, retorna 400 con código `INVALID_APPOINTMENT_STATUS`
+
+#### CA4: Cancelación y Liberación de Slot
+- [ ] Al cancelar:
+  - Se actualiza `status='cancelled'` en `APPOINTMENTS`
+  - Se guarda `cancellation_reason` (motivo opcional)
+  - Se libera el slot asociado (`is_available=true`, sin locks)
+
+#### CA5: Historial de Cambios
+- [ ] Se crea registro en `APPOINTMENT_HISTORY` con:
+  - `old_status` previo
+  - `new_status='cancelled'`
+  - `change_reason` con motivo o default "Cita cancelada por médico"
+  - `changed_by` con ID del usuario médico autenticado
+
+#### CA6: Auditoría
+- [ ] Se registra en `audit_logs`:
+  - Acción: `cancel_appointment_by_doctor`
+  - Entity_type: `appointment`
+  - Entity_id: ID de la cita cancelada
+  - User_id: ID del médico autenticado
+  - IP de la solicitud
+
+#### CA7: Respuesta Exitosa
+- [ ] La respuesta debe incluir:
+  - `id`
+  - `status: "cancelled"`
+  - `cancellationReason`
+  - `updatedAt`
+  - Mensaje de éxito
+- [ ] Se retorna código 200 OK
+
+#### CA8: UI en Perfil del Médico
+- [ ] En cada cita `pending` o `confirmed` del perfil del médico se muestra botón "Cancelar cita"
+- [ ] Al cancelar:
+  - Se solicita confirmación de la acción
+  - Se muestra loading durante la petición
+  - Se refresca la lista al éxito
+  - Se muestra mensaje de éxito/error
+
+#### CA9: Internacionalización
+- [ ] Los textos de cancelación (confirmación, loading, éxito y error) están disponibles en ES/EN
+
 ## Resumen de Historias Propuestas
 
 | # | Historia | Rol | Funcionalidad Crítica |
@@ -1079,4 +1233,6 @@ Un administrador autenticado debe poder acceder a un dashboard que muestre métr
 | 8 | Gestión de Horarios | Médico | - |
 | 9 | Creación de Reseña | Paciente | Review después de la cita |
 | 10 | Dashboard Administrativo | Admin | Dashboards |
+| 11 | Confirmación de Cita Pendiente | Médico | Confirmación operativa |
+| 12 | Cancelación de Cita por Médico | Médico | Gestión operativa |
 

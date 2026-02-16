@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { es, enUS } from 'date-fns/locale';
@@ -34,6 +34,15 @@ export default function RescheduleModal({
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedSlot, setSelectedSlot] = useState<SlotResponse | null>(null);
   const mutation = useRescheduleAppointment();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
 
   const { data: slots = [], isLoading } = useQuery({
     queryKey: ['slots', appointment.doctorId, selectedDate],
@@ -71,15 +80,27 @@ export default function RescheduleModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+    <div
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      data-testid="reschedule-modal"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reschedule-modal-title"
+        aria-describedby="reschedule-modal-description"
+        className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6"
+      >
+        <h3 id="reschedule-modal-title" className="text-lg font-semibold text-gray-900 mb-2">
           {t('rescheduleTitle')}
         </h3>
-        <p className="text-sm text-gray-600 mb-3">{t('rescheduleHelper')}</p>
+        <p id="reschedule-modal-description" className="text-sm text-gray-600 mb-3">
+          {t('rescheduleHelper')}
+        </p>
 
         <input
           type="date"
+          data-testid="reschedule-date"
           value={selectedDate}
           min={today}
           onChange={(e) => {
@@ -99,6 +120,7 @@ export default function RescheduleModal({
               <button
                 key={slot.id}
                 type="button"
+                data-testid={`reschedule-slot-${slot.id}`}
                 onClick={() => setSelectedSlot(slot)}
                 className={`border rounded-md px-2 py-2 text-sm ${
                   selectedSlot?.id === slot.id
@@ -121,6 +143,7 @@ export default function RescheduleModal({
         <div className="flex justify-end gap-2 mt-5">
           <button
             type="button"
+            data-testid="reschedule-close"
             className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
             onClick={onClose}
             disabled={mutation.isPending}
@@ -129,6 +152,7 @@ export default function RescheduleModal({
           </button>
           <button
             type="button"
+            data-testid="reschedule-confirm"
             className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300"
             onClick={onConfirm}
             disabled={!selectedSlot || mutation.isPending}

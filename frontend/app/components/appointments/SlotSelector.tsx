@@ -33,7 +33,13 @@ export default function SlotSelector({
   const today = startOfDay(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedSlot, setSelectedSlot] = useState<SlotResponse | null>(null);
+  const [bookingFor, setBookingFor] = useState<'self' | 'other'>('self');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [emailConfirm, setEmailConfirm] = useState('');
   const [note, setNote] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptMarketing, setAcceptMarketing] = useState(false);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
@@ -77,160 +83,245 @@ export default function SlotSelector({
     return err.message;
   };
 
+  const isBookingDataValid =
+    phone.trim().length >= 8 &&
+    email.trim().length > 4 &&
+    email.trim() === emailConfirm.trim() &&
+    acceptTerms;
+
   return (
-    <div className="space-y-6">
-      {/* Información del médico */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-        <h3 className="text-sm font-medium text-gray-500 mb-2">
-          {t('doctorInfo')}
-        </h3>
-        <p className="text-xl font-semibold text-gray-900">
-          Dr. {doctor.firstName} {doctor.lastName}
-        </p>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {doctor.specialties.map((spec) => (
-            <span
-              key={spec.id}
-              className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded"
-            >
-              {locale === 'es' ? spec.nameEs : spec.nameEn}
-            </span>
-          ))}
-        </div>
-        <p className="text-gray-600 mt-2">{doctor.address}</p>
-      </div>
-
-      {/* Selector de fecha */}
-      <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-3">
-          {t('selectDate')}
-        </h3>
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {availableDates.slice(0, 14).map((date) => (
-            <button
-              key={date.toISOString()}
-              type="button"
-              onClick={() => {
-                setSelectedDate(date);
-                setSelectedSlot(null);
-              }}
-              className={`flex-shrink-0 px-4 py-2 rounded-md text-sm font-medium ${
-                isSameDay(date, selectedDate)
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {format(date, 'EEE d', { locale: dateFnsLocale })}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Slots del día */}
-      <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-3">
-          {t('selectSlot')}
-        </h3>
-        {isLoading ? (
-          <div className="py-8 text-center text-gray-500">
-            {t('loadingSlots')}
+    <div className="space-y-6" data-testid="slot-selector">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <section className="space-y-6 lg:col-span-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-2 text-sm font-medium text-slate-500">{t('doctorInfo')}</h3>
+            <p className="text-xl font-semibold text-slate-900">
+              Dra./Dr. {doctor.firstName} {doctor.lastName}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {doctor.specialties.map((spec) => (
+                <span
+                  key={spec.id}
+                  className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
+                >
+                  {locale === 'es' ? spec.nameEs : spec.nameEn}
+                </span>
+              ))}
+            </div>
+            <p className="mt-2 text-sm text-slate-600">{doctor.address}</p>
           </div>
-        ) : slots.length === 0 ? (
-          <div className="py-8 text-center text-gray-500 rounded-lg bg-gray-50">
-            {t('noSlots')}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {slots.map((slot) => {
-              const isLocked =
-                slot.lockedUntil && new Date(slot.lockedUntil) > new Date();
-              const isDisabled = !slot.isAvailable || !!isLocked;
-              const isSelected = selectedSlot?.id === slot.id;
 
-              return (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-3 text-sm font-medium text-slate-700">{t('selectDate')}</h3>
+            <div className="flex gap-2 overflow-x-auto pb-2" data-testid="slot-date-list">
+              {availableDates.slice(0, 14).map((date) => (
                 <button
-                  key={slot.id}
+                  key={date.toISOString()}
                   type="button"
-                  onClick={() =>
-                    !isDisabled && setSelectedSlot(isSelected ? null : slot)
-                  }
-                  disabled={isDisabled}
-                  className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
-                    isSelected
-                      ? 'border-blue-600 bg-blue-50 text-blue-800 ring-2 ring-blue-600'
-                      : isDisabled
-                        ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'border-gray-300 text-gray-700 hover:border-blue-400 hover:bg-blue-50'
+                  data-testid={`slot-date-${format(date, 'yyyy-MM-dd')}`}
+                  onClick={() => {
+                    setSelectedDate(date);
+                    setSelectedSlot(null);
+                  }}
+                  className={`flex-shrink-0 rounded-md px-4 py-2 text-sm font-medium ${
+                    isSameDay(date, selectedDate)
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  {format(new Date(slot.startTime), 'HH:mm', {
-                    locale: dateFnsLocale,
-                  })}
-                  {isLocked && (
-                    <span className="block text-xs text-amber-600 mt-1">
-                      {t('reserving')}
-                    </span>
-                  )}
+                  {format(date, 'EEE d', { locale: dateFnsLocale })}
                 </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
 
-      {/* Panel de confirmación */}
-      {selectedSlot && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t('appointmentSummary')}
-          </h3>
-          <p className="text-gray-700">
-            {format(new Date(selectedSlot.startTime), "EEEE d 'de' MMMM", {
-              locale: dateFnsLocale,
-            })}
-          </p>
-          <p className="text-gray-700 mt-1">
-            {format(new Date(selectedSlot.startTime), 'HH:mm')} -{' '}
-            {format(new Date(selectedSlot.endTime), 'HH:mm')}
-          </p>
-          <textarea
-            placeholder={t('notesPlaceholder')}
-            value={note}
-            onChange={(e) => setNote(e.target.value.slice(0, 500))}
-            maxLength={500}
-            rows={3}
-            className="mt-4 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            {note.length}/500
-          </p>
-          <div className="mt-4 flex gap-3">
+            <h3 className="mb-3 mt-6 text-sm font-medium text-slate-700">{t('selectSlot')}</h3>
+            {isLoading ? (
+              <div className="py-8 text-center text-slate-500">{t('loadingSlots')}</div>
+            ) : slots.length === 0 ? (
+              <div className="rounded-lg bg-slate-50 py-8 text-center text-slate-500">{t('noSlots')}</div>
+            ) : (
+              <div
+                className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
+                data-testid="slot-list"
+              >
+                {slots.map((slot) => {
+                  const isLocked = slot.lockedUntil && new Date(slot.lockedUntil) > new Date();
+                  const isDisabled = !slot.isAvailable || !!isLocked;
+                  const isSelected = selectedSlot?.id === slot.id;
+
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      data-testid={`slot-item-${slot.id}`}
+                      onClick={() => !isDisabled && setSelectedSlot(isSelected ? null : slot)}
+                      disabled={isDisabled}
+                      className={`rounded-lg border p-4 text-sm font-medium transition-colors ${
+                        isSelected
+                          ? 'border-brand-600 bg-emerald-50 text-emerald-800 ring-2 ring-brand-600'
+                          : isDisabled
+                            ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
+                            : 'border-slate-300 text-slate-700 hover:border-brand-600 hover:bg-emerald-50'
+                      }`}
+                    >
+                      {format(new Date(slot.startTime), 'HH:mm', { locale: dateFnsLocale })}
+                      {isLocked && (
+                        <span className="mt-1 block text-xs text-amber-600">{t('reserving')}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <aside className="h-fit rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">
+          <h3 className="text-lg font-semibold text-slate-900">{t('appointmentSummary')}</h3>
+          {selectedSlot ? (
+            <>
+              <p className="mt-3 text-sm text-slate-700">
+                {format(new Date(selectedSlot.startTime), "EEEE d 'de' MMMM", {
+                  locale: dateFnsLocale,
+                })}
+              </p>
+              <p className="mt-1 text-sm text-slate-700">
+                {format(new Date(selectedSlot.startTime), 'HH:mm')} -{' '}
+                {format(new Date(selectedSlot.endTime), 'HH:mm')}
+              </p>
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-slate-500">{t('selectSlotToContinue')}</p>
+          )}
+
+          <div className="mt-5 space-y-4">
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium text-slate-700">{t('bookingFor')}</legend>
+              <div className="space-y-2 text-sm text-slate-700">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="bookingFor"
+                    checked={bookingFor === 'self'}
+                    onChange={() => setBookingFor('self')}
+                  />
+                  {t('forMe')}
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="bookingFor"
+                    checked={bookingFor === 'other'}
+                    onChange={() => setBookingFor('other')}
+                  />
+                  {t('forOther')}
+                </label>
+              </div>
+            </fieldset>
+
+            <label className="block text-sm text-slate-700">
+              {t('contactPhone')}
+              <input
+                type="tel"
+                data-testid="slot-contact-phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
+              />
+            </label>
+
+            <label className="block text-sm text-slate-700">
+              {t('contactEmail')}
+              <input
+                type="email"
+                data-testid="slot-contact-email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
+              />
+            </label>
+
+            <label className="block text-sm text-slate-700">
+              {t('confirmEmail')}
+              <input
+                type="email"
+                data-testid="slot-contact-email-confirm"
+                value={emailConfirm}
+                onChange={(e) => setEmailConfirm(e.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
+              />
+            </label>
+
+            <textarea
+              placeholder={t('notesPlaceholder')}
+              data-testid="slot-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value.slice(0, 500))}
+              maxLength={500}
+              rows={3}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
+            />
+            <p className="text-xs text-slate-500">{note.length}/500</p>
+
+            <label className="flex items-start gap-2 text-xs text-slate-600">
+              <input
+                type="checkbox"
+                data-testid="slot-consent-terms"
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                className="mt-0.5"
+              />
+              {t('consentTerms')}
+            </label>
+
+            <label className="flex items-start gap-2 text-xs text-slate-600">
+              <input
+                type="checkbox"
+                checked={acceptMarketing}
+                onChange={(e) => setAcceptMarketing(e.target.checked)}
+                className="mt-0.5"
+              />
+              {t('consentMarketing')}
+            </label>
+          </div>
+
+          <div className="mt-4 space-y-2">
             <button
               type="button"
+              data-testid="slot-confirm-appointment"
               onClick={() => reserveMutation.mutate()}
-              disabled={reserveMutation.isPending}
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={reserveMutation.isPending || !selectedSlot || !isBookingDataValid}
+              className="w-full rounded-md bg-brand-600 px-6 py-2 text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               {reserveMutation.isPending ? t('reserving') : t('confirmAppointment')}
             </button>
             <button
               type="button"
+              data-testid="slot-cancel-selection"
               onClick={() => {
                 setSelectedSlot(null);
                 setNote('');
+                setPhone('');
+                setEmail('');
+                setEmailConfirm('');
+                setAcceptTerms(false);
+                setAcceptMarketing(false);
               }}
-              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              className="w-full rounded-md bg-slate-100 px-6 py-2 text-slate-700 hover:bg-slate-200"
             >
               {t('cancel')}
             </button>
           </div>
+
+          {acceptMarketing && <p className="mt-2 text-[11px] text-slate-500">{t('marketingNote')}</p>}
+
           {reserveMutation.isError && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+            <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               {getErrorMessage(reserveMutation.error as Error)}
             </div>
           )}
-        </div>
-      )}
+        </aside>
+      </div>
     </div>
   );
 }

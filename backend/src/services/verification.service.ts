@@ -246,6 +246,39 @@ export class VerificationService {
       })
     );
 
+    // Cualquier nuevo documento reabre el proceso de validación del médico.
+    if (doctor.verificationStatus !== 'pending') {
+      const previousVerificationState = {
+        verificationStatus: doctor.verificationStatus,
+        verifiedBy: doctor.verifiedBy || null,
+        verifiedAt: doctor.verifiedAt || null,
+        verificationNotes: doctor.verificationNotes || null,
+      };
+
+      doctor.verificationStatus = 'pending';
+      doctor.verifiedBy = null;
+      doctor.verifiedAt = null;
+      doctor.verificationNotes = null;
+      await this.doctorRepo.save(doctor);
+
+      await this.auditRepo.save(
+        this.auditRepo.create({
+          action: 'reopen_doctor_verification',
+          entityType: 'doctor',
+          entityId: doctor.id,
+          userId,
+          ipAddress,
+          oldValues: JSON.stringify(previousVerificationState),
+          newValues: JSON.stringify({
+            verificationStatus: doctor.verificationStatus,
+            verifiedBy: doctor.verifiedBy,
+            verifiedAt: doctor.verifiedAt,
+            verificationNotes: doctor.verificationNotes,
+          }),
+        })
+      );
+    }
+
     await this.auditRepo.save(
       this.auditRepo.create({
         action: 'upload_verification_document',

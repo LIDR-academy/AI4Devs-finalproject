@@ -21,6 +21,8 @@ describe('Appointments Reprogram/Cancel API (Integration)', () => {
   let patientId: string;
   let patientToken: string;
   let otherPatientToken: string;
+  let doctorToken: string;
+  let otherDoctorToken: string;
   let doctorId: string;
 
   function createTestApp(): Express {
@@ -80,6 +82,28 @@ describe('Appointments Reprogram/Cancel API (Integration)', () => {
       verificationStatus: 'approved',
     });
     doctorId = doctor.id;
+    doctorToken = jwt.sign(
+      { sub: doctorUser.id, email: doctorUser.email, role: doctorUser.role },
+      process.env.JWT_ACCESS_SECRET || 'dev-access-secret',
+      { expiresIn: '15m' }
+    );
+
+    const otherDoctorUser = await createTestUser(testDataSource, {
+      email: 'hu5-other-doctor@test.com',
+      role: 'doctor',
+    });
+    await createTestDoctor(testDataSource, otherDoctorUser, {
+      verificationStatus: 'approved',
+    });
+    otherDoctorToken = jwt.sign(
+      {
+        sub: otherDoctorUser.id,
+        email: otherDoctorUser.email,
+        role: otherDoctorUser.role,
+      },
+      process.env.JWT_ACCESS_SECRET || 'dev-access-secret',
+      { expiresIn: '15m' }
+    );
   });
 
   afterAll(async () => {
@@ -232,5 +256,123 @@ describe('Appointments Reprogram/Cancel API (Integration)', () => {
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body.appointments)).toBe(true);
     expect(response.body.pagination).toBeDefined();
+  });
+
+  it('debe confirmar una cita pendiente cuando el doctor dueño la aprueba', async () => {
+    const slot = await createTestSlot(testDataSource, doctorId, {
+      startTime: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
+      endTime: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+      isAvailable: false,
+    });
+
+    const appointment = await createTestAppointment(testDataSource, {
+      patientId,
+      doctorId,
+      slotId: slot.id,
+      appointmentDate: slot.startTime,
+      status: 'pending',
+    });
+
+    const response = await request(app)
+      .patch(`/api/v1/appointments/${appointment.id}`)
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ status: 'confirmed' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('confirmed');
+  });
+
+  it('debe retornar 403 si otro doctor intenta confirmar cita ajena', async () => {
+    const slot = await createTestSlot(testDataSource, doctorId, {
+      startTime: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000),
+      endTime: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+      isAvailable: false,
+    });
+
+    const appointment = await createTestAppointment(testDataSource, {
+      patientId,
+      doctorId,
+      slotId: slot.id,
+      appointmentDate: slot.startTime,
+      status: 'pending',
+    });
+
+    const response = await request(app)
+      .patch(`/api/v1/appointments/${appointment.id}`)
+      .set('Authorization', `Bearer ${otherDoctorToken}`)
+      .send({ status: 'confirmed' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('FORBIDDEN_APPOINTMENT');
+  });
+
+  it('debe retornar 403 si un paciente intenta confirmar una cita pendiente', async () => {
+    const slot = await createTestSlot(testDataSource, doctorId, {
+      startTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      endTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+      isAvailable: false,
+    });
+
+    const appointment = await createTestAppointment(testDataSource, {
+      patientId,
+      doctorId,
+      slotId: slot.id,
+      appointmentDate: slot.startTime,
+      status: 'pending',
+    });
+
+    const response = await request(app)
+      .patch(`/api/v1/appointments/${appointment.id}`)
+      .set('Authorization', `Bearer ${patientToken}`)
+      .send({ status: 'confirmed' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('FORBIDDEN_ROLE');
+  });
+
+  it('debe cancelar una cita cuando el doctor dueño la cancela', async () => {
+    const slot = await createTestSlot(testDataSource, doctorId, {
+      startTime: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000),
+      endTime: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+    });
+
+    const appointment = await createTestAppointment(testDataSource, {
+      patientId,
+      doctorId,
+      slotId: slot.id,
+      appointmentDate: slot.startTime,
+      status: 'confirmed',
+    });
+
+    const response = await request(app)
+      .patch(`/api/v1/appointments/${appointment.id}`)
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ status: 'cancelled', cancellationReason: 'Emergencia médica' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe('cancelled');
+  });
+
+  it('debe retornar 403 si otro doctor intenta cancelar cita ajena', async () => {
+    const slot = await createTestSlot(testDataSource, doctorId, {
+      startTime: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
+      endTime: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
+    });
+
+    const appointment = await createTestAppointment(testDataSource, {
+      patientId,
+      doctorId,
+      slotId: slot.id,
+      appointmentDate: slot.startTime,
+      status: 'confirmed',
+    });
+
+    const response = await request(app)
+      .patch(`/api/v1/appointments/${appointment.id}`)
+      .set('Authorization', `Bearer ${otherDoctorToken}`)
+      .send({ status: 'cancelled', cancellationReason: 'No disponibilidad' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('FORBIDDEN_APPOINTMENT');
   });
 });

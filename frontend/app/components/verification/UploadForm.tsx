@@ -77,7 +77,11 @@ export default function UploadForm({ isUploading, onSubmit }: UploadFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white border border-gray-200 rounded-lg p-4"
+      data-testid="verification-upload-form"
+    >
       <h2 className="text-lg font-semibold mb-4">{t('uploadTitle')}</h2>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -87,6 +91,7 @@ export default function UploadForm({ isUploading, onSubmit }: UploadFormProps) {
           </label>
           <select
             id="documentType"
+            data-testid="verification-document-type"
             value={documentType}
             onChange={(event) =>
               setDocumentType(event.target.value as VerificationDocumentType)
@@ -110,6 +115,7 @@ export default function UploadForm({ isUploading, onSubmit }: UploadFormProps) {
           <input
             id="verification-document-input"
             type="file"
+            data-testid="verification-document-input"
             accept=".pdf,.jpg,.jpeg,.png"
             onChange={(event) => handleFileChange(event.target.files?.[0] || null)}
             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
@@ -121,13 +127,17 @@ export default function UploadForm({ isUploading, onSubmit }: UploadFormProps) {
       <p className="mt-3 text-xs text-gray-500">{t('fileHint')}</p>
 
       {validationError && (
-        <div className="mt-3 bg-red-50 border border-red-200 text-red-700 p-2 rounded-md text-sm">
+        <div
+          className="mt-3 bg-red-50 border border-red-200 text-red-700 p-2 rounded-md text-sm"
+          data-testid="verification-upload-error"
+        >
           {validationError}
         </div>
       )}
 
       <button
         type="submit"
+        data-testid="verification-upload-submit"
         disabled={isUploading}
         className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400"
       >

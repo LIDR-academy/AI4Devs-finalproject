@@ -1,6 +1,9 @@
 'use client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(
+  /\/api\/v1\/?$/,
+  ''
+);
 
 export interface Specialty {
   id: string;
@@ -51,7 +54,7 @@ export interface SearchFilters {
 
 export async function searchDoctors(
   filters: SearchFilters,
-  token: string
+  token?: string | null
 ): Promise<SearchResult> {
   const params = new URLSearchParams();
 
@@ -78,12 +81,14 @@ export async function searchDoctors(
     params.append('limit', filters.limit.toString());
   }
 
-  const response = await fetch(`${API_URL}/api/v1/doctors?${params}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_URL}/api/v1/doctors?${params}`, { headers });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Error desconocido' }));
@@ -108,10 +113,30 @@ export async function getSpecialties(): Promise<Specialty[]> {
   return data.specialties || [];
 }
 
+export async function getLatestDoctors(limit = 5): Promise<DoctorSearchResult[]> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+  });
+
+  const response = await fetch(`${API_URL}/api/v1/doctors/latest?${params}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al obtener últimos médicos');
+  }
+
+  const data = await response.json();
+  return data.doctors || [];
+}
+
 export interface DoctorDetail {
   id: string;
   firstName: string;
   lastName: string;
+  bio?: string;
   specialties: Array<{
     id: string;
     nameEs: string;

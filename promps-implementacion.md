@@ -40,3 +40,16 @@ Vamos a comenzar con los tickets de la HU1.
 Antes de comenzar a implementar explicame cual es el orden de ejecucion de HU1
 
 NO implementes nada, primero dime cual es el orden de implementacion de los tickets de trabajo
+
+
+*Notas*: Aqui comenzé a usar GPT-5.3 Codex y una nueva version de Cursor donde cambiaba en automatico al modo plan y construia un plan de implementacion. Este prompt lo ejecute para cada una de las HUs faltantes para la implementación
+
+**Prompt 7**
+Actua como un desarrollador experto en React, NodeJS, TypeScript, TypeORM. Necesito implementar las HU descritas en   @documentation/HUX  . Revisa la documentacion disponible y propponme una plan de implementacion para completar las taraeas. Antes de pasar a la implementacion explicame la propuesta de solucion y espera por mi confirmacion para proceder.
+
+
+**Prompt 8**
+Actua como un experto en calidad de software y QA especializado en pruebas de integracion. Revisa el proyecto y proponme un plan de pruebas de integracions y E2E para probar el 100% del MVP construido
+
+**Prompt 9**
+Para completar la suite vamos a emplear cypress. Generame el documento en @documentation donde se detalle el plan de pruebas propuestas. Una vez que termines implementa el plan propuesto. Antes de comenzar hazme todas las preguntas necesarias para un mejor entendimiento del contexto necesitado.

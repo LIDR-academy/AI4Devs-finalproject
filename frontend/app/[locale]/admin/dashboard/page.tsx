@@ -16,6 +16,8 @@ import CancellationsChart from '@/app/components/admin/CancellationsChart';
 import RatingsPie from '@/app/components/admin/RatingsPie';
 import VerificationTable from '@/app/components/admin/VerificationTable';
 import ReviewsModerationTable from '@/app/components/admin/ReviewsModerationTable';
+import PageHeader from '@/app/components/ui/PageHeader';
+import StateMessage from '@/app/components/ui/StateMessage';
 
 export default function AdminDashboardPage() {
   const t = useTranslations('adminDashboard');
@@ -41,8 +43,8 @@ export default function AdminDashboardPage() {
 
   if (loading || metricsQuery.isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <p className="text-gray-600">{t('common.loading')}</p>
+      <div className="mx-auto max-w-7xl p-6">
+        <StateMessage message={t('common.loading')} />
       </div>
     );
   }
@@ -53,10 +55,8 @@ export default function AdminDashboardPage() {
 
   if (metricsQuery.isError) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="p-4 rounded border border-red-200 bg-red-50 text-red-700">
-          {(metricsQuery.error as Error).message || t('common.error')}
-        </div>
+      <div className="mx-auto max-w-7xl p-6">
+        <StateMessage message={(metricsQuery.error as Error).message || t('common.error')} variant="error" />
       </div>
     );
   }
@@ -64,18 +64,18 @@ export default function AdminDashboardPage() {
   const metrics = metricsQuery.data;
   if (!metrics) {
     return (
-      <div className="container mx-auto p-6">
-        <p className="text-gray-600">{t('common.empty')}</p>
+      <div className="mx-auto max-w-7xl p-6">
+        <StateMessage message={t('common.empty')} />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+    <div className="mx-auto max-w-7xl space-y-6 p-6" data-testid="admin-dashboard-page">
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader title={t('title')} subtitle={t('subtitle')} />
         {metrics.stale && (
-          <span className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-700">
+          <span className="rounded bg-amber-100 px-2 py-1 text-xs text-amber-700">
             {t('common.staleData')}
           </span>
         )}

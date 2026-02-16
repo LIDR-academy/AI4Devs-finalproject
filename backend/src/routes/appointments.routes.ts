@@ -12,7 +12,7 @@ const router = Router();
 router.get(
   '/',
   authenticate,
-  requireRole(['patient']),
+  requireRole(['patient', 'doctor']),
   appointmentsController.list
 );
 
@@ -57,7 +57,7 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
-  requireRole(['patient']),
+  requireRole(['patient', 'doctor']),
   appointmentsController.update
 );
 

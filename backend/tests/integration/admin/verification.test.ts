@@ -9,6 +9,7 @@ import { errorHandler } from '../../../src/middleware/error-handler.middleware';
 import { clearTestDatabase } from '../../setup/test-db';
 import { createTestDoctor, createTestUser } from '../../helpers/factories';
 import { Doctor } from '../../../src/models/doctor.entity';
+import { VerificationDocument } from '../../../src/models/verification-document.entity';
 
 describe('Admin Verification API (Integration)', () => {
   let app: Express;
@@ -79,5 +80,72 @@ describe('Admin Verification API (Integration)', () => {
     expect(dbDoctor.verificationStatus).toBe('approved');
     expect(dbDoctor.verifiedBy).toBeDefined();
     expect(dbDoctor.verifiedAt).toBeDefined();
+  });
+
+  it('PATCH /api/v1/admin/verification/:doctorId/approve deja doctor en pending si existe documento no aprobado', async () => {
+    const documentsRepo = AppDataSource.getRepository(VerificationDocument);
+
+    await documentsRepo.save(
+      documentsRepo.create({
+        doctorId,
+        filePath: '/tmp/doc-1.pdf',
+        originalFilename: 'doc-1.pdf',
+        mimeType: 'application/pdf',
+        fileSizeBytes: '1024',
+        documentType: 'cedula',
+        status: 'approved',
+      })
+    );
+
+    await documentsRepo.save(
+      documentsRepo.create({
+        doctorId,
+        filePath: '/tmp/doc-2.pdf',
+        originalFilename: 'doc-2.pdf',
+        mimeType: 'application/pdf',
+        fileSizeBytes: '1024',
+        documentType: 'diploma',
+        status: 'rejected',
+      })
+    );
+
+    await request(app)
+      .patch(`/api/v1/admin/verification/${doctorId}/approve`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ notes: 'Falta re-subir diploma' })
+      .expect(200);
+
+    const dbDoctor = await AppDataSource.getRepository(Doctor).findOneOrFail({
+      where: { id: doctorId },
+    });
+    expect(dbDoctor.verificationStatus).toBe('pending');
+  });
+
+  it('GET /api/v1/admin/verification?status=pending incluye doctores con documento pendiente aunque estado doctor sea approved', async () => {
+    const doctorRepo = AppDataSource.getRepository(Doctor);
+    const documentsRepo = AppDataSource.getRepository(VerificationDocument);
+
+    await doctorRepo.update({ id: doctorId }, { verificationStatus: 'approved' });
+    await documentsRepo.save(
+      documentsRepo.create({
+        doctorId,
+        filePath: '/tmp/doc-pending.pdf',
+        originalFilename: 'doc-pending.pdf',
+        mimeType: 'application/pdf',
+        fileSizeBytes: '1024',
+        documentType: 'cedula',
+        status: 'pending',
+      })
+    );
+
+    const response = await request(app)
+      .get('/api/v1/admin/verification?status=pending&page=1&limit=20')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body.items)).toBe(true);
+    expect(response.body.items.some((item: { doctorId: string }) => item.doctorId === doctorId)).toBe(
+      true
+    );
   });
 });

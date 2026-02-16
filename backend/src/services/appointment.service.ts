@@ -3,6 +3,7 @@ import { Appointment } from '../models/appointment.entity';
 import { Slot } from '../models/slot.entity';
 import { AppointmentHistory } from '../models/appointment-history.entity';
 import { AuditLog } from '../models/audit-log.entity';
+import { Doctor } from '../models/doctor.entity';
 import { notificationQueue } from '../config/queue';
 import { logger } from '../utils/logger';
 
@@ -150,7 +151,7 @@ export class AppointmentService {
     const qb = AppDataSource.getRepository(Appointment)
       .createQueryBuilder('appointment')
       .where('appointment.patient_id = :patientId', { patientId })
-      .orderBy('appointment.appointment_date', 'DESC');
+      .orderBy('appointment.appointmentDate', 'DESC');
 
     if (status) {
       qb.andWhere('appointment.status = :status', { status });
@@ -161,6 +162,69 @@ export class AppointmentService {
     qb.skip((safePage - 1) * safeLimit).take(safeLimit);
 
     const [appointments, total] = await qb.getManyAndCount();
+
+    return {
+      appointments,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+      },
+    };
+  }
+
+  async listDoctorAppointments(
+    doctorUserId: string,
+    status?: Appointment['status'],
+    page = 1,
+    limit = 10
+  ): Promise<{
+    appointments: Appointment[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }> {
+    const doctor = await AppDataSource.getRepository(Doctor).findOne({
+      where: { userId: doctorUserId },
+      select: ['id'],
+    });
+
+    if (!doctor) {
+      return {
+        appointments: [],
+        pagination: {
+          page: Math.max(1, page),
+          limit: Math.min(Math.max(1, limit), 50),
+          total: 0,
+          totalPages: 1,
+        },
+      };
+    }
+
+    const qb = AppDataSource.getRepository(Appointment)
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.patient', 'patient')
+      .where('appointment.doctor_id = :doctorId', { doctorId: doctor.id });
+
+    if (status) {
+      qb.andWhere('appointment.status = :status', { status });
+    }
+
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(Math.max(1, limit), 50);
+    const appointments = await qb
+      .clone()
+      .orderBy('appointment.appointmentDate', 'DESC')
+      .skip((safePage - 1) * safeLimit)
+      .take(safeLimit)
+      .getMany();
+
+    const countQb = AppDataSource.getRepository(Appointment)
+      .createQueryBuilder('appointment')
+      .where('appointment.doctor_id = :doctorId', { doctorId: doctor.id });
+    if (status) {
+      countQb.andWhere('appointment.status = :status', { status });
+    }
+    const total = await countQb.getCount();
 
     return {
       appointments,
@@ -384,6 +448,163 @@ export class AppointmentService {
         entityType: 'appointment',
         entityId: appointment.id,
         userId: patientId,
+        ipAddress,
+      });
+
+      return updatedAppointment;
+    });
+  }
+
+  async confirmAppointmentByDoctor(
+    appointmentId: string,
+    doctorUserId: string,
+    ipAddress: string
+  ): Promise<Appointment> {
+    return AppDataSource.transaction(async (transactionalEntityManager) => {
+      const doctor = await transactionalEntityManager.findOne(Doctor, {
+        where: { userId: doctorUserId },
+        select: ['id'],
+      });
+
+      if (!doctor) {
+        throw this.buildError(
+          'Perfil de médico no encontrado',
+          404,
+          'DOCTOR_NOT_FOUND'
+        );
+      }
+
+      const appointment = await transactionalEntityManager
+        .createQueryBuilder(Appointment, 'appointment')
+        .where('appointment.id = :appointmentId', { appointmentId })
+        .setLock('pessimistic_write')
+        .getOne();
+
+      if (!appointment) {
+        throw this.buildError('Cita no encontrada', 404, 'APPOINTMENT_NOT_FOUND');
+      }
+
+      if (appointment.doctorId !== doctor.id) {
+        throw this.buildError(
+          'No puedes confirmar una cita que no está asignada a tu perfil',
+          403,
+          'FORBIDDEN_APPOINTMENT'
+        );
+      }
+
+      if (appointment.status !== 'pending') {
+        throw this.buildError(
+          'Solo se pueden confirmar citas en estado pending',
+          400,
+          'INVALID_APPOINTMENT_STATUS'
+        );
+      }
+
+      const previousStatus = appointment.status;
+      appointment.status = 'confirmed';
+      appointment.cancellationReason = undefined;
+      const updatedAppointment = await transactionalEntityManager.save(appointment);
+
+      await transactionalEntityManager.save(AppointmentHistory, {
+        appointmentId: appointment.id,
+        oldStatus: previousStatus,
+        newStatus: 'confirmed',
+        changeReason: 'Cita confirmada por médico',
+        changedBy: doctorUserId,
+      });
+
+      await transactionalEntityManager.save(AuditLog, {
+        action: 'confirm_appointment_by_doctor',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        userId: doctorUserId,
+        ipAddress,
+      });
+
+      return updatedAppointment;
+    });
+  }
+
+  async cancelAppointmentByDoctor(
+    appointmentId: string,
+    doctorUserId: string,
+    reason: string | undefined,
+    ipAddress: string
+  ): Promise<Appointment> {
+    const normalizedReason = this.normalizeReason(reason);
+
+    return AppDataSource.transaction(async (transactionalEntityManager) => {
+      const doctor = await transactionalEntityManager.findOne(Doctor, {
+        where: { userId: doctorUserId },
+        select: ['id'],
+      });
+
+      if (!doctor) {
+        throw this.buildError(
+          'Perfil de médico no encontrado',
+          404,
+          'DOCTOR_NOT_FOUND'
+        );
+      }
+
+      const appointment = await transactionalEntityManager
+        .createQueryBuilder(Appointment, 'appointment')
+        .where('appointment.id = :appointmentId', { appointmentId })
+        .setLock('pessimistic_write')
+        .getOne();
+
+      if (!appointment) {
+        throw this.buildError('Cita no encontrada', 404, 'APPOINTMENT_NOT_FOUND');
+      }
+
+      if (appointment.doctorId !== doctor.id) {
+        throw this.buildError(
+          'No puedes cancelar una cita que no está asignada a tu perfil',
+          403,
+          'FORBIDDEN_APPOINTMENT'
+        );
+      }
+
+      if (!['confirmed', 'pending'].includes(appointment.status)) {
+        throw this.buildError(
+          'Solo se pueden cancelar citas en estado confirmed o pending',
+          400,
+          'INVALID_APPOINTMENT_STATUS'
+        );
+      }
+
+      const slot = await transactionalEntityManager
+        .createQueryBuilder(Slot, 'slot')
+        .where('slot.id = :slotId', { slotId: appointment.slotId })
+        .setLock('pessimistic_write')
+        .getOne();
+
+      if (slot) {
+        slot.isAvailable = true;
+        slot.lockedBy = undefined;
+        slot.lockedUntil = undefined;
+        await transactionalEntityManager.save(slot);
+      }
+
+      const previousStatus = appointment.status;
+      appointment.status = 'cancelled';
+      appointment.cancellationReason =
+        normalizedReason ?? 'Cita cancelada por médico';
+      const updatedAppointment = await transactionalEntityManager.save(appointment);
+
+      await transactionalEntityManager.save(AppointmentHistory, {
+        appointmentId: appointment.id,
+        oldStatus: previousStatus,
+        newStatus: 'cancelled',
+        changeReason: normalizedReason ?? 'Cita cancelada por médico',
+        changedBy: doctorUserId,
+      });
+
+      await transactionalEntityManager.save(AuditLog, {
+        action: 'cancel_appointment_by_doctor',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        userId: doctorUserId,
         ipAddress,
       });
 

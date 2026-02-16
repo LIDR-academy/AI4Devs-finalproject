@@ -23,6 +23,24 @@ export interface DoctorDetail {
   verificationStatus: string;
 }
 
+export interface LatestDoctorResult {
+  id: string;
+  firstName: string;
+  lastName: string;
+  specialties: Array<{
+    id: string;
+    nameEs: string;
+    nameEn: string;
+    isPrimary: boolean;
+  }>;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  ratingAverage?: number;
+  totalReviews: number;
+  verificationStatus: string;
+}
+
 export interface SlotResponse {
   id: string;
   startTime: string;
@@ -274,6 +292,38 @@ export class DoctorService {
       totalReviews: doctor.totalReviews,
       verificationStatus: doctor.verificationStatus,
     };
+  }
+
+  async getLatestRegistered(limit = 5): Promise<LatestDoctorResult[]> {
+    const safeLimit = Math.min(Math.max(limit, 1), 20);
+
+    const doctors = await AppDataSource.getRepository(Doctor)
+      .createQueryBuilder('doctor')
+      .innerJoinAndSelect('doctor.user', 'user')
+      .leftJoinAndSelect('doctor.specialties', 'specialties')
+      .where('doctor.verification_status = :status', { status: 'approved' })
+      .orderBy('doctor.createdAt', 'DESC')
+      .take(safeLimit)
+      .getMany();
+
+    return doctors.map((doctor) => ({
+      id: doctor.id,
+      firstName: doctor.user.firstName,
+      lastName: doctor.user.lastName,
+      specialties:
+        doctor.specialties?.map((spec) => ({
+          id: spec.id,
+          nameEs: spec.nameEs,
+          nameEn: spec.nameEn,
+          isPrimary: false,
+        })) ?? [],
+      address: doctor.address,
+      latitude: doctor.latitude || undefined,
+      longitude: doctor.longitude || undefined,
+      ratingAverage: doctor.ratingAverage || undefined,
+      totalReviews: doctor.totalReviews,
+      verificationStatus: doctor.verificationStatus,
+    }));
   }
 
   async getSlotsByDate(doctorId: string, date: string): Promise<SlotResponse[]> {

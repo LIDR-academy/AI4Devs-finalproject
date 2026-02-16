@@ -70,8 +70,9 @@ export default function DoctorAvailabilityPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Reservar cita</h1>
+    <div className="mx-auto max-w-7xl p-4">
+      <h1 className="mb-2 text-3xl font-bold text-slate-900">Confirma tus datos y agenda</h1>
+      <p className="mb-6 text-sm text-slate-600">Completa la información para reservar tu cita presencial.</p>
       <SlotSelector
         doctorId={doctorId}
         doctor={doctor}

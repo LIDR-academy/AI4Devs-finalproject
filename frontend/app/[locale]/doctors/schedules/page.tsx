@@ -12,6 +12,8 @@ import {
 } from '@/hooks/useSchedules';
 import { DoctorSchedule, UpsertSchedulePayload } from '@/lib/api/schedules';
 import ScheduleFormModal from '@/app/components/schedules/ScheduleFormModal';
+import PageHeader from '@/app/components/ui/PageHeader';
+import StateMessage from '@/app/components/ui/StateMessage';
 
 type ApiError = Error & { status?: number; code?: string };
 
@@ -73,11 +75,7 @@ export default function DoctorSchedulesPage() {
   }, [schedulesQuery.data]);
 
   if (loading || schedulesQuery.isLoading) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="text-gray-600">{t('loading')}</div>
-      </div>
-    );
+    return <div className="mx-auto max-w-5xl p-4 text-slate-600">{t('loading')}</div>;
   }
 
   if (!isAuthenticated || user?.role !== 'doctor') {
@@ -85,62 +83,65 @@ export default function DoctorSchedulesPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{t('title')}</h1>
-          <p className="text-sm text-gray-600">{t('timezoneHint')}</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setSelected(null);
-            setBackendError(null);
-            setIsModalOpen(true);
-          }}
-          className="rounded-md bg-blue-600 px-4 py-2 text-white"
-        >
-          {t('newSchedule')}
-        </button>
-      </div>
+    <div className="mx-auto max-w-5xl p-4 sm:p-6" data-testid="doctor-schedules-page">
+      <PageHeader
+        title={t('title')}
+        subtitle={t('timezoneHint')}
+        action={
+          <button
+            type="button"
+            data-testid="new-schedule-button"
+            onClick={() => {
+              setSelected(null);
+              setBackendError(null);
+              setIsModalOpen(true);
+            }}
+            className="rounded-md bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
+          >
+            {t('newSchedule')}
+          </button>
+        }
+      />
 
       {schedulesQuery.isError && (
-        <div className="mb-3 rounded-md border border-red-200 bg-red-50 p-3 text-red-700">
-          {getErrorMessage(schedulesQuery.error, t)}
+        <div className="mb-3">
+          <StateMessage message={getErrorMessage(schedulesQuery.error, t)} variant="error" />
         </div>
       )}
 
       <div className="space-y-4">
         {Object.entries(grouped).map(([dayKey, daySchedules]) => (
-          <div key={dayKey} className="rounded-lg border border-gray-200 bg-white p-4">
+          <div key={dayKey} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <h2 className="mb-3 text-lg font-semibold">{t(`days.${dayKey}`)}</h2>
             {daySchedules.length === 0 ? (
-              <div className="text-sm text-gray-500">{t('emptyDay')}</div>
+              <div className="text-sm text-slate-500">{t('emptyDay')}</div>
             ) : (
               <div className="space-y-2">
                 {daySchedules.map((schedule) => (
                   <div
                     key={schedule.id}
-                    className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    data-testid={`schedule-row-${schedule.id}`}
+                    className="flex flex-col gap-2 rounded-md border border-slate-200 p-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <div className="font-medium">
                         {schedule.startTime.slice(0, 5)} - {schedule.endTime.slice(0, 5)}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-slate-600">
                         {t('slotLabel', {
                           duration: schedule.slotDurationMinutes,
                           break: schedule.breakDurationMinutes,
                         })}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-slate-500">
                         {schedule.isActive ? t('status.active') : t('status.inactive')}
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        className="rounded-md bg-gray-100 px-3 py-2 text-sm text-gray-700 hover:bg-gray-200"
+                        data-testid={`schedule-edit-${schedule.id}`}
+                        className="rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700 hover:bg-slate-200"
                         onClick={() => {
                           setSelected(schedule);
                           setBackendError(null);
@@ -151,6 +152,7 @@ export default function DoctorSchedulesPage() {
                       </button>
                       <button
                         type="button"
+                        data-testid={`schedule-delete-${schedule.id}`}
                         className="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 hover:bg-red-200"
                         onClick={async () => {
                           if (!window.confirm(t('deleteConfirm'))) {
@@ -176,8 +178,8 @@ export default function DoctorSchedulesPage() {
       </div>
 
       {backendError && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {backendError}
+        <div className="mt-4">
+          <StateMessage message={backendError} variant="error" />
         </div>
       )}
 

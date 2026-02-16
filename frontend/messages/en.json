@@ -2,6 +2,42 @@
   "common": {
     "welcome": "Welcome"
   },
+  "appShell": {
+    "skipToContent": "Skip to main content",
+    "mobileNavLabel": "Mobile navigation",
+    "logout": "Sign out",
+    "nav": {
+      "searchDoctors": "Search doctors",
+      "myAppointments": "My appointments",
+      "doctorProfile": "Doctor profile",
+      "doctorSchedules": "Schedules",
+      "doctorVerification": "Verification",
+      "adminDashboard": "Admin dashboard",
+      "login": "Log in",
+      "registerPatient": "Patient sign up",
+      "registerDoctor": "Doctor sign up"
+    },
+    "footer": {
+      "rights": "© 2026 CitaYa. All rights reserved.",
+      "market": "Beta MVP for Mexico"
+    }
+  },
+  "home": {
+    "eyebrow": "In-person medical appointments",
+    "title": "Find trusted specialists and book in minutes",
+    "subtitle": "Compare doctors by specialty and location, reserve your slot, and manage everything in one platform.",
+    "ctaSearch": "Search specialists",
+    "ctaDoctor": "I'm a doctor",
+    "kpiDoctors": "Doctors on platform",
+    "kpiAppointments": "Appointments managed",
+    "kpiSpecialties": "Available specialties",
+    "feature1Title": "Smart search",
+    "feature1Body": "Filter by specialty and location to discover relevant options near you.",
+    "feature2Title": "Fast, clear booking",
+    "feature2Body": "Pick an available slot and confirm your appointment with a guided flow.",
+    "feature3Title": "Trust and transparency",
+    "feature3Body": "Verified doctor profiles and moderated reviews to help better decisions."
+  },
   "auth": {
     "email": "Email",
     "emailPlaceholder": "your@email.com",
@@ -30,6 +66,11 @@
     "emailExists": "This email is already registered",
     "rateLimitExceeded": "You have exceeded the attempt limit. Try again in {minutes} minutes",
     "registerError": "Error registering. Please try again",
+    "loginTitle": "Log in",
+    "loginHint": "You can also use test patient: patient@test.com / password123",
+    "noAccountYet": "Don't have an account yet?",
+    "createPatientAccount": "Create patient account",
+    "createDoctorAccount": "Register doctor account",
     "geocodingFailed": "Could not geocode the address. Registration will continue without coordinates.",
     "geocodingWarning": "You can continue with registration. Geocoding will be attempted again on the backend.",
     "geocodingLoading": "Geocoding address...",
@@ -37,6 +78,7 @@
   },
   "search": {
     "title": "Search Doctors",
+    "searchHint": "Find specialists by specialty and location in seconds.",
     "specialty": "Specialty",
     "selectSpecialty": "Select a specialty",
     "useMyLocation": "Use my location",
@@ -51,6 +93,8 @@
     "yourLocation": "Your location",
     "resultsFound": "{count, plural, =0 {No results found} one {# result found} other {# results found}}",
     "noResults": "No doctors found with the specified criteria. Try expanding the search radius or changing the specialty.",
+    "latestDoctorsFound": "{count, plural, =0 {No recent doctors to show} one {Latest registered doctor (#)} other {Latest registered doctors (#)}}",
+    "noLatestDoctors": "There are no recent doctors to show yet.",
     "searchError": "Error searching for doctors. Please try again.",
     "googleMapsError": "Error loading Google Maps. Please check your connection.",
     "reviews": "reviews",
@@ -77,10 +121,21 @@
     "errorActiveAppointment": "You already have an active appointment. Cancel or reschedule before creating a new one.",
     "errorSlotTaken": "This time was just booked by another patient. Choose another slot.",
     "doctorInfo": "Doctor information",
-    "appointmentSummary": "Appointment summary"
+    "appointmentSummary": "Appointment summary",
+    "selectSlotToContinue": "Select a time slot to continue.",
+    "bookingFor": "Who is this appointment for?",
+    "forMe": "For me",
+    "forOther": "For someone else",
+    "contactPhone": "Phone number",
+    "contactEmail": "Email address",
+    "confirmEmail": "Confirm email address",
+    "consentTerms": "I consent to the use of health data for service delivery.",
+    "consentMarketing": "I want to receive marketing communications (optional).",
+    "marketingNote": "You can change this preference from your profile once available."
   },
   "appointmentsManagement": {
     "title": "My appointments",
+    "subtitle": "Review, reschedule, or cancel your active appointments in one place.",
     "loading": "Loading...",
     "loadingAppointments": "Loading your appointments...",
     "empty": "You have no appointments for the selected filters.",
@@ -153,6 +208,39 @@
     "address": "Address",
     "postalCode": "Postal code",
     "manageSchedules": "Manage schedules",
+    "appointments": {
+      "title": "Related appointments",
+      "subtitle": "Review your patient appointments and their current status.",
+      "loading": "Loading related appointments...",
+      "loadError": "Could not load doctor appointments.",
+      "empty": "No appointments found for the selected filter.",
+      "filters": {
+        "pending": "Pending approval",
+        "confirmed": "Confirmed"
+      },
+      "confirm": {
+        "action": "Confirm appointment",
+        "processing": "Confirming...",
+        "success": "Appointment confirmed successfully.",
+        "error": "Could not confirm the appointment."
+      },
+      "cancel": {
+        "action": "Cancel appointment",
+        "confirm": "This action will cancel the appointment and release the slot. Do you want to continue?",
+        "processing": "Cancelling...",
+        "success": "Appointment cancelled successfully.",
+        "error": "Could not cancel the appointment.",
+        "defaultReason": "Appointment cancelled by doctor"
+      },
+      "fields": {
+        "patient": "Patient",
+        "email": "Email",
+        "phone": "Phone",
+        "notes": "Notes"
+      },
+      "withoutNotes": "No notes",
+      "notAvailable": "Not available"
+    },
     "validation": {
       "firstNameRequired": "First name is required",
       "lastNameRequired": "Last name is required",
@@ -211,6 +299,7 @@
   },
   "doctorVerification": {
     "title": "Document verification",
+    "subtitle": "Upload your professional documents to complete manual review.",
     "loading": "Loading...",
     "uploadTitle": "Upload new document",
     "documentTypeLabel": "Document type",
@@ -242,6 +331,7 @@
   },
   "adminDashboard": {
     "title": "Admin dashboard",
+    "subtitle": "Track key metrics, pending verifications, and reviews moderation.",
     "common": {
       "loading": "Loading...",
       "error": "An error occurred while loading dashboard",
@@ -265,6 +355,20 @@
     "verification": {
       "title": "Doctor verification",
       "documentsTitle": "Doctor documents",
+      "tableCaption": "Doctor verification table by status",
+      "modalDescription": "Confirm the action and add notes when needed.",
+      "documentsSummary": "{approved} approved / {pending} pending / {rejected} rejected (total {total})",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "statusHints": {
+        "pendingDocuments": "There are {pending} document(s) still pending review.",
+        "rejectedDocuments": "There are {rejected} rejected document(s); re-upload is required.",
+        "allDocumentsApproved": "All documents are approved.",
+        "doctorRejected": "Doctor verification has been rejected."
+      },
       "columns": {
         "name": "Name",
         "email": "Email",
@@ -277,11 +381,15 @@
         "openSignedUrl": "Open signed URL",
         "approve": "Approve",
         "reject": "Reject",
-        "rejectPrompt": "Write rejection note"
+        "rejectPrompt": "Write rejection note",
+        "confirm": "Confirm action",
+        "cancel": "Cancel"
       }
     },
     "reviews": {
       "title": "Reviews moderation",
+      "tableCaption": "Pending reviews moderation table",
+      "modalDescription": "Review the feedback and add moderation notes when applicable.",
       "columns": {
         "patient": "Patient",
         "doctor": "Doctor",
@@ -292,7 +400,9 @@
       "actions": {
         "approve": "Approve",
         "reject": "Reject",
-        "rejectPrompt": "Write moderation note"
+        "rejectPrompt": "Write moderation note",
+        "confirm": "Confirm action",
+        "cancel": "Cancel"
       }
     }
   }

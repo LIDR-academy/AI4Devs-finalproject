@@ -12,7 +12,8 @@ const appointmentService = new AppointmentService();
 export const appointmentsController = {
   list: async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const patientId = req.user!.id;
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
       const status = req.query.status as string | undefined;
       const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
@@ -32,21 +33,51 @@ export const appointmentsController = {
         });
       }
 
-      const result = await appointmentService.listPatientAppointments(
-        patientId,
-        status as
-          | 'confirmed'
-          | 'pending'
-          | 'completed'
-          | 'cancelled'
-          | 'no_show'
-          | undefined,
-        page,
-        limit
-      );
+      const normalizedStatus = status as
+        | 'confirmed'
+        | 'pending'
+        | 'completed'
+        | 'cancelled'
+        | 'no_show'
+        | undefined;
+      const result =
+        userRole === 'doctor'
+          ? await appointmentService.listDoctorAppointments(
+              userId,
+              normalizedStatus,
+              page,
+              limit
+            )
+          : await appointmentService.listPatientAppointments(
+              userId,
+              normalizedStatus,
+              page,
+              limit
+            );
 
       return res.status(200).json({
-        appointments: result.appointments,
+        appointments: result.appointments.map((appointment) => ({
+          id: appointment.id,
+          patientId: appointment.patientId,
+          doctorId: appointment.doctorId,
+          slotId: appointment.slotId,
+          appointmentDate: appointment.appointmentDate,
+          status: appointment.status,
+          notes: appointment.notes,
+          cancellationReason: appointment.cancellationReason,
+          createdAt: appointment.createdAt,
+          updatedAt: appointment.updatedAt,
+          patient:
+            req.user?.role === 'doctor' && appointment.patient
+              ? {
+                  id: appointment.patient.id,
+                  firstName: appointment.patient.firstName,
+                  lastName: appointment.patient.lastName,
+                  email: appointment.patient.email,
+                  phone: appointment.patient.phone,
+                }
+              : undefined,
+        })),
         pagination: result.pagination,
       });
     } catch (error) {
@@ -155,33 +186,65 @@ export const appointmentsController = {
       }
 
       const hasCancelAction = dto.status === 'cancelled';
+      const hasDoctorConfirmAction = dto.status === 'confirmed';
       const hasRescheduleAction = !!dto.slotId || !!dto.appointmentDate;
+      const userRole = req.user!.role;
 
-      if (!hasCancelAction && !hasRescheduleAction) {
+      if (!hasCancelAction && !hasDoctorConfirmAction && !hasRescheduleAction) {
         return res.status(400).json({
           error:
-            "Debes enviar status='cancelled' para cancelar o slotId+appointmentDate para reprogramar",
+            "Debes enviar status='cancelled' para cancelar, status='confirmed' para confirmar o slotId+appointmentDate para reprogramar",
           code: 'UPDATE_ACTION_REQUIRED',
           timestamp: new Date().toISOString(),
         });
       }
 
-      if (hasCancelAction && hasRescheduleAction) {
+      if (
+        Number(hasCancelAction) +
+          Number(hasDoctorConfirmAction) +
+          Number(hasRescheduleAction) >
+        1
+      ) {
         return res.status(400).json({
-          error: 'No puedes cancelar y reprogramar en la misma solicitud',
+          error: 'No puedes combinar múltiples acciones en la misma solicitud',
           code: 'INVALID_UPDATE_ACTION',
           timestamp: new Date().toISOString(),
         });
       }
 
-      const patientId = req.user!.id;
+      const userId = req.user!.id;
       const ipAddress = req.ip || req.socket.remoteAddress || '0.0.0.0';
       const { id } = req.params;
 
       if (hasCancelAction) {
+        if (userRole !== 'patient' && userRole !== 'doctor') {
+          return res.status(403).json({
+            error: 'Solo pacientes o médicos pueden cancelar citas',
+            code: 'FORBIDDEN_ROLE',
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        if (userRole === 'doctor') {
+          const updated = await appointmentService.cancelAppointmentByDoctor(
+            id,
+            userId,
+            dto.cancellationReason,
+            ipAddress
+          );
+
+          return res.status(200).json({
+            id: updated.id,
+            status: updated.status,
+            cancellationReason: updated.cancellationReason,
+            updatedAt: updated.updatedAt,
+            message: 'Cita cancelada correctamente por el médico',
+          });
+        }
+
         const updated = await appointmentService.cancelAppointment(
           id,
-          patientId,
+          userId,
           dto.cancellationReason,
           ipAddress
         );
@@ -195,6 +258,29 @@ export const appointmentsController = {
         });
       }
 
+      if (hasDoctorConfirmAction) {
+        if (userRole !== 'doctor') {
+          return res.status(403).json({
+            error: 'Solo los médicos pueden confirmar citas pendientes',
+            code: 'FORBIDDEN_ROLE',
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        const updated = await appointmentService.confirmAppointmentByDoctor(
+          id,
+          userId,
+          ipAddress
+        );
+
+        return res.status(200).json({
+          id: updated.id,
+          status: updated.status,
+          updatedAt: updated.updatedAt,
+          message: 'Cita confirmada correctamente por el médico',
+        });
+      }
+
       if (!dto.slotId || !dto.appointmentDate) {
         return res.status(400).json({
           error: 'Para reprogramar debes enviar slotId y appointmentDate',
@@ -203,9 +289,17 @@ export const appointmentsController = {
         });
       }
 
+      if (userRole !== 'patient') {
+        return res.status(403).json({
+          error: 'Solo los pacientes pueden reprogramar citas',
+          code: 'FORBIDDEN_ROLE',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       const updated = await appointmentService.rescheduleAppointment(
         id,
-        patientId,
+        userId,
         dto.slotId,
         new Date(dto.appointmentDate),
         ipAddress

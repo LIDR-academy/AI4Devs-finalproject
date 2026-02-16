@@ -10,8 +10,10 @@ import {
 
 export class UpdateAppointmentDto {
   @IsOptional()
-  @IsIn(['cancelled'], { message: "status solo puede ser 'cancelled'" })
-  status?: 'cancelled';
+  @IsIn(['cancelled', 'confirmed'], {
+    message: "status solo puede ser 'cancelled' o 'confirmed'",
+  })
+  status?: 'cancelled' | 'confirmed';
 
   @ValidateIf((o: UpdateAppointmentDto) => o.status !== 'cancelled')
   @IsUUID('4', { message: 'slotId debe ser un UUID válido' })

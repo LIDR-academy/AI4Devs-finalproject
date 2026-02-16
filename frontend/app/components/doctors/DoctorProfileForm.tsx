@@ -88,6 +88,7 @@ export default function DoctorProfileForm({
         });
       })}
       className="space-y-4"
+      data-testid="doctor-profile-form"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -96,6 +97,7 @@ export default function DoctorProfileForm({
           </label>
           <input
             id="firstName"
+            data-testid="doctor-profile-firstName"
             {...register('firstName')}
             className="w-full border border-gray-300 rounded-md px-3 py-2"
           />
@@ -110,6 +112,7 @@ export default function DoctorProfileForm({
           </label>
           <input
             id="lastName"
+            data-testid="doctor-profile-lastName"
             {...register('lastName')}
             className="w-full border border-gray-300 rounded-md px-3 py-2"
           />
@@ -125,6 +128,7 @@ export default function DoctorProfileForm({
         </label>
         <input
           id="phone"
+          data-testid="doctor-profile-phone"
           {...register('phone')}
           placeholder="+521234567890"
           className="w-full border border-gray-300 rounded-md px-3 py-2"
@@ -140,6 +144,7 @@ export default function DoctorProfileForm({
         </label>
         <textarea
           id="bio"
+          data-testid="doctor-profile-bio"
           {...register('bio')}
           rows={4}
           className="w-full border border-gray-300 rounded-md px-3 py-2"
@@ -159,6 +164,7 @@ export default function DoctorProfileForm({
           </label>
           <input
             id="address"
+            data-testid="doctor-profile-address"
             {...register('address')}
             className="w-full border border-gray-300 rounded-md px-3 py-2"
           />
@@ -173,6 +179,7 @@ export default function DoctorProfileForm({
           </label>
           <input
             id="postalCode"
+            data-testid="doctor-profile-postalCode"
             {...register('postalCode')}
             className="w-full border border-gray-300 rounded-md px-3 py-2"
           />
@@ -184,6 +191,7 @@ export default function DoctorProfileForm({
 
       <button
         type="submit"
+        data-testid="doctor-profile-save"
         disabled={isSaving}
         className="bg-blue-600 text-white px-4 py-2 rounded-md disabled:opacity-50"
       >

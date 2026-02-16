@@ -1,4 +1,5 @@
 import { AppDataSource } from '../config/database';
+import { EntityManager } from 'typeorm';
 import { notificationQueue } from '../config/queue';
 import { AuditLog } from '../models/audit-log.entity';
 import { Doctor } from '../models/doctor.entity';
@@ -11,6 +12,38 @@ export interface AdminVerificationListFilters {
 }
 
 export class AdminVerificationService {
+  private async syncDoctorVerificationStatus(
+    manager: EntityManager,
+    doctor: Doctor,
+    adminUserId: string,
+    notes?: string
+  ): Promise<void> {
+    const documentRepo = manager.getRepository(VerificationDocument);
+    const totalDocumentsRow = await documentRepo
+      .createQueryBuilder('doc')
+      .select('COUNT(*)', 'totalDocuments')
+      .where('doc.doctor_id = :doctorId', { doctorId: doctor.id })
+      .getRawOne<{ totalDocuments: string }>();
+
+    const notApprovedDocumentsRow = await documentRepo
+      .createQueryBuilder('doc')
+      .select('COUNT(*)', 'notApprovedDocuments')
+      .where('doc.doctor_id = :doctorId', { doctorId: doctor.id })
+      .andWhere('doc.status <> :approvedStatus', { approvedStatus: 'approved' })
+      .getRawOne<{ notApprovedDocuments: string }>();
+
+    const total = Number(totalDocumentsRow?.totalDocuments || 0);
+    const notApproved = Number(notApprovedDocumentsRow?.notApprovedDocuments || 0);
+    const shouldBeApproved = total === 0 || notApproved === 0;
+
+    const nextStatus: 'approved' | 'pending' = shouldBeApproved ? 'approved' : 'pending';
+    doctor.verificationStatus = nextStatus;
+    doctor.verifiedBy = adminUserId;
+    doctor.verifiedAt = new Date();
+    doctor.verificationNotes = notes?.trim() || null;
+    await manager.getRepository(Doctor).save(doctor);
+  }
+
   async listDoctors(filters: AdminVerificationListFilters): Promise<{
     items: Array<{
       doctorId: string;
@@ -19,6 +52,10 @@ export class AdminVerificationService {
       email: string;
       specialty: string;
       verificationStatus: 'pending' | 'approved' | 'rejected';
+      totalDocuments: number;
+      pendingDocuments: number;
+      approvedDocuments: number;
+      rejectedDocuments: number;
       createdAt: string;
       verificationNotes?: string;
     }>;
@@ -28,9 +65,26 @@ export class AdminVerificationService {
     const qb = doctorRepo
       .createQueryBuilder('doctor')
       .innerJoin('doctor.user', 'user')
-      .leftJoin('doctor.specialties', 'specialty');
+      .leftJoin('doctor.specialties', 'specialty')
+      .leftJoin('VERIFICATION_DOCUMENTS', 'doc', 'doc.doctor_id = doctor.id');
 
-    if (filters.status) {
+    if (filters.status === 'pending') {
+      // Incluye inconsistencias históricas: médicos con documentos pendientes aunque
+      // el estado agregado del doctor no se haya sincronizado correctamente.
+      qb.andWhere(
+        `(doctor.verification_status = :doctorStatusPending
+          OR EXISTS (
+            SELECT 1
+            FROM VERIFICATION_DOCUMENTS pending_doc
+            WHERE pending_doc.doctor_id = doctor.id
+              AND pending_doc.status = :documentStatusPending
+          ))`,
+        {
+          doctorStatusPending: 'pending',
+          documentStatusPending: 'pending',
+        }
+      );
+    } else if (filters.status) {
       qb.andWhere('doctor.verification_status = :status', { status: filters.status });
     }
 
@@ -43,6 +97,19 @@ export class AdminVerificationService {
       .addSelect("COALESCE(MAX(specialty.name_es), 'Sin especialidad')", 'specialty')
       .addSelect('doctor.verification_status', 'verificationStatus')
       .addSelect('doctor.verification_notes', 'verificationNotes')
+      .addSelect('COUNT(DISTINCT doc.id)', 'totalDocuments')
+      .addSelect(
+        "COUNT(DISTINCT CASE WHEN doc.status = 'pending' THEN doc.id END)",
+        'pendingDocuments'
+      )
+      .addSelect(
+        "COUNT(DISTINCT CASE WHEN doc.status = 'approved' THEN doc.id END)",
+        'approvedDocuments'
+      )
+      .addSelect(
+        "COUNT(DISTINCT CASE WHEN doc.status = 'rejected' THEN doc.id END)",
+        'rejectedDocuments'
+      )
       .addSelect('doctor.created_at', 'createdAt')
       .groupBy('doctor.id')
       .addGroupBy('doctor.user_id')
@@ -65,6 +132,10 @@ export class AdminVerificationService {
         email: row.email,
         specialty: row.specialty,
         verificationStatus: row.verificationStatus,
+        totalDocuments: Number(row.totalDocuments || 0),
+        pendingDocuments: Number(row.pendingDocuments || 0),
+        approvedDocuments: Number(row.approvedDocuments || 0),
+        rejectedDocuments: Number(row.rejectedDocuments || 0),
         verificationNotes: row.verificationNotes || undefined,
         createdAt: new Date(row.createdAt).toISOString(),
       })),
@@ -114,11 +185,12 @@ export class AdminVerificationService {
       const doctor = await doctorRepo.findOne({ where: { id: doctorId } });
       if (!doctor) throw new Error('DOCTOR_NOT_FOUND');
 
-      doctor.verificationStatus = 'approved';
-      doctor.verifiedBy = adminUserId;
-      doctor.verifiedAt = new Date();
-      doctor.verificationNotes = notes?.trim() || null;
-      await doctorRepo.save(doctor);
+      const oldValues = {
+        verificationStatus: doctor.verificationStatus,
+        verifiedBy: doctor.verifiedBy,
+        verifiedAt: doctor.verifiedAt,
+        verificationNotes: doctor.verificationNotes,
+      };
 
       await documentRepo
         .createQueryBuilder()
@@ -128,6 +200,8 @@ export class AdminVerificationService {
         .andWhere('status = :status', { status: 'pending' })
         .execute();
 
+      await this.syncDoctorVerificationStatus(manager, doctor, adminUserId, notes);
+
       await auditRepo.save(
         auditRepo.create({
           action: 'approve_doctor_verification',
@@ -135,7 +209,7 @@ export class AdminVerificationService {
           entityId: doctor.id,
           userId: adminUserId,
           ipAddress,
-          oldValues: JSON.stringify({ verificationStatus: 'pending' }),
+          oldValues: JSON.stringify(oldValues),
           newValues: JSON.stringify({
             verificationStatus: doctor.verificationStatus,
             verifiedBy: doctor.verifiedBy,
@@ -151,7 +225,7 @@ export class AdminVerificationService {
     try {
       await notificationQueue.add('send-doctor-verification-status', {
         doctorId: result.id,
-        status: 'approved',
+        status: result.verificationStatus,
         notes: notes || null,
       });
     } catch {
@@ -185,6 +259,13 @@ export class AdminVerificationService {
       const doctor = await doctorRepo.findOne({ where: { id: doctorId } });
       if (!doctor) throw new Error('DOCTOR_NOT_FOUND');
 
+      const oldValues = {
+        verificationStatus: doctor.verificationStatus,
+        verifiedBy: doctor.verifiedBy,
+        verifiedAt: doctor.verifiedAt,
+        verificationNotes: doctor.verificationNotes,
+      };
+
       doctor.verificationStatus = 'rejected';
       doctor.verifiedBy = adminUserId;
       doctor.verifiedAt = new Date();
@@ -206,7 +287,7 @@ export class AdminVerificationService {
           entityId: doctor.id,
           userId: adminUserId,
           ipAddress,
-          oldValues: JSON.stringify({ verificationStatus: 'pending' }),
+          oldValues: JSON.stringify(oldValues),
           newValues: JSON.stringify({
             verificationStatus: doctor.verificationStatus,
             verifiedBy: doctor.verifiedBy,

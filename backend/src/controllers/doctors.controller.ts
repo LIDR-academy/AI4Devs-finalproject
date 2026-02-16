@@ -47,8 +47,11 @@ export const doctorsController = {
         });
       }
 
+      const hasCoordinates = filters.lat !== undefined && filters.lng !== undefined;
+      const hasPostalCode = !!filters.postalCode;
+
       // Validar que haya al menos coordenadas o código postal
-      if (!filters.lat && !filters.lng && !filters.postalCode) {
+      if (!hasCoordinates && !hasPostalCode) {
         return res.status(400).json({
           error: 'Debes proporcionar coordenadas (lat, lng) o código postal',
           code: 'MISSING_LOCATION_PARAMS',
@@ -57,7 +60,7 @@ export const doctorsController = {
       }
 
       // Validar que si hay lat, también haya lng y viceversa
-      if ((filters.lat && !filters.lng) || (!filters.lat && filters.lng)) {
+      if ((filters.lat !== undefined && filters.lng === undefined) || (filters.lat === undefined && filters.lng !== undefined)) {
         return res.status(400).json({
           error: 'Las coordenadas lat y lng deben proporcionarse juntas',
           code: 'INCOMPLETE_COORDINATES',
@@ -65,8 +68,20 @@ export const doctorsController = {
         });
       }
 
-      // Ejecutar búsqueda
-      const result = await doctorSearchService.searchDoctors(filters);
+      // Ejecutar búsqueda primaria
+      let result = await doctorSearchService.searchDoctors(filters);
+
+      // Fallback: si no hay resultados por geolocalización, intentar por código postal
+      if (result.doctors.length === 0 && hasCoordinates && hasPostalCode) {
+        const fallbackFilters = {
+          ...filters,
+          lat: undefined,
+          lng: undefined,
+        };
+
+        logger.info('Sin resultados por geolocalización. Aplicando fallback por código postal.');
+        result = await doctorSearchService.searchDoctors(fallbackFilters);
+      }
 
       // Si no hay resultados
       if (result.doctors.length === 0) {
@@ -113,6 +128,25 @@ export const doctorsController = {
       return res.status(200).json(doctor);
     } catch (error) {
       logger.error('Error al obtener médico:', error);
+      return res.status(500).json({
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_ERROR',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  },
+
+  getLatest: async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const parsedLimit = req.query.limit ? parseInt(req.query.limit as string, 10) : 5;
+      const limit = Number.isFinite(parsedLimit) ? parsedLimit : 5;
+      const latestDoctors = await doctorService.getLatestRegistered(limit);
+
+      return res.status(200).json({
+        doctors: latestDoctors,
+      });
+    } catch (error) {
+      logger.error('Error al obtener últimos médicos registrados:', error);
       return res.status(500).json({
         error: 'Error interno del servidor',
         code: 'INTERNAL_ERROR',

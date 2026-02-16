@@ -10,6 +10,8 @@ import {
   useUploadVerificationDoc,
   useVerificationDocs,
 } from '@/hooks/useVerificationDocs';
+import PageHeader from '@/app/components/ui/PageHeader';
+import StateMessage from '@/app/components/ui/StateMessage';
 
 function formatDate(date: string, locale: string): string {
   return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-MX', {
@@ -42,11 +44,7 @@ export default function DoctorVerificationPage() {
   }, [isAuthenticated, loading, locale, router, user?.role]);
 
   if (loading || docsQuery.isLoading) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="text-gray-600">{t('loading')}</div>
-      </div>
-    );
+    return <div className="mx-auto max-w-4xl p-4 text-slate-600">{t('loading')}</div>;
   }
 
   if (!isAuthenticated || user?.role !== 'doctor') {
@@ -82,20 +80,21 @@ export default function DoctorVerificationPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-4">{t('title')}</h1>
+    <div className="mx-auto max-w-4xl p-4 sm:p-6">
+      <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
       {successMessage && (
-        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 p-3 rounded-md">
-          {successMessage}
+        <div className="mb-4">
+          <StateMessage message={successMessage} variant="success" />
         </div>
       )}
 
       {uploadMutation.isError && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-md">
-          {uploadMutation.error instanceof Error
-            ? mapError(uploadMutation.error)
-            : t('errors.generic')}
+        <div className="mb-4">
+          <StateMessage
+            message={uploadMutation.error instanceof Error ? mapError(uploadMutation.error) : t('errors.generic')}
+            variant="error"
+          />
         </div>
       )}
 
@@ -109,30 +108,31 @@ export default function DoctorVerificationPage() {
         }}
       />
 
-      <section className="mt-6 bg-white border border-gray-200 rounded-lg p-4">
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold mb-3">{t('listTitle')}</h2>
 
         {docsQuery.isError ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md">
-            {docsQuery.error instanceof Error
-              ? docsQuery.error.message
-              : t('errors.loadDocuments')}
-          </div>
+          <StateMessage
+            message={
+              docsQuery.error instanceof Error ? docsQuery.error.message : t('errors.loadDocuments')
+            }
+            variant="error"
+          />
         ) : (docsQuery.data?.length || 0) === 0 ? (
-          <div className="text-gray-600">{t('emptyList')}</div>
+          <StateMessage message={t('emptyList')} />
         ) : (
           <div className="space-y-2">
             {docsQuery.data?.map((doc) => (
               <div
                 key={doc.id}
-                className="border border-gray-200 rounded-md p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                className="flex flex-col gap-2 rounded-md border border-slate-200 p-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{doc.originalFilename}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-slate-900">{doc.originalFilename}</p>
+                  <p className="text-sm text-slate-600">
                     {t(`documentTypeOptions.${doc.documentType}`)} - {doc.mimeType}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     {formatDate(doc.createdAt, locale)} - {doc.fileSizeBytes} bytes
                   </p>
                 </div>

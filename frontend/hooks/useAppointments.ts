@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import {
   cancelAppointment,
+  confirmAppointmentByDoctor,
   getAppointments,
   rescheduleAppointment,
 } from '@/lib/api/appointments';
@@ -76,6 +77,27 @@ export function useRescheduleAppointment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['slots'] });
+    },
+  });
+}
+
+export function useConfirmAppointmentByDoctor() {
+  const { accessToken } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ appointmentId }: { appointmentId: string }) => {
+      if (!accessToken) {
+        throw new Error('No autenticado');
+      }
+      return confirmAppointmentByDoctor(
+        appointmentId,
+        { status: 'confirmed' },
+        accessToken
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
   });
 }

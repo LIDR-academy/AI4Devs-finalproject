@@ -1,6 +1,8 @@
 'use client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { getApiBaseUrl } from './base-url';
+
+const API_URL = getApiBaseUrl();
 
 export interface CreateAppointmentPayload {
   doctorId: string;
@@ -32,6 +34,13 @@ export interface AppointmentItem {
   cancellationReason?: string;
   createdAt: string;
   updatedAt: string;
+  patient?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  };
 }
 
 export interface AppointmentsResponse {
@@ -54,11 +63,15 @@ export interface RescheduleAppointmentPayload {
   appointmentDate: string;
 }
 
+export interface ConfirmAppointmentPayload {
+  status: 'confirmed';
+}
+
 export async function createAppointment(
   payload: CreateAppointmentPayload,
   token: string
 ): Promise<CreateAppointmentResponse> {
-  const response = await fetch(`${API_URL}/api/v1/appointments`, {
+  const response = await fetch(`${API_URL}/appointments`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -97,7 +110,7 @@ export async function getAppointments(
     params.set('status', status);
   }
 
-  const response = await fetch(`${API_URL}/api/v1/appointments?${params}`, {
+  const response = await fetch(`${API_URL}/appointments?${params}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -118,7 +131,7 @@ export async function cancelAppointment(
   payload: CancelAppointmentPayload,
   token: string
 ): Promise<{ message: string; status: string }> {
-  const response = await fetch(`${API_URL}/api/v1/appointments/${appointmentId}`, {
+  const response = await fetch(`${API_URL}/appointments/${appointmentId}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -140,7 +153,7 @@ export async function rescheduleAppointment(
   payload: RescheduleAppointmentPayload,
   token: string
 ): Promise<{ message: string; status: string; slotId: string }> {
-  const response = await fetch(`${API_URL}/api/v1/appointments/${appointmentId}`, {
+  const response = await fetch(`${API_URL}/appointments/${appointmentId}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -152,6 +165,28 @@ export async function rescheduleAppointment(
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data.error || 'Error al reprogramar cita');
+  }
+
+  return data;
+}
+
+export async function confirmAppointmentByDoctor(
+  appointmentId: string,
+  payload: ConfirmAppointmentPayload,
+  token: string
+): Promise<{ message: string; status: string }> {
+  const response = await fetch(`${API_URL}/appointments/${appointmentId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || 'Error al confirmar cita');
   }
 
   return data;

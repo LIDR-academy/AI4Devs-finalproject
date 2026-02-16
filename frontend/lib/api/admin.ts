@@ -1,6 +1,9 @@
 'use client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(
+  /\/api\/v1\/?$/,
+  ''
+);
 
 export interface AdminMetricsResponse {
   summary: {
@@ -48,6 +51,10 @@ export interface AdminVerificationDoctor {
   email: string;
   specialty: string;
   verificationStatus: 'pending' | 'approved' | 'rejected';
+  totalDocuments: number;
+  pendingDocuments: number;
+  approvedDocuments: number;
+  rejectedDocuments: number;
   createdAt: string;
   verificationNotes?: string;
 }

@@ -44,8 +44,6 @@ const uploadVerificationDocument = (
 // Endpoint de búsqueda de médicos
 router.get(
   '/',
-  authenticate,
-  requireRole(['patient']),
   doctorsController.search
 );
 
@@ -55,6 +53,12 @@ router.get(
   authenticate,
   requireRole(['doctor']),
   doctorsController.getMe
+);
+
+// Últimos médicos registrados (público)
+router.get(
+  '/latest',
+  doctorsController.getLatest
 );
 
 // Actualización de perfil del médico autenticado
