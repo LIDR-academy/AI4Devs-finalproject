@@ -5,6 +5,9 @@ import { config } from './shared/config';
 import { errorHandler } from './shared/errors/error-handler';
 import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/users/user.routes';
+import { courtRoutes } from './modules/courts/court.routes';
+import { reservationRoutes } from './modules/reservations/reservation.routes';
+import { paymentRoutes } from './modules/payments/payment.routes';
 
 const fastify = Fastify({
     logger: {
@@ -24,6 +27,9 @@ fastify.register(jwt, {
 // Register routes
 fastify.register(authRoutes, { prefix: '/api/v1/auth' });
 fastify.register(userRoutes, { prefix: '/api/v1/auth' });
+fastify.register(courtRoutes, { prefix: '/api/v1' });
+fastify.register(reservationRoutes, { prefix: '/api/v1' });
+fastify.register(paymentRoutes, { prefix: '/api/v1' });
 
 // Health check endpoint
 fastify.get('/api/v1/health', async () => {
