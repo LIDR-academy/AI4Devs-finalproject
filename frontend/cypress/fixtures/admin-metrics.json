@@ -1,0 +1,29 @@
+{
+  "summary": {
+    "totalReservations": 35,
+    "totalCompletedAppointments": 20,
+    "totalCancellations": 4,
+    "cancellationRate": 11.42,
+    "averageRating": 4.6,
+    "activeDoctors": 8,
+    "activePatients": 54
+  },
+  "reservationsSeries": [
+    { "date": "2026-02-10", "total": 3 },
+    { "date": "2026-02-11", "total": 5 }
+  ],
+  "cancellationsSeries": [
+    { "date": "2026-02-10", "total": 1 },
+    { "date": "2026-02-11", "total": 0 }
+  ],
+  "cancellationsByReason": [
+    { "reason": "Paciente no disponible", "total": 2 }
+  ],
+  "ratingsBySpecialty": [
+    { "specialtyId": "spec-1", "specialty": "Cardiologia", "average": 4.6, "totalReviews": 13 }
+  ],
+  "topDoctorsByAppointments": [],
+  "topDoctorsByRating": [],
+  "generatedAt": "2026-02-15T12:00:00.000Z",
+  "stale": false
+}

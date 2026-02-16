@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-50: #eefbf8;
+  --brand-100: #d5f5ef;
+  --brand-600: #0f9a86;
+  --brand-700: #0a7d6d;
+  --canvas: #f6f9fc;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+}
+
+body {
+  color: var(--text-main);
+  background-color: var(--canvas);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--brand-700);
+  outline-offset: 2px;
+}
+
+.bg-canvas {
+  background-color: var(--canvas);
+}
+
+.text-brand-700 {
+  color: var(--brand-700);
+}
+
+.bg-brand-600 {
+  background-color: var(--brand-600);
+}
+
+.hover\:bg-brand-700:hover {
+  background-color: var(--brand-700);
+}
