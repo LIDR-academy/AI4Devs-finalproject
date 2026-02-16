@@ -225,7 +225,7 @@ describe('ValidationReportModal', () => {
 
       // Should display metadata
       expect(screen.getByText(/total_objects/i)).toBeInTheDocument();
-      expect(screen.getByText(/42/)).toBeInTheDocument();
+      expect(screen.getAllByText(/42/).length).toBeGreaterThan(0);
     });
 
     it('should show correct error counts in tab badges', () => {
