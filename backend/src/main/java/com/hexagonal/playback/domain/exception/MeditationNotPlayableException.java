@@ -28,10 +28,10 @@ public class MeditationNotPlayableException extends RuntimeException {
     /**
      * Returns user-friendly error message in Spanish.
      * 
-     * @return Spanish error message for end users
+     * @return Spanish error message for end users with current state
      */
     public String getUserMessage() {
-        return "Esta meditación aún se está procesando. Por favor, espera a que esté lista.";
+        return "La meditación está en estado " + currentState.getLabel() + " y no puede reproducirse";
     }
 
     public UUID getMeditationId() {
