@@ -107,7 +107,7 @@ export function useBlockStatusListener(
     );
 
     // Subscribe to channel
-    realtimeChannel.subscribe((status) => {
+    realtimeChannel.subscribe((status: string) => {
       if (status === 'SUBSCRIBED') {
         setIsConnected(true);
         setIsLoading(false);
