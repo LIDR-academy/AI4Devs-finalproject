@@ -57,7 +57,7 @@ public class GenerateMeditationSteps {
 
     @Given("sends meditation text with excessive length that would exceed processing time limits")
     public void sendsMeditationTextWithExcessiveLength() {
-        this.currentText = "calm ".repeat(500); // 500 words > 30s limit
+        this.currentText = "calm ".repeat(500); // 500 words > 187s limit
     }
 
     @Given("selects a valid music track {string}")

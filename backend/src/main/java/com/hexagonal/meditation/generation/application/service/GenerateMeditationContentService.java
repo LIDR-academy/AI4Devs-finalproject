@@ -57,7 +57,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
     
     private static final Logger log = LoggerFactory.getLogger(GenerateMeditationContentService.class);
     
-    private static final int MAX_GENERATION_TIMEOUT_SECONDS = 30; // 30 seconds as per OpenAPI
+    private static final int MAX_GENERATION_TIMEOUT_SECONDS = 187; // 187 seconds per requirement
     private static final long MEDIA_URL_TTL_SECONDS = 3600; // 1 hour for presigned URLs
     
     // Default TTS voice configuration (es-ES meditation voice)
@@ -109,7 +109,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
         
         try {
             // 1. Validate input and estimate duration
-            // This also throws GenerationTimeoutException if estimated > 30s
+            // This also throws GenerationTimeoutException if estimated > 187s
             int estimatedDuration = textLengthEstimator.validateAndEstimate(request.narrationText());
             
             // 2. Check idempotency - return existing result if found

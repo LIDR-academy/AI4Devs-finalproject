@@ -178,7 +178,7 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/test/java/com/hexagonal/meditation/generation/application/validator/TextLengthEstimatorTest.java`
 **Criterios de aceptación:**
 - [x] `estimateProcessingTime(text)` (s) con heurística conservadora (~150 wpm + overhead)
-- [x] Umbral configurable (default 30s)
+- [x] Umbral configurable (default 187s)
 **Evidencias:** Unit tests green  
 **Dependencias:** T007
 
@@ -211,7 +211,7 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Capa:** application  
 **Artefactos:** `/backend/src/test/java/com/hexagonal/meditation/generation/application/service/GenerateMeditationContentServiceTest.java`  
 **Criterios de aceptación:**
-- [x] Happy path vídeo y audio; timeout antes de TTS si >30s
+- [x] Happy path vídeo y audio; timeout antes de TTS si >187s
 - [x] Idempotencia (misma petición → mismo resultado)
 - [x] Errores TTS/Render/Storage mapeados
 - [x] Mockito verifica secuencia de puertos
@@ -467,7 +467,7 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 
 ---
 
-## 7. Testing Pyramid (6 tareas)
+## 7. Testing Pyramid (6 tareas) [✅ COMPLETED]
 
 ### T028 — Contract Tests (OpenAPI compliance)
 **Capa:** testing  
@@ -541,7 +541,7 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 
 ---
 
-## 8. CI/CD (1 tarea)
+## 8. CI/CD (1 tarea) [✅ COMPLETED]
 
 ### T034 — CI Workflow Backend (gates + entorno)
 **Capa:** ci  
@@ -609,7 +609,7 @@ Heurísticas (longitud de línea/ruptura por frase) + QA manual.
 - ✅ Controller con bypass auth SOLO en test  
 - ✅ **Frontend** (en BC Composition/US2): botón “Generate video/podcast”, **barra “creating”** con progreso, pantalla **éxito con descarga** o **error** con detalle  
 - ✅ Contract + E2E green (Testcontainers: Postgres + LocalStack)  
-- ✅ CI gates green (BDD → E2E) y build JAR
+- ✅ CI gates green (BDD → E2E) y build JAR (187s timeout validated)
 
 ---
 

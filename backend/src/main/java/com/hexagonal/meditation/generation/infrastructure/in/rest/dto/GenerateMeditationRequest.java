@@ -15,7 +15,7 @@ import jakarta.validation.constraints.Size;
  * - Output type determined by image presence: VIDEO (with image) or AUDIO (without)
  * 
  * Processing:
- * - Pre-validates processing time (rejects if >30s timeout)
+ * - Pre-validates processing time (rejects if >187s timeout)
  * - Idempotent: same (userId, text, music, image) → same meditationId
  * 
  * @param text Meditation text content to narrate (required, 1-10000 chars)

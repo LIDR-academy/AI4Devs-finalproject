@@ -26,8 +26,8 @@ import org.springframework.web.client.RestClient;
  * <p>Uses separate RestClient beans for different services to allow
  * independent timeout configurations:</p>
  * <ul>
- *   <li>aiTextRestClient - for text generation (30s timeout)</li>
- *   <li>aiImageRestClient - for image generation (60s timeout)</li>
+ *   <li>aiTextRestClient - for text generation (200s timeout)</li>
+ *   <li>aiImageRestClient - for image generation (200s timeout)</li>
  *   <li>mediaCatalogRestClient - for media catalog (10s timeout)</li>
  * </ul>
  */
@@ -45,7 +45,7 @@ public class InfrastructureConfig {
 
         /**
          * RestClient configured for OpenAI text generation.
-         * Uses default timeouts (connect: 5000ms, read: 30000ms).
+         * Uses default timeouts (connect: 5000ms, read: 200000ms).
          * Instrumented with ObservationRegistry for metrics and tracing.
          */
         @Bean
@@ -53,7 +53,7 @@ public class InfrastructureConfig {
         public RestClient aiTextRestClient(OpenAiProperties openAiProperties, ObservationRegistry observationRegistry) {
                 SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
                 requestFactory.setConnectTimeout(5000); // default connect timeout
-                requestFactory.setReadTimeout(30000);   // default read timeout
+                requestFactory.setReadTimeout(200000);   // increased read timeout for longer narrations
 
                 return RestClient.builder()
                                 .requestFactory(requestFactory)
@@ -63,7 +63,7 @@ public class InfrastructureConfig {
 
         /**
          * RestClient configured for OpenAI image generation.
-         * Uses longer timeouts (connect: 5000ms, read: 60000ms).
+         * Uses longer timeouts (connect: 5000ms, read: 200000ms).
          * Instrumented with ObservationRegistry for metrics and tracing.
          */
         @Bean
@@ -71,7 +71,7 @@ public class InfrastructureConfig {
         public RestClient aiImageRestClient(OpenAiProperties openAiProperties, ObservationRegistry observationRegistry) {
                 SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
                 requestFactory.setConnectTimeout(5000); // default connect timeout
-                requestFactory.setReadTimeout(60000);   // longer read timeout for images
+                requestFactory.setReadTimeout(200000);   // longer read timeout for images
 
                 return RestClient.builder()
                                 .requestFactory(requestFactory)

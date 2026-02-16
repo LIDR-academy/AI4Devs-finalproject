@@ -28,7 +28,7 @@ public enum GenerationStatus {
     
     /**
      * Processing time exceeded threshold.
-     * Request rejected before processing (>30s estimated).
+     * Request rejected before processing (>187s estimated).
      */
     TIMEOUT
 }

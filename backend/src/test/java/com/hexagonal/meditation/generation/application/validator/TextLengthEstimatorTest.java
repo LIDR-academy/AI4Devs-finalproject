@@ -88,12 +88,12 @@ class TextLengthEstimatorTest {
     @Test
     @DisplayName("Should validate and accept text with sufficient duration")
     void shouldValidateAndAcceptSufficientText() {
-        // 75 words → 30 seconds (exactly at threshold)
-        String text = generateWords(75);
+        // 467 words → 186 seconds (under 187s threshold)
+        String text = generateWords(467);
         
         int duration = estimator.validateAndEstimate(text);
         
-        assertThat(duration).isEqualTo(30);
+        assertThat(duration).isEqualTo(186);
     }
     
     @Test
@@ -145,12 +145,12 @@ class TextLengthEstimatorTest {
     @Test
     @DisplayName("Should reject text that is too long")
     void shouldRejectTooLongText() {
-        // 100 words → 40 seconds (above 30s threshold)
-        String text = generateWords(100);
+        // 500 words → 200 seconds (above 187s threshold)
+        String text = generateWords(500);
         
         assertThatThrownBy(() -> estimator.validateAndEstimate(text))
             .isInstanceOf(com.hexagonal.meditation.generation.domain.exception.GenerationTimeoutException.class)
-            .hasMessageContaining("exceed 30 seconds");
+            .hasMessageContaining("exceed 187 seconds");
     }
     
     /**

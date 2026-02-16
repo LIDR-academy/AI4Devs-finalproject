@@ -17,7 +17,7 @@ import java.util.UUID;
  * - PROCESSING: Generation in progress (mediaUrl/subtitle may be null)
  * - COMPLETED: Successfully generated and stored in S3
  * - FAILED: Generation failed (TTS/rendering/storage error)
- * - TIMEOUT: Processing time exceeded (>30s)
+ * - TIMEOUT: Processing time exceeded (>187s)
  * 
  * @param meditationId Unique ID of the generated meditation
  * @param type Output media type (VIDEO or AUDIO)

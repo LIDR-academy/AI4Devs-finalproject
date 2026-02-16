@@ -110,7 +110,7 @@ class GenerateMeditationContentServiceTest {
                 compositionId, userId, text, music, null
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(20); // Under 30s limit
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(20); // Under 187s limit
         when(idempotencyKeyGenerator.generate(userId, text, music, null)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
         
@@ -145,7 +145,7 @@ class GenerateMeditationContentServiceTest {
                 compositionId, userId, text, music, image
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(25); // Under 30s limit
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(25); // Under 187s limit
         when(idempotencyKeyGenerator.generate(userId, text, music, image)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
         
@@ -194,7 +194,7 @@ class GenerateMeditationContentServiceTest {
             clock
         );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(10); // Under 30s limit
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(10); // Under 187s limit
         when(idempotencyKeyGenerator.generate(userId, text, music, null)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.of(existingOutput));
         
@@ -225,13 +225,13 @@ class GenerateMeditationContentServiceTest {
             );
         
         when(textLengthEstimator.validateAndEstimate(text))
-            .thenThrow(new GenerationTimeoutException(300, 30)); 
+            .thenThrow(new GenerationTimeoutException(300, 187)); 
         
         // Act & Assert
         assertThatThrownBy(() -> service.generate(request))
             .isInstanceOf(GenerationTimeoutException.class)
             .hasMessageContaining("300")
-            .hasMessageContaining("30");
+            .hasMessageContaining("187");
         
         verify(textLengthEstimator).validateAndEstimate(text);
     }
@@ -277,7 +277,7 @@ class GenerateMeditationContentServiceTest {
                 compositionId, userId, text, music, ""
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(20); // Under 30s limit
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(20); // Under 187s limit
         when(idempotencyKeyGenerator.generate(userId, text, music, "")).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
         

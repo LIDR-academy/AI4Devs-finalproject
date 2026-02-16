@@ -10,7 +10,7 @@ public class TextLengthEstimator {
     
     private static final int WORDS_PER_MINUTE = 150;
     private static final int MINIMUM_DURATION_SECONDS = 5; 
-    private static final int MAXIMUM_DURATION_SECONDS = 30;
+    private static final int MAXIMUM_DURATION_SECONDS = 187;
     private static final String TEXT_FIELD = "narrationText";
     
     /**

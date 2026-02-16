@@ -69,7 +69,7 @@ public class MeditationGenerationController {
      * @param compositionId composition ID header (in production from context)
      * @param userId user ID header (in production from JWT, in tests from mock header)
      * @return 200 OK with generation response (media URLs, status, duration)
-     *         408 Request Timeout if processing time exceeds 30s
+     *         408 Request Timeout if processing time exceeds 187s
      *         400 Bad Request if validation fails
      *         503 Service Unavailable if external service fails
      */

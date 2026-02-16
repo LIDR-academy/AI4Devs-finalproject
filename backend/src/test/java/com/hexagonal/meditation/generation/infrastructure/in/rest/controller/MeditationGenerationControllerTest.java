@@ -174,7 +174,7 @@ class MeditationGenerationControllerTest {
 
             when(generateMeditationContentUseCase.generate(any(GenerationRequest.class)))
                     .thenThrow(new GenerationTimeoutException(
-                            "Processing time would exceed 30 seconds. Estimated: 45s"));
+                            "Processing time would exceed 187 seconds. Estimated: 200s"));
 
             // When/Then
             mockMvc.perform(post("/api/v1/generation/meditations")
@@ -184,7 +184,7 @@ class MeditationGenerationControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isRequestTimeout())
                     .andExpect(jsonPath("$.error").value("GENERATION_TIMEOUT"))
-                    .andExpect(jsonPath("$.message").value("Processing time would exceed 30 seconds. Estimated: 45s"));
+                    .andExpect(jsonPath("$.message").value("Processing time would exceed 187 seconds. Estimated: 200s"));
         }
 
         @Test

@@ -47,7 +47,7 @@ paths:
         
         Processing time validation:
         - Estimates processing time before generation
-        - Rejects requests exceeding 30s timeout with 408 error
+        - Rejects requests exceeding 187s timeout with 408 error
         
         Idempotency:
         - Same (userId, text, musicRef, imageRef) → same meditationId
@@ -254,7 +254,7 @@ components:
         - PROCESSING: Generation in progress
         - COMPLETED: Successfully generated and stored
         - FAILED: Generation failed (TTS/rendering/storage error)
-        - TIMEOUT: Processing time exceeded (>30s)
+        - TIMEOUT: Processing time exceeded (>187s)
 
     ErrorResponse:
       type: object
@@ -304,11 +304,11 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
           example:
             error: "GENERATION_TIMEOUT"
-            message: "Processing time would exceed 30 seconds. Please send shorter text (estimated: 45s for current content)."
+            message: "Processing time would exceed 187 seconds. Please send shorter text (estimated: 200s for current content)."
             timestamp: "2026-02-12T20:00:00Z"
             details:
-              estimatedSeconds: 45
-              maxAllowedSeconds: 30
+              estimatedSeconds: 200
+              maxAllowedSeconds: 187
 
     ServiceUnavailable:
       description: External service temporarily unavailable (TTS, rendering, storage)
