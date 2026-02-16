@@ -2,10 +2,8 @@ package com.hexagonal.meditationbuilder;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Main entry point for the Meditation Builder application.
@@ -29,14 +27,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * 
  * @see com.hexagonal.meditationbuilder.infrastructure.config.InfrastructureConfig
  */
-@SpringBootApplication
-@ConfigurationPropertiesScan("com.hexagonal.meditationbuilder.infrastructure.config")
-@ComponentScan({
-    "com.hexagonal.meditationbuilder",
-    "com.hexagonal.meditation.generation"
-})
-@EnableJpaRepositories(basePackages = "com.hexagonal.meditation.generation.infrastructure.out.persistence.repository")
-@EntityScan(basePackages = "com.hexagonal.meditation.generation.infrastructure.out.persistence.entity")
+@SpringBootApplication(scanBasePackages = "com.hexagonal")
+@ConfigurationPropertiesScan("com.hexagonal")
 public class MeditationBuilderApplication {
 
     public static void main(String[] args) {

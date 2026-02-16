@@ -9,15 +9,16 @@ import com.hexagonal.meditation.generation.domain.exception.InvalidContentExcept
 public class TextLengthEstimator {
     
     private static final int WORDS_PER_MINUTE = 150;
-    private static final int MINIMUM_DURATION_SECONDS = 30;
+    private static final int MINIMUM_DURATION_SECONDS = 5; 
+    private static final int MAXIMUM_DURATION_SECONDS = 30;
     private static final String TEXT_FIELD = "narrationText";
     
     /**
-     * Validates that the estimated narration duration meets minimum requirements.
+     * Validates that the estimated narration duration meets requirements.
      * 
      * @param text The narration text to validate
      * @return The estimated duration in seconds
-     * @throws InvalidContentException if text is too short (< 30 seconds estimated)
+     * @throws InvalidContentException if text is too short or too long
      */
     public int validateAndEstimate(String text) {
         if (text == null || text.isBlank()) {
@@ -32,6 +33,11 @@ public class TextLengthEstimator {
                 String.format("Text too short: estimated %d seconds, minimum %d seconds required", 
                     estimatedSeconds, MINIMUM_DURATION_SECONDS)
             );
+        }
+
+        if (estimatedSeconds > MAXIMUM_DURATION_SECONDS) {
+            throw new com.hexagonal.meditation.generation.domain.exception.GenerationTimeoutException(
+                estimatedSeconds, MAXIMUM_DURATION_SECONDS);
         }
         
         return estimatedSeconds;

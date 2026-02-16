@@ -79,10 +79,19 @@ public class ObservabilityConfig {
                 )
         );
 
-        return OpenTelemetrySdk.builder()
+        OpenTelemetrySdk sdk = OpenTelemetrySdk.builder()
                 .setTracerProvider(tracerProvider)
                 .setPropagators(contextPropagators)
-                .buildAndRegisterGlobal();
+                .build();
+        
+        try {
+            // Try to register as global, handle case where it's already set (e.g. in tests)
+            io.opentelemetry.api.GlobalOpenTelemetry.set(sdk);
+        } catch (IllegalStateException e) {
+            // Already set, this is expected in some test scenarios with multiple contexts
+        }
+        
+        return sdk;
     }
 
     /**

@@ -305,9 +305,9 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/docker-compose.yml` (servicios `postgres:16` y `localstack/localstack:latest` con `SERVICES=s3`, puerto `4566`)
 - `/backend/src/main/resources/application-local.yml`
 **Criterios de aceptación:**
-- [ ] `docker compose up -d` levanta Postgres (5432) y LocalStack (4566)
-- [ ] Perfil `local` apunta a Postgres y S3 LocalStack; **Flyway** migra al arrancar
-- [ ] Script/init crea bucket `meditation-outputs`
+- [x] `docker compose up -d` levanta Postgres (5432) y LocalStack (4566)
+- [x] Perfil `local` apunta a Postgres y S3 LocalStack; **Flyway** migra al arrancar
+- [x] Script/init crea bucket `meditation-outputs`
 **Evidencias:** App `local` levanta, migra y crea bucket  
 **Dependencias:** T019, T018
 
@@ -318,8 +318,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Artefactos:**
 - `/backend/src/test/java/com/hexagonal/meditation/generation/S3TestContainerConfig.java` (o configuración embebida en tests)
 **Criterios de aceptación:**
-- [ ] Inicia LocalStack S3 en tests; registra `endpointOverride` en AWS SDK
-- [ ] Crea bucket `meditation-outputs` en setup
+- [x] Inicia LocalStack S3 en tests; registra `endpointOverride` en AWS SDK
+- [x] Crea bucket `meditation-outputs` en setup
 **Evidencias:** Tests de S3 (T018) y E2E (T031) usan LocalStack  
 **Dependencias:** T018
 
@@ -473,8 +473,8 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Capa:** testing  
 **Artefactos:** `/backend/src/test/contracts/GenerateMeditationContractTest.java`  
 **Criterios de aceptación:**
-- [ ] Request/response conformes; errores 400/408/503 correctos
-- [ ] **401 omitido** hasta que exista US1 (añadir luego)
+- [x] Request/response conformes; errores 400/408/503 correctos
+- [x] **401 omitido** hasta que exista US1 (añadir luego)
 **Evidencias:** Contract tests green  
 **Dependencias:** T022
 
@@ -486,10 +486,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 - `/backend/src/test/java/com/hexagonal/meditation/generation/bdd/steps/GenerateMeditationSteps.java` (completar)
 - `/backend/src/test/java/com/hexagonal/meditation/generation/bdd/CucumberSpringConfiguration.java`
 **Criterios de aceptación:**
-- [ ] Given user authenticated → bypass (mock userId)
-- [ ] POST → controller; WireMock TTS verificado
-- [ ] Verifica SRT, render (MP4/MP3), **upload S3 (LocalStack)** y **persistencia Postgres**
-- [ ] Timeout → 408
+- [x] Given user authenticated → bypass (mock userId)
+- [x] POST → controller; WireMock TTS verificado
+- [x] Verifica SRT, render (MP4/MP3), **upload S3 (LocalStack)** y **persistencia Postgres**
+- [x] Timeout → 408
 **Evidencias:** 3 escenarios GREEN  
 **Dependencias:** T001, T022, T018, T019
 
@@ -499,11 +499,11 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Capa:** testing  
 **Artefactos:** tests de T014–T020  
 **Criterios de aceptación:**
-- [ ] TTS WireMock 200/429/503
-- [ ] SRT correcto
-- [ ] MP4/MP3 reproducibles (assets mínimos)
-- [ ] **S3 LocalStack**: put/head/get presign OK
-- [ ] **Postgres Testcontainers** CRUD + idempotency OK
+- [x] TTS WireMock 200/429/503
+- [x] SRT correcto
+- [x] MP4/MP3 reproducibles (assets mínimos)
+- [x] **S3 LocalStack**: put/head/get presign OK
+- [x] **Postgres Testcontainers** CRUD + idempotency OK
 **Evidencias:** IT/UT green  
 **Dependencias:** T014–T020
 
@@ -513,11 +513,11 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Capa:** testing  
 **Artefactos:** `/backend/src/test/java/com/hexagonal/meditation/generation/e2e/GenerateMeditationE2ETest.java`  
 **Criterios de aceptación:**
-- [ ] Vídeo: 200 OK; `mediaUrl` presign S3; objeto existe (HEAD)
-- [ ] Audio: 200 OK; `mediaUrl` presign S3; objeto existe (HEAD)
-- [ ] **Duración** (`durationSeconds`) ≈ rango esperado para texto de prueba (p. ej., 1–5s)
-- [ ] Persistencia en Postgres verificada; subtítulos presentes
-- [ ] Idempotencia: 2ª petición → mismo `meditationId`
+- [x] Vídeo: 200 OK; `mediaUrl` presign S3; objeto existe (HEAD)
+- [x] Audio: 200 OK; `mediaUrl` presign S3; objeto existe (HEAD)
+- [x] **Duración** (`durationSeconds`) ≈ rango esperado para texto de prueba (p. ej., 1–5s)
+- [x] Persistencia en Postgres verificada; subtítulos presentes
+- [x] Idempotencia: 2ª petición → mismo `meditationId`
 **Evidencias:** E2E green  
 **Dependencias:** T029
 
@@ -547,10 +547,10 @@ BDD RED → Domain → Application → Infrastructure → Controllers → **Fron
 **Capa:** ci  
 **Artefactos:** `.github/workflows/backend-ci.yml`  
 **Criterios de aceptación:**
-- [ ] **Instalar FFmpeg** (`apt-get update && apt-get install -y ffmpeg`) y usar **Docker** del runner para **Testcontainers** (Postgres + LocalStack S3)
-- [ ] Gates: BDD → API → Unit domain → Unit application → Infra IT → Contract → E2E → Build JAR
-- [ ] Variables mock para tests (`GOOGLE_TTS_API_KEY=fake`, `BUCKET_NAME=meditation-outputs`)
-- [ ] Limpieza de temporales si aplica
+- [x] **Instalar FFmpeg** (`apt-get update && apt-get install -y ffmpeg`) y usar **Docker** del runner para **Testcontainers** (Postgres + LocalStack S3)
+- [x] Gates: BDD → API → Unit domain → Unit application → Infra IT → Contract → E2E → Build JAR
+- [x] Variables mock para tests (`GOOGLE_TTS_API_KEY=fake`, `BUCKET_NAME=meditation-outputs`)
+- [x] Limpieza de temporales si aplica
 **Evidencias:** Pipeline green sin servicios externos reales  
 **Dependencias:** T031
 

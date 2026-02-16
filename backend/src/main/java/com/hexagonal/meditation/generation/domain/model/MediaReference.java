@@ -16,6 +16,9 @@ public record MediaReference(String reference) {
         if (reference == null || reference.isBlank()) {
             throw new IllegalArgumentException("Media reference cannot be null or blank");
         }
+        if (reference.length() > 500) {
+            throw new IllegalArgumentException("Media reference exceeds maximum length of 500 characters");
+        }
     }
 
     /**

@@ -1,2 +1,708 @@
-<testsuites id="" name="" tests="0" failures="0" skipped="0" errors="0" time="122.791482">
+<testsuites id="" name="" tests="20" failures="20" skipped="0" errors="0" time="100.095636">
+<testsuite name="ai-generation.spec.ts" timestamp="2026-02-16T17:28:39.756Z" hostname="chromium" tests="7" failures="7" skipped="0" time="109.427" errors="0">
+<testcase name="AI Generation Flow › should show loading state during AI text generation" classname="ai-generation.spec.ts" time="14.898">
+<failure message="ai-generation.spec.ts:136:3 should show loading state during AI text generation" type="FAILURE">
+<![CDATA[  [chromium] › ai-generation.spec.ts:136:3 › AI Generation Flow › should show loading state during AI text generation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      130 |
+      131 |     // Navigate to the meditation builder
+    > 132 |     await page.goto('/');
+          |                ^
+      133 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      134 |   });
+      135 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\ai-generation.spec.ts:132:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-bfb2e-e-during-AI-text-generation-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-bfb2e-e-during-AI-text-generation-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-bfb2e-e-during-AI-text-generation-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-bfb2e-e-during-AI-text-generation-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="AI Generation Flow › should handle AI text generation errors gracefully" classname="ai-generation.spec.ts" time="14.889">
+<failure message="ai-generation.spec.ts:153:3 should handle AI text generation errors gracefully" type="FAILURE">
+<![CDATA[  [chromium] › ai-generation.spec.ts:153:3 › AI Generation Flow › should handle AI text generation errors gracefully 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      130 |
+      131 |     // Navigate to the meditation builder
+    > 132 |     await page.goto('/');
+          |                ^
+      133 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      134 |   });
+      135 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\ai-generation.spec.ts:132:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-a6ee8-eneration-errors-gracefully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-a6ee8-eneration-errors-gracefully-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-a6ee8-eneration-errors-gracefully-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-a6ee8-eneration-errors-gracefully-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="AI Generation Flow › should show loading state during AI image generation" classname="ai-generation.spec.ts" time="16.779">
+<failure message="ai-generation.spec.ts:183:3 should show loading state during AI image generation" type="FAILURE">
+<![CDATA[  [chromium] › ai-generation.spec.ts:183:3 › AI Generation Flow › should show loading state during AI image generation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      130 |
+      131 |     // Navigate to the meditation builder
+    > 132 |     await page.goto('/');
+          |                ^
+      133 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      134 |   });
+      135 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\ai-generation.spec.ts:132:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-f1bd6--during-AI-image-generation-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-f1bd6--during-AI-image-generation-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-f1bd6--during-AI-image-generation-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-f1bd6--during-AI-image-generation-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="AI Generation Flow › should display AI-generated image immediately after generation" classname="ai-generation.spec.ts" time="16.96">
+<failure message="ai-generation.spec.ts:202:3 should display AI-generated image immediately after generation" type="FAILURE">
+<![CDATA[  [chromium] › ai-generation.spec.ts:202:3 › AI Generation Flow › should display AI-generated image immediately after generation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      130 |
+      131 |     // Navigate to the meditation builder
+    > 132 |     await page.goto('/');
+          |                ^
+      133 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      134 |   });
+      135 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\ai-generation.spec.ts:132:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-6c27d-mmediately-after-generation-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-6c27d-mmediately-after-generation-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-6c27d-mmediately-after-generation-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-6c27d-mmediately-after-generation-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="AI Generation Flow › should update output type to VIDEO after AI image generation" classname="ai-generation.spec.ts" time="14.082">
+<failure message="ai-generation.spec.ts:222:3 should update output type to VIDEO after AI image generation" type="FAILURE">
+<![CDATA[  [chromium] › ai-generation.spec.ts:222:3 › AI Generation Flow › should update output type to VIDEO after AI image generation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      130 |
+      131 |     // Navigate to the meditation builder
+    > 132 |     await page.goto('/');
+          |                ^
+      133 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      134 |   });
+      135 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\ai-generation.spec.ts:132:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-30597-O-after-AI-image-generation-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-30597-O-after-AI-image-generation-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-30597-O-after-AI-image-generation-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-30597-O-after-AI-image-generation-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="AI Generation Flow › should disable generate buttons during any AI operation" classname="ai-generation.spec.ts" time="14.863">
+<failure message="ai-generation.spec.ts:243:3 should disable generate buttons during any AI operation" type="FAILURE">
+<![CDATA[  [chromium] › ai-generation.spec.ts:243:3 › AI Generation Flow › should disable generate buttons during any AI operation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      130 |
+      131 |     // Navigate to the meditation builder
+    > 132 |     await page.goto('/');
+          |                ^
+      133 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      134 |   });
+      135 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\ai-generation.spec.ts:132:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-69f13-ons-during-any-AI-operation-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-69f13-ons-during-any-AI-operation-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-69f13-ons-during-any-AI-operation-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-69f13-ons-during-any-AI-operation-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="AI Generation Flow › should preserve user text while showing AI-generated suggestions" classname="ai-generation.spec.ts" time="16.956">
+<failure message="ai-generation.spec.ts:259:3 should preserve user text while showing AI-generated suggestions" type="FAILURE">
+<![CDATA[  [chromium] › ai-generation.spec.ts:259:3 › AI Generation Flow › should preserve user text while showing AI-generated suggestions 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      130 |
+      131 |     // Navigate to the meditation builder
+    > 132 |     await page.goto('/');
+          |                ^
+      133 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      134 |   });
+      135 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\ai-generation.spec.ts:132:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-237be-ng-AI-generated-suggestions-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\ai-generation-AI-Generatio-237be-ng-AI-generated-suggestions-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-237be-ng-AI-generated-suggestions-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\ai-generation-AI-Generatio-237be-ng-AI-generated-suggestions-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="manual-composition.spec.ts" timestamp="2026-02-16T17:28:39.756Z" hostname="chromium" tests="6" failures="6" skipped="0" time="92.963" errors="0">
+<testcase name="Manual Composition Flow › should display the meditation builder interface" classname="manual-composition.spec.ts" time="16.704">
+<failure message="manual-composition.spec.ts:27:3 should display the meditation builder interface" type="FAILURE">
+<![CDATA[  [chromium] › manual-composition.spec.ts:27:3 › Manual Composition Flow › should display the meditation builder interface 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to the meditation builder page
+    > 21 |     await page.goto('/');
+         |                ^
+      22 |     
+      23 |     // Wait for the page to be fully loaded
+      24 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\manual-composition.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--f44df-editation-builder-interface-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--f44df-editation-builder-interface-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\manual-composition-Manual--f44df-editation-builder-interface-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\manual-composition-Manual--f44df-editation-builder-interface-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Manual Composition Flow › should preserve meditation text exactly as entered" classname="manual-composition.spec.ts" time="15.828">
+<failure message="manual-composition.spec.ts:39:3 should preserve meditation text exactly as entered" type="FAILURE">
+<![CDATA[  [chromium] › manual-composition.spec.ts:39:3 › Manual Composition Flow › should preserve meditation text exactly as entered 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to the meditation builder page
+    > 21 |     await page.goto('/');
+         |                ^
+      22 |     
+      23 |     // Wait for the page to be fully loaded
+      24 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\manual-composition.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--843f5-ion-text-exactly-as-entered-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--843f5-ion-text-exactly-as-entered-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\manual-composition-Manual--843f5-ion-text-exactly-as-entered-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\manual-composition-Manual--843f5-ion-text-exactly-as-entered-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Manual Composition Flow › should indicate PODCAST output type when no image is selected" classname="manual-composition.spec.ts" time="16.274">
+<failure message="manual-composition.spec.ts:56:3 should indicate PODCAST output type when no image is selected" type="FAILURE">
+<![CDATA[  [chromium] › manual-composition.spec.ts:56:3 › Manual Composition Flow › should indicate PODCAST output type when no image is selected 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to the meditation builder page
+    > 21 |     await page.goto('/');
+         |                ^
+      22 |     
+      23 |     // Wait for the page to be fully loaded
+      24 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\manual-composition.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--370da-e-when-no-image-is-selected-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--370da-e-when-no-image-is-selected-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\manual-composition-Manual--370da-e-when-no-image-is-selected-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\manual-composition-Manual--370da-e-when-no-image-is-selected-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Manual Composition Flow › should support very long meditation text" classname="manual-composition.spec.ts" time="15.116">
+<failure message="manual-composition.spec.ts:70:3 should support very long meditation text" type="FAILURE">
+<![CDATA[  [chromium] › manual-composition.spec.ts:70:3 › Manual Composition Flow › should support very long meditation text 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to the meditation builder page
+    > 21 |     await page.goto('/');
+         |                ^
+      22 |     
+      23 |     // Wait for the page to be fully loaded
+      24 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\manual-composition.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--38ea8-t-very-long-meditation-text-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--38ea8-t-very-long-meditation-text-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\manual-composition-Manual--38ea8-t-very-long-meditation-text-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\manual-composition-Manual--38ea8-t-very-long-meditation-text-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Manual Composition Flow › should clear text when user deletes it" classname="manual-composition.spec.ts" time="14.508">
+<failure message="manual-composition.spec.ts:85:3 should clear text when user deletes it" type="FAILURE">
+<![CDATA[  [chromium] › manual-composition.spec.ts:85:3 › Manual Composition Flow › should clear text when user deletes it 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to the meditation builder page
+    > 21 |     await page.goto('/');
+         |                ^
+      22 |     
+      23 |     // Wait for the page to be fully loaded
+      24 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\manual-composition.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--ba94f-r-text-when-user-deletes-it-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--ba94f-r-text-when-user-deletes-it-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\manual-composition-Manual--ba94f-r-text-when-user-deletes-it-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\manual-composition-Manual--ba94f-r-text-when-user-deletes-it-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Manual Composition Flow › should preserve text with special characters and line breaks" classname="manual-composition.spec.ts" time="14.533">
+<failure message="manual-composition.spec.ts:101:3 should preserve text with special characters and line breaks" type="FAILURE">
+<![CDATA[  [chromium] › manual-composition.spec.ts:101:3 › Manual Composition Flow › should preserve text with special characters and line breaks 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      19 |   test.beforeEach(async ({ page }) => {
+      20 |     // Navigate to the meditation builder page
+    > 21 |     await page.goto('/');
+         |                ^
+      22 |     
+      23 |     // Wait for the page to be fully loaded
+      24 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\manual-composition.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--ccf44--characters-and-line-breaks-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\manual-composition-Manual--ccf44--characters-and-line-breaks-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\manual-composition-Manual--ccf44--characters-and-line-breaks-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\manual-composition-Manual--ccf44--characters-and-line-breaks-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="media-preview.spec.ts" timestamp="2026-02-16T17:28:39.756Z" hostname="chromium" tests="7" failures="7" skipped="0" time="100.189" errors="0">
+<testcase name="Media Preview › should display music selector interface" classname="media-preview.spec.ts" time="13.861">
+<failure message="media-preview.spec.ts:151:3 should display music selector interface" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:151:3 › Media Preview › should display music selector interface 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      145 |
+      146 |     // Navigate to the meditation builder
+    > 147 |     await page.goto('/');
+          |                ^
+      148 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      149 |   });
+      150 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:147:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-cfcf9-ay-music-selector-interface-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-cfcf9-ay-music-selector-interface-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-cfcf9-ay-music-selector-interface-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-cfcf9-ay-music-selector-interface-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Media Preview › should display AI-generated image preview immediately after generation" classname="media-preview.spec.ts" time="15.084">
+<failure message="media-preview.spec.ts:157:3 should display AI-generated image preview immediately after generation" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:157:3 › Media Preview › should display AI-generated image preview immediately after generation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      145 |
+      146 |     // Navigate to the meditation builder
+    > 147 |     await page.goto('/');
+          |                ^
+      148 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      149 |   });
+      150 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:147:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-8a74c-mmediately-after-generation-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-8a74c-mmediately-after-generation-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-8a74c-mmediately-after-generation-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-8a74c-mmediately-after-generation-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Media Preview › should show image preview with clearly visible content" classname="media-preview.spec.ts" time="13.617">
+<failure message="media-preview.spec.ts:175:3 should show image preview with clearly visible content" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:175:3 › Media Preview › should show image preview with clearly visible content 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      145 |
+      146 |     // Navigate to the meditation builder
+    > 147 |     await page.goto('/');
+          |                ^
+      148 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      149 |   });
+      150 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:147:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-d5dd4-ith-clearly-visible-content-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-d5dd4-ith-clearly-visible-content-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-d5dd4-ith-clearly-visible-content-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-d5dd4-ith-clearly-visible-content-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Media Preview › should allow removing AI-generated image" classname="media-preview.spec.ts" time="13.83">
+<failure message="media-preview.spec.ts:190:3 should allow removing AI-generated image" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:190:3 › Media Preview › should allow removing AI-generated image 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      145 |
+      146 |     // Navigate to the meditation builder
+    > 147 |     await page.goto('/');
+          |                ^
+      148 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      149 |   });
+      150 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:147:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-22cd8-removing-AI-generated-image-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-22cd8-removing-AI-generated-image-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-22cd8-removing-AI-generated-image-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-22cd8-removing-AI-generated-image-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Media Preview › should update output type when image is added or removed" classname="media-preview.spec.ts" time="14.987">
+<failure message="media-preview.spec.ts:207:3 should update output type when image is added or removed" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:207:3 › Media Preview › should update output type when image is added or removed 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      145 |
+      146 |     // Navigate to the meditation builder
+    > 147 |     await page.goto('/');
+          |                ^
+      148 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      149 |   });
+      150 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:147:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-9fb00-n-image-is-added-or-removed-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-9fb00-n-image-is-added-or-removed-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-9fb00-n-image-is-added-or-removed-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-9fb00-n-image-is-added-or-removed-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Media Preview › should handle missing or failed image previews gracefully" classname="media-preview.spec.ts" time="14.564">
+<failure message="media-preview.spec.ts:239:3 should handle missing or failed image previews gracefully" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:239:3 › Media Preview › should handle missing or failed image previews gracefully 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      145 |
+      146 |     // Navigate to the meditation builder
+    > 147 |     await page.goto('/');
+          |                ^
+      148 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      149 |   });
+      150 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:147:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-1509c-d-image-previews-gracefully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-1509c-d-image-previews-gracefully-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-1509c-d-image-previews-gracefully-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-1509c-d-image-previews-gracefully-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Media Preview › should persist image preview state after page interactions" classname="media-preview.spec.ts" time="14.246">
+<failure message="media-preview.spec.ts:267:3 should persist image preview state after page interactions" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:267:3 › Media Preview › should persist image preview state after page interactions 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/
+    Call log:
+      - navigating to "http://localhost:5173/", waiting until "load"
+
+
+      145 |
+      146 |     // Navigate to the meditation builder
+    > 147 |     await page.goto('/');
+          |                ^
+      148 |     await page.waitForSelector('[data-testid="meditation-builder"]', { timeout: 10000 });
+      149 |   });
+      150 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:147:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-6915e-ate-after-page-interactions-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\..\test-results\media-preview-Media-Previe-6915e-ate-after-page-interactions-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-6915e-ate-after-page-interactions-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-results\media-preview-Media-Previe-6915e-ate-after-page-interactions-chromium\video.webm]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
 </testsuites>

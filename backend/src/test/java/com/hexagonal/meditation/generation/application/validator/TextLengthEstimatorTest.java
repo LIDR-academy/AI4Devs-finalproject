@@ -123,14 +123,14 @@ class TextLengthEstimatorTest {
     @Test
     @DisplayName("Should reject text that is too short")
     void shouldRejectTooShortText() {
-        // 30 words → 12 seconds at 150 wpm (below 30s threshold)
-        String text = generateWords(30);
+        // 5 words → 2 seconds at 150 wpm (below 5s threshold)
+        String text = generateWords(5);
         
         assertThatThrownBy(() -> estimator.validateAndEstimate(text))
             .isInstanceOf(InvalidContentException.class)
             .hasMessageContaining("Text too short")
-            .hasMessageContaining("estimated 12 seconds")
-            .hasMessageContaining("minimum 30 seconds");
+            .hasMessageContaining("estimated 2 seconds")
+            .hasMessageContaining("minimum 5 seconds");
     }
     
     @Test
@@ -140,6 +140,17 @@ class TextLengthEstimatorTest {
             .isInstanceOf(InvalidContentException.class)
             .extracting("fieldName")
             .isEqualTo("narrationText");
+    }
+
+    @Test
+    @DisplayName("Should reject text that is too long")
+    void shouldRejectTooLongText() {
+        // 100 words → 40 seconds (above 30s threshold)
+        String text = generateWords(100);
+        
+        assertThatThrownBy(() -> estimator.validateAndEstimate(text))
+            .isInstanceOf(com.hexagonal.meditation.generation.domain.exception.GenerationTimeoutException.class)
+            .hasMessageContaining("exceed 30 seconds");
     }
     
     /**

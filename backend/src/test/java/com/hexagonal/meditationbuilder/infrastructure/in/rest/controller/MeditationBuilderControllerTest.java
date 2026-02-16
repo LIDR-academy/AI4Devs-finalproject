@@ -10,16 +10,15 @@ import com.hexagonal.meditationbuilder.domain.model.TextContent;
 import com.hexagonal.meditationbuilder.domain.ports.in.ComposeContentUseCase;
 import com.hexagonal.meditationbuilder.domain.ports.in.GenerateImageUseCase;
 import com.hexagonal.meditationbuilder.domain.ports.in.GenerateTextUseCase;
-import com.hexagonal.meditation.generation.infrastructure.out.persistence.repository.JpaMeditationOutputRepository;
 import com.hexagonal.meditationbuilder.infrastructure.in.rest.dto.*;
 import com.hexagonal.meditationbuilder.infrastructure.in.rest.mapper.CompositionDtoMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import com.hexagonal.meditationbuilder.infrastructure.in.rest.controller.GlobalExceptionHandler;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Clock;
@@ -39,13 +38,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests HTTP layer: request validation, response mapping, status codes.
  * Use cases are mocked - no business logic tested here.
  * 
- * Uses @SpringBootTest instead of @WebMvcTest to avoid JPA auto-configuration conflicts.
+ * Uses @WebMvcTest for isolated controller testing.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
-@TestPropertySource(properties = {
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
-})
+@WebMvcTest(MeditationBuilderController.class)
+@Import({GlobalExceptionHandler.class, CompositionDtoMapper.class})
 @DisplayName("MeditationBuilderController Tests")
 class MeditationBuilderControllerTest {
 
@@ -64,9 +60,6 @@ class MeditationBuilderControllerTest {
     @MockBean
     private GenerateImageUseCase generateImageUseCase;
 
-    @MockBean
-    private JpaMeditationOutputRepository jpaMeditationOutputRepository;
-
     private UUID compositionId;
     private MeditationComposition sampleComposition;
     private Clock fixedClock;
@@ -82,8 +75,8 @@ class MeditationBuilderControllerTest {
         );
     }
 
-    // @Nested
-    // @DisplayName("POST /v1/compositions")
+    @Nested
+    @DisplayName("POST /v1/compositions")
     class CreateCompositionTests {
 
         @Test
@@ -126,8 +119,8 @@ class MeditationBuilderControllerTest {
         }
     }
 
-    // @Nested
-    // @DisplayName("PUT /v1/compositions/{id}/text")
+    @Nested
+    @DisplayName("PUT /v1/compositions/{id}/text")
     class UpdateTextTests {
 
         @Test
@@ -158,8 +151,8 @@ class MeditationBuilderControllerTest {
         }
     }
 
-    // @Nested
-    // @DisplayName("POST /v1/text/generate")
+    @Nested
+    @DisplayName("POST /v1/text/generate")
     class GenerateTextTests {
 
         @Test
@@ -194,8 +187,8 @@ class MeditationBuilderControllerTest {
         }
     }
 
-    // @Nested
-    // @DisplayName("POST /v1/image/generate")
+    @Nested
+    @DisplayName("POST /v1/image/generate")
     class GenerateImageTests {
 
         @Test
@@ -212,8 +205,8 @@ class MeditationBuilderControllerTest {
         }
     }
 
-    // @Nested
-    // @DisplayName("GET /v1/compositions/{id}/output-type")
+    @Nested
+    @DisplayName("GET /v1/compositions/{id}/output-type")
     class GetOutputTypeTests {
 
         @Test
@@ -237,7 +230,7 @@ class MeditationBuilderControllerTest {
         }
     }
 
-    // @Nested
+    @Nested
     @DisplayName("Music Operations")
     class MusicOperationsTests {
 
@@ -255,6 +248,20 @@ class MeditationBuilderControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.musicReference").value("calm-ocean"));
+        }
+
+        @Test
+        @DisplayName("should return 404 when music not found in catalog")
+        void shouldReturn404WhenMusicNotFound() throws Exception {
+            SelectMusicRequest request = new SelectMusicRequest("invalid-music");
+            when(composeContentUseCase.selectMusic(eq(compositionId), any()))
+                    .thenThrow(new com.hexagonal.meditationbuilder.domain.exception.MusicNotFoundException("invalid-music"));
+
+            mockMvc.perform(put("/v1/compositions/{id}/music", compositionId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("MUSIC_NOT_FOUND"));
         }
 
         @Test
@@ -281,7 +288,7 @@ class MeditationBuilderControllerTest {
         }
     }
 
-    // @Nested
+    @Nested
     @DisplayName("Image Operations")
     class ImageOperationsTests {
 
@@ -337,8 +344,8 @@ class MeditationBuilderControllerTest {
         }
     }
 
-    // @Nested
-    // @DisplayName("GET /v1/compositions/{id}")
+    @Nested
+    @DisplayName("GET /v1/compositions/{id}")
     class GetCompositionTests {
 
         @Test
@@ -350,6 +357,17 @@ class MeditationBuilderControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(compositionId.toString()))
                     .andExpect(jsonPath("$.textContent").value("Sample meditation text"));
+        }
+
+        @Test
+        @DisplayName("should return 404 when composition not found")
+        void shouldReturn404WhenNotFound() throws Exception {
+            when(composeContentUseCase.getComposition(compositionId))
+                    .thenThrow(new CompositionNotFoundException(compositionId));
+
+            mockMvc.perform(get("/v1/compositions/{id}", compositionId))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("NOT_FOUND"));
         }
     }
 }

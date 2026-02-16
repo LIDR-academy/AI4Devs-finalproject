@@ -22,16 +22,18 @@ import java.nio.file.Path;
 public class S3MediaStorageAdapter implements MediaStoragePort {
     
     private static final Logger logger = LoggerFactory.getLogger(S3MediaStorageAdapter.class);
-    private static final String BUCKET_NAME = "meditation-media";
     
     private final S3Client s3Client;
     private final String endpoint;
+    private final String bucketName;
     
     public S3MediaStorageAdapter(
             S3Client s3Client,
-            @Value("${aws.s3.endpoint:}") String endpoint) {
+            @Value("${aws.s3.endpoint:}") String endpoint,
+            @Value("${aws.s3.bucket-name:meditation-outputs}") String bucketName) {
         this.s3Client = s3Client;
         this.endpoint = endpoint;
+        this.bucketName = bucketName;
     }
     
     @Override
@@ -48,7 +50,7 @@ public class S3MediaStorageAdapter implements MediaStoragePort {
             
             // Upload to S3
             PutObjectRequest putRequest = PutObjectRequest.builder()
-                    .bucket(BUCKET_NAME)
+                    .bucket(bucketName)
                     .key(s3Key)
                     .contentType(contentType)
                     .build();
@@ -70,10 +72,10 @@ public class S3MediaStorageAdapter implements MediaStoragePort {
     private String generateUrl(String s3Key) {
         if (!endpoint.isBlank()) {
             // LocalStack: use path-style URLs
-            return String.format("%s/%s/%s", endpoint, BUCKET_NAME, s3Key);
+            return String.format("%s/%s/%s", endpoint, bucketName, s3Key);
         } else {
             // AWS: use virtual-hosted-style URLs
-            return String.format("https://%s.s3.amazonaws.com/%s", BUCKET_NAME, s3Key);
+            return String.format("https://%s.s3.amazonaws.com/%s", bucketName, s3Key);
         }
     }
 }

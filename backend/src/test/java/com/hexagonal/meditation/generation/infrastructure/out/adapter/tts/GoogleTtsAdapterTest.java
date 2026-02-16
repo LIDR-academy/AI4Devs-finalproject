@@ -2,28 +2,44 @@ package com.hexagonal.meditation.generation.infrastructure.out.adapter.tts;
 
 import com.hexagonal.meditation.generation.domain.model.NarrationScript;
 import com.hexagonal.meditation.generation.domain.ports.out.VoiceSynthesisPort.VoiceConfig;
+import com.hexagonal.meditation.generation.infrastructure.config.FfmpegConfig;
+import com.hexagonal.meditation.generation.infrastructure.config.GoogleCloudTtsConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 @DisplayName("GoogleTtsAdapter Tests")
 class GoogleTtsAdapterTest {
     
     private GoogleTtsAdapter adapter;
+    
+    @Mock
+    private GoogleCloudTtsConfig ttsConfig;
+    
+    @Mock
+    private FfmpegConfig ffmpegConfig;
     
     @TempDir
     Path tempDir;
     
     @BeforeEach
     void setUp() {
-        adapter = new GoogleTtsAdapter(null, null, null);
+        lenient().when(ttsConfig.isEnabled()).thenReturn(false); // Default to FFmpeg fallback for tests
+        lenient().when(ffmpegConfig.getPath()).thenReturn("ffmpeg");
+        adapter = new GoogleTtsAdapter(Optional.empty(), ttsConfig, ffmpegConfig);
     }
     
     @Test

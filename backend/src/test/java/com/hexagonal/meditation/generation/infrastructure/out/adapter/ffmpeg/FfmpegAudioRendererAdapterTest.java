@@ -21,8 +21,19 @@ class FfmpegAudioRendererAdapterTest {
     Path tempDir;
     
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         adapter = new FfmpegAudioRendererAdapter(new FfmpegConfig());
+        
+        // Create actual dummy files so FFmpeg doesn't fail on missing inputs
+        createDummyAudio(tempDir.resolve("narration.mp3"));
+        createDummyAudio(tempDir.resolve("music.mp3"));
+    }
+    
+    private void createDummyAudio(Path path) throws Exception {
+        ProcessBuilder pb = new ProcessBuilder(
+            "ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono", "-t", "0.5", path.toAbsolutePath().toString()
+        );
+        pb.start().waitFor();
     }
     
     @Test

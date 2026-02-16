@@ -1,19 +1,25 @@
 package com.hexagonal.meditation.generation.bdd.steps;
 
-import io.cucumber.java.PendingException;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.Before;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
 
 /**
  * Step definitions for Generate Meditation Content feature (BC: Generation).
- * BDD implementation calling REST API endpoints.
- * 
- * Architecture: BDD tests validate the complete hexagonal architecture
- * through HTTP endpoints, mocking external dependencies (TTS, FFmpeg, S3).
- * 
- * Status: PENDING - All steps throw PendingException until implementation.
  */
 public class GenerateMeditationSteps {
 
@@ -21,105 +27,123 @@ public class GenerateMeditationSteps {
     private String currentText;
     private String currentMusicReference;
     private String currentImageReference;
+    private final UUID userId = UUID.randomUUID();
+    private final UUID compositionId = UUID.randomUUID();
 
-    // ================================
-    // Background
-    // ================================
+    @Before
+    public void setupTestFiles() throws IOException {
+        createDummyFile("nature-sounds-01.mp3");
+        createDummyFile("calm-piano-02.mp3");
+        createDummyFile("meditation-music-03.mp3");
+        createDummyFile("peaceful-landscape.jpg");
+    }
+
+    private void createDummyFile(String filename) throws IOException {
+        Path path = Path.of(filename);
+        if (!Files.exists(path)) {
+            Files.writeString(path, "dummy content for " + filename);
+        }
+    }
 
     @Given("the user is authenticated")
     public void theUserIsAuthenticated() {
-        throw new PendingException("Implement authentication bypass for tests");
+        // Simulado vía headers en RestAssured
     }
-
-    // ================================
-    // Given Steps
-    // ================================
 
     @Given("sends meditation text {string}")
     public void sendsMeditationText(String text) {
-        throw new PendingException("Implement meditation text setup");
+        this.currentText = text;
     }
 
     @Given("sends meditation text with excessive length that would exceed processing time limits")
     public void sendsMeditationTextWithExcessiveLength() {
-        throw new PendingException("Implement excessive text setup");
+        this.currentText = "calm ".repeat(500); // 500 words > 30s limit
     }
 
     @Given("selects a valid music track {string}")
     public void selectsAValidMusicTrack(String musicReference) {
-        throw new PendingException("Implement music track selection");
+        this.currentMusicReference = musicReference;
     }
 
     @Given("selects a valid image {string}")
     public void selectsAValidImage(String imageReference) {
-        throw new PendingException("Implement image selection");
+        this.currentImageReference = imageReference;
     }
 
     @Given("does not select an image")
     public void doesNotSelectAnImage() {
-        throw new PendingException("Implement no image scenario");
+        this.currentImageReference = null;
     }
-
-    // ================================
-    // When Steps
-    // ================================
 
     @When("requests to generate the content")
     public void requestsToGenerateTheContent() {
-        throw new PendingException("Implement POST /api/v1/generation/meditations");
-    }
+        Map<String, Object> body = new HashMap<>();
+        body.put("text", currentText);
+        body.put("musicReference", currentMusicReference);
+        if (currentImageReference != null) {
+            body.put("imageReference", currentImageReference);
+        }
 
-    // ================================
-    // Then Steps
-    // ================================
+        lastResponse = given()
+                .header("X-User-ID", userId.toString())
+                .header("X-Composition-ID", compositionId.toString())
+                .contentType(ContentType.JSON)
+                .body(body)
+        .when()
+                .post("/v1/generation/meditations");
+    }
 
     @Then("the system produces high-quality narration from the text")
     public void theSystemProducesHighQualityNarrationFromTheText() {
-        throw new PendingException("Validate TTS narration in response");
+        lastResponse.then().body("status", is("COMPLETED"));
     }
 
     @Then("generates comprehensible synchronized subtitles")
     public void generatesComprehensibleSynchronizedSubtitles() {
-        throw new PendingException("Validate subtitle generation");
+        lastResponse.then().body("subtitleUrl", notNullValue());
     }
 
     @Then("combines narration, music, and static image into a final video")
     public void combinesNarrationMusicAndStaticImageIntoAFinalVideo() {
-        throw new PendingException("Validate video rendering");
+        lastResponse.then().body("type", is("VIDEO"));
+        lastResponse.then().body("mediaUrl", containsString(".mp4"));
     }
 
     @Then("the platform registers the meditation as type {string}")
     public void thePlatformRegistersTheMeditationAsType(String expectedType) {
-        throw new PendingException("Validate meditation type in database");
+        lastResponse.then().body("type", is(expectedType));
     }
 
     @Then("the user receives access to the video in an acceptable timeframe")
     public void theUserReceivesAccessToTheVideoInAnAcceptableTimeframe() {
-        throw new PendingException("Validate video URL and timeframe");
+        lastResponse.then().statusCode(200);
+        lastResponse.then().body("mediaUrl", notNullValue());
     }
 
     @Then("combines the narration with music in a final audio output")
     public void combinesTheNarrationWithMusicInAFinalAudioOutput() {
-        throw new PendingException("Validate audio rendering");
+        lastResponse.then().body("type", is("AUDIO"));
+        lastResponse.then().body("mediaUrl", containsString(".mp3"));
     }
 
     @Then("generates synchronized subtitles for future use")
     public void generatesSynchronizedSubtitlesForFutureUse() {
-        throw new PendingException("Validate subtitle file generation");
+        lastResponse.then().body("subtitleUrl", notNullValue());
     }
 
     @Then("the user receives access to the audio in an acceptable timeframe")
     public void theUserReceivesAccessToTheAudioInAnAcceptableTimeframe() {
-        throw new PendingException("Validate audio URL and timeframe");
+        lastResponse.then().statusCode(200);
+        lastResponse.then().body("mediaUrl", notNullValue());
     }
 
     @Then("the system rejects the request with a time exceeded message")
     public void theSystemRejectsTheRequestWithATimeExceededMessage() {
-        throw new PendingException("Validate 408 timeout error response");
+        lastResponse.then().statusCode(408);
     }
 
     @Then("recommends sending shorter text")
     public void recommendsSendingShorterText() {
-        throw new PendingException("Validate error message guidance");
+        lastResponse.then().body("message", containsString("shorter text"));
     }
 }

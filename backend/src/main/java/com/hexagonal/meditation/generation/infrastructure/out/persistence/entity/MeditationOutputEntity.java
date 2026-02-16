@@ -12,7 +12,7 @@ import java.util.UUID;
  * Maps to `meditation_output` table.
  */
 @Entity
-@Table(name = "meditation_output")
+@Table(name = "meditation_output", schema = "generation")
 public class MeditationOutputEntity {
     
     @Id

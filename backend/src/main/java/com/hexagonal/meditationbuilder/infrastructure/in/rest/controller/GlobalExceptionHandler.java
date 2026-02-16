@@ -85,6 +85,18 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("NOT_FOUND", ex.getMessage()));
     }
 
+    /**
+     * Handles music not found exceptions.
+     */
+    @ExceptionHandler(com.hexagonal.meditationbuilder.domain.exception.MusicNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMusicNotFound(com.hexagonal.meditationbuilder.domain.exception.MusicNotFoundException ex) {
+        log.info("Music not found: {}", ex.getMessage());
+        
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("MUSIC_NOT_FOUND", ex.getMessage()));
+    }
+
     // ========== 429 Rate Limit Exceeded ==========
 
     /**

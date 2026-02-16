@@ -3,9 +3,11 @@ package com.hexagonal.meditationbuilder.bdd;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.hexagonal.meditationbuilder.MeditationBuilderApplication;
+import com.hexagonal.meditationbuilder.infrastructure.config.PersistenceConfig;
 import io.cucumber.spring.CucumberContextConfiguration;
 import io.restassured.RestAssured;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -32,8 +34,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
     classes = MeditationBuilderApplication.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
+@Import(PersistenceConfig.class)
 @ActiveProfiles("test")
-public class CucumberSpringConfiguration {
+public class CompositionCucumberSpringConfiguration {
 
     @LocalServerPort
     private int port;

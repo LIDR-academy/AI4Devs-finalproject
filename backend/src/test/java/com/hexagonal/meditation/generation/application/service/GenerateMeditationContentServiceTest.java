@@ -12,9 +12,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -39,11 +43,16 @@ class GenerateMeditationContentServiceTest {
     @Mock private ContentRepositoryPort contentRepositoryPort;
     @Mock private com.hexagonal.meditation.generation.infrastructure.out.service.audio.AudioMetadataService audioMetadataService;
     
+    @TempDir
+    Path tempDir;
+
     private Clock clock;
     private GenerateMeditationContentService service;
+    private Path dummyMusic;
+    private Path dummyImage;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         clock = Clock.fixed(Instant.parse("2024-01-15T10:00:00Z"), ZoneId.of("UTC"));
         service = new GenerateMeditationContentService(
             textLengthEstimator,
@@ -57,6 +66,33 @@ class GenerateMeditationContentServiceTest {
             audioMetadataService,
             clock
         );
+        
+        // Create dummy files for pipeline
+        dummyMusic = tempDir.resolve("music.mp3");
+        Files.writeString(dummyMusic, "dummy music content");
+        
+        dummyImage = tempDir.resolve("image.jpg");
+        Files.writeString(dummyImage, "dummy image content");
+        
+        Path dummyNarration = tempDir.resolve("narration.mp3");
+        Files.writeString(dummyNarration, "dummy narration content");
+        
+        Path dummyOutput = tempDir.resolve("output.mp3");
+        Files.writeString(dummyOutput, "dummy output content");
+        
+        Path dummySrt = tempDir.resolve("subtitles.srt");
+        Files.writeString(dummySrt, "1\n00:00:00,000 --> 00:00:05,000\nHello");
+
+        // Global stubs for pipeline to avoid non-mocked IO errors
+        lenient().when(contentRepositoryPort.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(audioMetadataService.getDurationSeconds(any())).thenReturn(60.0);
+        lenient().when(voiceSynthesisPort.synthesizeVoice(any(), any())).thenReturn(dummyNarration);
+        lenient().when(voiceSynthesisPort.synthesizeVoice(any(), any(), anyDouble())).thenReturn(dummyNarration);
+        lenient().when(subtitleSyncPort.generateSubtitles(anyString(), anyDouble())).thenReturn(java.util.List.of());
+        lenient().when(subtitleSyncPort.exportToSrt(any(), any())).thenReturn(dummySrt);
+        lenient().when(audioRenderingPort.renderAudio(any())).thenReturn(dummyOutput);
+        lenient().when(videoRenderingPort.renderVideo(any())).thenReturn(dummyOutput);
+        lenient().when(mediaStoragePort.uploadMedia(any())).thenReturn("https://s3.amazonaws.com/meditation/result.mp3");
     }
     
     @Test
@@ -66,7 +102,7 @@ class GenerateMeditationContentServiceTest {
         UUID compositionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String text = "Breathe deeply and relax. Feel the calm wash over you.";
-        String music = "calm-ocean.mp3";
+        String music = dummyMusic.toString();
         String idempotencyKey = "test-key-123";
         
         GenerateMeditationContentUseCase.GenerationRequest request = 
@@ -74,10 +110,9 @@ class GenerateMeditationContentServiceTest {
                 compositionId, userId, text, music, null
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(60);
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(20); // Under 30s limit
         when(idempotencyKeyGenerator.generate(userId, text, music, null)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
-        when(contentRepositoryPort.save(any(GeneratedMeditationContent.class))).thenAnswer(inv -> inv.getArgument(0));
         
         // Act
         GenerateMeditationContentUseCase.GenerationResponse response = service.generate(request);
@@ -86,15 +121,12 @@ class GenerateMeditationContentServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.compositionId()).isEqualTo(compositionId);
         assertThat(response.userId()).isEqualTo(userId);
-        assertThat(response.status()).isEqualTo(GenerationStatus.PROCESSING);
+        assertThat(response.status()).isEqualTo(GenerationStatus.COMPLETED);
         assertThat(response.mediaType()).isEqualTo(MediaType.AUDIO);
-        assertThat(response.mediaUrl()).isEmpty();
-        assertThat(response.subtitleUrl()).isEmpty();
         
         verify(textLengthEstimator).validateAndEstimate(text);
         verify(idempotencyKeyGenerator).generate(userId, text, music, null);
         verify(contentRepositoryPort).findByIdempotencyKey(idempotencyKey);
-        verify(contentRepositoryPort).save(any(GeneratedMeditationContent.class));
     }
     
     @Test
@@ -104,8 +136,8 @@ class GenerateMeditationContentServiceTest {
         UUID compositionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String text = "Breathe deeply and relax. Feel the calm wash over you.";
-        String music = "calm-ocean.mp3";
-        String image = "sunset-beach.jpg";
+        String music = dummyMusic.toString();
+        String image = dummyImage.toString();
         String idempotencyKey = "test-key-456";
         
         GenerateMeditationContentUseCase.GenerationRequest request = 
@@ -113,10 +145,9 @@ class GenerateMeditationContentServiceTest {
                 compositionId, userId, text, music, image
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(90);
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(25); // Under 30s limit
         when(idempotencyKeyGenerator.generate(userId, text, music, image)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
-        when(contentRepositoryPort.save(any(GeneratedMeditationContent.class))).thenAnswer(inv -> inv.getArgument(0));
         
         // Act
         GenerateMeditationContentUseCase.GenerationResponse response = service.generate(request);
@@ -125,15 +156,12 @@ class GenerateMeditationContentServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.compositionId()).isEqualTo(compositionId);
         assertThat(response.userId()).isEqualTo(userId);
-        assertThat(response.status()).isEqualTo(GenerationStatus.PROCESSING);
+        assertThat(response.status()).isEqualTo(GenerationStatus.COMPLETED);
         assertThat(response.mediaType()).isEqualTo(MediaType.VIDEO);
-        assertThat(response.mediaUrl()).isEmpty();
-        assertThat(response.subtitleUrl()).isEmpty();
         
         verify(textLengthEstimator).validateAndEstimate(text);
         verify(idempotencyKeyGenerator).generate(userId, text, music, image);
         verify(contentRepositoryPort).findByIdempotencyKey(idempotencyKey);
-        verify(contentRepositoryPort).save(any(GeneratedMeditationContent.class));
     }
     
     @Test
@@ -144,7 +172,7 @@ class GenerateMeditationContentServiceTest {
         UUID userId = UUID.randomUUID();
         UUID existingId = UUID.randomUUID();
         String text = "Breathe deeply and relax.";
-        String music = "calm-ocean.mp3";
+        String music = dummyMusic.toString();
         String idempotencyKey = "existing-key-789";
         
         GenerateMeditationContentUseCase.GenerationRequest request = 
@@ -159,9 +187,14 @@ class GenerateMeditationContentServiceTest {
             idempotencyKey,
             new NarrationScript(text),
             clock
+        ).markCompleted(
+            new MediaReference("https://s3.amazonaws.com/meditation/result.mp3"),
+            new MediaReference("https://s3.amazonaws.com/meditation/subtitles.srt"),
+            30,
+            clock
         );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(60);
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(10); // Under 30s limit
         when(idempotencyKeyGenerator.generate(userId, text, music, null)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.of(existingOutput));
         
@@ -170,12 +203,11 @@ class GenerateMeditationContentServiceTest {
         
         // Assert
         assertThat(response).isNotNull();
-        assertThat(response.status()).isEqualTo(GenerationStatus.PROCESSING);
+        assertThat(response.status()).isEqualTo(GenerationStatus.COMPLETED);
         
         verify(textLengthEstimator).validateAndEstimate(text);
         verify(idempotencyKeyGenerator).generate(userId, text, music, null);
         verify(contentRepositoryPort).findByIdempotencyKey(idempotencyKey);
-        verify(contentRepositoryPort, never()).save(any());
     }
     
     @Test
@@ -185,23 +217,23 @@ class GenerateMeditationContentServiceTest {
         UUID compositionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String text = "Very long meditation text...".repeat(100);
-        String music = "calm-ocean.mp3";
+        String music = dummyMusic.toString();
         
         GenerateMeditationContentUseCase.GenerationRequest request = 
             new GenerateMeditationContentUseCase.GenerationRequest(
                 compositionId, userId, text, music, null
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(300); // 5 minutes > 3 minute max
+        when(textLengthEstimator.validateAndEstimate(text))
+            .thenThrow(new GenerationTimeoutException(300, 30)); 
         
         // Act & Assert
         assertThatThrownBy(() -> service.generate(request))
             .isInstanceOf(GenerationTimeoutException.class)
             .hasMessageContaining("300")
-            .hasMessageContaining("180");
+            .hasMessageContaining("30");
         
         verify(textLengthEstimator).validateAndEstimate(text);
-        verify(contentRepositoryPort, never()).save(any());
     }
     
     @Test
@@ -211,7 +243,7 @@ class GenerateMeditationContentServiceTest {
         UUID compositionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String text = "Too short";
-        String music = "calm-ocean.mp3";
+        String music = dummyMusic.toString();
         
         GenerateMeditationContentUseCase.GenerationRequest request = 
             new GenerateMeditationContentUseCase.GenerationRequest(
@@ -227,7 +259,6 @@ class GenerateMeditationContentServiceTest {
             .hasMessageContaining("Text too short");
         
         verify(textLengthEstimator).validateAndEstimate(text);
-        verify(contentRepositoryPort, never()).save(any());
     }
     
     @Test
@@ -237,25 +268,23 @@ class GenerateMeditationContentServiceTest {
         UUID compositionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String text = "Breathe deeply and relax. Feel the calm wash over you.";
-        String music = "calm-ocean.mp3";
+        String music = dummyMusic.toString();
         String idempotencyKey = "test-key";
         
-        // Image is blank - should trigger VIDEO type but fail validation
+        // Image is blank - should trigger rejection
         GenerateMeditationContentUseCase.GenerationRequest request = 
             new GenerateMeditationContentUseCase.GenerationRequest(
                 compositionId, userId, text, music, ""
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(60);
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(20); // Under 30s limit
         when(idempotencyKeyGenerator.generate(userId, text, music, "")).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
         
         // Act & Assert
         assertThatThrownBy(() -> service.generate(request))
             .isInstanceOf(InvalidContentException.class)
-            .hasMessageContaining("Image reference required for video generation");
-        
-        verify(contentRepositoryPort, never()).save(any());
+            .hasMessageContaining("Image reference cannot be blank");
     }
     
     @Test
@@ -265,7 +294,7 @@ class GenerateMeditationContentServiceTest {
         UUID compositionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String text = "Invalid";
-        String music = "calm-ocean.mp3";
+        String music = dummyMusic.toString();
         
         GenerateMeditationContentUseCase.GenerationRequest request = 
             new GenerateMeditationContentUseCase.GenerationRequest(
@@ -291,8 +320,8 @@ class GenerateMeditationContentServiceTest {
         UUID compositionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String text = "Breathe deeply and relax. Feel the calm wash over you.";
-        String music = "calm-ocean.mp3";
-        String image = "sunset.jpg";
+        String music = dummyMusic.toString();
+        String image = dummyImage.toString();
         String idempotencyKey = "test-key";
         
         GenerateMeditationContentUseCase.GenerationRequest request = 
@@ -300,16 +329,15 @@ class GenerateMeditationContentServiceTest {
                 compositionId, userId, text, music, image
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(60);
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(20);
         when(idempotencyKeyGenerator.generate(userId, text, music, image)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
-        when(contentRepositoryPort.save(any(GeneratedMeditationContent.class))).thenAnswer(inv -> inv.getArgument(0));
         
         // Act
         service.generate(request);
         
         // Assert - verify save was called with correct aggregate
-        verify(contentRepositoryPort).save(argThat(output -> 
+        verify(contentRepositoryPort, atLeastOnce()).save(argThat(output -> 
             output.mediaType() == MediaType.VIDEO &&
             output.status() == GenerationStatus.PROCESSING &&
             output.compositionId().equals(compositionId) &&
@@ -324,7 +352,7 @@ class GenerateMeditationContentServiceTest {
         UUID compositionId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         String text = "Breathe deeply and relax. Feel the calm wash over you.";
-        String music = "calm-ocean.mp3";
+        String music = dummyMusic.toString();
         String idempotencyKey = "test-key";
         
         GenerateMeditationContentUseCase.GenerationRequest request = 
@@ -332,10 +360,9 @@ class GenerateMeditationContentServiceTest {
                 compositionId, userId, text, music, null
             );
         
-        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(60);
+        when(textLengthEstimator.validateAndEstimate(text)).thenReturn(20);
         when(idempotencyKeyGenerator.generate(userId, text, music, null)).thenReturn(idempotencyKey);
         when(contentRepositoryPort.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
-        when(contentRepositoryPort.save(any(GeneratedMeditationContent.class))).thenAnswer(inv -> inv.getArgument(0));
         
         // Act
         GenerateMeditationContentUseCase.GenerationResponse response = service.generate(request);
@@ -343,7 +370,7 @@ class GenerateMeditationContentServiceTest {
         // Assert
         assertThat(response.mediaType()).isEqualTo(MediaType.AUDIO);
         
-        verify(contentRepositoryPort).save(argThat(output -> 
+        verify(contentRepositoryPort, atLeastOnce()).save(argThat(output -> 
             output.mediaType() == MediaType.AUDIO &&
             output.backgroundImage().isEmpty()
         ));

@@ -8,7 +8,7 @@ Feature: Generate Guided Meditation with Narration
     Given the user is authenticated
 
   Scenario: Generate narrated video with synchronized subtitles
-    Given sends meditation text "Close your eyes and breathe deeply"
+    Given sends meditation text "Close your eyes and breathe deeply. Focus on the gentle rhythm of your breath as it flows in and out of your body. Allow yourself to be fully present in this moment, letting go of any thoughts or distractions. Experience the peace and tranquility that comes with each deep, intentional breath. Continue this practice for the next few minutes, staying connected to your inner calm."
     And selects a valid music track "nature-sounds-01.mp3"
     And selects a valid image "peaceful-landscape.jpg"
     When requests to generate the content
@@ -19,7 +19,7 @@ Feature: Generate Guided Meditation with Narration
     And the user receives access to the video in an acceptable timeframe
 
   Scenario: Generate narrated podcast
-    Given sends meditation text "Welcome to your mindfulness meditation journey"
+    Given sends meditation text "Welcome to your mindfulness meditation journey. Today, we will explore the depths of your consciousness and find a place of stillness within. Take a comfortable seat and allow your body to relax completely. Notice the sensations of your body against the chair or floor. Gently bring your attention to your breathing, observing the natural rise and fall of your chest. Inhale peace, exhale tension. Let each breath carry you deeper into a state of relaxation and awareness."
     And selects a valid music track "calm-piano-02.mp3"
     And does not select an image
     When requests to generate the content

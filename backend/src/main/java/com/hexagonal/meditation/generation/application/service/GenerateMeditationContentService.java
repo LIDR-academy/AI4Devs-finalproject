@@ -57,7 +57,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
     
     private static final Logger log = LoggerFactory.getLogger(GenerateMeditationContentService.class);
     
-    private static final int MAX_GENERATION_TIMEOUT_SECONDS = 180; // 3 minutes
+    private static final int MAX_GENERATION_TIMEOUT_SECONDS = 30; // 30 seconds as per OpenAPI
     private static final long MEDIA_URL_TTL_SECONDS = 3600; // 1 hour for presigned URLs
     
     // Default TTS voice configuration (es-ES meditation voice)
@@ -109,11 +109,8 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
         
         try {
             // 1. Validate input and estimate duration
+            // This also throws GenerationTimeoutException if estimated > 30s
             int estimatedDuration = textLengthEstimator.validateAndEstimate(request.narrationText());
-            
-            if (estimatedDuration > MAX_GENERATION_TIMEOUT_SECONDS) {
-                throw new GenerationTimeoutException(estimatedDuration, MAX_GENERATION_TIMEOUT_SECONDS);
-            }
             
             // 2. Check idempotency - return existing result if found
             String idempotencyKey = idempotencyKeyGenerator.generate(
@@ -130,8 +127,16 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             }
             
             // 3. Create domain aggregate based on media type
-            MediaType mediaType = request.imageReference() != null && !request.imageReference().isBlank() 
+            MediaType mediaType = (request.imageReference() != null && !request.imageReference().isBlank()) 
                     ? MediaType.VIDEO : MediaType.AUDIO;
+            
+            // Explicit validation if imageReference was provided but is blank (e.g. "")
+            if (mediaType == MediaType.AUDIO && request.imageReference() != null && request.imageReference().isBlank()) {
+                 // The user provided an image field but it's empty - we'll treat this as an error for clarity
+                 // instead of silently falling back to audio if they sent a blank string.
+                 throw new InvalidContentException("imageReference", "Image reference cannot be blank if provided");
+            }
+
             GeneratedMeditationContent output = createDomainAggregate(request, mediaType, idempotencyKey);
             
             // 4. Save initial state (PROCESSING)

@@ -1,6 +1,6 @@
 package com.hexagonal.meditationbuilder.bdd.steps;
 
-import com.hexagonal.meditationbuilder.bdd.CucumberSpringConfiguration;
+import com.hexagonal.meditationbuilder.bdd.CompositionCucumberSpringConfiguration;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
@@ -163,7 +163,7 @@ public class ComposeContentSteps {
                 "Feel the gentle rhythm of your breathing as you settle into peaceful awareness. " +
                 "Let go of any tension and allow your mind to rest in calm presence.";
         
-        CucumberSpringConfiguration.getAiTextServer().stubFor(post(urlPathEqualTo("/v1/chat/completions"))
+        CompositionCucumberSpringConfiguration.getAiTextServer().stubFor(post(urlPathEqualTo("/v1/chat/completions"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -238,7 +238,7 @@ public class ComposeContentSteps {
             // Mock AI image generation service response
             String aiImageUrl = "https://ai-generated-image.example.com/meditation-ocean-" + UUID.randomUUID();
             
-            CucumberSpringConfiguration.getAiImageServer().stubFor(post(urlPathEqualTo("/v1/images/generations"))
+            CompositionCucumberSpringConfiguration.getAiImageServer().stubFor(post(urlPathEqualTo("/v1/images/generations"))
                     .willReturn(aResponse()
                             .withStatus(200)
                             .withHeader("Content-Type", "application/json")
@@ -391,7 +391,7 @@ public class ComposeContentSteps {
         // Mock media catalog service (for future implementation)
         // Note: Preview endpoints will be implemented in a future user story
         // Use HEAD method as the adapter uses head() to check existence
-        CucumberSpringConfiguration.getMediaCatalogServer().stubFor(
+        CompositionCucumberSpringConfiguration.getMediaCatalogServer().stubFor(
                 head(urlPathEqualTo("/api/media/music/" + currentMusicId))
                 .willReturn(aResponse()
                         .withStatus(200)));

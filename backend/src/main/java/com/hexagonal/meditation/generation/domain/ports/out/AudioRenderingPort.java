@@ -28,7 +28,7 @@ public interface AudioRenderingPort {
      */
     record AudioRenderRequest(
         Path narrationAudioPath,
-        Path musicAudioPath, // Can be null for narration-only audio
+        Path musicAudioPath,
         Path outputPath,
         AudioConfig config
     ) {
@@ -36,7 +36,9 @@ public interface AudioRenderingPort {
             if (narrationAudioPath == null) {
                 throw new IllegalArgumentException("Narration audio path cannot be null");
             }
-            // musicAudioPath can be null - optional background music
+            if (musicAudioPath == null) {
+                throw new IllegalArgumentException("Music audio path cannot be null");
+            }
             if (outputPath == null) {
                 throw new IllegalArgumentException("Output path cannot be null");
             }

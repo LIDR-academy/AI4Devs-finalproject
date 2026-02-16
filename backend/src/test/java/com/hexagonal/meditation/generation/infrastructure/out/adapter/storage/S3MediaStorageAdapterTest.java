@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @DisplayName("S3MediaStorageAdapter Tests")
@@ -36,11 +37,11 @@ class S3MediaStorageAdapterTest {
     
     @BeforeEach
     void setUp() {
-        // LocalStack endpoint for testing
-        adapter = new S3MediaStorageAdapter(s3Client, "http://localhost:4566");
+        // LocalStack endpoint and bucket for testing
+        adapter = new S3MediaStorageAdapter(s3Client, "http://localhost:4566", "meditation-media");
         
         // Mock S3 upload response
-        when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
+        lenient().when(s3Client.putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class)))
             .thenReturn(PutObjectResponse.builder().build());
     }
     
