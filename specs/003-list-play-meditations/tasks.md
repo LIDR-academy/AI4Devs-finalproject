@@ -203,7 +203,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - Component tests (Jest/RTL) verify state-based behavior  
   **Dependencies**: T010
 
-- [ ] **T012 - Frontend State Management**  
+- [X] **T012 - Frontend State Management**
   **Description**: Implement React Query hooks and Zustand store  
   **Artifacts**:
   - Hooks: `frontend/src/hooks/playback/{useMeditationList, usePlaybackInfo}.ts`
@@ -216,7 +216,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - Hook tests (MSW) verify data fetching and error handling  
   **Dependencies**: T011
 
-- [ ] **T013 - Frontend Page & Routing**  
+- [X] **T013 - Frontend Page & Routing**
   **Description**: Implement Meditation Library page and route integration  
   **Artifacts**:
   - Page: `frontend/src/pages/MeditationLibraryPage.tsx`

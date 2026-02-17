@@ -1,0 +1,148 @@
+/**
+ * MeditationLibraryPage
+ * 
+ * Main page for listing and playing user's meditations.
+ * 
+ * Integrates:
+ * - useMeditationList (React Query) - Fetches meditation list
+ * - usePlaybackInfo (React Query) - Fetches playback URLs
+ * - usePlayerStore (Zustand) - UI state for player controls
+ * - MeditationList (Component) - Displays meditation grid
+ * - MeditationPlayer (Component) - Media playback
+ * 
+ * Features:
+ * - Auto-fetches meditation list on mount
+ * - Lazy-loads playback info when user clicks "Play"
+ * - Displays player only when meditation selected
+ * - Handles loading/error states gracefully
+ * - User-friendly error messages in Spanish
+ */
+
+import React from 'react';
+import { useMeditationList, usePlaybackInfo } from '../hooks/playback';
+import { usePlayerStore } from '../state/playback';
+import { MeditationList, MeditationPlayer } from '../components/playback';
+import type { MeditationItem } from '../api/generated/playback/src';
+
+/**
+ * MeditationLibraryPage Component
+ * 
+ * Layout:
+ * - Header: "Biblioteca de Meditaciones"
+ * - MeditationList: Grid of meditation cards
+ * - MeditationPlayer: Sticky footer player (only when meditation selected)
+ */
+export const MeditationLibraryPage: React.FC = () => {
+  // Server-state: Meditation list
+  const { 
+    data: meditations = [], 
+    isLoading: isLoadingList, 
+    error: listError 
+  } = useMeditationList();
+
+  // UI-state: Current meditation selection
+  const { 
+    currentMeditationId, 
+    currentMeditationTitle,
+    setCurrentMeditation,
+    reset: resetPlayer
+  } = usePlayerStore();
+
+  // Server-state: Playback info (lazy-loaded)
+  const { 
+    data: playbackInfo, 
+    isLoading: isLoadingPlayback, 
+    error: playbackError 
+  } = usePlaybackInfo(currentMeditationId);
+
+  /**
+   * Handle "Play" button click on meditation card.
+   * Sets current meditation in player store, which triggers playback info fetch.
+   */
+  const handlePlay = (meditationId: string) => {
+    // Find meditation details from list
+    const meditation = meditations.find((m: MeditationItem) => m.id === meditationId);
+    
+    if (!meditation) {
+      console.error('Meditation not found in list:', meditationId);
+      return;
+    }
+
+    // Check if meditation is playable (COMPLETED state)
+    if (meditation.state !== 'COMPLETED') {
+      // User shouldn't reach here (button should be disabled),
+      // but handle defensively
+      alert('Esta meditación aún no está disponible para reproducir.');
+      return;
+    }
+
+    // Set current meditation (triggers playback info fetch via usePlaybackInfo)
+    setCurrentMeditation(meditation.id, meditation.title);
+  };
+
+  /**
+   * Handle playback errors.
+   * Displays user-friendly alert and resets player.
+   */
+  const handlePlaybackError = (error?: Error) => {
+    const errorMessage = error?.message || 
+      'Error al reproducir el contenido multimedia. Por favor, intenta de nuevo.';
+    alert(errorMessage);
+    resetPlayer();
+  };
+
+  return (
+    <div className="meditation-library-page">
+      {/* Header */}
+      <header className="library-header">
+        <h1>Biblioteca de Meditaciones</h1>
+        <p className="library-description">
+          Aquí encontrarás todas tus meditaciones generadas. 
+          Haz clic en "Reproducir" para escuchar o ver una meditación.
+        </p>
+      </header>
+
+      {/* Meditation List */}
+      <main className="library-content">
+        <MeditationList
+          meditations={meditations}
+          onPlay={handlePlay}
+          isLoading={isLoadingList}
+          error={listError?.message}
+        />
+      </main>
+
+      {/* Player (sticky footer - only shown when meditation selected) */}
+      {currentMeditationId && (
+        <aside className="library-player-container">
+          {/* Loading state while fetching playback info */}
+          {isLoadingPlayback && (
+            <div className="player-loading">
+              <p>Cargando información de reproducción...</p>
+            </div>
+          )}
+
+          {/* Playback error */}
+          {playbackError && (
+            <div className="player-error" role="alert">
+              <p>⚠️ {playbackError.message}</p>
+              <button onClick={resetPlayer}>Cerrar</button>
+            </div>
+          )}
+
+          {/* Player (only show when playback info loaded) */}
+          {!isLoadingPlayback && !playbackError && playbackInfo && (
+            <MeditationPlayer
+              meditationId={currentMeditationId}
+              title={currentMeditationTitle || undefined}
+              mediaUrls={playbackInfo.mediaUrls}
+              onPlaybackError={handlePlaybackError}
+            />
+          )}
+        </aside>
+      )}
+    </div>
+  );
+};
+
+export default MeditationLibraryPage;

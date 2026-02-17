@@ -15,15 +15,17 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "generate:api": "npm run generate:api:composition && npm run generate:api:generation && npm run postprocess:api",
+    "generate:api": "npm run generate:api:composition && npm run generate:api:generation && npm run generate:api:playback && npm run postprocess:api",
     "generate:api:composition": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi/meditationbuilder/compose-content.yaml -g typescript-fetch -o src/api/generated/composition --additional-properties=supportsES6=true,typescriptThreePlus=true,npmName=@meditation-builder/composition-client",
     "generate:api:generation": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi/generation/generate-meditation.yaml -g typescript-fetch -o src/api/generated/generation --additional-properties=supportsES6=true,typescriptThreePlus=true,npmName=@meditation-builder/generation-client",
+    "generate:api:playback": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi/playback/list-play-meditations.yaml -g typescript-fetch -o src/api/generated/playback --additional-properties=supportsES6=true,typescriptThreePlus=true,npmName=@meditation-builder/playback-client",
     "postprocess:api": "node scripts/postprocess-openapi.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.17.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.30.3",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
