@@ -59,7 +59,7 @@ services:
     container_name: sf-pm-frontend
     working_dir: /app
     ports:
-      - "5173:5173"
+      - "127.0.0.1:5173:5173"  # Localhost only for security
     volumes:
       - ./src/frontend:/app
       - /app/node_modules  # Anonymous volume to prevent host overwriting node_modules
