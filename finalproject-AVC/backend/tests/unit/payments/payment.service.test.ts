@@ -8,6 +8,7 @@ jest.mock('@prisma/client', () => {
     const mockPrismaClient = {
         reservation: {
             findUnique: jest.fn(),
+            update: jest.fn(),
         },
         payment: {
             findFirst: jest.fn(),
@@ -62,7 +63,9 @@ describe('PaymentService', () => {
         const mockPayment = {
             id: 'payment-123',
             reservationId: 'reservation-123',
-            amount: 50.0,
+            amount: {
+                toNumber: () => 50.0,
+            },
             status: 'PENDING',
             provider: 'MOCK_GATEWAY',
             createdAt: new Date(),
@@ -183,7 +186,7 @@ describe('PaymentService', () => {
             const result = await paymentService.initiatePayment('user-123', 'reservation-123');
 
             // Assert
-            expect(mockPaymentGateway.generatePaymentUrl).toHaveBeenCalledWith('payment-123');
+            expect(mockPaymentGateway.generatePaymentUrl).toHaveBeenCalledWith('payment-123', 50.0);
             expect(result.paymentUrl).toBe('https://mock-payment-gateway.com/pay/payment-123');
         });
 
@@ -214,7 +217,9 @@ describe('PaymentService', () => {
         const mockPayment = {
             id: 'payment-123',
             reservationId: 'reservation-123',
-            amount: 50.0,
+            amount: {
+                toNumber: () => 50.0,
+            },
             status: 'PENDING',
             provider: 'MOCK_GATEWAY',
             createdAt: new Date(),
@@ -234,7 +239,7 @@ describe('PaymentService', () => {
             prisma.payment.findUnique.mockResolvedValue(mockPayment);
             (mockPaymentGateway.processPayment as jest.Mock).mockResolvedValue(true);
             prisma.$transaction.mockResolvedValue([
-                { ...mockPayment, status: 'PAID' },
+                { ...mockPayment, status: 'PAID', amount: { toNumber: () => 50.0 } },
                 { id: 'reservation-123', status: 'CONFIRMED' },
             ]);
             (mockPaymentGateway.generatePaymentUrl as jest.Mock).mockReturnValue(
@@ -256,7 +261,7 @@ describe('PaymentService', () => {
             (mockPaymentGateway.processPayment as jest.Mock).mockResolvedValue(true);
             const updatedPayment = { ...mockPayment, status: 'PAID' };
             prisma.$transaction.mockResolvedValue([
-                updatedPayment,
+                { ...updatedPayment, amount: { toNumber: () => 50.0 } },
                 { id: 'reservation-123', status: 'CONFIRMED' },
             ]);
             (mockPaymentGateway.generatePaymentUrl as jest.Mock).mockReturnValue(
@@ -275,7 +280,7 @@ describe('PaymentService', () => {
             prisma.payment.findUnique.mockResolvedValue(mockPayment);
             (mockPaymentGateway.processPayment as jest.Mock).mockResolvedValue(true);
             prisma.$transaction.mockResolvedValue([
-                { ...mockPayment, status: 'PAID' },
+                { ...mockPayment, status: 'PAID', amount: { toNumber: () => 50.0 } },
                 { id: 'reservation-123', status: 'CONFIRMED' },
             ]);
             (mockPaymentGateway.generatePaymentUrl as jest.Mock).mockReturnValue(

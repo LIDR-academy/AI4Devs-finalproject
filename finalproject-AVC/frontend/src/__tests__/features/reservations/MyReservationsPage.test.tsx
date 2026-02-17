@@ -1,11 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { MyReservationsPage } from '../../../src/features/reservations/MyReservationsPage';
-import { ToastProvider } from '../../../src/shared/components/ToastContext';
-import { reservationsApi } from '../../../src/api/reservationsApi';
+import { MyReservationsPage } from '../../../features/reservations/MyReservationsPage';
+import { ToastProvider } from '../../../shared/components/ToastContext';
+import { reservationsApi } from '../../../api/reservationsApi';
 
 // Mock the reservations API
-jest.mock('../../../src/api/reservationsApi');
+jest.mock('../../../api/reservationsApi');
 
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
@@ -139,7 +139,8 @@ describe('MyReservationsPage', () => {
         renderMyReservationsPage();
 
         await waitFor(() => {
-            expect(screen.getByText(/Error al cargar las reservas/i)).toBeInTheDocument();
+            const errorMessages = screen.getAllByText(/Error al cargar reservas/i);
+            expect(errorMessages.length).toBeGreaterThan(0);
         });
     });
 

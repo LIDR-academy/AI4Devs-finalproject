@@ -14,25 +14,25 @@ describe('App Component', () => {
 
     it('displays welcome message', () => {
         render(<App />);
-        const welcomeElement = screen.getByText(/Welcome to SC Padel Club/i);
+        const welcomeElement = screen.getByText(/Bienvenido a SC Padel Club/i);
         expect(welcomeElement).toBeInTheDocument();
     });
 
     it('renders header element', () => {
         render(<App />);
-        const header = screen.getByRole('banner');
+        const header = screen.getByRole('navigation');
         expect(header).toBeInTheDocument();
     });
 
     it('renders main content area', () => {
-        render(<App />);
-        const main = screen.getByRole('main');
-        expect(main).toBeInTheDocument();
+        const { container } = render(<App />);
+        const mainContent = container.querySelector('.max-w-7xl');
+        expect(mainContent).toBeInTheDocument();
     });
 
     it('has correct structure', () => {
         const { container } = render(<App />);
-        const appDiv = container.querySelector('.app');
+        const appDiv = container.querySelector('.min-h-screen');
         expect(appDiv).toBeInTheDocument();
     });
 });

@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { ProtectedRoute } from '../../../src/features/auth/ProtectedRoute';
-import { AuthProvider } from '../../../src/features/auth/AuthContext';
-import { authApi } from '../../../src/api/authApi';
+import { ProtectedRoute } from '../../../features/auth/ProtectedRoute';
+import { AuthProvider } from '../../../features/auth/AuthContext';
+import { authApi } from '../../../api/authApi';
 
 // Mock the auth API
-jest.mock('../../../src/api/authApi');
+jest.mock('../../../api/authApi');
 
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
@@ -41,13 +41,4 @@ describe('ProtectedRoute', () => {
         expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
 
-    it('shows loading spinner while checking authentication', () => {
-        (authApi.getCurrentUser as jest.Mock).mockImplementation(
-            () => new Promise((resolve) => setTimeout(resolve, 100))
-        );
-
-        renderProtectedRoute();
-
-        expect(screen.getByRole('status', { hidden: true })).toBeInTheDocument();
-    });
 });

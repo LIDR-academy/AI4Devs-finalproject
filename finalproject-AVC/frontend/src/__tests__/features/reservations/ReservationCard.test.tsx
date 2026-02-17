@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { ReservationCard } from '../../../src/features/reservations/components/ReservationCard';
-import { Reservation } from '../../../src/shared/types';
+import { ReservationCard } from '../../../features/reservations/components/ReservationCard';
+import { Reservation } from '../../../shared/types';
 
 describe('ReservationCard', () => {
     const mockReservation: Reservation = {
