@@ -49,9 +49,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, []);
 
     const login = async (credentials: LoginRequest) => {
-        const { token, user: loggedInUser } = await authApi.login(credentials);
+        console.log('[AuthContext] Login called with:', credentials.email);
+        const response = await authApi.login(credentials);
+        console.log('[AuthContext] Login response:', response);
+        console.log('[AuthContext] Response token:', response.token);
+        console.log('[AuthContext] Response user:', response.user);
+
+        const { token, user: loggedInUser } = response;
+        console.log('[AuthContext] Destructured token:', token);
+        console.log('[AuthContext] Destructured user:', loggedInUser);
+
         localStorage.setItem('token', token);
+        console.log('[AuthContext] Token saved to localStorage');
+
         setUser(loggedInUser);
+        console.log('[AuthContext] setUser called with:', loggedInUser);
     };
 
     const logout = () => {

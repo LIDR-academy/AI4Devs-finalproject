@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../shared/utils/prisma';
 import bcrypt from 'bcrypt';
 import { UnauthorizedError } from '../../shared/errors/app-error';
-
-const prisma = new PrismaClient();
 
 export class AuthService {
     /**

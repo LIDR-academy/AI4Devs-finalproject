@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { authService } from './auth.service';
 import { loginRequestSchema, LoginRequest, LoginResponse } from './auth.schemas';
+import { prisma } from '../../shared/utils/prisma';
 
 export async function authRoutes(fastify: FastifyInstance) {
     /**
@@ -27,6 +28,16 @@ export async function authRoutes(fastify: FastifyInstance) {
                         type: 'object',
                         properties: {
                             token: { type: 'string' },
+                            user: {
+                                type: 'object',
+                                properties: {
+                                    id: { type: 'string' },
+                                    email: { type: 'string' },
+                                    role: { type: 'string' },
+                                    active: { type: 'boolean' },
+                                    createdAt: { type: 'string' },
+                                },
+                            },
                         },
                     },
                 },
@@ -78,10 +89,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         async (request: FastifyRequest, reply: FastifyReply) => {
             const user = request.user as { id: string; email: string; role: string };
 
-            // Fetch full user data from database
-            const { PrismaClient } = await import('@prisma/client');
-            const prisma = new PrismaClient();
-
+            // Fetch full user data from database using shared Prisma instance
             const userData = await prisma.user.findUnique({
                 where: { id: user.id },
                 select: {

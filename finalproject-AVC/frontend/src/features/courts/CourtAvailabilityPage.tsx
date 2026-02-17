@@ -132,7 +132,11 @@ export const CourtAvailabilityPage: React.FC = () => {
                                             })}
                                         </p>
                                     </div>
-                                    <button onClick={handleReserve} className="btn-primary">
+                                    <button 
+                                        onClick={handleReserve} 
+                                        className="btn-primary"
+                                        data-testid="reserve-button"
+                                    >
                                         Reservar
                                     </button>
                                 </div>

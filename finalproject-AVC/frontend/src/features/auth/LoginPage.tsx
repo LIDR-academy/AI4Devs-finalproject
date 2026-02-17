@@ -17,6 +17,8 @@ export const LoginPage: React.FC = () => {
 
         try {
             await login({ email, password });
+            // Small delay to ensure React state updates propagate before navigation
+            await new Promise(resolve => setTimeout(resolve, 100));
             navigate('/');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Error al iniciar sesión. Verifica tus credenciales.');

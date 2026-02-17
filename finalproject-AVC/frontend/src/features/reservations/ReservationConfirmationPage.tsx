@@ -127,6 +127,7 @@ export const ReservationConfirmationPage: React.FC = () => {
                         onClick={handleCancel}
                         disabled={loading}
                         className="btn-secondary flex-1"
+                        data-testid="cancel-reservation-button"
                     >
                         Cancelar
                     </button>
@@ -134,6 +135,7 @@ export const ReservationConfirmationPage: React.FC = () => {
                         onClick={handleConfirm}
                         disabled={loading}
                         className="btn-primary flex-1 flex items-center justify-center"
+                        data-testid="confirm-reservation-button"
                     >
                         {loading ? (
                             <>

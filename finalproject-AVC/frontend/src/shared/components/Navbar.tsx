@@ -6,6 +6,10 @@ export const Navbar: React.FC = () => {
     const { user, isAuthenticated, isAdmin, logout } = useAuth();
     const navigate = useNavigate();
 
+    console.log('[Navbar] Rendering with user:', user);
+    console.log('[Navbar] isAuthenticated:', isAuthenticated);
+    console.log('[Navbar] isAdmin:', isAdmin);
+
     const handleLogout = () => {
         logout();
         navigate('/login');
