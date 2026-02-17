@@ -62,7 +62,8 @@ class PlaybackValidatorTest {
             .hasMessageContaining(meditationId.toString())
             .satisfies(ex -> {
                 MeditationNotPlayableException exception = (MeditationNotPlayableException) ex;
-                org.assertj.core.api.Assertions.assertThat(exception.getUserMessage()).contains("En cola");
+                org.assertj.core.api.Assertions.assertThat(exception.getUserMessage())
+                    .isEqualTo("La meditación está en cola para ser generada.");
             });
     }
 
@@ -86,7 +87,8 @@ class PlaybackValidatorTest {
             .hasMessageContaining(meditationId.toString())
             .satisfies(ex -> {
                 MeditationNotPlayableException exception = (MeditationNotPlayableException) ex;
-                org.assertj.core.api.Assertions.assertThat(exception.getUserMessage()).contains("Generando");
+                org.assertj.core.api.Assertions.assertThat(exception.getUserMessage())
+                    .isEqualTo("Esta meditación aún se está procesando. Por favor, espera a que esté lista.");
             });
     }
 
@@ -110,7 +112,8 @@ class PlaybackValidatorTest {
             .hasMessageContaining(meditationId.toString())
             .satisfies(ex -> {
                 MeditationNotPlayableException exception = (MeditationNotPlayableException) ex;
-                org.assertj.core.api.Assertions.assertThat(exception.getUserMessage()).contains("Fallida");
+                org.assertj.core.api.Assertions.assertThat(exception.getUserMessage())
+                    .isEqualTo("Error al generar la meditación. Por favor, inténtalo de nuevo.");
             });
     }
 

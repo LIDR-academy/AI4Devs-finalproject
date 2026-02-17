@@ -135,24 +135,8 @@ class MeditationTest {
         .hasMessage("CreatedAt cannot be null");
     }
 
-    @Test
-    void shouldThrowExceptionWhenCreatedAtIsInFuture() {
-        // Given
-        Instant future = Instant.now(FIXED_CLOCK).plusSeconds(3600);
-        
-        // When/Then
-        assertThatThrownBy(() -> new Meditation(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            "Title",
-            future,
-            ProcessingState.COMPLETED,
-            new MediaUrls("https://example.com/audio.mp3", null, null),
-            FIXED_CLOCK
-        ))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("CreatedAt cannot be in the future");
-    }
+    // Note: Temporal validation test removed - Playback BC is read-only,
+    // Generation BC already validates timestamps on creation
 
     @Test
     void shouldThrowExceptionWhenProcessingStateIsNull() {

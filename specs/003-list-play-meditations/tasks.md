@@ -76,7 +76,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Implement domain models, business rules, and ports (NO Spring dependencies)
 
-- [ ] **T005 - Domain Models & Value Objects**  
+- [x] **T005 - Domain Models & Value Objects**  
   **Description**: Implement TDD for domain models (Aggregate Root, VOs, Enums)  
   **Artifacts**:
   - Tests: `${basePackage}/playback/domain/model/*Test.java`
@@ -92,7 +92,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - Zero Spring dependencies  
   **Dependencies**: T004
 
-- [ ] **T006 - Domain Exceptions & Business Rules**  
+- [x] **T006 - Domain Exceptions & Business Rules**  
   **Description**: Implement domain exceptions and playback validation rules  
   **Artifacts**:
   - Tests: `${basePackage}/playback/domain/exception/*Test.java`
@@ -104,7 +104,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - All exception tests GREEN  
   **Dependencies**: T005
 
-- [ ] **T007 - Domain Ports (In & Out)**  
+- [x] **T007 - Domain Ports (In & Out)**  
   **Description**: Define hexagonal ports for use cases and repositories  
   **Artifacts**:
   - `${basePackage}/playback/domain/ports/in/{ListMeditationsUseCase, GetPlaybackInfoUseCase}`
@@ -122,7 +122,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Orchestrate domain logic via ports (NO business rules here)
 
-- [ ] **T008 - Application Services & Validators**  
+- [x] **T008 - Application Services & Validators**  
   **Description**: Implement TDD for use case orchestration  
   **Artifacts**:
   - Tests: `${basePackage}/playback/application/service/*Test.java` (mocked ports)
@@ -142,7 +142,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Implement out ports with Spring Data JPA + PostgreSQL
 
-- [ ] **T009 - PostgreSQL Persistence Layer**  
+- [x] **T009 - PostgreSQL Persistence Layer**  
   **Description**: Implement TDD for JPA persistence adapters (Testcontainers)  
   **Artifacts**:
   - Tests: `${basePackage}/playback/infrastructure/out/persistence/*IT.java` (Testcontainers PostgreSQL)

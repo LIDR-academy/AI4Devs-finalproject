@@ -34,40 +34,17 @@ public record Meditation(
     
     /**
      * Compact constructor with validation.
-     * Uses system clock for validation.
      * 
      * @throws IllegalArgumentException if business rules are violated
      */
     public Meditation {
-        validateInvariants(id, userId, title, createdAt, processingState, mediaUrls, Clock.systemUTC());
-    }
-
-    /**
-     * Alternative constructor with injectable clock for testing.
-     * 
-     * @param id Meditation ID
-     * @param userId Owner ID
-     * @param title Meditation title
-     * @param createdAt Creation timestamp
-     * @param processingState Processing state
-     * @param mediaUrls Media URLs
-     * @param clock Clock for timestamp validation
-     */
-    public Meditation(
-        UUID id,
-        UUID userId,
-        String title,
-        Instant createdAt,
-        ProcessingState processingState,
-        MediaUrls mediaUrls,
-        Clock clock
-    ) {
-        this(id, userId, title, createdAt, processingState, mediaUrls);
-        validateInvariants(id, userId, title, createdAt, processingState, mediaUrls, clock);
+        validateInvariants(id, userId, title, createdAt, processingState, mediaUrls);
     }
 
     /**
      * Validates all business rules and invariants.
+     * Note: Temporal validation (createdAt in future) is not enforced in Playback BC
+     * since we only read data validated by Generation BC.
      */
     private static void validateInvariants(
         UUID id,
@@ -75,8 +52,7 @@ public record Meditation(
         String title,
         Instant createdAt,
         ProcessingState processingState,
-        MediaUrls mediaUrls,
-        Clock clock
+        MediaUrls mediaUrls
     ) {
         // Validate id
         if (id == null) {
@@ -98,9 +74,8 @@ public record Meditation(
             throw new IllegalArgumentException("CreatedAt cannot be null");
         }
         
-        if (createdAt.isAfter(Instant.now(clock))) {
-            throw new IllegalArgumentException("CreatedAt cannot be in the future");
-        }
+        // Note: Temporal validation (future check) skipped in Playback BC
+        // Data is read-only from Generation BC which already validated timestamps
         
         // Validate processingState
         if (processingState == null) {

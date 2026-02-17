@@ -26,12 +26,17 @@ public class MeditationNotPlayableException extends RuntimeException {
     }
 
     /**
-     * Returns user-friendly error message in Spanish.
+     * Returns user-friendly error message in Spanish based on current state.
      * 
-     * @return Spanish error message for end users with current state
+     * @return Spanish error message for end users with state-specific guidance
      */
     public String getUserMessage() {
-        return "La meditación está en estado " + currentState.getLabel() + " y no puede reproducirse";
+        return switch (currentState) {
+            case PROCESSING -> "Esta meditación aún se está procesando. Por favor, espera a que esté lista.";
+            case FAILED -> "Error al generar la meditación. Por favor, inténtalo de nuevo.";
+            case PENDING -> "La meditación está en cola para ser generada.";
+            default -> "La meditación está en estado " + currentState.getLabel() + " y no puede reproducirse";
+        };
     }
 
     public UUID getMeditationId() {
