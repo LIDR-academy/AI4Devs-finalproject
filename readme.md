@@ -134,6 +134,7 @@ RRFinances es un **sistema financiero** desarrollado con **arquitectura de micro
 ## 6. Proyecto Final
 
 **Documento:** [6. proyecto final.md](6.%20proyecto%20final.md)
+**Enlace:** https://drive.google.com/file/d/1gJm8EosL42Nzv0gbMf59f5gTPxkB99gR/view?usp=sharing
 
 Resumen de la entrega final: video demostrativo, alcance del módulo de clientes y próximos módulos (cartera, depósitos, etc.).
 

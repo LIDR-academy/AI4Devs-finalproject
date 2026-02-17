@@ -9,6 +9,7 @@
 
 Por tratarse de un **proyecto financiero**, se optó por presentar la entrega mediante un **video demostrativo** en lugar de entregar el código fuente, priorizando la seguridad y la confidencialidad de la información.
 Archivo: Proyecto Final.rar
+Enlace: https://drive.google.com/file/d/1gJm8EosL42Nzv0gbMf59f5gTPxkB99gR/view?usp=sharing
 ---
 
 ## Entregas del proyecto
