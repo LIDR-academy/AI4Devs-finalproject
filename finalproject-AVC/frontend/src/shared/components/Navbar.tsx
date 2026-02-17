@@ -6,10 +6,6 @@ export const Navbar: React.FC = () => {
     const { user, isAuthenticated, isAdmin, logout } = useAuth();
     const navigate = useNavigate();
 
-    console.log('[Navbar] Rendering with user:', user);
-    console.log('[Navbar] isAuthenticated:', isAuthenticated);
-    console.log('[Navbar] isAdmin:', isAdmin);
-
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -40,12 +36,26 @@ export const Navbar: React.FC = () => {
                                 </Link>
 
                                 {isAdmin && (
-                                    <Link
-                                        to="/admin/users"
-                                        className="text-gray-700 hover:text-primary-600 transition-colors"
-                                    >
-                                        Usuarios
-                                    </Link>
+                                    <>
+                                        <Link
+                                            to="/admin/users"
+                                            className="text-gray-700 hover:text-primary-600 transition-colors"
+                                        >
+                                            Usuarios
+                                        </Link>
+                                        <Link
+                                            to="/admin/courts"
+                                            className="text-gray-700 hover:text-primary-600 transition-colors"
+                                        >
+                                            Gestión Canchas
+                                        </Link>
+                                        <Link
+                                            to="/admin/reservations"
+                                            className="text-gray-700 hover:text-primary-600 transition-colors"
+                                        >
+                                            Gestión Reservas
+                                        </Link>
+                                    </>
                                 )}
 
                                 <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-300">

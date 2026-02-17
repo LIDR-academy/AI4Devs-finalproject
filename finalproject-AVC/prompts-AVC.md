@@ -276,11 +276,9 @@ Comments:
 
 ---
 
-# Prompts para la implementación de la segunda entrega
+# Prompts para la implementación de la segunda entrega - Implementando estructura principal
 
-## Prompt 13 (ChatGPT GPT-5 mini)
-
-## Prompt 14 (Antigravity - Claude Sonnet 4.5)
+## Prompt 13 (Antigravity - Claude Sonnet 4.5)
 
 You are a senior full-stack software engineer working on a Pilot (Phase 0) Padel Club Management System.
 
@@ -429,11 +427,11 @@ If something is unclear:
 - ASK before implementing.
 - Do NOT assume.
 
-## Prompt 15
+## Prompt 14
 
 Begin by scaffolding the project structure and initial configuration.
 
-## Prompt 16
+## Prompt 15
 ### Cambios en la Base de Datos - Dockerización
 
 I did all the steps in the SETUP.md document except the ones related to the database.
@@ -487,7 +485,7 @@ After making these changes:
 
 Do not change any of the code yet. Show me how you would implement it and when I say OK, proceed.
 
-## Prompt 17
+## Prompt 16
 ### Creación de tests unitarios y de integración - Corrección de errores
 
 One more thing, when I run npm test, both in the backend directory and frontend, nothing happens as there are no unit tests. Also, there are errors when I run the other tests, such as:
@@ -513,11 +511,13 @@ Cypress failed to start.
 
 My question is, with the backend and frontend code implemented so far, can you create tests? If so, which ones and how you would implement them? I want to see it and if I agree, I’ll say OK so you can proceed.
 
-#######
-# 3ra entrega
-#######
+---
 
-## Prompt 18
+# Prompts para la implementación de la tercera entrega
+# Implementación completa del Backend y tests correspondientes
+## Se utilizó tanto Antigravity como VSCode con GitHub Copilot - Claude Sonnet 4.5
+
+## Prompt 17
 
 You are an expert software engineer and now you are executing Phase 0 (Pilot) implementation of the SC Padel Club Management System.
 
@@ -550,3 +550,94 @@ If something is unclear:
 - Do NOT assume or invent behavior.
 
 Acknowledge this and wait for the first ticket.
+
+## Prompt 18
+
+#### Fui iterando de a dos tickets para la implementación. Este es un ejemplo de los tickets 1 y 2:
+
+You can revise Tickets 1 and 2 and analyze what's missing for them to be completed. And also take Ticket 3. Describe step by step how you would implement it and when I say OK you may start
+
+#### Tickets 3 y 4
+Great! tests passed! Now let's move on to ticket 3 and 4 with the same methodology. First analyze what changes should be made in backend, frontend, database and everything else needed. Describe how to implement it and the necessary tests and when I say OK you may start
+
+#### Tickets 5 y 6
+Excellent so far! Now, lets move on to  tickets 5 and 6. Again, analyze what changes should be made in backend, frontend, database and everything else needed. Describe how to implement it and the necessary tests and when I say OK you may start
+
+y asi con el resto de los tickets...
+
+# Implementación del Frontend y tests correspondientes
+## Prompt 19
+
+Hasta ahora solo el Backend y tests unitarios estaban implementados. Faltaba el frontend y el resto de los tests. Así que utilicé el siguiente prompt:
+
+Backend implementation for Phase 0 tickets already exists.
+
+Your task now is to implement the missing FRONTEND layer and related tests.
+
+For each Phase 0 ticket:
+1. Identify required UI screens or components
+2. Integrate with existing backend endpoints
+3. Handle loading, error, and success states
+4. Add frontend unit tests
+5. Update or create Cypress E2E flows
+
+Do NOT modify backend unless absolutely required.
+
+Goal:
+User must be able to complete the full flow from UI.
+
+Start by listing missing frontend pieces per ticket, then implement.
+
+## Prompt 20
+
+#### Tickets 1 y 2 estaban completados. Asi que pasé a la implementación de los tickets 3 y 4. Nuevamente, fui en secuencia de dos tickets:
+
+Ok. Let's do the implementation according to this plan you just outlined. But let's do it in parts (grouping 2 tickets like in the backend). The tech stack for the frontend is Ok But I'd also like CSS Tailwind for style. You may start with the implementation of frontend for tickets 3 and 4
+
+##### Troubleshooting de los tickets 3 y 4
+Ok, there are some errors with the implementation of tickets 3 and 4. Those are:
+-There's no logout button and I can't check if theres an actual logout because of this.
+-Login redirects to home but I can't see the email in the navbar as you said
+-I login as player and go to /reservations but get redirected to home.
+-Admin features only the login an redirect home works but again, can't see the email in the navbar.
+-RBAC I'm not sure it works since I can't logout
+-Entering email and password incorrectly shows a message, which is fine. But login correctly and I'm not sure the system knows which user is logged in.
+
+#### Implementación de los tickets 5 y 6
+
+Excellent. everything works now. Now we can move on to the next implementation phase and implement frontend, messages (error, success, etc.) and related tests (unit, E2E and everything necessary) and integration with backend of tickets 5 and 6
+
+#### Implementacion de los tickets 7 y 8
+
+Indeed. everything works perfectly now. Now we can move on to the next implementation phase and implement frontend, messages (error, success, etc.) and related tests (unit, E2E and everything necessary) and integration with backend of tickets 7 and 8
+
+#### Implementación de los tickets 9 y 10
+Yes! ever. Now we can move on to the next implementation phase and implement frontend, messages (error, success, etc.) and related tests (unit, E2E and everything necessary) and integration with backend of tickets 9 and 10
+
+# Testing y Troubleshooting
+
+Solo adjuntaré los prompts principales para manejo de errores:
+
+## Prompt 21: pasaron tests unitarios de backend pero no de frontend
+
+Yes! All unit tests in the backend passed indeed! Now, for the frontend, many unit tests failed as well but this error log is a bit longer so I attach the file 
+resuls_frontend.txt
+ 
+and again, analyze the errors and suggest fixes but don't implement anything until I say OK 
+
+## Prompt 22: Durante el testing E2E me quedé atascada en un bucle de optimización. Hubieron pocos avances. Así que utilicé este prompt:
+You are stuck in a local optimization loop.
+
+Reset strategy.
+
+Assume previous fixes were incorrect or incomplete.
+
+Start from first principles:
+1. Verify backend works via direct API calls (no Cypress)
+2. Verify DB state manually
+3. Verify frontend manually in browser
+4. Only then re-evaluate Cypress failures
+
+Design a step-by-step isolation plan.
+
+Esto permitió que mediante algunos chequeos manuales o uso de capturas de pantalla mas uso del LLM hubiera feedback que mejorara la parte de testing.

@@ -1417,3 +1417,19 @@ npm run cypress:run
 # Open Cypress UI
 npm run cypress:open
 ```
+---
+
+# 8. Guías y Demos
+
+Pueden encontrar una guia completa en el archivo walkthrough.md
+
+O sino, pueden ver una demostración de un usuario con el rol "Jugador" en: https://youtu.be/EviMCzsCuVU
+
+También pueden ver una demostración como usuario "Administrador" en: https://youtu.be/3P4DzIYdBcU
+
+**¡Feliz juego! 🏆**
+
+---
+
+*Última actualización: Febrero 2026*  
+*Sistema de Gestión del SC Padel Club - Fase 0*

@@ -50,7 +50,22 @@ export class PaymentService {
         });
 
         if (existingPayment) {
-            throw new ConflictError('Payment already exists for this reservation');
+            // If payment is already PAID, don't allow creating a new one
+            if (existingPayment.status === 'PAID') {
+                throw new ConflictError('Payment already completed for this reservation');
+            }
+            
+            // If payment is PENDING or FAILED, reuse it (allow retry)
+            const paymentUrl = mockPaymentGateway.generatePaymentUrl(
+                existingPayment.id, 
+                existingPayment.amount.toNumber()
+            );
+            
+            return {
+                ...existingPayment,
+                userId: reservation.userId,
+                paymentUrl,
+            };
         }
 
         // Create payment with PENDING status

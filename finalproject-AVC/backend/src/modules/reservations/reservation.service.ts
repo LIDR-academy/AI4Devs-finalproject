@@ -107,6 +107,35 @@ export class ReservationService {
 
         return reservations;
     }
+
+    /**
+     * Get all reservations (admin only)
+     * @returns Array of all reservations with user and court details
+     */
+    async getAllReservations() {
+        const reservations = await prisma.reservation.findMany({
+            include: {
+                court: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        role: true,
+                    },
+                },
+            },
+            orderBy: {
+                startTime: 'desc', // Most recent first
+            },
+        });
+
+        return reservations;
+    }
 }
 
 export const reservationService = new ReservationService();

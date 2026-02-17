@@ -5,6 +5,8 @@ import { ProtectedRoute } from './features/auth/ProtectedRoute';
 import { LoginPage } from './features/auth/LoginPage';
 import { HomePage } from './features/home/HomePage';
 import { UserManagementPage } from './features/admin/UserManagementPage';
+import { CourtManagementPage } from './features/admin/CourtManagementPage';
+import { ReservationsManagementPage } from './features/admin/ReservationsManagementPage';
 import { CourtListPage } from './features/courts/CourtListPage';
 import { CourtAvailabilityPage } from './features/courts/CourtAvailabilityPage';
 import { ReservationConfirmationPage } from './features/reservations/ReservationConfirmationPage';
@@ -43,6 +45,8 @@ function App() {
                             {/* Admin Only Routes */}
                             <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
                                 <Route path="/admin/users" element={<UserManagementPage />} />
+                                <Route path="/admin/courts" element={<CourtManagementPage />} />
+                                <Route path="/admin/reservations" element={<ReservationsManagementPage />} />
                             </Route>
                         </Routes>
                     </div>

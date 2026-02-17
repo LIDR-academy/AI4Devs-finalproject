@@ -13,7 +13,16 @@ export const PaymentConfirmationPage: React.FC = () => {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
+        // Flag to prevent duplicate API calls
+        let isConfirming = false;
+
         const confirmPayment = async () => {
+            // Prevent duplicate confirmations
+            if (isConfirming) {
+                return;
+            }
+            isConfirming = true;
+
             if (!paymentId) {
                 navigate('/reservations');
                 return;
@@ -31,10 +40,15 @@ export const PaymentConfirmationPage: React.FC = () => {
                     navigate('/reservations', { replace: true });
                 }, 3000);
             } catch (error: any) {
-                showToast(
-                    error.response?.data?.message || 'Error al confirmar el pago',
-                    'error'
-                );
+                // Only show toast if it's NOT an "already processed" error
+                const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
+                
+                if (!errorMessage.includes('already been processed')) {
+                    showToast(
+                        errorMessage || 'Error al confirmar el pago',
+                        'error'
+                    );
+                }
 
                 // Redirect to reservations after error
                 setTimeout(() => {
@@ -46,7 +60,12 @@ export const PaymentConfirmationPage: React.FC = () => {
         };
 
         confirmPayment();
-    }, [paymentId, navigate, showToast]);
+
+        // Cleanup function
+        return () => {
+            isConfirming = true; // Prevent any pending calls
+        };
+    }, [paymentId]); // Only depend on paymentId
 
     if (confirming) {
         return (

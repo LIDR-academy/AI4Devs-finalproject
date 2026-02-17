@@ -103,9 +103,12 @@ describe('API Client', () => {
             const token = 'test-token';
             localStorage.setItem('token', token);
 
-            // Mock window.location
+            // Mock window.location with pathname
             delete (window as any).location;
-            window.location = { href: '' } as any;
+            (window as any).location = { 
+                href: '',
+                pathname: '/some-page' // Not /login, so the condition passes
+            };
 
             const error = {
                 response: {

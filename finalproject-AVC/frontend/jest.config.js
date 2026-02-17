@@ -13,9 +13,9 @@ export default {
         '!src/**/*.d.ts',
         '!src/main.tsx',
     ],
-    globals: {
-        'ts-jest': {
+    transform: {
+        '^.+\\.tsx?$': ['ts-jest', {
             tsconfig: 'tsconfig.test.json',
-        },
+        }],
     },
 };
