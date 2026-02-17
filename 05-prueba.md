@@ -7,7 +7,7 @@
 
 ## Ubicación de las pruebas
 
-Las pruebas **se realizan dentro del proyecto mismo**, en la carpeta `3. desarrollo/`. No existe una carpeta de pruebas separada; los tests están integrados en cada microservicio y en el frontend.
+Las pruebas **se realizan dentro del proyecto mismo**, en la carpeta `3. desarrollo/`. Los tests están integrados en cada microservicio y en el frontend.
 
 ---
 
