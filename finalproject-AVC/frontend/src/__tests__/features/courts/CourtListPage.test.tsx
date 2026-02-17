@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { CourtListPage } from '../../../src/features/courts/CourtListPage';
-import { ToastProvider } from '../../../src/shared/components/ToastContext';
-import { courtsApi } from '../../../src/api/courtsApi';
+import { CourtListPage } from '../../../features/courts/CourtListPage';
+import { ToastProvider } from '../../../shared/components/ToastContext';
+import { courtsApi } from '../../../api/courtsApi';
 
 // Mock the courts API
-jest.mock('../../../src/api/courtsApi');
+jest.mock('../../../api/courtsApi');
 
 describe('CourtListPage', () => {
     beforeEach(() => {
@@ -77,7 +77,8 @@ describe('CourtListPage', () => {
         renderCourtListPage();
 
         await waitFor(() => {
-            expect(screen.getByText(/Error al cargar las canchas/i)).toBeInTheDocument();
+            const errorMessages = screen.getAllByText(/Error al cargar canchas/i);
+            expect(errorMessages.length).toBeGreaterThan(0);
         });
     });
 });

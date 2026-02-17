@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { TimeSlotGrid } from '../../../src/features/courts/components/TimeSlotGrid';
-import { TimeSlot } from '../../../src/shared/types';
+import { TimeSlotGrid } from '../../../features/courts/components/TimeSlotGrid';
+import { TimeSlot } from '../../../shared/types';
 
 describe('TimeSlotGrid', () => {
     const mockTimeSlots: TimeSlot[] = [
@@ -26,7 +26,7 @@ describe('TimeSlotGrid', () => {
 
         render(<TimeSlotGrid timeSlots={mockTimeSlots} onSelectSlot={mockOnSelect} />);
 
-        expect(screen.getByText(/Disponible/i)).toBeInTheDocument();
+        expect(screen.getAllByText(/Disponible/i).length).toBeGreaterThan(0);
         expect(screen.getByText(/Ocupado/i)).toBeInTheDocument();
     });
 

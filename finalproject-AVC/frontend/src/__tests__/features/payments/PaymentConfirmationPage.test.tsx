@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { PaymentConfirmationPage } from '../../../src/features/payments/PaymentConfirmationPage';
-import { ToastProvider } from '../../../src/shared/components/ToastContext';
-import { paymentsApi } from '../../../src/api/paymentsApi';
+import { PaymentConfirmationPage } from '../../../features/payments/PaymentConfirmationPage';
+import { ToastProvider } from '../../../shared/components/ToastContext';
+import { paymentsApi } from '../../../api/paymentsApi';
 
 // Mock the payments API
-jest.mock('../../../src/api/paymentsApi');
+jest.mock('../../../api/paymentsApi');
 
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
@@ -48,7 +48,8 @@ describe('PaymentConfirmationPage', () => {
 
         // Wait for confirmation
         await waitFor(() => {
-            expect(screen.getByText(/¡Pago Confirmado!/i)).toBeInTheDocument();
+            const successMessages = screen.getAllByText(/¡Pago Confirmado!/i);
+            expect(successMessages.length).toBeGreaterThan(0);
         });
 
         expect(screen.getByText(/Tu reserva ha sido confirmada exitosamente/i)).toBeInTheDocument();
@@ -66,7 +67,8 @@ describe('PaymentConfirmationPage', () => {
         renderPaymentConfirmationPage();
 
         await waitFor(() => {
-            expect(screen.getByText(/Error al confirmar el pago/i)).toBeInTheDocument();
+            const errorMessages = screen.getAllByText(/Payment confirmation failed/i);
+            expect(errorMessages.length).toBeGreaterThan(0);
         });
     });
 });

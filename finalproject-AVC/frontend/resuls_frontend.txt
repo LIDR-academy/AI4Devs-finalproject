@@ -1,0 +1,455 @@
+ npm run cypress:run
+
+> sc-padel-frontend@1.0.0 cypress:run
+> cypress run
+
+
+DevTools listening on ws://127.0.0.1:46411/devtools/browser/43457b5d-6c71-4981-9abd-d30506a34302
+(node:117246) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("file%3A///home/ana/.cache/Cypress/13.17.0/Cypress/resources/app/node_modules/ts-node/esm/transpile-only.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:117246) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+====================================================================================================
+
+  (Run Starting)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Cypress:        13.17.0                                                                        │
+  │ Browser:        Electron 118 (headless)                                                        │
+  │ Node Version:   v23.11.1 (/usr/bin/node)                                                       │
+  │ Specs:          5 found (admin.cy.ts, auth.cy.ts, courts.cy.ts, payments.cy.ts, reservations.c │
+  │                 y.ts)                                                                          │
+  │ Searched:       cypress/e2e/**/*.cy.{js,jsx,ts,tsx}                                            │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  admin.cy.ts                                                                     (1 of 5)
+
+
+  Admin User Management
+    ✓ should display user management page for admin (4004ms)
+    ✓ should create a new user (4211ms)
+    1) should show error when creating user with existing email
+    2) should not allow player to access admin pages
+
+
+  2 passing (25s)
+  2 failing
+
+  1) Admin User Management
+       should show error when creating user with existing email:
+     AssertionError: Timed out retrying after 5000ms: Expected to find content: '/error/i' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/admin.cy.ts:42:47)
+
+  2) Admin User Management
+       should not allow player to access admin pages:
+     AssertionError: Timed out retrying after 5000ms: Expected to find content: 'Cerrar Sesión' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/admin.cy.ts:46:0)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        4                                                                                │
+  │ Passing:      2                                                                                │
+  │ Failing:      2                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  2                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     25 seconds                                                                       │
+  │ Spec Ran:     admin.cy.ts                                                                      │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/admin.cy.ts/Admin User Management -- should show error when cr
+     eating user with existing email (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/admin.cy.ts/Admin User Management -- should not allow player t
+     o access admin pages (failed).png
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  auth.cy.ts                                                                      (2 of 5)
+
+
+  Authentication Flow
+    ✓ should display login page (976ms)
+    1) should login successfully with valid credentials
+    2) should show error with invalid credentials
+    3) should logout successfully
+    ✓ should protect routes when not authenticated (447ms)
+
+
+  2 passing (24s)
+  3 failing
+
+  1) Authentication Flow
+       should login successfully with valid credentials:
+     AssertionError: Timed out retrying after 5000ms: Expected to find content: 'player@scpadel.com' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/auth.cy.ts:26:59)
+
+  2) Authentication Flow
+       should show error with invalid credentials:
+     AssertionError: Timed out retrying after 5000ms: Expected to find content: '/error/i' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/auth.cy.ts:36:47)
+
+  3) Authentication Flow
+       should logout successfully:
+     AssertionError: Timed out retrying after 5000ms: Expected to find content: 'Cerrar Sesión' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/auth.cy.ts:48:0)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        5                                                                                │
+  │ Passing:      2                                                                                │
+  │ Failing:      3                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  3                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     23 seconds                                                                       │
+  │ Spec Ran:     auth.cy.ts                                                                       │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/auth.cy.ts/Authentication Flow -- should login successfully wi
+     th valid credentials (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/auth.cy.ts/Authentication Flow -- should show error with inval
+     id credentials (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/auth.cy.ts/Authentication Flow -- should logout successfully (
+     failed).png
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  courts.cy.ts                                                                    (3 of 5)
+
+
+  Court Management - TICKET 5 & 6
+    Court List (Public)
+      ✓ should display list of courts (1084ms)
+      ✓ should navigate to court availability page (681ms)
+    Court Availability
+      ✓ should display availability calendar (655ms)
+      ✓ should allow selecting a date (1175ms)
+      1) should allow selecting a time slot
+      2) should not allow selecting occupied slots
+      3) should redirect to login when not authenticated and trying to reserve
+      4) should navigate to reservation creation when authenticated
+    Error Handling
+      ✓ should show error toast when API fails (1450ms)
+
+
+  5 passing (28s)
+  4 failing
+
+  1) Court Management - TICKET 5 & 6
+       Court Availability
+         should allow selecting a time slot:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: '/Seleccionado/i' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/courts.cy.ts:51:0)
+
+  2) Court Management - TICKET 5 & 6
+       Court Availability
+         should not allow selecting occupied slots:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: '/Ocupado/i' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/courts.cy.ts:59:0)
+
+  3) Court Management - TICKET 5 & 6
+       Court Availability
+         should redirect to login when not authenticated and trying to reserve:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/courts.cy.ts:67:0)
+
+  4) Court Management - TICKET 5 & 6
+       Court Availability
+         should navigate to reservation creation when authenticated:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/courts.cy.ts:87:0)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        9                                                                                │
+  │ Passing:      5                                                                                │
+  │ Failing:      4                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  4                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     28 seconds                                                                       │
+  │ Spec Ran:     courts.cy.ts                                                                     │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/courts.cy.ts/Court Management - TICKET 5 & 6 -- Court Availabi
+     lity -- should allow selecting a time slot (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/courts.cy.ts/Court Management - TICKET 5 & 6 -- Court Availabi
+     lity -- should not allow selecting occupied slots (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/courts.cy.ts/Court Management - TICKET 5 & 6 -- Court Availabi
+     lity -- should redirect to login when not authenticated and trying to reserve (f
+     ailed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/courts.cy.ts/Court Management - TICKET 5 & 6 -- Court Availabi
+     lity -- should navigate to reservation creation when authenticated (failed).png
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  payments.cy.ts                                                                  (4 of 5)
+
+
+  Payment Flow - TICKET 9 & 10
+    Payment Initiation (TICKET 9)
+      1) should initiate payment for a reservation
+      2) should redirect to mock payment gateway
+      3) should prevent payment for already paid reservation
+    Mock Payment Gateway
+      ✓ should display mock payment gateway (866ms)
+      ✓ should simulate successful payment (3119ms)
+      4) should simulate failed payment
+    Payment Confirmation (TICKET 10)
+      5) should confirm payment successfully
+      6) should redirect to reservations after confirmation
+    Complete Payment Flow
+      7) should complete entire flow from reservation to payment confirmation
+
+
+  2 passing (52s)
+  7 failing
+
+  1) Payment Flow - TICKET 9 & 10
+       Payment Initiation (TICKET 9)
+         should initiate payment for a reservation:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/payments.cy.ts:18:0)
+
+  2) Payment Flow - TICKET 9 & 10
+       Payment Initiation (TICKET 9)
+         should redirect to mock payment gateway:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/payments.cy.ts:40:0)
+
+  3) Payment Flow - TICKET 9 & 10
+       Payment Initiation (TICKET 9)
+         should prevent payment for already paid reservation:
+     AssertionError: Timed out retrying after 4000ms: expected 'http://localhost:5173/login' to include '/reservations'
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/payments.cy.ts:73:0)
+
+  4) Payment Flow - TICKET 9 & 10
+       Mock Payment Gateway
+         should simulate failed payment:
+     AssertionError: Timed out retrying after 5000ms: expected 'http://localhost:5173/login' to include '/reservations'
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/payments.cy.ts:99:36)
+
+  5) Payment Flow - TICKET 9 & 10
+       Payment Confirmation (TICKET 10)
+         should confirm payment successfully:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/payments.cy.ts:113:0)
+
+  6) Payment Flow - TICKET 9 & 10
+       Payment Confirmation (TICKET 10)
+         should redirect to reservations after confirmation:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/payments.cy.ts:137:0)
+
+  7) Payment Flow - TICKET 9 & 10
+       Complete Payment Flow
+         should complete entire flow from reservation to payment confirmation:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/payments.cy.ts:159:0)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        9                                                                                │
+  │ Passing:      2                                                                                │
+  │ Failing:      7                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  7                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     52 seconds                                                                       │
+  │ Spec Ran:     payments.cy.ts                                                                   │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/payments.cy.ts/Payment Flow - TICKET 9 & 10 -- Payment Initiat
+     ion (TICKET 9) -- should initiate payment for a reservation (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/payments.cy.ts/Payment Flow - TICKET 9 & 10 -- Payment Initiat
+     ion (TICKET 9) -- should redirect to mock payment gateway (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/payments.cy.ts/Payment Flow - TICKET 9 & 10 -- Payment Initiat
+     ion (TICKET 9) -- should prevent payment for already paid reservation (failed).p
+     ng
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/payments.cy.ts/Payment Flow - TICKET 9 & 10 -- Mock Payment Ga
+     teway -- should simulate failed payment (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/payments.cy.ts/Payment Flow - TICKET 9 & 10 -- Payment Confirm
+     ation (TICKET 10) -- should confirm payment successfully (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/payments.cy.ts/Payment Flow - TICKET 9 & 10 -- Payment Confirm
+     ation (TICKET 10) -- should redirect to reservations after confirmation (failed)
+     .png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/payments.cy.ts/Payment Flow - TICKET 9 & 10 -- Complete Paymen
+     t Flow -- should complete entire flow from reservation to payment confirmation (
+     failed).png
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Running:  reservations.cy.ts                                                              (5 of 5)
+
+
+  Reservation Management - TICKET 7 & 8
+    Reservation Creation (TICKET 7)
+      1) should create a reservation successfully
+      2) should handle conflict error (409)
+      3) should allow canceling reservation creation
+    My Reservations (TICKET 8)
+      4) should display user reservations
+      ✓ should filter reservations by status (1884ms)
+      ✓ should show empty state when no reservations (1612ms)
+      5) should navigate to payment when pay button is clicked
+    Complete Flow
+      6) should complete entire reservation flow
+
+
+  2 passing (41s)
+  6 failing
+
+  1) Reservation Management - TICKET 7 & 8
+       Reservation Creation (TICKET 7)
+         should create a reservation successfully:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/reservations.cy.ts:21:0)
+
+  2) Reservation Management - TICKET 7 & 8
+       Reservation Creation (TICKET 7)
+         should handle conflict error (409):
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/reservations.cy.ts:53:0)
+
+  3) Reservation Management - TICKET 7 & 8
+       Reservation Creation (TICKET 7)
+         should allow canceling reservation creation:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/reservations.cy.ts:70:0)
+
+  4) Reservation Management - TICKET 7 & 8
+       My Reservations (TICKET 8)
+         should display user reservations:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Mis Reservas' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/reservations.cy.ts:86:0)
+
+  5) Reservation Management - TICKET 7 & 8
+       My Reservations (TICKET 8)
+         should navigate to payment when pay button is clicked:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/reservations.cy.ts:134:0)
+
+  6) Reservation Management - TICKET 7 & 8
+       Complete Flow
+         should complete entire reservation flow:
+     AssertionError: Timed out retrying after 4000ms: Expected to find content: 'Reservar' within the selector: 'button' but never did.
+      at Context.eval (webpack://sc-padel-frontend/./cypress/e2e/reservations.cy.ts:159:0)
+
+
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        8                                                                                │
+  │ Passing:      2                                                                                │
+  │ Failing:      6                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  6                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     41 seconds                                                                       │
+  │ Spec Ran:     reservations.cy.ts                                                               │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  (Screenshots)
+
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/reservations.cy.ts/Reservation Management - TICKET 7 & 8 -- Re
+     servation Creation (TICKET 7) -- should create a reservation successfully (faile
+     d).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/reservations.cy.ts/Reservation Management - TICKET 7 & 8 -- Re
+     servation Creation (TICKET 7) -- should handle conflict error (409) (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/reservations.cy.ts/Reservation Management - TICKET 7 & 8 -- Re
+     servation Creation (TICKET 7) -- should allow canceling reservation creation (fa
+     iled).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/reservations.cy.ts/Reservation Management - TICKET 7 & 8 -- My
+      Reservations (TICKET 8) -- should display user reservations (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/reservations.cy.ts/Reservation Management - TICKET 7 & 8 -- My
+      Reservations (TICKET 8) -- should navigate to payment when pay button is clicke
+     d (failed).png
+  -  /mnt/c/Users/Usuario/Documents/AI4Devs-finalproject/finalproject-AVC/frontend/cy     (1280x720)
+     press/screenshots/reservations.cy.ts/Reservation Management - TICKET 7 & 8 -- Co
+     mplete Flow -- should complete entire reservation flow (failed).png
+
+
+====================================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✖  admin.cy.ts                              00:25        4        2        2        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✖  auth.cy.ts                               00:23        5        2        3        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✖  courts.cy.ts                             00:28        9        5        4        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✖  payments.cy.ts                           00:52        9        2        7        -        - │
+  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ ✖  reservations.cy.ts                       00:41        8        2        6        -        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✖  5 of 5 failed (100%)                     02:50       35       13       22        -        -

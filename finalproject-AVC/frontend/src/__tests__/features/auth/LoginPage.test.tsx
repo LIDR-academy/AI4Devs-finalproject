@@ -1,11 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { LoginPage } from '../../../src/features/auth/LoginPage';
-import { AuthProvider } from '../../../src/features/auth/AuthContext';
-import { authApi } from '../../../src/api/authApi';
+import { LoginPage } from '../../../features/auth/LoginPage';
+import { AuthProvider } from '../../../features/auth/AuthContext';
+import { authApi } from '../../../api/authApi';
 
 // Mock the auth API
-jest.mock('../../../src/api/authApi');
+jest.mock('../../../api/authApi');
 
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
@@ -32,7 +32,7 @@ describe('LoginPage', () => {
         renderLoginPage();
 
         expect(screen.getByText('SC Padel Club')).toBeInTheDocument();
-        expect(screen.getByText('Iniciar Sesión')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /Iniciar Sesión/i })).toBeInTheDocument();
         expect(screen.getByLabelText('Correo Electrónico')).toBeInTheDocument();
         expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();

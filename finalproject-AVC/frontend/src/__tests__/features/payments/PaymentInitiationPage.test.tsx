@@ -1,13 +1,13 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { PaymentInitiationPage } from '../../../src/features/payments/PaymentInitiationPage';
-import { ToastProvider } from '../../../src/shared/components/ToastContext';
-import { paymentsApi } from '../../../src/api/paymentsApi';
-import { reservationsApi } from '../../../src/api/reservationsApi';
+import { PaymentInitiationPage } from '../../../features/payments/PaymentInitiationPage';
+import { ToastProvider } from '../../../shared/components/ToastContext';
+import { paymentsApi } from '../../../api/paymentsApi';
+import { reservationsApi } from '../../../api/reservationsApi';
 
 // Mock the APIs
-jest.mock('../../../src/api/paymentsApi');
-jest.mock('../../../src/api/reservationsApi');
+jest.mock('../../../api/paymentsApi');
+jest.mock('../../../api/reservationsApi');
 
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
