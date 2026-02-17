@@ -68,11 +68,18 @@ export const PaymentInitiationPage: React.FC = () => {
                 window.location.href = payment.paymentUrl;
             }, 1000);
         } catch (error: any) {
-            showToast(
-                error.response?.data?.message || 'Error al iniciar el pago',
-                'error'
-            );
-            setProcessing(false);
+            const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Error al iniciar el pago';
+            
+            // If payment already completed, redirect to reservations
+            if (errorMessage.includes('already completed')) {
+                showToast('Esta reserva ya ha sido pagada', 'info');
+                setTimeout(() => {
+                    navigate('/reservations');
+                }, 1500);
+            } else {
+                showToast(errorMessage, 'error');
+                setProcessing(false);
+            }
         }
     };
 

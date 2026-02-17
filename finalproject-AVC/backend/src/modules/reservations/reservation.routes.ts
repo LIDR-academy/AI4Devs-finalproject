@@ -6,6 +6,7 @@ import {
     ReservationResponse,
 } from './reservation.schemas';
 import { authenticate } from '../../shared/middleware/auth.middleware';
+import { authorize } from '../../shared/middleware/authorize.middleware';
 
 export async function reservationRoutes(fastify: FastifyInstance) {
     /**
@@ -114,6 +115,59 @@ export async function reservationRoutes(fastify: FastifyInstance) {
 
             // Get user's reservations
             const reservations = await reservationService.getUserReservations(user.id);
+
+            return reply.status(200).send(reservations);
+        }
+    );
+
+    /**
+     * GET /api/v1/reservations
+     * Get all reservations (ADMIN only)
+     */
+    fastify.get<{
+        Reply: ReservationResponse[];
+    }>(
+        '/reservations',
+        {
+            preHandler: [authenticate, authorize(['ADMIN'])],
+            schema: {
+                response: {
+                    200: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                id: { type: 'string' },
+                                courtId: { type: 'string' },
+                                userId: { type: 'string' },
+                                startTime: { type: 'string' },
+                                endTime: { type: 'string' },
+                                status: { type: 'string' },
+                                createdAt: { type: 'string' },
+                                court: {
+                                    type: 'object',
+                                    properties: {
+                                        id: { type: 'string' },
+                                        name: { type: 'string' },
+                                    },
+                                },
+                                user: {
+                                    type: 'object',
+                                    properties: {
+                                        id: { type: 'string' },
+                                        email: { type: 'string' },
+                                        role: { type: 'string' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        async (_request: FastifyRequest, reply: FastifyReply) => {
+            // Get all reservations (admin only)
+            const reservations = await reservationService.getAllReservations();
 
             return reply.status(200).send(reservations);
         }

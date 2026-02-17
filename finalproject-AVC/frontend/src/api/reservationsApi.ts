@@ -23,4 +23,12 @@ export const reservationsApi = {
         const response = await api.get<Reservation[]>('/reservations/my');
         return response.data;
     },
+
+    /**
+     * Get all reservations (admin only)
+     */
+    getAllReservations: async (): Promise<Reservation[]> => {
+        const response = await api.get<Reservation[]>('/reservations');
+        return response.data;
+    },
 };
