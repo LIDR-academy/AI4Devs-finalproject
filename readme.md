@@ -1,134 +1,143 @@
+# RRFinances - Resumen por Etapas del Proyecto
+
+**Sistema Web Financiero Core para Cooperativas de Ahorro y Crédito**  
+**Proyecto:** RRFinances v1.0  
+**Fecha:** Febrero 2026
+
+---
+
 ## Índice
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+1. [Visión General](#visión-general)
+2. [1. Análisis](#1-análisis) → [Ver detalle](01-analisis.md)
+3. [2. Diseño](#2-diseño) → [Ver detalle](02-diseno.md)
+4. [3. Desarrollo](#3-desarrollo) → [Ver detalle](03-desarrollo.md)
+5. [4. Documentación](#4-documentación) → [Ver detalle](04-documentacion.md)
+6. [5. Prueba](#5-prueba) → [Ver detalle](05-prueba.md)
+7. [6. Proyecto Final](#6-proyecto-final) → [Ver detalle](6.%20proyecto%20final.md)
+
+### Archivos por carpeta
+
+| Carpeta | Archivo |
+|---------|---------|
+| 1. analisis | [01-analisis.md](01-analisis.md) |
+| 2. diseño | [02-diseno.md](02-diseno.md) |
+| 3. desarrollo | [03-desarrollo.md](03-desarrollo.md) |
+| 4. documentacion | [04-documentacion.md](04-documentacion.md) |
+| 5. prueba | [05-prueba.md](05-prueba.md) |
+| 6. proyecto final | [6. proyecto final.md](6.%20proyecto%20final.md) |
 
 ---
 
-## 0. Ficha del proyecto
+## Visión General
 
-### **0.1. Tu nombre completo:**
+RRFinances es un **sistema financiero** desarrollado con **arquitectura de microservicios** y basado en **Domain-Driven Design (DDD)**. El desarrollo se ha centrado en el **Módulo de Cliente** como dominio central, incorporando de forma incremental submódulos de soporte: **Autenticación** y **Configuración**.
 
-### **0.2. Nombre del proyecto:**
+**Stack tecnológico principal:**
+- **Frontend:** Angular 17 + Fuse Template + Material Design + TailwindCSS
+- **Backend:** NestJS + TypeScript + PostgreSQL
+- **Arquitectura:** Microservicios (MS-CORE, MS-AUTH, MS-PERSO, MS-CONFI)
 
-### **0.3. Descripción breve del proyecto:**
-
-### **0.4. URL del proyecto:**
-
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
-
-### 0.5. URL o archivo comprimido del repositorio
-
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+**Estado actual:** ~90% trabajado, en módulo de cliente, backend casi completo y frontend en progreso.
 
 ---
 
-## 1. Descripción general del producto
+## 1. Análisis
 
-> Describe en detalle los siguientes aspectos del producto:
+**Ubicación:** `1. analisis/`
 
-### **1.1. Objetivo:**
-
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
-
-### **1.2. Características y funcionalidades principales:**
-
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
-
-### **1.3. Diseño y experiencia de usuario:**
-
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
-
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+| | Resumen |
+|---|--------|
+| **Qué se hizo** | Documento de Requisitos del Producto (PRD), 76 casos de uso en 10 módulos, 5 User Stories con criterios de aceptación. |
+| **Cómo** | Análisis de requisitos → especificación funcional por módulo → flujos de usuario (actores, precondiciones, flujos principales y alternativos). |
+| **Qué más se entró** | 01-PRD-RRFinances.md, 02-Casos-de-Uso.md, 03-User-Stories.md. Definición de 4 tipos de usuarios, módulo Clientes como dominio central, multi-tenancy, validaciones Ecuador (cédula, geografía), modelo base Personas. |
 
 ---
 
-## 2. Arquitectura del Sistema
+## 2. Diseño
 
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+**Ubicación:** `2. diseño/`
 
-
-### **2.2. Descripción de componentes principales:**
-
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
-
-### **2.4. Infraestructura y despliegue**
-
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
-
-### **2.5. Seguridad**
-
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
-
-### **2.6. Tests**
-
-> Describe brevemente algunos de los tests realizados
+| | Resumen |
+|---|--------|
+| **Qué se hizo** | Arquitectura C4, modelo de datos con entidades/relaciones, diagramas de componentes backend y frontend, secuencias, despliegue, paquetes y seguridad. |
+| **Cómo** | Definición de contexto C4 → contenedores (Frontend, Backend, BD) → componentes NestJS y Angular → diagramas ER y de secuencia → arquitectura de despliegue (Docker, K8s, CI/CD) y de seguridad. |
+| **Qué más se entró** | 01-Arquitectura-C4.md, 01-08 en 02-diagramas/. Topología MS-CORE/MS-AUTH/MS-PERSO/MS-CONFI, BD compartida row-level multi-tenant, stack NestJS 10, Angular 17, PostgreSQL 15, Redis 7, seguridad en capas. |
 
 ---
 
-## 3. Modelo de Datos
+## 3. Desarrollo
 
-### **3.1. Diagrama del modelo de datos:**
+**Ubicación:** `3. desarrollo/`
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
-
-
-### **3.2. Descripción de entidades principales:**
-
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
-
----
-
-## 4. Especificación de la API
-
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+| | Resumen |
+|---|--------|
+| **Qué se hizo** | Implementación en 9 bloques (427 tickets, ~1,056 h): 4 microservicios backend (MS-CORE, MS-AUTH, MS-PERSO, MS-CONFI), frontend Angular, BD PostgreSQL. |
+| **Cómo** | Tickets secuenciales → desarrollo por bloques → Backend: NestJS + TypeORM + Swagger; Frontend: Angular 17 + Fuse Template; BD: esquemas por microservicio. |
+| **Qué más se entró** | 00-tickets/ (9 archivos), backend/ (ms-core, ms-auth, ms-perso, ms-confi, db), frontend/src. JWT, login, CRUD personas/clientes, catálogos GEO/CIIU, guards, layouts, Docker, NATS, Prometheus, OpenTelemetry. |
 
 ---
 
-## 5. Historias de Usuario
+## 4. Documentación
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+**Ubicación:** `4. documentacion/`
 
-**Historia de Usuario 1**
-
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
-
----
-
-## 6. Tickets de Trabajo
-
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
-
-**Ticket 1**
-
-**Ticket 2**
-
-**Ticket 3**
+| | Resumen |
+|---|--------|
+| **Qué se hizo** | Resumen ejecutivo del proyecto, referencias de prompts, especificación Sudolang, métricas de calidad, roadmap y checklist Go-Live. |
+| **Cómo** | Consolidación de documentación técnica → resumen con estadísticas y diagramas → prompts y pseudocódigo para reproducibilidad. |
+| **Qué más se entró** | 00-Resumen-Proyecto.md, _01-Referencias-Prompts.md, _02-Sudolang-Spec.sudo. Estadísticas (427 tickets, 1,056 h), arquitectura, WCAG 2.1 AA, 6 fases de implementación. |
 
 ---
 
-## 7. Pull Requests
+## 5. Prueba
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+**Ubicación:** `5. prueba/`
 
-**Pull Request 1**
+| | Resumen |
+|---|--------|
+| **Qué se hizo** | Fase planificada pero no implementada. |
+| **Cómo** | Pendiente — según tickets: tests unitarios/integración/E2E, k6, penetration testing, validación WCAG, UAT. |
+| **Qué más se entró** | Solo README indicando estado pendiente. Resultados esperados: >80% cobertura, 0 críticos OWASP, WCAG 2.1 AA, Lighthouse > 90. |
 
-**Pull Request 2**
+---
 
-**Pull Request 3**
+## Flujo de Dependencias
 
+```
+1. ANÁLISIS (PRD, Casos de Uso, User Stories)
+        ↓
+2. DISEÑO (Arquitectura C4, Modelo de Datos, Componentes)
+        ↓
+3. DESARROLLO (Tickets → Backend + Frontend)
+        ↓
+4. DOCUMENTACIÓN (Referencia continua)
+        ↓
+5. PRUEBA (Pendiente)
+```
+
+---
+
+## Archivos Clave por Rol
+
+| Rol | Archivos principales |
+|-----|----------------------|
+| **Product Owner** | 1. analisis/01-PRD, 4. documentacion/00-Resumen-Proyecto |
+| **Arquitecto** | 2. diseño/01-Arquitectura-C4, 02-diagramas/* |
+| **Backend Dev** | 3. desarrollo/00-tickets, backend/ms-* |
+| **Frontend Dev** | 3. desarrollo/00-tickets, frontend/src |
+| **DevOps** | 2. diseño/06-Despliegue, 08-Seguridad |
+| **QA** | 1. analisis/02-Casos-de-Uso, 5. prueba |
+
+---
+
+## 6. Proyecto Final
+
+**Documento:** [6. proyecto final.md](6.%20proyecto%20final.md)
+**Enlace:** https://drive.google.com/file/d/1gJm8EosL42Nzv0gbMf59f5gTPxkB99gR/view?usp=sharing
+
+Resumen de la entrega final: video demostrativo, alcance del módulo de clientes y próximos módulos (cartera, depósitos, etc.).
+
+---
+
+*Documento generado para el proyecto AI4Devs - RRFinances*
