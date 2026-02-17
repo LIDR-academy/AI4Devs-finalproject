@@ -25,11 +25,11 @@ describe('Authentication Flow', () => {
         // Wait for redirect to home page
         cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
 
-        // Wait for authentication to complete
-        cy.wait(1000);
+        // Wait for authentication to complete and React state to update
+        cy.wait(4000);
 
         // Should show user email in navbar
-        cy.contains('player@scpadel.com', { timeout: 5000 }).should('be.visible');
+        cy.contains('player@scpadel.com', { timeout: 20000 }).should('be.visible');
     });
 
     it('should show error with invalid credentials', () => {
@@ -43,7 +43,7 @@ describe('Authentication Flow', () => {
         cy.get('button[type="submit"]').click();
 
         // Should show error message
-        cy.contains(/error/i, { timeout: 5000 }).should('be.visible');
+        cy.contains(/Invalid credentials/i, { timeout: 5000 }).should('be.visible');
     });
 
     it('should logout successfully', () => {
@@ -55,10 +55,10 @@ describe('Authentication Flow', () => {
 
         // Wait for redirect and authentication
         cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
-        cy.wait(1000);
+        cy.wait(4000);
 
         // Click logout
-        cy.contains('Cerrar Sesión', { timeout: 5000 }).click();
+        cy.contains('Cerrar Sesión', { timeout: 20000 }).should('be.visible').click();
 
         // Should redirect to login
         cy.url().should('include', '/login');

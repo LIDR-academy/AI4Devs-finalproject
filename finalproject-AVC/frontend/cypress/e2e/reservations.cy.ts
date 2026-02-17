@@ -12,20 +12,21 @@ describe('Reservation Management - TICKET 7 & 8', () => {
             cy.get('button[type="submit"]').click();
 
             // Wait for redirect
-            cy.url().should('eq', Cypress.config().baseUrl + '/');
+            cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
+            cy.wait(1000);
 
             // Navigate to courts
             cy.visit('/courts');
             cy.contains('Ver Disponibilidad').first().click();
 
             // Select a time slot
-            cy.contains(/Disponible/i, { timeout: 5000 }).first().click();
+            cy.get('[data-testid^="time-slot-"][data-available="true"]', { timeout: 10000 }).first().click();
 
             // Click reserve button
-            cy.contains('button', 'Reservar').click();
+            cy.get('[data-testid="reserve-button"]', { timeout: 5000 }).click();
 
             // Should navigate to confirmation page
-            cy.url().should('include', '/reservations/create');
+            cy.url().should('include', '/reservations/create', { timeout: 5000 });
 
             // Should show reservation details
             cy.contains('Confirmar Reserva').should('be.visible');
@@ -34,7 +35,7 @@ describe('Reservation Management - TICKET 7 & 8', () => {
             cy.contains(/Horario/i).should('be.visible');
 
             // Confirm reservation
-            cy.contains('button', 'Confirmar Reserva').click();
+            cy.get('[data-testid="confirm-reservation-button"]', { timeout: 5000 }).click();
 
             // Should show success toast
             cy.contains(/Reserva creada exitosamente/i, { timeout: 5000 }).should('be.visible');
@@ -51,7 +52,8 @@ describe('Reservation Management - TICKET 7 & 8', () => {
             cy.get('input[type="password"]').type('player123');
             cy.get('button[type="submit"]').click();
 
-            cy.url().should('eq', Cypress.config().baseUrl + '/');
+            cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
+            cy.wait(1000);
 
             // Intercept API call and force 409 error
             cy.intercept('POST', '/api/v1/reservations', {
@@ -62,11 +64,12 @@ describe('Reservation Management - TICKET 7 & 8', () => {
             // Navigate to courts and try to reserve
             cy.visit('/courts');
             cy.contains('Ver Disponibilidad').first().click();
-            cy.contains(/Disponible/i, { timeout: 5000 }).first().click();
-            cy.contains('button', 'Reservar').click();
+            cy.get('[data-testid^="time-slot-"][data-available="true"]', { timeout: 10000 }).first().click();
+            cy.get('[data-testid="reserve-button"]', { timeout: 5000 }).click();
+            cy.url().should('include', '/reservations/create', { timeout: 5000 });
 
             // Confirm reservation
-            cy.contains('button', 'Confirmar Reserva').click();
+            cy.get('[data-testid="confirm-reservation-button"]', { timeout: 5000 }).click();
 
             // Should show conflict error
             cy.contains(/Este horario ya no está disponible/i, { timeout: 5000 }).should('be.visible');
@@ -79,16 +82,18 @@ describe('Reservation Management - TICKET 7 & 8', () => {
             cy.get('input[type="password"]').type('player123');
             cy.get('button[type="submit"]').click();
 
-            cy.url().should('eq', Cypress.config().baseUrl + '/');
+            cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
+            cy.wait(1000);
 
             // Navigate to confirmation page
             cy.visit('/courts');
             cy.contains('Ver Disponibilidad').first().click();
-            cy.contains(/Disponible/i, { timeout: 5000 }).first().click();
-            cy.contains('button', 'Reservar').click();
+            cy.get('[data-testid^="time-slot-"][data-available="true"]', { timeout: 10000 }).first().click();
+            cy.get('[data-testid="reserve-button"]', { timeout: 5000 }).click();
+            cy.url().should('include', '/reservations/create', { timeout: 5000 });
 
             // Click cancel
-            cy.contains('button', 'Cancelar').click();
+            cy.get('[data-testid="cancel-reservation-button"]', { timeout: 5000 }).click();
 
             // Should go back to availability page
             cy.url().should('include', '/availability');
@@ -161,14 +166,16 @@ describe('Reservation Management - TICKET 7 & 8', () => {
             cy.get('input[type="password"]').type('player123');
             cy.get('button[type="submit"]').click();
 
-            cy.url().should('eq', Cypress.config().baseUrl + '/');
+            cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
+            cy.wait(1000);
 
             // Create a reservation first
             cy.visit('/courts');
             cy.contains('Ver Disponibilidad').first().click();
-            cy.contains(/Disponible/i, { timeout: 5000 }).first().click();
-            cy.contains('button', 'Reservar').click();
-            cy.contains('button', 'Confirmar Reserva').click();
+            cy.get('[data-testid^="time-slot-"][data-available="true"]', { timeout: 10000 }).first().click();
+            cy.get('[data-testid="reserve-button"]', { timeout: 5000 }).click();
+            cy.url().should('include', '/reservations/create', { timeout: 5000 });
+            cy.get('[data-testid="confirm-reservation-button"]', { timeout: 5000 }).click();
 
             // Wait for redirect to my reservations
             cy.url().should('include', '/reservations');
@@ -189,6 +196,8 @@ describe('Reservation Management - TICKET 7 & 8', () => {
             cy.get('input[type="email"]').type('player@scpadel.com');
             cy.get('input[type="password"]').type('player123');
             cy.get('button[type="submit"]').click();
+            cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
+            cy.wait(1000);
 
             // 2. Browse courts
             cy.visit('/courts');
@@ -196,12 +205,13 @@ describe('Reservation Management - TICKET 7 & 8', () => {
 
             // 3. Select court and time
             cy.contains('Ver Disponibilidad').first().click();
-            cy.contains(/Disponible/i, { timeout: 5000 }).first().click();
+            cy.get('[data-testid^="time-slot-"][data-available="true"]', { timeout: 10000 }).first().click();
 
             // 4. Create reservation
-            cy.contains('button', 'Reservar').click();
+            cy.get('[data-testid="reserve-button"]', { timeout: 5000 }).click();
+            cy.url().should('include', '/reservations/create', { timeout: 5000 });
             cy.contains('Confirmar Reserva').should('be.visible');
-            cy.contains('button', 'Confirmar Reserva').click();
+            cy.get('[data-testid="confirm-reservation-button"]', { timeout: 5000 }).click();
 
             // 5. Verify success
             cy.contains(/Reserva creada exitosamente/i, { timeout: 5000 }).should('be.visible');

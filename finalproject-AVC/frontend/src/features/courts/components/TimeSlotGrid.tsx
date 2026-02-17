@@ -28,6 +28,9 @@ export const TimeSlotGrid: React.FC<TimeSlotGridProps> = ({ timeSlots, onSelectS
                         key={index}
                         onClick={() => available && onSelectSlot(slot)}
                         disabled={!available}
+                        data-testid={`time-slot-${index}`}
+                        data-available={available}
+                        data-selected={selected}
                         className={`
                             p-4 rounded-lg border-2 transition-all
                             ${available

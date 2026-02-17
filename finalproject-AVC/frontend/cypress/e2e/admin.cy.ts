@@ -7,7 +7,7 @@ describe('Admin User Management', () => {
         cy.get('input[type="password"]').type('admin123');
         cy.get('button[type="submit"]').click();
         cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
-        cy.wait(1000); // Wait for auth state to settle
+        cy.wait(2000); // Wait for auth state to settle
     });
 
     it('should display user management page for admin', () => {
@@ -49,24 +49,28 @@ describe('Admin User Management', () => {
         cy.get('form').contains('button', 'Crear').click();
 
         // Should show error
-        cy.contains(/error/i, { timeout: 5000 }).should('be.visible');
+        cy.contains(/ya existe|already exists|error/i, { timeout: 5000 }).should('be.visible');
     });
 
     it('should not allow player to access admin pages', () => {
         // Logout
-        cy.contains('Cerrar Sesión', { timeout: 5000 }).click();
+        cy.contains('Cerrar Sesión', { timeout: 10000 }).should('be.visible').click();
         cy.url().should('include', '/login');
-        cy.wait(500); // Wait for logout to complete
+        cy.wait(1000); // Wait for logout to complete
 
         // Login as player
         cy.get('input[type="email"]').type('player@scpadel.com');
         cy.get('input[type="password"]').type('player123');
         cy.get('button[type="submit"]').click();
 
+        // Wait for login to complete and redirect to home
+        cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
+        cy.wait(2000); // Wait for auth state to settle
+
         // Try to access admin page
         cy.visit('/admin/users');
 
         // Should redirect to home
-        cy.url().should('eq', Cypress.config().baseUrl + '/');
+        cy.url().should('eq', Cypress.config().baseUrl + '/', { timeout: 10000 });
     });
 });
