@@ -10,7 +10,9 @@ import { useComposerStore, useSelectedMusicId, type MusicTrack } from '@/state/c
 
 // Mock data - in real app would come from media catalog API
 const AVAILABLE_MUSIC: MusicTrack[] = [
-  // Empty list - users will select local audio files
+  { id: 'calm-ocean-waves', name: 'Calm Ocean Waves', duration: '3:45' },
+  { id: 'forest-ambience', name: 'Forest Ambience', duration: '4:20' },
+  { id: 'gentle-rain', name: 'Gentle Rain', duration: '5:10' },
 ];
 
 interface MusicSelectorProps {

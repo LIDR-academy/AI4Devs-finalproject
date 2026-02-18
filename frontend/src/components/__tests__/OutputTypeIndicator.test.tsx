@@ -70,10 +70,10 @@ describe('OutputTypeIndicator', () => {
   });
 
   describe('Accessibility', () => {
-    it('should have role="status" for screen readers', () => {
+    it('should have role="button" for main interaction', () => {
       render(<OutputTypeIndicator />);
       
-      expect(screen.getByRole('status')).toBeInTheDocument();
+      expect(screen.getByRole('button')).toBeInTheDocument();
     });
 
     it('should have aria-live="polite" for dynamic updates', () => {

@@ -102,10 +102,12 @@ export const useComposerStore = create<ComposerState>((set) => ({
   
   setSelectedMusic: (musicId) => set({ selectedMusicId: musicId }),
   
-   setSelectedImage: (imageId) => {
-     set({ selectedImageId: imageId });
-     // El outputType ahora se gestiona desde MeditationBuilderPage
-   },
+  setSelectedImage: (imageId) => {
+    set({ 
+      selectedImageId: imageId,
+      outputType: imageId ? 'VIDEO' : 'PODCAST'
+    });
+  },
   
   setIsGeneratingText: (isGenerating) => set({ isGeneratingText: isGenerating }),
   
@@ -117,15 +119,19 @@ export const useComposerStore = create<ComposerState>((set) => ({
   
   setGenerationError: (error) => set({ generationError: error }),
   
-   clearImage: () => {
-     set({ selectedImageId: null });
-     // El outputType ahora se gestiona desde MeditationBuilderPage
-   },
+  clearImage: () => {
+    set({ 
+      selectedImageId: null,
+      outputType: 'PODCAST'
+    });
+  },
   
-   setAiGeneratedImage: (imageId) => {
-     set({ selectedImageId: imageId });
-     // El outputType ahora se gestiona desde MeditationBuilderPage
-   },
+  setAiGeneratedImage: (imageId) => {
+    set({ 
+      selectedImageId: imageId,
+      outputType: imageId ? 'VIDEO' : 'PODCAST'
+    });
+  },
   
    updateOutputType: (type: OutputType) => {
      set({ outputType: type });

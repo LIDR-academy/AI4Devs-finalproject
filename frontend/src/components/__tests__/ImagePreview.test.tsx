@@ -56,7 +56,7 @@ describe('ImagePreview', () => {
       
       const removeButton = screen.getByTestId('image-remove-button');
       expect(removeButton).toBeInTheDocument();
-      expect(removeButton).toHaveTextContent(/Remove Image/);
+      expect(removeButton).toHaveAttribute('aria-label', 'Remove image');
     });
   });
 
@@ -67,7 +67,12 @@ describe('ImagePreview', () => {
 
     it('should clear image on remove click', async () => {
       const user = userEvent.setup();
-      render(<ImagePreview previewUrl="https://example.com/image.jpg" />);
+      render(
+        <ImagePreview 
+          previewUrl="https://example.com/image.jpg" 
+          onRemove={() => useComposerStore.getState().clearImage()} 
+        />
+      );
       
       await user.click(screen.getByTestId('image-remove-button'));
       
@@ -87,7 +92,12 @@ describe('ImagePreview', () => {
     it('should update output type when image removed', async () => {
       const user = userEvent.setup();
       useComposerStore.setState({ outputType: 'VIDEO' });
-      render(<ImagePreview previewUrl="https://example.com/image.jpg" />);
+      render(
+        <ImagePreview 
+          previewUrl="https://example.com/image.jpg" 
+          onRemove={() => useComposerStore.getState().clearImage()} 
+        />
+      );
       
       await user.click(screen.getByTestId('image-remove-button'));
       

@@ -1,9 +1,10 @@
+import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import ImageSelectorButton from '../ImageSelectorButton';
 
 describe('ImageSelectorButton', () => {
   it('calls onImageSelected with the selected file', () => {
-    const onImageSelected = jest.fn();
+    const onImageSelected = vi.fn();
     const { getByText, container } = render(
       <ImageSelectorButton onImageSelected={onImageSelected} />
     );
@@ -16,7 +17,7 @@ describe('ImageSelectorButton', () => {
   });
 
   it('does not call onImageSelected if file is not an image', () => {
-    const onImageSelected = jest.fn();
+    const onImageSelected = vi.fn();
     const { getByText, container } = render(
       <ImageSelectorButton onImageSelected={onImageSelected} />
     );

@@ -26,9 +26,9 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
     return (
       <div className="image-preview" data-testid="image-preview-empty">
         <div className="image-preview__container">
-          <div className="image-preview__placeholder">
+          <div className="image-preview__placeholder" data-testid="image-preview-placeholder">
             <span>📷</span>
-            <p>No image selected</p>
+            <p>{imageName === 'Selected Image' ? 'No image selected' : imageName}</p>
             <p className="image-preview__hint">Select an image or generate one with AI</p>
           </div>
         </div>
@@ -78,7 +78,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
             fontSize: 18,
             zIndex: 2,
           }}
-          data-testid="image-remove-x"
+          data-testid="image-remove-button"
         >
           ×
         </button>
