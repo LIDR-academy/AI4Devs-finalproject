@@ -5,6 +5,6 @@
  */
 
 export { StateLabel, type StateLabelProps, type ProcessingState } from './StateLabel';
-export { MeditationCard, type MeditationCardProps } from './MeditationCard';
+export { MeditationRow, type MeditationRowProps } from './MeditationRow';
 export { MeditationList, type MeditationListProps } from './MeditationList';
 export { MeditationPlayer, type MeditationPlayerProps, type MediaUrls } from './MeditationPlayer';

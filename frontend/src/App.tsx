@@ -8,7 +8,7 @@
  * - /library : MeditationLibraryPage (US4 - List and play meditations)
  */
 
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MeditationBuilderPage } from './pages/MeditationBuilderPage';
 import { MeditationLibraryPage } from './pages/MeditationLibraryPage';
@@ -33,10 +33,14 @@ function App() {
           <nav className="app-nav">
             <ul>
               <li>
-                <Link to="/">Crear Meditación</Link>
+                <NavLink to="/" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                  Crear Meditación
+                </NavLink>
               </li>
               <li>
-                <Link to="/library">Biblioteca</Link>
+                <NavLink to="/library" className={({ isActive }) => isActive ? 'nav-active' : ''}>
+                  Biblioteca
+                </NavLink>
               </li>
             </ul>
           </nav>

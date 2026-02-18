@@ -365,3 +365,269 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Meditation Library - Table View */
+.meditation-library-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem; /* Increased gap from 2rem to 3rem for more breathing space */
+  padding-bottom: 120px; /* Space for sticky player if needed */
+}
+
+/* More space specifically for the player container */
+.library-player-container {
+  margin-top: 4rem;
+  border-top: 1px solid #333;
+  padding-top: 2rem;
+}
+
+.library-header {
+  text-align: left;
+  border-bottom: 2px solid #333;
+  padding-bottom: 1.5rem;
+}
+
+.library-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(to right, #646cff, #f5576c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.library-description {
+  color: #888;
+  font-size: 1.1rem;
+}
+
+.meditation-list__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem; /* Row spacing */
+  margin-top: 1rem;
+}
+
+.meditation-list__th {
+  text-align: left;
+  padding: 1rem;
+  color: #666;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.meditation-row {
+  background: #1a1a1a;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 8px; /* Note: border-radius on TR only works with specific border-collapse */
+}
+
+/* Emulating rounded rows in table */
+.meditation-row td {
+  padding: 1.25rem 1rem;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+}
+
+.meditation-row td:first-child {
+  border-left: 1px solid #333;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.meditation-row td:last-child {
+  border-right: 1px solid #333;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.meditation-row:hover {
+  background: #242424;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.meditation-row--disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.meditation-row--disabled:hover {
+  transform: none;
+  background: #1a1a1a;
+  box-shadow: none;
+}
+
+.meditation-row__title-text {
+  font-weight: 500;
+  color: #fff;
+  font-size: 1rem;
+  max-width: 400px; /* Limit width for ellipsis */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meditation-row__date {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.meditation-row__status {
+  width: 120px;
+}
+
+.meditation-row__actions {
+  text-align: right;
+  width: 150px;
+}
+
+/* State Labels - Modern Minimalist */
+.state-label {
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.state-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.state-completed {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+.state-completed::before { background: #2ecc71; }
+
+.state-processing {
+  background: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+}
+.state-processing::before { background: #3498db; }
+
+.state-pending {
+  background: rgba(149, 165, 166, 0.15);
+  color: #95a5a6;
+}
+.state-pending::before { background: #95a5a6; }
+
+.state-failed {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+.state-failed::before { background: #e74c3c; }
+
+/* Small buttons */
+.btn--sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+/* Navigation enhancement */
+.app-nav {
+  margin-bottom: 3rem;
+  background: #1a1a1a;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.app-nav ul {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+}
+
+.app-nav a {
+  text-decoration: none;
+  color: #888;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.app-nav a:hover {
+  color: #646cff;
+}
+
+.app-nav a.nav-active {
+  color: #646cff;
+  border-bottom: 2px solid #646cff;
+  padding-bottom: 0.25rem;
+}
+
+/* List Summary */
+.meditation-list__summary {
+  margin-top: 1.5rem;
+  text-align: right;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Meditation Player - Modern Style */
+.library-player-container {
+  margin-top: 6rem; /* Substantial gap between table and player */
+  border-top: 1px solid #333;
+  padding-top: 3rem;
+}
+
+.meditation-player {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid #333;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.meditation-player__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #fff;
+  line-height: 1.4;
+  /* Truncate if exceptionally long to keep player compact */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Max 2 lines for player title */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meditation-player__media {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.meditation-player__video {
+  width: 100%;
+  max-width: 640px;
+  border-radius: 8px;
+  aspect-ratio: 16/9;
+  background: #000;
+}
+
+.meditation-player__audio {
+  width: 100%;
+  max-width: 500px;
+  filter: invert(0.9) hue-rotate(180deg); /* Modern dark look for default audio player controls */
+}
+
+.meditation-player__info {
+  display: flex;
+  justify-content: space-between;
+  color: #888;
+  font-size: 0.85rem;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+}

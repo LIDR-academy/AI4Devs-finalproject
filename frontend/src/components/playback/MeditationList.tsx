@@ -10,10 +10,10 @@
  */
 
 import React from 'react';
-import MeditationCard, { MeditationCardProps } from './MeditationCard';
+import MeditationRow, { MeditationRowProps } from './MeditationRow';
 
 export interface MeditationListProps {
-  meditations: Array<Omit<MeditationCardProps, 'onPlay'>>;
+  meditations: Array<Omit<MeditationRowProps, 'onPlay'>>;
   onPlay: (meditationId: string) => void;
   isLoading?: boolean;
   error?: string | null;
@@ -23,19 +23,8 @@ export interface MeditationListProps {
 /**
  * MeditationList Component
  * 
- * Renders a grid of meditation cards.
+ * Renders a table of meditation rows.
  * Shows empty state if no meditations available.
- * 
- * @example
- * ```tsx
- * <MeditationList
- *   meditations={[
- *     { id: "1", title: "Morning", state: "COMPLETED", ... },
- *     { id: "2", title: "Evening", state: "PROCESSING", ... }
- *   ]}
- *   onPlay={(id) => console.log('Play meditation:', id)}
- * />
- * ```
  */
 export const MeditationList: React.FC<MeditationListProps> = ({
   meditations,
@@ -87,33 +76,37 @@ export const MeditationList: React.FC<MeditationListProps> = ({
           <p className="meditation-list__empty-message">
             Aún no tienes meditaciones. Empieza creando una nueva.
           </p>
-          {/* TODO: Add "Create Meditation" button when US2/US3 integration ready */}
         </div>
       </div>
     );
   }
 
-  // Meditations list
+  // Meditations list table
   return (
     <div 
       className={`meditation-list ${className}`}
       data-testid="meditation-list"
-      role="list"
-      aria-label="Lista de meditaciones"
     >
-      <div className="meditation-list__grid">
-        {meditations.map((meditation) => (
-          <div 
-            key={meditation.id}
-            role="listitem"
-          >
-            <MeditationCard
+      <table className="meditation-list__table">
+        <thead>
+          <tr>
+            <th className="meditation-list__th">Estado</th>
+            <th className="meditation-list__th">Título</th>
+            <th className="meditation-list__th">Tipo</th>
+            <th className="meditation-list__th">Creada el</th>
+            <th className="meditation-list__th">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {meditations.map((meditation) => (
+            <MeditationRow
+              key={meditation.id}
               {...meditation}
               onPlay={onPlay}
             />
-          </div>
-        ))}
-      </div>
+          ))}
+        </tbody>
+      </table>
 
       {/* Summary */}
       <div 
