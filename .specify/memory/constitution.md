@@ -44,9 +44,17 @@ Define la arquitectura, el flujo de trabajo, la jerarquía normativa, los princi
    - Subtítulos sincronizados (SRT)
    - CI/CD con 8 gates completos
 
+3. ✅ **US4 (List and Play Meditations - Branch: 003-list-play-meditations)**  
+   Bounded Context: `playback`
+   - 2 escenarios BDD implementados (listado y reproducción)
+   - Listado de meditaciones filtrado por usuario y ordenado por fecha
+   - Reproductor multimedia integrado (audio/video) con subtítulos
+   - Estados de procesamiento con etiquetas en tiempo real
+   - Manejo de errores de reproducción (409 Conflict si no está lista)
+   - CI/CD con 8 gates completos
+
 ### Features Pendientes (según PRD):
 - US1: Autenticación segura con AWS Cognito + JWT
-- US4: Listado y reproducción de meditaciones
 
 Su objetivo es garantizar:
 
@@ -99,6 +107,7 @@ El código es una **materialización técnica** de un comportamiento ya acordado
 - **Bounded Contexts implementados**: 
   1. `meditationbuilder` (US2 - Composition)
   2. `meditation.generation` (US3 - A/V Generation)
+  3. `playback` (US4 - List & Play)
 
 **Stack tecnológico backend**:
 - Java 21 (Amazon Corretto)

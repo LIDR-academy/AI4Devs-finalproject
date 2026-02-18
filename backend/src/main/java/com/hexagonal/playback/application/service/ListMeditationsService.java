@@ -3,6 +3,8 @@ package com.hexagonal.playback.application.service;
 import com.hexagonal.playback.domain.model.Meditation;
 import com.hexagonal.playback.domain.ports.in.ListMeditationsUseCase;
 import com.hexagonal.playback.domain.ports.out.MeditationRepositoryPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +17,7 @@ import java.util.UUID;
  */
 public class ListMeditationsService implements ListMeditationsUseCase {
 
+    private static final Logger logger = LoggerFactory.getLogger(ListMeditationsService.class);
     private final MeditationRepositoryPort meditationRepositoryPort;
 
     public ListMeditationsService(MeditationRepositoryPort meditationRepositoryPort) {
@@ -27,6 +30,10 @@ public class ListMeditationsService implements ListMeditationsUseCase {
             throw new IllegalArgumentException("userId cannot be null");
         }
 
-        return meditationRepositoryPort.findAllByUserId(userId);
+        logger.info("Listing meditations for user: {}", userId);
+        List<Meditation> meditations = meditationRepositoryPort.findAllByUserId(userId);
+        logger.debug("Found {} meditations for user: {}", meditations.size(), userId);
+        
+        return meditations;
     }
 }

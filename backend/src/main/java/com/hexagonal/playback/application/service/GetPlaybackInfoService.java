@@ -4,6 +4,8 @@ import com.hexagonal.playback.domain.exception.MeditationNotFoundException;
 import com.hexagonal.playback.domain.model.Meditation;
 import com.hexagonal.playback.domain.ports.in.GetPlaybackInfoUseCase;
 import com.hexagonal.playback.domain.ports.out.MeditationRepositoryPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -15,6 +17,7 @@ import java.util.UUID;
  */
 public class GetPlaybackInfoService implements GetPlaybackInfoUseCase {
 
+    private static final Logger logger = LoggerFactory.getLogger(GetPlaybackInfoService.class);
     private final MeditationRepositoryPort meditationRepositoryPort;
     private final PlaybackValidator playbackValidator;
 
@@ -35,12 +38,23 @@ public class GetPlaybackInfoService implements GetPlaybackInfoUseCase {
             throw new IllegalArgumentException("userId cannot be null");
         }
 
+        logger.info("Retrieving playback info for meditation: {} of user: {}", meditationId, userId);
+
         Meditation meditation = meditationRepositoryPort
             .findByIdAndUserId(meditationId, userId)
-            .orElseThrow(() -> new MeditationNotFoundException(meditationId, userId));
+            .orElseThrow(() -> {
+                logger.warn("Meditation not found: {} for user: {}", meditationId, userId);
+                return new MeditationNotFoundException(meditationId, userId);
+            });
 
-        playbackValidator.validatePlayable(meditation);
+        try {
+            playbackValidator.validatePlayable(meditation);
+        } catch (RuntimeException e) {
+            logger.warn("Meditation not playable: {} state: {}", meditationId, meditation.processingState());
+            throw e;
+        }
 
+        logger.debug("Successfully retrieved playback info for meditation: {}", meditationId);
         return meditation;
     }
 }

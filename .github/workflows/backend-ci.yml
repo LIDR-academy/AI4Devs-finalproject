@@ -7,7 +7,7 @@ name: Backend CI
 
 on:
   push:
-    branches: [ main, 'feature/*', '002-generate-meditation-audio-video' ]
+    branches: [ main, 'feature/*', '002-generate-meditation-audio-video', '003-list-play-meditations' ]
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
@@ -78,6 +78,7 @@ jobs:
         run: |
           npx @redocly/cli lint src/main/resources/openapi/meditationbuilder/compose-content.yaml || echo "Warning: US2 spec lint failed but continuing"
           npx @redocly/cli lint src/main/resources/openapi/generation/generate-meditation.yaml
+          npx @redocly/cli lint src/main/resources/openapi/playback/list-play-meditations.yaml
 
   # Gate 3: Unit Domain
   unit-domain:
@@ -101,7 +102,7 @@ jobs:
       
       - name: Run Unit Tests (Domain)
         # Filters for both domain packages
-        run: mvn test -Dtest="com.hexagonal.meditationbuilder.domain.**,com.hexagonal.meditation.generation.domain.**" -DfailIfNoTests=false
+        run: mvn test -Dtest="com.hexagonal.meditationbuilder.domain.**,com.hexagonal.meditation.generation.domain.**,com.hexagonal.playback.domain.**" -DfailIfNoTests=false
 
   # Gate 4: Unit Application
   unit-application:
@@ -125,7 +126,7 @@ jobs:
       
       - name: Run Unit Tests (Application)
         # Filters for both application packages
-        run: mvn test -Dtest="com.hexagonal.meditationbuilder.application.**,com.hexagonal.meditation.generation.application.**" -DfailIfNoTests=false
+        run: mvn test -Dtest="com.hexagonal.meditationbuilder.application.**,com.hexagonal.meditation.generation.application.**,com.hexagonal.playback.application.**" -DfailIfNoTests=false
 
   # Gate 5: Infrastructure Tests (Integration)
   infrastructure-it:
@@ -152,7 +153,7 @@ jobs:
       
       - name: Run Infrastructure Integration Tests
         # Filters for infrastructure adapters
-        run: mvn test -Dtest="com.hexagonal.meditationbuilder.infrastructure.out.**,com.hexagonal.meditation.generation.infrastructure.out.**" -DfailIfNoTests=false
+        run: mvn test -Dtest="com.hexagonal.meditationbuilder.infrastructure.out.**,com.hexagonal.meditation.generation.infrastructure.out.**,com.hexagonal.playback.infrastructure.out.**" -DfailIfNoTests=false
 
   # Gate 6: Contract Tests
   contract-tests:

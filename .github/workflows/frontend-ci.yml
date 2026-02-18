@@ -2,7 +2,7 @@ name: Frontend CI
 
 on:
   push:
-    branches: [ main, 'feature/*', '**-compose-meditation-content' ]
+    branches: [ main, 'feature/*', '**-compose-meditation-content', '**-list-play-meditations' ]
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'

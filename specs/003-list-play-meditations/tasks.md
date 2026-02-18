@@ -164,7 +164,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Implement REST endpoints complying with OpenAPI spec
 
-- [ ] **T010 - REST Controllers & DTOs**  
+- [X] **T010 - REST Controllers & DTOs**  
   **Description**: Implement TDD for REST API layer with MockMvc  
   **Artifacts**:
   - Tests: `${basePackage}/playback/infrastructure/in/rest/controller/*Test.java` (MockMvc)
@@ -189,7 +189,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Implement React UI for meditation library and playback
 
-- [ ] **T011 - Frontend Components & UI**  
+- [X] **T011 - Frontend Components & UI**  
   **Description**: Implement playback UI components  
   **Artifacts**:
   - `frontend/src/api/` (OpenAPI TypeScript client generated)
@@ -236,10 +236,10 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Contract tests, E2E tests, CI/CD integration
 
-- [ ] **T014 - Contract Tests (OpenAPI Validation)**  
+- [X] **T014 - Contract Tests (OpenAPI Validation)**  
   **Description**: Validate backend compliance with OpenAPI spec  
   **Artifacts**:
-  - `backend/src/test/contracts/PlaybackContractTest.java` (WireMock or Spring Cloud Contract)  
+  - `backend/src/test/java/com/hexagonal/playback/infrastructure/in/rest/controller/PlaybackContractTest.java`  
   **Acceptance Criteria**:
   - Contract test for GET /api/v1/meditations validates response schema
   - Contract test for GET /api/v1/meditations/{id}/playback validates response schema, 404 case, 409 case
@@ -247,7 +247,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - All contract tests GREEN  
   **Dependencies**: T010
 
-- [ ] **T015 - E2E Tests (Backend + Frontend)**  
+- [x] **T015 - E2E Tests (Backend + Frontend)**  
   **Description**: Implement end-to-end BDD scenarios and frontend flows  
   **Artifacts**:
   - Backend BDD steps: `${basePackage}/playback/bdd/steps/{ListMeditationsSteps, PlayMeditationSteps}.java`
@@ -262,7 +262,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - All Playwright tests GREEN  
   **Dependencies**: T013, T014
 
-- [ ] **T016 - CI/CD Integration & Gates**  
+- [x] **T016 - CI/CD Integration & Gates**  
   **Description**: Update workflows, verify all 8 CI gates pass  
   **Artifacts**:
   - `.github/workflows/backend-ci.yml` (updated for playback BC)
@@ -281,7 +281,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Final validation, observability, code quality
 
-- [ ] **T017 - Observability & Documentation**  
+- [x] **T017 - Observability & Documentation**  
   **Description**: Add logging, metrics, API documentation  
   **Artifacts**:
   - Logging implementation in playback services
@@ -294,7 +294,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - Constitution.md reflects 3rd Bounded Context "playback" (if not already)  
   **Dependencies**: T016
 
-- [ ] **T018 - Code Quality & Final Validation**  
+- [x] **T018 - Code Quality & Final Validation**  
   **Description**: Run quality checks, verify Definition of Done  
   **Artifacts**:
   - SonarQube/quality reports
