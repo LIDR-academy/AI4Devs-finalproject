@@ -20,6 +20,11 @@ import { ApiError } from './types';
 
 const BASE_URL = '/api/v1';
 
+/**
+ * MVP User ID (hardcoded until US1 authentication is implemented)
+ */
+const MVP_USER_ID = '550e8400-e29b-41d4-a716-446655440000';
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const errorBody: ErrorResponse = await response.json().catch(() => ({
@@ -39,7 +44,10 @@ async function handleResponse<T>(response: Response): Promise<T> {
 export async function createComposition(request?: { text?: string }): Promise<CompositionResponse> {
   const response = await fetch(`${BASE_URL}/compositions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-User-Id': MVP_USER_ID
+    },
     body: JSON.stringify(request ?? { text: '' }),
   });
   return handleResponse<CompositionResponse>(response);
@@ -49,7 +57,9 @@ export async function createComposition(request?: { text?: string }): Promise<Co
  * Get composition by ID
  */
 export async function getComposition(compositionId: string): Promise<CompositionResponse> {
-  const response = await fetch(`${BASE_URL}/compositions/${compositionId}`);
+  const response = await fetch(`${BASE_URL}/compositions/${compositionId}`, {
+    headers: { 'X-User-Id': MVP_USER_ID },
+  });
   return handleResponse<CompositionResponse>(response);
 }
 
@@ -63,7 +73,10 @@ export async function updateText(
 ): Promise<CompositionResponse> {
   const response = await fetch(`${BASE_URL}/compositions/${compositionId}/text`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-User-Id': MVP_USER_ID
+    },
     body: JSON.stringify(request),
   });
   return handleResponse<CompositionResponse>(response);

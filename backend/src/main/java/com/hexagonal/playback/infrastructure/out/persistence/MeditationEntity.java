@@ -35,6 +35,9 @@ public class MeditationEntity {
     @Column(name = "status", nullable = false, length = 50)
     private String status;
 
+    @Column(name = "media_type", nullable = false, length = 10)
+    private String mediaType;
+
     @Column(name = "output_media_url")
     private String outputMediaUrl;
 
@@ -99,6 +102,14 @@ public class MeditationEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public void setMediaType(String mediaType) {
+        this.mediaType = mediaType;
     }
 
     public String getOutputMediaUrl() {

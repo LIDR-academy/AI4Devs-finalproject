@@ -1,27 +1,58 @@
 package com.hexagonal.playback.infrastructure.config;
 
+import com.hexagonal.playback.application.service.GetPlaybackInfoService;
+import com.hexagonal.playback.application.service.ListMeditationsService;
+import com.hexagonal.playback.application.service.PlaybackValidator;
+import com.hexagonal.playback.domain.ports.in.GetPlaybackInfoUseCase;
+import com.hexagonal.playback.domain.ports.in.ListMeditationsUseCase;
+import com.hexagonal.playback.domain.ports.out.MeditationRepositoryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Clock;
 
 /**
  * Spring configuration for Playback BC beans.
  * 
  * Provides:
- * - Clock bean for timestamp generation (testable, injectable)
+ * - Application use case implementations (services)
+ * - Domain validators
+ * - Clock is provided by global ClockConfig
  */
 @Configuration
 public class PlaybackConfig {
 
     /**
-     * Provides system UTC Clock bean.
-     * Injectable for testing (can be mocked/fixed).
+     * Provides the validator for playback business rules.
      * 
-     * @return Clock instance using system UTC time
+     * @return PlaybackValidator instance
      */
     @Bean
-    public Clock clock() {
-        return Clock.systemUTC();
+    public PlaybackValidator playbackValidator() {
+        return new PlaybackValidator();
+    }
+
+    /**
+     * Provides the use case for listing user meditations.
+     * 
+     * @param port the repository port for data access
+     * @return ListMeditationsUseCase implementation
+     */
+    @Bean
+    public ListMeditationsUseCase listMeditationsUseCase(MeditationRepositoryPort port) {
+        return new ListMeditationsService(port);
+    }
+
+    /**
+     * Provides the use case for getting playback information.
+     * 
+     * @param port the repository port for data access
+     * @param validator the playback rules validator
+     * @return GetPlaybackInfoUseCase implementation
+     */
+    @Bean
+    public GetPlaybackInfoUseCase getPlaybackInfoUseCase(
+        MeditationRepositoryPort port,
+        PlaybackValidator validator
+    ) {
+        return new GetPlaybackInfoService(port, validator);
     }
 }

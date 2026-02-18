@@ -67,13 +67,20 @@ public class EntityToDomainMapper {
      * @return MediaUrls if at least one URL exists, null otherwise
      */
     private MediaUrls buildMediaUrls(MeditationEntity entity) {
-        String audioUrl = entity.getOutputMediaUrl();
-        String videoUrl = entity.getBackgroundImageUrl();
+        String outputUrl = entity.getOutputMediaUrl();
         String subtitlesUrl = entity.getSubtitleUrl();
 
-        // If no media URLs exist, return null (typical for PROCESSING/FAILED states)
-        if (isEmpty(audioUrl) && isEmpty(videoUrl)) {
+        if (isEmpty(outputUrl)) {
             return null;
+        }
+
+        String audioUrl = null;
+        String videoUrl = null;
+
+        if ("AUDIO".equalsIgnoreCase(entity.getMediaType())) {
+            audioUrl = outputUrl;
+        } else if ("VIDEO".equalsIgnoreCase(entity.getMediaType())) {
+            videoUrl = outputUrl;
         }
 
         // MediaUrls constructor validates that at least one URL is provided

@@ -31,7 +31,7 @@ import java.util.UUID;
  * - Will be replaced with JWT in US1
  */
 @RestController
-@RequestMapping("/api/v1/playback/meditations")
+@RequestMapping("/v1/playback/meditations")
 public class PlaybackController {
 
     private final ListMeditationsUseCase listMeditationsUseCase;

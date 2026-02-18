@@ -27,7 +27,7 @@ const getApiConfig = (): Configuration => {
     basePath: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
     headers: {
       // Temporary: X-User-Id header until US1 implements JWT
-      'X-User-Id': import.meta.env.VITE_USER_ID || '123e4567-e89b-12d3-a456-426614174000'
+      'X-User-Id': import.meta.env.VITE_USER_ID || '550e8400-e29b-41d4-a716-446655440000'
     }
   });
 };

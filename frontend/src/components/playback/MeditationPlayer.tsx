@@ -153,6 +153,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
             className="meditation-player__video"
             controls
             preload="metadata"
+            crossOrigin="anonymous"
             onError={handleMediaError}
             aria-label={`Reproduciendo video: ${title}`}
           >
@@ -176,6 +177,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
             className="meditation-player__audio"
             controls
             preload="metadata"
+            crossOrigin="anonymous"
             onError={handleMediaError}
             aria-label={`Reproduciendo audio: ${title}`}
           >

@@ -64,7 +64,7 @@ class PlaybackControllerTest {
     @MockBean
     private Clock clock; // For PlaybackExceptionHandler
 
-    private static final UUID USER_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    private static final UUID USER_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private static final UUID MEDITATION_ID_1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private static final UUID MEDITATION_ID_2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
 
@@ -100,7 +100,7 @@ class PlaybackControllerTest {
             .thenReturn(List.of(processing, completed)); // Most recent first
 
         // When/Then
-        mockMvc.perform(get("/api/v1/playback/meditations")
+        mockMvc.perform(get("/v1/playback/meditations")
                 .header("X-User-Id", USER_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -131,7 +131,7 @@ class PlaybackControllerTest {
             .thenReturn(List.of());
 
         // When/Then
-        mockMvc.perform(get("/api/v1/playback/meditations")
+        mockMvc.perform(get("/v1/playback/meditations")
                 .header("X-User-Id", USER_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -153,7 +153,7 @@ class PlaybackControllerTest {
             .thenReturn(meditations);
 
         // When/Then
-        mockMvc.perform(get("/api/v1/playback/meditations")
+        mockMvc.perform(get("/v1/playback/meditations")
                 .header("X-User-Id", USER_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -190,7 +190,7 @@ class PlaybackControllerTest {
             .thenReturn(meditation);
 
         // When/Then
-        mockMvc.perform(get("/api/v1/playback/meditations/{id}", MEDITATION_ID_1)
+        mockMvc.perform(get("/v1/playback/meditations/{id}", MEDITATION_ID_1)
                 .header("X-User-Id", USER_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -213,7 +213,7 @@ class PlaybackControllerTest {
             .thenThrow(new MeditationNotFoundException(nonExistentId, USER_ID));
 
         // When/Then
-        mockMvc.perform(get("/api/v1/playback/meditations/{id}", nonExistentId)
+        mockMvc.perform(get("/v1/playback/meditations/{id}", nonExistentId)
                 .header("X-User-Id", USER_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
@@ -229,7 +229,7 @@ class PlaybackControllerTest {
             .thenThrow(new MeditationNotPlayableException(MEDITATION_ID_1, ProcessingState.PROCESSING));
 
         // When/Then
-        mockMvc.perform(get("/api/v1/playback/meditations/{id}", MEDITATION_ID_1)
+        mockMvc.perform(get("/v1/playback/meditations/{id}", MEDITATION_ID_1)
                 .header("X-User-Id", USER_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isConflict())
@@ -246,7 +246,7 @@ class PlaybackControllerTest {
             .thenThrow(new MeditationNotPlayableException(MEDITATION_ID_1, ProcessingState.FAILED));
 
         // When/Then
-        mockMvc.perform(get("/api/v1/playback/meditations/{id}", MEDITATION_ID_1)
+        mockMvc.perform(get("/v1/playback/meditations/{id}", MEDITATION_ID_1)
                 .header("X-User-Id", USER_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isConflict())
@@ -271,7 +271,7 @@ class PlaybackControllerTest {
             .thenReturn(meditation);
 
         // When/Then - UserId from X-User-Id header, not from path
-        mockMvc.perform(get("/api/v1/playback/meditations/{id}", MEDITATION_ID_1)
+        mockMvc.perform(get("/v1/playback/meditations/{id}", MEDITATION_ID_1)
                 .header("X-User-Id", USER_ID.toString())
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
