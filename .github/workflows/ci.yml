@@ -34,8 +34,13 @@ jobs:
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
           SUPABASE_DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }}
-          CELERY_BROKER_URL=redis://redis:6379/0
-          CELERY_RESULT_BACKEND=redis://redis:6379/0
+          DATABASE_USER=postgres
+          DATABASE_PASSWORD=test_ci_password_$(openssl rand -hex 8)
+          DATABASE_NAME=sfpm_db_test
+          DATABASE_URL=postgresql://postgres:test_ci_password@db:5432/sfpm_db_test
+          REDIS_PASSWORD=test_redis_$(openssl rand -hex 8)
+          CELERY_BROKER_URL=redis://:test_redis_password@redis:6379/0
+          CELERY_RESULT_BACKEND=redis://:test_redis_password@redis:6379/0
           EOF
           echo "✅ .env file created with credentials from GitHub Secrets"
 
@@ -135,8 +140,13 @@ jobs:
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
           SUPABASE_DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }}
-          CELERY_BROKER_URL=redis://redis:6379/0
-          CELERY_RESULT_BACKEND=redis://redis:6379/0
+          DATABASE_USER=postgres
+          DATABASE_PASSWORD=test_ci_password_$(openssl rand -hex 8)
+          DATABASE_NAME=sfpm_db_test
+          DATABASE_URL=postgresql://postgres:test_ci_password@db:5432/sfpm_db_test
+          REDIS_PASSWORD=test_redis_$(openssl rand -hex 8)
+          CELERY_BROKER_URL=redis://:test_redis_password@redis:6379/0
+          CELERY_RESULT_BACKEND=redis://:test_redis_password@redis:6379/0
           EOF
 
       - name: Pull base image
@@ -172,8 +182,13 @@ jobs:
           SUPABASE_URL=dummy
           SUPABASE_KEY=dummy
           SUPABASE_DATABASE_URL=dummy
-          CELERY_BROKER_URL=redis://redis:6379/0
-          CELERY_RESULT_BACKEND=redis://redis:6379/0
+          DATABASE_USER=postgres
+          DATABASE_PASSWORD=dummy
+          DATABASE_NAME=sfpm_db
+          DATABASE_URL=postgresql://postgres:dummy@db:5432/sfpm_db
+          REDIS_PASSWORD=dummy
+          CELERY_BROKER_URL=redis://:dummy@redis:6379/0
+          CELERY_RESULT_BACKEND=redis://:dummy@redis:6379/0
           EOF
           docker compose down -v
 
@@ -190,8 +205,13 @@ jobs:
           SUPABASE_URL=dummy
           SUPABASE_KEY=dummy
           SUPABASE_DATABASE_URL=dummy
-          CELERY_BROKER_URL=redis://redis:6379/0
-          CELERY_RESULT_BACKEND=redis://redis:6379/0
+          DATABASE_USER=postgres
+          DATABASE_PASSWORD=dummy
+          DATABASE_NAME=sfpm_db
+          DATABASE_URL=postgresql://postgres:dummy@db:5432/sfpm_db
+          REDIS_PASSWORD=dummy
+          CELERY_BROKER_URL=redis://:dummy@redis:6379/0
+          CELERY_RESULT_BACKEND=redis://:dummy@redis:6379/0
           EOF
 
       - name: Validate docker-compose configuration
@@ -276,7 +296,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-        continue-on-error: true  # Don't fail build yet
+          exit-code: '1'  # Fail build on CRITICAL/HIGH vulnerabilities
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
@@ -284,3 +304,27 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
         continue-on-error: true
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Audit Python dependencies (pip-audit)
+        run: |
+          pip install pip-audit
+          echo "=== Auditing Backend Dependencies ==="
+          pip-audit -r src/backend/requirements-lock.txt --desc --strict
+          echo "=== Auditing Agent Dependencies ==="
+          pip-audit -r src/agent/requirements.txt --desc --strict
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Audit npm dependencies
+        working-directory: src/frontend
+        run: |
+          npm ci
+          npm audit --audit-level=high
