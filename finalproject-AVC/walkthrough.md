@@ -31,14 +31,13 @@ El Sistema de Gestión del SC Padel Club está diseñado para hacer tu experienc
 **Como Jugador:**
 - 📅 Ver canchas disponibles en tiempo real
 - ⚡ Reservar canchas de forma rápida y sencilla
-- 💳 Pagar de forma segura en línea
-- 📱 Acceder desde cualquier dispositivo (web o móvil)
+- 💳 Pagar Reservas y visualizar su estado.
 
 **Como Administrador:**
 - 🏟️ Gestionar las canchas del club
-- 👥 Supervisar cuentas de usuarios
+- 👥 Crear cuentas de usuarios
 - 📊 Monitorear reservas
-- ⚙️ Configurar disponibilidad de canchas
+- ⚡ Reservar canchas de forma rápida y sencilla
 
 ---
 
@@ -46,29 +45,13 @@ El Sistema de Gestión del SC Padel Club está diseñado para hacer tu experienc
 
 ### Primeros Pasos
 
-#### 1. Crear tu Cuenta
-
-**Los usuarios nuevos necesitan registrarse:**
-
-1. Visita el sitio web del SC Padel Club o abre la aplicación móvil
-2. Haz clic en **"Registrarse"** o **"Crear Cuenta"**
-3. Completa tus datos:
-   - **Correo electrónico** (este será tu nombre de usuario)
-   - **Contraseña** (elige una contraseña segura)
-   - **Nombre completo**
-   - **Número de teléfono**
-4. Haz clic en **"Crear Cuenta"**
-5. Recibirás un mensaje de confirmación
-
-> 💡 **Consejo:** Usa un correo que revises regularmente - ¡allí recibirás las confirmaciones de tus reservas!
-
-#### 2. Iniciar Sesión
+#### 1. Iniciar Sesión
 
 **¿Ya tienes una cuenta?**
 
-1. Haz clic en **"Iniciar Sesión"** o **"Ingresar"**
-2. Ingresa tu **correo electrónico** y **contraseña**
-3. Haz clic en **"Iniciar Sesión"**
+Jugador: player@scpadel.com. Pass: player123
+
+Admin: admin@scpadel.com. Pass admin123
 
 ¡Ya estás listo para reservar canchas! 🎉
 
@@ -89,8 +72,6 @@ Sigue estos simples pasos para reservar tu cancha:
    - **Nombres de canchas** (ej., Cancha 1, Cancha 2)
    - **Horarios** (ej., 10:00 - 11:30)
 
-> 📌 **Nota:** La disponibilidad se muestra en tiempo real, ¡así que lo que ves es lo que realmente está disponible!
-
 #### Paso 2: Seleccionar tu Cancha
 
 1. Encuentra un horario que te funcione
@@ -104,7 +85,7 @@ Sigue estos simples pasos para reservar tu cancha:
 #### Paso 3: Confirmar tu Reserva
 
 1. Verifica todos los detalles
-2. Haz clic en **"Reservar"** o **"Reservar Cancha"**
+2. Haz clic en **"Reservar"**
 3. ¡Tu reserva ahora está creada (pero aún no confirmada!)
 
 > ⚠️ **Importante:** Tu reserva no será confirmada hasta que se complete el pago.
@@ -121,9 +102,7 @@ Después de crear tu reserva, necesitarás completar el pago:
 2. Revisa el resumen de tu reserva:
    - Cancha y horario
    - Monto total
-3. Elige tu método de pago (opciones de pago locales LATAM disponibles)
-4. Ingresa tus datos de pago de forma segura
-5. Haz clic en **"Pagar Ahora"** o **"Confirmar Pago"**
+3. Simula un Pago Exitoso o un pago fallido. Es una prueba de concepto de la Fase 0 de implementación.
 
 #### Después del Pago
 
@@ -136,8 +115,6 @@ Después de crear tu reserva, necesitarás completar el pago:
 - Tu reserva permanece en estado **"CREADA"** (pendiente)
 - Puedes intentar pagar nuevamente desde tu lista de reservas
 - El horario de la cancha queda temporalmente reservado para ti
-
-> 💳 **Nota de Seguridad:** Todos los pagos se procesan a través de pasarelas de pago seguras. Nunca almacenamos tus datos completos de pago.
 
 ---
 
@@ -156,8 +133,6 @@ Después de crear tu reserva, necesitarás completar el pago:
 
 - **🟡 CREADA:** Reserva realizada pero pago pendiente
 - **🟢 CONFIRMADA:** Pago exitoso, ¡la cancha es tuya!
-
-> 📱 **Consejo Móvil:** Puedes acceder a tus reservas desde cualquier lugar - ¡perfecto para mostrar en la entrada del club!
 
 ---
 
@@ -192,39 +167,14 @@ Mantén las canchas de tu club actualizadas y correctamente configuradas.
 1. Haz clic en **"Agregar Cancha"** o **"Crear Nueva Cancha"**
 2. Completa los detalles:
    - **Nombre de la Cancha** (ej., "Cancha 1", "Cancha Central")
-   - **Estado** (Activa/Inactiva)
-   - Opcional: Tipo de superficie, ubicación
 3. Haz clic en **"Guardar"** o **"Crear Cancha"**
-
-#### Editar una Cancha
-
-1. Encuentra la cancha que deseas editar
-2. Haz clic en **"Editar"** o haz clic en el nombre de la cancha
-3. Actualiza la información
 4. Haz clic en **"Guardar Cambios"**
-
-#### Desactivar una Cancha
-
-1. Encuentra la cancha en la lista
-2. Haz clic en **"Editar"**
-3. Cambia el estado a **"Inactiva"**
-4. Haz clic en **"Guardar"**
-
-> 💡 **Caso de Uso:** Desactiva canchas que estén en mantenimiento o no disponibles para reservas.
 
 ---
 
 ### Gestión de Usuarios
 
-Supervisa las cuentas de jugadores y crea usuarios administradores.
-
-#### Ver Todos los Usuarios
-
-1. Navega a **"Gestión de Usuarios"** o **"Usuarios"**
-2. Explora la lista de usuarios registrados
-3. Filtra por rol:
-   - **Jugadores** (usuarios regulares)
-   - **Administradores** (administradores)
+Crea Usuarios de tipo Administrador o Jugador
 
 #### Crear un Nuevo Usuario
 
@@ -237,15 +187,6 @@ Supervisa las cuentas de jugadores y crea usuarios administradores.
    - Contraseña inicial (el usuario puede cambiarla después)
 3. Haz clic en **"Crear"**
 
-> 🔐 **Seguridad:** Los usuarios recién creados deben cambiar su contraseña en el primer inicio de sesión.
-
-#### Editar Detalles de Usuario
-
-1. Encuentra el usuario en la lista
-2. Haz clic en **"Editar"**
-3. Actualiza la información
-4. Haz clic en **"Guardar Cambios"**
-
 ---
 
 ### Visualización de Reservas
@@ -256,10 +197,7 @@ Monitorea todas las reservas de canchas del club.
 
 1. Ve a **"Reservas"** en el panel de administración
 2. Visualiza todas las reservas con filtros:
-   - **Por fecha** (hoy, semana, mes)
-   - **Por cancha**
    - **Por estado** (Creada, Confirmada)
-   - **Por usuario**
 
 #### Detalles de Reserva
 
@@ -268,8 +206,6 @@ Haz clic en cualquier reserva para ver:
 - Cancha y horario
 - Estado del pago
 - Fecha de creación
-
-> 📊 **Dato útil:** Usa esta vista para entender las horas pico y la utilización de canchas.
 
 ---
 
@@ -289,55 +225,11 @@ Haz clic en cualquier reserva para ver:
 - Actualiza la página para ver la disponibilidad actual
 - Intenta seleccionar un horario diferente
 
-#### "Mi pago falló"
-
-- Verifica que tus datos de pago sean correctos
-- Asegúrate de tener fondos suficientes
-- Intenta con un método de pago diferente
-- Contacta a tu banco si el problema persiste
-
 #### "No veo mi reserva"
 
 - Verifica que hayas iniciado sesión con la cuenta correcta
 - Busca la reserva bajo la fecha correcta
 - Si el pago aún está pendiente, la reserva puede estar en estado "Creada"
-
-### Preguntas Frecuentes
-
-**P: ¿Con cuánta anticipación puedo reservar una cancha?**  
-R: Consulta con el administrador del club para conocer las ventanas de reserva específicas.
-
-**P: ¿Cuánto dura cada reserva de cancha?**  
-R: Las sesiones de cancha típicamente duran 1.5 horas, pero esto puede variar.
-
-**P: ¿Puedo cancelar una reserva?**  
-R: Las funciones de cancelación están planificadas para futuras actualizaciones. Por ahora, contacta directamente al club.
-
-**P: ¿Qué métodos de pago se aceptan?**  
-R: El sistema soporta proveedores de pago locales LATAM para tu comodidad.
-
-**P: ¿Puedo invitar a otros jugadores a mi reserva?**  
-R: ¡Las funciones de invitación de jugadores llegarán en futuras actualizaciones!
-
-**P: ¿Mi información de pago es segura?**  
-R: ¡Sí! Todos los pagos se procesan a través de pasarelas de pago seguras y certificadas.
-
----
-
-## 💬 Obtener Ayuda
-
-### ¿Necesitas Asistencia?
-
-**Para Jugadores:**
-- Contacta al club directamente durante el horario de atención
-- Email: [correo de contacto del club]
-- Teléfono: [número de contacto del club]
-- WhatsApp: [WhatsApp del club]
-
-**Para Administradores:**
-- Consulta la documentación de administración
-- Contacta al soporte técnico
-- Email: [correo de soporte]
 
 ---
 

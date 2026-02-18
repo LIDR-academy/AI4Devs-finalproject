@@ -1423,6 +1423,9 @@ npm run cypress:open
 
 Pueden encontrar una guia completa en el archivo walkthrough.md
 
+Jugador: player@scpadel.com. Pass: player123
+Admin: admin@scpadel.com. Pass admin123
+
 O sino, pueden ver una demostración de un usuario con el rol "Jugador" en: https://youtu.be/EviMCzsCuVU
 
 También pueden ver una demostración como usuario "Administrador" en: https://youtu.be/3P4DzIYdBcU
