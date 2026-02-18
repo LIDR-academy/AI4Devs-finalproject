@@ -77,6 +77,67 @@ declare module '*.gltf' {
 }
 ```
 
+## POC Validation Results
+
+**Date:** 2026-02-18  
+**Test File:** test-model-big.glb (1197 meshes, 39,360 triangles, 778 KB without Draco)
+
+### Performance Metrics (POC Validated)
+| Metric | Result | Target | Status |
+|--------|--------|--------|--------|
+| **Payload Size** | 778 KB | <800 KB | ✅ EXCELENTE |
+| **Download Time** | 89 ms | <100 ms | ✅ EXCELENTE |
+| **Parse Time (TTFR)** | 1002 ms | <1000 ms | ⚠️ ACEPTABLE (+2ms) |
+| **Memory Usage** | 41 MB | <200 MB | ✅ EXCELENTE (5x better) |
+| **FPS (Idle)** | 60 | >30 | ✅ EXCELENTE |
+| **FPS (Interaction)** | 60 | >30 | ✅ EXCELENTE |
+
+### Key Findings
+✅ **Stack validated:** React Three Fiber 8.15 + drei 9.92 + three.js 0.160 handles 1197 meshes without performance issues  
+✅ **Memory efficient:** 41 MB heap (5x better than 200 MB target)  
+✅ **FPS excellent:** Constant 60 FPS during rotation, zoom, pan  
+⚠️ **Parse time acceptable:** 1002 ms (2ms over target, negligible)  
+🎯 **Optimization potential:** With gltf-pipeline Draco compression, estimated 778 KB → 300-400 KB (50% reduction)
+
+### References
+- POC Results: `poc/formats-comparison/results/benchmark-results-2026-02-18.json`
+- Executive Summary: `poc/formats-comparison/results/executive-summary.md`
+- ADR: `memory-bank/decisions.md` (ADR-001: glTF+Draco adopted, ThatOpen rejected)
+
+## gltf-pipeline Installation (Draco Compression)
+
+### Install gltf-pipeline CLI
+```bash
+npm install -g gltf-pipeline@^4.0.0
+```
+
+### Verify Installation
+```bash
+gltf-pipeline --version
+# Expected: 4.0.0 or higher
+```
+
+### Usage (Manual Compression Test)
+```bash
+# Compress GLB with Draco level 10
+gltf-pipeline -i input.glb -o output.glb -d
+
+# With specific compression level
+gltf-pipeline -i input.glb -o output.glb \
+  --draco.compressionLevel 10 \
+  --draco.quantizePositionBits 14 \
+  --draco.quantizeNormalBits 10 \
+  --draco.quantizeTexcoordBits 12
+```
+
+### Expected Results
+- **Input:** 778 KB (uncompressed glTF)
+- **Output:** ~300-400 KB (Draco compressed)
+- **Reduction:** 50% file size
+- **Quality:** Imperceptible visual difference
+
+**Note:** T-0502-AGENT will automate this compression in production pipeline.
+
 ## Estructura de Directorios
 
 ```

@@ -1,0 +1,9 @@
+{
+  "files_processed": 1,
+  "total_faces_original": 39360,
+  "total_faces_decimated": 39360,
+  "size_original_mb": 0,
+  "size_gltf_mb": 0.7413444519042969,
+  "size_draco_mb": 0.7413444519042969,
+  "duplicates_detected": []
+}
