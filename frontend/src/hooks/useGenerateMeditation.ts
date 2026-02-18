@@ -77,7 +77,7 @@ export interface GenerateMeditationParams {
  */
 export function useGenerateMeditation() {
   const queryClient = useQueryClient();
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingIntervalRef = useRef<any>(null);
 
   const mutation = useMutation({
     mutationFn: async ({ request, compositionId }: GenerateMeditationParams): Promise<GenerationResponse> => {
