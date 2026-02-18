@@ -18,7 +18,7 @@
  * - User-friendly error messages in Spanish
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useMeditationList, usePlaybackInfo } from '../hooks/playback';
 import { usePlayerStore } from '../state/playback';
 import { MeditationList, MeditationPlayer } from '../components/playback';
@@ -47,6 +47,11 @@ export const MeditationLibraryPage: React.FC = () => {
     setCurrentMeditation,
     reset: resetPlayer
   } = usePlayerStore();
+
+  // Reset player when entering library page to avoid auto-play on navigation
+  useEffect(() => {
+    resetPlayer();
+  }, [resetPlayer]);
 
   // Server-state: Playback info (lazy-loaded)
   const { 

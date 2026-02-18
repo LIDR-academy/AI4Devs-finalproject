@@ -149,15 +149,17 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
       <div className="meditation-player__media">
         {mediaType === 'video' && mediaUrls.videoUrl && (
           <video
+            key={`video-${meditationId}`} // Force fresh element when meditation ID changes
             ref={videoRef}
+            src={mediaUrls.videoUrl} // Use src directly for more reliable React updates
             className="meditation-player__video"
             controls
-            preload="metadata"
+            autoPlay // Restored autoPlay for one-click play from list
+            preload="auto"
             crossOrigin="anonymous"
             onError={handleMediaError}
             aria-label={`Reproduciendo video: ${title}`}
           >
-            <source src={mediaUrls.videoUrl} type="video/mp4" />
             {mediaUrls.subtitlesUrl && (
               <track
                 kind="subtitles"
@@ -173,15 +175,17 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
 
         {mediaType === 'audio' && mediaUrls.audioUrl && (
           <audio
+            key={`audio-${meditationId}`} // Force fresh element when meditation ID changes
             ref={audioRef}
+            src={mediaUrls.audioUrl} // Use src directly for more reliable React updates
             className="meditation-player__audio"
             controls
-            preload="metadata"
+            autoPlay // Restored autoPlay for one-click play from list
+            preload="auto"
             crossOrigin="anonymous"
             onError={handleMediaError}
             aria-label={`Reproduciendo audio: ${title}`}
           >
-            <source src={mediaUrls.audioUrl} type="audio/mpeg" />
             Tu navegador no soporta reproducción de audio.
           </audio>
         )}

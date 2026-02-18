@@ -368,30 +368,30 @@ body {
 
 /* Meditation Library - Table View */
 .meditation-library-page {
-  max-width: 1000px;
+  max-width: 1100px; /* Aligned with video player width for consistency */
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 3rem; /* Increased gap from 2rem to 3rem for more breathing space */
-  padding-bottom: 120px; /* Space for sticky player if needed */
+  gap: 1rem; /* Compact gap */
+  padding-bottom: 80px;
 }
 
 /* More space specifically for the player container */
 .library-player-container {
-  margin-top: 4rem;
+  margin-top: 0; /* Align directly below the summary */
   border-top: 1px solid #333;
-  padding-top: 2rem;
+  padding-top: 1rem;
 }
 
 .library-header {
   text-align: left;
   border-bottom: 2px solid #333;
-  padding-bottom: 1.5rem;
+  padding-bottom: 0.75rem; /* Reduced from 1.5rem */
 }
 
 .library-header h1 {
   font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem; /* Reduced from 0.5rem */
   background: linear-gradient(to right, #646cff, #f5576c);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -400,18 +400,16 @@ body {
 .library-description {
   color: #888;
   font-size: 1.1rem;
+  margin-top: 0; /* Ensures no extra top margin */
 }
 
-.meditation-list__table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 0.5rem; /* Row spacing */
-  margin-top: 1rem;
+.library-content {
+  margin-top: 0;
 }
 
 .meditation-list__th {
   text-align: left;
-  padding: 1rem;
+  padding: 0.5rem 1rem; /* Reduced padding */
   color: #666;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -428,7 +426,7 @@ body {
 
 /* Emulating rounded rows in table */
 .meditation-row td {
-  padding: 1.25rem 1rem;
+  padding: 0.85rem 1rem; /* Reduced from 1.25rem */
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
 }
@@ -466,7 +464,7 @@ body {
   font-weight: 500;
   color: #fff;
   font-size: 1rem;
-  max-width: 400px; /* Limit width for ellipsis */
+  max-width: 600px; /* Allow longer titles to occupy more table width */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -475,6 +473,7 @@ body {
 .meditation-row__date {
   color: #888;
   font-size: 0.9rem;
+  white-space: nowrap; /* Keep date on a single line */
 }
 
 .meditation-row__status {
@@ -569,31 +568,91 @@ body {
 
 /* List Summary */
 .meditation-list__summary {
-  margin-top: 1.5rem;
+  margin-top: 0.5rem; /* Reduced from 1.5rem */
   text-align: right;
   color: #666;
   font-size: 0.9rem;
 }
 
-/* Meditation Player - Modern Style */
-.library-player-container {
-  margin-top: 6rem; /* Substantial gap between table and player */
-  border-top: 1px solid #333;
-  padding-top: 3rem;
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem; /* Reduced from 2rem */
+  padding: 0.25rem 0; /* Reduced from 1rem */
+}
+
+.pagination__pages {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pagination__btn {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.pagination__btn:hover:not(:disabled) {
+  background: #333;
+  border-color: #646cff;
+}
+
+.pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination__page-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #888;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination__page-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pagination__page-btn--active {
+  background: #646cff;
+  color: #fff;
+  border-color: #646cff;
+  font-weight: 600;
+}
+
+.pagination__page-btn--active:hover {
+  background: #5d56f3;
 }
 
 .meditation-player {
   background: #1a1a1a;
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.5rem; /* Reduced from 2rem */
   border: 1px solid #333;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .meditation-player__title {
-  font-size: 1.5rem;
+  font-size: 1.25rem; /* Reduced from 1.5rem to save vertical space */
   font-weight: 600;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem; /* Reduced from 2rem */
   color: #fff;
   line-height: 1.4;
   /* Truncate if exceptionally long to keep player compact */
@@ -604,14 +663,14 @@ body {
 }
 
 .meditation-player__media {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem; /* Reduced from 1.5rem */
   display: flex;
   justify-content: center;
 }
 
 .meditation-player__video {
   width: 100%;
-  max-width: 640px;
+  max-width: 1100px; /* Much larger video player */
   border-radius: 8px;
   aspect-ratio: 16/9;
   background: #000;
@@ -619,7 +678,7 @@ body {
 
 .meditation-player__audio {
   width: 100%;
-  max-width: 500px;
+  max-width: 800px; /* Larger audio controls */
   filter: invert(0.9) hue-rotate(180deg); /* Modern dark look for default audio player controls */
 }
 

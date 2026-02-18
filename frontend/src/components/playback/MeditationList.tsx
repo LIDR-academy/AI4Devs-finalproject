@@ -9,7 +9,7 @@
  * - Responsive grid layout
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import MeditationRow, { MeditationRowProps } from './MeditationRow';
 
 export interface MeditationListProps {
@@ -19,6 +19,8 @@ export interface MeditationListProps {
   error?: string | null;
   className?: string;
 }
+
+const ITEMS_PER_PAGE = 5;
 
 /**
  * MeditationList Component
@@ -33,6 +35,8 @@ export const MeditationList: React.FC<MeditationListProps> = ({
   error = null,
   className = ''
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
   // Loading state
   if (isLoading) {
     return (
@@ -81,6 +85,17 @@ export const MeditationList: React.FC<MeditationListProps> = ({
     );
   }
 
+  // Pagination logic
+  const totalItems = meditations.length;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedMeditations = meditations.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Meditations list table
   return (
     <div 
@@ -98,7 +113,7 @@ export const MeditationList: React.FC<MeditationListProps> = ({
           </tr>
         </thead>
         <tbody>
-          {meditations.map((meditation) => (
+          {paginatedMeditations.map((meditation) => (
             <MeditationRow
               key={meditation.id}
               {...meditation}
@@ -108,6 +123,39 @@ export const MeditationList: React.FC<MeditationListProps> = ({
         </tbody>
       </table>
 
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <nav className="pagination" aria-label="Navegación de páginas">
+          <button 
+            className="pagination__btn"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Anterior
+          </button>
+          
+          <div className="pagination__pages">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`pagination__page-btn ${currentPage === page ? 'pagination__page-btn--active' : ''}`}
+                onClick={() => goToPage(page)}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+
+          <button 
+            className="pagination__btn"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Siguiente
+          </button>
+        </nav>
+      )}
+
       {/* Summary */}
       <div 
         className="meditation-list__summary"
@@ -115,7 +163,7 @@ export const MeditationList: React.FC<MeditationListProps> = ({
         aria-atomic="true"
       >
         <p className="meditation-list__count">
-          {meditations.length} {meditations.length === 1 ? 'meditación' : 'meditaciones'}
+          Mostrando {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} de {totalItems} {totalItems === 1 ? 'meditación' : 'meditaciones'}
         </p>
       </div>
     </div>
