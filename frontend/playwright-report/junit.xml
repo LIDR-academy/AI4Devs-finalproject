@@ -1,18 +1,188 @@
-<testsuites id="" name="" tests="5" failures="0" skipped="0" errors="0" time="26.880593">
-<testsuite name="playback\list-meditations.spec.ts" timestamp="2026-02-18T18:42:37.468Z" hostname="chromium" tests="2" failures="0" skipped="0" time="18.098" errors="0">
-<testcase name="Meditation Library - Listing › should display all meditations with correct state labels" classname="playback\list-meditations.spec.ts" time="8.7">
+<testsuites id="" name="" tests="75" failures="0" skipped="0" errors="0" time="244.369771">
+<testsuite name="ai-generation.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="chromium" tests="7" failures="0" skipped="0" time="69.931" errors="0">
+<testcase name="AI Generation Flow › should show loading state during AI text generation" classname="ai-generation.spec.ts" time="11.235">
 </testcase>
-<testcase name="Meditation Library - Listing › should show empty state message when no meditations are found" classname="playback\list-meditations.spec.ts" time="9.398">
+<testcase name="AI Generation Flow › should handle AI text generation errors gracefully" classname="ai-generation.spec.ts" time="15.781">
+</testcase>
+<testcase name="AI Generation Flow › should show loading state during AI image generation" classname="ai-generation.spec.ts" time="11.317">
+</testcase>
+<testcase name="AI Generation Flow › should display AI-generated image immediately after generation" classname="ai-generation.spec.ts" time="8.317">
+</testcase>
+<testcase name="AI Generation Flow › should update output type to VIDEO after AI image generation" classname="ai-generation.spec.ts" time="8.028">
+</testcase>
+<testcase name="AI Generation Flow › should disable generate buttons during any AI operation" classname="ai-generation.spec.ts" time="6.874">
+</testcase>
+<testcase name="AI Generation Flow › should preserve user text while showing AI-generated suggestions" classname="ai-generation.spec.ts" time="8.379">
 </testcase>
 </testsuite>
-<testsuite name="playback\play-meditation.spec.ts" timestamp="2026-02-18T18:42:37.468Z" hostname="chromium" tests="2" failures="0" skipped="0" time="18.18" errors="0">
-<testcase name="Meditation Library - Playback › should enable play button only for completed meditations" classname="playback\play-meditation.spec.ts" time="9.014">
+<testsuite name="manual-composition.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="chromium" tests="6" failures="0" skipped="0" time="31.281" errors="0">
+<testcase name="Manual Composition Flow › should display the meditation builder interface" classname="manual-composition.spec.ts" time="2.511">
 </testcase>
-<testcase name="Meditation Library - Playback › should load player when a meditation is selected" classname="playback\play-meditation.spec.ts" time="9.166">
+<testcase name="Manual Composition Flow › should preserve meditation text exactly as entered" classname="manual-composition.spec.ts" time="6.84">
+</testcase>
+<testcase name="Manual Composition Flow › should indicate PODCAST output type when no image is selected" classname="manual-composition.spec.ts" time="5.64">
+</testcase>
+<testcase name="Manual Composition Flow › should support very long meditation text" classname="manual-composition.spec.ts" time="6.092">
+</testcase>
+<testcase name="Manual Composition Flow › should clear text when user deletes it" classname="manual-composition.spec.ts" time="5.303">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve text with special characters and line breaks" classname="manual-composition.spec.ts" time="4.895">
 </testcase>
 </testsuite>
-<testsuite name="playback\playback-error.spec.ts" timestamp="2026-02-18T18:42:37.468Z" hostname="chromium" tests="1" failures="0" skipped="0" time="13.234" errors="0">
-<testcase name="Meditation Library - Error Handling › should show error message when playback fails with 409" classname="playback\playback-error.spec.ts" time="13.234">
+<testsuite name="media-preview.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="chromium" tests="7" failures="0" skipped="0" time="35.977" errors="0">
+<testcase name="Media Preview › should display music selector interface" classname="media-preview.spec.ts" time="5.16">
+</testcase>
+<testcase name="Media Preview › should display AI-generated image preview immediately after generation" classname="media-preview.spec.ts" time="6.273">
+</testcase>
+<testcase name="Media Preview › should show image preview with clearly visible content" classname="media-preview.spec.ts" time="3.728">
+</testcase>
+<testcase name="Media Preview › should allow removing AI-generated image" classname="media-preview.spec.ts" time="5.009">
+</testcase>
+<testcase name="Media Preview › should update output type when image is added or removed" classname="media-preview.spec.ts" time="4.719">
+</testcase>
+<testcase name="Media Preview › should handle missing or failed image previews gracefully" classname="media-preview.spec.ts" time="5.888">
+</testcase>
+<testcase name="Media Preview › should persist image preview state after page interactions" classname="media-preview.spec.ts" time="5.2">
+</testcase>
+</testsuite>
+<testsuite name="playback\list-meditations.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="chromium" tests="2" failures="0" skipped="0" time="6.345" errors="0">
+<testcase name="Meditation Library - Listing › should display all meditations with correct state labels" classname="playback\list-meditations.spec.ts" time="3.421">
+</testcase>
+<testcase name="Meditation Library - Listing › should show empty state message when no meditations are found" classname="playback\list-meditations.spec.ts" time="2.924">
+</testcase>
+</testsuite>
+<testsuite name="playback\play-meditation.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="chromium" tests="2" failures="0" skipped="0" time="11.863" errors="0">
+<testcase name="Meditation Library - Playback › should enable play button only for completed meditations" classname="playback\play-meditation.spec.ts" time="6.252">
+</testcase>
+<testcase name="Meditation Library - Playback › should load player when a meditation is selected" classname="playback\play-meditation.spec.ts" time="5.611">
+</testcase>
+</testsuite>
+<testsuite name="playback\playback-error.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="chromium" tests="1" failures="0" skipped="0" time="8.436" errors="0">
+<testcase name="Meditation Library - Error Handling › should show error message when playback fails with 409" classname="playback\playback-error.spec.ts" time="8.436">
+</testcase>
+</testsuite>
+<testsuite name="ai-generation.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="firefox" tests="7" failures="0" skipped="0" time="91.684" errors="0">
+<testcase name="AI Generation Flow › should show loading state during AI text generation" classname="ai-generation.spec.ts" time="13.435">
+</testcase>
+<testcase name="AI Generation Flow › should handle AI text generation errors gracefully" classname="ai-generation.spec.ts" time="19.596">
+</testcase>
+<testcase name="AI Generation Flow › should show loading state during AI image generation" classname="ai-generation.spec.ts" time="15.109">
+</testcase>
+<testcase name="AI Generation Flow › should display AI-generated image immediately after generation" classname="ai-generation.spec.ts" time="13.55">
+</testcase>
+<testcase name="AI Generation Flow › should update output type to VIDEO after AI image generation" classname="ai-generation.spec.ts" time="16.133">
+</testcase>
+<testcase name="AI Generation Flow › should disable generate buttons during any AI operation" classname="ai-generation.spec.ts" time="5.366">
+</testcase>
+<testcase name="AI Generation Flow › should preserve user text while showing AI-generated suggestions" classname="ai-generation.spec.ts" time="8.495">
+</testcase>
+</testsuite>
+<testsuite name="manual-composition.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="firefox" tests="6" failures="0" skipped="0" time="62.453" errors="0">
+<testcase name="Manual Composition Flow › should display the meditation builder interface" classname="manual-composition.spec.ts" time="14.357">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve meditation text exactly as entered" classname="manual-composition.spec.ts" time="12.368">
+</testcase>
+<testcase name="Manual Composition Flow › should indicate PODCAST output type when no image is selected" classname="manual-composition.spec.ts" time="11.629">
+</testcase>
+<testcase name="Manual Composition Flow › should support very long meditation text" classname="manual-composition.spec.ts" time="5.738">
+</testcase>
+<testcase name="Manual Composition Flow › should clear text when user deletes it" classname="manual-composition.spec.ts" time="5.618">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve text with special characters and line breaks" classname="manual-composition.spec.ts" time="12.743">
+</testcase>
+</testsuite>
+<testsuite name="media-preview.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="firefox" tests="7" failures="0" skipped="0" time="96.586" errors="0">
+<testcase name="Media Preview › should display music selector interface" classname="media-preview.spec.ts" time="19.131">
+</testcase>
+<testcase name="Media Preview › should display AI-generated image preview immediately after generation" classname="media-preview.spec.ts" time="12.998">
+</testcase>
+<testcase name="Media Preview › should show image preview with clearly visible content" classname="media-preview.spec.ts" time="14.501">
+</testcase>
+<testcase name="Media Preview › should allow removing AI-generated image" classname="media-preview.spec.ts" time="13.454">
+</testcase>
+<testcase name="Media Preview › should update output type when image is added or removed" classname="media-preview.spec.ts" time="14.944">
+</testcase>
+<testcase name="Media Preview › should handle missing or failed image previews gracefully" classname="media-preview.spec.ts" time="10.613">
+</testcase>
+<testcase name="Media Preview › should persist image preview state after page interactions" classname="media-preview.spec.ts" time="10.945">
+</testcase>
+</testsuite>
+<testsuite name="playback\list-meditations.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="firefox" tests="2" failures="0" skipped="0" time="32.374" errors="0">
+<testcase name="Meditation Library - Listing › should display all meditations with correct state labels" classname="playback\list-meditations.spec.ts" time="22.827">
+</testcase>
+<testcase name="Meditation Library - Listing › should show empty state message when no meditations are found" classname="playback\list-meditations.spec.ts" time="9.547">
+</testcase>
+</testsuite>
+<testsuite name="playback\play-meditation.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="firefox" tests="2" failures="0" skipped="0" time="22.673" errors="0">
+<testcase name="Meditation Library - Playback › should enable play button only for completed meditations" classname="playback\play-meditation.spec.ts" time="8.828">
+</testcase>
+<testcase name="Meditation Library - Playback › should load player when a meditation is selected" classname="playback\play-meditation.spec.ts" time="13.845">
+</testcase>
+</testsuite>
+<testsuite name="playback\playback-error.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="firefox" tests="1" failures="0" skipped="0" time="17.31" errors="0">
+<testcase name="Meditation Library - Error Handling › should show error message when playback fails with 409" classname="playback\playback-error.spec.ts" time="17.31">
+</testcase>
+</testsuite>
+<testsuite name="ai-generation.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="webkit" tests="7" failures="0" skipped="0" time="35.552" errors="0">
+<testcase name="AI Generation Flow › should show loading state during AI text generation" classname="ai-generation.spec.ts" time="5.402">
+</testcase>
+<testcase name="AI Generation Flow › should handle AI text generation errors gracefully" classname="ai-generation.spec.ts" time="5.98">
+</testcase>
+<testcase name="AI Generation Flow › should show loading state during AI image generation" classname="ai-generation.spec.ts" time="5.086">
+</testcase>
+<testcase name="AI Generation Flow › should display AI-generated image immediately after generation" classname="ai-generation.spec.ts" time="5.057">
+</testcase>
+<testcase name="AI Generation Flow › should update output type to VIDEO after AI image generation" classname="ai-generation.spec.ts" time="4.788">
+</testcase>
+<testcase name="AI Generation Flow › should disable generate buttons during any AI operation" classname="ai-generation.spec.ts" time="4.283">
+</testcase>
+<testcase name="AI Generation Flow › should preserve user text while showing AI-generated suggestions" classname="ai-generation.spec.ts" time="4.956">
+</testcase>
+</testsuite>
+<testsuite name="manual-composition.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="webkit" tests="6" failures="0" skipped="0" time="22.314" errors="0">
+<testcase name="Manual Composition Flow › should display the meditation builder interface" classname="manual-composition.spec.ts" time="3.285">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve meditation text exactly as entered" classname="manual-composition.spec.ts" time="4.674">
+</testcase>
+<testcase name="Manual Composition Flow › should indicate PODCAST output type when no image is selected" classname="manual-composition.spec.ts" time="3.445">
+</testcase>
+<testcase name="Manual Composition Flow › should support very long meditation text" classname="manual-composition.spec.ts" time="3.269">
+</testcase>
+<testcase name="Manual Composition Flow › should clear text when user deletes it" classname="manual-composition.spec.ts" time="3.894">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve text with special characters and line breaks" classname="manual-composition.spec.ts" time="3.747">
+</testcase>
+</testsuite>
+<testsuite name="media-preview.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="webkit" tests="7" failures="0" skipped="0" time="33.487" errors="0">
+<testcase name="Media Preview › should display music selector interface" classname="media-preview.spec.ts" time="3.135">
+</testcase>
+<testcase name="Media Preview › should display AI-generated image preview immediately after generation" classname="media-preview.spec.ts" time="5.276">
+</testcase>
+<testcase name="Media Preview › should show image preview with clearly visible content" classname="media-preview.spec.ts" time="5.206">
+</testcase>
+<testcase name="Media Preview › should allow removing AI-generated image" classname="media-preview.spec.ts" time="4.826">
+</testcase>
+<testcase name="Media Preview › should update output type when image is added or removed" classname="media-preview.spec.ts" time="4.983">
+</testcase>
+<testcase name="Media Preview › should handle missing or failed image previews gracefully" classname="media-preview.spec.ts" time="4.903">
+</testcase>
+<testcase name="Media Preview › should persist image preview state after page interactions" classname="media-preview.spec.ts" time="5.158">
+</testcase>
+</testsuite>
+<testsuite name="playback\list-meditations.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="webkit" tests="2" failures="0" skipped="0" time="7.24" errors="0">
+<testcase name="Meditation Library - Listing › should display all meditations with correct state labels" classname="playback\list-meditations.spec.ts" time="3.448">
+</testcase>
+<testcase name="Meditation Library - Listing › should show empty state message when no meditations are found" classname="playback\list-meditations.spec.ts" time="3.792">
+</testcase>
+</testsuite>
+<testsuite name="playback\play-meditation.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="webkit" tests="2" failures="0" skipped="0" time="7.057" errors="0">
+<testcase name="Meditation Library - Playback › should enable play button only for completed meditations" classname="playback\play-meditation.spec.ts" time="3.292">
+</testcase>
+<testcase name="Meditation Library - Playback › should load player when a meditation is selected" classname="playback\play-meditation.spec.ts" time="3.765">
+</testcase>
+</testsuite>
+<testsuite name="playback\playback-error.spec.ts" timestamp="2026-02-18T20:13:28.870Z" hostname="webkit" tests="1" failures="0" skipped="0" time="7.569" errors="0">
+<testcase name="Meditation Library - Error Handling › should show error message when playback fails with 409" classname="playback\playback-error.spec.ts" time="7.569">
 </testcase>
 </testsuite>
 </testsuites>

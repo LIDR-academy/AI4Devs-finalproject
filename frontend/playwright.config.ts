@@ -36,7 +36,7 @@ export default defineConfig({
   /* Shared settings for all the projects below */
   use: {
     /* Base URL for tests */
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.BASE_URL || 'http://localhost:3011',
     
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
@@ -64,12 +64,16 @@ export default defineConfig({
     },
   ],
 
-  // Commented out for manual dev server management
-  // Uncomment on CI where server auto-start is needed
   /* webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 120 * 1000,
   }, */
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3011',
+    reuseExistingServer: true,
+    timeout: 120 * 1000,
+  },
 });
