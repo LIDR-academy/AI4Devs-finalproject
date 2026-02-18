@@ -40,6 +40,7 @@
 - T-030-BACK: Get Validation Status Endpoint — DONE 2026-02-15 (13/13 tests: 8 unit + 5 integration, TDD ENRICH→RED→GREEN→REFACTOR complete, GET /api/parts/{id}/validation, ValidationService + validation router, job_id schema limitation documented)
 - T-031-FRONT: Real-Time Block Status Listener — DONE 2026-02-15 (24/24 tests: 4 supabase.client + 8 notification.service + 12 hook, TDD ENRICH→RED→GREEN(DI Refactor)→REFACTOR complete, Dependency Injection pattern, @supabase/supabase-js@^2.39.0)
 - T-032-FRONT: Validation Report Modal UI — DONE 2026-02-16 (34/35 tests: 26 component + 8 utils, TDD ENRICH→RED→GREEN→REFACTOR complete, React Portal, tabs keyboard nav ArrowLeft/Right, focus trap, ARIA accessibility, constants extraction, code refactored DRY)
+- DEVSECOPS AUDIT: Pre-Production Security & Containerization Assessment — DONE 2026-02-18 (15K+ words report, 2 🔴 critical blockers: hardcoded DB password + Redis no-auth, 8 🟡 medium improvements: resource limits + /ready endpoint + oversized images + CI/CD hardening, 16 ✅ correct items: multi-stage builds + non-root users + healthchecks + CORS restricted + structlog + CI/CD 5 jobs, 1 CVE axios 1.6.0 SSRF CVSS 5.3, Timeline 5-7 days critical fixes, Report: docs/DEVSECOPS-AUDIT-REPORT-2026-02-18.md)
 
 ## Test Counts
 - Backend: 70 passed, 1 skipped (T-030 validation 13 + T-029 enqueue 13 + validation report 13 + upload flow 6 + previous 25)
