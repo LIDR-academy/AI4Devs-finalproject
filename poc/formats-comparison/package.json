@@ -16,8 +16,6 @@
     "@react-three/fiber": "^8.15.0",
     "@react-three/drei": "^9.92.0",
     "three": "^0.160.0",
-    "@thatopen/components": "^1.0.24",
-    "@thatopen/fragments": "^1.0.15",
     "zustand": "^4.4.7",
     "recharts": "^2.10.3"
   },

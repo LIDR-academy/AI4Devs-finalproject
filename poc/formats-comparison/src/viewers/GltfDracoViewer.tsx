@@ -5,7 +5,7 @@
  * Uses @react-three/fiber and @react-three/drei.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, Suspense } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Grid, Stats } from '@react-three/drei';
 import { useBenchmark, formatMetrics } from '../hooks/useBenchmark';
@@ -16,63 +16,62 @@ interface GltfDracoViewerProps {
   onMetricsUpdate?: (metrics: any) => void;
 }
 
-// Scene component with models
-function Scene({ files, onLoad }: { files: string[]; onLoad: () => void }) {
-  const { gl } = useThree();
-  const [models, setModels] = useState<any[]>([]);
-  const loadedCount = useRef(0);
+// Individual model component
+function Model({ url }: { url: string }) {
+  console.log('Loading model:', url);
+  const gltf = useGLTF(url);
+  const { camera, controls } = useThree();
   
   useEffect(() => {
-    const loadModels = async () => {
-      const loadedModels: any[] = [];
+    console.log('Model loaded:', gltf);
+    if (gltf.scene) {
+      // Rhino Z-up → glTF Y-up: Rotate -90° on X axis
+      gltf.scene.rotation.x = -Math.PI / 2;
       
-      for (let i = 0; i < files.length; i++) {
-        try {
-          const { scene } = await useGLTF.preload(files[i]);
-          
-          // Position models in grid
-          const gridSize = Math.ceil(Math.sqrt(files.length));
-          const spacing = 5;
-          const x = (i % gridSize) * spacing;
-          const z = Math.floor(i / gridSize) * spacing;
-          
-          scene.position.set(x, 0, z);
-          loadedModels.push(scene);
-          
-          loadedCount.current++;
-          
-          if (loadedCount.current === files.length) {
-            onLoad();
-          }
-        } catch (error) {
-          console.error(`Failed to load ${files[i]}:`, error);
-        }
+      // Calculate bounding box
+      const box = new THREE.Box3().setFromObject(gltf.scene);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      
+      console.log('Model bounds:', box);
+      console.log('Model center:', center);
+      console.log('Model size:', size);
+      
+      // Center camera on model
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const fov = (camera as THREE.PerspectiveCamera).fov * (Math.PI / 180);
+      let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+      cameraZ *= 1.5; // Add some padding
+      
+      // Position camera
+      camera.position.set(center.x + cameraZ, center.y + cameraZ, center.z + cameraZ);
+      camera.lookAt(center);
+      
+      // Update controls target
+      if (controls) {
+        (controls as any).target.copy(center);
+        (controls as any).update();
       }
       
-      setModels(loadedModels);
-    };
-    
-    loadModels();
-  }, [files, onLoad]);
+      // Add basic material if missing
+      gltf.scene.traverse((child: any) => {
+        if (child.isMesh && !child.material) {
+          child.material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+        }
+      });
+    }
+  }, [gltf, camera, controls]);
   
-  // Update draw calls metrics
-  useEffect(() => {
-    if (!gl || models.length === 0) return;
-    
-    const interval = setInterval(() => {
-      const info = gl.info;
-      console.log('Draw calls:', info.render.calls);
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [gl, models]);
-  
+  return <primitive object={gltf.scene} />;
+}
+
+// Loading fallback
+function Loader() {
   return (
-    <>
-      {models.map((model, idx) => (
-        <primitive key={idx} object={model} />
-      ))}
-    </>
+    <mesh>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color="orange" />
+    </mesh>
   );
 }
 
@@ -97,13 +96,16 @@ export function GltfDracoViewer({ files, onMetricsUpdate }: GltfDracoViewerProps
     // Start benchmark when component mounts
     startBenchmark();
     parseStartRef.current = performance.now();
-  }, [startBenchmark]);
-  
-  const handleSceneLoad = () => {
-    const parseEnd = performance.now();
-    measureParse(parseStartRef.current, parseEnd);
-    markFirstRender();
-  };
+    
+    // Mark as loaded after delay
+    const timer = setTimeout(() => {
+      const parseEnd = performance.now();
+      measureParse(parseStartRef.current, parseEnd);
+      markFirstRender();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [startBenchmark, measureParse, markFirstRender]);
   
   const formattedMetrics = formatMetrics(metrics);
   
@@ -114,17 +116,18 @@ export function GltfDracoViewer({ files, onMetricsUpdate }: GltfDracoViewerProps
         ref={canvasRef}
         shadows
         dpr={[1, 2]}
-        camera={{ position: [15, 15, 15], fov: 50 }}
+        camera={{ position: [5, 5, 5], fov: 50 }}
         style={{ background: '#1a1a1a' }}
       >
         {/* Lighting */}
-        <ambientLight intensity={0.4} />
+        <ambientLight intensity={0.5} />
         <directionalLight
           position={[10, 20, 10]}
           intensity={1}
           castShadow
           shadow-mapSize={[1024, 1024]}
         />
+        <pointLight position={[-10, -10, -10]} intensity={0.5} />
         
         {/* Grid */}
         <Grid
@@ -137,8 +140,12 @@ export function GltfDracoViewer({ files, onMetricsUpdate }: GltfDracoViewerProps
           fadeStrength={1}
         />
         
-        {/* Models */}
-        <Scene files={files} onLoad={handleSceneLoad} />
+        {/* Model with Suspense */}
+        <Suspense fallback={<Loader />}>
+          {files.map((file) => (
+            <Model key={file} url={file} />
+          ))}
+        </Suspense>
         
         {/* Controls */}
         <OrbitControls makeDefault />
@@ -209,11 +216,4 @@ export function GltfDracoViewer({ files, onMetricsUpdate }: GltfDracoViewerProps
       </div>
     </div>
   );
-}
-
-// Preload utility
-export function preloadGltfModels(urls: string[]) {
-  urls.forEach(url => {
-    useGLTF.preload(url);
-  });
 }

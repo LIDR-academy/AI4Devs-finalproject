@@ -87,19 +87,19 @@ class RhinoToGltfExporter:
             
             # Convertir a trimesh
             vertices = []
-            for i in range(rhino_mesh.Vertices.Count):
+            for i in range(len(rhino_mesh.Vertices)):
                 v = rhino_mesh.Vertices[i]
                 vertices.append([v.X, v.Y, v.Z])
             
             faces = []
-            for i in range(rhino_mesh.Faces.Count):
-                f = rhino_mesh.Faces[i]
-                if f.IsQuad:
+            for i in range(len(rhino_mesh.Faces)):
+                f = rhino_mesh.Faces[i]  # Tuple like (0, 3, 2, 1) for quad or (0, 1, 2) for tri
+                if len(f) == 4:  # Quad
                     # Quad → 2 triángulos
-                    faces.append([f.A, f.B, f.C])
-                    faces.append([f.C, f.D, f.A])
-                else:
-                    faces.append([f.A, f.B, f.C])
+                    faces.append([f[0], f[1], f[2]])
+                    faces.append([f[2], f[3], f[0]])
+                elif len(f) == 3:  # Triangle
+                    faces.append([f[0], f[1], f[2]])
             
             if not vertices or not faces:
                 continue
@@ -179,7 +179,8 @@ class RhinoToGltfExporter:
             print("  ⚠️  Copying without Draco compression...")
             import shutil
             shutil.copy(input_path, output_path)
-            return
+            file_size_mb = output_path.stat().st_size / (1024 * 1024)
+            return file_size_mb
         
         # Build command
         cmd = [
