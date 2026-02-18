@@ -196,6 +196,157 @@ Primero realiza los siguientes cambios en la documentación generada hasta ahora
 
 **Prompt 1:**
 
+```
+Eres un Asistente IA de planificación técnica para el proyecto Adresles. Tu tarea es **planificar paso a paso** el desarrollo del **Caso de Uso 1 (CU-01): Procesar Compra desde eCommerce (Mock)**.
+
+---
+
+## CONTEXTO OBLIGATORIO
+
+Antes de planificar, debes leer y entender:
+
+1. **Adresles_Business.md** – Especialmente:
+   - Sección 2.2: Caso de Uso 1 (flujo principal, FA-1 Modo Regalo, FA-2 Compra Tradicional)
+   - Sección 2.1: Actores del sistema
+   - Sección 3: Modelado de datos (tablas order, user, order_address, gift_recipient)
+   - Sección 4.5: Estructura del proyecto
+   - Sección 4.8: Diagrama de secuencia "Procesar Compra Mock"
+
+2. **memory-bank/README.md** – Para entender:
+   - Flujo de trabajo con OpenSpec
+   - ADRs relevantes
+   - Referencias a specs (backend-standards, data-model)
+
+3. **memory-bank/project-context/overview.md** – Para el alcance MVP (mock vs real)
+
+---
+
+## REGLAS DE PLANIFICACIÓN
+
+### 1. Metodología paso a paso
+
+- **No avances** al siguiente paso hasta que el anterior esté claro y validado.
+- Presenta cada paso con: objetivo, entregables, criterios de aceptación y dependencias.
+- Si un paso es ambiguo o tiene varias opciones, **detente y pregunta** antes de continuar.
+
+### 2. Preguntas en cualquier momento
+
+- **Puedes y debes preguntar** cuando:
+  - Falte información en la documentación
+  - Haya ambigüedad técnica o de negocio
+  - Existan varias alternativas razonables
+  - Necesites priorizar entre flujos (principal, FA-1, FA-2)
+  - Tengas dudas sobre el alcance MVP (qué mockear vs qué implementar real)
+- Indica explícitamente: *"Antes de continuar, necesito aclarar: [pregunta]"*.
+- No asumas decisiones importantes sin confirmar.
+
+### 3. Integración con OpenSpec
+
+- **Desde el momento en que se vaya a escribir código**, la planificación debe incluir el uso de **OpenSpec**.
+- El flujo de implementación será:
+  1. Crear un change con `openspec new change` (ej: `cu01-procesar-compra-mock`)
+  2. Crear artefactos en orden: proposal → specs → design → tasks
+  3. Implementar siguiendo las tareas con `openspec apply`
+  4. Archivar el change al completar
+- Los artefactos deben alinearse con:
+  - `openspec/specs/backend-standards.mdc`
+  - `openspec/specs/data-model.md`
+  - Estructura del monorepo en `Adresles_Business.md` sección 4.5
+
+---
+
+## ESTRUCTURA DEL PLAN QUE DEBES GENERAR
+
+### Fase 0: Validación de contexto (antes de planificar)
+
+1. Confirmar que has leído los documentos indicados.
+2. Resumir en 3–5 líneas qué hace el CU-01 y qué actores intervienen.
+3. Preguntar si hay restricciones adicionales (plazos, prioridades, tecnologías).
+
+### Fase 1: Descomposición del CU-01
+
+1. Listar los **flujos** a implementar:
+   - Flujo principal (modo Adresles sin dirección)
+   - FA-1: Modo Regalo (con subflujos FA-1.1 y FA-1.2)
+   - FA-2: Compra Tradicional con dirección
+2. Para cada flujo, identificar:
+   - Pasos del caso de uso
+   - Entidades/tablas afectadas
+   - Integraciones externas (Google Maps, OpenAI, etc.)
+   - Dependencias con CU-02 y CU-03
+3. Preguntar si se prioriza algún flujo para el MVP o si se implementan todos en paralelo.
+
+### Fase 2: Plan de implementación por capas
+
+1. **Infraestructura y datos**
+   - Migraciones/creación de tablas en Supabase
+   - Configuración DynamoDB (si aplica para conversaciones)
+   - Seeds o datos de prueba para mock
+2. **Backend (API NestJS)**
+   - Endpoint(s) para recibir JSON mock de compra
+   - Servicios: Orders, Users, Conversations
+   - Lógica de orquestación (crear Order, buscar/crear User, iniciar conversación)
+3. **Worker y conversaciones**
+   - Integración con CU-02 (obtención de dirección por IA)
+   - Cola BullMQ y procesamiento asíncrono
+4. **Simulación eCommerce**
+   - Mock de actualización de dirección (log estructurado o notificación)
+5. **Frontend Mock UI (si aplica)**
+   - Interfaz para introducir JSON de compra manualmente
+
+Para cada capa, indica:
+- Tareas concretas
+- Orden de implementación
+- Dependencias entre tareas
+
+### Fase 3: Integración con OpenSpec
+
+1. Definir el **nombre del change** (kebab-case): ej. `cu01-procesar-compra-mock`.
+2. Describir el contenido de cada artefacto:
+   - **Proposal**: Resumen del CU-01, alcance, flujos incluidos
+   - **Specs**: Contratos API, DTOs, esquemas de JSON mock
+   - **Design**: Diagramas de secuencia actualizados, decisiones técnicas
+   - **Tasks**: Lista de tareas ordenadas por dependencias
+3. Indicar en qué momento se ejecuta `openspec new change` y cuándo se pasa a `openspec apply`.
+
+### Fase 4: Criterios de aceptación y verificación
+
+1. Definir cómo se verificará cada flujo:
+   - Flujo principal: JSON mock → Order creado → Conversación iniciada → Dirección confirmada → Order SYNCED
+   - FA-1: JSON con `is_gift: true` → Dos conversaciones paralelas → Dirección regalado → SYNCED
+   - FA-2: JSON con `mode: "tradicional"` → Order ADDRESS_CONFIRMED → Conversación informativa → SYNCED
+2. Proponer tests (unitarios, integración, E2E) según backend-standards.
+
+---
+
+## ENTREGABLES ESPERADOS
+
+1. **Plan de desarrollo** en formato estructurado (markdown o lista numerada).
+2. **Puntos de decisión** explícitos donde debas preguntar al usuario.
+3. **Checklist de OpenSpec** integrado en el plan (cuándo crear change, artefactos, apply, archive).
+4. **Orden de implementación** claro, con dependencias entre tareas.
+
+---
+
+## RECORDATORIO FINAL
+
+- Avanza **paso a paso**; no saltes fases.
+- **Pregunta** siempre que haya duda o ambigüedad.
+- **Integra OpenSpec** desde el inicio de la fase de implementación.
+- Usa la documentación del proyecto como fuente de verdad; si algo contradice el Business.md, señálalo y pregunta.
+```
+
+**Respuestas a la planificación del plan:**
+
+- **Priorización**: Flujo principal + FA-2 (tradicional) primero; FA-1 (modo regalo) en fase posterior.
+- **Store mock**: Store mínimo en seeds (validar existencia).
+- **Cálculo de fee**: Implementar fórmula de pricing (2.5%-5%) en creación de Order.
+- **FA-1 (Regalo)**: Change separado `cu01-fa1-modo-regalo` para mantener scope manejable.
+
+> **Resumen de objetivos alcanzados:** Se generó el plan CU-01, artefactos OpenSpec (proposal, specs mock-orders-api, design, tasks) y la implementación base: endpoint POST /api/mock/orders, DTOs, servicios NestJS, Worker BullMQ, Mock UI y seeds.
+
+---
+
 **Prompt 2:**
 
 **Prompt 3:**

@@ -1,0 +1,248 @@
+// Prisma schema for Adresles - Supabase (PostgreSQL)
+// Data model from Adresles_Business.md Section 3.2-3.3
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EcommerceStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum StorePlatform {
+  WOOCOMMERCE
+  PRESTASHOP
+  MAGENTO
+  SHOPIFY
+}
+
+enum StoreStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_SETUP
+}
+
+enum OrderStatus {
+  PENDING_ADDRESS
+  ADDRESS_CONFIRMED
+  SYNCED
+  FAILED
+  CANCELLED
+}
+
+enum RecipientType {
+  BUYER
+  GIFT_RECIPIENT
+}
+
+enum ConfirmedVia {
+  CONVERSATION
+  MANUAL
+  ECOMMERCE_SYNC
+}
+
+enum GiftRecipientStatus {
+  PENDING_CONTACT
+  CONTACTED
+  ADDRESS_RECEIVED
+  COMPLETED
+}
+
+enum ConversationType {
+  INFORMATION
+  GET_ADDRESS
+  REGISTER
+  GIFT_NOTIFICATION
+  SUPPORT
+}
+
+enum ConversationStatus {
+  ACTIVE
+  WAITING_USER
+  COMPLETED
+  ESCALATED
+  TIMEOUT
+}
+
+enum UserType {
+  BUYER
+  RECIPIENT
+}
+
+model Ecommerce {
+  id             String    @id @default(uuid())
+  taxId          String    @unique @map("tax_id")
+  legalName      String    @map("legal_name")
+  commercialName String?   @map("commercial_name")
+  email          String
+  phone          String?
+  country        String
+  billingAddress Json?    @map("billing_address")
+  trialEndsAt    DateTime? @map("trial_ends_at")
+  status         EcommerceStatus @default(ACTIVE)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  stores Store[]
+}
+
+model Store {
+  id               String       @id @default(uuid())
+  ecommerceId      String       @map("ecommerce_id")
+  url              String       @unique
+  name             String
+  platform         StorePlatform @default(WOOCOMMERCE)
+  defaultLanguage  String       @map("default_language") @default("es")
+  defaultCurrency  String       @map("default_currency") @default("EUR")
+  timezone         String       @default("Europe/Madrid")
+  logoUrl          String?      @map("logo_url")
+  status           StoreStatus  @default(ACTIVE)
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  ecommerce Ecommerce @relation(fields: [ecommerceId], references: [id], onDelete: Cascade)
+  orders    Order[]
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  phone                String    @unique
+  phoneCountry         String    @map("phone_country") @default("ES")
+  firstName            String?   @map("first_name")
+  lastName             String?   @map("last_name")
+  email                String?
+  preferredLanguage    String?   @map("preferred_language")
+  isRegistered         Boolean   @default(false) @map("is_registered")
+  registeredAt         DateTime? @map("registered_at")
+  lastInteractionAt    DateTime? @map("last_interaction_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  orders   Order[]
+  addresses Address[]
+}
+
+model Address {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  label        String?
+  fullAddress  String   @map("full_address")
+  street       String
+  number       String?
+  block        String?
+  staircase    String?
+  floor        String?
+  door         String?
+  additionalInfo String? @map("additional_info")
+  postalCode   String   @map("postal_code")
+  city         String
+  province     String?
+  country      String
+  gmapsPlaceId String?  @map("gmaps_place_id")
+  latitude     Decimal? @db.Decimal(10, 8)
+  longitude    Decimal? @db.Decimal(11, 8)
+  isDefault    Boolean  @default(false) @map("is_default")
+  isDeleted    Boolean  @default(false) @map("is_deleted")
+  deletedAt    DateTime? @map("deleted_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id                  String      @id @default(uuid())
+  storeId             String      @map("store_id")
+  userId              String      @map("user_id")
+  externalOrderId     String      @map("external_order_id")
+  externalOrderNumber String?     @map("external_order_number")
+  totalAmount         Decimal     @map("total_amount") @db.Decimal(12, 2)
+  currency            String      @default("EUR")
+  feePercentage       Decimal     @map("fee_percentage") @db.Decimal(5, 2)
+  feeAmount           Decimal     @map("fee_amount") @db.Decimal(12, 2)
+  status              OrderStatus @default(PENDING_ADDRESS)
+  isGift              Boolean     @default(false) @map("is_gift")
+  itemsSummary        Json?       @map("items_summary")
+  webhookReceivedAt   DateTime    @map("webhook_received_at")
+  addressConfirmedAt  DateTime?   @map("address_confirmed_at")
+  syncedAt            DateTime?   @map("synced_at")
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+
+  store         Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderAddress  OrderAddress?
+  giftRecipient GiftRecipient?
+  conversations Conversation[]
+
+  @@unique([storeId, externalOrderId])
+  @@index([storeId, status])
+  @@index([userId])
+}
+
+model OrderAddress {
+  id               String       @id @default(uuid())
+  orderId          String       @unique @map("order_id")
+  sourceAddressId  String?      @map("source_address_id")
+  recipientType    RecipientType @map("recipient_type")
+  recipientName    String       @map("recipient_name")
+  recipientPhone   String       @map("recipient_phone")
+  fullAddress      String       @map("full_address")
+  street           String
+  number           String?
+  block            String?
+  staircase        String?
+  floor            String?
+  door             String?
+  additionalInfo    String?      @map("additional_info")
+  postalCode       String       @map("postal_code")
+  city             String
+  province         String?
+  country          String
+  gmapsPlaceId     String?      @map("gmaps_place_id")
+  confirmedAt      DateTime     @map("confirmed_at")
+  confirmedVia     ConfirmedVia @map("confirmed_via")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model GiftRecipient {
+  id        String             @id @default(uuid())
+  orderId   String             @unique @map("order_id")
+  firstName String             @map("first_name")
+  lastName  String             @map("last_name")
+  phone     String
+  note      String?
+  status    GiftRecipientStatus @default(PENDING_CONTACT)
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id                    String             @id @default(uuid())
+  orderId               String             @map("order_id")
+  userId                String             @map("user_id")
+  conversationType      ConversationType   @map("conversation_type")
+  userType              UserType           @map("user_type")
+  status                ConversationStatus @default(ACTIVE)
+  isRegisteredAdresles  Boolean?           @map("is_registered_adresles")
+  isRegisteredEcommerce Boolean?           @map("is_registered_ecommerce")
+  hasAddressAdresles    Boolean?           @map("has_address_adresles")
+  hasAddressEcommerce   Boolean?           @map("has_address_ecommerce")
+  startedAt             DateTime           @default(now()) @map("started_at")
+  completedAt           DateTime?          @map("completed_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([userId])
+}

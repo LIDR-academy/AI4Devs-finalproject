@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-10  
-> ⚠️ **Actualizado**: Casos de Uso redefinidos para MVP con enfoque Mock
+> **Última actualización**: 2026-02-18  
+> ⚠️ **Change en curso**: cu01-procesar-compra-mock (18/25 tareas)
 
 ## 📖 Inicio Rápido
 
@@ -59,7 +59,11 @@ Aquí se documentarán:
 
 ## 📝 Sesiones Pasadas
 
-_Se documentarán aprendizajes relevantes de sesiones futuras_
+| Fecha | Sesión | Estado |
+|-------|--------|--------|
+| [2026-02-18](./sessions/2026-02-18-cu01-progreso.md) | CU-01 Procesar Compra Mock | En progreso (18/25 tareas) |
+
+**Change activo**: `openspec/changes/cu01-procesar-compra-mock/` — Ver [tasks.md](../openspec/changes/cu01-procesar-compra-mock/tasks.md) para tareas pendientes.
 
 ## 🔄 Flujo de Trabajo
 
@@ -130,7 +134,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-10  
+**Última revisión**: 2026-02-18  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: Actualización v1.3 - MVP redefinido con enfoque mock  
+**Cambios recientes**: CU-01 implementación parcial - API mock, Worker, Mock UI operativos. Pendiente: DynamoDB, OpenAI, process-response, tests.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

@@ -192,9 +192,9 @@ rules:
     - Reference existing patterns before inventing new ones
     - Include scenarios for Windows path handling when dealing with file paths
     - Requirements involving paths must specify cross-platform behavior
-  tasks:
-    - Add Windows CI verification as a task when changes involve file paths
-    - Include cross-platform testing considerations
   design:
     - Document any platform-specific behavior or limitations
     - Prefer Node.js path module over string manipulation for paths
+  tasks:
+    - Add Windows CI verification as a task when changes involve file paths
+    - Include cross-platform testing considerations
