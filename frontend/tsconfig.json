@@ -22,7 +22,7 @@
 
     /* Paths */
     "baseUrl": ".",
-    "types": ["jest"],
+    "types": ["vitest/globals"],
     "paths": {
       "@/*": ["src/*"],
       "@api/*": ["src/api/*"],
