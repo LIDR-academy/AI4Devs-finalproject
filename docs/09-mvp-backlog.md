@@ -14,8 +14,8 @@ Selección estratégica de historias para cumplir con los objetivos del TFM en e
 ### MUST-HAVE (Prioridad Crítica - Core Loop)
 * **US-001:** Upload de archivo .3dm válido **[DONE]** ✅ (Ingesta)
 * **US-002:** Validación de errores (Nomenclatura/Geometría) **[DONE]** ✅ (El "Cerebro")
-* **US-005:** Dashboard de listado de piezas. (Gestión)
-* **US-010:** Visor 3D (Interacción geométrica). (Visualización)
+* **US-005:** Dashboard 3D Interactivo de Piezas. (Gestión + Visualización Espacial)
+* **US-010:** Visor 3D de Detalle (Interacción geométrica individual). (Profundización)
 * **US-007:** Cambio de Estado. (Ciclo de Vida)
 
 ### SHOULD-HAVE (Prioridad Alta - Soporte)
@@ -174,36 +174,288 @@ Este prompt es agnóstico a la tecnología. Para entender el stack (lenguajes, f
 
 ---
 
-### US-005: Dashboard de listado de piezas
-**User Story:** Como **BIM Manager**, quiero ver una lista paginada de todas las piezas con su estado actual y filtros rápidos, para tener una visión global del progreso sin esperar tiempos de carga excesivos.
+### US-005: Dashboard 3D Interactivo de Piezas
+**User Story:** Como **BIM Manager**, quiero visualizar todas las piezas del sistema en un canvas 3D interactivo con filtros en tiempo real, para tener una visión espacial global del progreso sin depender de herramientas CAD desktop.
+
+**Visión Técnica:** Dashboard inmersivo con Canvas Three.js donde cada pieza se representa por su geometría Low-Poly (~1000 triángulos) simplificada, coloreada por estado, en posición espacial real o grid automático. Sidebar persistente con filtros (tipología, estado, workshop) que actualiza el canvas en tiempo real. Click en pieza abre modal de detalle (US-010).
 
 **Criterios de Aceptación:**
-*   **Scenario 1 (Happy Path - Pagination):**
-    *   Given existen 150 piezas en el sistema.
-    *   When entro al Dashboard.
-    *   Then veo las primeras 50 piezas ordenadas por fecha reciente.
-    *   And veo controles "Página 1 de 3".
-    *   And al dar click en "Siguiente", carga la página 2 en <500ms.
-*   **Scenario 2 (Wait State - Empty Dashboard):**
-    *   Given no existen piezas iniciadas.
-    *   When entro al Dashboard.
-    *   Then veo un "Empty State" amigable invitando a subir el primer archivo.
-*   **Scenario 3 (Filtering):**
-    *   Given selecciono filtro "Workshop: Granollers".
-    *   When aplico el filtro.
-    *   Then la tabla solo muestra piezas de ese taller.
-    *   And el contador "Total Piezas" se actualiza al número filtrado.
+*   **Scenario 1 (Happy Path - 3D Rendering):**
+    *   Given existen 150 piezas en el sistema con geometría procesada.
+    *   When cargo el Dashboard (`/dashboard`).
+    *   Then veo un Canvas 3D fullscreen con 150 geometrías Low-Poly distribuidas espacialmente.
+    *   And cada pieza tiene color según estado (validated=azul, in_fabrication=naranja, completed=verde, etc.).
+    *   And puedo rotar la escena con mouse (OrbitControls), zoom con scroll, pan con Right-Click.
+    *   And hay un grid de referencia [100x100] para orientación espacial.
+    *   And el canvas mantiene >30 FPS en Chrome desktop (medido con DevTools Performance).
+
+*   **Scenario 2 (3D Interaction - Part Selection):**
+    *   Given estoy navegando el Canvas 3D.
+    *   When hago click en una geometría Low-Poly.
+    *   Then la pieza se resalta (emissive glow + opacity 1.0).
+    *   And aparece tooltip flotante con `iso_code` (ej: "SF-C12-D-001") encima de la pieza.
+    *   And se abre modal lateral (US-010) mostrando la geometría .glb completa (high-poly) para inspección detallada.
+    *   When cierro el modal, la pieza permanece seleccionada en el canvas (highlight persistente).
+
+*   **Scenario 3 (Filtering - Real-Time Canvas Update):**
+    *   Given el canvas muestra 150 piezas.
+    *   When selecciono filtro "Tipología: Capitel" en sidebar.
+    *   Then las piezas NO-capitel hacen fade-out (opacity 0.2, desaturadas).
+    *   And el contador "Mostrando X de Y piezas" se actualiza (ej: "Mostrando 23 de 150").
+    *   And la URL se actualiza a `/dashboard?tipologia=capitel` (deep-linking).
+    *   When refresco la página, el filtro permanece aplicado (persistencia via URL params).
+
+*   **Scenario 4 (Wait State - Empty Dashboard):**
+    *   Given no existen piezas en el sistema (tabla `blocks` vacía).
+    *   When cargo el Dashboard.
+    *   Then veo un Canvas 3D vacío con grid de referencia visible.
+    *   And un overlay centrado muestra: "📦 No hay piezas registradas aún" + botón "Subir Primera Pieza" → redirige a `/upload` (US-001).
+    *   And NO aparece error de Three.js en consola (empty state controlado).
+
+*   **Scenario 5 (Security - RLS Filtering en Canvas):**
+    *   Given soy usuario con rol `workshop` asignado a "Taller Granollers" (workshop_id=`123-abc`).
+    *   When cargo el Dashboard.
+    *   Then el canvas solo renderiza piezas con `workshop_id = '123-abc'` o `workshop_id IS NULL` (RLS aplicado en backend).
+    *   And NO veo geometrías de otros talleres (ni siquiera ocultas).
+    *   And el contador refleja solo mis piezas visibles (ej: "Mostrando 45 piezas").
+
+*   **Scenario 6 (Performance - LOD System):**
+    *   Given la cámara está alejada (distancia >50 units) de un grupo de piezas.
+    *   When navego con OrbitControls.
+    *   Then las geometrías distantes se renderizan con Low-Poly (ej: 500 triángulos).
+    *   When me acerco (distancia <20 units), las piezas cercanas cargan Mid-Poly (1000 triángulos).
+    *   And la transición entre LOD levels es imperceptible (sin pop-in visible).
+    *   And el framerate se mantiene >30 FPS durante navegación continua.
 
 **Desglose de Tickets Técnicos:**
 | ID Ticket | Título | Tech Spec | DoD |
 |-----------|--------|-----------|-----|
-| `T-030-FRONT` | **Dashboard Layout & Stats** | Layout principal con Sidebar de filtros y Grid de Stats (Zustand store para filtros globales). | Estructura visual responsive montada. |
-| `T-031-FRONT` | **Parts Table Component** | Implementación `TanStack Table`. Columnas sortables. Hook `useQuery` con key `['parts', page, filters]`. | Tabla renderiza datos mockeados con paginación UI. |
-| `T-032-BACK` | **List Parts Endpoint** | `GET /api/parts`. Query params: `page`, `limit`, `status`, `workshop`. Implementa offset pagination SQL. | Retorna JSON `{ data: [...], meta: { total, page } }`. |
-| `T-033-DB` | **Index Optimization** | Crear índices B-tree compuestos en columnas `status` y `workshop_id` de tabla `parts`. | `EXPLAIN ANALYZE` muestra uso de índice en queries filtradas. |
+| `T-0500-INFRA` | **Setup React Three Fiber Stack** | Instalar dependencias: `@react-three/fiber@^8.15`, `@react-three/drei@^9.92`, `three@^0.160`, `zustand@^4.4`. Configurar Vite para importar GLB assets. Añadir TypeScript types `@types/three`. | `package.json` actualizado, `npm install` sin errores, importaciones Three.js funcionan en componentes. |
+| `T-0501-BACK` | **List Parts with Geometry Metadata** | Modificar endpoint `GET /api/parts`. Query params: `limit` (default=ALL para canvas, no paginación), `status`, `tipologia`, `workshop`. Response incluye `low_poly_url` (URL S3 de GLB simplificado) + `bbox` (bounding box para posicionamiento). Aplicar RLS: usuarios workshop solo ven sus piezas. Schema Pydantic: `PartCanvasItem(id, iso_code, status, tipologia, low_poly_url, bbox, workshop_id)`. | Endpoint retorna JSON con `data: PartCanvasItem[]` (max 500 items). RLS funciona: workshop no ve otras piezas. Response <200KB incluso con 150 items. |
+| `T-0502-AGENT` | **Generate Low-Poly GLB from .3dm** | Añadir task Celery `generate_low_poly_glb(block_id)`. Usa `rhino3dm` para leer .3dm → Simplificar geometría a ~1000 triángulos (ej: decimación 90%) → Exportar a `.glb` → Subir a bucket S3 `processed-geometry/low-poly/`. Actualizar `blocks.low_poly_url` en DB. Ejecutar automáticamente tras validación exitosa (trigger en `status='validated'`). | Task exitoso genera GLB <500KB. Geometría simplificada visualmente reconocible. Campo `low_poly_url` poblado en DB tras procesamiento. |
+| `T-0503-DB` | **Add low_poly_url Column & Indexes** | `ALTER TABLE blocks ADD COLUMN low_poly_url TEXT NULL;`. Crear índices: `idx_blocks_canvas_query ON blocks(status, tipologia, workshop_id) WHERE is_archived=false;`. Índice GIN en `rhino_metadata` para búsquedas avanzadas futuras. | Columna existe. Query `SELECT id, low_poly_url, status FROM blocks WHERE status='validated'` usa índice (verificar con `EXPLAIN ANALYZE`). |
+| `T-0504-FRONT` | **Dashboard 3D Canvas Layout** | Componente `Dashboard3D.tsx` con layout: Sidebar izquierda (20% width, filtros Zustand) + Canvas derecha (80% width, fullscreen). Canvas con `<Canvas shadows dpr={[1,2]}>`, `<PerspectiveCamera position={[50,50,50]} />`, `<OrbitControls enableDamping />`. Lighting: `ambientLight` + `directionalLight` con sombras. Grid helper [100x100]. Stats panel flotante (esquina superior derecha) con "Mostrando X de Y piezas". | Canvas renderiza grid 3D vacío. OrbitControls funcionales (mouse + wheel). Sidebar visible con placeholder filtros. Stats panel reactivo a Zustand store. |
+| `T-0505-FRONT` | **3D Parts Scene with Low-Poly Meshes** | Componente `PartsScene.tsx` que recibe `parts: PartCanvasItem[]`. Para cada parte: `useGLTF(part.low_poly_url)` para cargar geometría. Calcular posición: Grid automático 10x10 con espaciado 5 units (futuro: leer `bbox` del metadata). Colorear mesh según `STATUS_COLORS[part.status]`. Click handler: `onClick={() => selectPart(part.id)}`. Hover: Mostrar tooltip con `<Html distanceFactor={10}>{iso_code}</Html>`. | Canvas muestra 50 geometrías Low-Poly cargadas desde URLs reales. Colores correctos por status. Click selecciona (emissive highlight). Tooltip aparece en hover. FPS >30 con 50 piezas. |
+| `T-0506-FRONT` | **Filters Sidebar & Zustand Store** | Store Zustand: `usePartsStore` con state `{ parts, filters, selectedId, isLoading }`. Actions: `setFilters(filters)` → re-fetch API + actualizar canvas, `selectPart(id)` → highlight + abrir modal. Sidebar con checkboxes: Tipología (capitel, columna, dovela, clave, imposta), Status (uploaded, validated, in_fabrication, completed), Workshop (dropdown multi-select). Al cambiar filtro, actualizar URL params (`?status=validated&tipologia=capitel`). | Sidebar checkboxes actualizan Zustand store. Canvas re-renderiza con filtros aplicados (fade-out piezas no-match). URL sincronizada con filtros. Recargar página mantiene filtros (leer de URL params en `useEffect`). |
+| `T-0507-FRONT` | **LOD System Implementation** | Envolver cada `<mesh>` en `<Lod distances={[0, 20, 50]}>`. Niveles: (1) <20 units: Mid-Poly (1000 tris), (2) 20-50 units: Low-Poly (500 tris), (3) >50 units: Bounding box proxy. Usar `useMemo` para cachear geometrías LOD (evitar recrear en cada render). Medir performance con DevTools: target >30 FPS con 150 piezas visibles. | LOD funcional: zoom-in carga más detalles, zoom-out simplifica. Transición imperceptible (sin pop-in). Performance: 30-60 FPS mantenido durante navegación continua. Memory usage <500MB con 150 piezas. |
+| `T-0508-FRONT` | **Part Selection & Modal Integration** | Al hacer `onClick` en geometría, ejecutar: (1) `selectPart(part.id)` en store → Actualizar mesh material con `emissive: STATUS_COLORS[part.status], emissiveIntensity: 0.4`. (2) Abrir `<PartDetailModal id={part.id} />` (componente de US-010) como overlay lateral derecho. Modal carga geometría .glb completa (high-poly) + metadata. Botón "Cerrar" oculta modal pero mantiene selección en canvas. | Click en pieza abre modal con geometría completa. Pieza seleccionada tiene glow en canvas. Cerrar modal no deselecciona. Click en otra pieza cambia selección (solo una activa). |
+| `T-0509-TEST-FRONT` | **3D Dashboard Integration Tests** | Vitest tests para: (1) Canvas renderiza cuando `parts.length > 0`. (2) Empty State aparece si `parts.length === 0`. (3) Click en mesh ejecuta `selectPart(id)` (mock Three.js raycasting). (4) Filtros actualizan query params en URL. (5) LOD system carga geometrías correctas según distancia (mock camera position). Mock `useGLTF` con fixtures. | 5 tests passing en `Dashboard3D.test.tsx`. Coverage >80% en componentes 3D. Test de performance: renderizar 150 mocks <2s. |
+| `T-0510-TEST-BACK` | **Canvas API Integration Tests** | Pytest tests para: (1) `GET /api/parts` retorna `low_poly_url` válida. (2) RLS: Usuario workshop solo ve sus piezas. (3) Filtro `status=validated` retorna solo validadas. (4) Response size <200KB con 150 items. (5) Query usa índice `idx_blocks_canvas_query` (`EXPLAIN ANALYZE`). | 5 tests passing en `tests/integration/test_parts_canvas.py`. Coverage >85% en endpoint `/api/parts`. |
 
-**Valoración:** 5 Story Points
-**Dependencias:** US-001
+**Contratos API (Backend ↔ Frontend):**
+```python
+# src/backend/schemas.py
+from pydantic import BaseModel, HttpUrl
+from typing import List, Optional, Literal
+
+BlockStatus = Literal["uploaded", "validated", "in_fabrication", "completed", "archived"]
+Tipologia = Literal["capitel", "columna", "dovela", "clave", "imposta"]
+
+class BoundingBox(BaseModel):
+    min: List[float]  # [x, y, z]
+    max: List[float]  # [x, y, z]
+
+class PartCanvasItem(BaseModel):
+    """Schema optimizado para renderizado 3D (sin payload pesado)"""
+    id: str
+    iso_code: str
+    status: BlockStatus
+    tipologia: Tipologia
+    low_poly_url: Optional[HttpUrl] = None  # NULL si aún no procesado
+    bbox: Optional[BoundingBox] = None      # Para posicionamiento espacial
+    workshop_id: Optional[str] = None
+    workshop_name: Optional[str] = None     # Denormalizado para filtros
+    
+class PartCanvasResponse(BaseModel):
+    data: List[PartCanvasItem]
+    meta: dict  # { total: int, filtered: int }
+```
+
+```typescript
+// src/frontend/src/types/parts.ts
+export type BlockStatus = "uploaded" | "validated" | "in_fabrication" | "completed" | "archived";
+export type Tipologia = "capitel" | "columna" | "dovela" | "clave" | "imposta";
+
+export interface BoundingBox {
+  min: [number, number, number];
+  max: [number, number, number];
+}
+
+export interface PartCanvasItem {
+  id: string;
+  iso_code: string;
+  status: BlockStatus;
+  tipologia: Tipologia;
+  low_poly_url?: string;  // URL del GLB Low-Poly
+  bbox?: BoundingBox;
+  workshop_id?: string;
+  workshop_name?: string;
+}
+
+export interface PartCanvasResponse {
+  data: PartCanvasItem[];
+  meta: {
+    total: number;
+    filtered: number;
+  };
+}
+
+export interface CanvasFilters {
+  status?: BlockStatus;
+  tipologia?: Tipologia;
+  workshop?: string;  // UUID
+}
+```
+
+**Código de Referencia (Implementación Core):**
+```typescript
+// src/frontend/src/components/Dashboard/Dashboard3D.tsx
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Grid, PerspectiveCamera } from '@react-three/drei';
+import { PartsScene } from './PartsScene';
+import { FiltersSidebar } from './FiltersSidebar';
+import { StatsPanel } from './StatsPanel';
+import { usePartsStore } from '@/stores/parts.store';
+
+export function Dashboard3D() {
+  const { parts, isLoading } = usePartsStore();
+  
+  if (isLoading) return <LoadingSpinner />;
+  if (parts.length === 0) return <EmptyStateOverlay />;
+  
+  return (
+    <div className="dashboard-3d h-screen flex">
+      <FiltersSidebar />
+      
+      <div className="flex-1 relative">
+        <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }}>
+          <PerspectiveCamera makeDefault position={[50, 50, 50]} fov={60} />
+          <OrbitControls enableDamping dampingFactor={0.05} />
+          
+          {/* Lighting */}
+          <ambientLight intensity={0.4} />
+          <directionalLight position={[10, 20, 10]} intensity={1} castShadow />
+          
+          {/* Spatial Reference */}
+          <Grid args={[100, 100]} cellColor="#6B7280" sectionColor="#374151" />
+          
+          {/* Parts Rendering */}
+          <PartsScene parts={parts} />
+        </Canvas>
+        
+        <StatsPanel />
+      </div>
+    </div>
+  );
+}
+```
+
+```typescript
+// src/frontend/src/components/Dashboard/PartsScene.tsx
+import { useGLTF } from '@react-three/drei';
+import { Lod, Html } from '@react-three/drei';
+import { PartCanvasItem } from '@/types/parts';
+import { usePartsStore } from '@/stores/parts.store';
+import { useMemo } from 'react';
+
+const STATUS_COLORS = {
+  uploaded: '#94A3B8',
+  validated: '#3B82F6',
+  in_fabrication: '#F59E0B',
+  completed: '#10B981',
+  archived: '#6B7280'
+};
+
+interface PartMeshProps {
+  part: PartCanvasItem;
+  position: [number, number, number];
+}
+
+function PartMesh({ part, position }: PartMeshProps) {
+  const { selectPart, selectedId } = usePartsStore();
+  const { scene } = useGLTF(part.low_poly_url || '/fallback.glb');
+  
+  const isSelected = selectedId === part.id;
+  const color = STATUS_COLORS[part.status];
+  
+  return (
+    <group position={position}>
+      <Lod distances={[0, 20, 50]}>
+        {/* LOD 0: Mid-Poly (<20 units) */}
+        <primitive 
+          object={scene.clone()} 
+          onClick={(e) => {
+            e.stopPropagation();
+            selectPart(part.id);
+          }}
+        >
+          <meshStandardMaterial 
+            color={color}
+            emissive={isSelected ? color : '#000000'}
+            emissiveIntensity={isSelected ? 0.4 : 0}
+            roughness={0.7}
+            metalness={0.3}
+          />
+        </primitive>
+        
+        {/* LOD 1: Low-Poly (20-50 units) */}
+        <mesh>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color={color} />
+        </mesh>
+        
+        {/* LOD 2: Bounding Box (>50 units) */}
+        <mesh>
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshBasicMaterial color={color} wireframe />
+        </mesh>
+      </Lod>
+      
+      {/* Tooltip */}
+      {isSelected && (
+        <Html distanceFactor={10}>
+          <div className="bg-gray-900 text-white px-2 py-1 rounded text-sm">
+            {part.iso_code}
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+export function PartsScene({ parts }: { parts: PartCanvasItem[] }) {
+  // Grid Layout: 10x10 con espaciado 5 units
+  const positions = useMemo(() => 
+    parts.map((_, idx) => [
+      (idx % 10) * 5,
+      0,
+      Math.floor(idx / 10) * 5
+    ] as [number, number, number]),
+    [parts]
+  );
+  
+  return (
+    <>
+      {parts.map((part, idx) => (
+        <PartMesh key={part.id} part={part} position={positions[idx]} />
+      ))}
+    </>
+  );
+}
+```
+
+**Valoración:** 13 Story Points (antes: 5 SP, +8 por complejidad 3D + LOD + procesamiento geometría)  
+**Dependencias:** 
+- **Técnica:** US-001 (geometría .3dm disponible), US-010 (modal de detalle reutiliza visor 3D)
+- **Infraestructura:** Bucket S3 `processed-geometry/low-poly/` configurado, Celery worker para procesamiento
+- **DB:** Tabla `blocks` con columna `low_poly_url`, índices optimizados
+- **Frontend:** Three.js expertise, DevTools para performance profiling
+
+**Riesgos & Mitigaciones:**
+1. **Performance con 150+ piezas:** Mitigación: LOD system + budget 1000 tris/pieza + frustum culling automático Three.js.
+2. **Latencia de carga GLB:** Mitigación: Lazy loading (solo cargar geometrías visibles en viewport), Progressive loading.
+3. **Complejidad testing 3D:** Mitigación: Mock `useGLTF`, snapshot testing de scene structure.
+4. **Simplificación degrada reconocibilidad:** Mitigación: Validación manual con arquitectos en sprint review, ajustar decimación si necesario.
 
 ---
 
