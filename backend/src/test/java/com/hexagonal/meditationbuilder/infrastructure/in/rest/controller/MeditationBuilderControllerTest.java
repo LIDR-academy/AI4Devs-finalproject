@@ -40,7 +40,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 
  * Uses @WebMvcTest for isolated controller testing.
  */
-@WebMvcTest(MeditationBuilderController.class)
+@WebMvcTest(
+    controllers = MeditationBuilderController.class,
+    properties = "media.preview.base-url=http://localhost:8081/api/media/preview"
+)
 @Import({GlobalExceptionHandler.class, CompositionDtoMapper.class})
 @DisplayName("MeditationBuilderController Tests")
 class MeditationBuilderControllerTest {
@@ -60,6 +63,9 @@ class MeditationBuilderControllerTest {
     @MockBean
     private GenerateImageUseCase generateImageUseCase;
 
+    @MockBean
+    private Clock clock; // Required by PlaybackExceptionHandler scanned by WebMvcTest
+
     private UUID compositionId;
     private MeditationComposition sampleComposition;
     private Clock fixedClock;
@@ -67,6 +73,9 @@ class MeditationBuilderControllerTest {
     @BeforeEach
     void setUp() {
         fixedClock = Clock.fixed(Instant.parse("2024-01-15T10:00:00Z"), ZoneId.of("UTC"));
+        when(clock.instant()).thenReturn(fixedClock.instant());
+        when(clock.getZone()).thenReturn(fixedClock.getZone());
+        
         compositionId = UUID.randomUUID();
         sampleComposition = MeditationComposition.create(
                 compositionId, 

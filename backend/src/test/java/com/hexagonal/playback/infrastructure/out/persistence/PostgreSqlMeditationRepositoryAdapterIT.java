@@ -111,7 +111,8 @@ class PostgreSqlMeditationRepositoryAdapterIT {
         // Given
         UUID meditationId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
-        insertMeditation(meditationId, userId, "Test Meditation", Instant.now(), "COMPLETED", "http://audio.url", "http://video.url", "http://subs.url");
+        // A meditation is either AUDIO or VIDEO. Testing AUDIO here as a representative format.
+        insertMeditation(meditationId, userId, "Test Meditation", Instant.now(), "COMPLETED", "http://audio.url", null, "http://subs.url");
 
         // When
         Optional<Meditation> result = adapter.findByIdAndUserId(meditationId, userId);
@@ -124,7 +125,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
         assertThat(result.get().processingState()).isEqualTo(ProcessingState.COMPLETED);
         assertThat(result.get().mediaUrls()).isNotNull();
         assertThat(result.get().mediaUrls().audioUrl()).isEqualTo("http://audio.url");
-        assertThat(result.get().mediaUrls().videoUrl()).isEqualTo("http://video.url");
+        assertThat(result.get().mediaUrls().videoUrl()).isNull();
         assertThat(result.get().mediaUrls().subtitlesUrl()).isEqualTo("http://subs.url");
     }
 
@@ -300,6 +301,14 @@ class PostgreSqlMeditationRepositoryAdapterIT {
     // Helper method to insert test data
     private void insertMeditation(UUID meditationId, UUID userId, String title, Instant createdAt, 
                                    String status, String audioUrl, String videoUrl, String subtitlesUrl) {
+        String mediaType = "AUDIO";
+        String mainUrl = audioUrl;
+        
+        if (audioUrl == null && videoUrl != null) {
+            mediaType = "VIDEO";
+            mainUrl = videoUrl;
+        }
+
         jdbcTemplate.update(
             """
             INSERT INTO generation.meditation_output 
@@ -311,8 +320,12 @@ class PostgreSqlMeditationRepositoryAdapterIT {
             meditationId, userId, title, 
             java.sql.Timestamp.from(createdAt),  // Convert Instant to Timestamp for JDBC compatibility
             status,
-            audioUrl, videoUrl, subtitlesUrl,
-            UUID.randomUUID(), UUID.randomUUID().toString(), audioUrl != null ? "AUDIO" : "VIDEO"
+            mainUrl, backgroundImageUrl(videoUrl), subtitlesUrl,
+            UUID.randomUUID(), UUID.randomUUID().toString(), mediaType
         );
+    }
+
+    private String backgroundImageUrl(String videoUrl) {
+        return videoUrl != null ? "http://background.url" : null;
     }
 }

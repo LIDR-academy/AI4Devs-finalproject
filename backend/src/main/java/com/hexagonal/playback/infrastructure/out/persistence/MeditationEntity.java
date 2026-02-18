@@ -52,13 +52,14 @@ public class MeditationEntity {
     }
 
     public MeditationEntity(UUID meditationId, UUID userId, String narrationScriptText, 
-                           Instant createdAt, String status, String outputMediaUrl, 
+                           Instant createdAt, String status, String mediaType, String outputMediaUrl, 
                            String backgroundImageUrl, String subtitleUrl) {
         this.meditationId = meditationId;
         this.userId = userId;
         this.narrationScriptText = narrationScriptText;
         this.createdAt = createdAt;
         this.status = status;
+        this.mediaType = mediaType;
         this.outputMediaUrl = outputMediaUrl;
         this.backgroundImageUrl = backgroundImageUrl;
         this.subtitleUrl = subtitleUrl;

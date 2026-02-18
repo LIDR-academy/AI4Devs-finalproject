@@ -69,6 +69,7 @@ public class EntityToDomainMapper {
     private MediaUrls buildMediaUrls(MeditationEntity entity) {
         String outputUrl = entity.getOutputMediaUrl();
         String subtitlesUrl = entity.getSubtitleUrl();
+        String backgroundImageUrl = entity.getBackgroundImageUrl();
 
         if (isEmpty(outputUrl)) {
             return null;
@@ -81,6 +82,11 @@ public class EntityToDomainMapper {
             audioUrl = outputUrl;
         } else if ("VIDEO".equalsIgnoreCase(entity.getMediaType())) {
             videoUrl = outputUrl;
+        }
+
+        // Return MediaUrls or null if both are missing
+        if (isEmpty(audioUrl) && isEmpty(videoUrl)) {
+            return null;
         }
 
         // MediaUrls constructor validates that at least one URL is provided
