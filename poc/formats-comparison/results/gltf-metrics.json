@@ -1,0 +1,9 @@
+{
+  "files_processed": 0,
+  "total_faces_original": 0,
+  "total_faces_decimated": 0,
+  "size_original_mb": 0,
+  "size_gltf_mb": 0,
+  "size_draco_mb": 0,
+  "duplicates_detected": []
+}
