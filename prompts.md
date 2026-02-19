@@ -7173,3 +7173,180 @@ Ejecutado audit completo DevSecOps pre-producción con scope 3 Dockerfiles + doc
 
 ---
 
+
+## Workflow Step 1: Enrichment — T-0500-INFRA
+**Fecha:** 2026-02-19
+**Ticket:** T-0500-INFRA (US-005 Dashboard 3D Interactivo)
+**Rol:** Senior Software Architect + Tech Lead + Technical Writer
+
+### Objetivo
+Generar el Contrato Técnico completo de T-0500-INFRA (Setup React Three Fiber Stack) como blueprint para TDD-Red. Definir sin escribir código de implementación.
+
+### Inputs Consumidos
+- `docs/09-mvp-backlog.md` → Sección US-005 + T-0500-INFRA criterios aceptación
+- `memory-bank/systemPatterns.md` → Patrones arquitectónicos existentes
+- `memory-bank/techContext.md` → Stack + librerías + decisiones previas
+- `memory-bank/productContext.md` → Contexto producto + estado implementación
+- `docs/US-005/T-0500-INFRA-TechnicalSpec.md` → Spec previa (referencia)
+- `src/frontend/package.json`, `vite.config.ts`, `tsconfig.json`, `vitest.config.ts`, `src/test/setup.ts`, `src/vite-env.d.ts` → Estado actual archivos
+
+### Outputs Generados
+- `docs/US-005/T-0500-INFRA-TechnicalSpec.md` → Reemplazado con spec completa (10 secciones)
+- `memory-bank/activeContext.md` → Actualizado a T-0500-INFRA en fase Enrichment
+
+### Decisiones Capturadas
+- `three@0.160.0` pinned (versión validada en POC 2026-02-18)
+- `zustand@4.4.7` incluido en INFRA aunque lo usa T-0506 (consolidar deps)
+- Mock Canvas como `<div data-testid="three-canvas">` (jsdom no implementa WebGL)
+- Chunk `three-vendor` separado (Three.js 600KB no debe bloquear páginas sin 3D)
+
+### Test Cases Definidos: 14
+- Happy Path: T1-T6
+- Edge Cases: T7-T9
+- Security/Errores: T10-T11
+- Integration: T12-T14
+
+**Estado:** ✅ **ENRICHMENT COMPLETADO** — Listo para TDD-Red (Step 2)
+
+## Workflow Step 2: TDD-Red — T-0500-INFRA
+**Fecha:** 2026-02-19
+**Ticket:** T-0500-INFRA (US-005 Dashboard 3D Interactivo)
+**Rol:** QA Automation Engineer + Software Architect
+
+### Objetivo
+Escribir tests que fallen (RED) como blueprint para la implementación de T-0500-INFRA.
+
+### Test File Creado
+- `src/frontend/src/test/T-0500-INFRA.test.tsx`
+
+### Estructura de Tests (9 casos)
+- **T2 (3 tests):** Canvas, useGLTF, OrbitControls exportados desde sus paquetes
+- **T13 (2 tests):** Canvas mock renderiza `<div data-testid="three-canvas">`, useGLTF mock devuelve `{scene, nodes, materials}`
+- **T4 (4 tests):** Stubs parts.store, parts types, dashboard3d.constants, usePartsSpatialLayout importables
+
+### Error RED Confirmado
+```
+Error: Failed to resolve import "@react-three/fiber" from "src/test/T-0500-INFRA.test.tsx". Does the file exist?
+Test Files: 1 failed | Tests: 0 (collection error)
+```
+
+### Suite Existente: Sin Regresiones
+```
+Test Files  7 passed (7)
+Tests       77 passed (77)
+```
+
+### Comando de Ejecución
+```bash
+docker compose run --rm frontend bash -c "npm install && npx vitest run src/test/T-0500-INFRA.test.tsx --reporter=verbose"
+```
+
+**Estado:** 🔴 **TDD-RED COMPLETADO** — Listo para implementación (GREEN phase)
+
+---
+
+## 030 - T-0500-INFRA: TDD Green Phase
+**Fecha:** 2026-02-19
+**Ticket:** T-0500-INFRA — Setup React Three Fiber Stack
+**Fase:** TDD-GREEN — Implementación mínima para pasar los tests
+
+**Prompt Original:**
+> Eres un experto en TDD y desarrollo frontend con React Three Fiber.
+> Estás en la fase GREEN del TDD Cycle para el ticket T-0500-INFRA.
+>
+> Objetivo: Escribir la implementación MÍNIMA necesaria para que los tests pasen (GREEN). Nada más.
+>
+> Implementar:
+> 1. package.json — añadir @react-three/fiber@^8.15, @react-three/drei@^9.92, three@^0.160, zustand@^4.4.7, @types/three@^0.160
+> 2. vite.config.ts — assetsInclude GLB/GLTF, manualChunks three-vendor, resolve.alias @
+> 3. tsconfig.json — types: ["vitest/globals", "@testing-library/jest-dom", "three"]
+> 4. vite-env.d.ts — declare module '*.glb' y '*.gltf'
+> 5. vitest.config.ts — resolve.alias @ + coverage.include Dashboard/stores/hooks
+> 6. setup.ts — vi.mock @react-three/fiber (Canvas→div[data-testid=three-canvas]) + vi.mock @react-three/drei (useGLTF stub)
+> 7. Stubs: stores/parts.store.ts, types/parts.ts, constants/dashboard3d.constants.ts, hooks/usePartsSpatialLayout.ts, components/Dashboard/index.ts
+
+**Implementación:**
+- `package.json`: +4 deps (`@react-three/fiber`, `@react-three/drei`, `three`, `zustand`) +1 devDep (`@types/three`)
+- `vite.config.ts`: `assetsInclude ['**/*.glb','**/*.gltf']`, `manualChunks {'three-vendor': [...]}`, `resolve.alias {'@': path.resolve(__dirname, './src')}`
+- `tsconfig.json`: `types` array → `"three"` (sin prefijo `@types/`, TypeScript lo resuelve solo)
+- `vite-env.d.ts`: `declare module '*.glb'` + `declare module '*.gltf'`
+- `vitest.config.ts`: `resolve.alias {'@': ...}` + `coverage.include`
+- `setup.ts`: `vi.mock('@react-three/fiber', ...)` + `vi.mock('@react-three/drei', ...)`
+- Stubs: 5 archivos con `export {};`
+- `src/components/Dashboard/.gitkeep`: directorio creado
+
+**Lección aprendida:** `docker compose run --rm` usa volúmenes anónimos efímeros — `node_modules` no persiste entre runs. Usar `docker exec <running-container>` cuando el servicio ya está levantado.
+
+**Resultado final:**
+```
+Test Files  1 passed (1)   ← T-0500-INFRA.test.tsx
+     Tests  10 passed (10)  ← T2(3) + T13(2) + T4(5) ✅ GREEN
+```
+Existing suite: 7 files, 77 tests — todos pasan ✅
+
+**Estado:** ✅ **TDD-GREEN COMPLETADO** — T-0500-INFRA listo para DoD check
+
+---
+
+## 031 - T-0500-INFRA: TDD Refactor Phase & Ticket Close
+**Fecha:** 2026-02-19
+**Ticket:** T-0500-INFRA — Setup React Three Fiber Stack
+**Fase:** TDD-REFACTOR + Cierre de ticket
+
+**Prompt Original:**
+> Actúa como Tech Lead y Documentation Manager.
+> El código para T-0500-INFRA funciona y los tests pasan (VERDE).
+> Ahora debemos limpiar el código y documentar el cierre.
+> Instrucciones: (1) Refactor para mejorar legibilidad, (2) Anti-regresión make test-front,
+> (3) Actualizar docs/09-mvp-backlog.md, productContext.md, activeContext.md,
+> progress.md, systemPatterns.md, techContext.md, prompts.md.
+
+**Refactors aplicados:**
+- `T-0500-INFRA.test.tsx`: Actualizado header de 🔴 RED a ✅ DONE con cobertura real
+- Setup.ts, stubs, configs: ya estaban limpios — sin cambios
+
+**Documentación actualizada:**
+- `docs/09-mvp-backlog.md` → T-0500-INFRA marcado `[DONE 2026-02-19]`, DoD actualizado
+- `memory-bank/techContext.md` → Sección "3D Visualization (NEW — T-0500-INFRA)" añadida, "Planned" limpiado
+- `memory-bank/productContext.md` → US-005 T-0500-INFRA añadido en Completed Features, roadmap actualizado
+- `memory-bank/systemPatterns.md` → Nuevo patrón "Three.js / WebGL jsdom Mock Pattern" documentado
+- `memory-bank/activeContext.md` → DoD status actualizado, T-0500-INFRA en Recently Completed
+- `memory-bank/progress.md` → T-0500-INFRA registrado con fecha
+
+**Resultado anti-regresión:**
+```
+Test Files  8 passed (8)
+     Tests  87 passed (87)   ← 77 existentes + 10 T-0500-INFRA ✅
+```
+
+**Estado:** ✅ **T-0500-INFRA CERRADO** — Listo para AUDITORÍA
+
+---
+
+## 032 - T-0500-INFRA: Auditoría Final (Step 5/5)
+**Fecha:** 2026-02-19
+**Ticket:** T-0500-INFRA — Setup React Three Fiber Stack
+**Fase:** AUDITORÍA FINAL — Cierre definitivo
+
+**Prompt Original:**
+> Actúa como Lead QA Engineer, Tech Lead y Documentation Manager.
+> Estamos en Step 5/5: Auditoría Final (Post-TDD).
+> Realiza una auditoría exhaustiva de código, tests y documentación para garantizar que
+> T-0500-INFRA cumple todos los criterios de aceptación.
+
+**Hallazgos del audit:**
+- BLOCKER resuelto: Stale RED-phase inline comments en T-0500-INFRA.test.tsx limpiados
+  (comentarios de "Falla porque..." + "Cannot find module..." eliminados — ya no aplican)
+- Contratos API: N/A (ticket pure infrastructure, sin endpoints nuevos)
+- SQL migrations: N/A (T-0503-DB los implementa)
+- Env vars: N/A (sin nuevas variables de entorno)
+
+**Resultado final:**
+```
+Test Files  8 passed (8)
+     Tests  87 passed (87)  ← 0 failures, 0 regressions ✅
+```
+
+**Decisión:** ✅ APROBADO — Listo para merge a develop/main
+
+**Estado:** ✅ **T-0500-INFRA AUDITADO Y CERRADO**

@@ -116,11 +116,26 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   - Test utilities: resetSupabaseClient() for test isolation
   - Full test coverage (24 tests: 4 client + 8 notification + 12 hook, 0 regression)
 
+- ✅ **T-032: Validation Report Modal** (Frontend UI complete)
+  - React Portal modal with tabbed layout (Nomenclature / Geometry / Metadata)
+  - Keyboard navigation: ArrowLeft/Right for tabs, ESC to close
+  - Full ARIA accessibility (role=dialog, aria-modal, focus trap)
+  - Utils: groupErrorsByCategory, formatValidatedAt, getErrorCountForCategory
+  - Full test coverage (34 tests: 26 component + 8 utils, 0 regression)
+
+**US-005: Dashboard 3D Interactivo de Piezas (IN PROGRESS)**
+- ✅ **T-0500-INFRA: React Three Fiber Stack Setup** (Foundation complete)
+  - Dependencies: @react-three/fiber@^8.15, @react-three/drei@^9.92, three@^0.160, zustand@^4.4.7
+  - Vite: GLB/GLTF asset support, `three-vendor` chunk (code splitting), `@` path alias
+  - jsdom mocks: Canvas → `<div data-testid="three-canvas">`, useGLTF → `{ scene, nodes, materials }`
+  - Stubs: parts.store.ts, types/parts.ts, dashboard3d.constants.ts, usePartsSpatialLayout.ts, Dashboard/index.ts
+  - Test coverage: 10/10 tests passing (T2 imports + T13 mock + T4 stubs)
+
 ### 🔄 In Progress
-- T-032: Validation Report Visualizer (Frontend)
+- US-005 T-0503-DB: Add low_poly_url column & indexes (next)
 
 ### 📋 Next Milestones
-- US-005: Dashboard with parts listing
-- US-010: 3D Web Viewer (Three.js)
+- US-005: Dashboard 3D (T-0503-DB → T-0501-BACK → T-0504-FRONT → T-0505-FRONT → ...)
+- US-010: 3D Web Viewer (Three.js) — stack already installed via T-0500-INFRA
 - US-007: Lifecycle state machine
 - US-013: Authentication (Supabase Auth)

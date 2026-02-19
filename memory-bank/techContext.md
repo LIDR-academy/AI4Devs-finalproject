@@ -73,9 +73,15 @@
   - **Limitation**: DataTransfer API incomplete, no drag & drop event simulation
   - **Workaround**: Tests focus on DOM structure, not interaction (see T-001-FRONT)
 
+### 3D Visualization (NEW — T-0500-INFRA)
+- **@react-three/fiber** ^8.15.0 - React renderer for Three.js
+- **@react-three/drei** ^9.92.0 - Three.js helpers (useGLTF, OrbitControls, Html, etc.)
+- **three** ^0.160.0 - 3D graphics engine (bundled as `three-vendor` chunk ~600KB)
+- **zustand** ^4.4.7 - Lightweight global state management (parts store, filters)
+- **@types/three** ^0.160.0 (devDep) - TypeScript types for Three.js
+- **jsdom mock strategy**: `vi.mock('@react-three/fiber')` + `vi.mock('@react-three/drei')` in setup.ts replaces WebGL with testable DOM elements (see systemPatterns.md)
+
 ### Planned (Not Yet Implemented)
-- **Zustand** - Global state management
-- **Three.js** - 3D visualization for .3dm files
 - **TanStack Query** - Server state management
 
 ## Infrastructure
