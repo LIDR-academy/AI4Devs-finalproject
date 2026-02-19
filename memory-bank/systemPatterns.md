@@ -192,6 +192,34 @@ def get_celery_client() -> Celery:
   - **Issue**: Alpine Linux (musl) causes fatal JavaScript memory errors with jsdom
   - **Solution**: Use glibc-based images (Debian/Ubuntu) for frontend testing
 
+### Three.js / WebGL jsdom Mock Pattern (T-0500-INFRA)
+**Problem**: `@react-three/fiber` Canvas requires a real WebGL context. jsdom has no WebGL → tests crash at collection time.
+
+**Solution**: Global `vi.mock()` in `src/test/setup.ts` (applied before every test file):
+
+```typescript
+// setup.ts
+vi.mock('@react-three/fiber', () => ({
+  Canvas: ({ children }) =>
+    React.createElement('div', { 'data-testid': 'three-canvas' }, children),
+  useFrame: vi.fn(),
+  useThree: vi.fn(() => ({ camera: {}, scene: {}, gl: {} })),
+}));
+
+vi.mock('@react-three/drei', () => ({
+  useGLTF: vi.fn(() => ({ scene: {}, nodes: {}, materials: {} })),
+  OrbitControls: vi.fn(() => null),
+  Html: vi.fn(({ children }) => React.createElement('div', null, children)),
+}));
+```
+
+**Rules**:
+- All Three.js mocks live in `setup.ts` only — never in individual test files
+- Canvas mock always uses `data-testid="three-canvas"` for queryability
+- useGLTF mock always returns `{ scene, nodes, materials }` shape
+- `vi.mock()` is automatically hoisted — import order doesn't matter
+- **Docker tip**: Use `docker exec <running-container>` for tests; `--rm` containers lose node_modules
+
 ## Frontend Architecture Patterns
 
 ### Dependency Injection Pattern for Services (T-031-FRONT)
