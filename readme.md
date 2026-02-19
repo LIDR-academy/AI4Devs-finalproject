@@ -2011,7 +2011,216 @@ A continuación se presentan 3 historias de usuario principales basadas en los c
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-**Pull Request 1**
+### **Pull Request 1: Implementación Completa de la Infraestructura del Proyecto Adresles**
+
+#### 📋 Información General
+
+- **Rama origen**: `finalproject-SVL`
+- **Rama destino**: `main`
+- **Autor**: Sergio Valdueza Lozano
+- **Fecha**: 10 de febrero de 2026
+- **Tipo de cambio**: Feature - Infraestructura inicial del proyecto
+- **Estado**: ✅ Merged
+- **Commits incluidos**: 11 commits
+- **Link**: [Ver PR completa](./PR%2020260210.md)
+
+#### 🎯 Resumen Ejecutivo
+
+Esta Pull Request establece **la base completa del proyecto Adresles**. Incluye toda la documentación arquitectural, infraestructura de desarrollo con OPENSPEC, sistema de memoria persistente (Memory-Bank), y definición exhaustiva del producto.
+
+**Impacto**: Representa la fase de **planificación y diseño completada** del proyecto, sentando las bases técnicas, arquitecturales y de proceso para las futuras implementaciones del MVP.
+
+#### 📊 Estadísticas de Cambios
+
+```
+93 archivos modificados
+19,857 líneas añadidas (+)
+43 líneas eliminadas (-)
+```
+
+**Distribución por Categorías**:
+
+| Categoría | Archivos | Líneas | Descripción |
+|-----------|----------|--------|-------------|
+| **OPENSPEC (Skills & Commands)** | 42 | ~7,500 | Framework de desarrollo con workflows |
+| **Memory-Bank** | 13 | ~3,000 | Sistema de documentación persistente |
+| **Documentación de Negocio** | 2 | ~2,400 | Diseño completo del sistema y prompts |
+| **Especificaciones Técnicas** | 10 | ~4,200 | Standards, API specs, modelos de datos |
+| **README & Configuración** | 3 | ~2,400 | Documentación principal del proyecto |
+| **Infraestructura** | 23 | ~350 | .gitignore, configs, templates |
+
+#### 🚀 Principales Cambios Implementados
+
+##### 1️⃣ Implementación de OPENSPEC (Framework de Desarrollo)
+
+OPENSPEC es un framework de desarrollo dirigido por especificaciones que estructura el trabajo en artifacts (proposal → specs → design → tasks → implementation).
+
+**Archivos principales**:
+- `.cursor/skills/openspec-*/SKILL.md` (7 skills)
+- `.cursor/commands/opsx-*.md` (7 comandos)
+- `openspec/config.yaml` (configuración central)
+- `openspec/schemas/my-workflow/` (templates y schemas)
+
+**Beneficios**:
+- ✅ **Consistencia**: Workflow estandarizado para todos los desarrollos
+- ✅ **Trazabilidad**: Cada cambio documentado desde propuesta hasta implementación
+- ✅ **Productividad**: Comandos reutilizables (`/opsx:new`, `/opsx:continue`, `/opsx:apply`)
+- ✅ **Calidad**: Verificación sistemática con `/opsx:verify` antes de archivar cambios
+
+##### 2️⃣ Memory-Bank (Sistema de Contexto Persistente)
+
+Sistema de documentación modular diseñado para que sesiones de IA conserven contexto del proyecto sin tener que releer documentos de 2,000+ líneas.
+
+**Estructura**:
+```
+memory-bank/
+├── README.md (índice maestro)
+├── project-context/ (overview, tech-stack, domain-glossary)
+├── architecture/ (4 ADRs - Decisiones Arquitecturales)
+├── patterns/ (patrones emergentes)
+└── references/ (navegación temática)
+```
+
+**Impacto**: Reduce tiempo de onboarding de nuevas sesiones de IA de ~10 minutos a ~2 minutos.
+
+##### 3️⃣ Documentación de Negocio (Adresles_Business.md)
+
+Documento maestro de **2,170 líneas** que contiene el diseño completo del sistema en 4 fases:
+1. **Fase 1**: Investigación y Análisis (Lean Canvas, User Journeys, Pricing)
+2. **Fase 2**: Casos de Uso (3 casos con diagramas UML)
+3. **Fase 3**: Modelado de Datos (Modelo E-R, diccionario de datos, políticas de retención)
+4. **Fase 4**: Diseño de Alto Nivel (Arquitectura C4, diagramas de secuencia, API endpoints, CI/CD)
+
+**Contenido destacado**:
+- 🎨 Diagramas C4 (niveles 1-3)
+- 🗂️ Modelo E-R completo: 9 entidades principales
+- 📡 42 API Endpoints documentados por módulo
+- 🔄 8 Diagramas de Secuencia
+- 🏗️ Estructura del Proyecto: Arquitectura modular DDD (5 bounded contexts)
+
+##### 4️⃣ Especificaciones Técnicas (openspec/specs/)
+
+| Archivo | Líneas | Propósito |
+|---------|--------|-----------|
+| `backend-standards.mdc` | 1,327 | Principios DDD, SOLID, arquitectura hexagonal, testing |
+| `frontend-standards.mdc` | 638 | Componentes React, Next.js, TypeScript, UX patterns |
+| `data-model.md` | 284 | Modelo de datos detallado (Supabase + DynamoDB) |
+| `api-spec-example.yml` | 1,093 | Especificación OpenAPI 3.0 de ejemplo |
+| `development_guide.md` | 220 | Guía de desarrollo para nuevos contribuidores |
+
+##### 5️⃣ Actualización Masiva del README.md
+
+De un README básico de ~76 líneas a un **documento completo de 2,019 líneas** que incluye:
+- ✅ Ficha del Proyecto
+- ✅ Descripción General (objetivo, características, diseño UX)
+- ✅ Arquitectura del Sistema
+- ✅ Modelo de Datos
+- ✅ Especificación de la API
+- ✅ 3 Historias de Usuario detalladas
+
+##### 6️⃣ Configuración del Repositorio
+
+- `.gitignore` (294 líneas) - Seguridad y prevención de commits accidentales
+- `prompts.md` (351 líneas) - Trazabilidad de uso de IA
+- Configuraciones de `.cursor/` y `.claude/` para trabajo con IA
+
+#### 🎯 Decisiones Arquitecturales Clave (ADRs)
+
+Esta PR documenta **4 decisiones arquitecturales fundamentales**:
+
+**ADR-001: Monolito Modular vs Microservicios**
+- ✅ **Decisión**: Monolito modular con 5 bounded contexts (DDD)
+- 🎯 **Razón**: Simplicidad en MVP, menor overhead operacional
+- 📦 **Módulos**: Conversations, Orders, Addresses, Users, Stores
+
+**ADR-002: Arquitectura DB Híbrida (Supabase + DynamoDB)**
+- ✅ **Decisión**: Supabase para datos relacionales + DynamoDB para mensajes
+- 🎯 **Razón**: PostgreSQL ideal para entidades + DynamoDB para alta volumetría
+- 🔐 **Ventaja**: RLS (Row Level Security) nativo en Supabase para multi-tenancy
+
+**ADR-003: NestJS como Framework Backend**
+- ✅ **Decisión**: NestJS + TypeScript
+- 🎯 **Razón**: Arquitectura modular nativa, soporte DDD, inyección de dependencias
+- 🏗️ **Patrón**: Hexagonal architecture (Ports & Adapters)
+
+**ADR-004: OpenAI GPT-4 para Conversaciones**
+- ✅ **Decisión**: OpenAI GPT-4 como motor conversacional
+- 🎯 **Razón**: Mejor comprensión de contexto, multiidioma nativo, "tools calling"
+- 🔄 **Alternativas consideradas**: Claude, Gemini, modelos open-source
+
+#### 🏗️ Estructura del Proyecto Definida
+
+```
+AI4Devs-finalproject/
+├── .cursor/                    # Configuración Cursor IDE
+│   ├── commands/              # Comandos reutilizables
+│   └── skills/                # Skills de OPENSPEC
+├── memory-bank/                # Sistema de contexto persistente
+│   ├── project-context/       # Síntesis del proyecto
+│   ├── architecture/          # ADRs
+│   └── references/            # Índices de navegación
+├── openspec/                   # Framework de desarrollo
+│   ├── schemas/               # Schemas de workflows
+│   └── specs/                 # Especificaciones técnicas
+├── Adresles_Business.md        # Documento maestro (2170 líneas)
+├── prompts.md                  # Histórico de prompts IA
+├── readme.md                   # Documentación principal
+└── .gitignore                  # Configuración Git
+```
+
+#### 🔍 Commits Incluidos (11 total)
+
+1. `70dabd4` - Format README tables and whitespace cleanup
+2. `1477a6d` - Actualización del README.md para Adresles
+3. `c64e07f` - Redefinición del MVP de Adresles con enfoque mock
+4. `03e8cf9` - Implementación del Memory-Bank para Adresles
+5. `94473cb` - Expand Adresles system design documentation
+6. `6be6b82` - Add initial documentation for Adresles system design
+7. `b899c94` - Enhance my-workflow schema.yaml with improved instructions
+8. `d22b9fa` - Integración de AI-SPECS de Lidr con OPENSPEC
+9. `5428af2` - Implementación y Configuración de OPEN SPEC
+10. `7eec2bb` - Remove WooCommerce plugin ignore rule from .gitignore
+11. `6d3544a` - Add comprehensive .gitignore file
+
+#### 💡 Impacto en el Proyecto
+
+**Corto Plazo (Inmediato)**:
+- ✅ Base documentada para empezar implementación
+- ✅ Workflow de desarrollo estructurado con OPENSPEC
+- ✅ Claridad total sobre arquitectura y decisiones técnicas
+
+**Medio Plazo (2-4 semanas)**:
+- ✅ Implementación del MVP siguiendo especificaciones
+- ✅ Consistencia en código gracias a standards definidos
+- ✅ Reducción de tiempo de desarrollo por contexto claro
+
+**Largo Plazo (Post-MVP)**:
+- ✅ Fácil onboarding de nuevos desarrolladores
+- ✅ Base sólida para migración a microservicios si es necesario
+- ✅ Documentación técnica que evoluciona con el código
+
+#### 🎓 Aprendizajes y Buenas Prácticas Aplicadas
+
+1. **Documentación como código**: Todos los documentos versionados con Git
+2. **ADRs para decisiones**: Registro del "por qué" de cada decisión arquitectural
+3. **Separación de concerns**: Documentación de negocio vs documentación técnica
+4. **Onboarding optimizado**: Memory-Bank permite arrancar rápido en nuevas sesiones
+5. **Workflow estructurado**: OPENSPEC garantiza consistencia en futuros desarrollos
+
+#### 🎯 Conclusión
+
+Esta Pull Request representa **la fundación completa del proyecto Adresles**. No contiene código de aplicación, pero establece:
+
+1. ✅ **Qué se va a construir** (Adresles_Business.md)
+2. ✅ **Cómo se va a construir** (OPENSPEC + Standards)
+3. ✅ **Por qué se toman ciertas decisiones** (ADRs en Memory-Bank)
+4. ✅ **Cómo mantener contexto** (Memory-Bank)
+
+**Este es el trabajo previo necesario para un desarrollo exitoso**. Invertir tiempo en diseño, arquitectura y documentación evita refactorizaciones costosas después.
+
+> 📄 **Documentación completa**: [PR 20260210.md](./PR%2020260210.md)
+
+---
 
 **Pull Request 2**
 
