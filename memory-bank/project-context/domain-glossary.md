@@ -1,8 +1,8 @@
 # Glosario del Dominio - Adresles
 
-> **Última actualización**: 2026-02-10  
+> **Última actualización**: 2026-02-19  
 > **Documento fuente**: [Adresles_Business.md - Glosario](../../Adresles_Business.md#glosario)  
-> ⚠️ **Actualizado**: Términos relacionados con MVP Mock añadidos
+> ⚠️ **Actualizado v1.4**: OrderStatus redefinido; nuevos términos Phone, OrderMode, PaymentType, AddressOrigin
 
 ---
 
@@ -79,6 +79,24 @@ Configuración específica de cada tienda (API keys, webhook URLs, opciones de p
 
 ### Datos y Modelos
 
+#### **Phone** (Entidad Teléfono)
+Entidad centralizada que almacena números de teléfono normalizados en formato E.164. Es la única fuente de verdad para datos telefónicos, referenciada por `User`, `GiftRecipient` y `OrderAddress`. Incluye desglose del número (prefijo país, número nacional, tipo de línea) y formatos de presentación.
+
+#### **Order Mode** (Modo de Pedido)
+Modo operativo de un pedido:
+- `TRADITIONAL`: El comprador introdujo dirección en el checkout del eCommerce (flujo estándar)
+- `ADRESLES`: El comprador usó checkout Adresles (solo nombre + teléfono, dirección se obtiene por IA)
+
+#### **Payment Type** (Tipo de Pago)
+Método de pago usado en el pedido: `CREDIT_CARD`, `PAYPAL`, `BIZUM`, `BANK_TRANSFER`, `CASH_ON_DELIVERY`, `OTHER`
+
+#### **Address Origin** (Origen de Dirección)
+Indica cómo se obtuvo la dirección confirmada en un `OrderAddress`:
+- `STORE_TRADITIONAL`: La tienda envió la dirección en el webhook (modo tradicional)
+- `STORE_ADRESLES`: La tienda envió una dirección de partida en modo Adresles
+- `ADRESLES_SAVED`: Se usó una dirección guardada en la libreta del usuario
+- `USER_CONVERSATION`: El usuario proporcionó la dirección durante la conversación con la IA
+
 #### **Libreta de Direcciones** (Address Book)
 Colección de direcciones guardadas por un usuario en Adresles, reutilizables en cualquier eCommerce integrado.
 
@@ -108,11 +126,11 @@ Rol del usuario en una conversación: `BUYER` (comprador) o `RECIPIENT` (destina
 
 #### **Order Status**
 Estados del pedido:
-- `PENDING_ADDRESS`: Esperando dirección del usuario
-- `ADDRESS_CONFIRMED`: Dirección confirmada por el usuario
-- `SYNCED`: Dirección sincronizada con eCommerce
-- `FAILED`: Error en el proceso
-- `CANCELLED`: Pedido cancelado
+- `PENDING_PAYMENT`: Webhook recibido, pago pendiente de confirmar
+- `PENDING_ADDRESS`: Pago confirmado, esperando dirección del usuario
+- `READY_TO_PROCESS`: Dirección confirmada, pendiente de sincronizar con eCommerce
+- `COMPLETED`: Dirección sincronizada con eCommerce exitosamente
+- `CANCELED`: Pedido cancelado (pago fallido o usuario cancela)
 
 #### **Conversation Status**
 Estados de la conversación:
@@ -231,7 +249,7 @@ Proceso donde el usuario puede optar por registrarse en Adresles después de com
 
 ---
 
-**Última actualización**: 2026-02-10  
+**Última actualización**: 2026-02-19  
 **Mantenido por**: Sergio  
-**Cambios v1.3**: Términos mock añadidos, estados actualizados para MVP sin reminders  
+**Cambios v1.4**: OrderStatus actualizado (nuevos estados PENDING_PAYMENT, READY_TO_PROCESS, COMPLETED, CANCELED); añadidos términos Phone, OrderMode, PaymentType, AddressOrigin  
 **Evoluciona con**: Cada nuevo término del dominio que surja durante el desarrollo

@@ -1,6 +1,6 @@
 # Tech Stack - Adresles
 
-> **Última actualización**: 2026-02-07  
+> **Última actualización**: 2026-02-19  
 > **Documento fuente**: [Adresles_Business.md - Fase 4](../../Adresles_Business.md#fase-4-diseño-de-alto-nivel)
 
 ---
@@ -14,9 +14,9 @@
 | **Node.js** | 20 LTS | Runtime JavaScript |
 | **NestJS** | 10.x | Framework backend (DDD-friendly) |
 | **TypeScript** | 5.x | Lenguaje principal |
-| **Prisma** | 5.x | ORM para Supabase (PostgreSQL) |
+| **Prisma** | 5.22.0 (pinned) | ORM para Supabase (PostgreSQL) |
 | **AWS SDK** | 3.x | Cliente DynamoDB |
-| **BullMQ** | 4.x | Sistema de colas (jobs asíncronos) |
+| **BullMQ** | 5.x | Sistema de colas (jobs asíncronos) |
 | **Redis** | 7.x | Cache + Cola de trabajos |
 
 **Decisión**: Ver [ADR-003: NestJS Backend](../architecture/003-nestjs-backend.md)
@@ -163,12 +163,11 @@ adresles/
   "@nestjs/core": "^10.0.0",
   "@nestjs/common": "^10.0.0",
   "@nestjs/config": "^3.0.0",
-  "@prisma/client": "^5.0.0",
-  "aws-sdk": "^3.0.0",
-  "bullmq": "^4.0.0",
+  "@prisma/client": "5.22.0",
+  "bullmq": "^5.0.0",
   "ioredis": "^5.0.0",
-  "openai": "^4.0.0",
-  "@googlemaps/google-maps-services-js": "^3.0.0"
+  "class-validator": "^0.14.1",
+  "class-transformer": "^0.5.1"
 }
 ```
 
@@ -248,7 +247,7 @@ import { render, screen } from '@testing-library/react';
 
 | Herramienta | Configuración |
 |-------------|---------------|
-| **ESLint** | `@typescript-eslint/recommended` |
+| **ESLint v9** | Configuración plana (`eslint.config.js`) con `@typescript-eslint` v8 |
 | **Prettier** | 2 espacios, single quotes, trailing commas |
 | **TypeScript** | `strict: true` |
 
@@ -292,6 +291,6 @@ Stack considerado:
 
 ---
 
-**Última actualización**: 2026-02-07  
+**Última actualización**: 2026-02-19  
 **Mantenido por**: Sergio  
-**Versiones actualizadas**: Conforme evoluciona el proyecto
+**Versiones actualizadas**: Prisma 5.22.0 (pinned), BullMQ 5.x, ESLint 9.x, @typescript-eslint 8.x

@@ -103,7 +103,8 @@ Este documento describe las mejores prácticas, convenciones y estándares utili
 - **Ubicación de Pruebas**: Directorios `__tests__` y archivos `.test.ts`
 
 ### Herramientas de Desarrollo
-- **ESLint**: Linting de código
+- **ESLint v9**: Linting de código con formato de configuración plana (`eslint.config.js`)
+- **@typescript-eslint v8**: Plugin y parser para TypeScript
 - **TypeScript Compiler**: Verificación de tipos y compilación
 - **Serverless Framework**: Soporte de despliegue en AWS Lambda
 
@@ -1269,10 +1270,12 @@ npx prisma db seed       # Poblar base de datos
 
 ### Calidad de Código
 
-- **Validación de ESLint**: Ejecutar ESLint antes de commits
+- **Validación de ESLint**: Ejecutar ESLint antes de commits (configuración plana en `apps/api/eslint.config.js`)
 - **Compilación de TypeScript**: Asegurar que TypeScript compila sin errores
 - **Todas las Pruebas Pasando**: Asegurar que todas las pruebas pasen antes del despliegue
 - **Revisión de Código**: Revisar código para adherencia a estándares
+
+> **Nota**: El proyecto usa ESLint v9 con formato de configuración plana (`eslint.config.js`), no `.eslintrc`. La configuración cubre `src/**/*.ts` y `test/**/*.ts` con las reglas de `@typescript-eslint`.
 
 ## Deployment en Servidor Dedicado
 
