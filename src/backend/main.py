@@ -79,7 +79,9 @@ async def readiness_check():
 
 from api.upload import router as upload_router
 from api.validation import router as validation_router
+from api.parts import router as parts_router
 
 app.include_router(upload_router, prefix="/api/upload", tags=["Upload"])
 app.include_router(validation_router)
+app.include_router(parts_router, prefix="/api/parts", tags=["Parts"])
 
