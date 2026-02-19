@@ -1,4 +1,108 @@
-# Technical Specification: T-0500-INFRA — Setup React Three Fiber Stack
+# Technical Specification: T-0500-I## Prompt: TDD FASE ROJA - Ticket T-0500-INFRA
+
+**Role:** Actúa como QA Automation Engineer y Software Architect.
+
+---
+
+### Protocolo Agents (OBLIGATORIO antes de escribir código)
+
+1. **Lee** `memory-bank/activeContext.md` para entender el estado actual del sprint.
+2. **Lee** `memory-bank/systemPatterns.md` para respetar los contratos API y patrones existentes.
+3. **Consulta** `docs/09-mvp-backlog.md` y busca el ticket `T-0500-INFRA` para entender su alcance exacto, criterios de aceptación y DoD.
+4. **Consulta** `docs/productContext.md` para ver qué componentes o endpoints ya existen y pueden reutilizarse.
+5. **Al finalizar**, registra el inicio de esta tarea en `prompts.md`.
+
+---
+
+### Contexto
+
+Iniciamos el desarrollo de la funcionalidad: **Setup React Three Fiber Stack** (Ticket `T-0500-INFRA`).
+Seguimos estrictamente TDD. El código de la implementación **AÚN NO EXISTE**.
+
+**Stack relevante del proyecto:**
+- **Backend:** FastAPI (Python 3.11) con Pydantic schemas, tests en `tests/` con pytest
+- **Frontend:** React 18 + TypeScript strict + Vite, tests con Vitest + @testing-library/react
+- **Agent:** LangGraph (Python), tests con pytest
+- **Infra:** Docker multi-stage, Supabase Storage (S3-compatible), PostgreSQL 15, migraciones en `supabase/migrations/`
+- **Ejecución:** Todo corre dentro de Docker. Tests vía `make test` (backend) o `make test-front` (frontend)
+
+**Patrón de contrato (CRÍTICO):** Las interfaces TypeScript en `src/frontend/src/types/` DEBEN coincidir exactamente con los Pydantic schemas en `src/backend/schemas.py`. Revisa ambos antes de crear tipos nuevos.
+
+---
+
+### Objetivo
+
+1. **Crear/Actualizar los tipos e interfaces** necesarios para `T-0500-INFRA`.
+2. **Crear tests que fallen (RED)** describiendo el comportamiento esperado.
+3. El test DEBE fallar por `ImportError` (módulo no existe) o `AssertionError` (lógica no implementada), NO por errores de sintaxis.
+
+---
+
+### Instrucciones
+
+#### 1. Análisis previo
+- Identifica si `T-0500-INFRA` es FRONT, BACK, AGENT, INFRA o DB por su sufijo.
+- Revisa los criterios de aceptación del backlog: cada **Scenario** del ticket es al menos un test case.
+- Si el ticket tiene dependencias (ej: "Dependencias: US-001"), verifica que los componentes necesarios existen.
+
+#### 2. Definición de tipos
+- **Si es BACK/AGENT:** Crea/actualiza Pydantic models en `src/backend/schemas.py` o el módulo correspondiente.
+- **Si es FRONT:** Crea/actualiza interfaces TypeScript en `src/frontend/src/types/`.
+- **Si es DB/INFRA:** Define el schema SQL como migración en `supabase/migrations/` y los tipos Python/TS que lo representan.
+- **Si el ticket toca BACK + FRONT:** Crea AMBOS y asegura que coinciden campo por campo (contract-first).
+
+#### 3. Test Cases (Fase Roja)
+Escribe tests que cubran:
+- **Happy Path:** El flujo principal funciona correctamente.
+- **Validación de entrada:** Datos inválidos son rechazados con el error correcto.
+- **Edge cases:** Casos límite definidos en los criterios de aceptación.
+- **Integración Docker/Infra:** Si el ticket afecta infraestructura (buckets, tablas, migrations), incluye un test que verifique que el recurso existe y es accesible.
+
+**Framework de test:**
+- BACK/AGENT/INFRA/DB → pytest (`tests/unit/` o `tests/integration/`)
+- FRONT → Vitest (`src/frontend/src/components/` o `src/frontend/src/services/`)
+
+**Reglas del test:**
+- DEBE importar el módulo/componente aunque no exista todavía.
+- DEBE afirmar (assert) el resultado esperado.
+- DEBE fallar por ImportError o AssertionError, NO por syntax error.
+- Usar fixtures de `tests/conftest.py` si existen (ej: `supabase_client`).
+
+#### 4. Infraestructura como Código
+Si el ticket requiere cambios de infraestructura:
+- Crear migración SQL en `supabase/migrations/YYYYMMDDHHMMSS_<nombre>.sql`
+- Si necesita un nuevo bucket, documentar en `infra/` con script idempotente
+- Verificar que el `docker-compose.yml` no necesita ajustes (nuevos servicios, volumes, env vars)
+
+---
+
+### Output esperado
+
+1. **Código de los tipos/interfaces** (con path exacto del archivo).
+2. **Código del test** (con path exacto del archivo).
+3. **Comando exacto para ejecutar el test:**
+   - Backend: `make test-unit` o `docker compose run --rm backend pytest tests/unit/<archivo> -v`
+   - Frontend: `make test-front` o `docker compose run --rm frontend npx vitest run src/<path> --reporter=verbose`
+4. **Confirmación de que estamos en ROJA:** Ejecuta el test y muéstrame que falla por la razón correcta.
+5. **Si hay cambios de infra:** Incluye la migración SQL y/o cambios en docker-compose.
+6. **Handoff para FASE VERDE:** Al final, imprime este bloque con los valores reales rellenados:
+
+   ```
+   =============================================
+   READY FOR GREEN PHASE - Copy these values:
+   =============================================
+   Ticket ID:       T-0500-INFRA
+   Feature name:    Setup React Three Fiber Stack
+   Test error:      <línea clave del error del primer test que falla>
+   Test files:
+     - <path relativo del test file 1>
+     - <path relativo del test file 2 (si aplica)>
+   Commands:
+     - <comando make para ejecutar test 1>
+     - <comando make para ejecutar test 2 (si aplica)>
+   =============================================
+   ```
+
 
 **Ticket:** T-0500-INFRA | **Sprint:** US-005 | **Story Points:** 2
 **Fecha enrichment:** 2026-02-19 | **Estado:** Enrichment ✍️ → listo para TDD-Red

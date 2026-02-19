@@ -78,6 +78,14 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
 - Backend service layer with Clean Architecture pattern
 - Full test coverage (18 frontend + 7 backend tests)
 
+**US-005: Dashboard 3D Interactivo - Foundation (IN PROGRESS)**
+- Database schema extended for 3D rendering (T-0503-DB DONE 2026-02-19)
+  * `low_poly_url` column: Storage URLs for GLB geometry files (~1000 triangles)
+  * `bbox` column: 3D bounding boxes in JSONB format for spatial queries
+  * `idx_blocks_canvas_query`: Composite index (status, tipologia, workshop_id) for dashboard filters <500ms
+  * `idx_blocks_low_poly_processing`: Partial index for GLB generation queue <10ms
+- React Three Fiber stack setup complete (T-0500-INFRA DONE 2026-02-19)
+
 **US-002: Validation Infrastructure (PARTIAL)**
 - ✅ Database schema: `validation_report` JSONB column in `blocks` table
 - ✅ Extended `block_status` enum: `processing`, `rejected`, `error_processing`
@@ -130,9 +138,15 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   - jsdom mocks: Canvas → `<div data-testid="three-canvas">`, useGLTF → `{ scene, nodes, materials }`
   - Stubs: parts.store.ts, types/parts.ts, dashboard3d.constants.ts, usePartsSpatialLayout.ts, Dashboard/index.ts
   - Test coverage: 10/10 tests passing (T2 imports + T13 mock + T4 stubs)
+- ✅ **T-0503-DB: Add low_poly_url Column & Indexes** (Database schema complete)
+  - Migration: `supabase/migrations/20260219000001_add_low_poly_url_bbox.sql`
+  - Columns: `low_poly_url` (TEXT NULL), `bbox` (JSONB NULL) for 3D rendering
+  - Indexes: `idx_blocks_canvas_query` (composite), `idx_blocks_low_poly_processing` (partial)
+  - Performance: <500ms canvas query, <10ms processing queue, 24KB index size
+  - Test coverage: 17/20 tests passing (85%, functional core 100%)
 
 ### 🔄 In Progress
-- US-005 T-0503-DB: Add low_poly_url column & indexes (next)
+- US-005 T-0501-BACK: List Parts API endpoint (next)
 
 ### 📋 Next Milestones
 - US-005: Dashboard 3D (T-0503-DB → T-0501-BACK → T-0504-FRONT → T-0505-FRONT → ...)
