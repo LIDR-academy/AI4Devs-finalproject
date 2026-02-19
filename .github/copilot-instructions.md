@@ -154,18 +154,27 @@ Copilot must follow `testing.instructions.md` when suggesting tests:
 
 ---
 
-# 9. CI/CD Gates
+# 9. CI/CD Gates (reminder)
 
 Copilot must consider the gates defined in Constitution and Testing Instructions as blocking:
 
+### Backend CI (8 Gates):
 1. **BDD** (Cucumber acceptance tests)
-2. **API** (OpenAPI contract validation)
+2. **API Verification** (OpenAPI lint + validation)
 3. **Unit Domain** (Domain model tests)
 4. **Unit App** (Application service tests)
-5. **Infra IT** (Infrastructure integration tests with Testcontainers)
-6. **Contract** (OpenAPI contract tests with WireMock)
+5. **Infra IT** (Integration tests with Testcontainers)
+6. **Contract** (OpenAPI contract tests)
 7. **E2E** (End-to-end tests)
 8. **Build** (Maven package generation)
+
+### Frontend CI (6 Gates):
+1. **Setup**: Node + **Java 21 (Temurin)** (required for generator).
+2. **API Generation**: `npm run generate:api` (must happen before tests/build).
+3. **Lint & Check**: `npm run lint` + `tsc` (strict mode).
+4. **Unit & Integration**: `npm run test` (Vitest + MSW).
+5. **E2E**: `npm run test:e2e` (Playwright on port 3011).
+6. **Build**: `npm run build` (Vite production build).
 
 ---
 
@@ -173,13 +182,15 @@ Copilot must consider the gates defined in Constitution and Testing Instructions
 
 Copilot must actively avoid and suggest alternatives when it detects:
 
-- God Objects.
-- Mixed UI ↔ domain logic.
-- Unrequested persistence.
-- Duplicate classes.
-- Tests without assertions.
-- Endpoints not based on BDD.
-- Design "for the future" without justification in stories/BDD.
+- **God Objects**.
+- **Mixed UI ↔ domain logic**.
+- **Unrequested persistence**.
+- **Explicit `NodeJS.Timeout` in Frontend**: Use `any` or browser-native types to avoid build failures in non-Node environments.
+- **Missing `npm run generate:api`**: Never assume generated clients exist without running the generator manually or in CI.
+- **Duplicate classes**.
+- **Tests without assertions**.
+- **Endpoints not based on BDD**.
+- **Design "for the future"** without justification in stories/BDD.
 
 ---
 

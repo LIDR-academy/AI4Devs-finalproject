@@ -1,9 +1,9 @@
 
 # Project Constitution — Meditation Builder  
-**Versión: 4.0.0 (Actualizada con Estado Real del Proyecto)**  
-**Última actualización:** 16 de Febrero de 2026  
+**Versión: 4.1.0 (Actualizada con Estado Real del Proyecto)**  
+**Última actualización:** 17 de Febrero de 2026  
 **Ubicación:** `.specify/memory/constitution.md`  
-**Ámbito:** Backend (Java 21 + Spring Boot 3.5.10) y Frontend (React 18 + TypeScript + Vite)
+**Ámbito:** Backend (Java 21 + Spring Boot 3.5.10) y Frontend (React 18 + TypeScript + Vite 5)
 
 ---
 
@@ -20,7 +20,7 @@ Define la arquitectura, el flujo de trabajo, la jerarquía normativa, los princi
 
 **Proyecto**: Plataforma MVP de generación de meditaciones guiadas con asistencia de IA  
 **Repositorio**: AI4Devs-finalproject (LIDR-academy)  
-**Branches implementados**: `001-compose-meditation-content`, `002-generate-meditation-audio-video`  
+**Branches implementados**: `001-compose-meditation-content`, `002-generate-meditation-audio-video`, `003-list-play-meditations`  
 **Branch principal**: `main`
 
 ### Features Implementadas:
@@ -51,6 +51,7 @@ Define la arquitectura, el flujo de trabajo, la jerarquía normativa, los princi
    - Reproductor multimedia integrado (audio/video) con subtítulos
    - Estados de procesamiento con etiquetas en tiempo real
    - Manejo de errores de reproducción (409 Conflict si no está lista)
+   - Búsqueda de meditaciones y filtrado por tipo de salida (AUDIO/VIDEO)
    - CI/CD con 8 gates completos
 
 ### Features Pendientes (según PRD):
@@ -125,22 +126,23 @@ El código es una **materialización técnica** de un comportamiento ya acordado
 - OpenAPI Validator (Atlassian 2.41.0)
 - OpenTelemetry 1.45.0
 
-### Frontend (React 18 + TypeScript + Vite):
+### Frontend (React 18 + TypeScript + Vite 5):
 - **React 18** con TypeScript estricto
 - **React Query (TanStack Query)** para server-state
 - **Zustand** para UI-state local
-- **OpenAPI Client autogenerado** desde YAML backend
-- **Playwright** para E2E
-- **Vite** como bundler
+- **OpenAPI Client autogenerado** mediante `npm run generate:api` (requiere Java 21)
+- **Playwright** para E2E (puerto 3011)
+- **Vite 5** como bundler y dev server
 
 **Stack tecnológico frontend**:
-- React 18.3.1
-- TypeScript 5.x
-- Vite 6.x
+- React 18.2.0
+- TypeScript 5.3+
+- Vite 5.0.x
 - TanStack React Query v5
-- Zustand
-- Axios (generado por OpenAPI)
-- Vitest + React Testing Library (tests unitarios)
+- Zustand 4.4.x
+- OpenAPI Generator Cli 2.7.0 (typescript-fetch)
+- Vitest + React Testing Library (tests unitarios/integración)
+- MSW (Mock Service Worker) para simular APIs en tests
 - Playwright (E2E)
 - CSS Modules / Tailwind (según implementación)
 
@@ -196,102 +198,56 @@ AI4Devs-finalproject/
 │   │   │   │   │       ├── in/rest/     # Controllers, DTOs
 │   │   │   │   │       └── out/         # Adapters (OpenAI, InMemory)
 │   │   │   │   │
-│   │   │   │   └── meditation/
-│   │   │   │       └── generation/      # BC 2: Generation (US3)
-│   │   │   │           ├── application/     # GenerateMeditationContentService, IdempotencyKeyGenerator, TextLengthEstimator
-│   │   │   │           ├── domain/          # GeneratedMeditationContent, NarrationScript, MeditationOutput, SubtitleSegment
-│   │   │   │           │   ├── enums/       # GenerationStatus, MediaType
-│   │   │   │           │   ├── exception/   # GenerationTimeoutException, InvalidContentException
-│   │   │   │           │   ├── model/       # Aggregates y Value Objects
-│   │   │   │           │   └── ports/
-│   │   │   │           │       ├── in/      # GenerateMeditationContentUseCase
-│   │   │   │           │       └── out/     # VoiceSynthesisPort, AudioRenderingPort, VideoRenderingPort, MediaStoragePort, SubtitleSyncPort, ContentRepositoryPort
-│   │   │   │           └── infrastructure/
-│   │   │   │               ├── in/rest/     # MeditationGenerationController, FileUploadController
-│   │   │   │               ├── out/
-│   │   │   │               │   ├── adapter/  # GoogleTtsAdapter, FfmpegAudioRendererAdapter, FfmpegVideoRendererAdapter, S3MediaStorageAdapter
-│   │   │   │               │   ├── persistence/  # PostgresContentRepository (JPA)
-│   │   │   │               │   └── service/      # SubtitleSyncService, TempFileManager, AudioMetadataService
-│   │   │   │               └── config/   # S3Config, GoogleCloudTtsConfig
+│   │   │   │   ├── meditation/
+│   │   │   │   │   └── generation/      # BC 2: Generation (US3)
+│   │   │   │   │       ├── application/     # GenerateMeditationContentService, IdempotencyKeyGenerator
+│   │   │   │   │       ├── domain/          # GeneratedMeditationContent, MeditationOutput
+│   │   │   │   │       │   ├── enums/       # GenerationStatus, MediaType
+│   │   │   │   │       │   └── ports/
+│   │   │   │   │       └── infrastructure/
+│   │   │   │   │           ├── in/rest/     # MeditationGenerationController
+│   │   │   │   │           └── out/         # Adapters (Google TTS, FFmpeg, S3, Postgres)
+│   │   │   │   │
+│   │   │   │   └── playback/            # BC 3: Playback (US4)
+│   │   │   │       ├── application/
+│   │   │   │       ├── domain/
+│   │   │   │       └── infrastructure/
+│   │   │   │           └── in/rest/     # PlaybackController
 │   │   │   │
 │   │   │   └── resources/
 │   │   │       ├── application.yml              # Configuración principal
 │   │   │       ├── application-local.yml        # Profile local
-│   │   │       ├── application-test.yml         # Profile test
 │   │   │       └── openapi/
 │   │   │           ├── meditationbuilder/
-│   │   │           │   └── compose-content.yaml # Contrato OpenAPI BC1 (US2)
-│   │   │           └── generation/
-│   │   │               └── generate-meditation.yaml # Contrato OpenAPI BC2 (US3)
+│   │   │           │   └── compose-content.yaml # Contrato OpenAPI US2
+│   │   │           ├── generation/
+│   │   │           │   └── generate-meditation.yaml # Contrato OpenAPI US3
+│   │   │           └── playback/
+│   │   │               └── list-play-meditations.yaml # Contrato OpenAPI US4
 │   │   └── test/
-│   │       ├── contracts/                       # Tests de contrato (vacío por ahora)
-│   │       ├── e2e/                             # Tests E2E (vacío por ahora)
-│   │       ├── java/com/hexagonal/
-│   │       │   ├── meditationbuilder/           # Tests BC1
-│   │       │   │   ├── application/
-│   │       │   │   ├── domain/
-│   │       │   │   ├── infrastructure/
-│   │       │   │   ├── observability/
-│   │       │   │   ├── bdd/
-│   │       │   │   │   ├── CucumberTestRunner.java
-│   │       │   │   │   └── steps/
-│   │       │   │   └── e2e/
-│   │       │   │       ├── AiGenerationE2ETest.java
-│   │       │   │       └── ManualCompositionE2ETest.java
-│   │       │   └── meditation/generation/       # Tests BC2
-│   │       │       ├── application/
-│   │       │       ├── domain/
-│   │       │       ├── infrastructure/
-│   │       │       ├── bdd/
-│   │       │       │   ├── CucumberSpringConfiguration.java
-│   │       │       │   └── steps/
-│   │       │       └── e2e/
-│   │       │           └── GenerateMeditationE2ETest.java
+│   │       ├── contracts/                       # Tests de contrato
+│   │       ├── e2e/                             # Tests E2E Backend
+│   │       ├── java/com/hexagonal/...           # Unit/Integration tests
 │   │       └── resources/
-│   │           ├── application-test.yml
 │   │           └── features/                    # Archivos .feature BDD
-│   │               ├── meditationbuilder/
-│   │               │   └── compose-content.feature
-│   │               └── generation/
-│   │                   └── generate-meditation.feature
 │   └── target/                                  # Artefactos compilados (generados)
 │
 ├── frontend/
-│   ├── package.json                             # Dependencies (React 18, Vite, etc.)
-│   ├── vite.config.ts                           # Configuración Vite
+│   ├── package.json                             # Dependencies (React 18, Vite 5)
+│   ├── vite.config.ts                           # Configuración Vite (Puerto 3011)
 │   ├── playwright.config.ts                     # Configuración Playwright
 │   ├── src/
 │   │   ├── main.tsx                             # Entry point
-│   │   ├── App.tsx                              # App root
 │   │   ├── api/                                 # Cliente OpenAPI autogenerado
-│   │   │   ├── client/
-│   │   │   ├── client.ts
-│   │   │   ├── index.ts
-│   │   │   └── types.ts
-│   │   ├── components/                          # Componentes reutilizables
-│   │   │   ├── TextEditor.tsx
-│   │   │   ├── ImagePreview.tsx
-│   │   │   ├── ImageSelectorButton.tsx
-│   │   │   ├── GenerateImageButton.tsx
-│   │   │   ├── GenerateTextButton.tsx
-│   │   │   ├── MusicPreview.tsx
-│   │   │   ├── MusicSelector.tsx
-│   │   │   ├── MusicSelectorButton.tsx
-│   │   │   ├── LocalMusicItem.tsx
-│   │   │   ├── OutputTypeIndicator.tsx
-│   │   │   └── __tests__/                       # Tests unitarios de componentes
-│   │   ├── pages/
-│   │   │   └── MeditationBuilderPage.tsx        # Página principal
-│   │   ├── state/                               # Estado global (Zustand)
-│   │   │   ├── composerStore.ts
-│   │   │   ├── index.ts
-│   │   │   └── __tests__/
-│   │   └── hooks/                               # Custom hooks (React Query)
+│   │   │   ├── generated/                       # Carpeta real de generación (/composition, /generation, /playback)
+│   │   │   ├── generation-client.ts             # Wrapper/Adapter síncrono
+│   │   │   └── composition-client.ts            # Wrapper/Adapter principal
+│   │   ├── components/                          # Componentes UI
+│   │   ├── pages/                               # Páginas (MeditationBuilderPage, PlaybackPage)
+│   │   ├── state/                               # Estado global (Zustand: composerStore)
+│   │   └── hooks/                               # Custom hooks (React Query: useGenerateMeditation)
 │   ├── tests/
 │   │   └── e2e/                                 # Tests E2E Playwright
-│   │       ├── ai-generation.spec.ts
-│   │       ├── manual-composition.spec.ts
-│   │       └── media-preview.spec.ts
 │   └── playwright-report/                       # Reportes Playwright (generados)
 │
 ├── docs/                                        # Documentación del proyecto
@@ -1746,17 +1702,24 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
   - **TIMEOUT 187 segundos** (decisión de negocio crítica)
   - Idempotencia SHA-256 + subtítulos sincronizados
 
+- ✅ **US4 (Playback - Branch 003-list-play-meditations)** implementada al 100%
+  - BC: `playback`
+  - 2 escenarios BDD + arquitectura hexagonal completa
+  - Listado filtrado por usuario y ordenado por fecha
+  - Reproductor multimedia integrado (audio/video) con subtítulos
+  - Estados de procesamiento en tiempo real
+  - PostgreSQL persistence (acceso a resultados de generación)
+
 - ❌ **US1 (Authentication)**: NO implementada (pending - AWS Cognito + JWT)
-- ❌ **US4 (List & Play)**: NO implementada (pending)
 
 ### Decisiones arquitectónicas clave:
-1. **Dos Bounded Contexts independientes**: `meditationbuilder` (composition) + `meditation.generation` (A/V generation)
-2. **Hexagonal Architecture**: No negociable, estrictamente aplicada en ambos BCs
+1. **Tres Bounded Contexts independientes**: `meditationbuilder` (composition) + `meditation.generation` (A/V generation) + `playback` (list & play)
+2. **Hexagonal Architecture**: No negociable, estrictamente aplicada en todos los BCs
 3. **Java 21 Records**: Usado extensivamente para inmutabilidad (aggregates y VOs)
 4. **Clock injection**: Obligatorio para testabilidad temporal
-5. **Persistencia diferenciada**: In-memory para BC Composition (temporal), PostgreSQL para BC Generation (permanente)
+5. **Persistencia diferenciada**: In-memory para BC Composition (temporal), PostgreSQL para BC Generation y BC Playback (permanente)
 6. **Timeout 187s**: Límite de negocio para narración (~467 palabras @ 150 wpm)
-7. **OpenAPI First**: Contrato antes que implementación (2 specs: compose-content.yaml, generate-meditation.yaml)
+7. **OpenAPI First**: Contrato antes que implementación (Specs: compose-content.yaml, generate-meditation.yaml, list-play-meditations.yaml)
 8. **CI/CD 8 gates**: BDD → API → Unit Domain → Unit App → Infra → Contract → E2E → Build
 
 ### Bottlenecks conocidos:
@@ -1764,7 +1727,7 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 - ⚠️ **OpenAI API**: Latency variable (3-10s típico)
 - ⚠️ **Google TTS**: Latency 5-15s dependiendo de texto length
 - ⚠️ **FFmpeg rendering**: CPU-intensive, ~10-30s para video completo
-- ✅ **Degradación graceful** implementada en ambos BCs
+- ✅ **Degradación graceful** implementada en todos los BCs
 - ✅ **S3 LocalStack**: Dev/test fast, migración a AWS S3 productivo
 
 ### Integraciones externas implementadas:
@@ -1779,14 +1742,14 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
    - Auth: Service Account JSON (GOOGLE_APPLICATION_CREDENTIALS)
    - Output: MP3 @ 64kbps
 
-3. **AWS S3 / LocalStack** (BC: meditation.generation - storage):
+3. **AWS S3 / LocalStack** (BC: meditation.generation/playback - storage):
    - LocalStack: Dev/test (http://localhost:4566)
    - AWS S3: Production (configurable)
    - Buckets: meditation-outputs, meditation-subtitles
 
-4. **PostgreSQL** (BC: meditation.generation - persistence):
+4. **PostgreSQL** (BC: meditation.generation/playback - persistence):
    - Schema: meditation_outputs table (id, content_id, urls, status, timestamps)
-   - JPA + Spring Data
+   - BC Playback accede vía JPA a las generaciones finalizadas
    - Testcontainers en CI
 
 5. **FFmpeg** (BC: meditation.generation - rendering):
@@ -1800,8 +1763,9 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 
 ### Tech Debt resuelto (vs. versión anterior):
 - ✅ **Contract Tests**: Ahora ACTIVOS (Gate 6 en CI/CD)
-- ✅ **Persistencia PostgreSQL**: IMPLEMENTADA en BC Generation
+- ✅ **Persistencia PostgreSQL**: IMPLEMENTADA en BC Generation y BC Playback
 - ✅ **Video/Audio generation**: IMPLEMENTADA completamente (US3)
+- ✅ **List & Play meditations**: IMPLEMENTADA completamente (US4)
 - ✅ **FFmpeg integration**: COMPLETA con tests
 - ✅ **S3 Storage**: IMPLEMENTADO (LocalStack)
 
@@ -1815,18 +1779,17 @@ Una historia/feature solo está **DONE** si cumple TODO lo siguiente:
 
 ### Próximos pasos recomendados (en orden):
 1. **US1**: Implementar Cognito authentication + JWT validation
-2. **US4**: Listado y reproducción de meditaciones generadas
-3. **Production Hardening**:
+2. **Production Hardening**:
    - Health checks completos (OpenAI, Google TTS, S3, PostgreSQL)
    - Containerization (Dockerfile multi-stage)
    - IaC (Terraform para AWS resources)
    - Security scanning (Snyk, Trivy)
    - Performance testing con carga
-4. **Async Processing**: 
+3. **Async Processing**: 
    - Refactor Generation BC para async (SQS/SNS o similar)
    - Webhooks para notificar completion
    - Polling endpoint para status checking
-5. **Observability**:
+4. **Observability**:
    - Export métricas a Prometheus
    - Dashboards Grafana
    - Distributed tracing completo (OpenTelemetry → Jaeger/Zipkin)
@@ -1898,7 +1861,7 @@ DONE (deployable)
 
 ---
 
-**FIN DE CONSTITUTION v3.0.0**
+**FIN DE CONSTITUTION v4.1.0**
 
-*Última actualización: 16 de Febrero de 2026*  
-*Actualizado con estado real del proyecto tras implementación completa de US002*
+*Última actualización: 17 de Febrero de 2026*  
+*Actualizado con estado real del proyecto tras implementación completa de US2, US3 y US4*

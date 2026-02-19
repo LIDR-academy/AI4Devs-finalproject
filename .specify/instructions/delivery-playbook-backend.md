@@ -1,6 +1,6 @@
 
 # 🧭 Backend Delivery Playbook — Meditation Builder
-**Versión:** 2.1.0 (Actualizado con estado real: 2 bounded contexts implementados)
+**Versión:** 2.1.1 (Actualizado con estado real: US2, US3, US4 implementadas)
 **Ámbito:** `/backend` – Microservicio Java 21 + Spring Boot + Arquitectura Hexagonal
 
 ---
@@ -11,8 +11,8 @@ Este documento define **cómo debe entregarse cualquier Historia de Usuario** en
 **Estado actual del proyecto (Febrero 2026)**:
 - ✅ **BC 1: `meditationbuilder`** (US2 - Compose Content) - Completado
 - ✅ **BC 2: `meditation.generation`** (US3 - A/V Generation) - Completado
-- ❌ **BC 3**: Auth (US1 - Pendiente)
-- ❌ **BC 4**: List & Play (US4 - Pendiente)
+- ✅ **BC 3: `playback`** (US4 - List & Play) - Completado
+- ❌ **BC 4**: Auth (US1 - Pendiente)
 
 Alinea el trabajo técnico con:
 - La **Constitución del proyecto**

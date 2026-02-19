@@ -27,21 +27,20 @@ Objetivo: **entregar valor observable** por historia sin introducir lógica de n
 ```
 /frontend
   /src
-    /api              # Cliente OpenAPI autogenerado + wrappers finos
-    /components       # Presentacionales (sin IO)
+    /api              # Cliente OpenAPI autogenerado (src/api/generated/) + wrappers
+    /components       # Presentacionales (sin IO) + __tests__/ (unit)
     /pages            # Páginas/routers
     /hooks            # Lógica de interacción (sin negocio)
-    /state            # Slices de Zustand (UI-state)
+    /state            # Slices de Zustand (UI-state) + __tests__/ (unit)
     /styles           # Estilos globales o por módulo
     /utils            # Utilidades UI puras
+    /test             # Setup de vitest (setup.ts)
   /tests
-    /unit             # Jest/Vitest + RTL
-    /integration      # RTL con API mockeada
-    /e2e              # Playwright
+    /e2e              # Playwright (*.spec.ts)
 ```
 
 **Reglas:**
-- Cualquier acceso a red pasa por `src/api` (cliente OpenAPI).  
+- Cualquier acceso a red pasa por `src/api` (cliente OpenAPI autogenerado).  
 - `components/` nunca importan `src/api` directamente; lo hará un `hook` o `page`.
 - `state/` solo almacena **estado de UI** (flags, filtros, wizard steps). **Datos remotos** → React Query.
 
@@ -50,11 +49,11 @@ Objetivo: **entregar valor observable** por historia sin introducir lógica de n
 ## 3. Pipeline por historia (frontend)
 1) **BDD** (solo negocio; vive en backend y guía el comportamiento observable).  
 2) **API First** (YAML en backend).  
-3) **Generar cliente OpenAPI** para FE (`npm run generate:api`).  
+3) **Generar cliente OpenAPI** para FE: `npm run generate:api` (requiere Java 21).  
 4) **UI**: páginas/comp./hooks + estado (Zustand).  
-5) **Tests unitarios** (RTL) sobre componentes y hooks.  
-6) **Tests de integración** (RTL) simulando API con MSW.  
-7) **E2E (Playwright)** contra backend real o mockeado.  
+5) **Tests unitarios** (Vitest + RTL) sobre componentes, hooks y stores.  
+6) **Tests de integración** (Vitest + RTL + MSW) simulando API según OpenAPI.  
+7) **E2E (Playwright)** contra backend real (puerto 8080) y frontend (puerto 3011).  
 8) **CI/CD** (gates bloqueantes).
 
 **Prohibido** crear llamadas manuales a fetch/axios sin pasar por el **cliente OpenAPI**.
@@ -63,10 +62,10 @@ Objetivo: **entregar valor observable** por historia sin introducir lógica de n
 
 ## 4. Naming y convenciones
 - Componentes: `PascalCase`, p. ej., `MeditationBuilderPage.tsx`, `MusicSection.tsx`.
-- Hooks: `useCamelCase`, p. ej., `useGenerateMeditationText.ts`.
-- Slices Zustand: `camelCase` + selector explícito, p. ej., `useComposerStore()`.
-- API: módulos autogenerados; cualquier wrapper manual va en `src/api/client.ts` o `src/api/adapters.ts`.
-- Tests: `*.test.ts(x)` (unit - ubicados en `__tests__` dentro de cada carpeta) y `*.spec.ts` (E2E Playwright).
+- Hooks: `useCamelCase`, p. ej., `useGenerateMeditation.ts`.
+- Slices Zustand: `camelCase` + hook selector, p. ej., `useComposerStore()`.
+- API: módulos autogenerados en `src/api/generated/`; wrappers en `src/api/client.ts` o `src/api/generation-client.ts`.
+- Tests: `*.test.ts(x)` (unit/integration - ubicados en `__tests__`) y `*.spec.ts` (E2E Playwright).
 
 ---
 
@@ -96,7 +95,13 @@ Objetivo: **entregar valor observable** por historia sin introducir lógica de n
 ---
 
 ## 8. CI/CD (gates)
-Orden **bloqueante**: `lint → unit → integration → e2e`.  
+Orden **bloqueante**:
+1. **API Gen**: `npm run generate:api` (bloquea si hay error en contrato).
+2. **Lint & Check**: `npm run lint` + `tsc`.
+3. **Vitest**: `npm run test` (Unit + Integration con MSW).
+4. **Playwright**: `npm run test:e2e` (E2E con backend real).
+5. **Build**: `npm run build` (Vite production build).
+
 Ningún fallo permite merge a `main`.
 
 ---

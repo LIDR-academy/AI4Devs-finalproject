@@ -37,20 +37,22 @@ Definir **cómo** se prueban los comportamientos y las capas del sistema para qu
 ## 3. Integration tests (Infra)
 - **Backend**: Testcontainers para DB/colas cuando aplique.
 - **IA adapters**: simular respuestas; nunca dependencias externas reales en CI.
-- **Frontend**: pruebas de integración con **RTL + MSW** (API simulada según OpenAPI).
+- **Frontend**: pruebas de integración con **Vitest + RTL + MSW** (API simulada según OpenAPI).
 
 ---
 
 ## 4. Contract tests (OpenAPI)
 - Validar implementación contra el YAML en `/backend/src/main/resources/openapi/...`.
+- **Generación de Cliente**: El frontend **DEBE** ejecutar `npm run generate:api` antes de los tests para asegurar que los tipos están sincronizados.
 - Lint obligatorio (p. ej., Redocly CLI).
 - Consumer/provider tests integrados en CI.
 
 ---
 
 ## 5. E2E tests
-- **Backend**: Spring Boot E2E tests en `/backend/src/test/java/.../e2e/` (ejecutan contra app completa).
+- **Backend**: Spring Boot E2E tests en `/backend/src/test/java/.../e2e/`.
 - **Frontend**: Playwright en `/frontend/tests/e2e/*.spec.ts`.
+- **Configuración CI**: Playwright requiere el servidor levantado en puerto 3011 y el backend en 8080.
 - Ejecutan los escenarios críticos definidos en BDD.
 - Usar contenedores/mocks locales; **no** servicios externos reales.
 
@@ -66,23 +68,34 @@ Definir **cómo** se prueban los comportamientos y las capas del sistema para qu
 ---
 
 ## 7. CI/CD Gates (orden bloqueante)
-1. **BDD** (Cucumber acceptance tests - puede empezar rojo)  
-2. **API** (OpenAPI lint + schema validation)  
-3. **Unit Domain** (Domain model tests)  
-4. **Unit App** (Application service tests)  
-5. **Infra IT** (Infrastructure integration tests with Testcontainers)  
-6. **Contract** (OpenAPI contract tests with WireMock)  
-7. **E2E** (End-to-end tests - backend + frontend)  
-8. **Build** (Maven package generation)
+Cada commit debe pasar por los siguientes gates en GitHub Actions:
 
-**Fast‑fail**: cualquier fallo bloquea el merge.
+### Backend CI (`backend-ci.yml`):
+1. **BDD** (Cucumber)
+2. **API Verification**
+3. **Unit Tests** (Domain + App)
+4. **Integration Tests** (Infra/Testcontainers)
+5. **Contract Tests**
+6. **E2E Tests**
+7. **Build** (JAR)
+
+### Frontend CI (`frontend-ci.yml`):
+1. **Setup**: Dependencias + **Java 21** (p/ API Gen).
+2. **API Generation**: `npm run generate:api`.
+3. **Lint & Type Check**: `npm run lint`.
+4. **Unit & Integration**: `npm run test` (Vitest + MSW).
+5. **E2E**: `npm run test:e2e` (Playwright).
+6. **Build**: `npm run build`.
+
+**Fast-fail**: cualquier fallo bloquea el merge.
 
 ---
 
 ## 8. Métricas y umbrales mínimos
-- Cobertura razonada (no dogmática) por capa.
+- Cobertura mínima objetivo: **80%** en dominio y lógica de aplicación.
+- Cobertura frontend: verificada con `vitest --coverage`.
 - Métricas de latencia/errores/throughput en endpoints relevantes.
-- Reportes de pruebas en CI (JUnit XML / HTML / Allure según tooling).
+- Reportes de pruebas en CI (JUnit XML para backend, HTML report para Playwright).
 
 ---
 

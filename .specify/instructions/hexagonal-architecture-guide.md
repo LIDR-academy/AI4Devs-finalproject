@@ -1,6 +1,6 @@
 
 # ⬡ Hexagonal Architecture Guide — Meditation Builder (Backend)
-**Versión:** 2.1.0 (Actualizado con 2 bounded contexts implementados)
+**Versión:** 2.1.1 (Actualizado con US2, US3, US4 implementadas)
 
 ---
 
@@ -10,8 +10,8 @@ Definir **estructura, dependencias y responsabilidades** de la arquitectura hexa
 **Estado actual del proyecto (Febrero 2026)**:
 - ✅ **BC 1: `meditationbuilder`** (US2) - In-memory persistence, OpenAI adapters
 - ✅ **BC 2: `meditation.generation`** (US3) - PostgreSQL persistence, Google TTS, FFmpeg, S3
-- ❌ **BC 3**: Auth (US1) - Pendiente
-- ❌ **BC 4**: List & Play (US4) - Pendiente
+- ✅ **BC 3: `playback`** (US4) - PostgreSQL persistence, Media playback
+- ❌ **BC 4**: Auth (US1) - Pendiente
 
 ---
 
@@ -81,6 +81,9 @@ shared/                        # Módulo transversal
   - `adapter/ffmpeg/` → FFmpeg (audio/video rendering)
   - `adapter/storage/` → AWS S3 / LocalStack (media file storage)
   - `service/subtitle/` → Subtitle synchronization (SRT generation)
+- **Outbound adapters - BC playback**:
+  - `persistence/` → PostgreSQL via JPA (read-only access to generations)
+  - `service/` → Media URL resolution and streaming metadata
 
 ---
 

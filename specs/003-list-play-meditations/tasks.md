@@ -18,7 +18,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Initialize branch, verify infrastructure prerequisites
 
-- [x] **T001 - Setup Playback BC Structure**  
+- [X] **T001 - Setup Playback BC Structure**  
   **Description**: Create branch `003-list-play-meditations` from `develop`, initialize bounded context directory structure  
   **Artifacts**:
   - `backend/src/main/java/com/hexagonal/playback/`
@@ -31,7 +31,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - No compilation errors  
   **Dependencies**: None
 
-- [x] **T002 - Verify Database Infrastructure (US3 Dependency)**  
+- [X] **T002 - Verify Database Infrastructure (US3 Dependency)**  
   **Description**: Verify PostgreSQL schema `generation.meditations` exists from US3, create indexes if missing  
   **Artifacts**:
   - Database verification script
@@ -49,7 +49,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Define business behavior and abstract API capabilities
 
-- [x] **T003 - BDD Feature Definition**  
+- [X] **T003 - BDD Feature Definition**  
   **Description**: Create Cucumber feature file with 2 scenarios from spec.md  
   **Artifacts**:
   - `backend/src/test/resources/features/playback/list-play-meditations.feature`  
@@ -60,7 +60,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - Steps PENDING (Cucumber YELLOW)  
   **Dependencies**: T002
 
-- [x] **T004 - OpenAPI Specification**  
+- [X] **T004 - OpenAPI Specification**  
   **Description**: Define abstract API capabilities for playback BC  
   **Artifacts**:
   - `backend/src/main/resources/openapi/playback/list-play-meditations.yaml`  
@@ -76,7 +76,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Implement domain models, business rules, and ports (NO Spring dependencies)
 
-- [x] **T005 - Domain Models & Value Objects**  
+- [X] **T005 - Domain Models & Value Objects**  
   **Description**: Implement TDD for domain models (Aggregate Root, VOs, Enums)  
   **Artifacts**:
   - Tests: `${basePackage}/playback/domain/model/*Test.java`
@@ -92,7 +92,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - Zero Spring dependencies  
   **Dependencies**: T004
 
-- [x] **T006 - Domain Exceptions & Business Rules**  
+- [X] **T006 - Domain Exceptions & Business Rules**  
   **Description**: Implement domain exceptions and playback validation rules  
   **Artifacts**:
   - Tests: `${basePackage}/playback/domain/exception/*Test.java`
@@ -104,7 +104,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - All exception tests GREEN  
   **Dependencies**: T005
 
-- [x] **T007 - Domain Ports (In & Out)**  
+- [X] **T007 - Domain Ports (In & Out)**  
   **Description**: Define hexagonal ports for use cases and repositories  
   **Artifacts**:
   - `${basePackage}/playback/domain/ports/in/{ListMeditationsUseCase, GetPlaybackInfoUseCase}`
@@ -122,7 +122,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Orchestrate domain logic via ports (NO business rules here)
 
-- [x] **T008 - Application Services & Validators**  
+- [X] **T008 - Application Services & Validators**  
   **Description**: Implement TDD for use case orchestration  
   **Artifacts**:
   - Tests: `${basePackage}/playback/application/service/*Test.java` (mocked ports)
@@ -142,7 +142,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Implement out ports with Spring Data JPA + PostgreSQL
 
-- [x] **T009 - PostgreSQL Persistence Layer**  
+- [X] **T009 - PostgreSQL Persistence Layer**  
   **Description**: Implement TDD for JPA persistence adapters (Testcontainers)  
   **Artifacts**:
   - Tests: `${basePackage}/playback/infrastructure/out/persistence/*IT.java` (Testcontainers PostgreSQL)
@@ -247,7 +247,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - All contract tests GREEN  
   **Dependencies**: T010
 
-- [x] **T015 - E2E Tests (Backend + Frontend)**  
+- [X] **T015 - E2E Tests (Backend + Frontend)**  
   **Description**: Implement end-to-end BDD scenarios and frontend flows  
   **Artifacts**:
   - Backend BDD steps: `${basePackage}/playback/bdd/steps/{ListMeditationsSteps, PlayMeditationSteps}.java`
@@ -262,7 +262,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - All Playwright tests GREEN  
   **Dependencies**: T013, T014
 
-- [x] **T016 - CI/CD Integration & Gates**  
+- [X] **T016 - CI/CD Integration & Gates**  
   **Description**: Update workflows, verify all 8 CI gates pass  
   **Artifacts**:
   - `.github/workflows/backend-ci.yml` (updated for playback BC)
@@ -281,7 +281,7 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
 
 **Purpose**: Final validation, observability, code quality
 
-- [x] **T017 - Observability & Documentation**  
+- [X] **T017 - Observability & Documentation**  
   **Description**: Add logging, metrics, API documentation  
   **Artifacts**:
   - Logging implementation in playback services
@@ -294,8 +294,8 @@ description: "Implementation tasks for US4 - List and Play Generated Meditations
   - Constitution.md reflects 3rd Bounded Context "playback" (if not already)  
   **Dependencies**: T016
 
-- [x] **T018 - Code Quality & Final Validation**  
-  **Description**: Run quality checks, verify Definition of Done  
+- [X] **T018 - Code Quality & Final Validation**  
+  **Description**: Run quality checks, verify Definition of Vertical  
   **Artifacts**:
   - SonarQube/quality reports
   - DoD checklist verification  
