@@ -1,0 +1,1 @@
+../../openspec/.commands/meta-prompt.md

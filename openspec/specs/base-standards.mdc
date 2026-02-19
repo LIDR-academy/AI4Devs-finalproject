@@ -1,0 +1,69 @@
+---
+description: Este documento contiene todas las reglas y directrices de desarrollo para este proyecto, aplicables a todos los agentes de IA (Claude, Cursor, Codex, Gemini, etc.).
+alwaysApply: true
+---
+
+## 1. Principios Centrales
+
+- **Tareas pequeñas, una a la vez**: Trabaja siempre en pasos de bebé, uno a la vez. Nunca avances más de un paso.
+- **Desarrollo Guiado por Pruebas**: Comienza con pruebas que fallan para cualquier funcionalidad nueva (TDD), según los detalles de la tarea.
+- **Seguridad de Tipos**: Todo el código debe estar completamente tipado.
+- **Nomenclatura Clara**: Usa nombres claros y descriptivos para todas las variables y funciones.
+- **Cambios Incrementales**: Prefiere cambios incrementales y enfocados sobre modificaciones grandes y complejas.
+- **Cuestionar Suposiciones**: Cuestiona siempre las suposiciones e inferencias.
+- **Detección de Patrones**: Detecta y resalta patrones de código repetidos.
+
+## 2. Estándares de Lenguaje
+
+- **Lenguaje del código (OBLIGATORIO: INGLÉS)**
+    - Todo lo que forme parte **estructural o ejecutable del código** debe estar **exclusivamente en INGLÉS**:
+        - Código fuente:
+            - Variables
+            - Funciones / métodos
+            - Clases
+            - Interfaces
+            - Tipos
+            - Enums
+            - Constantes
+        - Esquemas de datos:
+            - Nombres de tablas
+            - Columnas
+            - Campos
+            - Índices
+        - APIs:
+            - Endpoints
+            - Parámetros
+            - Payloads
+        - Nombres de archivos
+        - Nombres de pruebas (test suites, test cases, helpers)
+        - ❌ Prohibido usar español en cualquier identificador, esquema o elemento ejecutable.
+
+- **Lenguaje humano (OBLIGATORIO: ESPAÑOL)**
+    - Todo lo que esté dirigido a **personas** debe estar **exclusivamente en ESPAÑOL**:
+        - Comentarios dentro del código
+        - Documentación:
+            - README
+            - `.md`, `.mdc`
+            - Guías Técnicas
+            - Documentación de API (descripción, no nombres ni endpoints)
+        - Commits de Git
+        - Explicaciones funcionales, reglas de negocio y decisiones técnicas
+        - Documentación de pruebas (descripción del caso, objetivo, criterios)
+        - Mensajes de error técnicos (expuestos a logs o APIs)
+        - Mensajes de log
+        ❌ Prohibido usar inglés en comentarios o documentación.
+
+- **Reglas de coherencia (CRÍTICAS)**
+    - ❌ No mezclar idiomas dentro del mismo comentario, documento o sección.
+    - ❌ No traducir palabras clave técnicas del lenguaje de programación.
+    - ❌ No usar español en nombres de código.
+    - ❌ No usar inglés para explicar lógica o negocio.
+
+## 3. Estándares específicos
+
+Para estándares y directrices detalladas específicas a diferentes áreas del proyecto, consultar:
+
+- [Estándares de Backend](./backend-standards.mdc) - Desarrollo de API, patrones de base de datos, pruebas, seguridad y mejores prácticas de backend
+- [Estándares de Frontend](./frontend-standards.mdc) - Componentes React, directrices de UI/UX y arquitectura frontend
+- [Estándares de Documentación](./documentation-standards.mdc) - Estructura de documentación técnica, formato y directrices de mantenimiento, incluyendo estándares de IA como este documento
+
