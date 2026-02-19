@@ -13,6 +13,8 @@ services:
       - ./tests:/app/tests
       - ./infra:/app/infra
       - ./src/agent:/app/src/agent  # Mount agent module for test imports
+      - ./supabase:/app/supabase  # Mount migrations for test verification
+      - ./docs:/app/docs  # Mount docs for spec file tests
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - SUPABASE_URL=${SUPABASE_URL}
