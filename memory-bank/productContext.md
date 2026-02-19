@@ -85,6 +85,13 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   * `idx_blocks_canvas_query`: Composite index (status, tipologia, workshop_id) for dashboard filters <500ms
   * `idx_blocks_low_poly_processing`: Partial index for GLB generation queue <10ms
 - React Three Fiber stack setup complete (T-0500-INFRA DONE 2026-02-19)
+- **List Parts API implemented** (T-0501-BACK DONE 2026-02-20)
+  * `GET /api/parts` endpoint with dynamic filtering (status, tipologia, workshop_id)
+  * Clean Architecture service layer: PartsService with NULL-safe transformations
+  * RLS enforcement: workshop users scope, service role full access
+  * Query performance: <500ms target met (composite index usage)
+  * Response optimization: <200KB payload for 150+ parts
+  * 32/32 tests PASS (20 integration + 12 unit)
 
 **US-002: Validation Infrastructure (PARTIAL)**
 - ✅ Database schema: `validation_report` JSONB column in `blocks` table
