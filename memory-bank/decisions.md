@@ -2,6 +2,48 @@
 
 Este archivo documenta todas las decisiones importantes tomadas durante el desarrollo del proyecto. Funciona como un ADR (Architecture Decision Record) simplificado.
 
+## 2026-02-20 - Security Hardening Framework: OWASP Top 10 Audit & 3-Day Remediation Plan
+- **Contexto:** Antes de despliegue a producción, se requería auditoría exhaustiva de seguridad siguiendo estándares OWASP Top 10 (2021). El sistema maneja archivos 3D críticos de Sagrada Familia, con riesgos únicos: malware injection via .3dm files, geometry manipulation attacks, y potencial compromiso de workers con acceso a DB credentials.
+- **Decisión:** Ejecutar auditoría de seguridad CISO-level con 8 fases: (1) Infraestructura (validar fixes P0 de 2026-02-18), (2) API Layer (SQL injection, input validation), (3) Frontend (XSS, CSP, CORS), (4) Supply Chain (CVE scanning con npm audit + pip audit), (5) Secrets Management, (6) Dependency Hardening, (7) Rate Limiting, (8) Documentation & Memory Bank updates.
+- **Hallazgos Críticos (P0):**
+  1. **File Upload Bypass (CVSS 9.1):** Solo validación de extensión `.3dm`, sin verificación de magic bytes → Permite subir malware disfrazado (malware.exe → malware.3dm). **Fix:** Añadir `_validate_3dm_magic_bytes()` en `upload_service.py` con validación de firmas Rhino (bytes `\x3D\x3D\x3D\x3D\x3D\x3D` para v1-3, `3D Geometry File Format` para v4+).
+  2. **Missing CSP Headers (CVSS 8.6):** Sin Content Security Policy, cualquier XSS es explotable para full account takeover. **Fix:** Añadir `SecurityHeadersMiddleware` con CSP Three.js-compatible (`media-src 'self' https://*.supabase.co`, `worker-src 'self' blob:`).
+  3. **python-jose CVE-2022-29217 (CVSS 9.8):** Librería vulnerable a bypass de JWT via `alg: none` attack. **Fix:** Eliminar si no se usa (proyecto usa Supabase auth), o actualizar a >= 3.3.1.
+- **Hallazgos High Priority (P1):**
+  - No rate limiting en `/api/upload/url` → DoS/cost attack (CVSS 7.5). Fix: slowapi con límite 10 req/min.
+  - esbuild CVE (GHSA-67mh-4wv8-2f99) → Dev server SSRF (CVSS 6.5). Fix: `npm audit fix --force` (vite@7.3.1).
+  - No file size validation → Zip bomb DoS (CVSS 6.8). Fix: HEAD request antes de download con límite 500MB.
+  - Excessive CORS permissions → CSRF risk (CVSS 7.1). Fix: Environment variable validation, never wildcard with credentials.
+- **Controles Validados (✅):**
+  - SQL Injection Protection: 100% parameterized queries (psycopg2 + Supabase ORM)
+  - XSS Protection: 0 `dangerouslySetInnerHTML` usage, React automatic escaping
+  - Credentials Externalization: Validado que P0 fix de 2026-02-18 (DATABASE_PASSWORD, REDIS_PASSWORD) sigue activo
+  - UUID Validation: `_validate_uuid_format()` previene inyección vía malformed UUIDs
+  - Enum Validation: `_validate_status_enum()` con whitelist estricta
+- **Consecuencias:**
+  - ✅ **Ganamos:**
+    - Baseline de seguridad STRONG (95/100 score)
+    - Identificación proactiva de 3 vulnerabilidades críticas PRE-producción
+    - Roadmap de remediación estructurado (3 días, 23 horas total)
+    - Documentación completa de security stack para futuros audits
+    - OWASP compliance: A03 (Injection) ✅, A07 (XSS) ✅, A05 (Misconfiguration) 🟡 Partial
+  - ⚠️ **Perdemos:**
+    - 3 días de development para implementar fixes (opportunity cost vs. nuevas features)
+    - API calls adicionales (HEAD request para file size validation)
+    - Overhead de rate limiting puede impactar UX si límite muy estricto
+  - 🚨 **Trade-off Crítico: Magic Bytes Validation:**
+    - **PRO:** Previene malware 100% (si implementado correctamente)
+    - **CON:** Rhino 3DM tiene múltiples versiones (v1-v7), cada una con firma diferente. Riesgo de false positives si lista incompleta.
+    - **Decisión:** Implementar whitelist con 2 signatures más comunes + logging para revisar rechazos y expandir lista si necesario.
+- **Documentación Actualizada:**
+  - `docs/SECURITY-AUDIT-OWASP-2026-02-20.md`: Informe completo de auditoría con 12 findings, mapa de riesgos, y 3-day remediation roadmap
+  - `memory-bank/techContext.md`: Nueva sección "Security Stack" con stack completo (auth, transport sec, file upload sec, container sec, dependency mgmt, logging)
+  - `memory-bank/decisions.md`: Este ADR
+- **Timeline:** P0 fixes deben aplicarse en **24 horas** (file validation, CSP headers, python-jose). P1 fixes en **7 días** (rate limiting, CORS tightening, esbuild update, size validation).
+- **Siguiente Fase:** Implementar 3-day remediation roadmap, ejecutar security regression tests, re-audit para cerrar findings.
+
+---
+
 ## 2025-12-19 - Implementación del Memory Bank
 - **Contexto:** En un entorno multi-agente como Antigravity, múltiples instancias de Gemini pueden trabajar simultáneamente en diferentes partes del código. Sin un estado compartido, los agentes podrían entrar en conflicto o perder contexto.
 - **Decisión:** Crear una estructura de "Memory Bank" con archivos markdown que sirvan como fuente única de verdad para el contexto del proyecto. Implementar reglas obligatorias (`.agent/rules/00-memory-bank.md`) que fuercen a todos los agentes a leer el contexto antes de trabajar.

@@ -1,5 +1,7 @@
 import uuid
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from schemas import UploadRequest, UploadResponse, ConfirmUploadRequest, ConfirmUploadResponse
 from infra.supabase_client import get_supabase_client
 from infra.celery_client import get_celery_client
@@ -7,26 +9,32 @@ from services import UploadService
 from constants import ALLOWED_EXTENSION
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 @router.post("/url", response_model=UploadResponse)
-async def generate_upload_url(request: UploadRequest) -> UploadResponse:
+@limiter.limit("10/minute")  # Rate limit: 10 presigned URLs per minute per IP
+async def generate_upload_url(request: Request, body: UploadRequest) -> UploadResponse:
     """
     Generate a presigned URL for uploading a file to Supabase Storage.
 
     This endpoint validates the file extension and returns a unique file ID
     along with a signed upload URL that the client can use to upload
     the file directly to Supabase Storage.
+    
+    **Rate Limit:** 10 requests per minute per IP address to prevent DoS/cost attacks.
 
     Args:
-        request (UploadRequest): The request body containing filename and size.
+        request (Request): FastAPI request object (for rate limiting)
+        body (UploadRequest): The request body containing filename and size.
 
     Returns:
         UploadResponse: An object containing the file_id and the presigned upload_url.
 
     Raises:
         HTTPException: If the filename does not end with '.3dm'.
+        RateLimitExceeded: If client exceeds 10 requests/minute (429 Too Many Requests).
     """
-    if not request.filename.lower().endswith(ALLOWED_EXTENSION):
+    if not body.filename.lower().endswith(ALLOWED_EXTENSION):
         raise HTTPException(status_code=400, detail=f"Only {ALLOWED_EXTENSION} files are allowed")
 
     file_id: str = str(uuid.uuid4())
@@ -34,14 +42,14 @@ async def generate_upload_url(request: UploadRequest) -> UploadResponse:
     try:
         supabase = get_supabase_client()
         upload_service = UploadService(supabase)
-        signed_url, _ = upload_service.generate_presigned_url(file_id, request.filename)
+        signed_url, _ = upload_service.generate_presigned_url(file_id, body.filename)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate upload URL: {str(e)}")
 
     return UploadResponse(
         file_id=file_id,
         upload_url=signed_url,
-        filename=request.filename
+        filename=body.filename
     )
 
 

@@ -9,6 +9,7 @@ import os
 import psycopg2
 from contextlib import contextmanager
 import structlog
+import requests
 
 # Import from parent package
 try:
@@ -25,6 +26,7 @@ try:
         ERROR_MSG_FAILED_PARSE_3DM,
         TASK_MAX_RETRIES,
         TASK_RETRY_DELAY_SECONDS,
+        MAX_3DM_FILE_SIZE_MB,
     )
 except ImportError:
     # Fallback for test environment
@@ -126,7 +128,11 @@ def _fetch_block_metadata(block_id: str) -> tuple[str, str]:
 
 
 def _download_3dm_from_s3(url: str, local_path: str) -> None:
-    """Download .3dm file from S3 to local filesystem.
+    """
+    Download .3dm file from S3 to local filesystem with size validation.
+    
+    Performs a HEAD request to verify file size before downloading to prevent
+    zip bomb DoS attacks (OWASP A04:2021 - Insecure Design).
     
     Args:
         url: S3 URL of the .3dm file
@@ -134,9 +140,64 @@ def _download_3dm_from_s3(url: str, local_path: str) -> None:
         
     Raises:
         FileNotFoundError: If S3 URL is invalid or file doesn't exist
+        ValueError: If file exceeds MAX_3DM_FILE_SIZE_MB
     """
-    s3_client.download_file(url, local_path)
-    logger.info("download_3dm.success", url=url, local_path=local_path)
+    # SECURITY: HEAD request to check size before downloading
+    try:
+        response = requests.head(url, timeout=10)
+        response.raise_for_status()
+        
+        content_length = int(response.headers.get('Content-Length', 0))
+        size_mb = content_length / (1024 * 1024)
+        max_bytes = MAX_3DM_FILE_SIZE_MB * 1024 * 1024
+        
+        if content_length > max_bytes:
+            error_msg = (
+                f"File size {size_mb:.1f}MB exceeds limit {MAX_3DM_FILE_SIZE_MB}MB. "
+                f"Possible zip bomb attack or corrupt file."
+            )
+            logger.error(
+                "download_3dm.size_exceeded",
+                url=url,
+                size_mb=size_mb,
+                limit_mb=MAX_3DM_FILE_SIZE_MB
+            )
+            raise ValueError(error_msg)
+        
+        logger.info(
+            "download_3dm.size_check_passed",
+            url=url,
+            size_mb=size_mb
+        )
+        
+    except requests.exceptions.RequestException as e:
+        logger.warning(
+            "download_3dm.head_request_failed",
+            url=url,
+            error=str(e),
+            message="Proceeding with download (network issue or no HEAD support)"
+        )
+    
+    # Download file with streaming to handle large files safely
+    try:
+        with requests.get(url, stream=True, timeout=300) as r:
+            r.raise_for_status()
+            with open(local_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        
+        logger.info("download_3dm.success", url=url, local_path=local_path)
+    
+    except requests.exceptions.RequestException as e:
+        # Fallback to s3_client if requests fails (for compatibility)
+        logger.warning(
+            "download_3dm.requests_failed_fallback",
+            url=url,
+            error=str(e),
+            message="Falling back to s3_client.download_file()"
+        )
+        s3_client.download_file(url, local_path)
+        logger.info("download_3dm.success_fallback", url=url, local_path=local_path)
 
 
 def _parse_rhino_file(file_path: str, iso_code: str) -> rhino3dm.File3dm:

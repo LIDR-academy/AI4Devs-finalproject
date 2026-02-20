@@ -41,6 +41,7 @@ ISO_19650_PATTERN_DESCRIPTION = "[PREFIX]-[ZONE]-[TYPE]-[ID] (e.g., SF-NAV-CO-00
 # Geometry Validation
 GEOMETRY_CATEGORY_NAME = "geometry"
 MIN_VALID_VOLUME = 1e-6  # Minimum volume in cubic units (avoid near-zero volumes)
+MAX_3DM_FILE_SIZE_MB = 500  # Maximum file size for .3dm files (prevent zip bomb DoS)
 
 # Geometry Error Messages Templates
 GEOMETRY_ERROR_INVALID = "Geometry is marked as invalid by Rhino (obj.Geometry.IsValid = False)"
