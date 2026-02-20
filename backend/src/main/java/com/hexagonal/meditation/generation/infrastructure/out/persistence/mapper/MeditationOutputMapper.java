@@ -6,8 +6,6 @@ import com.hexagonal.meditation.generation.domain.model.NarrationScript;
 import com.hexagonal.meditation.generation.infrastructure.out.persistence.entity.MeditationOutputEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 /**
  * Mapper between domain GeneratedMeditationContent and persistence MeditationOutputEntity.
  */
@@ -33,13 +31,13 @@ public class MeditationOutputMapper {
             domain.createdAt()
         );
         
-        domain.outputMedia().ifPresent(media -> entity.setOutputMediaUrl(media.url()));
-        domain.subtitleFile().ifPresent(subtitle -> entity.setSubtitleUrl(subtitle.url()));
-        domain.backgroundImage().ifPresent(image -> entity.setBackgroundImageUrl(image.url()));
-        domain.backgroundMusic().ifPresent(music -> entity.setBackgroundMusicUrl(music.url()));
-        domain.durationSeconds().ifPresent(entity::setDurationSeconds);
-        domain.errorMessage().ifPresent(entity::setErrorMessage);
-        domain.completedAt().ifPresent(entity::setCompletedAt);
+        if (domain.outputMedia() != null) entity.setOutputMediaUrl(domain.outputMedia().url());
+        if (domain.subtitleFile() != null) entity.setSubtitleUrl(domain.subtitleFile().url());
+        if (domain.backgroundImage() != null) entity.setBackgroundImageUrl(domain.backgroundImage().url());
+        if (domain.backgroundMusic() != null) entity.setBackgroundMusicUrl(domain.backgroundMusic().url());
+        if (domain.durationSeconds() != null) entity.setDurationSeconds(domain.durationSeconds());
+        if (domain.errorMessage() != null) entity.setErrorMessage(domain.errorMessage());
+        if (domain.completedAt() != null) entity.setCompletedAt(domain.completedAt());
         
         return entity;
     }
@@ -53,23 +51,17 @@ public class MeditationOutputMapper {
     public GeneratedMeditationContent toDomain(MeditationOutputEntity entity) {
         NarrationScript narrationScript = new NarrationScript(entity.getNarrationScriptText());
         
-        Optional<MediaReference> outputMedia = Optional.ofNullable(entity.getOutputMediaUrl())
-            .map(MediaReference::new);
+        MediaReference outputMedia = entity.getOutputMediaUrl() != null
+            ? new MediaReference(entity.getOutputMediaUrl()) : null;
         
-        Optional<MediaReference> subtitleFile = Optional.ofNullable(entity.getSubtitleUrl())
-            .map(MediaReference::new);
+        MediaReference subtitleFile = entity.getSubtitleUrl() != null
+            ? new MediaReference(entity.getSubtitleUrl()) : null;
         
-        Optional<MediaReference> backgroundImage = Optional.ofNullable(entity.getBackgroundImageUrl())
-            .map(MediaReference::new);
+        MediaReference backgroundImage = entity.getBackgroundImageUrl() != null
+            ? new MediaReference(entity.getBackgroundImageUrl()) : null;
         
-        Optional<MediaReference> backgroundMusic = Optional.ofNullable(entity.getBackgroundMusicUrl())
-            .map(MediaReference::new);
-        
-        Optional<Integer> durationSeconds = Optional.ofNullable(entity.getDurationSeconds());
-        
-        Optional<String> errorMessage = Optional.ofNullable(entity.getErrorMessage());
-        
-        Optional<java.time.Instant> completedAt = Optional.ofNullable(entity.getCompletedAt());
+        MediaReference backgroundMusic = entity.getBackgroundMusicUrl() != null
+            ? new MediaReference(entity.getBackgroundMusicUrl()) : null;
         
         return new GeneratedMeditationContent(
             entity.getMeditationId(),
@@ -83,10 +75,10 @@ public class MeditationOutputMapper {
             subtitleFile,
             backgroundImage,
             backgroundMusic,
-            durationSeconds,
-            errorMessage,
+            entity.getDurationSeconds(),
+            entity.getErrorMessage(),
             entity.getCreatedAt(),
-            completedAt
+            entity.getCompletedAt()
         );
     }
 }

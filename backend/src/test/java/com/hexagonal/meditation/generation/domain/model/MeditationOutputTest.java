@@ -25,7 +25,7 @@ class MeditationOutputTest {
     @Test
     void shouldCreateAudioMeditationWithFactory() {
         UUID compositionId = UUID.randomUUID();
-        String userId = "user-123";
+        UUID userId = UUID.randomUUID();
         String text = "Close your eyes and breathe";
         MediaReference music = new MediaReference("calm-ocean");
         String idempotencyKey = "test-key-audio";
@@ -42,10 +42,10 @@ class MeditationOutputTest {
         assertEquals(text, output.textSnapshot());
         assertEquals(music, output.musicReference());
         assertEquals(idempotencyKey, output.idempotencyKey());
-        assertTrue(output.imageReference().isEmpty());
-        assertTrue(output.mediaUrl().isEmpty());
-        assertTrue(output.subtitleUrl().isEmpty());
-        assertTrue(output.durationSeconds().isEmpty());
+        assertNull(output.imageReference());
+        assertNull(output.mediaUrl());
+        assertNull(output.subtitleUrl());
+        assertNull(output.durationSeconds());
         assertEquals(GenerationStatus.PROCESSING, output.status());
         assertEquals(FIXED_CLOCK.instant(), output.createdAt());
         assertEquals(FIXED_CLOCK.instant(), output.updatedAt());
@@ -54,7 +54,7 @@ class MeditationOutputTest {
     @Test
     void shouldCreateVideoMeditationWithFactory() {
         UUID compositionId = UUID.randomUUID();
-        String userId = "user-456";
+        UUID userId = UUID.randomUUID();
         String text = "Welcome to your meditation";
         MediaReference music = new MediaReference("nature-sounds");
         MediaReference image = new MediaReference("peaceful-landscape");
@@ -72,11 +72,11 @@ class MeditationOutputTest {
         assertEquals(text, output.textSnapshot());
         assertEquals(music, output.musicReference());
         assertEquals(idempotencyKey, output.idempotencyKey());
-        assertTrue(output.imageReference().isPresent());
-        assertEquals(image, output.imageReference().get());
-        assertTrue(output.mediaUrl().isEmpty());
-        assertTrue(output.subtitleUrl().isEmpty());
-        assertTrue(output.durationSeconds().isEmpty());
+        assertNotNull(output.imageReference());
+        assertEquals(image, output.imageReference());
+        assertNull(output.mediaUrl());
+        assertNull(output.subtitleUrl());
+        assertNull(output.durationSeconds());
         assertEquals(GenerationStatus.PROCESSING, output.status());
     }
 
@@ -90,15 +90,15 @@ class MeditationOutputTest {
             new MeditationOutput(
                 id,
                 compositionId,
-                "user-123",
+                UUID.randomUUID(),
                 MediaType.VIDEO,
                 "Text",
                 music,
-                java.util.Optional.empty(), // VIDEO requires image
+                null, // VIDEO requires image
                 "test-key",
-                java.util.Optional.empty(),
-                java.util.Optional.empty(),
-                java.util.Optional.empty(),
+                null,
+                null,
+                null,
                 GenerationStatus.PROCESSING,
                 FIXED_CLOCK.instant(),
                 FIXED_CLOCK.instant()
@@ -110,7 +110,7 @@ class MeditationOutputTest {
     void shouldMarkAsCompleted() {
         MeditationOutput processing = MeditationOutput.createAudio(
             UUID.randomUUID(),
-            "user-123",
+            UUID.randomUUID(),
             "Text",
             new MediaReference("music"),
             "test-key",
@@ -130,12 +130,12 @@ class MeditationOutputTest {
         );
         
         assertEquals(GenerationStatus.COMPLETED, completed.status());
-        assertTrue(completed.mediaUrl().isPresent());
-        assertEquals("https://s3.aws/media.mp3", completed.mediaUrl().get());
-        assertTrue(completed.subtitleUrl().isPresent());
-        assertEquals("https://s3.aws/subs.srt", completed.subtitleUrl().get());
-        assertTrue(completed.durationSeconds().isPresent());
-        assertEquals(180, completed.durationSeconds().get());
+        assertNotNull(completed.mediaUrl());
+        assertEquals("https://s3.aws/media.mp3", completed.mediaUrl());
+        assertNotNull(completed.subtitleUrl());
+        assertEquals("https://s3.aws/subs.srt", completed.subtitleUrl());
+        assertNotNull(completed.durationSeconds());
+        assertEquals(180, completed.durationSeconds());
         assertEquals(laterClock.instant(), completed.updatedAt());
         assertEquals(FIXED_CLOCK.instant(), completed.createdAt()); // unchanged
     }
@@ -144,7 +144,7 @@ class MeditationOutputTest {
     void shouldMarkAsFailed() {
         MeditationOutput processing = MeditationOutput.createAudio(
             UUID.randomUUID(),
-            "user-123",
+            UUID.randomUUID(),
             "Text",
             new MediaReference("music"),
             "test-key",
@@ -160,15 +160,15 @@ class MeditationOutputTest {
         
         assertEquals(GenerationStatus.FAILED, failed.status());
         assertEquals(laterClock.instant(), failed.updatedAt());
-        assertTrue(failed.mediaUrl().isEmpty());
-        assertTrue(failed.subtitleUrl().isEmpty());
+        assertNull(failed.mediaUrl());
+        assertNull(failed.subtitleUrl());
     }
 
     @Test
     void shouldMarkAsTimeout() {
         MeditationOutput processing = MeditationOutput.createAudio(
             UUID.randomUUID(),
-            "user-123",
+            UUID.randomUUID(),
             "Text",
             new MediaReference("music"),
             "test-key",
@@ -190,7 +190,7 @@ class MeditationOutputTest {
     void shouldCheckIfCompleted() {
         MeditationOutput processing = MeditationOutput.createAudio(
             UUID.randomUUID(),
-            "user-123",
+            UUID.randomUUID(),
             "Text",
             new MediaReference("music"),
             "test-key",
@@ -213,7 +213,7 @@ class MeditationOutputTest {
     void shouldCheckIfProcessing() {
         MeditationOutput output = MeditationOutput.createAudio(
             UUID.randomUUID(),
-            "user-123",
+            UUID.randomUUID(),
             "Text",
             new MediaReference("music"),
             "test-key",
@@ -228,7 +228,7 @@ class MeditationOutputTest {
     void shouldCheckIfFailed() {
         MeditationOutput processing = MeditationOutput.createAudio(
             UUID.randomUUID(),
-            "user-123",
+            UUID.randomUUID(),
             "Text",
             new MediaReference("music"),
             "test-key",
@@ -247,15 +247,15 @@ class MeditationOutputTest {
             new MeditationOutput(
                 null,
                 UUID.randomUUID(),
-                "user",
+                UUID.randomUUID(),
                 MediaType.AUDIO,
                 "text",
                 new MediaReference("music"),
-                java.util.Optional.empty(),
+                null,
                 "test-key",
-                java.util.Optional.empty(),
-                java.util.Optional.empty(),
-                java.util.Optional.empty(),
+                null,
+                null,
+                null,
                 GenerationStatus.PROCESSING,
                 FIXED_CLOCK.instant(),
                 FIXED_CLOCK.instant()
@@ -278,25 +278,11 @@ class MeditationOutputTest {
     }
 
     @Test
-    void shouldRejectBlankUserId() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            MeditationOutput.createAudio(
-                UUID.randomUUID(),
-                "  ",
-                "text",
-                new MediaReference("music"),
-                "test-key",
-                FIXED_CLOCK
-            );
-        });
-    }
-
-    @Test
     void shouldRejectNullTextSnapshot() {
         assertThrows(IllegalArgumentException.class, () -> {
             MeditationOutput.createAudio(
                 UUID.randomUUID(),
-                "user",
+                UUID.randomUUID(),
                 null,
                 new MediaReference("music"),
                 "test-key",
@@ -310,7 +296,7 @@ class MeditationOutputTest {
         assertThrows(IllegalArgumentException.class, () -> {
             MeditationOutput.createAudio(
                 UUID.randomUUID(),
-                "user",
+                UUID.randomUUID(),
                 "text",
                 null,
                 "test-key",
@@ -323,7 +309,7 @@ class MeditationOutputTest {
     void shouldPreserveIdAcrossStateTransitions() {
         MeditationOutput original = MeditationOutput.createAudio(
             UUID.randomUUID(),
-            "user-123",
+            UUID.randomUUID(),
             "Text",
             new MediaReference("music"),
             "test-key",

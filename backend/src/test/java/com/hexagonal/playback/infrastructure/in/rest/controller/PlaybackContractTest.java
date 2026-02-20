@@ -89,7 +89,7 @@ public class PlaybackContractTest {
                 MEDITATION_ID,
                 USER_ID,
                 "Contract Test Meditation",
-                Instant.now(),
+                Instant.parse("2026-01-01T00:00:00Z"),
                 ProcessingState.COMPLETED,
                 new MediaUrls("https://s3.aws.com/audio.mp3", "https://s3.aws.com/video.mp4", null)
         );
@@ -113,7 +113,7 @@ public class PlaybackContractTest {
                 MEDITATION_ID,
                 USER_ID,
                 "Playback Contract Test",
-                Instant.now(),
+                Instant.parse("2026-01-01T00:00:00Z"),
                 ProcessingState.COMPLETED,
                 new MediaUrls("https://s3.aws.com/audio.mp3", null, "https://s3.aws.com/subs.srt")
         );

@@ -10,7 +10,7 @@ import java.time.Instant;
  * 
  * @param error Error code (e.g., VALIDATION_ERROR, NOT_FOUND)
  * @param message Human-readable error message
- * @param timestamp When the error occurred
+ * @param timestamp When the error occurred (must be supplied by caller via injected Clock)
  * @param details Additional error details (optional)
  */
 public record ErrorResponse(
@@ -19,18 +19,4 @@ public record ErrorResponse(
         Instant timestamp,
         Object details
 ) {
-    
-    /**
-     * Creates an error response without details.
-     */
-    public ErrorResponse(String error, String message) {
-        this(error, message, Instant.now(), null);
-    }
-    
-    /**
-     * Creates an error response with details.
-     */
-    public ErrorResponse(String error, String message, Object details) {
-        this(error, message, Instant.now(), details);
-    }
 }

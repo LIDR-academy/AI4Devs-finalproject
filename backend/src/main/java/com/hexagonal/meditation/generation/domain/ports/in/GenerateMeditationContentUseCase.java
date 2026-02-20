@@ -65,10 +65,10 @@ public interface GenerateMeditationContentUseCase {
         java.util.UUID userId,
         com.hexagonal.meditation.generation.domain.enums.GenerationStatus status,
         com.hexagonal.meditation.generation.domain.enums.MediaType mediaType,
-        java.util.Optional<String> mediaUrl,
-        java.util.Optional<String> subtitleUrl,
-        java.util.Optional<Integer> durationSeconds,
+        String mediaUrl,
+        String subtitleUrl,
+        Integer durationSeconds,
         java.time.Instant createdAt,
-        java.util.Optional<java.time.Instant> completedAt
+        java.time.Instant completedAt
     ) {}
 }

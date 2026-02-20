@@ -88,7 +88,7 @@ class MeditationCompositionTest {
     void shouldRejectNullId() {
         // Given
         TextContent textContent = new TextContent("Test");
-        Instant now = Instant.now();
+        Instant now = FIXED_CLOCK.instant();
         
         // When & Then
         assertThrows(NullPointerException.class, () -> {
@@ -101,7 +101,7 @@ class MeditationCompositionTest {
     void shouldRejectNullTextContent() {
         // Given
         UUID id = UUID.randomUUID();
-        Instant now = Instant.now();
+        Instant now = FIXED_CLOCK.instant();
         
         // When & Then
         assertThrows(NullPointerException.class, () -> {

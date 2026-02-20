@@ -26,15 +26,13 @@ class TextGenerationAiAdapterIntegrationTest {
 
     @BeforeAll
     static void initAiTextRequestProps() {
-        OpenAiProperties props = new OpenAiProperties();
-        props.getText().setModel("gpt-4o-mini");
-        props.setApiKey("test-api-key");
-        props.setBaseUrl("http://localhost");
-        props.getText().setTemperature(0.7);
-        props.getText().setMaxTokens(256);
-        props.getText().setTopP(1.0);
-        props.getText().setFrequencyPenalty(0.0);
-        props.getText().setPresencePenalty(0.0);
+        OpenAiProperties props = new OpenAiProperties(
+            "http://localhost",
+            "test-api-key",
+            new OpenAiProperties.Text("gpt-4o-mini", 0.7, 256, 1.0, 0.0, 0.0),
+            null,
+            null, null, null
+        );
         AiTextRequest.setProperties(props);
     }
 

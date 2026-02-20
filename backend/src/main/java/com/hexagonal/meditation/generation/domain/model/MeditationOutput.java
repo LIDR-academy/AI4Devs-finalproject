@@ -5,7 +5,6 @@ import com.hexagonal.meditation.generation.domain.enums.MediaType;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -23,15 +22,15 @@ import java.util.UUID;
 public record MeditationOutput(
     UUID id,
     UUID compositionId,
-    String userId,
+    UUID userId,
     MediaType type,
     String textSnapshot,
     MediaReference musicReference,
-    Optional<MediaReference> imageReference,
+    MediaReference imageReference,
     String idempotencyKey,
-    Optional<String> mediaUrl,
-    Optional<String> subtitleUrl,
-    Optional<Integer> durationSeconds,
+    String mediaUrl,
+    String subtitleUrl,
+    Integer durationSeconds,
     GenerationStatus status,
     Instant createdAt,
     Instant updatedAt
@@ -47,8 +46,8 @@ public record MeditationOutput(
         if (compositionId == null) {
             throw new IllegalArgumentException("Composition ID cannot be null");
         }
-        if (userId == null || userId.isBlank()) {
-            throw new IllegalArgumentException("User ID cannot be null or blank");
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
         }
         if (type == null) {
             throw new IllegalArgumentException("Media type cannot be null");
@@ -59,20 +58,8 @@ public record MeditationOutput(
         if (musicReference == null) {
             throw new IllegalArgumentException("Music reference cannot be null");
         }
-        if (imageReference == null) {
-            throw new IllegalArgumentException("Image reference Optional cannot be null");
-        }
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new IllegalArgumentException("Idempotency key cannot be null or blank");
-        }
-        if (mediaUrl == null) {
-            throw new IllegalArgumentException("Media URL Optional cannot be null");
-        }
-        if (subtitleUrl == null) {
-            throw new IllegalArgumentException("Subtitle URL Optional cannot be null");
-        }
-        if (durationSeconds == null) {
-            throw new IllegalArgumentException("Duration seconds Optional cannot be null");
         }
         if (status == null) {
             throw new IllegalArgumentException("Status cannot be null");
@@ -85,7 +72,7 @@ public record MeditationOutput(
         }
         
         // Business rule: VIDEO requires image
-        if (type == MediaType.VIDEO && imageReference.isEmpty()) {
+        if (type == MediaType.VIDEO && imageReference == null) {
             throw new IllegalArgumentException("VIDEO type requires an image reference");
         }
     }
@@ -103,7 +90,7 @@ public record MeditationOutput(
      */
     public static MeditationOutput createAudio(
         UUID compositionId,
-        String userId,
+        UUID userId,
         String textSnapshot,
         MediaReference musicReference,
         String idempotencyKey,
@@ -117,11 +104,11 @@ public record MeditationOutput(
             MediaType.AUDIO,
             textSnapshot,
             musicReference,
-            Optional.empty(), // no image
+            null, // no image
             idempotencyKey,
-            Optional.empty(), // media URL set after generation
-            Optional.empty(), // subtitle URL set after generation
-            Optional.empty(), // duration set after generation
+            null, // media URL set after generation
+            null, // subtitle URL set after generation
+            null, // duration set after generation
             GenerationStatus.PROCESSING,
             now,
             now
@@ -142,7 +129,7 @@ public record MeditationOutput(
      */
     public static MeditationOutput createVideo(
         UUID compositionId,
-        String userId,
+        UUID userId,
         String textSnapshot,
         MediaReference musicReference,
         MediaReference imageReference,
@@ -157,11 +144,11 @@ public record MeditationOutput(
             MediaType.VIDEO,
             textSnapshot,
             musicReference,
-            Optional.of(imageReference), // image present
+            imageReference, // image present
             idempotencyKey,
-            Optional.empty(), // media URL set after generation
-            Optional.empty(), // subtitle URL set after generation
-            Optional.empty(), // duration set after generation
+            null, // media URL set after generation
+            null, // subtitle URL set after generation
+            null, // duration set after generation
             GenerationStatus.PROCESSING,
             now,
             now
@@ -192,9 +179,9 @@ public record MeditationOutput(
             this.musicReference,
             this.imageReference,
             this.idempotencyKey,
-            Optional.of(mediaUrl),
-            Optional.of(subtitleUrl),
-            Optional.of(durationSeconds),
+            mediaUrl,
+            subtitleUrl,
+            durationSeconds,
             GenerationStatus.COMPLETED,
             this.createdAt,
             clock.instant()

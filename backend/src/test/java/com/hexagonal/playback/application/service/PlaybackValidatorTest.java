@@ -17,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("PlaybackValidator Tests")
 class PlaybackValidatorTest {
 
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
+
     private PlaybackValidator playbackValidator;
 
     @BeforeEach
@@ -32,7 +34,7 @@ class PlaybackValidatorTest {
             UUID.randomUUID(),
             UUID.randomUUID(),
             "Completed Meditation",
-            Instant.now(),
+            FIXED_NOW,
             ProcessingState.COMPLETED,
             new MediaUrls("http://audio.url", null, null)
         );
@@ -51,7 +53,7 @@ class PlaybackValidatorTest {
             meditationId,
             UUID.randomUUID(),
             "Pending Meditation",
-            Instant.now(),
+            FIXED_NOW,
             ProcessingState.PENDING,
             null
         );
@@ -76,7 +78,7 @@ class PlaybackValidatorTest {
             meditationId,
             UUID.randomUUID(),
             "Processing Meditation",
-            Instant.now(),
+            FIXED_NOW,
             ProcessingState.PROCESSING,
             null
         );
@@ -101,7 +103,7 @@ class PlaybackValidatorTest {
             meditationId,
             UUID.randomUUID(),
             "Failed Meditation",
-            Instant.now(),
+            FIXED_NOW,
             ProcessingState.FAILED,
             null
         );
@@ -134,7 +136,7 @@ class PlaybackValidatorTest {
             UUID.randomUUID(),
             UUID.randomUUID(),
             "Test",
-            Instant.now(),
+            FIXED_NOW,
             ProcessingState.COMPLETED,
             new MediaUrls("http://audio.url", null, null)
         );
@@ -143,7 +145,7 @@ class PlaybackValidatorTest {
             UUID.randomUUID(),
             UUID.randomUUID(),
             "Test",
-            Instant.now(),
+            FIXED_NOW,
             ProcessingState.PENDING,
             null
         );

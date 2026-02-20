@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +18,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("MeditationOutputDtoMapper Tests")
 class MeditationOutputDtoMapperTest {
+
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
 
     private MeditationOutputDtoMapper mapper;
 
@@ -37,8 +38,8 @@ class MeditationOutputDtoMapperTest {
             // Given
             UUID meditationId = UUID.randomUUID();
             UUID compositionId = UUID.randomUUID();
-            String userId = "user-123";
-            Instant now = Instant.now();
+            UUID userId = UUID.randomUUID();
+            Instant now = FIXED_NOW;
 
             MeditationOutput output = new MeditationOutput(
                     meditationId,
@@ -47,11 +48,11 @@ class MeditationOutputDtoMapperTest {
                     MediaType.VIDEO,
                     "Test meditation text",
                     new MediaReference("calm-music"),
-                    Optional.of(new MediaReference("peaceful-image")),
+                    new MediaReference("peaceful-image"),
                     "idempotency-key-123",
-                    Optional.of("https://s3.amazonaws.com/meditation-outputs/generation/user-123/video.mp4"),
-                    Optional.of("https://s3.amazonaws.com/meditation-outputs/generation/user-123/subs.srt"),
-                    Optional.of(180),
+                    "https://s3.amazonaws.com/meditation-outputs/generation/user-123/video.mp4",
+                    "https://s3.amazonaws.com/meditation-outputs/generation/user-123/subs.srt",
+                    180,
                     GenerationStatus.COMPLETED,
                     now,
                     now
@@ -77,8 +78,8 @@ class MeditationOutputDtoMapperTest {
             // Given
             UUID meditationId = UUID.randomUUID();
             UUID compositionId = UUID.randomUUID();
-            String userId = "user-456";
-            Instant now = Instant.now();
+            UUID userId = UUID.randomUUID();
+            Instant now = FIXED_NOW;
 
             MeditationOutput output = new MeditationOutput(
                     meditationId,
@@ -87,11 +88,11 @@ class MeditationOutputDtoMapperTest {
                     MediaType.AUDIO,
                     "Test audio content",
                     new MediaReference("forest-sounds"),
-                    Optional.empty(),
+                    null,
                     "idempotency-key-456",
-                    Optional.of("https://s3.amazonaws.com/meditation-outputs/generation/user-456/audio.mp3"),
-                    Optional.of("https://s3.amazonaws.com/meditation-outputs/generation/user-456/subs.srt"),
-                    Optional.of(240),
+                    "https://s3.amazonaws.com/meditation-outputs/generation/user-456/audio.mp3",
+                    "https://s3.amazonaws.com/meditation-outputs/generation/user-456/subs.srt",
+                    240,
                     GenerationStatus.COMPLETED,
                     now,
                     now
@@ -116,8 +117,8 @@ class MeditationOutputDtoMapperTest {
             // Given
             UUID meditationId = UUID.randomUUID();
             UUID compositionId = UUID.randomUUID();
-            String userId = "user-processing";
-            Instant now = Instant.now();
+            UUID userId = UUID.randomUUID();
+            Instant now = FIXED_NOW;
 
             MeditationOutput output = new MeditationOutput(
                     meditationId,
@@ -126,11 +127,11 @@ class MeditationOutputDtoMapperTest {
                     MediaType.VIDEO,
                     "Processing content",
                     new MediaReference("music-ref"),
-                    Optional.of(new MediaReference("image-ref")),
+                    new MediaReference("image-ref"),
                     "idempotency-key-processing",
-                    Optional.empty(),  // No mediaUrl yet
-                    Optional.empty(),  // No subtitleUrl yet
-                    Optional.empty(),  // No duration yet
+                    null,  // No mediaUrl yet
+                    null,  // No subtitleUrl yet
+                    null,  // No duration yet
                     GenerationStatus.PROCESSING,
                     now,
                     now
@@ -156,8 +157,8 @@ class MeditationOutputDtoMapperTest {
             // Given
             UUID meditationId = UUID.randomUUID();
             UUID compositionId = UUID.randomUUID();
-            String userId = "user-failed";
-            Instant now = Instant.now();
+            UUID userId = UUID.randomUUID();
+            Instant now = FIXED_NOW;
 
             MeditationOutput output = new MeditationOutput(
                     meditationId,
@@ -166,11 +167,11 @@ class MeditationOutputDtoMapperTest {
                     MediaType.AUDIO,
                     "Failed content",
                     new MediaReference("music-ref"),
-                    Optional.empty(),
+                    null,
                     "idempotency-key-failed",
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
+                    null,
+                    null,
+                    null,
                     GenerationStatus.FAILED,
                     now,
                     now
@@ -191,8 +192,8 @@ class MeditationOutputDtoMapperTest {
             // Given
             UUID meditationId = UUID.randomUUID();
             UUID compositionId = UUID.randomUUID();
-            String userId = "user-timeout";
-            Instant now = Instant.now();
+            UUID userId = UUID.randomUUID();
+            Instant now = FIXED_NOW;
 
             MeditationOutput output = new MeditationOutput(
                     meditationId,
@@ -201,11 +202,11 @@ class MeditationOutputDtoMapperTest {
                     MediaType.VIDEO,
                     "Timeout content",
                     new MediaReference("music-ref"),
-                    Optional.of(new MediaReference("image-ref")),
+                    new MediaReference("image-ref"),
                     "idempotency-key-timeout",
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
+                    null,
+                    null,
+                    null,
                     GenerationStatus.TIMEOUT,
                     now,
                     now

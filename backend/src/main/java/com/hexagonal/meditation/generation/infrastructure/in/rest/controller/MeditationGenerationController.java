@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Clock;
 import java.util.UUID;
 
 /**
@@ -47,14 +48,17 @@ public class MeditationGenerationController {
     private final GenerateMeditationContentUseCase generateMeditationContentUseCase;
     private final ContentRepositoryPort contentRepositoryPort;
     private final MeditationOutputDtoMapper mapper;
+    private final Clock clock;
 
     public MeditationGenerationController(
             GenerateMeditationContentUseCase generateMeditationContentUseCase,
             ContentRepositoryPort contentRepositoryPort,
-            MeditationOutputDtoMapper mapper) {
+            MeditationOutputDtoMapper mapper,
+            Clock clock) {
         this.generateMeditationContentUseCase = generateMeditationContentUseCase;
         this.contentRepositoryPort = contentRepositoryPort;
         this.mapper = mapper;
+        this.clock = clock;
     }
 
     /**
@@ -144,9 +148,9 @@ public class MeditationGenerationController {
         return new GenerationResponse(
                 domainResponse.id(),
                 domainResponse.mediaType().name(),
-                domainResponse.mediaUrl().orElse(null),
-                domainResponse.subtitleUrl().orElse(null),
-                domainResponse.durationSeconds().orElse(null),
+                domainResponse.mediaUrl(),
+                domainResponse.subtitleUrl(),
+                domainResponse.durationSeconds(),
                 domainResponse.status().name(),
                 formatStatusMessage(domainResponse)
         );
@@ -177,8 +181,8 @@ public class MeditationGenerationController {
         return new GenerationResponse(
                 content.meditationId(),
                 content.mediaType().name(),
-                content.outputMedia().map(ref -> ref.url()).orElse(null),
-                content.subtitleFile().map(ref -> ref.url()).orElse(null),
+                content.outputMedia() != null ? content.outputMedia().url() : null,
+                content.subtitleFile() != null ? content.subtitleFile().url() : null,
                 (int) content.narrationScript().estimateDurationSeconds(),
                 content.status().name(),
                 formatContentStatusMessage(content)
@@ -223,7 +227,9 @@ public class MeditationGenerationController {
         
         var errorResponse = new com.hexagonal.meditationbuilder.infrastructure.in.rest.dto.ErrorResponse(
                 "MEDITATION_NOT_FOUND",
-                ex.getMessage()
+                ex.getMessage(),
+                clock.instant(),
+                null
         );
         
         return ResponseEntity
@@ -242,7 +248,9 @@ public class MeditationGenerationController {
         
         var errorResponse = new com.hexagonal.meditationbuilder.infrastructure.in.rest.dto.ErrorResponse(
                 "GENERATION_TIMEOUT",
-                ex.getMessage()
+                ex.getMessage(),
+                clock.instant(),
+                null
         );
         
         return ResponseEntity
@@ -261,7 +269,9 @@ public class MeditationGenerationController {
         
         var errorResponse = new com.hexagonal.meditationbuilder.infrastructure.in.rest.dto.ErrorResponse(
                 "INVALID_CONTENT",
-                ex.getMessage()
+                ex.getMessage(),
+                clock.instant(),
+                null
         );
         
         return ResponseEntity
@@ -280,7 +290,9 @@ public class MeditationGenerationController {
         
         var errorResponse = new com.hexagonal.meditationbuilder.infrastructure.in.rest.dto.ErrorResponse(
                 "GENERATION_FAILED",
-                "An error occurred during generation: " + ex.getMessage()
+                "An error occurred during generation: " + ex.getMessage(),
+                clock.instant(),
+                null
         );
         
         return ResponseEntity

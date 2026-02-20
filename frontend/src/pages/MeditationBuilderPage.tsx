@@ -2,8 +2,6 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   TextEditor,
   OutputTypeIndicator,
-  MusicSelector,
-  MusicPreview,
   ImagePreview,
   GenerateTextButton,
   GenerateImageButton,
@@ -15,9 +13,7 @@ import LocalMusicItem from '@/components/LocalMusicItem';
 import { useUploadImage, useUploadMusic } from '@/hooks/useFileUpload';
 import {
   useUpdateText,
-  useSelectMusic,
   useRemoveImage,
-  useMusicPreview,
   useImagePreview,
   useGenerateMeditation,
 } from '@/hooks';
@@ -44,7 +40,6 @@ export function MeditationBuilderPage() {
   const generationError = useGenerationError();
 
   const updateText = useUpdateText(compositionId);
-  const selectMusic = useSelectMusic(compositionId);
   const removeImage = useRemoveImage(compositionId);
 
   const generateText = useGenerateText({ compositionId });
@@ -57,7 +52,6 @@ export function MeditationBuilderPage() {
   const uploadImage = useUploadImage();
   const uploadMusic = useUploadMusic();
 
-  const musicPreview = useMusicPreview(compositionId, !!selectedMusicId);
   const imagePreview = useImagePreview(compositionId, !!selectedImageId);
 
   useEffect(() => {
@@ -75,17 +69,11 @@ export function MeditationBuilderPage() {
   const [localAudioFile, setLocalAudioFile] = useState<File | null>(null);
 
   const musicPreviewData = useMemo(() => {
-    if (localAudioUrl) {
-      return {
-        previewUrl: localAudioUrl,
-        musicName: localAudioName,
-      };
-    }
     return {
-      previewUrl: musicPreview.data?.previewUrl,
-      musicName: musicPreview.data?.musicReference ?? selectedMusicId ?? '',
+      previewUrl: localAudioUrl ?? undefined,
+      musicName: localAudioName,
     };
-  }, [localAudioUrl, localAudioName, musicPreview.data, selectedMusicId]);
+  }, [localAudioUrl, localAudioName]);
 
   // Track music duration
   const [musicDuration, setMusicDuration] = useState<number | null>(null);
@@ -307,27 +295,7 @@ export function MeditationBuilderPage() {
                 useComposerStore.getState().setIsMusicPlaying(false);
               }}
             />
-          ) : (
-            <>
-              <MusicSelector
-                onSelect={(id) =>
-                  selectMusic.mutate({ musicReference: id })
-                }
-              />
-              <MusicPreview
-                previewUrl={musicPreviewData.previewUrl}
-                musicName={musicPreviewData.musicName}
-                onRemove={() => {
-                  if (localAudioUrl) {
-                    URL.revokeObjectURL(localAudioUrl);
-                    setLocalAudioUrl(null);
-                    setLocalAudioName('');
-                    setLocalAudioFile(null);
-                  }
-                }}
-              />
-            </>
-          )}
+          ) : null}
           
           <div style={{ marginTop: '8px' }}>
             <MusicSelectorButton 

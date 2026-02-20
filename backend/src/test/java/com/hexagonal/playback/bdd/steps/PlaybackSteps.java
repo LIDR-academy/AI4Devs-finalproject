@@ -15,6 +15,8 @@ import static org.hamcrest.Matchers.*;
 
 public class PlaybackSteps {
 
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -65,7 +67,7 @@ public class PlaybackSteps {
             userId,
             idempotencyKey,
             "Meditation title for BDD (" + estado + ")",
-            Instant.now(),
+            FIXED_NOW,
             state.name(),
             "AUDIO",
             state == ProcessingState.COMPLETED ? "http://s3.aws.com/audio.mp3" : null,

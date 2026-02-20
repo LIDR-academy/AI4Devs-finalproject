@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,11 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final Clock clock;
+
+    public GlobalExceptionHandler(Clock clock) {
+        this.clock = clock;
+    }
 
     // ========== 400 Bad Request ==========
 
@@ -44,7 +50,7 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("VALIDATION_ERROR", "Request validation failed", fieldErrors));
+                .body(new ErrorResponse("VALIDATION_ERROR", "Request validation failed", clock.instant(), fieldErrors));
     }
 
     /**
@@ -56,7 +62,7 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("INVALID_REQUEST", ex.getMessage()));
+                .body(new ErrorResponse("INVALID_REQUEST", ex.getMessage(), clock.instant(), null));
     }
 
     /**
@@ -68,7 +74,7 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse("INVALID_STATE", ex.getMessage()));
+                .body(new ErrorResponse("INVALID_STATE", ex.getMessage(), clock.instant(), null));
     }
 
     // ========== 404 Not Found ==========
@@ -82,7 +88,7 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("NOT_FOUND", ex.getMessage()));
+                .body(new ErrorResponse("NOT_FOUND", ex.getMessage(), clock.instant(), null));
     }
 
     /**
@@ -94,7 +100,7 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("MUSIC_NOT_FOUND", ex.getMessage()));
+                .body(new ErrorResponse("MUSIC_NOT_FOUND", ex.getMessage(), clock.instant(), null));
     }
 
     // ========== 429 Rate Limit Exceeded ==========
@@ -108,13 +114,13 @@ public class GlobalExceptionHandler {
             log.warn("Text generation rate limit exceeded");
             return ResponseEntity
                     .status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(new ErrorResponse("RATE_LIMIT_EXCEEDED", "AI text service rate limit exceeded. Please retry later."));
+                    .body(new ErrorResponse("RATE_LIMIT_EXCEEDED", "AI text service rate limit exceeded. Please retry later.", clock.instant(), null));
         }
         
         log.error("Text generation service error: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(new ErrorResponse("SERVICE_UNAVAILABLE", "AI text service temporarily unavailable."));
+                .body(new ErrorResponse("SERVICE_UNAVAILABLE", "AI text service temporarily unavailable.", clock.instant(), null));
     }
 
     /**
@@ -126,13 +132,13 @@ public class GlobalExceptionHandler {
             log.warn("Image generation rate limit exceeded");
             return ResponseEntity
                     .status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body(new ErrorResponse("RATE_LIMIT_EXCEEDED", "AI image service rate limit exceeded. Please retry later."));
+                    .body(new ErrorResponse("RATE_LIMIT_EXCEEDED", "AI image service rate limit exceeded. Please retry later.", clock.instant(), null));
         }
         
         log.error("Image generation service error: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(new ErrorResponse("SERVICE_UNAVAILABLE", "AI image service temporarily unavailable."));
+                .body(new ErrorResponse("SERVICE_UNAVAILABLE", "AI image service temporarily unavailable.", clock.instant(), null));
     }
 
     // ========== 503 Service Unavailable ==========
@@ -146,7 +152,7 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(new ErrorResponse("TEXT_GENERATION_FAILED", "Failed to generate/enhance text. Please retry later."));
+                .body(new ErrorResponse("TEXT_GENERATION_FAILED", "Failed to generate/enhance text. Please retry later.", clock.instant(), null));
     }
 
     /**
@@ -158,7 +164,7 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(new ErrorResponse("IMAGE_GENERATION_FAILED", "Failed to generate image. Please retry later."));
+                .body(new ErrorResponse("IMAGE_GENERATION_FAILED", "Failed to generate image. Please retry later.", clock.instant(), null));
     }
 
     // ========== 500 Internal Server Error ==========
@@ -172,6 +178,6 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("INTERNAL_ERROR", "An unexpected error occurred."));
+                .body(new ErrorResponse("INTERNAL_ERROR", "An unexpected error occurred.", clock.instant(), null));
     }
 }

@@ -46,7 +46,7 @@ spring:
 # OpenAI - Use real API for local development
 # Set OPENAI_API_KEY environment variable with your key
 openai:
-  api-key: ${OPENAI_API_KEY:sk-proj-your-key-here}
+  api-key: ${OPENAI_API_KEY}
 
 # Media Catalog - Local mock or development service
 media-catalog:

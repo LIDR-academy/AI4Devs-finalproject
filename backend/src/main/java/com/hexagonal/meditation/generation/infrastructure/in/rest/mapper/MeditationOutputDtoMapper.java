@@ -40,9 +40,9 @@ public class MeditationOutputDtoMapper {
         return new GenerationResponse(
                 output.id(),
                 output.type().name(),
-                output.mediaUrl().orElse(null),
-                output.subtitleUrl().orElse(null),
-                output.durationSeconds().orElse(null),
+                output.mediaUrl(),
+                output.subtitleUrl(),
+                output.durationSeconds(),
                 output.status().name(),
                 formatStatusMessage(output)
         );

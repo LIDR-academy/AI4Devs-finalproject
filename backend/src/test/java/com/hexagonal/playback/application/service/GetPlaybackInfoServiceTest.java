@@ -26,6 +26,8 @@ import static org.mockito.Mockito.when;
 @DisplayName("GetPlaybackInfoService Tests")
 class GetPlaybackInfoServiceTest {
 
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
+
     @Mock
     private MeditationRepositoryPort meditationRepositoryPort;
 
@@ -49,7 +51,7 @@ class GetPlaybackInfoServiceTest {
             meditationId,
             userId,
             "Morning Meditation",
-            Instant.now().minusSeconds(3600),
+            FIXED_NOW.minusSeconds(3600),
             ProcessingState.COMPLETED,
             new MediaUrls("http://audio.url", "http://video.url", null)
         );
@@ -142,7 +144,7 @@ class GetPlaybackInfoServiceTest {
             meditationId,
             userId,
             "Test Meditation",
-            Instant.now(),
+            FIXED_NOW,
             ProcessingState.COMPLETED,
             new MediaUrls("http://audio.url", null, null)
         );

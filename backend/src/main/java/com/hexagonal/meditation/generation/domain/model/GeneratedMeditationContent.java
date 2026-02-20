@@ -5,7 +5,6 @@ import com.hexagonal.meditation.generation.domain.enums.MediaType;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -23,14 +22,14 @@ public record GeneratedMeditationContent(
     MediaType mediaType,
     GenerationStatus status,
     NarrationScript narrationScript,
-    Optional<MediaReference> outputMedia,
-    Optional<MediaReference> subtitleFile,
-    Optional<MediaReference> backgroundImage,
-    Optional<MediaReference> backgroundMusic,
-    Optional<Integer> durationSeconds,
-    Optional<String> errorMessage,
+    MediaReference outputMedia,
+    MediaReference subtitleFile,
+    MediaReference backgroundImage,
+    MediaReference backgroundMusic,
+    Integer durationSeconds,
+    String errorMessage,
     Instant createdAt,
-    Optional<Instant> completedAt
+    Instant completedAt
 ) {
     
     /**
@@ -58,33 +57,12 @@ public record GeneratedMeditationContent(
         if (narrationScript == null) {
             throw new IllegalArgumentException("Narration script cannot be null");
         }
-        if (outputMedia == null) {
-            throw new IllegalArgumentException("Output media Optional cannot be null");
-        }
-        if (subtitleFile == null) {
-            throw new IllegalArgumentException("Subtitle file Optional cannot be null");
-        }
-        if (backgroundImage == null) {
-            throw new IllegalArgumentException("Background image Optional cannot be null");
-        }
-        if (backgroundMusic == null) {
-            throw new IllegalArgumentException("Background music Optional cannot be null");
-        }
-        if (durationSeconds == null) {
-            throw new IllegalArgumentException("Duration seconds Optional cannot be null");
-        }
-        if (errorMessage == null) {
-            throw new IllegalArgumentException("Error message Optional cannot be null");
-        }
         if (createdAt == null) {
             throw new IllegalArgumentException("Created at cannot be null");
         }
-        if (completedAt == null) {
-            throw new IllegalArgumentException("Completed at Optional cannot be null");
-        }
         
         // Business rule: VIDEO requires background image
-        if (mediaType == MediaType.VIDEO && backgroundImage.isEmpty()) {
+        if (mediaType == MediaType.VIDEO && backgroundImage == null) {
             throw new IllegalArgumentException("VIDEO type requires a background image");
         }
     }
@@ -108,14 +86,14 @@ public record GeneratedMeditationContent(
             MediaType.AUDIO,
             GenerationStatus.PROCESSING,
             narrationScript,
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
             clock.instant(),
-            Optional.empty()
+            null
         );
     }
     
@@ -139,14 +117,14 @@ public record GeneratedMeditationContent(
             MediaType.VIDEO,
             GenerationStatus.PROCESSING,
             narrationScript,
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of(backgroundImage),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
+            null,
+            null,
+            backgroundImage,
+            null,
+            null,
+            null,
             clock.instant(),
-            Optional.empty()
+            null
         );
     }
     
@@ -167,14 +145,14 @@ public record GeneratedMeditationContent(
             mediaType,
             GenerationStatus.COMPLETED,
             narrationScript,
-            Optional.of(outputMedia),
-            Optional.of(subtitleFile),
+            outputMedia,
+            subtitleFile,
             backgroundImage,
             backgroundMusic,
-            Optional.ofNullable(durationSeconds),
-            Optional.empty(),
+            durationSeconds,
+            null,
             createdAt,
-            Optional.of(clock.instant())
+            clock.instant()
         );
     }
     
@@ -195,9 +173,9 @@ public record GeneratedMeditationContent(
             backgroundImage,
             backgroundMusic,
             durationSeconds,
-            Optional.of(errorMessage),
+            errorMessage,
             createdAt,
-            Optional.of(clock.instant())
+            clock.instant()
         );
     }
     
@@ -218,9 +196,9 @@ public record GeneratedMeditationContent(
             backgroundImage,
             backgroundMusic,
             durationSeconds,
-            Optional.of(errorMessage),
+            errorMessage,
             createdAt,
-            Optional.of(clock.instant())
+            clock.instant()
         );
     }
     
@@ -239,7 +217,7 @@ public record GeneratedMeditationContent(
             outputMedia,
             subtitleFile,
             backgroundImage,
-            Optional.of(musicReference),
+            musicReference,
             durationSeconds,
             errorMessage,
             createdAt,

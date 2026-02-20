@@ -372,7 +372,7 @@ class GenerateMeditationContentServiceTest {
         
         verify(contentRepositoryPort, atLeastOnce()).save(argThat(output -> 
             output.mediaType() == MediaType.AUDIO &&
-            output.backgroundImage().isEmpty()
+            output.backgroundImage() == null
         ));
     }
 }

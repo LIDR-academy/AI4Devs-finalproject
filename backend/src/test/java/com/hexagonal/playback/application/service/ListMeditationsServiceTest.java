@@ -24,6 +24,8 @@ import static org.mockito.Mockito.when;
 @DisplayName("ListMeditationsService Tests")
 class ListMeditationsServiceTest {
 
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
+
     @Mock
     private MeditationRepositoryPort meditationRepositoryPort;
 
@@ -44,7 +46,7 @@ class ListMeditationsServiceTest {
                 UUID.randomUUID(),
                 userId,
                 "Morning Meditation",
-                Instant.now().minusSeconds(3600),
+                FIXED_NOW.minusSeconds(3600),
                 ProcessingState.COMPLETED,
                 new MediaUrls("http://audio.url", null, null)
             ),
@@ -52,7 +54,7 @@ class ListMeditationsServiceTest {
                 UUID.randomUUID(),
                 userId,
                 "Evening Meditation",
-                Instant.now().minusSeconds(7200),
+                FIXED_NOW.minusSeconds(7200),
                 ProcessingState.PROCESSING,
                 null
             )
@@ -97,7 +99,7 @@ class ListMeditationsServiceTest {
     void shouldDelegateOrderingToRepository() {
         // Given
         UUID userId = UUID.randomUUID();
-        Instant now = Instant.now();
+        Instant now = FIXED_NOW;
         List<Meditation> orderedMeditations = List.of(
             new Meditation(UUID.randomUUID(), userId, "Latest", now, ProcessingState.COMPLETED, new MediaUrls("http://audio1.url", null, null)),
             new Meditation(UUID.randomUUID(), userId, "Older", now.minusSeconds(3600), ProcessingState.COMPLETED, new MediaUrls("http://audio2.url", null, null)),
@@ -122,10 +124,10 @@ class ListMeditationsServiceTest {
         // Given
         UUID userId = UUID.randomUUID();
         List<Meditation> mixedStateMeditations = List.of(
-            new Meditation(UUID.randomUUID(), userId, "Completed", Instant.now(), ProcessingState.COMPLETED, new MediaUrls("http://audio.url", null, null)),
-            new Meditation(UUID.randomUUID(), userId, "Processing", Instant.now().minusSeconds(60), ProcessingState.PROCESSING, null),
-            new Meditation(UUID.randomUUID(), userId, "Pending", Instant.now().minusSeconds(120), ProcessingState.PENDING, null),
-            new Meditation(UUID.randomUUID(), userId, "Failed", Instant.now().minusSeconds(180), ProcessingState.FAILED, null)
+            new Meditation(UUID.randomUUID(), userId, "Completed", FIXED_NOW, ProcessingState.COMPLETED, new MediaUrls("http://audio.url", null, null)),
+            new Meditation(UUID.randomUUID(), userId, "Processing", FIXED_NOW.minusSeconds(60), ProcessingState.PROCESSING, null),
+            new Meditation(UUID.randomUUID(), userId, "Pending", FIXED_NOW.minusSeconds(120), ProcessingState.PENDING, null),
+            new Meditation(UUID.randomUUID(), userId, "Failed", FIXED_NOW.minusSeconds(180), ProcessingState.FAILED, null)
         );
 
         when(meditationRepositoryPort.findAllByUserId(userId)).thenReturn(mixedStateMeditations);

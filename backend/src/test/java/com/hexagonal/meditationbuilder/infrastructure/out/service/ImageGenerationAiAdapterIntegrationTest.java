@@ -52,7 +52,8 @@ class ImageGenerationAiAdapterIntegrationTest {
         String baseUrl = "http://localhost:" + wireMockServer.port();
         AiProperties aiProperties = new AiProperties();
         aiProperties.setImageMetaprompt(""); // No metaprompt for integration test
-        adapter = new ImageGenerationAiAdapter(restClient, baseUrl, "test-api-key", aiProperties, new OpenAiProperties());
+        adapter = new ImageGenerationAiAdapter(restClient, baseUrl, "test-api-key", aiProperties,
+                new OpenAiProperties("http://localhost", "test-api-key", null, null, null, null, null));
     }
 
     @Nested

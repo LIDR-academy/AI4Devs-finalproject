@@ -108,8 +108,8 @@ public class InfrastructureConfig {
             AiProperties aiProperties) {
         return new TextGenerationAiAdapter(
                 restClient,
-                openAiProperties.getBaseUrl(),
-                openAiProperties.getApiKey(),
+                openAiProperties.baseUrl(),
+                openAiProperties.apiKey(),
                 aiProperties
         );
     }
@@ -126,8 +126,8 @@ public class InfrastructureConfig {
                 AiProperties aiProperties) {
         return new ImageGenerationAiAdapter(
                 restClient,
-                openAiProperties.getBaseUrl(),
-                openAiProperties.getApiKey(),
+                openAiProperties.baseUrl(),
+                openAiProperties.apiKey(),
                 aiProperties,
                 openAiProperties
         );

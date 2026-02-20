@@ -21,7 +21,7 @@ ai:
 # OpenAI Configuration
 openai:
   base-url: ${OPENAI_BASE_URL:https://api.openai.com}
-  api-key: ${OPENAI_API_KEY:}
+  api-key: ${OPENAI_API_KEY}
 
   text:
     model: ${OPENAI_TEXT_MODEL:gpt-5-nano}

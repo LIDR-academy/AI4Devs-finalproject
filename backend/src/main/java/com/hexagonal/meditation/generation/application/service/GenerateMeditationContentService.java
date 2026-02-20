@@ -687,7 +687,7 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
      */
     private GenerationResponse mapToResponse(GeneratedMeditationContent content) {
         log.info("Mapping to response: meditationId={}, status={}, duration={}", 
-            content.meditationId(), content.status(), content.durationSeconds().orElse(null));
+            content.meditationId(), content.status(), content.durationSeconds());
             
         return new GenerationResponse(
             content.meditationId(),
@@ -695,9 +695,9 @@ public class GenerateMeditationContentService implements GenerateMeditationConte
             content.userId(),
             content.status(),
             content.mediaType(),
-            content.outputMedia().map(MediaReference::url),
-            content.subtitleFile().map(MediaReference::url),
-            content.durationSeconds().isPresent() ? content.durationSeconds() : Optional.of((int) content.narrationScript().estimateDurationSeconds()),
+            content.outputMedia() != null ? content.outputMedia().url() : null,
+            content.subtitleFile() != null ? content.subtitleFile().url() : null,
+            content.durationSeconds() != null ? content.durationSeconds() : (int) content.narrationScript().estimateDurationSeconds(),
             content.createdAt(),
             content.completedAt()
         );

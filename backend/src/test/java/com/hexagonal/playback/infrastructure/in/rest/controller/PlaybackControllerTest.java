@@ -67,6 +67,7 @@ class PlaybackControllerTest {
     private static final UUID USER_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private static final UUID MEDITATION_ID_1 = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private static final UUID MEDITATION_ID_2 = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
 
     @BeforeEach
     void setUp() {
@@ -143,10 +144,10 @@ class PlaybackControllerTest {
     void shouldIncludeAllStatesWithCorrectLabels() throws Exception {
         // Given
         List<Meditation> meditations = List.of(
-            createMeditation(UUID.randomUUID(), "M1", ProcessingState.PENDING, Instant.now(), null),
-            createMeditation(UUID.randomUUID(), "M2", ProcessingState.PROCESSING, Instant.now(), null),
-            createMeditation(UUID.randomUUID(), "M3", ProcessingState.COMPLETED, Instant.now(), new MediaUrls("url", null, null)),
-            createMeditation(UUID.randomUUID(), "M4", ProcessingState.FAILED, Instant.now(), null)
+            createMeditation(UUID.randomUUID(), "M1", ProcessingState.PENDING, FIXED_NOW, null),
+            createMeditation(UUID.randomUUID(), "M2", ProcessingState.PROCESSING, FIXED_NOW, null),
+            createMeditation(UUID.randomUUID(), "M3", ProcessingState.COMPLETED, FIXED_NOW, new MediaUrls("url", null, null)),
+            createMeditation(UUID.randomUUID(), "M4", ProcessingState.FAILED, FIXED_NOW, null)
         );
 
         when(listMeditationsUseCase.execute(USER_ID))
@@ -263,7 +264,7 @@ class PlaybackControllerTest {
             MEDITATION_ID_1,
             "Test",
             ProcessingState.COMPLETED,
-            Instant.now(),
+            FIXED_NOW,
             new MediaUrls("url", null, null)
         );
 

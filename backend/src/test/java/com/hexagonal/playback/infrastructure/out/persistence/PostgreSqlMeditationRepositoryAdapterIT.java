@@ -35,6 +35,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("PostgreSQL Meditation Repository Adapter Integration Tests")
 class PostgreSqlMeditationRepositoryAdapterIT {
 
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
+
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("meditation_builder_test")
@@ -73,7 +75,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
         // Given
         UUID userId = UUID.randomUUID();
         UUID otherUserId = UUID.randomUUID();
-        Instant now = Instant.now();
+        Instant now = FIXED_NOW;
 
         // Insert test data directly into database
         insertMeditation(UUID.randomUUID(), userId, "Latest Meditation", now, "COMPLETED", "http://audio1.url", null, "http://subs1.url");
@@ -112,7 +114,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
         UUID meditationId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         // A meditation is either AUDIO or VIDEO. Testing AUDIO here as a representative format.
-        insertMeditation(meditationId, userId, "Test Meditation", Instant.now(), "COMPLETED", "http://audio.url", null, "http://subs.url");
+        insertMeditation(meditationId, userId, "Test Meditation", FIXED_NOW, "COMPLETED", "http://audio.url", null, "http://subs.url");
 
         // When
         Optional<Meditation> result = adapter.findByIdAndUserId(meditationId, userId);
@@ -150,7 +152,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
         UUID meditationId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         UUID differentUserId = UUID.randomUUID();
-        insertMeditation(meditationId, userId, "Test", Instant.now(), "COMPLETED", "http://audio.url", null, null);
+        insertMeditation(meditationId, userId, "Test", FIXED_NOW, "COMPLETED", "http://audio.url", null, null);
 
         // When
         Optional<Meditation> result = adapter.findByIdAndUserId(meditationId, differentUserId);
@@ -164,7 +166,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
     void shouldMapProcessingStateCorrectly() {
         // Given
         UUID userId = UUID.randomUUID();
-        insertMeditation(UUID.randomUUID(), userId, "Processing", Instant.now(), "PROCESSING", null, null, null);
+        insertMeditation(UUID.randomUUID(), userId, "Processing", FIXED_NOW, "PROCESSING", null, null, null);
 
         // When
         List<Meditation> result = adapter.findAllByUserId(userId);
@@ -179,7 +181,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
     void shouldMapCompletedStateCorrectly() {
         // Given
         UUID userId = UUID.randomUUID();
-        insertMeditation(UUID.randomUUID(), userId, "Completed", Instant.now(), "COMPLETED", "http://audio.url", null, null);
+        insertMeditation(UUID.randomUUID(), userId, "Completed", FIXED_NOW, "COMPLETED", "http://audio.url", null, null);
 
         // When
         List<Meditation> result = adapter.findAllByUserId(userId);
@@ -194,7 +196,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
     void shouldMapFailedStateCorrectly() {
         // Given
         UUID userId = UUID.randomUUID();
-        insertMeditation(UUID.randomUUID(), userId, "Failed", Instant.now(), "FAILED", null, null, null);
+        insertMeditation(UUID.randomUUID(), userId, "Failed", FIXED_NOW, "FAILED", null, null, null);
 
         // When
         List<Meditation> result = adapter.findAllByUserId(userId);
@@ -209,7 +211,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
     void shouldMapTimeoutStateToFailed() {
         // Given
         UUID userId = UUID.randomUUID();
-        insertMeditation(UUID.randomUUID(), userId, "Timeout", Instant.now(), "TIMEOUT", null, null, null);
+        insertMeditation(UUID.randomUUID(), userId, "Timeout", FIXED_NOW, "TIMEOUT", null, null, null);
 
         // When
         List<Meditation> result = adapter.findAllByUserId(userId);
@@ -224,7 +226,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
     void shouldHandleMeditationWithOnlyAudioUrl() {
         // Given
         UUID userId = UUID.randomUUID();
-        insertMeditation(UUID.randomUUID(), userId, "Audio Only", Instant.now(), "COMPLETED", "http://audio.url", null, null);
+        insertMeditation(UUID.randomUUID(), userId, "Audio Only", FIXED_NOW, "COMPLETED", "http://audio.url", null, null);
 
         // When
         List<Meditation> result = adapter.findAllByUserId(userId);
@@ -243,7 +245,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
     void shouldHandleMeditationWithOnlyVideoUrl() {
         // Given
         UUID userId = UUID.randomUUID();
-        insertMeditation(UUID.randomUUID(), userId, "Video Only", Instant.now(), "COMPLETED", null, "http://video.url", null);
+        insertMeditation(UUID.randomUUID(), userId, "Video Only", FIXED_NOW, "COMPLETED", null, "http://video.url", null);
 
         // When
         List<Meditation> result = adapter.findAllByUserId(userId);
@@ -262,7 +264,7 @@ class PostgreSqlMeditationRepositoryAdapterIT {
     void shouldHandleMeditationWithNullMediaUrlsForNonCompletedStates() {
         // Given
         UUID userId = UUID.randomUUID();
-        insertMeditation(UUID.randomUUID(), userId, "Processing", Instant.now(), "PROCESSING", null, null, null);
+        insertMeditation(UUID.randomUUID(), userId, "Processing", FIXED_NOW, "PROCESSING", null, null, null);
 
         // When
         List<Meditation> result = adapter.findAllByUserId(userId);

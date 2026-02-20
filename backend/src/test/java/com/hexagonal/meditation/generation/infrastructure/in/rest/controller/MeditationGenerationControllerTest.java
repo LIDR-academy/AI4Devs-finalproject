@@ -21,7 +21,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -52,6 +51,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @DisplayName("MeditationGenerationController Tests")
 class MeditationGenerationControllerTest {
+
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
 
     @Autowired
     private MockMvc mockMvc;
@@ -89,11 +90,11 @@ class MeditationGenerationControllerTest {
                     userId,
                     GenerationStatus.COMPLETED,
                     com.hexagonal.meditation.generation.domain.enums.MediaType.VIDEO,
-                    Optional.of("https://s3.amazonaws.com/meditation-outputs/generation/user-123/video.mp4"),
-                    Optional.of("https://s3.amazonaws.com/meditation-outputs/generation/user-123/subs.srt"),
-                    Optional.of(180),
-                    Instant.now(),
-                    Optional.of(Instant.now())
+                    "https://s3.amazonaws.com/meditation-outputs/generation/user-123/video.mp4",
+                    "https://s3.amazonaws.com/meditation-outputs/generation/user-123/subs.srt",
+                    180,
+                    FIXED_NOW,
+                    FIXED_NOW
             );
 
             when(generateMeditationContentUseCase.generate(any(GenerationRequest.class)))
@@ -108,8 +109,8 @@ class MeditationGenerationControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.meditationId").value(meditationId.toString()))
                     .andExpect(jsonPath("$.type").value("VIDEO"))
-                    .andExpect(jsonPath("$.mediaUrl").value(domainResponse.mediaUrl().get()))
-                    .andExpect(jsonPath("$.subtitleUrl").value(domainResponse.subtitleUrl().get()))
+                    .andExpect(jsonPath("$.mediaUrl").value(domainResponse.mediaUrl()))
+                    .andExpect(jsonPath("$.subtitleUrl").value(domainResponse.subtitleUrl()))
                     .andExpect(jsonPath("$.durationSeconds").value(180))
                     .andExpect(jsonPath("$.status").value("COMPLETED"))
                     .andExpect(jsonPath("$.message").value("Generation completed successfully"));
@@ -135,11 +136,11 @@ class MeditationGenerationControllerTest {
                     userId,
                     GenerationStatus.COMPLETED,
                     com.hexagonal.meditation.generation.domain.enums.MediaType.AUDIO,
-                    Optional.of("https://s3.amazonaws.com/meditation-outputs/generation/user-456/audio.mp3"),
-                    Optional.of("https://s3.amazonaws.com/meditation-outputs/generation/user-456/subs.srt"),
-                    Optional.of(240),
-                    Instant.now(),
-                    Optional.of(Instant.now())
+                    "https://s3.amazonaws.com/meditation-outputs/generation/user-456/audio.mp3",
+                    "https://s3.amazonaws.com/meditation-outputs/generation/user-456/subs.srt",
+                    240,
+                    FIXED_NOW,
+                    FIXED_NOW
             );
 
             when(generateMeditationContentUseCase.generate(any(GenerationRequest.class)))
@@ -154,7 +155,7 @@ class MeditationGenerationControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.meditationId").value(meditationId.toString()))
                     .andExpect(jsonPath("$.type").value("AUDIO"))
-                    .andExpect(jsonPath("$.mediaUrl").value(domainResponse.mediaUrl().get()))
+                    .andExpect(jsonPath("$.mediaUrl").value(domainResponse.mediaUrl()))
                     .andExpect(jsonPath("$.durationSeconds").value(240))
                     .andExpect(jsonPath("$.status").value("COMPLETED"));
         }

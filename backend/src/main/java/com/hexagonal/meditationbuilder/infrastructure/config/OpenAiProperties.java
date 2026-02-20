@@ -1,36 +1,41 @@
 package com.hexagonal.meditationbuilder.infrastructure.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
+/**
+ * OpenAI configuration properties.
+ * Java 21 record — immutable, no Lombok required.
+ */
 @ConfigurationProperties(prefix = "openai")
-@Data
-public class OpenAiProperties {
-    private String baseUrl;
-    private String apiKey;
-    private Text text = new Text();
-    private Image image = new Image();
-    private String outputFormat; // sólo GPT Image
-    private String background;   // sólo GPT Image
-    private String responseFormat; // sólo DALL·E
-
-    @Data
-    public static class Text {
-        private String model;
-        private Double temperature;
-        private Integer maxTokens;
-        private Double topP;
-        private Double frequencyPenalty;
-        private Double presencePenalty;
+public record OpenAiProperties(
+    String baseUrl,
+    String apiKey,
+    Text text,
+    Image image,
+    String outputFormat,
+    String background,
+    String responseFormat
+) {
+    /** Ensure nested objects are never null to avoid NPEs on partial YAML config. */
+    public OpenAiProperties {
+        if (text == null) text = new Text(null, null, null, null, null, null);
+        if (image == null) image = new Image(null, null, null, null, null);
     }
 
-    @Data
-    public static class Image {
-        private String model;
-        private String size;
-        private String quality;
-        private String responseFormat;
-        private Integer n;
-    }
+    public record Text(
+        String model,
+        Double temperature,
+        Integer maxTokens,
+        Double topP,
+        Double frequencyPenalty,
+        Double presencePenalty
+    ) {}
+
+    public record Image(
+        String model,
+        String size,
+        String quality,
+        String responseFormat,
+        Integer n
+    ) {}
 }

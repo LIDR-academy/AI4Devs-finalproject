@@ -64,24 +64,24 @@ public class ImageGenerationAiAdapter implements ImageGenerationPort {
                 ? metaprompt + "\n" + prompt
                 : prompt;
 
-        var imgCfg = openAiProperties.getImage();
-        String model = imgCfg.getModel();
-        String size = defaultIfBlank(imgCfg.getSize(), "1024x1024");
+        var imgCfg = openAiProperties.image();
+        String model = imgCfg.model();
+        String size = defaultIfBlank(imgCfg.size(), "1024x1024");
 
         boolean isGpt = model != null && model.startsWith("gpt-image");
         boolean isDalle = model != null && model.startsWith("dall-e");
 
         String quality = isGpt
-                ? defaultIfBlank(imgCfg.getQuality(), "low")
-                : defaultIfBlank(imgCfg.getQuality(), "standard");
+                ? defaultIfBlank(imgCfg.quality(), "low")
+                : defaultIfBlank(imgCfg.quality(), "standard");
 
         // 👇 Parche: si no tienes getters, usa defaults directos
         String outputFormat = isGpt ? "png"  : null;
         String background   = isGpt ? "auto" : null;
 
-        String responseFormat = isDalle ? defaultIfBlank(imgCfg.getResponseFormat(), "url") : null;
+        String responseFormat = isDalle ? defaultIfBlank(imgCfg.responseFormat(), "url") : null;
 
-        Integer n = "dall-e-3".equals(model) ? 1 : (imgCfg.getN() != null ? imgCfg.getN() : 1);
+        Integer n = "dall-e-3".equals(model) ? 1 : (imgCfg.n() != null ? imgCfg.n() : 1);
 
         AiImageRequest request = new AiImageRequest(
                 model,

@@ -17,13 +17,14 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
+import java.time.Clock;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
@@ -54,6 +55,10 @@ public class GenerateMeditationContractTest {
             com.hexagonal.meditation.generation.infrastructure.in.rest.mapper.MeditationOutputDtoMapper.class
     })
     public static class TestConfig {
+        @Bean
+        public Clock clock() {
+            return Clock.systemUTC();
+        }
     }
 
     @LocalServerPort
@@ -72,6 +77,7 @@ public class GenerateMeditationContractTest {
     private com.hexagonal.meditation.generation.domain.ports.out.MediaStoragePort mediaStoragePort;
 
     private static final String OPENAPI_SPEC = "openapi/generation/generate-meditation.yaml";
+    private static final Instant FIXED_NOW = Instant.parse("2026-01-01T00:00:00Z");
     private final OpenApiValidationFilter validationFilter = new OpenApiValidationFilter(OPENAPI_SPEC);
 
     @BeforeEach
@@ -99,11 +105,11 @@ public class GenerateMeditationContractTest {
                 userId,
                 GenerationStatus.COMPLETED,
                 com.hexagonal.meditation.generation.domain.enums.MediaType.VIDEO,
-                Optional.of("https://s3.amazonaws.com/meditation-outputs/video.mp4"),
-                Optional.of("https://s3.amazonaws.com/meditation-outputs/subs.srt"),
-                Optional.of(10),
-                Instant.now(),
-                Optional.of(Instant.now())
+                "https://s3.amazonaws.com/meditation-outputs/video.mp4",
+                "https://s3.amazonaws.com/meditation-outputs/subs.srt",
+                10,
+                FIXED_NOW,
+                FIXED_NOW
         );
 
         when(generateMeditationContentUseCase.generate(any(GenerationRequest.class)))
