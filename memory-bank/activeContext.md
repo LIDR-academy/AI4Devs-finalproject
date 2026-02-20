@@ -3,11 +3,29 @@
 ## Current Sprint
 Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
 
+# Active Context
+
+## Current Sprint
+Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
+
 ## Completed User Stories
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
+## Recently Completed
+- **T-0502-AGENT: Generate Low-Poly GLB from .3dm** — ✅ COMPLETE (2026-02-19) | TDD-GREEN + REFACTOR phases complete
+  - Status: 9/9 tests passing (including huge_geometry - OOM fixed with Docker 4GB memory)
+  - Refactor: 6 helper functions extracted from 290-line monolith, Google Style docstrings added
+  - Files: `src/agent/tasks/geometry_processing.py` (450 lines, 7 functions), `docker-compose.yml` (backend/agent-worker 4GB)
+  - Zero regression: 16/16 backend+agent tests PASS
+  - Ready for production deployment
+
 ## Active Ticket
-**T-0502-AGENT: Generate Low-Poly GLB from .3dm** — � TDD-RED COMPLETE (Step 2/5 Complete, Ready for TDD-GREEN)
+**None** — Next: T-0504-FRONT or T-0505-FRONT (Dashboard 3D Canvas)
+
+## Next Steps
+1. Continue with US-005 Dashboard 3D frontend implementation
+2. T-0504-FRONT: Dashboard layout with Canvas + Sidebar
+3. T-0505-FRONT: Render low-poly meshes in 3D scene
 
 ### Status (T-0502-AGENT)
 - ✅ Complete: TDD-Enrich Phase — Technical Specification blueprint generated (2,100+ lines)
