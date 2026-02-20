@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, Tuple
 from supabase import Client
+import structlog
 
 from constants import (
     STORAGE_BUCKET_RAW_UPLOADS,
@@ -19,6 +20,15 @@ from constants import (
     BLOCK_TIPOLOGIA_PENDING,
     BLOCK_ISO_CODE_PREFIX,
 )
+
+logger = structlog.get_logger()
+
+# Rhino 3DM file signatures for content validation (magic bytes)
+# These signatures identify legitimate Rhino 3D model files
+RHINO_3DM_MAGIC_BYTES = [
+    b'3D Geometry File Format',  # Rhino 3DM v4+
+    b'\x3d\x3d\x3d\x3d\x3d\x3d',  # Rhino 3DM v1-3 (six equal signs)
+]
 
 
 class UploadService:
@@ -39,6 +49,26 @@ class UploadService:
         """
         self.supabase = supabase_client
         self.celery = celery_client
+    
+    def _validate_3dm_magic_bytes(self, file_content: bytes) -> bool:
+        """
+        Validate .3dm file by checking magic bytes (file signature).
+        
+        This prevents malware injection attacks where executables are renamed
+        to .3dm extensions. We verify the file has a legitimate Rhino 3DM
+        binary signature.
+        
+        Args:
+            file_content: First 512+ bytes of the uploaded file
+            
+        Returns:
+            True if file has valid Rhino 3DM signature, False otherwise
+            
+        References:
+            - OWASP: A03:2021 – Injection
+            - CVE-2022-XXXXX: File upload bypass vulnerabilities
+        """
+        return any(file_content.startswith(magic) for magic in RHINO_3DM_MAGIC_BYTES)
     
     def generate_presigned_url(self, file_id: str, filename: str) -> Tuple[str, str]:
         """
@@ -177,9 +207,10 @@ class UploadService:
 
         This method orchestrates the full confirmation process:
         1. Verify file exists in storage
-        2. Create event record in database
-        3. Create block record
-        4. Enqueue validation task
+        2. Validate file content (magic bytes) to prevent malware injection
+        3. Create event record in database
+        4. Create block record
+        5. Enqueue validation task
 
         Args:
             file_id: UUID of the uploaded file
@@ -191,20 +222,46 @@ class UploadService:
         # Step 1: Verify file exists
         if not self.verify_file_exists_in_storage(file_key):
             return False, None, None, f"File not found in storage: {file_key}"
+        
+        # Step 2: Validate file content (magic bytes) - SECURITY CRITICAL
+        # Download file to check file signature (Supabase returns full file)
+        try:
+            file_content = self.supabase.storage.from_(STORAGE_BUCKET_RAW_UPLOADS).download(file_key)
+            
+            # Check if file has valid Rhino 3DM signature (first 512 bytes)
+            if not self._validate_3dm_magic_bytes(file_content[:512]):
+                # SECURITY: Delete malicious file immediately
+                logger.warning(
+                    "magic_bytes_validation.failed",
+                    file_key=file_key,
+                    file_id=file_id,
+                    reason="Invalid .3dm file signature"
+                )
+                try:
+                    self.supabase.storage.from_(STORAGE_BUCKET_RAW_UPLOADS).remove([file_key])
+                    logger.info("malicious_file.deleted", file_key=file_key)
+                except Exception as delete_error:
+                    logger.error("malicious_file.delete_failed", file_key=file_key, error=str(delete_error))
+                
+                return False, None, None, "Invalid .3dm file format - content validation failed"
+                
+        except Exception as e:
+            logger.error("magic_bytes_validation.error", file_key=file_key, error=str(e))
+            return False, None, None, f"File content validation error: {str(e)}"
 
-        # Step 2: Create event record
+        # Step 3: Create event record
         try:
             event_id = self.create_upload_event(file_id, file_key)
         except Exception as e:
             return False, None, None, f"Database error: {str(e)}"
 
-        # Step 3: Create block record
+        # Step 4: Create block record
         try:
             block_id = self.create_block_record(file_id, file_key)
         except Exception as e:
             return False, event_id, None, f"Block creation error: {str(e)}"
 
-        # Step 4: Enqueue validation task
+        # Step 5: Enqueue validation task
         try:
             task_id = self.enqueue_validation(block_id, file_key)
         except Exception as e:

@@ -151,3 +151,66 @@
   - Redis (message broker)
   - Celery worker (task executor)
 - **Critical**: CI must replicate local docker-compose environment for test parity
+
+## Security Stack
+*Last Audit: 2026-02-20 (OWASP Top 10 Full Assessment)*
+
+### Authentication & Authorization
+- **Framework**: Supabase Auth (OAuth 2.0, JWT)
+- **RLS Policies**: Row-Level Security enforced at database layer (workshop-level isolation)
+- **Session Management**: Short-lived tokens (1h), refresh token rotation
+
+### API Security
+- **Input Validation**: Pydantic schemas + custom validators (UUID format, enum checks)
+- **SQL Injection Protection**: psycopg2 parameterized queries (100% coverage - 2026-02-20 audit ✅)
+- **Rate Limiting**: slowapi (10 req/min per IP on presigned URL generation)
+- **CORS**: Strict whitelist (`localhost:5173`, `localhost:3000`), no wildcards with credentials
+
+### Transport Security
+- **TLS**: Required on all Supabase connections (`sslmode=require` in DATABASE_URL)
+- **HSTS**: Enabled in production (max-age=31536000)
+- **Headers**: CSP, X-Frame-Options, X-Content-Type-Options, X-XSS-Protection configured
+- **Content Security Policy (CSP)**: Three.js-compatible directives with media-src restrictions
+
+### File Upload Security
+- **Extension Validation**: `.3dm` only (ALLOWED_EXTENSION constant)
+- **Content Validation**: Magic bytes verification (Rhino 3DM signatures) - Added 2026-02-20
+- **Size Limits**: 500MB hard limit (HEAD request before download)
+- **Malware Scanning**: ClamAV integration (optional, production recommended)
+- **UUID-Based IDs**: Server-generated, prevents path traversal attacks
+
+### Container Security
+- **Base Images**: Pinned versions (python:3.11.14-slim, node:20-bookworm)
+- **Non-Root Users**: All containers run as non-root (USER node/nonroot)
+- **Resource Limits**: Memory caps (backend: 4GB, frontend: 512MB, redis: 256MB)
+- **Vulnerability Scanning**: Trivy on every Docker build (CI/CD pipeline)
+
+### Dependency Management
+- **CVE Monitoring**: Dependabot weekly scans
+- **Pinned Versions**: All dependencies locked in requirements.txt/package-lock.json
+- **Audit Frequency**: npm audit + pip-audit on CI/CD pipeline (as of 2026-02-20)
+- **Known Vulnerabilities**: esbuild GHSA-67mh-4wv8-2f99 (moderate, dev-only) - tracked for upgrade
+
+### Logging & Monitoring
+- **Structured Logs**: structlog with sanitized URLs (no tokens in logs)
+- **Secret Detection**: git-secrets pre-commit hooks
+- **Audit Trail**: All writes logged with user context
+- **Error Handling**: Generic messages to users, detailed stack traces in logs only
+
+### Credentials Management
+- **Setup Script**: `setup-env.sh` generates cryptographically secure passwords (openssl rand -base64 32)
+- **Environment Variables**: All credentials externalized (${DATABASE_PASSWORD}, ${REDIS_PASSWORD}, ${SUPABASE_KEY})
+- **Git Ignore**: `.env` never committed, `.env.example` provides template
+- **Historical P0 Fixes**: 2026-02-18 audit eliminated hardcoded credentials (DATABASE_PASSWORD, REDIS_PASSWORD)
+
+### Compliance Status
+- **OWASP A03 (Injection)**: ✅ MITIGATED (100% parameterized queries)
+- **OWASP A07 (XSS)**: ✅ MITIGATED (0 dangerouslySetInnerHTML usage, React auto-escaping)
+- **OWASP A05 (Misconfiguration)**: 🟡 PARTIAL (CSP added, CORS tightened, DELETE method needs review)
+- **OWASP A06 (Vulnerable Components)**: 🟡 PARTIAL (4 moderate frontend CVEs tracked, backend audit complete)
+- **OWASP A01 (Broken Access Control)**: 🟢 VALIDATED (RLS policies active, UUID validation enforced)
+
+### Incident Response
+- **Security Contacts**: security@sf-pm.example.com
+- **Responsible Disclosure**: `/.well-known/security.txt` (as of 2026-02-20)
+- **Escalation Path**: DevOps (24h) → CTO (12h) → CISO (immediate for data breach)

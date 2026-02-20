@@ -4,12 +4,12 @@ supabase==2.10.0
 pydantic==2.6.1
 pydantic-settings==2.1.0
 python-multipart==0.0.9
-python-jose[cryptography]==3.3.0
 python-dotenv==1.0.1
 psycopg2-binary==2.9.9
 redis==5.0.1
 celery==5.3.4
 structlog==24.1.0
+slowapi==0.1.9
 
 # Agent dependencies (needed for running agent tests from backend container)
 rhino3dm==8.4.0
