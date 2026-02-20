@@ -23,6 +23,12 @@ vi.mock('@react-three/drei', () => ({
     materials: {},
   })),
   OrbitControls: vi.fn(() => null),
+  Grid: vi.fn(() => null),
+  GizmoHelper: vi.fn(({ children }: { children: React.ReactNode }) =>
+    React.createElement('div', null, children)
+  ),
+  GizmoViewcube: vi.fn(() => null),
+  Stats: vi.fn(() => null),
   Html: vi.fn(({ children }: { children: React.ReactNode }) =>
     React.createElement('div', null, children)
   ),

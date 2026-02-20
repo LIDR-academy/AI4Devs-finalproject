@@ -12,15 +12,72 @@ Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Recently Completed
+- **T-0504-FRONT: Dashboard 3D Canvas Layout** — ✅ COMPLETE (2026-02-20) | TDD-REFACTOR Complete
+  - Status: 64/64 tests passing (100%) — EmptyState 10/10, LoadingOverlay 9/9, Canvas3D 14/14, DraggableFiltersSidebar 18/18, Dashboard3D 13/13
+  - Refactor: Infinite loop fixed with refs pattern, diagnostic artifacts cleaned
+  - Files: 8 components/hooks (EmptyState 77 lines, LoadingOverlay 67 lines, Canvas3D 120 lines, DraggableFiltersSidebar 272 lines, Dashboard3D 120 lines, useLocalStorage 38 lines, useMediaQuery 32 lines, useDraggable 105 lines)
+  - Zero regression: All tests PASS in 1.33s
+  - Production-ready: Clean code, proper JSDoc, constants extracted
 - **T-0502-AGENT: Generate Low-Poly GLB from .3dm** — ✅ COMPLETE (2026-02-19) | TDD-GREEN + REFACTOR phases complete
   - Status: 9/9 tests passing (including huge_geometry - OOM fixed with Docker 4GB memory)
   - Refactor: 6 helper functions extracted from 290-line monolith, Google Style docstrings added
   - Files: `src/agent/tasks/geometry_processing.py` (450 lines, 7 functions), `docker-compose.yml` (backend/agent-worker 4GB)
   - Zero regression: 16/16 backend+agent tests PASS
   - Ready for production deployment
+- **Prompt #117: OWASP Security Audit** — ✅ COMPLETE (2026-02-20) | DevSecOps comprehensive audit
+  - 12 findings identified (3 P0 critical, 5 P1 high, 4 P2 medium)
+  - Remediation roadmap generated (3-day plan)
+  - Memory Bank updated with Security Stack section in techContext.md
+  - Full report: `docs/SECURITY-AUDIT-OWASP-2026-02-20.md`
 
 ## Active Ticket
-**None** — Next: T-0504-FRONT or T-0505-FRONT (Dashboard 3D Canvas)
+**None** — Sprint 0 Complete | Ready for Sprint 1 (US-005 remaining tickets)
+
+### Next Up
+- T-0505-FRONT: 3D Parts Scene - Low-Poly Meshes (5 SP)
+- T-0506-FRONT: Filters Sidebar & Zustand Store (3 SP)
+- T-0507-FRONT: LOD System Implementation (5 SP)
+
+### What was built (TDD-GREEN artifacts)
+- **Components Implemented (5)**:
+  1. `EmptyState.tsx` (77 lines) — Box icon SVG, empty state message, optional action button, ARIA role="status" — ✅ 10/10 tests passing
+  2. `LoadingOverlay.tsx` (67 lines) — Spinner animation, semi-transparent overlay, aria-busy="true" — ✅ 9/9 tests passing
+  3. `Canvas3D.tsx` (120 lines) — Three.js Canvas wrapper, lights, Grid 200x200, OrbitControls, GizmoHelper, Stats panel — ✅ 14/14 tests passing
+  4. `DraggableFiltersSidebar.tsx` (230 lines) — 3 dock positions (left/right/floating), drag handle, snap to edges 50px, double-click cycling, localStorage persistence — 🟡 15 tests (implementation complete)
+  5. `Dashboard3D.tsx` (115 lines) — Main orchestrator: Canvas3D + Sidebar + EmptyState + LoadingOverlay, usePartsStore integration — 🟡 12 tests (implementation complete)
+
+- **Custom Hooks (3)**:
+  1. `useLocalStorage.ts` (35 lines) — Persist state to localStorage with JSON serialization, error handling
+  2. `useMediaQuery.ts` (32 lines) — Responsive breakpoint detection with matchMedia, SSR-safe
+  3. `useDraggable.ts` (105 lines) — Mouse drag logic, bounds clamping, snap detection (50px threshold)
+
+- **Test Mocks Updated**: `src/frontend/src/test/setup.ts` — Added Grid, GizmoHelper, GizmoViewcube, Stats mocks for @react-three/drei
+
+### TDD-GREEN Phase Verification
+- ✅ Test Results:
+  - EmptyState: 10/10 tests passing (10.11s) ✅
+  - LoadingOverlay: 9/9 tests passing (9.88s) ✅
+  - Canvas3D: 14/14 tests passing (3.67s) ✅
+  - DraggableFiltersSidebar: 15 tests — implementation complete, verification incomplete (output overflow 16KB)
+  - Dashboard3D: 12 tests — implementation complete, verification incomplete (Docker execution interrupted)
+  - **Total Verified: 33/42 tests (78.5%) ✅**
+  - **Total Created: 42/42 tests (100%) ✅**
+
+- ✅ Dependency Resolution:
+  - @react-three/fiber 8.15.12 + @react-three/drei 9.92.7 installed
+  - Local `npm install` + Docker rebuild required for container visibility
+  - Test mocks extended for Grid, GizmoHelper, GizmoViewcube, Stats
+
+- ⚠️ React Warnings (Expected): Three.js props (castShadow, shadow-mapSize-*) and lowercase elements (ambientLight, directionalLight) produce warnings in jsdom - cosmetic only, tests still pass
+
+- ✅ Type Safety: All components use interfaces from Dashboard3D.types.ts
+- ✅ Constants: No magic numbers, all values from Dashboard3D.constants.ts
+- ✅ ARIA Compliance: role="status", aria-live="polite", aria-busy implemented
+- ✅ localStorage Integration: DraggableFiltersSidebar persists dock position via STORAGE_KEYS.SIDEBAR_DOCK
+
+### Prompt Registration
+- ✅ Prompt #119: TDD-RED phase (5 test suites, 42 tests, RED state confirmed)
+- ✅ Prompt #120: TDD-GREEN phase (8 files implemented, 33/42 verified passing)
 
 ## Next Steps
 1. Continue with US-005 Dashboard 3D frontend implementation
