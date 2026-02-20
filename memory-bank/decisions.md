@@ -2,6 +2,56 @@
 
 Este archivo documenta todas las decisiones importantes tomadas durante el desarrollo del proyecto. Funciona como un ADR (Architecture Decision Record) simplificado.
 
+## 2026-02-20 - React useEffect Infinite Loop Prevention: Ref Pattern for Event Handlers
+- **Contexto:** Durante TDD-GREEN phase de T-0504-FRONT (DraggableFiltersSidebar), tests colgaban 28-70 segundos con "0 passed (18)" sin ejecutar assertions. Causa raíz: infinite loop en useEffect de drag behavior. El efecto dependía de `[isDragging, internalPosition, dockPosition, handleDockChange, onPositionChange]`, donde `internalPosition` cambiaba en cada `mousemove` → re-ejecutaba useEffect → adjuntaba nuevos listeners → `internalPosition` cambiaba de nuevo → loop infinito. Vitest timeout default 5000ms se extendía con retries.
+- **Decisión:** Aplicar **Ref Pattern for Stable Event Handlers**: (1) Reducir dependencies de drag useEffect a `[isDragging]` solamente, (2) Usar `useRef` para capturar valores actualizados sin trigger re-renders (`internalPositionRef.current = internalPosition` en render body), (3) Event handlers acceden a `.current` para leer valor fresco sin estar en dependencies. Patrón aplicado a `internalPosition`, `dockPosition`, `onDockChange`, `onPositionChange`.
+- **Alternativas Descartadas:**
+  1. **useCallback con dependencies completas:** Intentado con `handleDockChange = useCallback(..., [onDockChange])` pero creaba segundo loop (handleDockChange recreado → useEffect rerun).
+  2. **useEffect de sincronización de refs:** Intentado con `useEffect(() => { internalPositionRef.current = internalPosition }, [internalPosition])` pero creaba loops adicionales.
+  3. **Eliminar localStorage persistence:** Probado comentar todas operaciones localStorage, pero loop persistía en drag logic.
+- **Implementación:**
+  ```typescript
+  // Refs actualizados en render (NO useEffect)
+  const internalPositionRef = useRef(internalPosition);
+  internalPositionRef.current = internalPosition;
+  
+  // useEffect depende SOLO de isDragging
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      const currentX = internalPositionRef.current.x; // ← Lee valor fresco
+      if (currentX < SNAP_THRESHOLD) handleDockChange('left');
+      // ...
+    };
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => document.removeEventListener('mouseup', handleMouseUp);
+  }, [isDragging]); // ← Solo una dependencia
+  ```
+- **Resultados:**
+  - ✅ **Tests ANTES del fix:** 0 passed (18), Duration: 70.89s (hang)
+  - ✅ **Tests DESPUÉS del fix:** 18 passed (18), Duration: 1.16s (253ms en full suite)
+  - ✅ **Tests integración (full suite):** 64/64 passing (100%), Duration: 1.33s
+- **Consecuencias:**
+  - ✅ **Ganamos:**
+    - Performance: Tests 60x más rápidos (70s → 1.2s)
+    - Predictability: useEffect run solo cuando isDragging cambia (mount + drag start/end)
+    - Maintainability: Pattern claro y reusable para event handlers con state closure
+  - ⚠️ **Perdemos:**
+    - Requires manual sync: Refs deben actualizarse manualmente en render body (no automático como useEffect)
+    - Linting warnings: ESLint puede señalar exhaustive-deps violation (requiere `// eslint-disable-line` comentario)
+  - 🚨 **Trade-off:** Refs rompen "React way" de dependencies declarativas, pero es el patrón oficial documentado en React docs para "accessing latest value from event handler".
+- **Documentación:**
+  - Pattern documentado en archivo implementado: `DraggableFiltersSidebar.tsx` líneas 38-43
+  - Prompt log: `prompts.md` #119 (TDD-RED), #120 (TDD-GREEN con debug), #121 (REFACTOR)
+- **Lecciones para futuros tickets:**
+  - ✅ Siempre considerar useRef para valores que cambian frecuentemente pero no necesitan trigger re-render
+  - ✅ Event handlers dentro de useEffect deben minimizar dependencies list
+  - ✅ Crear test minimal (componente aislado) para diagnosticar loops vs. infrastructure issues
+  - ❌ NUNCA sincronizar refs con useEffect - hacerlo directamente en render phase
+
+---
+
 ## 2026-02-20 - Security Hardening Framework: OWASP Top 10 Audit & 3-Day Remediation Plan
 - **Contexto:** Antes de despliegue a producción, se requería auditoría exhaustiva de seguridad siguiendo estándares OWASP Top 10 (2021). El sistema maneja archivos 3D críticos de Sagrada Familia, con riesgos únicos: malware injection via .3dm files, geometry manipulation attacks, y potencial compromiso de workers con acceso a DB credentials.
 - **Decisión:** Ejecutar auditoría de seguridad CISO-level con 8 fases: (1) Infraestructura (validar fixes P0 de 2026-02-18), (2) API Layer (SQL injection, input validation), (3) Frontend (XSS, CSP, CORS), (4) Supply Chain (CVE scanning con npm audit + pip audit), (5) Secrets Management, (6) Dependency Hardening, (7) Rate Limiting, (8) Documentation & Memory Bank updates.
