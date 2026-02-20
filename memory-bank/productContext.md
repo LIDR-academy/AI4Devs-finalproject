@@ -92,6 +92,12 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   * Query performance: <500ms target met (composite index usage)
   * Response optimization: <200KB payload for 150+ parts
   * 32/32 tests PASS (20 integration + 12 unit)
+- **Low-Poly GLB Generation Pipeline** (T-0502-AGENT DONE 2026-02-19)
+  * Celery async task: .3dm → decimation 90% → GLB+Draco → S3 upload
+  * Quad face handling: Split (A,B,C,D) → 2 triangles for proper rendering
+  * Performance: OOM fix with Docker 4GB memory limits
+  * Test coverage: 9/9 unit tests PASS (including huge_geometry 150K faces)
+  * Files: `src/agent/tasks/geometry_processing.py` (450 lines, 7 modular functions)
 
 **US-002: Validation Infrastructure (PARTIAL)**
 - ✅ Database schema: `validation_report` JSONB column in `blocks` table
