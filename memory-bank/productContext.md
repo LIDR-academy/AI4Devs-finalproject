@@ -98,6 +98,14 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   * Performance: OOM fix with Docker 4GB memory limits
   * Test coverage: 9/9 unit tests PASS (including huge_geometry 150K faces)
   * Files: `src/agent/tasks/geometry_processing.py` (450 lines, 7 modular functions)
+- **3D Parts Scene - Low-Poly Meshes** (T-0505-FRONT DONE 2026-02-20)
+  * PartsScene.tsx: Orchestrates N parts rendering with spatial layout from usePartsSpatialLayout hook
+  * PartMesh.tsx: GLB mesh loader (useGLTF), status-based colors (STATUS_COLORS), tooltip on hover, click → selectPart(id)
+  * usePartsSpatialLayout.ts: Position calculation (bbox center OR grid 10x10 spacing), helper functions for spatial logic
+  * parts.store.ts: Zustand store with fetchParts/setFilters/selectPart, integrated with parts.service API layer
+  * Test coverage: 16/16 tests PASS (PartsScene 5/5, PartMesh 11/11), zero regression 49/49 Dashboard tests
+  * Refactor: TOOLTIP_STYLES constant extracted, helper functions (calculateBBoxCenter, calculateGridPosition), clarifying comments for performance logging
+  * Files: 5 total (PartsScene 60 lines, PartMesh 107 lines, usePartsSpatialLayout 70 lines, parts.store 95 lines, parts.service 40 lines)
 
 **US-002: Validation Infrastructure (PARTIAL)**
 - ✅ Database schema: `validation_report` JSONB column in `blocks` table

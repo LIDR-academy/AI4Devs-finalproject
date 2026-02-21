@@ -12,6 +12,13 @@ Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Recently Completed
+- **T-0505-FRONT: 3D Parts Scene - Low-Poly Meshes** — ✅ COMPLETE (2026-02-20) | TDD-REFACTOR Complete
+  - Status: 16/16 tests passing (100%) — PartsScene 5/5, PartMesh 11/11
+  - Refactor: TOOLTIP_STYLES constant extracted, helper functions (calculateBBoxCenter, calculateGridPosition), clarifying comments for performance logging
+  - Files: 5 components/hooks (PartsScene 60 lines, PartMesh 107 lines, usePartsSpatialLayout 70 lines, parts.store 95 lines, parts.service 40 lines)
+  - Zero regression: 49/49 Dashboard tests PASS
+  - Production-ready: Clean code, proper JSDoc, constants extraction pattern maintained
+  - TDD-GREEN timestamp: 2026-02-20 17:48, REFACTOR timestamp: 2026-02-20 18:05
 - **T-0504-FRONT: Dashboard 3D Canvas Layout** — ✅ COMPLETE (2026-02-20) | TDD-REFACTOR Complete
   - Status: 64/64 tests passing (100%) — EmptyState 10/10, LoadingOverlay 9/9, Canvas3D 14/14, DraggableFiltersSidebar 18/18, Dashboard3D 13/13
   - Refactor: Infinite loop fixed with refs pattern, diagnostic artifacts cleaned
@@ -31,14 +38,30 @@ Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
   - Full report: `docs/SECURITY-AUDIT-OWASP-2026-02-20.md`
 
 ## Active Ticket
-**None** — Sprint 0 Complete | Ready for Sprint 1 (US-005 remaining tickets)
+**None** — T-0505-FRONT completed. Ready for next ticket assignment.
+- `src/frontend/src/components/Dashboard/PartsScene.test.tsx` (~120 lines)
+- `src/frontend/src/components/Dashboard/PartMesh.test.tsx` (~150 lines)
+- `src/frontend/src/constants/dashboard3d.constants.ts` (~40 lines)
 
-### Next Up
-- T-0505-FRONT: 3D Parts Scene - Low-Poly Meshes (5 SP)
-- T-0506-FRONT: Filters Sidebar & Zustand Store (3 SP)
-- T-0507-FRONT: LOD System Implementation (5 SP)
+**Modified Files (replace stubs):**
+- `src/frontend/src/hooks/usePartsSpatialLayout.ts` (~70 lines, currently stub)
+- `src/frontend/src/stores/parts.store.ts` (~120 lines, currently stub)
 
-### What was built (TDD-GREEN artifacts)
+### Dependencies
+- ✅ T-0504-FRONT: Dashboard3D layout with Canvas3D wrapper (DONE)
+- ✅ T-0501-BACK: GET /api/parts endpoint (DONE)
+- ✅ T-0502-AGENT: GLB generation pipeline (DONE)
+- ✅ T-0503-DB: low_poly_url + bbox columns (DONE)
+
+### Blocks
+- T-0506-FRONT: Filters sidebar (needs parts rendering working)
+- T-0507-FRONT: LOD system (needs PartMesh base component)
+- T-0508-FRONT: Part selection (needs click handlers)
+
+### Prompt Registration
+- ✅ Prompt #124: TDD-ENRICH phase (spec read, contracts validated, plan prepared)
+
+
 - **Components Implemented (5)**:
   1. `EmptyState.tsx` (77 lines) — Box icon SVG, empty state message, optional action button, ARIA role="status" — ✅ 10/10 tests passing
   2. `LoadingOverlay.tsx` (67 lines) — Spinner animation, semi-transparent overlay, aria-busy="true" — ✅ 9/9 tests passing
