@@ -28,10 +28,10 @@ export class MockOrdersService {
     }
 
     const { id: storeId } = await this.stores.findOrCreateStore(dto.store);
-    const { id: userId } = await this.users.findOrCreateByPhone(dto.buyer);
+    const { id: userId, phoneId } = await this.users.findOrCreateByPhone(dto.buyer);
 
     if (dto.mode === 'tradicional' && dto.address) {
-      return this.processTraditionalOrder(dto, storeId, userId);
+      return this.processTraditionalOrder(dto, storeId, userId, phoneId);
     }
 
     return this.processAdreslesOrder(dto, storeId, userId);
@@ -44,6 +44,7 @@ export class MockOrdersService {
   ): Promise<MockOrderResult> {
     const order = await this.orders.createFromMock(dto, storeId, userId, {
       initialStatus: 'PENDING_ADDRESS',
+      orderMode: 'ADRESLES',
     });
 
     const conversation = await this.conversations.createAndEnqueue({
@@ -60,12 +61,18 @@ export class MockOrdersService {
     dto: CreateMockOrderDto,
     storeId: string,
     userId: string,
+    phoneId: string,
   ): Promise<MockOrderResult> {
     if (!dto.address) throw new BadRequestException('Address required for traditional mode');
 
     const order = await this.orders.createFromMock(dto, storeId, userId, {
-      initialStatus: 'ADDRESS_CONFIRMED',
-      createAddress: dto.address,
+      initialStatus: 'READY_TO_PROCESS',
+      orderMode: 'TRADITIONAL',
+      createAddress: {
+        address: dto.address,
+        recipientPhoneId: phoneId,
+        recipientName: `${dto.buyer.first_name} ${dto.buyer.last_name}`,
+      },
     });
 
     const conversation = await this.conversations.createAndEnqueue({
@@ -82,7 +89,7 @@ export class MockOrdersService {
       recipientPhone: dto.buyer.phone,
     });
 
-    await this.orders.updateStatus(order.id, 'SYNCED', {
+    await this.orders.updateStatus(order.id, 'COMPLETED', {
       syncedAt: new Date(),
     });
 

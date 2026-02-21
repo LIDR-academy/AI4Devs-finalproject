@@ -4,7 +4,7 @@
 
 - [x] 1.1 Crear monorepo root (package.json, pnpm-workspace.yaml, turbo.json)
 - [x] 1.2 Crear migraciones Prisma para Supabase (ecommerce, store, user, order, order_address, gift_recipient, conversation)
-- [ ] 1.3 Configurar DynamoDB (tabla adresles-messages, TTL 90 días)
+- [x] 1.3 Configurar DynamoDB (tabla adresles-messages, TTL 90 días)
 - [x] 1.4 Configurar Redis y BullMQ (colas process-conversation, process-response)
 - [x] 1.5 Crear seeds con ecommerce y store mock
 
@@ -27,9 +27,9 @@
 
 - [x] 4.1 Crear app Worker con BullMQ
 - [x] 4.2 Implementar ConversationProcessor para process-conversation
-- [ ] 4.3 Implementar journey GET_ADDRESS (prompt, OpenAI, guardar en DynamoDB)
+- [x] 4.3 Implementar journey GET_ADDRESS (prompt, OpenAI, guardar en DynamoDB)
 - [x] 4.4 Implementar journey INFORMATION (mensaje confirmatorio)
-- [ ] 4.5 Implementar ResponseProcessor para process-response (validar dirección, actualizar Order)
+- [x] 4.5 Implementar ResponseProcessor como máquina de estados (GMaps, edificios, confirmación explícita, sync mock)
 
 ## 5. Integración y pruebas
 

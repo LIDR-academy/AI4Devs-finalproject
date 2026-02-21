@@ -8,6 +8,8 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.995.0",
+    "@aws-sdk/lib-dynamodb": "^3.995.0",
     "@prisma/client": "^5.22.0",
     "bullmq": "^5.0.0",
     "ioredis": "^5.4.0",

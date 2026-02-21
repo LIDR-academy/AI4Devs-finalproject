@@ -9,17 +9,31 @@ export interface ProcessConversationJobData {
   conversationType: string;
 }
 
+export interface ProcessResponseJobData {
+  conversationId: string;
+  orderId: string;
+  userId: string;
+  userMessage: string;
+}
+
 @Injectable()
 export class QueueService implements OnModuleDestroy {
   private processConversationQueue: Queue<ProcessConversationJobData>;
+  private processResponseQueue: Queue<ProcessResponseJobData>;
 
   constructor(private readonly config: ConfigService) {
     const redisUrl = this.config.get<string>('REDIS_URL', 'redis://localhost:6379');
     const connection = this.parseRedisUrl(redisUrl);
-    this.processConversationQueue = new Queue<ProcessConversationJobData>('process-conversation', {
-      connection,
-      defaultJobOptions: { attempts: 3, backoff: { type: 'exponential', delay: 1000 } },
-    });
+    const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 1000 } };
+
+    this.processConversationQueue = new Queue<ProcessConversationJobData>(
+      'process-conversation',
+      { connection, defaultJobOptions },
+    );
+    this.processResponseQueue = new Queue<ProcessResponseJobData>(
+      'process-response',
+      { connection, defaultJobOptions },
+    );
   }
 
   async addProcessConversationJob(data: ProcessConversationJobData): Promise<string> {
@@ -27,8 +41,14 @@ export class QueueService implements OnModuleDestroy {
     return job.id ?? '';
   }
 
+  async addProcessResponseJob(data: ProcessResponseJobData): Promise<string> {
+    const job = await this.processResponseQueue.add('process', data);
+    return job.id ?? '';
+  }
+
   async onModuleDestroy() {
     await this.processConversationQueue.close();
+    await this.processResponseQueue.close();
   }
 
   private parseRedisUrl(url: string): { host: string; port: number; password?: string } {

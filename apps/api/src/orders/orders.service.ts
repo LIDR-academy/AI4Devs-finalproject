@@ -4,6 +4,12 @@ import { CreateMockOrderDto, MockAddressDto } from '../mock/dto/create-mock-orde
 import { calculateFee } from '../shared/fee.utils';
 import { OrderStatus } from '@prisma/client';
 
+export interface CreateAddressOptions {
+  address: MockAddressDto;
+  recipientPhoneId: string;
+  recipientName: string;
+}
+
 @Injectable()
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -12,10 +18,15 @@ export class OrdersService {
     dto: CreateMockOrderDto,
     storeId: string,
     userId: string,
-    options: { initialStatus: OrderStatus; createAddress?: MockAddressDto },
+    options: {
+      initialStatus: OrderStatus;
+      orderMode: 'TRADITIONAL' | 'ADRESLES';
+      createAddress?: CreateAddressOptions;
+    },
   ) {
     const { percentage, amount: feeAmount } = calculateFee(dto.total_amount);
     const now = new Date();
+    const isAddressReady = options.initialStatus === 'READY_TO_PROCESS';
 
     const order = await this.prisma.order.create({
       data: {
@@ -28,32 +39,36 @@ export class OrdersService {
         feePercentage: percentage,
         feeAmount,
         status: options.initialStatus,
+        orderMode: options.orderMode,
+        paymentType: 'OTHER',
         isGift: false,
         itemsSummary: dto.items ? (dto.items as object) : undefined,
         webhookReceivedAt: now,
-        addressConfirmedAt: options.initialStatus === 'ADDRESS_CONFIRMED' ? now : undefined,
+        addressConfirmedAt: isAddressReady ? now : undefined,
       },
     });
 
     if (options.createAddress) {
+      const { address, recipientPhoneId, recipientName } = options.createAddress;
       await this.prisma.orderAddress.create({
         data: {
           orderId: order.id,
           recipientType: 'BUYER',
-          recipientName: `${dto.buyer.first_name} ${dto.buyer.last_name}`,
-          recipientPhone: dto.buyer.phone,
-          fullAddress: options.createAddress.full_address,
-          street: options.createAddress.street,
-          number: options.createAddress.number,
-          block: options.createAddress.block,
-          staircase: options.createAddress.staircase,
-          floor: options.createAddress.floor,
-          door: options.createAddress.door,
-          additionalInfo: options.createAddress.additional_info,
-          postalCode: options.createAddress.postal_code,
-          city: options.createAddress.city,
-          province: options.createAddress.province,
-          country: options.createAddress.country,
+          recipientName,
+          recipientPhoneId,
+          fullAddress: address.full_address,
+          street: address.street,
+          number: address.number,
+          block: address.block,
+          staircase: address.staircase,
+          floor: address.floor,
+          door: address.door,
+          additionalInfo: address.additional_info,
+          postalCode: address.postal_code,
+          city: address.city,
+          province: address.province,
+          country: address.country,
+          addressOrigin: 'STORE_TRADITIONAL',
           confirmedAt: now,
           confirmedVia: 'MANUAL',
         },
@@ -63,7 +78,58 @@ export class OrdersService {
     return order;
   }
 
-  async updateStatus(orderId: string, status: OrderStatus, timestamps?: { addressConfirmedAt?: Date; syncedAt?: Date }) {
+  async createAddressFromConversation(params: {
+    orderId: string;
+    recipientPhoneId: string;
+    recipientName: string;
+    address: {
+      street: string;
+      number?: string | null;
+      block?: string | null;
+      staircase?: string | null;
+      floor?: string | null;
+      door?: string | null;
+      additionalInfo?: string | null;
+      postalCode: string;
+      city: string;
+      province?: string | null;
+      country: string;
+      fullAddress: string;
+      gmapsPlaceId?: string | null;
+    };
+  }) {
+    const now = new Date();
+    return this.prisma.orderAddress.create({
+      data: {
+        orderId: params.orderId,
+        recipientType: 'BUYER',
+        recipientName: params.recipientName,
+        recipientPhoneId: params.recipientPhoneId,
+        fullAddress: params.address.fullAddress,
+        street: params.address.street,
+        number: params.address.number ?? undefined,
+        block: params.address.block ?? undefined,
+        staircase: params.address.staircase ?? undefined,
+        floor: params.address.floor ?? undefined,
+        door: params.address.door ?? undefined,
+        additionalInfo: params.address.additionalInfo ?? undefined,
+        postalCode: params.address.postalCode,
+        city: params.address.city,
+        province: params.address.province ?? undefined,
+        country: params.address.country,
+        gmapsPlaceId: params.address.gmapsPlaceId ?? undefined,
+        addressOrigin: 'USER_CONVERSATION',
+        confirmedAt: now,
+        confirmedVia: 'CONVERSATION',
+      },
+    });
+  }
+
+  async updateStatus(
+    orderId: string,
+    status: OrderStatus,
+    timestamps?: { addressConfirmedAt?: Date; syncedAt?: Date },
+  ) {
     return this.prisma.order.update({
       where: { id: orderId },
       data: { status, ...timestamps },

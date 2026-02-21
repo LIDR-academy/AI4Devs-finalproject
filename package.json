@@ -10,9 +10,15 @@
     "db:generate": "pnpm --filter api exec prisma generate",
     "db:migrate": "pnpm --filter api exec prisma migrate dev",
     "db:seed": "pnpm --filter api exec prisma db seed",
-    "db:studio": "pnpm --filter api exec prisma studio"
+    "db:studio": "pnpm --filter api exec prisma studio",
+    "dynamo:setup": "ts-node --require dotenv/config infrastructure/scripts/setup-dynamodb.ts dotenv_config_path=apps/api/.env"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.995.0",
+    "@aws-sdk/lib-dynamodb": "^3.995.0",
+    "@types/node": "^20.0.0",
+    "dotenv": "^17.3.1",
+    "ts-node": "^10.9.0",
     "turbo": "^2.3.0",
     "typescript": "^5.3.0"
   },

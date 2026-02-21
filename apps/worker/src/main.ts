@@ -1,24 +1,39 @@
+import 'dotenv/config';
 import { Worker } from 'bullmq';
-import { conversationProcessor } from './processors/conversation.processor';
+import { conversationProcessor, processResponseProcessor } from './processors/conversation.processor';
 
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
 const connection = parseRedisUrl(redisUrl);
 
-const worker = new Worker(
+const conversationWorker = new Worker(
   'process-conversation',
   conversationProcessor,
   { connection, concurrency: 2 },
 );
 
-worker.on('completed', (job) => {
-  console.log(`[Worker] Job ${job.id} completed`);
+const responseWorker = new Worker(
+  'process-response',
+  processResponseProcessor,
+  { connection, concurrency: 2 },
+);
+
+conversationWorker.on('completed', (job) => {
+  console.log(`[Worker:conversation] Job ${job.id} completed`);
 });
 
-worker.on('failed', (job, err) => {
-  console.error(`[Worker] Job ${job?.id} failed:`, err);
+conversationWorker.on('failed', (job, err) => {
+  console.error(`[Worker:conversation] Job ${job?.id} failed:`, err.message);
 });
 
-console.log('[Worker] Listening for process-conversation jobs...');
+responseWorker.on('completed', (job) => {
+  console.log(`[Worker:response] Job ${job.id} completed`);
+});
+
+responseWorker.on('failed', (job, err) => {
+  console.error(`[Worker:response] Job ${job?.id} failed:`, err.message);
+});
+
+console.log('[Worker] Listening for process-conversation and process-response jobs...');
 
 function parseRedisUrl(url: string): { host: string; port: number; password?: string } {
   try {

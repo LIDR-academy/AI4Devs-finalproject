@@ -149,6 +149,23 @@ Si, procede con la Fase 4 con las recomendaciones realizadas, usando Node.js com
 
 ---
 
+**Prompt 2** *(Modo Agent):*
+
+```
+No tengo AWS conectado a la terminal
+```
+
+**Respuestas / decisiones tomadas:**
+
+- **DynamoDB Local**: Opción 1 — DynamoDB Local en Docker (imagen `amazon/dynamodb-local`) sin necesidad de AWS CLI ni credenciales reales
+- **Supabase**: La base de datos PostgreSQL permanece en Supabase Cloud; no se mete en Docker
+- **Redis**: Necesario para BullMQ; se levanta con Docker junto a DynamoDB Local
+- **Prisma**: No requiere configuración adicional; el `.env` ya apunta a Supabase Cloud y las tablas existen en el dashboard
+
+> **Resumen de objetivos alcanzados:** Se añadió el servicio `dynamodb-local` al `docker-compose.yml` en modo `-inMemory` (para evitar problemas de permisos en Windows). Se creó el script `infrastructure/scripts/setup-dynamodb.ts` para crear la tabla `adresles-messages` con TTL de 90 días. Se creó `apps/worker/src/dynamodb/dynamodb.service.ts` con `saveMessage()` y `getMessages()`. Se añadió el script `pnpm dynamo:setup` en el `package.json` raíz. Se actualizó `apps/api/.env` con las variables `AWS_ACCESS_KEY_ID=local`, `AWS_SECRET_ACCESS_KEY=local` y `DYNAMODB_ENDPOINT=http://localhost:8000`.
+
+---
+
 ### **2.5. Seguridad**
 
 > Las consideraciones de seguridad fueron incluidas en la Fase 4 como parte integral del diseño, incluyendo: capas de seguridad (perímetro, aplicación, datos), checklist completo de medidas de seguridad, ejemplo de Row Level Security (RLS) en Supabase para aislamiento multi-tenant.
@@ -406,9 +423,50 @@ Para cada capa, indica:
 
 ---
 
-**Prompt 2:**
+**Prompt 2** *(Modo Agent):*
 
-**Prompt 3:**
+```
+continua con la tarea 4.3. Pregúntame todo lo que consideres necesario para afrontarla con garantías
+```
+
+**Respuestas a las preguntas previas a la implementación:**
+
+- **OpenAI API key**: No disponible todavía; estructurar el código para cuando la tenga (mock fallback si no hay key)
+- **Flujo mock sin WhatsApp**: Crear un endpoint adicional en la API (`POST /api/mock/conversations/:id/reply`) para simular la respuesta del usuario manualmente
+- **Sub-journeys GET_ADDRESS**: Solo el básico para este MVP — usuario sin dirección guardada → preguntar dirección
+- **Idioma del prompt**: Usar el `preferredLanguage` del usuario de la base de datos (ya modelado)
+
+> **Resumen de objetivos alcanzados:** Se implementó el journey GET_ADDRESS completo en el Worker: llamada a OpenAI `gpt-4o-mini` con prompt adaptado al idioma del usuario, guardado de 3 mensajes en DynamoDB (system, user-context, assistant). Se añadieron los endpoints `POST /api/mock/conversations/:id/reply` y `GET /api/mock/conversations/:id/history`. Se añadió la cola `process-response` en `QueueService`. Se registró el worker `process-response` (stub) en `apps/worker/src/main.ts`. Se corrigieron bugs pre-existentes en `UsersService` (campos del esquema antiguo `phone`/`phoneCountry` → modelo `Phone` con `e164`, `countryCallingCode`, `nationalNumber`, `isValid`), `OrdersService` (`recipientPhone` → `recipientPhoneId`, `ADDRESS_CONFIRMED` → `READY_TO_PROCESS`, `SYNCED` → `COMPLETED`) y `MockOrdersService` (pasar `phoneId` al crear dirección en modo tradicional).
+
+---
+
+**Prompt 3** *(Modo Agent):*
+
+```
+si, de la misma forma, pregúntame lo necesario antes de implementar
+```
+
+*(Tarea 4.5: Implementar ResponseProcessor)*
+
+**Respuestas a las preguntas previas a la implementación:**
+
+- **Google Maps API key**: No disponible; estructurar el código para cuando la tenga (misma aproximación que OpenAI)
+- **Dirección incompleta**: Conversación multi-turno — el asistente pregunta los datos que faltan; el usuario responde con un nuevo `POST /reply`
+- **Tras confirmación**: Simular sync con eCommerce (log estructurado) + actualizar `Order` a `READY_TO_PROCESS` + `Conversation` a `COMPLETED`
+- **Bug recipientPhone**: Corregir como parte de esta tarea para no acumular deuda técnica
+
+> **Resumen de objetivos alcanzados:** Se implementó `processResponseProcessor` con extracción de dirección via OpenAI (modo JSON), validación con Google Maps (mock si no hay key), conversación multi-turno con límite de 3 intentos antes de escalar, creación de `OrderAddress` en Supabase, actualización de `Order` a `READY_TO_PROCESS` y `Conversation` a `COMPLETED`, y simulación del sync con eCommerce (log estructurado).
+
+---
+
+**Prompt 4** *(Modo Plan → Agent):*
+
+```
+No, necesito que modifiques el flujo de la siguiente forma:
+Cuando recibe dirección pausible para ser validad con GMaps, se valida primero con Gmaps y se le devuelve al usuario toda la información completa de la dirección: dirección con número (y bloque, escalera y/o piso y puerta si el usuario la había especificado), código postal, ciudad, provincia y país. aunque el usuario haya omitido alguno de esos datos en su primera respuesta. Si hay más de una dirección válida para los datos enviados a GMaps, solicitar al usuario cual quiere usar. En todo caso se mantiene la pregunta o solicitud de información adicional si se considera que a la dirección le puede faltar bloque, escalera y/o piso y puerta, pero no insistir en el tema si el usuario confirma que no son necesarios esos datos (por ser una casa o porque indica que es un local). Antes de sincronizar la dirección con el ECommerce se necesita confirmación explícita del usuario de la dirección que se va a enviar (expresada tal y como se ha indicado antes). Como puedes observar, la conversación puede tener varios flujos de mensajes de ida y vuelta hasta la confirmación final y sincronización con el ECommerce, tras la cual, de tener una respuesta 200 (OK), se confirma al usuario que la dirección ha sido grabada satisfactoriamente.
+```
+
+> **Resumen de objetivos alcanzados:** Se rediseñó `processResponseProcessor` como máquina de estados con 4 fases persistidas en DynamoDB (SK `__state__`): `WAITING_ADDRESS` (extrae dirección con OpenAI y valida con GMaps), `WAITING_DISAMBIGUATION` (múltiples resultados GMaps → el usuario elige), `WAITING_BUILDING_DETAILS` (dirección parece edificio → pregunta piso/puerta, sin insistir si el usuario confirma que no aplica), `WAITING_CONFIRMATION` (muestra dirección completa normalizada y pide confirmación explícita antes de sincronizar). Tras confirmación y sync mock con 200 OK, se confirma al usuario que la dirección ha sido registrada correctamente. Se refactorizó `address.service.ts` con: `validateWithGoogleMaps()` devolviendo múltiples resultados con `address_components` estructurados, `interpretUserIntent()` vía OpenAI para clasificar intenciones, constructores de mensajes por fase e idioma, y `simulateEcommerceSync()`. Se añadieron `saveConversationState()` / `getConversationState()` en `dynamodb.service.ts`.
 
 ---
 
