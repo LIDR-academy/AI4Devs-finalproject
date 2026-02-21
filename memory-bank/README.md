@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-18  
-> ⚠️ **Change en curso**: cu01-procesar-compra-mock (18/25 tareas)
+> **Última actualización**: 2026-02-21  
+> ✅ **Change completado**: cu01-procesar-compra-mock (23/23 tareas) — listo para archivar
 
 ## 📖 Inicio Rápido
 
@@ -22,6 +22,7 @@ Decisiones clave que guían el desarrollo del proyecto:
 | [002](./architecture/002-supabase-dynamodb.md) | Arquitectura DB Híbrida (Supabase + DynamoDB) | ✅ Aceptada | 2026-01-30 |
 | [003](./architecture/003-nestjs-backend.md) | NestJS como Framework Backend | ✅ Aceptada | 2026-01-30 |
 | [004](./architecture/004-openai-gpt4.md) | OpenAI GPT-4 para Conversaciones | ✅ Aceptada | 2026-01-30 |
+| [005](./architecture/005-bullmq-worker-conversations.md) | BullMQ + Worker Dedicado para Conversaciones IA | ✅ Aceptada | 2026-02-21 |
 
 ## 🎨 Patrones y Convenciones
 
@@ -61,9 +62,10 @@ Aquí se documentarán:
 
 | Fecha | Sesión | Estado |
 |-------|--------|--------|
-| [2026-02-18](./sessions/2026-02-18-cu01-progreso.md) | CU-01 Procesar Compra Mock | En progreso (18/25 tareas) |
+| [2026-02-18](./sessions/2026-02-18-cu01-progreso.md) | CU-01 Procesar Compra Mock — Progreso inicial | ✅ Supersedida |
+| [2026-02-21](./sessions/2026-02-21-cu01-procesar-compra-mock.md) | CU-01 Procesar Compra Mock — Completado | ✅ Completado (23/23 tareas) |
 
-**Change activo**: `openspec/changes/cu01-procesar-compra-mock/` — Ver [tasks.md](../openspec/changes/cu01-procesar-compra-mock/tasks.md) para tareas pendientes.
+**Próximo change**: `cu02-webhook-ecommerce-sync` — Webhook real WooCommerce.
 
 ## 🔄 Flujo de Trabajo
 
@@ -97,7 +99,8 @@ memory-bank/
 │   ├── 001-monolith-modular.md
 │   ├── 002-supabase-dynamodb.md
 │   ├── 003-nestjs-backend.md
-│   └── 004-openai-gpt4.md
+│   ├── 004-openai-gpt4.md
+│   └── 005-bullmq-worker-conversations.md
 │
 ├── patterns/                   # Patrones y convenciones
 │   └── (pendiente durante implementación)
@@ -134,7 +137,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-18  
+**Última revisión**: 2026-02-21  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: CU-01 implementación parcial - API mock, Worker, Mock UI operativos. Pendiente: DynamoDB, OpenAI, process-response, tests.  
+**Cambios recientes**: CU-01 completado — 37 tests pasando, ResponseProcessor (máquina de estados), integración DynamoDB + OpenAI + Google Maps, migraciones Prisma versionadas. Nuevo ADR-005 (BullMQ + Worker).  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

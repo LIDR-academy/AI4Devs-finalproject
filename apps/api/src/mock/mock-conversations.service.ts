@@ -7,7 +7,7 @@ import { QueueService } from '../queue/queue.service';
 const TABLE_NAME = 'adresles-messages';
 const TTL_DAYS = 90;
 
-interface DynamoMessage {
+export interface DynamoMessage {
   conversationId: string;
   messageId: string;
   role: 'system' | 'user' | 'assistant';

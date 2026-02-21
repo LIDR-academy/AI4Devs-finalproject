@@ -1,4 +1,4 @@
-import 'dotenv/config';
+// dotenv is loaded in main.ts with override:true
 import { Job } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';

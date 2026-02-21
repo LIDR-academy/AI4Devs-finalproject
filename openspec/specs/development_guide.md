@@ -30,33 +30,41 @@ Adresles usa **arquitectura de base de datos híbrida**: Supabase (PostgreSQL) p
 **Entorno de Backend** (`apps/api/.env`):
 
 ```env
-# Supabase Configuration
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# Base de datos - Supabase (PostgreSQL)
+DATABASE_URL="postgresql://usuario:password@host:5432/postgres?sslmode=disable"
+DIRECT_URL="postgresql://usuario:password@host:5432/postgres?sslmode=disable"
 
-# DynamoDB Configuration (AWS)
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-DYNAMODB_TABLE_MESSAGES=adresles-messages
+# Redis - para BullMQ
+REDIS_URL="redis://localhost:6379"
 
-# Para DynamoDB local (desarrollo)
-# AWS_ENDPOINT=http://localhost:8000
+# AWS - DynamoDB (local con Docker o servicio real)
+AWS_REGION="eu-west-1"
+AWS_ACCESS_KEY_ID="local"
+AWS_SECRET_ACCESS_KEY="local"
+DYNAMODB_ENDPOINT="http://localhost:8000"   # Solo para DynamoDB local; omitir en producción
+```
 
-# Redis Configuration
-REDIS_HOST=localhost
-REDIS_PORT=6379
+**Entorno de Worker** (`apps/worker/.env`):
 
-# OpenAI Configuration
-OPENAI_API_KEY=your-openai-api-key
+```env
+# Base de datos - Supabase (PostgreSQL)
+DATABASE_URL="postgresql://usuario:password@host:5432/postgres?sslmode=disable"
+DIRECT_URL="postgresql://usuario:password@host:5432/postgres?sslmode=disable"
 
-# Google Maps API
-GOOGLE_MAPS_API_KEY=your-google-maps-key
+# Redis - para BullMQ
+REDIS_URL="redis://localhost:6379"
 
-# Application Configuration
-PORT=3000
-NODE_ENV=development
+# AWS - DynamoDB
+AWS_REGION="eu-west-1"
+AWS_ACCESS_KEY_ID="local"
+AWS_SECRET_ACCESS_KEY="local"
+DYNAMODB_ENDPOINT="http://localhost:8000"   # Solo para DynamoDB local; omitir en producción
+
+# OpenAI (procesamiento de conversaciones)
+OPENAI_API_KEY="sk-..."
+
+# Google Maps (validación de direcciones)
+GOOGLE_MAPS_API_KEY="your-google-maps-key"
 ```
 
 **Entorno de Chat App** (`apps/web-chat/.env`):
@@ -115,17 +123,20 @@ Ver [ADR-002](../../memory-bank/architecture/002-supabase-dynamodb.md) para just
 ### 4. Configuración de Backend (NestJS)
 
 ```bash
-# Install dependencies (desde la raíz del monorepo)
+# Instalar dependencias (desde la raíz del monorepo)
 pnpm install
 
-# Generate Prisma client para Supabase
+# Generar cliente Prisma para Supabase
 cd apps/api
-pnpm prisma generate
+pnpm prisma:generate
 
-# Run database migrations (Supabase)
+# Aplicar migraciones (Supabase)
 pnpm prisma migrate deploy
 
-# Start the development server
+# Poblar base de datos con datos mock iniciales
+pnpm prisma db seed
+
+# Arrancar el servidor de desarrollo
 pnpm dev
 ```
 
@@ -189,32 +200,43 @@ El Worker procesará jobs de la cola Redis para:
 
 ## 🧪 Pruebas
 
-### Pruebas de Backend
+### Pruebas de Backend (`apps/api`)
+
+El proyecto usa **Jest** con **ts-jest** y **@nestjs/testing**. Los archivos de prueba siguen el patrón `*.spec.ts` y se colocan junto al código fuente.
 
 ```bash
-cd backend
+cd apps/api
 
-# Run all tests
-npm test
+# Ejecutar todos los tests
+pnpm test
 
-# Run tests in watch mode
-npm run test:watch
+# Ejecutar tests en modo vigilancia
+pnpm test:watch
 
-# Run tests with coverage
-npm run test:coverage
+# Ejecutar tests con informe de cobertura
+pnpm test:cov
 ```
+
+**Tests disponibles**:
+- `src/shared/fee.utils.spec.ts` — Pruebas unitarias de la fórmula de fee
+- `src/orders/orders.service.spec.ts` — Pruebas unitarias de `OrdersService`
+- `src/users/users.service.spec.ts` — Pruebas unitarias de `UsersService`
+- `src/mock/mock-orders.service.spec.ts` — Pruebas unitarias de `MockOrdersService`
+- `src/mock/mock-orders.controller.spec.ts` — Prueba de integración HTTP de `POST /api/mock/orders` (usa **supertest**)
+
+**Dependencias de prueba relevantes**: `jest`, `ts-jest`, `@nestjs/testing`, `supertest`, `@types/supertest`
 
 ### Pruebas de Frontend
 
 ```bash
-cd frontend
+cd apps/web-admin   # o apps/web-chat
 
-# Run unit tests
-npm test
+# Ejecutar tests unitarios
+pnpm test
 
-# Run E2E tests with Playwright
-npm run playwright:run
+# Ejecutar tests E2E con Playwright
+pnpm playwright:run
 
-# Open Playwright Test Runner
-npm run playwright:open
+# Abrir Playwright Test Runner interactivo
+pnpm playwright:open
 ```

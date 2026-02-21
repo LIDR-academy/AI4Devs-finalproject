@@ -369,11 +369,11 @@ function mockInterpretIntent(phase: ConversationPhase, msg: string): UserIntent 
     return {
       type: 'PROVIDE_BUILDING_DETAILS',
       buildingDetails: {
-        floor: floorMatch?.[1] ?? null,
-        door: doorMatch?.[1] ?? null,
-        block: blockMatch?.[1] ?? null,
-        staircase: stairMatch?.[1] ?? null,
-        additionalInfo: null,
+        floor: floorMatch?.[1] ?? undefined,
+        door: doorMatch?.[1] ?? undefined,
+        block: blockMatch?.[1] ?? undefined,
+        staircase: stairMatch?.[1] ?? undefined,
+        additionalInfo: undefined,
       },
     };
   }

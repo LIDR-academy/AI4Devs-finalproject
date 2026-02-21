@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+dotenv.config({ override: true });
 import { Worker } from 'bullmq';
 import { conversationProcessor, processResponseProcessor } from './processors/conversation.processor';
 

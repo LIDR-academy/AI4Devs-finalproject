@@ -8,8 +8,8 @@ El MVP de Adresles requiere un punto de entrada para simular compras desde eComm
 
 - Nuevo endpoint `POST /api/mock/orders` para recibir JSON de compra mock
 - Orquestación que detecta modo (adresles vs tradicional) y ejecuta flujo correspondiente
-- Flujo principal: Order PENDING_ADDRESS → conversación GET_ADDRESS → validación Google Maps → OrderAddress → sync mock → SYNCED
-- Flujo FA-2 (tradicional): Order ADDRESS_CONFIRMED desde inicio → conversación INFORMATION → sync mock → SYNCED
+- Flujo principal: Order PENDING_ADDRESS → conversación GET_ADDRESS → validación Google Maps → OrderAddress → sync mock → COMPLETED
+- Flujo FA-2 (tradicional): Order READY_TO_PROCESS desde inicio → conversación INFORMATION → sync mock → COMPLETED
 - Servicios: OrdersService, UsersService, ConversationsService, EcommerceSyncService
 - Worker BullMQ para procesar conversaciones (journeys GET_ADDRESS e INFORMATION)
 - Migraciones Supabase, configuración DynamoDB y Redis

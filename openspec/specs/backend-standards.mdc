@@ -98,9 +98,11 @@ Este documento describe las mejores prácticas, convenciones y estándares utili
 - **DynamoDB**: Mensajes de conversaciones con TTL automático
 
 ### Framework de Pruebas
-- **Jest**: Framework de pruebas con soporte para TypeScript
+- **Jest**: Framework de pruebas con soporte para TypeScript (via `ts-jest`)
+- **@nestjs/testing**: Módulo de pruebas de NestJS para tests unitarios e integración
+- **supertest**: Pruebas HTTP de integración para controladores
 - **Umbral de Cobertura**: 90% para ramas, funciones, líneas y sentencias
-- **Ubicación de Pruebas**: Directorios `__tests__` y archivos `.test.ts`
+- **Ubicación de Pruebas**: Junto al código fuente, con el patrón `*.spec.ts` (ej. `orders.service.spec.ts`)
 
 ### Herramientas de Desarrollo
 - **ESLint v9**: Linting de código con formato de configuración plana (`eslint.config.js`)
@@ -948,9 +950,9 @@ export class CandidateRepository implements ICandidateRepository {
 El proyecto tiene requisitos estrictos para calidad de código y mantenibilidad. Estos son los estándares y mejores prácticas de pruebas unitarias que deben aplicarse.
 
 ### Estructura de Archivos de Prueba
-- Usar nombres descriptivos de archivos de prueba: `[componentName].test.ts`
-- Colocar archivos de prueba junto al código fuente que prueban
-- Usar Jest como framework de pruebas con soporte para TypeScript
+- Usar el patrón de nomenclatura: `[componentName].spec.ts` (ej. `orders.service.spec.ts`, `mock-orders.controller.spec.ts`)
+- Colocar archivos de prueba junto al código fuente que prueban (no en directorio `test/` separado)
+- Usar Jest como framework de pruebas con soporte para TypeScript via `ts-jest`
 - Mantener umbral de cobertura de 90% para ramas, funciones, líneas y sentencias
 
 
@@ -1051,7 +1053,7 @@ Patrón de aserción:
 5. **Puntos de Integración**: Llamadas a servicios externos, operaciones de base de datos
 
 - **Umbral**: 90% para ramas, funciones, líneas y sentencias
-- **Reportes de Cobertura**: Generar reportes de cobertura con `npm run test:coverage`
+- **Reportes de Cobertura**: Generar reportes de cobertura con `pnpm test:cov`
 - **Archivos de Cobertura**: Reportes de cobertura en directorio `coverage/` agregando la fecha, como YYYYMMDD-backend-coverage.md
 
 
@@ -1259,13 +1261,17 @@ export async function getCandidate(req: Request, res: Response) {
 ### Scripts de Desarrollo
 
 ```bash
-npm run dev          # Servidor de desarrollo con recarga en caliente
-npm run build        # Compilar para producción
-npm test             # Ejecutar pruebas
-npm run test:coverage # Ejecutar pruebas con cobertura
-npm run prisma:generate  # Generar cliente Prisma
-npx prisma migrate dev   # Crear y aplicar migración
-npx prisma db seed       # Poblar base de datos
+# Desde apps/api o apps/worker:
+pnpm dev              # Servidor de desarrollo con recarga en caliente
+pnpm build            # Compilar para producción
+pnpm test             # Ejecutar pruebas
+pnpm test:cov         # Ejecutar pruebas con cobertura
+pnpm prisma:generate  # Generar cliente Prisma
+
+# Desde apps/api:
+npx prisma migrate dev --name nombre_descriptivo  # Crear y aplicar nueva migración
+npx prisma migrate deploy                         # Aplicar migraciones en producción
+npx prisma db seed                                # Poblar base de datos con datos mock
 ```
 
 ### Calidad de Código

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 export interface OrderAddressSnapshot {
   orderId: string;
@@ -9,6 +9,8 @@ export interface OrderAddressSnapshot {
 
 @Injectable()
 export class EcommerceSyncService {
+  private readonly logger = new Logger(EcommerceSyncService.name);
+
   simulateSync(orderId: string, address: OrderAddressSnapshot): void {
     const payload = {
       event: 'ADDRESS_SYNC_MOCK',
@@ -20,6 +22,6 @@ export class EcommerceSyncService {
       },
       timestamp: new Date().toISOString(),
     };
-    console.log('[EcommerceSync Mock]', JSON.stringify(payload));
+    this.logger.log(JSON.stringify(payload));
   }
 }

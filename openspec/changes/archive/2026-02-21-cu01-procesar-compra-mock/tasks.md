@@ -34,6 +34,6 @@
 ## 5. Integración y pruebas
 
 - [x] 5.1 Crear script de seed ejecutable
-- [ ] 5.2 Añadir tests unitarios para OrdersService y UsersService
-- [ ] 5.3 Añadir test de integración para POST /api/mock/orders
+- [x] 5.2 Añadir tests unitarios para OrdersService y UsersService
+- [x] 5.3 Añadir test de integración para POST /api/mock/orders
 - [x] 5.4 Crear página Mock UI básica en web-admin (opcional) o documentar ejemplos curl
