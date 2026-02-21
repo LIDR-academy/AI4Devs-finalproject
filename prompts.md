@@ -472,11 +472,55 @@ Cuando recibe dirección pausible para ser validad con GMaps, se valida primero 
 
 ### 5. Historias de Usuario
 
-**Prompt 1:**
+#### cu02-frontend-admin
 
-**Prompt 2:**
+**Prompt 1** *(Modo Plan — Exploración):*
 
-**Prompt 3:**
+```
+/opsx-explore generar un frontend que me permita como administrador ver todas las compras realizadas y los usuarios de adresles (registrados o no registrados), y como usuario me permita recibir los mensajes de Adresles y responder los mensajes para confirmar mi dirección.
+```
+
+> **Resumen de objetivos alcanzados:** Se entró en modo exploración para definir el alcance del frontend. Se analizó el estado del proyecto (CU-01 completado, backend operativo, apps/web-chat y apps/web-admin inexistentes). Se mapearon las dos superficies del producto: `web-admin` (Next.js 14) y `web-chat` (React 18 + Vite). Se identificó la pregunta clave de acceso del usuario al chat (magic link por conversationId). Se acordó comenzar por `web-admin` como primera prioridad, con acceso via magic link para el chat de usuario en iteraciones posteriores. Se generó un plan estructurado en 6 tareas con backend y frontend detallados.
+
+---
+
+**Prompt 2** *(Modo Plan):*
+
+```
+Corrige el plan para que desde admin también se puedan ver las conversaciones realizadas entre el sistema adresles y el usuario, tipo chat. Obviamente esaas conversaciones tienen que mentener un TTL de 90 días.
+```
+
+> **Resumen de objetivos alcanzados:** Se amplió el plan con una tercera vista en el dashboard admin: el visor de conversaciones tipo chat. Se añadió el endpoint `GET /api/admin/conversations/:conversationId/messages` que reutiliza la lógica DynamoDB ya existente en `MockConversationsService.getConversationHistory()`. Se incorporaron los componentes `chat-view.tsx`, `chat-bubble.tsx` y `chat-expiry-banner.tsx`. Se añadió un icono de chat por fila en la tabla de órdenes como punto de entrada a la conversación. Se documentó que el TTL de 90 días ya está implementado via campo `expiresAt` en cada mensaje DynamoDB.
+
+---
+
+**Prompt 3** *(Modo Plan):*
+
+```
+Lee @memory-bank y corrige y/o actualiza el Plan asegurando que está perfectamente definido para lo que llevamos hecho de Proyecto
+```
+
+> **Resumen de objetivos alcanzados:** Tras leer el memory-bank completo (README, sesión CU-01, tech-stack), se corrigieron y alinearon varias partes del plan con el estado real del proyecto: se eliminó la tarea de configurar `pnpm-workspace.yaml` y `turbo.json` (ya cubren `apps/*` automáticamente), se confirmó que el DynamoDB client existe en `mock-conversations.service.ts` y no hay que recrearlo, se añadieron tests requeridos (`admin.controller.spec.ts` y `admin.service.spec.ts`) siguiendo el patrón de los 37 tests existentes, se precisaron los colores exactos de badges alineados con los `OrderStatus` del schema Prisma, y se añadió el aviso de expiración TTL con umbral de 7 días usando el campo `expiresAt`.
+
+---
+
+**Prompt 4** *(Modo Agent):*
+
+```
+Genera un nuevo caso de uso cu02-frontend-admin.md a guardar en openspec/changes/ (no dentro de archive) con toda la información contenida en este Plan. Sé exhaustivo. De momento sólo genera este nuevo archivo en formato markdown, no hagas nada más.
+```
+
+> **Resumen de objetivos alcanzados:** Se creó el archivo `openspec/changes/cu02-frontend-admin.md` con la especificación completa del change. El documento sigue el formato de CU-01 (proposal, diseño, API, estructura, vistas, tareas) en un único archivo con 576 líneas. Incluye: propuesta con capacidades y plan de rollback, diseño con decisiones técnicas D1-D4, contratos JSON de los 3 endpoints con ejemplos reales, estructura de archivos de backend y frontend, especificación de cada vista con columnas/campos/colores, 25 tareas de implementación numeradas y ordenadas, variables de entorno y notas de implementación.
+
+---
+
+**Prompt 5** *(Modo Agent):*
+
+```
+/enrich-us @openspec/changes/cu02-frontend-admin.md como si fueras una IA experta en desarrollo frontend, con más de 20 años de experiencia, usando las mejores prácticas en desarrollo de frontend y con un diseño moderno utilizando colores Adresles (PRIMARIOS con HEX #000000 o HEX #DBFF36 y SECUNDARIOS con HEX #00687D o blanco).
+```
+
+> **Resumen de objetivos alcanzados:** Se enriqueció exhaustivamente el documento `cu02-frontend-admin.md` (de 576 a 1319 líneas) añadiendo: sistema de diseño completo con paleta de colores Adresles (#000000, #DBFF36, #00687D, #FFFFFF) y ratios de contraste WCAG AA verificados; configuración completa de `tailwind.config.ts` con tokens de marca y `borderRadius: chat`; variables CSS para overrides de Shadcn/ui; tipografía Inter via `next/font`; diseño detallado del sidebar, tablas, badges y burbujas de chat con clases Tailwind exactas; decisión D5 sobre Server Components por defecto; sección completa de tipos TypeScript (interfaces `AdminOrder`, `AdminUser`, `ConversationMessage`, `PaginatedResponse<T>`); estructura de archivos ampliada con `loading.tsx`, `error.tsx` y componentes de estado vacío y skeleton por cada ruta; código completo de `api.ts` (ISR 30s), `utils.ts` (date-fns locale ES, `cn()`), `Sidebar`, `OrderStatusBadge`, `ChatBubble` y `ChatExpiryBanner`; especificación de accesibilidad WCAG 2.1 AA; requisitos no funcionales de rendimiento (FCP < 1.5s); y wireframe del chat con anotaciones de colores de marca.
 
 ---
 
