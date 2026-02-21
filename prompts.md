@@ -192,6 +192,65 @@ Primero realiza los siguientes cambios en la documentación generada hasta ahora
 
 ---
 
+**Prompt 3** *(Modo Agent):*
+
+```
+añade a @apps/api/prisma/seed.ts lo siguiente:
+- 2 ecommerce
+- 1 de ellos con 2 tiendas, el otro sólo con una (tenemos 3 tiendas)
+- 10 usuarios, de los cuales:
+    - preferred_language: 7 en español, 1 en catalán , 1 en francés y 1 en inglés
+    - phone_country: 9 de España y uno de Francia
+    - is_registerd: sólo 4 de ellos
+- Para los usuarios registrados:
+    - Dos de ellos tienen una sóla Address guardada, uno tiene 2 y otro tiene 3. Pon label razonables. Las direcciones todas de España.
+- Todos los usuarios han realizado como mínimo una compra, algunos más, hasta un máximo de 4 compras.
+- Un 20% de las compras (aproximadamente) debe tener is_gift, y poblar los GiftRecipient apropiadamente.
+- Todas las compras deben tener su OrderAddres en consonancia con si es gift o no. Un 5% de las compras deben de tener en OrderAddress un PlaceHolder y estar sin confirmar todavía. No todas las direcciones deben tener todos los campos de bloque, escalera piso y puerta rellenos, pueden quedar algunos vacíos, lo razonable.
+```
+
+> **Resumen de objetivos alcanzados:** Se generó un `seed.ts` completo con 2 ecommerces (ModaMujer con 2 tiendas WooCommerce/Shopify, TechGadgets con 1 tienda PrestaShop), 10 usuarios con distribución correcta de idiomas (7 es, 1 ca, 1 fr, 1 en) y países (9 ES, 1 FR), 4 usuarios registrados con 1, 1, 2 y 3 direcciones guardadas respectivamente, y 20 pedidos distribuidos entre 1 y 4 por usuario. Se poblaron 4 GiftRecipient (~20%) con sus OrderAddress en modo `GIFT_RECIPIENT`, y 1 pedido en estado `PENDING_ADDRESS` sin OrderAddress (placeholder ~5%).
+
+---
+
+**Prompt 4** *(Modo Plan):*
+
+```
+Necesito corregir un poco @apps/api/prisma/schema.prisma 
+- Cambiar el enum de OrderStatus a PENDING_PAYMENT, PENDING_ADDRESS, READY_TO_PROCESS, COMPLETED y CANCELED.
+- Añadir un sourceUserId, opcional, en GiftRecipient para los casos en los que el regalado también sea usuario de Adresles.
+- Añadir un addressOrigin en OrderAddress para reflejar si la dirección viene de la Tienda por compra tradicional, de la Tienda pero usando modo Adresles, de Adresles (dirección previamente guardada por usuario registrado) o del Usuario (indicada mediante conversación en WhatsApp). Usa un enum apropiado que refleje estos 4 orígenes.
+- Añade un orderMode en Order para indicar si la Order se ha hecho en Modo Tradicional o Modo Adresles.
+- Añade un paymentType para indicar el modo de compra usado (Tarjeta de Crédito, PayPal, Bizum, Transferencia, Contra Reembolso, u Otros)
+- Todos los phone tienen que ser un modelo propio que tenga los campos más importantes extraídos de la librería phone_numbers, que es la que usaremos para verificarlos (investiga dichos campos y pregúntame cuáles implantar antes de hacerlo). No puede haber teléfonos repetidos. En consecuencia, todos los phone en el resto de modelos se tienen que sustituir por un phoneId obligatorio.
+```
+
+> **Resumen de objetivos alcanzados:** Se planificó la corrección completa del schema. Se consultaron los campos de libphonenumber-js y se acordó incluir: `e164` (único), `countryCallingCode`, `nationalNumber`, `country`, `numberType` (enum PhoneNumberType), `isValid`, `formattedNational` y `formattedInternational`. Se decidió mantener `Ecommerce.phone` como `String?` sin cambios. Se diseñó el modelo Phone con relación `users User[]` (varios históricos por soft-delete) y relaciones `1:N` a GiftRecipient y OrderAddress.
+
+---
+
+**Prompt 5** *(Modo Plan → Agent):*
+
+```
+Cambia lo siguiente: GiftRecipient siempre tendrá un sourceUserId, porque siempre se crea un usuario cuando tenemos un teléfono nuevo, aunque puede estar no registrado.
+Revisa estrictamente que si un teléfono ya existe, y pertenece a un usuario registrado, se tiene que asgnar la Order o el GiftRecipient a dicho usuario registrado. Si no está registrado, crear un nuevo usuario sin registrar con el mismo phoneId. 
+Verifica el proceso y pregúntame si ves algo que no sientes coherente
+```
+
+> **Resumen de objetivos alcanzados:** Se detectó una contradicción: "crear un nuevo usuario para un teléfono existente no registrado" chocaba con la restricción `User.phoneId @unique`. Se plantearon tres preguntas de clarificación sobre este caso, sobre el renombrado de `sourceUserId` y sobre si garantizar la unicidad activa a nivel de BD o de aplicación. Las respuestas fueron: adoptar **soft-delete** para liberar el `phoneId` del usuario antiguo (phoneId → null, isDeleted = true), renombrar el campo a `recipientUserId`, y garantizar la unicidad activa únicamente a nivel de aplicación. Con la confirmación del plan (`si`), se implementaron todos los cambios en `schema.prisma`: nuevo enum `OrderStatus` (5 valores), enums `OrderMode`, `PaymentType`, `AddressOrigin` y `PhoneNumberType`; nuevo modelo `Phone`; actualización de `User` (phoneId nullable, isDeleted, deletedAt), `Order` (orderMode, paymentType), `OrderAddress` (recipientPhoneId, addressOrigin) y `GiftRecipient` (phoneId, recipientUserId obligatorio, eliminado campo `phone`). Se regeneró el cliente Prisma (`prisma generate`).
+
+---
+
+**Prompt 6** *(Modo Agent):*
+
+```
+Actualiza @apps/api/prisma/seed.ts con los cambios, procurando tener una semilla lo más variada posible en cuanto a modos de compra, tipos de pago, estados de orden y origen de dirección. Revisa estrictamente la coherencia entre las instancias creadas en cuando al uso de userId, phoneId, etc.
+```
+
+> **Resumen de objetivos alcanzados:** Se reescribió completamente `seed.ts` adaptándolo al nuevo schema. Se crearon 14 registros `Phone` (10 compradores + 4 destinatarios de regalo) con todos los campos de libphonenumber-js. Se crearon 14 `User` (incluyendo los 4 usuarios no registrados para destinatarios de regalo, cada uno con su phoneId). Los 20 pedidos cubren todos los valores de los nuevos enums: `OrderStatus` (COMPLETED×14, READY_TO_PROCESS×2, PENDING_ADDRESS×1, PENDING_PAYMENT×1, CANCELED×1), `OrderMode` (TRADITIONAL×7, ADRESLES×13), `PaymentType` (los 6 valores), `AddressOrigin` (los 4 valores). Se verificó estrictamente la coherencia: `GiftRecipient.phoneId == recipientUser.phoneId`, `OrderAddress.recipientPhoneId` apunta al phone del destinatario correcto, y las 2 órdenes con `ADRESLES_SAVED` referencian `sourceAddressId` de una `Address` guardada real.
+
+---
+
 ### 4. Especificación de la API
 
 **Prompt 1:**
