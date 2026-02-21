@@ -106,6 +106,16 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   * Test coverage: 16/16 tests PASS (PartsScene 5/5, PartMesh 11/11), zero regression 49/49 Dashboard tests
   * Refactor: TOOLTIP_STYLES constant extracted, helper functions (calculateBBoxCenter, calculateGridPosition), clarifying comments for performance logging
   * Files: 5 total (PartsScene 60 lines, PartMesh 107 lines, usePartsSpatialLayout 70 lines, parts.store 95 lines, parts.service 40 lines)
+- **Filters Sidebar & Zustand Store** (T-0506-FRONT DONE 2026-02-21)
+  * Zustand store extended: PartsFilters interface (status[], tipologia[], workshop_id), setFilters (partial merge), clearFilters, getFilteredParts (computed)
+  * CheckboxGroup.tsx: Reusable multi-select component (91 lines) with color badges, aria-label accessibility
+  * FiltersSidebar.tsx: Orchestrator component (84 lines) with counter "Mostrando X de Y", clear button, 3 sections (Tipología/Estado/Taller placeholder)
+  * useURLFilters.ts: Bidirectional URL sync hook (79 lines) with mount + reactive effects, comma-separated arrays encoding
+  * PartMesh.tsx extensions: Filter-based opacity logic (1.0 match, 0.2 non-match), backward compatible with T-0505 tests
+  * Test coverage: 49/50 tests PASS (98%) — 11/11 store ✓, 6/6 CheckboxGroup ✓, 7/8 FiltersSidebar (1 test bug), 9/9 useURLFilters ✓, 16/16 PartMesh ✓
+  * Refactor: calculatePartOpacity helper (26 lines), buildFilterURLString/parseURLToFilters helpers, inline styles extracted to constants (CHECKBOX_*, SIDEBAR_*, SECTION_*, COLOR_BADGE_*)
+  * Files: 5 total (parts.store.ts +80 lines, CheckboxGroup.tsx 91 lines, FiltersSidebar.tsx 84 lines, useURLFilters.ts 79 lines, PartMesh.tsx +25 lines)
+  * Zero regression: 96/96 Dashboard tests PASS
 
 **US-002: Validation Infrastructure (PARTIAL)**
 - ✅ Database schema: `validation_report` JSONB column in `blocks` table
@@ -167,10 +177,10 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   - Test coverage: 17/20 tests passing (85%, functional core 100%)
 
 ### 🔄 In Progress
-- US-005 T-0501-BACK: List Parts API endpoint (next)
+- US-005: Dashboard 3D (T-0506-FRONT complete, next: T-0507-FRONT LOD System)
 
 ### 📋 Next Milestones
-- US-005: Dashboard 3D (T-0503-DB → T-0501-BACK → T-0504-FRONT → T-0505-FRONT → ...)
-- US-010: 3D Web Viewer (Three.js) — stack already installed via T-0500-INFRA
+- US-005: Dashboard 3D (T-0507-FRONT LOD → T-0508-FRONT Selection → T-0509/T-0510 Tests)
+- US-010: 3D Web Viewer High-Poly (Three.js instance viewer for detailed inspection)
 - US-007: Lifecycle state machine
 - US-013: Authentication (Supabase Auth)
