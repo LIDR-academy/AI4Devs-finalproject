@@ -177,10 +177,12 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   - Test coverage: 17/20 tests passing (85%, functional core 100%)
 
 ### 🔄 In Progress
-- US-005: Dashboard 3D (T-0506-FRONT complete, next: T-0507-FRONT LOD System)
+- US-005: Dashboard 3D (T-0507-FRONT LOD complete 2026-02-22, next: T-0508-FRONT Part Selection & Modal)
 
 ### 📋 Next Milestones
-- US-005: Dashboard 3D (T-0507-FRONT LOD → T-0508-FRONT Selection → T-0509/T-0510 Tests)
+- US-005: Dashboard 3D (T-0508-FRONT Selection → T-0509/T-0510 Tests)
+- US-010: 3D Web Viewer High-Poly (instance viewer, detailed inspection)
+- US-007: Lifecycle state machine (block status transitions)
 - US-010: 3D Web Viewer High-Poly (Three.js instance viewer for detailed inspection)
 - US-007: Lifecycle state machine
 - US-013: Authentication (Supabase Auth)
