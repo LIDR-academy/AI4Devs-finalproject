@@ -17,11 +17,16 @@ vi.mock('@react-three/fiber', () => ({
 // @react-three/drei — prevent real asset fetching and WebGL calls in jsdom.
 // ---------------------------------------------------------------------------
 vi.mock('@react-three/drei', () => ({
-  useGLTF: vi.fn(() => ({
-    scene: {},
-    nodes: {},
-    materials: {},
-  })),
+  useGLTF: Object.assign(
+    vi.fn(() => ({
+      scene: {
+        clone: vi.fn(() => ({})),
+      },
+      nodes: {},
+      materials: {},
+    })),
+    { preload: vi.fn() }
+  ),
   OrbitControls: vi.fn(() => null),
   Grid: vi.fn(() => null),
   GizmoHelper: vi.fn(({ children }: { children: React.ReactNode }) =>
@@ -31,5 +36,8 @@ vi.mock('@react-three/drei', () => ({
   Stats: vi.fn(() => null),
   Html: vi.fn(({ children }: { children: React.ReactNode }) =>
     React.createElement('div', null, children)
+  ),
+  Lod: vi.fn(({ children, distances }: { children: React.ReactNode, distances?: number[] }) =>
+    React.createElement('div', { 'data-lod-distances': distances?.join(',') }, children)
   ),
 }));

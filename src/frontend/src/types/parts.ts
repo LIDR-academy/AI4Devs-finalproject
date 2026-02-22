@@ -34,6 +34,7 @@ export interface PartCanvasItem {
   status: BlockStatus;             // Enum value
   tipologia: string;               // "capitel" | "columna" | "dovela" | etc.
   low_poly_url: string | null;     // Supabase Storage URL to GLB, or null if not processed
+  mid_poly_url?: string | null;    // T-0507: Mid-poly URL (1000 tris) for LOD Level 0 - graceful fallback to low_poly_url
   bbox: BoundingBox | null;        // 3D bounding box, or null if not extracted yet
   workshop_id: string | null;      // UUID string or null if unassigned
 }
@@ -52,4 +53,23 @@ export interface PartsQueryParams {
   status?: BlockStatus;
   tipologia?: string;
   workshop_id?: string;  // UUID string
+}
+
+/**
+ * LOD (Level of Detail) Configuration
+ * 
+ * T-0507-FRONT: Interface for geometry LOD system
+ * Represents the 3 levels of geometry detail based on camera distance
+ * 
+ * @see src/constants/lod.constants.ts - LOD_DISTANCES, LOD_LEVELS
+ */
+export interface LodConfig {
+  /** Level 0: Mid-poly geometry URL (<20 units) - ~1000 triangles */
+  midPolyUrl?: string;
+  
+  /** Level 1: Low-poly geometry URL (20-50 units) - ~500 triangles */
+  lowPolyUrl?: string;
+  
+  /** Level 2: BBox for wireframe proxy (>50 units) - 12 triangles */
+  bbox?: BoundingBox;
 }

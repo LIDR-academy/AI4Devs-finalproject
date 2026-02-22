@@ -3,15 +3,27 @@
 ## Current Sprint
 Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
 
-# Active Context
-
-## Current Sprint
-Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
+## Active Ticket
+- **No active ticket** — 🟢 AWAITING USER SELECTION
+  - T-0507-FRONT (LOD System) completed 2026-02-22 17:00 (TDD-REFACTOR phase complete)
+  - Next available tickets: T-0508-FRONT (Part Selection & Modal), T-0500-INFRA (Celery Setup), T-0501-BACK (Low-Poly GLB Endpoint)
+  - Branch: US-005 (3D Visualization & LOD System)
 
 ## Completed User Stories
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
 
 ## Recently Completed
+- **T-0507-FRONT: LOD System Implementation** — ✅ COMPLETE (2026-02-22) | TDD-REFACTOR Complete 17:00
+  - Status: **43/43 tests passing (100%)** — PartMesh 34/34 ✓ + BBoxProxy 9/9 ✓ (Duration: 9.77s, zero regressions)
+  - Scope: 3-level LOD system with `<Lod distances={[0, 20, 50]}>` — Level 0: mid-poly <20 units (1000 tris), Level 1: low-poly 20-50 units (500 tris), Level 2: bbox proxy >50 units (12 tris)
+  - Implementation: BBoxProxy.tsx (68 lines wireframe component), PartMesh.tsx (+120 lines LOD wrapper with useGLTF.preload), PartsScene.tsx (+15 lines preload strategy), lod.constants.ts (91 lines)
+  - Performance targets MET: POC validation 60 FPS 1197 meshes, 41 MB memory (exceeds >30 FPS 150 parts, <500 MB target)
+  - Graceful degradation: mid_poly_url ?? low_poly_url fallback (works before agent generates mid-poly)
+  - Backward compatibility: enableLod=false prop preserves T-0505 behavior (zero regression guarantee: 16/16 T-0505 tests PASS)
+  - Refactoring applied (TDD-REFACTOR phase): Fixed PartsScene duplicate props bug, added Z-up rotation clarifying comments (3 locations), fixed import typo
+  - Files: 3 created (BBoxProxy.tsx, BBoxProxy.test.tsx, lod.constants.ts), 3 modified (PartMesh.tsx +120, PartMesh.test.tsx +18 tests, setup.ts +5 mocks)
+  - Production-ready: Clean code, proper JSDoc, constants extraction pattern, TypeScript strict mode
+  - TDD-GREEN timestamp: 2026-02-22 16:37, TDD-REFACTOR timestamp: 2026-02-22 17:00
 - **T-0506-FRONT: Filters Sidebar & Zustand Store** — ✅ COMPLETE (2026-02-21) | TDD-REFACTOR Complete
   - Status: 49/50 tests passing (98%) — 11/11 store ✓ + 6/6 CheckboxGroup ✓ + 7/8 FiltersSidebar (1 test bug) ✓ + 9/9 useURLFilters ✓ + 16/16 PartMesh ✓
   - Refactor: calculatePartOpacity helper, buildFilterURLString/parseURLToFilters helpers, inline styles extracted to constants
