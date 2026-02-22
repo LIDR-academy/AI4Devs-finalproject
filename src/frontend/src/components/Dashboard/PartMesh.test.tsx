@@ -284,4 +284,154 @@ describe('PartMesh Component', () => {
       });
     });
   });
+
+  describe('T-0506-FRONT: Filter-based Opacity (Fade-out)', () => {
+    it('should apply full opacity (1.0) when part matches filters', async () => {
+      vi.mocked(partsStore.usePartsStore).mockReturnValue({
+        selectPart: mockSelectPart,
+        selectedId: null,
+        parts: [mockPart],
+        filters: { status: [], tipologia: [], workshop_id: null },
+        isLoading: false,
+        error: null,
+        fetchParts: vi.fn(),
+        setFilters: vi.fn(),
+        clearSelection: vi.fn(),
+        clearFilters: vi.fn(),
+        getFilteredParts: vi.fn(() => [mockPart]), // Part matches filters
+      });
+
+      const { container } = render(
+        <Canvas>
+          <PartMesh part={mockPart} position={[0, 0, 0]} />
+        </Canvas>
+      );
+
+      await waitFor(() => {
+        const material = container.querySelector('[data-testid="part-material"]');
+        expect(material).toHaveAttribute('opacity', '1.0');
+      });
+    });
+
+    it('should apply reduced opacity (0.2) when part does not match filters', async () => {
+      const anotherPart: PartCanvasItem = {
+        ...mockPart,
+        id: 'another-id',
+        tipologia: 'columna',
+      };
+
+      vi.mocked(partsStore.usePartsStore).mockReturnValue({
+        selectPart: mockSelectPart,
+        selectedId: null,
+        parts: [mockPart, anotherPart],
+        filters: { status: [], tipologia: ['capitel'], workshop_id: null },
+        isLoading: false,
+        error: null,
+        fetchParts: vi.fn(),
+        setFilters: vi.fn(),
+        clearSelection: vi.fn(),
+        clearFilters: vi.fn(),
+        getFilteredParts: vi.fn(() => [mockPart]), // Only mockPart matches
+      });
+
+      const { container } = render(
+        <Canvas>
+          <PartMesh part={anotherPart} position={[0, 0, 0]} />
+        </Canvas>
+      );
+
+      await waitFor(() => {
+        const material = container.querySelector('[data-testid="part-material"]');
+        expect(material).toHaveAttribute('opacity', '0.2');
+      });
+    });
+
+    it('should use MATCH_OPACITY constant for matching parts', async () => {
+      vi.mocked(partsStore.usePartsStore).mockReturnValue({
+        selectPart: mockSelectPart,
+        selectedId: null,
+        parts: [mockPart],
+        filters: { status: [], tipologia: [], workshop_id: null },
+        isLoading: false,
+        error: null,
+        fetchParts: vi.fn(),
+        setFilters: vi.fn(),
+        clearSelection: vi.fn(),
+        clearFilters: vi.fn(),
+        getFilteredParts: vi.fn(() => [mockPart]),
+      });
+
+      const { container } = render(
+        <Canvas>
+          <PartMesh part={mockPart} position={[0, 0, 0]} />
+        </Canvas>
+      );
+
+      await waitFor(() => {
+        const material = container.querySelector('[data-testid="part-material"]');
+        // Should use FILTER_VISUAL_FEEDBACK.MATCH_OPACITY (1.0)
+        expect(material).toHaveAttribute('opacity', '1.0');
+      });
+    });
+
+    it('should use NON_MATCH_OPACITY constant for non-matching parts', async () => {
+      const nonMatchingPart: PartCanvasItem = {
+        ...mockPart,
+        id: 'non-matching-id',
+      };
+
+      vi.mocked(partsStore.usePartsStore).mockReturnValue({
+        selectPart: mockSelectPart,
+        selectedId: null,
+        parts: [mockPart, nonMatchingPart],
+        filters: { status: ['validated'], tipologia: [], workshop_id: null },
+        isLoading: false,
+        error: null,
+        fetchParts: vi.fn(),
+        setFilters: vi.fn(),
+        clearSelection: vi.fn(),
+        clearFilters: vi.fn(),
+        getFilteredParts: vi.fn(() => [mockPart]), // Only mockPart matches
+      });
+
+      const { container } = render(
+        <Canvas>
+          <PartMesh part={nonMatchingPart} position={[0, 0, 0]} />
+        </Canvas>
+      );
+
+      await waitFor(() => {
+        const material = container.querySelector('[data-testid="part-material"]');
+        // Should use FILTER_VISUAL_FEEDBACK.NON_MATCH_OPACITY (0.2)
+        expect(material).toHaveAttribute('opacity', '0.2');
+      });
+    });
+
+    it('should show all parts with full opacity when no filters applied', async () => {
+      vi.mocked(partsStore.usePartsStore).mockReturnValue({
+        selectPart: mockSelectPart,
+        selectedId: null,
+        parts: [mockPart],
+        filters: { status: [], tipologia: [], workshop_id: null },
+        isLoading: false,
+        error: null,
+        fetchParts: vi.fn(),
+        setFilters: vi.fn(),
+        clearSelection: vi.fn(),
+        clearFilters: vi.fn(),
+        getFilteredParts: vi.fn(() => [mockPart]), // All parts match when no filters
+      });
+
+      const { container } = render(
+        <Canvas>
+          <PartMesh part={mockPart} position={[0, 0, 0]} />
+        </Canvas>
+      );
+
+      await waitFor(() => {
+        const material = container.querySelector('[data-testid="part-material"]');
+        expect(material).toHaveAttribute('opacity', '1.0');
+      });
+    });
+  });
 });
