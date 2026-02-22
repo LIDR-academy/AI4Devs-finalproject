@@ -3,10 +3,18 @@
 ## Current Sprint
 Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
 
-# Active Context
-
-## Current Sprint
-Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
+## Active Ticket
+- **T-0507-FRONT: LOD System Implementation** — 🔄 IN PROGRESS (2026-02-22) | Phase: ENRICHMENT
+  - Status: Technical Specification complete (docs/US-005/T-0507-FRONT-TechnicalSpec-ENRICHED.md, 650+ lines)
+  - Scope: 3-level LOD system with `<Lod distances={[0, 20, 50]}>` — Level 0: mid-poly <20 units (1000 tris), Level 1: low-poly 20-50 units (500 tris), Level 2: bbox proxy >50 units (12 tris)
+  - Performance targets: >30 FPS 150 parts, <500 MB memory, smooth transitions (no pop-in)
+  - Graceful degradation: mid_poly_url ?? low_poly_url fallback (works before agent generates mid-poly)
+  - Backward compatibility: enableLod=false prop preserves T-0505 behavior (zero regression guarantee)
+  - Test strategy: 28+ tests (8 HP, 4 EC, 4 PERF, 3 INT, 9 BBoxProxy unit tests)
+  - Files: 3 create (BBoxProxy.tsx, BBoxProxy.test.tsx, lod.constants.ts), 6 modify (PartMesh +70, PartsScene +15, types/parts +25)
+  - Next phase: TDD-RED (write failing tests for LOD levels, BBoxProxy component, preload strategy)
+  - Notion: Status "In Progress", Tech Spec link updated
+  - Timestamp ENRICHMENT: 2026-02-22 10:15
 
 ## Completed User Stories
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
