@@ -1,17 +1,38 @@
 # Active Context
 
 ## Current Sprint
-Sprint 4 / US-005 - Dashboard 3D | COMPLETE (2026-02-23) ✅
+Sprint 5 / US-010 - Visor 3D Web | PLANNING COMPLETE (2026-02-23) ✅
 
 ## Active Ticket
-**No active ticket** — US-005 Dashboard 3D Interactivo de Piezas COMPLETE & AUDITED ✅
-- **Context:** All 11 tickets of US-005 completed and audited (35/35 SP, 100%). Acceptance Criteria 6/6 cumplidos. Tests: Funcional core 100% PASS. API Contracts 100% synced. POC Validation approved. Production-ready, zero bloqueadores.
-- **Timestamp:** 2026-02-23 22:30
-- **Status:** Repository clean, ready for next US or deployment
+**US-010: Visor 3D Web de Piezas — SPECIFICATIONS COMPLETE** ✅
+- **Context:** Gap analysis executed, enriched proposal approved (4 tickets → 9 tickets, 8 SP → 15 SP), all technical specifications completed and ready for TDD RED phase implementation.
+- **Timestamp:** 2026-02-23 23:30
+- **Status:** READY FOR IMPLEMENTATION — All 9 technical specs created (~110KB docs), dependency chain documented, contracts defined
+
+### Gap Analysis Results (Prompt #149)
+- **5 Critical Gaps Identified:** (1) No testing ticket, (2) Backend RLS not documented, (3) Fallback strategy ambiguous, (4) Modal integration undefined, (5) Edge cases missing (WebGL unavailable, RLS violations, large models, mobile)
+- **Enrichment Applied:** +5 tickets (T-1001 CDN, T-1003 Navigation, T-1006 ErrorBoundary, T-1008 MetadataSidebar, T-1009 Testing), +7 SP justified by security (RLS enforcement + rate limiting + audit logs), performance (CDN <200ms + preload adjacent), UX (prev/next navigation + metadata sidebar + keyboard shortcuts)
+- **Approval:** User confirmed "Apruebo la propuesta, naturalmente"
+
+### Technical Specifications Created
+**All 9 specs following US-005 template structure:**
+1. **T-1001-INFRA** (2 SP): CloudFront CDN, CloudFormation template 240 lines YAML, cache policy 24h TTL Brotli, monitoring 3 alarms, cost ~$26/month
+2. **T-1002-BACK** (3 SP): Get Part Detail API, PartDetailResponse Pydantic schema 15 fields, RLS enforcement users/superusers, presigned URLs 5min TTL, error matrix 400/403→404/500, 12 unit + 8 integration tests
+3. **T-1003-BACK** (1 SP): Part Navigation API, AdjacentPartsResponse prev_id/next_id, algorithm fetch filtered IDs ordered created_at, Redis caching consideration, 6 unit + 8 integration tests
+4. **T-1004-FRONT** (3 SP): PartViewerCanvas component, camera fov 45° position [3,3,3], 3-point lighting key/fill/rim, OrbitControls + Stage + touch gestures, 8 component tests + manual
+5. **T-1005-FRONT** (3 SP): ModelLoader component, useGLTF + BBoxProxy fallback if low_poly_url NULL, auto-center/scale algorithm, preload adjacent async, 3 error states, 10 component tests + manual
+6. **T-1006-FRONT** (2 SP): ViewerErrorBoundary class component, componentDidCatch + WebGL availability check, timeout 30s, 5 error types, DefaultErrorFallback + WebGLUnavailableFallback UIs, 7 component tests
+7. **T-1007-FRONT** (3 SP): Modal Integration refactor, 3 tabs viewer/metadata/validation, keyboard shortcuts ← → ESC, adjacentParts navigation state from T-1003, integration ViewerErrorBoundary>PartViewerCanvas>ModelLoader + MetadataSidebar + ValidationReportView reused, 10 component tests
+8. **T-1008-FRONT** (1 SP): MetadataSidebar component, 5 sections 10+ fields, copy-to-clipboard button plain text format, calculations dimensions/file size/date formatting, 8 component tests
+9. **T-1009-TEST** (2 SP): Integration Testing, 15 tests (5 rendering + 3 loading + 3 errors + 2 controls + 2 accessibility) + 3 performance benchmarks <5s GLB load/60 FPS/500ms render, test helpers, .env.test, jsdom limitation documented
+
+### Dependencies Chain
+T-1001 (CDN) → T-1002/T-1003 (Backend APIs) → T-1004/T-1005/T-1006 (Canvas+Loader+ErrorBoundary) → T-1007/T-1008 (Modal+Metadata) → T-1009 (Integration Tests)
 
 ### Recommended Next Action
-- **Start next User Story** — Review backlog for US-006 or US-010 (Visor 3D Web)
-- **OR Deploy US-005 to staging** — Test in production-like environment
+1. **Team Handoff Meeting** — Present enriched proposal, review dependency chain, assign tickets (DevOps/Backend/Frontend×2/QA)
+2. **Start T-1001-INFRA** — Deploy CloudFormation CDN stack (2 hours, no blockers, DevOps can start immediately)
+3. **Create Git Branch** — `git checkout -b feature/US-010-visor-3d-web`
 
 ## Recently Completed
 - **US-005: Dashboard 3D Interactivo de Piezas** — ✅ COMPLETE & AUDITED (2026-02-23) | [Prompt #147]

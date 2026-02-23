@@ -506,31 +506,82 @@ export function PartsScene({ parts }: { parts: PartCanvasItem[] }) {
 ### US-010: Visor 3D Web
 **User Story:** Como **Responsable de Taller**, quiero visualizar la pieza 3D asignada directamente en el navegador, para poder rotarla, hacer zoom y entender su geometría sin instalar software CAD.
 
+**Visión Técnica:** Visor 3D modal con React Three Fiber que carga geometría GLB desde S3/CDN vía presigned URL. Modal extendido de T-0508 con tabs (3D Viewer | Metadata | Validation). Navegación prev/next sin cerrar modal. Toolbar con acciones (reset camera, snapshot, fullscreen). Performance target: >60 FPS desktop.
+
 **Criterios de Aceptación:**
 *   **Scenario 1 (Happy Path - Load Success):**
-    *   Given una pieza con geometría procesada (.glb disponible) y click en "Ver 3D".
-    *   When se abre el modal del visor.
-    *   Then el modelo aparece centrado en pantalla con iluminación neutra.
-    *   And puedo rotar (orbit) suavemente alrededor de la pieza.
+    *   Given una pieza con geometría procesada (`.glb` disponible en `blocks.low_poly_url`) y estado `validated`.
+    *   When click en pieza del Dashboard 3D (o botón "Ver 3D" en lista).
+    *   Then se abre modal fullscreen con visor 3D.
+    *   And modelo aparece centrado con iluminación neutra (ambient 0.6 + directional 0.8).
+    *   And **OrbitControls activos:** Rotate (left-drag), Zoom (scroll), Pan (right-drag).
+    *   And **Performance:** >60 FPS desktop, >30 FPS mobile, <2s load time.
+    *   And **Metadata sidebar** (colapsable): `iso_code`, status badge, workshop, volumen, área, bbox.
+    *   And **Toolbar:** Reset camera 🔄, Snapshot 📸, Fullscreen ⛶.
+    *   And **Footer:** Prev/Next buttons (navegación sin cerrar modal), counter "Pieza X de Y".
+    *   And **Keyboard shortcuts:** `R` reset, `F` fullscreen, `←/→` prev/next, `ESC` close.
+    *   And **ARIA:** Modal tiene `role="dialog"`, `aria-label="Visor 3D de {iso_code}"`, focus trap.
+
 *   **Scenario 2 (Edge Case - Model Not Found):**
-    *   Given el archivo .glb aún no se ha generado (estado `processing`).
-    *   When intento abrir el visor.
-    *   Then veo un "Placeholder" o "Spinner" indicando que se está procesando (o Bounding Box básico).
+    *   Given pieza con estado `processing` (geometría aún no generada, `low_poly_url IS NULL`).
+    *   When intento abrir visor.
+    *   Then modal se abre con **BBox wireframe** gris (reutilizando `BBoxProxy.tsx` de T-0507).
+    *   And overlay centrado: Spinner + mensaje "⏳ Geometría en procesamiento...".
+    *   And botón "Cerrar" disponible (no bloqueo).
+    *   And **Backend:** Endpoint retorna HTTP 200 con `glb_url: null`, frontend maneja gracefully.
+
 *   **Scenario 3 (Error Handling - Load Fail):**
-    *   Given el archivo .glb está corrupto o URL es 404.
-    *   When el loader falla.
-    *   Then veo un mensaje de error "No se pudo cargar la geometría 3D" (no pantalla blanca).
+    *   Given URL de GLB es 404, 403 (expirada), o archivo corrupto (Draco decode fail).
+    *   When `useGLTF` arroja error.
+    *   Then **React Error Boundary** captura excepción.
+    *   And fallback UI: ⚠️ "No se pudo cargar la geometría 3D. Por favor, intenta más tarde."
+    *   And botón "Reportar problema" (copia error + part_id al portapapeles).
+    *   And **Logging:** Enviar error a Railway logs con metadata (part_id, url, user_id).
+    *   And **NO pantalla blanca** (error controlado siempre).
+
+*   **Scenario 4 (Security - RLS Enforcement):**
+    *   Given usuario con `workshop_id = 'granollers'` intenta ver pieza con `workshop_id = 'sabadell'`.
+    *   When request `GET /api/parts/{id}`.
+    *   Then backend retorna **HTTP 403 Forbidden** con error `{ "detail": "No tienes permisos para ver esta pieza" }`.
+    *   And frontend muestra toast de error (no abre modal).
+    *   And audit log registra intento de acceso no autorizado.
+
+*   **Scenario 5 (Performance - Large Model):**
+    *   Given modelo GLB de 45 MB (pieza compleja con 500K triángulos).
+    *   When inicio de carga.
+    *   Then **Progressive loading:** Mostrar low-poly proxy primero, cargar high-poly en background.
+    *   And **Progress bar:** "Cargando geometría... 12.3 MB de 45 MB".
+    *   And **Timeout:** Si carga excede 30 segundos, mostrar error "El modelo es demasiado grande. Contacta a soporte."
+    *   And **Memory budget:** Si heap excede 200 MB, aplicar LOD automático.
+
+*   **Scenario 6 (Responsive - Mobile):**
+    *   Given usuario en tablet/móvil (viewport <768px).
+    *   When abre visor.
+    *   Then modal ocupa 100% viewport (fullscreen automático).
+    *   And **Touch gestures:** 1 finger rotate, 2 fingers zoom/pan.
+    *   And metadata sidebar se oculta por defecto (botón toggle `ℹ️` en toolbar).
+    *   And performance target: >30 FPS, <5s load time.
+
+**Sprint Planning:**
+- **Total Story Points:** 15 SP (original 8 SP + 7 SP mejoras UX/Security/Performance)
+- **Duration:** 8 días (2 sprints, 3 developers)
+- **Dependency Order:** T-1001-INFRA → T-1002-BACK → T-1003-BACK → T-1004-FRONT → T-1005-FRONT → T-1006-FRONT → T-1007-FRONT → T-1008-FRONT → T-1009-TEST
 
 **Desglose de Tickets Técnicos:**
-| ID Ticket | Título | Tech Spec | DoD |
-|-----------|--------|-----------|-----|
-| `T-040-FRONT` | **Viewer Canvas Component** | Setup `@react-three/fiber` con `<Canvas>`. Configurar cámara `makeDefault` y `OrbitControls`. | Canvas 3D renderiza un cubo de prueba rotable. |
-| `T-041-FRONT` | **Model Loader & Stage** | Componente que recibe URL `.glb`. Usa `useGLTF` de `@react-three/drei` y `<Stage>` para entorno automático (luces/sombras). | Carga modelo desde URL estática correctamente. |
-| `T-042-FRONT` | **Error Boundary & Fallback** | Wrapper React Error Boundary para capturar fallos de WebGL. Loader Suspense con spinner. | Si URL rompe, muestra UI de error controlada. |
-| `T-043-BACK` | **Get Model URL** | El endpoint `GET /api/parts/{id}` debe incluir campo `glb_url` (URL pública S3 o presigned GET temporal). | Endpoint retorna URL válida al frontend. |
+| ID | Título | SP | Tech Spec | DoD |
+|----|--------|----|-----------|-----|
+| `T-1001-INFRA` | **GLB CDN Optimization** | 2 | CloudFront CDN frente a S3 bucket `processed-geometry/`. Cache policy: TTL 24h, invalidación automática. CORS: `Access-Control-Allow-Origin: app.sfpm.io`. Compression: Brotli + Gzip. Logging: CloudFront access logs. Metrics: alarmas si latency >500ms p95. | [T-1001-INFRA-TechnicalSpec.md](US-010/T-1001-INFRA-TechnicalSpec.md) | CDN activo. Presigned URLs resuelven vía CloudFront. Latency <200ms median. |
+| `T-1002-BACK` | **Get Part Detail API** | 3 | Endpoint `GET /api/parts/{id}` singular. `PartDetailService.get_part_detail(part_id, user_workshop_id)` con RLS check. Query SQL: `SELECT id, iso_code, status, low_poly_url, bbox, workshop_id, validation_report FROM blocks WHERE id = :part_id AND (workshop_id = :user_workshop_id OR workshop_id IS NULL)`. Presigned URL: TTL 5min con Supabase Storage. Response: `PartDetailResponse` con `glb_url` presigned, `bbox`, `validation_report`. Error handling: 400 (UUID inválido), 403 (RLS violation), 404 (not found), 500 (DB error). Rate limiting: 60 req/min. Audit log: eventos `part_viewed`. | [T-1002-BACK-TechnicalSpec.md](US-010/T-1002-BACK-TechnicalSpec.md) | Unit tests: 12/12 PASS. Integration tests: 8/8 PASS. Casos: Success 200 ✓, UUID inválido 400 ✓, RLS 403 ✓, Not found 404 ✓, glb_url NULL → 200 con campo null ✓. |
+| `T-1003-BACK` | **Part Navigation API** | 1 | Endpoint `GET /api/parts/{id}/adjacent?workshop_id=xxx&filters=...` retorna IDs prev/next en orden `created_at ASC`. Response: `{ "prev_id": "uuid", "next_id": "uuid", "current_index": 42, "total_count": 150 }`. RLS enforcement. Cache 5min (Redis). | [T-1003-BACK-TechnicalSpec.md](US-010/T-1003-BACK-TechnicalSpec.md) | Endpoint retorna IDs correctos. Tests 6/6. Frontend navega con Prev/Next sin cerrar modal. |
+| `T-1004-FRONT` | **Viewer Canvas Component** | 3 | Componente `<PartViewer3D partId={id}>` reutilizable. **Reusa Canvas3D de T-0504** (no duplicar). `<Canvas>` con `camera={{ fov: 50, position: [5,5,5] }}`. `<OrbitControls enableDamping dampingFactor={0.05} />`. Lighting: `<ambientLight intensity={0.6} />` + `<directionalLight position={[10,10,5]} intensity={0.8} />`. Touch gestures mobile. | [T-1004-FRONT-TechnicalSpec.md](US-010/T-1004-FRONT-TechnicalSpec.md) | Canvas renderiza cubo de prueba rotable. Touch gestures funcionan. Tests 8/8. |
+| `T-1005-FRONT` | **Model Loader & Stage** | 3 | Componente `<PartModel3D url={glbUrl} />` usando `useGLTF(url)`. Wrapper `<Suspense fallback={<LoadingSkeleton />}>`. Si `glbUrl === null`, renderizar `<BBoxProxy bbox={part.bbox} />` (reutilizar T-0507). Preload adjacent parts con `useGLTF.preload(adjacentUrls)`. | [T-1005-FRONT-TechnicalSpec.md](US-010/T-1005-FRONT-TechnicalSpec.md) | Carga modelo desde S3. Skeleton loader durante carga. BBox fallback si null. Tests 10/10. |
+| `T-1006-FRONT` | **Error Boundary & Fallback** | 2 | `<ViewerErrorBoundary>` wrapper React Error Boundary. Captura errores WebGL, Draco decode, network. Fallback: `<ViewerError error={e} partId={id} onReport={copyToClipboard} />`. Timeout 30s con `setTimeout`. WebGL detection: `document.createElement('canvas').getContext('webgl2')`. | [T-1006-FRONT-TechnicalSpec.md](US-010/T-1006-FRONT-TechnicalSpec.md) | Tests: URL 404 muestra error, corrupted GLB error, timeout 30s fallback. No pantalla blanca. Tests 7/7. |
+| `T-1007-FRONT` | **Integrate Viewer into Modal** | 3 | Refactorizar `PartDetailModal.tsx` (T-0508) con tabs: 1️⃣ **3D Viewer** (default): `<PartViewer3D>`, 2️⃣ **Metadata**: Tabla iso_code/status/tipologia, 3️⃣ **Validation Report**: Reutilizar `<ValidationReportModal>` (T-032). Toolbar: Reset 🔄, Snapshot 📸, Fullscreen ⛶ (hooks: `useViewerControls`). Footer: Prev/Next buttons con `usePartNavigation({ currentId })`. Counter "Pieza X de Y". Keyboard: `←/→` navegar, `R` reset, `F` fullscreen. | [T-1007-FRONT-TechnicalSpec.md](US-010/T-1007-FRONT-TechnicalSpec.md) | Modal reusable. Tabs navegables con teclado. Prev/Next funciona. Tests 10/10. |
+| `T-1008-FRONT` | **Viewer Metadata Sidebar** | 1 | Componente `<ViewerMetadata part={part} />` colapsable (hook `useLocalStorage('viewer-metadata-collapsed')`). Secciones: Identificación (iso_code, status badge), Geometría (volumen m³, área m², peso kg), BBox (dimensiones X×Y×Z mm), Technical (triangles, vertices, file size). Button "Copiar metadata" (export JSON). Mobile: Bottom drawer (swipe up/down). | [T-1008-FRONT-TechnicalSpec.md](US-010/T-1008-FRONT-TechnicalSpec.md) | Sidebar renderiza. Colapsa/expande. Copia metadata. Responsive mobile. Tests 8/8. |
+| `T-1009-TEST` | **3D Viewer Integration Tests** | 2 | Test suite `PartViewer3D.test.tsx` con Vitest. Casos mínimos (15 tests): Rendering (Canvas renderiza con partId válido - 5 tests), Loading states (Suspense fallback, skeleton visible - 3 tests), Error handling (404, corrupted, timeout - 3 tests), Controls (OrbitControls mouse events - 2 tests), Accessibility (ARIA labels, keyboard shortcuts - 2 tests). Performance benchmark (Puppeteer): Medir FPS con 1 modelo, assert >60 FPS. Mock useGLTF en setup.ts. | [T-1009-TEST-TechnicalSpec.md](US-010/T-1009-TEST-TechnicalSpec.md) | 15/15 tests passing. Cobertura >80%. Performance test automated en CI/CD. |
 
-**Valoración:** 8 Story Points
-**Dependencias:** US-001 (Necesita geometría procesada)
+**Valoración:** 15 Story Points (+87% vs original)  
+**Dependencias:** US-001 (Upload), US-005 (Dashboard 3D Canvas), US-002 (Validación geometría)
 
 ---
 
