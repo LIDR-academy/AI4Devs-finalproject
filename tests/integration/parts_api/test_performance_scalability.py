@@ -41,13 +41,15 @@ def test_perf01_response_time_under_500ms_with_500_parts(supabase_client: Client
     
     Performance Target: P95 latency < 500ms per docs/US-005/T-0510-TEST-BACK-TechnicalSpec-ENRICHED.md
     """
-    pytest.skip("FAIL: Performance test infrastructure not yet implemented (T-0510-TEST-BACK RED phase)")
-    
-    # TODO: Implement performance test harness:
-    # 1. Create 500 realistic test blocks with varied attributes
-    # 2. Measure response time with time.perf_counter()
-    # 3. Verify response time < 500ms
-    # 4. Cleanup test data
+    # CLEANUP FIRST: Delete any leftover test blocks from previous runs
+    try:
+        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-PERF01%").execute()
+        if existing.data:
+            block_ids = [b["id"] for b in existing.data]
+            for block_id in block_ids:
+                supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass  # Ignore if no blocks to delete
     
     # ARRANGE: Create 500 test blocks
     test_blocks = []
@@ -107,13 +109,15 @@ def test_perf02_payload_size_under_200kb_for_100_parts(supabase_client: Client):
     
     Performance Target: Response size < 200KB per T-0510-TEST-BACK Technical Spec
     """
-    pytest.skip("FAIL: Payload size test not yet implemented (T-0510-TEST-BACK RED phase)")
-    
-    # TODO: Implement payload size validation:
-    # 1. Create 100 test blocks with realistic data
-    # 2. Fetch all parts
-    # 3. Measure response payload size (len(response.content))
-    # 4. Verify < 200KB (204800 bytes)
+    # CLEANUP FIRST: Delete any leftover test blocks
+    try:
+        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-PERF02%").execute()
+        if existing.data:
+            block_ids = [b["id"] for b in existing.data]
+            for block_id in block_ids:
+                supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass
     
     # ARRANGE: Create 100 test blocks
     test_blocks = []
@@ -167,13 +171,15 @@ def test_perf03_stress_test_1000_parts_p95_latency(supabase_client: Client):
     
     Performance Target: P95 latency < 750ms at 1000 parts (stress scenario)
     """
-    pytest.skip("FAIL: Stress test infrastructure not yet implemented (T-0510-TEST-BACK RED phase)")
-    
-    # TODO: Implement stress test with statistical analysis:
-    # 1. Create 1000 test blocks
-    # 2. Execute GET /api/parts 20 times
-    # 3. Calculate P50, P95, P99 latencies
-    # 4. Verify P95 < 750ms, P50 < 500ms
+    # CLEANUP FIRST: Delete any leftover test blocks
+    try:
+        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-PERF03%").execute()
+        if existing.data:
+            block_ids = [b["id"] for b in existing.data]
+            for block_id in block_ids:
+                supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass
     
     # ARRANGE: Create 1000 test blocks (stress scenario)
     test_blocks = []
@@ -243,13 +249,15 @@ def test_perf04_memory_stability_under_load(supabase_client: Client):
     
     Performance Target: Memory delta < 50MB after 50 requests
     """
-    pytest.skip("FAIL: Memory profiling not yet implemented (T-0510-TEST-BACK RED phase)")
-    
-    # TODO: Implement memory stability test:
-    # 1. Baseline memory usage (psutil or tracemalloc)
-    # 2. Execute 50 consecutive requests
-    # 3. Measure memory delta
-    # 4. Verify < 50MB growth (no leaks)
+    # CLEANUP FIRST: Delete any leftover test blocks
+    try:
+        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-PERF04%").execute()
+        if existing.data:
+            block_ids = [b["id"] for b in existing.data]
+            for block_id in block_ids:
+                supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass
     
     # ARRANGE: Create 100 test blocks for realistic workload
     test_blocks = []

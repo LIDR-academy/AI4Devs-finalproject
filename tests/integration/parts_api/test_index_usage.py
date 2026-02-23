@@ -61,13 +61,15 @@ def test_idx01_filter_queries_use_composite_index(supabase_client: Client):
         ON blocks(status, tipologia, workshop_id) 
         WHERE is_archived = false;
     """
-    pytest.skip("FAIL: EXPLAIN ANALYZE infrastructure not yet implemented (T-0510-TEST-BACK RED phase)")
-    
-    # TODO: Implement query plan analysis:
-    # 1. Create test blocks with status/tipologia filters
-    # 2. Execute query through FastAPI endpoint
-    # 3. Run EXPLAIN ANALYZE on equivalent SQL query
-    # 4. Parse query plan and verify Index Scan (not Seq Scan)
+    # CLEANUP FIRST: Delete any leftover test blocks
+    try:
+        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-IDX01%").execute()
+        if existing.data:
+            block_ids = [b["id"] for b in existing.data]
+            for block_id in block_ids:
+                supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass
     
     # ARRANGE: Create test blocks
     test_blocks = []
@@ -141,13 +143,21 @@ def test_idx02_partial_index_triggers_on_is_archived_false(supabase_client: Clie
     
     Partial Index Advantage: Index covers only 100 rows, not 1100.
     """
-    pytest.skip("FAIL: Partial index validation not yet implemented (T-0510-TEST-BACK RED phase)")
-    
-    # TODO: Implement partial index effectiveness test:
-    # 1. Create 100 active blocks + 1000 archived blocks
-    # 2. Execute query with is_archived = false
-    # 3. Verify EXPLAIN ANALYZE shows partial index usage
-    # 4. Verify rows scanned << total rows (proof of partial index)
+    # CLEANUP FIRST: Delete any leftover test blocks
+    try:
+        # Clean active blocks
+        active_existing = supabase_client.table("blocks").select("id").ilike("iso_code", "ACTIVE%").execute()
+        if active_existing.data:
+            for b in active_existing.data:
+                supabase_client.table("blocks").delete().eq("id", b["id"]).execute()
+        
+        # Clean archived blocks
+        archived_existing = supabase_client.table("blocks").select("id").ilike("iso_code", "ARCHIVED%").execute()
+        if archived_existing.data:
+            for b in archived_existing.data:
+                supabase_client.table("blocks").delete().eq("id", b["id"]).execute()
+    except Exception:
+        pass
     
     # ARRANGE: Create active blocks
     active_blocks = [
@@ -222,13 +232,15 @@ def test_idx03_no_sequential_scans_on_blocks_table(supabase_client: Client):
         3. Filter by workshop_id only
         4. Filter by status + tipologia (composite)
     """
-    pytest.skip("FAIL: Sequential scan detection not yet implemented (T-0510-TEST-BACK RED phase)")
-    
-    # TODO: Implement comprehensive index coverage test:
-    # 1. Create diverse test dataset (100 blocks)
-    # 2. Execute 10+ filter combinations
-    # 3. Run EXPLAIN ANALYZE for each
-    # 4. Assert NO Seq Scan found in any plan
+    # CLEANUP FIRST: Delete any leftover test blocks
+    try:
+        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-IDX03%").execute()
+        if existing.data:
+            block_ids = [b["id"] for b in existing.data]
+            for block_id in block_ids:
+                supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass
     
     # ARRANGE: Create diverse test dataset
     test_blocks = []
@@ -322,13 +334,15 @@ def test_idx04_index_hit_ratio_above_95_percent(supabase_client: Client):
         FROM pg_statio_user_indexes
         WHERE schemaname = 'public' AND indexrelname = 'idx_blocks_status_active';
     """
-    pytest.skip("FAIL: Cache hit ratio monitoring not yet implemented (T-0510-TEST-BACK RED phase)")
-    
-    # TODO: Implement cache efficiency test:
-    # 1. Query pg_statio_user_indexes for baseline stats
-    # 2. Execute 100 warm-up queries
-    # 3. Query pg_statio_user_indexes again
-    # 4. Calculate delta hit ratio, assert > 95%
+    # CLEANUP FIRST: Delete any leftover test blocks
+    try:
+        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-IDX04%").execute()
+        if existing.data:
+            block_ids = [b["id"] for b in existing.data]
+            for block_id in block_ids:
+                supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass
     
     # ARRANGE: Create test dataset
     test_blocks = []
