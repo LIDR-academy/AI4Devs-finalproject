@@ -8,7 +8,7 @@
  * @module test/fixtures/parts.fixtures
  */
 
-import type { PartCanvasItem, BlockStatus, Tipologia } from '@/types/parts';
+import { BlockStatus, type PartCanvasItem } from '@/types/parts';
 
 /**
  * Mock Part: Capitel (Capital) - Validated Status
@@ -21,7 +21,7 @@ import type { PartCanvasItem, BlockStatus, Tipologia } from '@/types/parts';
 export const mockPartCapitel: PartCanvasItem = {
   id: '123e4567-e89b-12d3-a456-426614174000',
   iso_code: 'SF-C12-CAP-001',
-  status: 'validated',
+  status: BlockStatus.Validated,
   tipologia: 'capitel',
   low_poly_url: 'https://storage.supabase.co/object/public/processed-geometry/capitel-001.glb',
   bbox: {
@@ -43,7 +43,7 @@ export const mockPartCapitel: PartCanvasItem = {
 export const mockPartColumna: PartCanvasItem = {
   id: '223e4567-e89b-12d3-a456-426614174001',
   iso_code: 'SF-C12-COL-002',
-  status: 'in_fabrication',
+  status: BlockStatus.InFabrication,
   tipologia: 'columna',
   low_poly_url: 'https://storage.supabase.co/object/public/processed-geometry/columna-002.glb',
   bbox: {
@@ -62,12 +62,12 @@ export const mockPartColumna: PartCanvasItem = {
 export const mockPartDovela: PartCanvasItem = {
   id: '323e4567-e89b-12d3-a456-426614174002',
   iso_code: 'SF-C12-DOV-003',
-  status: 'uploaded',
+  status: BlockStatus.Uploaded,
   tipologia: 'dovela',
-  low_poly_url: undefined, // Not processed yet
-  bbox: undefined,
+  low_poly_url: null, // Not processed yet
+  bbox: null,
   workshop_id: null,
-  workshop_name: undefined,
+  workshop_name: null,
 };
 
 /**
@@ -76,7 +76,7 @@ export const mockPartDovela: PartCanvasItem = {
 export const mockPartClave: PartCanvasItem = {
   id: '423e4567-e89b-12d3-a456-426614174003',
   iso_code: 'SF-C12-CLA-004',
-  status: 'completed',
+  status: BlockStatus.Completed,
   tipologia: 'clave',
   low_poly_url: 'https://storage.supabase.co/object/public/processed-geometry/clave-004.glb',
   bbox: {
@@ -93,7 +93,7 @@ export const mockPartClave: PartCanvasItem = {
 export const mockPartImposta: PartCanvasItem = {
   id: '523e4567-e89b-12d3-a456-426614174004',
   iso_code: 'SF-C12-IMP-005',
-  status: 'archived',
+  status: BlockStatus.Archived,
   tipologia: 'imposta',
   low_poly_url: 'https://storage.supabase.co/object/public/processed-geometry/imposta-005.glb',
   bbox: {
@@ -101,7 +101,7 @@ export const mockPartImposta: PartCanvasItem = {
     max: [1.5, 1.5, 0.5],
   },
   workshop_id: null,
-  workshop_name: undefined,
+  workshop_name: null,
 };
 
 /**
@@ -126,8 +126,8 @@ export const mockPartImposta: PartCanvasItem = {
  * ```
  */
 export function generate150MockParts(count: number = 150): PartCanvasItem[] {
-  const statuses: BlockStatus[] = ['validated', 'in_fabrication', 'completed'];
-  const tipologias: Tipologia[] = ['capitel', 'columna', 'dovela'];
+  const statuses = [BlockStatus.Validated, BlockStatus.InFabrication, BlockStatus.Completed];
+  const tipologias = ['capitel', 'columna', 'dovela'] as const;
   const workshops = [
     { id: 'workshop-123', name: 'Taller Granollers' },
     { id: 'workshop-456', name: 'Taller Barcelona' },
@@ -164,7 +164,7 @@ export const mockPartsForFilterTesting: PartCanvasItem[] = [
   {
     id: '623e4567-e89b-12d3-a456-426614174005',
     iso_code: 'SF-C12-CAP-006',
-    status: 'validated',
+    status: BlockStatus.Validated,
     tipologia: 'capitel', // Another capitel (same tipologia as mockPartCapitel)
     low_poly_url: 'https://storage.supabase.co/object/public/processed-geometry/capitel-006.glb',
     bbox: { min: [0, 0, 0], max: [1, 1, 1] },

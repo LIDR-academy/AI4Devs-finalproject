@@ -12,12 +12,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useGLTF, Html, Lod } from '@react-three/drei';
+import { useGLTF, Html } from '@react-three/drei';
 import { STATUS_COLORS } from '@/constants/dashboard3d.constants';
 import { FILTER_VISUAL_FEEDBACK } from '@/constants/parts.constants';
-import { LOD_DISTANCES } from '@/constants/lod.constants';
+// import { LOD_DISTANCES } from '@/constants/lod.constants';  // Temporarily unused (LOD disabled)
 import { usePartsStore } from '@/stores/parts.store';
-import { BBoxProxy } from './BBoxProxy';
+// import { BBoxProxy } from './BBoxProxy';  // Temporarily unused (LOD disabled)
 import type { PartMeshProps } from './PartsScene.types';
 
 /**
@@ -54,28 +54,28 @@ function calculatePartOpacity(
   hasFilterSystem: boolean,
   hasActiveFilters: boolean,
   matchesFilters: boolean
-): string {
+): number {
   // Selected parts always fully visible
   if (isSelected) {
-    return '1.0';
+    return 1.0;
   }
   
   // Filter-based opacity (T-0506)
   if (hasFilterSystem) {
     if (!hasActiveFilters) {
       // No filters applied: all parts fully visible
-      return FILTER_VISUAL_FEEDBACK.MATCH_OPACITY.toFixed(1);
+      return FILTER_VISUAL_FEEDBACK.MATCH_OPACITY;
     } else if (matchesFilters) {
       // Filters applied and part matches
-      return FILTER_VISUAL_FEEDBACK.MATCH_OPACITY.toFixed(1);
+      return FILTER_VISUAL_FEEDBACK.MATCH_OPACITY;
     } else {
       // Filters applied and part doesn't match
-      return FILTER_VISUAL_FEEDBACK.NON_MATCH_OPACITY.toFixed(1);
+      return FILTER_VISUAL_FEEDBACK.NON_MATCH_OPACITY;
     }
   }
   
   // Backward compatibility for T-0505 tests (no filter system)
-  return '0.8';
+  return 0.8;
 }
 
 /**
@@ -103,7 +103,7 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
   
   const isSelected = selectedId === part.id;
   const filteredParts = getFilteredParts();
-  const matchesFilters = filteredParts.some(p => p.id === part.id);
+  const matchesFilters = filteredParts.some((p: typeof part) => p.id === part.id);
   
   // Check if any filters are applied
   const hasFilterSystem = filters && ('status' in filters || 'tipologia' in filters);
@@ -114,20 +114,23 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
   );
   
   // Load GLB geometries
-  // Level 0: mid-poly (if available) or low-poly fallback
-  const midPolyUrl = part.mid_poly_url ?? part.low_poly_url!;
-  const { scene: midPolyScene } = useGLTF(midPolyUrl);
+  // NOTE: Mid-poly LOD temporarily disabled
+  // const midPolyUrl = part.mid_poly_url ?? part.low_poly_url!;
+  // const { scene: midPolyScene } = useGLTF(midPolyUrl);
   
-  // Level 1: low-poly
+  // Level 1: low-poly (currently only level used)
   const { scene: lowPolyScene } = useGLTF(part.low_poly_url!);
 
   // Preload LOD assets on mount for smoother transitions
+  // NOTE: LOD preloading temporarily disabled
+  /*
   useEffect(() => {
     if (enableLod) {
       useGLTF.preload(midPolyUrl);
       useGLTF.preload(part.low_poly_url!);
     }
   }, [midPolyUrl, part.low_poly_url, enableLod]);
+  */
 
   // Handle cursor change on hover
   useEffect(() => {
@@ -199,58 +202,23 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
   }
 
   // LOD System: 3-level distance-based rendering
+  // NOTE: Lod component temporarily disabled - @react-three/drei export not found
+  // Using single-level low-poly rendering for now
   return (
     <group name={`part-${part.iso_code}`} position={position}>
-      <Lod distances={LOD_DISTANCES} data-lod-distances={LOD_DISTANCES.join(',')}>
-        {/* Level 0: Mid-poly (<20 units) */}
-        <group data-lod-level="0" data-geometry-url={midPolyUrl}>
-          <primitive
-            object={midPolyScene.clone()}
-            // Z-up rotation: Aligns Rhino Y-up exports to Sagrada Familia Z-up coordinate system
-            rotation-x={-Math.PI / 2}
-            data-rotation-x={-Math.PI / 2}
-            onClick={handleClick}
-            onPointerOver={() => setHovered(true)}
-            onPointerOut={() => setHovered(false)}
-            name={`part-${part.iso_code}`}
-          >
-            <meshStandardMaterial
-              attach="material"
-              {...materialProps}
-            />
-          </primitive>
-        </group>
-
-        {/* Level 1: Low-poly (20-50 units) */}
-        <group data-lod-level="1" data-geometry-url={part.low_poly_url!}>
-          <primitive
-            object={lowPolyScene.clone()}
-            // Z-up rotation: Aligns Rhino Y-up exports to Sagrada Familia Z-up coordinate system
-            rotation-x={-Math.PI / 2}
-            data-rotation-x={-Math.PI / 2}
-            onClick={handleClick}
-            onPointerOver={() => setHovered(true)}
-            onPointerOut={() => setHovered(false)}
-            name={`part-${part.iso_code}`}
-          >
-            <meshStandardMaterial
-              attach="material"
-              {...materialProps}
-            />
-          </primitive>
-        </group>
-
-        {/* Level 2: BBox wireframe proxy (>50 units) */}
-        {part.bbox && (
-          <group data-lod-level="2">
-            <BBoxProxy
-              bbox={part.bbox}
-              color={color}
-              opacity={parseFloat(opacity)}
-            />
-          </group>
-        )}
-      </Lod>
+      <primitive
+        object={lowPolyScene}
+        rotation-x={-Math.PI / 2}
+        data-rotation-x={-Math.PI / 2}
+        onClick={handleClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        <meshStandardMaterial
+          attach="material"
+          {...materialProps}
+        />
+      </primitive>
 
       {/* Tooltip on hover or selection */}
       {(hovered || isSelected) && (

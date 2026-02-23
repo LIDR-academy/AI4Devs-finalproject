@@ -13,7 +13,7 @@ export interface CheckboxGroupOption {
 }
 
 export interface CheckboxGroupProps {
-  options: CheckboxGroupOption[];
+  options: readonly CheckboxGroupOption[];
   value: string[];
   onChange: (value: string[]) => void;
   ariaLabel?: string;

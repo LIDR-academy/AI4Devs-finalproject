@@ -23,7 +23,7 @@ const Canvas3D: React.FC<Canvas3DProps> = ({
   showStats = false, 
   cameraConfig 
 }) => {
-  const clearSelection = usePartsStore((state) => state.clearSelection);
+  const clearSelection = usePartsStore((state: any) => state.clearSelection);
 
   // Merge default config with custom config
   const cameraPosition = cameraConfig?.position || CAMERA_CONFIG.POSITION;

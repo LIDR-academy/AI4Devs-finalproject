@@ -47,7 +47,7 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
   const isEmpty = parts.length === 0 && !isLoading;
   
   // T-0508-FRONT: Find selected part for modal
-  const selectedPart = selectedId ? parts.find(p => p.id === selectedId) || null : null;
+  const selectedPart = selectedId ? parts.find((p: typeof parts[0]) => p.id === selectedId) || null : null;
 
   return (
     <div

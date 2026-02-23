@@ -83,7 +83,7 @@ export function useDraggable({
       setPosition(newPosition);
     };
 
-    const handleMouseUp = (e: MouseEvent) => {
+    const handleMouseUp = (_e: MouseEvent) => {
       setIsDragging(false);
 
       const finalPosition = position;

@@ -20,6 +20,12 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
+    /* Path Mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Testing */
     "types": ["vitest/globals", "@testing-library/jest-dom", "three"]
   },

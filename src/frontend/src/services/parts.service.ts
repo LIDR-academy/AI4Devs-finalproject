@@ -28,7 +28,7 @@ const PARTS_ENDPOINT = '/api/parts';
  * ```
  */
 export async function listParts(
-  filters?: Record<string, string | null>
+  filters?: Record<string, string | string[] | null | undefined>
 ): Promise<PartCanvasItem[]> {
   const response = await axios.get<PartsListResponse>(PARTS_ENDPOINT, {
     params: filters,

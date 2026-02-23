@@ -18,6 +18,7 @@ export interface PartsFilters {
   status: string[];
   tipologia: string[];
   workshop_id: string | null;
+  [key: string]: string | string[] | null | undefined;  // Index signature for Record compatibility (allows undefined from Partial)
 }
 
 /**

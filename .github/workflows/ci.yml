@@ -48,17 +48,21 @@ jobs:
 
       - name: Create .env file from secrets
         run: |
+          # Generate random passwords for CI
+          DB_PASSWORD="test_ci_password_$(openssl rand -hex 8)"
+          REDIS_PASS="test_redis_$(openssl rand -hex 8)"
+          
           cat > .env << EOF
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
           SUPABASE_DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }}
           DATABASE_USER=postgres
-          DATABASE_PASSWORD=test_ci_password_$(openssl rand -hex 8)
+          DATABASE_PASSWORD=${DB_PASSWORD}
           DATABASE_NAME=sfpm_db_test
-          DATABASE_URL=postgresql://postgres:test_ci_password@db:5432/sfpm_db_test
-          REDIS_PASSWORD=test_redis_$(openssl rand -hex 8)
-          CELERY_BROKER_URL=redis://:test_redis_password@redis:6379/0
-          CELERY_RESULT_BACKEND=redis://:test_redis_password@redis:6379/0
+          DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/sfpm_db_test
+          REDIS_PASSWORD=${REDIS_PASS}
+          CELERY_BROKER_URL=redis://:${REDIS_PASS}@redis:6379/0
+          CELERY_RESULT_BACKEND=redis://:${REDIS_PASS}@redis:6379/0
           EOF
           echo "✅ .env file created with credentials from GitHub Secrets"
 
@@ -78,13 +82,15 @@ jobs:
       - name: Wait for database to be ready
         run: |
           echo "Waiting for PostgreSQL to be ready..."
-          timeout 30 bash -c 'until docker compose exec -T db pg_isready -U user; do sleep 1; done'
+          timeout 30 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 1; done'
           echo "✅ PostgreSQL is ready"
 
       - name: Wait for Redis to be ready
         run: |
           echo "Waiting for Redis to be ready..."
-          timeout 30 bash -c 'until docker compose exec -T redis redis-cli ping | grep -q PONG; do sleep 1; done'
+          # Extract REDIS_PASSWORD from .env file
+          REDIS_PASSWORD=$(grep '^REDIS_PASSWORD=' .env | cut -d '=' -f2)
+          timeout 30 bash -c "until docker compose exec -T redis redis-cli --no-auth-warning -a '$REDIS_PASSWORD' ping | grep -q PONG; do sleep 1; done"
           echo "✅ Redis is ready"
 
       - name: Wait for Celery worker to be ready
@@ -128,8 +134,13 @@ jobs:
           SUPABASE_URL=dummy
           SUPABASE_KEY=dummy
           SUPABASE_DATABASE_URL=dummy
-          CELERY_BROKER_URL=redis://redis:6379/0
-          CELERY_RESULT_BACKEND=redis://redis:6379/0
+          DATABASE_USER=postgres
+          DATABASE_PASSWORD=dummy
+          DATABASE_NAME=sfpm_db_test
+          DATABASE_URL=postgresql://postgres:dummy@db:5432/sfpm_db_test
+          REDIS_PASSWORD=dummy
+          CELERY_BROKER_URL=redis://:dummy@redis:6379/0
+          CELERY_RESULT_BACKEND=redis://:dummy@redis:6379/0
           EOF
           docker compose down -v
 

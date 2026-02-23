@@ -37,6 +37,7 @@ export interface PartCanvasItem {
   mid_poly_url?: string | null;    // T-0507: Mid-poly URL (1000 tris) for LOD Level 0 - graceful fallback to low_poly_url
   bbox: BoundingBox | null;        // 3D bounding box, or null if not extracted yet
   workshop_id: string | null;      // UUID string or null if unassigned
+  workshop_name?: string | null;   // Workshop display name (joined from workshops table) or null if unassigned
 }
 
 export interface PartsListResponse {
