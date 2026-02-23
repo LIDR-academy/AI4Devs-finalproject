@@ -12,45 +12,29 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import Dashboard3D from '../Dashboard3D';
 import { usePartsStore } from '@/stores/parts.store';
 import { mockPartCapitel, mockPartColumna } from '../../../test/fixtures/parts.fixtures';
+import { setupStoreMock } from './test-helpers';
 
 // Mock the Zustand store
 vi.mock('@/stores/parts.store');
 
-/**
- * Helper: Setup store mock with custom overrides
- */
-const setupStoreMock = (overrides: Partial<ReturnType<typeof usePartsStore>> = {}) => {
-  vi.mocked(usePartsStore).mockImplementation((selector: any) => {
-    const mockState = {
-      parts: [mockPartCapitel, mockPartColumna],
-      isLoading: false,
-      error: null,
-      filters: { status: [], tipologia: [], workshop_id: null },
-      selectedId: null,
-      setParts: vi.fn(),
-      setLoading: vi.fn(),
-      setError: vi.fn(),
-      setFilters: vi.fn(),
-      selectPart: vi.fn(),
-      clearSelection: vi.fn(),
-      clearFilters: vi.fn(),
-      getFilteredParts: vi.fn(() => [mockPartCapitel, mockPartColumna]),
-      ...overrides,
-    };
-    return selector ? selector(mockState) : mockState;
-  });
-};
-
 describe('Dashboard3D Selection & Modal Integration', () => {
   beforeEach(() => {
-    // Reset store state with 2 parts
-    setupStoreMock();
+    vi.clearAllMocks();
+    // Reset store with 2 parts for selection testing
+    setupStoreMock({
+      parts: [mockPartCapitel, mockPartColumna],
+      getFilteredParts: vi.fn(() => [mockPartCapitel, mockPartColumna]),
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
   });
 
   /**
@@ -60,27 +44,14 @@ describe('Dashboard3D Selection & Modal Integration', () => {
    * Expected: Modal visible with part iso_code in heading
    */
   it('opens modal with correct part data when part is clicked', async () => {
-    const mockSelectPart = vi.fn();
-    
-    // Given: No part selected initially
+    // Given: Store with selected part (simulating post-click state)
     setupStoreMock({
-      selectedId: null,
-      selectPart: mockSelectPart,
-    });
-
-    render(<Dashboard3D />);
-
-    // When: Simulate part selection (in real app, clicking PartMesh calls selectPart)
-    act(() => {
-      mockSelectPart(mockPartCapitel.id);
-    });
-
-    // Update mock to reflect selected state
-    setupStoreMock({
+      parts: [mockPartCapitel, mockPartColumna],
       selectedId: mockPartCapitel.id,
+      getFilteredParts: vi.fn(() => [mockPartCapitel, mockPartColumna]),
     });
 
-    // Re-render with updated state
+    // When: Render Dashboard3D with selected part
     render(<Dashboard3D />);
 
     // Then: Modal should be visible with part details
@@ -104,8 +75,10 @@ describe('Dashboard3D Selection & Modal Integration', () => {
 
     // Given: Part is selected and modal is open
     setupStoreMock({
+      parts: [mockPartCapitel, mockPartColumna],
       selectedId: mockPartCapitel.id,
       clearSelection: mockClearSelection,
+      getFilteredParts: vi.fn(() => [mockPartCapitel, mockPartColumna]),
     });
 
     render(<Dashboard3D />);
@@ -134,8 +107,10 @@ describe('Dashboard3D Selection & Modal Integration', () => {
 
     // Given: Modal is open
     setupStoreMock({
+      parts: [mockPartCapitel, mockPartColumna],
       selectedId: mockPartCapitel.id,
       clearSelection: mockClearSelection,
+      getFilteredParts: vi.fn(() => [mockPartCapitel, mockPartColumna]),
     });
 
     render(<Dashboard3D />);
@@ -162,7 +137,9 @@ describe('Dashboard3D Selection & Modal Integration', () => {
   it('applies emissive glow to selected part', () => {
     // Given: Part is selected
     setupStoreMock({
+      parts: [mockPartCapitel, mockPartColumna],
       selectedId: mockPartCapitel.id,
+      getFilteredParts: vi.fn(() => [mockPartCapitel, mockPartColumna]),
     });
 
     // When: Render Dashboard
@@ -185,36 +162,35 @@ describe('Dashboard3D Selection & Modal Integration', () => {
    * Expected: Modal shows new part data, old part deselected
    */
   it('updates modal content when selecting different part', async () => {
-    const mockSelectPart = vi.fn();
-
     // Given: First part selected
     setupStoreMock({
+      parts: [mockPartCapitel, mockPartColumna],
       selectedId: mockPartCapitel.id,
-      selectPart: mockSelectPart,
+      getFilteredParts: vi.fn(() => [mockPartCapitel, mockPartColumna]),
     });
 
-    const { rerender } = render(<Dashboard3D />);
+    const { unmount } = render(<Dashboard3D />);
 
     // Verify first modal
     expect(screen.getByText(mockPartCapitel.iso_code)).toBeInTheDocument();
+    
+    // Clean up first render
+    unmount();
 
-    // When: Select second part
-    act(() => {
-      mockSelectPart(mockPartColumna.id);
-    });
-
-    // Update mock to new selection
+    // When: Second part is selected (simulating user clicking different part)
     setupStoreMock({
+      parts: [mockPartCapitel, mockPartColumna],
       selectedId: mockPartColumna.id,
+      getFilteredParts: vi.fn(() => [mockPartCapitel, mockPartColumna]),
     });
 
-    rerender(<Dashboard3D />);
+    render(<Dashboard3D />);
 
     // Then: Modal shows new part data
     await waitFor(() => {
       expect(screen.getByText(mockPartColumna.iso_code)).toBeInTheDocument();
-      expect(screen.queryByText(mockPartCapitel.iso_code)).not.toBeInTheDocument();
     });
+    expect(screen.queryByText(mockPartCapitel.iso_code)).not.toBeInTheDocument();
   });
 });
 

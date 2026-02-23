@@ -249,6 +249,76 @@ vi.mock('@react-three/drei', () => ({
 - `vi.mock()` is automatically hoisted — import order doesn't matter
 - **Docker tip**: Use `docker exec <running-container>` for tests; `--rm` containers lose node_modules
 
+### Integration Test Helper Pattern (T-0509-TEST-FRONT)
+**Pattern**: Shared test helper for consistent store mocking in integration tests (DRY principle).
+
+**Problem**: Integration tests for Dashboard3D needed identical setupStoreMock helper across 5 test files (rendering, filters, selection, empty-state, performance), leading to 150+ lines of duplication. Store migration (T-0506) required selector support in mocks.
+
+**Solution**: Extract shared helper to `src/frontend/src/test/test-helpers.ts`.
+
+**Implementation** (`src/frontend/src/test/test-helpers.ts`):
+```typescript
+import { vi } from 'vitest';
+
+interface MockStoreState {
+  parts?: Part[];
+  filters?: PartsFilters;
+  isLoading?: boolean;
+  error?: string | null;
+  selectedId?: string | null;
+  setFilters?: (filters: Partial<PartsFilters>) => void;
+  clearFilters?: () => void;
+  selectPart?: (id: string | null) => void;
+  fetchParts?: () => Promise<void>;
+  getFilteredParts?: () => Part[];
+}
+
+export function setupStoreMock(overrides: MockStoreState = {}) {
+  vi.mocked(usePartsStore).mockImplementation((selector: any) => {
+    const state = {
+      parts: overrides.parts ?? [],
+      filters: overrides.filters ?? { status: [], tipologia: [], workshop_id: null },
+      isLoading: overrides.isLoading ?? false,
+      error: overrides.error ?? null,
+      selectedId: overrides.selectedId ?? null,
+      setFilters: overrides.setFilters ?? vi.fn(),
+      clearFilters: overrides.clearFilters ?? vi.fn(),
+      selectPart: overrides.selectPart ?? vi.fn(),
+      fetchParts: overrides.fetchParts ?? vi.fn(),
+      getFilteredParts: overrides.getFilteredParts ?? vi.fn(() => overrides.parts ?? []),
+    };
+    return selector ? selector(state) : state;
+  });
+}
+```
+
+**Usage in Integration Tests**:
+```typescript
+import { setupStoreMock } from '@/test/test-helpers';
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+it('renders Dashboard3D with parts', () => {
+  setupStoreMock({ parts: [mockPart] });
+  render(<Dashboard3D />);
+  expect(screen.getByTestId('three-canvas')).toBeInTheDocument();
+});
+```
+
+**Rules**:
+- All integration tests import `setupStoreMock` from `@/test/test-helpers` (never duplicate)
+- Always use `mockImplementation` with selector support (never `mockReturnValue`)
+- Always include `cleanup()` + `vi.restoreAllMocks()` in `afterEach` for test isolation
+- Configure `fileParallelism: false` in vitest.config.ts for integration tests (prevents DOM/mock state conflicts)
+- Test file naming: `ComponentName.scenario.test.tsx` (e.g., `Dashboard3D.selection.test.tsx`)
+
 ## Frontend Architecture Patterns
 
 ### Dependency Injection Pattern for Services (T-031-FRONT)

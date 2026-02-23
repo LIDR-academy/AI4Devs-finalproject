@@ -63,8 +63,10 @@ describe('PartsScene Component', () => {
         expect(partsGroup).toBeInTheDocument();
 
         // Should render 2 PartMesh components (both have low_poly_url)
-        const partMeshes = container.querySelectorAll('[name^="part-"]');
-        expect(partMeshes).toHaveLength(2);
+        // Note: Each PartMesh with LOD renders 3 elements with name="part-" (mid-poly, low-poly, and parent group)
+        // So we need to count only the parent groups by checking for position attribute
+        const partGroups = container.querySelectorAll('group[name^="part-"][position]');
+        expect(partGroups).toHaveLength(2);
       });
     });
 
@@ -101,8 +103,10 @@ describe('PartsScene Component', () => {
 
       await waitFor(() => {
         // Should only render 2 parts (skipping the one without low_poly_url)
-        const partMeshes = container.querySelectorAll('[name^="part-"]');
-        expect(partMeshes).toHaveLength(2);
+        // Note: Each PartMesh with LOD renders 3 elements with name="part-" (mid-poly, low-poly, and parent group)
+        // So we need to count only the parent groups by checking for position attribute
+        const partGroups = container.querySelectorAll('group[name^="part-"][position]');
+        expect(partGroups).toHaveLength(2);
       });
     });
 

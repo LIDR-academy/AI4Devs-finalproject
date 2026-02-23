@@ -20,5 +20,7 @@ export default defineConfig({
     coverage: {
       include: ['src/components/Dashboard/**', 'src/stores/**', 'src/hooks/**'],
     },
+    // Run tests sequentially to avoid DOM/mock state conflicts in integration tests
+    fileParallelism: false,
   },
 });

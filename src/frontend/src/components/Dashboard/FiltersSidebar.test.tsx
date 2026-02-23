@@ -84,14 +84,21 @@ describe('FiltersSidebar', () => {
   });
 
   it('should update counter when filters change', () => {
-    const { rerender } = render(<FiltersSidebar />);
-
     // Initial: no filters, all 3 parts visible
     mockGetFilteredParts.mockReturnValue([
       { id: '1' },
       { id: '2' },
       { id: '3' },
     ]);
+    (usePartsStore as any).mockReturnValue({
+      parts: [{ id: '1' }, { id: '2' }, { id: '3' }],
+      filters: { status: [], tipologia: [], workshop_id: null },
+      setFilters: mockSetFilters,
+      clearFilters: mockClearFilters,
+      getFilteredParts: mockGetFilteredParts,
+    });
+
+    const { rerender } = render(<FiltersSidebar />);
     expect(screen.getByText(/mostrando 3 de 3/i)).toBeInTheDocument();
 
     // Apply filter: only 2 parts match
