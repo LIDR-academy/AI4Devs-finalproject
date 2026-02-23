@@ -73,8 +73,14 @@ export interface EmptyStateProps {
   /** Custom message (default: "No hay piezas cargadas") */
   message?: string;
   
+  /** Error message to display (takes precedence over message) */
+  error?: string | null;
+  
   /** Optional action button text */
   actionLabel?: string;
+  
+  /** Optional action href for link button (if provided, renders as <a> instead of <button>) */
+  actionHref?: string;
   
   /** Optional action callback */
   onAction?: () => void;

@@ -10,8 +10,10 @@ import type { EmptyStateProps } from './Dashboard3D.types';
 import { MESSAGES } from './Dashboard3D.constants';
 
 const EmptyState: React.FC<EmptyStateProps> = ({ 
-  message, 
+  message,
+  error,
   actionLabel, 
+  actionHref,
   onAction 
 }) => {
   const displayMessage = message || MESSAGES.EMPTY_STATE;
@@ -30,6 +32,26 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         color: '#666',
       }}
     >
+      {/* Error Banner (displayed above icon if error exists) */}
+      {error && (
+        <div
+          role="alert"
+          style={{
+            marginBottom: '1.5rem',
+            padding: '1rem 1.5rem',
+            backgroundColor: '#FEE2E2',
+            border: '1px solid #FCA5A5',
+            borderRadius: '6px',
+            color: '#991B1B',
+            fontSize: '0.875rem',
+            maxWidth: '500px',
+            width: '100%',
+            textAlign: 'center',
+          }}
+        >
+          {error}
+        </div>
+      )}
       {/* Icon SVG */}
       <svg
         width="64"
@@ -52,22 +74,41 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         {displayMessage}
       </p>
 
-      {/* Optional Action Button */}
-      {actionLabel && onAction && (
-        <button
-          onClick={onAction}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-          }}
-        >
-          {actionLabel}
-        </button>
+      {/* Optional Action Button or Link */}
+      {actionLabel && (
+        actionHref ? (
+          <a
+            href={actionHref}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            {actionLabel}
+          </a>
+        ) : onAction ? (
+          <button
+            onClick={onAction}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+            }}
+          >
+            {actionLabel}
+          </button>
+        ) : null
       )}
     </div>
   );

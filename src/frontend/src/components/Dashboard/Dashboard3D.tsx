@@ -16,6 +16,7 @@ import type { Dashboard3DProps, DockPosition } from './Dashboard3D.types';
 import { CAMERA_CONFIG, STORAGE_KEYS, MESSAGES } from './Dashboard3D.constants';
 import Canvas3D from './Canvas3D';
 import DraggableFiltersSidebar from './DraggableFiltersSidebar';
+import FiltersSidebar from './FiltersSidebar';
 import EmptyState from './EmptyState';
 import LoadingOverlay from './LoadingOverlay';
 import { PartDetailModal } from './PartDetailModal';
@@ -66,17 +67,20 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
           height: '100%',
         }}
       >
-        <Canvas3D
-          showStats={showStats}
-          cameraConfig={{
-            position: initialCameraPosition,
-            fov: CAMERA_CONFIG.FOV,
-            near: CAMERA_CONFIG.NEAR,
-            far: CAMERA_CONFIG.FAR,
-          }}
-        />
+        {/* Render Canvas only when parts exist */}
+        {!isEmpty && (
+          <Canvas3D
+            showStats={showStats}
+            cameraConfig={{
+              position: initialCameraPosition,
+              fov: CAMERA_CONFIG.FOV,
+              near: CAMERA_CONFIG.NEAR,
+              far: CAMERA_CONFIG.FAR,
+            }}
+          />
+        )}
 
-        {/* Empty State Overlay */}
+        {/* Empty State (when no parts loaded) */}
         {isEmpty && (
           <div
             style={{
@@ -88,10 +92,37 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              pointerEvents: 'none',
             }}
           >
-            <EmptyState message={emptyMessage || MESSAGES.EMPTY_STATE} />
+            <EmptyState
+              message={emptyMessage || MESSAGES.EMPTY_STATE}
+              error={error}
+              actionLabel="Subir Primera Pieza"
+              actionHref="/upload"
+            />
+          </div>
+        )}
+
+        {/* Error Banner (shown even when parts exist) */}
+        {error && !isEmpty && (
+          <div
+            role="alert"
+            style={{
+              position: 'absolute',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '1rem 1.5rem',
+              backgroundColor: '#FEE2E2',
+              border: '1px solid #FCA5A5',
+              borderRadius: '6px',
+              color: '#991B1B',
+              fontSize: '0.875rem',
+              zIndex: 100,
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            }}
+          >
+            {error}
           </div>
         )}
 
@@ -113,17 +144,7 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
         floatingPosition={floatingPosition}
         onPositionChange={handlePositionChange}
       >
-        <h3 style={{ marginTop: 0, fontSize: '1.125rem' }}>{MESSAGES.FILTERS_TITLE}</h3>
-        
-        {/* Placeholder: Parts count */}
-        <p style={{ fontSize: '0.875rem', color: '#666' }}>
-          Total: {parts.length} piezas
-        </p>
-
-        {/* TODO (T-0506): Real filters UI will be implemented here */}
-        <div style={{ padding: '16px 0', color: '#999', fontSize: '0.75rem' }}>
-          Filters UI (T-0506-FRONT)
-        </div>
+        <FiltersSidebar />
       </DraggableFiltersSidebar>
     </div>
   );

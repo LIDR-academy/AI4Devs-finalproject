@@ -13,6 +13,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'src/**/__integration__/**/*.test.{ts,tsx}',
+    ],
     coverage: {
       include: ['src/components/Dashboard/**', 'src/stores/**', 'src/hooks/**'],
     },

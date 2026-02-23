@@ -10152,3 +10152,127 @@ Auditoría final exhaustiva completada. Calificación: **100/100**.
 **APROBADO PARA CIERRE Y MERGE A DEVELOP.**
 
 ---
+## [143] - ENRICHMENT - Ticket T-0509-TEST-FRONT
+**Fecha:** 2026-02-23 10:15
+
+**Prompt Original:**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-0509-TEST-FRONT
+> 
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+> 
+> ---
+> 
+> ### Protocolo Agents (OBLIGATORIO antes de diseñar)
+> 
+> 1. **Marca en Notion** el item correspondiente a `T-0509-TEST-FRONT` como **In Progress** para indicar que el trabajo ha comenzado.
+> 2. **Lee** `docs/09-mvp-backlog.md` y localiza el ticket `T-0509-TEST-FRONT` para entender alcance, criterios de aceptación y DoD.
+> 3. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API existentes y patrones arquitectónicos del proyecto.
+> 4. **Lee** `memory-bank/techContext.md` para conocer el stack completo, librerías permitidas y decisiones técnicas previas.
+> 5. **Lee** `docs/productContext.md` para identificar componentes/endpoints existentes que pueden reutilizarse.
+> 6. **Al finalizar**, registra este prompt en `prompts.md` bajo la sección "## Workflow Step 1: Enrichment".
+> 
+> ---
+> 
+> ### Contexto del Workflow
+> 
+> Estamos en **Step 1/5: Enriquecer Ticket** (Pre-TDD).
+> Acabamos de crear la rama `feature/T-0509-TEST-FRONT` y marcado el item en Notion como **In Progress**.
+> El objetivo es definir el **"Contrato Técnico"** detallado ANTES de escribir el primer test (Step 2: TDD-Red).
+> 
+> **Stack del proyecto:**
+> - **Backend:** FastAPI (Python 3.11) + Pydantic schemas (`src/backend/schemas.py`), rutas en `src/backend/api/`
+> - **Frontend:** React 18 + TypeScript strict + Vite, componentes en `src/frontend/src/components/`, tipos en `src/frontend/src/types/`
+> - **Agent:** LangGraph (Python) en `src/agent/`
+> - **Infra:** Docker multi-stage, Supabase Storage (S3-compatible), PostgreSQL 15, migraciones en `supabase/migrations/`
+> - **Docs:** `docs/`, `memory-bank/`, backlog en `docs/09-mvp-backlog.md`
+> 
+> **Patrón de contrato (CRÍTICO):** Las interfaces TypeScript (`src/frontend/src/types/`) DEBEN coincidir exactamente con los Pydantic schemas (`src/backend/schemas.py`). Verifica ambos antes de proponer nuevos tipos.
+> 
+> ---
+> 
+> ### Objetivo
+> 
+> Generar una **Technical Specification** completa para `T-0509-TEST-FRONT` que sirva como blueprint para el desarrollo TDD, sin escribir código de implementación todavía.
+> 
+> ### Instrucciones de Ejecución
+> 
+> #### 1. Análisis del contexto (Read-Only)
+> 
+> **Identificar tipo de ticket:**
+> - Por sufijo: `T-XXX-FRONT`, `T-XXX-BACK`, `T-XXX-AGENT`, `T-XXX-INFRA`, `T-XXX-DB`
+> - Si toca múltiples capas (ej: crear endpoint + UI consumiéndolo), especificar todas
+> 
+> **Revisar documentación:**
+> - Criterios de aceptación en `docs/09-mvp-backlog.md`
+> - Contratos API existentes en `memory-bank/systemPatterns.md`
+> - Dependencias del ticket (si otras US deben completarse primero)
+> 
+> **Inventario de reutilización:**
+> - ¿Qué componentes/endpoints/schemas ya existen y pueden reutilizarse?
+> - ¿Qué patrones/hooks/utils del proyecto aplican a este ticket?
+> 
+> #### 2. Diseño de la Solución (Contract-First)
+> 
+> **Para cada capa afectada, define:**
+> 
+> **A) BACKEND (si aplica):**
+> - **Request Schema (Pydantic):** Campos obligatorios/opcionales, validaciones, ejemplos
+> - **Response Schema (Pydantic):** Estructura exitosa (200) y casos de error (400, 401, 404, 500)
+> - **Endpoint:** Método HTTP, ruta, autenticación requerida
+> - **Lógica de negocio:** Descripción en pseudocódigo (sin implementar todavía)
+> - **Dependencias externas:** Supabase Storage, tablas DB, servicios externos
+> 
+> **B) FRONTEND (si aplica):**
+> - **Props del componente (TypeScript):** Interfaces completas con tipos estrictos
+> - **Estados locales vs globales:** Qué va en `useState`, qué en Zustand/Context
+> - **Llamadas API:** Qué endpoints se consumen, qué servicio en `src/services/` manejará la llamada
+> - **UX/Interacciones:** Loading states, error handling, validaciones del formulario
+> 
+> **C) BASE DE DATOS (si aplica):**
+> - **Cambios de esquema:** Nuevas tablas, columnas, índices, foreign keys
+> - **Migraciones SQL:** Ruta propuesta (`supabase/migrations/YYYYMMDDHHMMSS_<nombre>.sql`)
+> - **Row Level Security:** Políticas necesarias para proteger los datos
+> - **Seed data:** Si se necesitan datos iniciales para testing
+> 
+> **D) INFRAESTRUCTURA (si aplica):**
+> - **Buckets/Storage:** Nuevos buckets en Supabase, políticas de acceso
+> - **Variables de entorno:** Nuevas env vars necesarias en `.env` y `docker-compose.yml`
+> - **Dependencias:** Nuevos paquetes Python/npm que deban instalarse
+> 
+> #### 3. Estrategia de Testing (Pre-TDD Checklist)
+> 
+> Genera una **lista de test cases** específica para este ticket:
+> 
+> **✅ Happy Path (flujo principal):**
+> - Caso 1: [Descripción del comportamiento esperado con entrada válida]
+> - Caso 2: [Otro escenario del flujo feliz]
+> 
+> **⚠️ Edge Cases (casos límite):**
+> - Valores nulos, strings vacíos, arrays vacíos
+> - Límites de tamaño (archivos grandes, textos muy largos)
+> - IDs que no existen, recursos ya eliminados
+> 
+> **🛡️ Security/Error Handling:**
+> - Validaciones que deben fallar (campos requeridos ausentes, formatos incorrectos)
+> - Códigos HTTP esperados en cada caso de error (400, 401, 403, 404, 500)
+> - Timeouts, errores de red, servicios externos caídos
+> 
+> **🔗 Integration (si aplica):**
+> - Verificar que la migración SQL se aplica correctamente
+> - Verificar que el bucket S3 existe y es accesible
+> - Verificar que el contrato BACK→FRONT coincide campo por campo
+> 
+> #### 4. Definición de Contratos (Critical)
+> 
+> **Si el ticket toca BACK + FRONT:**
+> - Define AMBOS schemas (Pydantic + TypeScript) lado a lado
+> - Marca en **negrita** cualquier campo que difiera entre ambos (NO debería haber ninguno)
+> - Proporciona un ejemplo JSON completo que ambos lados acepten
+> 
+> **Si se crea un nuevo patrón:**
+> - Documenta si este contrato debe añadirse a `memory-bank/systemPatterns.md` para reutilización futura
+
+**Resumen de la Respuesta/Acción:**
+Generando Technical Specification enriquecida para T-0509-TEST-FRONT (3D Dashboard Integration Tests). Este ticket es de TESTING (no implementación) para validar integración de componentes T-0504 a T-0508. Spec incluirá: 5 test suites (Rendering, Interaction, State, EmptyState, Performance), 21 tests total, coverage targets (>80% Dashboard3D, >85% PartMesh, >90% FiltersSidebar), mock strategy para Three.js, performance protocol manual. Documentación memory-bank leída, componentes existentes identificados, patrones de testing verificados.
+
+---
