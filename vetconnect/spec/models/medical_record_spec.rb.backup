@@ -1,0 +1,107 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe MedicalRecord, type: :model do
+  describe 'associations' do
+    it { should belong_to(:pet) }
+    it { should belong_to(:veterinarian).class_name('User') }
+    it { should belong_to(:appointment).optional }
+    it { should have_many(:documents).dependent(:nullify) }
+    it { should have_many(:vaccinations).dependent(:nullify) }
+  end
+
+  describe 'validations' do
+    subject { build(:medical_record) }
+
+    it { should validate_presence_of(:visit_date) }
+    it { should validate_presence_of(:record_type) }
+    it { should validate_presence_of(:diagnosis) }
+
+    it 'validates record_type inclusion' do
+      valid_types = %w[consultation vaccination surgery emergency dental other]
+      valid_types.each do |type|
+        record = build(:medical_record, record_type: type)
+        expect(record).to be_valid
+      end
+
+      invalid_record = build(:medical_record, record_type: 'invalid_type')
+      expect(invalid_record).not_to be_valid
+      expect(invalid_record.errors[:record_type]).to be_present
+    end
+
+    it 'validates veterinarian is a vet or admin' do
+      owner = create(:user, role: :owner)
+      record = build(:medical_record, veterinarian: owner)
+      expect(record).not_to be_valid
+      expect(record.errors[:veterinarian]).to include('must be a veterinarian or admin')
+    end
+
+    it 'accepts veterinarian role' do
+      vet = create(:user, role: :veterinarian)
+      record = build(:medical_record, veterinarian: vet)
+      expect(record).to be_valid
+    end
+
+    it 'accepts admin role' do
+      admin = create(:user, role: :admin)
+      record = build(:medical_record, veterinarian: admin)
+      expect(record).to be_valid
+    end
+  end
+
+  describe 'scopes' do
+    let!(:recent_record) { create(:medical_record, visit_date: 1.day.ago) }
+    let!(:old_record) { create(:medical_record, visit_date: 1.month.ago) }
+    let!(:consultation) { create(:medical_record, record_type: 'consultation') }
+    let!(:surgery) { create(:medical_record, record_type: 'surgery') }
+    let(:pet) { create(:pet) }
+    let!(:pet_record) { create(:medical_record, pet: pet) }
+
+    describe '.recent' do
+      it 'orders by visit_date descending' do
+        records = MedicalRecord.recent
+        expect(records.first).to eq(recent_record)
+        expect(records.last).to eq(old_record)
+      end
+    end
+
+    describe '.by_type' do
+      it 'filters by record type' do
+        consultations = MedicalRecord.by_type('consultation')
+        expect(consultations).to include(consultation)
+        expect(consultations).not_to include(surgery)
+      end
+    end
+
+    describe '.for_pet' do
+      it 'filters by pet_id' do
+        pet_records = MedicalRecord.for_pet(pet.id)
+        expect(pet_records).to include(pet_record)
+        expect(pet_records).not_to include(consultation)
+      end
+    end
+  end
+
+  describe 'instance methods' do
+    let(:owner) { create(:user, role: :owner) }
+    let(:pet) { create(:pet, user: owner) }
+    let(:medical_record) { create(:medical_record, pet: pet) }
+
+    describe '#owner' do
+      it 'returns the pet owner' do
+        expect(medical_record.owner).to eq(owner)
+      end
+    end
+
+    describe '#display_title' do
+      it 'returns formatted title with record type and date' do
+        record = create(:medical_record, 
+          record_type: 'consultation',
+          visit_date: Date.new(2024, 3, 15)
+        )
+        expect(record.display_title).to eq('Consultation - March 15, 2024')
+      end
+    end
+  end
+end

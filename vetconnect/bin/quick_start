@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Script de inicio rápido para desarrollo
+
+set -e
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo "🚀 VetConnect - Inicio Rápido"
+echo "=============================="
+echo ""
+
+# Verificar si el proyecto está configurado
+if ! bundle check &> /dev/null; then
+    echo -e "${YELLOW}⚠ Proyecto no configurado. Ejecutando setup...${NC}"
+    ./bin/setup_project
+fi
+
+echo -e "${GREEN}✓${NC} Proyecto configurado"
+echo ""
+
+# Verificar estado de la base de datos
+echo "🗄️  Verificando base de datos..."
+if ! bundle exec rails db:version &> /dev/null 2>&1; then
+    echo "Ejecutando migraciones..."
+    bundle exec rails db:migrate
+fi
+
+# Verificar si hay migraciones pendientes
+if bundle exec rails db:migrate:status | grep -q "down"; then
+    echo -e "${YELLOW}⚠ Hay migraciones pendientes. Ejecutando...${NC}"
+    bundle exec rails db:migrate
+fi
+
+echo -e "${GREEN}✓${NC} Base de datos actualizada"
+echo ""
+
+# Iniciar servidor
+echo "🌐 Iniciando servidor Rails..."
+echo ""
+echo "Servidor disponible en: http://localhost:3000"
+echo "Presiona Ctrl+C para detener el servidor"
+echo ""
+
+bundle exec rails server

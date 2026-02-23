@@ -1,0 +1,167 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'API V1 Authentication', type: :request do
+  describe 'POST /api/v1/auth/login' do
+    let(:user) { create(:user, password: 'Password123!', confirmed_at: Time.current) }
+
+    context 'with valid credentials' do
+      it 'returns authentication token and user info' do
+        post '/api/v1/auth/login', params: {
+          email: user.email,
+          password: 'Password123!'
+        }
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        expect(json_response['token']).to be_present
+        expect(json_response['user']['id']).to eq(user.id)
+        expect(json_response['user']['email']).to eq(user.email)
+        expect(json_response['user']['role']).to eq(user.role)
+        expect(json_response['user']['name']).to eq(user.full_name)
+      end
+
+      it 'generates API token if user does not have one' do
+        user.update_column(:api_token, nil)
+        
+        post '/api/v1/auth/login', params: {
+          email: user.email,
+          password: 'Password123!'
+        }
+
+        expect(response).to have_http_status(:ok)
+        user.reload
+        expect(user.api_token).to be_present
+      end
+
+      it 'returns existing token if user already has one' do
+        existing_token = user.generate_api_token!
+        
+        post '/api/v1/auth/login', params: {
+          email: user.email,
+          password: 'Password123!'
+        }
+
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        expect(json_response['token']).to eq(existing_token)
+      end
+    end
+
+    context 'with invalid credentials' do
+      it 'returns unauthorized for wrong password' do
+        post '/api/v1/auth/login', params: {
+          email: user.email,
+          password: 'WrongPassword'
+        }
+
+        expect(response).to have_http_status(:unauthorized)
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to be_present
+      end
+
+      it 'returns unauthorized for non-existent email' do
+        post '/api/v1/auth/login', params: {
+          email: 'nonexistent@example.com',
+          password: 'Password123!'
+        }
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      it 'returns bad request for missing email' do
+        post '/api/v1/auth/login', params: {
+          password: 'Password123!'
+        }
+
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it 'returns bad request for missing password' do
+        post '/api/v1/auth/login', params: {
+          email: user.email
+        }
+
+        expect(response).to have_http_status(:bad_request)
+      end
+    end
+
+    context 'with unconfirmed user' do
+      let(:unconfirmed_user) { create(:user, :unconfirmed, password: 'Password123!') }
+
+      it 'returns unauthorized' do
+        post '/api/v1/auth/login', params: {
+          email: unconfirmed_user.email,
+          password: 'Password123!'
+        }
+
+        expect(response).to have_http_status(:unauthorized)
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to include('confirm your email')
+      end
+    end
+  end
+
+  describe 'POST /api/v1/auth/logout' do
+    let(:user) { create(:user, confirmed_at: Time.current) }
+    let(:token) { user.generate_api_token! }
+
+    it 'returns success message' do
+      post '/api/v1/auth/logout',
+        headers: { 'Authorization' => token }
+
+      expect(response).to have_http_status(:ok)
+      json_response = JSON.parse(response.body)
+      expect(json_response['message']).to eq('Logged out successfully')
+    end
+
+    it 'requires authentication' do
+      post '/api/v1/auth/logout'
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
+  describe 'GET /api/v1/auth/me' do
+    let(:user) { create(:user, confirmed_at: Time.current) }
+    let(:token) { user.generate_api_token! }
+
+    it 'returns current user information' do
+      get '/api/v1/auth/me',
+        headers: { 'Authorization' => token }
+
+      expect(response).to have_http_status(:ok)
+      json_response = JSON.parse(response.body)
+      
+      expect(json_response['id']).to eq(user.id)
+      expect(json_response['email']).to eq(user.email)
+      expect(json_response['role']).to eq(user.role)
+      expect(json_response['name']).to eq(user.full_name)
+      expect(json_response['first_name']).to eq(user.first_name)
+      expect(json_response['last_name']).to eq(user.last_name)
+      expect(json_response['phone']).to eq(user.phone)
+    end
+
+    it 'requires authentication' do
+      get '/api/v1/auth/me'
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'handles invalid token' do
+      get '/api/v1/auth/me',
+        headers: { 'Authorization' => 'invalid_token' }
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it 'handles Bearer token format' do
+      get '/api/v1/auth/me',
+        headers: { 'Authorization' => "Bearer #{token}" }
+
+      expect(response).to have_http_status(:ok)
+    end
+  end
+end

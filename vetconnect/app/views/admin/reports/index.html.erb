@@ -1,0 +1,26 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="animate-fade-in">
+    <h1 class="text-3xl font-bold tracking-tight text-gray-900">Reportes del Sistema 📊</h1>
+    <p class="mt-2 text-sm text-gray-600">
+      Accede a estadísticas y análisis del sistema
+    </p>
+  </div>
+
+  <!-- Reports Grid -->
+  <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in">
+    <% @reports.each do |report| %>
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden card-hover">
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-gray-900 mb-2"><%= report[:name] %></h3>
+          <p class="text-sm text-gray-600 mb-4"><%= report[:description] %></p>
+          <%= link_to admin_report_path(report[:id]), 
+              class: "w-full flex justify-center items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]",
+              aria: { label: "Ver reporte de #{report[:name]}" } do %>
+            Ver Reporte
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

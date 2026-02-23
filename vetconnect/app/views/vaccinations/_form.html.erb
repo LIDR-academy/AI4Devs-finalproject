@@ -1,0 +1,191 @@
+<%= form_with(model: [pet, vaccination].compact, local: true, class: "animate-fade-in") do |f| %>
+  <!-- Errors -->
+  <% if vaccination.errors.any? %>
+    <div class="mb-6 rounded-lg bg-red-50 p-4 border-l-4 border-red-400">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <span class="text-2xl">⚠️</span>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">
+            <%= pluralize(vaccination.errors.count, "error") %> impidieron guardar la vacunación:
+          </h3>
+          <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+            <% vaccination.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Form Card -->
+  <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+    <div class="px-6 py-8 sm:p-10">
+      <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+        
+        <!-- Pet -->
+        <div class="sm:col-span-3">
+          <%= f.label :pet_id, "Mascota *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.collection_select :pet_id, @pets, :id, :name,
+                { prompt: "🐾 Seleccionar mascota...", selected: pet&.id },
+                { 
+                  class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 min-h-[44px]",
+                  required: true,
+                  disabled: pet.present?
+                } %>
+          </div>
+        </div>
+
+        <!-- Veterinarian -->
+        <div class="sm:col-span-3">
+          <%= f.label :veterinarian_id, "Veterinario *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.collection_select :veterinarian_id, @veterinarians, :id, :full_name,
+                { prompt: "👨‍⚕️ Seleccionar veterinario..." },
+                { 
+                  class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 min-h-[44px]",
+                  required: true
+                } %>
+          </div>
+        </div>
+
+        <!-- Vaccine Name -->
+        <div class="sm:col-span-3">
+          <%= f.label :vaccine_name, "Nombre de la Vacuna *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.text_field :vaccine_name,
+                class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                placeholder: "Ej: Nobivac Rabia",
+                required: true %>
+          </div>
+        </div>
+
+        <!-- Vaccine Type -->
+        <div class="sm:col-span-3">
+          <%= f.label :vaccine_type, "Tipo de Vacuna *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.select :vaccine_type,
+                options_for_select([
+                  ['Rabia', 'rabies'],
+                  ['DHPP', 'dhpp'],
+                  ['Bordetella', 'bordetella'],
+                  ['Leptospirosis', 'leptospirosis'],
+                  ['Moquillo Felino', 'feline_distemper'],
+                  ['Leucemia Felina', 'feline_leukemia'],
+                  ['Otra', 'other']
+                ], vaccination.vaccine_type),
+                { prompt: "Seleccionar tipo..." },
+                { 
+                  class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 min-h-[44px]",
+                  required: true
+                } %>
+          </div>
+        </div>
+
+        <!-- Administered Date -->
+        <div class="sm:col-span-3">
+          <%= f.label :administered_at, "Fecha de Administración *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.date_field :administered_at,
+                class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 min-h-[44px]",
+                required: true,
+                max: Date.today.strftime('%Y-%m-%d') %>
+          </div>
+        </div>
+
+        <!-- Dose Number -->
+        <div class="sm:col-span-3">
+          <%= f.label :dose_number, "Número de Dosis *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.number_field :dose_number,
+                class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                min: 1,
+                required: true %>
+            <p class="mt-1 text-xs text-gray-500">Número de dosis en la serie (1, 2, 3...)</p>
+          </div>
+        </div>
+
+        <!-- Manufacturer -->
+        <div class="sm:col-span-3">
+          <%= f.label :manufacturer, "Fabricante", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.text_field :manufacturer,
+                class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                placeholder: "Ej: MSD Animal Health" %>
+          </div>
+        </div>
+
+        <!-- Lot Number -->
+        <div class="sm:col-span-3">
+          <%= f.label :lot_number, "Número de Lote", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.text_field :lot_number,
+                class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                placeholder: "Ej: LOT2024-001" %>
+          </div>
+        </div>
+
+        <!-- Expires At -->
+        <div class="sm:col-span-3">
+          <%= f.label :expires_at, "Fecha de Vencimiento", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.date_field :expires_at,
+                class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 min-h-[44px]" %>
+          </div>
+        </div>
+
+        <!-- Next Due Date -->
+        <div class="sm:col-span-3">
+          <%= f.label :next_due_date, "Próxima Dosis", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.date_field :next_due_date,
+                class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 min-h-[44px]" %>
+            <p class="mt-1 text-xs text-gray-500">Se calculará automáticamente si se deja vacío</p>
+          </div>
+        </div>
+
+        <!-- Medical Record (optional) -->
+        <% if @medical_records&.any? %>
+          <div class="sm:col-span-6">
+            <%= f.label :medical_record_id, "Registro Médico Asociado", class: "block text-sm font-medium leading-6 text-gray-900" %>
+            <div class="mt-2">
+              <%= f.collection_select :medical_record_id, @medical_records, :id, :display_title,
+                  { prompt: "Seleccionar registro médico (opcional)", include_blank: true },
+                  { 
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6 min-h-[44px]"
+                  } %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Notes -->
+        <div class="sm:col-span-6">
+          <%= f.label :notes, "Notas", class: "block text-sm font-medium leading-6 text-gray-900" %>
+          <div class="mt-2">
+            <%= f.text_area :notes,
+                rows: 4,
+                class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                placeholder: "Observaciones adicionales sobre la vacunación..." %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-x-6 border-t border-gray-900/10 px-6 py-4 sm:px-10">
+      <% if pet %>
+        <%= link_to pet_vaccinations_path(pet), class: "text-sm font-semibold leading-6 text-gray-900" do %>
+          Cancelar
+        <% end %>
+      <% else %>
+        <%= link_to vaccinations_path, class: "text-sm font-semibold leading-6 text-gray-900" do %>
+          Cancelar
+        <% end %>
+      <% end %>
+      <%= f.submit "Guardar Vacunación", class: "rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 min-h-[44px]" %>
+    </div>
+  </div>
+<% end %>

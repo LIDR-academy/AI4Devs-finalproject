@@ -1,0 +1,56 @@
+<%# 
+  Reusable Table Component
+  Usage: 
+  <%= render 'shared/table', 
+      headers: ['Nombre', 'Especie', 'Edad', 'Acciones'],
+      rows: @pets.map { |pet| [
+        pet.name,
+        pet.species.humanize,
+        "#{pet.age} años",
+        link_to('Ver', pet_path(pet), class: 'text-indigo-600 hover:text-indigo-900')
+      ]},
+      empty_message: 'No hay mascotas registradas',
+      empty_action: { text: 'Registrar Mascota', path: new_pet_path }
+  %>
+%>
+<div class="table-container">
+  <div class="overflow-x-auto">
+    <table class="table" role="table" aria-label="<%= caption || 'Tabla de datos' %>">
+      <% if caption.present? %>
+        <caption class="sr-only"><%= caption %></caption>
+      <% end %>
+      <thead>
+        <tr>
+          <% headers.each_with_index do |header, index| %>
+            <th scope="col" class="<%= index == 0 ? 'pl-6' : '' %> <%= index == headers.length - 1 ? 'pr-6' : '' %>">
+              <%= header.is_a?(Hash) ? header[:text] : header %>
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% if rows.any? %>
+          <% rows.each do |row| %>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <% row.each_with_index do |cell, index| %>
+                <td class="<%= index == 0 ? 'pl-6' : '' %> <%= index == row.length - 1 ? 'pr-6' : '' %>">
+                  <%= cell %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="<%= headers.length %>" class="px-6 py-12 text-center">
+              <%= render 'shared/empty_state', 
+                  icon: empty_icon || '📭',
+                  title: empty_message || 'No hay elementos',
+                  message: empty_submessage,
+                  action: empty_action %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-case-conflict
+
+  - repo: https://github.com/mattlqx/pre-commit-ruby
+    rev: v1.3.7
+    hooks:
+      - id: rubocop
+        args: ['--auto-correct']
+        files: \.(rb)$
+      - id: erblint
+        args: ['--lint-all']
+        files: \.(erb)$
+
+  - repo: local
+    hooks:
+      - id: brakeman
+        name: Brakeman Security Scan
+        entry: bundle exec brakeman --no-pager
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: \.(rb)$

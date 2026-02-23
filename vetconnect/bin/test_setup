@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Script para verificar la configuración del proyecto
+
+set -e
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo "🔍 Verificando configuración de VetConnect"
+echo "=========================================="
+echo ""
+
+# Verificar Ruby
+echo -n "Ruby: "
+if command -v ruby &> /dev/null; then
+    echo -e "${GREEN}✓${NC} $(ruby -v | cut -d' ' -f1-2)"
+else
+    echo -e "${RED}✗ No instalado${NC}"
+fi
+
+# Verificar Bundler
+echo -n "Bundler: "
+if command -v bundle &> /dev/null; then
+    echo -e "${GREEN}✓${NC} $(bundle -v)"
+else
+    echo -e "${RED}✗ No instalado${NC}"
+fi
+
+# Verificar PostgreSQL
+echo -n "PostgreSQL: "
+if command -v psql &> /dev/null; then
+    echo -e "${GREEN}✓${NC} $(psql --version | cut -d' ' -f3)"
+else
+    echo -e "${RED}✗ No instalado${NC}"
+fi
+
+# Verificar Node.js
+echo -n "Node.js: "
+if command -v node &> /dev/null; then
+    echo -e "${GREEN}✓${NC} $(node -v)"
+else
+    echo -e "${RED}⚠ No instalado (opcional)${NC}"
+fi
+
+echo ""
+echo "📦 Verificando gemas instaladas..."
+if bundle check &> /dev/null; then
+    echo -e "${GREEN}✓${NC} Todas las gemas están instaladas"
+else
+    echo -e "${RED}✗${NC} Faltan gemas. Ejecuta: bundle install"
+fi
+
+echo ""
+echo "🗄️  Verificando base de datos..."
+if bundle exec rails db:version &> /dev/null; then
+    echo -e "${GREEN}✓${NC} Base de datos configurada"
+    echo "   Versión: $(bundle exec rails db:version | grep 'Current version' | cut -d: -f2)"
+else
+    echo -e "${RED}✗${NC} Base de datos no configurada"
+fi
+
+echo ""
+echo "📁 Verificando archivos clave..."
+files=("Gemfile" "config/database.yml" "config/routes.rb" "app/models/pet.rb" "app/controllers/pets_controller.rb")
+for file in "${files[@]}"; do
+    echo -n "  $file: "
+    if [ -f "$file" ]; then
+        echo -e "${GREEN}✓${NC}"
+    else
+        echo -e "${RED}✗${NC}"
+    fi
+done
+
+echo ""
+echo "=========================================="

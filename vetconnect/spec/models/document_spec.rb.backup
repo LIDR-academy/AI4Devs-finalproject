@@ -1,0 +1,116 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe Document, type: :model do
+  describe 'associations' do
+    it { should belong_to(:pet) }
+    it { should belong_to(:uploaded_by).class_name('User') }
+    it { should belong_to(:medical_record).optional }
+  end
+
+  describe 'validations' do
+    subject { build(:document) }
+
+    it { should validate_presence_of(:title) }
+    it { should validate_length_of(:title).is_at_least(2).is_at_most(100) }
+    it { should validate_presence_of(:document_type) }
+    it { should validate_presence_of(:file_name) }
+
+    it 'validates document_type inclusion' do
+      valid_types = %w[lab_result x_ray prescription vaccine_record invoice other]
+      valid_types.each do |type|
+        document = build(:document, document_type: type)
+        expect(document).to be_valid
+      end
+
+      invalid_document = build(:document, document_type: 'invalid_type')
+      expect(invalid_document).not_to be_valid
+      expect(invalid_document.errors[:document_type]).to be_present
+    end
+
+    it 'validates file_size is greater than 0' do
+      document = build(:document, file_size: 0)
+      expect(document).not_to be_valid
+    end
+
+    it 'validates file_size is less than or equal to 10MB' do
+      document = build(:document, file_size: 11.megabytes)
+      expect(document).not_to be_valid
+    end
+
+    it 'allows blank file_size' do
+      document = build(:document, file_size: nil)
+      expect(document).to be_valid
+    end
+  end
+
+  describe 'scopes' do
+    let!(:recent_doc) { create(:document, created_at: 1.day.ago) }
+    let!(:old_doc) { create(:document, created_at: 1.month.ago) }
+    let!(:lab_result) { create(:document, document_type: 'lab_result') }
+    let!(:x_ray) { create(:document, document_type: 'x_ray') }
+    let(:pet) { create(:pet) }
+    let!(:pet_doc) { create(:document, pet: pet) }
+
+    describe '.recent' do
+      it 'orders by created_at descending' do
+        docs = Document.recent
+        expect(docs.first).to eq(recent_doc)
+        expect(docs.last).to eq(old_doc)
+      end
+    end
+
+    describe '.by_type' do
+      it 'filters by document type' do
+        lab_results = Document.by_type('lab_result')
+        expect(lab_results).to include(lab_result)
+        expect(lab_results).not_to include(x_ray)
+      end
+    end
+
+    describe '.for_pet' do
+      it 'filters by pet_id' do
+        pet_docs = Document.for_pet(pet.id)
+        expect(pet_docs).to include(pet_doc)
+        expect(pet_docs).not_to include(lab_result)
+      end
+    end
+  end
+
+  describe 'instance methods' do
+    let(:owner) { create(:user, role: :owner) }
+    let(:pet) { create(:pet, user: owner) }
+    let(:document) { create(:document, pet: pet) }
+
+    describe '#owner' do
+      it 'returns the pet owner' do
+        expect(document.owner).to eq(owner)
+      end
+    end
+
+    describe '#display_name' do
+      it 'returns title with document type' do
+        doc = create(:document, title: 'Blood Test', document_type: 'lab_result')
+        expect(doc.display_name).to eq('Blood Test (Lab Result)')
+      end
+    end
+
+    describe '#file_size_in_mb' do
+      it 'converts file_size to megabytes' do
+        doc = create(:document, file_size: 2.megabytes)
+        expect(doc.file_size_in_mb).to eq(2.0)
+      end
+
+      it 'rounds to 2 decimal places' do
+        doc = create(:document, file_size: 1.5.megabytes + 500.kilobytes)
+        expect(doc.file_size_in_mb).to be_between(1.99, 2.01)
+      end
+
+      it 'returns nil if file_size is blank' do
+        doc = build(:document, file_size: nil)
+        expect(doc.file_size_in_mb).to be_nil
+      end
+    end
+  end
+end
