@@ -41,7 +41,6 @@ test-results
 *.temp
 .cache
 
-# OpenAPI Generated Clients (keep only tracked wrappers)
-# The generated/ folders contain auto-generated code that should not be committed
-# We only commit the wrapper files (client.ts, generation-client.ts, etc.)
-src/api/generated/
+# OpenAPI Generated Clients
+# Committed to the repository so CI/CD (Vercel) can build without needing Java
+# src/api/generated/ is intentionally tracked
