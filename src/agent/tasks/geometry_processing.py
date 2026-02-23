@@ -17,7 +17,6 @@ try:
     from ..constants import (
         TASK_GENERATE_LOW_POLY_GLB,
         DECIMATION_TARGET_FACES,
-        MAX_GLB_SIZE_KB,
         PROCESSED_GEOMETRY_BUCKET,
         LOW_POLY_PREFIX,
         TEMP_DIR,
@@ -60,10 +59,10 @@ logger = structlog.get_logger()
 @contextmanager
 def get_db_connection():
     """Get a PostgreSQL database connection using psycopg2.
-    
+
     Returns a context manager that yields a connection object.
     Connection is automatically closed after use.
-    
+
     Yields:
         psycopg2.connection: Database connection
     """
@@ -94,16 +93,16 @@ s3_client = S3Client()
 
 def _fetch_block_metadata(block_id: str) -> tuple[str, str]:
     """Fetch block metadata from database.
-    
+
     Args:
         block_id: UUID of the block to query
-        
+
     Returns:
         Tuple of (url_original, iso_code)
-        
+
     Raises:
         ValueError: If block not found in database
-        
+
     Example:
         url, iso_code = _fetch_block_metadata("123e4567-e89b-12d3-a456-426614174000")
     """
@@ -129,14 +128,14 @@ def _fetch_block_metadata(block_id: str) -> tuple[str, str]:
 def _download_3dm_from_s3(url: str, local_path: str) -> None:
     """
     Download .3dm file from S3 to local filesystem with size validation.
-    
+
     Performs a HEAD request to verify file size before downloading to prevent
     zip bomb DoS attacks (OWASP A04:2021 - Insecure Design).
-    
+
     Args:
         url: S3 URL of the .3dm file
         local_path: Local filesystem path where file will be saved
-        
+
     Raises:
         FileNotFoundError: If S3 URL is invalid or file doesn't exist
         ValueError: If file exceeds MAX_3DM_FILE_SIZE_MB
@@ -201,14 +200,14 @@ def _download_3dm_from_s3(url: str, local_path: str) -> None:
 
 def _parse_rhino_file(file_path: str, iso_code: str) -> rhino3dm.File3dm:
     """Parse .3dm file using rhino3dm library.
-    
+
     Args:
         file_path: Local path to .3dm file
         iso_code: ISO code of the block (for error messages)
-        
+
     Returns:
         Parsed rhino3dm File3dm object
-        
+
     Raises:
         ValueError: If file is corrupted or cannot be parsed
     """
@@ -230,23 +229,23 @@ def _extract_and_merge_meshes(
     iso_code: str
 ) -> tuple[trimesh.Trimesh, int]:
     """Extract meshes from Rhino file, handle quads, and merge into single mesh.
-    
+
     Processes all mesh objects in the Rhino file:
     - Extracts vertices and faces
     - Splits quad faces into 2 triangles each
     - Merges all geometries into a single trimesh
-    
+
     Args:
         rhino_file: Parsed rhino3dm File3dm object
         block_id: UUID of the block (for logging)
         iso_code: ISO code of the block (for error messages)
-        
+
     Returns:
         Tuple of (merged_mesh, original_faces_count)
-        
+
     Raises:
         ValueError: If no valid meshes found in file
-        
+
     Example:
         mesh, face_count = _extract_and_merge_meshes(rhino_file, block_id, "SF-C12-D-001")
     """
@@ -307,19 +306,19 @@ def _apply_decimation(
     block_id: str
 ) -> tuple[trimesh.Trimesh, int]:
     """Apply quadric decimation to reduce mesh complexity.
-    
+
     Uses trimesh's quadric decimation algorithm (via open3d backend) to reduce
     face count while preserving overall shape. Skips decimation if mesh is
     already below target. Falls back to original mesh if decimation fails.
-    
+
     Args:
         mesh: Input trimesh mesh
         target_faces: Target number of faces after decimation
         block_id: UUID of the block (for logging)
-        
+
     Returns:
         Tuple of (decimated_mesh, decimated_faces_count)
-        
+
     Example:
         decimated_mesh, face_count = _apply_decimation(mesh, 1000, block_id)
     """
@@ -366,14 +365,14 @@ def _export_and_upload_glb(
     block_id: str
 ) -> tuple[str, int]:
     """Export mesh to GLB format and upload to S3 storage.
-    
+
     Args:
         mesh: Trimesh mesh to export
         block_id: UUID of the block (used in S3 key)
-        
+
     Returns:
         Tuple of (public_url, file_size_kb)
-        
+
     Example:
         url, size = _export_and_upload_glb(mesh, "123e4567-e89b-12d3-a456-426614174000")
     """
@@ -422,7 +421,7 @@ def _export_and_upload_glb(
 
 def _update_block_low_poly_url(block_id: str, url: str) -> None:
     """Update database with low_poly_url for processed block.
-    
+
     Args:
         block_id: UUID of the block to update
         url: Public URL of the uploaded GLB file
@@ -446,10 +445,10 @@ def _update_block_low_poly_url(block_id: str, url: str) -> None:
 )
 def generate_low_poly_glb(self, block_id: str):
     """Generate Low-Poly GLB from .3dm file.
-    
+
     Main orchestrator task that coordinates the 10-step pipeline to convert
     high-poly .3dm CAD files into low-poly GLB models suitable for web visualization.
-    
+
     Pipeline Steps:
         1. Fetch block metadata from database (url_original, iso_code)
         2. Download .3dm file from S3 to temp directory
@@ -461,10 +460,10 @@ def generate_low_poly_glb(self, block_id: str):
         8. Upload GLB to S3 (processed-geometry/low-poly/)
         9. Update database with low_poly_url
         10. Cleanup temp files
-    
+
     Args:
         block_id: UUID of the block to process
-        
+
     Returns:
         dict: Processing results containing:
             - status (str): 'success' or 'error'
@@ -473,11 +472,11 @@ def generate_low_poly_glb(self, block_id: str):
             - decimated_faces (int): Face count after decimation
             - file_size_kb (int): GLB file size in kilobytes
             - error_message (str|None): Error details if failed
-        
+
     Raises:
         ValueError: If block not found, no meshes, or parsing fails
         FileNotFoundError: If S3 download fails
-        
+
     Example:
         result = generate_low_poly_glb.delay("123e4567-e89b-12d3-a456-426614174000")
         # Returns: {'status': 'success', 'low_poly_url': 'https://...', ...}

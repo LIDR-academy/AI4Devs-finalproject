@@ -325,8 +325,8 @@ class TestRhinoParserServiceSecurity:
         assert isinstance(result.file_metadata["units"], str)
 
 
-class TestRhinoParserServiceEdgeCases:
-    """Test parsing behavior with malformed or edge-case files."""
+class TestRhinoParserServiceEdgeCasesV2:
+    """Test parsing behavior with malformed or edge-case files (additional tests)."""
 
     def test_parse_nonexistent_file(self):
         """
@@ -392,7 +392,7 @@ class TestRhinoParserServiceEdgeCases:
         GIVEN: A .3dm file with layer named "Capa-España-™"
         WHEN: parse_file() extracts layers
         THEN: Layer names are preserved as UTF-8 strings
-        
+
         NOTE: This is an integration test using real rhino3dm library and fixture.
         """
         test_file = Path(__file__).parent.parent / "fixtures" / "test-model.3dm"
@@ -408,8 +408,8 @@ class TestRhinoParserServiceEdgeCases:
             assert isinstance(layer.name, str)
 
 
-class TestRhinoParserServiceSecurity:
-    """Test security and resource limit handling."""
+class TestRhinoParserServiceSecurityV2:
+    """Test security and resource limit handling (additional tests)."""
 
     def test_parse_large_file_within_timeout(self):
         """
@@ -417,7 +417,7 @@ class TestRhinoParserServiceSecurity:
         GIVEN: Task has 10min timeout (TASK_TIME_LIMIT_SECONDS=600)
         WHEN: parse_file() is called on large file
         THEN: Completes within soft time limit (9min)
-        
+
         NOTE: This is an integration test using real rhino3dm library and fixture.
         Real large file testing requires integration test with actual fixtures.
         """
@@ -441,7 +441,7 @@ class TestRhinoParserServiceSecurity:
         GIVEN: Parser receives relative path like "../../../etc/passwd"
         WHEN: parse_file() validates input
         THEN: Rejects relative paths or normalizes them
-        
+
         NOTE: This is a security documentation test. Implementation should
         validate paths in file_download_service before reaching parser.
         """
@@ -459,7 +459,7 @@ class TestRhinoParserServiceSecurity:
         GIVEN: A .3dm file potentially containing malicious scripts
         WHEN: parse_file() reads the file
         THEN: Only extracts geometry and metadata (no script execution)
-        
+
         NOTE: rhino3dm is read-only by design, but this test documents the requirement.
         """
         # This is a documentation test - rhino3dm.File3dm.Read() is safe
@@ -478,7 +478,7 @@ class TestRhinoParserServiceSecurity:
         GIVEN: A .3dm with 1000+ nested block instances
         WHEN: parse_file() iterates over objects
         THEN: Completes without memory exhaustion
-        
+
         NOTE: This is a regression prevention test. Implementation should
         limit recursion depth or use iterative traversal.
         """

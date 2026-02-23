@@ -28,18 +28,18 @@ from typing import List, Tuple
 def test_all_enum_values_present(db_connection: connection) -> None:
     """
     Test 1 (Critical): Verify all 8 block_status ENUM values exist after migration.
-    
+
     This test will FAIL initially because the new values don't exist yet.
     Expected error: Only 5 values found (uploaded, validated, in_fabrication, completed, archived).
-    
+
     After migration, it should find all 8 values (5 original + 3 new).
-    
+
     Args:
         db_connection: Direct PostgreSQL connection (from conftest.py fixture)
-        
+
     Assertions:
         - Total of 8 ENUM values exist
-        - All required values are present: uploaded, validated, in_fabrication, completed, 
+        - All required values are present: uploaded, validated, in_fabrication, completed,
           archived, processing, rejected, error_processing
     """
     cursor = db_connection.cursor()
@@ -98,16 +98,16 @@ def test_all_enum_values_present(db_connection: connection) -> None:
 def test_add_value_idempotent(db_connection: connection) -> None:
     """
     Test 2 (Critical): Verify ADD VALUE IF NOT EXISTS is idempotent.
-    
+
     This test simulates running the migration twice to ensure idempotency.
     PostgreSQL 9.6+ supports IF NOT EXISTS for ALTER TYPE ADD VALUE.
-    
+
     This test will FAIL initially because the values don't exist yet,
     and the first ADD VALUE will succeed but subsequent ones should be skipped.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection (autocommit mode required)
-        
+
     Assertions:
         - First execution of ALTER TYPE ADD VALUE succeeds
         - Second execution is silently skipped (no error)
@@ -156,15 +156,15 @@ def test_add_value_idempotent(db_connection: connection) -> None:
 def test_insert_block_with_processing_status(db_connection: connection) -> None:
     """
     Test 3 (Critical): Verify INSERT with new status 'processing' succeeds.
-    
+
     This test will FAIL initially because 'processing' is not a valid ENUM value yet.
     Expected error: invalid input value for enum block_status: "processing"
-    
+
     After migration, it should successfully insert a block with status='processing'.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - INSERT block with status='processing' succeeds
         - SELECT retrieves correct status value
@@ -184,10 +184,10 @@ def test_insert_block_with_processing_status(db_connection: connection) -> None:
         try:
             cursor.execute("""
                 INSERT INTO blocks (
-                    iso_code, 
-                    status, 
-                    tipologia, 
-                    created_by, 
+                    iso_code,
+                    status,
+                    tipologia,
+                    created_by,
                     updated_by
                 )
                 VALUES (
@@ -229,8 +229,8 @@ def test_insert_block_with_processing_status(db_connection: connection) -> None:
 
         # Verify can query by new status
         cursor.execute("""
-            SELECT COUNT(*) 
-            FROM blocks 
+            SELECT COUNT(*)
+            FROM blocks
             WHERE status = 'processing';
         """)
 
@@ -248,16 +248,16 @@ def test_insert_block_with_processing_status(db_connection: connection) -> None:
 def test_verification_query_passes(db_connection: connection) -> None:
     """
     Test 4 (Critical): Verify migration verification query succeeds.
-    
+
     This test executes the same DO $$ block that's in the migration file
     to confirm all required ENUM values are present.
-    
+
     This test will FAIL initially because the new values don't exist.
     Expected error: Missing ENUM value: processing (or rejected, error_processing)
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - DO $$ verification block executes without exception
         - RAISE NOTICE confirms all 8 values present
@@ -277,9 +277,9 @@ def test_verification_query_passes(db_connection: connection) -> None:
           missing_value text;
         BEGIN
           -- Get all current enum values
-          SELECT array_agg(enumlabel::text ORDER BY enumlabel) 
+          SELECT array_agg(enumlabel::text ORDER BY enumlabel)
           INTO enum_values
-          FROM pg_enum 
+          FROM pg_enum
           WHERE enumtypid = 'block_status'::regtype;
 
           -- Check each required value exists
@@ -322,15 +322,15 @@ def test_verification_query_passes(db_connection: connection) -> None:
 def test_update_block_to_rejected_status(db_connection: connection) -> None:
     """
     Test 5 (Edge Case): Verify UPDATE to new status 'rejected' succeeds.
-    
+
     This is an additional edge case test to verify state transitions work.
     A block can be updated from 'uploaded' to 'rejected' (validation failed).
-    
+
     This test will FAIL initially because 'rejected' is not a valid ENUM value yet.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - UPDATE block status to 'rejected' succeeds
         - New status persists correctly
@@ -347,10 +347,10 @@ def test_update_block_to_rejected_status(db_connection: connection) -> None:
         # Insert block with default 'uploaded' status
         cursor.execute("""
             INSERT INTO blocks (
-                iso_code, 
-                status, 
-                tipologia, 
-                created_by, 
+                iso_code,
+                status,
+                tipologia,
+                created_by,
                 updated_by
             )
             VALUES (
@@ -405,15 +405,15 @@ def test_update_block_to_rejected_status(db_connection: connection) -> None:
 def test_invalid_status_value_rejected(db_connection: connection) -> None:
     """
     Test 6 (Edge Case): Verify invalid status values are rejected.
-    
+
     This test confirms PostgreSQL ENUM type safety - attempting to insert
     a non-existent ENUM value should fail with appropriate error.
-    
+
     This test should PASS both before and after migration (ENUM validation always active).
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - INSERT with invalid status raises error
         - Error message indicates invalid ENUM value
@@ -427,10 +427,10 @@ def test_invalid_status_value_rejected(db_connection: connection) -> None:
         with pytest.raises(Exception) as exc_info:
             cursor.execute("""
                 INSERT INTO blocks (
-                    iso_code, 
-                    status, 
-                    tipologia, 
-                    created_by, 
+                    iso_code,
+                    status,
+                    tipologia,
+                    created_by,
                     updated_by
                 )
                 VALUES (

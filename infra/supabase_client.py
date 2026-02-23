@@ -15,13 +15,13 @@ _supabase_client: Optional[Client] = None
 def get_supabase_client() -> Client:
     """
     Get or create a Supabase client instance.
-    
+
     This function implements a singleton pattern to reuse
     the same client instance across the application.
-    
+
     Returns:
         Client: Configured Supabase client
-        
+
     Raises:
         ValueError: If SUPABASE_URL or SUPABASE_KEY are not set
     """

@@ -18,10 +18,10 @@ from constants import ERROR_MSG_INVALID_STATUS, ERROR_MSG_INVALID_UUID, ERROR_MS
 def _validate_status_enum(status: Optional[str]) -> None:
     """
     Validate status parameter against BlockStatus enum values.
-    
+
     Args:
         status: Status value to validate
-    
+
     Raises:
         HTTPException: 400 if status is invalid
     """
@@ -37,10 +37,10 @@ def _validate_status_enum(status: Optional[str]) -> None:
 def _validate_uuid_format(workshop_id: Optional[str]) -> None:
     """
     Validate workshop_id parameter as valid UUID.
-    
+
     Args:
         workshop_id: UUID string to validate
-    
+
     Raises:
         HTTPException: 400 if UUID format is invalid
     """
@@ -65,27 +65,27 @@ async def list_parts(
 ) -> PartsListResponse:
     """
     List all non-archived parts with optional filtering.
-    
+
     Query Parameters:
         - status: Filter by lifecycle status
         - tipologia: Filter by part typology
         - workshop_id: Filter by assigned workshop UUID
-    
+
     Returns:
         PartsListResponse with:
         - parts: Array of PartCanvasItem (id, iso_code, status, tipologia, low_poly_url, bbox, workshop_id)
         - count: Total number of parts returned
         - filters_applied: Echo of applied filters for transparency
-    
+
     Performance:
         - Query optimized with composite index idx_blocks_canvas_query
         - Target latency: <500ms (validated at 28ms in T-0503-DB)
         - Target response size: <200KB gzipped
-    
+
     Security:
         - RLS policies enforce workshop-level access control
         - Service role key bypasses RLS (admin context)
-    
+
     Errors:
         - 500: Database query failure
     """

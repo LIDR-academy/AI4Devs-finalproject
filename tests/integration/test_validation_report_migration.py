@@ -18,13 +18,13 @@ import json
 def test_validation_report_column_exists(db_connection: connection) -> None:
     """
     Verify validation_report column exists in blocks table.
-    
+
     This test will FAIL initially because the migration hasn't been run yet.
     Expected error: Column "validation_report" not found in blocks table.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection (from conftest.py fixture)
-        
+
     Assertions:
         - validation_report column exists in information_schema.columns
     """
@@ -60,14 +60,14 @@ def test_validation_report_column_exists(db_connection: connection) -> None:
 def test_insert_block_with_validation_report(db_connection: connection) -> None:
     """
     Verify blocks table accepts JSONB data in validation_report column.
-    
+
     This test will FAIL initially because the column doesn't exist.
     After migration, it should INSERT a test block with a validation report
     and verify the data persists correctly.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Insert with validation_report succeeds
         - Retrieved data matches inserted structure
@@ -172,13 +172,13 @@ def test_insert_block_with_validation_report(db_connection: connection) -> None:
 def test_validation_report_accepts_null(db_connection: connection) -> None:
     """
     Verify validation_report column accepts NULL values.
-    
+
     Blocks that haven't been validated yet should have NULL in validation_report,
     not an empty object. This distinguishes "not validated" from "validation pending".
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Insert with validation_report=NULL succeeds
         - Retrieved value is NULL
@@ -237,14 +237,14 @@ def test_validation_report_accepts_null(db_connection: connection) -> None:
 def test_gin_index_exists(db_connection: connection) -> None:
     """
     Verify GIN indexes on validation_report exist.
-    
+
     This test queries PostgreSQL system catalogs to confirm:
     1. idx_blocks_validation_errors (GIN index on errors array) exists
     2. idx_blocks_validation_failed (partial index for is_valid=false) exists
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Both indexes exist in pg_indexes
     """

@@ -28,7 +28,7 @@ class TestRedisConnectivity:
     def test_redis_connection_works(self):
         """
         Test 1: Redis connection is functional
-        
+
         DoD: Can connect to Redis and execute PING command
         """
         # Connect to Redis using settings
@@ -40,7 +40,7 @@ class TestRedisConnectivity:
     def test_redis_not_accessible_from_external_network(self):
         """
         Test 2: Redis is properly secured (bound to localhost only)
-        
+
         DoD: Verify Redis is not accessible on 0.0.0.0
         Note: This test passes if connection is refused OR if we detect localhost binding
         """
@@ -55,7 +55,7 @@ class TestCeleryConfiguration:
     def test_celery_app_is_configured(self):
         """
         Test 3: Celery app has correct basic configuration
-        
+
         DoD: celery_app instance exists and has expected values
         """
         assert celery_app is not None, "celery_app should be initialized"
@@ -64,7 +64,7 @@ class TestCeleryConfiguration:
     def test_serializer_configuration(self):
         """
         Test 4: Celery uses secure JSON serialization (not pickle)
-        
+
         DoD: Only JSON serialization is accepted (accept_content=["json"])
         """
         assert "json" in celery_app.conf.accept_content, \
@@ -79,7 +79,7 @@ class TestCeleryConfiguration:
     def test_task_timeout_configuration(self):
         """
         Test 5: Task timeouts are configured (protection against OOM)
-        
+
         DoD: time_limit and soft_time_limit are set
         """
         assert celery_app.conf.task_time_limit == 600, \
@@ -90,7 +90,7 @@ class TestCeleryConfiguration:
     def test_worker_prefetch_configuration(self):
         """
         Test 6: Worker prefetch is set to 1 (large file handling)
-        
+
         DoD: worker_prefetch_multiplier = 1
         """
         assert celery_app.conf.worker_prefetch_multiplier == 1, \
@@ -103,7 +103,7 @@ class TestAgentConfiguration:
     def test_celery_broker_url_is_set(self):
         """
         Test 7: CELERY_BROKER_URL environment variable is configured
-        
+
         DoD: Settings contains valid Redis URL
         """
         assert agent_settings.CELERY_BROKER_URL is not None, \
@@ -114,7 +114,7 @@ class TestAgentConfiguration:
     def test_celery_result_backend_is_set(self):
         """
         Test 8: CELERY_RESULT_BACKEND environment variable is configured
-        
+
         DoD: Settings contains valid Redis URL for results
         """
         assert agent_settings.CELERY_RESULT_BACKEND is not None, \
@@ -125,7 +125,7 @@ class TestAgentConfiguration:
     def test_database_url_is_configured(self):
         """
         Test 9: DATABASE_URL is available in agent settings
-        
+
         DoD: Worker can access database configuration
         """
         assert agent_settings.DATABASE_URL is not None, \
@@ -136,7 +136,7 @@ class TestAgentConfiguration:
     def test_supabase_credentials_are_configured(self):
         """
         Test 10: Supabase credentials are available
-        
+
         DoD: SUPABASE_URL and SUPABASE_KEY are accessible
         """
         # These might be None in test environment, but should be present in settings
@@ -152,7 +152,7 @@ class TestTaskDefinitions:
     def test_health_check_task_exists(self):
         """
         Test 11: health_check task is registered
-        
+
         DoD: Task can be imported and has correct name
         """
         assert health_check is not None, "health_check task should exist"
@@ -162,7 +162,7 @@ class TestTaskDefinitions:
     def test_validate_file_task_exists(self):
         """
         Test 12: validate_file task is registered (placeholder)
-        
+
         DoD: Task exists even if not fully implemented
         """
         assert validate_file is not None, "validate_file task should exist"
@@ -176,7 +176,7 @@ class TestTaskExecution:
     def test_health_check_task_structure(self):
         """
         Test 13: Health check task returns expected structure
-        
+
         DoD: Calling health_check() via Celery returns dict with expected keys
         Note: This is a real async task execution test
         """

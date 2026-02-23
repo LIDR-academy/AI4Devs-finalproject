@@ -21,7 +21,7 @@ from constants import (
 class PartsService:
     """
     Service for parts listing operations.
-    
+
     Provides business logic for fetching parts with dynamic filtering,
     optimized for 3D canvas rendering in Dashboard (US-005).
     """
@@ -29,7 +29,7 @@ class PartsService:
     def __init__(self, supabase_client: Client):
         """
         Initialize PartsService with database client.
-        
+
         Args:
             supabase_client: Supabase client instance for database operations
         """
@@ -38,13 +38,13 @@ class PartsService:
     def _transform_row_to_part_item(self, row: Dict[str, Any]) -> PartCanvasItem:
         """
         Transform database row to PartCanvasItem Pydantic model.
-        
+
         Handles NULL-safe extraction of optional fields (low_poly_url, bbox, workshop_id)
         and JSONB parsing for bounding box data.
-        
+
         Args:
             row: Database row dictionary from Supabase query result
-        
+
         Returns:
             PartCanvasItem with all fields populated from row
         """
@@ -70,12 +70,12 @@ class PartsService:
     def _build_filters_applied(self, status: Optional[str], tipologia: Optional[str], workshop_id: Optional[str]) -> Dict[str, str]:
         """
         Build filters_applied dictionary from non-NULL filter parameters.
-        
+
         Args:
             status: Status filter value
             tipologia: Tipologia filter value
             workshop_id: Workshop ID filter value
-        
+
         Returns:
             Dictionary with only non-NULL filters included
         """
@@ -96,20 +96,20 @@ class PartsService:
     ) -> PartsListResponse:
         """
         List all parts with optional filtering.
-        
+
         Query optimization:
         - Uses composite index idx_blocks_canvas_query (status, tipologia, workshop_id)
         - Always filters is_archived=false
         - Returns minimal fields for 3D rendering (no heavy blobs)
-        
+
         Args:
             status: Filter by lifecycle status (validated, in_fabrication, etc.)
             tipologia: Filter by part type (capitel, columna, dovela, etc.)
             workshop_id: Filter by assigned workshop UUID
-        
+
         Returns:
             PartsListResponse with parts array, count, and filters_applied
-        
+
         Raises:
             Exception: If database query fails (handled by API layer)
         """

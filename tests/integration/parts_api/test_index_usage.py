@@ -30,7 +30,7 @@ client = TestClient(app)
 def get_direct_db_connection():
     """
     Establish direct PostgreSQL connection for EXPLAIN ANALYZE queries.
-    
+
     Returns psycopg2 connection to bypass Supabase client RLS filtering.
     """
     db_url = os.getenv("SUPABASE_DATABASE_URL")
@@ -47,19 +47,19 @@ def get_direct_db_connection():
 def test_idx01_filter_queries_use_composite_index(supabase_client: Client):
     """
     IDX-01: Status/tipologia filters use idx_blocks_status_active composite index.
-    
+
     ⚠️ NEW TEST - Expected to FAIL if index not created or not used
-    
+
     Given: blocks table has idx_blocks_status_active (status, tipologia, workshop_id)
     When: GET /api/parts?status=validated&tipologia=capitel
     Then:
         - Query plan shows Index Scan on idx_blocks_status_active
         - No Sequential Scan on blocks table
         - Query execution time < 100ms
-    
+
     Expected Index:
-        CREATE INDEX idx_blocks_status_active 
-        ON blocks(status, tipologia, workshop_id) 
+        CREATE INDEX idx_blocks_status_active
+        ON blocks(status, tipologia, workshop_id)
         WHERE is_archived = false;
     """
     # CLEANUP FIRST: Delete any leftover test blocks
@@ -90,7 +90,7 @@ def test_idx01_filter_queries_use_composite_index(supabase_client: Client):
     cursor = conn.cursor()
 
     explain_query = """
-        EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) 
+        EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
         SELECT id, iso_code, status, tipologia, workshop_id, low_poly_url, bbox, created_at
         FROM blocks
         WHERE is_archived = false
@@ -122,19 +122,19 @@ def test_idx01_filter_queries_use_composite_index(supabase_client: Client):
 def test_idx02_partial_index_triggers_on_is_archived_false(supabase_client: Client):
     """
     IDX-02: Partial index only triggers when is_archived = false.
-    
+
     ⚠️ NEW TEST - Expected to FAIL if partial index condition not optimized
-    
-    Given: 
+
+    Given:
         - 100 blocks with is_archived = false (active)
         - 1000 blocks with is_archived = true (archived, excluded from index)
-    
+
     When: GET /api/parts (default filter is_archived = false)
     Then:
         - Query uses partial index (skips archived blocks)
         - Index size smaller than full table index (space efficiency)
         - Query performance unaffected by archived blocks count
-    
+
     Partial Index Advantage: Index covers only 100 rows, not 1100.
     """
     # CLEANUP FIRST: Delete any leftover test blocks
@@ -198,16 +198,16 @@ def test_idx02_partial_index_triggers_on_is_archived_false(supabase_client: Clie
 def test_idx03_no_sequential_scans_on_blocks_table(supabase_client: Client):
     """
     IDX-03: All filter queries avoid sequential scans (index coverage).
-    
+
     ⚠️ NEW TEST - Expected to FAIL if any filter query lacks index
-    
+
     Given: blocks table with comprehensive indexes
     When: Execute common filter queries (status, tipologia, workshop_id)
     Then:
         - NO query uses Seq Scan on blocks table
         - All queries use Index Scan or Bitmap Index Scan
         - Query planner chooses index for all filter combinations
-    
+
     Test Cases:
         1. Filter by status only
         2. Filter by tipologia only
@@ -291,19 +291,19 @@ def test_idx03_no_sequential_scans_on_blocks_table(supabase_client: Client):
 def test_idx04_index_hit_ratio_above_95_percent(supabase_client: Client):
     """
     IDX-04: Index cache hit ratio > 95% (PostgreSQL buffer cache efficiency).
-    
+
     ⚠️ NEW TEST - Expected to FAIL if indexes not properly cached
-    
+
     Given: PostgreSQL instance with default shared_buffers (128MB)
     When: Execute 100 filter queries (warm up cache)
     Then:
         - Index cache hit ratio > 95% (pg_stat_statements or pg_statio_user_indexes)
         - Disk reads minimized (most lookups served from memory)
         - Validates indexes fit in working set
-    
+
     Query:
-        SELECT 
-            idx_blks_read, 
+        SELECT
+            idx_blks_read,
             idx_blks_hit,
             (idx_blks_hit::float / NULLIF(idx_blks_hit + idx_blks_read, 0)) * 100 AS hit_ratio
         FROM pg_statio_user_indexes
@@ -333,11 +333,11 @@ def test_idx04_index_hit_ratio_above_95_percent(supabase_client: Client):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT 
-            idx_blks_read, 
+        SELECT
+            idx_blks_read,
             idx_blks_hit
         FROM pg_statio_user_indexes
-        WHERE schemaname = 'public' 
+        WHERE schemaname = 'public'
           AND indexrelname LIKE 'idx_blocks_%';
     """)
 
@@ -352,11 +352,11 @@ def test_idx04_index_hit_ratio_above_95_percent(supabase_client: Client):
 
     # Get final cache stats
     cursor.execute("""
-        SELECT 
-            idx_blks_read, 
+        SELECT
+            idx_blks_read,
             idx_blks_hit
         FROM pg_statio_user_indexes
-        WHERE schemaname = 'public' 
+        WHERE schemaname = 'public'
           AND indexrelname LIKE 'idx_blocks_%';
     """)
 

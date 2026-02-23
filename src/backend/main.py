@@ -10,6 +10,10 @@ from slowapi.errors import RateLimitExceeded
 import os
 import redis
 
+from api.upload import router as upload_router
+from api.validation import router as validation_router
+from api.parts import router as parts_router
+
 app = FastAPI(
     title="SF-PM API",
     description="Sagrada Familia Parts Manager API",
@@ -25,13 +29,13 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
     Add security headers to all responses.
-    
+
     Implements OWASP security best practices:
     - Content Security Policy (CSP) to prevent XSS
     - X-Frame-Options to prevent clickjacking
     - X-Content-Type-Options to prevent MIME sniffing
     - Strict-Transport-Security (HSTS) for HTTPS enforcement
-    
+
     References:
         - OWASP A05:2021 – Security Misconfiguration
         - OWASP A07:2021 – Cross-Site Scripting (XSS)
@@ -105,11 +109,11 @@ async def health_check():
 async def readiness_check():
     """
     Readiness probe - checks if service can handle requests.
-    
+
     Verifies:
     - Database connectivity (Supabase)
     - Redis connectivity (Celery broker)
-    
+
     Returns 503 if any dependency is unavailable.
     """
     checks = {}
@@ -120,7 +124,7 @@ async def readiness_check():
         from infra.supabase_client import get_supabase_client
         supabase = get_supabase_client()
         # Simple query to verify connection
-        result = supabase.table("blocks").select("id").limit(1).execute()
+        supabase.table("blocks").select("id").limit(1).execute()
         checks["database"] = "ok"
     except Exception as e:
         checks["database"] = f"error: {str(e)}"
@@ -149,10 +153,6 @@ async def readiness_check():
                 "checks": checks
             }
         )
-
-from api.upload import router as upload_router
-from api.validation import router as validation_router
-from api.parts import router as parts_router
 
 app.include_router(upload_router, prefix="/api/upload", tags=["Upload"])
 app.include_router(validation_router)

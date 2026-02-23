@@ -7,7 +7,7 @@ Validates core functionality of Canvas API endpoint.
 Tests (6):
 - F-01: Fetch all parts without filters
 - F-02: Parts include low_poly_url field
-- F-03: Parts include bbox JSONB field  
+- F-03: Parts include bbox JSONB field
 - F-04: Empty database returns 200 + empty array
 - F-05: Archived parts excluded from results
 - F-06: Consistent ordering (created_at DESC)
@@ -29,7 +29,7 @@ client = TestClient(app)
 def test_f01_fetch_all_parts_no_filters(supabase_client: Client):
     """
     F-01: Fetch all parts without filters.
-    
+
     Given: Database contains 5 blocks with varied status/tipologia
     When: GET /api/parts (no query params)
     Then:
@@ -83,7 +83,7 @@ def test_f01_fetch_all_parts_no_filters(supabase_client: Client):
 def test_f02_parts_include_low_poly_url(supabase_client: Client):
     """
     F-02: Response includes low_poly_url field (nullable).
-    
+
     Given: Block with low_poly_url populated
     When: GET /api/parts
     Then:
@@ -129,7 +129,7 @@ def test_f02_parts_include_low_poly_url(supabase_client: Client):
 def test_f03_parts_include_bbox_jsonb(supabase_client: Client):
     """
     F-03: Response includes bbox JSONB field with {min, max} structure.
-    
+
     Given: Block with bbox field populated as JSONB
     When: GET /api/parts
     Then:
@@ -180,7 +180,7 @@ def test_f03_parts_include_bbox_jsonb(supabase_client: Client):
 def test_f04_empty_database_returns_200(supabase_client: Client):
     """
     F-04: Empty database returns 200 + {parts: [], count: 0}.
-    
+
     Given: Clean database, no blocks match filter
     When: GET /api/parts with filter that returns no results
     Then:
@@ -201,7 +201,7 @@ def test_f04_empty_database_returns_200(supabase_client: Client):
 def test_f05_archived_parts_excluded(supabase_client: Client):
     """
     F-05: Archived parts (is_archived=true) excluded from results.
-    
+
     Given: Block A (is_archived = false), Block B (is_archived = true)
     When: GET /api/parts
     Then:
@@ -239,7 +239,7 @@ def test_f05_archived_parts_excluded(supabase_client: Client):
 def test_f06_consistent_ordering_created_at_desc(supabase_client: Client):
     """
     F-06: Parts ordered by created_at DESC (newest first).
-    
+
     Given: 5 blocks inserted at different timestamps
     When: GET /api/parts
     Then:

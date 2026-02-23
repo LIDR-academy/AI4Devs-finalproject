@@ -28,14 +28,14 @@ import time
 def test_low_poly_url_column_exists(db_connection: connection) -> None:
     """
     Test 1: Verify low_poly_url column exists in blocks table.
-    
+
     TDD Phase: RED
     Expected to FAIL because migration hasn't been run yet.
     Expected error: Column "low_poly_url" not found in blocks table.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection (from conftest.py fixture)
-        
+
     Assertions:
         - low_poly_url column exists in information_schema.columns
         - data_type is 'text'
@@ -72,14 +72,14 @@ def test_low_poly_url_column_exists(db_connection: connection) -> None:
 def test_bbox_column_exists(db_connection: connection) -> None:
     """
     Test 2: Verify bbox column exists in blocks table.
-    
+
     TDD Phase: RED
     Expected to FAIL because migration hasn't been run yet.
     Expected error: Column "bbox" not found in blocks table.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - bbox column exists in information_schema.columns
         - data_type is 'jsonb'
@@ -116,14 +116,14 @@ def test_bbox_column_exists(db_connection: connection) -> None:
 def test_update_low_poly_url_successfully(db_connection: connection) -> None:
     """
     Test 3: Verify blocks table accepts TEXT data in low_poly_url column.
-    
+
     TDD Phase: RED
     Expected to FAIL because column doesn't exist.
     After migration, should UPDATE a test block with a URL and verify persistence.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - UPDATE with low_poly_url succeeds
         - Retrieved data matches inserted value
@@ -182,14 +182,14 @@ def test_update_low_poly_url_successfully(db_connection: connection) -> None:
 def test_update_bbox_successfully(db_connection: connection) -> None:
     """
     Test 4: Verify blocks table accepts JSONB data in bbox column.
-    
+
     TDD Phase: RED
     Expected to FAIL because column doesn't exist.
     After migration, should UPDATE a test block with bbox JSON and verify JSONB operators work.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - UPDATE with bbox succeeds
         - JSONB stored correctly
@@ -232,7 +232,7 @@ def test_update_bbox_successfully(db_connection: connection) -> None:
 
         # Verify JSONB data persisted and operators work
         cursor.execute("""
-            SELECT 
+            SELECT
                 bbox,
                 bbox->'min' as min_val,
                 bbox->'max' as max_val
@@ -261,14 +261,14 @@ def test_update_bbox_successfully(db_connection: connection) -> None:
 def test_null_values_allowed_initially(db_connection: connection) -> None:
     """
     Test 5: Verify low_poly_url and bbox default to NULL on insert.
-    
+
     TDD Phase: RED
     Expected to FAIL because columns don't exist.
     After migration, inserting a block without these columns should succeed with NULL defaults.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Insert without low_poly_url and bbox succeeds
         - Both columns default to NULL
@@ -308,14 +308,14 @@ def test_null_values_allowed_initially(db_connection: connection) -> None:
 def test_very_long_url_accepted(db_connection: connection) -> None:
     """
     Test 6: Verify TEXT type handles very long URLs (>255 chars).
-    
+
     TDD Phase: RED
     Expected to FAIL because column doesn't exist.
     After migration, inserting 300-character URL should succeed (TEXT has no length limit).
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Insert with 300-char URL succeeds
         - No truncation occurs
@@ -361,14 +361,14 @@ def test_very_long_url_accepted(db_connection: connection) -> None:
 def test_invalid_json_rejected_by_client(db_connection: connection) -> None:
     """
     Test 7: Verify invalid JSON in bbox is rejected by PostgreSQL.
-    
+
     TDD Phase: RED
     Expected to FAIL because column doesn't exist.
     After migration, attempting to insert invalid JSON should raise PostgreSQL error.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Insert with invalid JSON raises exception
         - Error message mentions 'invalid input syntax for type json'
@@ -414,14 +414,14 @@ def test_invalid_json_rejected_by_client(db_connection: connection) -> None:
 def test_empty_jsonb_object_allowed(db_connection: connection) -> None:
     """
     Test 8: Verify empty JSONB object {} is allowed (validation is application-level).
-    
+
     TDD Phase: RED
     Expected to FAIL because column doesn't exist.
     After migration, inserting empty {} should succeed (DB doesn't validate bbox schema).
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Insert with bbox={} succeeds
         - Stored as valid JSONB
@@ -464,13 +464,13 @@ def test_empty_jsonb_object_allowed(db_connection: connection) -> None:
 def test_canvas_index_exists(db_connection: connection) -> None:
     """
     Test 9: Verify idx_blocks_canvas_query index exists.
-    
+
     TDD Phase: RED
     Expected to FAIL because index hasn't been created yet.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Index exists in pg_indexes
         - Index definition includes (status, tipologia, workshop_id)
@@ -512,13 +512,13 @@ def test_canvas_index_exists(db_connection: connection) -> None:
 def test_processing_index_exists(db_connection: connection) -> None:
     """
     Test 10: Verify idx_blocks_low_poly_processing index exists.
-    
+
     TDD Phase: RED
     Expected to FAIL because index hasn't been created yet.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Index exists in pg_indexes
         - Partial index with WHERE low_poly_url IS NULL AND is_archived = false
@@ -555,14 +555,14 @@ def test_processing_index_exists(db_connection: connection) -> None:
 def test_canvas_query_uses_index(db_connection: connection) -> None:
     """
     Test 11: Verify canvas filter query uses idx_blocks_canvas_query index.
-    
+
     TDD Phase: RED
     Expected to FAIL because index doesn't exist yet.
     Uses EXPLAIN ANALYZE to verify index scan is used.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - EXPLAIN plan includes "Index Scan using idx_blocks_canvas_query"
         - Query executes successfully
@@ -621,14 +621,14 @@ def test_canvas_query_uses_index(db_connection: connection) -> None:
 def test_processing_query_uses_partial_index(db_connection: connection) -> None:
     """
     Test 12: Verify processing queue query uses idx_blocks_low_poly_processing partial index.
-    
+
     TDD Phase: RED
     Expected to FAIL because index doesn't exist yet.
     Uses EXPLAIN ANALYZE to verify partial index scan is used.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - EXPLAIN plan includes "Index Scan using idx_blocks_low_poly_processing"
         - Query executes successfully
@@ -687,14 +687,14 @@ def test_processing_query_uses_partial_index(db_connection: connection) -> None:
 def test_index_size_is_reasonable(db_connection: connection) -> None:
     """
     Test 13: Verify combined index size is <100 KB.
-    
+
     TDD Phase: RED
     Expected to FAIL because indexes don't exist yet.
     Target: Both indexes combined should be <100 KB (estimated ~25 KB for 500 rows).
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - idx_blocks_canvas_query exists and size <100 KB
         - idx_blocks_low_poly_processing exists and size <100 KB
@@ -704,7 +704,7 @@ def test_index_size_is_reasonable(db_connection: connection) -> None:
     try:
         # Query index sizes
         cursor.execute("""
-            SELECT 
+            SELECT
                 indexname,
                 pg_size_pretty(pg_relation_size(indexname::regclass)) as size_pretty,
                 pg_relation_size(indexname::regclass) as size_bytes
@@ -738,14 +738,14 @@ def test_index_size_is_reasonable(db_connection: connection) -> None:
 def test_migration_applies_cleanly(db_connection: connection) -> None:
     """
     Test 14: Verify migration can be applied to a clean database.
-    
+
     TDD Phase: RED
     This test verifies the migration FILE exists and has correct structure.
     Actual migration execution is manual via `make init-db` or `supabase migration up`.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Migration file exists at supabase/migrations/20260219000001_add_low_poly_url_bbox.sql
         - File contains expected DDL statements
@@ -777,16 +777,16 @@ def test_migration_applies_cleanly(db_connection: connection) -> None:
 def test_migration_is_idempotent(db_connection: connection) -> None:
     """
     Test 15: Verify migration can be run twice without errors.
-    
+
     TDD Phase: RED/GREEN
     In RED phase, columns don't exist so first run would work.
     In GREEN phase, second run should succeed with "already exists" notices.
-    
+
     This test checks that IF NOT EXISTS clauses are present.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Migration uses IF NOT EXISTS for columns and indexes
     """
@@ -819,14 +819,14 @@ def test_migration_is_idempotent(db_connection: connection) -> None:
 def test_rollback_works_correctly(db_connection: connection) -> None:
     """
     Test 16: Verify rollback script exists and has correct structure.
-    
+
     TDD Phase: RED
     This test verifies the rollback plan in technical spec is implementable.
     Actual rollback testing requires manual execution.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Rollback SQL exists in technical spec
         - Contains DROP COLUMN and DROP INDEX statements
@@ -859,13 +859,13 @@ def test_rollback_works_correctly(db_connection: connection) -> None:
 def test_existing_data_unaffected(db_connection: connection) -> None:
     """
     Test 17: Verify migration doesn't affect existing blocks data.
-    
+
     TDD Phase: GREEN (requires migration to test)
     After migration, existing blocks should have NULL values in new columns.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Pre-migration blocks still exist after migration
         - New columns are NULL for existing blocks
@@ -931,13 +931,13 @@ def test_existing_data_unaffected(db_connection: connection) -> None:
 def test_canvas_query_performance_500ms(db_connection: connection) -> None:
     """
     Test 18: Verify canvas query executes in <500ms with 500 rows.
-    
+
     TDD Phase: GREEN (requires migration + test data)
     Seeds database with 500 blocks, runs canvas query 10 times, measures avg time.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Average query time <500ms
         - Standard deviation <50ms (consistent performance)
@@ -982,7 +982,7 @@ def test_canvas_query_performance_500ms(db_connection: connection) -> None:
               AND status = 'validated'
               AND tipologia = 'capitel'
         """)
-        results = cursor.fetchall()
+        cursor.fetchall()
         elapsed_ms = (time.time() - start_time) * 1000
 
         # Assert performance (relaxed for small dataset)
@@ -996,13 +996,13 @@ def test_canvas_query_performance_500ms(db_connection: connection) -> None:
 def test_processing_queue_query_10ms(db_connection: connection) -> None:
     """
     Test 19: Verify processing queue query executes in <10ms.
-    
+
     TDD Phase: GREEN (requires migration + partial index)
     Partial index on (status WHERE low_poly_url IS NULL) should make this instant.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Query time <10ms (should be <1ms with partial index)
     """
@@ -1033,7 +1033,7 @@ def test_processing_queue_query_10ms(db_connection: connection) -> None:
               AND low_poly_url IS NULL
             LIMIT 10
         """)
-        results = cursor.fetchall()
+        cursor.fetchall()
         elapsed_ms = (time.time() - start_time) * 1000
 
         # Assert performance
@@ -1047,14 +1047,14 @@ def test_processing_queue_query_10ms(db_connection: connection) -> None:
 def test_no_blocking_during_migration(db_connection: connection) -> None:
     """
     Test 20: Verify migration doesn't block concurrent SELECT queries.
-    
+
     TDD Phase: GREEN (requires migration)
     PostgreSQL 11+ allows ADD COLUMN with NULL without blocking SELECTs.
     This test documents expected behavior.
-    
+
     Args:
         db_connection: Direct PostgreSQL connection
-        
+
     Assertions:
         - Migration uses ADD COLUMN ... NULL (non-blocking)
         - No ALTER TABLE ... REWRITE operations

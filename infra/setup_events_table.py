@@ -7,7 +7,7 @@ This script connects directly to PostgreSQL and executes the DDL migration.
 
 Usage:
     python infra/setup_events_table.py
-    
+
 Environment variables required:
     SUPABASE_DATABASE_URL - PostgreSQL connection string for Supabase
 """
@@ -21,7 +21,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src" / "backend"))
 
 try:
     import psycopg2
-    from psycopg2 import sql
 except ImportError:
     print("❌ ERROR: psycopg2-binary not installed")
     print("   Run: pip install psycopg2-binary")
@@ -41,7 +40,7 @@ def load_sql_migration() -> str:
 
 def get_database_url() -> str:
     """Get database URL from environment variables
-    
+
     Follows 12-Factor App principles:
     - Loads .env file if it exists (local development)
     - Falls back to environment variables (production/Docker)
@@ -91,8 +90,8 @@ def execute_migration(database_url: str, sql: str) -> None:
             # Verify table was created
             cursor.execute("""
                 SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_schema = 'public' 
+                    SELECT FROM information_schema.tables
+                    WHERE table_schema = 'public'
                     AND table_name = 'events'
                 );
             """)

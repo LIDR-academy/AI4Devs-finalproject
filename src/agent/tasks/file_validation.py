@@ -39,10 +39,10 @@ logger = structlog.get_logger()
 def health_check(self):
     """
     Dummy task for infrastructure validation.
-    
+
     Returns worker metadata to confirm Celery is operational.
     Used by integration tests to verify worker connectivity.
-    
+
     Returns:
         dict: Status metadata including worker_id, hostname, timestamp
     """
@@ -63,7 +63,7 @@ def health_check(self):
 def validate_file(self, part_id: str, s3_key: str):
     """
     Validate .3dm file from S3.
-    
+
     This task:
     1. Updates block status to 'processing'
     2. Downloads .3dm from S3 to /tmp
@@ -72,11 +72,11 @@ def validate_file(self, part_id: str, s3_key: str):
     5. Saves validation report to database
     6. Updates block status to 'validated' or 'error_processing'
     7. Cleans up temporary files
-    
+
     Args:
         part_id: UUID of the part in database
         s3_key: S3 object key for the .3dm file
-    
+
     Returns:
         dict: Result with success status and metadata
     """

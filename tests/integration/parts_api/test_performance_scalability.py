@@ -29,16 +29,16 @@ client = TestClient(app)
 def test_perf01_response_time_under_500ms_with_500_parts(supabase_client: Client):
     """
     PERF-01: Response time < 500ms with 500 parts in database.
-    
+
     ⚠️ NEW TEST - Expected to FAIL if DB not optimized or indexes missing
-    
+
     Given: Database contains 500 blocks (realistic production load)
     When: GET /api/parts (no filters applied)
     Then:
         - Response time < 500ms (NFR requirement)
         - All 500 parts returned in single request
         - No pagination implemented (MVP constraint)
-    
+
     Performance Target: P95 latency < 500ms per docs/US-005/T-0510-TEST-BACK-TechnicalSpec-ENRICHED.md
     """
     # CLEANUP FIRST: Delete any leftover test blocks from previous runs
@@ -90,16 +90,16 @@ def test_perf01_response_time_under_500ms_with_500_parts(supabase_client: Client
 def test_perf02_payload_size_under_200kb_for_100_parts(supabase_client: Client):
     """
     PERF-02: Response payload < 200KB for 100 parts.
-    
+
     ⚠️ NEW TEST - Expected to FAIL if payload bloated with unnecessary fields
-    
+
     Given: Database contains 100 blocks with typical data
     When: GET /api/parts (fetch 100 parts)
     Then:
         - Response payload size < 200KB (NFR requirement)
         - Payload calculated as len(response.content)
         - Validates efficient serialization (no N+1 queries)
-    
+
     Performance Target: Response size < 200KB per T-0510-TEST-BACK Technical Spec
     """
     # CLEANUP FIRST: Delete any leftover test blocks
@@ -145,16 +145,16 @@ def test_perf02_payload_size_under_200kb_for_100_parts(supabase_client: Client):
 def test_perf03_stress_test_1000_parts_p95_latency(supabase_client: Client):
     """
     PERF-03: Stress test with 1000+ parts (P95 latency validation).
-    
+
     ⚠️ NEW TEST - Expected to FAIL without proper indexing/optimization
-    
+
     Given: Database contains 1000 blocks (stress scenario)
     When: GET /api/parts (execute 20 times to measure P95)
     Then:
         - P95 response time < 750ms (acceptable degradation at scale)
         - P50 response time < 500ms (median performance)
         - No memory leaks or connection pool exhaustion
-    
+
     Performance Target: P95 latency < 750ms at 1000 parts (stress scenario)
     """
     # CLEANUP FIRST: Delete any leftover test blocks
@@ -216,16 +216,16 @@ def test_perf03_stress_test_1000_parts_p95_latency(supabase_client: Client):
 def test_perf04_memory_stability_under_load(supabase_client: Client):
     """
     PERF-04: Memory stability under repeated loads (no memory leaks).
-    
+
     ⚠️ NEW TEST - Expected to FAIL if connection pooling issues or leaks exist
-    
+
     Given: FastAPI backend with default configuration
     When: Execute GET /api/parts 50 times consecutively
     Then:
         - Memory usage stable (no unbounded growth)
         - Connection pool does not exhaust
         - Response times remain consistent (no degradation)
-    
+
     Performance Target: Memory delta < 50MB after 50 requests
     """
     # CLEANUP FIRST: Delete any leftover test blocks

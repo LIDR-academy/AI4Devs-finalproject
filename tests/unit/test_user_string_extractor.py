@@ -36,7 +36,7 @@ class TestUserStringExtractor:
     def test_extract_document_user_strings(self, extractor):
         """
         Test 1: Extract document user strings.
-        
+
         Given: rhino3dm model with document.Strings containing key-value pairs
         When: extract() is called
         Then: collection.document contains all key-value pairs
@@ -73,7 +73,7 @@ class TestUserStringExtractor:
     def test_extract_layer_user_strings(self, extractor):
         """
         Test 2: Extract layer user strings.
-        
+
         Given: Model with 2 layers, each having GetUserStrings() returning distinct pairs
         When: extract() is called
         Then: collection.layers contains dict keyed by layer name with correct strings
@@ -126,7 +126,7 @@ class TestUserStringExtractor:
     def test_extract_object_user_strings(self, extractor):
         """
         Test 3: Extract object user strings.
-        
+
         Given: Model with 3 objects having user strings (ISO_Code, Mass, Notes)
         When: extract() is called
         Then: collection.objects contains dict keyed by object UUID with all strings
@@ -201,7 +201,7 @@ class TestUserStringExtractor:
     def test_empty_document_user_strings(self, extractor):
         """
         Test 4: Empty user strings (document).
-        
+
         Given: Document with NO user strings (Strings collection empty)
         When: extract() is called
         Then: collection.document is empty dict (not None, not error)
@@ -224,7 +224,7 @@ class TestUserStringExtractor:
     def test_layer_without_user_strings(self, extractor):
         """
         Test 5: Layer without user strings.
-        
+
         Given: Model with layers but NO layer.GetUserStrings() available
         When: extract() is called
         Then: collection.layers is empty dict (graceful handling)
@@ -257,7 +257,7 @@ class TestUserStringExtractor:
     def test_mixed_objects_some_have_strings(self, extractor):
         """
         Test 6: Mixed scenario (some objects have strings, some don't).
-        
+
         Given: 5 objects, only 2 have user strings
         When: extract() is called
         Then: collection.objects contains only those 2 UUIDs (sparse dict)
@@ -327,7 +327,7 @@ class TestUserStringExtractor:
     def test_invalid_model_none(self, extractor):
         """
         Test 7: Invalid model (None).
-        
+
         Given: model = None
         When: extract() is called
         Then: Returns empty UserStringCollection (no exception raised)
@@ -344,7 +344,7 @@ class TestUserStringExtractor:
     def test_api_exception_getuserstrings_fails(self, extractor):
         """
         Test 8: API exceptions (GetUserStrings fails).
-        
+
         Given: layer.GetUserStrings() raises AttributeError
         When: extract() is called
         Then: Logs warning and continues with other layers (resilient)

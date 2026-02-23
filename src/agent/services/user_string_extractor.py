@@ -21,7 +21,7 @@ logger = structlog.get_logger()
 class UserStringExtractor:
     """
     Service for extracting user strings from Rhino models.
-    
+
     Implements the extraction logic for document-level, layer-level,
     and object-level user strings using rhino3dm API.
     """
@@ -29,10 +29,10 @@ class UserStringExtractor:
     def extract(self, model) -> UserStringCollection:
         """
         Extract all user strings from a rhino3dm.File3dm model.
-        
+
         Args:
             model: rhino3dm.File3dm object (already parsed)
-            
+
         Returns:
             UserStringCollection with document/layer/object user strings
         """
@@ -66,10 +66,10 @@ class UserStringExtractor:
     def _extract_document_strings(self, model) -> Dict[str, str]:
         """
         Extract user strings from document.
-        
+
         Args:
             model: rhino3dm.File3dm object
-            
+
         Returns:
             Dict of key-value pairs from document strings
         """
@@ -99,10 +99,10 @@ class UserStringExtractor:
     def _extract_layer_strings(self, model) -> Dict[str, Dict[str, str]]:
         """
         Extract user strings from all layers.
-        
+
         Args:
             model: rhino3dm.File3dm object
-            
+
         Returns:
             Dict mapping layer_name -> user strings dict
         """
@@ -164,10 +164,10 @@ class UserStringExtractor:
     def _extract_object_strings(self, model) -> Dict[str, Dict[str, str]]:
         """
         Extract user strings from all objects.
-        
+
         Args:
             model: rhino3dm.File3dm object
-            
+
         Returns:
             Dict mapping object_uuid -> user strings dict
         """

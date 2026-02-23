@@ -23,7 +23,7 @@ logger = structlog.get_logger()
 class RhinoParserService:
     """
     Service for parsing Rhino .3dm files.
-    
+
     Provides methods to extract layer information and metadata
     from .3dm files using the rhino3dm library.
     """
@@ -31,10 +31,10 @@ class RhinoParserService:
     def parse_file(self, file_path: str) -> FileProcessingResult:
         """
         Parse a .3dm file and extract metadata.
-        
+
         Args:
             file_path: Absolute path to the .3dm file
-            
+
         Returns:
             FileProcessingResult with parsed data or error information
         """

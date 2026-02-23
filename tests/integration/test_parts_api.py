@@ -34,7 +34,7 @@ client = TestClient(app)
 def test_fetch_all_parts_no_filters(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 1): Fetch all parts without filters.
-    
+
     Given: Database contains 5 blocks with varied status/tipologia
     When: GET /api/parts (no query params)
     Then:
@@ -88,7 +88,7 @@ def test_fetch_all_parts_no_filters(supabase_client: Client):
 def test_filter_by_status_only(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 2): Filter by status only.
-    
+
     Given: Blocks with status = [validated, in_fabrication, completed]
     When: GET /api/parts?status=validated
     Then:
@@ -140,7 +140,7 @@ def test_filter_by_status_only(supabase_client: Client):
 def test_filter_by_tipologia_only(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 3): Filter by tipologia only.
-    
+
     Given: Blocks with tipologia = [capitel, columna, dovela]
     When: GET /api/parts?tipologia=capitel
     Then:
@@ -182,7 +182,7 @@ def test_filter_by_tipologia_only(supabase_client: Client):
 def test_filter_by_workshop_id_only(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 4): Filter by workshop_id only.
-    
+
     Given: Blocks with workshop_id = [workshop-A, workshop-B, NULL]
     When: GET /api/parts?workshop_id=<workshop-A-uuid>
     Then:
@@ -228,7 +228,7 @@ def test_filter_by_workshop_id_only(supabase_client: Client):
 def test_multiple_filters_combined(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 5): Multiple filters combined.
-    
+
     Given: 10 blocks with varied combinations of status/tipologia/workshop_id
     When: GET /api/parts?status=validated&tipologia=columna&workshop_id=<uuid>
     Then:
@@ -281,7 +281,7 @@ def test_multiple_filters_combined(supabase_client: Client):
 def test_parts_include_new_columns_low_poly_url_bbox(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 6): Parts include new columns (low_poly_url, bbox).
-    
+
     Given: Block with low_poly_url and bbox populated
     When: GET /api/parts
     Then:
@@ -338,7 +338,7 @@ def test_parts_include_new_columns_low_poly_url_bbox(supabase_client: Client):
 def test_no_parts_match_filters(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 7): No parts match filters.
-    
+
     Given: Blocks with status = [validated, completed]
     When: GET /api/parts?status=rejected
     Then:
@@ -380,7 +380,7 @@ def test_no_parts_match_filters(supabase_client: Client):
 def test_parts_with_null_low_poly_url(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 8): Parts with NULL low_poly_url.
-    
+
     Given: Block with low_poly_url = NULL (not yet processed by agent)
     When: GET /api/parts
     Then:
@@ -425,7 +425,7 @@ def test_parts_with_null_low_poly_url(supabase_client: Client):
 def test_parts_with_null_bbox(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 9): Parts with NULL bbox.
-    
+
     Given: Block with bbox = NULL (not yet extracted)
     When: GET /api/parts
     Then:
@@ -469,7 +469,7 @@ def test_parts_with_null_bbox(supabase_client: Client):
 def test_empty_database_no_blocks_exist(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 10): Empty database (no blocks exist).
-    
+
     Given: Clean database, no blocks inserted
     When: GET /api/parts
     Then:
@@ -493,7 +493,7 @@ def test_empty_database_no_blocks_exist(supabase_client: Client):
 def test_archived_parts_excluded(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 11): Archived parts excluded from results.
-    
+
     Given: Block A (is_archived = false), Block B (is_archived = true)
     When: GET /api/parts
     Then:
@@ -533,7 +533,7 @@ def test_archived_parts_excluded(supabase_client: Client):
 def test_authentication_required(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 12): Authentication required.
-    
+
     Given: No Authorization header
     When: GET /api/parts
     Then:
@@ -545,7 +545,7 @@ def test_authentication_required(supabase_client: Client):
 
     # ACT: Make request without auth (TestClient may bypass middleware, mock if needed)
     # For now, this is a placeholder expecting the endpoint to enforce auth
-    response = client.get("/api/parts")
+    client.get("/api/parts")
 
     # ASSERT: If auth is enforced, should get 401
     # If not yet implemented, this will fail (TDD-RED)
@@ -557,7 +557,7 @@ def test_authentication_required(supabase_client: Client):
 def test_invalid_status_enum_value(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 13): Invalid status enum value.
-    
+
     Given: Query param status = "invalid_status"
     When: GET /api/parts?status=invalid_status
     Then:
@@ -578,7 +578,7 @@ def test_invalid_status_enum_value(supabase_client: Client):
 def test_invalid_uuid_format_for_workshop_id(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 14): Invalid UUID format for workshop_id.
-    
+
     Given: Query param workshop_id = "not-a-valid-uuid"
     When: GET /api/parts?workshop_id=not-a-valid-uuid
     Then:
@@ -599,7 +599,7 @@ def test_invalid_uuid_format_for_workshop_id(supabase_client: Client):
 def test_sql_injection_prevention(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 15): SQL injection prevention.
-    
+
     Given: Malicious SQL in query param
     When: GET /api/parts?status=validated'; DROP TABLE blocks;--
     Then:
@@ -616,7 +616,7 @@ def test_sql_injection_prevention(supabase_client: Client):
 
     # Verify table still exists (attempt a safe query)
     try:
-        result = supabase_client.table("blocks").select("id").limit(1).execute()
+        supabase_client.table("blocks").select("id").limit(1).execute()
         # If this doesn't raise an exception, table exists
         assert True, "Table 'blocks' exists (injection prevented)"
     except Exception as e:
@@ -628,7 +628,7 @@ def test_sql_injection_prevention(supabase_client: Client):
 def test_query_uses_idx_blocks_canvas_query_index(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 16): Query uses idx_blocks_canvas_query index.
-    
+
     Given: 500 blocks in database
     When: Query with all 3 filters (status, tipologia, workshop_id)
     Then:
@@ -655,7 +655,7 @@ def test_query_uses_idx_blocks_canvas_query_index(supabase_client: Client):
 def test_response_size_under_200kb_with_realistic_dataset(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 17): Response size <200KB with realistic dataset.
-    
+
     Given: 500 blocks with realistic data
     When: GET /api/parts (no filters)
     Then:
@@ -681,7 +681,7 @@ def test_response_size_under_200kb_with_realistic_dataset(supabase_client: Clien
 def test_rls_applies_for_workshop_users(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 18): RLS applies for workshop users.
-    
+
     Given:
         - User: role=workshop, workshop_id=workshop-A
         - Block 1: workshop_id=workshop-A (assigned to user)
@@ -714,7 +714,7 @@ def test_rls_applies_for_workshop_users(supabase_client: Client):
         supabase_client.table("blocks").insert(block).execute()
 
     # ACT: Request with workshop user token (TODO: mock auth)
-    response = client.get("/api/parts")
+    client.get("/api/parts")
 
     # ASSERT: Placeholder - will fail in TDD-RED
     # Real test needs to initialize client with workshop user token
@@ -728,7 +728,7 @@ def test_rls_applies_for_workshop_users(supabase_client: Client):
 def test_bim_manager_sees_all_parts_no_rls_filter(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 19): BIM Manager sees ALL parts (no RLS filter).
-    
+
     Given:
         - User: role=bim_manager
         - Blocks with varied workshop assignments (A, B, NULL)
@@ -755,7 +755,7 @@ def test_bim_manager_sees_all_parts_no_rls_filter(supabase_client: Client):
         supabase_client.table("blocks").insert(block).execute()
 
     # ACT: Request with BIM Manager token (TODO: mock auth)
-    response = client.get("/api/parts")
+    client.get("/api/parts")
 
     # ASSERT: Placeholder - will fail in TDD-RED
     # Real test needs to verify all 3 blocks are returned
@@ -769,7 +769,7 @@ def test_bim_manager_sees_all_parts_no_rls_filter(supabase_client: Client):
 def test_consistent_ordering_created_at_desc(supabase_client: Client):
     """
     T-0501-BACK (TDD-RED Test 20): Consistent ordering (created_at DESC).
-    
+
     Given: 5 blocks inserted at different timestamps
     When: GET /api/parts
     Then:

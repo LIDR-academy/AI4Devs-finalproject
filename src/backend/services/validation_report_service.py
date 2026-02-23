@@ -2,7 +2,7 @@
 Validation Report Service - Business logic for validation report operations.
 
 This module contains the core business logic for creating and persisting
-validation reports, separate from the API routing layer to follow Clean 
+validation reports, separate from the API routing layer to follow Clean
 Architecture principles.
 """
 from datetime import datetime
@@ -16,7 +16,7 @@ from constants import TABLE_BLOCKS
 class ValidationReportService:
     """
     Service class for handling validation report operations.
-    
+
     This class encapsulates all business logic related to creating,
     saving, and retrieving validation reports from the database.
     """
@@ -24,7 +24,7 @@ class ValidationReportService:
     def __init__(self, supabase_client: Client):
         """
         Initialize the validation report service.
-        
+
         Args:
             supabase_client: Configured Supabase client instance
         """
@@ -38,15 +38,15 @@ class ValidationReportService:
     ) -> ValidationReport:
         """
         Create a ValidationReport from validation results.
-        
+
         Args:
             errors: List of validation errors from validators
             metadata: Extracted metadata (user strings, layer info, etc.)
             validated_by: Identifier of the validator (default: "agent-worker")
-            
+
         Returns:
             Complete ValidationReport with timestamp
-            
+
         Logic:
             - is_valid = True if errors list is empty, False otherwise
             - validated_at = current UTC datetime
@@ -70,22 +70,22 @@ class ValidationReportService:
     ) -> Tuple[bool, Optional[str]]:
         """
         Persist validation report to database.
-        
+
         Args:
             block_id: UUID of the block record to update
             report: ValidationReport to persist
-            
+
         Returns:
             Tuple of (success: bool, error_message: Optional[str])
             - (True, None) if save successful
             - (False, error_msg) if save failed
-            
+
         Implementation:
             1. Serialize ValidationReport to dict using .model_dump()
             2. Execute UPDATE blocks SET validation_report = ... WHERE id = block_id
             3. Verify update affected exactly 1 row (block exists)
             4. Return success status
-            
+
         Error Handling:
             - Block ID not found → (False, "Block not found")
             - Database error → (False, str(exception))
@@ -115,17 +115,17 @@ class ValidationReportService:
     ) -> Tuple[Optional[ValidationReport], Optional[str]]:
         """
         Retrieve validation report from database.
-        
+
         Args:
             block_id: UUID of the block record
-            
+
         Returns:
             Tuple of (report: Optional[ValidationReport], error: Optional[str])
             - (ValidationReport, None) if found
             - (None, "Block not found") if block doesn't exist
             - (None, "No validation report") if block exists but no report
             - (None, error_msg) if database error
-            
+
         Implementation:
             1. SELECT validation_report FROM blocks WHERE id = block_id
             2. If no rows → block not found

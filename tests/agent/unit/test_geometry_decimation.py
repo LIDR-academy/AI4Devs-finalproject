@@ -17,7 +17,7 @@ from uuid import uuid4
 def mock_rhino_simple_mesh():
     """
     Mock rhino3dm File with a simple mesh (1000 triangular faces).
-    
+
     Returns a mock with:
     - 1 mesh object
     - 1000 triangular faces
@@ -102,7 +102,7 @@ def mock_rhino_with_quads():
     """
     Mock rhino3dm File with 50% quad faces and 50% triangular faces.
     Uses icosphere as base, then adds mock quad faces for testing quad→tri conversion.
-    
+
     Total expected after conversion: 500 quads → 1000 tris + 500 tris = 1500 triangles.
     """
     import trimesh
@@ -200,7 +200,7 @@ def mock_rhino_huge_geometry():
 class TestGeometryDecimation:
     """
     Unit tests for Low-Poly GLB generation task.
-    
+
     These tests verify mesh decimation logic, Face tuple handling,
     and error conditions without touching real S3 or database.
     """
@@ -208,10 +208,10 @@ class TestGeometryDecimation:
     def test_simple_mesh_decimation(self, mock_rhino_simple_mesh):
         """
         Test 1 (Happy Path): Simple mesh decimation from 1000 to ~1000 triangles.
-        
+
         Given: Block with .3dm containing 1 mesh of 1000 triangular faces
         When: generate_low_poly_glb(block_id) executes
-        Then: 
+        Then:
           - GLB generated with ~1000 triangles (±10% tolerance)
           - Task result status='success'
           - decimated_faces between 900-1100
@@ -229,7 +229,7 @@ class TestGeometryDecimation:
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
 
-            with patch('src.agent.tasks.geometry_processing.s3_client') as mock_s3:
+            with patch('src.agent.tasks.geometry_processing.s3_client'):
                 with patch('rhino3dm.File3dm.Read', return_value=mock_rhino_simple_mesh):
                     with patch('src.agent.tasks.geometry_processing.os.path.getsize', return_value=400 * 1024):  # 400KB
                         with patch('src.agent.tasks.geometry_processing.get_supabase_client') as mock_supabase_fn:
@@ -253,14 +253,14 @@ class TestGeometryDecimation:
     def test_multiple_meshes_merge(self, mock_rhino_multiple_meshes):
         """
         Test 2 (Happy Path): Multiple meshes merged before decimation.
-        
-        Given: Block with .3dm containing 10 meshes (icospheres, ~12,800 total triangles)  
+
+        Given: Block with .3dm containing 10 meshes (icospheres, ~12,800 total triangles)
         When: Task executes
-        Then: 
+        Then:
           - Meshes merged into single geometry before decimation
           - Result final ~1000 triangles (successful decimation)
           - original_faces ≈ 12,800 (10 icospheres × 1280 faces)
-        
+
         NOTE: Uses trimesh.creation.icosphere() to generate VALID watertight geometry.
         Previous mock-based fixtures created degenerate topology that couldn't be decimated.
         """
@@ -297,10 +297,10 @@ class TestGeometryDecimation:
     def test_quad_faces_handling(self, mock_rhino_with_quads):
         """
         Test 3 (Happy Path): Quad faces split into 2 triangles.
-        
+
         Given: Rhino mesh with 50% quads (500), 50% triangles (500)
         When: Task converts faces
-        Then: 
+        Then:
           - Each quad detected via len(face)==4 or IsQuad=True
           - Quad split into 2 triangles
           - Total triangles = 500 + (500 quads × 2) = 1500 before decimation
@@ -342,10 +342,10 @@ class TestGeometryDecimation:
     def test_already_low_poly_skip_decimation(self):
         """
         Test 4 (Happy Path): Already low-poly mesh skips decimation.
-        
+
         Given: Block with .3dm containing 800 triangles (below DECIMATION_TARGET_FACES)
         When: Task executes
-        Then: 
+        Then:
           - Decimation skipped (log message: "Mesh already below target")
           - GLB exported without modifying geometry
           - decimated_faces = 800 (no reduction)
@@ -402,10 +402,10 @@ class TestGeometryDecimation:
     def test_empty_mesh_no_geometry_found(self, mock_rhino_empty):
         """
         Test 5 (Edge Case): Empty mesh with no geometry raises ValueError.
-        
+
         Given: Block with .3dm with no meshes (only curves/NURBS)
         When: Task executes
-        Then: 
+        Then:
           - Raise ValueError("No meshes found in {iso_code}")
           - Task result: status='error', error_message='No meshes found'
         """
@@ -432,15 +432,15 @@ class TestGeometryDecimation:
     def test_huge_geometry_performance(self, mock_rhino_huge_geometry):
         """
         Test 6 (Edge Case): Huge geometry (150K faces) completes within timeout.
-        
+
         Given: Block with .3dm containing 150,000 triangles
         When: Task executes (timeout 10 min)
-        Then: 
+        Then:
           - Log warning: "Original mesh exceeds 100K faces"
           - Decimation completes successfully (trimesh efficient)
           - Result ~1000 faces (99.3% reduction)
           - Execution time <540s (soft time limit)
-        
+
         STATUS: SKIPPED - Docker OOM kill (exit 137) with default memory limit.
         TODO: Implement chunked decimation or increase Docker memory to 4GB.
         """
@@ -479,10 +479,10 @@ class TestGeometryDecimation:
     def test_invalid_s3_url_404_error(self):
         """
         Test 7 (Edge Case): Invalid S3 URL (deleted file) triggers retry.
-        
+
         Given: Block with url_original pointing to deleted .3dm file
         When: Task executes download
-        Then: 
+        Then:
           - S3 download raises 404 error
           - Task retries 3x (Celery retry policy)
           - After 3 failures: status='error', error_message contains 'S3 download failed'
@@ -509,10 +509,10 @@ class TestGeometryDecimation:
     def test_malformed_3dm_corrupted_file(self):
         """
         Test 8 (Edge Case): Malformed .3dm (corrupted) fails parsing.
-        
+
         Given: Block with .3dm corrupted (header truncated)
         When: rhino3dm.File3dm.Read() attempts parse
-        Then: 
+        Then:
           - rhino3dm returns None (failed parse)
           - Task raises ValueError("Failed to parse .3dm file")
           - Task retries (idempotent operation)
@@ -541,10 +541,10 @@ class TestGeometryDecimation:
     def test_sql_injection_protection(self):
         """
         Test 9 (Security): SQL injection in block_id is sanitized.
-        
+
         Given: block_id = "'; DROP TABLE blocks; --"
         When: Task queries DB with malicious input
-        Then: 
+        Then:
           - Parameterized query (%s placeholder) sanitizes input
           - No SQL execution occurs
           - Query returns 0 rows → ValueError("Block not found")

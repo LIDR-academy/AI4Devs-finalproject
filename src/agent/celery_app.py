@@ -73,10 +73,3 @@ celery_app.conf.update(
     # Task acknowledgment
     task_acks_late=True,  # Acknowledge after task completion
 )
-
-# Import tasks to register them with Celery
-# This MUST happen after celery_app is configured
-try:
-    import tasks  # When executed as worker from /app
-except ModuleNotFoundError:
-    pass  # When imported as module in tests

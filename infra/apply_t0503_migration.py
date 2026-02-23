@@ -18,26 +18,26 @@ MIGRATION_SQL = """
 BEGIN;
 
 -- Add low_poly_url column
-ALTER TABLE blocks 
+ALTER TABLE blocks
 ADD COLUMN IF NOT EXISTS low_poly_url TEXT NULL;
 
-COMMENT ON COLUMN blocks.low_poly_url IS 
-'URL pública del archivo GLB simplificado (~1000 triángulos). 
-Generado por Celery task tras validación. 
+COMMENT ON COLUMN blocks.low_poly_url IS
+'URL pública del archivo GLB simplificado (~1000 triángulos).
+Generado por Celery task tras validación.
 Format: https://xyz.supabase.co/storage/v1/object/public/processed-geometry/low-poly/{id}.glb';
 
 -- Add bbox column
-ALTER TABLE blocks 
+ALTER TABLE blocks
 ADD COLUMN IF NOT EXISTS bbox JSONB NULL;
 
-COMMENT ON COLUMN blocks.bbox IS 
-'3D Bounding box from Rhino model. 
-Schema: {"min": [x,y,z], "max": [x,y,z]} 
+COMMENT ON COLUMN blocks.bbox IS
+'3D Bounding box from Rhino model.
+Schema: {"min": [x,y,z], "max": [x,y,z]}
 Example: {"min": [-2.5, 0, -2.5], "max": [2.5, 5, 2.5]}';
 
 -- Create canvas query index
-CREATE INDEX IF NOT EXISTS idx_blocks_canvas_query 
-ON blocks(status, tipologia, workshop_id) 
+CREATE INDEX IF NOT EXISTS idx_blocks_canvas_query
+ON blocks(status, tipologia, workshop_id)
 WHERE is_archived = false;
 
 -- Create processing queue index
@@ -53,26 +53,26 @@ DECLARE
 BEGIN
     -- Check columns exist
     SELECT COUNT(*) INTO col_count
-    FROM information_schema.columns 
-    WHERE 
-        table_name = 'blocks' 
+    FROM information_schema.columns
+    WHERE
+        table_name = 'blocks'
         AND column_name IN ('low_poly_url', 'bbox');
-    
+
     IF col_count <> 2 THEN
         RAISE EXCEPTION 'Migration failed: columns not created (expected 2, got %)', col_count;
     END IF;
-    
+
     -- Check indexes exist
     SELECT COUNT(*) INTO idx_count
-    FROM pg_indexes 
-    WHERE 
+    FROM pg_indexes
+    WHERE
         tablename = 'blocks'
         AND indexname IN ('idx_blocks_canvas_query', 'idx_blocks_low_poly_processing');
-    
+
     IF idx_count <> 2 THEN
         RAISE EXCEPTION 'Migration failed: indexes not created (expected 2, got %)', idx_count;
     END IF;
-    
+
     RAISE NOTICE 'Migration successful: low_poly_url & bbox columns + 2 indexes created';
 END$$;
 

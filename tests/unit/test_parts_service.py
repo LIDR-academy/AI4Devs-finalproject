@@ -343,7 +343,7 @@ def test_list_parts_validates_uuid_format():
     GIVEN workshop_id parameter is an invalid UUID string
     WHEN list_parts(workshop_id="not-a-uuid") is called
     THEN query executes (validation happens at API layer, not service layer)
-    
+
     NOTE: UUID validation is handled by the API endpoint (parts.py _validate_uuid_format helper),
     not by the service layer. This test verifies service accepts any string and passes it to DB.
     """
@@ -432,11 +432,11 @@ def test_list_parts_returns_consistent_count():
 def test_list_parts_rls_placeholder_workshop_user():
     """
     PLACEHOLDER TEST: RLS logic for workshop users.
-    
+
     GIVEN user has role=workshop and workshop_id=X
     WHEN list_parts() is called
     THEN service applies RLS filter: (workshop_id=X OR workshop_id IS NULL)
-    
+
     NOTE: This test will fail in TDD-RED as RLS logic not yet implemented.
     Implementation depends on user context passing (JWT decode, Supabase RLS).
     """
@@ -447,11 +447,11 @@ def test_list_parts_rls_placeholder_workshop_user():
 def test_list_parts_rls_placeholder_bim_manager():
     """
     PLACEHOLDER TEST: RLS logic for BIM Managers.
-    
+
     GIVEN user has role=bim_manager
     WHEN list_parts() is called
     THEN service does NOT apply workshop filter (sees all parts)
-    
+
     NOTE: This test will fail in TDD-RED as RLS logic not yet implemented.
     """
     # TODO: Implement when RLS service layer logic is added

@@ -20,10 +20,10 @@ client = TestClient(app)
 def test_confirm_upload_happy_path(supabase_client: Client):
     """
     T-004-BACK (FASE ROJA): Verificar confirmación exitosa de archivo subido.
-    
+
     Given: Un archivo ha sido subido exitosamente a Supabase Storage
     When: El frontend llama a POST /api/upload/confirm con file_id y file_key
-    Then: 
+    Then:
         - El endpoint retorna 200 OK
         - Verifica existencia del archivo en storage
         - Crea un registro en la tabla 'events'
@@ -53,7 +53,7 @@ def test_confirm_upload_happy_path(supabase_client: Client):
         pass  # Block doesn't exist or already deleted
 
     # Upload test file to Supabase Storage
-    upload_response = supabase_client.storage.from_(bucket_name).upload(
+    supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
         file=test_content,
         file_options={"content-type": "application/x-rhino"}
@@ -99,7 +99,7 @@ def test_confirm_upload_happy_path(supabase_client: Client):
 def test_confirm_upload_file_not_found():
     """
     T-004-BACK (FASE ROJA): Verificar manejo de error cuando archivo no existe.
-    
+
     Given: Un file_key que NO existe en Supabase Storage
     When: El frontend intenta confirmar el upload
     Then: El endpoint retorna 404 con mensaje de error apropiado
@@ -124,7 +124,7 @@ def test_confirm_upload_file_not_found():
 def test_confirm_upload_invalid_payload():
     """
     T-004-BACK (FASE ROJA): Verificar validación de payload.
-    
+
     Given: Un payload inválido (falta file_key)
     When: Se llama al endpoint
     Then: Retorna 422 Unprocessable Entity (validación Pydantic)
@@ -148,14 +148,14 @@ def test_confirm_upload_invalid_payload():
 def test_confirm_upload_creates_event_record(supabase_client: Client):
     """
     T-004-BACK (FASE ROJA): Verificar creación de registro en tabla 'events'.
-    
+
     Given: Un archivo confirmado exitosamente
     When: El endpoint procesa la confirmación
-    Then: 
+    Then:
         - Se crea un registro en la tabla 'events' con tipo 'upload.confirmed'
         - El registro contiene file_id, file_key, timestamp
         - El event_id es retornado en la respuesta
-    
+
     NOTE: Este test requiere que exista la tabla 'events' en Supabase.
           Para FASE ROJA, esto fallará. En FASE VERDE, implementaremos la tabla.
     """

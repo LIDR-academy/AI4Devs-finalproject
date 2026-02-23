@@ -17,7 +17,7 @@ from uuid import uuid4
 def test_block_id(supabase_client):
     """
     Create a test block in 'validated' status with mock .3dm URL.
-    
+
     Returns block_id UUID ready for Low-Poly generation.
     """
     block_id = str(uuid4())
@@ -43,7 +43,7 @@ def test_block_id(supabase_client):
 def test_3dm_file():
     """
     Path to real test fixture .3dm file in tests/fixtures/.
-    
+
     This file should contain a simple mesh with ~5000 triangles.
     """
     fixtures_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'fixtures')
@@ -60,7 +60,7 @@ def test_3dm_file():
 class TestLowPolyPipeline:
     """
     Integration tests for full Low-Poly generation pipeline.
-    
+
     These tests verify end-to-end workflow with real services:
     - PostgreSQL database (blocks table)
     - Supabase Storage (S3-compatible)
@@ -71,13 +71,13 @@ class TestLowPolyPipeline:
     def test_full_pipeline_upload_to_low_poly(self, supabase_client, test_3dm_file):
         """
         Test 13 (Integration): Full pipeline from upload to low_poly_url population.
-        
+
         Given: Fresh .3dm file uploaded via US-001 flow
-        When: 
+        When:
           1. File validated successfully (US-002 agent) → status='validated'
           2. T-0502 task enqueued automatically (future trigger, manual for now)
           3. Task executes
-        Then: 
+        Then:
           - After max 120 seconds: blocks.low_poly_url populated
           - GET /api/parts returns part with valid GLB URL
           - GLB file exists in S3 processed-geometry/low-poly/ bucket
@@ -147,10 +147,10 @@ class TestLowPolyPipeline:
     def test_s3_public_url_accessibility(self, supabase_client, test_block_id):
         """
         Test 14 (Integration): S3 public URL is accessible without authentication.
-        
+
         Given: Task uploaded GLB to processed-geometry/low-poly/
         When: Fetch URL without authentication: curl https://{url}
-        Then: 
+        Then:
           - HTTP 200 response
           - Content-Type: model/gltf-binary or application/octet-stream
           - File size <500KB
@@ -191,10 +191,10 @@ class TestLowPolyPipeline:
     def test_database_constraint_validation(self, supabase_client, test_block_id):
         """
         Test 15 (Integration): Database constraints accept valid low_poly_url values.
-        
+
         Given: blocks.low_poly_url column accepts TEXT NULL
         When: Task updates with 500-char URL
-        Then: 
+        Then:
           - Update succeeds (TEXT supports arbitrary length)
           - Value stored correctly without truncation
           - Query returns exact URL
@@ -233,7 +233,7 @@ class TestPerformanceMetrics:
     def test_processing_time_under_120_seconds(self, supabase_client, test_block_id):
         """
         Verify task completes within 120 seconds for typical .3dm files.
-        
+
         Target: <120 seconds per file (soft limit 540s, hard limit 600s).
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
@@ -251,10 +251,10 @@ class TestPerformanceMetrics:
     def test_task_idempotency(self, supabase_client, test_block_id):
         """
         Verify task can be retried safely (idempotent S3 uploads).
-        
+
         Given: Task executed once successfully
         When: Task executed again with same block_id
-        Then: 
+        Then:
           - Second execution succeeds (no errors)
           - GLB file overwritten (same filename)
           - low_poly_url remains valid

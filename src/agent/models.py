@@ -17,10 +17,10 @@ from datetime import datetime
 class UserStringCollection(BaseModel):
     """
     User strings extracted from a Rhino .3dm file.
-    
+
     Rhino allows attaching custom key-value pairs to documents, layers, and objects.
     These are critical for ISO-19650 compliance and manufacturing traceability.
-    
+
     Attributes:
         document: Document-level user strings (project metadata)
         layers: Dict mapping layer_name -> user strings dict
@@ -70,10 +70,10 @@ class UserStringCollection(BaseModel):
 class LayerInfo(BaseModel):
     """
     Metadata extracted from a Rhino layer.
-    
+
     Represents one layer in a .3dm file with its geometric and organizational properties.
     Used during parsing to build the validation report metadata.
-    
+
     Attributes:
         name: Layer name (e.g., "SF-C12-M-001" for nomenclature validation)
         index: Zero-based layer index in the .3dm file
@@ -91,10 +91,10 @@ class LayerInfo(BaseModel):
 class FileProcessingResult(BaseModel):
     """
     Aggregated result from .3dm file parsing and validation.
-    
+
     This model represents the complete output of the rhino_parser_service,
     combining extraction success status with parsed data.
-    
+
     Attributes:
         success: Processing completion status (False if file corrupt/unreadable)
         error_message: Human-readable error if success=False

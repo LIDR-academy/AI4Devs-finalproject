@@ -18,7 +18,7 @@ STORAGE_BUCKET_RAW_UPLOADS = "raw-uploads"
 class FileDownloadService:
     """
     Service for downloading files from Supabase Storage.
-    
+
     Handles S3 download operations with error handling and cleanup.
     """
 
@@ -31,10 +31,10 @@ class FileDownloadService:
     def download_from_s3(self, s3_key: str) -> tuple[bool, str, str]:
         """
         Download file from S3 to temporary directory.
-        
+
         Args:
             s3_key: S3 key/path of the file (e.g., "uploads/file.3dm")
-            
+
         Returns:
             Tuple of (success, local_path, error_message)
             - success: Whether download succeeded
@@ -77,7 +77,7 @@ class FileDownloadService:
     def cleanup_temp_file(self, file_path: str) -> None:
         """
         Delete temporary file after processing.
-        
+
         Args:
             file_path: Path to temporary file
         """

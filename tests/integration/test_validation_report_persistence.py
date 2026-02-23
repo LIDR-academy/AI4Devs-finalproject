@@ -20,13 +20,13 @@ from schemas import ValidationErrorItem, ValidationReport
 def test_block_id(supabase_client):
     """
     Create a test block in the database for integration tests.
-    
+
     Cleanup after test completes to avoid pollution.
     """
     # Create a test block record
     block_id = str(uuid4())
     iso_code = f"TEST-{uuid4().hex[:8].upper()}-XX-001"
-    result = supabase_client.table("blocks").insert({
+    supabase_client.table("blocks").insert({
         "id": block_id,
         "iso_code": iso_code,
         "status": "uploaded",
@@ -45,7 +45,7 @@ def test_save_and_retrieve_report_roundtrip(supabase_client, test_block_id):
     GIVEN a ValidationReport is created and saved to database
     WHEN retrieved using get_report()
     THEN retrieved report matches original (except datetime precision)
-    
+
     This test verifies:
     - JSONB serialization/deserialization integrity
     - Pydantic model round-trip conversion
@@ -130,7 +130,7 @@ def test_jsonb_query_on_validation_status(supabase_client):
     GIVEN multiple blocks with different validation statuses
     WHEN querying blocks WHERE validation_report->>'is_valid' = 'false'
     THEN only blocks with failed validations are returned
-    
+
     This test verifies:
     - JSONB index is used for filtering
     - Queries return correct subset of data
@@ -207,7 +207,7 @@ def test_get_report_block_not_found(supabase_client):
     GIVEN a block_id that does not exist in database
     WHEN get_report() is called
     THEN return (None, "Block not found")
-    
+
     This test verifies error handling for non-existent blocks.
     """
     # Arrange

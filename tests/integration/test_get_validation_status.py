@@ -21,7 +21,7 @@ client = TestClient(app)
 def test_get_validation_status_endpoint_validated_block(supabase_client: Client):
     """
     T-030-BACK (FASE ROJA): Get validation status for a validated block.
-    
+
     Given: A block exists in DB with validation_report filled, status=validated
     When: GET /api/parts/{block_id}/validation is called
     Then:
@@ -93,7 +93,7 @@ def test_get_validation_status_endpoint_validated_block(supabase_client: Client)
 def test_get_validation_status_endpoint_unvalidated_block(supabase_client: Client):
     """
     T-030-BACK (FASE ROJA): Get validation status for an unvalidated block.
-    
+
     Given: A block exists in DB with validation_report=NULL, status=uploaded
     When: GET /api/parts/{block_id}/validation is called
     Then:
@@ -144,7 +144,7 @@ def test_get_validation_status_endpoint_unvalidated_block(supabase_client: Clien
 def test_get_validation_status_endpoint_not_found():
     """
     T-030-BACK (FASE ROJA): Get validation status for non-existent block.
-    
+
     Given: A block_id that does not exist in database
     When: GET /api/parts/{random_uuid}/validation is called
     Then:
@@ -173,7 +173,7 @@ def test_get_validation_status_endpoint_not_found():
 def test_get_validation_status_endpoint_invalid_uuid():
     """
     T-030-BACK (FASE ROJA): Get validation status with invalid UUID format.
-    
+
     Given: A malformed UUID string
     When: GET /api/parts/invalid-uuid/validation is called
     Then:
@@ -204,18 +204,18 @@ def test_get_validation_status_endpoint_invalid_uuid():
 def test_get_validation_status_after_confirm_flow(supabase_client: Client):
     """
     T-030-BACK (FASE ROJA): End-to-end flow - Upload → Confirm → Validate → Get Status.
-    
+
     Given: A complete US-002 flow has been executed
     When: Block transitions from uploaded → processing → validated
     Then: GET endpoint reflects the current state correctly
-    
+
     This is a simplified version for RED phase.
     GREEN phase will implement full async validation flow.
     """
     # ARRANGE: Simulate a block that has gone through full validation cycle
     test_block_id = str(uuid4())
     test_iso_code = "TEST-E2E-001"
-    test_file_id = str(uuid4())
+    str(uuid4())
 
     # Clean up: Remove test block if exists
     try:

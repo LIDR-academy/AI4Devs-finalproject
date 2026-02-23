@@ -20,7 +20,7 @@ async def generate_upload_url(request: Request, body: UploadRequest) -> UploadRe
     This endpoint validates the file extension and returns a unique file ID
     along with a signed upload URL that the client can use to upload
     the file directly to Supabase Storage.
-    
+
     **Rate Limit:** 10 requests per minute per IP address to prevent DoS/cost attacks.
 
     Args:

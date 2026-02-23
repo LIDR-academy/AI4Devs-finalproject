@@ -3,7 +3,7 @@ Integration test: User Strings extraction E2E flow
 
 Verifies the complete workflow:
   .3dm file → RhinoParserService → UserStringExtractor → FileProcessingResult
-  
+
 This test validates that user strings are properly extracted and structured
 in the FileProcessingResult model for both document, layer, and object levels.
 """

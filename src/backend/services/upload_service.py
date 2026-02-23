@@ -34,7 +34,7 @@ RHINO_3DM_MAGIC_BYTES = [
 class UploadService:
     """
     Service class for handling file upload operations.
-    
+
     This class encapsulates all business logic related to file uploads,
     including storage verification and event creation.
     """
@@ -53,17 +53,17 @@ class UploadService:
     def _validate_3dm_magic_bytes(self, file_content: bytes) -> bool:
         """
         Validate .3dm file by checking magic bytes (file signature).
-        
+
         This prevents malware injection attacks where executables are renamed
         to .3dm extensions. We verify the file has a legitimate Rhino 3DM
         binary signature.
-        
+
         Args:
             file_content: First 512+ bytes of the uploaded file
-            
+
         Returns:
             True if file has valid Rhino 3DM signature, False otherwise
-            
+
         References:
             - OWASP: A03:2021 – Injection
             - CVE-2022-XXXXX: File upload bypass vulnerabilities
@@ -88,10 +88,10 @@ class UploadService:
     def verify_file_exists_in_storage(self, file_key: str) -> bool:
         """
         Verify that a file exists in Supabase Storage.
-        
+
         Args:
             file_key: The S3 object key (path) of the file
-            
+
         Returns:
             True if file exists, False otherwise
         """
@@ -120,14 +120,14 @@ class UploadService:
     ) -> str:
         """
         Create an event record for a confirmed upload.
-        
+
         Args:
             file_id: UUID of the uploaded file
             file_key: S3 object key where file was uploaded
-            
+
         Returns:
             str: UUID of the created event
-            
+
         Raises:
             Exception: If event creation fails
         """

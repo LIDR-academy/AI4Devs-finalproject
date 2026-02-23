@@ -47,10 +47,10 @@ logger = structlog.get_logger()
 def health_check(self):
     """
     Dummy task for infrastructure validation.
-    
+
     Returns worker metadata to confirm Celery is operational.
     Used by integration tests to verify worker connectivity.
-    
+
     Returns:
         dict: Status metadata including worker_id, hostname, timestamp
     """
@@ -71,7 +71,7 @@ def health_check(self):
 def validate_file(self, part_id: str, s3_key: str):
     """
     Validate .3dm file from S3.
-    
+
     This task:
     1. Updates block status to 'processing'
     2. Downloads .3dm from S3 to /tmp
@@ -80,11 +80,11 @@ def validate_file(self, part_id: str, s3_key: str):
     5. Saves validation report to database
     6. Updates block status to 'validated' or 'error_processing'
     7. Cleans up temporary files
-    
+
     Args:
         part_id: UUID of the part in database
         s3_key: S3 object key for the .3dm file
-    
+
     Returns:
         dict: Result with success status and metadata
     """
@@ -241,8 +241,8 @@ def validate_file(self, part_id: str, s3_key: str):
 
 # ===== T-0502-AGENT: Low-Poly GLB Generation =====
 
-import psycopg2
-from contextlib import contextmanager
+import psycopg2  # noqa: E402
+from contextlib import contextmanager  # noqa: E402
 
 # Additional imports for geometry processing
 try:
@@ -251,7 +251,6 @@ try:
         from constants import (
             TASK_GENERATE_LOW_POLY_GLB,
             DECIMATION_TARGET_FACES,
-            MAX_GLB_SIZE_KB,
             PROCESSED_GEOMETRY_BUCKET,
             LOW_POLY_PREFIX,
             TEMP_DIR,
@@ -273,19 +272,19 @@ except (ImportError, ModuleNotFoundError):
         ERROR_MSG_FAILED_PARSE_3DM,
     )
 
-import rhino3dm
-import trimesh
-import numpy as np
+import rhino3dm  # noqa: E402
+import trimesh  # noqa: E402
+import numpy as np  # noqa: E402
 
 
 @contextmanager
 def get_db_connection():
     """
     Get a PostgreSQL database connection using psycopg2.
-    
+
     Returns a context manager that yields a connection object.
     Connection is automatically closed after use.
-    
+
     Yields:
         psycopg2.connection: Database connection
     """
@@ -323,7 +322,7 @@ s3_client = S3Client()
 def generate_low_poly_glb(self, block_id: str):
     """
     Generate Low-Poly GLB from .3dm file.
-    
+
     Algorithm:
     1. Fetch block metadata from database (url_original, iso_code)
     2. Download .3dm file from S3 to temp directory
@@ -335,13 +334,13 @@ def generate_low_poly_glb(self, block_id: str):
     8. Upload GLB to S3 (processed-geometry/low-poly/)
     9. Update database with low_poly_url
     10. Cleanup temp files
-    
+
     Args:
         block_id: UUID of the block to process
-        
+
     Returns:
         dict with status, low_poly_url, original_faces, decimated_faces, file_size_kb
-        
+
     Raises:
         ValueError: If block not found, no meshes, or parsing fails
         FileNotFoundError: If S3 download fails

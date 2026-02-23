@@ -51,7 +51,7 @@ logger = structlog.get_logger()
 class GeometryValidator:
     """
     Service for validating geometric integrity of Rhino objects.
-    
+
     Performs 3D geometry validation to detect:
     - Invalid geometry (Rhino's internal validity checks)
     - Null/missing geometry
@@ -66,10 +66,10 @@ class GeometryValidator:
     def _get_object_id(self, obj) -> str:
         """
         Extract object ID from Rhino object attributes.
-        
+
         Args:
             obj: Rhino File3dmObject
-            
+
         Returns:
             String representation of object UUID
         """
@@ -81,14 +81,14 @@ class GeometryValidator:
     ) -> List[ValidationErrorItem]:
         """
         Validate all geometric objects in a .3dm file.
-        
+
         Args:
             model: Parsed rhino3dm File3dm object
-            
+
         Returns:
             List of ValidationErrorItem for objects with invalid geometry.
             Empty list if all geometry is valid.
-            
+
         Examples:
             >>> validator = GeometryValidator()
             >>> model = rhino3dm.File3dm.Read("valid_model.3dm")

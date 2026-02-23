@@ -16,16 +16,16 @@ from supabase import Client
 def test_upload_bucket_access(supabase_client: Client) -> None:
     """
     Verify 'raw-uploads' bucket exists and supports basic CRUD operations.
-    
+
     This test confirms that:
     1. The bucket can accept file uploads
     2. Uploaded files can be listed
     3. Public/signed URLs can be generated for uploaded files
     4. Files can be deleted (cleanup)
-    
+
     Args:
         supabase_client: Authenticated Supabase client (from conftest.py fixture)
-        
+
     Assertions:
         - Upload response is not None
         - Uploaded file appears in bucket listing

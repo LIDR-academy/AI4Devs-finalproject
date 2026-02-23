@@ -26,11 +26,11 @@ from supabase import Client
 def cleanup_test_blocks(supabase_client: Client, block_ids: List[str]) -> None:
     """
     Delete test blocks by ID list (idempotent cleanup).
-    
+
     Args:
         supabase_client: Supabase client instance
         block_ids: List of block UUIDs to delete
-    
+
     Example:
         >>> cleanup_test_blocks(client, ["uuid1", "uuid2", "uuid3"])
     """
@@ -44,19 +44,19 @@ def cleanup_test_blocks(supabase_client: Client, block_ids: List[str]) -> None:
 def cleanup_test_blocks_by_pattern(supabase_client: Client, iso_code_pattern: str) -> None:
     """
     Delete test blocks matching an iso_code pattern (idempotent cleanup).
-    
+
     Uses SELECT+DELETE pattern (Supabase .like() doesn't work reliably for DELETE).
-    
+
     Args:
         supabase_client: Supabase client instance
         iso_code_pattern: ISO code pattern for ILIKE match (e.g., "TEST-PERF01%")
-    
+
     Example:
         >>> cleanup_test_blocks_by_pattern(client, "TEST-PERF01%")
         >>> cleanup_test_blocks_by_pattern(client, "ACTIVE%")
-    
+
     Note:
-        This pattern is required because supabase_client.table("blocks").delete().like() 
+        This pattern is required because supabase_client.table("blocks").delete().like()
         does not work correctly. We must SELECT first, then DELETE by ID.
     """
     try:
@@ -80,7 +80,7 @@ def create_realistic_block(
 ) -> Dict[str, Any]:
     """
     Generate a block dictionary with realistic field values.
-    
+
     Args:
         iso_code: Unique ISO code (e.g., "TEST-F01-001")
         status: Block status (validated, completed, pending, etc.)
@@ -89,10 +89,10 @@ def create_realistic_block(
         is_archived: Whether block is archived (default: False)
         include_bbox: Include bounding box field (default: True)
         include_low_poly_url: Include low-poly URL field (default: False)
-    
+
     Returns:
         Dictionary ready for Supabase insert
-    
+
     Example:
         >>> block = create_realistic_block("TEST-001", status="completed")
         >>> supabase_client.table("blocks").insert(block).execute()
@@ -127,10 +127,10 @@ def create_realistic_block(
 def assert_execution_time(max_duration_ms: float):
     """
     Decorator to assert function execution time is under threshold.
-    
+
     Args:
         max_duration_ms: Maximum allowed execution time in milliseconds
-    
+
     Example:
         >>> @assert_execution_time(500)
         >>> def test_fast_query():
@@ -160,14 +160,14 @@ def get_query_plan(
 ) -> Dict[str, Any]:
     """
     Execute EXPLAIN ANALYZE and return parsed query plan.
-    
+
     Args:
         sql_query: SQL query to analyze
         db_connection: psycopg2 connection object
-    
+
     Returns:
         Parsed query plan as dictionary (from JSON format)
-    
+
     Example:
         >>> conn = get_direct_db_connection()
         >>> plan = get_query_plan("SELECT * FROM blocks WHERE status = 'validated'", conn)
@@ -191,22 +191,22 @@ def generate_jwt_token(
 ) -> str:
     """
     Generate test JWT token for RLS policy testing (placeholder).
-    
+
     ⚠️ NOT IMPLEMENTED - Requires JWT signing infrastructure
-    
+
     Args:
         role: User role (workshop_user, bim_manager, admin)
         workshop_id: Workshop UUID (for tenant isolation tests)
         user_id: User UUID
-    
+
     Returns:
         Signed JWT token string
-    
+
     Example:
         >>> token = generate_jwt_token(role="bim_manager")
         >>> headers = {"Authorization": f"Bearer {token}"}
         >>> response = client.get("/api/parts", headers=headers)
-    
+
     TODO: Implement JWT signing with Supabase secret key
     """
     raise NotImplementedError(
@@ -222,12 +222,12 @@ def batch_insert_blocks(
 ) -> None:
     """
     Insert large number of blocks in chunks (avoids Supabase 1000-row limit).
-    
+
     Args:
         supabase_client: Supabase client instance
         blocks: List of block dictionaries to insert
         chunk_size: Number of blocks per batch (default: 500)
-    
+
     Example:
         >>> blocks = [create_realistic_block(f"TEST-{i:04d}") for i in range(1000)]
         >>> batch_insert_blocks(supabase_client, blocks)
@@ -246,14 +246,14 @@ def calculate_percentiles(
 ) -> Dict[str, float]:
     """
     Calculate latency percentiles from list of measurements.
-    
+
     Args:
         latencies: List of latency measurements (milliseconds)
         percentiles: List of percentile values to calculate (default: [50, 95, 99])
-    
+
     Returns:
         Dictionary mapping percentile labels to values (e.g., {"p50": 123.45})
-    
+
     Example:
         >>> latencies = [100, 150, 200, 250, 300]
         >>> stats = calculate_percentiles(latencies)
@@ -276,11 +276,11 @@ def assert_response_schema(
 ) -> None:
     """
     Assert API response contains all expected fields.
-    
+
     Args:
         response_data: JSON response from API
         expected_fields: List of required field names
-    
+
     Example:
         >>> data = response.json()
         >>> assert_response_schema(data, ["parts", "count", "filters_applied"])
@@ -299,11 +299,11 @@ def print_test_summary(
 ) -> None:
     """
     Print formatted test summary (for debugging/logs).
-    
+
     Args:
         test_name: Name of test being executed
         metrics: Dictionary of metrics to display
-    
+
     Example:
         >>> print_test_summary("PERF-03", {
         >>>     "blocks_created": 1000,

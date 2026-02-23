@@ -6,7 +6,7 @@ Validates RLS policies with real authentication contexts.
 
 Tests (4):
 - RLS-01: Workshop user only sees own parts (tenant isolation) ⚠️ NEW TEST
-- RLS-02: BIM Manager bypasses RLS with custom policy ⚠️ NEW TEST  
+- RLS-02: BIM Manager bypasses RLS with custom policy ⚠️ NEW TEST
 - RLS-03: Service role key bypasses RLS (system access) ⚠️ NEW TEST
 - RLS-04: Unauthenticated request returns 401 ⚠️ NEW TEST
 
@@ -27,20 +27,20 @@ client = TestClient(app)
 def test_rls01_workshop_user_only_sees_own_parts(supabase_client: Client):
     """
     RLS-01: Workshop user only sees parts assigned to their workshop_id.
-    
+
     ⚠️ NEW TEST - Expected to FAIL until JWT authentication implemented
-    
+
     Given:
         - Block A: workshop_id = W1 (owned by workshop user)
         - Block B: workshop_id = W2 (owned by different workshop)
         - User authenticated as workshop W1
-    
+
     When: GET /api/parts (with workshop W1 JWT token)
     Then:
         - Only Block A visible (tenant isolation enforced)
         - Block B NOT visible (RLS policy filters it)
         - Response count reflects filtered count
-    
+
     RLS Policy Expected:
         CREATE POLICY workshop_tenant_isolation ON blocks
         FOR SELECT
@@ -106,19 +106,19 @@ def test_rls01_workshop_user_only_sees_own_parts(supabase_client: Client):
 def test_rls02_bim_manager_bypasses_rls(supabase_client: Client):
     """
     RLS-02: BIM Manager role bypasses workshop_id isolation.
-    
+
     ⚠️ NEW TEST - Expected to FAIL until role-based RLS implemented
-    
+
     Given:
         - Block A: workshop_id = W1
         - Block B: workshop_id = W2
         - User authenticated as BIM Manager (role = 'bim_manager')
-    
+
     When: GET /api/parts (with BIM Manager JWT)
     Then:
         - Both Block A and Block B visible (no tenant isolation)
         - RLS policy allows bim_manager role to see all blocks
-    
+
     RLS Policy Expected:
         CREATE POLICY bim_manager_bypass ON blocks
         FOR SELECT
@@ -168,19 +168,19 @@ def test_rls02_bim_manager_bypasses_rls(supabase_client: Client):
 def test_rls03_service_role_bypasses_rls(supabase_client: Client):
     """
     RLS-03: Service role key bypasses ALL RLS policies (system access).
-    
+
     ⚠️ NEW TEST - Should PASS if supabase_client uses service_role key
-    
+
     Given:
         - Supabase client initialized with service_role key
         - Block A: workshop_id = W1
         - Block B: workshop_id = W2
-    
+
     When: GET /api/parts (using service_role client)
     Then:
         - Both blocks visible (service_role bypasses RLS)
         - This is current behavior (tests run with service_role)
-    
+
     Note: This test validates our test harness setup is correct.
     """
     # ARRANGE
@@ -216,15 +216,15 @@ def test_rls03_service_role_bypasses_rls(supabase_client: Client):
 def test_rls04_unauthenticated_request_returns_401(supabase_client: Client):
     """
     RLS-04: Unauthenticated requests return 401 Unauthorized.
-    
+
     ⚠️ NEW TEST - Expected to FAIL until authentication middleware implemented
-    
+
     Given: Endpoint requires authentication
     When: GET /api/parts (no Authorization header)
     Then:
         - Returns HTTP 401 (not 200)
         - Error message indicates authentication required
-    
+
     Implementation Note: Requires FastAPI dependency injection for JWT validation.
     """
     pytest.skip("FAIL: Authentication middleware not yet enforced (T-0510-TEST-BACK RED phase)")

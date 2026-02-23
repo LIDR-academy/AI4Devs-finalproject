@@ -15,7 +15,7 @@ from psycopg2.extensions import connection
 def celery_config():
     """
     Configure Celery for testing with eager mode.
-    
+
     In eager mode, tasks execute synchronously instead of being
     sent to the broker, making tests deterministic and faster.
     """
@@ -29,7 +29,7 @@ def celery_config():
 def celery_eager_mode():
     """
     Enable Celery eager mode for all tests automatically.
-    
+
     This makes validate_file.apply_async() execute synchronously,
     allowing tests to run without a background worker.
     """
@@ -54,18 +54,18 @@ def celery_eager_mode():
 def supabase_client() -> Client:
     """
     Create a Supabase client instance using environment variables.
-    
+
     This fixture is scoped to the session level to reuse the same
     client instance across all tests within the test session, reducing
     connection overhead.
-    
+
     Environment variables required:
         SUPABASE_URL: Your Supabase project URL (e.g., https://xxxxx.supabase.co)
         SUPABASE_KEY: Service role key or anon key from Supabase project settings
-    
+
     Returns:
         Client: Configured Supabase client instance
-        
+
     Raises:
         pytest.skip: If required environment variables are not set
     """
@@ -82,20 +82,20 @@ def supabase_client() -> Client:
 def db_connection() -> connection:
     """
     Create a direct PostgreSQL connection to the local test database.
-    
+
     This fixture provides a psycopg2 connection for tests that need
     to execute raw SQL or verify database schema directly.
     Useful for DB migration tests (e.g., T-020-DB).
-    
+
     Environment variables:
         DATABASE_URL: PostgreSQL connection string (default: from docker-compose)
-    
+
     Returns:
         psycopg2.connection: Active database connection
-        
+
     Yields:
         connection: Connection object for test use
-        
+
     Cleanup:
         Closes connection after test session ends
     """
@@ -116,7 +116,7 @@ def db_connection() -> connection:
 def setup_database_schema(db_connection: connection):
     """
     Create essential database schema for integration tests.
-    
+
     This fixture runs once per test session and ensures the basic
     tables (profiles, blocks) are available for tests that need them.
     """

@@ -30,10 +30,10 @@ logger = structlog.get_logger()
 class NomenclatureValidator:
     """
     Service for validating layer nomenclature against ISO-19650 standards.
-    
+
     Validates that layer names follow the pattern:
     [PREFIX]-[ZONE/CODE]-[TYPE]-[ID]
-    
+
     Examples:
         - Valid: SF-NAV-COL-001, SFC-NAV1-A-999
         - Invalid: sf-nav-col-001 (lowercase), SF_NAV_COL_001 (underscores)
@@ -50,21 +50,21 @@ class NomenclatureValidator:
     def validate_nomenclature(self, layers: List[LayerInfo]) -> List[ValidationErrorItem]:
         """
         Validate layer names against ISO-19650 pattern.
-        
+
         Args:
             layers: List of LayerInfo objects to validate
-            
+
         Returns:
             List of ValidationErrorItem for layers that fail validation.
             Empty list if all layers are valid.
-            
+
         Examples:
             >>> validator = NomenclatureValidator()
             >>> layers = [LayerInfo(name="SF-NAV-COL-001", index=0)]
             >>> errors = validator.validate_nomenclature(layers)
             >>> len(errors)
             0
-            
+
             >>> bad_layers = [LayerInfo(name="invalid_name", index=0)]
             >>> errors = validator.validate_nomenclature(bad_layers)
             >>> len(errors)

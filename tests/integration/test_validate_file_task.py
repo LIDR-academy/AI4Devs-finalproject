@@ -88,7 +88,7 @@ class TestValidateFileTaskHappyPath:
 
         supabase.table("blocks").insert(test_block).execute()
 
-        result = validate_file(part_id=test_block_id, s3_key=s3_key)
+        validate_file(part_id=test_block_id, s3_key=s3_key)
 
         # Verify metadata extraction
         block_after = supabase.table("blocks").select("*").eq("id", test_block_id).execute()
@@ -250,7 +250,7 @@ class TestValidateFileTaskErrorHandling:
         GIVEN: S3 file parses successfully
         WHEN: DB connection drops before final update
         THEN: Task retries according to TASK_MAX_RETRIES policy
-        
+
         NOTE: This test is challenging to implement without mocking.
         Documents expected behavior for manual testing.
         """
@@ -294,7 +294,7 @@ class TestValidateFileTaskCeleryIntegration:
         WHEN: validate_file task is called via .delay()
         THEN: Task completes successfully
         AND: Returns expected result format
-        
+
         Note: This test uses Celery's eager mode (task_always_eager=True)
         which executes tasks synchronously for deterministic testing.
         Real async execution with workers is tested in E2E tests.
@@ -342,7 +342,7 @@ class TestValidateFileTaskCeleryIntegration:
         GIVEN: A .3dm file that takes >10min to process (simulate with large fixture)
         WHEN: Task exceeds soft time limit (540s)
         THEN: Celery kills task and marks as timeout error
-        
+
         NOTE: This test is time-prohibitive for CI. Documents expected behavior.
         """
         # This is a specification test - actual timeout testing requires
@@ -362,7 +362,7 @@ class TestValidateFileTaskCeleryIntegration:
         GIVEN: S3 download fails with ConnectionError on first attempt
         WHEN: Task catches transient error
         THEN: Retries up to TASK_MAX_RETRIES (3) times with 60s delay
-        
+
         NOTE: Requires mocking S3 responses. Documents retry policy.
         """
         # This is a specification test for retry behavior

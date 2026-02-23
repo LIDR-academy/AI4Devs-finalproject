@@ -16,7 +16,7 @@ logger = structlog.get_logger()
 class DBService:
     """
     Service for database operations during file validation.
-    
+
     Handles block status updates and validation report persistence.
     """
 
@@ -27,11 +27,11 @@ class DBService:
     def update_block_status(self, part_id: str, status: str) -> bool:
         """
         Update block status in database.
-        
+
         Args:
             part_id: Block ID
             status: New status value (e.g., 'processing', 'validated', 'error_processing')
-            
+
         Returns:
             True if update succeeded, False otherwise
         """
@@ -63,14 +63,14 @@ class DBService:
     ) -> bool:
         """
         Save validation report to database.
-        
+
         Args:
             part_id: Block ID
             is_valid: Whether validation passed
             errors: List of validation errors
             metadata: Extracted metadata
             validated_by: Worker identifier
-            
+
         Returns:
             True if save succeeded, False otherwise
         """
@@ -105,10 +105,10 @@ class DBService:
     def get_block(self, part_id: str) -> Optional[Dict[str, Any]]:
         """
         Fetch block record from database.
-        
+
         Args:
             part_id: Block ID
-            
+
         Returns:
             Block record as dict, or None if not found
         """
