@@ -4,9 +4,19 @@
 Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
 
 ## Active Ticket
-**No active ticket** — 🟢 AWAITING USER SELECTION
-- **Context:** T-0509-TEST-FRONT completed successfully (TDD-REFACTOR phase)
-- **Timestamp:** 2026-02-23
+**T-0510-TEST-BACK: Canvas API Integration Tests** (3 SP) — 🔵 IN PROGRESS (Enrichment Phase)
+- **Phase:** STEP 1/5 - Enrichment (Technical Specification)
+- **Context:** Backend integration tests for GET /api/parts endpoint. Reorganizing 20 existing tests into 5 specialized suites (Functional, Filter, RLS, Performance, Index Usage), completing 6 placeholders, adding 3 new tests. 
+- **Timestamp:** 2026-02-23 15:00
+- **Tech Spec:** [T-0510-TEST-BACK-TechnicalSpec-ENRICHED.md](../docs/US-005/T-0510-TEST-BACK-TechnicalSpec-ENRICHED.md)
+- **Prompt:** #129 in prompts.md
+
+### Next Steps for T-0510-TEST-BACK
+1. ✅ Technical Specification complete (ENRICHED document created)
+2. ⏭️ **NEXT:** TDD-RED Phase - Create 5 test suite files + helpers
+3. ⏭️ TDD-GREEN Phase - Verify tests pass (implementation already done in T-0501-BACK)
+4. ⏭️ TDD-REFACTOR Phase - Extract shared utilities, complete placeholders
+5. ⏭️ AUDIT Phase - Validate coverage >85%, DoD compliance
 
 ### Next Available Tickets (US-005 Dashboard 3D)
 - **T-0510-TEST-BACK: Canvas API Integration Tests** (3 SP) — Backend tests for GET /api/parts endpoint, 5 test suites (Functional, Filter, RLS, Performance, Index Usage), 23 tests total

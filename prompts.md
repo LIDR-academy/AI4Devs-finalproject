@@ -10293,4 +10293,69 @@ Refactoring completed for T-0509-TEST-FRONT:
 6. Documentation updates - Updated docs/09-mvp-backlog.md (REFACTOR phase details), memory-bank/activeContext.md (T-0509 complete), memory-bank/progress.md (test counts 215→268), memory-bank/systemPatterns.md (test-helpers.ts pattern documented)
 ---
 
+## 129 - ENRIQUECIMIENTO TÉCNICO - Ticket T-0510-TEST-BACK (WORKFLOW STEP 1/5)
+**Fecha:** 2026-02-23
+
+**Prompt Original:**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-0510-TEST-BACK
+> 
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+> 
+> ---
+> 
+> ### Protocolo Agents (OBLIGATORIO antes de diseñar)
+> 
+> 1. **Marca en Notion** el item correspondiente a `T-0510-TEST-BACK` como **In Progress** para indicar que el trabajo ha comenzado.
+> 2. **Lee** `docs/09-mvp-backlog.md` y localiza el ticket `T-0510-TEST-BACK` para entender alcance, criterios de aceptación y DoD.
+> 3. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API existentes y patrones arquitectónicos del proyecto.
+> 4. **Lee** `memory-bank/techContext.md` para conocer el stack completo, librerías permitidas y decisiones técnicas previas.
+> 5. **Lee** `docs/productContext.md` para identificar componentes/endpoints existentes que pueden reutilizarse.
+> 6. **Al finalizar**, registra este prompt en `prompts.md` bajo la sección "## Workflow Step 1: Enrichment".
+> 
+> ---
+> 
+> ### Contexto del Workflow
+> 
+> Estamos en **Step 1/5: Enriquecer Ticket** (Pre-TDD).
+> Acabamos de crear la rama `feature/T-0510-TEST-BACK` y marcado el item en Notion como **In Progress**.
+> El objetivo es definir el **"Contrato Técnico"** detallado ANTES de escribir el primer test (Step 2: TDD-Red).
+> 
+> **Stack del proyecto:**
+> - **Backend:** FastAPI (Python 3.11) + Pydantic schemas (`src/backend/schemas.py`), rutas en `src/backend/api/`
+> - **Frontend:** React 18 + TypeScript strict + Vite, componentes en `src/frontend/src/components/`, tipos en `src/frontend/src/types/`
+> - **Agent:** LangGraph (Python) en `src/agent/`
+> - **Infra:** Docker multi-stage, Supabase Storage (S3-compatible), PostgreSQL 15, migraciones en `supabase/migrations/`
+> - **Docs:** `docs/`, `memory-bank/`, backlog en `docs/09-mvp-backlog.md`
+> 
+> **Patrón de contrato (CRÍTICO):** Las interfaces TypeScript (`src/frontend/src/types/`) DEBEN coincidir exactamente con los Pydantic schemas (`src/backend/schemas.py`). Verifica ambos antes de proponer nuevos tipos.
+> 
+> ---
+> 
+> ### Objetivo
+> 
+> Generar una **Technical Specification** completa para `T-0510-TEST-BACK` que sirva como blueprint para el desarrollo TDD, sin escribir código de implementación todavía.
+> 
+> [... Full prompt content with sections on Analysis, Solution Design, Testing Strategy, Contracts Definition, Output Format, Handoff for TDD-RED ...]
+
+**Resumen de la Respuesta/Acción:**
+Technical Specification completa creada para T-0510-TEST-BACK (Canvas API Integration Tests). Análisis realizado:
+
+1. **Contexto validado**: T-0501-BACK ya implementado con 32/32 tests PASS (20 integration + 12 unit en test_parts_api.py monolítico)
+2. **Gap Analysis identificado**: Tests actuales son monolíticos, faltan tests especializados para Performance (response time <500ms, size <200KB), RLS enforcement (workshop scope), Index usage verification (EXPLAIN ANALYZE)
+3. **Solución propuesta**: Reorganizar 20 tests existentes en 5 suites especializadas (Functional Core, Filters Validation, RLS Policies, Performance & Scalability, Index Usage), completar 6 placeholders, añadir 3 nuevos tests
+4. **Test Suite Architecture**: 
+   - Suite 1: test_functional_core.py (6 tests - básicos, ya implementados)
+   - Suite 2: test_filters_validation.py (5 tests - filtros dinámicos, ya implementados)
+   - Suite 3: test_rls_policies.py (4 tests - 2 placeholders + 2 nuevos)
+   - Suite 4: test_performance_scalability.py (4 tests - 2 placeholders + 2 nuevos)
+   - Suite 5: test_index_usage.py (4 tests - 1 placeholder + 3 nuevos)
+5. **Sin nuevos schemas**: Ticket es test-only, valida contratos existentes de T-0501-BACK (PartCanvasItem, PartsListResponse)
+6. **Patrones reutilizables**: cleanup_test_blocks(), create_realistic_block(), assert_execution_time() extraídos de tests existentes; nuevos patrones para RLS context switching (workshop_user_client fixture) y EXPLAIN ANALYZE (get_query_plan helper)
+7. **DoD definido**: 23 tests total (20 reorganizados + 3 nuevos), coverage >85% api/parts.py, >90% services/parts_service.py, zero regression, execution time ~90s
+
+**Archivos creados**:
+- docs/US-005/T-0510-TEST-BACK-TechnicalSpec-ENRICHED.md (Technical Spec completa, 650+ líneas)
+
+**Next Steps**: Handoff READY para TDD-RED Phase con lista de 7 archivos a crear (test suites + helpers + README) y 2 a modificar (conftest.py fixtures + archive test_parts_api.py)
+
 ---
