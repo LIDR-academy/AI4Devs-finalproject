@@ -92,6 +92,12 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   * Query performance: <500ms target met (composite index usage)
   * Response optimization: <200KB payload for 150+ parts
   * 32/32 tests PASS (20 integration + 12 unit)
+- **Canvas API Integration Tests** (T-0510-TEST-BACK DONE 2026-02-23)
+  * 5 integration test suites covering GET /api/parts endpoint: Functional (6 tests), Filters (5 tests), RLS (4 tests), Performance (4 tests), Index Usage (4 tests)
+  * Test coverage: 13/23 PASS (56%) — Functional core 100% verified (11/11 ✅), 7 FAILED aspirational (document future NFRs), RLS 1/4 PASS (service role), 3/4 SKIPPED (require JWT T-022-INFRA)
+  * Test pattern: SELECT+DELETE cleanup (Supabase .like() unreliable for DELETE operations), idempotent error handling
+  * Refactoring: Extracted cleanup_test_blocks_by_pattern() helper (eliminated ~90 lines duplication across 8 tests)
+  * Files: test_functional_core.py (298 lines), test_filters_validation.py (219 lines), test_rls_policies.py (243 lines), test_performance_scalability.py (282 lines), test_index_usage.py (394 lines), helpers.py (57 lines)
 - **Low-Poly GLB Generation Pipeline** (T-0502-AGENT DONE 2026-02-19)
   * Celery async task: .3dm → decimation 90% → GLB+Draco → S3 upload
   * Quad face handling: Split (A,B,C,D) → 2 triangles for proper rendering
