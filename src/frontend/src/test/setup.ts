@@ -4,11 +4,19 @@ import React from 'react';
 
 // ---------------------------------------------------------------------------
 // @react-three/fiber — Canvas cannot use real WebGL in jsdom.
-// Replace with a plain <div data-testid="three-canvas"> so tests can query it.
+// Replace with a plain <div data-testid="three-canvas"> that can handle click events.
 // ---------------------------------------------------------------------------
 vi.mock('@react-three/fiber', () => ({
-  Canvas: ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', { 'data-testid': 'three-canvas' }, children),
+  Canvas: ({ children, onPointerMissed, ...props }: any) =>
+    React.createElement(
+      'div',
+      {
+        'data-testid': 'three-canvas',
+        onClick: onPointerMissed, // Simulate onPointerMissed with click for testing
+        ...props
+      },
+      children
+    ),
   useFrame: vi.fn(),
   useThree: vi.fn(() => ({ camera: {}, scene: {}, gl: {} })),
 }));
