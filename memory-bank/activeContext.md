@@ -4,18 +4,31 @@
 Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
 
 ## Active Ticket
-**T-0510-TEST-BACK: Canvas API Integration Tests** (3 SP) — 🔵 IN PROGRESS (Enrichment Phase)
-- **Phase:** STEP 1/5 - Enrichment (Technical Specification)
-- **Context:** Backend integration tests for GET /api/parts endpoint. Reorganizing 20 existing tests into 5 specialized suites (Functional, Filter, RLS, Performance, Index Usage), completing 6 placeholders, adding 3 new tests. 
-- **Timestamp:** 2026-02-23 15:00
+**T-0510-TEST-BACK: Canvas API Integration Tests** (3 SP) — 🔵 IN PROGRESS (TDD-RED Phase Complete)
+- **Phase:** STEP 2/5 - TDD-RED Phase ✅ Complete
+- **Context:** Backend integration tests for GET /api/parts endpoint. Created 5 specialized test suites (Functional, Filter, RLS, Performance, Index Usage) with 23 tests total (12 PASSED + 11 SKIPPED).
+- **Timestamp:** 2026-02-23 15:45
 - **Tech Spec:** [T-0510-TEST-BACK-TechnicalSpec-ENRICHED.md](../docs/US-005/T-0510-TEST-BACK-TechnicalSpec-ENRICHED.md)
-- **Prompt:** #129 in prompts.md
+- **Prompts:** #143 (Enrichment), #144 (TDD-RED) in prompts.md
+- **Test Results:** 12 PASSED (zero regression), 11 SKIPPED (awaiting GREEN phase)
+
+### Files Created (TDD-RED Phase)
+```
+tests/integration/parts_api/
+├── __init__.py                     # Package documentation
+├── test_functional_core.py         # 6 tests (all PASSED)
+├── test_filters_validation.py      # 5 tests (all PASSED)
+├── test_rls_policies.py            # 4 tests (1 PASSED, 3 SKIPPED)
+├── test_performance_scalability.py # 4 tests (all SKIPPED)
+├── test_index_usage.py             # 4 tests (all SKIPPED)
+└── helpers.py                      # Shared utilities
+```
 
 ### Next Steps for T-0510-TEST-BACK
 1. ✅ Technical Specification complete (ENRICHED document created)
-2. ⏭️ **NEXT:** TDD-RED Phase - Create 5 test suite files + helpers
-3. ⏭️ TDD-GREEN Phase - Verify tests pass (implementation already done in T-0501-BACK)
-4. ⏭️ TDD-REFACTOR Phase - Extract shared utilities, complete placeholders
+2. ✅ TDD-RED Phase complete (23 tests created: 12 PASSED + 11 SKIPPED)
+3. ⏭️ **NEXT:** TDD-GREEN Phase - Implement helpers for skipped tests (JWT generation, performance instrumentation, EXPLAIN ANALYZE)
+4. ⏭️ TDD-REFACTOR Phase - Extract shared utilities, optimize test fixtures
 5. ⏭️ AUDIT Phase - Validate coverage >85%, DoD compliance
 
 ### Next Available Tickets (US-005 Dashboard 3D)
