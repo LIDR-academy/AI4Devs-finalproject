@@ -22,6 +22,7 @@ import os
 
 from main import app
 from supabase import Client
+from .helpers import cleanup_test_blocks_by_pattern
 
 client = TestClient(app)
 
@@ -62,14 +63,7 @@ def test_idx01_filter_queries_use_composite_index(supabase_client: Client):
         WHERE is_archived = false;
     """
     # CLEANUP FIRST: Delete any leftover test blocks
-    try:
-        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-IDX01%").execute()
-        if existing.data:
-            block_ids = [b["id"] for b in existing.data]
-            for block_id in block_ids:
-                supabase_client.table("blocks").delete().eq("id", block_id).execute()
-    except Exception:
-        pass
+    cleanup_test_blocks_by_pattern(supabase_client, "TEST-IDX01%")
     
     # ARRANGE: Create test blocks
     test_blocks = []
@@ -144,20 +138,8 @@ def test_idx02_partial_index_triggers_on_is_archived_false(supabase_client: Clie
     Partial Index Advantage: Index covers only 100 rows, not 1100.
     """
     # CLEANUP FIRST: Delete any leftover test blocks
-    try:
-        # Clean active blocks
-        active_existing = supabase_client.table("blocks").select("id").ilike("iso_code", "ACTIVE%").execute()
-        if active_existing.data:
-            for b in active_existing.data:
-                supabase_client.table("blocks").delete().eq("id", b["id"]).execute()
-        
-        # Clean archived blocks
-        archived_existing = supabase_client.table("blocks").select("id").ilike("iso_code", "ARCHIVED%").execute()
-        if archived_existing.data:
-            for b in archived_existing.data:
-                supabase_client.table("blocks").delete().eq("id", b["id"]).execute()
-    except Exception:
-        pass
+    cleanup_test_blocks_by_pattern(supabase_client, "ACTIVE%")
+    cleanup_test_blocks_by_pattern(supabase_client, "ARCHIVED%")
     
     # ARRANGE: Create active blocks
     active_blocks = [
@@ -233,14 +215,7 @@ def test_idx03_no_sequential_scans_on_blocks_table(supabase_client: Client):
         4. Filter by status + tipologia (composite)
     """
     # CLEANUP FIRST: Delete any leftover test blocks
-    try:
-        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-IDX03%").execute()
-        if existing.data:
-            block_ids = [b["id"] for b in existing.data]
-            for block_id in block_ids:
-                supabase_client.table("blocks").delete().eq("id", block_id).execute()
-    except Exception:
-        pass
+    cleanup_test_blocks_by_pattern(supabase_client, "TEST-IDX03%")
     
     # ARRANGE: Create diverse test dataset
     test_blocks = []
@@ -335,14 +310,7 @@ def test_idx04_index_hit_ratio_above_95_percent(supabase_client: Client):
         WHERE schemaname = 'public' AND indexrelname = 'idx_blocks_status_active';
     """
     # CLEANUP FIRST: Delete any leftover test blocks
-    try:
-        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-IDX04%").execute()
-        if existing.data:
-            block_ids = [b["id"] for b in existing.data]
-            for block_id in block_ids:
-                supabase_client.table("blocks").delete().eq("id", block_id).execute()
-    except Exception:
-        pass
+    cleanup_test_blocks_by_pattern(supabase_client, "TEST-IDX04%")
     
     # ARRANGE: Create test dataset
     test_blocks = []

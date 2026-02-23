@@ -41,6 +41,34 @@ def cleanup_test_blocks(supabase_client: Client, block_ids: List[str]) -> None:
             pass  # Idempotent: ignore if already deleted
 
 
+def cleanup_test_blocks_by_pattern(supabase_client: Client, iso_code_pattern: str) -> None:
+    """
+    Delete test blocks matching an iso_code pattern (idempotent cleanup).
+    
+    Uses SELECT+DELETE pattern (Supabase .like() doesn't work reliably for DELETE).
+    
+    Args:
+        supabase_client: Supabase client instance
+        iso_code_pattern: ISO code pattern for ILIKE match (e.g., "TEST-PERF01%")
+    
+    Example:
+        >>> cleanup_test_blocks_by_pattern(client, "TEST-PERF01%")
+        >>> cleanup_test_blocks_by_pattern(client, "ACTIVE%")
+    
+    Note:
+        This pattern is required because supabase_client.table("blocks").delete().like() 
+        does not work correctly. We must SELECT first, then DELETE by ID.
+    """
+    try:
+        existing = supabase_client.table("blocks").select("id").ilike("iso_code", iso_code_pattern).execute()
+        if existing.data:
+            block_ids = [b["id"] for b in existing.data]
+            for block_id in block_ids:
+                supabase_client.table("blocks").delete().eq("id", block_id).execute()
+    except Exception:
+        pass  # Idempotent: ignore if no blocks to delete
+
+
 def create_realistic_block(
     iso_code: str,
     status: str = "validated",

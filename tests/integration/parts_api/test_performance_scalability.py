@@ -22,6 +22,7 @@ from fastapi.testclient import TestClient
 
 from main import app
 from supabase import Client
+from .helpers import cleanup_test_blocks_by_pattern
 
 client = TestClient(app)
 
@@ -42,14 +43,7 @@ def test_perf01_response_time_under_500ms_with_500_parts(supabase_client: Client
     Performance Target: P95 latency < 500ms per docs/US-005/T-0510-TEST-BACK-TechnicalSpec-ENRICHED.md
     """
     # CLEANUP FIRST: Delete any leftover test blocks from previous runs
-    try:
-        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-PERF01%").execute()
-        if existing.data:
-            block_ids = [b["id"] for b in existing.data]
-            for block_id in block_ids:
-                supabase_client.table("blocks").delete().eq("id", block_id).execute()
-    except Exception:
-        pass  # Ignore if no blocks to delete
+    cleanup_test_blocks_by_pattern(supabase_client, "TEST-PERF01%")
     
     # ARRANGE: Create 500 test blocks
     test_blocks = []
@@ -110,14 +104,7 @@ def test_perf02_payload_size_under_200kb_for_100_parts(supabase_client: Client):
     Performance Target: Response size < 200KB per T-0510-TEST-BACK Technical Spec
     """
     # CLEANUP FIRST: Delete any leftover test blocks
-    try:
-        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-PERF02%").execute()
-        if existing.data:
-            block_ids = [b["id"] for b in existing.data]
-            for block_id in block_ids:
-                supabase_client.table("blocks").delete().eq("id", block_id).execute()
-    except Exception:
-        pass
+    cleanup_test_blocks_by_pattern(supabase_client, "TEST-PERF02%")
     
     # ARRANGE: Create 100 test blocks
     test_blocks = []
@@ -172,14 +159,7 @@ def test_perf03_stress_test_1000_parts_p95_latency(supabase_client: Client):
     Performance Target: P95 latency < 750ms at 1000 parts (stress scenario)
     """
     # CLEANUP FIRST: Delete any leftover test blocks
-    try:
-        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-PERF03%").execute()
-        if existing.data:
-            block_ids = [b["id"] for b in existing.data]
-            for block_id in block_ids:
-                supabase_client.table("blocks").delete().eq("id", block_id).execute()
-    except Exception:
-        pass
+    cleanup_test_blocks_by_pattern(supabase_client, "TEST-PERF03%")
     
     # ARRANGE: Create 1000 test blocks (stress scenario)
     test_blocks = []
@@ -250,14 +230,7 @@ def test_perf04_memory_stability_under_load(supabase_client: Client):
     Performance Target: Memory delta < 50MB after 50 requests
     """
     # CLEANUP FIRST: Delete any leftover test blocks
-    try:
-        existing = supabase_client.table("blocks").select("id").ilike("iso_code", "TEST-PERF04%").execute()
-        if existing.data:
-            block_ids = [b["id"] for b in existing.data]
-            for block_id in block_ids:
-                supabase_client.table("blocks").delete().eq("id", block_id).execute()
-    except Exception:
-        pass
+    cleanup_test_blocks_by_pattern(supabase_client, "TEST-PERF04%")
     
     # ARRANGE: Create 100 test blocks for realistic workload
     test_blocks = []
