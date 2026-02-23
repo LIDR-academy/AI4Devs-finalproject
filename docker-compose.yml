@@ -13,22 +13,33 @@ services:
       - ./tests:/app/tests
       - ./infra:/app/infra
       - ./src/agent:/app/src/agent  # Mount agent module for test imports
+      - ./supabase:/app/supabase  # Mount migrations for test verification
+      - ./docs:/app/docs  # Mount docs for spec file tests
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
+      - DATABASE_URL=${DATABASE_URL}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
-      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")'"]
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/ready\")'"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    restart: unless-stopped
     networks:
       - sf-network
 
@@ -38,17 +49,26 @@ services:
     ports:
       - "127.0.0.1:5432:5432"  # Only expose to localhost for security
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=sfpm_db
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "user"]
+      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./supabase/migrations:/docker-entrypoint-initdb.d
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    restart: unless-stopped
     networks:
       - sf-network
 
@@ -68,6 +88,11 @@ services:
     command: bash -c "npm install && npm run dev -- --host 0.0.0.0"
     depends_on:
       - backend
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - sf-network
 
@@ -76,7 +101,7 @@ services:
     container_name: sf-pm-redis
     ports:
       - "127.0.0.1:6379:6379"  # Localhost only for security
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
@@ -84,6 +109,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
     networks:
       - sf-network
 
@@ -100,11 +131,11 @@ services:
       - ./tests:/app/tests
       - ./infra:/app/infra  # Required for supabase_client imports in tests
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
-      - DATABASE_URL=postgresql://user:password@db:5432/sfpm_db
+      - DATABASE_URL=${DATABASE_URL}
       - PYTHONPATH=/app  # Ensure proper Python import paths
     depends_on:
       redis:
@@ -121,6 +152,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
 
 volumes:
   postgres_data:

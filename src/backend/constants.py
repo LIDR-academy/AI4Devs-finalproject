@@ -38,3 +38,15 @@ TASK_VALIDATE_FILE = "agent.tasks.validate_file"
 # ===== Block Defaults =====
 BLOCK_TIPOLOGIA_PENDING = "pending"
 BLOCK_ISO_CODE_PREFIX = "PENDING"
+
+# ===== Parts Listing Query Fields =====
+PARTS_LIST_SELECT_FIELDS = "id, iso_code, status, tipologia, low_poly_url, bbox, workshop_id"
+QUERY_FIELD_IS_ARCHIVED = "is_archived"
+QUERY_FIELD_CREATED_AT = "created_at"
+QUERY_ORDER_DESC = True
+
+# ===== Validation Error Messages =====
+ERROR_MSG_INVALID_STATUS = "Invalid status value. Must be one of: {valid_values}"
+ERROR_MSG_INVALID_UUID = "Invalid workshop_id format. Must be a valid UUID."
+ERROR_MSG_FETCH_PARTS_FAILED = "Failed to fetch parts: {error}"
+ERROR_MSG_FETCH_PARTS_FAILED = "Failed to fetch parts: {error}"

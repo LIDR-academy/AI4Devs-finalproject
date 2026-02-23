@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 
 class UploadRequest(BaseModel):
@@ -171,6 +171,113 @@ class ValidationStatusResponse(BaseModel):
                     "validated_by": "librarian-v1.0.0"
                 },
                 "job_id": None
+            }
+        }
+
+
+# ===== T-0501-BACK: Parts Canvas API Schemas =====
+
+class BoundingBox(BaseModel):
+    """
+    3D bounding box for spatial layout in canvas.
+    
+    Used by PartCanvasItem to represent geometry bounds extracted from Rhino models.
+    Format matches THREE.js Box3 structure for frontend compatibility.
+    
+    Attributes:
+        min: Array of [x, y, z] coordinates for minimum corner
+        max: Array of [x, y, z] coordinates for maximum corner
+    """
+    min: List[float] = Field(..., min_length=3, max_length=3, description="Min corner [x, y, z]")
+    max: List[float] = Field(..., min_length=3, max_length=3, description="Max corner [x, y, z]")
+    
+    @field_validator('min', 'max')
+    @classmethod
+    def validate_coordinates(cls, v):
+        if len(v) != 3:
+            raise ValueError('Must contain exactly 3 coordinates [x, y, z]')
+        return v
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "min": [-2.5, 0.0, -2.5],
+                "max": [2.5, 5.0, 2.5]
+            }
+        }
+
+
+class PartCanvasItem(BaseModel):
+    """
+    Minimal part info optimized for 3D canvas rendering.
+    
+    Contract: Must match TypeScript interface PartCanvasItem exactly.
+    Used by GET /api/parts endpoint for Dashboard 3D (US-005).
+    
+    Attributes:
+        id: Block UUID
+        iso_code: Part identifier (ISO-19650 format, e.g., SF-C12-D-001)
+        status: Lifecycle state (reuses existing BlockStatus enum)
+        tipologia: Part typology (capitel, columna, dovela, clave, imposta, etc.)
+        low_poly_url: Storage URL to simplified GLB file (~1000 triangles, ~300-400KB with Draco)
+        bbox: 3D bounding box for camera centering and spatial queries
+        workshop_id: Assigned workshop UUID (NULL if unassigned)
+    """
+    id: UUID = Field(..., description="Block UUID")
+    iso_code: str = Field(..., description="Part identifier (e.g., SF-C12-D-001)")
+    status: BlockStatus = Field(..., description="Lifecycle state")
+    tipologia: str = Field(..., description="Part typology")
+    low_poly_url: Optional[str] = Field(None, description="GLB file URL for 3D rendering")
+    bbox: Optional[BoundingBox] = Field(None, description="3D bounding box")
+    workshop_id: Optional[UUID] = Field(None, description="Assigned workshop UUID")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "iso_code": "SF-C12-D-001",
+                "status": "validated",
+                "tipologia": "capitel",
+                "low_poly_url": "https://xyz.supabase.co/storage/v1/object/public/processed-geometry/low-poly/550e8400.glb",
+                "bbox": {"min": [-2.5, 0.0, -2.5], "max": [2.5, 5.0, 2.5]},
+                "workshop_id": "123e4567-e89b-12d3-a456-426614174000"
+            }
+        }
+
+
+class PartsListResponse(BaseModel):
+    """
+    Response for GET /api/parts endpoint.
+    
+    Attributes:
+        parts: Array of all parts matching filters
+        count: Total number of parts returned
+        filters_applied: Echo of query parameters used for transparency
+    """
+    parts: List[PartCanvasItem] = Field(..., description="Array of canvas-ready parts")
+    count: int = Field(..., description="Total count of parts returned")
+    filters_applied: Dict[str, Any] = Field(default_factory=dict, description="Applied filters (for debugging)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "parts": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440000",
+                        "iso_code": "SF-C12-D-001",
+                        "status": "validated",
+                        "tipologia": "capitel",
+                        "low_poly_url": "https://xyz.supabase.co/storage/v1/object/public/processed-geometry/low-poly/550e8400.glb",
+                        "bbox": {"min": [-2.5, 0, -2.5], "max": [2.5, 5, 2.5]},
+                        "workshop_id": "123e4567-e89b-12d3-a456-426614174000"
+                    }
+                ],
+                "count": 1,
+                "filters_applied": {
+                    "status": "validated",
+                    "tipologia": "capitel",
+                    "workshop_id": None
+                }
             }
         }
 

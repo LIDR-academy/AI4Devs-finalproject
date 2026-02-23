@@ -1,0 +1,25 @@
+# POC Exporters Requirements
+# Python 3.11+
+
+# Core Rhino parsing
+rhino3dm==8.4.0
+
+# Mesh manipulation
+trimesh==4.0.5
+numpy==1.26.3
+# rtree==1.1.0  # Optional: Spatial indexing (requires C build, skip for POC)
+
+# glTF export + Draco compression
+pygltflib==1.16.1
+# Draco CLI needed (install separately): npm install -g gltf-pipeline
+
+# IFC/ThatOpen export (optional, complex to install)
+# ifcopenshell==0.7.0  # Uncomment if ThatOpen requires IFC intermediate
+
+# Alternative: Use ThatOpen web-ifc (WebAssembly via Node.js)
+# Install separately: npm install -g @thatopen/components-cli
+
+# Utilities
+tqdm==4.66.1  # Progress bars
+# click==8.1.7  # CLI interface (not needed for POC)
+# pydantic==2.5.3  # Data validation (requires Rust, skip for POC)

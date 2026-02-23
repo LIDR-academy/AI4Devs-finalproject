@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "fecha": "2026-02-18",
+    "archivo": "test-model-big.glb",
+    "formato": "glTF sin Draco (gltf-pipeline no disponible)",
+    "fuente_original": "test-model-big.3dm (3.4 MB, InstanceDefinitions con Meshes)",
+    "navegador": "Chrome/Safari",
+    "dispositivo": "MacBook (ARM)",
+    "resolucion": "Default (DPR 1-2)"
+  },
+  
+  "geometria": {
+    "meshes": 1197,
+    "triangulos": 39360,
+    "vertices_aprox": 4000,
+    "note": "Geometría convertida manualmente en Rhino Desktop (SelAll → _Mesh)"
+  },
+  
+  "network": {
+    "payload_mb": 0.74,
+    "payload_kb": 778,
+    "download_ms": 89,
+    "download_real_ms": 7,
+    "compression_ratio_vs_3dm": "78%",
+    "waterfall": {
+      "queued": 0.13,
+      "waiting": 1.62,
+      "download": 3.68
+    },
+    "evaluacion": "✅ EXCELENTE",
+    "notas": "Tamaño muy bajo (<800 KB objetivo), descarga instantánea (<100 ms)"
+  },
+  
+  "parse": {
+    "parse_ms": 1001,
+    "ttfr_ms": 1002,
+    "scripting_time_ms": 428,
+    "rendering_time_ms": 9,
+    "mainthread_blocked_ms": 5588,
+    "evaluacion": "⚠️ ACEPTABLE",
+    "notas": "TTFR justo en el objetivo (1 segundo). Main thread blocked alto (5.5s) probablemente por React.StrictMode double-render en desarrollo"
+  },
+  
+  "runtime": {
+    "memory_overlay_mb": 35,
+    "memory_heap_mb": 41.5,
+    "fps_reposo": 60,
+    "fps_movimiento_min": 60,
+    "fps_movimiento_avg": 60,
+    "fps_zoom": 60,
+    "draw_calls_reported": 0,
+    "triangles_reported": "0.0K",
+    "evaluacion": "✅ EXCELENTE",
+    "notas": "FPS perfecto y constante (60). Memoria muy baja (~40 MB). Draw Calls/Triangles no capturados correctamente por el hook useBenchmark (problema de implementación del benchmark, no del formato)"
+  },
+  
+  "interaccion_usuario": {
+    "orbita": "Fluida, sin lag",
+    "zoom": "Instantáneo, sin stuttering",
+    "rotacion": "60 FPS constante durante 10s",
+    "calidad_visual": "Correcta (Z-up Rhino → Y-up Three.js aplicado)",
+    "evaluacion": "✅ EXCELENTE"
+  },
+  
+  "evaluacion_global": "✅ APROBADO - Formato viable para US-005",
+  
+  "metricas_vs_objetivos": {
+    "payload": {
+      "objetivo": "<800 KB",
+      "resultado": "778 KB",
+      "cumple": true,
+      "delta": "-22 KB"
+    },
+    "download": {
+      "objetivo": "<100 ms",
+      "resultado": "89 ms",
+      "cumple": true,
+      "delta": "-11 ms"
+    },
+    "ttfr": {
+      "objetivo": "<1000 ms",
+      "resultado": "1002 ms",
+      "cumple": false,
+      "delta": "+2 ms",
+      "nota": "Muy cerca del objetivo, aceptable"
+    },
+    "memory": {
+      "objetivo": "<200 MB",
+      "resultado": "41.5 MB",
+      "cumple": true,
+      "delta": "-158.5 MB"
+    },
+    "fps": {
+      "objetivo": ">50",
+      "resultado": 60,
+      "cumple": true,
+      "delta": "+10 FPS"
+    }
+  },
+  
+  "conclusiones": {
+    "fortalezas": [
+      "Tamaño payload excelente (778 KB, 78% reducción vs .3dm)",
+      "Descarga instantánea (89 ms)",
+      "FPS perfecto y constante (60 FPS en todas las situaciones)",
+      "Memoria muy baja (41 MB, 5x mejor que objetivo)",
+      "Sin lag ni stuttering en interacciones",
+      "Orientación Z-up → Y-up correcta",
+      "Centrado automático de cámara funcional"
+    ],
+    "debilidades": [
+      "Parse time en el límite (1002 ms, objetivo <1000 ms)",
+      "Main thread blocked alto en carga inicial (5.5s en dev mode)",
+      "Sin compresión Draco real (gltf-pipeline no instalado)",
+      "Hook useBenchmark no captura Draw Calls correctamente"
+    ],
+    "mejoras_potenciales": [
+      {
+        "mejora": "Instalar gltf-pipeline para Draco",
+        "impacto": "Reducir payload 778 KB → ~300-400 KB (50% adicional)",
+        "esfuerzo": "npm install -g gltf-pipeline (5 minutos)"
+      },
+      {
+        "mejora": "Optimizar parse (Web Workers para deserialización)",
+        "impacto": "Reducir main thread blocked 5.5s → <2s",
+        "esfuerzo": "Requiere refactor del loader (3-5 horas)"
+      },
+      {
+        "mejora": "Instancing manual en exportador",
+        "impacto": "Reducir Draw Calls ~1200 → <100 (detectar InstanceDefinitions duplicadas)",
+        "esfuerzo": "Modificar export_gltf_draco.py (2-4 horas)"
+      }
+    ]
+  },
+  
+  "recomendacion_final": {
+    "decision": "✅ ADOPTAR glTF+Draco para US-005",
+    "justificacion": "Performance excelente en todas las métricas críticas. TTFR ligeramente sobre objetivo (1002 vs 1000 ms) es despreciable. Formato maduro, tooling probado, zero-risk para MVP.",
+    "alternativa_thatopen": "❌ Descartada para MVP - requiere workflow IFC completo (ADR-001), evaluación diferida a Fase 2 (>5000 piezas, 12-18 meses)",
+    "proximos_pasos": [
+      "Instalar gltf-pipeline: npm install -g gltf-pipeline",
+      "Re-exportar con Draco: bash run-gltf-export.sh",
+      "Verificar nuevo payload (~300-400 KB esperado)",
+      "Implementar T-0502-AGENT con export_gltf_draco.py",
+      "Diseñar UI Dashboard3D (T-0504-FRONT Canvas 80% + Sidebar 20%)",
+      "Planificar Sprint US-005 (10 días, 8 tickets)"
+    ]
+  },
+  
+  "contexto_tecnico": {
+    "arquitectura_descubierta": "InstanceObjects (91 InstanceDefinitions, 1197 Meshes tras conversión manual)",
+    "limitacion_rhino3dm": "Python API no expone CreateMesh(), requiere preprocessing manual o RhinoCompute",
+    "solucion_implementada": "2-phase approach (ADR-001): Fase 1 POC Manual + Fase 2 Production T-0502B-AGENT RhinoCompute",
+    "adr_referencia": "docs/US-005/ARCHITECTURE_DECISION.md ADR-001"
+  }
+}

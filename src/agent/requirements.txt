@@ -4,6 +4,7 @@ pydantic==2.6.1
 pydantic-settings==2.1.0
 python-dotenv==1.0.1
 structlog==24.1.0
+requests==2.31.0
 
 # Database access
 psycopg2-binary==2.9.9
@@ -11,6 +12,12 @@ supabase==2.10.0
 
 # .3dm file parsing (T-024-AGENT+)
 rhino3dm==8.4.0
+
+# Geometry processing (T-0502-AGENT)
+numpy<2.0             # Pin to 1.x for trimesh 4.0.5 compatibility (ptp() removed in numpy 2.0)
+trimesh==4.0.5        # Mesh decimation library (simplify_quadric_decimation)
+rtree==1.1.0          # Spatial index for trimesh (required dependency)
+open3d==0.18.0        # Required backend for trimesh decimation algorithm
 
 # Testing (for integration tests in agent container)
 pytest==7.4.4
