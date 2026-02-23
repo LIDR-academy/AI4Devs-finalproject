@@ -84,26 +84,26 @@ def main():
         "DATABASE_URL",
         "postgresql://user:password@db:5432/sfpm_db"
     )
-    
-    print(f"🔌 Connecting to database...")
-    
+
+    print("🔌 Connecting to database...")
+
     try:
         conn = psycopg2.connect(database_url)
         conn.autocommit = True
         cursor = conn.cursor()
-        
-        print(f"📝 Applying T-0503-DB migration...")
+
+        print("📝 Applying T-0503-DB migration...")
         cursor.execute(MIGRATION_SQL)
-        
-        print(f"✅ Migration applied successfully!")
-        print(f"   - Added columns: low_poly_url, bbox")
-        print(f"   - Created indexes: idx_blocks_canvas_query, idx_blocks_low_poly_processing")
-        
+
+        print("✅ Migration applied successfully!")
+        print("   - Added columns: low_poly_url, bbox")
+        print("   - Created indexes: idx_blocks_canvas_query, idx_blocks_low_poly_processing")
+
         cursor.close()
         conn.close()
-        
+
         return 0
-        
+
     except Exception as e:
         print(f"❌ Migration failed: {e}")
         return 1

@@ -16,7 +16,6 @@ Tests:
   4. File not found returns 404, no block created
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from main import app
 

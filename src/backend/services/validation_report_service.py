@@ -20,7 +20,7 @@ class ValidationReportService:
     This class encapsulates all business logic related to creating,
     saving, and retrieving validation reports from the database.
     """
-    
+
     def __init__(self, supabase_client: Client):
         """
         Initialize the validation report service.
@@ -29,7 +29,7 @@ class ValidationReportService:
             supabase_client: Configured Supabase client instance
         """
         self.supabase = supabase_client
-    
+
     def create_report(
         self,
         errors: List[ValidationErrorItem],
@@ -54,7 +54,7 @@ class ValidationReportService:
         """
         is_valid = len(errors) == 0
         validated_at = datetime.utcnow()
-        
+
         return ValidationReport(
             is_valid=is_valid,
             errors=errors,
@@ -62,7 +62,7 @@ class ValidationReportService:
             validated_at=validated_at,
             validated_by=validated_by
         )
-    
+
     def save_to_db(
         self,
         block_id: str,
@@ -94,21 +94,21 @@ class ValidationReportService:
         try:
             # Serialize report to JSON-compatible dict
             report_json = report.model_dump(mode='json')
-            
+
             # Update database
             result = self.supabase.table(TABLE_BLOCKS).update({
                 "validation_report": report_json
             }).eq("id", block_id).execute()
-            
+
             # Check if update affected any rows
             if len(result.data) == 0:
                 return (False, "Block not found")
-            
+
             return (True, None)
-            
+
         except Exception as e:
             return (False, str(e))
-    
+
     def get_report(
         self,
         block_id: str
@@ -138,19 +138,19 @@ class ValidationReportService:
             result = self.supabase.table(TABLE_BLOCKS).select(
                 "validation_report"
             ).eq("id", block_id).execute()
-            
+
             # Check if block exists
             if len(result.data) == 0:
                 return (None, "Block not found")
-            
+
             # Check if report exists
             report_json = result.data[0].get("validation_report")
             if report_json is None:
                 return (None, "No validation report")
-            
+
             # Parse JSON to ValidationReport
             report = ValidationReport.model_validate(report_json)
             return (report, None)
-            
+
         except Exception as e:
             return (None, str(e))

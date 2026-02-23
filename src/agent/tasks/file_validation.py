@@ -5,7 +5,6 @@ This module contains all async tasks executed by the Celery worker,
 including health checks and file validation workflows.
 """
 
-import os
 
 # Import from parent package
 try:
@@ -82,7 +81,7 @@ def validate_file(self, part_id: str, s3_key: str):
         dict: Result with success status and metadata
     """
     logger.info("validate_file.started", part_id=part_id, s3_key=s3_key)
-    
+
     # Import services
     try:
         from services.file_download_service import FileDownloadService
@@ -92,25 +91,25 @@ def validate_file(self, part_id: str, s3_key: str):
         from src.agent.services.file_download_service import FileDownloadService
         from src.agent.services.rhino_parser_service import RhinoParserService
         from src.agent.services.db_service import DBService
-    
+
     # Initialize services
     file_download = FileDownloadService()
     rhino_parser = RhinoParserService()
     db_service = DBService()
-    
+
     # Worker identifier for audit trail
     worker_id = self.request.hostname or "unknown-worker"
-    
+
     try:
         # Step 1: Update status to processing
         db_service.update_block_status(part_id, "processing")
-        
+
         # Step 2: Download file from S3
         success, local_path, download_error = file_download.download_from_s3(s3_key)
-        
+
         if not success:
             logger.error("validate_file.download_failed", part_id=part_id, error=download_error)
-            
+
             # Save error to validation report
             db_service.save_validation_report(
                 part_id=part_id,
@@ -123,25 +122,25 @@ def validate_file(self, part_id: str, s3_key: str):
                 metadata={},
                 validated_by=worker_id
             )
-            
+
             # Update status to error
             db_service.update_block_status(part_id, "error_processing")
-            
+
             return {
                 "success": False,
                 "error": download_error
             }
-        
+
         # Step 3: Parse .3dm file
         parse_result = rhino_parser.parse_file(local_path)
-        
+
         # Step 4: Cleanup temp file
         file_download.cleanup_temp_file(local_path)
-        
+
         # Step 5: Process results
         if not parse_result.success:
             logger.error("validate_file.parse_failed", part_id=part_id, error=parse_result.error_message)
-            
+
             # Save error to validation report
             db_service.save_validation_report(
                 part_id=part_id,
@@ -154,15 +153,15 @@ def validate_file(self, part_id: str, s3_key: str):
                 metadata={},
                 validated_by=worker_id
             )
-            
+
             # Update status to error
             db_service.update_block_status(part_id, "error_processing")
-            
+
             return {
                 "success": False,
                 "error": parse_result.error_message
             }
-        
+
         # Step 6: Build metadata from parsed layers
         layers_metadata = [
             {
@@ -174,12 +173,12 @@ def validate_file(self, part_id: str, s3_key: str):
             }
             for layer in parse_result.layers
         ]
-        
+
         metadata = {
             "layers": layers_metadata,
             **parse_result.file_metadata
         }
-        
+
         # Step 7: Save validation report (no errors for MVP - T-026/T-027 add validation)
         db_service.save_validation_report(
             part_id=part_id,
@@ -188,26 +187,26 @@ def validate_file(self, part_id: str, s3_key: str):
             metadata=metadata,
             validated_by=worker_id
         )
-        
+
         # Step 8: Update status to validated
         db_service.update_block_status(part_id, "validated")
-        
+
         logger.info(
             "validate_file.success",
             part_id=part_id,
             layer_count=len(parse_result.layers)
         )
-        
+
         return {
             "success": True,
             "part_id": part_id,
             "layer_count": len(parse_result.layers),
             "metadata": metadata
         }
-        
+
     except Exception as e:
         logger.exception("validate_file.unexpected_error", part_id=part_id, error=str(e))
-        
+
         # Save error to validation report
         try:
             db_service.save_validation_report(
@@ -221,11 +220,11 @@ def validate_file(self, part_id: str, s3_key: str):
                 metadata={},
                 validated_by=worker_id
             )
-            
+
             db_service.update_block_status(part_id, "error_processing")
         except Exception as db_error:
             logger.exception("validate_file.db_error_during_error_handling", error=str(db_error))
-        
+
         return {
             "success": False,
             "error": str(e)

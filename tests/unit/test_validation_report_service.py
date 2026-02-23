@@ -27,14 +27,14 @@ def test_create_report_with_no_errors():
     # Arrange
     mock_supabase = Mock()
     service = ValidationReportService(mock_supabase)
-    
+
     errors = []
     metadata = {"layer_count": 5, "object_count": 100}
     validated_by = "test-worker"
-    
+
     # Act
     report = service.create_report(errors, metadata, validated_by)
-    
+
     # Assert
     assert isinstance(report, ValidationReport), "Should return ValidationReport instance"
     assert report.is_valid is True, "Report with no errors should be valid"
@@ -53,17 +53,17 @@ def test_create_report_with_errors():
     # Arrange
     mock_supabase = Mock()
     service = ValidationReportService(mock_supabase)
-    
+
     errors = [
         ValidationErrorItem(category="nomenclature", target="Layer1", message="Invalid format"),
         ValidationErrorItem(category="nomenclature", target="Layer2", message="Missing prefix"),
         ValidationErrorItem(category="geometry", target="Object-123", message="Invalid geometry"),
     ]
     metadata = {"layer_count": 2}
-    
+
     # Act
     report = service.create_report(errors, metadata)
-    
+
     # Assert
     assert report.is_valid is False, "Report with errors should be invalid"
     assert len(report.errors) == 3, f"Expected 3 errors, got {len(report.errors)}"
@@ -83,15 +83,15 @@ def test_save_report_to_db_success():
     mock_table = Mock()
     mock_update = Mock()
     mock_eq = Mock()
-    
+
     # Mock Supabase chain: table().update().eq().execute()
     mock_supabase.table.return_value = mock_table
     mock_table.update.return_value = mock_update
     mock_update.eq.return_value = mock_eq
     mock_eq.execute.return_value = MagicMock(data=[{"id": "test-block-id"}])
-    
+
     service = ValidationReportService(mock_supabase)
-    
+
     report = ValidationReport(
         is_valid=True,
         errors=[],
@@ -100,10 +100,10 @@ def test_save_report_to_db_success():
         validated_by="test-worker"
     )
     block_id = "test-block-id"
-    
+
     # Act
     success, error = service.save_to_db(block_id, report)
-    
+
     # Assert
     assert success is True, "Save should succeed"
     assert error is None, "Error should be None on success"
@@ -122,12 +122,12 @@ def test_get_report_success():
     mock_table = Mock()
     mock_select = Mock()
     mock_eq = Mock()
-    
+
     # Mock Supabase chain: table().select().eq().execute()
     mock_supabase.table.return_value = mock_table
     mock_table.select.return_value = mock_select
     mock_select.eq.return_value = mock_eq
-    
+
     # Mock report data in DB
     report_data = {
         "is_valid": True,
@@ -137,13 +137,13 @@ def test_get_report_success():
         "validated_by": "test-worker"
     }
     mock_eq.execute.return_value = MagicMock(data=[{"validation_report": report_data}])
-    
+
     service = ValidationReportService(mock_supabase)
     block_id = "test-block-id"
-    
+
     # Act
     report, error = service.get_report(block_id)
-    
+
     # Assert
     assert report is not None, "Report should be returned"
     assert error is None, "Error should be None"
@@ -163,10 +163,10 @@ def test_create_report_with_empty_metadata():
     # Arrange
     mock_supabase = Mock()
     service = ValidationReportService(mock_supabase)
-    
+
     # Act
     report = service.create_report(errors=[], metadata={})
-    
+
     # Assert
     assert report.metadata == {}, "Empty metadata should be accepted"
     assert report.is_valid is True
@@ -183,15 +183,15 @@ def test_save_report_block_not_found():
     mock_table = Mock()
     mock_update = Mock()
     mock_eq = Mock()
-    
+
     # Mock empty result (block not found)
     mock_supabase.table.return_value = mock_table
     mock_table.update.return_value = mock_update
     mock_update.eq.return_value = mock_eq
     mock_eq.execute.return_value = MagicMock(data=[])  # No rows updated
-    
+
     service = ValidationReportService(mock_supabase)
-    
+
     report = ValidationReport(
         is_valid=True,
         errors=[],
@@ -199,10 +199,10 @@ def test_save_report_block_not_found():
         validated_at=datetime.utcnow(),
         validated_by="test"
     )
-    
+
     # Act
     success, error = service.save_to_db("non-existent-id", report)
-    
+
     # Assert
     assert success is False, "Save should fail for non-existent block"
     assert error == "Block not found", f"Expected 'Block not found', got '{error}'"
@@ -219,18 +219,18 @@ def test_get_report_no_report_yet():
     mock_table = Mock()
     mock_select = Mock()
     mock_eq = Mock()
-    
+
     # Mock result with NULL validation_report
     mock_supabase.table.return_value = mock_table
     mock_table.select.return_value = mock_select
     mock_select.eq.return_value = mock_eq
     mock_eq.execute.return_value = MagicMock(data=[{"validation_report": None}])
-    
+
     service = ValidationReportService(mock_supabase)
-    
+
     # Act
     report, error = service.get_report("existing-block-id")
-    
+
     # Assert
     assert report is None, "Report should be None when not found"
     assert error == "No validation report", f"Expected 'No validation report', got '{error}'"
@@ -247,14 +247,14 @@ def test_update_existing_report():
     mock_table = Mock()
     mock_update = Mock()
     mock_eq = Mock()
-    
+
     mock_supabase.table.return_value = mock_table
     mock_table.update.return_value = mock_update
     mock_update.eq.return_value = mock_eq
     mock_eq.execute.return_value = MagicMock(data=[{"id": "block-id"}])
-    
+
     service = ValidationReportService(mock_supabase)
-    
+
     new_report = ValidationReport(
         is_valid=False,
         errors=[ValidationErrorItem(category="geometry", target="Obj1", message="Invalid")],
@@ -262,10 +262,10 @@ def test_update_existing_report():
         validated_at=datetime.utcnow(),
         validated_by="test"
     )
-    
+
     # Act
     success, error = service.save_to_db("block-id", new_report)
-    
+
     # Assert
     assert success is True, "Update should succeed"
     assert error is None
@@ -284,15 +284,15 @@ def test_save_report_with_invalid_block_id_format():
     mock_table = Mock()
     mock_update = Mock()
     mock_eq = Mock()
-    
+
     # Mock exception from Supabase
     mock_supabase.table.return_value = mock_table
     mock_table.update.return_value = mock_update
     mock_update.eq.return_value = mock_eq
     mock_eq.execute.side_effect = Exception("Invalid UUID format")
-    
+
     service = ValidationReportService(mock_supabase)
-    
+
     report = ValidationReport(
         is_valid=True,
         errors=[],
@@ -300,10 +300,10 @@ def test_save_report_with_invalid_block_id_format():
         validated_at=datetime.utcnow(),
         validated_by="test"
     )
-    
+
     # Act
     success, error = service.save_to_db("invalid-id", report)
-    
+
     # Assert
     assert success is False, "Should fail gracefully"
     assert error is not None, "Should return error message"
@@ -319,20 +319,20 @@ def test_serialization_to_json():
     # Arrange
     mock_supabase = Mock()
     service = ValidationReportService(mock_supabase)
-    
+
     errors = [
         ValidationErrorItem(category="nomenclature", target="Layer1", message="Error")
     ]
     metadata = {"key": "value"}
-    
+
     report = service.create_report(errors, metadata, "test-worker")
-    
+
     # Act
     try:
         serialized = report.model_dump(mode='json')
     except Exception as e:
         pytest.fail(f"Serialization failed: {e}")
-    
+
     # Assert
     assert "validated_at" in serialized, "validated_at should be in serialized output"
     assert isinstance(serialized["validated_at"], str), "validated_at should be ISO string"

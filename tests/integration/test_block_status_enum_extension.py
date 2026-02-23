@@ -43,7 +43,7 @@ def test_all_enum_values_present(db_connection: connection) -> None:
           archived, processing, rejected, error_processing
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Query pg_enum to get all block_status values
         cursor.execute("""
@@ -52,27 +52,27 @@ def test_all_enum_values_present(db_connection: connection) -> None:
             WHERE enumtypid = 'block_status'::regtype
             ORDER BY enumsortorder;
         """)
-        
+
         results: List[Tuple[str, float]] = cursor.fetchall()
-        
+
         if not results:
             pytest.fail(
                 "CRITICAL FAILURE: block_status ENUM type does not exist.\n"
                 "Prerequisite migration missing: 20260211155000_create_blocks_table.sql"
             )
-        
+
         # Extract enum labels
         current_values = [label for label, _ in results]
-        
+
         # Define required values (5 original + 3 new)
         required_values = [
             'uploaded', 'validated', 'in_fabrication', 'completed', 'archived',  # Original 5
             'processing', 'rejected', 'error_processing'  # New 3
         ]
-        
+
         # Check if all required values are present
         missing_values = [val for val in required_values if val not in current_values]
-        
+
         if missing_values:
             pytest.fail(
                 f"EXPECTED FAILURE (RED Phase): Missing ENUM values: {missing_values}\n"
@@ -80,17 +80,17 @@ def test_all_enum_values_present(db_connection: connection) -> None:
                 f"Required values ({len(required_values)}): {required_values}\n"
                 "Run migration: supabase/migrations/20260212100000_extend_block_status_enum.sql"
             )
-        
+
         # If we reach here, all values exist (test passes after migration)
         assert len(current_values) == 8, (
             f"Expected exactly 8 ENUM values, found {len(current_values)}: {current_values}"
         )
-        
+
         # Verify specific new values
         assert 'processing' in current_values, "New value 'processing' must exist"
         assert 'rejected' in current_values, "New value 'rejected' must exist"
         assert 'error_processing' in current_values, "New value 'error_processing' must exist"
-        
+
     finally:
         cursor.close()
 
@@ -114,11 +114,11 @@ def test_add_value_idempotent(db_connection: connection) -> None:
         - ENUM still has correct number of values
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Note: PostgreSQL requires autocommit mode for ALTER TYPE ADD VALUE
         # The db_connection fixture should have autocommit=True
-        
+
         # Attempt to add 'processing' value (should succeed first time, skip if exists)
         try:
             cursor.execute("ALTER TYPE block_status ADD VALUE IF NOT EXISTS 'processing';")
@@ -128,19 +128,19 @@ def test_add_value_idempotent(db_connection: connection) -> None:
                 f"Error: {e}\n"
                 "This is expected before migration. After migration, this should skip silently."
             )
-        
+
         # Attempt to add same value again (should skip silently)
         cursor.execute("ALTER TYPE block_status ADD VALUE IF NOT EXISTS 'processing';")
-        
+
         # Verify value exists and count is correct
         cursor.execute("""
             SELECT COUNT(*)
             FROM pg_enum
             WHERE enumtypid = 'block_status'::regtype;
         """)
-        
+
         count = cursor.fetchone()[0]
-        
+
         # After migration, should have 8 values total
         # Before migration, will have 5-7 values depending on partial execution
         if count < 8:
@@ -148,7 +148,7 @@ def test_add_value_idempotent(db_connection: connection) -> None:
                 f"EXPECTED FAILURE (RED Phase): Only {count} ENUM values exist.\n"
                 "Migration not fully applied. Expected 8 values after migration."
             )
-        
+
     finally:
         cursor.close()
 
@@ -171,15 +171,15 @@ def test_insert_block_with_processing_status(db_connection: connection) -> None:
         - New status values can be used in WHERE clauses
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Test ISO code for integration test
         test_iso_code = 'SF-TEST-ENUM-001'
-        
+
         # Clean up any previous test data
         cursor.execute("DELETE FROM blocks WHERE iso_code = %s;", (test_iso_code,))
         db_connection.commit()
-        
+
         # Attempt to insert block with 'processing' status
         try:
             cursor.execute("""
@@ -199,14 +199,14 @@ def test_insert_block_with_processing_status(db_connection: connection) -> None:
                 )
                 RETURNING id, status;
             """, (test_iso_code,))
-            
+
             db_connection.commit()
-            
+
         except Exception as e:
             # Expected failure before migration
             db_connection.rollback()
             error_msg = str(e)
-            
+
             if "invalid input value for enum block_status" in error_msg:
                 pytest.fail(
                     f"EXPECTED FAILURE (RED Phase): Cannot use 'processing' status.\n"
@@ -219,28 +219,28 @@ def test_insert_block_with_processing_status(db_connection: connection) -> None:
                     f"UNEXPECTED ERROR: {error_msg}\n"
                     "Check test prerequisites (profiles table must have at least 1 row)"
                 )
-        
+
         # If we reach here, insert succeeded (test passes after migration)
         result = cursor.fetchone()
         assert result is not None, "INSERT should return row"
-        
+
         block_id, status = result
         assert status == 'processing', f"Status must be 'processing', got {status}"
-        
+
         # Verify can query by new status
         cursor.execute("""
             SELECT COUNT(*) 
             FROM blocks 
             WHERE status = 'processing';
         """)
-        
+
         count = cursor.fetchone()[0]
         assert count >= 1, f"Should find at least 1 block with status='processing', found {count}"
-        
+
         # Cleanup
         cursor.execute("DELETE FROM blocks WHERE iso_code = %s;", (test_iso_code,))
         db_connection.commit()
-        
+
     finally:
         cursor.close()
 
@@ -263,7 +263,7 @@ def test_verification_query_passes(db_connection: connection) -> None:
         - RAISE NOTICE confirms all 8 values present
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Execute the same verification query from migration
         verification_query = """
@@ -293,16 +293,16 @@ def test_verification_query_passes(db_connection: connection) -> None:
           RAISE NOTICE 'All required block_status values present: %', enum_values;
         END $$;
         """
-        
+
         try:
             cursor.execute(verification_query)
             db_connection.commit()
-            
+
         except Exception as e:
             # Expected failure before migration
             db_connection.rollback()
             error_msg = str(e)
-            
+
             if "Missing ENUM value:" in error_msg:
                 pytest.fail(
                     f"EXPECTED FAILURE (RED Phase): {error_msg}\n"
@@ -311,10 +311,10 @@ def test_verification_query_passes(db_connection: connection) -> None:
             else:
                 # Unexpected error
                 pytest.fail(f"UNEXPECTED ERROR in verification query: {error_msg}")
-        
+
         # If we reach here, verification passed (test passes after migration)
         # No further assertions needed - the query itself validates correctness
-        
+
     finally:
         cursor.close()
 
@@ -336,14 +336,14 @@ def test_update_block_to_rejected_status(db_connection: connection) -> None:
         - New status persists correctly
     """
     cursor = db_connection.cursor()
-    
+
     try:
         test_iso_code = 'SF-TEST-ENUM-002'
-        
+
         # Clean up any previous test data
         cursor.execute("DELETE FROM blocks WHERE iso_code = %s;", (test_iso_code,))
         db_connection.commit()
-        
+
         # Insert block with default 'uploaded' status
         cursor.execute("""
             INSERT INTO blocks (
@@ -362,10 +362,10 @@ def test_update_block_to_rejected_status(db_connection: connection) -> None:
             )
             RETURNING id;
         """, (test_iso_code,))
-        
+
         block_id = cursor.fetchone()[0]
         db_connection.commit()
-        
+
         # Attempt to update to 'rejected' status
         try:
             cursor.execute("""
@@ -374,13 +374,13 @@ def test_update_block_to_rejected_status(db_connection: connection) -> None:
                 WHERE id = %s
                 RETURNING status;
             """, (block_id,))
-            
+
             db_connection.commit()
-            
+
         except Exception as e:
             db_connection.rollback()
             error_msg = str(e)
-            
+
             if "invalid input value for enum block_status" in error_msg:
                 pytest.fail(
                     f"EXPECTED FAILURE (RED Phase): Cannot update to 'rejected' status.\n"
@@ -389,15 +389,15 @@ def test_update_block_to_rejected_status(db_connection: connection) -> None:
                 )
             else:
                 pytest.fail(f"UNEXPECTED ERROR: {error_msg}")
-        
+
         # If we reach here, update succeeded
         new_status = cursor.fetchone()[0]
         assert new_status == 'rejected', f"Status must be 'rejected', got {new_status}"
-        
+
         # Cleanup
         cursor.execute("DELETE FROM blocks WHERE iso_code = %s;", (test_iso_code,))
         db_connection.commit()
-        
+
     finally:
         cursor.close()
 
@@ -419,10 +419,10 @@ def test_invalid_status_value_rejected(db_connection: connection) -> None:
         - Error message indicates invalid ENUM value
     """
     cursor = db_connection.cursor()
-    
+
     try:
         test_iso_code = 'SF-TEST-ENUM-003'
-        
+
         # Attempt to insert block with invalid status
         with pytest.raises(Exception) as exc_info:
             cursor.execute("""
@@ -441,16 +441,16 @@ def test_invalid_status_value_rejected(db_connection: connection) -> None:
                     (SELECT id FROM profiles LIMIT 1)
                 );
             """, (test_iso_code,))
-            
+
             db_connection.commit()
-        
+
         # Verify error message
         error_msg = str(exc_info.value)
         assert "invalid input value for enum block_status" in error_msg, (
             f"Expected ENUM validation error, got: {error_msg}"
         )
-        
+
         db_connection.rollback()
-        
+
     finally:
         cursor.close()

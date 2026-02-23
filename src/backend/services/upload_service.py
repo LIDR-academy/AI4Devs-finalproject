@@ -38,7 +38,7 @@ class UploadService:
     This class encapsulates all business logic related to file uploads,
     including storage verification and event creation.
     """
-    
+
     def __init__(self, supabase_client: Client, celery_client=None):
         """
         Initialize the upload service.
@@ -49,7 +49,7 @@ class UploadService:
         """
         self.supabase = supabase_client
         self.celery = celery_client
-    
+
     def _validate_3dm_magic_bytes(self, file_content: bytes) -> bool:
         """
         Validate .3dm file by checking magic bytes (file signature).
@@ -69,7 +69,7 @@ class UploadService:
             - CVE-2022-XXXXX: File upload bypass vulnerabilities
         """
         return any(file_content.startswith(magic) for magic in RHINO_3DM_MAGIC_BYTES)
-    
+
     def generate_presigned_url(self, file_id: str, filename: str) -> Tuple[str, str]:
         """
         Generate a signed upload URL for Supabase Storage.
@@ -103,16 +103,16 @@ class UploadService:
             else:
                 path = ''
                 file_name = file_key
-            
+
             # List files in the directory
             files = self.supabase.storage.from_(STORAGE_BUCKET_RAW_UPLOADS).list(path=path)
-            
+
             # Check if our file is in the list
             return any(f.get('name') == file_name for f in files)
         except Exception:
             # Any error means file not accessible
             return False
-    
+
     def create_upload_event(
         self,
         file_id: str,
@@ -142,14 +142,14 @@ class UploadService:
             },
             "created_at": datetime.utcnow().isoformat()
         }
-        
+
         result = self.supabase.table(TABLE_EVENTS).insert(event_data).execute()
-        
+
         if not result.data:
             raise Exception("Failed to create event record - no data returned")
-        
+
         return event_id
-    
+
     def create_block_record(self, file_id: str, file_key: str) -> str:
         """
         Create a block record with temporary pending values.
@@ -222,12 +222,12 @@ class UploadService:
         # Step 1: Verify file exists
         if not self.verify_file_exists_in_storage(file_key):
             return False, None, None, f"File not found in storage: {file_key}"
-        
+
         # Step 2: Validate file content (magic bytes) - SECURITY CRITICAL
         # Download file to check file signature (Supabase returns full file)
         try:
             file_content = self.supabase.storage.from_(STORAGE_BUCKET_RAW_UPLOADS).download(file_key)
-            
+
             # Check if file has valid Rhino 3DM signature (first 512 bytes)
             if not self._validate_3dm_magic_bytes(file_content[:512]):
                 # SECURITY: Delete malicious file immediately
@@ -242,9 +242,9 @@ class UploadService:
                     logger.info("malicious_file.deleted", file_key=file_key)
                 except Exception as delete_error:
                     logger.error("malicious_file.delete_failed", file_key=file_key, error=str(delete_error))
-                
+
                 return False, None, None, "Invalid .3dm file format - content validation failed"
-                
+
         except Exception as e:
             logger.error("magic_bytes_validation.error", file_key=file_key, error=str(e))
             return False, None, None, f"File content validation error: {str(e)}"

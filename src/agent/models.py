@@ -38,7 +38,7 @@ class UserStringCollection(BaseModel):
         default_factory=dict,
         description="Object-level user strings keyed by object UUID"
     )
-    
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {

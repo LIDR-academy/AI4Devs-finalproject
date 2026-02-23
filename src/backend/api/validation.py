@@ -90,7 +90,7 @@ async def get_validation_status(id: UUID) -> ValidationStatusResponse:
     supabase = get_supabase_client()
     service = ValidationService(supabase)
     success, block_data, error_msg, extra = service.get_validation_status(id)
-    
+
     # Map service errors to HTTP responses
     if not success:
         if error_msg and "not found" in error_msg.lower():
@@ -103,7 +103,7 @@ async def get_validation_status(id: UUID) -> ValidationStatusResponse:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database connection failed. Please try again later."
             )
-    
+
     # Build Pydantic response model
     return ValidationStatusResponse(
         block_id=block_data["id"],

@@ -105,22 +105,22 @@ def create_realistic_block(
         "is_archived": is_archived,
         "created_at": datetime.utcnow().isoformat() + "Z"
     }
-    
+
     if workshop_id:
         block["workshop_id"] = workshop_id
-    
+
     if include_bbox:
         block["bbox"] = {
             "min": [-2.5, 0.0, -2.5],
             "max": [2.5, 5.0, 2.5]
         }
-    
+
     if include_low_poly_url:
         block["low_poly_url"] = (
             f"https://example.supabase.co/storage/v1/object/public/"
             f"processed-geometry/low-poly/{block['id']}.glb"
         )
-    
+
     return block
 
 
@@ -143,7 +143,7 @@ def assert_execution_time(max_duration_ms: float):
             start_time = time.perf_counter()
             result = func(*args, **kwargs)
             end_time = time.perf_counter()
-            
+
             duration_ms = (end_time - start_time) * 1000
             assert duration_ms < max_duration_ms, (
                 f"Function {func.__name__} took {duration_ms:.2f}ms "
@@ -174,13 +174,13 @@ def get_query_plan(
         >>> assert "Index Scan" in str(plan)
     """
     cursor = db_connection.cursor()
-    
+
     explain_query = f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {sql_query}"
     cursor.execute(explain_query)
     query_plan = cursor.fetchone()[0]
-    
+
     cursor.close()
-    
+
     return query_plan
 
 
@@ -262,11 +262,11 @@ def calculate_percentiles(
     """
     sorted_latencies = sorted(latencies)
     results = {}
-    
+
     for p in percentiles:
         index = int(len(sorted_latencies) * (p / 100))
         results[f"p{p}"] = sorted_latencies[index]
-    
+
     return results
 
 
@@ -286,7 +286,7 @@ def assert_response_schema(
         >>> assert_response_schema(data, ["parts", "count", "filters_applied"])
     """
     missing_fields = [field for field in expected_fields if field not in response_data]
-    
+
     assert not missing_fields, (
         f"Response missing required fields: {missing_fields}. "
         f"Actual fields: {list(response_data.keys())}"

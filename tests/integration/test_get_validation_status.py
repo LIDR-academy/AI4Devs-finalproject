@@ -9,7 +9,6 @@ Test Coverage:
 - Edge cases: Block not found, invalid UUID
 - End-to-end: Full upload → confirm → validate → get status flow
 """
-import pytest
 from uuid import uuid4
 from fastapi.testclient import TestClient
 from main import app
@@ -46,13 +45,13 @@ def test_get_validation_status_endpoint_validated_block(supabase_client: Client)
         "validated_at": datetime.utcnow().isoformat() + "Z",
         "validated_by": "librarian-v1.0.0"
     }
-    
+
     # Clean up: Remove test block if exists from previous run
     try:
         supabase_client.table("blocks").delete().eq("id", test_block_id).execute()
     except Exception:
         pass
-    
+
     # Insert test block into database
     insert_result = supabase_client.table("blocks").insert({
         "id": test_block_id,
@@ -62,15 +61,15 @@ def test_get_validation_status_endpoint_validated_block(supabase_client: Client)
         "validation_report": test_validation_report,
         "rhino_metadata": {}
     }).execute()
-    
+
     assert insert_result.data, "Failed to insert test block"
-    
+
     # ACT: Call GET endpoint
     response = client.get(f"/api/parts/{test_block_id}/validation")
-    
+
     # ASSERT: Status code should be 200
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-    
+
     # ASSERT: Response structure matches ValidationStatusResponse
     data = response.json()
     assert "block_id" in data, "Response missing 'block_id' field"
@@ -78,15 +77,15 @@ def test_get_validation_status_endpoint_validated_block(supabase_client: Client)
     assert "status" in data, "Response missing 'status' field"
     assert "validation_report" in data, "Response missing 'validation_report' field"
     assert "job_id" in data, "Response missing 'job_id' field"
-    
+
     # ASSERT: Field values
     assert data["block_id"] == test_block_id, f"block_id mismatch: expected {test_block_id}, got {data['block_id']}"
-    assert data["iso_code"] == test_iso_code, f"iso_code mismatch"
+    assert data["iso_code"] == test_iso_code, "iso_code mismatch"
     assert data["status"] == "validated", f"status should be 'validated', got {data['status']}"
     assert data["validation_report"] is not None, "validation_report should not be null"
     assert data["validation_report"]["is_valid"] is True, "is_valid should be True"
     assert data["job_id"] is None, "job_id should be None for validated block"
-    
+
     # CLEANUP: Remove test block
     supabase_client.table("blocks").delete().eq("id", test_block_id).execute()
 
@@ -105,13 +104,13 @@ def test_get_validation_status_endpoint_unvalidated_block(supabase_client: Clien
     # ARRANGE: Create a test block WITHOUT validation_report
     test_block_id = str(uuid4())
     test_iso_code = "TEST-UNV-001"
-    
+
     # Clean up: Remove test block if exists
     try:
         supabase_client.table("blocks").delete().eq("id", test_block_id).execute()
     except Exception:
         pass
-    
+
     # Insert test block (validation_report is NULL)
     insert_result = supabase_client.table("blocks").insert({
         "id": test_block_id,
@@ -121,15 +120,15 @@ def test_get_validation_status_endpoint_unvalidated_block(supabase_client: Clien
         "validation_report": None,
         "rhino_metadata": {}
     }).execute()
-    
+
     assert insert_result.data, "Failed to insert test block"
-    
+
     # ACT: Call GET endpoint
     response = client.get(f"/api/parts/{test_block_id}/validation")
-    
+
     # ASSERT: Status code should be 200
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-    
+
     # ASSERT: Response structure
     data = response.json()
     assert data["block_id"] == test_block_id
@@ -137,7 +136,7 @@ def test_get_validation_status_endpoint_unvalidated_block(supabase_client: Clien
     assert data["status"] == "uploaded", f"status should be 'uploaded', got {data['status']}"
     assert data["validation_report"] is None, "validation_report should be null for unvalidated block"
     assert data["job_id"] is None, "job_id should be None"
-    
+
     # CLEANUP: Remove test block
     supabase_client.table("blocks").delete().eq("id", test_block_id).execute()
 
@@ -154,13 +153,13 @@ def test_get_validation_status_endpoint_not_found():
     """
     # ARRANGE: Use a random UUID that doesn't exist
     random_block_id = str(uuid4())
-    
+
     # ACT: Call GET endpoint
     response = client.get(f"/api/parts/{random_block_id}/validation")
-    
+
     # ASSERT: Status code should be 404
     assert response.status_code == 404, f"Expected 404, got {response.status_code}: {response.text}"
-    
+
     # ASSERT: Error message
     # NOTE (RED PHASE): Currently fails with generic "Not Found" because endpoint doesn't exist yet.
     # In GREEN phase, will return specific message: "Block with ID <uuid> not found"
@@ -183,13 +182,13 @@ def test_get_validation_status_endpoint_invalid_uuid():
     """
     # ARRANGE: Use invalid UUID format
     invalid_uuid = "invalid-uuid-format"
-    
+
     # ACT: Call GET endpoint
     response = client.get(f"/api/parts/{invalid_uuid}/validation")
-    
+
     # ASSERT: Status code should be 422
     assert response.status_code == 422, f"Expected 422, got {response.status_code}: {response.text}"
-    
+
     # ASSERT: Pydantic validation error structure
     data = response.json()
     assert "detail" in data, "Response missing 'detail' field"
@@ -217,13 +216,13 @@ def test_get_validation_status_after_confirm_flow(supabase_client: Client):
     test_block_id = str(uuid4())
     test_iso_code = "TEST-E2E-001"
     test_file_id = str(uuid4())
-    
+
     # Clean up: Remove test block if exists
     try:
         supabase_client.table("blocks").delete().eq("id", test_block_id).execute()
     except Exception:
         pass
-    
+
     # Insert test block simulating validated state after full flow
     final_validation_report = {
         "is_valid": True,
@@ -237,7 +236,7 @@ def test_get_validation_status_after_confirm_flow(supabase_client: Client):
         "validated_at": datetime.utcnow().isoformat() + "Z",
         "validated_by": "librarian-v1.0.0"
     }
-    
+
     insert_result = supabase_client.table("blocks").insert({
         "id": test_block_id,
         "iso_code": test_iso_code,
@@ -246,24 +245,24 @@ def test_get_validation_status_after_confirm_flow(supabase_client: Client):
         "validation_report": final_validation_report,
         "rhino_metadata": {}
     }).execute()
-    
+
     assert insert_result.data, "Failed to insert test block"
-    
+
     # ACT: Call GET endpoint to retrieve final status
     response = client.get(f"/api/parts/{test_block_id}/validation")
-    
+
     # ASSERT: Status code should be 200
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-    
+
     # ASSERT: Final state reflects validated status
     data = response.json()
     assert data["status"] == "validated", "Final status should be 'validated'"
     assert data["validation_report"] is not None, "validation_report should be present"
     assert data["validation_report"]["is_valid"] is True, "File should have passed validation"
-    
+
     # ASSERT: Processing metadata is present
     assert "processing_duration_ms" in data["validation_report"]["metadata"], \
         "Metadata should include processing_duration_ms"
-    
+
     # CLEANUP: Remove test block
     supabase_client.table("blocks").delete().eq("id", test_block_id).execute()

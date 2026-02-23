@@ -23,16 +23,16 @@ except ModuleNotFoundError:
 
 class TestUserStringExtractor:
     """Test suite for UserStringExtractor service."""
-    
+
     @pytest.fixture
     def extractor(self):
         """Create UserStringExtractor instance."""
         return UserStringExtractor()
-    
+
     # ========================================
     # HAPPY PATH TESTS
     # ========================================
-    
+
     def test_extract_document_user_strings(self, extractor):
         """
         Test 1: Extract document user strings.
@@ -44,7 +44,7 @@ class TestUserStringExtractor:
         # Arrange: Mock rhino3dm model with document strings
         mock_model = Mock()
         mock_strings = MagicMock()
-        
+
         # Simulate NameValueDictionary with Keys property
         mock_strings.Keys = ["Project", "RevisionDate", "BIM_Manager"]
         mock_strings.__getitem__ = Mock(side_effect=lambda k: {
@@ -52,14 +52,14 @@ class TestUserStringExtractor:
             "RevisionDate": "2026-01-15",
             "BIM_Manager": "Pedro Cortés"
         }[k])
-        
+
         mock_model.Strings = mock_strings
         mock_model.Layers = []
         mock_model.Objects = []
-        
+
         # Act
         result = extractor.extract(mock_model)
-        
+
         # Assert
         assert isinstance(result, UserStringCollection)
         assert result.document == {
@@ -69,7 +69,7 @@ class TestUserStringExtractor:
         }
         assert result.layers == {}
         assert result.objects == {}
-    
+
     def test_extract_layer_user_strings(self, extractor):
         """
         Test 2: Extract layer user strings.
@@ -82,7 +82,7 @@ class TestUserStringExtractor:
         mock_model = Mock()
         mock_model.Strings = Mock(Keys=[])
         mock_model.Objects = []
-        
+
         # Create 2 layers with user strings
         layer1 = Mock()
         layer1.Name = "SF-C12-M-001"
@@ -93,7 +93,7 @@ class TestUserStringExtractor:
             "MaterialType": "UHPC"
         }[k])
         layer1.GetUserStrings = Mock(return_value=layer1_strings)
-        
+
         layer2 = Mock()
         layer2.Name = "SF-C12-M-002"
         layer2_strings = MagicMock()
@@ -103,12 +103,12 @@ class TestUserStringExtractor:
             "MaterialType": "Concrete"
         }[k])
         layer2.GetUserStrings = Mock(return_value=layer2_strings)
-        
+
         mock_model.Layers = [layer1, layer2]
-        
+
         # Act
         result = extractor.extract(mock_model)
-        
+
         # Assert
         assert isinstance(result, UserStringCollection)
         assert result.document == {}
@@ -122,7 +122,7 @@ class TestUserStringExtractor:
             "MaterialType": "Concrete"
         }
         assert result.objects == {}
-    
+
     def test_extract_object_user_strings(self, extractor):
         """
         Test 3: Extract object user strings.
@@ -135,7 +135,7 @@ class TestUserStringExtractor:
         mock_model = Mock()
         mock_model.Strings = Mock(Keys=[])
         mock_model.Layers = []
-        
+
         # Create 3 objects with user strings
         obj1 = Mock()
         obj1_attrs = Mock()
@@ -149,7 +149,7 @@ class TestUserStringExtractor:
         }[k])
         obj1_attrs.GetUserStrings = Mock(return_value=obj1_strings)
         obj1.Attributes = obj1_attrs
-        
+
         obj2 = Mock()
         obj2_attrs = Mock()
         obj2_attrs.Id = "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
@@ -161,7 +161,7 @@ class TestUserStringExtractor:
         }[k])
         obj2_attrs.GetUserStrings = Mock(return_value=obj2_strings)
         obj2.Attributes = obj2_attrs
-        
+
         obj3 = Mock()
         obj3_attrs = Mock()
         obj3_attrs.Id = "6ba7b814-9dad-11d1-80b4-00c04fd430c8"
@@ -170,12 +170,12 @@ class TestUserStringExtractor:
         obj3_strings.__getitem__ = Mock(side_effect=lambda k: {"ISO_Code": "SF-C12-M-003"}[k])
         obj3_attrs.GetUserStrings = Mock(return_value=obj3_strings)
         obj3.Attributes = obj3_attrs
-        
+
         mock_model.Objects = [obj1, obj2, obj3]
-        
+
         # Act
         result = extractor.extract(mock_model)
-        
+
         # Assert
         assert isinstance(result, UserStringCollection)
         assert result.document == {}
@@ -193,11 +193,11 @@ class TestUserStringExtractor:
         assert result.objects["6ba7b814-9dad-11d1-80b4-00c04fd430c8"] == {
             "ISO_Code": "SF-C12-M-003"
         }
-    
+
     # ========================================
     # EDGE CASES
     # ========================================
-    
+
     def test_empty_document_user_strings(self, extractor):
         """
         Test 4: Empty user strings (document).
@@ -211,16 +211,16 @@ class TestUserStringExtractor:
         mock_model.Strings = Mock(Keys=[])
         mock_model.Layers = []
         mock_model.Objects = []
-        
+
         # Act
         result = extractor.extract(mock_model)
-        
+
         # Assert
         assert isinstance(result, UserStringCollection)
         assert result.document == {}
         assert result.layers == {}
         assert result.objects == {}
-    
+
     def test_layer_without_user_strings(self, extractor):
         """
         Test 5: Layer without user strings.
@@ -233,27 +233,27 @@ class TestUserStringExtractor:
         mock_model = Mock()
         mock_model.Strings = Mock(Keys=[])
         mock_model.Objects = []
-        
+
         # Layer with GetUserStrings() returning None
         layer1 = Mock()
         layer1.Name = "Layer01"
         layer1.GetUserStrings = Mock(return_value=None)
-        
+
         # Layer with GetUserStrings() returning empty
         layer2 = Mock()
         layer2.Name = "Layer02"
         layer2_strings = Mock(Keys=[])
         layer2.GetUserStrings = Mock(return_value=layer2_strings)
-        
+
         mock_model.Layers = [layer1, layer2]
-        
+
         # Act
         result = extractor.extract(mock_model)
-        
+
         # Assert
         assert isinstance(result, UserStringCollection)
         assert result.layers == {}
-    
+
     def test_mixed_objects_some_have_strings(self, extractor):
         """
         Test 6: Mixed scenario (some objects have strings, some don't).
@@ -266,7 +266,7 @@ class TestUserStringExtractor:
         mock_model = Mock()
         mock_model.Strings = Mock(Keys=[])
         mock_model.Layers = []
-        
+
         # Object WITH user strings
         obj1 = Mock()
         obj1_attrs = Mock()
@@ -275,14 +275,14 @@ class TestUserStringExtractor:
         obj1_strings.__getitem__ = Mock(return_value="SF-001")
         obj1_attrs.GetUserStrings = Mock(return_value=obj1_strings)
         obj1.Attributes = obj1_attrs
-        
+
         # Object WITHOUT user strings (returns None)
         obj2 = Mock()
         obj2_attrs = Mock()
         obj2_attrs.Id = "uuid-without-strings-1"
         obj2_attrs.GetUserStrings = Mock(return_value=None)
         obj2.Attributes = obj2_attrs
-        
+
         # Object WITH user strings
         obj3 = Mock()
         obj3_attrs = Mock()
@@ -291,7 +291,7 @@ class TestUserStringExtractor:
         obj3_strings.__getitem__ = Mock(return_value="SF-002")
         obj3_attrs.GetUserStrings = Mock(return_value=obj3_strings)
         obj3.Attributes = obj3_attrs
-        
+
         # Object WITHOUT user strings (empty Keys)
         obj4 = Mock()
         obj4_attrs = Mock()
@@ -299,19 +299,19 @@ class TestUserStringExtractor:
         obj4_strings = Mock(Keys=[])
         obj4_attrs.GetUserStrings = Mock(return_value=obj4_strings)
         obj4.Attributes = obj4_attrs
-        
+
         # Object WITHOUT user strings (None)
         obj5 = Mock()
         obj5_attrs = Mock()
         obj5_attrs.Id = "uuid-without-strings-3"
         obj5_attrs.GetUserStrings = Mock(return_value=None)
         obj5.Attributes = obj5_attrs
-        
+
         mock_model.Objects = [obj1, obj2, obj3, obj4, obj5]
-        
+
         # Act
         result = extractor.extract(mock_model)
-        
+
         # Assert
         assert isinstance(result, UserStringCollection)
         assert len(result.objects) == 2
@@ -319,11 +319,11 @@ class TestUserStringExtractor:
         assert "uuid-with-strings-2" in result.objects
         assert result.objects["uuid-with-strings-1"] == {"ISO_Code": "SF-001"}
         assert result.objects["uuid-with-strings-2"] == {"ISO_Code": "SF-002"}
-    
+
     # ========================================
     # ERROR HANDLING
     # ========================================
-    
+
     def test_invalid_model_none(self, extractor):
         """
         Test 7: Invalid model (None).
@@ -334,13 +334,13 @@ class TestUserStringExtractor:
         """
         # Act
         result = extractor.extract(None)
-        
+
         # Assert
         assert isinstance(result, UserStringCollection)
         assert result.document == {}
         assert result.layers == {}
         assert result.objects == {}
-    
+
     def test_api_exception_getuserstrings_fails(self, extractor):
         """
         Test 8: API exceptions (GetUserStrings fails).
@@ -353,24 +353,24 @@ class TestUserStringExtractor:
         mock_model = Mock()
         mock_model.Strings = Mock(Keys=[])
         mock_model.Objects = []
-        
+
         # Layer that raises exception
         bad_layer = Mock()
         bad_layer.Name = "BadLayer"
         bad_layer.GetUserStrings = Mock(side_effect=AttributeError("No GetUserStrings method"))
-        
+
         # Good layer
         good_layer = Mock()
         good_layer.Name = "GoodLayer"
         good_strings = Mock(Keys=["Key1"])
         good_strings.__getitem__ = Mock(return_value="Value1")
         good_layer.GetUserStrings = Mock(return_value=good_strings)
-        
+
         mock_model.Layers = [bad_layer, good_layer]
-        
+
         # Act
         result = extractor.extract(mock_model)
-        
+
         # Assert - should continue processing despite error
         assert isinstance(result, UserStringCollection)
         assert len(result.layers) == 1

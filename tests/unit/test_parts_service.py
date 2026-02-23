@@ -20,14 +20,12 @@ Author: AI Assistant (Prompt #039 - TDD-RED Phase)
 Date: 2026-02-19
 """
 
-import pytest
-from uuid import UUID, uuid4
+from uuid import uuid4
 from unittest.mock import Mock, MagicMock
-from datetime import datetime
 
 # This import WILL FAIL because parts_service.py does not exist yet (TDD-RED)
 from services.parts_service import PartsService
-from schemas import PartCanvasItem, PartsListResponse, BoundingBox, BlockStatus
+from schemas import PartCanvasItem, PartsListResponse, BoundingBox
 
 
 # ===== HAPPY PATH TESTS =====
@@ -45,7 +43,7 @@ def test_list_parts_builds_correct_query_no_filters():
     mock_select = Mock()
     mock_eq = Mock()
     mock_order = Mock()
-    
+
     # Mock database response
     db_response = [
         {
@@ -58,23 +56,23 @@ def test_list_parts_builds_correct_query_no_filters():
             "workshop_id": str(uuid4())
         }
     ]
-    
+
     mock_supabase.table.return_value = mock_table
     mock_table.select.return_value = mock_select
     mock_select.eq.return_value = mock_eq  # For is_archived=false filter
     mock_eq.order.return_value = mock_order  # For created_at ordering
     mock_order.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts(status=None, tipologia=None, workshop_id=None)
-    
+
     # Assert
     assert isinstance(result, PartsListResponse), "Should return PartsListResponse"
     assert len(result.parts) == 1, "Should return 1 part"
     assert result.count == 1, "count should be 1"
-    
+
     # Verify Supabase methods were called
     mock_supabase.table.assert_called_once_with("blocks")
     mock_table.select.assert_called_once()
@@ -95,7 +93,7 @@ def test_list_parts_applies_status_filter():
     mock_select = Mock()
     mock_eq = Mock()
     mock_order = Mock()
-    
+
     db_response = [
         {
             "id": str(uuid4()),
@@ -107,24 +105,24 @@ def test_list_parts_applies_status_filter():
             "workshop_id": None
         }
     ]
-    
+
     mock_supabase.table.return_value = mock_table
     mock_table.select.return_value = mock_select
     mock_select.eq.return_value = mock_eq
     mock_eq.eq.return_value = mock_eq  # Chain for multiple filters
     mock_eq.order.return_value = mock_order  # For created_at ordering
     mock_order.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts(status="validated", tipologia=None, workshop_id=None)
-    
+
     # Assert
     assert len(result.parts) == 1
     assert result.parts[0].status == "validated"
     assert result.filters_applied["status"] == "validated"
-    
+
     # Verify Supabase eq() was called with status filter
     # (Checking call history: eq("is_archived", False) AND eq("status", "validated"))
     # This will fail in TDD-RED since implementation doesn't exist
@@ -138,7 +136,7 @@ def test_list_parts_applies_tipologia_filter():
     """
     # Arrange
     mock_supabase = Mock()
-    
+
     db_response = [
         {
             "id": str(uuid4()),
@@ -150,15 +148,15 @@ def test_list_parts_applies_tipologia_filter():
             "workshop_id": None
         }
     ]
-    
+
     # Mock chain (now includes .order() call added in GREEN phase)
     mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts(status=None, tipologia="capitel", workshop_id=None)
-    
+
     # Assert
     assert len(result.parts) == 1
     assert result.parts[0].tipologia == "capitel"
@@ -175,7 +173,7 @@ def test_list_parts_applies_all_three_filters():
     # Arrange
     mock_supabase = Mock()
     target_workshop = uuid4()
-    
+
     db_response = [
         {
             "id": str(uuid4()),
@@ -187,15 +185,15 @@ def test_list_parts_applies_all_three_filters():
             "workshop_id": str(target_workshop)
         }
     ]
-    
+
     # Mock chain with .order() call added in GREEN phase
     mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.eq.return_value.eq.return_value.order.return_value.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts(status="validated", tipologia="columna", workshop_id=target_workshop)
-    
+
     # Assert
     assert len(result.parts) == 1
     assert result.parts[0].status == "validated"
@@ -219,11 +217,11 @@ def test_list_parts_transforms_db_rows_to_pydantic():
     """
     # Arrange
     mock_supabase = Mock()
-    
+
     test_id = str(uuid4())
     test_workshop_id = str(uuid4())
     test_bbox = {"min": [-1.5, -1.5, -1.5], "max": [1.5, 1.5, 1.5]}
-    
+
     db_response = [
         {
             "id": test_id,
@@ -235,19 +233,19 @@ def test_list_parts_transforms_db_rows_to_pydantic():
             "workshop_id": test_workshop_id
         }
     ]
-    
+
     # Mock chain includes .order() call added in GREEN phase
     mock_supabase.table.return_value.select.return_value.eq.return_value.order.return_value.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts()
-    
+
     # Assert
     assert len(result.parts) == 1
     part = result.parts[0]
-    
+
     assert isinstance(part, PartCanvasItem), "Should return PartCanvasItem instances"
     assert str(part.id) == test_id, "UUID should match"
     assert part.iso_code == "SF-C12-D-005"
@@ -268,7 +266,7 @@ def test_list_parts_handles_null_low_poly_url():
     """
     # Arrange
     mock_supabase = Mock()
-    
+
     db_response = [
         {
             "id": str(uuid4()),
@@ -280,15 +278,15 @@ def test_list_parts_handles_null_low_poly_url():
             "workshop_id": None
         }
     ]
-    
+
     # Mock chain includes .order() call
     mock_supabase.table.return_value.select.return_value.eq.return_value.order.return_value.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts()
-    
+
     # Assert
     assert len(result.parts) == 1
     part = result.parts[0]
@@ -305,9 +303,9 @@ def test_list_parts_parses_bbox_from_jsonb():
     """
     # Arrange
     mock_supabase = Mock()
-    
+
     test_bbox_json = {"min": [-3.0, -1.0, -3.0], "max": [3.0, 6.0, 3.0]}
-    
+
     db_response = [
         {
             "id": str(uuid4()),
@@ -319,15 +317,15 @@ def test_list_parts_parses_bbox_from_jsonb():
             "workshop_id": None
         }
     ]
-    
+
     # Mock chain includes .order() call
     mock_supabase.table.return_value.select.return_value.eq.return_value.order.return_value.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts()
-    
+
     # Assert
     part = result.parts[0]
     assert part.bbox is not None
@@ -351,17 +349,17 @@ def test_list_parts_validates_uuid_format():
     """
     # Arrange
     mock_supabase = Mock()
-    
+
     db_response = []  # No matches for invalid UUID
-    
+
     # Mock chain includes .order() call
     mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act - Service does NOT validate UUID format (API layer does)
     result = service.list_parts(workshop_id="not-a-valid-uuid-123")
-    
+
     # Assert - Returns empty result (DB won't match invalid UUID)
     assert result.count == 0
     assert len(result.parts) == 0
@@ -375,17 +373,17 @@ def test_list_parts_empty_result():
     """
     # Arrange
     mock_supabase = Mock()
-    
+
     db_response = []  # Empty result
-    
+
     # Mock chain includes .order() call
     mock_supabase.table.return_value.select.return_value.eq.return_value.order.return_value.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts()
-    
+
     # Assert
     assert isinstance(result, PartsListResponse)
     assert len(result.parts) == 0, "parts array should be empty"
@@ -400,7 +398,7 @@ def test_list_parts_returns_consistent_count():
     """
     # Arrange
     mock_supabase = Mock()
-    
+
     db_response = [
         {
             "id": str(uuid4()),
@@ -413,15 +411,15 @@ def test_list_parts_returns_consistent_count():
         }
         for i in range(5)
     ]
-    
+
     # Mock chain includes .order() call
     mock_supabase.table.return_value.select.return_value.eq.return_value.order.return_value.execute.return_value = MagicMock(data=db_response)
-    
+
     service = PartsService(mock_supabase)
-    
+
     # Act
     result = service.list_parts()
-    
+
     # Assert
     assert result.count == len(result.parts), f"count mismatch: {result.count} != {len(result.parts)}"
     assert result.count == 5, "Should have 5 parts"

@@ -16,7 +16,7 @@ import pytest
 import redis
 
 # Import agent modules (should work now in GREEN phase)
-from src.agent.celery_app import celery_app  
+from src.agent.celery_app import celery_app
 from src.agent.tasks import health_check, validate_file
 from src.agent.config import settings as agent_settings
 from src.agent.constants import TASK_HEALTH_CHECK, TASK_VALIDATE_FILE
@@ -34,7 +34,7 @@ class TestRedisConnectivity:
         # Connect to Redis using settings
         r = redis.from_url(agent_settings.CELERY_BROKER_URL)
         response = r.ping()
-        
+
         assert response is True, "Redis should respond to PING with True"
 
     def test_redis_not_accessible_from_external_network(self):
@@ -182,10 +182,10 @@ class TestTaskExecution:
         """
         # Enqueue health check task through Celery
         async_result = health_check.delay()
-        
+
         # Wait for result (max 10 seconds)
         result = async_result.get(timeout=10)
-        
+
         assert isinstance(result, dict), "Health check should return a dictionary"
         assert result.get("status") == "healthy", "Status should be 'healthy'"
         assert "worker_id" in result, "Result should contain worker_id"

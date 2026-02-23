@@ -38,7 +38,7 @@ class NomenclatureValidator:
         - Valid: SF-NAV-COL-001, SFC-NAV1-A-999
         - Invalid: sf-nav-col-001 (lowercase), SF_NAV_COL_001 (underscores)
     """
-    
+
     def __init__(self):
         """Initialize validator with compiled regex pattern."""
         self.pattern = re.compile(ISO_19650_LAYER_NAME_PATTERN)
@@ -46,7 +46,7 @@ class NomenclatureValidator:
             "nomenclature_validator.initialized",
             pattern=ISO_19650_LAYER_NAME_PATTERN
         )
-    
+
     def validate_nomenclature(self, layers: List[LayerInfo]) -> List[ValidationErrorItem]:
         """
         Validate layer names against ISO-19650 pattern.
@@ -73,17 +73,17 @@ class NomenclatureValidator:
             'nomenclature'
         """
         errors = []
-        
+
         # Handle None input gracefully
         if layers is None:
             logger.warning("nomenclature_validator.validate_nomenclature.none_input")
             return errors
-        
+
         logger.info(
             "nomenclature_validator.validate_nomenclature.started",
             layer_count=len(layers)
         )
-        
+
         for layer in layers:
             if not self.pattern.match(layer.name):
                 error = ValidationErrorItem(
@@ -97,11 +97,11 @@ class NomenclatureValidator:
                     layer_name=layer.name,
                     expected_pattern=ISO_19650_PATTERN_DESCRIPTION
                 )
-        
+
         logger.info(
             "nomenclature_validator.validate_nomenclature.completed",
             layers_checked=len(layers),
             errors_found=len(errors)
         )
-        
+
         return errors

@@ -21,7 +21,7 @@ class ValidationService:
     This class encapsulates all business logic related to retrieving
     validation reports and block status information.
     """
-    
+
     def __init__(self, supabase_client: Client):
         """
         Initialize the validation service.
@@ -30,7 +30,7 @@ class ValidationService:
             supabase_client: Configured Supabase client instance
         """
         self.supabase = supabase_client
-    
+
     def get_validation_status(
         self,
         block_id: UUID
@@ -87,30 +87,30 @@ class ValidationService:
                     raise ValueError(f"Invalid UUID format: {block_id}") from e
             else:
                 raise TypeError(f"block_id must be UUID or string, got {type(block_id)}")
-        
+
         try:
             logger.info(f"Querying validation status for block_id={block_id}")
-            
+
             # Query blocks table
             response = self.supabase.table(TABLE_BLOCKS) \
                 .select("id, iso_code, status, validation_report") \
                 .eq("id", str(block_id)) \
                 .execute()
-            
+
             if not response.data or len(response.data) == 0:
                 logger.warning(f"Block not found: block_id={block_id}")
                 return (False, None, "Block not found", None)
-            
+
             block = response.data[0]
             logger.info(f"Block found: block_id={block_id}, status={block['status']}")
-            
+
             # job_id tracking not implemented (schema limitation)
             # Unit tests mock event_id for backward compatibility
             job_id = block.get("event_id")  # Only present in mocked test data
             extra = {"job_id": job_id} if job_id else None
-            
+
             return (True, block, None, extra)
-        
+
         except Exception as e:
             logger.error(f"Failed to query validation status: block_id={block_id}, error={str(e)}")
             return (False, None, "Database connection failed", {"exception": str(e)})

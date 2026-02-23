@@ -47,7 +47,7 @@ def test_rls01_workshop_user_only_sees_own_parts(supabase_client: Client):
         USING (workshop_id = (auth.jwt() -> 'workshop_id')::uuid);
     """
     pytest.skip("FAIL: JWT authentication not yet implemented (T-0510-TEST-BACK RED phase)")
-    
+
     # TODO: Implement when JWT infrastructure ready:
     # 1. Create 2 test blocks with different workshop_ids
     # 2. Generate JWT token for workshop W1 user
@@ -55,11 +55,11 @@ def test_rls01_workshop_user_only_sees_own_parts(supabase_client: Client):
     # 4. Verify only Block A visible (workshop_id = W1)
     # 5. Verify Block B NOT visible (different workshop_id)
     # 6. Verify filters_applied includes workshop_id from JWT
-    
+
     # ARRANGE
     workshop_1 = str(uuid4())
     workshop_2 = str(uuid4())
-    
+
     block_a = {
         "id": str(uuid4()),
         "iso_code": "TEST-RLS01-A",
@@ -74,7 +74,7 @@ def test_rls01_workshop_user_only_sees_own_parts(supabase_client: Client):
         "tipologia": "capitel",
         "workshop_id": workshop_2
     }
-    
+
     # Insert test data
     for block in [block_a, block_b]:
         try:
@@ -82,22 +82,22 @@ def test_rls01_workshop_user_only_sees_own_parts(supabase_client: Client):
         except Exception:
             pass
         supabase_client.table("blocks").insert(block).execute()
-    
+
     # ACT: Generate JWT token for workshop W1
     # jwt_token = generate_workshop_jwt(workshop_id=workshop_1, role="workshop_user")
     jwt_token = "PLACEHOLDER_JWT_TOKEN"  # ⚠️ Need JWT generation helper
-    
+
     headers = {"Authorization": f"Bearer {jwt_token}"}
     response = client.get("/api/parts", headers=headers)
-    
+
     # ASSERT: Should see only Block A
     assert response.status_code == 200
     data = response.json()
-    
+
     returned_ids = [p["id"] for p in data["parts"]]
     assert block_a["id"] in returned_ids, "Block A (own workshop) should be visible"
     assert block_b["id"] not in returned_ids, "Block B (other workshop) should NOT be visible"
-    
+
     # CLEANUP
     for block in [block_a, block_b]:
         supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
@@ -128,38 +128,38 @@ def test_rls02_bim_manager_bypasses_rls(supabase_client: Client):
         );
     """
     pytest.skip("FAIL: Role-based JWT not yet implemented (T-0510-TEST-BACK RED phase)")
-    
+
     # TODO: Implement when role-based auth ready
-    
+
     # ARRANGE
     workshop_1 = str(uuid4())
     workshop_2 = str(uuid4())
-    
+
     block_a = {"id": str(uuid4()), "iso_code": "TEST-RLS02-A", "status": "validated", "tipologia": "capitel", "workshop_id": workshop_1}
     block_b = {"id": str(uuid4()), "iso_code": "TEST-RLS02-B", "status": "validated", "tipologia": "capitel", "workshop_id": workshop_2}
-    
+
     for block in [block_a, block_b]:
         try:
             supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
         except Exception:
             pass
         supabase_client.table("blocks").insert(block).execute()
-    
+
     # ACT: Generate BIM Manager JWT
     # jwt_token = generate_bim_manager_jwt()
     jwt_token = "PLACEHOLDER_BIM_MANAGER_JWT"  # ⚠️ Need JWT generation
-    
+
     headers = {"Authorization": f"Bearer {jwt_token}"}
     response = client.get("/api/parts", headers=headers)
-    
+
     # ASSERT: Should see BOTH blocks
     assert response.status_code == 200
     data = response.json()
-    
+
     returned_ids = [p["id"] for p in data["parts"]]
     assert block_a["id"] in returned_ids, "Block A should be visible to BIM Manager"
     assert block_b["id"] in returned_ids, "Block B should ALSO be visible to BIM Manager"
-    
+
     # CLEANUP
     for block in [block_a, block_b]:
         supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
@@ -186,28 +186,28 @@ def test_rls03_service_role_bypasses_rls(supabase_client: Client):
     # ARRANGE
     workshop_1 = str(uuid4())
     workshop_2 = str(uuid4())
-    
+
     block_a = {"id": str(uuid4()), "iso_code": "TEST-RLS03-A", "status": "validated", "tipologia": "capitel", "workshop_id": workshop_1}
     block_b = {"id": str(uuid4()), "iso_code": "TEST-RLS03-B", "status": "validated", "tipologia": "capitel", "workshop_id": workshop_2}
-    
+
     for block in [block_a, block_b]:
         try:
             supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
         except Exception:
             pass
         supabase_client.table("blocks").insert(block).execute()
-    
+
     # ACT: Call endpoint (TestClient uses service role by default)
     response = client.get("/api/parts")
-    
+
     # ASSERT: Should see ALL blocks (service role bypasses RLS)
     assert response.status_code == 200
     data = response.json()
-    
+
     returned_ids = [p["id"] for p in data["parts"]]
     assert block_a["id"] in returned_ids, "Block A should be visible to service role"
     assert block_b["id"] in returned_ids, "Block B should ALSO be visible to service role"
-    
+
     # CLEANUP
     for block in [block_a, block_b]:
         supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
@@ -228,15 +228,15 @@ def test_rls04_unauthenticated_request_returns_401(supabase_client: Client):
     Implementation Note: Requires FastAPI dependency injection for JWT validation.
     """
     pytest.skip("FAIL: Authentication middleware not yet enforced (T-0510-TEST-BACK RED phase)")
-    
+
     # TODO: Implement when auth middleware ready
-    
+
     # ACT: Call endpoint WITHOUT Authorization header
     response = client.get("/api/parts")  # No headers
-    
+
     # ASSERT: Should reject with 401
     assert response.status_code == 401, f"Expected 401, got {response.status_code}: {response.text}"
-    
+
     data = response.json()
     assert "detail" in data
     assert "authentication" in data["detail"].lower() or "unauthorized" in data["detail"].lower()

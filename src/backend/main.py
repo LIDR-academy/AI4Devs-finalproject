@@ -36,10 +36,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         - OWASP A05:2021 – Security Misconfiguration
         - OWASP A07:2021 – Cross-Site Scripting (XSS)
     """
-    
+
     async def dispatch(self, request: Request, call_next) -> Response:
         response = await call_next(request)
-        
+
         # Content Security Policy - Three.js compatible
         # Note: 'unsafe-inline' and 'unsafe-eval' required for Three.js functionality
         csp_directives = [
@@ -57,18 +57,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "worker-src 'self' blob:",  # Three.js web workers
         ]
         response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
-        
+
         # Additional security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        
+
         # HSTS (only in production with HTTPS)
         if request.url.scheme == "https":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-        
+
         return response
 
 # CORS Config - OWASP A05:2021 Security Misconfiguration
@@ -114,7 +114,7 @@ async def readiness_check():
     """
     checks = {}
     all_ready = True
-    
+
     # Check Supabase database connectivity
     try:
         from infra.supabase_client import get_supabase_client
@@ -125,7 +125,7 @@ async def readiness_check():
     except Exception as e:
         checks["database"] = f"error: {str(e)}"
         all_ready = False
-    
+
     # Check Redis connectivity (Celery broker)
     try:
         celery_broker_url = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
@@ -135,7 +135,7 @@ async def readiness_check():
     except Exception as e:
         checks["redis"] = f"error: {str(e)}"
         all_ready = False
-    
+
     if all_ready:
         return {
             "status": "ready",

@@ -93,20 +93,20 @@ async def list_parts(
         # Validate input parameters
         _validate_status_enum(status)
         _validate_uuid_format(workshop_id)
-        
+
         # Get dependencies
         supabase = get_supabase_client()
         service = PartsService(supabase)
-        
+
         # Call service layer
         result = service.list_parts(
             status=status,
             tipologia=tipologia,
             workshop_id=workshop_id
         )
-        
+
         return result
-    
+
     except HTTPException:
         raise
     except Exception as e:

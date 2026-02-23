@@ -34,17 +34,17 @@ def celery_eager_mode():
     allowing tests to run without a background worker.
     """
     from src.agent.celery_app import celery_app
-    
+
     # Store original config
     original_always_eager = celery_app.conf.task_always_eager
     original_eager_propagates = celery_app.conf.task_eager_propagates
-    
+
     # Enable eager mode
     celery_app.conf.task_always_eager = True
     celery_app.conf.task_eager_propagates = True
-    
+
     yield
-    
+
     # Restore original config
     celery_app.conf.task_always_eager = original_always_eager
     celery_app.conf.task_eager_propagates = original_eager_propagates
@@ -71,10 +71,10 @@ def supabase_client() -> Client:
     """
     url: str | None = os.environ.get("SUPABASE_URL")
     key: str | None = os.environ.get("SUPABASE_KEY")
-    
+
     if not url or not key:
         pytest.skip("SUPABASE_URL and SUPABASE_KEY must be configured in environment")
-    
+
     return create_client(url, key)
 
 
@@ -103,12 +103,12 @@ def db_connection() -> connection:
         "DATABASE_URL",
         "postgresql://user:password@db:5432/sfpm_db"
     )
-    
+
     conn = psycopg2.connect(database_url)
     conn.autocommit = False  # Manual transaction control
-    
+
     yield conn
-    
+
     conn.close()
 
 
@@ -121,7 +121,7 @@ def setup_database_schema(db_connection: connection):
     tables (profiles, blocks) are available for tests that need them.
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Create profiles table
         cursor.execute("""
@@ -136,7 +136,7 @@ def setup_database_schema(db_connection: connection):
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             );
         """)
-        
+
         # Create block_status ENUM if not exists
         cursor.execute("""
             DO $$
@@ -148,7 +148,7 @@ def setup_database_schema(db_connection: connection):
                 END IF;
             END $$;
         """)
-        
+
         # Create blocks table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS blocks (
@@ -168,22 +168,22 @@ def setup_database_schema(db_connection: connection):
                 is_archived BOOLEAN DEFAULT FALSE
             );
         """)
-        
+
         # Insert a test profile for FK references
         cursor.execute("""
             INSERT INTO profiles (id, name, email, role)
             VALUES ('00000000-0000-0000-0000-000000000001', 'Test User', 'test@example.com', 'architect')
             ON CONFLICT (id) DO NOTHING;
         """)
-        
+
         db_connection.commit()
-        
+
     except Exception as e:
         db_connection.rollback()
         pytest.skip(f"Failed to setup database schema: {e}")
-    
+
     yield
-    
+
     # Cleanup: optionally drop tables after session (not recommended for integration tests)
     # cursor.execute("DROP TABLE IF EXISTS blocks;")
     # cursor.execute("DROP TABLE IF EXISTS profiles;")

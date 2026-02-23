@@ -34,9 +34,9 @@ def test_upload_bucket_access(supabase_client: Client) -> None:
     bucket_name: str = "raw-uploads"
     test_filename: str = "test_infra.txt"
     test_content: bytes = b"TDD infrastructure validation file"
-    
+
     uploaded: bool = False
-    
+
     try:
         # Upload test file to bucket
         response = supabase_client.storage.from_(bucket_name).upload(
@@ -44,20 +44,20 @@ def test_upload_bucket_access(supabase_client: Client) -> None:
             file=test_content,
             file_options={"content-type": "text/plain", "upsert": "true"}
         )
-        
+
         assert response is not None, "Upload response must not be None"
         uploaded = True
-        
+
         # Verify file appears in bucket listing
         files = supabase_client.storage.from_(bucket_name).list()
         file_names: list[str] = [f["name"] for f in files]
         assert test_filename in file_names, f"File '{test_filename}' must exist in bucket listing"
-        
+
         # Verify URL generation
         public_url: str = supabase_client.storage.from_(bucket_name).get_public_url(test_filename)
         assert public_url, "Public URL must be generated"
         assert bucket_name in public_url, f"URL must contain bucket name '{bucket_name}'"
-        
+
     finally:
         # Cleanup: Remove test file if upload succeeded
         if uploaded:

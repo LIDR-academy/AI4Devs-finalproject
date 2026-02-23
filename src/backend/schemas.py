@@ -144,14 +144,14 @@ class ValidationStatusResponse(BaseModel):
     iso_code: str = Field(..., description="ISO code identifier")
     status: BlockStatus = Field(..., description="Current block status")
     validation_report: Optional[ValidationReport] = Field(
-        None, 
+        None,
         description="Validation report (NULL if not validated)"
     )
     job_id: Optional[str] = Field(
-        None, 
+        None,
         description="Celery task ID for tracking (only if status=processing)"
     )
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -190,14 +190,14 @@ class BoundingBox(BaseModel):
     """
     min: List[float] = Field(..., min_length=3, max_length=3, description="Min corner [x, y, z]")
     max: List[float] = Field(..., min_length=3, max_length=3, description="Max corner [x, y, z]")
-    
+
     @field_validator('min', 'max')
     @classmethod
     def validate_coordinates(cls, v):
         if len(v) != 3:
             raise ValueError('Must contain exactly 3 coordinates [x, y, z]')
         return v
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -230,7 +230,7 @@ class PartCanvasItem(BaseModel):
     low_poly_url: Optional[str] = Field(None, description="GLB file URL for 3D rendering")
     bbox: Optional[BoundingBox] = Field(None, description="3D bounding box")
     workshop_id: Optional[UUID] = Field(None, description="Assigned workshop UUID")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -257,7 +257,7 @@ class PartsListResponse(BaseModel):
     parts: List[PartCanvasItem] = Field(..., description="Array of canvas-ready parts")
     count: int = Field(..., description="Total count of parts returned")
     filters_applied: Dict[str, Any] = Field(default_factory=dict, description="Applied filters (for debugging)")
-    
+
     class Config:
         json_schema_extra = {
             "example": {

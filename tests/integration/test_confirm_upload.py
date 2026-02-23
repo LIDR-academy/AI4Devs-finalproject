@@ -10,7 +10,6 @@ Test Coverage:
 - Event creation in database
 - Celery task dispatch (mocked for MVP)
 """
-import pytest
 from fastapi.testclient import TestClient
 from main import app
 from supabase import Client
@@ -36,13 +35,13 @@ def test_confirm_upload_happy_path(supabase_client: Client):
     test_file_key = "test/confirm_upload_test.3dm"
     test_content = b"Mock .3dm file content for testing"
     file_id = "550e8400-e29b-41d4-a716-446655440000"
-    
+
     # Clean up: Remove test file if it exists from previous run
     try:
         supabase_client.storage.from_(bucket_name).remove([test_file_key])
     except Exception:
         pass  # File doesn't exist, continue
-    
+
     # Clean up: Remove block if it exists from previous run (T-029-BACK creates blocks automatically)
     iso_code = f"PENDING-{file_id[:8]}"
     try:
@@ -52,40 +51,40 @@ def test_confirm_upload_happy_path(supabase_client: Client):
             supabase_client.table("blocks").delete().eq("id", block_id).execute()
     except Exception:
         pass  # Block doesn't exist or already deleted
-    
+
     # Upload test file to Supabase Storage
     upload_response = supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
         file=test_content,
         file_options={"content-type": "application/x-rhino"}
     )
-    
+
     # ARRANGE: Prepare confirmation payload
     payload = {
         "file_id": file_id,
         "file_key": test_file_key
     }
-    
+
     # ACT: Call the confirm endpoint
     response = client.post("/api/upload/confirm", json=payload)
-    
+
     # ASSERT: Status code should be 200
     assert response.status_code == 200, f"Expected 200, got {response.status_code}"
-    
+
     # ASSERT: Response structure
     data = response.json()
     assert "success" in data, "Response missing 'success' field"
     assert data["success"] is True, "Confirmation should be successful"
     assert "message" in data, "Response missing 'message' field"
     assert "event_id" in data, "Response missing 'event_id' field"
-    
+
     # ASSERT: Event was created (verify via database query or response)
     # NOTE: For FASE VERDE, we'll implement actual DB check
     assert data["event_id"] is not None, "event_id should not be null"
-    
+
     # CLEANUP: Remove test file from storage
     supabase_client.storage.from_(bucket_name).remove([test_file_key])
-    
+
     # CLEANUP: Remove created block record (T-029-BACK creates blocks automatically)
     iso_code = f"PENDING-{file_id[:8]}"
     try:
@@ -110,13 +109,13 @@ def test_confirm_upload_file_not_found():
         "file_id": "999e8400-e29b-41d4-a716-000000000999",
         "file_key": "non-existent/fake-file.3dm"
     }
-    
+
     # ACT
     response = client.post("/api/upload/confirm", json=payload)
-    
+
     # ASSERT: Should return 404 Not Found
     assert response.status_code == 404, f"Expected 404, got {response.status_code}"
-    
+
     data = response.json()
     assert "detail" in data, "Error response should contain 'detail' field"
     assert "not found" in data["detail"].lower(), "Error message should indicate file not found"
@@ -135,13 +134,13 @@ def test_confirm_upload_invalid_payload():
         "file_id": "550e8400-e29b-41d4-a716-446655440000"
         # Missing required field 'file_key'
     }
-    
+
     # ACT
     response = client.post("/api/upload/confirm", json=payload)
-    
+
     # ASSERT: Pydantic validation should fail
     assert response.status_code == 422, f"Expected 422, got {response.status_code}"
-    
+
     data = response.json()
     assert "detail" in data, "Validation error should contain 'detail'"
 
@@ -165,13 +164,13 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
     test_file_key = "test/event_test.3dm"
     test_content = b"Event creation test content"
     file_id = "660e8400-e29b-41d4-a716-446655440000"
-    
+
     # Clean up: Remove test file if it exists from previous run
     try:
         supabase_client.storage.from_(bucket_name).remove([test_file_key])
     except Exception:
         pass  # File doesn't exist, continue
-    
+
     # Clean up: Remove block if it exists from previous run (T-029-BACK creates blocks automatically)
     iso_code = f"PENDING-{file_id[:8]}"
     try:
@@ -181,7 +180,7 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
             supabase_client.table("blocks").delete().eq("id", block_id).execute()
     except Exception:
         pass  # Block doesn't exist or already deleted
-    
+
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
         file=test_content,
@@ -191,27 +190,27 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
         "file_id": file_id,
         "file_key": test_file_key
     }
-    
+
     # ACT
     response = client.post("/api/upload/confirm", json=payload)
-    
+
     # ASSERT: Verify event was created
     assert response.status_code == 200
     data = response.json()
     event_id = data.get("event_id")
-    
+
     # Query the events table to verify record exists
     # NOTE: This will fail in FASE ROJA if table doesn't exist
     events = supabase_client.table("events").select("*").eq("id", event_id).execute()
-    
+
     assert len(events.data) == 1, "Event record should exist in database"
     event_record = events.data[0]
     assert event_record["file_id"] == file_id, "Event should reference correct file_id"
     assert event_record["event_type"] == "upload.confirmed", "Event type should be 'upload.confirmed'"
-    
+
     # CLEANUP: Remove test file from storage
     supabase_client.storage.from_(bucket_name).remove([test_file_key])
-    
+
     # CLEANUP: Remove created block record (T-029-BACK creates blocks automatically)
     iso_code = f"PENDING-{file_id[:8]}"
     try:

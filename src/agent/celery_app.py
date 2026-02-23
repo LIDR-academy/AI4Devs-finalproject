@@ -7,7 +7,6 @@ configurations for distributed task processing.
 
 from celery import Celery
 
-from celery import Celery
 
 # Conditional import: support both direct execution and module import
 try:
@@ -53,24 +52,24 @@ celery_app.conf.update(
     task_serializer="json",
     result_serializer="json",
     accept_content=["json"],
-    
+
     # Timezone
     timezone="UTC",
     enable_utc=True,
-    
+
     # Task tracking
     task_track_started=True,
-    
+
     # Timeouts (protection against OOM with large .3dm files)
     task_time_limit=TASK_TIME_LIMIT_SECONDS,
     task_soft_time_limit=TASK_SOFT_TIME_LIMIT_SECONDS,
-    
+
     # Worker behavior
     worker_prefetch_multiplier=WORKER_PREFETCH_MULTIPLIER,
-    
+
     # Result expiration
     result_expires=RESULT_EXPIRES_SECONDS,
-    
+
     # Task acknowledgment
     task_acks_late=True,  # Acknowledge after task completion
 )
@@ -80,4 +79,4 @@ celery_app.conf.update(
 try:
     import tasks  # When executed as worker from /app
 except ModuleNotFoundError:
-    import src.agent.tasks  # When imported as module in tests
+    pass  # When imported as module in tests

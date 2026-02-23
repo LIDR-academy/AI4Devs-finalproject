@@ -15,7 +15,6 @@ Status: ✅ Tests reorganized from test_parts_api.py (should PASS)
 Author: AI Assistant (T-0510-TEST-BACK TDD-RED Phase)
 Date: 2026-02-23
 """
-import pytest
 from uuid import uuid4
 from fastapi.testclient import TestClient
 
@@ -39,29 +38,29 @@ def test_fi01_filter_by_status(supabase_client: Client):
     # ARRANGE
     block_a = {"id": str(uuid4()), "iso_code": "TEST-FI01-A", "status": "validated", "tipologia": "capitel"}
     block_b = {"id": str(uuid4()), "iso_code": "TEST-FI01-B", "status": "completed", "tipologia": "capitel"}
-    
+
     for block in [block_a, block_b]:
         try:
             supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
         except Exception:
             pass
         supabase_client.table("blocks").insert(block).execute()
-    
+
     # ACT
     response = client.get("/api/parts?status=validated")
-    
+
     # ASSERT
     assert response.status_code == 200
     data = response.json()
-    
+
     # Verify filters_applied
     assert data["filters_applied"]["status"] == "validated"
-    
+
     # Verify correct blocks returned
     returned_ids = [p["id"] for p in data["parts"]]
     assert block_a["id"] in returned_ids, "Block A should be present"
     assert block_b["id"] not in returned_ids, "Block B should NOT be present"
-    
+
     # CLEANUP
     for block in [block_a, block_b]:
         supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
@@ -80,27 +79,27 @@ def test_fi02_filter_by_tipologia(supabase_client: Client):
     # ARRANGE
     block_a = {"id": str(uuid4()), "iso_code": "TEST-FI02-A", "status": "validated", "tipologia": "capitel"}
     block_b = {"id": str(uuid4()), "iso_code": "TEST-FI02-B", "status": "validated", "tipologia": "columna"}
-    
+
     for block in [block_a, block_b]:
         try:
             supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
         except Exception:
             pass
         supabase_client.table("blocks").insert(block).execute()
-    
+
     # ACT
     response = client.get("/api/parts?tipologia=capitel")
-    
+
     # ASSERT
     assert response.status_code == 200
     data = response.json()
-    
+
     assert data["filters_applied"]["tipologia"] == "capitel"
-    
+
     returned_ids = [p["id"] for p in data["parts"]]
     assert block_a["id"] in returned_ids, "Block A (capitel) should be present"
     assert block_b["id"] not in returned_ids, "Block B (columna) should NOT be present"
-    
+
     # CLEANUP
     for block in [block_a, block_b]:
         supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
@@ -119,30 +118,30 @@ def test_fi03_filter_by_workshop_id(supabase_client: Client):
     # ARRANGE
     workshop_1 = str(uuid4())
     workshop_2 = str(uuid4())
-    
+
     block_a = {"id": str(uuid4()), "iso_code": "TEST-FI03-A", "status": "validated", "tipologia": "capitel", "workshop_id": workshop_1}
     block_b = {"id": str(uuid4()), "iso_code": "TEST-FI03-B", "status": "validated", "tipologia": "capitel", "workshop_id": workshop_2}
-    
+
     for block in [block_a, block_b]:
         try:
             supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
         except Exception:
             pass
         supabase_client.table("blocks").insert(block).execute()
-    
+
     # ACT
     response = client.get(f"/api/parts?workshop_id={workshop_1}")
-    
+
     # ASSERT
     assert response.status_code == 200
     data = response.json()
-    
+
     assert data["filters_applied"]["workshop_id"] == workshop_1
-    
+
     returned_ids = [p["id"] for p in data["parts"]]
     assert block_a["id"] in returned_ids, "Block A (workshop_1) should be present"
     assert block_b["id"] not in returned_ids, "Block B (workshop_2) should NOT be present"
-    
+
     # CLEANUP
     for block in [block_a, block_b]:
         supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
@@ -166,31 +165,31 @@ def test_fi04_multiple_filters_with_and_logic(supabase_client: Client):
     block_a = {"id": str(uuid4()), "iso_code": "TEST-FI04-A", "status": "validated", "tipologia": "capitel"}
     block_b = {"id": str(uuid4()), "iso_code": "TEST-FI04-B", "status": "completed", "tipologia": "capitel"}
     block_c = {"id": str(uuid4()), "iso_code": "TEST-FI04-C", "status": "validated", "tipologia": "columna"}
-    
+
     for block in [block_a, block_b, block_c]:
         try:
             supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
         except Exception:
             pass
         supabase_client.table("blocks").insert(block).execute()
-    
+
     # ACT
     response = client.get("/api/parts?status=validated&tipologia=capitel")
-    
+
     # ASSERT
     assert response.status_code == 200
     data = response.json()
-    
+
     # Verify both filters applied
     assert data["filters_applied"]["status"] == "validated"
     assert data["filters_applied"]["tipologia"] == "capitel"
-    
+
     # Verify only Block A present
     returned_ids = [p["id"] for p in data["parts"]]
     assert block_a["id"] in returned_ids, "Block A (validated + capitel) should be present"
     assert block_b["id"] not in returned_ids, "Block B (completed) should NOT be present"
     assert block_c["id"] not in returned_ids, "Block C (columna) should NOT be present"
-    
+
     # CLEANUP
     for block in [block_a, block_b, block_c]:
         supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
@@ -208,11 +207,11 @@ def test_fi05_invalid_uuid_returns_400(supabase_client: Client):
     """
     # ACT
     response = client.get("/api/parts?workshop_id=not-a-uuid")
-    
+
     # ASSERT
     assert response.status_code == 400, f"Expected 400, got {response.status_code}: {response.text}"
     data = response.json()
-    
+
     # Verify error message indicates UUID validation failure
     assert "detail" in data, "Error response missing 'detail' field"
     assert "uuid" in data["detail"].lower(), "Error message should mention UUID validation"

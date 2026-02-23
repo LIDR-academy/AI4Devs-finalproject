@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 from main import app
 
@@ -37,8 +36,8 @@ def test_generate_presigned_url_invalid_extension():
         "size": 1000,
         "checksum": "dummy"
     }
-    
+
     response = client.post("/api/upload/url", json=payload)
-    
+
     assert response.status_code == 400
     assert "detail" in response.json()

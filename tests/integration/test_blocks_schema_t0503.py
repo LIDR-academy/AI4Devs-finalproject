@@ -19,7 +19,6 @@ import pytest
 from psycopg2.extensions import connection
 import json
 import time
-from typing import Any, Dict
 
 
 # ==============================================================================
@@ -43,7 +42,7 @@ def test_low_poly_url_column_exists(db_connection: connection) -> None:
         - is_nullable is 'YES'
     """
     cursor = db_connection.cursor()
-    
+
     try:
         cursor.execute("""
             SELECT column_name, data_type, is_nullable
@@ -52,20 +51,20 @@ def test_low_poly_url_column_exists(db_connection: connection) -> None:
               AND table_name = 'blocks'
               AND column_name = 'low_poly_url'
         """)
-        
+
         result = cursor.fetchone()
-        
+
         if result is None:
             pytest.fail(
                 "EXPECTED FAILURE (RED Phase): low_poly_url column does not exist yet.\n"
                 "Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         column_name, data_type, is_nullable = result
         assert column_name == "low_poly_url", f"Column name must be 'low_poly_url', got {column_name}"
         assert data_type == "text", f"Column type must be 'text', got {data_type}"
         assert is_nullable == "YES", f"Column must be nullable, got is_nullable={is_nullable}"
-        
+
     finally:
         cursor.close()
 
@@ -87,7 +86,7 @@ def test_bbox_column_exists(db_connection: connection) -> None:
         - is_nullable is 'YES'
     """
     cursor = db_connection.cursor()
-    
+
     try:
         cursor.execute("""
             SELECT column_name, data_type, is_nullable
@@ -96,20 +95,20 @@ def test_bbox_column_exists(db_connection: connection) -> None:
               AND table_name = 'blocks'
               AND column_name = 'bbox'
         """)
-        
+
         result = cursor.fetchone()
-        
+
         if result is None:
             pytest.fail(
                 "EXPECTED FAILURE (RED Phase): bbox column does not exist yet.\n"
                 "Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         column_name, data_type, is_nullable = result
         assert column_name == "bbox", f"Column name must be 'bbox', got {column_name}"
         assert data_type == "jsonb", f"Column type must be 'jsonb', got {data_type}"
         assert is_nullable == "YES", f"Column must be nullable, got is_nullable={is_nullable}"
-        
+
     finally:
         cursor.close()
 
@@ -130,7 +129,7 @@ def test_update_low_poly_url_successfully(db_connection: connection) -> None:
         - Retrieved data matches inserted value
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Insert test block
         cursor.execute("""
@@ -140,10 +139,10 @@ def test_update_low_poly_url_successfully(db_connection: connection) -> None:
         """)
         block_id = cursor.fetchone()[0]
         db_connection.commit()
-        
+
         # Attempt to update low_poly_url (will fail in RED phase)
         test_url = "https://example.supabase.co/storage/v1/object/public/processed-geometry/low-poly/test.glb"
-        
+
         try:
             cursor.execute("""
                 UPDATE blocks
@@ -160,22 +159,22 @@ def test_update_low_poly_url_successfully(db_connection: connection) -> None:
                 f"Error: {e}\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         # Verify data persisted
         cursor.execute("""
             SELECT low_poly_url
             FROM blocks
             WHERE id = %s
         """, (block_id,))
-        
+
         result = cursor.fetchone()
         assert result is not None, "Block should exist after update"
         assert result[0] == test_url, f"Expected URL '{test_url}', got '{result[0]}'"
-        
+
         # Clean up
         cursor.execute("DELETE FROM blocks WHERE id = %s", (block_id,))
         db_connection.commit()
-        
+
     finally:
         cursor.close()
 
@@ -197,7 +196,7 @@ def test_update_bbox_successfully(db_connection: connection) -> None:
         - Can query bbox->'min' and bbox->'max' with -> operator
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Insert test block
         cursor.execute("""
@@ -207,13 +206,13 @@ def test_update_bbox_successfully(db_connection: connection) -> None:
         """)
         block_id = cursor.fetchone()[0]
         db_connection.commit()
-        
+
         # Attempt to update bbox (will fail in RED phase)
         test_bbox = {
             "min": [-1.5, -1.5, 0.0],
             "max": [1.5, 1.5, 8.5]
         }
-        
+
         try:
             cursor.execute("""
                 UPDATE blocks
@@ -230,7 +229,7 @@ def test_update_bbox_successfully(db_connection: connection) -> None:
                 f"Error: {e}\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         # Verify JSONB data persisted and operators work
         cursor.execute("""
             SELECT 
@@ -240,17 +239,17 @@ def test_update_bbox_successfully(db_connection: connection) -> None:
             FROM blocks
             WHERE id = %s
         """, (block_id,))
-        
+
         result = cursor.fetchone()
         assert result is not None, "Block should exist after update"
-        
+
         stored_bbox = result[0]
         assert stored_bbox == test_bbox, f"Expected bbox {test_bbox}, got {stored_bbox}"
-        
+
         # Clean up
         cursor.execute("DELETE FROM blocks WHERE id = %s", (block_id,))
         db_connection.commit()
-        
+
     finally:
         cursor.close()
 
@@ -275,7 +274,7 @@ def test_null_values_allowed_initially(db_connection: connection) -> None:
         - Both columns default to NULL
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Insert block without new columns
         try:
@@ -291,17 +290,17 @@ def test_null_values_allowed_initially(db_connection: connection) -> None:
                 f"Error: {e}\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         result = cursor.fetchone()
         block_id, low_poly_url, bbox = result
-        
+
         assert low_poly_url is None, f"Expected low_poly_url=NULL, got {low_poly_url}"
         assert bbox is None, f"Expected bbox=NULL, got {bbox}"
-        
+
         # Clean up
         cursor.execute("DELETE FROM blocks WHERE id = %s", (block_id,))
         db_connection.commit()
-        
+
     finally:
         cursor.close()
 
@@ -322,15 +321,15 @@ def test_very_long_url_accepted(db_connection: connection) -> None:
         - No truncation occurs
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Create very long URL (300 chars)
         base_url = "https://ebqapsoyjmdkhdxnkikz.supabase.co/storage/v1/object/public/processed-geometry/low-poly/"
         long_filename = "a" * (300 - len(base_url) - 4) + ".glb"  # -4 for .glb extension
         test_url = base_url + long_filename
-        
+
         assert len(test_url) >= 300, f"Test URL should be >=300 chars, got {len(test_url)}"
-        
+
         # Insert block with long URL
         try:
             cursor.execute("""
@@ -345,16 +344,16 @@ def test_very_long_url_accepted(db_connection: connection) -> None:
                 f"Error: {e}\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         result = cursor.fetchone()
         block_id, stored_url = result
-        
+
         assert stored_url == test_url, f"URL was truncated: expected {len(test_url)} chars, got {len(stored_url)}"
-        
+
         # Clean up
         cursor.execute("DELETE FROM blocks WHERE id = %s", (block_id,))
         db_connection.commit()
-        
+
     finally:
         cursor.close()
 
@@ -375,24 +374,24 @@ def test_invalid_json_rejected_by_client(db_connection: connection) -> None:
         - Error message mentions 'invalid input syntax for type json'
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Attempt to insert invalid JSON
         invalid_json_str = "{min: [1,2,3]}"  # Missing quotes around 'min'
-        
+
         try:
             cursor.execute("""
                 INSERT INTO blocks (iso_code, status, tipologia, bbox)
                 VALUES ('TEST-T0503-005', 'uploaded', 'capitel', %s::jsonb)
             """, (invalid_json_str,))
             db_connection.commit()
-            
+
             # If we reach here in GREEN phase, it means invalid JSON was accepted (test should fail)
             pytest.fail("Invalid JSON was accepted by PostgreSQL, expected rejection")
-            
+
         except Exception as e:
             error_msg = str(e).lower()
-            
+
             # In RED phase, expect "column does not exist" error
             if "column" in error_msg and "does not exist" in error_msg:
                 pytest.fail(
@@ -400,14 +399,14 @@ def test_invalid_json_rejected_by_client(db_connection: connection) -> None:
                     f"Error: {e}\n"
                     f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
                 )
-            
+
             # In GREEN phase, expect JSON syntax error
             assert "invalid" in error_msg or "json" in error_msg, \
                 f"Expected JSON syntax error, got: {e}"
-            
+
             # Rollback failed transaction
             db_connection.rollback()
-        
+
     finally:
         cursor.close()
 
@@ -428,7 +427,7 @@ def test_empty_jsonb_object_allowed(db_connection: connection) -> None:
         - Stored as valid JSONB
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Insert block with empty JSONB
         try:
@@ -444,16 +443,16 @@ def test_empty_jsonb_object_allowed(db_connection: connection) -> None:
                 f"Error: {e}\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         result = cursor.fetchone()
         block_id, stored_bbox = result
-        
+
         assert stored_bbox == {}, f"Expected empty dict, got {stored_bbox}"
-        
+
         # Clean up
         cursor.execute("DELETE FROM blocks WHERE id = %s", (block_id,))
         db_connection.commit()
-        
+
     finally:
         cursor.close()
 
@@ -478,7 +477,7 @@ def test_canvas_index_exists(db_connection: connection) -> None:
         - Partial index with WHERE is_archived = false
     """
     cursor = db_connection.cursor()
-    
+
     try:
         cursor.execute("""
             SELECT indexname, indexdef
@@ -486,26 +485,26 @@ def test_canvas_index_exists(db_connection: connection) -> None:
             WHERE tablename = 'blocks'
               AND indexname = 'idx_blocks_canvas_query'
         """)
-        
+
         result = cursor.fetchone()
-        
+
         if result is None:
             pytest.fail(
                 "EXPECTED FAILURE (RED Phase): idx_blocks_canvas_query index does not exist yet.\n"
                 "Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         indexname, indexdef = result
         assert indexname == "idx_blocks_canvas_query"
-        
+
         # Verify index includes expected columns
         assert "status" in indexdef.lower(), "Index must include 'status' column"
         assert "tipologia" in indexdef.lower(), "Index must include 'tipologia' column"
         assert "workshop_id" in indexdef.lower(), "Index must include 'workshop_id' column"
-        
+
         # Verify partial index condition
         assert "is_archived = false" in indexdef.lower(), "Index must have WHERE is_archived = false condition"
-        
+
     finally:
         cursor.close()
 
@@ -525,7 +524,7 @@ def test_processing_index_exists(db_connection: connection) -> None:
         - Partial index with WHERE low_poly_url IS NULL AND is_archived = false
     """
     cursor = db_connection.cursor()
-    
+
     try:
         cursor.execute("""
             SELECT indexname, indexdef
@@ -533,22 +532,22 @@ def test_processing_index_exists(db_connection: connection) -> None:
             WHERE tablename = 'blocks'
               AND indexname = 'idx_blocks_low_poly_processing'
         """)
-        
+
         result = cursor.fetchone()
-        
+
         if result is None:
             pytest.fail(
                 "EXPECTED FAILURE (RED Phase): idx_blocks_low_poly_processing index does not exist yet.\n"
                 "Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         indexname, indexdef = result
         assert indexname == "idx_blocks_low_poly_processing"
-        
+
         # Verify partial index condition
         assert "low_poly_url is null" in indexdef.lower(), "Index must have WHERE low_poly_url IS NULL condition"
         assert "is_archived = false" in indexdef.lower(), "Index must have WHERE is_archived = false condition"
-        
+
     finally:
         cursor.close()
 
@@ -569,7 +568,7 @@ def test_canvas_query_uses_index(db_connection: connection) -> None:
         - Query executes successfully
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Run EXPLAIN ANALYZE on canvas query
         cursor.execute("""
@@ -581,15 +580,15 @@ def test_canvas_query_uses_index(db_connection: connection) -> None:
               AND tipologia = 'capitel'
               AND workshop_id IS NOT NULL
         """)
-        
+
         explain_result = cursor.fetchone()
-        
+
         if explain_result is None:
             pytest.fail("EXPLAIN query returned no results")
-        
+
         explain_json = explain_result[0]
         explain_text = json.dumps(explain_json, indent=2)
-        
+
         # Check if index is used (will fail in RED phase)
         if "idx_blocks_canvas_query" not in explain_text:
             pytest.fail(
@@ -597,13 +596,13 @@ def test_canvas_query_uses_index(db_connection: connection) -> None:
                 f"EXPLAIN output:\n{explain_text}\n\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         assert "Index Scan" in explain_text or "Index Only Scan" in explain_text, \
             f"Expected index scan, but got different plan:\n{explain_text}"
-        
+
     except Exception as e:
         error_msg = str(e).lower()
-        
+
         # If column doesn't exist, that's the RED phase failure we expect
         if "column" in error_msg and "does not exist" in error_msg:
             pytest.fail(
@@ -611,10 +610,10 @@ def test_canvas_query_uses_index(db_connection: connection) -> None:
                 f"Error: {e}\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         # Re-raise unexpected errors
         raise
-        
+
     finally:
         cursor.close()
 
@@ -635,7 +634,7 @@ def test_processing_query_uses_partial_index(db_connection: connection) -> None:
         - Query executes successfully
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Run EXPLAIN ANALYZE on processing queue query
         cursor.execute("""
@@ -647,15 +646,15 @@ def test_processing_query_uses_partial_index(db_connection: connection) -> None:
               AND low_poly_url IS NULL
             LIMIT 10
         """)
-        
+
         explain_result = cursor.fetchone()
-        
+
         if explain_result is None:
             pytest.fail("EXPLAIN query returned no results")
-        
+
         explain_json = explain_result[0]
         explain_text = json.dumps(explain_json, indent=2)
-        
+
         # Check if partial index is used (will fail in RED phase)
         if "idx_blocks_low_poly_processing" not in explain_text:
             pytest.fail(
@@ -663,13 +662,13 @@ def test_processing_query_uses_partial_index(db_connection: connection) -> None:
                 f"EXPLAIN output:\n{explain_text}\n\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         assert "Index Scan" in explain_text, \
             f"Expected index scan on partial index, got:\n{explain_text}"
-        
+
     except Exception as e:
         error_msg = str(e).lower()
-        
+
         # If column doesn't exist, that's the RED phase failure we expect
         if "column" in error_msg and "does not exist" in error_msg:
             pytest.fail(
@@ -677,10 +676,10 @@ def test_processing_query_uses_partial_index(db_connection: connection) -> None:
                 f"Error: {e}\n"
                 f"Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         # Re-raise unexpected errors
         raise
-        
+
     finally:
         cursor.close()
 
@@ -701,7 +700,7 @@ def test_index_size_is_reasonable(db_connection: connection) -> None:
         - idx_blocks_low_poly_processing exists and size <100 KB
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Query index sizes
         cursor.execute("""
@@ -713,21 +712,21 @@ def test_index_size_is_reasonable(db_connection: connection) -> None:
             WHERE tablename = 'blocks'
               AND indexname IN ('idx_blocks_canvas_query', 'idx_blocks_low_poly_processing')
         """)
-        
+
         results = cursor.fetchall()
-        
+
         if len(results) == 0:
             pytest.fail(
                 "EXPECTED FAILURE (RED Phase): Indexes idx_blocks_canvas_query and "
                 "idx_blocks_low_poly_processing do not exist yet.\n"
                 "Run migration: supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
             )
-        
+
         # Check each index size
         for indexname, size_pretty, size_bytes in results:
             assert size_bytes < 100 * 1024, \
                 f"Index {indexname} is too large: {size_pretty} (expected <100 KB)"
-        
+
     finally:
         cursor.close()
 
@@ -752,20 +751,20 @@ def test_migration_applies_cleanly(db_connection: connection) -> None:
         - File contains expected DDL statements
     """
     import os
-    
+
     migration_file = "supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
-    
+
     if not os.path.exists(migration_file):
         pytest.fail(
             f"EXPECTED FAILURE (RED Phase): Migration file does not exist.\n"
             f"Expected path: {migration_file}\n"
             f"Create migration with columns and indexes as per technical spec."
         )
-    
+
     # Read migration content
     with open(migration_file, 'r') as f:
         content = f.read()
-    
+
     # Verify critical DDL statements are present
     assert "ALTER TABLE blocks" in content, "Migration must contain ALTER TABLE statement"
     assert "ADD COLUMN low_poly_url" in content, "Migration must add low_poly_url column"
@@ -792,27 +791,27 @@ def test_migration_is_idempotent(db_connection: connection) -> None:
         - Migration uses IF NOT EXISTS for columns and indexes
     """
     import os
-    
+
     migration_file = "supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
-    
+
     if not os.path.exists(migration_file):
         pytest.fail(
             f"EXPECTED FAILURE (RED Phase): Migration file does not exist.\n"
             f"Expected path: {migration_file}"
         )
-    
+
     # Read migration content
     with open(migration_file, 'r') as f:
         content = f.read()
-    
+
     # Verify idempotent patterns
     assert "IF NOT EXISTS" in content, \
         "Migration must use IF NOT EXISTS to be idempotent"
-    
+
     # Check for both columns
     low_poly_url_idempotent = "ADD COLUMN IF NOT EXISTS low_poly_url" in content
     bbox_idempotent = "ADD COLUMN IF NOT EXISTS bbox" in content
-    
+
     assert low_poly_url_idempotent, "low_poly_url column must use IF NOT EXISTS"
     assert bbox_idempotent, "bbox column must use IF NOT EXISTS"
 
@@ -833,23 +832,23 @@ def test_rollback_works_correctly(db_connection: connection) -> None:
         - Contains DROP COLUMN and DROP INDEX statements
     """
     import os
-    
+
     spec_file = "docs/US-005/T-0503-DB-TechnicalSpec-ENRICHED.md"
-    
+
     if not os.path.exists(spec_file):
         pytest.fail(
             f"EXPECTED FAILURE (RED Phase): Technical spec file missing.\n"
             f"Expected: {spec_file}"
         )
-    
+
     # Read spec content
     with open(spec_file, 'r') as f:
         content = f.read()
-    
+
     # Verify rollback section exists
     assert "Rollback" in content or "rollback" in content, \
         "Technical spec must document rollback plan"
-    
+
     # Check for critical rollback statements (in doc, not DB)
     assert "DROP COLUMN" in content or "drop column" in content, \
         "Rollback plan must include DROP COLUMN statements"
@@ -872,7 +871,7 @@ def test_existing_data_unaffected(db_connection: connection) -> None:
         - New columns are NULL for existing blocks
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Insert test block BEFORE checking migration status
         cursor.execute("""
@@ -882,7 +881,7 @@ def test_existing_data_unaffected(db_connection: connection) -> None:
         """)
         pre_migration_id = cursor.fetchone()[0]
         db_connection.commit()
-        
+
         # Check if new columns exist (migration applied)
         cursor.execute("""
             SELECT column_name
@@ -890,37 +889,37 @@ def test_existing_data_unaffected(db_connection: connection) -> None:
             WHERE table_name = 'blocks'
               AND column_name IN ('low_poly_url', 'bbox')
         """)
-        
+
         existing_columns = cursor.fetchall()
-        
+
         if len(existing_columns) < 2:
             # Clean up before failing
             cursor.execute("DELETE FROM blocks WHERE id = %s", (pre_migration_id,))
             db_connection.commit()
-            
+
             pytest.fail(
                 "EXPECTED FAILURE (RED Phase): New columns don't exist yet.\n"
                 "Run migration first, then re-run this test."
             )
-        
+
         # Verify existing block has NULL in new columns
         cursor.execute("""
             SELECT low_poly_url, bbox
             FROM blocks
             WHERE id = %s
         """, (pre_migration_id,))
-        
+
         result = cursor.fetchone()
         assert result is not None, "Pre-migration block should still exist"
-        
+
         low_poly_url, bbox = result
         assert low_poly_url is None, "Existing block should have NULL low_poly_url after migration"
         assert bbox is None, "Existing block should have NULL bbox after migration"
-        
+
         # Clean up
         cursor.execute("DELETE FROM blocks WHERE id = %s", (pre_migration_id,))
         db_connection.commit()
-        
+
     finally:
         cursor.close()
 
@@ -944,7 +943,7 @@ def test_canvas_query_performance_500ms(db_connection: connection) -> None:
         - Standard deviation <50ms (consistent performance)
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Check if new columns exist
         cursor.execute("""
@@ -953,17 +952,17 @@ def test_canvas_query_performance_500ms(db_connection: connection) -> None:
             WHERE table_name = 'blocks'
               AND column_name = 'low_poly_url'
         """)
-        
+
         if cursor.fetchone() is None:
             pytest.skip(
                 "SKIP (RED Phase): Column low_poly_url doesn't exist yet.\n"
                 "Run migration first, then re-run performance tests."
             )
-        
+
         # Seed test data (500 blocks)
         # NOTE: This is expensive, consider using a separate test database
         # or adding a @pytest.mark.slow marker
-        
+
         # For now, just verify query syntax is correct
         cursor.execute("""
             SELECT id, iso_code, status, tipologia, low_poly_url, bbox, workshop_id
@@ -973,7 +972,7 @@ def test_canvas_query_performance_500ms(db_connection: connection) -> None:
               AND tipologia = 'capitel'
             LIMIT 100
         """)
-        
+
         # Measure execution time
         start_time = time.time()
         cursor.execute("""
@@ -985,11 +984,11 @@ def test_canvas_query_performance_500ms(db_connection: connection) -> None:
         """)
         results = cursor.fetchall()
         elapsed_ms = (time.time() - start_time) * 1000
-        
+
         # Assert performance (relaxed for small dataset)
         assert elapsed_ms < 500, \
             f"Query took {elapsed_ms:.2f}ms (target <500ms). Add index or optimize query."
-        
+
     finally:
         cursor.close()
 
@@ -1008,7 +1007,7 @@ def test_processing_queue_query_10ms(db_connection: connection) -> None:
         - Query time <10ms (should be <1ms with partial index)
     """
     cursor = db_connection.cursor()
-    
+
     try:
         # Check if new columns exist
         cursor.execute("""
@@ -1017,13 +1016,13 @@ def test_processing_queue_query_10ms(db_connection: connection) -> None:
             WHERE table_name = 'blocks'
               AND column_name = 'low_poly_url'
         """)
-        
+
         if cursor.fetchone() is None:
             pytest.skip(
                 "SKIP (RED Phase): Column low_poly_url doesn't exist yet.\n"
                 "Run migration first, then re-run performance tests."
             )
-        
+
         # Measure execution time
         start_time = time.time()
         cursor.execute("""
@@ -1036,11 +1035,11 @@ def test_processing_queue_query_10ms(db_connection: connection) -> None:
         """)
         results = cursor.fetchall()
         elapsed_ms = (time.time() - start_time) * 1000
-        
+
         # Assert performance
         assert elapsed_ms < 10, \
             f"Query took {elapsed_ms:.2f}ms (target <10ms). Verify partial index is used."
-        
+
     finally:
         cursor.close()
 
@@ -1061,31 +1060,31 @@ def test_no_blocking_during_migration(db_connection: connection) -> None:
         - No ALTER TABLE ... REWRITE operations
     """
     import os
-    
+
     migration_file = "supabase/migrations/20260219000001_add_low_poly_url_bbox.sql"
-    
+
     if not os.path.exists(migration_file):
         pytest.fail(
             f"EXPECTED FAILURE (RED Phase): Migration file does not exist.\n"
             f"Expected path: {migration_file}"
         )
-    
+
     # Read migration content
     with open(migration_file, 'r') as f:
         content = f.read()
-    
+
     # Verify non-blocking patterns
     assert "ADD COLUMN" in content, "Migration must use ADD COLUMN"
-    
+
     # Check that columns are nullable (non-blocking)
     low_poly_url_nullable = "low_poly_url TEXT NULL" in content or \
                              "ADD COLUMN low_poly_url TEXT" in content  # DEFAULT NULL implicit
     bbox_nullable = "bbox JSONB NULL" in content or \
                     "ADD COLUMN bbox JSONB" in content
-    
+
     assert low_poly_url_nullable, "low_poly_url must be nullable for non-blocking migration"
     assert bbox_nullable, "bbox must be nullable for non-blocking migration"
-    
+
     # Verify no DEFAULT with value (would require table rewrite)
     assert "DEFAULT" not in content or "DEFAULT NULL" in content, \
         "Migration should not use DEFAULT with value (causes table rewrite)"

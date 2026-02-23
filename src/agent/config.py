@@ -17,18 +17,18 @@ class Settings(BaseSettings):
     # Celery
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
-    
+
     # Database (for direct writes)
     DATABASE_URL: str = "postgresql://user:password@db:5432/sfpm_db"
-    
+
     # Supabase (for S3 downloads)
     SUPABASE_URL: Optional[str] = None
     SUPABASE_KEY: Optional[str] = None
-    
+
     # File Processing Limits
     MAX_FILE_SIZE_MB: int = 500
     TEMP_DIR: str = "/tmp/sf-pm-agent"
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

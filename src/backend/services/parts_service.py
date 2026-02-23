@@ -25,7 +25,7 @@ class PartsService:
     Provides business logic for fetching parts with dynamic filtering,
     optimized for 3D canvas rendering in Dashboard (US-005).
     """
-    
+
     def __init__(self, supabase_client: Client):
         """
         Initialize PartsService with database client.
@@ -34,7 +34,7 @@ class PartsService:
             supabase_client: Supabase client instance for database operations
         """
         self.supabase = supabase_client
-    
+
     def _transform_row_to_part_item(self, row: Dict[str, Any]) -> PartCanvasItem:
         """
         Transform database row to PartCanvasItem Pydantic model.
@@ -56,7 +56,7 @@ class PartsService:
                 min=bbox_data["min"],
                 max=bbox_data["max"]
             )
-        
+
         return PartCanvasItem(
             id=row["id"],
             iso_code=row["iso_code"],
@@ -66,7 +66,7 @@ class PartsService:
             bbox=bbox,
             workshop_id=row.get("workshop_id")  # NULL-safe
         )
-    
+
     def _build_filters_applied(self, status: Optional[str], tipologia: Optional[str], workshop_id: Optional[str]) -> Dict[str, str]:
         """
         Build filters_applied dictionary from non-NULL filter parameters.
@@ -87,7 +87,7 @@ class PartsService:
         if workshop_id is not None:
             filters["workshop_id"] = workshop_id
         return filters
-    
+
     def list_parts(
         self,
         status: Optional[str] = None,
@@ -115,32 +115,32 @@ class PartsService:
         """
         # Build query with dynamic filters
         query = self.supabase.table(TABLE_BLOCKS).select(PARTS_LIST_SELECT_FIELDS)
-        
+
         # Always filter archived blocks
         query = query.eq(QUERY_FIELD_IS_ARCHIVED, False)
-        
+
         # Apply optional filters
         if status is not None:
             query = query.eq("status", status)
-        
+
         if tipologia is not None:
             query = query.eq("tipologia", tipologia)
-        
+
         if workshop_id is not None:
             query = query.eq("workshop_id", workshop_id)
-        
+
         # Apply ordering (newest first)
         query = query.order(QUERY_FIELD_CREATED_AT, desc=QUERY_ORDER_DESC)
-        
+
         # Execute query
         result = query.execute()
-        
+
         # Transform DB rows to Pydantic models
         parts = [self._transform_row_to_part_item(row) for row in result.data]
-        
+
         # Build filters_applied dict for transparency
         filters_applied = self._build_filters_applied(status, tipologia, workshop_id)
-        
+
         return PartsListResponse(
             parts=parts,
             count=len(parts),

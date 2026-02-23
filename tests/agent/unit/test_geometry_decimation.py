@@ -8,7 +8,7 @@ TDD Phase: RED - These tests will fail until implementation is complete.
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 
@@ -24,11 +24,11 @@ def mock_rhino_simple_mesh():
     - 500 vertices
     """
     mock_file = MagicMock()
-    
+
     # Create mock mesh with triangular faces
     mock_mesh = MagicMock()
     mock_mesh.Vertices = [MagicMock(X=i*0.1, Y=i*0.15, Z=i*0.2) for i in range(500)]
-    
+
     # Create triangular faces (tuples with 3 indices)
     mock_faces = []
     for i in range(1000):
@@ -38,14 +38,14 @@ def mock_rhino_simple_mesh():
         mock_face.B = (i + 1) % 500
         mock_face.C = (i + 2) % 500
         mock_faces.append(mock_face)
-    
+
     mock_mesh.Faces = mock_faces
-    
+
     # Mock object container
     mock_obj = MagicMock()
     mock_obj.Geometry = mock_mesh
     mock_obj.Geometry.ObjectType = 1  # Mesh type enum value
-    
+
     mock_file.Objects = [mock_obj]
     return mock_file
 
@@ -57,25 +57,25 @@ def mock_rhino_multiple_meshes():
     Uses trimesh to create VALID icosphere geometries that can be properly decimated.
     """
     import trimesh
-    
+
     mock_file = MagicMock()
     mock_objects = []
-    
+
     for mesh_idx in range(10):
         # Create icosphere (valid closed surface with proper topology)
         # subdivisions=4 creates ~2560 faces per sphere, so we need subdivisions ~3 for ~1000 faces
         sphere = trimesh.creation.icosphere(subdivisions=3, radius=1.0)
         # Move sphere to unique position
         sphere.apply_translation([mesh_idx * 3, 0, 0])
-        
+
         mock_mesh = MagicMock()
-        
+
         # Convert trimesh vertices to mock Rhino vertices with proper geometry
         mock_mesh.Vertices = [
             MagicMock(X=float(v[0]), Y=float(v[1]), Z=float(v[2]))
             for v in sphere.vertices
         ]
-        
+
         # Convert trimesh faces to mock Rhino faces
         mock_faces = []
         for face in sphere.faces:
@@ -85,14 +85,14 @@ def mock_rhino_multiple_meshes():
             mock_face.B = int(face[1])
             mock_face.C = int(face[2])
             mock_faces.append(mock_face)
-        
+
         mock_mesh.Faces = mock_faces
-        
+
         mock_obj = MagicMock()
         mock_obj.Geometry = mock_mesh
         mock_obj.Geometry.ObjectType = 1  # Mesh type
         mock_objects.append(mock_obj)
-    
+
     mock_file.Objects = mock_objects
     return mock_file
 
@@ -106,13 +106,13 @@ def mock_rhino_with_quads():
     Total expected after conversion: 500 quads → 1000 tris + 500 tris = 1500 triangles.
     """
     import trimesh
-    
+
     # Create base sphere with valid geometry
     sphere = trimesh.creation.icosphere(subdivisions=2, radius=1.0)  # ~320 faces
-    
+
     mock_file = MagicMock()
     mock_mesh = MagicMock()
-    
+
     # Use sphere vertices as base (valid 3D coordinates)
     base_vertices = [
         MagicMock(X=float(v[0]), Y=float(v[1]), Z=float(v[2]))
@@ -120,11 +120,11 @@ def mock_rhino_with_quads():
     ]
     # Add more vertices to reach 400 total
     base_vertices += [MagicMock(X=i*0.01, Y=i*0.02, Z=i*0.03) for i in range(len(sphere.vertices), 400)]
-    
+
     mock_mesh.Vertices = base_vertices
-    
+
     mock_faces = []
-    
+
     # 500 quad faces (IsQuad=True) - will be split into 1000 triangles
     for i in range(500):
         mock_face = MagicMock()
@@ -134,7 +134,7 @@ def mock_rhino_with_quads():
         mock_face.C = (i + 2) % 400
         mock_face.D = (i + 3) % 400
         mock_faces.append(mock_face)
-    
+
     # 500 triangle faces (IsQuad=False)
     for i in range(500):
         mock_face = MagicMock()
@@ -143,13 +143,13 @@ def mock_rhino_with_quads():
         mock_face.B = (i + 1) % 400
         mock_face.C = (i + 2) % 400
         mock_faces.append(mock_face)
-    
+
     mock_mesh.Faces = mock_faces
-    
+
     mock_obj = MagicMock()
     mock_obj.Geometry = mock_mesh
     mock_obj.Geometry.ObjectType = 1
-    
+
     mock_file.Objects = [mock_obj]
     return mock_file
 
@@ -158,11 +158,11 @@ def mock_rhino_with_quads():
 def mock_rhino_empty():
     """Mock rhino3dm File with no mesh objects (only curves)."""
     mock_file = MagicMock()
-    
+
     # Create non-mesh objects (curves, points, etc.)
     mock_curve_obj = MagicMock()
     mock_curve_obj.Geometry.ObjectType = 4  # Curve type (not mesh)
-    
+
     mock_file.Objects = [mock_curve_obj]
     return mock_file
 
@@ -175,7 +175,7 @@ def mock_rhino_huge_geometry():
     mock_file = MagicMock()
     mock_mesh = MagicMock()
     mock_mesh.Vertices = [MagicMock(X=i*0.01, Y=i*0.01, Z=i*0.01) for i in range(75000)]
-    
+
     mock_faces = []
     for i in range(150000):
         mock_face = MagicMock()
@@ -184,13 +184,13 @@ def mock_rhino_huge_geometry():
         mock_face.B = (i + 1) % 75000
         mock_face.C = (i + 2) % 75000
         mock_faces.append(mock_face)
-    
+
     mock_mesh.Faces = mock_faces
-    
+
     mock_obj = MagicMock()
     mock_obj.Geometry = mock_mesh
     mock_obj.Geometry.ObjectType = 1
-    
+
     mock_file.Objects = [mock_obj]
     return mock_file
 
@@ -204,7 +204,7 @@ class TestGeometryDecimation:
     These tests verify mesh decimation logic, Face tuple handling,
     and error conditions without touching real S3 or database.
     """
-    
+
     def test_simple_mesh_decimation(self, mock_rhino_simple_mesh):
         """
         Test 1 (Happy Path): Simple mesh decimation from 1000 to ~1000 triangles.
@@ -217,10 +217,9 @@ class TestGeometryDecimation:
           - decimated_faces between 900-1100
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        from src.agent.constants import DECIMATION_TARGET_FACES
-        
+
         block_id = str(uuid4())
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             # Mock DB query returning block metadata
             mock_cursor = MagicMock()
@@ -229,7 +228,7 @@ class TestGeometryDecimation:
                 "SF-C12-D-001"
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with patch('src.agent.tasks.geometry_processing.s3_client') as mock_s3:
                 with patch('rhino3dm.File3dm.Read', return_value=mock_rhino_simple_mesh):
                     with patch('src.agent.tasks.geometry_processing.os.path.getsize', return_value=400 * 1024):  # 400KB
@@ -241,16 +240,16 @@ class TestGeometryDecimation:
                             mock_supabase = MagicMock()
                             mock_supabase.storage.from_.return_value = mock_storage
                             mock_supabase_fn.return_value = mock_supabase
-                            
+
                             with patch('src.agent.tasks.geometry_processing.os.remove'):  # Mock file cleanup
                                 result = generate_low_poly_glb(block_id)
-                                
+
                                 assert result['status'] == 'success'
                                 assert result['low_poly_url'] is not None
                                 assert result['original_faces'] == 1000
                                 assert 900 <= result['decimated_faces'] <= 1100  # ±10% tolerance
                                 assert result['file_size_kb'] <= 500  # Under 500KB target
-    
+
     def test_multiple_meshes_merge(self, mock_rhino_multiple_meshes):
         """
         Test 2 (Happy Path): Multiple meshes merged before decimation.
@@ -266,9 +265,9 @@ class TestGeometryDecimation:
         Previous mock-based fixtures created degenerate topology that couldn't be decimated.
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        
+
         block_id = str(uuid4())
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = (
@@ -276,7 +275,7 @@ class TestGeometryDecimation:
                 "SF-TEST-M-001"
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with patch('src.agent.tasks.geometry_processing.s3_client'):
                 with patch('rhino3dm.File3dm.Read', return_value=mock_rhino_multiple_meshes):
                     with patch('src.agent.tasks.geometry_processing.os.path.getsize', return_value=450 * 1024):
@@ -287,14 +286,14 @@ class TestGeometryDecimation:
                             mock_supabase = MagicMock()
                             mock_supabase.storage.from_.return_value = mock_storage
                             mock_supabase_fn.return_value = mock_supabase
-                            
+
                             with patch('src.agent.tasks.geometry_processing.os.remove'):
                                 result = generate_low_poly_glb(block_id)
-                                
+
                                 assert result['status'] == 'success'
                                 assert 12000 <= result['original_faces'] <= 13000  # ~12800 (10 icospheres)
                                 assert 900 <= result['decimated_faces'] <= 1100  # Decimated to target ~1000
-    
+
     def test_quad_faces_handling(self, mock_rhino_with_quads):
         """
         Test 3 (Happy Path): Quad faces split into 2 triangles.
@@ -307,9 +306,9 @@ class TestGeometryDecimation:
           - Total triangles = 500 + (500 quads × 2) = 1500 before decimation
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        
+
         block_id = str(uuid4())
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = (
@@ -317,7 +316,7 @@ class TestGeometryDecimation:
                 "SF-QUAD-T-001"
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with patch('src.agent.tasks.geometry_processing.s3_client'):
                 with patch('rhino3dm.File3dm.Read', return_value=mock_rhino_with_quads):
                     with patch('src.agent.tasks.geometry_processing.os.path.getsize', return_value=380 * 1024):
@@ -328,10 +327,10 @@ class TestGeometryDecimation:
                             mock_supabase = MagicMock()
                             mock_supabase.storage.from_.return_value = mock_storage
                             mock_supabase_fn.return_value = mock_supabase
-                            
+
                             with patch('src.agent.tasks.geometry_processing.os.remove'):
                                 result = generate_low_poly_glb(block_id)
-                                
+
                                 assert result['status'] == 'success'
                                 # 500 tris + 500 quads × 2 = 1500 original faces (quad split works!)
                                 assert result['original_faces'] == 1500
@@ -339,7 +338,7 @@ class TestGeometryDecimation:
                                 # This test validates QUAD SPLITTING, not decimation quality.
                                 # Real-world validation with actual .3dm files in integration tests.
                                 assert result['decimated_faces'] <= 1500  # At most 1500, ideally ~1000
-    
+
     def test_already_low_poly_skip_decimation(self):
         """
         Test 4 (Happy Path): Already low-poly mesh skips decimation.
@@ -352,10 +351,9 @@ class TestGeometryDecimation:
           - decimated_faces = 800 (no reduction)
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        from src.agent.constants import DECIMATION_TARGET_FACES
-        
+
         block_id = str(uuid4())
-        
+
         # Create mock with 800 faces (below target)
         mock_file = MagicMock()
         mock_mesh = MagicMock()
@@ -369,12 +367,12 @@ class TestGeometryDecimation:
             mock_face.C = (i + 2) % 400
             mock_faces.append(mock_face)
         mock_mesh.Faces = mock_faces
-        
+
         mock_obj = MagicMock()
         mock_obj.Geometry = mock_mesh
         mock_obj.Geometry.ObjectType = 1
         mock_file.Objects = [mock_obj]
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = (
@@ -382,7 +380,7 @@ class TestGeometryDecimation:
                 "SF-LOWP-L-001"
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with patch('src.agent.tasks.geometry_processing.s3_client'):
                 with patch('rhino3dm.File3dm.Read', return_value=mock_file):
                     with patch('src.agent.tasks.geometry_processing.os.path.getsize', return_value=250 * 1024):
@@ -393,14 +391,14 @@ class TestGeometryDecimation:
                             mock_supabase = MagicMock()
                             mock_supabase.storage.from_.return_value = mock_storage
                             mock_supabase_fn.return_value = mock_supabase
-                            
+
                             with patch('src.agent.tasks.geometry_processing.os.remove'):
                                 result = generate_low_poly_glb(block_id)
-                                
+
                                 assert result['status'] == 'success'
                                 assert result['original_faces'] == 800
                                 assert result['decimated_faces'] == 800  # No decimation
-    
+
     def test_empty_mesh_no_geometry_found(self, mock_rhino_empty):
         """
         Test 5 (Edge Case): Empty mesh with no geometry raises ValueError.
@@ -412,10 +410,9 @@ class TestGeometryDecimation:
           - Task result: status='error', error_message='No meshes found'
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        from src.agent.constants import ERROR_MSG_NO_MESHES_FOUND
-        
+
         block_id = str(uuid4())
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = (
@@ -423,15 +420,15 @@ class TestGeometryDecimation:
                 "SF-EMPTY-E-001"
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with patch('src.agent.tasks.geometry_processing.s3_client'):
                 with patch('rhino3dm.File3dm.Read', return_value=mock_rhino_empty):
-                    
+
                     with pytest.raises(ValueError) as exc_info:
                         generate_low_poly_glb(block_id)
-                    
+
                     assert "No meshes found" in str(exc_info.value)
-    
+
     def test_huge_geometry_performance(self, mock_rhino_huge_geometry):
         """
         Test 6 (Edge Case): Huge geometry (150K faces) completes within timeout.
@@ -448,10 +445,9 @@ class TestGeometryDecimation:
         TODO: Implement chunked decimation or increase Docker memory to 4GB.
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        from src.agent.constants import MAX_ORIGINAL_FACES_WARNING
-        
+
         block_id = str(uuid4())
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = (
@@ -459,7 +455,7 @@ class TestGeometryDecimation:
                 "SF-HUGE-H-001"
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with patch('src.agent.tasks.geometry_processing.s3_client'):
                 with patch('rhino3dm.File3dm.Read', return_value=mock_rhino_huge_geometry):
                     with patch('src.agent.tasks.geometry_processing.os.path.getsize', return_value=490 * 1024):
@@ -470,16 +466,16 @@ class TestGeometryDecimation:
                             mock_supabase = MagicMock()
                             mock_supabase.storage.from_.return_value = mock_storage
                             mock_supabase_fn.return_value = mock_supabase
-                            
+
                             with patch('src.agent.tasks.geometry_processing.os.remove'):
                                 result = generate_low_poly_glb(block_id)
-                                
+
                                 assert result['status'] == 'success'
                                 assert result['original_faces'] == 150000
                                 # Relaxed assertion: mock geometry is not topologically valid (is_watertight=False)
                                 # so quadric decimation can't achieve full reduction. Accept any reduction >50%.
                                 assert result['decimated_faces'] < result['original_faces'] * 0.5  # At least 50% reduction
-    
+
     def test_invalid_s3_url_404_error(self):
         """
         Test 7 (Edge Case): Invalid S3 URL (deleted file) triggers retry.
@@ -492,9 +488,9 @@ class TestGeometryDecimation:
           - After 3 failures: status='error', error_message contains 'S3 download failed'
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        
+
         block_id = str(uuid4())
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = (
@@ -502,14 +498,14 @@ class TestGeometryDecimation:
                 "SF-404-N-001"
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with patch('src.agent.tasks.geometry_processing.s3_client') as mock_s3:
                 # Simulate S3 404 error
                 mock_s3.download_file.side_effect = FileNotFoundError("404 Not Found")
-                
+
                 with pytest.raises(FileNotFoundError):
                     generate_low_poly_glb(block_id)
-    
+
     def test_malformed_3dm_corrupted_file(self):
         """
         Test 8 (Edge Case): Malformed .3dm (corrupted) fails parsing.
@@ -522,10 +518,9 @@ class TestGeometryDecimation:
           - Task retries (idempotent operation)
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        from src.agent.constants import ERROR_MSG_FAILED_PARSE_3DM
-        
+
         block_id = str(uuid4())
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = (
@@ -533,16 +528,16 @@ class TestGeometryDecimation:
                 "SF-CORR-C-001"
             )
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with patch('src.agent.tasks.geometry_processing.s3_client'):
                 # rhino3dm returns None for corrupted files
                 with patch('rhino3dm.File3dm.Read', return_value=None):
-                    
+
                     with pytest.raises(ValueError) as exc_info:
                         generate_low_poly_glb(block_id)
-                    
+
                     assert "Failed to parse" in str(exc_info.value)
-    
+
     def test_sql_injection_protection(self):
         """
         Test 9 (Security): SQL injection in block_id is sanitized.
@@ -555,20 +550,19 @@ class TestGeometryDecimation:
           - Query returns 0 rows → ValueError("Block not found")
         """
         from src.agent.tasks.geometry_processing import generate_low_poly_glb
-        from src.agent.constants import ERROR_MSG_BLOCK_NOT_FOUND
-        
+
         malicious_block_id = "'; DROP TABLE blocks; --"
-        
+
         with patch('src.agent.tasks.geometry_processing.get_db_connection') as mock_db:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = None  # No block found (sanitized)
             mock_db.return_value.__enter__.return_value.cursor.return_value = mock_cursor
-            
+
             with pytest.raises(ValueError) as exc_info:
                 generate_low_poly_glb(malicious_block_id)
-            
+
             assert "not found" in str(exc_info.value).lower()
-            
+
             # Verify parameterized query was used (not string concatenation)
             mock_cursor.execute.assert_called_once()
             call_args = mock_cursor.execute.call_args[0]
