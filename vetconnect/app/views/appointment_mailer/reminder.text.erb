@@ -1,0 +1,31 @@
+RECORDATORIO DE CITA - VetConnect
+=====================================
+
+Hola <%= @owner.first_name %>,
+
+Este es un recordatorio de que tienes una cita programada para <%= @pet.name %> mañana.
+
+DETALLES DE LA CITA:
+--------------------
+Mascota: <%= @pet.name %> (<%= @pet.species.humanize %>)
+Fecha y Hora: <%= l(@appointment.appointment_date, format: :long) %>
+Duración: <%= @appointment.duration_minutes %> minutos
+Veterinario: Dr. <%= @veterinarian.full_name %>
+Motivo: <%= @appointment.reason %>
+
+CLÍNICA:
+--------
+<%= @clinic.name %>
+<%= @clinic.address %>
+Teléfono: <%= @clinic.phone %>
+
+<% if @appointment.notes.present? %>
+NOTAS ADICIONALES:
+-----------------
+<%= @appointment.notes %>
+<% end %>
+
+Por favor, llega 10 minutos antes de tu cita. Si necesitas cancelar o reprogramar, contáctanos lo antes posible.
+
+---
+VetConnect - Cuidando a tu mascota

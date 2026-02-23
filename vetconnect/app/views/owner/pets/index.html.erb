@@ -1,0 +1,78 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Mis Mascotas 🐾</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Gestiona el perfil y salud de tus mascotas
+      </p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <%= link_to new_pet_path, class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+        <span class="mr-2" aria-hidden="true">➕</span> Registrar Nueva Mascota
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Pets Grid -->
+  <% if @pets.any? %>
+    <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-fade-in">
+      <% @pets.each do |pet| %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden card-hover">
+          <div class="p-6">
+            <!-- Pet Name -->
+            <div class="mb-4">
+              <h2 class="text-xl font-bold text-gray-900"><%= pet.name %></h2>
+            </div>
+
+            <!-- Pet Details -->
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center text-gray-700">
+                <span class="font-medium w-20">Especie:</span>
+                <span class="text-gray-600 capitalize"><%= pet.species.humanize %></span>
+              </div>
+              <% if pet.breed.present? %>
+                <div class="flex items-center text-gray-700">
+                  <span class="font-medium w-20">Raza:</span>
+                  <span class="text-gray-600"><%= pet.breed %></span>
+                </div>
+              <% end %>
+              <div class="flex items-center text-gray-700">
+                <span class="font-medium w-20">Edad:</span>
+                <span class="text-gray-600"><%= pet.age %> años</span>
+              </div>
+              <div class="flex items-center text-gray-700">
+                <span class="font-medium w-20">Género:</span>
+                <span class="text-gray-600 capitalize">
+                  <%= pet.gender == 'male' ? '♂️ Macho' : pet.gender == 'female' ? '♀️ Hembra' : pet.gender.humanize %>
+                </span>
+              </div>
+              <% if pet.weight.present? %>
+                <div class="flex items-center text-gray-700">
+                  <span class="font-medium w-20">Peso:</span>
+                  <span class="text-gray-600"><%= number_with_precision(pet.weight, precision: 1) %> kg</span>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Action Button -->
+            <div class="mt-6">
+              <%= link_to owner_pet_path(pet), 
+                  class: "w-full flex justify-center items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]",
+                  aria: { label: "Ver detalles de #{pet.name}" } do %>
+                Ver Detalles
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- Empty State -->
+    <%= render 'shared/empty_state', 
+        icon: '🐾',
+        title: 'No tienes mascotas registradas',
+        message: 'Comienza registrando tu primera mascota para poder agendar citas y gestionar su salud.',
+        action: { text: 'Registrar Mi Primera Mascota', path: new_pet_path, icon: '➕' } %>
+  <% end %>
+</div>

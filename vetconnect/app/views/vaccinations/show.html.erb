@@ -1,0 +1,118 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:flex sm:items-center sm:justify-between animate-fade-in">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Vacunación 💉</h1>
+        <p class="mt-2 text-sm text-gray-600"><%= @vaccination.vaccine_name %></p>
+      </div>
+      <div class="mt-4 sm:mt-0 flex gap-2">
+        <%= link_to certificate_vaccination_path(@vaccination), class: "inline-flex items-center rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700" do %>
+          📄 Certificado
+        <% end %>
+        <%= link_to edit_vaccination_path(@vaccination), class: "inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50" do %>
+          ✏️ Editar
+        <% end %>
+        <%= link_to vaccination_path(@vaccination), method: :delete, 
+            data: { confirm: '¿Estás seguro de eliminar esta vacunación?' },
+            class: "inline-flex items-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700" do %>
+          🗑️ Eliminar
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden animate-fade-in">
+      <div class="px-6 py-8 sm:p-10">
+        <dl class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2">
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Mascota</dt>
+            <dd class="mt-1 text-sm text-gray-900">
+              <%= link_to @vaccination.pet.name, @vaccination.pet, class: "text-indigo-600 hover:text-indigo-900" %>
+            </dd>
+          </div>
+          
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Veterinario</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @vaccination.veterinarian.full_name %></dd>
+          </div>
+          
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Nombre de la Vacuna</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @vaccination.vaccine_name %></dd>
+          </div>
+          
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Tipo de Vacuna</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @vaccination.vaccine_type.humanize %></dd>
+          </div>
+          
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Fecha de Administración</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @vaccination.administered_at.strftime('%d de %B de %Y') %></dd>
+          </div>
+          
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Número de Dosis</dt>
+            <dd class="mt-1 text-sm text-gray-900">Dosis #<%= @vaccination.dose_number %></dd>
+          </div>
+          
+          <% if @vaccination.next_due_date %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Próxima Dosis</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= @vaccination.next_due_date.strftime('%d de %B de %Y') %>
+                <% if @vaccination.overdue? %>
+                  <span class="ml-2 text-xs text-red-600">⚠️ Vencida</span>
+                <% elsif @vaccination.due_soon? %>
+                  <span class="ml-2 text-xs text-yellow-600">⚠️ Por vencer</span>
+                <% end %>
+              </dd>
+            </div>
+          <% end %>
+          
+          <% if @vaccination.manufacturer.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Fabricante</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @vaccination.manufacturer %></dd>
+            </div>
+          <% end %>
+          
+          <% if @vaccination.lot_number.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Número de Lote</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @vaccination.lot_number %></dd>
+            </div>
+          <% end %>
+          
+          <% if @vaccination.expires_at.present? %>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Fecha de Vencimiento</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @vaccination.expires_at.strftime('%d de %B de %Y') %></dd>
+            </div>
+          <% end %>
+          
+          <% if @vaccination.notes.present? %>
+            <div class="sm:col-span-2">
+              <dt class="text-sm font-medium text-gray-500">Notas</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= simple_format(@vaccination.notes) %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Back Link -->
+    <div class="mt-6">
+      <% if @vaccination.pet %>
+        <%= link_to pet_vaccinations_path(@vaccination.pet), class: "text-sm text-indigo-600 hover:text-indigo-900" do %>
+          ← Volver a vacunaciones de <%= @vaccination.pet.name %>
+        <% end %>
+      <% else %>
+        <%= link_to vaccinations_path, class: "text-sm text-indigo-600 hover:text-indigo-900" do %>
+          ← Volver a todas las vacunaciones
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

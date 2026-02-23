@@ -1,0 +1,36 @@
+<% if flash.any? %>
+  <div class="<%= user_signed_in? ? 'lg:pl-72' : '' %>">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+      <% flash.each do |type, message| %>
+        <% 
+          alert_class = case type.to_s
+          when 'notice' then 'bg-green-50 border-green-200 text-green-800'
+          when 'success' then 'bg-green-50 border-green-200 text-green-800'
+          when 'alert' then 'bg-red-50 border-red-200 text-red-800'
+          when 'error' then 'bg-red-50 border-red-200 text-red-800'
+          when 'warning' then 'bg-yellow-50 border-yellow-200 text-yellow-800'
+          else 'bg-blue-50 border-blue-200 text-blue-800'
+          end
+          
+          icon = case type.to_s
+          when 'notice', 'success' then '✅'
+          when 'alert', 'error' then '⚠️'
+          when 'warning' then '⚡'
+          else 'ℹ️'
+          end
+        %>
+        <div class="animate-fade-in rounded-lg border-l-4 p-4 mb-3 <%= alert_class %> flex items-start" role="alert">
+          <span class="text-xl mr-3"><%= icon %></span>
+          <div class="flex-1">
+            <p class="font-medium"><%= message %></p>
+          </div>
+          <button onclick="this.parentElement.remove()" class="ml-4 flex-shrink-0 text-current opacity-50 hover:opacity-100 transition-opacity">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

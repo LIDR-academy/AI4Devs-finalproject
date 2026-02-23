@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificado de Vacunación - <%= @vaccination.pet.name %></title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px;
+      background: white;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #4F46E5;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #4F46E5;
+      margin: 0;
+      font-size: 28px;
+    }
+    .certificate-body {
+      margin: 30px 0;
+    }
+    .section {
+      margin: 25px 0;
+    }
+    .section-title {
+      font-weight: bold;
+      color: #374151;
+      margin-bottom: 10px;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+    .section-content {
+      color: #111827;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .info-item {
+      padding: 10px;
+      background: #F9FAFB;
+      border-radius: 8px;
+    }
+    .info-label {
+      font-size: 12px;
+      color: #6B7280;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .info-value {
+      font-size: 16px;
+      color: #111827;
+      font-weight: 500;
+    }
+    .footer {
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 2px solid #E5E7EB;
+      text-align: center;
+      color: #6B7280;
+      font-size: 12px;
+    }
+    .signature-section {
+      margin-top: 60px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    .signature-box {
+      text-align: center;
+    }
+    .signature-line {
+      border-top: 2px solid #111827;
+      margin-top: 60px;
+      padding-top: 10px;
+    }
+    @media print {
+      body { padding: 20px; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🐾 CERTIFICADO DE VACUNACIÓN</h1>
+    <p style="color: #6B7280; margin-top: 10px;">VetConnect - Sistema de Gestión Veterinaria</p>
+  </div>
+
+  <div class="certificate-body">
+    <div class="section">
+      <p class="section-content" style="text-align: justify;">
+        Por medio del presente documento se certifica que la mascota mencionada a continuación 
+        ha recibido la vacunación especificada en las condiciones y fechas indicadas.
+      </p>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Mascota</div>
+        <div class="info-value"><%= @vaccination.pet.name %></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Especie</div>
+        <div class="info-value"><%= @vaccination.pet.species.humanize %></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Raza</div>
+        <div class="info-value"><%= @vaccination.pet.breed || 'N/A' %></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Dueño</div>
+        <div class="info-value"><%= @vaccination.pet.user.full_name %></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Información de la Vacunación</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">Vacuna</div>
+          <div class="info-value"><%= @vaccination.vaccine_name %></div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Tipo</div>
+          <div class="info-value"><%= @vaccination.vaccine_type.humanize %></div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Fecha de Administración</div>
+          <div class="info-value"><%= @vaccination.administered_at.strftime('%d de %B de %Y') %></div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Dosis Número</div>
+          <div class="info-value">#<%= @vaccination.dose_number %></div>
+        </div>
+        <% if @vaccination.manufacturer.present? %>
+          <div class="info-item">
+            <div class="info-label">Fabricante</div>
+            <div class="info-value"><%= @vaccination.manufacturer %></div>
+          </div>
+        <% end %>
+        <% if @vaccination.lot_number.present? %>
+          <div class="info-item">
+            <div class="info-label">Número de Lote</div>
+            <div class="info-value"><%= @vaccination.lot_number %></div>
+          </div>
+        <% end %>
+        <% if @vaccination.next_due_date.present? %>
+          <div class="info-item">
+            <div class="info-label">Próxima Dosis</div>
+            <div class="info-value"><%= @vaccination.next_due_date.strftime('%d de %B de %Y') %></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <% if @vaccination.notes.present? %>
+      <div class="section">
+        <div class="section-title">Observaciones</div>
+        <div class="section-content"><%= simple_format(@vaccination.notes) %></div>
+      </div>
+    <% end %>
+
+    <div class="signature-section">
+      <div class="signature-box">
+        <div class="signature-line">
+          <div class="info-value"><%= @vaccination.veterinarian.full_name %></div>
+          <div class="info-label">Veterinario</div>
+        </div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line">
+          <div class="info-value"><%= @vaccination.administered_at.strftime('%d/%m/%Y') %></div>
+          <div class="info-label">Fecha</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Este certificado fue generado electrónicamente por VetConnect</p>
+    <p>ID de Vacunación: #<%= @vaccination.id %> | Generado el <%= Time.current.strftime('%d/%m/%Y a las %H:%M') %></p>
+    <div class="no-print" style="margin-top: 20px;">
+      <%= link_to '← Volver a la vacunación', vaccination_path(@vaccination), 
+          style: "color: #4F46E5; text-decoration: none;" %>
+      | 
+      <a href="javascript:window.print()" style="color: #4F46E5; text-decoration: none;">🖨️ Imprimir</a>
+    </div>
+  </div>
+</body>
+</html>

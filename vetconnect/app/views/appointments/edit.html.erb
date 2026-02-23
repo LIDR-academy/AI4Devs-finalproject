@@ -1,0 +1,163 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Editar Cita 📝</h1>
+      <p class="mt-2 text-sm text-gray-600">Actualiza los detalles de la cita programada</p>
+    </div>
+
+    <!-- Form -->
+    <%= form_with(model: @appointment, class: "animate-fade-in") do |f| %>
+      <!-- Errors -->
+      <% if @appointment.errors.any? %>
+        <div class="mb-6 rounded-lg bg-red-50 p-4 border-l-4 border-red-400">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">⚠️</span>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">
+                <%= pluralize(@appointment.errors.count, "error") %> impidieron actualizar la cita:
+              </h3>
+              <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                <% @appointment.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Form Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="px-6 py-8 sm:p-10">
+          <div class="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+            
+            <!-- Pet (Disabled) -->
+            <div class="sm:col-span-3">
+              <%= f.label :pet_id, "Mascota *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.collection_select :pet_id, @pets, :id, :name,
+                    {},
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 bg-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 sm:text-sm sm:leading-6",
+                    required: true,
+                    disabled: true %>
+                <%= f.hidden_field :pet_id %>
+              </div>
+              <p class="mt-1 text-xs text-gray-500">No se puede cambiar la mascota</p>
+            </div>
+
+            <!-- Veterinarian -->
+            <div class="sm:col-span-3">
+              <%= f.label :veterinarian_id, "Veterinario *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.collection_select :veterinarian_id, @veterinarians, :id, :full_name,
+                    {},
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true %>
+              </div>
+            </div>
+
+            <!-- Clinic -->
+            <div class="sm:col-span-3">
+              <%= f.label :clinic_id, "Clínica *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.collection_select :clinic_id, @clinics, :id, :name,
+                    {},
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true %>
+              </div>
+            </div>
+
+            <!-- Appointment Type -->
+            <div class="sm:col-span-3">
+              <%= f.label :appointment_type, "Tipo de Cita *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.select :appointment_type,
+                    options_for_select([
+                      ['💉 Vacunación', 'vaccination'],
+                      ['🩺 Consulta General', 'consultation'],
+                      ['🔬 Chequeo Preventivo', 'checkup'],
+                      ['🏥 Cirugía', 'surgery'],
+                      ['🚨 Emergencia', 'emergency']
+                    ], @appointment.appointment_type),
+                    {},
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true %>
+              </div>
+            </div>
+
+            <!-- Date and Time -->
+            <div class="sm:col-span-3">
+              <%= f.label :appointment_date, "Fecha y Hora *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.datetime_field :appointment_date,
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true %>
+              </div>
+            </div>
+
+            <!-- Duration -->
+            <div class="sm:col-span-3">
+              <%= f.label :duration_minutes, "Duración *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.select :duration_minutes,
+                    options_for_select([
+                      ['15 minutos', 15],
+                      ['30 minutos', 30],
+                      ['45 minutos', 45],
+                      ['1 hora', 60],
+                      ['1.5 horas', 90],
+                      ['2 horas', 120]
+                    ], @appointment.duration_minutes),
+                    {},
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true %>
+              </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="sm:col-span-6">
+              <%= f.label :reason, "Motivo de la Consulta *", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.text_field :reason,
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6",
+                    required: true,
+                    maxlength: 200 %>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="sm:col-span-6">
+              <%= f.label :notes, "Notas Adicionales", class: "block text-sm font-medium leading-6 text-gray-900" %>
+              <div class="mt-2">
+                <%= f.text_area :notes,
+                    rows: 3,
+                    class: "block w-full rounded-lg border-0 py-2.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6" %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-x-3 border-t border-gray-900/10 px-6 py-4 bg-gray-50">
+          <%= link_to "Cancelar", appointment_path(@appointment),
+              class: "rounded-lg px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors" %>
+          <%= f.submit "Actualizar Cita",
+              class: "rounded-lg gradient-bg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity cursor-pointer" %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Warning -->
+    <div class="mt-6 rounded-lg bg-yellow-50 p-4 shadow-sm ring-1 ring-yellow-100">
+      <div class="flex">
+        <span class="text-xl mr-2">⚠️</span>
+        <p class="text-sm text-yellow-800">
+          <strong>Nota:</strong> Al modificar la cita, se notificará automáticamente al dueño de la mascota y al veterinario.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

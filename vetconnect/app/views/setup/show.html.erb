@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VetConnect - Setup</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .status {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-weight: 500;
+    }
+    .status.initialized {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.not-initialized {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      margin: 10px 10px 10px 0;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .button:hover {
+      background: #5568d3;
+    }
+    .button.danger {
+      background: #dc3545;
+    }
+    .button.danger:hover {
+      background: #c82333;
+    }
+    .button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .info {
+      background: #e7f3ff;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+    .credentials {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+    }
+    .credentials strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🐾 VetConnect Setup</h1>
+    
+    <% if @initialized %>
+      <div class="status initialized">
+        ✅ Application is already initialized
+      </div>
+      
+      <div class="info">
+        <strong>Status:</strong><br>
+        Total users: <%= @user_count %><br>
+        Admin user exists: Yes
+      </div>
+      
+      <div class="warning">
+        <strong>⚠️ Security Note:</strong><br>
+        The setup endpoints are still active. Consider disabling them in production for security.
+      </div>
+      
+      <a href="/users/sign_in" class="button">Go to Login</a>
+      
+    <% else %>
+      <div class="status not-initialized">
+        ⚠️ Application is not initialized
+      </div>
+      
+      <div class="info">
+        <strong>What does initialization do?</strong><br>
+        Creates a default admin user so you can log in and manage the application.
+      </div>
+      
+      <div class="credentials">
+        <strong>Default Admin Credentials:</strong>
+        Email: <code>admin@vetconnect.com</code><br>
+        Password: <code>password123</code>
+      </div>
+      
+      <div class="warning">
+        <strong>⚠️ Important:</strong><br>
+        After initialization, change the default password immediately!
+      </div>
+      
+      <button onclick="initializeApp()" class="button" id="initBtn">
+        Initialize Application
+      </button>
+      
+      <button onclick="runSeeds()" class="button danger" id="seedBtn">
+        Run Full Seeds (Demo Data)
+      </button>
+      
+      <div id="seedWarning" class="warning" style="display: none; margin-top: 15px;">
+        <strong>⚠️ Para ejecutar seeds cuando ya hay usuarios:</strong><br>
+        1. Ve a Render.com → Tu servicio → Environment<br>
+        2. Agrega variable: <code>ALLOW_SEED_IN_PRODUCTION=true</code><br>
+        3. Guarda y espera a que se reinicie el servicio<br>
+        4. Vuelve a esta página e intenta de nuevo
+      </div>
+      
+      <div id="result" style="margin-top: 20px;"></div>
+    <% end %>
+  </div>
+
+  <script>
+    async function initializeApp() {
+      const btn = document.getElementById('initBtn');
+      const result = document.getElementById('result');
+      
+      btn.disabled = true;
+      btn.textContent = 'Initializing...';
+      result.innerHTML = '<div class="info">Please wait...</div>';
+      
+      try {
+        const response = await fetch('/setup/initialize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          result.innerHTML = `
+            <div class="status initialized">
+              ✅ ${data.message}
+            </div>
+            <div class="credentials">
+              <strong>Admin User Created:</strong><br>
+              Email: <code>${data.admin_user.email}</code><br>
+              Role: ${data.admin_user.role}<br>
+              Confirmed: ${data.admin_user.confirmed ? 'Yes' : 'No'}
+            </div>
+            <div class="warning">
+              ${data.warning}
+            </div>
+            <div style="margin-top: 15px;">
+              <a href="/users/sign_in" class="button">Go to Login</a>
+            </div>
+          `;
+          btn.style.display = 'none';
+          document.getElementById('seedBtn').style.display = 'none';
+        } else {
+          result.innerHTML = `
+            <div class="status not-initialized">
+              ❌ ${data.message || 'Failed to initialize'}
+            </div>
+            ${data.error ? `<div class="warning">Error: ${data.error}</div>` : ''}
+          `;
+          btn.disabled = false;
+          btn.textContent = 'Initialize Application';
+        }
+      } catch (error) {
+        result.innerHTML = `
+          <div class="status not-initialized">
+            ❌ Error: ${error.message}
+          </div>
+        `;
+        btn.disabled = false;
+        btn.textContent = 'Initialize Application';
+      }
+    }
+    
+    async function runSeeds() {
+      const btn = document.getElementById('seedBtn');
+      const result = document.getElementById('result');
+      const warning = document.getElementById('seedWarning');
+      
+      // Check if we need to show warning about ALLOW_SEED_IN_PRODUCTION
+      try {
+        const statusResponse = await fetch('/setup');
+        const statusData = await statusResponse.json();
+        if (statusData.user_count > 0) {
+          warning.style.display = 'block';
+        }
+      } catch (e) {
+        // Ignore error
+      }
+      
+      if (!confirm('This will create demo data (users, pets, appointments, etc.). Continue?')) {
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.textContent = 'Running seeds...';
+      result.innerHTML = '<div class="info">This may take a moment...</div>';
+      
+      try {
+        const response = await fetch('/setup/seed', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          result.innerHTML = `
+            <div class="status initialized">
+              ✅ ${data.message}
+            </div>
+            ${data.forced ? '<div class="warning">⚠️ Seeds executed on existing database - may have duplicate data</div>' : ''}
+            <div class="info">
+              <strong>Created:</strong><br>
+              Users: ${data.stats.users}<br>
+              Clinics: ${data.stats.clinics}<br>
+              Pets: ${data.stats.pets}<br>
+              Appointments: ${data.stats.appointments}
+            </div>
+            <div class="credentials">
+              <strong>Demo Credentials:</strong><br>
+              ${Object.entries(data.credentials).map(([role, creds]) => 
+                `${role}: <code>${creds}</code>`
+              ).join('<br>')}
+            </div>
+            <div class="warning">
+              ${data.warning}
+            </div>
+            ${data.note ? `<div class="warning">${data.note}</div>` : ''}
+            <div style="margin-top: 15px;">
+              <a href="/users/sign_in" class="button">Go to Login</a>
+            </div>
+          `;
+          btn.style.display = 'none';
+          document.getElementById('initBtn').style.display = 'none';
+          warning.style.display = 'none';
+        } else {
+          result.innerHTML = `
+            <div class="status not-initialized">
+              ❌ ${data.message || 'Failed to seed database'}
+            </div>
+            ${data.error ? `<div class="warning">Error: ${data.error}</div>` : ''}
+            ${data.suggestion ? `<div class="info">${data.suggestion}</div>` : ''}
+            ${data.warning ? `<div class="warning">${data.warning}</div>` : ''}
+          `;
+          btn.disabled = false;
+          btn.textContent = 'Run Full Seeds (Demo Data)';
+        }
+      } catch (error) {
+        result.innerHTML = `
+          <div class="status not-initialized">
+            ❌ Error: ${error.message}
+          </div>
+        `;
+        btn.disabled = false;
+        btn.textContent = 'Run Full Seeds (Demo Data)';
+      }
+    }
+  </script>
+</body>
+</html>

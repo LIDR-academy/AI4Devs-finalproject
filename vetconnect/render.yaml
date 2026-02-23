@@ -1,0 +1,130 @@
+# render.yaml - Render Blueprint for VetConnect
+# Infrastructure as Code configuration for Render.com deployment
+# 
+# IMPORTANT: Update the 'repo' field below with your actual GitHub repository URL
+# Example: https://github.com/your-username/AI4Devs-finalproject
+
+services:
+  # ============================================
+  # Redis / Key Value (cache & sessions)
+  # ============================================
+  - type: keyvalue
+    name: vetconnect-redis
+    plan: free
+    region: oregon
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+  # ============================================
+  # Web Service (Rails App)
+  # ============================================
+  - type: web
+    name: vetconnect-web
+    runtime: docker
+    repo: https://github.com/liam-dev-eng/AI4Devs-finalproject  # UPDATE THIS WITH YOUR REPO URL
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: ./vetconnect
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      
+      - key: RACK_ENV
+        value: production
+      
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vetconnect-db
+          property: connectionString
+      
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: vetconnect-redis
+          property: connectionString
+      
+      - key: RAILS_SERVE_STATIC_FILES
+        value: true
+      
+      - key: RAILS_LOG_TO_STDOUT
+        value: true
+      
+      - key: WEB_CONCURRENCY
+        value: 2
+      
+      - key: RAILS_MAX_THREADS
+        value: 5
+      
+      - key: PORT
+        value: 3000
+      
+      - key: HOST
+        value: vetconnect.onrender.com  # Update with your actual domain
+      
+      # Add your SMTP settings here (optional)
+      # - key: SMTP_ADDRESS
+      #   value: smtp.sendgrid.net
+      # - key: SMTP_PORT
+      #   value: 587
+      # - key: SMTP_DOMAIN
+      #   value: your-domain.com
+      # - key: SMTP_USERNAME
+      #   sync: false  # Set via Render dashboard
+      # - key: SMTP_PASSWORD
+      #   sync: false  # Set via Render dashboard
+      
+      # Optional: Error tracking
+      # - key: ROLLBAR_ACCESS_TOKEN
+      #   sync: false  # Set via Render dashboard
+    
+    healthCheckPath: /health
+    # Docker runtime: start command is defined in Dockerfile CMD
+
+  # ============================================
+  # Background Worker (Sidekiq - Optional)
+  # ============================================
+  # Uncomment if you use Sidekiq for background jobs
+  # - type: worker
+  #   name: vetconnect-worker
+  #   runtime: docker
+  #   repo: https://github.com/your-username/AI4Devs-finalproject  # UPDATE THIS
+  #   region: oregon
+  #   plan: free
+  #   branch: main
+  #   dockerfilePath: ./Dockerfile
+  #   dockerContext: ./vetconnect
+  #   
+  #   envVars:
+  #     - key: RAILS_ENV
+  #       value: production
+  #     
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: vetconnect-db
+  #         property: connectionString
+  #     
+  #     - key: REDIS_URL
+  #       fromService:
+  #         type: redis
+  #         name: vetconnect-redis
+  #         property: connectionString
+  #   
+  #   startCommand: bundle exec sidekiq -C config/sidekiq.yml
+
+databases:
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  - name: vetconnect-db
+    databaseName: vetconnect_production
+    plan: free
+    region: oregon
+    ipAllowList: []
+    # Free tier: 256MB RAM, 1GB storage, 90-day retention
