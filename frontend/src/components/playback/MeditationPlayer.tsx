@@ -63,7 +63,7 @@ const getMediaType = (mediaUrls?: MediaUrls | null): 'video' | 'audio' | null =>
  */
 export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
   meditationId,
-  title = 'Meditación',
+  title = 'Meditation',
   mediaUrls,
   onPlaybackError,
   className = ''
@@ -82,7 +82,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
   // Handle media errors
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleMediaError = (_e: React.SyntheticEvent<HTMLMediaElement, Event>) => {
-    const errorMessage = 'Error al cargar el contenido multimedia';
+    const errorMessage = 'Error loading media content';
     setError(errorMessage);
     
     if (onPlaybackError) {
@@ -98,7 +98,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
         data-testid="meditation-player-empty"
       >
         <div className="meditation-player__placeholder">
-          <p>Selecciona una meditación completada para reproducir</p>
+          <p>Select a completed meditation to play</p>
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
         data-testid="meditation-player-no-media"
       >
         <div className="meditation-player__error">
-          <p>No hay contenido multimedia disponible para esta meditación</p>
+          <p>No media content available for this meditation</p>
         </div>
       </div>
     );
@@ -128,7 +128,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
         <div className="meditation-player__error">
           <p className="meditation-player__error-message">{error}</p>
           <p className="meditation-player__error-hint">
-            Verifica tu conexión a Internet e intenta de nuevo.
+            Check your internet connection and try again.
           </p>
         </div>
       </div>
@@ -158,18 +158,18 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
             preload="auto"
             crossOrigin="anonymous"
             onError={handleMediaError}
-            aria-label={`Reproduciendo video: ${title}`}
+            aria-label={`Now playing video: ${title}`}
           >
             {mediaUrls.subtitlesUrl && (
               <track
                 kind="subtitles"
                 src={mediaUrls.subtitlesUrl}
                 srcLang="es"
-                label="Español"
+                label="Spanish"
                 default
               />
             )}
-            Tu navegador no soporta reproducción de video.
+            Your browser does not support video playback.
           </video>
         )}
 
@@ -184,9 +184,9 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
             preload="auto"
             crossOrigin="anonymous"
             onError={handleMediaError}
-            aria-label={`Reproduciendo audio: ${title}`}
+            aria-label={`Now playing audio: ${title}`}
           >
-            Tu navegador no soporta reproducción de audio.
+            Your browser does not support audio playback.
           </audio>
         )}
       </div>
@@ -198,7 +198,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
         </p>
         {mediaType === 'video' && mediaUrls.subtitlesUrl && (
           <p className="meditation-player__subtitles-available">
-            📝 Subtítulos disponibles
+            📝 Subtitles available
           </p>
         )}
       </div>

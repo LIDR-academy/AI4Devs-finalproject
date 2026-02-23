@@ -42,7 +42,7 @@ const fetchMeditationList = async (): Promise<MeditationItem[]> => {
     return response.meditations || [];
   } catch (error) {
     console.error('Error fetching meditation list:', error);
-    throw new Error('No se pudo cargar la lista de meditaciones');
+    throw new Error('Could not load the meditation list');
   }
 };
 

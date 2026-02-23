@@ -46,7 +46,7 @@ export const MeditationList: React.FC<MeditationListProps> = ({
         aria-live="polite"
       >
         <div className="meditation-list__loader">
-          <p>Cargando meditaciones...</p>
+          <p>Loading meditations...</p>
         </div>
       </div>
     );
@@ -62,7 +62,7 @@ export const MeditationList: React.FC<MeditationListProps> = ({
         <div className="meditation-list__error">
           <p className="meditation-list__error-message">{error}</p>
           <p className="meditation-list__error-hint">
-            Intenta recargar la página o contacta con soporte si el problema persiste.
+            Try reloading the page or contact support if the problem persists.
           </p>
         </div>
       </div>
@@ -78,7 +78,7 @@ export const MeditationList: React.FC<MeditationListProps> = ({
       >
         <div className="meditation-list__empty-state">
           <p className="meditation-list__empty-message">
-            Aún no tienes meditaciones. Empieza creando una nueva.
+            You don't have any meditations yet. Start by creating a new one.
           </p>
         </div>
       </div>
@@ -105,11 +105,11 @@ export const MeditationList: React.FC<MeditationListProps> = ({
       <table className="meditation-list__table">
         <thead>
           <tr>
-            <th className="meditation-list__th">Estado</th>
-            <th className="meditation-list__th">Título</th>
-            <th className="meditation-list__th">Tipo</th>
-            <th className="meditation-list__th">Creada el</th>
-            <th className="meditation-list__th">Acciones</th>
+            <th className="meditation-list__th">Status</th>
+            <th className="meditation-list__th">Title</th>
+            <th className="meditation-list__th">Type</th>
+            <th className="meditation-list__th">Created</th>
+            <th className="meditation-list__th">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -125,13 +125,13 @@ export const MeditationList: React.FC<MeditationListProps> = ({
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <nav className="pagination" aria-label="Navegación de páginas">
+        <nav className="pagination" aria-label="Page navigation">
           <button 
             className="pagination__btn"
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            Anterior
+            Previous
           </button>
           
           <div className="pagination__pages">
@@ -151,7 +151,7 @@ export const MeditationList: React.FC<MeditationListProps> = ({
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            Siguiente
+            Next
           </button>
         </nav>
       )}
@@ -163,7 +163,7 @@ export const MeditationList: React.FC<MeditationListProps> = ({
         aria-atomic="true"
       >
         <p className="meditation-list__count">
-          Mostrando {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} de {totalItems} {totalItems === 1 ? 'meditación' : 'meditaciones'}
+          Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} of {totalItems} {totalItems === 1 ? 'meditation' : 'meditations'}
         </p>
       </div>
     </div>

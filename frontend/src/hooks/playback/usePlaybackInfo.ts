@@ -45,19 +45,19 @@ const fetchPlaybackInfo = async (meditationId: string): Promise<PlaybackInfoResp
   } catch (error: any) {
     // Parse backend error responses
     if (error.status === 404 || error.response?.status === 404) {
-      throw new Error('Meditación no encontrada');
+      throw new Error('Meditation not found');
     }
     
     if (error.status === 409 || error.response?.status === 409) {
       // Extract user message from backend ErrorResponse
       const errorData = error.response?.data || error.body || {};
       const message = errorData.message || 
-        'Esta meditación aún se está procesando. Por favor, espera a que esté lista.';
+        'This meditation is still being processed. Please wait until it is ready.';
       throw new Error(message);
     }
     
     console.error('Error fetching playback info:', error);
-    throw new Error('Error al obtener información de reproducción');
+    throw new Error('Error fetching playback information');
   }
 };
 
@@ -78,7 +78,7 @@ const fetchPlaybackInfo = async (meditationId: string): Promise<PlaybackInfoResp
  * function PlayerPage({ meditationId }) {
  *   const { data, isLoading, error } = usePlaybackInfo(meditationId);
  *   
- *   if (isLoading) return <p>Cargando...</p>;
+ *   if (isLoading) return <p>Loading...</p>;
  *   if (error) return <p>{error.message}</p>;
  *   
  *   return <MeditationPlayer mediaUrls={data?.mediaUrls} />;

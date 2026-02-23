@@ -481,8 +481,12 @@ body {
 }
 
 .meditation-row__actions {
-  text-align: right;
+  text-align: center;
   width: 150px;
+}
+
+.meditation-list__table thead th:last-child {
+  text-align: center;
 }
 
 /* State Labels - Modern Minimalist */

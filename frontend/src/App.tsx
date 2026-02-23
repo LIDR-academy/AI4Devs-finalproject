@@ -34,12 +34,12 @@ function App() {
             <ul>
               <li>
                 <NavLink to="/" className={({ isActive }) => isActive ? 'nav-active' : ''}>
-                  Crear Meditación
+                  Create Meditation
                 </NavLink>
               </li>
               <li>
                 <NavLink to="/library" className={({ isActive }) => isActive ? 'nav-active' : ''}>
-                  Biblioteca
+                  Library
                 </NavLink>
               </li>
             </ul>

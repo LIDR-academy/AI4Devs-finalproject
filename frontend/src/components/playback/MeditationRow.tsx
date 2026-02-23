@@ -34,7 +34,7 @@ export interface MeditationRowProps {
 const formatDate = (input: string | Date): string => {
   try {
     const date = typeof input === "string" ? new Date(input) : input;
-    return new Intl.DateTimeFormat("es-ES", {
+    return new Intl.DateTimeFormat("en-US", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -111,9 +111,9 @@ export const MeditationRow: React.FC<MeditationRowProps> = ({
               onPlay(id);
             }
           }}
-          title={isPlayable ? "Reproducir" : "No disponible todavía"}
+          title={isPlayable ? "Play" : "Not available yet"}
         >
-          {isPlayable ? "  Reproducir" : "  Pausado..."}
+          {isPlayable ? "  Play" : "  Pending..."}
         </button>
       </td>
     </tr>

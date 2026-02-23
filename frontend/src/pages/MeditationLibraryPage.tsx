@@ -15,7 +15,7 @@
  * - Lazy-loads playback info when user clicks "Play"
  * - Displays player only when meditation selected
  * - Handles loading/error states gracefully
- * - User-friendly error messages in Spanish
+ * - User-friendly error messages in English
  */
 
 import React, { useEffect } from 'react';
@@ -28,7 +28,7 @@ import type { MeditationItem } from '../api/generated/playback/src';
  * MeditationLibraryPage Component
  * 
  * Layout:
- * - Header: "Biblioteca de Meditaciones"
+ * - Header: "Meditation Library"
  * - MeditationList: Grid of meditation cards
  * - MeditationPlayer: Sticky footer player (only when meditation selected)
  */
@@ -77,7 +77,7 @@ export const MeditationLibraryPage: React.FC = () => {
     if (meditation.state !== 'COMPLETED') {
       // User shouldn't reach here (button should be disabled),
       // but handle defensively
-      alert('Esta meditación aún no está disponible para reproducir.');
+      alert('This meditation is not available for playback yet.');
       return;
     }
 
@@ -91,7 +91,7 @@ export const MeditationLibraryPage: React.FC = () => {
    */
   const handlePlaybackError = (error?: Error) => {
     const errorMessage = error?.message || 
-      'Error al reproducir el contenido multimedia. Por favor, intenta de nuevo.';
+      'Error playing the media content. Please try again.';
     alert(errorMessage);
     resetPlayer();
   };
@@ -100,10 +100,10 @@ export const MeditationLibraryPage: React.FC = () => {
     <div className="meditation-library-page">
       {/* Header */}
       <header className="library-header">
-        <h1>Biblioteca de Meditaciones</h1>
+        <h1>Meditation Library</h1>
         <p className="library-description">
-          Aquí encontrarás todas tus meditaciones generadas. 
-          Haz clic en "Reproducir" para escuchar o ver una meditación.
+          Here you'll find all your generated meditations.
+          Click "Play" to listen to or watch a meditation.
         </p>
       </header>
 
@@ -123,7 +123,7 @@ export const MeditationLibraryPage: React.FC = () => {
           {/* Loading state while fetching playback info */}
           {isLoadingPlayback && (
             <div className="player-loading">
-              <p>Cargando información de reproducción...</p>
+              <p>Loading playback information...</p>
             </div>
           )}
 

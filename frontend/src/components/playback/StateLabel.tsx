@@ -6,10 +6,10 @@
  * to user-friendly Spanish labels with appropriate color coding.
  * 
  * Design:
- * - PENDING ("En cola") → Gray/neutral color
- * - PROCESSING ("Generando") → Blue/info color  
- * - COMPLETED ("Completada") → Green/success color
- * - FAILED ("Fallida") → Red/error color
+ * - PENDING ("Queued") → Gray/neutral color
+ * - PROCESSING ("Processing") → Blue/info color  
+ * - COMPLETED ("Completed") → Green/success color
+ * - FAILED ("Failed") → Red/error color
  */
 
 import React from 'react';
@@ -18,7 +18,7 @@ export type ProcessingState = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
 export interface StateLabelProps {
   state: ProcessingState;
-  label: string; // User-friendly label from backend ("En cola", "Generando", etc.)
+  label: string; // User-friendly label from backend ("Queued", "Processing", etc.)
   className?: string;
 }
 
@@ -43,8 +43,8 @@ const getStateColorClass = (state: ProcessingState): string => {
  * 
  * @example
  * ```tsx
- * <StateLabel state="COMPLETED" label="Completada" />
- * <StateLabel state="PROCESSING" label="Generando" />
+ * <StateLabel state="COMPLETED" label="Completed" />
+ * <StateLabel state="PROCESSING" label="Processing" />
  * ```
  */
 export const StateLabel: React.FC<StateLabelProps> = ({ state, label, className = '' }) => {
