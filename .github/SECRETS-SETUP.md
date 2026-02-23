@@ -8,11 +8,21 @@ El pipeline CI/CD **NO FUNCIONARÁ** hasta que configures estos 3 secrets en Git
 
 ## 📋 Secrets Necesarios
 
-| Secret Name | Descripción | Valor del Proyecto |
-|-------------|-------------|-------------------|
-| `SUPABASE_URL` | URL del proyecto Supabase | `https://ebqapsoyjmdkhdxnkikz.supabase.co` |
+### Secrets OBLIGATORIOS
+
+| Secret Name | Descripción | Ejemplo (Placeholder) |
+|-------------|-------------|----------------------|
+| `SUPABASE_URL` | URL del proyecto Supabase | `https://YOUR_PROJECT_REF.supabase.co` |
 | `SUPABASE_KEY` | Service role key (⚠️ NO anon key) | Ver `.env` local |
 | `SUPABASE_DATABASE_URL` | Connection string PostgreSQL | Ver `.env` local |
+
+### Secrets OPCIONALES
+
+| Secret Name | Descripción | Cuándo se requiere |
+|-------------|-------------|-------------------|
+| `GITGUARDIAN_API_KEY` | API key de GitGuardian | Solo si quieres escaneo de secretos en CI |
+
+> ⚠️ **NOTA**: Los valores mostrados son PLACEHOLDERS genéricos. Debes usar TUS propias credenciales desde `.env` local.
 
 ---
 
@@ -46,7 +56,8 @@ New repository secret (botón verde)
 │ SUPABASE_URL                        │
 ├─────────────────────────────────────┤
 │ Secret*                             │
-│ https://ebqapsoyjmdkhdxnkikz.supabase.co │
+│ https://YOUR_PROJECT_REF.supabase.co │
+│ (ejemplo: https://abc123xyz.supabase.co) │
 └─────────────────────────────────────┘
 
 [Add secret]
@@ -96,7 +107,7 @@ New repository secret (botón verde)
 │ SUPABASE_DATABASE_URL               │
 ├─────────────────────────────────────┤
 │ Secret*                             │
-│ postgresql://postgres.ebqapsoyjmdkhdxnkikz:Farolina-14-Supabase@aws-1-eu-central-1.pooler.supabase.com:6543/postgres │
+│ postgresql://postgres.YOUR_PROJECT_REF:YOUR_PASSWORD@aws-0-region.pooler.supabase.com:6543/postgres │
 └─────────────────────────────────────┘
 
 [Add secret]
@@ -111,9 +122,37 @@ New repository secret (botón verde)
 
 ---
 
+### 5. ⭐ (OPCIONAL) Agregar Secret #4: GITGUARDIAN_API_KEY
+
+**¿Cuándo agregarlo?**  
+Solo si quieres activar el escaneo de secretos en el CI/CD. Si no lo configuras, el workflow continuará normalmente (el step de GitGuardian se saltará con warning).
+
+**Cómo obtener la API key:**
+1. Crea cuenta gratuita en [GitGuardian](https://dashboard.gitguardian.com/)
+2. Ve a API → Personal Access Tokens
+3. Genera token con scope `scan`
+
+**Click en:** "New repository secret"
+
+```
+┌─────────────────────────────────────┐
+│ Name*                               │
+│ GITGUARDIAN_API_KEY                 │
+├─────────────────────────────────────┤
+│ Secret*                             │
+│ [Tu token de GitGuardian]           │
+└─────────────────────────────────────┘
+
+[Add secret]
+```
+
+> 💡 **Tip**: Si eres estudiante/proyecto de práctica, es seguro omitir este secret. El CI no fallará sin él.
+
+---
+
 ## ✅ Verificación de Configuración
 
-Después de agregar los 3 secrets, debes ver:
+Después de agregar los 3 secrets OBLIGATORIOS, debes ver:
 
 ```
 Repository secrets
@@ -121,6 +160,11 @@ Repository secrets
 SUPABASE_DATABASE_URL    Updated 1 minute ago
 SUPABASE_KEY             Updated 2 minutes ago
 SUPABASE_URL             Updated 3 minutes ago
+```
+
+Si agregaste GitGuardian (opcional):
+```
+GITGUARDIAN_API_KEY      Updated 1 minute ago   (opcional)
 ```
 
 ---
@@ -187,6 +231,21 @@ Luego verifica en Actions → CI workflow
 
 ---
 
+### Error: "Invalid GitGuardian API key"
+
+**Causa**: Secret `GITGUARDIAN_API_KEY` no configurado o inválido.
+
+**Solución (Opción 1 - Recomendada para proyectos de práctica)**:
+- No hacer nada. El workflow está configurado con `continue-on-error: true`, así que el CI continuará normalmente con un warning.
+
+**Solución (Opción 2 - Si quieres activar el escaneo)**:
+1. Crea cuenta en [GitGuardian](https://dashboard.gitguardian.com/)
+2. Ve a API → Personal Access Tokens
+3. Genera token con scope `scan`
+4. Agrega como secret `GITGUARDIAN_API_KEY` en GitHub
+
+---
+
 ### Error: "Database connection failed"
 
 **Causa**: `SUPABASE_DATABASE_URL` incorrecto o password cambió.
@@ -242,6 +301,7 @@ cat .env | grep SUPABASE
 
 ---
 
-**Última actualización**: 2026-02-09  
+**Última actualización**: 2026-02-23  
 **Configuración requerida para**: Pipeline CI/CD  
-**Estados**: ⏸️ Pending initial configuration
+**Estados**: ⏸️ Pending initial configuration  
+**Cambios recientes**: Sanitización de credenciales + GitGuardian como opcional

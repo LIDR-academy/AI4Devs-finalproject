@@ -21,6 +21,7 @@ jobs:
           fetch-depth: 0  # Full history required for commit-range scanning
       - name: GitGuardian scan
         uses: GitGuardian/gg-shield-action@v1.48.0
+        continue-on-error: true  # Optional: don't block CI if API key is missing
         env:
           GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
           GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
