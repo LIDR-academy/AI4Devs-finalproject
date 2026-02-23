@@ -9,26 +9,45 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import Dashboard3D from './Dashboard3D';
-import { usePartsStore } from '@/stores/partsStore';
+import { usePartsStore } from '@/stores/parts.store';
 
 // Mock Zustand store
-vi.mock('@/stores/partsStore');
+vi.mock('@/stores/parts.store');
+
+/**
+ * Helper: Create mock part for testing
+ */
+const createMockPart = (id: string = '123') => ({
+  id,
+  iso_code: `TEST-${id}`,
+  status: 'validated' as const,
+  tipologia: 'capitel' as const,
+  low_poly_url: 'https://example.com/part.glb',
+  bbox: { min: [0, 0, 0], max: [1, 1, 1] },
+  workshop_id: null,
+  workshop_name: null,
+});
 
 describe('Dashboard3D Component', () => {
   beforeEach(() => {
-    // Reset mock store state before each test
-    vi.mocked(usePartsStore).mockReturnValue({
-      parts: [],
-      isLoading: false,
-      error: null,
-      filters: { status: [], tipologia: [], workshop_id: null },
-      selectedId: null,
-      setParts: vi.fn(),
-      setLoading: vi.fn(),
-      setError: vi.fn(),
-      setFilters: vi.fn(),
-      selectPart: vi.fn(),
-      getFilteredParts: vi.fn(() => []),
+    // Reset mock store state before each test with parts to render Canvas
+    vi.mocked(usePartsStore).mockImplementation((selector: any) => {
+      const mockState = {
+        parts: [createMockPart()],
+        isLoading: false,
+        error: null,
+        filters: { status: [], tipologia: [], workshop_id: null },
+        selectedId: null,
+        setParts: vi.fn(),
+        setLoading: vi.fn(),
+        setError: vi.fn(),
+        setFilters: vi.fn(),
+        selectPart: vi.fn(),
+        clearSelection: vi.fn(),
+        clearFilters: vi.fn(),
+        getFilteredParts: vi.fn(() => [createMockPart()]),
+      };
+      return selector ? selector(mockState) : mockState;
     });
   });
 
@@ -89,18 +108,23 @@ describe('Dashboard3D Component', () => {
 
   describe('Edge Cases - Empty State', () => {
     it('should show EmptyState when parts.length === 0', () => {
-      vi.mocked(usePartsStore).mockReturnValue({
-        parts: [],
-        isLoading: false,
-        error: null,
-        filters: { status: [], tipologia: [], workshop_id: null },
-        selectedId: null,
-        setParts: vi.fn(),
-        setLoading: vi.fn(),
-        setError: vi.fn(),
-        setFilters: vi.fn(),
-        selectPart: vi.fn(),
-        getFilteredParts: vi.fn(() => []),
+      vi.mocked(usePartsStore).mockImplementation((selector: any) => {
+        const mockState = {
+          parts: [],
+          isLoading: false,
+          error: null,
+          filters: { status: [], tipologia: [], workshop_id: null },
+          selectedId: null,
+          setParts: vi.fn(),
+          setLoading: vi.fn(),
+          setError: vi.fn(),
+          setFilters: vi.fn(),
+          selectPart: vi.fn(),
+          clearSelection: vi.fn(),
+          clearFilters: vi.fn(),
+          getFilteredParts: vi.fn(() => []),
+        };
+        return selector ? selector(mockState) : mockState;
       });
 
       render(<Dashboard3D />);
@@ -109,28 +133,23 @@ describe('Dashboard3D Component', () => {
     });
 
     it('should hide EmptyState when parts.length > 0', () => {
-      vi.mocked(usePartsStore).mockReturnValue({
-        parts: [
-          {
-            id: '123',
-            iso_code: 'TEST-001',
-            status: 'validated' as any,
-            tipologia: 'capitel',
-            low_poly_url: null,
-            bbox: null,
-            workshop_id: null,
-          },
-        ],
-        isLoading: false,
-        error: null,
-        filters: { status: [], tipologia: [], workshop_id: null },
-        selectedId: null,
-        setParts: vi.fn(),
-        setLoading: vi.fn(),
-        setError: vi.fn(),
-        setFilters: vi.fn(),
-        selectPart: vi.fn(),
-        getFilteredParts: vi.fn(() => []),
+      vi.mocked(usePartsStore).mockImplementation((selector: any) => {
+        const mockState = {
+          parts: [createMockPart()],
+          isLoading: false,
+          error: null,
+          filters: { status: [], tipologia: [], workshop_id: null },
+          selectedId: null,
+          setParts: vi.fn(),
+          setLoading: vi.fn(),
+          setError: vi.fn(),
+          setFilters: vi.fn(),
+          selectPart: vi.fn(),
+          clearSelection: vi.fn(),
+          clearFilters: vi.fn(),
+          getFilteredParts: vi.fn(() => [createMockPart()]),
+        };
+        return selector ? selector(mockState) : mockState;
       });
 
       render(<Dashboard3D />);
@@ -141,18 +160,23 @@ describe('Dashboard3D Component', () => {
 
   describe('Edge Cases - Loading State', () => {
     it('should show LoadingOverlay when isLoading === true', () => {
-      vi.mocked(usePartsStore).mockReturnValue({
-        parts: [],
-        isLoading: true,
-        error: null,
-        filters: { status: [], tipologia: [], workshop_id: null },
-        selectedId: null,
-        setParts: vi.fn(),
-        setLoading: vi.fn(),
-        setError: vi.fn(),
-        setFilters: vi.fn(),
-        selectPart: vi.fn(),
-        getFilteredParts: vi.fn(() => []),
+      vi.mocked(usePartsStore).mockImplementation((selector: any) => {
+        const mockState = {
+          parts: [],
+          isLoading: true,
+          error: null,
+          filters: { status: [], tipologia: [], workshop_id: null },
+          selectedId: null,
+          setParts: vi.fn(),
+          setLoading: vi.fn(),
+          setError: vi.fn(),
+          setFilters: vi.fn(),
+          selectPart: vi.fn(),
+          clearSelection: vi.fn(),
+          clearFilters: vi.fn(),
+          getFilteredParts: vi.fn(() => []),
+        };
+        return selector ? selector(mockState) : mockState;
       });
 
       render(<Dashboard3D />);
@@ -169,27 +193,29 @@ describe('Dashboard3D Component', () => {
 
   describe('Sidebar - Placeholder Content', () => {
     it('should render FiltersSidebar with part count', () => {
-      vi.mocked(usePartsStore).mockReturnValue({
-        parts: [
-          { id: '1', iso_code: 'TEST-001', status: 'validated' as any, tipologia: 'capitel', low_poly_url: null, bbox: null, workshop_id: null },
-          { id: '2', iso_code: 'TEST-002', status: 'validated' as any, tipologia: 'columna', low_poly_url: null, bbox: null, workshop_id: null },
-        ],
-        isLoading: false,
-        error: null,
-        filters: { status: [], tipologia: [], workshop_id: null },
-        selectedId: null,
-        setParts: vi.fn(),
-        setLoading: vi.fn(),
-        setError: vi.fn(),
-        setFilters: vi.fn(),
-        selectPart: vi.fn(),
-        getFilteredParts: vi.fn(() => []),
+      vi.mocked(usePartsStore).mockImplementation((selector: any) => {
+        const mockState = {
+          parts: [createMockPart('1'), createMockPart('2')],
+          isLoading: false,
+          error: null,
+          filters: { status: [], tipologia: [], workshop_id: null },
+          selectedId: null,
+          setParts: vi.fn(),
+          setLoading: vi.fn(),
+          setError: vi.fn(),
+          setFilters: vi.fn(),
+          selectPart: vi.fn(),
+          clearSelection: vi.fn(),
+          clearFilters: vi.fn(),
+          getFilteredParts: vi.fn(() => [createMockPart('1'), createMockPart('2')]),
+        };
+        return selector ? selector(mockState) : mockState;
       });
 
       render(<Dashboard3D />);
       
-      // Should show total count
-      expect(screen.getByText(/Total: 2 piezas/i)).toBeInTheDocument();
+      // Should show total count (from FiltersSidebar)
+      expect(screen.getByText(/Mostrando 2 de 2/i)).toBeInTheDocument();
     });
   });
 
