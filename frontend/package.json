@@ -1,0 +1,51 @@
+{
+  "name": "meditation-builder-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "generate:api": "npm run generate:api:composition && npm run generate:api:generation && npm run generate:api:playback && npm run postprocess:api",
+    "generate:api:composition": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi/meditationbuilder/compose-content.yaml -g typescript-fetch -o src/api/generated/composition --additional-properties=supportsES6=true,typescriptThreePlus=true,npmName=@meditation-builder/composition-client",
+    "generate:api:generation": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi/generation/generate-meditation.yaml -g typescript-fetch -o src/api/generated/generation --additional-properties=supportsES6=true,typescriptThreePlus=true,npmName=@meditation-builder/generation-client",
+    "generate:api:playback": "openapi-generator-cli generate -i ../backend/src/main/resources/openapi/playback/list-play-meditations.yaml -g typescript-fetch -o src/api/generated/playback --additional-properties=supportsES6=true,typescriptThreePlus=true,npmName=@meditation-builder/playback-client",
+    "postprocess:api": "node scripts/postprocess-openapi.mjs"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.17.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.30.3",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.7.0",
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.2.0",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^1.2.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^23.2.0",
+    "msw": "^2.1.4",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vitest": "^1.2.1",
+    "wait-on": "^9.0.3"
+  }
+}

@@ -1,0 +1,90 @@
+# Docker Compose for Meditation Builder - Generation BC (US3) Local Development
+# Services: PostgreSQL, LocalStack (S3), FFmpeg
+
+services:
+  # PostgreSQL database for meditation_output persistence
+  postgres:
+    image: postgres:16-alpine
+    container_name: meditation-postgres
+    environment:
+      POSTGRES_DB: meditation
+      POSTGRES_USER: meditation_user
+      POSTGRES_PASSWORD: meditation_pass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meditation_user -d meditation"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - meditation-network
+
+  # LocalStack for S3-compatible storage (dev/test)
+  localstack:
+    image: localstack/localstack:latest
+    container_name: meditation-localstack
+    environment:
+      SERVICES: s3
+      DEBUG: 0
+      AWS_DEFAULT_REGION: us-east-1
+      EDGE_PORT: 4566
+      EXTRA_CORS_ALLOWED_ORIGINS: "http://localhost:3011,*"
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./init-localstack.sh:/etc/localstack/init/ready.d/init-s3.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - meditation-network
+
+  # FFmpeg container for audio/video rendering (optional for tests)
+  ffmpeg:
+    image: jrottenberg/ffmpeg:6.1-alpine
+    container_name: meditation-ffmpeg
+    entrypoint: ["tail", "-f", "/dev/null"]  # Keep container running
+    volumes:
+      - ffmpeg_tmp:/tmp/meditation
+    networks:
+      - meditation-network
+
+volumes:
+  postgres_data:
+    driver: local
+  localstack_data:
+    driver: local
+  ffmpeg_tmp:
+    driver: local
+
+networks:
+  meditation-network:
+    driver: bridge
+
+# Usage:
+#   Start all services:     docker-compose up -d
+#   View logs:              docker-compose logs -f
+#   Stop services:          docker-compose down
+#   Reset all data:         docker-compose down -v
+#
+#   Start only dependencies (for local IDE development):
+#     docker-compose up -d postgres localstack
+#
+#   S3 Bucket (LocalStack):
+#     The 'meditation-media' bucket is created automatically via init-localstack.sh
+#     Manual creation (if needed): .\create-s3-bucket.ps1
+#     List buckets: aws --endpoint-url=http://localhost:4566 s3 ls
+#
+#   Connect to PostgreSQL:
+#     docker exec -it meditation-postgres psql -U meditation_user -d meditation
+#
+#   View database migrations:
+#     SELECT * FROM flyway_schema_history ORDER BY installed_rank;

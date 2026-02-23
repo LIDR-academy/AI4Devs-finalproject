@@ -1,0 +1,14 @@
+# .dockerignore
+.git
+.gitignore
+.vscode
+.idea
+**/node_modules
+**/target
+**/*.log
+.env*
+coverage/
+Dockerfile*
+.dockerignore
+package-lock.json
+npm-debug.log*

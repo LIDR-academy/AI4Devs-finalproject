@@ -1,0 +1,104 @@
+package com.hexagonal.meditationbuilder.application.service;
+
+import com.hexagonal.meditationbuilder.domain.model.TextContent;
+import com.hexagonal.meditationbuilder.domain.ports.in.GenerateTextUseCase.TextGenerationException;
+import com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort;
+import com.hexagonal.meditationbuilder.domain.ports.out.TextGenerationPort.TextGenerationServiceException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * Unit tests for GenerateTextService.
+ * 
+ * Tests the application service that orchestrates AI text generation.
+ * Uses mocked TextGenerationPort to isolate the service logic.
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("GenerateTextService")
+class GenerateTextServiceTest {
+
+    @Mock
+    private TextGenerationPort textGenerationPort;
+
+    private MeterRegistry meterRegistry;
+    private GenerateTextService service;
+
+    @BeforeEach
+    void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
+        service = new GenerateTextService(textGenerationPort, meterRegistry);
+    }
+
+    @Nested
+    @DisplayName("generateText()")
+    class GenerateTextTests {
+
+        @Test
+        @DisplayName("should generate text from prompt")
+        void shouldGenerateTextFromPrompt() {
+            String prompt = "Create a relaxing meditation about nature";
+            TextContent expectedText = new TextContent("Generated meditation text about nature...");
+            
+            when(textGenerationPort.generate(prompt)).thenReturn(expectedText);
+            
+            TextContent result = service.generateText(prompt);
+            
+            assertThat(result).isEqualTo(expectedText);
+            verify(textGenerationPort).generate(prompt);
+        }
+
+        @Test
+        @DisplayName("should throw exception when prompt is null")
+        void shouldThrowExceptionWhenPromptIsNull() {
+            assertThatThrownBy(() -> service.generateText(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("prompt");
+        }
+
+        @Test
+        @DisplayName("should throw exception when prompt is empty")
+        void shouldThrowExceptionWhenPromptIsEmpty() {
+            assertThatThrownBy(() -> service.generateText(""))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("prompt");
+        }
+
+        @Test
+        @DisplayName("should throw exception when prompt is blank")
+        void shouldThrowExceptionWhenPromptIsBlank() {
+            assertThatThrownBy(() -> service.generateText("   "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("prompt");
+        }
+
+        @Test
+        @DisplayName("should map service exception to business exception")
+        void shouldMapServiceExceptionToBusinessException() {
+            String prompt = "Create meditation";
+            
+            when(textGenerationPort.generate(prompt))
+                .thenThrow(new TextGenerationServiceException("AI service timeout"));
+            
+            assertThatThrownBy(() -> service.generateText(prompt))
+                .isInstanceOf(TextGenerationException.class)
+                .hasMessageContaining("AI")
+                .hasCauseInstanceOf(TextGenerationServiceException.class);
+        }
+    }
+
+    // Tests for enhanceText() eliminados: solo se prueba generateText()
+}
