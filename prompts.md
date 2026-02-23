@@ -524,6 +524,63 @@ Genera un nuevo caso de uso cu02-frontend-admin.md a guardar en openspec/changes
 
 ---
 
+**Prompt 6** *(Modo Agent):*
+
+```
+Lee memory-bank/README.md y los ADRs relevantes antes de comenzar.
+```
+
+> **Resumen de objetivos alcanzados:** Se leyeron y resumieron todos los documentos del memory-bank (README, overview, tech-stack, ADRs 001-005). Se proporcionó un resumen completo del contexto arquitectural del proyecto como punto de partida para la sesión de implementación.
+
+---
+
+**Prompt 7** *(Modo Agent):*
+
+```
+/opsx-apply @openspec/changes/cu02-frontend-admin Pregunta cualquier aspecto que requiera más concreción por mi parte
+```
+
+**Respuestas a las preguntas de clarificación previas a la implementación:**
+
+- **Pregunta 1** — No acabo de entender la pregunta. El repositorio actual sólo tiene backend y todavía no se ha creado el frontend, por lo que no sí la pregunta es coherente. Como IA experta en desarrollo frontend en repositorios monolíticos, analiza y justifica la decisión que tú tomarías ¿dónde se van a generar todos los archivos del frontend?
+- **Pregunta 2** — Puedes usar la última, pero asegurando que lo que está generado hasta la fecha funciona igualmente con la versión 15.x
+- **Pregunta 3** — Lo has entendido bien, me parece correcto tu enfoque.
+- **Pregunta 4** — En formato e163 me parece el más idóneo, pues contiene en una única string la información del país de origen y del número de teléfono en un formato bonito.
+
+> **Resumen de objetivos alcanzados:** Se implementaron las 40 tareas del change completas. Backend: `AdminModule` (NestJS) con 3 endpoints GET (`/admin/orders`, `/admin/users`, `/admin/conversations/:id/messages`), `AdminService` con paginación y filtrado `isDeleted: false`, tests unitarios e integración con supertest. `MockModule` actualizado para exportar `MockConversationsService`. Frontend (`apps/web-admin`): scaffolding con Next.js 16, React 19, Tailwind v4 (CSS-first), Shadcn/ui; tokens de marca Adresles en `globals.css` vía `@theme`; vistas de pedidos, usuarios y conversaciones tipo chat con burbujas por rol; layout con sidebar, skip link y `TooltipProvider` global; `force-dynamic` y `cache: 'no-store'` para evitar errores de prerendering en build time. La decisión de usar directorio `src/` dentro de `apps/web-admin` se tomó como experto, alineada con convenciones modernas de Next.js en monorepo.
+
+---
+
+**Prompt 8** *(Modo Agent):*
+
+```
+Corrige los 2 warnings (W1 y W2) tal y como lo sugieres, y realiza las 2 mejoras opcionales. Respecto a la primera mejroa opcional (S1) decide como IA experta en frontend y cuál es la mejor manera de mostrar la infromación de forma que el usuario tenga la mejor experiencia UX. Si finalmente decides no utlizar el componente separator, y verificas que efectivamente no se usa en ningún lado, elimínalo. Para la S2 implementa tu recomendacón.
+```
+
+> **Resumen de objetivos alcanzados:** Se corrigieron los dos warnings y se implementaron las dos mejoras opcionales: **W1** — añadido test explícito en `admin.service.spec.ts` para verificar que usuarios con `isDeleted: true` son filtrados correctamente. **W2** — reemplazado el atributo `title` inaccessible en `UsersTable` por un `<Tooltip>` completo de Shadcn, creando el componente cliente `RelativeDateCell` y el wrapper `<Providers>` con `TooltipProvider` en el root layout. **S1** — como decisión experta de UX, se mantuvo el patrón "separador flanqueado" para mensajes de sistema en `ChatBubble` por ofrecer mejor experiencia visual; se eliminó `separator.tsx` y su dependencia `@radix-ui/react-separator` al verificar que no estaban en uso en ningún otro lugar. **S2** — prop `expiresAtUnix` de `ChatExpiryBanner` cambiado a `number | undefined` con guard interno, simplificando el uso en el componente padre `ChatView`. Build de producción y `tsc --noEmit` pasaron sin errores.
+
+---
+
+**Prompt 9** *(Modo Agent):*
+
+```
+/update-docs
+```
+
+> **Resumen de objetivos alcanzados:** Se actualizó la documentación de proyecto para reflejar el estado post-CU-02: `memory-bank/README.md` con estado del change y sesión del 2026-02-23; `memory-bank/project-context/tech-stack.md` con versiones reales del Dashboard Admin (Next.js 16, React 19, Tailwind 4, nuevas dependencias); `memory-bank/project-context/overview.md` con el actor "Admin/Mock UI" actualizado y el Dashboard como implementación real; `openspec/specs/frontend-standards.mdc` con stack real, estructura de archivos y patrones clave del Dashboard Admin; y creación del archivo de sesión `memory-bank/sessions/2026-02-23-cu02-frontend-admin.md` con el registro completo de la sesión.
+
+---
+
+**Prompt 10** *(Modo Agent):*
+
+```
+/opsx-archive @openspec/changes/cu02-frontend-admin
+```
+
+> **Resumen de objetivos alcanzados:** Se verificó que los 4 artefactos del change (`proposal`, `design`, `specs`, `tasks`) estaban en estado `done` y las 40 tareas marcadas `[x]`. Se detectaron 2 delta specs (`admin-api/spec.md` y `admin-dashboard/spec.md`) sin correspondencia en `openspec/specs/`. El usuario eligió sincronizar antes de archivar: se copiaron ambos delta specs a `openspec/specs/admin-api/` y `openspec/specs/admin-dashboard/`. Finalmente se movió el directorio del change a `openspec/changes/archive/2026-02-23-cu02-frontend-admin/`.
+
+---
+
 ### 6. Tickets de Trabajo
 
 **Prompt 1:**
@@ -536,7 +593,15 @@ Genera un nuevo caso de uso cu02-frontend-admin.md a guardar en openspec/changes
 
 ### 7. Pull Requests
 
-**Prompt 1:**
+**Prompt 1** *(Modo Agent):*
+
+```
+Estás operando dentro de un repositorio Git con una rama activa que se va a fusionar contra la rama principal (main o master).
+
+Tu tarea es analizar todas las diferencias (git diff) entre la rama actual y la rama principal y generar el texto completo de una Pull Request.Genera un documento PR.md con el título y el texto de esta PULL REQUEST, incluyendo una descripción detallada de lo que cambia (el por qué y el impacto).
+```
+
+---
 
 **Prompt 2:**
 

@@ -126,7 +126,7 @@ IA solicita dirección + invita a registrarse para futuras compras
 - ✅ Validación de direcciones con Google Maps API (implementación completa)
 - ✅ App conversacional propia (no WhatsApp inicialmente)
 - ✅ Backend Node.js + NestJS
-- ✅ Frontend React + Next.js
+- ✅ Frontend React + Next.js (Dashboard Admin `apps/web-admin` — Next.js 16, Tailwind v4, Shadcn/ui)
 
 **Implementación Mock (Para MVP)**:
 - 🔄 Entrada manual de JSON para simular compras del eCommerce
@@ -148,7 +148,7 @@ IA solicita dirección + invita a registrarse para futuras compras
 |-------|-------------|
 | **Buyer** | Comprador que realiza el pedido y proporciona dirección |
 | **Recipient** | Destinatario del pedido (en modo regalo) |
-| **Admin/Mock UI** | **[MVP]** Ingresa manualmente JSON de compra mock |
+| **Admin/Mock UI** | **[MVP]** Ingresa JSON de compra mock + Dashboard web para visualizar pedidos, usuarios y chats |
 | **Mock eCommerce** | **[MVP]** Simulación de tienda online para actualizaciones |
 | **Adresles System** | Sistema backend (orquestador, IA, validador) |
 | **OpenAI GPT-4** | **[Real]** Motor de conversación inteligente |
@@ -229,7 +229,8 @@ Para análisis exhaustivo, arquitectura detallada, diagramas C4 completos, y esp
 
 ---
 
-**Última actualización**: 2026-02-10  
+**Última actualización**: 2026-02-23  
 **Mantenido por**: Sergio  
 **Documento fuente**: Adresles_Business.md v1.3 (10 febrero 2026)  
-**Cambios v1.3**: MVP redefinido con enfoque mock para integración eCommerce, enfocándose en el core (IA + validación)
+**Cambios v1.3**: MVP redefinido con enfoque mock para integración eCommerce, enfocándose en el core (IA + validación)  
+**Cambios 2026-02-23**: Dashboard Admin (`apps/web-admin`) implementado — visualización de pedidos, usuarios y conversaciones

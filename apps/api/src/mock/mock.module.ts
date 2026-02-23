@@ -18,5 +18,6 @@ import { EcommerceSyncModule } from '../ecommerce-sync/ecommerce-sync.module';
   ],
   controllers: [MockOrdersController, MockConversationsController],
   providers: [MockOrdersService, MockConversationsService],
+  exports: [MockConversationsService],
 })
 export class MockModule {}

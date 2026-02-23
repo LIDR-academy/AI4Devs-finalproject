@@ -1,6 +1,6 @@
 # Tech Stack - Adresles
 
-> **Última actualización**: 2026-02-19  
+> **Última actualización**: 2026-02-23  
 > **Documento fuente**: [Adresles_Business.md - Fase 4](../../Adresles_Business.md#fase-4-diseño-de-alto-nivel)
 
 ---
@@ -40,10 +40,13 @@
 
 | Tecnología | Versión | Propósito |
 |------------|---------|-----------|
-| **Next.js** | 14.x | Framework React SSR |
+| **Next.js** | 16.x | Framework React SSR (App Router, Server Components) |
+| **React** | 19.x | Librería UI |
 | **TypeScript** | 5.x | Type safety |
-| **TailwindCSS** | 3.x | Utility-first CSS |
-| **Shadcn/ui** | Latest | Componentes UI |
+| **TailwindCSS** | 4.x | Utility-first CSS (CSS-first con `@theme` en globals.css) |
+| **Shadcn/ui** | Latest | Componentes UI accesibles (Radix UI) |
+| **date-fns** | 4.x | Formateo de fechas |
+| **lucide-react** | Latest | Iconos |
 
 ---
 
@@ -187,10 +190,14 @@ adresles/
 
 ```json
 {
-  "next": "^14.0.0",
-  "react": "^18.0.0",
-  "tailwindcss": "^3.0.0",
-  "@radix-ui/react-*": "^1.0.0"
+  "next": "^16.0.0",
+  "react": "^19.0.0",
+  "tailwindcss": "^4.0.0",
+  "@radix-ui/react-tooltip": "^1.0.0",
+  "date-fns": "^4.0.0",
+  "lucide-react": "latest",
+  "clsx": "^2.0.0",
+  "tailwind-merge": "^2.0.0"
 }
 ```
 
@@ -291,6 +298,6 @@ Stack considerado:
 
 ---
 
-**Última actualización**: 2026-02-19  
+**Última actualización**: 2026-02-23  
 **Mantenido por**: Sergio  
-**Versiones actualizadas**: Prisma 5.22.0 (pinned), BullMQ 5.x, ESLint 9.x, @typescript-eslint 8.x
+**Versiones actualizadas**: Prisma 5.22.0 (pinned), BullMQ 5.x, ESLint 9.x, @typescript-eslint 8.x, Next.js 16.x, React 19.x, Tailwind 4.x

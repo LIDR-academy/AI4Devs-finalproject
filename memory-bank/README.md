@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-21  
-> ✅ **Change completado**: cu01-procesar-compra-mock (23/23 tareas) — listo para archivar
+> **Última actualización**: 2026-02-23  
+> ✅ **Change completado**: cu02-frontend-admin (40/40 tareas) — listo para archivar
 
 ## 📖 Inicio Rápido
 
@@ -64,6 +64,7 @@ Aquí se documentarán:
 |-------|--------|--------|
 | [2026-02-18](./sessions/2026-02-18-cu01-progreso.md) | CU-01 Procesar Compra Mock — Progreso inicial | ✅ Supersedida |
 | [2026-02-21](./sessions/2026-02-21-cu01-procesar-compra-mock.md) | CU-01 Procesar Compra Mock — Completado | ✅ Completado (23/23 tareas) |
+| [2026-02-23](./sessions/2026-02-23-cu02-frontend-admin.md) | CU-02 Frontend Admin Dashboard — Completado | ✅ Completado (40/40 tareas) |
 
 **Próximo change**: `cu02-webhook-ecommerce-sync` — Webhook real WooCommerce.
 
@@ -137,7 +138,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-21  
+**Última revisión**: 2026-02-23  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: CU-01 completado — 37 tests pasando, ResponseProcessor (máquina de estados), integración DynamoDB + OpenAI + Google Maps, migraciones Prisma versionadas. Nuevo ADR-005 (BullMQ + Worker).  
+**Cambios recientes**: CU-02 completado — `apps/web-admin` creado (Next.js 16, React 19, Tailwind v4, Shadcn/ui). AdminModule NestJS con 3 endpoints. 53 tests pasando. Dashboard funcional: pedidos, usuarios, visor de chat con burbujas.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+/* ────────────────────────────────────────────────────────────────
+   Tokens de diseño Adresles (Tailwind v4 CSS-first config)
+   Se definen aquí para que Tailwind genere las clases utilitarias:
+   bg-brand-black, text-brand-lime, rounded-chat, etc.
+──────────────────────────────────────────────────────────────── */
+@theme {
+  /* Paleta de marca */
+  --color-brand-black: #000000;
+  --color-brand-lime:  #DBFF36;
+  --color-brand-teal:  #00687D;
+  --color-brand-white: #FFFFFF;
+
+  /* Radio de burbuja de chat */
+  --radius-chat: 1.25rem;
+
+  /* Tipografía */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
+  /* Tokens Shadcn/ui (light mode) */
+  --color-background:       #ffffff;
+  --color-foreground:       #09090b;
+  --color-card:             #ffffff;
+  --color-card-foreground:  #09090b;
+  --color-popover:          #ffffff;
+  --color-popover-foreground: #09090b;
+  --color-primary:          #18181b;
+  --color-primary-foreground: #fafafa;
+  --color-secondary:        #f4f4f5;
+  --color-secondary-foreground: #18181b;
+  --color-muted:            #f4f4f5;
+  --color-muted-foreground: #71717a;
+  --color-accent:           #f4f4f5;
+  --color-accent-foreground: #18181b;
+  --color-destructive:      #ef4444;
+  --color-destructive-foreground: #fafafa;
+  --color-border:           #e4e4e7;
+  --color-input:            #e4e4e7;
+  --color-ring:             #00687D;
+
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}

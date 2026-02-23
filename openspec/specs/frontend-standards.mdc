@@ -76,9 +76,9 @@ El proyecto Adresles tiene **dos aplicaciones frontend independientes**:
 
 ### 2. Dashboard Admin (Next.js)
 
-- **Propósito**: Panel de administración para eCommerce
-- **Stack**: Next.js 14, React 18, TypeScript, TailwindCSS, Shadcn/ui
-- **Características**: SSR, Server Components, SEO optimizado
+- **Propósito**: Panel de administración para visualizar pedidos, usuarios y conversaciones del MVP
+- **Stack**: Next.js 16, React 19, TypeScript, TailwindCSS 4 (CSS-first), Shadcn/ui (Radix UI), date-fns, lucide-react
+- **Características**: App Router, Server Components por defecto, `force-dynamic` en páginas de datos, `cache: 'no-store'` en fetch, accesibilidad WCAG 2.1 AA
 - **Ubicación**: `apps/web-admin/`
 - **Deployment**: Vercel (free tier)
 
@@ -88,10 +88,10 @@ Ver [ADR-001](../../memory-bank/architecture/001-monolith-modular.md) para decis
 
 ### Tecnologías Centrales
 
-- **React**: Librería UI (v18.x) - Ambas apps
+- **React**: Librería UI (v18.x Chat App / v19.x Dashboard Admin)
 - **TypeScript**: Lenguaje principal (strict mode) - Ambas apps
 - **Vite**: Build tool para Chat App (v5.x)
-- **Next.js**: Framework para Dashboard Admin (v14.x)
+- **Next.js**: Framework para Dashboard Admin (v16.x, App Router)
 
 ### Data Fetching y Estado (Chat App)
 
@@ -106,8 +106,10 @@ Ver [ADR-001](../../memory-bank/architecture/001-monolith-modular.md) para decis
 
 ### UI y Estilos
 
-- **TailwindCSS (v3.x)**: Utility-first CSS (Dashboard Admin)
-- **Shadcn/ui**: Componentes UI accesibles y customizables (Dashboard Admin)
+- **TailwindCSS (v4.x)**: Utility-first CSS, configuración CSS-first con `@theme` en `globals.css` (Dashboard Admin)
+- **Shadcn/ui**: Componentes UI accesibles y customizables — Radix UI (Dashboard Admin)
+- **date-fns (v4.x)**: Formateo de fechas (Dashboard Admin)
+- **lucide-react**: Iconos (Dashboard Admin)
 - **React Router DOM (v6.x)**: Routing en Chat App
 
 ### Framework de Pruebas
@@ -152,22 +154,47 @@ apps/web-chat/
 ```
 apps/web-admin/
 ├── src/
-│   ├── app/                # Next.js App Router
-│   │   ├── (auth)/        # Grupo de rutas autenticadas
-│   │   ├── api/           # API Routes (Next.js)
-│   │   ├── layout.tsx     # Root layout
-│   │   └── page.tsx       # Home page
-│   ├── components/         # React components
-│   │   ├── ui/            # Shadcn/ui components
-│   │   └── features/      # Feature-specific components
-│   ├── lib/                # Utilidades
-│   └── types/              # TypeScript types
-├── public/                 # Assets estáticos
-├── next.config.js          # Next.js config
-├── tailwind.config.ts      # Tailwind config
-├── tsconfig.json           # TypeScript config
-└── package.json            # Dependencies
+│   ├── app/                         # Next.js App Router
+│   │   ├── orders/                  # Página de pedidos
+│   │   │   ├── page.tsx             # Server Component (force-dynamic)
+│   │   │   ├── loading.tsx          # Skeleton
+│   │   │   └── error.tsx            # Error boundary
+│   │   ├── users/                   # Página de usuarios
+│   │   │   ├── page.tsx
+│   │   │   ├── loading.tsx
+│   │   │   └── error.tsx
+│   │   ├── conversations/[id]/      # Visor de chat
+│   │   │   ├── page.tsx
+│   │   │   ├── loading.tsx
+│   │   │   └── error.tsx
+│   │   ├── globals.css              # Tailwind v4 @theme + tokens Shadcn
+│   │   ├── layout.tsx               # Root layout (Inter, Sidebar, Providers)
+│   │   └── page.tsx                 # Redirect a /orders
+│   ├── components/
+│   │   ├── ui/                      # Shadcn/ui generados (table, badge, tooltip…)
+│   │   ├── layout/                  # sidebar.tsx, providers.tsx
+│   │   ├── orders/                  # Tabla, badges, empty state
+│   │   ├── users/                   # Tabla, badges, relative-date-cell, empty state
+│   │   └── chat/                    # chat-view.tsx, chat-bubble.tsx, chat-expiry-banner.tsx
+│   ├── lib/
+│   │   ├── api.ts                   # fetch con cache: 'no-store'
+│   │   └── utils.ts                 # cn(), formatDate, formatCurrency, isExpiringSoon…
+│   └── types/
+│       └── api.ts                   # Interfaces TypeScript de respuestas API
+├── public/                          # Assets estáticos
+├── components.json                  # Configuración Shadcn (Tailwind v4)
+├── next.config.ts                   # Next.js config
+├── tsconfig.json                    # TypeScript config
+└── package.json                     # Dependencies
 ```
+
+**Patrones clave del Dashboard Admin**:
+- **Server Components por defecto**: Las páginas son Server Components. Solo usan `'use client'` cuando necesitan interactividad (scroll, tooltip, sidebar).
+- **`force-dynamic`**: Todas las páginas de datos usan `export const dynamic = 'force-dynamic'` para evitar pre-renderizado en build time cuando el API no está disponible.
+- **`cache: 'no-store'`**: El helper `apiFetch` usa `cache: 'no-store'` para garantizar datos frescos en cada petición.
+- **Tailwind v4 CSS-first**: No hay `tailwind.config.ts`. Los tokens se definen en el bloque `@theme {}` dentro de `globals.css`.
+- **Shadcn + `components.json`**: Componentes Shadcn generados manualmente con configuración compatible con Tailwind v4.
+- **`TooltipProvider` global**: Se envuelve la app con `<Providers>` en `layout.tsx` para que los tooltips funcionen sin ser Client Component en la raíz.
 
 ## Estándares de Codificación
 
