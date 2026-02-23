@@ -20,6 +20,6 @@ pygltflib==1.16.1
 # Install separately: npm install -g @thatopen/components-cli
 
 # Utilities
-tqdm==4.66.1  # Progress bars
+tqdm==4.66.3  # Progress bars (CVE-2024-34062 fix)
 # click==8.1.7  # CLI interface (not needed for POC)
 # pydantic==2.5.3  # Data validation (requires Rust, skip for POC)
