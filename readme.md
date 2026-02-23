@@ -86,8 +86,8 @@ https://github.com/SValduezaL/AI4Devs-finalproject/tree/finalproject-SVL
 | Función                   | Descripción                                    | Estado                                      |
 | ------------------------- | ---------------------------------------------- | ------------------------------------------- |
 | **Plugin de Checkout**    | Integración en el proceso de pago              | 🔄 Pendiente (MVP usa entrada JSON mock)    |
-| **Webhook de Compras**    | Recepción automática de pedidos en tiempo real | 🔄 Mockeado (entrada JSON manual)           |
-| **Dashboard de Gestión**  | Monitorización de pedidos y conversaciones     | ⏳ Por diseñar                              |
+| **Webhook de Compras**    | Recepción automática de pedidos en tiempo real | ✅ Implementado (POST /api/mock/orders)     |
+| **Dashboard de Gestión**  | Monitorización de pedidos y conversaciones     | ✅ Implementado (CU-02 MVP)                 |
 | **API de Sincronización** | Actualización de direcciones en el sistema     | 🔄 Mockeado (log estructurado/notificación) |
 | **Prueba gratuita**       | 1 mes sin coste para evaluar el servicio       | ✅ Definido en modelo de negocio            |
 
@@ -95,8 +95,8 @@ https://github.com/SValduezaL/AI4Devs-finalproject/tree/finalproject-SVL
 
 | Función                           | Descripción                                           | Estado                              |
 | --------------------------------- | ----------------------------------------------------- | ----------------------------------- |
-| **Orquestador de Conversaciones** | Gestión del flujo conversacional con GPT-4            | ✅ Diseñado (Backend NestJS)        |
-| **Motor de Journeys**             | Selección automática del flujo según contexto usuario | ✅ Diseñado (5 journeys definidos)  |
+| **Orquestador de Conversaciones** | Gestión del flujo conversacional con GPT-4            | ✅ Implementado (Backend NestJS)    |
+| **Motor de Journeys**             | Selección automática del flujo según contexto usuario | ✅ Implementado (GET_ADDRESS, INFORMATION, ResponseProcessor) |
 | **Sistema de Reminders**          | Recordatorios tras 15 min sin respuesta               | ⏳ Pendiente post-MVP               |
 | **Validador de Direcciones**      | Google Maps API + detección datos faltantes           | ✅ Diseñado (Implementación real)   |
 | **Escalado a Soporte**            | Envío de incidencias por email cuando IA no resuelve  | ✅ Diseñado                         |
@@ -173,15 +173,13 @@ La conversación con el agente IA (GPT-4) incluye:
 
 ### **1.4. Instrucciones de instalación:**
 
-> ⚠️ **Estado actual**: El proyecto está en fase de diseño y documentación. La implementación del código fuente iniciará tras completar el diseño arquitectónico detallado.
-
-#### **Arquitectura Técnica Diseñada**
+#### **Arquitectura Técnica**
 
 **Stack Tecnológico**:
 
 - **Backend**: Node.js + NestJS + TypeScript
 - **Frontend Chat**: React + Vite + TailwindCSS + Shadcn/ui
-- **Frontend Admin**: Next.js + TailwindCSS
+- **Frontend Admin**: Next.js 16 + Tailwind v4 + Shadcn/ui
 - **Base de Datos**: Supabase (PostgreSQL) + AWS DynamoDB
 - **IA Conversacional**: OpenAI GPT-4
 - **Validación de Direcciones**: Google Maps API (Geocoding)
@@ -218,37 +216,42 @@ adresles/
 | **Google Maps**  | Geocoding y validación de direcciones       | API Key requerida          |
 | **Vercel**       | Hosting Dashboard Admin (opcional)          | Free tier disponible       |
 
-#### **Variables de Entorno (Futuro `.env`)**
+#### **Variables de Entorno (`.env`)**
+
+**API (`apps/api/.env`)**:
 
 ```bash
-# Backend API
 NODE_ENV=development
 PORT=3000
+DATABASE_URL=postgresql://postgres:password@localhost:5432/adresles
 REDIS_URL=redis://localhost:6379
-
-# Supabase
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_KEY=xxx
-SUPABASE_ANON_KEY=xxx
-
-# AWS DynamoDB
+DYNAMODB_ENDPOINT=http://localhost:8000
 AWS_REGION=eu-west-1
 AWS_ACCESS_KEY_ID=xxx
 AWS_SECRET_ACCESS_KEY=xxx
-
-# OpenAI
 OPENAI_API_KEY=sk-xxx
-
-# Google Maps
 GOOGLE_MAPS_API_KEY=xxx
-
-# Frontend URLs
-NEXT_PUBLIC_API_URL=http://localhost:3000
-VITE_API_URL=http://localhost:3000
-VITE_WS_URL=ws://localhost:3000
 ```
 
-#### **Instalación Futura (Cuando se implemente)**
+**Worker (`apps/worker/.env`)**:
+
+```bash
+REDIS_URL=redis://localhost:6379
+DYNAMODB_ENDPOINT=http://localhost:8000
+AWS_REGION=eu-west-1
+AWS_ACCESS_KEY_ID=xxx
+AWS_SECRET_ACCESS_KEY=xxx
+OPENAI_API_KEY=sk-xxx
+GOOGLE_MAPS_API_KEY=xxx
+```
+
+**Web Admin (`apps/web-admin/.env.local`)**:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+#### **Instalación**
 
 ```bash
 # 1. Clonar repositorio
@@ -259,23 +262,30 @@ cd AI4Devs-finalproject
 pnpm install
 
 # 3. Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus credenciales
+# Copiar y editar los .env de cada app (ver sección anterior)
 
 # 4. Iniciar servicios con Docker Compose
 docker-compose up -d redis
 
-# 5. Ejecutar migraciones de base de datos (Supabase)
-pnpm --filter api db:migrate
+# 5. Ejecutar migraciones de base de datos (Supabase/PostgreSQL)
+cd apps/api && npx prisma migrate dev
 
-# 6. Iniciar aplicaciones en modo desarrollo
-pnpm dev
+# 6. Cargar datos de prueba (ecommerce + store mock)
+cd apps/api && npx prisma db seed
 
-# Las apps estarán disponibles en:
-# - API Backend: http://localhost:3000
-# - Chat App: http://localhost:5173
-# - Admin Dashboard: http://localhost:3001
-# - Worker: (background, sin UI)
+# 7. Iniciar aplicaciones en modo desarrollo
+# API Backend
+pnpm --filter api dev          # http://localhost:3000
+
+# Worker BullMQ
+pnpm --filter worker dev       # (background, sin UI)
+
+# Dashboard Admin
+pnpm --filter web-admin dev    # http://localhost:3001
+
+# Ejecutar tests (desde apps/api)
+cd apps/api && pnpm test
+cd apps/api && pnpm test:cov
 ```
 
 > 📖 **Arquitectura completa**: [Adresles_Business.md - Fase 4](./Adresles_Business.md#fase-4-diseño-de-alto-nivel)  
@@ -405,12 +415,15 @@ C4Container
 
 **Módulos principales**:
 
-- `conversations/`: Orquestación de conversaciones IA (núcleo del sistema)
-- `orders/`: Gestión de pedidos
-- `addresses/`: Validación y normalización de direcciones
-- `users/`: Gestión de usuarios y autenticación
-- `stores/`: Configuración de tiendas y eCommerce
-- `webhooks/`: Recepción de eventos desde eCommerce
+- `mock/`: Endpoint `POST /api/mock/orders` — orquestación por modo (adresles / tradicional)
+- `orders/`: Gestión del ciclo de vida de pedidos y cálculo de fee
+- `users/`: Búsqueda o creación de usuario por teléfono E.164
+- `conversations/`: Creación de conversación y encola job BullMQ
+- `stores/`: Búsqueda o creación de tienda por URL
+- `ecommerce-sync/`: Simulación de sincronización con eCommerce (mock)
+- `admin/`: Endpoints de visualización para el dashboard admin (`GET /admin/orders`, `GET /admin/users`, `GET /admin/conversations/:id/messages`)
+- `queue/`: Configuración de BullMQ (cola `process-conversation` y `process-response`)
+- `prisma/`: Módulo de acceso a base de datos (Prisma ORM + Supabase)
 
 #### **Worker - Conversation Processor (BullMQ)**
 
@@ -423,11 +436,12 @@ C4Container
 - Parseo y validación de respuestas de IA
 - Programación de reminders (pendiente post-MVP)
 
-**Servicios principales**:
+**Procesadores y servicios principales**:
 
-- `ai.service.ts`: Orquesta llamadas a OpenAI
-- `prompt-builder.service.ts`: Construye prompts según journey
-- `response-parser.service.ts`: Parsea y valida respuestas de IA
+- `processors/conversation.processor.ts`: Consume cola `process-conversation`; gestiona journeys `GET_ADDRESS` (llama a OpenAI, guarda en DynamoDB) e `INFORMATION` (confirmación tradicional)
+- `processors/response.processor.ts`: Máquina de estados para cola `process-response`; valida dirección con Google Maps, detecta edificios (solicita datos adicionales), confirma y sincroniza
+- `services/address.service.ts`: Integración con Google Maps API
+- `dynamodb/dynamodb.service.ts`: Escritura y lectura de mensajes en DynamoDB
 
 #### **Frontend - Chat App (React + Vite)**
 
@@ -449,19 +463,21 @@ C4Container
 
 #### **Frontend - Dashboard Admin (Next.js)**
 
-**Tecnología**: Next.js 14 + TailwindCSS  
+**Tecnología**: Next.js 16.1.6 + React 19 + Tailwind v4 + Shadcn/ui  
 **Puerto**: 3001 (dev)  
 **Responsabilidades**:
 
-- Panel de gestión para administradores de eCommerce
-- Monitorización de pedidos y conversaciones
-- Configuración de tiendas y plugins
-- Estadísticas y métricas
+- Panel de visualización para administradores de eCommerce
+- Tabla de pedidos con estados, badges y enlace a chat
+- Tabla de usuarios con registro relativo y tooltips accesibles
+- Visor de chat con burbujas por rol, metadatos de conversación y banner TTL
 
 **Stack**:
 
-- **Rendering**: Server Components + Client Components
-- **API Routes**: Next.js API Routes
+- **Rendering**: Server Components + Client Components (mínimo client side)
+- **Estilos**: Tailwind v4 CSS-first (`@theme` en `globals.css`); tokens de marca `brand-black`, `brand-lime`, `brand-teal`
+- **UI Components**: Shadcn/ui (Radix UI)
+- **Accesibilidad**: WCAG 2.1 AA (`aria-label`, `scope="col"`, `role="log"`, tooltips, `focus-visible`)
 - **Deployment**: Vercel (free tier)
 
 #### **Base de Datos - Arquitectura Híbrida**
@@ -526,96 +542,80 @@ adresles/
 ├── apps/                              # Aplicaciones
 │   ├── api/                           # Backend NestJS
 │   │   ├── src/
-│   │   │   ├── modules/
-│   │   │   │   ├── auth/              # Autenticación y autorización
-│   │   │   │   ├── conversations/     # 🎯 NÚCLEO - Orquestación conversaciones
-│   │   │   │   │   ├── journeys/      # Journey Engine (get-address, register, gift, etc.)
-│   │   │   │   │   ├── conversations.gateway.ts  # WebSocket
-│   │   │   │   │   └── conversations.service.ts
-│   │   │   │   ├── orders/            # Gestión de pedidos
-│   │   │   │   ├── addresses/         # Validación con Google Maps
-│   │   │   │   ├── users/             # Gestión de usuarios
-│   │   │   │   ├── stores/            # Tiendas y eCommerce
-│   │   │   │   ├── webhooks/          # Recepción webhooks eCommerce
-│   │   │   │   └── ecommerce-sync/    # Sincronización con eCommerce
-│   │   │   ├── shared/
-│   │   │   │   ├── database/          # Módulos Supabase + DynamoDB
-│   │   │   │   ├── queue/             # BullMQ config
-│   │   │   │   └── utils/
-│   │   │   └── config/
-│   │   ├── Dockerfile
+│   │   │   ├── admin/                 # AdminModule — dashboard endpoints
+│   │   │   ├── conversations/         # ConversationsService — crea y encola
+│   │   │   ├── ecommerce-sync/        # EcommerceSyncService — sync mock
+│   │   │   ├── mock/                  # 🎯 MockOrdersController POST /api/mock/orders
+│   │   │   ├── orders/                # OrdersService — ciclo de vida + fee
+│   │   │   ├── prisma/                # PrismaModule (Prisma ORM + Supabase)
+│   │   │   ├── queue/                 # BullMQ — colas process-conversation / process-response
+│   │   │   ├── shared/                # fee.utils, helpers
+│   │   │   ├── stores/                # StoresService — findOrCreate por URL
+│   │   │   ├── users/                 # UsersService — findOrCreate por teléfono E.164
+│   │   │   ├── app.module.ts
+│   │   │   └── main.ts
+│   │   ├── prisma/
+│   │   │   ├── migrations/            # 3 migraciones versionadas (Supabase)
+│   │   │   ├── schema.prisma          # Modelos: Ecommerce, Store, User, Order, etc.
+│   │   │   └── seed.ts                # Seeds de ecommerce y store mock
 │   │   └── package.json
 │   │
 │   ├── worker/                        # Worker BullMQ para conversaciones
 │   │   ├── src/
 │   │   │   ├── processors/
-│   │   │   │   ├── conversation.processor.ts
-│   │   │   │   └── reminder.processor.ts
+│   │   │   │   └── conversation.processor.ts  # Journeys GET_ADDRESS e INFORMATION
 │   │   │   ├── services/
-│   │   │   │   ├── ai.service.ts      # Integración OpenAI
-│   │   │   │   ├── prompt-builder.service.ts
-│   │   │   │   └── response-parser.service.ts
-│   │   │   └── prompts/
-│   │   │       └── system-prompts/    # Prompts por journey
-│   │   ├── Dockerfile
+│   │   │   │   └── address.service.ts          # Google Maps API
+│   │   │   ├── dynamodb/
+│   │   │   │   └── dynamodb.service.ts         # Tabla adresles-messages (TTL 90d)
+│   │   │   └── main.ts
 │   │   └── package.json
 │   │
-│   ├── web-chat/                      # Frontend Chat (React + Vite)
-│   │   ├── src/
-│   │   │   ├── components/
-│   │   │   │   ├── ui/                # Shadcn/ui components
-│   │   │   │   └── chat/              # Componentes específicos de chat
-│   │   │   ├── hooks/                 # Custom hooks
-│   │   │   ├── stores/                # Zustand stores
-│   │   │   └── lib/                   # Utilidades
-│   │   ├── Dockerfile
+│   ├── web-chat/                      # Frontend Chat (React + Vite) — pendiente implementación
 │   │   └── package.json
 │   │
-│   └── web-admin/                     # Frontend Admin (Next.js)
+│   └── web-admin/                     # Frontend Admin (Next.js 16)
 │       ├── src/
-│       │   ├── app/                   # App Router Next.js 14
+│       │   ├── app/
+│       │   │   ├── globals.css        # Tokens de marca con @theme (Tailwind v4)
+│       │   │   ├── layout.tsx         # Sidebar + TooltipProvider global
+│       │   │   ├── page.tsx           # Redirect a /orders
+│       │   │   ├── orders/            # Tabla de pedidos + badges
+│       │   │   ├── users/             # Tabla de usuarios + fecha relativa
+│       │   │   └── conversations/[conversationId]/  # Visor de chat con burbujas
 │       │   ├── components/
-│       │   └── lib/
-│       ├── Dockerfile
+│       │   │   ├── ui/                # Shadcn/ui (table, badge, button, skeleton, tooltip)
+│       │   │   ├── layout/            # Sidebar, Providers
+│       │   │   ├── orders/            # OrdersTable, OrderStatusBadge, OrderModeBadge
+│       │   │   ├── users/             # UsersTable, UserRegisteredBadge, RelativeDateCell
+│       │   │   └── chat/              # ChatView, ChatBubble, ChatExpiryBanner, ConversationBadges
+│       │   ├── lib/
+│       │   │   ├── api.ts             # Funciones fetch hacia API NestJS
+│       │   │   └── utils.ts
+│       │   └── types/
+│       │       └── api.ts             # Tipos TypeScript de respuesta API
+│       ├── components.json
+│       ├── next.config.ts
 │       └── package.json
-│
-├── packages/                          # Código compartido
-│   ├── shared-types/                  # TypeScript types compartidos
-│   │   ├── src/
-│   │   │   ├── order.types.ts
-│   │   │   ├── conversation.types.ts
-│   │   │   ├── address.types.ts
-│   │   │   └── index.ts
-│   │   └── package.json
-│   └── api-client/                    # Cliente API generado (OpenAPI)
-│       └── package.json
-│
-├── infrastructure/                    # Infraestructura como código
-│   ├── docker/
-│   │   └── docker-compose.yml         # Orquestación de servicios
-│   └── scripts/
-│       ├── deploy.sh                  # Script de despliegue
-│       └── backup.sh                  # Backups de BD
 │
 ├── memory-bank/                       # Documentación persistente
 │   ├── project-context/               # Contexto del proyecto
 │   ├── architecture/                  # ADRs
+│   ├── sessions/                      # Notas por sesión de desarrollo
 │   └── references/                    # Referencias rápidas
 │
 ├── openspec/                          # Especificaciones SDD
 │   ├── specs/                         # Estándares del proyecto
-│   ├── .agents/                       # Definición de agentes
 │   └── changes/                       # Cambios específicos por feature
 │
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                     # Tests y linting
-│       └── deploy.yml                 # Deployment automático
+├── docs/
+│   ├── mock-orders-ui.html            # UI de prueba para POST /api/mock/orders
+│   └── MOCK-ORDERS-README.md          # Guía de uso del endpoint mock
 │
 ├── package.json                       # Monorepo root
 ├── pnpm-workspace.yaml               # Configuración workspaces
 ├── turbo.json                         # Turborepo config
-├── Adresles_Business.md              # Documento de diseño completo (2170 líneas)
+├── Adresles_Business.md              # Documento de diseño completo
 └── README.md                          # Este archivo
 ```
 
@@ -822,40 +822,40 @@ CREATE POLICY "orders_isolation" ON "order"
 
 ### **2.6. Tests**
 
-> ⚠️ **Estado actual**: La estrategia de testing será definida durante la fase de implementación.
+**Framework**: Jest + Supertest (`@nestjs/testing`)
 
-**Testing Planeado**:
+#### **Tests implementados — Backend API (apps/api)**
 
-#### **Tests Unitarios**
+**CU-01 — 37 tests, 100% pasan**
 
-- **Backend (NestJS)**: Jest + Supertest
-    - Servicios de dominio (conversations, orders, addresses)
-    - Validadores de direcciones
-    - Journey Engine
-- **Frontend**: Vitest + React Testing Library
-    - Componentes UI
-    - Hooks personalizados
-    - Stores de Zustand
+| Archivo | Tests | Cobertura |
+|---------|-------|-----------|
+| `src/shared/fee.utils.spec.ts` | Fórmula de fee (bordes e intermedios) | Lógica de cálculo |
+| `src/orders/orders.service.spec.ts` | `createFromMock`, `updateStatus`, `createAddressFromConversation` | Servicio de pedidos |
+| `src/users/users.service.spec.ts` | `findOrCreateByPhone` (crear/actualizar/preservar email, prefijos internacionales) | Servicio de usuarios |
+| `src/mock/mock-orders.service.spec.ts` | Orquestación modos adresles y tradicional; `BadRequestException` sin dirección | Orquestación mock |
+| `src/mock/mock-orders.controller.spec.ts` | HTTP `supertest`; 400 para campos inválidos, URL inválida, email inválido | Controller HTTP |
 
-#### **Tests de Integración**
+**CU-02 — Tests admin, todos pasan**
 
-- **API Endpoints**: Supertest
-- **Base de Datos**: Supabase local + DynamoDB Local
-- **Colas**: Redis in-memory para tests
+| Archivo | Tests |
+|---------|-------|
+| `src/admin/admin.service.spec.ts` | Paginación, filtrado `isDeleted: false`, datos relacionales, usuarios eliminados |
+| `src/admin/admin.controller.spec.ts` | Integración HTTP con `supertest` para los 3 endpoints admin |
 
-#### **Tests End-to-End**
+#### **Comandos de tests**
 
-- **Framework**: Playwright
-- **Escenarios principales**:
-    - Flujo completo de checkout Adresles
-    - Conversación con IA para obtener dirección
-    - Modo regalo (dos conversaciones paralelas)
-    - Validación de dirección con Google Maps
+```bash
+# Desde apps/api
+cd apps/api && pnpm test          # Todos los tests
+cd apps/api && pnpm test:cov      # Con cobertura
+```
 
-#### **Tests de Carga**
+#### **Tests pendientes (post-MVP)**
 
-- **Framework**: Artillery o k6
-- **Escenarios**: Múltiples conversaciones simultáneas, webhook bursts
+- **Frontend**: Vitest + React Testing Library (componentes, hooks)
+- **E2E**: Playwright (flujo completo de checkout, conversación, modo regalo)
+- **Carga**: Artillery o k6 (múltiples conversaciones simultáneas)
 
 **Cobertura objetivo**: 80% en lógica de negocio crítica (Conversations, Orders, Addresses)
 
@@ -981,7 +981,7 @@ erDiagram
         string currency
         decimal fee_percentage
         decimal fee_amount
-        enum status "PENDING_ADDRESS|ADDRESS_CONFIRMED|SYNCED|FAILED|CANCELLED"
+        enum status "PENDING_ADDRESS|READY_TO_PROCESS|COMPLETED|FAILED|CANCELLED"
         boolean is_gift
         jsonb items_summary
         timestamp webhook_received_at
@@ -1221,7 +1221,7 @@ Representa un pedido realizado en una tienda online.
 | `currency`              | VARCHAR(3)    | NOT NULL                | Moneda (ISO 4217: EUR, USD, GBP...)                                             |
 | `fee_percentage`        | DECIMAL(5,2)  | NOT NULL                | % de fee aplicado (2.5% - 5%)                                                   |
 | `fee_amount`            | DECIMAL(12,2) | NOT NULL                | Importe de fee cobrado a eCommerce                                              |
-| `status`                | TEXT          | NOT NULL, CHECK         | `PENDING_ADDRESS` \| `ADDRESS_CONFIRMED` \| `SYNCED` \| `FAILED` \| `CANCELLED` |
+| `status`                | TEXT          | NOT NULL, CHECK         | `PENDING_ADDRESS` \| `READY_TO_PROCESS` \| `COMPLETED` \| `FAILED` \| `CANCELLED` |
 | `is_gift`               | BOOLEAN       | DEFAULT false           | Pedido es un regalo (modo regalo activo)                                        |
 | `items_summary`         | JSONB         |                         | Resumen de productos comprados                                                  |
 | `webhook_received_at`   | TIMESTAMPTZ   | NOT NULL                | Cuándo se recibió el webhook del eCommerce                                      |
@@ -1241,21 +1241,22 @@ Representa un pedido realizado en una tienda online.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING_ADDRESS : Webhook recibido
+    [*] --> PENDING_ADDRESS : Modo adresles (sin dirección)
+    [*] --> READY_TO_PROCESS : Modo tradicional (con dirección)
 
-    PENDING_ADDRESS --> ADDRESS_CONFIRMED : Dirección confirmada
+    PENDING_ADDRESS --> READY_TO_PROCESS : Dirección confirmada por conversación
     PENDING_ADDRESS --> ESCALATED : Timeout/Escalado
     PENDING_ADDRESS --> CANCELLED : Cancelado
 
-    ADDRESS_CONFIRMED --> SYNCED : Sync OK
-    ADDRESS_CONFIRMED --> FAILED : Sync fails
+    READY_TO_PROCESS --> COMPLETED : Sync OK
+    READY_TO_PROCESS --> FAILED : Sync fails
 
-    ESCALATED --> SYNCED : Resuelto
+    ESCALATED --> COMPLETED : Resuelto
 
-    FAILED --> SYNCED : Retry exitoso
+    FAILED --> COMPLETED : Retry exitoso
     FAILED --> FAILED : Retry fallido
 
-    SYNCED --> [*]
+    COMPLETED --> [*]
     CANCELLED --> [*]
 ```
 
@@ -1369,17 +1370,18 @@ stateDiagram-v2
 
 El backend expone una API REST + WebSocket para comunicación en tiempo real. A continuación se describen 3 endpoints principales en formato OpenAPI.
 
-### **Endpoint 1: Recibir Pedido desde eCommerce (Webhook)**
+### **Endpoint 1: Recibir Pedido Mock desde eCommerce**
 
 ```yaml
-/webhooks/woocommerce:
+/api/mock/orders:
     post:
-        summary: Recibe pedidos de WooCommerce (Mock en MVP)
+        summary: Recibe pedidos mock (simula webhook de eCommerce)
         description: |
-            Webhook llamado por WooCommerce cuando se crea un nuevo pedido.
-            En MVP se simula con entrada manual de JSON.
-        security:
-            - webhookSignature: []
+            Endpoint de entrada manual que simula la recepción de un pedido desde
+            un eCommerce. Orquesta el flujo según el modo (adresles / tradicional).
+            En modo adresles crea la Order en PENDING_ADDRESS e inicia una
+            conversación GET_ADDRESS con GPT-4. En modo tradicional crea la Order
+            en READY_TO_PROCESS con OrderAddress incluida y la marca COMPLETED.
         requestBody:
             required: true
             content:
@@ -1485,43 +1487,37 @@ El backend expone una API REST + WebSocket para comunicación en tiempo real. A 
                                         price:
                                             type: number
         responses:
-            "200":
-                description: Pedido recibido y procesado correctamente
+            "201":
+                description: Pedido creado y procesado correctamente
                 content:
                     application/json:
                         schema:
                             type: object
                             properties:
-                                success:
-                                    type: boolean
-                                    example: true
-                                order_id:
+                                orderId:
                                     type: string
                                     description: ID interno de Adresles
                                     example: "550e8400-e29b-41d4-a716-446655440000"
-                                message:
+                                conversationId:
                                     type: string
-                                    example: "Pedido procesado, conversación iniciada"
-            "401":
-                description: Firma del webhook inválida
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                error:
+                                    description: ID de la conversación iniciada
+                                    example: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                                status:
                                     type: string
-                                    example: "Invalid webhook signature"
+                                    example: "PENDING_ADDRESS"
             "400":
-                description: Datos del pedido inválidos
+                description: Datos del pedido inválidos (class-validator)
                 content:
                     application/json:
                         schema:
                             type: object
                             properties:
-                                error:
-                                    type: string
-                                    example: "Missing required field: customer.phone"
+                                message:
+                                    type: array
+                                    example: ["phone must be a valid phone number"]
+                                statusCode:
+                                    type: number
+                                    example: 400
 ```
 
 **Ejemplo de petición (Modo Adresles sin dirección)**:
@@ -1780,6 +1776,73 @@ El backend expone una API REST + WebSocket para comunicación en tiempo real. A 
     "missing_fields": ["floor", "door"],
     "is_building": true
 }
+```
+
+---
+
+---
+
+### **Endpoint 4: Dashboard Admin — Pedidos, Usuarios y Chat**
+
+```yaml
+/admin/orders:
+    get:
+        summary: Lista pedidos con paginación y datos relacionales
+        parameters:
+            - name: page
+              in: query
+              schema: { type: integer, default: 1 }
+            - name: limit
+              in: query
+              schema: { type: integer, default: 20 }
+        responses:
+            "200":
+                description: Lista paginada de pedidos
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                data:
+                                    type: array
+                                    items: { $ref: '#/components/schemas/Order' }
+                                total:
+                                    type: integer
+                                page:
+                                    type: integer
+                                limit:
+                                    type: integer
+
+/admin/users:
+    get:
+        summary: Lista usuarios (excluye soft-deleted)
+        parameters:
+            - name: page
+              in: query
+              schema: { type: integer, default: 1 }
+            - name: limit
+              in: query
+              schema: { type: integer, default: 20 }
+        responses:
+            "200":
+                description: Lista paginada de usuarios
+
+/admin/conversations/{conversationId}/messages:
+    get:
+        summary: Devuelve mensajes de una conversación con contexto
+        description: |
+            Incluye ConversationContext (tipo, estado, timestamps, número de pedido)
+            en la respuesta para evitar múltiples peticiones desde el frontend.
+        parameters:
+            - name: conversationId
+              in: path
+              required: true
+              schema: { type: string, format: uuid }
+        responses:
+            "200":
+                description: Mensajes de la conversación con contexto
+            "404":
+                description: Conversación no encontrada
 ```
 
 ---
@@ -2222,6 +2285,6 @@ Esta Pull Request representa **la fundación completa del proyecto Adresles**. N
 
 ---
 
-**Pull Request 2**
+### **Pull Request 2:**
 
-**Pull Request 3**
+### **Pull Request 3:**
