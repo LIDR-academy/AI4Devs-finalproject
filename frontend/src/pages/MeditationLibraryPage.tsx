@@ -131,7 +131,7 @@ export const MeditationLibraryPage: React.FC = () => {
           {playbackError && (
             <div className="player-error" role="alert">
               <p>⚠️ {playbackError.message}</p>
-              <button onClick={resetPlayer}>Cerrar</button>
+              <button onClick={resetPlayer}>Close</button>
             </div>
           )}
 

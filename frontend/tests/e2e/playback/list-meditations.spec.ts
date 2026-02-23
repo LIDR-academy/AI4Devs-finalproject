@@ -75,6 +75,6 @@ test.describe('Meditation Library - Listing', () => {
     });
 
     await page.goto('/library');
-    await expect(page.locator('text=Aún no tienes meditaciones. Empieza creando una nueva.')).toBeVisible();
+    await expect(page.locator('text=You don\'t have any meditations yet. Start by creating a new one.')).toBeVisible();
   });
 });

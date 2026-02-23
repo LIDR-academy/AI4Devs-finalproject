@@ -50,10 +50,10 @@ test.describe('Meditation Library - Error Handling', () => {
     // Verify error message is shown in the player container
     const errorAlert = page.locator('.player-error[role="alert"]');
     await expect(errorAlert).toBeVisible();
-    await expect(errorAlert).toHaveText(/Esta meditación aún se está procesando/);
+    await expect(errorAlert).toHaveText(/This meditation is still being processed/);
     
-    // Test the "Cerrar" button in the error alert
-    await errorAlert.locator('button:has-text("Cerrar")').click();
+    // Test the "Close" button in the error alert
+    await errorAlert.locator('button:has-text("Close")').click();
     await expect(errorAlert).not.toBeVisible();
   });
 });

@@ -68,13 +68,13 @@ test.describe('Meditation Library - Playback', () => {
     // Completed row should show "Reproducir" button and be enabled
     const rowReady = page.locator('tr').filter({ hasText: 'Ready to Play' });
     const btnPlay = rowReady.locator('button');
-    await expect(btnPlay).toHaveText(/Reproducir/);
+    await expect(btnPlay).toHaveText(/Play/);
     await expect(btnPlay).toBeEnabled();
 
-    // Processing row should show "Pausado..." or different text and be disabled
+    // Processing row should show "Pending..." and be disabled
     const rowBusy = page.locator('tr').filter({ hasText: 'Generating meditation' });
     const btnBusy = rowBusy.locator('button');
-    await expect(btnBusy).toHaveText(/Pausado/);
+    await expect(btnBusy).toHaveText(/Pending/);
     await expect(btnBusy).toBeDisabled();
   });
 
