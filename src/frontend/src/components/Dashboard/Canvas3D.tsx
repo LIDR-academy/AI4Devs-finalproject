@@ -1,11 +1,12 @@
 /**
  * Canvas3D Component
  * T-0504-FRONT: Three.js Canvas wrapper with scene configuration
+ * T-0508-FRONT: Selection handlers (ESC key, background click)
  * 
  * Wraps @react-three/fiber Canvas with standardized camera, lights, and controls
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid, GizmoHelper, GizmoViewcube, Stats } from '@react-three/drei';
 import type { Canvas3DProps } from './Dashboard3D.types';
@@ -15,16 +16,41 @@ import {
   LIGHTING_CONFIG, 
   CONTROLS_CONFIG 
 } from './Dashboard3D.constants';
+import { usePartsStore } from '@/stores/parts.store';
+import { DESELECTION_KEYS } from '@/constants/selection.constants';
 
 const Canvas3D: React.FC<Canvas3DProps> = ({ 
   showStats = false, 
   cameraConfig 
 }) => {
+  const clearSelection = usePartsStore((state) => state.clearSelection);
+
   // Merge default config with custom config
   const cameraPosition = cameraConfig?.position || CAMERA_CONFIG.POSITION;
   const cameraFov = cameraConfig?.fov !== undefined ? cameraConfig.fov : CAMERA_CONFIG.FOV;
   const cameraNear = cameraConfig?.near || CAMERA_CONFIG.NEAR;
   const cameraFar = cameraConfig?.far || CAMERA_CONFIG.FAR;
+
+  // T-0508-FRONT: ESC key handler for deselection
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      // Support both 'Escape' and legacy 'Esc' key
+      if (event.key === DESELECTION_KEYS.ESCAPE || event.key === DESELECTION_KEYS.ESC) {
+        clearSelection();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [clearSelection]);
+
+  // T-0508-FRONT: Background click handler for deselection
+  const handleBackgroundClick = () => {
+    clearSelection();
+  };
 
   return (
     <div
@@ -58,6 +84,7 @@ const Canvas3D: React.FC<Canvas3DProps> = ({
           near: cameraNear,
           far: cameraFar,
         }}
+        onPointerMissed={handleBackgroundClick}
       >
         {/* Ambient Light */}
         <ambientLight intensity={LIGHTING_CONFIG.AMBIENT_INTENSITY} />

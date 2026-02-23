@@ -1,10 +1,12 @@
 /**
  * Dashboard3D Component
  * T-0504-FRONT: Main dashboard with 3D canvas and dockable sidebar
+ * T-0508-FRONT: Part selection and modal integration
  * 
  * Orchestrates:
  * - Canvas3D for 3D visualization
  * - DraggableFiltersSidebar for filters UI
+ * - PartDetailModal for selected part details (T-0508)
  * - EmptyState when no parts loaded
  * - LoadingOverlay during data fetch
  */
@@ -16,7 +18,8 @@ import Canvas3D from './Canvas3D';
 import DraggableFiltersSidebar from './DraggableFiltersSidebar';
 import EmptyState from './EmptyState';
 import LoadingOverlay from './LoadingOverlay';
-import { usePartsStore } from '@/stores/partsStore';
+import { PartDetailModal } from './PartDetailModal';
+import { usePartsStore } from '@/stores/parts.store';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const Dashboard3D: React.FC<Dashboard3DProps> = ({
@@ -25,7 +28,7 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
   emptyMessage,
   initialSidebarDock = 'right',
 }) => {
-  const { parts, isLoading, error } = usePartsStore();
+  const { parts, isLoading, error, selectedId, clearSelection } = usePartsStore();
   const [sidebarDock, setSidebarDock] = useLocalStorage<DockPosition>(
     STORAGE_KEYS.SIDEBAR_DOCK,
     initialSidebarDock
@@ -41,6 +44,9 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
   };
 
   const isEmpty = parts.length === 0 && !isLoading;
+  
+  // T-0508-FRONT: Find selected part for modal
+  const selectedPart = selectedId ? parts.find(p => p.id === selectedId) || null : null;
 
   return (
     <div
@@ -92,6 +98,13 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
         {/* Loading Overlay */}
         {isLoading && <LoadingOverlay message={MESSAGES.LOADING} />}
       </div>
+
+      {/* Part Detail Modal (T-0508-FRONT) */}
+      <PartDetailModal
+        isOpen={!!selectedId}
+        part={selectedPart}
+        onClose={clearSelection}
+      />
 
       {/* Sidebar with Filters */}
       <DraggableFiltersSidebar

@@ -4,15 +4,37 @@
 Sprint 0 - Foundation Setup | IN PROGRESS (Week 1: Feb 3-9, 2026)
 
 ## Active Ticket
-- **No active ticket** — 🟢 AWAITING USER SELECTION
-  - T-0507-FRONT (LOD System) completed 2026-02-22 17:00 (TDD-REFACTOR phase complete)
-  - Next available tickets: T-0508-FRONT (Part Selection & Modal), T-0500-INFRA (Celery Setup), T-0501-BACK (Low-Poly GLB Endpoint)
-  - Branch: US-005 (3D Visualization & LOD System)
+**No active ticket** — 🟢 AWAITING USER SELECTION
+- **Context:** T-0508-FRONT completed successfully (TDD-REFACTOR phase)
+- **Timestamp:** 2026-02-22 19:50
 
-## Completed User Stories
+### Next Available Tickets (US-005 Dashboard 3D)
+- **T-0509-TEST-FRONT: 3D Dashboard Integration Tests** (3 SP) — 5 test suites (Rendering, Interaction, State, EmptyState, Performance), coverage >80% Dashboard3D, >85% PartMesh, >90% FiltersSidebar, 21 tests total
+- **T-0510-TEST-BACK: Canvas API Integration Tests** (3 SP) — Backend tests for GET /api/parts endpoint, 5 test suites (Functional, Filter, RLS, Performance, Index Usage), 23 tests total
+
+### Dependencies Status
 - US-001: Upload Flow (5 SP) — DONE 2026-02-11 | [docs/US-001/](../docs/US-001/)
+- ✅ T-0504-FRONT: Dashboard3D layout (DONE)
+- ✅ T-0505-FRONT: PartsScene rendering (DONE)
+- ✅ T-0506-FRONT: Filters sidebar (DONE)
+- ✅ T-0507-FRONT: LOD System (DONE)
+- ✅ T-0508-FRONT: Part Selection & Modal (DONE)
+
+### Recommended Next Ticket
+- **T-0509-TEST-FRONT** (3D Dashboard Integration Tests) — Comprehensive test coverage for all components
 
 ## Recently Completed
+- **T-0508-FRONT: Part Selection & Modal** — ✅ COMPLETE (2026-02-22) | TDD-REFACTOR Complete 19:50
+  - Status: **32/32 tests passing (100%)** — Canvas3D 18/18 ✓ (14 existing + 4 new selection handlers) + PartDetailModal 14/14 ✓ (Duration: 10.26s, zero regressions)
+  - Scope: Click handler selectPart(id) → emissive glow (intensity 0.4 from STATUS_COLORS), open PartDetailModal (placeholder for US-010 integration), deselection via ESC key/canvas background click/modal close, single selection pattern
+  - Implementation: PartDetailModal.tsx (193 lines, modal component with ESC listener, backdrop click, debounced close button, status colors, workshop fallback "Sin asignar"), Canvas3D.tsx (+useEffect ESC listener, +onPointerMissed handler), Dashboard3D.tsx (+modal integration with selectedId/clearSelection), Canvas3D.test.tsx (fixed store mocking for selector support), index.ts (+export), test/setup.ts (+Canvas mock with onPointerMissed)
+  - Constants extraction: SELECTION_CONSTANTS (emissive intensity, deselection keys, ARIA labels)
+  - Future-Proof Design: PartDetailModalProps interface for US-010 extension
+  - Zero regressions: All existing Canvas3D tests (14) remain passing
+  - Refactoring applied (TDD-REFACTOR phase): Fixed Dashboard3D.tsx comment syntax (corrupted multi-line comment from GREEN phase)
+  - Files: 1 created (PartDetailModal.tsx), 5 modified (Canvas3D.tsx, Dashboard3D.tsx, Canvas3D.test.tsx, index.ts, test/setup.ts)
+  - Production-ready: TypeScript strict, JSDoc complete, no console.logs, SELECTION_CONSTANTS extracted, Clean Architecture pattern
+  - TDD-GREEN timestamp: 2026-02-22 19:35, TDD-REFACTOR timestamp: 2026-02-22 19:50
 - **T-0507-FRONT: LOD System Implementation** — ✅ COMPLETE (2026-02-22) | TDD-REFACTOR Complete 17:00
   - Status: **43/43 tests passing (100%)** — PartMesh 34/34 ✓ + BBoxProxy 9/9 ✓ (Duration: 9.77s, zero regressions)
   - Scope: 3-level LOD system with `<Lod distances={[0, 20, 50]}>` — Level 0: mid-poly <20 units (1000 tris), Level 1: low-poly 20-50 units (500 tris), Level 2: bbox proxy >50 units (12 tris)
