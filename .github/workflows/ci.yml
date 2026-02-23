@@ -21,7 +21,6 @@ jobs:
           fetch-depth: 0  # Full history required for commit-range scanning
       - name: GitGuardian scan
         uses: GitGuardian/gg-shield-action@v1.48.0
-        continue-on-error: true  # Optional: don't block CI if API key is missing
         env:
           GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
           GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
@@ -96,7 +95,6 @@ jobs:
 
       - name: Run backend integration tests
         run: make test
-        continue-on-error: true  # Allow backend tests to fail (not blocking for agent tests)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
@@ -109,7 +107,6 @@ jobs:
 
       - name: Run backend unit tests (if any)
         run: make test-unit
-        continue-on-error: true  # Unit tests folder might be empty
 
       - name: Show test logs on failure
         if: failure()
@@ -283,7 +280,6 @@ jobs:
         run: |
           echo "=== Linting Backend Python Code ==="
           ruff check src/backend/ --select E,F,W --ignore E501
-        continue-on-error: true  # Don't fail build on linting issues yet
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
@@ -298,8 +294,7 @@ jobs:
 
       - name: Lint Frontend TypeScript
         working-directory: src/frontend
-        run: npm run lint || echo "⚠️ Linting issues found (non-blocking)"
-        continue-on-error: true
+        run: npm run build  # TypeScript compilation serves as linting (tsc in build script)
 
   security-scan:
     runs-on: ubuntu-latest
@@ -309,27 +304,19 @@ jobs:
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
-        continue-on-error: true  # Don't block CI - report findings for review
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          exit-code: '0'  # Changed from 1: Don't fail build, just report
+          exit-code: '1'  # Production-ready: Fail build on CRITICAL/HIGH vulnerabilities
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
-        continue-on-error: true
-
-      # NOTE: Trivy run in informative mode (exit-code: 0, continue-on-error: true)
-      # Vulnerabilities are reported to GitHub Security tab but don't block CI.
-      # Critical fixes applied: python-multipart 0.0.12 (CVE-2024-24762)
-      # Remaining findings: Review in Security → Code scanning alerts
-      # TODO P2: Create dedicated ticket to address remaining CRITICAL/HIGH CVEs
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
