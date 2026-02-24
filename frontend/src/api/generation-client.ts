@@ -16,6 +16,7 @@ import {
   type GenerationResponse,
   type ErrorResponse,
 } from './generated/generation/src';
+import { API_BASE_URL } from '../config';
 
 /**
  * API Error wrapper for consistency with existing client
@@ -32,14 +33,9 @@ export class GenerationApiError extends Error {
 
 /**
  * Configuration for Generation API client
- * Uses relative path to work with Vite proxy
  */
-// Use VITE_API_BASE_URL when set (CI / production), otherwise fallback to relative
-// path so the Vite dev-server proxy (/api → http://localhost:8080) handles routing.
 const generationApiConfig = new Configuration({
-  basePath: import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/api/v1`
-    : '/api/v1',
+  basePath: `${API_BASE_URL}/api/v1`,
   // JWT token will be added here when authentication is implemented (blocked by US1)
   // accessToken: () => getAuthToken(),
 });

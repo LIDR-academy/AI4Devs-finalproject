@@ -17,8 +17,9 @@ import type {
   ErrorResponse,
 } from './types';
 import { ApiError } from './types';
+import { API_BASE_URL } from '../config';
 
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1`;
+const BASE_URL = `${API_BASE_URL}/api/v1`;
 
 /**
  * MVP User ID (hardcoded until US1 authentication is implemented)

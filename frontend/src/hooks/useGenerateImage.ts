@@ -9,6 +9,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ImageReferenceResponse, ApiError } from '@/api/types';
 import { useComposerStore } from '@/state/composerStore';
+import { API_BASE_URL } from '@/config';
 
 interface UseGenerateImageOptions {
   prompt?: string;
@@ -26,7 +27,7 @@ export function useGenerateImage({ prompt, onSuccess, onError }: UseGenerateImag
     mutationFn: async (promptOverride?: string) => {
       const textPrompt = promptOverride ?? prompt;
       if (!textPrompt) throw new Error('No prompt provided');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/compositions/image/generate`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/compositions/image/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: textPrompt,

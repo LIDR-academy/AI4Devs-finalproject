@@ -1,6 +1,8 @@
 /**
  * Upload file to S3 via backend API
  */
+import { API_BASE_URL } from '../config';
+
 export interface UploadFileResponse {
   fileUrl: string;
   fileType: string;
@@ -14,7 +16,7 @@ export async function uploadImage(file: File): Promise<UploadFileResponse> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/generation/upload/image`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/generation/upload/image`, {
     method: 'POST',
     body: formData,
   });
@@ -33,7 +35,7 @@ export async function uploadMusic(file: File): Promise<UploadFileResponse> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/generation/upload/music`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/generation/upload/music`, {
     method: 'POST',
     body: formData,
   });

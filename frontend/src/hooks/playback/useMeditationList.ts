@@ -15,6 +15,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Configuration, PlaybackApi, MeditationItem } from '../../api/generated/playback/src';
+import { API_BASE_URL } from '../../config';
 
 /**
  * API Configuration
@@ -22,7 +23,7 @@ import { Configuration, PlaybackApi, MeditationItem } from '../../api/generated/
  */
 const getApiConfig = (): Configuration => {
   return new Configuration({
-    basePath: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
+    basePath: `${API_BASE_URL}/api/v1`,
     headers: {
       // Temporary: X-User-Id header until US1 implements JWT
       'X-User-Id': import.meta.env.VITE_USER_ID || '550e8400-e29b-41d4-a716-446655440000'
