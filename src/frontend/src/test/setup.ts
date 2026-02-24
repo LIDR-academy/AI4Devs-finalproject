@@ -45,7 +45,7 @@ vi.mock('@react-three/drei', () => ({
   Html: vi.fn(({ children }: { children: React.ReactNode }) =>
     React.createElement('div', null, children)
   ),
-  Lod: vi.fn(({ children, distances }: { children: React.ReactNode, distances?: number[] }) =>
+  Detailed: vi.fn(({ children, distances }: { children: React.ReactNode, distances?: number[] }) =>
     React.createElement('div', { 'data-lod-distances': distances?.join(',') }, children)
   ),
 }));

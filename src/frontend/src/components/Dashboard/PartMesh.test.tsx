@@ -251,7 +251,7 @@ describe('PartMesh Component', () => {
         // Selected parts should have emissive glow
         expect(material).toHaveAttribute('emissive', STATUS_COLORS[mockPart.status]);
         expect(material).toHaveAttribute('emissiveintensity', '0.4');
-        expect(material).toHaveAttribute('opacity', '1.0');
+        expect(material).toHaveAttribute('opacity', '1');
       });
     });
 
@@ -310,7 +310,7 @@ describe('PartMesh Component', () => {
 
       await waitFor(() => {
         const material = container.querySelector('[data-testid="part-material"]');
-        expect(material).toHaveAttribute('opacity', '1.0');
+        expect(material).toHaveAttribute('opacity', '1');
       });
     });
 
@@ -371,7 +371,7 @@ describe('PartMesh Component', () => {
       await waitFor(() => {
         const material = container.querySelector('[data-testid="part-material"]');
         // Should use FILTER_VISUAL_FEEDBACK.MATCH_OPACITY (1.0)
-        expect(material).toHaveAttribute('opacity', '1.0');
+        expect(material).toHaveAttribute('opacity', '1');
       });
     });
 
@@ -431,7 +431,7 @@ describe('PartMesh Component', () => {
 
       await waitFor(() => {
         const material = container.querySelector('[data-testid="part-material"]');
-        expect(material).toHaveAttribute('opacity', '1.0');
+        expect(material).toHaveAttribute('opacity', '1');
       });
     });
   });
