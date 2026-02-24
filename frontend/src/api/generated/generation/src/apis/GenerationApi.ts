@@ -46,15 +46,20 @@ export interface GetMeditationStatusRequest {
  *
  */
 export class GenerationApi extends runtime.BaseAPI {
-  // === Helper: construir URL absoluta de forma segura a partir de VITE_API_BASE_URL ===
-  // - Lee import.meta.env.VITE_API_BASE_URL (p.ej. "http://localhost:8080")
-  // - Asegura que no haya dobles barras al unir base + path relativo
-  private buildUrl = (relativePath: string): string => {
+  /**
+   * Asegura que this.basePath apunte SIEMPRE al backend configurado.
+   * - Lee import.meta.env.VITE_API_BASE_URL (p.ej., "http://localhost:8080").
+   * - Normaliza para que NO termine en "/".
+   * - Evita tener que tocar Configuration({ basePath }).
+   */
+  private ensureBasePath = (): void => {
     const rawBase =
       (import.meta as any)?.env?.VITE_API_BASE_URL ?? 'http://localhost:8080';
     const base = String(rawBase).replace(/\/+$/, ''); // sin barra al final
-    const path = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
-    return `${base}${path}`;
+    // BaseAPI expone basePath; lo reasignamos en caliente si cambia
+    if ((this as any).basePath !== base) {
+      (this as any).basePath = base;
+    }
   };
 
   /**
@@ -87,8 +92,7 @@ export class GenerationApi extends runtime.BaseAPI {
     requestParameters: GenerateMeditationContentRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction
   ): Promise<runtime.ApiResponse<GenerationResponse>> {
-    if (requestParameters['generateMedititationRequest'] == null && requestParameters['generateMeditationRequest'] == null) {
-      // El nombre correcto es generateMeditationRequest; la primera condición protege por si el generador cambió el nombre
+    if (requestParameters['generateMeditationRequest'] == null) {
       throw new runtime.RequiredError(
         'generateMeditationRequest',
         'Required parameter "generateMeditationRequest" was null or undefined when calling generateMeditationContent().'
@@ -109,21 +113,21 @@ export class GenerationApi extends runtime.BaseAPI {
       }
     }
 
-    // Path relativo; la base se añade con buildUrl
-    const urlPath = this.buildUrl('/api/v1/generation/meditations');
+    // Asegura basePath en cada request (local, Vercel, etc.)
+    this.ensureBasePath();
 
-    const bodyPayload = GenerateMeditationRequestToJSON(
-      (requestParameters as any)['generateMeditationRequest'] ??
-        (requestParameters as any)['generateMedititationRequest']
-    );
+    // Path RELATIVO (nunca metas import.meta.env aquí)
+    const path = `/api/v1/generation/meditations`;
 
     const response = await this.request(
       {
-        path: urlPath,
+        path, // el runtime hará basePath + path
         method: 'POST',
         headers: headerParameters,
         query: queryParameters,
-        body: bodyPayload,
+        body: GenerateMeditationRequestToJSON(
+          requestParameters['generateMeditationRequest']
+        ),
       },
       initOverrides
     );
@@ -152,13 +156,13 @@ export class GenerationApi extends runtime.BaseAPI {
    * Get meditation generation status
    */
   async getMeditationStatusRaw(
-    requestParameters: GetMeditationStatusRequest,
+    requestParameters: GetMedititationStatusRequest, // nota: algunos generadores usan "GetMedititation..." con doble "ti"
     initOverrides?: RequestInit | runtime.InitOverrideFunction
   ): Promise<runtime.ApiResponse<GenerationResponse>> {
-    if (requestParameters['meditationId'] == null) {
+    if ((requestParameters as any)['meditationId'] == null) {
       throw new runtime.RequiredError(
         'meditationId',
-        'Required parameter "meditationId" was null or undefined when calling getMedititationStatus().'
+        'Required parameter "meditationId" was null or undefined when calling getMeditationStatus().'
       );
     }
 
@@ -175,17 +179,19 @@ export class GenerationApi extends runtime.BaseAPI {
       }
     }
 
-    // Path relativo + sustitución del parámetro; luego base con buildUrl
-    let relPath = `/api/v1/generation/meditations/{meditationId}`;
-    relPath = relPath.replace(
+    // Asegura basePath
+    this.ensureBasePath();
+
+    // Path RELATIVO con sustitución del parámetro
+    let path = `/api/v1/generation/meditations/{meditationId}`;
+    path = path.replace(
       `{${'meditationId'}}`,
-      encodeURIComponent(String(requestParameters['meditationId']))
+      encodeURIComponent(String((requestParameters as any)['meditationId']))
     );
-    const urlPath = this.buildUrl(relPath);
 
     const response = await this.request(
       {
-        path: urlPath,
+        path, // basePath + path
         method: 'GET',
         headers: headerParameters,
         query: queryParameters,
@@ -201,14 +207,22 @@ export class GenerationApi extends runtime.BaseAPI {
   /**
    * Get meditation generation status
    */
-  async getMeditationStatus(
+  async getMedititationStatus( // nombre alternativo según el generador
     requestParameters: GetMeditationStatusRequest,
     initOverrides?: RequestInit | runtime.InitOverrideFunction
   ): Promise<GenerationResponse> {
     const response = await this.getMeditationStatusRaw(
-      requestParameters,
+      requestParameters as any,
       initOverrides
     );
     return await response.value();
+  }
+
+  // Alias con el nombre "correcto" por si el template generó el método sin doble "ti"
+  async getMeditationStatus(
+    requestParameters: GetMeditationStatusRequest,
+    initOverrides?: RequestInit | runtime.InitOverrideFunction
+  ): Promise<GenerationResponse> {
+    return this.getMedititationStatus(requestParameters, initOverrides);
   }
 }
