@@ -18,7 +18,7 @@
  * - User-friendly error messages in English
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMeditationList, usePlaybackInfo } from '../hooks/playback';
 import { usePlayerStore } from '../state/playback';
 import { MeditationList, MeditationPlayer } from '../components/playback';
@@ -47,6 +47,9 @@ export const MeditationLibraryPage: React.FC = () => {
     setCurrentMeditation,
     reset: resetPlayer
   } = usePlayerStore();
+
+  // UI-state: media playback error (separate from API error)
+  const [mediaError, setMediaError] = useState<string | null>(null);
 
   // Reset player when entering library page to avoid auto-play on navigation
   useEffect(() => {
@@ -87,14 +90,18 @@ export const MeditationLibraryPage: React.FC = () => {
 
   /**
    * Handle playback errors.
-   * Displays user-friendly alert and resets player.
+   * Shows inline error message without resetting the player.
    */
   const handlePlaybackError = (error?: Error) => {
     const errorMessage = error?.message || 
       'Error playing the media content. Please try again.';
-    alert(errorMessage);
-    resetPlayer();
+    setMediaError(errorMessage);
   };
+
+  // Clear mediaError when the selected meditation changes
+  useEffect(() => {
+    setMediaError(null);
+  }, [currentMeditationId]);
 
   return (
     <div className="meditation-library-page">
@@ -127,11 +134,19 @@ export const MeditationLibraryPage: React.FC = () => {
             </div>
           )}
 
-          {/* Playback error */}
+          {/* API error (e.g. 409 not ready yet) */}
           {playbackError && (
             <div className="player-error" role="alert">
               <p>⚠️ {playbackError.message}</p>
               <button onClick={resetPlayer}>Close</button>
+            </div>
+          )}
+
+          {/* Media playback error (audio/video failed to load) */}
+          {mediaError && !playbackError && (
+            <div className="player-error" role="alert">
+              <p>⚠️ {mediaError}</p>
+              <button onClick={() => setMediaError(null)}>Close</button>
             </div>
           )}
 

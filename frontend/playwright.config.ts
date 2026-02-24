@@ -56,7 +56,18 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        launchOptions: {
+          firefoxUserPrefs: {
+            // Disable hardware acceleration to avoid SWGL crash on Windows headless
+            'layers.acceleration.disabled': true,
+            'gfx.direct2d.disabled': true,
+            'layers.offmainthreadcomposition.enabled': false,
+            'media.hardware-video-decoding.force-enabled': false,
+          },
+        },
+      },
     },
     {
       name: 'webkit',

@@ -123,9 +123,13 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
     return (
       <div 
         className={`meditation-player meditation-player--error ${className}`}
-        role="alert"
+        data-testid={`meditation-player-error`}
       >
-        <div className="meditation-player__error">
+        {/* Always render title so tests and users can see what was selected */}
+        <div className="meditation-player__header">
+          <h2 className="meditation-player__title">{title}</h2>
+        </div>
+        <div className="meditation-player__error" role="alert">
           <p className="meditation-player__error-message">{error}</p>
           <p className="meditation-player__error-hint">
             Check your internet connection and try again.
@@ -154,8 +158,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
             src={mediaUrls.videoUrl} // Use src directly for more reliable React updates
             className="meditation-player__video"
             controls
-            autoPlay // Restored autoPlay for one-click play from list
-            preload="auto"
+            preload="none"
             crossOrigin="anonymous"
             onError={handleMediaError}
             aria-label={`Now playing video: ${title}`}
@@ -180,8 +183,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
             src={mediaUrls.audioUrl} // Use src directly for more reliable React updates
             className="meditation-player__audio"
             controls
-            autoPlay // Restored autoPlay for one-click play from list
-            preload="auto"
+            preload="none"
             crossOrigin="anonymous"
             onError={handleMediaError}
             aria-label={`Now playing audio: ${title}`}

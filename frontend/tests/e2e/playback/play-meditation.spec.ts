@@ -60,6 +60,15 @@ test.describe('Meditation Library - Playback', () => {
       });
     });
 
+    // Prevent media loading errors from fake S3 URLs (avoids race condition)
+    await page.route('http://s3.aws.com/**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'audio/mpeg',
+        body: Buffer.from([0xFF, 0xFB, 0x90, 0x00]),
+      });
+    });
+
     await page.goto('/library');
     await page.waitForSelector('.meditation-list');
   });

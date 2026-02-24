@@ -17,9 +17,12 @@ on:
       - 'backend/**'
 
 env:
-  GOOGLE_TTS_API_KEY: fake
   BUCKET_NAME: meditation-outputs
   SPRING_PROFILES_ACTIVE: test
+  
+  # === Backend Secrets ===
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_TTS_JSON }}
 
 jobs:
   # Gate 1: BDD Tests (Cucumber)
