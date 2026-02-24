@@ -12,7 +12,14 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+// src/api/generationClient.ts
+import { Configuration } from './generated/generation';
+import { GenerationApi } from './generated/generation';
+import { API_BASE_URL } from '../config';
 
+const cfg = new Configuration({ basePath: API_BASE_URL });
+// Importante: NO pongas /api/v1 aquí si tus paths ya lo traen. basePath = solo host.
+export const generationApi = new GenerationApi(cfg);
 
 import * as runtime from '../runtime';
 import type {
@@ -69,7 +76,7 @@ export class GenerationApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `${import.meta.env.VITE_API_BASE_URL}/generation/meditations`;
+        const urlPath = `/api/v1/generation/meditations`;
 
         const response = await this.request({
             path: urlPath,
@@ -116,7 +123,7 @@ export class GenerationApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `${import.meta.env.VITE_API_BASE_URL}/generation/meditations/{meditationId}`;
+        let urlPath = `/api/v1/generation/meditations/{meditationId}`;
         urlPath = urlPath.replace(`{${"meditationId"}}`, encodeURIComponent(String(requestParameters['meditationId'])));
 
         const response = await this.request({
