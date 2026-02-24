@@ -112,6 +112,45 @@ def db_connection() -> connection:
     conn.close()
 
 
+@pytest.fixture(scope="session")
+def supabase_db_connection() -> connection:
+    """
+    Create a direct PostgreSQL connection to Supabase database.
+
+    This fixture is specifically for performance tests that need bulk operations
+    using raw SQL against the same database that Supabase client uses.
+    
+    Environment variables:
+        SUPABASE_DATABASE_URL: PostgreSQL connection string to Supabase
+        
+    Returns:
+        psycopg2.connection: Active database connection to Supabase
+        
+    Yields:
+        connection: Connection object for test use
+        
+    Cleanup:
+        Closes connection after test session ends
+        
+    Example:
+        >>> def test_bulk_delete(supabase_db_connection):
+        >>>     cursor = supabase_db_connection.cursor()
+        >>>     cursor.execute("DELETE FROM blocks WHERE iso_code ILIKE %s", ("TEST-%",))
+        >>>     supabase_db_connection.commit()
+    """
+    database_url = os.environ.get("SUPABASE_DATABASE_URL")
+    
+    if not database_url:
+        pytest.skip("SUPABASE_DATABASE_URL must be configured for performance tests")
+    
+    conn = psycopg2.connect(database_url)
+    conn.autocommit = True  # Auto-commit for cleanup operations
+    
+    yield conn
+    
+    conn.close()
+
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_database_schema(db_connection: connection):
     """

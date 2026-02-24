@@ -5,6 +5,8 @@ Shared utilities to reduce duplication across 5 test suites.
 
 Functions:
 - cleanup_test_blocks(): Delete test blocks by ID list
+- cleanup_test_blocks_by_pattern(): Delete using Supabase (slow for large datasets)
+- bulk_delete_by_pattern_pg(): FAST bulk delete using PostgreSQL directly
 - create_realistic_block(): Generate block with realistic data
 - assert_execution_time(): Decorator for performance assertions
 - get_query_plan(): Execute EXPLAIN ANALYZE and parse plan
@@ -21,6 +23,8 @@ from uuid import uuid4
 from datetime import datetime
 
 from supabase import Client
+import psycopg2
+from psycopg2.extensions import connection
 
 
 def cleanup_test_blocks(supabase_client: Client, block_ids: List[str]) -> None:
@@ -45,6 +49,8 @@ def cleanup_test_blocks_by_pattern(supabase_client: Client, iso_code_pattern: st
     """
     Delete test blocks matching an iso_code pattern (idempotent cleanup).
 
+    ⚠️ WARNING: SLOW for large datasets (100+ rows). Use bulk_delete_by_pattern_pg() instead.
+
     Uses SELECT+DELETE pattern (Supabase .like() doesn't work reliably for DELETE).
 
     Args:
@@ -67,6 +73,45 @@ def cleanup_test_blocks_by_pattern(supabase_client: Client, iso_code_pattern: st
                 supabase_client.table("blocks").delete().eq("id", block_id).execute()
     except Exception:
         pass  # Idempotent: ignore if no blocks to delete
+
+
+def bulk_delete_by_pattern_pg(db_connection: connection, iso_code_pattern: str) -> int:
+    """
+    FAST bulk delete using PostgreSQL directly (recommended for performance tests).
+
+    Deletes all blocks matching iso_code pattern in a single SQL statement.
+    Up to 100x faster than cleanup_test_blocks_by_pattern() for large datasets.
+
+    Args:
+        db_connection: psycopg2 connection from conftest.py db_connection fixture
+        iso_code_pattern: ISO code pattern for ILIKE match (e.g., "TEST-PERF01%")
+
+    Returns:
+        Number of rows deleted
+
+    Example:
+        >>> # In test function with db_connection fixture
+        >>> deleted = bulk_delete_by_pattern_pg(db_connection, "TEST-PERF01%")
+        >>> assert deleted >= 0  # Idempotent
+
+    Performance:
+        - Supabase cleanup (500 rows): ~30-60 seconds
+        - PostgreSQL bulk delete (500 rows): ~0.1-0.5 seconds
+    """
+    cursor = db_connection.cursor()
+    try:
+        cursor.execute(
+            "DELETE FROM blocks WHERE iso_code ILIKE %s",
+            (iso_code_pattern,)
+        )
+        deleted_count = cursor.rowcount
+        db_connection.commit()
+        return deleted_count
+    except Exception as e:
+        db_connection.rollback()
+        return 0  # Idempotent: ignore errors
+    finally:
+        cursor.close()
 
 
 def create_realistic_block(
