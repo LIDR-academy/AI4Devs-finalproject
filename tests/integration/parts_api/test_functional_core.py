@@ -216,7 +216,7 @@ def test_f05_archived_parts_excluded(supabase_client: Client):
         supabase_client.table("blocks").delete().like("iso_code", "TEST-F05%").execute()
     except Exception:
         pass
-    
+
     for block in [block_a, block_b]:
         supabase_client.table("blocks").insert(block).execute()
 

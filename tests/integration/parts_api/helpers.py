@@ -23,7 +23,6 @@ from uuid import uuid4
 from datetime import datetime
 
 from supabase import Client
-import psycopg2
 from psycopg2.extensions import connection
 
 
@@ -107,7 +106,7 @@ def bulk_delete_by_pattern_pg(db_connection: connection, iso_code_pattern: str) 
         deleted_count = cursor.rowcount
         db_connection.commit()
         return deleted_count
-    except Exception as e:
+    except Exception:
         db_connection.rollback()
         return 0  # Idempotent: ignore errors
     finally:

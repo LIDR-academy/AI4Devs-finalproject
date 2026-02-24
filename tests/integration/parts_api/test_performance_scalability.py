@@ -212,7 +212,7 @@ def test_perf03_stress_test_250_parts_p95_latency(
     assert p50 < 500, f"P50 latency {p50:.2f}ms exceeds 500ms (median target)"
     assert p95 < 750, f"P95 latency {p95:.2f}ms exceeds 750ms (stress target)"
 
-    print(f"\n📊 Stress Test Results (250 parts):")
+    print("\n📊 Stress Test Results (250 parts):")
     print(f"   P50: {p50:.2f}ms")
     print(f"   P95: {p95:.2f}ms")
     print(f"   P99: {p99:.2f}ms")
@@ -279,7 +279,7 @@ def test_perf04_memory_stability_under_load(
     # ASSERT: Memory stability
     assert memory_delta_mb < 50, f"Memory grew by {memory_delta_mb:.2f}MB (threshold: 50MB)"
 
-    print(f"\n💾 Memory Stability Test:")
+    print("\n💾 Memory Stability Test:")
     print(f"   Baseline: {baseline_size / (1024*1024):.2f}MB")
     print(f"   Final: {final_size / (1024*1024):.2f}MB")
     print(f"   Delta: {memory_delta_mb:.2f}MB")

@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useGLTF, Html, Lod } from '@react-three/drei';
+import { useGLTF, Html, Detailed } from '@react-three/drei';
 import { STATUS_COLORS } from '@/constants/dashboard3d.constants';
 import { FILTER_VISUAL_FEEDBACK } from '@/constants/parts.constants';
 import { LOD_DISTANCES } from '@/constants/lod.constants';
@@ -156,16 +156,13 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
     matchesFilters
   );
 
-  // Format opacity as string with 1 decimal place for consistent DOM attributes
-  const opacityStr = opacity.toFixed(1);
-
   // Create material props (shared across all LOD levels)
   const materialProps = {
     'data-testid': 'part-material',
     color,
     emissive,
     emissiveIntensity,
-    opacity: opacityStr,
+    opacity: opacity,
     transparent: true,
   };
 
@@ -220,7 +217,7 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
         </Html>
       )}
 
-      <Lod distances={LOD_DISTANCES}>
+      <Detailed distances={[...LOD_DISTANCES]}>
         {/* Level 0: Mid-poly geometry (0-20 units) */}
         <group data-lod-level="0" data-geometry-url={midPolyUrl}>
           <primitive
@@ -257,42 +254,35 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
           </primitive>
         </group>
 
-        {/* Level 2: BBox proxy (>50 units) - only if bbox exists */}
-        {part.bbox ? (
-          <group 
-            name={`part-${part.iso_code}`}
-            data-lod-level="2"
-            onClick={handleClick}
-            onPointerOver={() => setHovered(true)}
-            onPointerOut={() => setHovered(false)}
-          >
+        {/* Level 2: BBox proxy (>50 units) or low-poly fallback */}
+        <group 
+          name={`part-${part.iso_code}`}
+          data-lod-level="2"
+          onClick={handleClick}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+        >
+          {part.bbox ? (
             <BBoxProxy
               bbox={part.bbox}
               color={color}
-              opacity={parseFloat(opacityStr)}
+              opacity={opacity}
               wireframe={true}
             />
-          </group>
-        ) : (
-          // Fallback to Level 1 if no bbox
-          <group data-lod-level="2" data-geometry-url={part.low_poly_url}>
+          ) : (
             <primitive
-              name={`part-${part.iso_code}`}
               object={lowPolyScene}
               rotation-x={-Math.PI / 2}
               data-rotation-x={-Math.PI / 2}
-              onClick={handleClick}
-              onPointerOver={() => setHovered(true)}
-              onPointerOut={() => setHovered(false)}
             >
               <meshStandardMaterial
                 attach="material"
                 {...materialProps}
               />
             </primitive>
-          </group>
-        )}
-      </Lod>
+          )}
+        </group>
+      </Detailed>
     </group>
   );
 }
