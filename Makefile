@@ -1,4 +1,4 @@
-.PHONY: build build-prod up up-all down init-db test test-all test-infra test-unit test-integration test-storage shell clean front-install test-front front-shell front-dev help
+.PHONY: build build-prod up up-all down init-db setup-events migrate-t0503 migrate-all test test-all test-infra test-unit test-integration test-storage shell clean front-install test-front front-shell front-dev help
 
 # ===== DOCKER LIFECYCLE =====
 
@@ -38,17 +38,31 @@ init-db:
 setup-events:
 	docker compose run --rm backend python /app/infra/setup_events_table.py
 
+# Apply T-0503-DB migration (add low_poly_url and bbox columns)
+migrate-t0503:
+	@echo "📦 Applying T-0503-DB migration (low_poly_url + bbox)..."
+	docker compose run --rm backend python /app/infra/apply_t0503_migration.py
+
+# Apply all pending migrations (runs all SQL files in supabase/migrations/)
+migrate-all:
+	@echo "📦 Applying all Supabase migrations..."
+	@for file in supabase/migrations/*.sql; do \
+		echo "  Applying $$file..."; \
+		docker compose run --rm backend bash -c "PGPASSWORD=\$$DATABASE_PASSWORD psql -h db -U \$$DATABASE_USER -d \$$DATABASE_NAME -f /app/$$file" || exit 1; \
+	done
+	@echo "✅ All migrations applied successfully"
+
 # Run all tests inside Docker (backend + agent)
 test:
 	@echo "🧪 Running backend tests..."
 	docker compose run --rm backend pytest -v || true
 	@echo "🤖 Running agent tests..."
-	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py -v
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py -v
 
 # Run only agent tests (unit + agent-specific integration)
-# Note: Excludes backend-specific unit tests (validation_service, validation_report_service, upload_service_enqueue)
+# Note: Excludes backend-specific unit tests (validation_service, validation_report_service, upload_service_enqueue, parts_service)
 test-agent:
-	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py -v
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py --ignore=tests/unit/test_rhino_parser_service.py -v
 
 # Run only integration tests (backend)
 test-infra:
@@ -107,6 +121,8 @@ help:
 	@echo "  Backend:"
 	@echo "    make init-db       - Initialize DB infrastructure (buckets, policies)"
 	@echo "    make setup-events  - Create events table in Supabase (T-004-BACK)"
+	@echo "    make migrate-t0503 - Apply T-0503-DB migration (low_poly_url + bbox)"
+	@echo "    make migrate-all   - Apply all pending Supabase migrations"
 	@echo "    make test          - Run all tests (backend + agent)"
 	@echo "    make test-agent    - Run agent tests only"
 	@echo "    make test-unit     - Run backend unit tests only"

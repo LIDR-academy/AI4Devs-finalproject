@@ -247,6 +247,12 @@ def test_f06_consistent_ordering_created_at_desc(supabase_client: Client):
         - Order is stable across multiple requests
     """
     # ARRANGE: Insert blocks with staggered timestamps
+    # Clean up any existing test data first
+    try:
+        supabase_client.table("blocks").delete().like("iso_code", "TEST-F06-%").execute()
+    except Exception:
+        pass
+
     blocks = []
     for i in range(5):
         block_id = str(uuid4())
@@ -258,12 +264,6 @@ def test_f06_consistent_ordering_created_at_desc(supabase_client: Client):
             "created_at": (datetime.utcnow() + timedelta(seconds=i)).isoformat() + "Z"
         }
         blocks.append(block)
-
-        try:
-            supabase_client.table("blocks").delete().eq("id", block_id).execute()
-        except Exception:
-            pass
-
         supabase_client.table("blocks").insert(block).execute()
 
     # ACT: Request multiple times

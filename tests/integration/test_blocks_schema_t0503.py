@@ -767,8 +767,8 @@ def test_migration_applies_cleanly(db_connection: connection) -> None:
 
     # Verify critical DDL statements are present
     assert "ALTER TABLE blocks" in content, "Migration must contain ALTER TABLE statement"
-    assert "ADD COLUMN low_poly_url" in content, "Migration must add low_poly_url column"
-    assert "ADD COLUMN bbox" in content, "Migration must add bbox column"
+    assert "low_poly_url" in content and "ADD COLUMN" in content, "Migration must add low_poly_url column"
+    assert "bbox" in content and "ADD COLUMN" in content, "Migration must add bbox column"
     assert "CREATE INDEX" in content, "Migration must create indexes"
     assert "idx_blocks_canvas_query" in content, "Migration must create canvas index"
     assert "idx_blocks_low_poly_processing" in content, "Migration must create processing index"

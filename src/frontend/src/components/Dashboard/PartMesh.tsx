@@ -12,12 +12,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useGLTF, Html } from '@react-three/drei';
+import { useGLTF, Html, Lod } from '@react-three/drei';
 import { STATUS_COLORS } from '@/constants/dashboard3d.constants';
 import { FILTER_VISUAL_FEEDBACK } from '@/constants/parts.constants';
-// import { LOD_DISTANCES } from '@/constants/lod.constants';  // Temporarily unused (LOD disabled)
+import { LOD_DISTANCES } from '@/constants/lod.constants';
 import { usePartsStore } from '@/stores/parts.store';
-// import { BBoxProxy } from './BBoxProxy';  // Temporarily unused (LOD disabled)
+import { BBoxProxy } from './BBoxProxy';
 import type { PartMeshProps } from './PartsScene.types';
 
 /**
@@ -114,23 +114,23 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
   );
   
   // Load GLB geometries
-  // NOTE: Mid-poly LOD temporarily disabled
-  // const midPolyUrl = part.mid_poly_url ?? part.low_poly_url!;
-  // const { scene: midPolyScene } = useGLTF(midPolyUrl);
+  // When enableLod=false: only load low_poly (backward compatibility)
+  // When enableLod=true: load both mid_poly (or fallback to low_poly) and low_poly
+  const lowPolyUrl = part.low_poly_url!;
+  const midPolyUrl = enableLod ? (part.mid_poly_url ?? lowPolyUrl) : lowPolyUrl;
   
-  // Level 1: low-poly (currently only level used)
-  const { scene: lowPolyScene } = useGLTF(part.low_poly_url!);
+  const { scene: lowPolyScene } = useGLTF(lowPolyUrl);
+  const { scene: midPolyScene } = useGLTF(midPolyUrl);
 
   // Preload LOD assets on mount for smoother transitions
-  // NOTE: LOD preloading temporarily disabled
-  /*
   useEffect(() => {
     if (enableLod) {
-      useGLTF.preload(midPolyUrl);
-      useGLTF.preload(part.low_poly_url!);
+      if (part.mid_poly_url) {
+        useGLTF.preload(part.mid_poly_url);
+      }
+      useGLTF.preload(lowPolyUrl);
     }
-  }, [midPolyUrl, part.low_poly_url, enableLod]);
-  */
+  }, [part.mid_poly_url, lowPolyUrl, enableLod]);
 
   // Handle cursor change on hover
   useEffect(() => {
@@ -156,13 +156,16 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
     matchesFilters
   );
 
+  // Format opacity as string with 1 decimal place for consistent DOM attributes
+  const opacityStr = opacity.toFixed(1);
+
   // Create material props (shared across all LOD levels)
   const materialProps = {
     'data-testid': 'part-material',
     color,
     emissive,
     emissiveIntensity,
-    opacity,
+    opacity: opacityStr,
     transparent: true,
   };
 
@@ -202,25 +205,11 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
   }
 
   // LOD System: 3-level distance-based rendering
-  // NOTE: Lod component temporarily disabled - @react-three/drei export not found
-  // Using single-level low-poly rendering for now
+  // NOTE: Lod component from @react-three/drei
+  // Level 0 (<20u): mid_poly_url → Level 1 (20-50u): low_poly_url → Level 2 (>50u): BBoxProxy
   return (
     <group name={`part-${part.iso_code}`} position={position}>
-      <primitive
-        object={lowPolyScene}
-        rotation-x={-Math.PI / 2}
-        data-rotation-x={-Math.PI / 2}
-        onClick={handleClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <meshStandardMaterial
-          attach="material"
-          {...materialProps}
-        />
-      </primitive>
-
-      {/* Tooltip on hover or selection */}
+      {/* Tooltip on hover or selection (shared across all LOD levels) */}
       {(hovered || isSelected) && (
         <Html>
           <div style={TOOLTIP_STYLES}>
@@ -230,6 +219,80 @@ export function PartMesh({ part, position, enableLod = true }: PartMeshProps) {
           </div>
         </Html>
       )}
+
+      <Lod distances={LOD_DISTANCES}>
+        {/* Level 0: Mid-poly geometry (0-20 units) */}
+        <group data-lod-level="0" data-geometry-url={midPolyUrl}>
+          <primitive
+            name={`part-${part.iso_code}`}
+            object={midPolyScene}
+            rotation-x={-Math.PI / 2}
+            data-rotation-x={-Math.PI / 2}
+            onClick={handleClick}
+            onPointerOver={() => setHovered(true)}
+            onPointerOut={() => setHovered(false)}
+          >
+            <meshStandardMaterial
+              attach="material"
+              {...materialProps}
+            />
+          </primitive>
+        </group>
+
+        {/* Level 1: Low-poly geometry (20-50 units) */}
+        <group data-lod-level="1" data-geometry-url={part.low_poly_url}>
+          <primitive
+            name={`part-${part.iso_code}`}
+            object={lowPolyScene}
+            rotation-x={-Math.PI / 2}
+            data-rotation-x={-Math.PI / 2}
+            onClick={handleClick}
+            onPointerOver={() => setHovered(true)}
+            onPointerOut={() => setHovered(false)}
+          >
+            <meshStandardMaterial
+              attach="material"
+              {...materialProps}
+            />
+          </primitive>
+        </group>
+
+        {/* Level 2: BBox proxy (>50 units) - only if bbox exists */}
+        {part.bbox ? (
+          <group 
+            name={`part-${part.iso_code}`}
+            data-lod-level="2"
+            onClick={handleClick}
+            onPointerOver={() => setHovered(true)}
+            onPointerOut={() => setHovered(false)}
+          >
+            <BBoxProxy
+              bbox={part.bbox}
+              color={color}
+              opacity={parseFloat(opacityStr)}
+              wireframe={true}
+            />
+          </group>
+        ) : (
+          // Fallback to Level 1 if no bbox
+          <group data-lod-level="2" data-geometry-url={part.low_poly_url}>
+            <primitive
+              name={`part-${part.iso_code}`}
+              object={lowPolyScene}
+              rotation-x={-Math.PI / 2}
+              data-rotation-x={-Math.PI / 2}
+              onClick={handleClick}
+              onPointerOver={() => setHovered(true)}
+              onPointerOut={() => setHovered(false)}
+            >
+              <meshStandardMaterial
+                attach="material"
+                {...materialProps}
+              />
+            </primitive>
+          </group>
+        )}
+      </Lod>
     </group>
   );
 }
