@@ -69,7 +69,7 @@ export class GenerationApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `/generation/meditations`;
+        let urlPath = `${import.meta.env.VITE_API_BASE_URL}/generation/meditations`;
 
         const response = await this.request({
             path: urlPath,
@@ -116,7 +116,7 @@ export class GenerationApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `/generation/meditations/{meditationId}`;
+        let urlPath = `${import.meta.env.VITE_API_BASE_URL}/generation/meditations/{meditationId}`;
         urlPath = urlPath.replace(`{${"meditationId"}}`, encodeURIComponent(String(requestParameters['meditationId'])));
 
         const response = await this.request({
