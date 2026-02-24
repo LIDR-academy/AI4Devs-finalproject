@@ -10,13 +10,9 @@ import re
 import structlog
 from typing import List
 
-# Conditional imports for agent vs backend context
-try:
-    from constants import ISO_19650_LAYER_NAME_PATTERN, ISO_19650_PATTERN_DESCRIPTION
-    from models import LayerInfo
-except ModuleNotFoundError:
-    from src.agent.constants import ISO_19650_LAYER_NAME_PATTERN, ISO_19650_PATTERN_DESCRIPTION
-    from src.agent.models import LayerInfo
+# Direct imports from src.agent namespace
+from src.agent.constants import ISO_19650_LAYER_NAME_PATTERN, ISO_19650_PATTERN_DESCRIPTION
+from src.agent.models import LayerInfo
 
 # Import backend schema for validation errors
 try:

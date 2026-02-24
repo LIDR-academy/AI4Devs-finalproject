@@ -19,25 +19,15 @@ try:
 except ImportError:
     rhino3dm = None  # For test environment without rhino3dm installed
 
-# Conditional imports for agent vs backend context
-try:
-    from constants import (
-        GEOMETRY_CATEGORY_NAME,
-        MIN_VALID_VOLUME,
-        GEOMETRY_ERROR_INVALID,
-        GEOMETRY_ERROR_NULL,
-        GEOMETRY_ERROR_DEGENERATE_BBOX,
-        GEOMETRY_ERROR_ZERO_VOLUME,
-    )
-except ModuleNotFoundError:
-    from src.agent.constants import (
-        GEOMETRY_CATEGORY_NAME,
-        MIN_VALID_VOLUME,
-        GEOMETRY_ERROR_INVALID,
-        GEOMETRY_ERROR_NULL,
-        GEOMETRY_ERROR_DEGENERATE_BBOX,
-        GEOMETRY_ERROR_ZERO_VOLUME,
-    )
+# Direct imports from src.agent namespace
+from src.agent.constants import (
+    GEOMETRY_CATEGORY_NAME,
+    MIN_VALID_VOLUME,
+    GEOMETRY_ERROR_INVALID,
+    GEOMETRY_ERROR_NULL,
+    GEOMETRY_ERROR_DEGENERATE_BBOX,
+    GEOMETRY_ERROR_ZERO_VOLUME,
+)
 
 # Import backend schema for validation errors
 try:

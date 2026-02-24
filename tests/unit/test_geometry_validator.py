@@ -15,7 +15,13 @@ NOTE: These tests mock rhino3dm to avoid CMake build requirements.
 import pytest
 from unittest.mock import Mock
 from src.agent.services.geometry_validator import GeometryValidator
-from src.backend.schemas import ValidationErrorItem
+
+# Conditional import for schemas - backend container vs agent-worker container
+try:
+    from schemas import ValidationErrorItem
+except ModuleNotFoundError:
+    from src.backend.schemas import ValidationErrorItem
+
 from src.agent.constants import (
     GEOMETRY_CATEGORY_NAME,
     GEOMETRY_ERROR_INVALID,

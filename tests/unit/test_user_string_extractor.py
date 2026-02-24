@@ -9,15 +9,12 @@ import pytest
 from unittest.mock import Mock, MagicMock
 
 # Import service to test
-try:
-    from services.user_string_extractor import UserStringExtractor
-except ModuleNotFoundError:
-    from src.agent.services.user_string_extractor import UserStringExtractor
+from src.agent.services.user_string_extractor import UserStringExtractor
 
 # Import models
 try:
-    from models import UserStringCollection
-except ModuleNotFoundError:
+    from src.agent.models import UserStringCollection
+except ImportError:
     from src.agent.models import UserStringCollection
 
 

@@ -23,9 +23,13 @@ Date: 2026-02-19
 from uuid import uuid4
 from unittest.mock import Mock, MagicMock
 
-# This import WILL FAIL because parts_service.py does not exist yet (TDD-RED)
-from services.parts_service import PartsService
-from schemas import PartCanvasItem, PartsListResponse, BoundingBox
+# Conditional imports for backend container vs agent-worker container
+try:
+    from services.parts_service import PartsService
+    from schemas import PartCanvasItem, PartsListResponse, BoundingBox
+except ModuleNotFoundError:
+    from src.backend.services.parts_service import PartsService
+    from src.backend.schemas import PartCanvasItem, PartsListResponse, BoundingBox
 
 
 # ===== HAPPY PATH TESTS =====
