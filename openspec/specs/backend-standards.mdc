@@ -783,22 +783,49 @@ try {
 ### Patrones de Validación
 
 - **Validación de Entrada**: Validar todas las entradas en la capa de aplicación
-- **Usar Módulo Validator**: Centralizar lógica de validación en `src/application/validator.ts`
 - **Validar Antes de Procesar**: Siempre validar antes de ejecutar lógica de negocio
 
-```typescript
-import { validateCandidateData } from '../application/validator';
+#### ValidationPipe Global (NestJS) — Regla Crítica
 
-export async function addCandidate(req: Request, res: Response, next: NextFunction) {
-    try {
-        const validatedData = validateCandidateData(req.body);
-        const candidate = await candidateService.create(validatedData);
-        res.status(201).json(candidate);
-    } catch (error) {
-        next(error);
-    }
+El servidor configura un `ValidationPipe` global en `main.ts` con las opciones más estrictas:
+
+```typescript
+// apps/api/src/main.ts
+app.useGlobalPipes(new ValidationPipe({
+  whitelist: true,            // Elimina propiedades sin decoradores
+  forbidNonWhitelisted: true, // Devuelve HTTP 400 si hay propiedades no decoradas
+  transform: true,            // Transforma query strings a tipos primitivos
+}));
+```
+
+**Consecuencia directa**: **TODA** clase usada como DTO (`@Body()`, `@Query()`, `@Param()`) MUST declarar sus propiedades con decoradores de `class-validator`. Una propiedad sin decorador es tratada como "no permitida" y la petición devuelve `400 Bad Request`.
+
+Esto aplica especialmente a **Query DTOs**, que suelen omitirse por error:
+
+```typescript
+// ❌ INCORRECTO — query params ?page=1&limit=50 devuelven 400
+class PaginationQuery {
+  page?: string;
+  limit?: string;
+}
+
+// ✅ CORRECTO — decoradores obligatorios en todas las propiedades
+import { IsOptional, IsString } from 'class-validator';
+
+class PaginationQuery {
+  @IsOptional()
+  @IsString()
+  page?: string;
+
+  @IsOptional()
+  @IsString()
+  limit?: string;
 }
 ```
+
+**Regla nemotécnica**: Si una propiedad puede llegar en la petición HTTP, necesita al menos `@IsOptional()` o un decorador de tipo (`@IsString()`, `@IsNumber()`, etc.).
+
+Ver patrón completo en [`memory-bank/patterns/validation-patterns.md`](../../memory-bank/patterns/validation-patterns.md).
 
 ### Estándares de Logging
 

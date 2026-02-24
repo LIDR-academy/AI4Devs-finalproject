@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { QueueModule } from './queue/queue.module';
 import { MockModule } from './mock/mock.module';
 import { AdminModule } from './admin/admin.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -13,5 +14,6 @@ import { AdminModule } from './admin/admin.module';
     MockModule,
     AdminModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

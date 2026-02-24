@@ -1,8 +1,14 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
+import { IsOptional, IsString } from 'class-validator';
 import { AdminService } from './admin.service';
 
 class PaginationQuery {
+  @IsOptional()
+  @IsString()
   page?: string;
+
+  @IsOptional()
+  @IsString()
   limit?: string;
 }
 
