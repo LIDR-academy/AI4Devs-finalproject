@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     SUPABASE_URL: Optional[str] = None
     SUPABASE_KEY: Optional[str] = None
 
+    # T-1001-INFRA: CloudFront CDN for GLB files
+    CDN_BASE_URL: str = "https://tqduceanvyckaztgpcmw.supabase.co/storage/v1/object/public/processed-geometry"
+    USE_CDN: bool = False
+
     # Celery (Task Queue)
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
