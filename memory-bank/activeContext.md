@@ -1,40 +1,24 @@
 # Active Context
 
 ## Current Sprint
-Sprint 5 / US-010 - Visor 3D Web | PLANNING COMPLETE (2026-02-23) ✅
+Sprint 5 / US-010 - Visor 3D Web | IMPLEMENTATION STARTED (2026-02-24) ✅
 
 ## Active Ticket
-**US-010: Visor 3D Web de Piezas — SPECIFICATIONS COMPLETE** ✅
-- **Context:** Gap analysis executed, enriched proposal approved (4 tickets → 9 tickets, 8 SP → 15 SP), all technical specifications completed and ready for TDD RED phase implementation.
-- **Timestamp:** 2026-02-23 23:30
-- **Status:** READY FOR IMPLEMENTATION — All 9 technical specs created (~110KB docs), dependency chain documented, contracts defined
-
-### Gap Analysis Results (Prompt #149)
-- **5 Critical Gaps Identified:** (1) No testing ticket, (2) Backend RLS not documented, (3) Fallback strategy ambiguous, (4) Modal integration undefined, (5) Edge cases missing (WebGL unavailable, RLS violations, large models, mobile)
-- **Enrichment Applied:** +5 tickets (T-1001 CDN, T-1003 Navigation, T-1006 ErrorBoundary, T-1008 MetadataSidebar, T-1009 Testing), +7 SP justified by security (RLS enforcement + rate limiting + audit logs), performance (CDN <200ms + preload adjacent), UX (prev/next navigation + metadata sidebar + keyboard shortcuts)
-- **Approval:** User confirmed "Apruebo la propuesta, naturalmente"
-
-### Technical Specifications Created
-**All 9 specs following US-005 template structure:**
-1. **T-1001-INFRA** (2 SP): CloudFront CDN, CloudFormation template 240 lines YAML, cache policy 24h TTL Brotli, monitoring 3 alarms, cost ~$26/month
-2. **T-1002-BACK** (3 SP): Get Part Detail API, PartDetailResponse Pydantic schema 15 fields, RLS enforcement users/superusers, presigned URLs 5min TTL, error matrix 400/403→404/500, 12 unit + 8 integration tests
-3. **T-1003-BACK** (1 SP): Part Navigation API, AdjacentPartsResponse prev_id/next_id, algorithm fetch filtered IDs ordered created_at, Redis caching consideration, 6 unit + 8 integration tests
-4. **T-1004-FRONT** (3 SP): PartViewerCanvas component, camera fov 45° position [3,3,3], 3-point lighting key/fill/rim, OrbitControls + Stage + touch gestures, 8 component tests + manual
-5. **T-1005-FRONT** (3 SP): ModelLoader component, useGLTF + BBoxProxy fallback if low_poly_url NULL, auto-center/scale algorithm, preload adjacent async, 3 error states, 10 component tests + manual
-6. **T-1006-FRONT** (2 SP): ViewerErrorBoundary class component, componentDidCatch + WebGL availability check, timeout 30s, 5 error types, DefaultErrorFallback + WebGLUnavailableFallback UIs, 7 component tests
-7. **T-1007-FRONT** (3 SP): Modal Integration refactor, 3 tabs viewer/metadata/validation, keyboard shortcuts ← → ESC, adjacentParts navigation state from T-1003, integration ViewerErrorBoundary>PartViewerCanvas>ModelLoader + MetadataSidebar + ValidationReportView reused, 10 component tests
-8. **T-1008-FRONT** (1 SP): MetadataSidebar component, 5 sections 10+ fields, copy-to-clipboard button plain text format, calculations dimensions/file size/date formatting, 8 component tests
-9. **T-1009-TEST** (2 SP): Integration Testing, 15 tests (5 rendering + 3 loading + 3 errors + 2 controls + 2 accessibility) + 3 performance benchmarks <5s GLB load/60 FPS/500ms render, test helpers, .env.test, jsdom limitation documented
-
-### Dependencies Chain
-T-1001 (CDN) → T-1002/T-1003 (Backend APIs) → T-1004/T-1005/T-1006 (Canvas+Loader+ErrorBoundary) → T-1007/T-1008 (Modal+Metadata) → T-1009 (Integration Tests)
-
-### Recommended Next Action
-1. **Team Handoff Meeting** — Present enriched proposal, review dependency chain, assign tickets (DevOps/Backend/Frontend×2/QA)
-2. **Start T-1001-INFRA** — Deploy CloudFormation CDN stack (2 hours, no blockers, DevOps can start immediately)
-3. **Create Git Branch** — `git checkout -b feature/US-010-visor-3d-web`
+**T-1002-BACK: Get Part Detail API — READY FOR TDD-RED** ⏸️
+- **Context:** Próximo ticket crítico en US-010 dependency chain. Bloquea T-1004-FRONT (Viewer Canvas). Requiere: T-1001-INFRA ✅ DONE + T-0503-DB ✅ DONE.
+- **Timestamp:** 2026-02-24 12:00
+- **Status:** AWAITING ENRICHMENT — Spec exists (docs/US-010/T-1002-BACK-TechnicalSpec.md, 3 SP), puede iniciar workflow Step 1/5 (Enrichment validation)
 
 ## Recently Completed
+- **T-1001-INFRA: GLB CDN Optimization** — ✅ COMPLETE (2026-02-24 12:00) | TDD Workflow Complete (Prompts #151-154)
+  - **TDD Phases:** ENRICH (spec audited 99/100, no modifications) → RED (5 tests failing correctly) → GREEN (implementation minimal) → REFACTOR (code cleanup + docs)
+  - **Implementation:** Backend settings CDN_BASE_URL + USE_CDN added to config.py. URL transformation logic extracted to PartsService._apply_cdn_transformation() private method (48 lines with early returns pattern + explanatory comments). Tests refactored with pytest fixtures (mock_row_s3_url, mock_row_null_url, mock_row_cdn_url, parts_service).
+  - **Test Results:** 4/4 active tests PASSING (ENV-01 ✓, ENV-02 ✓, TRANSFORM-02 ✓, TRANSFORM-03 ✓), 1 test SKIPPED (TRANSFORM-01, feature toggle OFF), 5 tests SKIPPED (TestCDNLiveEndpoint, require CloudFormation deployment), 12/12 unit tests parts_service PASSING (zero regression).
+  - **Files Modified:** src/backend/config.py (+2 settings), src/backend/services/parts_service.py (+48 lines method extraction), tests/integration/test_cdn_config.py (+70 lines fixtures).
+  - **Refactor Quality:** Clean Architecture pattern maintained, DRY principle applied (fixture consolidation eliminated 90+ lines duplication), early return pattern for readability, Google Style docstrings.
+  - **Documentation Updated:** docs/09-mvp-backlog.md (T-1001 marked [DONE] with completion details), memory-bank/productContext.md (CDN feature added to Core Features), memory-bank/progress.md (Sprint 5 entry), prompts.md (#154 REFACTOR entry).
+  - **Next Step:** CloudFormation deployment (optional post-MVP, feature toggle allows direct S3 in dev). Proceed to T-1002-BACK enrichment.
+
 - **US-005: Dashboard 3D Interactivo de Piezas** — ✅ COMPLETE & AUDITED (2026-02-23) | [Prompt #147]
   - **Scope:** 11 tickets técnicos (35/35 SP, 100% complete) - T-0500-INFRA, T-0501-BACK, T-0502-AGENT, T-0503-DB, T-0504-FRONT, T-0505-FRONT, T-0506-FRONT, T-0507-FRONT, T-0508-FRONT, T-0509-TEST-FRONT, T-0510-TEST-BACK
   - **Acceptance Criteria:** 6/6 cumplidos — 3D Rendering ✓, Part Selection ✓, Filtering ✓, Empty State ✓, RLS Security ✓, LOD Performance ✓
