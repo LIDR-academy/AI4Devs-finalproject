@@ -16,10 +16,15 @@ Tests:
   4. File not found returns 404, no block created
 """
 
+from pathlib import Path
 from fastapi.testclient import TestClient
 from main import app
 
 client = TestClient(app)
+
+# Load real .3dm fixture for magic bytes validation
+FIXTURE_DIR = Path(__file__).parent.parent / "fixtures"
+test_3dm_content = (FIXTURE_DIR / "test-model.3dm").read_bytes()
 
 
 def _cleanup_pending_blocks(supabase_client, iso_prefix: str):
@@ -48,7 +53,6 @@ def test_confirm_upload_returns_task_id(supabase_client):
     # Arrange: Upload test file to storage
     bucket_name = "raw-uploads"
     test_file_key = "test/t029_enqueue_test.3dm"
-    test_content = b"Mock .3dm content for T-029 enqueue test"
 
     file_id = "029e8400-e29b-41d4-a716-446655440029"
 
@@ -61,7 +65,7 @@ def test_confirm_upload_returns_task_id(supabase_client):
 
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
-        file=test_content,
+        file=test_3dm_content,
         file_options={"content-type": "application/x-rhino"}
     )
 
@@ -104,7 +108,6 @@ def test_confirm_upload_creates_block_record(supabase_client):
     # Arrange
     bucket_name = "raw-uploads"
     test_file_key = "test/t029_block_test.3dm"
-    test_content = b"Mock .3dm content for T-029 block test"
 
     file_id = "029eaaaa-bbbb-41d4-a716-446655440029"
 
@@ -117,7 +120,7 @@ def test_confirm_upload_creates_block_record(supabase_client):
 
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
-        file=test_content,
+        file=test_3dm_content,
         file_options={"content-type": "application/x-rhino"}
     )
 

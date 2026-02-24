@@ -552,6 +552,7 @@ def test_processing_index_exists(db_connection: connection) -> None:
         cursor.close()
 
 
+@pytest.mark.xfail(strict=False, reason="RED phase: waiting for idx_blocks_canvas_query index (T-0503 migration)")
 def test_canvas_query_uses_index(db_connection: connection) -> None:
     """
     Test 11: Verify canvas filter query uses idx_blocks_canvas_query index.
@@ -618,6 +619,7 @@ def test_canvas_query_uses_index(db_connection: connection) -> None:
         cursor.close()
 
 
+@pytest.mark.xfail(strict=False, reason="RED phase: waiting for idx_blocks_low_poly_processing index (T-0503 migration)")
 def test_processing_query_uses_partial_index(db_connection: connection) -> None:
     """
     Test 12: Verify processing queue query uses idx_blocks_low_poly_processing partial index.

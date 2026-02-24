@@ -150,7 +150,7 @@ def test_f03_parts_include_bbox_jsonb(supabase_client: Client):
     }
 
     try:
-        supabase_client.table("blocks").delete().eq("id", test_id).execute()
+        supabase_client.table("blocks").delete().like("iso_code", "TEST-F03%").execute()
     except Exception:
         pass
 
@@ -212,11 +212,12 @@ def test_f05_archived_parts_excluded(supabase_client: Client):
     block_a = {"id": str(uuid4()), "iso_code": "TEST-F05-A-001", "status": "completed", "tipologia": "capitel", "is_archived": False}
     block_b = {"id": str(uuid4()), "iso_code": "TEST-F05-B-001", "status": "completed", "tipologia": "columna", "is_archived": True}
 
+    try:
+        supabase_client.table("blocks").delete().like("iso_code", "TEST-F05%").execute()
+    except Exception:
+        pass
+    
     for block in [block_a, block_b]:
-        try:
-            supabase_client.table("blocks").delete().eq("id", block["id"]).execute()
-        except Exception:
-            pass
         supabase_client.table("blocks").insert(block).execute()
 
     # ACT

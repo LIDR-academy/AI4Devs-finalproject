@@ -10,11 +10,16 @@ Test Coverage:
 - Event creation in database
 - Celery task dispatch (mocked for MVP)
 """
+from pathlib import Path
 from fastapi.testclient import TestClient
 from main import app
 from supabase import Client
 
 client = TestClient(app)
+
+# Load real .3dm fixture for magic bytes validation
+FIXTURE_DIR = Path(__file__).parent.parent / "fixtures"
+test_3dm_content = (FIXTURE_DIR / "test-model.3dm").read_bytes()
 
 
 def test_confirm_upload_happy_path(supabase_client: Client):
@@ -33,7 +38,6 @@ def test_confirm_upload_happy_path(supabase_client: Client):
     # ARRANGE: Create a test file in Supabase Storage
     bucket_name = "raw-uploads"
     test_file_key = "test/confirm_upload_test.3dm"
-    test_content = b"Mock .3dm file content for testing"
     file_id = "550e8400-e29b-41d4-a716-446655440000"
 
     # Clean up: Remove test file if it exists from previous run
@@ -55,7 +59,7 @@ def test_confirm_upload_happy_path(supabase_client: Client):
     # Upload test file to Supabase Storage
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
-        file=test_content,
+        file=test_3dm_content,
         file_options={"content-type": "application/x-rhino"}
     )
 
@@ -162,7 +166,6 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
     # ARRANGE: Upload test file
     bucket_name = "raw-uploads"
     test_file_key = "test/event_test.3dm"
-    test_content = b"Event creation test content"
     file_id = "660e8400-e29b-41d4-a716-446655440000"
 
     # Clean up: Remove test file if it exists from previous run
@@ -183,7 +186,7 @@ def test_confirm_upload_creates_event_record(supabase_client: Client):
 
     supabase_client.storage.from_(bucket_name).upload(
         path=test_file_key,
-        file=test_content,
+        file=test_3dm_content,
         file_options={"content-type": "application/x-rhino"}
     )
     payload = {

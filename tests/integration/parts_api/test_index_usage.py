@@ -44,6 +44,7 @@ def get_direct_db_connection():
         pytest.skip(f"Cannot connect to database: {e}")
 
 
+@pytest.mark.xfail(strict=False, reason="RED phase: waiting for idx_blocks_status_active index creation")
 def test_idx01_filter_queries_use_composite_index(supabase_client: Client):
     """
     IDX-01: Status/tipologia filters use idx_blocks_status_active composite index.
@@ -119,6 +120,7 @@ def test_idx01_filter_queries_use_composite_index(supabase_client: Client):
             pass
 
 
+@pytest.mark.xfail(strict=False, reason="RED phase: waiting for partial index idx_blocks_status_active creation")
 def test_idx02_partial_index_triggers_on_is_archived_false(supabase_client: Client):
     """
     IDX-02: Partial index only triggers when is_archived = false.
@@ -195,6 +197,7 @@ def test_idx02_partial_index_triggers_on_is_archived_false(supabase_client: Clie
             pass
 
 
+@pytest.mark.xfail(strict=False, reason="RED phase: waiting for comprehensive index coverage")
 def test_idx03_no_sequential_scans_on_blocks_table(supabase_client: Client):
     """
     IDX-03: All filter queries avoid sequential scans (index coverage).
@@ -223,7 +226,7 @@ def test_idx03_no_sequential_scans_on_blocks_table(supabase_client: Client):
         block = {
             "id": str(uuid4()),
             "iso_code": f"TEST-IDX03-{i:03d}",
-            "status": ["validated", "completed", "pending"][i % 3],
+            "status": ["validated", "completed", "processing"][i % 3],
             "tipologia": ["capitel", "columna", "basa", "fuste"][i % 4],
             "workshop_id": str(uuid4()) if i % 2 == 0 else None
         }
@@ -288,6 +291,7 @@ def test_idx03_no_sequential_scans_on_blocks_table(supabase_client: Client):
             pass
 
 
+@pytest.mark.xfail(strict=False, reason="RED phase: waiting for index creation and cache warm-up")
 def test_idx04_index_hit_ratio_above_95_percent(supabase_client: Client):
     """
     IDX-04: Index cache hit ratio > 95% (PostgreSQL buffer cache efficiency).

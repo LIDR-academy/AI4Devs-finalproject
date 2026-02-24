@@ -55,22 +55,27 @@ migrate-all:
 # Run all tests inside Docker (backend + agent)
 test:
 	@echo "🧪 Running backend tests..."
-	docker compose run --rm backend pytest -v || true
+	docker compose run --rm backend pytest -v --ignore=tests/integration/test_validate_file_task.py --ignore=tests/integration/test_user_strings_e2e.py --ignore=tests/integration/test_celery_worker.py || true
 	@echo "🤖 Running agent tests..."
-	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py -v
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py tests/integration/test_celery_worker.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py -v
 
 # Run only agent tests (unit + agent-specific integration)
 # Note: Excludes backend-specific unit tests (validation_service, validation_report_service, upload_service_enqueue, parts_service)
 test-agent:
-	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py --ignore=tests/unit/test_rhino_parser_service.py -v
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py tests/integration/test_celery_worker.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py --ignore=tests/unit/test_rhino_parser_service.py -v
 
 # Run only integration tests (backend)
 test-infra:
-	docker compose run --rm backend pytest tests/integration/ -v
+	docker compose run --rm backend pytest tests/integration/ --ignore=tests/integration/test_validate_file_task.py --ignore=tests/integration/test_user_strings_e2e.py --ignore=tests/integration/test_celery_worker.py -v
 
 # Run only unit tests (backend)
 test-unit:
 	docker compose run --rm backend pytest tests/unit/ -v
+
+# Run backend tests quickly (unit + core integration, no slow tests)
+test-backend-quick:
+	@echo "🧪 Running backend tests (fast)..."
+	docker compose run --rm backend pytest tests/unit/ tests/integration/test_blocks_schema_t0503.py tests/integration/test_block_status_enum_extension.py tests/integration/test_storage_config.py tests/integration/parts_api/ -m "not slow" -v
 
 # Run specific integration test
 test-storage:
