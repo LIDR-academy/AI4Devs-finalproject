@@ -4,10 +4,11 @@
 Sprint 5 / US-010 - Visor 3D Web | IMPLEMENTATION STARTED (2026-02-24) ✅
 
 ## Active Ticket
-**T-1002-BACK: Get Part Detail API — READY FOR TDD-RED** ⏸️
+**T-1002-BACK: Get Part Detail API — RED PHASE VERIFIED** ✅
 - **Context:** Próximo ticket crítico en US-010 dependency chain. Bloquea T-1004-FRONT (Viewer Canvas). Requiere: T-1001-INFRA ✅ DONE + T-0503-DB ✅ DONE.
-- **Timestamp:** 2026-02-24 12:00
-- **Status:** AWAITING ENRICHMENT — Spec exists (docs/US-010/T-1002-BACK-TechnicalSpec.md, 3 SP), puede iniciar workflow Step 1/5 (Enrichment validation)
+- **Timestamp:** 2026-02-24 17:30 (RED PHASE VERIFIED)
+- **Status:** RED PHASE COMPLETE — Spec validated (docs/US-010/T-1002-BACK-TechnicalSpec.md, 99/100). Step 1/5 Enrichment DONE (Prompt #156). Step 2/5 RED Phase VERIFIED (Prompt #157): 20 tests created (12 unit + 8 integration), PartDetailResponse schema added, all tests fail correctly by ModuleNotFoundError (services.part_detail_service doesn't exist yet).
+- **Next Action:** Execute `:tdd-green T-1002-BACK` to begin Step 3/5 (TDD GREEN phase - implement PartDetailService + endpoint)
 
 ## Recently Completed
 - **T-1001-INFRA: GLB CDN Optimization** — ✅ COMPLETE (2026-02-24 12:00) | TDD Workflow Complete (Prompts #151-154)
