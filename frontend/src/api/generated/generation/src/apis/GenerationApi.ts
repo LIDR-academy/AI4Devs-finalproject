@@ -46,21 +46,6 @@ export interface GetMeditationStatusRequest {
  *
  */
 export class GenerationApi extends runtime.BaseAPI {
-  /**
-   * Asegura que this.basePath apunte SIEMPRE al backend configurado.
-   * - Lee import.meta.env.VITE_API_BASE_URL (p.ej., "http://localhost:8080").
-   * - Normaliza para que NO termine en "/".
-   * - Evita tener que tocar Configuration({ basePath }).
-   */
-  private ensureBasePath = (): void => {
-    const rawBase =
-      (import.meta as any)?.env?.VITE_API_BASE_URL ?? 'http://localhost:8080';
-    const base = String(rawBase).replace(/\/+$/, ''); // sin barra al final
-    // BaseAPI expone basePath; lo reasignamos en caliente si cambia
-    if ((this as any).basePath !== base) {
-      (this as any).basePath = base;
-    }
-  };
 
   /**
    * Generate professional meditation content with:
@@ -113,15 +98,9 @@ export class GenerationApi extends runtime.BaseAPI {
       }
     }
 
-    // Asegura basePath en cada request (local, Vercel, etc.)
-    this.ensureBasePath();
-
-    // Path RELATIVO (nunca metas import.meta.env aquí)
-    const path = `/api/v1/generation/meditations`;
-
     const response = await this.request(
       {
-        path, // el runtime hará basePath + path
+        path: `/generation/meditations`,
         method: 'POST',
         headers: headerParameters,
         query: queryParameters,
@@ -179,11 +158,7 @@ export class GenerationApi extends runtime.BaseAPI {
       }
     }
 
-    // Asegura basePath
-    this.ensureBasePath();
-
-    // Path RELATIVO con sustitución del parámetro
-    let path = `/api/v1/generation/meditations/{meditationId}`;
+    let path = `/generation/meditations/{meditationId}`;
     path = path.replace(
       `{${'meditationId'}}`,
       encodeURIComponent(String((requestParameters as any)['meditationId']))
@@ -191,7 +166,7 @@ export class GenerationApi extends runtime.BaseAPI {
 
     const response = await this.request(
       {
-        path, // basePath + path
+        path,
         method: 'GET',
         headers: headerParameters,
         query: queryParameters,
