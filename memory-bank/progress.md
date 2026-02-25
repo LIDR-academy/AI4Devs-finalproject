@@ -69,6 +69,10 @@
 - Unit Tests: 67 (12 parts_service ✅ + 8 validation_service + 9 upload_service_enqueue + 10 validation_report_service + 28 previous)
 - Integration Tests: 60 (13 T-0510 Canvas API ✅ + 47 previous: 20 parts_api ✅ + 5 get_validation_status + 4 confirm_upload_enqueue + 3 validation_report_persistence + 15 previous)
 
+### Sprint 5 / US-010 (in progress)
+- T-1001-INFRA: GLB CDN Optimization — DONE 2026-02-24 (TDD complete ENRICH→RED→GREEN→REFACTOR, 16/16 tests PASS: 4 integration + 12 unit, Backend CDN_BASE_URL + USE_CDN settings, PartsService._apply_cdn_transformation() method extraction, pytest fixtures, zero regression, production-ready) [Prompts #151-155]
+- T-1002-BACK: Get Part Detail API — DONE 2026-02-25 (TDD complete ENRICH→RED→GREEN→REFACTOR, **20/20 tests PASS** (12 unit + 8 integration), PartDetailService (122 lines RLS logic), parts_detail router (67 lines error mapping), UUID validation strict (regex + UUID class), Response transformation with schema handling, INT-05 fix (uuid4 fixture), Enhanced docstrings Google Style, Clean Architecture, DRY principle, Files: 2 created + 2 modified, Ready for T-1004-FRONT dependency) [Prompts #159-160 RED→GREEN, #161 REFACTOR]
+
 ## Status
 - Memory Bank: Active
 - Feasibility Phase: CLOSED (archived)

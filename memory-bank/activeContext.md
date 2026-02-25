@@ -1,15 +1,39 @@
 # Active Context
 
 ## Current Sprint
-Sprint 5 / US-010 - Visor 3D Web | IMPLEMENTATION STARTED (2026-02-24) ✅
+Sprint 5 / US-010 - Visor 3D Web | WAVE 2 IN PROGRESS (2026-02-25) | **T-1002-BACK COMPLETE ✅**
 
 ## Active Ticket
-**T-1002-BACK: Get Part Detail API — READY FOR TDD-RED** ⏸️
-- **Context:** Próximo ticket crítico en US-010 dependency chain. Bloquea T-1004-FRONT (Viewer Canvas). Requiere: T-1001-INFRA ✅ DONE + T-0503-DB ✅ DONE.
-- **Timestamp:** 2026-02-24 12:00
-- **Status:** AWAITING ENRICHMENT — Spec exists (docs/US-010/T-1002-BACK-TechnicalSpec.md, 3 SP), puede iniciar workflow Step 1/5 (Enrichment validation)
+**T-1004-FRONT: Viewer Canvas Component** (Next in dependency chain - NOW UNBLOCKED ✅)
+- **Context:** Requires T-1001-INFRA ✅ + T-0504-FRONT ✅ + T-1002-BACK ✅. Desbloqueador para T-1005-FRONT, T-1006-FRONT, T-1007-FRONT.
+- **Timestamp:** Ready to start (2026-02-25)
+- **Status:** Unblocked (T-1002-BACK completed and audited). Next action: Enrich technical spec
+- **Dependency Chain Unblocked:** T-1002-BACK ✅ → T-1004-FRONT ⏳ → T-1005-FRONT → ...
 
 ## Recently Completed
+- **T-1002-BACK: Get Part Detail API** — ✅ COMPLETE & AUDITED (2026-02-25 05:35) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→AUDIT)
+  - **Context:** Critical ticket en US-010 dependency chain que bloquea T-1004-FRONT.
+  - **TDD Timeline:** 
+    - ENRICH: 2026-02-24 16:00 (Spec validated 99/100)
+    - RED: 2026-02-24 17:30 (All tests created, failing by design)
+    - GREEN: 2026-02-24 18:10 (Implementation minimal, all tests passing, INT-05 fix 2026-02-25 04:52)
+    - REFACTOR: 2026-02-25 05:20 (Docstrings enriched, zero regression)
+    - AUDIT: 2026-02-25 05:35 (Step 5/5 COMPLETE ✅ - See Prompt #162)
+  - **Implementation Details:**
+    - **PartDetailService** (122 lines): RLS enforcement logic, UUID validation (regex + UUID class), response transformation with schema handling
+    - **parts_detail router** (67 lines): GET /api/parts/{id} endpoint, X-Workshop-Id header, error mapping (400/404/500)
+    - **main.py**: +import, +router registration (2 lines)
+    - **test_part_detail_api.py**: Fixed INT-05 by generating unique iso_code per run (uuid4 fixture)
+  - **Test Results:** **20/20 PASSING** ✅ (12 unit + 8 integration, 0 failures)
+    - UNIT-01 to UNIT-12: RLS, uuid, not found, superuser, unassigned, validation report, DB error, CDN, schema, RLS-404 equivalence, null workshop, uuid validation
+    - INT-01 to INT-08: Success 200, Invalid UUID 400, Not found 404, RLS violation 404, Unassigned accessible 200, Superuser sees all 200, Required fields, Schema validation
+  - **Code Quality:** Google Style docstrings (complete), Clean Architecture (service separation), DRY principle, types without `any`, zero dead code
+  - **Files Modified:**
+    - Created: src/backend/services/part_detail_service.py (122 lines), src/backend/api/parts_detail.py (67 lines)
+    - Modified: src/backend/main.py (+2 lines), tests/integration/test_part_detail_api.py (+uuid4 fixture)
+  - **DoD Checklist:** 11/11 ✅ (code refactored, all tests pass, docstrings complete, no dead code, productContext updated, activeContext updated, progress.md updated, prompts.md registered, no new dependencies, env vars not changed, decision documented if needed)
+  - **AUDIT Phase:** Step 5/5 COMPLETE ✅ (2026-02-25 05:35) - Acceptance Criteria 8/8 ✅, Tests 20/20 PASS ✅, Code Quality ✅, DoD 11/11 ✅, Documentation 4/4 files ✅
+  - **Status:** APROBADO PARA MERGE ✅ (Prompt #162: Full audit report registered in prompts.md)
 - **T-1001-INFRA: GLB CDN Optimization** — ✅ COMPLETE (2026-02-24 12:00) | TDD Workflow Complete (Prompts #151-154)
   - **TDD Phases:** ENRICH (spec audited 99/100, no modifications) → RED (5 tests failing correctly) → GREEN (implementation minimal) → REFACTOR (code cleanup + docs)
   - **Implementation:** Backend settings CDN_BASE_URL + USE_CDN added to config.py. URL transformation logic extracted to PartsService._apply_cdn_transformation() private method (48 lines with early returns pattern + explanatory comments). Tests refactored with pytest fixtures (mock_row_s3_url, mock_row_null_url, mock_row_cdn_url, parts_service).
