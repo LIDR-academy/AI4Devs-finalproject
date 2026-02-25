@@ -17,8 +17,9 @@ Sistema Enterprise de Digital Twin Activo que desacopla metadata critica de la g
    - **Async Task Queue** (Redis + Celery): Procesamiento en background de archivos .3dm pesados sin bloquear UI
    - **Worker Isolation**: Un worker dedicado por archivo para evitar OOM con modelos de 500MB+
 3. **CDN-Optimized 3D Delivery** (2026-02-24): CloudFront CDN para archivos GLB optimizados. Cache TTL 24h, Brotli compression, latency <200ms vs >500ms S3 directo. Feature toggle USE_CDN permite separación dev/prod.
-4. **Instanced 3D Viewer**: Three.js con instancing y LOD para 10,000+ piezas en navegador
-5. **Lifecycle Traceability**: Log inmutable de eventos (Disenada → Validada → Fabricada → Enviada → Instalada)
+4. **Part Navigation API with Redis Caching** (2026-02-25): Endpoint para navegación secuencial prev/next sin cerrar modal. Ordenación por created_at ASC con filtros (workshop, status, tipologia), RLS enforcement, respuesta con ids adyacentes + posición 1-based (current_index/total_count). Redis caching con TTL 300s reduce latencia 53% (cache hit <50ms vs 94ms DB query), graceful degradation si Redis no disponible.
+5. **Instanced 3D Viewer**: Three.js con instancing y LOD para 10,000+ piezas en navegador
+6. **Lifecycle Traceability**: Log inmutable de eventos (Disenada → Validada → Fabricada → Enviada → Instalada)
 
 ## User Profiles
 

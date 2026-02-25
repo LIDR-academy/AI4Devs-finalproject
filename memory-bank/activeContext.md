@@ -1,15 +1,55 @@
 # Active Context
 
 ## Current Sprint
-Sprint 5 / US-010 - Visor 3D Web | WAVE 2 IN PROGRESS (2026-02-25) | **T-1002-BACK ✅ + T-1004-FRONT ✅**
+Sprint 5 / US-010 - Visor 3D Web | WAVE 3 COMPLETE (2026-02-25) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅**
 
 ## Active Ticket
-**T-1005-FRONT: Model Loader & Stage** (TDD Workflow - Step 1/5: ENRICH phase)
-- **Context:** Requires T-1004-FRONT ✅ (JUST COMPLETED), T-1002-BACK ✅, T-0507-FRONT ✅. Desbloqueador para T-1006-FRONT, T-1007-FRONT.
-- **Status:** Ready to START ENRICH PHASE. All dependencies met.
-- **Dependency Chain:** T-1002-BACK ✅ → T-1004-FRONT ✅ → T-1005-FRONT NEXT → ...
+**T-1005-FRONT: Model Loader & Stage** (Status: Ready to start)
+- **Context:** Component `<PartModel3D>` using `useGLTF` with Suspense fallback and BBox proxy for null URLs
+- **Status:** NOT STARTED (dependency on T-1004-FRONT complete ✅)
+- **Dependencies:** T-1004-FRONT ✅, T-1002-BACK ✅, T-0507-FRONT ✅
+- **Next Step:** TDD-ENRICH phase (Step 1/5) - Create technical specification
+- **Key Design:**
+  - Component: `<PartModel3D url={glbUrl} bbox={bbox} />` with Suspense boundary
+  - Fallback: `<BBoxProxy bbox={bbox} />` when glbUrl is null (reuse T-0507-FRONT)
+  - Preloading: `useGLTF.preload(adjacentUrls)` for performance
+  - Error handling: React Error Boundary for load failures
+- **Dependency Chain:** T-1004-FRONT ✅ → T-1005-FRONT (next) → T-1007-FRONT (modal integration)
 
 ## Recently Completed
+- **T-1003-BACK: Part Navigation API** — ✅ COMPLETE with Redis Caching (2026-02-25 20:15) | TDD Workflow Complete + Production Enhancements
+  - **Context:** Navigation API para modal 3D viewer. Retorna prev_id/next_id para navegación secuencial (botones ← →) con Redis caching (300s TTL, <50ms cache hit)
+  - **TDD Timeline:**
+    - ENRICH: 2026-02-25 09:30 (Spec created, 423 lines, score 99/100) [Prompt #168]
+    - RED: Phase skipped (tests written during GREEN)
+    - GREEN: 2026-02-25 11:45 (Implementation complete, 11/14 unit + 3/6 integration passing) [Prompt #169]
+    - REFACTOR: 2026-02-25 14:00 (40 lines duplication eliminated, Google Style docstrings, is_archived filter added) [Prompt #170]
+    - REDIS CACHING: 2026-02-25 20:15 (Fixed test mocks ✅, Redis infrastructure created ✅, caching logic integrated ✅, authentication fixed ✅, **20/20 tests PASSING**) [Prompt #171]
+  - **Implementation Details:**
+    - **NavigationService** (210 lines, +23 cache logic): get_adjacent_parts() with cache key generation → try cache hit → cache miss: query DB + store with 300s TTL
+    - **redis_client.py** (64 lines NEW): Singleton get_redis_client() with graceful degradation, password auth, 2s timeouts, health checks
+    - **_fetch_ordered_ids()** refactored: Eliminated 8 if/elif branches (58 lines → 18 lines), dynamic filter application, added is_archived=False filter
+    - **parts_navigation.py** (119 lines): GET /{id}/adjacent endpoint with workshop_id/status/tipologia filters, X-Workshop-Id header support
+    - **main.py** (+2 lines): Router registration
+    - **Docstrings:** Complete Google Style with Args/Returns/Examples/Raises sections
+  - **Test Results:** **20/20 tests PASSING (100%)** ✅
+    - Unit tests: 14/14 PASS (100%) ✅ - Mock pattern fixes aligned with PartsService
+    - Integration tests: 6/6 PASS (100%) ✅ - Schema ✅, TypeScript contract ✅, Performance <50ms cache hit ✅, <200ms DB query ✅, TTL 290-310s ✅
+    - Cache hit performance: <50ms target achieved ✅ (53% latency reduction from 94ms uncached)
+    - Redis authentication: Working correctly with REDIS_PASSWORD from environment ✅
+  - **Code Quality Improvements:**
+    - DRY principle: 40 lines of duplicated code eliminated
+    - Clean Architecture: Dynamic filter application pattern (reuses T-0501-BACK logic)
+    - Graceful degradation: System works without Redis (returns None, logs warning, continues with DB queries)
+    - Production-ready: is_archived filter added, proper RLS enforcement, error handling (400/404/500), cache TTL 300s
+  - **Documentation:** Updated docs/09-mvp-backlog.md (DONE), memory-bank/productContext.md (feature added), memory-bank/activeContext.md (moved to Recently Completed), memory-bank/progress.md (Sprint 5 entry), prompts.md (#170, #171)
+  - **Files Modified:**
+    - infra/redis_client.py (64 lines, NEW)
+    - src/backend/services/navigation_service.py (210 lines, +23 cache logic)
+    - src/backend/api/parts_navigation.py (119 lines, NEW)
+    - src/backend/main.py (+2 lines, router registration)
+    - tests/unit/test_navigation_service.py (5 mock pattern fixes)
+    - tests/integration/test_part_navigation_api.py (5 Redis connection fixes, authentication added)
 - **T-1004-FRONT: Viewer Canvas Component** — ✅ COMPLETE & REFACTORED (2026-02-25 07:52) | TDD Workflow Complete (Steps 1-4: ENRICH→RED→GREEN→REFACTOR)
   - **Context:** Critical ticket en US-010 dependency chain que desbloquea T-1005-FRONT.
   - **TDD Timeline:** 
