@@ -97,6 +97,71 @@ class ConversationParams {
 }
 ```
 
+### 5. Query DTO con enum de valores permitidos (`@IsIn`) y herencia de DTO
+
+Cuando un endpoint extiende otro con parámetros adicionales de tipo enum, usar herencia de DTO y `@IsIn([...])`:
+
+```typescript
+import { IsOptional, IsIn, IsString } from 'class-validator';
+
+class PaginationQuery {
+  @IsOptional()
+  @IsString()
+  page?: string;
+
+  @IsOptional()
+  @IsString()
+  limit?: string;
+}
+
+// Extiende PaginationQuery añadiendo parámetros de ordenación con valores fijos
+class OrdersQuery extends PaginationQuery {
+  @IsOptional()
+  @IsIn(['ref', 'store', 'user', 'amount', 'date'])
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortDir?: string;
+}
+```
+
+> **Fallback silencioso vs. error 400**: Con `forbidNonWhitelisted: true` y sin `ValidationPipe` global en tests, los valores inválidos para `@IsIn` pueden llegar al servicio. El servicio debe implementar su propia validación de fallback cuando el comportamiento correcto ante valores inválidos es degradar silenciosamente (no lanzar 400). Ver `admin.service.ts` para el patrón de `validSortColumns.includes(sortBy)`.
+
+### 6. Patrón `buildOrderBy()` — construcción dinámica de `orderBy` en Prisma
+
+Para servicios que soportan múltiples criterios de ordenación, extraer la lógica a un método privado para facilitar los tests unitarios:
+
+```typescript
+@Injectable()
+export class AdminService {
+  private readonly validSortColumns = ['ref', 'store', 'user', 'amount', 'date'];
+
+  async getOrders(page: number, limit: number, sortBy?: string, sortDir?: string) {
+    const isValidSort = sortBy !== undefined && this.validSortColumns.includes(sortBy);
+    const resolvedSort = isValidSort ? sortBy : 'date';
+    const dir: 'asc' | 'desc' = isValidSort
+      ? sortDir === 'asc' ? 'asc' : 'desc'
+      : 'desc'; // reset conjunto si sortBy inválido
+    const orderBy = this.buildOrderBy(resolvedSort, dir);
+    // ...
+  }
+
+  private buildOrderBy(sortBy: string | undefined, dir: 'asc' | 'desc') {
+    const refSort = { externalOrderNumber: { sort: dir, nulls: 'last' as const } };
+    switch (sortBy) {
+      case 'store': return [{ store: { name: dir } }, refSort]; // con subsort
+      case 'user':  return [{ user: { firstName: dir } }, { user: { lastName: dir } }];
+      default:      return [{ webhookReceivedAt: dir }];
+    }
+  }
+}
+```
+
+> El método privado permite testearlo directamente llamando a `getOrders` y verificando el argumento de `findMany` con `toHaveBeenCalledWith(expect.objectContaining({ orderBy: [...] }))`.
+
+> **Nulls al final**: Para campos opcionales (ej. `externalOrderNumber`), usar `{ sort: dir, nulls: 'last' }` en lugar de `dir` directamente.
+
 ---
 
 ## Configuración de Referencia
@@ -129,3 +194,5 @@ Con `forbidNonWhitelisted: true`, se lanza `HTTP 400 Bad Request` — mucho más
 | Fecha | Evento |
 |-------|--------|
 | 2026-02-24 | Patrón identificado — `AdminController.PaginationQuery` sin decoradores causaba HTTP 400 en `/api/admin/orders` y `/api/admin/users` |
+| 2026-02-24 | Añadido patrón 5: DTO con herencia y `@IsIn` para validación de enums (ticket `t01-orders-sorting`) |
+| 2026-02-24 | Añadido patrón 6: `buildOrderBy()` privado para ordenación dinámica con Prisma |

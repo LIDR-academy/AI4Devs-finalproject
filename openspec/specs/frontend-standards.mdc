@@ -195,6 +195,38 @@ apps/web-admin/
 - **Tailwind v4 CSS-first**: No hay `tailwind.config.ts`. Los tokens se definen en el bloque `@theme {}` dentro de `globals.css`.
 - **Shadcn + `components.json`**: Componentes Shadcn generados manualmente con configuración compatible con Tailwind v4.
 - **`TooltipProvider` global**: Se envuelve la app con `<Providers>` en `layout.tsx` para que los tooltips funcionen sin ser Client Component en la raíz.
+- **`searchParams` como `Promise` (Next.js 15+)**: En Next.js 15/16, `searchParams` en las páginas del App Router es una `Promise`, no un objeto directo. Siempre usar la firma `searchParams: Promise<{...}>` con `await searchParams` antes de leer los parámetros. No hacerlo produce errores en build o deprecation warnings.
+
+  ```typescript
+  // Correcto — Next.js 15/16
+  export default async function Page({
+    searchParams,
+  }: {
+    searchParams: Promise<{ sort?: string; dir?: string }>;
+  }) {
+    const { sort, dir } = await searchParams;
+    // ...
+  }
+  ```
+
+- **Patrón de componente sortable reutilizable**: Para tablas con ordenación interactiva, crear un Client Component `SortableColumnHeader` que recibe el estado de sort como props (desde el Server Component padre) y usa `useRouter().push()` + `usePathname()` para actualizar la URL. No usar `useSearchParams()` dentro del componente para leer el estado actual, ya que requiere un `Suspense` boundary adicional — pasar el estado como props es más limpio.
+
+  ```typescript
+  // Patrón: props desde Server Component → Client Component de interactividad
+  // page.tsx (Server Component): lee searchParams, pasa sortBy/sortDir a la tabla
+  // OrdersTable ('use client'): recibe sortBy/sortDir, renderiza SortableColumnHeader
+  // SortableColumnHeader ('use client'): usa useRouter/usePathname para navegación
+  ```
+
+- **Validación de query params en Server Components**: Siempre validar los params de URL con un allowlist antes de usarlos. Si el `sortBy` es inválido, resetear también el `sortDir` al valor por defecto (no validar independientemente):
+
+  ```typescript
+  const isValidSort = VALID_SORT_COLUMNS.includes(sort as SortByColumn);
+  const sortBy: SortByColumn = isValidSort ? (sort as SortByColumn) : DEFAULT_SORT;
+  const sortDir: SortDir = isValidSort
+    ? (dir === 'asc' || dir === 'desc' ? dir : DEFAULT_DIR)
+    : DEFAULT_DIR;  // reset conjunto cuando sortBy es inválido
+  ```
 
 ## Estándares de Codificación
 

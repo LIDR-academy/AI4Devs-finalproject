@@ -583,11 +583,85 @@ Corrige los 2 warnings (W1 y W2) tal y como lo sugieres, y realiza las 2 mejoras
 
 ### 6. Tickets de Trabajo
 
-**Prompt 1:**
+#### t01-orders-sorting
 
-**Prompt 2:**
+**Prompt 1** *(Modo Agent):*
 
-**Prompt 3:**
+```
+lee memory bank para iniciar un ticket de frontend
+```
+
+> **Resumen de objetivos alcanzados:** Se leyeron los documentos del memory-bank (`overview.md`, `tech-stack.md`, sesión `2026-02-23-cu02-frontend-admin.md`) para cargar el contexto del proyecto antes de iniciar el nuevo ticket. Se identificó el estado actual del dashboard admin (CU-02 completado) y se estableció la base de conocimiento necesaria para abordar el nuevo cambio en la página de Pedidos.
+
+---
+
+**Prompt 2** *(Modo Agent):*
+
+```
+Quiero cambiar añadir features a la página de Pedidos. Quiero que se puedan ordenar según Tienda, Usuario, Importe, Estado, Modo y Fecha, tanto en orden ascendente como en orden descendente, mediante un botoncito situado a la derecha del nombre de la columna con el cual puedas ordenar en orden ascendente según esa columna (trriangulito arriba) o en orden descendente (triangulito abajo). Cuando se ordena por Tienda también se tiene que subordenar por Nº de pedido (por cierto, la columna "N.º pedido" debe llamarse "Referencia"). Crea primero un archivo markdown con el nombre "T01-frontend-xxx.md", siendo xxx algo que identifique este ticket. Luego lo desarrollaremos con el comando /enrich-us . Pregúntame todo lo necesario para enriquecer el ticket todo lo necesario para luego crear los artefactos del change adecuadamente.
+```
+
+> **Resumen de objetivos alcanzados:** Se creó el archivo `openspec/changes/T01-frontend-orders-sorting.md` con la propuesta inicial del ticket. Se ejecutó `/enrich-us` con una batería de 8 preguntas para afinar todos los aspectos de la implementación: tipo de ordenación (server-side vs client-side), persistencia del estado, orden por defecto, columnas no ordenables, lógica de sort por usuario, icono neutro, y comportamiento del subsort. El documento quedó listo para ser procesado por `/opsx-ff`.
+
+---
+
+**Prompt 3** *(Modo Agent):*
+
+```
+1- Implementación server-side 2- En la URL 3- Ordenado por fecha de forma descendente (primero los pedidos más recientes) 4y5- No hace falta ordenar las columnas Estado y Modo, para visualizar estas columnas mejor aplicaremos una capa de filtros, a resolver en otro ticket. 6- Por nombre completo concatenado 7- A 8- La Referencia también es ordenable de forma individual, aunque lo que más me interesa es que si se ordena por Tienda, se ordenen los pedidos de una misma Tienda por Referencia (en ascendente o descendente). Las columnas Estado y Modo no son ordenables (srán filtrables)
+```
+
+> **Resumen de objetivos alcanzados:** Se completó la fase de enriquecimiento del ticket con todas las decisiones de diseño: sort server-side, estado persistido en URL como query params (`?sort=<col>&dir=<asc|desc>`), orden por defecto `date DESC`, columnas Estado y Modo excluidas del sort (se abordarán con filtros en otro ticket), sort de Usuario por nombre completo concatenado, icono neutro `ChevronsUpDown`, y Referencia como columna ordenable de forma individual y como subsort de Tienda. El archivo `T01-frontend-orders-sorting.md` quedó completamente enriquecido.
+
+---
+
+**Prompt 4** *(Modo Agent):*
+
+```
+/opsx-ff t01-orders-sorting
+```
+
+> **Resumen de objetivos alcanzados:** Se generaron en secuencia los 4 artefactos OpenSpec del change `t01-orders-sorting`: `proposal.md` (justificación del cambio y alcance), `specs/orders-column-sorting/spec.md` (requisitos frontend: columnas ordenables, subsort, indicadores visuales, accesibilidad WCAG 2.1 AA, renombrado de columna), `specs/admin-dashboard/spec.md` (contrato API: parámetros `sortBy` y `sortDir` opcionales con fallback silencioso), `design.md` (decisiones técnicas: sort server-side, `searchParams` como Promise, Client Component, `buildOrderBy` privado, DTO extendido, tipos compartidos), y `tasks.md` (30 tareas ordenadas por dependencias en 9 grupos). Todos los artefactos marcados como `done`.
+
+---
+
+**Prompt 5** *(Modo Agent):*
+
+```
+/opsx-apply t01-orders-sorting
+```
+
+> **Resumen de objetivos alcanzados:** Se implementaron las 30 tareas del change completamente. **Backend**: nuevo `OrdersQuery extends PaginationQuery` con `@IsIn([...])` en el controlador, método privado `buildOrderBy()` en `AdminService` con los 5 casos de sort y fallback doble (sortBy + sortDir) ante parámetros inválidos, 9 nuevos tests unitarios de `buildOrderBy` y 2 tests de integración en el controlador. **Frontend**: tipos `SortByColumn`/`SortDir` y constantes en `types/api.ts`, `getOrders()` extendido con `URLSearchParams`, `orders/page.tsx` actualizado para recibir `searchParams: Promise<{...}>` (Next.js 15/16) con validación allowlist y reset conjunto, `orders-table.tsx` convertido a `'use client'` con columna renombrada a "Referencia" y `aria-sort` en `<th>`, y nuevo componente `sortable-column-header.tsx` con `useRouter`/`usePathname`, iconos `ChevronsUpDown`/`ChevronUp`/`ChevronDown` y `aria-label` accesible. Todos los tests pasaron.
+
+---
+
+**Prompt 6** *(Modo Agent):*
+
+```
+Atiende la Suggestion S1, pero con el escenario ?sort=invalido&dir=asc (sortBy inválido pero sortDir válido), el comportamiento tiene que ser date DESC.
+```
+
+> **Resumen de objetivos alcanzados:** Se corrigió una inconsistencia en la validación de parámetros de sort: cuando `sortBy` es inválido, el `sortDir` recibido (aunque sea válido) también se descarta y se resetea al defecto. El fix se aplicó en `admin.service.ts` (reset conjunto del dir al validar sortBy), en `apps/web-admin/src/app/orders/page.tsx` (misma lógica en frontend: `sortDir` solo se respeta si `isValidSort` es true), y en `openspec/changes/t01-orders-sorting/specs/orders-column-sorting/spec.md` (nuevo escenario documentado: "sortBy inválido con sortDir válido → reset completo al defecto"). El test fallido `sortBy inválido → fallback a date desc` pasó tras la corrección.
+
+---
+
+**Prompt 7** *(Modo Agent):*
+
+```
+/update-docs
+```
+
+> **Resumen de objetivos alcanzados:** Se actualizaron 3 archivos de documentación: `openspec/specs/frontend-standards.mdc` con 3 nuevos patrones clave (async `searchParams: Promise<{...}>` en Next.js 15/16, patrón `SortableColumnHeader` como Client Component con props en vez de `useSearchParams`, y validación de query params con reset conjunto); `memory-bank/patterns/validation-patterns.md` con el patrón 5 (DTO con herencia y `@IsIn` para enums) y el patrón 6 (`buildOrderBy()` privado para ordenación dinámica con Prisma); y creación del nuevo archivo de sesión `memory-bank/sessions/2026-02-24-t01-orders-sorting.md` con el registro completo del change.
+
+---
+
+**Prompt 8** *(Modo Agent):*
+
+```
+/opsx-archive @openspec/changes/t01-orders-sorting
+```
+
+> **Resumen de objetivos alcanzados:** Tras verificar artefactos (4/4 completos) y tareas (30/30 marcadas `[x]`), se ejecutó el sync de delta specs antes de archivar (elección del usuario): se creó `openspec/specs/orders-column-sorting/spec.md` (nueva capability) y se actualizó `openspec/specs/admin-dashboard/spec.md` (columna renombrada, ordenación dinámica, nuevo requirement del endpoint, estructura de archivos y firma de `getOrders` actualizadas). Finalmente se movió el directorio del change a `openspec/changes/archive/2026-02-24-t01-orders-sorting/`.
 
 ---
 

@@ -9,8 +9,21 @@ export class AdminService {
     private readonly mockConversations: MockConversationsService,
   ) {}
 
-  async getOrders(page: number, limit: number) {
+  private readonly validSortColumns = ['ref', 'store', 'user', 'amount', 'date'];
+
+  async getOrders(
+    page: number,
+    limit: number,
+    sortBy?: string,
+    sortDir?: string,
+  ) {
     const skip = (page - 1) * limit;
+    const isValidSort = sortBy !== undefined && this.validSortColumns.includes(sortBy);
+    const resolvedSort = isValidSort ? sortBy : 'date';
+    const dir: 'asc' | 'desc' = isValidSort
+      ? sortDir === 'asc' ? 'asc' : 'desc'
+      : 'desc';
+    const orderBy = this.buildOrderBy(resolvedSort, dir);
 
     const [data, total] = await this.prisma.$transaction([
       this.prisma.order.findMany({
@@ -19,7 +32,7 @@ export class AdminService {
           user: { include: { phone: true } },
           conversations: { select: { id: true } },
         },
-        orderBy: { webhookReceivedAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),
@@ -27,6 +40,24 @@ export class AdminService {
     ]);
 
     return { data, meta: { page, limit, total } };
+  }
+
+  private buildOrderBy(sortBy: string | undefined, dir: 'asc' | 'desc') {
+    const refSort = { externalOrderNumber: { sort: dir, nulls: 'last' as const } };
+
+    switch (sortBy) {
+      case 'ref':
+        return [refSort];
+      case 'store':
+        return [{ store: { name: dir } }, refSort];
+      case 'user':
+        return [{ user: { firstName: dir } }, { user: { lastName: dir } }];
+      case 'amount':
+        return [{ totalAmount: dir }];
+      case 'date':
+      default:
+        return [{ webhookReceivedAt: dir }];
+    }
   }
 
   async getUsers(page: number, limit: number) {

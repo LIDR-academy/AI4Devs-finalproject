@@ -42,7 +42,7 @@ describe('AdminController (integration HTTP)', () => {
         .expect(200);
 
       expect(res.body).toEqual(payload);
-      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50);
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, undefined, undefined);
     });
 
     it('parsea correctamente los parámetros page y limit', async () => {
@@ -52,7 +52,7 @@ describe('AdminController (integration HTTP)', () => {
         .get('/admin/orders?page=2&limit=10')
         .expect(200);
 
-      expect(mockAdminService.getOrders).toHaveBeenCalledWith(2, 10);
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(2, 10, undefined, undefined);
     });
 
     it('usa valores por defecto cuando no se envían parámetros', async () => {
@@ -60,7 +60,27 @@ describe('AdminController (integration HTTP)', () => {
 
       await request(app.getHttpServer()).get('/admin/orders').expect(200);
 
-      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50);
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, undefined, undefined);
+    });
+
+    it('pasa sortBy y sortDir al servicio cuando se proporcionan', async () => {
+      mockAdminService.getOrders.mockResolvedValue({ data: [], meta: {} });
+
+      await request(app.getHttpServer())
+        .get('/admin/orders?sortBy=store&sortDir=asc')
+        .expect(200);
+
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, 'store', 'asc');
+    });
+
+    it('pasa sortBy=amount y sortDir=desc correctamente', async () => {
+      mockAdminService.getOrders.mockResolvedValue({ data: [], meta: {} });
+
+      await request(app.getHttpServer())
+        .get('/admin/orders?sortBy=amount&sortDir=desc')
+        .expect(200);
+
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, 'amount', 'desc');
     });
   });
 

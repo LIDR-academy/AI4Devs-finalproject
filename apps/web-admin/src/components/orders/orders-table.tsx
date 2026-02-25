@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { MessageSquare } from 'lucide-react';
 import {
@@ -9,25 +11,68 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { OrderStatusBadge, OrderModeBadge } from './order-status-badge';
+import { SortableColumnHeader } from './sortable-column-header';
 import { formatDate, formatCurrency, formatFullName } from '@/lib/utils';
-import type { AdminOrder } from '@/types/api';
+import type { AdminOrder, SortByColumn, SortDir } from '@/types/api';
 
 interface OrdersTableProps {
   orders: AdminOrder[];
+  sortBy: SortByColumn;
+  sortDir: SortDir;
 }
 
-export function OrdersTable({ orders }: OrdersTableProps) {
+export function OrdersTable({ orders, sortBy, sortDir }: OrdersTableProps) {
+  const ariaSortFor = (col: SortByColumn): 'ascending' | 'descending' | 'none' => {
+    if (col !== sortBy) return 'none';
+    return sortDir === 'asc' ? 'ascending' : 'descending';
+  };
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead scope="col">N.º pedido</TableHead>
-          <TableHead scope="col">Tienda</TableHead>
-          <TableHead scope="col">Usuario</TableHead>
-          <TableHead scope="col">Importe</TableHead>
+          <TableHead scope="col" aria-sort={ariaSortFor('ref')}>
+            <SortableColumnHeader
+              column="ref"
+              label="Referencia"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
+          <TableHead scope="col" aria-sort={ariaSortFor('store')}>
+            <SortableColumnHeader
+              column="store"
+              label="Tienda"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
+          <TableHead scope="col" aria-sort={ariaSortFor('user')}>
+            <SortableColumnHeader
+              column="user"
+              label="Usuario"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
+          <TableHead scope="col" aria-sort={ariaSortFor('amount')}>
+            <SortableColumnHeader
+              column="amount"
+              label="Importe"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
           <TableHead scope="col">Estado</TableHead>
           <TableHead scope="col">Modo</TableHead>
-          <TableHead scope="col">Fecha</TableHead>
+          <TableHead scope="col" aria-sort={ariaSortFor('date')}>
+            <SortableColumnHeader
+              column="date"
+              label="Fecha"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
           <TableHead scope="col" className="w-10">
             <span className="sr-only">Chat</span>
           </TableHead>

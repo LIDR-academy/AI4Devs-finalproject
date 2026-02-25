@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 import { AdminService } from './admin.service';
 
 class PaginationQuery {
@@ -12,15 +12,25 @@ class PaginationQuery {
   limit?: string;
 }
 
+class OrdersQuery extends PaginationQuery {
+  @IsOptional()
+  @IsIn(['ref', 'store', 'user', 'amount', 'date'])
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortDir?: string;
+}
+
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('orders')
-  getOrders(@Query() query: PaginationQuery) {
+  getOrders(@Query() query: OrdersQuery) {
     const page = Math.max(1, parseInt(query.page ?? '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(query.limit ?? '50', 10) || 50));
-    return this.adminService.getOrders(page, limit);
+    return this.adminService.getOrders(page, limit, query.sortBy, query.sortDir);
   }
 
   @Get('users')

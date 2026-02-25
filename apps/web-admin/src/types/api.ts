@@ -114,3 +114,10 @@ export interface ConversationMessagesResponse {
 
 export type OrdersResponse = PaginatedResponse<AdminOrder>;
 export type UsersResponse  = PaginatedResponse<AdminUser>;
+
+export type SortByColumn = 'ref' | 'store' | 'user' | 'amount' | 'date';
+export type SortDir = 'asc' | 'desc';
+
+export const VALID_SORT_COLUMNS: SortByColumn[] = ['ref', 'store', 'user', 'amount', 'date'];
+export const DEFAULT_SORT: SortByColumn = 'date';
+export const DEFAULT_DIR: SortDir = 'desc';

@@ -32,16 +32,16 @@ La página `/orders` SHALL obtener los pedidos vía `GET /api/admin/orders` (Ser
 
 | Columna | Origen | Notas |
 |---------|--------|-------|
-| N.º pedido | `externalOrderNumber` | Fallback: `externalOrderId` si null |
-| Tienda | `store.name` | — |
-| Usuario | `user.firstName + user.lastName` + `user.phone.e164` | Nombre en línea 1 (`font-medium`), teléfono en línea 2 (`text-xs text-gray-500`) |
-| Importe | `totalAmount` + `currency` | `formatCurrency(totalAmount, currency)` |
-| Estado | `status` | `<OrderStatusBadge>` |
-| Modo | `orderMode` | `<OrderModeBadge>` |
-| Fecha | `webhookReceivedAt` | `formatDate(webhookReceivedAt)` |
-| Chat | `conversations[0].id` | Icono `MessageSquare` (lucide) visible solo si `conversations.length > 0`; `aria-label="Ver conversación del pedido #[N]"` |
+| Referencia | `externalOrderNumber` | Fallback: `externalOrderId` si null; ordenable |
+| Tienda | `store.name` | Ordenable; subsort por Referencia |
+| Usuario | `user.firstName + user.lastName` + `user.phone.e164` | Nombre en línea 1 (`font-medium`), teléfono en línea 2 (`text-xs text-gray-500`); ordenable por nombre completo |
+| Importe | `totalAmount` + `currency` | `formatCurrency(totalAmount, currency)`; ordenable |
+| Estado | `status` | `<OrderStatusBadge>`; **no ordenable** |
+| Modo | `orderMode` | `<OrderModeBadge>`; **no ordenable** |
+| Fecha | `webhookReceivedAt` | `formatDate(webhookReceivedAt)`; ordenable |
+| Chat | `conversations[0].id` | Icono `MessageSquare` (lucide) visible solo si `conversations.length > 0`; `aria-label="Ver conversación del pedido #[N]"`; **no ordenable** |
 
-**Ordenación**: por `webhookReceivedAt` descendente (más recientes primero).
+**Ordenación**: dinámica vía query params `?sort=<columna>&dir=<asc|desc>`. Por defecto: `date DESC` (más recientes primero). Ver spec `orders-column-sorting` para los requisitos completos de ordenación.
 
 La tabla SHALL mostrar un skeleton de 8 filas durante la carga (`loading.tsx`) y un estado vacío con icono cuando `data` está vacío.
 
@@ -215,6 +215,38 @@ Todos los elementos interactivos SHALL tener `focus-visible:ring-2 focus-visible
 
 ---
 
+### Requirement: Endpoint GET /admin/orders acepta parámetros de ordenación
+El endpoint `GET /api/admin/orders` SHALL aceptar los query params opcionales `sortBy` y `sortDir` para controlar el orden de los resultados devueltos.
+
+Valores válidos de `sortBy`: `ref` | `store` | `user` | `amount` | `date`  
+Valores válidos de `sortDir`: `asc` | `desc`  
+Valor por defecto cuando no se proporcionan params: `sortBy=date`, `sortDir=desc`
+
+#### Scenario: Solicitud sin parámetros de ordenación
+- **WHEN** el cliente llama a `GET /api/admin/orders` sin `sortBy` ni `sortDir`
+- **THEN** la respuesta devuelve los pedidos ordenados por `webhookReceivedAt DESC`
+- **THEN** el status HTTP es 200
+
+#### Scenario: Solicitud con sortBy y sortDir válidos
+- **WHEN** el cliente llama a `GET /api/admin/orders?sortBy=store&sortDir=asc`
+- **THEN** la respuesta devuelve los pedidos ordenados por nombre de tienda ASC con subsort por referencia ASC
+- **THEN** el status HTTP es 200
+
+#### Scenario: sortBy inválido — fallback silencioso
+- **WHEN** el cliente llama a `GET /api/admin/orders?sortBy=foobar&sortDir=asc`
+- **THEN** la respuesta devuelve los pedidos con el orden por defecto (`date DESC`)
+- **THEN** el status HTTP es 200 (sin error 400)
+
+#### Scenario: Ordenación por importe numérico
+- **WHEN** el cliente llama a `GET /api/admin/orders?sortBy=amount&sortDir=desc`
+- **THEN** los pedidos se ordenan por `totalAmount` de mayor a menor (tipo Decimal en Prisma)
+
+#### Scenario: Ordenación por referencia con nulls al final
+- **WHEN** el cliente llama a `GET /api/admin/orders?sortBy=ref&sortDir=asc`
+- **THEN** los pedidos con `externalOrderNumber` nulo aparecen al final de la lista
+
+---
+
 ## Estructura de Archivos (`apps/web-admin`)
 
 ```
@@ -241,7 +273,8 @@ apps/web-admin/
 │   │   ├── layout/
 │   │   │   └── sidebar.tsx                      ← 'use client' — usePathname() para nav activa
 │   │   ├── orders/
-│   │   │   ├── orders-table.tsx                 ← Server Component — Shadcn Table
+│   │   │   ├── orders-table.tsx                 ← 'use client' — Shadcn Table con ordenación
+│   │   │   ├── sortable-column-header.tsx       ← 'use client' — cabecera sortable con useRouter
 │   │   │   ├── orders-table-skeleton.tsx        ← Skeleton de filas
 │   │   │   ├── orders-empty-state.tsx           ← ShoppingCart + texto vacío
 │   │   │   └── order-status-badge.tsx           ← OrderStatusBadge + OrderModeBadge
@@ -283,8 +316,17 @@ async function apiFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export const getOrders = (page = 1, limit = 50): Promise<OrdersResponse> =>
-  apiFetch(`/api/admin/orders?page=${page}&limit=${limit}`);
+export const getOrders = (
+  page = 1,
+  limit = 50,
+  sortBy?: SortByColumn,
+  sortDir?: SortDir,
+): Promise<OrdersResponse> => {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (sortBy) params.set('sortBy', sortBy);
+  if (sortDir) params.set('sortDir', sortDir);
+  return apiFetch(`/api/admin/orders?${params.toString()}`);
+};
 
 export const getUsers = (page = 1, limit = 50): Promise<UsersResponse> =>
   apiFetch(`/api/admin/users?page=${page}&limit=${limit}`);

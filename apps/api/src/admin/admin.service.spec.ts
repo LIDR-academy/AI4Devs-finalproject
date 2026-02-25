@@ -67,9 +67,91 @@ describe('AdminService', () => {
 
       await service.getOrders(2, 10);
 
-      // El skip debe ser (2-1)*10 = 10
       const transactionCall = mockPrisma.$transaction.mock.calls[0][0];
       expect(transactionCall).toHaveLength(2);
+    });
+  });
+
+  describe('buildOrderBy (via getOrders)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sortBy=date → ordena por webhookReceivedAt', async () => {
+      await service.getOrders(1, 50, 'date', 'desc');
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
+      );
+    });
+
+    it('sortBy=date asc → ordena por webhookReceivedAt asc', async () => {
+      await service.getOrders(1, 50, 'date', 'asc');
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'asc' }] }),
+      );
+    });
+
+    it('sin sortBy (undefined) → fallback a date desc', async () => {
+      await service.getOrders(1, 50, undefined, undefined);
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
+      );
+    });
+
+    it('sortBy inválido → fallback a date desc', async () => {
+      await service.getOrders(1, 50, 'foobar', 'asc');
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
+      );
+    });
+
+    it('sortBy=ref → ordena por externalOrderNumber con nulls last', async () => {
+      await service.getOrders(1, 50, 'ref', 'asc');
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ externalOrderNumber: { sort: 'asc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=store → ordena por store.name con subsort por externalOrderNumber', async () => {
+      await service.getOrders(1, 50, 'store', 'asc');
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { store: { name: 'asc' } },
+            { externalOrderNumber: { sort: 'asc', nulls: 'last' } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=store desc → subsort externalOrderNumber también desc', async () => {
+      await service.getOrders(1, 50, 'store', 'desc');
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { store: { name: 'desc' } },
+            { externalOrderNumber: { sort: 'desc', nulls: 'last' } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=user → ordena por firstName luego lastName', async () => {
+      await service.getOrders(1, 50, 'user', 'asc');
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ user: { firstName: 'asc' } }, { user: { lastName: 'asc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=amount → ordena por totalAmount', async () => {
+      await service.getOrders(1, 50, 'amount', 'desc');
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ totalAmount: 'desc' }] }),
+      );
     });
   });
 

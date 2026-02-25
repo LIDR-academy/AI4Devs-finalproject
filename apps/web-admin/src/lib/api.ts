@@ -2,6 +2,8 @@ import type {
   OrdersResponse,
   UsersResponse,
   ConversationMessagesResponse,
+  SortByColumn,
+  SortDir,
 } from '@/types/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -16,8 +18,17 @@ async function apiFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export const getOrders = (page = 1, limit = 50): Promise<OrdersResponse> =>
-  apiFetch(`/api/admin/orders?page=${page}&limit=${limit}`);
+export const getOrders = (
+  page = 1,
+  limit = 50,
+  sortBy?: SortByColumn,
+  sortDir?: SortDir,
+): Promise<OrdersResponse> => {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (sortBy) params.set('sortBy', sortBy);
+  if (sortDir) params.set('sortDir', sortDir);
+  return apiFetch(`/api/admin/orders?${params.toString()}`);
+};
 
 export const getUsers = (page = 1, limit = 50): Promise<UsersResponse> =>
   apiFetch(`/api/admin/users?page=${page}&limit=${limit}`);
