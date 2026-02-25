@@ -79,6 +79,23 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({
     setError(null);
   }, [meditationId]);
 
+  // Auto-play when a new meditation is selected (user clicked "Play")
+  useEffect(() => {
+    if (!meditationId || !mediaUrls || !mediaType) return;
+
+    // Small timeout to ensure the media element is mounted and src is set
+    const timer = setTimeout(() => {
+      const el = mediaType === 'audio' ? audioRef.current : videoRef.current;
+      if (el) {
+        el.play().catch(() => {
+          // Autoplay blocked by browser policy – user can click the native control
+        });
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [meditationId, mediaUrls, mediaType]);
+
   // Handle media errors
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleMediaError = (_e: React.SyntheticEvent<HTMLMediaElement, Event>) => {
