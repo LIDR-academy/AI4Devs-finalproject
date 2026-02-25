@@ -1,112 +1,98 @@
 # Technical Specification: T-1003-BACK
 
-**Ticket ID:** T-1003-BACK  
-**Story:** US-010 - Visor 3D Web  
-**Sprint:** Sprint 6 (Week 11-12, 2026)  
-**Estimación:** 1 Story Point (~2 hours)  
-**Responsable:** Backend Developer  
-**Prioridad:** 🟡 P2 (Nice-to-have for T-1007-FRONT navigation)  
-**Status:** 🟡 **READY FOR TDD-RED**
-
----
-
 ## 1. Ticket Summary
-
 - **Tipo:** BACK
-- **Alcance:** Create `GET /api/parts/{id}/adjacent` endpoint that returns IDs of previous and next parts in the current filtered list, enabling keyboard navigation (←/→ arrows) in the 3D viewer modal.
-- **Dependencias:**
-  - **Upstream:** T-1002-BACK (✅ MUST BE DONE) - Uses same RLS logic
-  - **Upstream:** T-0501-BACK (✅ DONE 2026-02-18) - Reuses filter parsing logic
-  - **Downstream:** T-1007-FRONT (Modal with prev/next navigation buttons)
-
-### Problem Statement
-When user opens 3D viewer for part A, they need to navigate to adjacent parts (B, C) without closing modal:
-- **UX Issue:** Current design forces user to close modal → select next row → reopen modal (3 clicks per part)
-- **Performance Issue:** Frontend stores 150 parts in memory → can calculate adjacent IDs client-side BUT filters applied server-side → sync problem
-- **Missing endpoint:** Need server to calculate adjacent IDs respecting current filters + workshop RLS
-
-### Current State (Before Implementation)
-```
-User opens Part 5 of 20 filtered parts
-→ ❌ No prev/next functionality
-→ ❌ Frontend doesn't know which parts are "adjacent" after applying server-side filters
-```
-
-### Target State (After Implementation)
-```
-User opens Part 5 of 20 filtered parts
-→ Backend calculates: prev=Part-4-ID, next=Part-6-ID (respecting filters + RLS)
-→ Frontend shows ← → buttons
-→ User clicks → → Modal content updates with Part 6 data (no page reload)
-```
-
----
+- **Alcance:** Part Navigation API - Endpoint para obtener IDs de piezas adyacentes (prev/next) en un conjunto ordenado, permitiendo navegación modal sin recargar interfaz
+- **Dependencias:** 
+  - ✅ T-1002-BACK (Get Part Detail API) - DONE
+  - ✅ T-0501-BACK (List Parts API) - DONE
+  - Redis (Celery stack ya desplegado en T-022-INFRA)
 
 ## 2. Data Structures & Contracts
 
 ### Backend Schema (Pydantic)
 
-**File:** `src/backend/schemas.py` (add to existing file)
+**Location:** `src/backend/schemas.py` (añadir al final de la sección T-1002-BACK)
 
 ```python
 # ===== T-1003-BACK: Part Navigation API Schemas =====
 
-from typing import Optional
-from uuid import UUID
-from pydantic import BaseModel, Field
-
-
-class AdjacentPartsResponse(BaseModel):
+class PartNavigationResponse(BaseModel):
     """
-    Previous and next part IDs for modal navigation (US-010 T-1007).
+    Response for GET /api/parts/{id}/adjacent endpoint.
     
-    Contract: Must match TypeScript interface AdjacentParts exactly.
-    Used by GET /api/parts/{id}/adjacent endpoint.
+    Provides prev/next IDs for sequential navigation between parts in the 3D viewer modal.
+    Order is determined by created_at ASC (oldest first), with filters applied.
+    
+    Contract: Must match TypeScript interface PartNavigationResponse exactly.
+    Used by US-010 for Prev/Next buttons in modal footer.
     
     Attributes:
-        current_id: Current part UUID (same as request path param)
-        prev_id: Previous part UUID in filtered list (None if first)
-        next_id: Next part UUID in filtered list (None if last)
-        current_index: 1-based position in filtered list (e.g., "5 of 20")
-        total_count: Total number of parts matching filters
+        prev_id: UUID of previous part in sequence (None if current is first)
+        next_id: UUID of next part in sequence (None if current is last)
+        current_index: 1-based position of current part in filtered set (e.g., 42 of 150)
+        total_count: Total number of parts in filtered set
     """
-    current_id: UUID = Field(..., description="Current part UUID")
     prev_id: Optional[UUID] = Field(None, description="Previous part UUID (None if first)")
     next_id: Optional[UUID] = Field(None, description="Next part UUID (None if last)")
-    current_index: int = Field(..., description="1-based position in filtered list", ge=1)
-    total_count: int = Field(..., description="Total parts matching filters", ge=0)
+    current_index: int = Field(..., ge=1, description="1-based index of current part")
+    total_count: int = Field(..., ge=0, description="Total parts in filtered set")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
-                "current_id": "550e8400-e29b-41d4-a716-446655440000",
-                "prev_id": "660e8400-e29b-41d4-a716-446655440001",
-                "next_id": "770e8400-e29b-41d4-a716-446655440002",
-                "current_index": 5,
-                "total_count": 20
+                "prev_id": "123e4567-e89b-12d3-a456-426614174000",
+                "next_id": "987fcdeb-51a2-43e7-9876-543210fedcba",
+                "current_index": 42,
+                "total_count": 150
             }
         }
 ```
 
----
-
 ### Frontend Types (TypeScript)
 
-**File:** `src/frontend/src/types/parts.ts` (add to existing file)
+**Location:** `src/frontend/src/types/navigation.ts` (archivo nuevo)
 
 ```typescript
 /**
- * T-1003-BACK Contract: Part Navigation API Types
+ * T-1003-BACK: Part Navigation API Response
+ * Contract must match backend Pydantic schema PartNavigationResponse exactly
  */
-
-export interface AdjacentParts {
-  current_id: string;       // UUID
+export interface PartNavigationResponse {
+  /** UUID of previous part (null if current is first) */
   prev_id: string | null;
+  
+  /** UUID of next part (null if current is last) */
   next_id: string | null;
-  current_index: number;    // 1-based (e.g., 5)
-  total_count: number;      // e.g., 20
+  
+  /** 1-based index of current part in filtered set */
+  current_index: number;
+  
+  /** Total number of parts in filtered set */
+  total_count: number;
+}
+
+/**
+ * Query parameters for navigation API
+ */
+export interface PartNavigationQueryParams {
+  /** Filter by workshop ID (RLS enforcement) */
+  workshop_id?: string;
+  
+  /** Filter by status (validated, in_production, etc.) */
+  status?: string;
+  
+  /** Filter by tipologia (capitel, columna, dovela, etc.) */
+  tipologia?: string;
 }
 ```
+
+### Database Changes (SQL)
+**No se requieren cambios de esquema.** La funcionalidad utiliza campos existentes:
+- `blocks.id` (UUID, PK)
+- `blocks.created_at` (timestamp) - usado para ordenamiento ASC
+- `blocks.status`, `blocks.tipologia`, `blocks.workshop_id` - usados para filtros
+- `blocks.is_archived` (boolean) - siempre filtrado a `false`
 
 ---
 
