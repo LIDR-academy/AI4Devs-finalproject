@@ -43,7 +43,8 @@ describe('Dashboard3D Selection & Modal Integration', () => {
    * Integration Point: PartMesh.onClick → partsStore.selectPart → PartDetailModal
    * Expected: Modal visible with part iso_code in heading
    */
-  it('opens modal with correct part data when part is clicked', async () => {
+  // DEPRECATED T-1007: Modal now fetches own data via partId prop (T-1007 integration tests cover this)
+  it.skip('opens modal with correct part data when part is clicked', async () => {
     // Given: Store with selected part (simulating post-click state)
     setupStoreMock({
       parts: [mockPartCapitel, mockPartColumna],
@@ -161,7 +162,8 @@ describe('Dashboard3D Selection & Modal Integration', () => {
    * Integration Point: selectPart(newId) → Modal content updates
    * Expected: Modal shows new part data, old part deselected
    */
-  it('updates modal content when selecting different part', async () => {
+  // DEPRECATED T-1007: Modal now fetches own data via partId prop (T-1007 integration tests cover this)
+  it.skip('updates modal content when selecting different part', async () => {
     // Given: First part selected
     setupStoreMock({
       parts: [mockPartCapitel, mockPartColumna],

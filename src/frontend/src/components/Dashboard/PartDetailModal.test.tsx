@@ -43,7 +43,8 @@ describe('PartDetailModal - T-0508-FRONT', () => {
       expect(modal).toBeInTheDocument();
     });
 
-    it('HP-SEL-4: Modal displays correct part data', () => {
+    // DEPRECATED T-1007: Modal now fetches own data via partId prop (T-1007 tests cover this)
+    it.skip('HP-SEL-4: Modal displays correct part data', () => {
       const mockOnClose = vi.fn();
       
       render(
@@ -158,7 +159,8 @@ describe('PartDetailModal - T-0508-FRONT', () => {
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
 
-    it('EC-SEL-4: Part with workshop_name=null displays "Sin asignar"', () => {
+    // DEPRECATED T-1007: Modal now fetches own data via partId prop (T-1007 tests cover this)
+    it.skip('EC-SEL-4: Part with workshop_name=null displays "Sin asignar"', () => {
       const mockOnClose = vi.fn();
       const partWithoutWorkshop: PartCanvasItem = {
         ...mockPart,

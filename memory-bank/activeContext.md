@@ -4,9 +4,40 @@
 Sprint 5 / US-010 - Visor 3D Web | WAVE 3 IN PROGRESS (2026-02-25) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅ + T-1005-FRONT ✅**
 
 ## Active Ticket
-**None** — Sprint 5 paused after T-1005-FRONT completion. Next ticket: T-1006-FRONT (Error Boundary) or T-1007-FRONT (Modal Integration).
+**None** — Next: T-1006-FRONT (Error Boundary) or T-1008-FRONT (Metadata Panel)
 
 ## Recently Completed
+- **T-1007-FRONT: Modal Integration (PartDetailModal)** — ✅ COMPLETE & REFACTORED (2026-02-25 23:50) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→READY FOR AUDIT)
+  - **Context:** Transformed T-0508 placeholder modal into full-featured component with tabs, 3D viewer, and prev/next navigation  
+  - **Technical Spec:** `docs/US-010/T-1007-FRONT-TechnicalSpec.md` (25KB, 31 test cases)
+  - **Breaking Change:** Props interface changed from `part: PartCanvasItem | null` → `partId: string` (modal fetches own data)
+  - **TDD Timeline:**
+    - ENRICH: 2026-02-25 22:05 (Technical spec created, contracts defined, test cases identified) [Prompt #178]
+    - RED: 2026-02-25 22:30 (5 files created: types extended, navigation.service, constants, 31 tests - 14/14 service tests PASSING, 31/31 integration tests FAILING ❌) [Prompt #179]
+    - GREEN: 2026-02-25 23:15 (Implementation complete: PartDetailModal refactored 194→343 lines, Dashboard3D updated, **31/31 tests PASSING** ✅, **343/343 frontend tests PASSING** ✅) [Prompt #180]
+    - REFACTOR: 2026-02-25 23:50 (Clean Architecture applied: 4 custom hooks extracted, 5 helper functions extracted, main component reduced 312→227 lines (-27%), JSDoc complete, **343/343 tests PASSING** ✅) [Prompt #181]
+  - **Implementation Summary:**
+    - **RED Phase:**
+      - **PartDetailModal.tsx** (343 lines): Portal rendering (z-index 9999), internal partId state management, dual useEffect (data fetch + navigation fetch), tab system (3 tabs), keyboard shortcuts (ESC/←/→), navigation buttons (disabled states), ModelLoader integration, body scroll lock, error handling (404/403/network)
+      - **Dashboard3D.tsx** (2 changes): Removed selectedPart lookup, modal props changed to `partId={selectedId}` + filters
+      - **navigation.service.ts** (105 lines): getPartNavigation(partId, filters) with query param construction
+      - **PartDetailModal.constants.ts** (170 lines): MODAL_STYLES, TAB_CONFIG, KEYBOARD_SHORTCUTS, ERROR_MESSAGES, ARIA_LABELS
+      - **types/modal.ts** (+80 lines): TabId, NavigationDirection, AdjacentPartsInfo, updated PartDetailModalProps
+    - **REFACTOR Phase:**
+      - **PartDetailModal.hooks.ts** (170 lines NEW): 4 custom hooks (usePartDetail, usePartNavigation, useModalKeyboard, useBodyScrollLock) with JSDoc
+      - **PartDetailModal.helpers.tsx** (120 lines NEW): 5 helper functions (error mapping + tab rendering) with JSDoc
+      - **PartDetailModal.tsx** (312→227 lines, -27%): Refactored to use extracted hooks/helpers, Clean Architecture separation of concerns
+  - **Test Results:** **31/31 PASSING** ✅ (HP 6/6, EC 8/8, SE 6/6, INT 5/5, A11Y 4/4) | Full suite: 343/343 PASSING ✅ after refactor (anti-regression verified)
+  - **Dependencies:** All verified — T-1004-FRONT ✅, T-1005-FRONT ✅, T-1002-BACK ✅, T-1003-BACK ✅, T-0508-FRONT ✅
+  - **Files Created/Modified:**
+    - PartDetailModal.tsx (312→227 lines, refactored)
+    - PartDetailModal.hooks.ts (170 lines, NEW)
+    - PartDetailModal.helpers.tsx (120 lines, NEW)
+    - PartDetailModal.constants.ts (170 lines, from RED)
+    - navigation.service.ts (105 lines, from RED)
+    - types/modal.ts (+80 lines, from RED)
+    - Dashboard3D.tsx (2 changes, from GREEN)
+  - **Prompts:** #178 (ENRICH), #179 (RED), #180 (GREEN), #181 (REFACTOR)
 - **T-1005-FRONT: Model Loader & Stage** — ✅ COMPLETE & REFACTORED (2026-02-25 21:34) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→READY FOR AUDIT)
   - **Context:** Component `<ModelLoader partId>` using `useGLTF` hook with Suspense fallback, BBox wireframe proxy for processing state, and service layer integration for part data fetching
   - **TDD Timeline:**
