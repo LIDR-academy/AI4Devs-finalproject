@@ -74,3 +74,49 @@ export interface LodConfig {
   /** Level 2: BBox for wireframe proxy (>50 units) - 12 triangles */
   bbox?: BoundingBox;
 }
+
+/**
+ * T-1002-BACK / T-1005-FRONT Contract: Part Detail API Types
+ * 
+ * CRITICAL: Must match backend PartDetailResponse schema exactly
+ * Used by GET /api/parts/{id} endpoint for 3D viewer modal
+ * 
+ * @see src/backend/schemas.py - PartDetailResponse (12 fields)
+ */
+export interface PartDetail {
+  /** Part UUID */
+  id: string;
+  
+  /** Part identifier (ISO-19650 format, e.g., SF-C12-D-001) */
+  iso_code: string;
+  
+  /** Lifecycle state */
+  status: BlockStatus;
+  
+  /** Part typology (capitel, columna, dovela, etc.) */
+  tipologia: string;
+  
+  /** Creation timestamp (ISO 8601 datetime) */
+  created_at: string;
+  
+  /** Presigned CDN URL for GLB file (TTL 5min), null if not generated yet */
+  low_poly_url: string | null;
+  
+  /** 3D bounding box for camera positioning */
+  bbox: BoundingBox | null;
+  
+  /** Assigned workshop UUID (null if unassigned) */
+  workshop_id: string | null;
+  
+  /** Workshop human-readable name (null if unassigned) */
+  workshop_name: string | null;
+  
+  /** Validation results from The Librarian agent */
+  validation_report: ValidationReport | null;
+  
+  /** GLB file size in bytes */
+  glb_size_bytes: number | null;
+  
+  /** Triangle count (for performance monitoring) */
+  triangle_count: number | null;
+}
