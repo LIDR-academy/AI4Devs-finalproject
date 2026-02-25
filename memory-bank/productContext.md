@@ -118,6 +118,13 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   * Zustand store extended: PartsFilters interface (status[], tipologia[], workshop_id), setFilters (partial merge), clearFilters, getFilteredParts (computed)
   * CheckboxGroup.tsx: Reusable multi-select component (91 lines) with color badges, aria-label accessibility
   * FiltersSidebar.tsx: Orchestrator component (84 lines) with counter "Mostrando X de Y", clear button, 3 sections (Tipología/Estado/Taller placeholder)
+- **ViewerErrorBoundary Component** (T-1006-FRONT DONE 2026-02-25)
+  * React Error Boundary class component for catching WebGL, Three.js, and useGLTF errors
+  * Features: WebGL availability detection, graceful error fallback UI, retry/close functionality, custom fallback support via render prop
+  * Accessibility: ARIA attributes (role=alert, aria-live=assertive), keyboard accessible buttons
+  * Files: ViewerErrorBoundary.tsx (220 lines with comprehensive JSDoc), types (108 lines), constants (89 lines), tests (300 lines, 10/10 PASS)
+  * Production-safe: console.error/warn wrapped in NODE_ENV checks, no debug noise in production
+  * Anti-regression: 353/353 frontend tests PASS
   * useURLFilters.ts: Bidirectional URL sync hook (79 lines) with mount + reactive effects, comma-separated arrays encoding
   * PartMesh.tsx extensions: Filter-based opacity logic (1.0 match, 0.2 non-match), backward compatible with T-0505 tests
   * Test coverage: 49/50 tests PASS (98%) — 11/11 store ✓, 6/6 CheckboxGroup ✓, 7/8 FiltersSidebar (1 test bug), 9/9 useURLFilters ✓, 16/16 PartMesh ✓

@@ -45,9 +45,6 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
   };
 
   const isEmpty = parts.length === 0 && !isLoading;
-  
-  // T-0508-FRONT: Find selected part for modal
-  const selectedPart = selectedId ? parts.find((p: typeof parts[0]) => p.id === selectedId) || null : null;
 
   return (
     <div
@@ -130,12 +127,16 @@ const Dashboard3D: React.FC<Dashboard3DProps> = ({
         {isLoading && <LoadingOverlay message={MESSAGES.LOADING} />}
       </div>
 
-      {/* Part Detail Modal (T-0508-FRONT) */}
-      <PartDetailModal
-        isOpen={!!selectedId}
-        part={selectedPart}
-        onClose={clearSelection}
-      />
+      {/* Part Detail Modal (T-1007-FRONT) */}
+      {selectedId && (
+        <PartDetailModal
+          isOpen={!!selectedId}
+          partId={selectedId}
+          onClose={clearSelection}
+          enableNavigation={true}
+          filters={null}
+        />
+      )}
 
       {/* Sidebar with Filters */}
       <DraggableFiltersSidebar

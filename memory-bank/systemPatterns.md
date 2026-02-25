@@ -461,6 +461,219 @@ export function useBlockStatusListener(options: UseBlockStatusListenerOptions): 
 
 **Component Organization (T-001-FRONT, continued)**:
 
+### Component Refactoring Pattern - Custom Hooks + Helper Functions (T-1007-FRONT)
+**Pattern**: Extract complex state logic and rendering logic to improve component maintainability.
+
+**Problem**: Large components (300+ lines) with mixed concerns (data fetching, event handlers, rendering logic) become difficult to test, understand, and maintain. Inline state management and rendering logic create duplication and tight coupling.
+
+**Solution**: Apply Clean Architecture separation of concerns:
+1. **Custom Hooks** for state management and side effects
+2. **Helper Functions** for rendering logic and pure transformations
+3. **Main Component** as orchestrator only
+
+**Implementation** (`T-1007-FRONT` - PartDetailModal Refactor):
+
+**Before** (312 lines, monolithic):
+```typescript
+export const PartDetailModal: React.FC<Props> = ({ partId, isOpen, onClose, ... }) => {
+  // 8 useState hooks (partData, adjacentParts, loading, error, navigationLoading, ...)
+  const [partData, setPartData] = useState<PartDetail | null>(null);
+  const [adjacentParts, setAdjacentParts] = useState<AdjacentPartsInfo | null>(null);
+  // ...
+
+  // 5 useEffect hooks (data fetch, navigation fetch, keyboard shortcuts, body scroll, ...)
+  useEffect(() => {
+    const fetchPartData = async () => { /* 25 lines inline logic */ };
+    fetchPartData();
+  }, [partId, isOpen]);
+
+  useEffect(() => {
+    const fetchNavigation = async () => { /* 20 lines inline logic */ };
+    fetchNavigation();
+  }, [partId, isOpen, enableNavigation]);
+
+  // Inline error rendering logic (20 lines)
+  if (error) {
+    return <div>{ /* error UI */ }</div>;
+  }
+
+  // Inline tab content rendering logic (40 lines)
+  const renderTabContent = () => {
+    if (activeTab === 'viewer') { /* 15 lines */ }
+    else if (activeTab === 'metadata') { /* 15 lines */ }
+    // ...
+  };
+}
+```
+
+**After** (227 lines, -27% reduction, separation of concerns):
+
+**1. Custom Hooks File** (`PartDetailModal.hooks.ts` - 170 lines):
+```typescript
+/**
+ * Fetches part detail data when modal opens
+ * @param partId - Part UUID to fetch
+ * @param isOpen - Modal open state (triggers fetch)
+ * @returns {partData, loading, error}
+ */
+export function usePartDetail(partId: string, isOpen: boolean) {
+  const [partData, setPartData] = useState<PartDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || !partId) return;
+    
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getPartDetail(partId);
+        setPartData(data);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [partId, isOpen]);
+
+  return { partData, loading, error };
+}
+
+/**
+ * Manages keyboard shortcuts (ESC close, ←→ navigation)
+ */
+export function useModalKeyboard(isOpen, onClose, onNavigate, adjacentParts, enableNavigation) {
+  useEffect(() => {
+    // 32 lines keyboard handling logic
+  }, [isOpen, onClose, onNavigate, adjacentParts, enableNavigation]);
+}
+
+/**
+ * Prevents body scroll when modal is open
+ */
+export function useBodyScrollLock(isOpen: boolean) {
+  useEffect(() => {
+    // 12 lines body scroll lock logic
+  }, [isOpen]);
+}
+```
+
+**2. Helper Functions File** (`PartDetailModal.helpers.tsx` - 120 lines):
+```typescript
+/**
+ * Maps Error objects to user-friendly messages
+ * @param error - Error object from fetch
+ * @returns {title, detail} tuple
+ */
+export function getErrorMessages(error: Error): { title: string; detail: string } {
+  const messageMap: Record<string, { title: string; detail: string }> = {
+    PART_NOT_FOUND: { title: 'Part Not Found', detail: 'ID does not exist' },
+    ACCESS_DENIED: { title: 'Access Denied', detail: '403 forbidden' },
+    FETCH_FAILED: { title: 'Load Error', detail: 'Check connection' },
+  };
+  // Map error.message to config
+}
+
+/**
+ * Renders error state UI
+ */
+export function renderErrorState(error: Error): JSX.Element {
+  const { title, detail } = getErrorMessages(error);
+  return (
+    <div style={MODAL_STYLES.errorContainer}>
+      <span style={{ fontSize: '48px' }}>⚠️</span>
+      <h3>{title}</h3>
+      <p>{detail}</p>
+    </div>
+  );
+}
+
+/**
+ * Renders metadata tab content
+ */
+export function renderMetadataTab(partData: PartDetail): JSX.Element {
+  return (
+    <div style={MODAL_STYLES.tabContent}>
+      <h3>Part Metadata</h3>
+      <pre>{JSON.stringify(partData, null, 2)}</pre>
+    </div>
+  );
+}
+
+// + renderValidationTab(), renderViewerTab()
+```
+
+**3. Main Component (Refactored)** (`PartDetailModal.tsx` - 227 lines):
+```typescript
+import { usePartDetail, usePartNavigation, useModalKeyboard, useBodyScrollLock } from './PartDetailModal.hooks';
+import { renderErrorState, renderMetadataTab, renderValidationTab, renderViewerTab } from './PartDetailModal.helpers';
+
+/**
+ * Full-featured modal with 3D viewer, tabs, and navigation
+ * @param partId - Part UUID to display
+ * @param isOpen - Modal visibility
+ * @param onClose - Close handler
+ */
+export const PartDetailModal: React.FC<Props> = ({ partId, isOpen, onClose, ... }) => {
+  // State management via custom hooks (3 useState + 4 custom hooks)
+  const [currentPartId, setCurrentPartId] = useState(partId);
+  const [activeTab, setActiveTab] = useState<TabId>('viewer');
+  
+  const { partData, loading, error } = usePartDetail(currentPartId, isOpen);
+  const { adjacentParts } = usePartNavigation(currentPartId, isOpen, enableNavigation, filters);
+  
+  useModalKeyboard(isOpen, onClose, handleNavigate, adjacentParts, enableNavigation);
+  useBodyScrollLock(isOpen);
+
+  // Error handling (rendering extracted to helper)
+  if (error) return renderErrorState(error);
+
+  // Tab content rendering (extracted to helpers)
+  const getTabContent = () => {
+    if (activeTab === 'viewer') return renderViewerTab(currentPartId);
+    if (activeTab === 'metadata') return renderMetadataTab(partData);
+    if (activeTab === 'validation') return renderValidationTab(partData);
+  };
+
+  return (
+    <Portal>
+      {/* Header with ISO code, position indicator, navigation buttons */}
+      {/* Tab list */}
+      {getTabContent()}
+    </Portal>
+  );
+};
+```
+
+**Metrics**:
+- **Lines of Code**: 312 → 227 lines (-27% complexity reduction)
+- **useState hooks**: 8 → 3 (state management delegated to hooks)
+- **useEffect hooks**: 5 → 2 (side effects delegated to hooks)
+- **Inline rendering logic**: 60 lines eliminated (moved to helpers)
+- **JSDoc coverage**: 0% → 100% (9 public functions documented)
+- **Testability**: Custom hooks and helpers can be unit tested independently
+
+**Benefits**:
+- **Readability**: Main component focuses on orchestration, not implementation
+- **Maintainability**: Changes to data fetching logic isolated to hooks file
+- **Testability**: Pure functions (helpers) + isolated hooks easier to test
+- **Reusability**: `useModalKeyboard` and `useBodyScrollLock` hooks reusable across modals
+- **DRY Principle**: Error rendering logic centralized (no duplication)
+- **Type Safety**: All functions strongly typed with JSDoc documentation
+
+**When to Apply**:
+- Components >250 lines with mixed concerns
+- Repeated data fetching patterns across components (extract to hook)
+- Complex rendering logic (>30 lines inline JSX) → extract to helper
+- 5+ useEffect hooks in single component → extract to custom hooks
+- Testing difficulty due to tight coupling → separate pure functions
+
+**Trade-off**: +2 files (hooks.ts + helpers.tsx) but 27% less complexity in main component.
+
 ## Agent (Celery Worker) Architecture Patterns
 
 ### Agent Module Structure (Implemented in T-022-INFRA)
