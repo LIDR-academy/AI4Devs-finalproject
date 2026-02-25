@@ -1,22 +1,50 @@
 # Active Context
 
 ## Current Sprint
-Sprint 5 / US-010 - Visor 3D Web | WAVE 3 COMPLETE (2026-02-25) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅**
+Sprint 5 / US-010 - Visor 3D Web | WAVE 3 IN PROGRESS (2026-02-25) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅ + T-1005-FRONT ✅**
 
 ## Active Ticket
-**T-1005-FRONT: Model Loader & Stage** (Status: Ready to start)
-- **Context:** Component `<PartModel3D>` using `useGLTF` with Suspense fallback and BBox proxy for null URLs
-- **Status:** NOT STARTED (dependency on T-1004-FRONT complete ✅)
-- **Dependencies:** T-1004-FRONT ✅, T-1002-BACK ✅, T-0507-FRONT ✅
-- **Next Step:** TDD-ENRICH phase (Step 1/5) - Create technical specification
-- **Key Design:**
-  - Component: `<PartModel3D url={glbUrl} bbox={bbox} />` with Suspense boundary
-  - Fallback: `<BBoxProxy bbox={bbox} />` when glbUrl is null (reuse T-0507-FRONT)
-  - Preloading: `useGLTF.preload(adjacentUrls)` for performance
-  - Error handling: React Error Boundary for load failures
-- **Dependency Chain:** T-1004-FRONT ✅ → T-1005-FRONT (next) → T-1007-FRONT (modal integration)
+**None** — Sprint 5 paused after T-1005-FRONT completion. Next ticket: T-1006-FRONT (Error Boundary) or T-1007-FRONT (Modal Integration).
 
 ## Recently Completed
+- **T-1005-FRONT: Model Loader & Stage** — ✅ COMPLETE & REFACTORED (2026-02-25 21:34) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→READY FOR AUDIT)
+  - **Context:** Component `<ModelLoader partId>` using `useGLTF` hook with Suspense fallback, BBox wireframe proxy for processing state, and service layer integration for part data fetching
+  - **TDD Timeline:**
+    - ENRICH: 2026-02-25 18:45 (Spec validated, dependencies verified, contract alignment confirmed) [Prompt #173]
+    - RED: 2026-02-25 20:15 (10 tests created, all failing by design ✅) [Prompt #174]
+    - GREEN: 2026-02-25 21:30 (Implementation complete, all tests passing ✅) [Prompt #175]
+    - REFACTOR: 2026-02-25 21:34 (Code quality improvements, JSDoc enhanced, console logs production-safe, **302/302 tests PASSING**) [Prompt #176]
+  - **Implementation Details:**
+    - **ModelLoader.tsx** (264 lines): Main component with 4 state hooks (partData, loading, error, groupRef)
+    - **useEffect #1:** fetchPartData() → getPartDetail() → callbacks (onLoadSuccess/onLoadError)
+    - **useEffect #2:** Auto-center/auto-scale with Three.js Box3/Vector3 (try-catch for jsdom compatibility)
+    - **Sub-components:** GLBModel (useGLTF), ProcessingFallback (BBoxProxy + message for NULL low_poly_url), ErrorFallback (BBoxProxy + error message), LoadingSpinner (HTML overlay)
+    - **preloadAdjacentModels():** Stub function for T-1003-BACK integration (preload prev_id/next_id GLB files)
+    - **Service Layer:** getPartDetail(partId) in upload.service.ts (+50 lines) with error handling (404/403/network)
+    - **Types:** PartDetail interface in types/parts.ts (+58 lines, 12 fields matching backend PartDetailResponse)
+  - **Refactoring Improvements:**
+    - JSDoc enhanced for 5 sub-components (GLBModel, ProcessingFallback, ErrorFallback, LoadingSpinner, preloadAdjacentModels) with comprehensive @param/@returns documentation
+    - Console logs wrapped in `process.env.NODE_ENV === 'development'` checks (3 instances: console.warn auto-center, console.error fetch, console.warn preload)
+    - Production-safe: No debug noise in production, all warnings/errors hidden outside development mode
+    - Code architecture verified: No magic numbers (constants extraction complete), no code duplication, type safety 100%
+  - **Test Results:** **10/10 tests PASSING (100%)** ✅ - Duration: 2.81s
+    - LOADING-01: Loading state render ✅
+    - LOADING-02: Loading callback ✅
+    - CALLBACK-01: Success callback ✅
+    - FALLBACK-01: Processing fallback render ✅
+    - FALLBACK-02: Processing fallback structure ✅ (BBoxProxy + message)
+    - PROPS-01: Default props applied ✅
+    - FALLBACK-03: GLB Model render ✅
+    - PROPS-02: Custom props override ✅
+    - CALLBACK-02: Error callback ✅
+    - EDGE-01: Error fallback render ✅ (error message + BBoxProxy)
+  - **Anti-Regression Verification:** **302/302 frontend tests PASSING (100%)** ✅ - Full test suite validated, zero regressions introduced
+  - **Code Quality:** TypeScript strict mode, Clean Architecture pattern, constants extraction (DEFAULTS, ERROR_MESSAGES, LOADING_MESSAGES), JSDoc complete, production console log cleanup
+  - **Dependencies:** T-1004-FRONT ✅ (PartViewerCanvas), T-1002-BACK ✅ (GET /api/parts/{id}), T-0507-FRONT ✅ (BBoxProxy component)
+  - **Files Created:** ModelLoader.tsx (264 lines), ModelLoader.types.ts (68 lines), ModelLoader.constants.ts (68 lines), ModelLoader.test.tsx (300 lines), types/parts.ts (+58 lines), upload.service.ts (+50 lines)
+  - **Technical Spec:** `docs/US-010/T-1005-FRONT-TechnicalSpec.md` (730 lines, ENRICHED 2026-02-25)
+  - **Documentation:** Updated docs/09-mvp-backlog.md (DONE), memory-bank/activeContext.md, memory-bank/progress.md (Sprint 5 entry), prompts.md (#173-176)
+  - **Dependency Chain:** T-1004-FRONT ✅ → T-1005-FRONT ✅ (REFACTOR complete) → T-1007-FRONT (modal integration, ready to start) | T-1006-FRONT (error boundary, parallel track)
 - **T-1003-BACK: Part Navigation API** — ✅ COMPLETE with Redis Caching (2026-02-25 20:15) | TDD Workflow Complete + Production Enhancements
   - **Context:** Navigation API para modal 3D viewer. Retorna prev_id/next_id para navegación secuencial (botones ← →) con Redis caching (300s TTL, <50ms cache hit)
   - **TDD Timeline:**

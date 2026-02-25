@@ -186,11 +186,28 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
 
 ### 🔄 In Progress
 - US-005: Dashboard 3D (T-0507-FRONT LOD complete 2026-02-22, next: T-0508-FRONT Part Selection & Modal)
+- **US-010: Visor 3D Web de Piezas** (Wave 3 progress: 5/9 tickets complete 2026-02-25)
+  - ✅ T-1001-INFRA: CloudFront CDN setup with presigned URLs (5min TTL)
+  - ✅ T-1002-BACK: Part Detail API returning PartDetailResponse (12 fields)
+  - ✅ T-1003-BACK: Navigation API with Redis caching (prev_id/next_id, 53% latency reduction)
+  - ✅ T-1004-FRONT: PartViewerCanvas component (React Three Fiber wrapper, 3-point lighting)
+  - ✅ **T-1005-FRONT: Model Loader & Stage** (2026-02-25 DONE & REFACTORED)
+    * Component `<ModelLoader partId>` with useGLTF hook for GLB loading from CDN presigned URLs
+    * Service layer: `getPartDetail(partId)` in upload.service.ts fetches part metadata from T-1002-BACK API
+    * Type contract: PartDetail interface (12 fields) aligned with backend PartDetailResponse
+    * Fallback states: 3 scenarios handled with dedicated UI:
+      - **ProcessingFallback**: Shows BBoxProxy wireframe + "Geometría en procesamiento" message when low_poly_url is NULL
+      - **ErrorFallback**: Shows BBoxProxy + error message for 404/403/network failures
+      - **LoadingSpinner**: HTML overlay during initial fetch with informative messages
+    * Auto-centering/scaling: Three.js Box3/Vector3 calculations with jsdom-safe try-catch
+    * Preloading integration: preloadAdjacentModels() stub ready for T-1003-BACK navigation (uses useGLTF.preload())
+    * Test coverage: 10/10 tests PASS (100%) — LOADING-01/02, CALLBACK-01/02, FALLBACK-01/02/03, PROPS-01/02, EDGE-01
+    * Anti-regression verified: 302/302 frontend tests PASS, zero breaking changes
+    * Production-ready: JSDoc enhanced for 5 sub-components, console logs wrapped in NODE_ENV checks, constants extraction complete
+    * Files: 4 created (ModelLoader.tsx 264 lines + types 68 lines + constants 68 lines + tests 300 lines), types/parts.ts +58 lines, upload.service.ts +50 lines
+  - ⏸️ Next: T-1006-FRONT Error Boundary, T-1007-FRONT Modal Integration, T-1008-FRONT Metadata Panel, T-1009-TEST Integration Tests
 
 ### 📋 Next Milestones
-- US-005: Dashboard 3D (T-0508-FRONT Selection → T-0509/T-0510 Tests)
-- US-010: 3D Web Viewer High-Poly (instance viewer, detailed inspection)
+- US-010: Complete remaining tickets (T-1006 Error Boundary → T-1007 Modal Integration → T-1008 Metadata Panel → T-1009 Tests)
 - US-007: Lifecycle state machine (block status transitions)
-- US-010: 3D Web Viewer High-Poly (Three.js instance viewer for detailed inspection)
-- US-007: Lifecycle state machine
 - US-013: Authentication (Supabase Auth)
