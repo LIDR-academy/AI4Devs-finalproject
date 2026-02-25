@@ -1,16 +1,49 @@
 # Active Context
 
 ## Current Sprint
-Sprint 5 / US-010 - Visor 3D Web | WAVE 2 IN PROGRESS (2026-02-25) | **T-1002-BACK COMPLETE ✅**
+Sprint 5 / US-010 - Visor 3D Web | WAVE 2 IN PROGRESS (2026-02-25) | **T-1002-BACK ✅ + T-1004-FRONT ✅**
 
 ## Active Ticket
-**T-1004-FRONT: Viewer Canvas Component** (Next in dependency chain - NOW UNBLOCKED ✅)
-- **Context:** Requires T-1001-INFRA ✅ + T-0504-FRONT ✅ + T-1002-BACK ✅. Desbloqueador para T-1005-FRONT, T-1006-FRONT, T-1007-FRONT.
-- **Timestamp:** Ready to start (2026-02-25)
-- **Status:** Unblocked (T-1002-BACK completed and audited). Next action: Enrich technical spec
-- **Dependency Chain Unblocked:** T-1002-BACK ✅ → T-1004-FRONT ⏳ → T-1005-FRONT → ...
+**T-1005-FRONT: Model Loader & Stage** (TDD Workflow - Step 1/5: ENRICH phase)
+- **Context:** Requires T-1004-FRONT ✅ (JUST COMPLETED), T-1002-BACK ✅, T-0507-FRONT ✅. Desbloqueador para T-1006-FRONT, T-1007-FRONT.
+- **Status:** Ready to START ENRICH PHASE. All dependencies met.
+- **Dependency Chain:** T-1002-BACK ✅ → T-1004-FRONT ✅ → T-1005-FRONT NEXT → ...
 
 ## Recently Completed
+- **T-1004-FRONT: Viewer Canvas Component** — ✅ COMPLETE & REFACTORED (2026-02-25 07:52) | TDD Workflow Complete (Steps 1-4: ENRICH→RED→GREEN→REFACTOR)
+  - **Context:** Critical ticket en US-010 dependency chain que desbloquea T-1005-FRONT.
+  - **TDD Timeline:** 
+    - ENRICH: 2026-02-25 05:45 (Spec validated 99/100, production-ready) [Prompt #163]
+    - RED: 2026-02-25 06:38 (26 tests created, all failing by design ✅) [Prompt #164]
+    - GREEN: 2026-02-25 07:52 (Implementation complete, all tests passing ✅) [Prompt #165]
+    - REFACTOR: 2026-02-25 08:15 (Code verification clean, zero changes needed, REFACTOR COMPLETE ✅) [Prompt #166]
+  - **Implementation Details:**
+    - **PartViewerCanvas.tsx** (192 lines): React.FC with all 11 props + defaults from constants
+    - **PartViewerCanvasProps interface** (87 bytes): Complete JSDoc documenting all props
+    - **VIEWER_DEFAULTS constant:** FOV, CAMERA_POSITION, AUTO_ROTATE, speeds, shadows, messages, touch support
+    - **CAMERA_CONSTRAINTS constant:** MIN_DISTANCE, MAX_DISTANCE, MAX_POLAR_ANGLE
+    - **LIGHTING_CONFIG constant:** 3-point lighting (KEY, FILL, RIM, AMBIENT) with positions, intensities, colors
+    - **LoadingFallback component:** Html-based spinner with message inside Suspense
+    - **LoadingOverlay component:** Fullscreen overlay div when showLoading=true
+    - **Canvas setup:** PerspectiveCamera, OrbitControls with damping, Stage with HDRI, contact shadows
+    - **Accessibility:** role="img", aria-label (default + custom)
+  - **Test Results:** **26/26 PASSING** ✅ (0 failures, 0 regressions)
+    - Rendering: 4 tests (canvas, className, loading overlay, custom message)
+    - Accessibility: 2 tests (role + aria-label, default aria-label)
+    - Props: 8 tests (minimal props, all optional, specific combinations)
+    - Integration: 3 tests (multiple children, loading independence, styles)
+    - EdgeCases: 6 tests (empty className, empty aria-label, zero speed, negative coords, large FOV, constants validation)
+    - LightingConfig: 3 tests (VIEWER_DEFAULTS, CAMERA_CONSTRAINTS, LIGHTING_CONFIG structure)
+    - Overall frontend suite: **292/292 PASSING (+ 2 todo)** ✅
+  - **Code Quality:** JSDoc complete on all components, TypeScript strict (minimal useRef<any> acceptable for THREE.js), DRY principle (all magic numbers extracted to constants), contract-first design (Props interface matches implementation exactly), zero duplication with T-0504-FRONT Canvas3D
+  - **Files Created:**
+    - src/frontend/src/components/PartViewerCanvas.tsx (5.8 KB)
+    - src/frontend/src/components/PartViewerCanvas.types.ts (1.9 KB)
+    - src/frontend/src/components/PartViewerCanvas.constants.ts (4.0 KB)
+    - src/frontend/src/components/PartViewerCanvas.test.tsx (10.3 KB, 26 test cases)
+  - **DoD Checklist:** 11/11 ✅ (code refactored, all tests pass, docstrings complete, no dead code, systemPatterns verified no changes needed, activeContext updated, progress.md updated, prompts.md registered #163-166, no new dependencies, env vars not changed)
+  - **REFACTOR Phase:** Step 4/5 COMPLETE ✅ (2026-02-25 08:15) - Code verification clean (no refactor changes needed), JSDoc complete, all imports valid, tests passing, zero regressions
+  - **Status:** LISTO PARA AUDIT PHASE ✅ (Next step: Step 5/5 AUDIT, verify acceptance criteria 6/6, update prompts.md with final audit report)
 - **T-1002-BACK: Get Part Detail API** — ✅ COMPLETE & AUDITED (2026-02-25 05:35) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→AUDIT)
   - **Context:** Critical ticket en US-010 dependency chain que bloquea T-1004-FRONT.
   - **TDD Timeline:** 
