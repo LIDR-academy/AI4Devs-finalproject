@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString, Matches } from 'class-validator';
 import { AdminService } from './admin.service';
 
 class PaginationQuery {
@@ -20,6 +20,26 @@ class OrdersQuery extends PaginationQuery {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortDir?: string;
+
+  @IsOptional()
+  @IsString()
+  q?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  mode?: string;
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  from?: string;
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  to?: string;
 }
 
 @Controller('admin')
@@ -30,7 +50,15 @@ export class AdminController {
   getOrders(@Query() query: OrdersQuery) {
     const page = Math.max(1, parseInt(query.page ?? '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(query.limit ?? '50', 10) || 50));
-    return this.adminService.getOrders(page, limit, query.sortBy, query.sortDir);
+    return this.adminService.getOrders(page, limit, {
+      sortBy: query.sortBy,
+      sortDir: query.sortDir,
+      q: query.q,
+      status: query.status,
+      mode: query.mode,
+      from: query.from,
+      to: query.to,
+    });
   }
 
   @Get('users')

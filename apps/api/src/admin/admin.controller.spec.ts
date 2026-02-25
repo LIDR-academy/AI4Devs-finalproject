@@ -30,6 +30,16 @@ describe('AdminController (integration HTTP)', () => {
   });
 
   describe('GET /admin/orders', () => {
+    const defaultParams = {
+      sortBy: undefined,
+      sortDir: undefined,
+      q: undefined,
+      status: undefined,
+      mode: undefined,
+      from: undefined,
+      to: undefined,
+    };
+
     it('responde 200 con datos paginados', async () => {
       const payload = {
         data: [{ id: 'o1' }],
@@ -42,7 +52,7 @@ describe('AdminController (integration HTTP)', () => {
         .expect(200);
 
       expect(res.body).toEqual(payload);
-      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, undefined, undefined);
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, defaultParams);
     });
 
     it('parsea correctamente los parámetros page y limit', async () => {
@@ -52,7 +62,7 @@ describe('AdminController (integration HTTP)', () => {
         .get('/admin/orders?page=2&limit=10')
         .expect(200);
 
-      expect(mockAdminService.getOrders).toHaveBeenCalledWith(2, 10, undefined, undefined);
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(2, 10, defaultParams);
     });
 
     it('usa valores por defecto cuando no se envían parámetros', async () => {
@@ -60,7 +70,7 @@ describe('AdminController (integration HTTP)', () => {
 
       await request(app.getHttpServer()).get('/admin/orders').expect(200);
 
-      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, undefined, undefined);
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, defaultParams);
     });
 
     it('pasa sortBy y sortDir al servicio cuando se proporcionan', async () => {
@@ -70,7 +80,11 @@ describe('AdminController (integration HTTP)', () => {
         .get('/admin/orders?sortBy=store&sortDir=asc')
         .expect(200);
 
-      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, 'store', 'asc');
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, {
+        ...defaultParams,
+        sortBy: 'store',
+        sortDir: 'asc',
+      });
     });
 
     it('pasa sortBy=amount y sortDir=desc correctamente', async () => {
@@ -80,7 +94,39 @@ describe('AdminController (integration HTTP)', () => {
         .get('/admin/orders?sortBy=amount&sortDir=desc')
         .expect(200);
 
-      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, 'amount', 'desc');
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, {
+        ...defaultParams,
+        sortBy: 'amount',
+        sortDir: 'desc',
+      });
+    });
+
+    it('pasa q al servicio cuando se proporciona', async () => {
+      mockAdminService.getOrders.mockResolvedValue({ data: [], meta: {} });
+
+      await request(app.getHttpServer())
+        .get('/admin/orders?q=zara')
+        .expect(200);
+
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, {
+        ...defaultParams,
+        q: 'zara',
+      });
+    });
+
+    it('pasa status y from/to al servicio correctamente', async () => {
+      mockAdminService.getOrders.mockResolvedValue({ data: [], meta: {} });
+
+      await request(app.getHttpServer())
+        .get('/admin/orders?status=COMPLETED,CANCELED&from=2026-02-01&to=2026-02-28')
+        .expect(200);
+
+      expect(mockAdminService.getOrders).toHaveBeenCalledWith(1, 50, {
+        ...defaultParams,
+        status: 'COMPLETED,CANCELED',
+        from: '2026-02-01',
+        to: '2026-02-28',
+      });
     });
   });
 

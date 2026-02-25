@@ -665,6 +665,108 @@ Atiende la Suggestion S1, pero con el escenario ?sort=invalido&dir=asc (sortBy i
 
 ---
 
+#### t02-orders-filters
+
+**Prompt 1** *(Modo Agent):*
+
+```
+lee memory bank para iniciar un ticket de frontend
+```
+
+> **Resumen de objetivos alcanzados:** Se leyeron los documentos del memory-bank (`README.md`, `overview.md`, `tech-stack.md`, sesión `2026-02-24-t01-orders-sorting.md`, `spec.md` del admin-dashboard, `T01-frontend-orders-sorting.md`, `admin.controller.ts` y `admin.service.ts`) para cargar el contexto completo del proyecto. Se identificó el estado actual del dashboard admin (CU-02 + T01 completados, todos los changes archivados) y se presentaron los tickets de frontend pendientes identificados como no-objetivos de tickets anteriores. Mediante una pregunta estructurada el usuario eligió el ticket **A — Filtros en /orders (Estado, Modo)** como próxima tarea.
+
+---
+
+**Prompt 2** *(Modo Plan):*
+
+```
+Quiero filtros en la página de Pedidos, en las columnas de Estado y Modo. También necesito una opción de buscar por Tienda, Referencia, Usuario o fecha, pero no sé la mejor manera de hacerlo, si con una única celda de Search de forma que, a medida que escribes, se vean en pantalla sólo los Pedidos con coincidencias en alguna de esas columnas, o mejor con un search by especificando la columna primeramente. Como IA experta en frontend y UX/UI razona cuál sería la mejor práctica en mi caso para obtener la mejor UX/UI.
+```
+
+> **Resumen de objetivos alcanzados:** Se realizó un análisis exhaustivo de UX/UI comparando tres patrones de búsqueda (search box único, búsqueda por columna y enfoque híbrido), teniendo en cuenta el factor determinante de que el filtrado debe ser obligatoriamente server-side por la paginación existente. Se recomendó la **Opción C — búsqueda global + filtros discretos**, el mismo patrón usado por Linear, GitHub Issues y Retool: search box único con placeholder descriptivo para texto libre (Tienda, Referencia, Usuario), dropdowns multi-select para Estado y Modo (valores discretos conocidos), y date range picker para fechas (semántica diferente). Se documentó la lógica de combinación (AND entre controles, OR dentro de multi-select), la gestión de URL y la integración con el sort de T01.
+
+---
+
+**Prompt 3** *(Modo Agent):*
+
+```
+primero genera un fichero markdown llamado T02-orders-filters.md denro de la carpeta @openspec/changes  con la misma estructura que @openspec/changes/T01-frontend-orders-sorting.md para entender y exandir mejor la definición de este ticket. También incluye dentro del ticket el mejor approach para poder filtrar por rangos de fecha, coordinando que todos los orderings y los filters (tanto el search box como los multi-select dropdown y el date range picker) queden bien integrados en la expereincia UI del usuario, siguiendo las mejoes prácticas. Utiliza el comando /enrich-us para enriquezer el ticket.
+```
+
+> **Resumen de objetivos alcanzados:** Se leyó el comando `/enrich-us`, el archivo T01 de referencia y el estado actual del backend (`admin.controller.ts`, `admin.service.ts`, `schema.prisma`) para obtener el contexto técnico real. Se creó `openspec/changes/T02-orders-filters.md` (346 líneas) siguiendo la misma estructura que T01, con: historia de usuario, descripción funcional completa de los 4 controles (search box con debounce 300ms, status multi-select con puntos de color, mode multi-select, date range picker con Popover + `<input type="date">` nativo y botón "Aplicar"), esquema de URL con tabla completa de 9 parámetros y reglas de combinación, arquitectura frontend detallada (`OrdersFilterBar` coordinador con `buildUrl()` centralizado, sub-componentes tipados), arquitectura backend (`buildWhere()` privado análogo a `buildOrderBy()` con `Prisma.OrderWhereInput`), criterios de aceptación exhaustivos (search, estado, modo, fecha, integración, chips, accesibilidad, backend) y tabla de archivos a crear o modificar.
+
+---
+
+**Prompt 4** *(Modo Agent):*
+
+```
+/opsx-ff t02-orders-filters teniendo en cuenta también todo el dcumento @openspec/changes/T02-orders-filters.md 
+```
+
+> **Resumen de objetivos alcanzados:** Se ejecutó el skill `openspec-ff-change` generando en secuencia los 4 artefactos OpenSpec del change `t02-orders-filters`: `proposal.md` (justificación, capacidades nuevas `orders-filters` y modificación de `admin-dashboard`, impacto y plan de rollback), `specs/orders-filters/spec.md` (7 requisitos con 25 escenarios: barra de filtros, search multi-columna, status multi-select, mode multi-select, date range picker, chips de filtros activos, endpoint backend), `specs/admin-dashboard/spec.md` (MODIFIED del requisito existente: tabla con barra de filtros, subtítulo dinámico `meta.total`, estado vacío adaptativo), `design.md` (10 decisiones técnicas documentadas: D1-URL-as-state, D2-FilterBar independiente de OrdersTable, D3-buildUrl centralizado, D4-debounce solo en search, D5-date range con "Aplicar", D6-input nativo sin Calendar, D7-refactor firma a objeto, D8-buildWhere privado, D9-validación doble de enums, D10-mode insensitive) y `tasks.md` (36 tareas en 9 grupos: Backend DTO → Backend lógica → Backend tests → Frontend tipos → Frontend page → Frontend sub-componentes → OrdersFilterBar → OrdersEmptyState → Integración y verificación). Todos los artefactos marcados como `done`.
+
+---
+
+**Prompt 5** *(Modo Agent):*
+
+```
+/opsx-apply  t02-orders-filters
+```
+
+> **Resumen de objetivos alcanzados:** Se implementaron las 34 tareas del change completas. **Backend**: interfaz `GetOrdersParams` exportada en `admin.service.ts`; `OrdersQuery` DTO ampliado con `q`, `status`, `mode` (`@IsString`) y `from`/`to` (`@Matches(/^\d{4}-\d{2}-\d{2}$/)`); firma de `getOrders()` refactorizada a objeto `params`; método privado `buildWhere()` con lógica AND entre filtros (OR sobre 4 columnas con `mode: 'insensitive'`, status/mode CSV con allowlist e `{ in: [...] }`, rango de fechas `gte 00:00:00Z / lte 23:59:59.999Z` sobre `webhookReceivedAt`); `prisma.order.count({ where })` compartiendo el mismo `where` que `findMany` para que `meta.total` sea siempre el count filtrado; 11 nuevos tests de `buildWhere()` y 2 nuevos tests en el controller. **Frontend**: `OrdersFilters`, `VALID_ORDER_STATUSES`, `VALID_ORDER_MODES`, `ORDER_STATUS_LABELS`, `ORDER_MODE_LABELS` en `types/api.ts`; `getOrders()` en `lib/api.ts` con `filters?`; `orders/page.tsx` con parsing y validación de los nuevos `searchParams`, subtítulo dinámico (`meta.total`), `OrdersFilterBar` integrado y `hasFilters` a `OrdersEmptyState`; componente `Popover` Shadcn (`@radix-ui/react-popover` instalado); y 6 nuevos componentes: `orders-search-input.tsx`, `orders-status-filter.tsx`, `orders-mode-filter.tsx`, `orders-date-filter.tsx`, `orders-active-filter-chips.tsx` y `orders-filter-bar.tsx` (coordinador con `buildUrl()` centralizado y debounce 300ms). 40/40 tests backend pasando, `tsc --noEmit` sin errores.
+
+---
+
+**Prompt 6** *(Modo Agent):*
+
+```
+/opsx-verify t02-orders-filters
+```
+
+> **Resumen de objetivos alcanzados:** Se realizó la verificación completa en tres dimensiones (Completeness, Correctness, Coherence). Se confirmaron 34/34 tareas completas, todos los artefactos en estado `done` y cobertura de 6/7 escenarios de spec. Se detectó un **WARNING** crítico (W1): `SortableColumnHeader` construía la URL con `${pathname}?sort=${column}&dir=${nextDir}` sin preservar los params de filtro activos, violando los escenarios "Sort preserva filtros activos" y "Filtros y sort coexisten en la URL" de la spec. Se identificaron 2 sugerencias opcionales (stale closure en debounce, comportamiento heterogéneo de `@Matches` vs allowlist para valores inválidos).
+
+---
+
+**Prompt 7** *(Modo Agent):*
+
+```
+si
+```
+
+> **Resumen de objetivos alcanzados:** Se corrigió el warning W1 en `sortable-column-header.tsx`: se añadió `useSearchParams()` de `next/navigation` y se refactorizó `handleClick` para copiar los params de filtro activos (`q`, `status`, `mode`, `from`, `to`) al construir la nueva URL de sort. `tsc --noEmit` pasó sin errores. Con esta corrección, los dos escenarios de la spec quedaron cubiertos: `OrdersFilterBar` preserva el sort al filtrar (ya funcionaba) y `SortableColumnHeader` preserva los filtros al cambiar la ordenación (corregido).
+
+---
+
+**Prompt 8** *(Modo Agent):*
+
+```
+/update-docs 
+```
+
+> **Resumen de objetivos alcanzados:** Se actualizaron 3 archivos de documentación: `openspec/specs/admin-dashboard/spec.md` — requisito "Vista de órdenes" ampliado con `OrdersFilterBar`, subtítulo dinámico (`meta.total`), estado vacío adaptativo y 4 nuevos escenarios; estructura de archivos actualizada con los 6 nuevos componentes de filtros; firma de `getOrders()` en `lib/api.ts` actualizada. `openspec/specs/admin-api/spec.md` — endpoint `/admin/orders` con tabla completa de query params (`q`, `status`, `mode`, `from`, `to`), documentación de `buildWhere()`, `meta.total` como count filtrado y 5 nuevos escenarios; sección `src/types/api.ts` con los nuevos tipos `OrdersFilters`, `VALID_ORDER_STATUSES`, `VALID_ORDER_MODES`, `ORDER_STATUS_LABELS`, `ORDER_MODE_LABELS`. `openspec/specs/orders-column-sorting/spec.md` — 2 nuevos escenarios: "Sort preserva los filtros activos" y "Filtros y sort coexisten al activar un filtro con sort activo".
+
+---
+
+**Prompt 9** *(Modo Agent):*
+
+```
+actualiza @memory-bank , revisando que se incluya lo  realizado en esta sersión
+```
+
+> **Resumen de objetivos alcanzados:** Se creó el archivo `memory-bank/sessions/2026-02-25-t02-orders-filters.md` con el registro completo de la sesión: resumen de implementación backend y frontend, tabla de decisiones técnicas (D1-D10), corrección post-verificación W1, listado de archivos modificados/creados y resultados de tests. Se actualizó `memory-bank/README.md`: cabecera con la fecha y change activo del día, tabla de sesiones con T01 (que faltaba) y T02 añadidos, sección "Próximo change" apuntando al archive pendiente de T02 y luego a `cu02-webhook-ecommerce-sync`, y sección "Cambios recientes" con el resumen de T02.
+
+---
+
+**Prompt 10** *(Modo Agent):*
+
+```
+/opsx-archive t02-orders-filters
+```
+
+> **Resumen de objetivos alcanzados:** Tras confirmar 4/4 artefactos completos y 34/34 tareas marcadas `[x]`, se evaluó el estado de sync de los delta specs. La spec de `admin-dashboard` ya estaba sincronizada (vía `/update-docs`), pero la spec de la nueva capability `orders-filters` no existía aún en `openspec/specs/`. El usuario eligió sincronizar antes de archivar: se creó `openspec/specs/orders-filters/spec.md` con el contenido completo de la delta spec (7 requisitos, 31 escenarios). Finalmente se movió el directorio del change a `openspec/changes/archive/2026-02-25-t02-orders-filters/` y se movió el archivo de overview `T02-orders-filters.md` al mismo directorio de archive.
+
+---
+
 ### 7. Pull Requests
 
 **Prompt 1** *(Modo Agent):*

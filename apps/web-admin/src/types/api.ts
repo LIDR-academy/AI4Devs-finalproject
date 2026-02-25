@@ -121,3 +121,34 @@ export type SortDir = 'asc' | 'desc';
 export const VALID_SORT_COLUMNS: SortByColumn[] = ['ref', 'store', 'user', 'amount', 'date'];
 export const DEFAULT_SORT: SortByColumn = 'date';
 export const DEFAULT_DIR: SortDir = 'desc';
+
+export interface OrdersFilters {
+  q?: string;
+  status?: OrderStatus[];
+  mode?: OrderMode[];
+  from?: string;
+  to?: string;
+}
+
+export const VALID_ORDER_STATUSES: OrderStatus[] = [
+  'PENDING_PAYMENT',
+  'PENDING_ADDRESS',
+  'READY_TO_PROCESS',
+  'COMPLETED',
+  'CANCELED',
+];
+
+export const VALID_ORDER_MODES: OrderMode[] = ['ADRESLES', 'TRADITIONAL'];
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  PENDING_PAYMENT: 'Pago pendiente',
+  PENDING_ADDRESS: 'Dirección pendiente',
+  READY_TO_PROCESS: 'Listo para procesar',
+  COMPLETED: 'Completado',
+  CANCELED: 'Cancelado',
+};
+
+export const ORDER_MODE_LABELS: Record<OrderMode, string> = {
+  ADRESLES: 'Adresles',
+  TRADITIONAL: 'Tradicional',
+};

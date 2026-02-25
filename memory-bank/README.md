@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-23  
-> ✅ **Change completado**: cu02-frontend-admin (40/40 tareas) — listo para archivar
+> **Última actualización**: 2026-02-25  
+> ✅ **Change completado**: t02-orders-filters (34/34 tareas) — pendiente de `/opsx-archive`
 
 ## 📖 Inicio Rápido
 
@@ -65,8 +65,10 @@ Aquí se documentarán:
 | [2026-02-18](./sessions/2026-02-18-cu01-progreso.md) | CU-01 Procesar Compra Mock — Progreso inicial | ✅ Supersedida |
 | [2026-02-21](./sessions/2026-02-21-cu01-procesar-compra-mock.md) | CU-01 Procesar Compra Mock — Completado | ✅ Completado (23/23 tareas) |
 | [2026-02-23](./sessions/2026-02-23-cu02-frontend-admin.md) | CU-02 Frontend Admin Dashboard — Completado | ✅ Completado (40/40 tareas) |
+| [2026-02-24](./sessions/2026-02-24-t01-orders-sorting.md) | T01 — Ordenación de Columnas en Pedidos — Completado | ✅ Completado (30/30 tareas) |
+| [2026-02-25](./sessions/2026-02-25-t02-orders-filters.md) | T02 — Filtros y Búsqueda en Tabla de Pedidos — Completado | ✅ Completado (34/34 tareas) |
 
-**Próximo change**: `cu02-webhook-ecommerce-sync` — Webhook real WooCommerce.
+**Próximo change**: `/opsx-archive t02-orders-filters` → luego `cu02-webhook-ecommerce-sync` (Webhook real WooCommerce).
 
 ## 🔄 Flujo de Trabajo
 
@@ -138,7 +140,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-23  
+**Última revisión**: 2026-02-25  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: CU-02 completado — `apps/web-admin` creado (Next.js 16, React 19, Tailwind v4, Shadcn/ui). AdminModule NestJS con 3 endpoints. 53 tests pasando. Dashboard funcional: pedidos, usuarios, visor de chat con burbujas.  
+**Cambios recientes**: T02 completado — filtros server-side en tabla de pedidos (búsqueda texto, multi-select estado/modo, date range picker). 6 nuevos componentes frontend. `buildWhere()` en backend. 40 tests pasando. `SortableColumnHeader` corregido para preservar filtros al cambiar sort. Docs de specs actualizadas.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

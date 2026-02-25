@@ -43,7 +43,13 @@ La página `/orders` SHALL obtener los pedidos vía `GET /api/admin/orders` (Ser
 
 **Ordenación**: dinámica vía query params `?sort=<columna>&dir=<asc|desc>`. Por defecto: `date DESC` (más recientes primero). Ver spec `orders-column-sorting` para los requisitos completos de ordenación.
 
-La tabla SHALL mostrar un skeleton de 8 filas durante la carga (`loading.tsx`) y un estado vacío con icono cuando `data` está vacío.
+**Filtros**: la tabla SHALL ir precedida de la barra de filtros `OrdersFilterBar`. Ver spec `orders-filters` para los requisitos completos de filtrado y búsqueda.
+
+**Subtítulo de la página**: SHALL mostrar `"N pedido(s) encontrado(s)"` donde N es `meta.total` (total filtrado devuelto por la API), no un texto fijo.
+
+La tabla SHALL mostrar un skeleton de 8 filas durante la carga (`loading.tsx`) y un estado vacío adaptativo:
+- Sin pedidos y sin filtros: icono `ShoppingCart` + "Sin pedidos todavía. Cuando se procese un pedido aparecerá aquí."
+- Sin resultados con filtros activos: icono `ShoppingCart` + "Sin resultados" + "Prueba a ajustar o limpiar los filtros activos."
 
 **Paleta de badges completa:**
 - `PENDING_PAYMENT` → `bg-gray-100 text-gray-600 border-gray-200`
@@ -58,6 +64,14 @@ La tabla SHALL mostrar un skeleton de 8 filas durante la carga (`loading.tsx`) y
 - **WHEN** el usuario accede a `/orders` y hay pedidos disponibles
 - **THEN** la tabla muestra una fila por pedido con las 8 columnas especificadas
 
+#### Scenario: Barra de filtros precede a la tabla
+- **WHEN** el usuario accede a `/orders`
+- **THEN** se muestra la barra de filtros (`OrdersFilterBar`) encima de la tabla
+
+#### Scenario: Subtítulo muestra el conteo filtrado
+- **WHEN** hay 3 pedidos con `status=COMPLETED` de un total de 10 y el filtro de estado está activo
+- **THEN** el subtítulo muestra "3 pedidos encontrados"
+
 #### Scenario: Icono de chat solo aparece en pedidos con conversación
 - **WHEN** un pedido tiene `conversations.length > 0`
 - **THEN** se muestra el icono `MessageSquare` con `aria-label` y enlace a `/conversations/[id]`
@@ -66,9 +80,13 @@ La tabla SHALL mostrar un skeleton de 8 filas durante la carga (`loading.tsx`) y
 - **WHEN** un pedido tiene `conversations.length === 0`
 - **THEN** la celda de chat está vacía (sin icono ni enlace)
 
-#### Scenario: Estado vacío cuando no hay pedidos
-- **WHEN** la API devuelve `data: []`
-- **THEN** se muestra el componente `OrdersEmptyState` con icono `ShoppingCart` y mensaje "Sin pedidos todavía. Cuando se procese un pedido aparecerá aquí."
+#### Scenario: Estado vacío sin filtros activos
+- **WHEN** la API devuelve `data: []` y no hay filtros activos
+- **THEN** se muestra el componente `OrdersEmptyState` con mensaje "Sin pedidos todavía. Cuando se procese un pedido aparecerá aquí."
+
+#### Scenario: Estado vacío con filtros activos
+- **WHEN** la API devuelve `data: []` y hay al menos un filtro activo
+- **THEN** se muestra el componente `OrdersEmptyState` con mensaje "Sin resultados" y "Prueba a ajustar o limpiar los filtros activos."
 
 #### Scenario: Skeleton durante carga
 - **WHEN** la página está cargando datos de la API
@@ -274,10 +292,16 @@ apps/web-admin/
 │   │   │   └── sidebar.tsx                      ← 'use client' — usePathname() para nav activa
 │   │   ├── orders/
 │   │   │   ├── orders-table.tsx                 ← 'use client' — Shadcn Table con ordenación
-│   │   │   ├── sortable-column-header.tsx       ← 'use client' — cabecera sortable con useRouter
+│   │   │   ├── sortable-column-header.tsx       ← 'use client' — cabecera sortable; preserva filtros activos
 │   │   │   ├── orders-table-skeleton.tsx        ← Skeleton de filas
-│   │   │   ├── orders-empty-state.tsx           ← ShoppingCart + texto vacío
-│   │   │   └── order-status-badge.tsx           ← OrderStatusBadge + OrderModeBadge
+│   │   │   ├── orders-empty-state.tsx           ← ShoppingCart + texto vacío/sin resultados (prop hasFilters)
+│   │   │   ├── order-status-badge.tsx           ← OrderStatusBadge + OrderModeBadge
+│   │   │   ├── orders-filter-bar.tsx            ← 'use client' — coordinador de filtros + buildUrl()
+│   │   │   ├── orders-search-input.tsx          ← 'use client' — input con debounce 300ms
+│   │   │   ├── orders-status-filter.tsx         ← 'use client' — Popover multi-select de OrderStatus
+│   │   │   ├── orders-mode-filter.tsx           ← 'use client' — Popover multi-select de OrderMode
+│   │   │   ├── orders-date-filter.tsx           ← 'use client' — Popover date range picker nativo
+│   │   │   └── orders-active-filter-chips.tsx   ← 'use client' — chips de filtros activos + Limpiar todo
 │   │   ├── users/
 │   │   │   ├── users-table.tsx                  ← Server Component — Shadcn Table
 │   │   │   ├── users-table-skeleton.tsx         ← Skeleton de filas
@@ -311,7 +335,7 @@ apps/web-admin/
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 async function apiFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, { next: { revalidate: 30 } });
+  const res = await fetch(`${API_URL}${path}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
   return res.json() as Promise<T>;
 }
@@ -321,10 +345,16 @@ export const getOrders = (
   limit = 50,
   sortBy?: SortByColumn,
   sortDir?: SortDir,
+  filters?: OrdersFilters,
 ): Promise<OrdersResponse> => {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (sortBy) params.set('sortBy', sortBy);
   if (sortDir) params.set('sortDir', sortDir);
+  if (filters?.q) params.set('q', filters.q);
+  if (filters?.status?.length) params.set('status', filters.status.join(','));
+  if (filters?.mode?.length) params.set('mode', filters.mode.join(','));
+  if (filters?.from) params.set('from', filters.from);
+  if (filters?.to) params.set('to', filters.to);
   return apiFetch(`/api/admin/orders?${params.toString()}`);
 };
 

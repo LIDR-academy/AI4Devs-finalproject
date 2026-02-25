@@ -19,6 +19,14 @@ La tabla de pedidos en `/orders` SHALL permitir al administrador ordenar las fil
 - **WHEN** el administrador recarga la página con `?sort=store&dir=asc` en la URL
 - **THEN** la tabla muestra los pedidos ordenados por Tienda ascendente, sin perder el estado
 
+#### Scenario: Sort preserva los filtros activos
+- **WHEN** la URL contiene `?status=COMPLETED&q=zara` y el administrador hace clic en el encabezado "Importe"
+- **THEN** la URL pasa a ser `?sort=amount&dir=asc&status=COMPLETED&q=zara` (los filtros activos se preservan)
+
+#### Scenario: Filtros y sort coexisten al activar un filtro con sort activo
+- **WHEN** la URL contiene `?sort=amount&dir=desc` y el administrador selecciona el estado `COMPLETED` en `OrdersFilterBar`
+- **THEN** la URL pasa a ser `?sort=amount&dir=desc&status=COMPLETED` (el sort se preserva)
+
 #### Scenario: Parámetros de ordenación completamente inválidos
 - **WHEN** la URL contiene `?sort=invalido&dir=invalido`
 - **THEN** la página renderiza con el orden por defecto (Fecha DESC) sin mostrar error

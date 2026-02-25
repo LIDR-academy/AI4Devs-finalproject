@@ -1,9 +1,25 @@
 ## ADDED Requirements
 
 ### Requirement: Listar pedidos con contexto completo
-El sistema SHALL exponer `GET /api/admin/orders` que devuelva todos los pedidos ordenados por `webhookReceivedAt` descendente, incluyendo datos de tienda, usuario (con teléfono) y lista de IDs de conversación asociadas.
+El sistema SHALL exponer `GET /api/admin/orders` que devuelva pedidos paginados con soporte de ordenación y filtrado, incluyendo datos de tienda, usuario (con teléfono) y lista de IDs de conversación asociadas.
 
-El endpoint SHALL aceptar los parámetros de paginación `page` (entero ≥ 1, defecto 1) y `limit` (entero entre 1 y 100, defecto 50).
+El endpoint SHALL aceptar los siguientes query params (todos opcionales):
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `page` | entero ≥ 1 | Página (defecto: 1) |
+| `limit` | entero 1–100 | Tamaño de página (defecto: 50) |
+| `sortBy` | `ref\|store\|user\|amount\|date` | Columna de ordenación (defecto: `date`) |
+| `sortDir` | `asc\|desc` | Dirección (defecto: `desc`) |
+| `q` | string | Búsqueda de texto libre en `store.name`, `externalOrderNumber`, `user.firstName`, `user.lastName` (case-insensitive, OR entre columnas) |
+| `status` | string CSV | Estados a filtrar, ej: `COMPLETED,CANCELED`. Valores inválidos se ignoran silenciosamente |
+| `mode` | string CSV | Modos a filtrar, ej: `ADRESLES`. Valores inválidos se ignoran silenciosamente |
+| `from` | `YYYY-MM-DD` | Fecha inicio (inclusiva desde `00:00:00.000Z`). El DTO valida el formato; formato incorrecto → HTTP 400 |
+| `to` | `YYYY-MM-DD` | Fecha fin (inclusiva hasta `23:59:59.999Z`). Mismo comportamiento que `from` |
+
+Los filtros se combinan con lógica AND entre sí. Dentro de `status` y `mode`, la lógica es OR.
+
+`meta.total` refleja siempre el número de pedidos que cumplen los filtros activos (no el total global).
 
 **Respuesta `200 OK`:**
 ```json
@@ -52,18 +68,13 @@ El endpoint SHALL aceptar los parámetros de paginación `page` (entero ≥ 1, d
 }
 ```
 
-La consulta Prisma SHALL incluir:
-```
-prisma.order.findMany({
-  include: {
-    store: true,
-    user: { include: { phone: true } },
-    conversations: { select: { id: true } }
-  },
-  orderBy: { webhookReceivedAt: 'desc' },
-  skip: (page - 1) * limit,
-  take: limit
-})
+La consulta Prisma usa `buildWhere(params)` (método privado de `AdminService`) para construir el `where` y aplica el mismo filtro tanto en `findMany` como en `count`:
+```typescript
+const where = this.buildWhere(params);
+prisma.$transaction([
+  prisma.order.findMany({ include: { ... }, where, orderBy, skip, take }),
+  prisma.order.count({ where }),
+])
 ```
 
 #### Scenario: Consulta paginada de pedidos
@@ -77,6 +88,26 @@ prisma.order.findMany({
 #### Scenario: Respuesta vacía cuando no hay pedidos
 - **WHEN** se hace `GET /api/admin/orders` y no hay pedidos en la base de datos
 - **THEN** el sistema responde `200 OK` con `data: []` y `meta.total: 0`
+
+#### Scenario: Filtro de texto libre sobre 4 columnas
+- **WHEN** se hace `GET /api/admin/orders?q=garcia`
+- **THEN** la respuesta incluye solo pedidos donde `store.name`, `externalOrderNumber`, `user.firstName` o `user.lastName` contiene "garcia" (case-insensitive)
+
+#### Scenario: Filtro de status multi-valor aplica OR
+- **WHEN** se hace `GET /api/admin/orders?status=COMPLETED,CANCELED`
+- **THEN** la respuesta incluye pedidos con `status = COMPLETED` OR `status = CANCELED`
+
+#### Scenario: status inválido ignorado silenciosamente
+- **WHEN** se hace `GET /api/admin/orders?status=INVALID_STATUS`
+- **THEN** la respuesta devuelve todos los pedidos sin filtrar y status HTTP 200
+
+#### Scenario: Filtro de rango de fechas
+- **WHEN** se hace `GET /api/admin/orders?from=2026-02-01&to=2026-02-28`
+- **THEN** la respuesta incluye solo pedidos con `webhookReceivedAt` entre `2026-02-01T00:00:00Z` y `2026-02-28T23:59:59.999Z`
+
+#### Scenario: meta.total refleja el count filtrado
+- **WHEN** se hace `GET /api/admin/orders?status=COMPLETED` y hay 3 pedidos completados de un total de 10
+- **THEN** la respuesta tiene `meta.total = 3`
 
 ---
 
@@ -303,6 +334,38 @@ export interface ConversationMessagesResponse {
 
 export type OrdersResponse = PaginatedResponse<AdminOrder>;
 export type UsersResponse  = PaginatedResponse<AdminUser>;
+
+export type SortByColumn = 'ref' | 'store' | 'user' | 'amount' | 'date';
+export type SortDir = 'asc' | 'desc';
+
+export const VALID_SORT_COLUMNS: SortByColumn[] = ['ref', 'store', 'user', 'amount', 'date'];
+export const DEFAULT_SORT: SortByColumn = 'date';
+export const DEFAULT_DIR: SortDir = 'desc';
+
+export interface OrdersFilters {
+  q?: string;
+  status?: OrderStatus[];
+  mode?: OrderMode[];
+  from?: string;
+  to?: string;
+}
+
+export const VALID_ORDER_STATUSES: OrderStatus[] = [
+  'PENDING_PAYMENT', 'PENDING_ADDRESS', 'READY_TO_PROCESS', 'COMPLETED', 'CANCELED',
+];
+export const VALID_ORDER_MODES: OrderMode[] = ['ADRESLES', 'TRADITIONAL'];
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  PENDING_PAYMENT: 'Pago pendiente',
+  PENDING_ADDRESS: 'Dirección pendiente',
+  READY_TO_PROCESS: 'Listo para procesar',
+  COMPLETED: 'Completado',
+  CANCELED: 'Cancelado',
+};
+export const ORDER_MODE_LABELS: Record<OrderMode, string> = {
+  ADRESLES: 'Adresles',
+  TRADITIONAL: 'Tradicional',
+};
 ```
 
 ---

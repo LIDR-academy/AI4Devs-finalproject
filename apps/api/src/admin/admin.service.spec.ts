@@ -78,35 +78,35 @@ describe('AdminService', () => {
     });
 
     it('sortBy=date → ordena por webhookReceivedAt', async () => {
-      await service.getOrders(1, 50, 'date', 'desc');
+      await service.getOrders(1, 50, { sortBy: 'date', sortDir: 'desc' });
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
       );
     });
 
     it('sortBy=date asc → ordena por webhookReceivedAt asc', async () => {
-      await service.getOrders(1, 50, 'date', 'asc');
+      await service.getOrders(1, 50, { sortBy: 'date', sortDir: 'asc' });
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'asc' }] }),
       );
     });
 
     it('sin sortBy (undefined) → fallback a date desc', async () => {
-      await service.getOrders(1, 50, undefined, undefined);
+      await service.getOrders(1, 50, {});
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
       );
     });
 
     it('sortBy inválido → fallback a date desc', async () => {
-      await service.getOrders(1, 50, 'foobar', 'asc');
+      await service.getOrders(1, 50, { sortBy: 'foobar', sortDir: 'asc' });
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
       );
     });
 
     it('sortBy=ref → ordena por externalOrderNumber con nulls last', async () => {
-      await service.getOrders(1, 50, 'ref', 'asc');
+      await service.getOrders(1, 50, { sortBy: 'ref', sortDir: 'asc' });
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: [{ externalOrderNumber: { sort: 'asc', nulls: 'last' } }],
@@ -115,7 +115,7 @@ describe('AdminService', () => {
     });
 
     it('sortBy=store → ordena por store.name con subsort por externalOrderNumber', async () => {
-      await service.getOrders(1, 50, 'store', 'asc');
+      await service.getOrders(1, 50, { sortBy: 'store', sortDir: 'asc' });
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: [
@@ -127,7 +127,7 @@ describe('AdminService', () => {
     });
 
     it('sortBy=store desc → subsort externalOrderNumber también desc', async () => {
-      await service.getOrders(1, 50, 'store', 'desc');
+      await service.getOrders(1, 50, { sortBy: 'store', sortDir: 'desc' });
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: [
@@ -139,7 +139,7 @@ describe('AdminService', () => {
     });
 
     it('sortBy=user → ordena por firstName luego lastName', async () => {
-      await service.getOrders(1, 50, 'user', 'asc');
+      await service.getOrders(1, 50, { sortBy: 'user', sortDir: 'asc' });
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           orderBy: [{ user: { firstName: 'asc' } }, { user: { lastName: 'asc' } }],
@@ -148,9 +148,152 @@ describe('AdminService', () => {
     });
 
     it('sortBy=amount → ordena por totalAmount', async () => {
-      await service.getOrders(1, 50, 'amount', 'desc');
+      await service.getOrders(1, 50, { sortBy: 'amount', sortDir: 'desc' });
       expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ orderBy: [{ totalAmount: 'desc' }] }),
+      );
+    });
+  });
+
+  describe('buildWhere (via getOrders)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sin filtros → where vacío {}', async () => {
+      await service.getOrders(1, 50, {});
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
+    });
+
+    it('q → OR sobre las 4 columnas con mode insensitive', async () => {
+      await service.getOrders(1, 50, { q: 'garcia' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                OR: [
+                  { store: { name: { contains: 'garcia', mode: 'insensitive' } } },
+                  { externalOrderNumber: { contains: 'garcia', mode: 'insensitive' } },
+                  { user: { firstName: { contains: 'garcia', mode: 'insensitive' } } },
+                  { user: { lastName: { contains: 'garcia', mode: 'insensitive' } } },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('status CSV válido → { in: [...] }', async () => {
+      await service.getOrders(1, 50, { status: 'COMPLETED,CANCELED' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ status: { in: ['COMPLETED', 'CANCELED'] } }] },
+        }),
+      );
+    });
+
+    it('status con valor inválido en CSV → solo los válidos en el in', async () => {
+      await service.getOrders(1, 50, { status: 'COMPLETED,ROGUE' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ status: { in: ['COMPLETED'] } }] },
+        }),
+      );
+    });
+
+    it('status completamente inválido → no se añade filtro de status', async () => {
+      await service.getOrders(1, 50, { status: 'INVALID_STATUS' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
+    });
+
+    it('mode CSV válido → { in: [...] }', async () => {
+      await service.getOrders(1, 50, { mode: 'ADRESLES,TRADITIONAL' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ orderMode: { in: ['ADRESLES', 'TRADITIONAL'] } }] },
+        }),
+      );
+    });
+
+    it('solo from → { gte: Date 00:00:00Z }', async () => {
+      await service.getOrders(1, 50, { from: '2026-02-01' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                webhookReceivedAt: {
+                  gte: new Date('2026-02-01T00:00:00.000Z'),
+                },
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('solo to → { lte: Date 23:59:59.999Z }', async () => {
+      await service.getOrders(1, 50, { to: '2026-02-28' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                webhookReceivedAt: {
+                  lte: new Date('2026-02-28T23:59:59.999Z'),
+                },
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('from + to → { gte, lte } con horas correctas', async () => {
+      await service.getOrders(1, 50, { from: '2026-02-01', to: '2026-02-28' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                webhookReceivedAt: {
+                  gte: new Date('2026-02-01T00:00:00.000Z'),
+                  lte: new Date('2026-02-28T23:59:59.999Z'),
+                },
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('combinación q + status + from → AND entre los tres filtros', async () => {
+      await service.getOrders(1, 50, { q: 'zara', status: 'COMPLETED', from: '2026-02-01' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: expect.arrayContaining([
+              expect.objectContaining({ OR: expect.any(Array) }),
+              { status: { in: ['COMPLETED'] } },
+              expect.objectContaining({ webhookReceivedAt: expect.objectContaining({ gte: expect.any(Date) }) }),
+            ]),
+          },
+        }),
+      );
+    });
+
+    it('count se llama con el mismo where que findMany', async () => {
+      await service.getOrders(1, 50, { status: 'COMPLETED' });
+      expect(mockPrisma.order.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ status: { in: ['COMPLETED'] } }] },
+        }),
       );
     });
   });

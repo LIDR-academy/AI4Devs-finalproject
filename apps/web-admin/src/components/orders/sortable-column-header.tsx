@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { SortByColumn, SortDir } from '@/types/api';
 
 interface SortableColumnHeaderProps {
@@ -19,12 +19,21 @@ export function SortableColumnHeader({
 }: SortableColumnHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const isActive = column === currentSort;
   const nextDir: SortDir = isActive && currentDir === 'asc' ? 'desc' : 'asc';
 
   const handleClick = () => {
-    router.push(`${pathname}?sort=${column}&dir=${nextDir}`);
+    const params = new URLSearchParams();
+    params.set('sort', column);
+    params.set('dir', nextDir);
+    // Preservar los filtros activos al cambiar la ordenación
+    ['q', 'status', 'mode', 'from', 'to'].forEach((key) => {
+      const val = searchParams.get(key);
+      if (val) params.set(key, val);
+    });
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const Icon = isActive
