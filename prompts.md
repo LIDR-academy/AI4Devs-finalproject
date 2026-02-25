@@ -12301,5 +12301,76 @@ Next Step: BEGIN AUDIT PHASE (final validation before merge)
 
 ---
 
+## [167] - TDD ENRICH PHASE: T-1003-BACK Navigation API
+**Fecha:** 2026-02-25 09:30
 
+**Prompt Original:**
+> ## Prompt: ENRIQUECIMIENTO TÉCNICO - Ticket T-1003-BACK
+> 
+> **Role:** Actúa como **Senior Software Architect**, **Tech Lead** y **Technical Writer**.
+> 
+> ---
+> 
+> ### Protocolo Agents (OBLIGATORIO antes de diseñar)
+> 
+> 1. **Marca en Notion** el item correspondiente a `T-1003-BACK` como **In Progress** para indicar que el trabajo ha comenzado.
+> 2. **Lee** `docs/09-mvp-backlog.md` y localiza el ticket `T-1003-BACK` para entender alcance, criterios de aceptación y DoD.
+> 3. **Lee** `memory-bank/systemPatterns.md` para respetar contratos API existentes y patrones arquitectónicos del proyecto.
+> 4. **Lee** `memory-bank/techContext.md` para conocer el stack completo, librerías permitidas y decisiones técnicas previas.
+> 5. **Lee** `docs/productContext.md` para identificar componentes/endpoints existentes que pueden reutilizarse.
+> 6. **Al finalizar**, registra este prompt en `prompts.md` bajo la sección "## Workflow Step 1: Enrichment".
+> 
+> ---
+> 
+> ### Contexto del Workflow
+> 
+> Estamos en **Step 1/5: Enriquecer Ticket** (Pre-TDD).
+> Acabamos de crear la rama `feature/T-1003-BACK` y marcado el item en Notion como **In Progress**.
+> El objetivo es definir el **"Contrato Técnico"** detallado ANTES de escribir el primer test (Step 2: TDD-Red).
+> 
+> **Stack del proyecto:**
+> - **Backend:** FastAPI (Python 3.11) + Pydantic schemas (`src/backend/schemas.py`), rutas en `src/backend/api/`
+> - **Frontend:** React 18 + TypeScript strict + Vite, componentes en `src/frontend/src/components/`, tipos en `src/frontend/src/types/`
+> - **Agent:** LangGraph (Python) en `src/agent/`
+> - **Infra:** Docker multi-stage, Supabase Storage (S3-compatible), PostgreSQL 15, migraciones en `supabase/migrations/`
+> - **Docs:** `docs/`, `memory-bank/`, backlog en `docs/09-mvp-backlog.md`
+> 
+> **Patrón de contrato (CRÍTICO):** Las interfaces TypeScript (`src/frontend/src/types/`) DEBEN coincidir exactamente con los Pydantic schemas (`src/backend/schemas.py`). Verifica ambos antes de proponer nuevos tipos.
+> 
+> ---
+> 
+> ### Objetivo
+> 
+> Generar una **Technical Specification** completa para `T-1003-BACK` que sirva como blueprint para el desarrollo TDD, sin escribir código de implementación todavía.
+> 
+> [Full detailed prompt with sections for Analysis, Design, Testing Strategy, Contracts, and Output format - see original request]
 
+**Resumen de la Respuesta/Acción:**
+Created comprehensive Technical Specification for T-1003-BACK (Part Navigation API). Document includes:
+- Pydantic schema: `PartNavigationResponse` with prev_id, next_id, current_index, total_count
+- TypeScript interfaces: `PartNavigationResponse` and `PartNavigationQueryParams`
+- Service layer design: `NavigationService` class with Redis caching (5min TTL)
+- API endpoint: `GET /api/parts/{id}/adjacent` with filters (status, tipologia, workshop_id)
+- RLS enforcement pattern reused from T-0501-BACK and T-1002-BACK
+- 18 test cases defined (NAV-01 to NAV-18): happy path, edge cases, security, cache, contract validation
+- Performance targets: <50ms cache hit, <250ms cache miss, <200ms DB query for 500 IDs
+- Files to create: navigation_service.py, parts_navigation.py, navigation.ts (types), tests
+- Reusable patterns: UUID validation (T-1002), filter logic (T-0501), Redis caching (T-022)
+- Document location: `docs/US-010/T-1003-BACK-TechnicalSpec.md`
+- Status: ✅ READY FOR TDD-RED PHASE (Step 2/5)
+
+**Key Design Decisions:**
+1. No database schema changes - uses existing `blocks` table fields
+2. Order by `created_at ASC` (oldest first) for consistent navigation
+3. Redis cache key format: `nav:{part_id}:{filters_hash}` with 300s TTL
+4. Service returns tuple `(success, data, error)` following T-1002 pattern
+5. Minimal SELECT query (id, created_at only) for performance
+6. Contract-first: Backend Pydantic ↔ Frontend TypeScript alignment enforced
+
+**Files Updated:**
+- Created: `docs/US-010/T-1003-BACK-TechnicalSpec.md` (complete spec, ~400 lines)
+- Registered: `prompts.md` (this entry #167)
+
+**Next Step:** TDD-RED Phase - Create failing tests (NAV-01 to NAV-18) following spec
+
+---

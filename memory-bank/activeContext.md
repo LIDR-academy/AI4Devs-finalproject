@@ -4,10 +4,19 @@
 Sprint 5 / US-010 - Visor 3D Web | WAVE 2 IN PROGRESS (2026-02-25) | **T-1002-BACK ✅ + T-1004-FRONT ✅**
 
 ## Active Ticket
-**T-1005-FRONT: Model Loader & Stage** (TDD Workflow - Step 1/5: ENRICH phase)
-- **Context:** Requires T-1004-FRONT ✅ (JUST COMPLETED), T-1002-BACK ✅, T-0507-FRONT ✅. Desbloqueador para T-1006-FRONT, T-1007-FRONT.
-- **Status:** Ready to START ENRICH PHASE. All dependencies met.
-- **Dependency Chain:** T-1002-BACK ✅ → T-1004-FRONT ✅ → T-1005-FRONT NEXT → ...
+**T-1003-BACK: Part Navigation API** (TDD Workflow - Step 1/5: ENRICH phase COMPLETE ✅)
+- **Context:** Navigation API para modal 3D viewer. Retorna prev_id/next_id para navegación secuencial (botones ← →)
+- **Status:** ENRICH phase complete (2026-02-25 09:30). Spec creada en `docs/US-010/T-1003-BACK-TechnicalSpec.md`
+- **Dependencies:** T-1002-BACK ✅ (Get Part Detail API), T-0501-BACK ✅ (List Parts API)
+- **Next Step:** TDD-RED phase (Step 2/5) - Create 18 failing tests (NAV-01 to NAV-18)
+- **Key Design:**
+  - Endpoint: `GET /api/parts/{id}/adjacent` con query filters (status, tipologia, workshop_id)
+  - Response: `{ "prev_id": "uuid|null", "next_id": "uuid|null", "current_index": 42, "total_count": 150 }`
+  - Service: NavigationService con Redis cache (5min TTL), RLS enforcement, order by created_at ASC
+  - No DB changes, reutiliza patterns de T-0501-BACK (filters) y T-1002-BACK (UUID validation)
+  - Performance: <50ms cache hit, <250ms cache miss, <200ms DB query
+- **Test Coverage:** 18 test cases defined (happy path, edge cases, security, cache, contract validation)
+- **Dependency Chain:** T-1002-BACK ✅ → T-1003-BACK (ENRICH ✅) → (RED → GREEN → REFACTOR → AUDIT) → T-1007-FRONT
 
 ## Recently Completed
 - **T-1004-FRONT: Viewer Canvas Component** — ✅ COMPLETE & REFACTORED (2026-02-25 07:52) | TDD Workflow Complete (Steps 1-4: ENRICH→RED→GREEN→REFACTOR)
