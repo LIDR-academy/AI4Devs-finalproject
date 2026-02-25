@@ -1,13 +1,41 @@
 # Active Context
 
 ## Current Sprint
-Sprint 5 / US-010 - Visor 3D Web | WAVE 3 IN PROGRESS (2026-02-25) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅ + T-1005-FRONT ✅ + T-1007-FRONT ✅**
+Sprint 5 / US-010 - Visor 3D Web | WAVE 3 ALMOST COMPLETE (2026-02-25) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅ + T-1005-FRONT ✅ + T-1006-FRONT ✅ + T-1007-FRONT ✅ + T-1008-FRONT ✅**
 
 ## Active Ticket
-**None** — Sprint 5 Wave 3 at 7/9 completion. Next: T-1008-FRONT Metadata Panel OR T-1009-TEST-FRONT Integration Tests
+**T-1009-TEST-FRONT: 3D Viewer Integration Tests** — ⏸️ NEXT TICKET | Final ticket of US-010 Wave 3
+
+### Next Steps
+1. Execute ENRICHMENT phase for T-1009-TEST-FRONT
+2. Create comprehensive integration tests for 3D viewer flow
+3. Document US-010 completion and prepare for US-007 Lifecycle or US-013 Authentication
 
 ## Recently Completed
-- **T-1006-FRONT: Error Boundary Wrapper (ViewerErrorBoundary)** — ✅ COMPLETE & REFACTORED (2026-02-25 17:37) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→READY FOR AUDIT)
+- **T-1008-FRONT: Metadata Panel Component** — ✅ COMPLETE & REFACTORED (2026-02-25) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→READY FOR AUDIT)
+  - **Context:** Displays part metadata in 4 collapsible sections replacing JSON.stringify() in PartDetailModal "Metadata" tab
+  - **Technical Spec:** Implicit from T-1007-FRONT dependencies
+  - **TDD Timeline:**
+    - ENRICH: 2026-02-25 (Technical spec created, 15 test cases identified, contracts defined) [Prompt #188]
+    - RED: 2026-02-25 (4 files created: types 80 lines, constants 207 lines, component stub 33 lines, tests 329 lines - 14/15 FAILING ❌, 1/15 PASSING ✅) [Prompt #189]
+    - GREEN: 2026-02-25 (Implementation complete: 250 lines component with useState, toggleSection/handleKeyDown handlers, renderFieldValue function, formatters, **15/15 tests PASSING** ✅, HP-01 fix: selector improved from getByText to getByRole) [Prompts #190, #191]
+    - REFACTOR: 2026-02-25 (Utility functions extracted to shared formatters.ts, comprehensive JSDoc, **368/368 frontend tests PASSING** ✅) [Prompt #192]
+  - **Implementation Summary:**
+    - **PartMetadataPanel.tsx** (250 lines): Component with 4 collapsible sections (Info, Workshop, Geometry, Validation), inline styles for Portal-safe rendering, keyboard navigation (Enter/Space), ARIA attributes (aria-expanded, aria-controls, aria-labelledby, role=region), null-safe value rendering with fallback placeholders
+    - **Sections:** Info (iso_code, status, tipologia, created_at, id), Workshop (workshop_name, workshop_id), Geometry (bbox, glb_size_bytes, triangle_count, low_poly_url), Validation (validation_report with error display)
+    - **Formatters:** Extracted to src/frontend/src/utils/formatters.ts (78 lines) — formatFileSize (bytes → KB/MB/GB), formatDate (ISO 8601 → DD/MM/YYYY), formatBBox (coordinates display) — comprehensive JSDoc for reusability
+    - **PartMetadataPanel.types.ts** (80 lines): PartMetadataPanelProps, SectionId, ExpandedSections, FieldConfig, SectionConfig
+    - **PartMetadataPanel.constants.ts** (207 lines): SECTIONS_CONFIG (4 sections × 12 fields), SECTION_STYLES (inline styles for all elements), STATUS_COLORS (8 BlockStatus mappings), ARIA_LABELS, EMPTY_VALUES
+  - **Test Results:** **15/15 PASSING** ✅ (HP-01 to HP-05 happy path, EC-01 to EC-04 edge cases, A11Y-01 to A11Y-03 accessibility, PROP-01 to PROP-03 prop validation)
+  - **Dependencies:** All verified — T-1007-FRONT ✅ (PartDetailModal tab system integration point), T-1002-BACK ✅ (PartDetail interface with 12 fields)
+  - **Files Created/Modified:**
+    - PartMetadataPanel.tsx (250 lines, comprehensive JSDoc)
+    - PartMetadataPanel.types.ts (80 lines)
+    - PartMetadataPanel.constants.ts (207 lines)
+    - PartMetadataPanel.test.tsx (329 lines, 15 tests)
+    - **NEW:** src/frontend/src/utils/formatters.ts (78 lines, 3 shared utilities with full JSDoc)
+  - **Prompts:** #188 (ENRICH), #189 (RED), #190 (GREEN), #191 (HP-01 FIX), #192 (REFACTOR)
+- **T-1007-FRONT: Modal Integration (PartDetailModal)** — ✅ COMPLETE & REFACTORED (2026-02-25 23:50) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→READY FOR AUDIT)
   - **Context:** React Error Boundary class component for catching WebGL, Three.js, useGLTF errors with graceful degradation
   - **Technical Spec:** `docs/US-010/T-1006-FRONT-TechnicalSpec.md` (611 lines)
   - **TDD Timeline:**
