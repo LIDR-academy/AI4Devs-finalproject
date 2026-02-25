@@ -337,3 +337,37 @@ class PartDetailResponse(BaseModel):
                 "triangle_count": 1024
             }
         }
+
+
+# ===== T-1003-BACK: Part Navigation API Schemas =====
+
+class PartNavigationResponse(BaseModel):
+    """
+    Response for GET /api/parts/{id}/adjacent endpoint.
+    
+    Provides prev/next IDs for sequential navigation between parts in the 3D viewer modal.
+    Order is determined by created_at ASC (oldest first), with filters applied.
+    
+    Contract: Must match TypeScript interface PartNavigationResponse exactly.
+    Used by US-010 for Prev/Next buttons in modal footer.
+    
+    Attributes:
+        prev_id: UUID of previous part in sequence (None if current is first)
+        next_id: UUID of next part in sequence (None if current is last)
+        current_index: 1-based position of current part in filtered set (e.g., 42 of 150)
+        total_count: Total number of parts in filtered set
+    """
+    prev_id: Optional[UUID] = Field(None, description="Previous part UUID (None if first)")
+    next_id: Optional[UUID] = Field(None, description="Next part UUID (None if last)")
+    current_index: int = Field(..., ge=1, description="1-based index of current part")
+    total_count: int = Field(..., ge=0, description="Total parts in filtered set")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "prev_id": "123e4567-e89b-12d3-a456-426614174000",
+                "next_id": "987fcdeb-51a2-43e7-9876-543210fedcba",
+                "current_index": 42,
+                "total_count": 150
+            }
+        }
