@@ -1,12 +1,33 @@
 # Active Context
 
 ## Current Sprint
-Sprint 5 / US-010 - Visor 3D Web | WAVE 3 IN PROGRESS (2026-02-25) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅ + T-1005-FRONT ✅**
+Sprint 5 / US-010 - Visor 3D Web | WAVE 3 IN PROGRESS (2026-02-25) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅ + T-1005-FRONT ✅ + T-1007-FRONT ✅**
 
 ## Active Ticket
-**None** — Next: T-1006-FRONT (Error Boundary) or T-1008-FRONT (Metadata Panel)
+**None** — Sprint 5 Wave 3 at 7/9 completion. Next: T-1008-FRONT Metadata Panel OR T-1009-TEST-FRONT Integration Tests
 
 ## Recently Completed
+- **T-1006-FRONT: Error Boundary Wrapper (ViewerErrorBoundary)** — ✅ COMPLETE & REFACTORED (2026-02-25 17:37) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→READY FOR AUDIT)
+  - **Context:** React Error Boundary class component for catching WebGL, Three.js, useGLTF errors with graceful degradation
+  - **Technical Spec:** `docs/US-010/T-1006-FRONT-TechnicalSpec.md` (611 lines)
+  - **TDD Timeline:**
+    - ENRICH: 2026-02-25 (Technical spec reviewed, contracts defined, test cases identified) [Prompt #183]
+    - RED: 2026-02-25 (4 files created: types 108 lines, constants 89 lines, component stub 98 lines, tests 300 lines - 9/10 FAILING ❌, 1/10 PASSING ✅) [Prompt #184]
+    - GREEN: 2026-02-25 (Implementation complete: render() method with 3 branches [WebGL check, error state, happy path], **10/10 tests PASSING** ✅, **353/353 frontend tests PASSING** ✅) [Prompt #185]
+    - REFACTOR: 2026-02-25 17:37 (Comprehensive JSDoc added to all methods, console logs wrapped in NODE_ENV checks, TODO comments removed, **353/353 tests PASSING** ✅) [Prompt #186]
+  - **Implementation Summary:**
+    - **ViewerErrorBoundary.tsx** (98→220 lines): Class component with lifecycle methods (constructor, componentDidMount, componentWillUnmount, getDerivedStateFromError, componentDidCatch, render), WebGL detection (checkWebGLAvailability), error handlers (handleRetry, handleClose)
+    - **Rendering branches:** WebGL unavailable → specific message, hasError → fallback UI (custom or default with role=alert + aria-live=assertive + retry/close buttons + collapsible technical details), happy path → children
+    - **ViewerErrorBoundary.types.ts** (108 lines): ViewerErrorBoundaryProps, ViewerErrorBoundaryState, ERROR_TYPES enum
+    - **ViewerErrorBoundary.constants.ts** (89 lines): ERROR_MESSAGES, TECHNICAL_MESSAGES, BUTTON_LABELS, ARIA_LABELS, ERROR_BOUNDARY_DEFAULTS
+  - **Test Results:** **10/10 PASSING** ✅ (ERROR-01 to ERROR-05 happy path/fallback/callbacks/retry/close, A11Y-01 to A11Y-03 WebGL/ARIA/keyboard, EDGE-01 to EDGE-02 custom fallback/collapsible)
+  - **Dependencies:** All verified — T-1004-FRONT ✅, T-1005-FRONT ✅, T-1007-FRONT ✅
+  - **Files Created/Modified:**
+    - ViewerErrorBoundary.tsx (220 lines, comprehensive JSDoc)
+    - ViewerErrorBoundary.types.ts (108 lines)
+    - ViewerErrorBoundary.constants.ts (89 lines)
+    - ViewerErrorBoundary.test.tsx (300 lines)
+  - **Prompts:** #183 (ENRICH), #184 (RED), #185 (GREEN), #186 (REFACTOR)
 - **T-1007-FRONT: Modal Integration (PartDetailModal)** — ✅ COMPLETE & REFACTORED (2026-02-25 23:50) | TDD Workflow Complete (Steps 1-5: ENRICH→RED→GREEN→REFACTOR→READY FOR AUDIT)
   - **Context:** Transformed T-0508 placeholder modal into full-featured component with tabs, 3D viewer, and prev/next navigation  
   - **Technical Spec:** `docs/US-010/T-1007-FRONT-TechnicalSpec.md` (25KB, 31 test cases)
