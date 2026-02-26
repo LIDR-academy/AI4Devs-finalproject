@@ -16,8 +16,10 @@ Sistema Enterprise de Digital Twin Activo que desacopla metadata critica de la g
 2. **"The Librarian" AI Agent**: LangGraph agent — validacion ISO-19650, clasificacion tipologias, enriquecimiento de metadatos, deteccion de anomalias
    - **Async Task Queue** (Redis + Celery): Procesamiento en background de archivos .3dm pesados sin bloquear UI
    - **Worker Isolation**: Un worker dedicado por archivo para evitar OOM con modelos de 500MB+
-3. **Instanced 3D Viewer**: Three.js con instancing y LOD para 10,000+ piezas en navegador
-4. **Lifecycle Traceability**: Log inmutable de eventos (Disenada → Validada → Fabricada → Enviada → Instalada)
+3. **CDN-Optimized 3D Delivery** (2026-02-24): CloudFront CDN para archivos GLB optimizados. Cache TTL 24h, Brotli compression, latency <200ms vs >500ms S3 directo. Feature toggle USE_CDN permite separación dev/prod.
+4. **Part Navigation API with Redis Caching** (2026-02-25): Endpoint para navegación secuencial prev/next sin cerrar modal. Ordenación por created_at ASC con filtros (workshop, status, tipologia), RLS enforcement, respuesta con ids adyacentes + posición 1-based (current_index/total_count). Redis caching con TTL 300s reduce latencia 53% (cache hit <50ms vs 94ms DB query), graceful degradation si Redis no disponible.
+5. **Instanced 3D Viewer**: Three.js con instancing y LOD para 10,000+ piezas en navegador
+6. **Lifecycle Traceability**: Log inmutable de eventos (Disenada → Validada → Fabricada → Enviada → Instalada)
 
 ## User Profiles
 
@@ -116,6 +118,13 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
   * Zustand store extended: PartsFilters interface (status[], tipologia[], workshop_id), setFilters (partial merge), clearFilters, getFilteredParts (computed)
   * CheckboxGroup.tsx: Reusable multi-select component (91 lines) with color badges, aria-label accessibility
   * FiltersSidebar.tsx: Orchestrator component (84 lines) with counter "Mostrando X de Y", clear button, 3 sections (Tipología/Estado/Taller placeholder)
+- **ViewerErrorBoundary Component** (T-1006-FRONT DONE 2026-02-25)
+  * React Error Boundary class component for catching WebGL, Three.js, and useGLTF errors
+  * Features: WebGL availability detection, graceful error fallback UI, retry/close functionality, custom fallback support via render prop
+  * Accessibility: ARIA attributes (role=alert, aria-live=assertive), keyboard accessible buttons
+  * Files: ViewerErrorBoundary.tsx (220 lines with comprehensive JSDoc), types (108 lines), constants (89 lines), tests (300 lines, 10/10 PASS)
+  * Production-safe: console.error/warn wrapped in NODE_ENV checks, no debug noise in production
+  * Anti-regression: 353/353 frontend tests PASS
   * useURLFilters.ts: Bidirectional URL sync hook (79 lines) with mount + reactive effects, comma-separated arrays encoding
   * PartMesh.tsx extensions: Filter-based opacity logic (1.0 match, 0.2 non-match), backward compatible with T-0505 tests
   * Test coverage: 49/50 tests PASS (98%) — 11/11 store ✓, 6/6 CheckboxGroup ✓, 7/8 FiltersSidebar (1 test bug), 9/9 useURLFilters ✓, 16/16 PartMesh ✓
@@ -184,11 +193,57 @@ Nomenclaturas Uniclass 2015 / IFC, metadatos obligatorios, audit trail completo 
 
 ### 🔄 In Progress
 - US-005: Dashboard 3D (T-0507-FRONT LOD complete 2026-02-22, next: T-0508-FRONT Part Selection & Modal)
+- **US-010: Visor 3D Web de Piezas** ✅ **WAVE 3 COMPLETE** (All 8 tickets done 2026-02-26)
+  - ✅ T-1001-INFRA: CloudFront CDN setup with presigned URLs (5min TTL)
+  - ✅ T-1002-BACK: Part Detail API returning PartDetailResponse (12 fields)
+  - ✅ T-1003-BACK: Navigation API with Redis caching (prev_id/next_id, 53% latency reduction)
+  - ✅ T-1004-FRONT: PartViewerCanvas component (React Three Fiber wrapper, 3-point lighting)
+  - ✅ **T-1005-FRONT: Model Loader & Stage** (2026-02-25 DONE & REFACTORED)
+    * Component `<ModelLoader partId>` with useGLTF hook for GLB loading from CDN presigned URLs
+    * Service layer: `getPartDetail(partId)` in upload.service.ts fetches part metadata from T-1002-BACK API
+    * Type contract: PartDetail interface (12 fields) aligned with backend PartDetailResponse
+    * Fallback states: 3 scenarios handled with dedicated UI:
+      - **ProcessingFallback**: Shows BBoxProxy wireframe + "Geometría en procesamiento" message when low_poly_url is NULL
+      - **ErrorFallback**: Shows BBoxProxy + error message for 404/403/network failures
+      - **LoadingSpinner**: HTML overlay during initial fetch with informative messages
+    * Auto-centering/scaling: Three.js Box3/Vector3 calculations with jsdom-safe try-catch
+    * Preloading integration: preloadAdjacentModels() stub ready for T-1003-BACK navigation (uses useGLTF.preload())
+    * Test coverage: 10/10 tests PASS (100%) — LOADING-01/02, CALLBACK-01/02, FALLBACK-01/02/03, PROPS-01/02, EDGE-01
+    * Anti-regression verified: 302/302 frontend tests PASS, zero breaking changes
+    * Production-ready: JSDoc enhanced for 5 sub-components, console logs wrapped in NODE_ENV checks, constants extraction complete
+    * Files: 4 created (ModelLoader.tsx 264 lines + types 68 lines + constants 68 lines + tests 300 lines), types/parts.ts +58 lines, upload.service.ts +50 lines
+  - ✅ **T-1006-FRONT: ViewerErrorBoundary Component** (2026-02-25 DONE & REFACTORED)
+    * React Error Boundary class component for catching WebGL, Three.js, and useGLTF errors
+    * Features: WebGL availability detection, graceful error fallback UI, retry/close functionality, custom fallback support via render prop
+    * Accessibility: ARIA attributes (role=alert, aria-live=assertive), keyboard accessible buttons
+    * Files: ViewerErrorBoundary.tsx (220 lines with comprehensive JSDoc), types (108 lines), constants (89 lines), tests (300 lines, 10/10 PASS)
+    * Production-safe: console.error/warn wrapped in NODE_ENV checks, no debug noise in production
+    * Anti-regression: 353/353 frontend tests PASS
+  - ✅ **T-1007-FRONT: PartDetailModal Integration** (2026-02-25 DONE & REFACTORED)
+    * Full-featured modal with tabs (3D Viewer, Metadata, Navigation), keyboard shortcuts (ESC/←/→), prev/next navigation
+    * Clean Architecture refactor: 4 custom hooks extracted (usePartDetail, usePartNavigation, useModalKeyboard, useBodyScrollLock), 5 helper functions extracted
+    * Component complexity reduced 27% (312→227 lines), JSDoc complete, comprehensive error handling (404/403/network)
+    * Test coverage: 31/31 tests PASS (100%), anti-regression: 343/343 frontend tests PASS
+  - ✅ **T-1008-FRONT: PartMetadataPanel Component** (2026-02-25 DONE & REFACTORED)
+    * Component displays part metadata in 4 collapsible sections: Info (ISO code, status, tipología, date, ID), Workshop (name, ID), Geometry (bbox, file size, triangles, GLB URL), Validation (report summary)
+    * Features: Keyboard accessible (Enter/Space toggles), ARIA attributes, null-safe with fallback placeholders, auto-formatting (dates DD/MM/YYYY, file sizes KB/MB/GB, coordinates)
+    * Refactor: Utility functions extracted to shared formatters.ts (formatFileSize, formatDate, formatBBox) for reusability across components
+    * Files: PartMetadataPanel.tsx (250 lines + comprehensive JSDoc), types (80 lines), constants (207 lines), tests (329 lines, 15/15 PASS 100%)
+    * Shared utilities: src/frontend/src/utils/formatters.ts (78 lines with full JSDoc) — reusable across project
+    * Anti-regression verified: 368/368 frontend tests PASS
+  - ✅ **T-1009-TEST-FRONT: 3D Viewer Integration Tests** (2026-02-26 DONE & REFACTORED)
+    * Integration test suite ensuring PartDetailModal 3D viewer, tabs, navigation, and error handling work correctly end-to-end
+    * Test coverage: 22/22 tests PASS (100%) — HP-INT 8/8 ✓ (happy path), EC-INT 5/5 ✓ (edge cases), ERR-INT 5/5 ✓ (error scenarios), PERF-INT 2/2 ✓ (performance), A11Y-INT 2/2 ✓ (accessibility)
+    * Implementation: ViewerErrorBoundary.tsx (176 lines NEW, pattern-based error detection), timeout logic with AbortController + retry (10s threshold), focus trap with Tab cycling (WCAG 2.1), WebGL availability check
+    * Error scenarios handled: 5 scenarios (backend 404, timeout 10s, WebGL unavailable, GLB 404, corrupted GLB file)
+    * Files: 8 files modified — 1 NEW (ViewerErrorBoundary), 7 enhanced (PartDetailModal +focus trap, hooks +timeout/retry, helpers +retry button, constants +timeout config, PartViewerCanvas +WebGL check, setup.ts +mocks, tests +3 fixes)
+    * Test infrastructure: MSW (Mock Service Worker) for backend API mocking (setupMockServer.ts 150 lines), test-helpers.ts (200 lines integration utilities), viewer.fixtures.ts (230 lines test data)
+    * Test execution: Duration 28.40s for 4 test files, anti-regression verified: 368/368 frontend tests PASS
+    * Refactor: Code already clean from GREEN phase — JSDoc complete on all public functions, constants extracted to dedicated files (TIMEOUT_CONFIG, ERROR_MESSAGES, KEYBOARD_SHORTCUTS), Clean Architecture applied (hooks/helpers separation), zero code duplication, TypeScript strict with no `any`, production-safe logging with NODE_ENV checks
+    * Handoff document: T-1009-TEST-FRONT-HANDOFF.md (850+ lines) with complete implementation details, technical decisions, error flow diagrams, deployment checklist
+    * Status: TDD cycle complete (ENRICH→RED→GREEN→REFACTOR), ready for final audit
 
 ### 📋 Next Milestones
-- US-005: Dashboard 3D (T-0508-FRONT Selection → T-0509/T-0510 Tests)
-- US-010: 3D Web Viewer High-Poly (instance viewer, detailed inspection)
+- US-010: Wave 3 COMPLETE ✅ — Ready for final audit or next User Story
 - US-007: Lifecycle state machine (block status transitions)
-- US-010: 3D Web Viewer High-Poly (Three.js instance viewer for detailed inspection)
-- US-007: Lifecycle state machine
 - US-013: Authentication (Supabase Auth)

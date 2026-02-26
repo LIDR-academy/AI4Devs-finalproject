@@ -27,9 +27,15 @@
     },
 
     /* Testing */
-    "types": ["vitest/globals", "@testing-library/jest-dom", "three"]
+    "types": ["vitest/globals", "@testing-library/jest-dom", "three", "node"]
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.tsx", "src/**/*.test.ts", "src/**/*.spec.tsx", "src/**/*.spec.ts"],
+  "exclude": [
+    "src/**/*.test.tsx",
+    "src/**/*.test.ts",
+    "src/**/*.spec.tsx",
+    "src/**/*.spec.ts",
+    "src/test/**/*"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -12,6 +12,7 @@ import type {
   ConfirmUploadResponse,
   UploadProgress,
 } from '../types/upload';
+import type { PartDetail } from '../types/parts';
 
 /**
  * API endpoint for requesting presigned upload URLs
@@ -22,6 +23,11 @@ const UPLOAD_URL_ENDPOINT = '/api/upload/url';
  * API endpoint for confirming a completed upload
  */
 const CONFIRM_UPLOAD_ENDPOINT = '/api/upload/confirm';
+
+/**
+ * API endpoint for fetching part details
+ */
+const PART_DETAIL_ENDPOINT = '/api/parts';
 
 /**
  * Content type for .3dm Rhino files
@@ -159,4 +165,52 @@ export async function uploadFile(
   await uploadToStorage(upload_url, file, onProgress);
 
   return file_id;
+}
+
+/**
+ * Fetch detailed part information including low_poly_url
+ * 
+ * T-1002-BACK / T-1005-FRONT: Get Part Detail API
+ * Used by ModelLoader component to fetch part data before loading GLB
+ * 
+ * @param partId - Part UUID
+ * @returns Promise resolving to PartDetail with presigned CDN URL
+ * @throws {Error} If part not found (404) or access denied (403)
+ * 
+ * @example
+ * ```typescript
+ * const partData = await getPartDetail('550e8400-e29b-41d4-a716-446655440000');
+ * console.log(`ISO Code: ${partData.iso_code}`);
+ * if (partData.low_poly_url) {
+ *   console.log(`GLB URL: ${partData.low_poly_url}`);
+ * }
+ * ```
+ */
+export async function getPartDetail(partId: string): Promise<PartDetail> {
+  try {
+    const response = await axios.get<PartDetail>(
+      `${PART_DETAIL_ENDPOINT}/${partId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          // X-Workshop-Id header added by middleware from JWT claims
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        throw new Error(`Pieza no encontrada (ID: ${partId})`);
+      } else if (error.response?.status === 403) {
+        throw new Error('Acceso denegado: no tienes permisos para ver esta pieza');
+      } else {
+        const status = error.response?.status || 'unknown';
+        const statusText = error.response?.statusText || 'Unknown error';
+        throw new Error(`Error ${status}: ${statusText}`);
+      }
+    }
+    throw error;
+  }
 }

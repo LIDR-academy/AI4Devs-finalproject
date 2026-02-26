@@ -1,193 +1,312 @@
 /**
  * PartDetailModal Component
  * T-0508-FRONT: Part selection and modal integration
+ * T-1007-FRONT: Modal Integration - 3D Viewer with Tabs & Navigation
  * 
  * @remarks
- * This is a PLACEHOLDER modal for T-0508. US-010 will extend this with:
- * - Full 3D viewer in modal
- * - Metadata tabs (geometry, validation, history)
- * - Timeline of status changes
+ * Full-featured modal with 3D viewer, tabs, and prev/next navigation.
+ * Fetches own data via partId prop (decoupled from Dashboard3D state).
+ * Renders via Portal with high z-index (9999) to appear above all Dashboard elements.
+ * 
+ * REFACTORED 2026-02-25: Extracted custom hooks (usePartDetail, usePartNavigation, 
+ * useModalKeyboard, useBodyScrollLock) and helper functions (error mapping, tab rendering)
+ * for better testability and separation of concerns.
  * 
  * @module PartDetailModal
  */
 
-import React, { useEffect, useRef } from 'react';
-import type { PartDetailModalProps } from '@/types/modal';
-import { DESELECTION_KEYS, SELECTION_ARIA_LABELS } from '@/constants/selection.constants';
-import { STATUS_COLORS } from '@/constants/dashboard3d.constants';
+import React, { useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
+import type { PartDetailModalProps, TabId } from '@/types/modal';
+import {
+  MODAL_STYLES,
+  TAB_CONFIG,
+  ARIA_LABELS,
+  DEFAULTS,
+} from './PartDetailModal.constants';
+import {
+  usePartDetail,
+  usePartNavigation,
+  useModalKeyboard,
+  useBodyScrollLock,
+} from './PartDetailModal.hooks';
+import {
+  renderErrorState,
+  renderMetadataTab,
+  renderValidationTab,
+  renderViewerTab,
+} from './PartDetailModal.helpers';
 
+/**
+ * PartDetailModal - Full-featured modal for part details with 3D viewer
+ * 
+ * @param props - Component props (see PartDetailModalProps)
+ * @returns React Portal rendering modal content, or null if closed
+ * 
+ * @example
+ * <PartDetailModal
+ *   isOpen={!!selectedId}
+ *   partId={selectedId}
+ *   onClose={() => clearSelection()}
+ *   enableNavigation={true}
+ *   filters={{ status: ['validated'] }}
+ * />
+ */
 export const PartDetailModal: React.FC<PartDetailModalProps> = ({
   isOpen,
-  part,
+  partId,
   onClose,
+  initialTab = DEFAULTS.INITIAL_TAB,
+  enableNavigation = DEFAULTS.ENABLE_NAVIGATION,
+  filters = null,
 }) => {
+  // Local state for current part ID (enables internal navigation)
+  const [currentPartId, setCurrentPartId] = useState<string>(partId);
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const closeCalledRef = useRef(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
+  // Custom hooks for data fetching
+  const { partData, loading, error, retry } = usePartDetail(currentPartId, isOpen);
+  const { adjacentParts, navigationLoading } = usePartNavigation(
+    currentPartId,
+    isOpen,
+    enableNavigation,
+    filters
+  );
+
+  // Sync internal currentPartId with prop partId when modal reopens or parent changes selection
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen) {
+      setCurrentPartId(partId);
+    }
+  }, [isOpen, partId]);
 
-    const handleEscape = (event: KeyboardEvent) => {
-      // Support both 'Escape' and legacy 'Esc' key
-      if (event.key === DESELECTION_KEYS.ESCAPE || event.key === DESELECTION_KEYS.ESC) {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-
-    return () => {
-      window.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose]);
-
-  // Reset closeCalledRef when modal reopens
+  // Reset closeCalledRef when modal reopens (prevents debouncing issues)
   useEffect(() => {
     if (isOpen) {
       closeCalledRef.current = false;
     }
   }, [isOpen]);
 
-  if (!isOpen) {
-    return null;
-  }
-
+  /**
+   * Handles modal close with debouncing to prevent double-calls
+   */
   const handleClose = () => {
-    // Debounce: Only call onClose once per modal open
     if (closeCalledRef.current) return;
     closeCalledRef.current = true;
     onClose();
   };
 
+  /**
+   * Handles backdrop click (only closes if clicking backdrop, not modal content)
+   */
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Only close if clicking backdrop, not modal content
     if (e.target === e.currentTarget) {
       handleClose();
     }
   };
 
-  const workshopName = part?.workshop_name || 'Sin asignar';
-  const statusColor = part ? STATUS_COLORS[part.status] : '#6B7280';
+  /**
+   * Handles navigation to another part (triggered by prev/next buttons or keyboard)
+   */
+  const handleNavigate = (targetPartId: string) => {
+    setCurrentPartId(targetPartId);
+  };
 
-  return (
+  /**
+   * Handles previous button click
+   */
+  const handlePrevClick = () => {
+    if (adjacentParts?.prev_id && !navigationLoading) {
+      handleNavigate(adjacentParts.prev_id);
+    }
+  };
+
+  /**
+   * Handles next button click
+   */
+  const handleNextClick = () => {
+    if (adjacentParts?.next_id && !navigationLoading) {
+      handleNavigate(adjacentParts.next_id);
+    }
+  };
+
+  // Apply custom hooks for keyboard shortcuts and body scroll lock
+  useModalKeyboard(isOpen, handleClose, handleNavigate, adjacentParts, enableNavigation);
+  useBodyScrollLock(isOpen);
+
+  // Focus trap: Capture focus when modal opens and manage Tab cycling (A11Y-INT-02)
+  useEffect(() => {
+    if (!isOpen || !modalRef.current) return;
+
+    // Get focusable elements in VISUAL order (not DOM order):
+    // 1. Tabs (Visor 3D, Metadatos, Validación)
+    // 2. Navigation buttons (Prev, Next) - only if enabled
+    // 3. Close button
+    const tabs = Array.from(modalRef.current.querySelectorAll<HTMLElement>('[role="tab"]'));
+    const prevButton = modalRef.current.querySelector<HTMLElement>('[aria-label*="anterior"]');
+    const nextButton = modalRef.current.querySelector<HTMLElement>('[aria-label*="siguiente"]');
+    const closeButton = modalRef.current.querySelector<HTMLElement>('[aria-label*="Cerrar"]');
+    
+    // Build ordered list of focusable elements (visual order, filter disabled buttons)
+    const focusableElements: HTMLElement[] = [...tabs];
+    if (prevButton && !prevButton.hasAttribute('disabled')) focusableElements.push(prevButton);
+    if (nextButton && !nextButton.hasAttribute('disabled')) focusableElements.push(nextButton);
+    if (closeButton) focusableElements.push(closeButton);
+
+    // Handle Tab key to trap focus within modal
+    const handleTabKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+
+      // Always prevent default to implement custom tab order
+      event.preventDefault();
+
+      const currentIndex = focusableElements.indexOf(document.activeElement as HTMLElement);
+      
+      // If focus is outside modal, move to first element
+      if (currentIndex === -1) {
+        focusableElements[0]?.focus();
+        return;
+      }
+
+      // Shift+Tab: move backward (with wraparound)
+      if (event.shiftKey) {
+        const prevIndex = currentIndex === 0 ? focusableElements.length - 1 : currentIndex - 1;
+        focusableElements[prevIndex]?.focus();
+      }
+      // Tab: move forward (with wraparound)
+      else {
+        const nextIndex = currentIndex === focusableElements.length - 1 ? 0 : currentIndex + 1;
+        focusableElements[nextIndex]?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleTabKey);
+    return () => document.removeEventListener('keydown', handleTabKey);
+  }, [isOpen, partData, error, activeTab]); // Re-run when content changes
+
+  // Don't render if modal is closed
+  if (!isOpen) {
+    return null;
+  }
+
+  const modalContent = (
     <div
       data-testid="modal-backdrop"
       role="dialog"
+      aria-modal="true"
+      aria-label={ARIA_LABELS.MODAL}
       onClick={handleBackdropClick}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
+      style={MODAL_STYLES.backdrop}
     >
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '24px',
-          minWidth: '400px',
-          maxWidth: '600px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          position: 'relative',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '16px',
-          }}
-        >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: '1.5rem',
-              fontWeight: '600',
-              color: '#111827',
-            }}
-          >
-            {part?.iso_code || 'N/A'}
-          </h2>
-          <button
-            onClick={handleClose}
-            aria-label={SELECTION_ARIA_LABELS.MODAL_CLOSE_BUTTON}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              padding: '4px 8px',
-              color: '#6B7280',
-              lineHeight: 1,
-            }}
-          >
-            ×
-          </button>
+      <div ref={modalRef} style={MODAL_STYLES.container} onClick={(e) => e.stopPropagation()}>
+        {/* Header with ISO code, position indicator, and navigation buttons */}
+        <div style={MODAL_STYLES.header}>
+          <div style={MODAL_STYLES.headerLeft}>
+            <h2 style={MODAL_STYLES.headerTitle}>
+              {partData?.iso_code || (loading ? 'Cargando...' : 'N/A')}
+            </h2>
+            {adjacentParts && (
+              <div style={MODAL_STYLES.headerSubtitle} aria-label={ARIA_LABELS.POSITION_INDICATOR}>
+                Pieza {adjacentParts.current_index + 1} de {adjacentParts.total_count}
+              </div>
+            )}
+          </div>
+          <div style={MODAL_STYLES.headerRight}>
+            {enableNavigation && adjacentParts && (
+              <>
+                <button
+                  onClick={handlePrevClick}
+                  disabled={!adjacentParts.prev_id || navigationLoading}
+                  aria-label={ARIA_LABELS.PREV_BUTTON}
+                  style={{
+                    ...MODAL_STYLES.navButton,
+                    ...((!adjacentParts.prev_id || navigationLoading) && MODAL_STYLES.navButtonDisabled),
+                  }}
+                >
+                  ←
+                </button>
+                <button
+                  onClick={handleNextClick}
+                  disabled={!adjacentParts.next_id || navigationLoading}
+                  aria-label={ARIA_LABELS.NEXT_BUTTON}
+                  style={{
+                    ...MODAL_STYLES.navButton,
+                    ...((!adjacentParts.next_id || navigationLoading) && MODAL_STYLES.navButtonDisabled),
+                  }}
+                >
+                  →
+                </button>
+              </>
+            )}
+            <button
+              onClick={handleClose}
+              aria-label={ARIA_LABELS.CLOSE_BUTTON}
+              style={MODAL_STYLES.closeButton}
+            >
+              ×
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        {part ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* Status */}
-            <div>
-              <strong style={{ color: '#6B7280', fontSize: '0.875rem' }}>Estado:</strong>
-              <div
+        {/* Tab Bar - Only show when no error */}
+        {!error && (
+          <div role="tablist" aria-label={ARIA_LABELS.TAB_LIST} style={MODAL_STYLES.tabBar}>
+            {(Object.keys(TAB_CONFIG) as TabId[]).map((tabId) => (
+              <button
+                key={tabId}
+                role="tab"
+                aria-selected={activeTab === tabId}
+                aria-label={TAB_CONFIG[tabId].label}
+                onClick={() => setActiveTab(tabId)}
                 style={{
-                  display: 'inline-block',
-                  marginLeft: '8px',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  backgroundColor: statusColor,
-                  color: 'white',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
+                  ...MODAL_STYLES.tabButton,
+                  ...(activeTab === tabId && MODAL_STYLES.tabButtonActive),
                 }}
               >
-                {part.status}
-              </div>
-            </div>
-
-            {/* Tipología */}
-            <div>
-              <strong style={{ color: '#6B7280', fontSize: '0.875rem' }}>Tipología:</strong>
-              <span style={{ marginLeft: '8px', fontSize: '0.875rem' }}>{part.tipologia}</span>
-            </div>
-
-            {/* Workshop */}
-            <div>
-              <strong style={{ color: '#6B7280', fontSize: '0.875rem' }}>Taller:</strong>
-              <span style={{ marginLeft: '8px', fontSize: '0.875rem' }}>{workshopName}</span>
-            </div>
-
-            {/* Placeholder message for US-010 */}
-            <div
-              style={{
-                marginTop: '16px',
-                padding: '12px',
-                backgroundColor: '#F3F4F6',
-                borderRadius: '4px',
-                color: '#6B7280',
-                fontSize: '0.875rem',
-              }}
-            >
-              📋 Detalles completos disponibles en US-010
-            </div>
-          </div>
-        ) : (
-          <div style={{ color: '#6B7280', fontSize: '0.875rem' }}>
-            No hay información de pieza disponible.
+                {TAB_CONFIG[tabId].icon} {TAB_CONFIG[tabId].label}
+                {tabId === 'validation' && partData?.validation_report?.is_valid === false && (
+                  <span
+                    data-testid="validation-error-badge"
+                    style={{
+                      marginLeft: '6px',
+                      display: 'inline-block',
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: '#ef4444',
+                    }}
+                  />
+                )}
+              </button>
+            ))}
           </div>
         )}
+
+        {/* Tab Content */}
+        <div style={MODAL_STYLES.tabContent}>
+          {/* Loading State */}
+          {loading && (
+            <div style={MODAL_STYLES.loadingSpinner}>Cargando pieza...</div>
+          )}
+
+          {/* Error State */}
+          {error && renderErrorState(error, retry)}
+
+          {/* Success State - Render tab content */}
+          {!loading && !error && partData && (
+            <>
+              {activeTab === 'viewer' && renderViewerTab(currentPartId)}
+              {activeTab === 'metadata' && renderMetadataTab(partData)}
+              {activeTab === 'validation' && renderValidationTab(partData)}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
+
+  // Render via Portal to ensure modal appears above all other elements
+  return ReactDOM.createPortal(modalContent, document.body);
 };

@@ -279,3 +279,95 @@ class PartsListResponse(BaseModel):
             }
         }
 
+
+# ===== T-1002-BACK: Get Part Detail API Schemas =====
+
+class PartDetailResponse(BaseModel):
+    """
+    Detailed part info for 3D viewer modal (US-010).
+    
+    Contract: Must match TypeScript interface PartDetail exactly.
+    Used by GET /api/parts/{id} endpoint.
+    
+    Attributes:
+        id: Block UUID
+        iso_code: Part identifier (ISO-19650 format)
+        status: Lifecycle state
+        tipologia: Part typology
+        created_at: Row creation timestamp (ISO 8601 format)
+        low_poly_url: Presigned CDN URL for GLB file (TTL 5min), None if not generated yet
+        bbox: 3D bounding box for camera positioning
+        workshop_id: Assigned workshop UUID (NULL if unassigned)
+        workshop_name: Workshop human-readable name (NULL if unassigned)
+        validation_report: Automatic validation results from The Librarian agent
+        glb_size_bytes: File size of GLB in bytes (optional, from validation metadata)
+        triangle_count: Number of triangles (optional, from validation metadata)
+    """
+    id: UUID = Field(..., description="Block UUID")
+    iso_code: str = Field(..., description="Part identifier (e.g., SF-C12-D-001)")
+    status: BlockStatus = Field(..., description="Lifecycle state")
+    tipologia: str = Field(..., description="Part typology (capitel, columna, dovela, etc.)")
+    created_at: str = Field(..., description="Creation timestamp (ISO 8601)")
+    low_poly_url: Optional[str] = Field(None, description="Presigned CDN URL for GLB (TTL 5min)")
+    bbox: Optional[BoundingBox] = Field(None, description="3D bounding box")
+    workshop_id: Optional[UUID] = Field(None, description="Assigned workshop UUID")
+    workshop_name: Optional[str] = Field(None, description="Workshop human-readable name")
+    validation_report: Optional[ValidationReport] = Field(None, description="Validation results from agent")
+    glb_size_bytes: Optional[int] = Field(None, description="GLB file size in bytes")
+    triangle_count: Optional[int] = Field(None, description="Triangle count (for performance)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "iso_code": "SF-C12-D-001",
+                "status": "validated",
+                "tipologia": "capitel",
+                "created_at": "2026-02-15T10:30:00Z",
+                "low_poly_url": "https://d1234abcd.cloudfront.net/low-poly/550e8400.glb?X-Amz-Expires=300&...",
+                "bbox": {"min": [-2.5, 0.0, -2.5], "max": [2.5, 5.0, 2.5]},
+                "workshop_id": "123e4567-e89b-12d3-a456-426614174000",
+                "workshop_name": "Taller Granollers",
+                "validation_report": {
+                    "is_valid": True,
+                    "errors": [],
+                    "metadata": {"layer_count": 5, "object_count": 12}
+                },
+                "glb_size_bytes": 425984,
+                "triangle_count": 1024
+            }
+        }
+
+
+# ===== T-1003-BACK: Part Navigation API Schemas =====
+
+class PartNavigationResponse(BaseModel):
+    """
+    Response for GET /api/parts/{id}/adjacent endpoint.
+    
+    Provides prev/next IDs for sequential navigation between parts in the 3D viewer modal.
+    Order is determined by created_at ASC (oldest first), with filters applied.
+    
+    Contract: Must match TypeScript interface PartNavigationResponse exactly.
+    Used by US-010 for Prev/Next buttons in modal footer.
+    
+    Attributes:
+        prev_id: UUID of previous part in sequence (None if current is first)
+        next_id: UUID of next part in sequence (None if current is last)
+        current_index: 1-based position of current part in filtered set (e.g., 42 of 150)
+        total_count: Total number of parts in filtered set
+    """
+    prev_id: Optional[UUID] = Field(None, description="Previous part UUID (None if first)")
+    next_id: Optional[UUID] = Field(None, description="Next part UUID (None if last)")
+    current_index: int = Field(..., ge=1, description="1-based index of current part")
+    total_count: int = Field(..., ge=0, description="Total parts in filtered set")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "prev_id": "123e4567-e89b-12d3-a456-426614174000",
+                "next_id": "987fcdeb-51a2-43e7-9876-543210fedcba",
+                "current_index": 42,
+                "total_count": 150
+            }
+        }

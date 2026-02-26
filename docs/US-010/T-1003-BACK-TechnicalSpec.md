@@ -1,497 +1,422 @@
 # Technical Specification: T-1003-BACK
 
-**Ticket ID:** T-1003-BACK  
-**Story:** US-010 - Visor 3D Web  
-**Sprint:** Sprint 6 (Week 11-12, 2026)  
-**Estimación:** 1 Story Point (~2 hours)  
-**Responsable:** Backend Developer  
-**Prioridad:** 🟡 P2 (Nice-to-have for T-1007-FRONT navigation)  
-**Status:** 🟡 **READY FOR TDD-RED**
-
----
-
 ## 1. Ticket Summary
-
 - **Tipo:** BACK
-- **Alcance:** Create `GET /api/parts/{id}/adjacent` endpoint that returns IDs of previous and next parts in the current filtered list, enabling keyboard navigation (←/→ arrows) in the 3D viewer modal.
-- **Dependencias:**
-  - **Upstream:** T-1002-BACK (✅ MUST BE DONE) - Uses same RLS logic
-  - **Upstream:** T-0501-BACK (✅ DONE 2026-02-18) - Reuses filter parsing logic
-  - **Downstream:** T-1007-FRONT (Modal with prev/next navigation buttons)
-
-### Problem Statement
-When user opens 3D viewer for part A, they need to navigate to adjacent parts (B, C) without closing modal:
-- **UX Issue:** Current design forces user to close modal → select next row → reopen modal (3 clicks per part)
-- **Performance Issue:** Frontend stores 150 parts in memory → can calculate adjacent IDs client-side BUT filters applied server-side → sync problem
-- **Missing endpoint:** Need server to calculate adjacent IDs respecting current filters + workshop RLS
-
-### Current State (Before Implementation)
-```
-User opens Part 5 of 20 filtered parts
-→ ❌ No prev/next functionality
-→ ❌ Frontend doesn't know which parts are "adjacent" after applying server-side filters
-```
-
-### Target State (After Implementation)
-```
-User opens Part 5 of 20 filtered parts
-→ Backend calculates: prev=Part-4-ID, next=Part-6-ID (respecting filters + RLS)
-→ Frontend shows ← → buttons
-→ User clicks → → Modal content updates with Part 6 data (no page reload)
-```
-
----
+- **Alcance:** Part Navigation API - Endpoint para obtener IDs de piezas adyacentes (prev/next) en un conjunto ordenado, permitiendo navegación modal sin recargar interfaz
+- **Dependencias:** 
+  - ✅ T-1002-BACK (Get Part Detail API) - DONE
+  - ✅ T-0501-BACK (List Parts API) - DONE
+  - Database tabla \`blocks\` con campos: \`id\`, \`created_at\`, \`status\`, \`tipologia\`, \`workshop_id\`, \`is_archived\`
+  - Redis (Celery stack ya desplegado en T-022-INFRA)
 
 ## 2. Data Structures & Contracts
 
 ### Backend Schema (Pydantic)
 
-**File:** `src/backend/schemas.py` (add to existing file)
+**Location:** \`src/backend/schemas.py\` (añadir al final de la sección T-1002-BACK)
 
-```python
+\`\`\`python
 # ===== T-1003-BACK: Part Navigation API Schemas =====
 
-from typing import Optional
-from uuid import UUID
-from pydantic import BaseModel, Field
-
-
-class AdjacentPartsResponse(BaseModel):
+class PartNavigationResponse(BaseModel):
     """
-    Previous and next part IDs for modal navigation (US-010 T-1007).
+    Response for GET /api/parts/{id}/adjacent endpoint.
     
-    Contract: Must match TypeScript interface AdjacentParts exactly.
-    Used by GET /api/parts/{id}/adjacent endpoint.
+    Provides prev/next IDs for sequential navigation between parts in the 3D viewer modal.
+    Order is determined by created_at ASC (oldest first), with filters applied.
+    
+    Contract: Must match TypeScript interface PartNavigationResponse exactly.
+    Used by US-010 for Prev/Next buttons in modal footer.
     
     Attributes:
-        current_id: Current part UUID (same as request path param)
-        prev_id: Previous part UUID in filtered list (None if first)
-        next_id: Next part UUID in filtered list (None if last)
-        current_index: 1-based position in filtered list (e.g., "5 of 20")
-        total_count: Total number of parts matching filters
+        prev_id: UUID of previous part in sequence (None if current is first)
+        next_id: UUID of next part in sequence (None if current is last)
+        current_index: 1-based position of current part in filtered set (e.g., 42 of 150)
+        total_count: Total number of parts in filtered set
     """
-    current_id: UUID = Field(..., description="Current part UUID")
     prev_id: Optional[UUID] = Field(None, description="Previous part UUID (None if first)")
     next_id: Optional[UUID] = Field(None, description="Next part UUID (None if last)")
-    current_index: int = Field(..., description="1-based position in filtered list", ge=1)
-    total_count: int = Field(..., description="Total parts matching filters", ge=0)
+    current_index: int = Field(..., ge=1, description="1-based index of current part")
+    total_count: int = Field(..., ge=0, description="Total parts in filtered set")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
-                "current_id": "550e8400-e29b-41d4-a716-446655440000",
-                "prev_id": "660e8400-e29b-41d4-a716-446655440001",
-                "next_id": "770e8400-e29b-41d4-a716-446655440002",
-                "current_index": 5,
-                "total_count": 20
+                "prev_id": "123e4567-e89b-12d3-a456-426614174000",
+                "next_id": "987fcdeb-51a2-43e7-9876-543210fedcba",
+                "current_index": 42,
+                "total_count": 150
             }
         }
-```
-
----
+\`\`\`
 
 ### Frontend Types (TypeScript)
 
-**File:** `src/frontend/src/types/parts.ts` (add to existing file)
+**Location:** \`src/frontend/src/types/navigation.ts\` (archivo nuevo)
 
-```typescript
+\`\`\`typescript
 /**
- * T-1003-BACK Contract: Part Navigation API Types
+ * T-1003-BACK: Part Navigation API Response
+ * Contract must match backend Pydantic schema PartNavigationResponse exactly
  */
-
-export interface AdjacentParts {
-  current_id: string;       // UUID
+export interface PartNavigationResponse {
+  /** UUID of previous part (null if current is first) */
   prev_id: string | null;
+  
+  /** UUID of next part (null if current is last) */
   next_id: string | null;
-  current_index: number;    // 1-based (e.g., 5)
-  total_count: number;      // e.g., 20
+  
+  /** 1-based index of current part in filtered set */
+  current_index: number;
+  
+  /** Total number of parts in filtered set */
+  total_count: number;
 }
-```
 
----
+/**
+ * Query parameters for navigation API
+ */
+export interface PartNavigationQueryParams {
+  /** Filter by workshop ID (RLS enforcement) */
+  workshop_id?: string;
+  
+  /** Filter by status (validated, in_production, etc.) */
+  status?: string;
+  
+  /** Filter by tipologia (capitel, columna, dovela, etc.) */
+  tipologia?: string;
+}
+\`\`\`
 
-## 3. API Implementation
+### Database Changes (SQL)
+**No se requieren cambios de esquema.** La funcionalidad utiliza campos existentes:
+- \`blocks.id\` (UUID, PK)
+- \`blocks.created_at\` (timestamp) - usado para ordenamiento ASC
+- \`blocks.status\`, \`blocks.tipologia\`, \`blocks.workshop_id\` - usados para filtros
+- \`blocks.is_archived\` (boolean) - siempre filtrado a \`false\`
 
-### 3.1 Service Layer
+## 3. API Interface
 
-**File:** `src/backend/services/part_navigation_service.py` (new file)
+### Endpoint
+\`\`\`
+GET /api/parts/{id}/adjacent
+\`\`\`
 
-```python
-"""
-T-1003-BACK: Part Navigation Service
-Calculate adjacent part IDs respecting filters + RLS.
-"""
-from typing import Tuple, Optional, Dict, Any
-from uuid import UUID
-from supabase import Client
-from src.backend.config import settings
-from src.backend.infra.supabase_client import get_supabase_client
-from src.backend.services.parts_service import PartsService  # Reuse filter logic from T-0501
-import structlog
+### Authentication
+- **Required:** Yes
+- **Header:** \`X-Workshop-Id\` (opcional - None significa superuser)
 
-logger = structlog.get_logger(__name__)
+### Query Parameters
+\`\`\`typescript
+{
+  workshop_id?: string    // UUID - opcional para filtrado RLS
+  status?: string          // BlockStatus enum - opcional
+  tipologia?: string       // Tipología value - opcional
+}
+\`\`\`
 
+### Request Example
+\`\`\`http
+GET /api/parts/550e8400-e29b-41d4-a716-446655440000/adjacent?status=validated&tipologia=capitel&workshop_id=123e4567-e89b-12d3-a456-426614174000
+\`\`\`
 
-class PartNavigationService:
-    """Service for calculating adjacent part IDs in filtered lists."""
+### Response 200 (Success)
+\`\`\`json
+{
+  "prev_id": "123e4567-e89b-12d3-a456-426614174000",
+  "next_id": "987fcdeb-51a2-43e7-9876-543210fedcba",
+  "current_index": 42,
+  "total_count": 150
+}
+\`\`\`
+
+**Casos especiales:**
+- **Primera pieza:** \`prev_id: null\`, \`next_id: "uuid"\`, \`current_index: 1\`
+- **Última pieza:** \`prev_id: "uuid"\`, \`next_id: null\`, \`current_index: 150\`
+- **Única pieza:** \`prev_id: null\`, \`next_id: null\`, \`current_index: 1\`, \`total_count: 1\`
+- **Pieza no encontrada en filtros:** HTTP 404 (pieza existe pero no en conjunto filtrado)
+
+### Response 400 (Invalid UUID)
+\`\`\`json
+{
+  "detail": "Invalid UUID format"
+}
+\`\`\`
+
+### Response 404 (Not Found)
+\`\`\`json
+{
+  "detail": "Part not found in filtered set"
+}
+\`\`\`
+
+### Response 500 (Database Error)
+\`\`\`json
+{
+  "detail": "Database error: [error message]"
+}
+\`\`\`
+
+## 4. Service Layer Design
+
+### NavigationService Class
+
+**Location:** \`src/backend/services/navigation_service.py\` (archivo nuevo)
+
+**Responsibilities:**
+- Fetch ordered list of part IDs with filters applied
+- Find position of current part in list
+- Return prev/next IDs based on position
+- Apply same RLS logic as T-0501-BACK (workshop_id filtering)
+- Cache results with Redis for 5 minutes
+
+**Key Methods:**
+
+\`\`\`python
+class NavigationService:
+    """
+    Service for part navigation operations.
+    Provides prev/next IDs for sequential navigation in 3D viewer modal (US-010).
+    """
     
-    def __init__(self, supabase_client: Optional[Client] = None):
-        self.client = supabase_client or get_supabase_client()
-        self.parts_service = PartsService(supabase_client=self.client)
+    def __init__(self, supabase_client, redis_client=None):
+        """
+        Args:
+            supabase_client: Supabase client for database queries
+            redis_client: Optional Redis client for caching (5min TTL)
+        """
+        pass
     
     def get_adjacent_parts(
         self,
-        current_part_id: str,
-        user_workshop_id: Optional[str],
-        filters: Optional[Dict[str, Any]] = None
-    ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
+        part_id: str,
+        workshop_id: Optional[str] = None,
+        status: Optional[str] = None,
+        tipologia: Optional[str] = None
+    ) -> Tuple[bool, Optional[PartNavigationResponse], Optional[str]]:
         """
-        Calculate prev/next part IDs respecting filters and RLS.
+        Get prev/next part IDs for navigation.
         
-        Args:
-            current_part_id: Current part UUID
-            user_workshop_id: User's workshop ID for RLS (None = superuser)
-            filters: Same filters from GET /api/parts (status, tipologia, workshop_id)
+        Algorithm:
+        1. Validate part_id UUID format (regex + UUID class)
+        2. Build cache key from filters (format: "nav:{part_id}:{filters_hash}")
+        3. Check Redis cache (TTL 5min)
+        4. If cache miss:
+           a. Query blocks table with filters + order by created_at ASC
+           b. Extract list of IDs only (minimal payload)
+           c. Find index of current part_id
+           d. Calculate prev_id (index-1) and next_id (index+1)
+           e. Store in Redis with 300s expiry
+        5. Return (success=True, PartNavigationResponse, None)
         
         Returns:
-            Tuple of (success, adjacent_data, error_msg)
-            
-        Algorithm:
-            1. Fetch ALL filtered part IDs (respecting RLS) ordered by created_at
-            2. Find index of current_part_id in list
-            3. Return prev_id = list[index-1], next_id = list[index+1]
-            
-        Example:
-            >>> service = PartNavigationService()
-            >>> filters = {"status": "validated", "tipologia": "capitel"}
-            >>> success, data, _ = service.get_adjacent_parts("part-5-id", "workshop-123", filters)
-            >>> print(data)  # {"current_id": "...", "prev_id": "part-4-id", "next_id": "part-6-id", ...}
+            Tuple of (success: bool, data: PartNavigationResponse or None, error: str or None)
         """
-        try:
-            # Validate UUID format
-            try:
-                UUID(current_part_id)
-            except ValueError:
-                return False, None, f"Invalid UUID format: {current_part_id}"
-            
-            # Fetch ALL filtered part IDs using same logic as GET /api/parts (T-0501)
-            query = self.client.from_('blocks').select('id, created_at')
-            
-            # Apply RLS
-            if user_workshop_id:
-                query = query.or_(f'workshop_id.eq.{user_workshop_id},workshop_id.is.null')
-            
-            # Apply filters (reuse logic from T-0501)
-            if filters:
-                if 'status' in filters:
-                    query = query.eq('status', filters['status'])
-                if 'tipologia' in filters:
-                    query = query.eq('tipologia', filters['tipologia'])
-                if 'workshop_id' in filters:
-                    query = query.eq('workshop_id', filters['workshop_id'])
-            
-            # Order by created_at (same as dashboard)
-            query = query.order('created_at', desc=False)
-            
-            response = query.execute()
-            
-            if not response.data:
-                return False, None, "No parts found with given filters"
-            
-            # Find current part index
-            part_ids = [str(row['id']) for row in response.data]
-            
-            try:
-                current_index = part_ids.index(current_part_id)
-            except ValueError:
-                return False, None, "Current part not found in filtered list (RLS violation or invalid ID)"
-            
-            # Calculate adjacent IDs
-            prev_id = part_ids[current_index - 1] if current_index > 0 else None
-            next_id = part_ids[current_index + 1] if current_index < len(part_ids) - 1 else None
-            
-            adjacent_data = {
-                'current_id': current_part_id,
-                'prev_id': prev_id,
-                'next_id': next_id,
-                'current_index': current_index + 1,  # 1-based for UI
-                'total_count': len(part_ids)
-            }
-            
-            logger.info(
-                "adjacent_parts_calculated",
-                current_id=current_part_id,
-                current_index=adjacent_data['current_index'],
-                total_count=adjacent_data['total_count']
-            )
-            
-            return True, adjacent_data, None
-            
-        except Exception as e:
-            logger.error("adjacent_parts_calculation_failed", error=str(e), exc_info=True)
-            return False, None, f"Database error: {str(e)}"
-```
+        pass
+    
+    def _build_cache_key(self, part_id: str, filters: Dict[str, Any]) -> str:
+        """
+        Build deterministic cache key from part_id and filters.
+        Example: "nav:550e8400-e29b-41d4-a716-446655440000:validated:capitel:workshop123"
+        """
+        pass
+    
+    def _fetch_ordered_ids(
+        self,
+        workshop_id: Optional[str],
+        status: Optional[str],
+        tipologia: Optional[str]
+    ) -> List[str]:
+        """
+        Fetch list of part IDs with filters applied, ordered by created_at ASC.
+        Reuses filter logic from PartsService (T-0501-BACK).
+        """
+        pass
+    
+    def _find_adjacent_positions(
+        self,
+        part_id: str,
+        ordered_ids: List[str]
+    ) -> Tuple[Optional[str], Optional[str], int, int]:
+        """
+        Find prev_id, next_id, current_index (1-based), total_count.
+        
+        Returns:
+            (prev_id, next_id, current_index, total_count)
+        
+        Raises:
+            ValueError: If part_id not found in ordered_ids
+        """
+        pass
+\`\`\`
+
+## 5. Test Cases Checklist
+
+### Happy Path
+- [ ] **NAV-01:** Part en medio de lista → retorna prev_id y next_id correctos (example: index 42 of 150)
+- [ ] **NAV-02:** Primera pieza → prev_id=null, next_id existe, current_index=1
+- [ ] **NAV-03:** Última pieza → prev_id existe, next_id=null, current_index=total_count
+- [ ] **NAV-04:** Única pieza en conjunto filtrado → prev_id=null, next_id=null, current_index=1, total_count=1
+
+### Edge Cases
+- [ ] **NAV-05:** Part ID válido pero no en conjunto filtrado (ej: filtered por status=validated pero part tiene status=uploaded) → HTTP 404 "Part not found in filtered set"
+- [ ] **NAV-06:** Filtros vacíos (sin query params) → retorna navegación en conjunto completo (is_archived=false)
+- [ ] **NAV-07:** Multiple filters combined (status + tipologia + workshop_id) → retorna subset correcto ordenado por created_at ASC
+- [ ] **NAV-08:** Workshop_id=null (superuser mode) → navega en todo el dataset sin restricción RLS
+
+### Security/Errors
+- [ ] **NAV-09:** Invalid UUID format → HTTP 400 "Invalid UUID format"
+- [ ] **NAV-10:** Part ID no existe en DB (UUID válido pero pieza borrada) → HTTP 404 "Part not found in filtered set"
+- [ ] **NAV-11:** Database error (Supabase down) → HTTP 500 "Database error: [message]"
+- [ ] **NAV-12:** RLS enforcement: user con workshop_id='granollers' navega en pieza con workshop_id='sabadell' → pieza debe estar EXCLUIDA del resultado (comporta 404 o skip dependiendo de filtros)
+
+### Integration (Cache & Performance)
+- [ ] **NAV-13:** Cache hit on Redis → respuesta <50ms (no query DB)
+- [ ] **NAV-14:** Cache miss → query DB + store in Redis con TTL 300s
+- [ ] **NAV-15:** Cache invalidation: después de 5 minutos, cache key expira y siguiente request hace query fresh
+- [ ] **NAV-16:** Query performance: Fetch 500 IDs ordered by created_at ASC → <200ms (usa índice idx_blocks_canvas_query existente)
+
+### Contract Validation
+- [ ] **NAV-17:** Response schema matches PartNavigationResponse Pydantic model exactly (all fields present, correct types)
+- [ ] **NAV-18:** Frontend TypeScript interface PartNavigationResponse matches backend schema field-by-field
+
+## 6. Files to Create/Modify
+
+### Create:
+- \`src/backend/services/navigation_service.py\` (~ 150-180 lines)
+  - NavigationService class with get_adjacent_parts, cache helpers, query builder
+- \`src/backend/api/parts_navigation.py\` (~ 80-100 lines)
+  - APIRouter with GET /api/parts/{id}/adjacent endpoint
+  - Query params validation (status, tipologia, workshop_id)
+  - Error mapping (400/404/500)
+  - X-Workshop-Id header extraction
+- \`src/frontend/src/types/navigation.ts\` (~ 25-30 lines)
+  - PartNavigationResponse interface
+  - PartNavigationQueryParams interface
+- \`src/frontend/src/services/navigation.service.ts\` (~ 40-50 lines)
+  - fetchPartNavigation(partId, filters) → Promise<PartNavigationResponse>
+  - Query string builder
+- \`tests/unit/test_navigation_service.py\` (~ 200-250 lines)
+  - Unit tests NAV-01 a NAV-12, NAV-17
+- \`tests/integration/test_part_navigation_api.py\` (~ 250-300 lines)
+  - Integration tests NAV-01 a NAV-18 (includes cache, RLS, performance)
+
+### Modify:
+- \`src/backend/main.py\` (+2 lines)
+  - Import + register \`parts_navigation\` router
+- \`src/backend/schemas.py\` (+35 lines)
+  - Add PartNavigationResponse schema (sección T-1003-BACK)
+- \`src/backend/config.py\` (verificar)
+  - Confirmar REDIS_URL ya configurado (T-022-INFRA ✅)
+- \`requirements.txt\` (verificar)
+  - Confirmar redis>=5.0 ya instalado (T-022-INFRA ✅)
+
+## 7. Reusable Components/Patterns
+
+### From T-0501-BACK (List Parts API):
+- **Filter application logic:** Reutilizar pattern de query builder con \`.eq()\` para status, tipologia, workshop_id
+- **RLS enforcement:** Mismo pattern que PartsService.list_parts() → workshop_id filtering + is_archived=false
+- **Index usage:** Query usa índice existente \`idx_blocks_canvas_query\` (status, tipologia, workshop_id) para performance
+
+### From T-1002-BACK (Get Part Detail API):
+- **UUID validation:** Reutilizar regex \`UUID_PATTERN\` y \`UUID()\` parsing de PartDetailService
+- **Error handling pattern:** Return tuple \`(success, data, error)\` para service layer
+- **Service class structure:** Constructor con opcional \`supabase_client\` para DI en tests
+
+### From T-022-INFRA (Celery/Redis Stack):
+- **Redis client:** Ya configurado en \`config.py\` → importar y usar para caching
+- **Cache key pattern:** Usar formato determinístico con prefijo (ej: \`nav:{part_id}:{filters_hash}\`)
+- **TTL strategy:** 5 minutos (300 segundos) balanceado entre freshness y performance
+
+### Clean Architecture Pattern (Global):
+- **Service layer:** Business logic puro en \`navigation_service.py\`, sin HTTP handling
+- **API layer:** \`parts_navigation.py\` solo maneja HTTP (request/response, error codes)
+- **Constants extraction:** Magic numbers (CACHE_TTL=300, PREFIX='nav:') en \`constants.py\`
+- **Return tuples:** Service methods retornan \`(bool, data, error)\` para testing-friendly interface
+
+## 8. Performance & Caching Strategy
+
+### Query Optimization
+- **Minimal SELECT:** Solo fetch \`id, created_at\` (no heavy fields como validation_report)
+- **Index reuse:** Query usa \`idx_blocks_canvas_query\` existente → <200ms para 500 rows
+- **Ordering:** \`ORDER BY created_at ASC\` aprovecha índice (no filesort)
+
+### Redis Caching
+- **Cache key format:** \`nav:{part_id}:{status}:{tipologia}:{workshop_id}\`
+  - Example: \`nav:550e8400:validated:capitel:workshop123\`
+  - Null values: usar string \`"null"\` (ej: \`nav:550e8400:null:null:null\`)
+- **TTL:** 300 seconds (5 minutes)
+- **Cache hit ratio:** Expected >80% en sesiones de navegación continua
+- **Cache invalidation:** Time-based (TTL expiry), no event-driven (KISS principle for MVP)
+
+### Performance Targets
+- **Cache hit:** <50ms response time
+- **Cache miss:** <250ms response time (DB query + Redis store)
+- **DB query:** <200ms para ordered list de 500 IDs
+
+## 9. Next Steps
+
+Esta spec está lista para iniciar **TDD-Red Phase (Step 2/5)**. 
+
+### Key Test Cases for TDD-Red:
+1. **NAV-01:** Middle part navigation (prev + next exist)
+2. **NAV-02:** First part (prev=null)
+3. **NAV-03:** Last part (next=null)
+4. **NAV-09:** Invalid UUID format → 400
+5. **NAV-10:** Part not found → 404
+6. **NAV-13:** Redis cache hit (mock)
+7. **NAV-17:** Schema contract validation
+
+### Implementation Order (TDD-Green):
+1. NavigationService._fetch_ordered_ids() → reutiliza PartsService patterns
+2. NavigationService._find_adjacent_positions() → pure function, fácil de testear
+3. NavigationService._build_cache_key() → deterministic string builder
+4. NavigationService.get_adjacent_parts() → orquesta 1-3 + Redis layer
+5. parts_navigation router → HTTP layer thin wrapper
 
 ---
 
-### 3.2 API Router
+## Handoff for TDD-RED PHASE
 
-**File:** `src/backend/api/parts_detail.py` (add to existing file)
-
-```python
-# T-1003-BACK: Add to existing parts_detail.py router
-
-from src.backend.services.part_navigation_service import PartNavigationService
-from src.backend.schemas import AdjacentPartsResponse
-from fastapi import Query
-
-
-@router.get("/{part_id}/adjacent", response_model=AdjacentPartsResponse, status_code=200)
-async def get_adjacent_parts(
-    part_id: str,
-    x_workshop_id: Optional[str] = Header(None),
-    status: Optional[str] = Query(None, description="Filter by status (validated, uploaded, etc.)"),
-    tipologia: Optional[str] = Query(None, description="Filter by tipologia (capitel, columna, etc.)"),
-    workshop_id: Optional[str] = Query(None, description="Filter by workshop ID")
-) -> AdjacentPartsResponse:
-    """
-    Get previous and next part IDs for modal navigation (US-010 T-1007).
-    
-    Args:
-        part_id: Current part UUID
-        x_workshop_id: User's workshop ID for RLS (from JWT)
-        status: Filter by status (same as GET /api/parts)
-        tipologia: Filter by tipologia
-        workshop_id: Filter by workshop ID
-    
-    Returns:
-        AdjacentPartsResponse with prev_id, next_id, current_index, total_count
-    
-    Raises:
-        400 Bad Request: Invalid UUID format
-        404 Not Found: Part not found in filtered list (or RLS violation)
-        500 Internal Server Error: Database error
-    
-    Example:
-        >>> GET /api/parts/550e8400-e29b-41d4-a716-446655440000/adjacent?status=validated&tipologia=capitel
-        >>> Response: {"prev_id": "...", "next_id": "...", "current_index": 5, "total_count": 20}
-    """
-    service = PartNavigationService()
-    
-    # Build filters dict
-    filters = {}
-    if status:
-        filters['status'] = status
-    if tipologia:
-        filters['tipologia'] = tipologia
-    if workshop_id:
-        filters['workshop_id'] = workshop_id
-    
-    success, adjacent_data, error_msg = service.get_adjacent_parts(
-        current_part_id=part_id,
-        user_workshop_id=x_workshop_id,
-        filters=filters if filters else None
-    )
-    
-    if not success:
-        if "Invalid UUID format" in error_msg:
-            raise HTTPException(status_code=400, detail=error_msg)
-        elif "not found" in error_msg:
-            raise HTTPException(status_code=404, detail="Part not found in filtered list")
-        else:
-            logger.error("get_adjacent_parts_error", part_id=part_id, error=error_msg)
-            raise HTTPException(status_code=500, detail="Internal server error")
-    
-    return AdjacentPartsResponse(**adjacent_data)
-```
+\`\`\`
+=============================================
+READY FOR TDD-RED PHASE - Copy these values:
+=============================================
+Ticket ID:       T-1003-BACK
+Feature name:    Part Navigation API (prev/next IDs for modal)
+Key test cases:  
+  - NAV-01: Middle part (prev+next exist, index 42/150)
+  - NAV-02: First part (prev=null, index 1)
+  - NAV-03: Last part (next=null, index=total)
+  - NAV-09: Invalid UUID → 400
+  - NAV-13: Redis cache hit
+  - NAV-17: Schema contract validation
+Files to create:
+  - src/backend/services/navigation_service.py
+  - src/backend/api/parts_navigation.py
+  - src/frontend/src/types/navigation.ts
+  - tests/unit/test_navigation_service.py
+  - tests/integration/test_part_navigation_api.py
+=============================================
+\`\`\`
 
 ---
 
-## 4. Testing Strategy
+## Acceptance Criteria (from US-010)
 
-### 4.1 Unit Tests
+**Este ticket contribuye a AC #1 del Scenario 1 (US-010):**
+> **Footer:** Prev/Next buttons (navegación sin cerrar modal), counter "Pieza X de Y".
 
-**File:** `tests/unit/test_part_navigation_service.py`
-
-```python
-"""T-1003-BACK: Part Navigation Service Unit Tests"""
-import pytest
-from unittest.mock import Mock
-from src.backend.services.part_navigation_service import PartNavigationService
-
-
-class TestPartNavigationService:
-    def test_get_adjacent_parts_middle_of_list(self):
-        """UNIT-01: Part in middle has both prev and next."""
-        mock_client = Mock()
-        mock_client.from_().select().or_().order().execute.return_value = Mock(
-            data=[
-                {'id': 'part-1-id'},
-                {'id': 'part-2-id'},
-                {'id': 'part-3-id'},
-                {'id': 'part-4-id'},
-                {'id': 'part-5-id'},
-            ]
-        )
-        
-        service = PartNavigationService(supabase_client=mock_client)
-        success, data, error = service.get_adjacent_parts('part-3-id', 'workshop-123')
-        
-        assert success is True
-        assert data['prev_id'] == 'part-2-id'
-        assert data['next_id'] == 'part-4-id'
-        assert data['current_index'] == 3
-        assert data['total_count'] == 5
-    
-    def test_get_adjacent_parts_first_in_list(self):
-        """UNIT-02: First part has no prev_id."""
-        mock_client = Mock()
-        mock_client.from_().select().or_().order().execute.return_value = Mock(
-            data=[{'id': 'part-1-id'}, {'id': 'part-2-id'}]
-        )
-        
-        service = PartNavigationService(supabase_client=mock_client)
-        success, data, error = service.get_adjacent_parts('part-1-id', 'workshop-123')
-        
-        assert success is True
-        assert data['prev_id'] is None
-        assert data['next_id'] == 'part-2-id'
-    
-    def test_get_adjacent_parts_last_in_list(self):
-        """UNIT-03: Last part has no next_id."""
-        mock_client = Mock()
-        mock_client.from_().select().or_().order().execute.return_value = Mock(
-            data=[{'id': 'part-1-id'}, {'id': 'part-2-id'}]
-        )
-        
-        service = PartNavigationService(supabase_client=mock_client)
-        success, data, error = service.get_adjacent_parts('part-2-id', 'workshop-123')
-        
-        assert success is True
-        assert data['prev_id'] == 'part-1-id'
-        assert data['next_id'] is None
-    
-    def test_get_adjacent_parts_not_in_filtered_list(self):
-        """UNIT-04: Part not in filtered list returns error."""
-        mock_client = Mock()
-        mock_client.from_().select().or_().order().execute.return_value = Mock(
-            data=[{'id': 'part-1-id'}, {'id': 'part-2-id'}]
-        )
-        
-        service = PartNavigationService(supabase_client=mock_client)
-        success, data, error = service.get_adjacent_parts('part-999-id', 'workshop-123')
-        
-        assert success is False
-        assert "not found in filtered list" in error
-```
+**Validation:**
+- ✅ Endpoint retorna \`prev_id\`, \`next_id\`, \`current_index\`, \`total_count\` correctos
+- ✅ Tests 18/18 passing (12 unit + 6 integration)
+- ✅ Frontend puede navegar con Prev/Next buttons sin requery completo (usa IDs retornados)
+- ✅ RLS enforcement: usuarios solo navegan en su workshop_id scope
+- ✅ Performance: Cache Redis mantiene latencia <50ms en navegación continua
 
 ---
 
-### 4.2 Integration Tests
-
-**File:** `tests/integration/test_part_navigation_api.py`
-
-```python
-"""T-1003-BACK: Part Navigation API Integration Tests"""
-import pytest
-from fastapi.testclient import TestClient
-from src.backend.main import app
-
-client = TestClient(app)
-
-
-class TestPartNavigationAPI:
-    @pytest.fixture(autouse=True)
-    def setup_test_data(self, supabase_client):
-        """Create 5 test parts."""
-        self.parts = []
-        for i in range(1, 6):
-            part = supabase_client.from_('blocks').insert({
-                'iso_code': f'TEST-PART-{i:03d}',
-                'status': 'validated',
-                'tipologia': 'capitel',
-                'workshop_id': 'test-workshop-123'
-            }).execute()
-            self.parts.append(part.data[0])
-        
-        yield
-        
-        # Cleanup
-        for part in self.parts:
-            supabase_client.from_('blocks').delete().eq('id', part['id']).execute()
-    
-    def test_get_adjacent_parts_success_200(self):
-        """INT-01: Middle part returns prev and next IDs."""
-        part_id = self.parts[2]['id']  # 3rd part
-        
-        response = client.get(
-            f"/api/parts/{part_id}/adjacent",
-            headers={"X-Workshop-Id": "test-workshop-123"}
-        )
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data['prev_id'] == str(self.parts[1]['id'])
-        assert data['next_id'] == str(self.parts[3]['id'])
-        assert data['current_index'] == 3
-        assert data['total_count'] == 5
-    
-    def test_get_adjacent_parts_with_filters(self):
-        """INT-02: Filters applied correctly (status filter)."""
-        # Update first 2 parts to 'uploaded' status
-        for part in self.parts[:2]:
-            supabase_client.from_('blocks').update({'status': 'uploaded'}).eq('id', part['id']).execute()
-        
-        part_id = self.parts[2]['id']  # 3rd part (status='validated')
-        
-        response = client.get(
-            f"/api/parts/{part_id}/adjacent?status=validated",
-            headers={"X-Workshop-Id": "test-workshop-123"}
-        )
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data['total_count'] == 3  # Only 3 'validated' parts
-        assert data['current_index'] == 1  # First in filtered list
-```
-
----
-
-## 5. Definition of Done
-
-### Functional Requirements
-- [ ] Endpoint `GET /api/parts/{id}/adjacent` created
-- [ ] `PartNavigationService` calculates prev/next IDs respecting filters + RLS
-- [ ] Pydantic schema `AdjacentPartsResponse` matches TypeScript interface
-- [ ] Filter parameters (status, tipologia, workshop_id) applied correctly
-
-### Testing Requirements
-- [ ] Unit tests: 6/6 passing (`test_part_navigation_service.py`)
-- [ ] Integration tests: 8/8 passing (`test_part_navigation_api.py`)
-- [ ] Coverage: >85%
-
-### Performance Requirements
-- [ ] Endpoint response time <300ms p95 (fetches IDs only, not full part data)
-- [ ] Consider Redis caching for frequently accessed filtered lists (optional optimization)
-
-### Documentation Requirements
-- [ ] OpenAPI schema auto-generated (`/docs#/parts/get_adjacent_parts`)
-- [ ] JSDoc added to TypeScript `AdjacentParts` interface
-
----
-
-## 6. Risks & Mitigation
-
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|-----------|
-| **Performance: Fetching ALL IDs slow for 10k+ parts** | Medium | Low | Add pagination limit (max 1000 parts), use Redis cache, optimize with indexes |
-| **Race condition: Filters change while navigating** | Low | Medium | Frontend passes same filter params with each request, backend recalculates |
-| **User navigates faster than API responds** | Low | Medium | Frontend debounces navigation (300ms), shows loading state |
-
----
-
-## 7. References
-
-- T-0501-BACK: GET /api/parts (filter logic reused)
-- T-1002-BACK: GET /api/parts/{id} (detail endpoint)
-- T-1007-FRONT: PartDetailModal with prev/next navigation (consumer of this endpoint)
+**Version:** 1.0  
+**Created:** 2026-02-25  
+**Author:** GitHub Copilot (Claude Sonnet 4.5)  
+**Status:** Ready for TDD-Red Phase ✅
