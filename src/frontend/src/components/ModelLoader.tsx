@@ -148,7 +148,7 @@ export const ModelLoader: React.FC<ModelLoaderProps> = ({
 
   // Case 2: low_poly_url exists → Load GLB
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} data-testid="model-loader">
       <GLBModel url={partData.low_poly_url} />
     </group>
   );

@@ -97,8 +97,17 @@ export const PartViewerCanvas: React.FC<PartViewerCanvasProps> = ({
 }) => {
   const controlsRef = useRef<any>(null);
 
+  // Check WebGL availability before rendering (T-1009-TEST-FRONT: ERR-INT-03)
+  // This must run during render (not in useEffect) to be caught by error boundary
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+  if (!gl) {
+    throw new Error('WebGL is not available in this browser');
+  }
+
   return (
     <div
+      data-testid="part-viewer-canvas"
       className={`part-viewer-canvas ${className}`}
       style={{ width: '100%', height: '100%', position: 'relative' }}
       role="img"
