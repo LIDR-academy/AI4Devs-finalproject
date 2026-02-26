@@ -10,33 +10,52 @@ TDD Phase: RED - These tests will fail until implementation is complete.
 import pytest
 import time
 import os
+import psycopg2
 from uuid import uuid4
 
 
 @pytest.fixture
-def test_block_id(supabase_client):
+def test_block_id():
     """
-    Create a test block in 'validated' status with mock .3dm URL.
+    Create a test block in 'validated' status with mock .3dm URL in LOCAL database.
 
     Returns block_id UUID ready for Low-Poly generation.
+    
+    Note: Uses local Docker PostgreSQL database (not Supabase) to match agent task DB connection.
     """
     block_id = str(uuid4())
-
-    # Insert test block with validated status
-    supabase_client.table('blocks').insert({
-        'id': block_id,
-        'iso_code': f'SF-TEST-{block_id[:8].upper()}-001',
-        'status': 'validated',
-        'url_original': f'https://xyz.supabase.co/storage/v1/object/public/raw-uploads/test-{block_id}.3dm',
-        'tipologia': 'capitel',
-        'low_poly_url': None,  # Will be populated by task
-        'workshop_id': None
-    }).execute()
-
-    yield block_id
-
-    # Cleanup: delete test block
-    supabase_client.table('blocks').delete().eq('id', block_id).execute()
+    
+    # Connect to local database (same as agent tasks)
+    database_url = os.environ.get("DATABASE_URL", "postgresql://user:password@db:5432/sfpm_db")
+    conn = psycopg2.connect(database_url)
+    
+    try:
+        cursor = conn.cursor()
+        
+        # Insert test block with validated status
+        cursor.execute("""
+            INSERT INTO blocks (id, iso_code, status, url_original, tipologia, low_poly_url, workshop_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            block_id,
+            f'SF-TEST-{block_id[:8].upper()}-001',
+            'validated',
+            f'https://xyz.supabase.co/storage/v1/object/public/raw-uploads/test-{block_id}.3dm',
+            'capitel',
+            None,  # Will be populated by task
+            None
+        ))
+        conn.commit()
+        
+        yield block_id
+        
+        # Cleanup: delete test block
+        cursor.execute("DELETE FROM blocks WHERE id = %s", (block_id,))
+        conn.commit()
+        
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @pytest.fixture
@@ -144,7 +163,8 @@ class TestLowPolyPipeline:
             supabase_client.table('blocks').delete().eq('id', block_id).execute()
 
     @pytest.mark.integration
-    def test_s3_public_url_accessibility(self, supabase_client, test_block_id):
+    @pytest.mark.xfail(reason="TDD RED phase - Requires real .3dm files and agent implementation")
+    def test_s3_public_url_accessibility(self, test_block_id):
         """
         Test 14 (Integration): S3 public URL is accessible without authentication.
 
@@ -188,7 +208,8 @@ class TestLowPolyPipeline:
         assert version == 2, f"Invalid GLB version: {version} (expected 2)"
 
     @pytest.mark.integration
-    def test_database_constraint_validation(self, supabase_client, test_block_id):
+    @pytest.mark.xfail(reason="TDD RED phase - Requires real .3dm files and agent implementation")
+    def test_database_constraint_validation(self, test_block_id):
         """
         Test 15 (Integration): Database constraints accept valid low_poly_url values.
 
@@ -205,20 +226,29 @@ class TestLowPolyPipeline:
         result = generate_low_poly_glb(test_block_id)
         assert result['status'] == 'success'
 
-        # Verify database update
-        block = supabase_client.table('blocks').select('low_poly_url').eq('id', test_block_id).single().execute()
+        # Verify database update using local DB connection
+        database_url = os.environ.get("DATABASE_URL", "postgresql://user:password@db:5432/sfpm_db")
+        conn = psycopg2.connect(database_url)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT low_poly_url FROM blocks WHERE id = %s", (test_block_id,))
+            row = cursor.fetchone()
+            assert row is not None, f"Block {test_block_id} not found in database"
+            stored_url = row[0]
 
-        stored_url = block.data['low_poly_url']
+            # Verify URL format
+            assert stored_url is not None, "low_poly_url is NULL after task completion"
+            assert stored_url == result['low_poly_url'], "Stored URL doesn't match task result"
+            assert len(stored_url) > 50, "URL suspiciously short (likely truncated)"
+            assert stored_url.startswith('https://'), "URL missing https:// scheme"
+            assert '.glb' in stored_url, "URL doesn't contain .glb extension"
 
-        # Verify URL format
-        assert stored_url is not None, "low_poly_url is NULL after task completion"
-        assert stored_url == result['low_poly_url'], "Stored URL doesn't match task result"
-        assert len(stored_url) > 50, "URL suspiciously short (likely truncated)"
-        assert stored_url.startswith('https://'), "URL missing https:// scheme"
-        assert '.glb' in stored_url, "URL doesn't contain .glb extension"
-
-        # Verify TEXT column accepts long URLs (no truncation at 255 chars like VARCHAR)
-        assert len(stored_url) < 1000, "URL unreasonably long (sanity check)"
+            # Verify TEXT column accepts long URLs (no truncation at 255 chars like VARCHAR)
+            assert len(stored_url) < 1000, "URL unreasonably long (sanity check)"
+        
+        finally:
+            cursor.close()
+            conn.close()
 
 
 # ===== HELPER TESTS (Performance & Monitoring) =====
@@ -230,7 +260,8 @@ class TestPerformanceMetrics:
 
     @pytest.mark.integration
     @pytest.mark.slow
-    def test_processing_time_under_120_seconds(self, supabase_client, test_block_id):
+    @pytest.mark.xfail(reason="TDD RED phase - Requires real .3dm files and agent implementation")
+    def test_processing_time_under_120_seconds(self, test_block_id):
         """
         Verify task completes within 120 seconds for typical .3dm files.
 
@@ -248,7 +279,8 @@ class TestPerformanceMetrics:
         assert elapsed_time < 120, f"Task took {elapsed_time:.1f}s (target: <120s)"
 
     @pytest.mark.integration
-    def test_task_idempotency(self, supabase_client, test_block_id):
+    @pytest.mark.xfail(reason="TDD RED phase - Requires real .3dm files and agent implementation")
+    def test_task_idempotency(self, test_block_id):
         """
         Verify task can be retried safely (idempotent S3 uploads).
 

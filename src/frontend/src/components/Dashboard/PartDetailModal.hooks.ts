@@ -14,7 +14,7 @@ import type { AdjacentPartsInfo } from '@/types/modal';
 import type { PartDetail } from '@/types/parts';
 import { getPartDetail } from '@/services/upload.service';
 import { getPartNavigation } from '@/services/navigation.service';
-import { ERROR_MESSAGES, KEYBOARD_SHORTCUTS, TIMEOUT_CONFIG } from './PartDetailModal.constants';
+import { ERROR_MESSAGES, KEYBOARD_SHORTCUTS } from './PartDetailModal.constants';
 
 /**
  * Fetches part detail data when partId changes

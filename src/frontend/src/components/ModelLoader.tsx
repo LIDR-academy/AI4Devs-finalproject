@@ -18,7 +18,7 @@ import { BBoxProxy } from './Dashboard/BBoxProxy';
 import { getPartDetail } from '@/services/upload.service';
 import type { PartDetail } from '@/types/parts';
 import type { ModelLoaderProps } from './ModelLoader.types';
-import { MODEL_LOADER_DEFAULTS, ERROR_MESSAGES, LOADING_MESSAGES } from './ModelLoader.constants';
+import { MODEL_LOADER_DEFAULTS, LOADING_MESSAGES } from './ModelLoader.constants';
 
 /**
  * ModelLoader Component
@@ -27,7 +27,7 @@ import { MODEL_LOADER_DEFAULTS, ERROR_MESSAGES, LOADING_MESSAGES } from './Model
 export const ModelLoader: React.FC<ModelLoaderProps> = ({
   partId,
   enablePreload = MODEL_LOADER_DEFAULTS.ENABLE_PRELOAD,
-  showLoadingSpinner = MODEL_LOADER_DEFAULTS.SHOW_LOADING_SPINNER,
+  // showLoadingSpinner = MODEL_LOADER_DEFAULTS.SHOW_LOADING_SPINNER, // Reserved for future use
   onLoadSuccess,
   onLoadError,
   autoCenter = MODEL_LOADER_DEFAULTS.AUTO_CENTER,
@@ -282,14 +282,14 @@ const LoadingSpinner: React.FC<{ message: string }> = ({ message }) => {
  * Fetches prev_id/next_id from T-1003-BACK navigation endpoint,
  * then preloads GLB models using useGLTF.preload() for cache warming.
  * 
- * @param currentPartId - UUID of currently displayed part
+ * @param _currentPartId - UUID of currently displayed part (reserved for future use)
  * @returns Promise<void> - Non-blocking, errors are logged but not thrown
  * @internal This function is a stub pending T-1003-BACK integration
  */
-const preloadAdjacentModels = async (currentPartId: string) => {
+const preloadAdjacentModels = async (_currentPartId: string) => {
   try {
     // TODO: Fetch adjacent IDs from T-1003-BACK endpoint
-    // const adjacent = await getAdjacentParts(currentPartId);
+    // const adjacent = await getAdjacentParts(_currentPartId);
     // if (adjacent.prev_id) {
     //   const prevPart = await getPartDetail(adjacent.prev_id);
     //   if (prevPart.low_poly_url) {

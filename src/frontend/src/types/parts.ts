@@ -12,6 +12,8 @@
  * @see src/backend/schemas.py - BlockStatus, BoundingBox, PartCanvasItem, PartsListResponse
  */
 
+import type { ValidationReport } from './validation';
+
 export enum BlockStatus {
   Uploaded = "uploaded",
   Processing = "processing",

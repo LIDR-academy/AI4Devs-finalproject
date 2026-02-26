@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import type { PartMetadataPanelProps, ExpandedSections, SectionId } from './PartMetadataPanel.types';
-import { SECTIONS_CONFIG, SECTION_STYLES, STATUS_COLORS, ARIA_LABELS, DEFAULTS, EMPTY_VALUES } from './PartMetadataPanel.constants';
+import { SECTIONS_CONFIG, SECTION_STYLES, STATUS_COLORS, ARIA_LABELS, EMPTY_VALUES } from './PartMetadataPanel.constants';
 import { formatFileSize, formatDate, formatBBox } from '../../utils/formatters';
 
 /**
@@ -30,7 +30,7 @@ import { formatFileSize, formatDate, formatBBox } from '../../utils/formatters';
  */
 export const PartMetadataPanel: React.FC<PartMetadataPanelProps> = ({
   part,
-  initialExpandedSection,
+  // initialExpandedSection, // Reserved for future use
   className,
 }) => {
   // Guard against undefined part
