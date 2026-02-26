@@ -54,15 +54,17 @@ migrate-all:
 
 # Run all tests inside Docker (backend + agent)
 test:
-	@echo "🧪 Running backend tests..."
+	@echo "🧪 Running backend tests (includes unit + integration)..."
 	docker compose run --rm backend pytest -v --ignore=tests/integration/test_validate_file_task.py --ignore=tests/integration/test_user_strings_e2e.py --ignore=tests/integration/test_celery_worker.py || true
-	@echo "🤖 Running agent tests..."
-	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py tests/integration/test_celery_worker.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py -v
+	@echo "🤖 Running agent tests (celery/worker-specific)..."
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py tests/integration/test_celery_worker.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py --ignore=tests/unit/test_navigation_service.py --ignore=tests/unit/test_part_detail_service.py -v
 
 # Run only agent tests (unit + agent-specific integration)
-# Note: Excludes backend-specific unit tests (validation_service, validation_report_service, upload_service_enqueue, parts_service)
+# Note: Excludes backend-specific unit tests that require src/backend/services/ imports
+# (validation_service, validation_report_service, upload_service_enqueue, parts_service, navigation_service, part_detail_service)
+# These tests run in 'make test-unit' using backend container where imports work correctly
 test-agent:
-	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py tests/integration/test_celery_worker.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py --ignore=tests/unit/test_rhino_parser_service.py -v
+	docker compose run --rm agent-worker python -m pytest tests/unit/ tests/integration/test_user_strings_e2e.py tests/integration/test_validate_file_task.py tests/integration/test_celery_worker.py --ignore=tests/unit/test_validation_service.py --ignore=tests/unit/test_validation_report_service.py --ignore=tests/unit/test_upload_service_enqueue.py --ignore=tests/unit/test_validate_file_red.py --ignore=tests/unit/test_validation_schema_presence.py --ignore=tests/unit/test_parts_service.py --ignore=tests/unit/test_rhino_parser_service.py --ignore=tests/unit/test_navigation_service.py --ignore=tests/unit/test_part_detail_service.py -v
 
 # Run only integration tests (backend)
 test-infra:
