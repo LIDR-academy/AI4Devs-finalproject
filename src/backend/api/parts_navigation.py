@@ -64,15 +64,15 @@ async def get_adjacent_parts(
 ):
     """
     Fetch prev/next part IDs for navigation in 3D viewer modal.
-    
+
     Query Parameters:
     - workshop_id (optional): Filter by workshop UUID
     - status (optional): Filter by status
     - tipologia (optional): Filter by tipologia
-    
+
     Headers:
     - X-Workshop-Id (optional): Alternative way to pass workshop_id (query param takes precedence)
-    
+
     Returns:
     - prev_id: UUID of previous part (null if first)
     - next_id: UUID of next part (null if last)
@@ -81,7 +81,7 @@ async def get_adjacent_parts(
     """
     # Priority: query param > header
     effective_workshop_id = workshop_id or x_workshop_id
-    
+
     # Initialize service and fetch adjacent parts
     service = NavigationService()
     success, data, error = service.get_adjacent_parts(
@@ -90,7 +90,7 @@ async def get_adjacent_parts(
         status=status,
         tipologia=tipologia
     )
-    
+
     # Handle errors
     if not success:
         if "Invalid UUID" in error:
@@ -108,6 +108,6 @@ async def get_adjacent_parts(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=error
             )
-    
+
     # Success
     return data

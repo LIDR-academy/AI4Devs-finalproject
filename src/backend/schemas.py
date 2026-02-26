@@ -285,10 +285,10 @@ class PartsListResponse(BaseModel):
 class PartDetailResponse(BaseModel):
     """
     Detailed part info for 3D viewer modal (US-010).
-    
+
     Contract: Must match TypeScript interface PartDetail exactly.
     Used by GET /api/parts/{id} endpoint.
-    
+
     Attributes:
         id: Block UUID
         iso_code: Part identifier (ISO-19650 format)
@@ -315,7 +315,7 @@ class PartDetailResponse(BaseModel):
     validation_report: Optional[ValidationReport] = Field(None, description="Validation results from agent")
     glb_size_bytes: Optional[int] = Field(None, description="GLB file size in bytes")
     triangle_count: Optional[int] = Field(None, description="Triangle count (for performance)")
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -344,13 +344,13 @@ class PartDetailResponse(BaseModel):
 class PartNavigationResponse(BaseModel):
     """
     Response for GET /api/parts/{id}/adjacent endpoint.
-    
+
     Provides prev/next IDs for sequential navigation between parts in the 3D viewer modal.
     Order is determined by created_at ASC (oldest first), with filters applied.
-    
+
     Contract: Must match TypeScript interface PartNavigationResponse exactly.
     Used by US-010 for Prev/Next buttons in modal footer.
-    
+
     Attributes:
         prev_id: UUID of previous part in sequence (None if current is first)
         next_id: UUID of next part in sequence (None if current is last)
@@ -361,7 +361,7 @@ class PartNavigationResponse(BaseModel):
     next_id: Optional[UUID] = Field(None, description="Next part UUID (None if last)")
     current_index: int = Field(..., ge=1, description="1-based index of current part")
     total_count: int = Field(..., ge=0, description="Total parts in filtered set")
-    
+
     class Config:
         json_schema_extra = {
             "example": {

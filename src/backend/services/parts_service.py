@@ -38,35 +38,35 @@ class PartsService:
     def _apply_cdn_transformation(self, url: Optional[str]) -> Optional[str]:
         """
         Transform Supabase S3 URL to CDN URL when USE_CDN is enabled.
-        
+
         This method implements the URL transformation strategy for GLB file delivery
         optimization (T-1001-INFRA). It only transforms URLs that match our S3 bucket
         pattern to avoid double-transformation of already-CDN URLs.
-        
+
         Detection Logic:
         - 'processed-geometry': Our S3 bucket name for optimized GLB files
         - 'supabase.co': Ensures we only transform Supabase Storage URLs, not external CDNs
-        
+
         Args:
             url: Original URL from database (S3 or NULL)
-            
+
         Returns:
             CDN URL if transformation applied, original URL if skipped, None if input was None
         """
         from config import settings
-        
+
         # Early return: NULL URLs remain NULL (geometry not processed yet)
         if url is None:
             return None
-        
+
         # Early return: CDN disabled (development mode with direct S3 access)
         if not settings.USE_CDN:
             return url
-        
+
         # Early return: Not a Supabase S3 URL (external CDN or already transformed)
         if 'processed-geometry' not in url or 'supabase.co' not in url:
             return url
-        
+
         # Transform: Extract path after bucket name and prepend CDN base URL
         # Example: https://xxx.supabase.co/.../processed-geometry/low-poly/550e8400.glb
         #       -> https://xxx.cloudfront.net/low-poly/550e8400.glb
@@ -79,7 +79,7 @@ class PartsService:
 
         Handles NULL-safe extraction of optional fields (low_poly_url, bbox, workshop_id)
         and JSONB parsing for bounding box data.
-        
+
         T-1001-INFRA: Delegates CDN URL transformation to _apply_cdn_transformation().
 
         Args:
@@ -96,7 +96,7 @@ class PartsService:
                 min=bbox_data["min"],
                 max=bbox_data["max"]
             )
-        
+
         # T-1001-INFRA: Apply CDN transformation if enabled (extracted method)
         low_poly_url = self._apply_cdn_transformation(row.get("low_poly_url"))
 

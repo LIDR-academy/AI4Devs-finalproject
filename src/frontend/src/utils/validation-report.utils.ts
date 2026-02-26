@@ -62,6 +62,7 @@ export function formatValidatedAt(isoDate: string): string {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'UTC', // Force UTC to avoid timezone-dependent output
   });
 }
 

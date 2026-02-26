@@ -21,14 +21,14 @@ async def get_part_detail(
 ) -> PartDetailResponse:
     """
     Fetch a single part by ID with RLS enforcement.
-    
+
     Args:
         part_id: UUID of the part
         x_workshop_id: User's workshop ID (from header). None for superuser.
-    
+
     Returns:
         PartDetailResponse with part details
-    
+
     Raises:
         HTTPException 400: Invalid UUID format
         HTTPException 403: RLS violation (access denied)
@@ -43,13 +43,13 @@ async def get_part_detail(
             status_code=400,
             detail="Invalid UUID format"
         )
-    
+
     # Fetch part with RLS
     success, data, error = part_detail_service.get_part_detail(
         part_id=part_id,
         workshop_id=x_workshop_id
     )
-    
+
     if not success:
         # Determine appropriate status code
         if "Invalid UUID" in error:
@@ -62,5 +62,5 @@ async def get_part_detail(
         else:
             # Default to 404 for "not found"
             raise HTTPException(status_code=404, detail="Part not found")
-    
+
     return PartDetailResponse(**data)
