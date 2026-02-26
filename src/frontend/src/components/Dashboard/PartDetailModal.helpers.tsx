@@ -12,6 +12,9 @@
 import { ERROR_MESSAGES, MODAL_STYLES } from './PartDetailModal.constants';
 import type { PartDetail } from '@/types/parts';
 import { ModelLoader } from '@/components/ModelLoader';
+import { PartMetadataPanel } from './PartMetadataPanel';
+import { PartViewerCanvas } from '@/components/PartViewerCanvas';
+import { ViewerErrorBoundary } from './ViewerErrorBoundary';
 
 /**
  * Maps Error object to user-friendly error messages
@@ -32,6 +35,10 @@ export function getErrorMessages(error: Error): { title: string; detail: string 
       title: ERROR_MESSAGES.ACCESS_DENIED,
       detail: ERROR_MESSAGES.ACCESS_DENIED_DETAIL,
     },
+    [ERROR_MESSAGES.TIMEOUT]: {
+      title: ERROR_MESSAGES.TIMEOUT,
+      detail: ERROR_MESSAGES.TIMEOUT_DETAIL,
+    },
   };
 
   return messageMap[error.message] || {
@@ -44,19 +51,40 @@ export function getErrorMessages(error: Error): { title: string; detail: string 
  * Renders error state UI with icon, title, and message
  * 
  * @param error - Error object from fetch failure
+ * @param onRetry - Optional callback to retry the failed operation (for timeout errors)
  * @returns JSX element with error UI
  * 
  * @example
- * {error && renderErrorState(error)}
+ * {error && renderErrorState(error, handleRetry)}
  */
-export function renderErrorState(error: Error): JSX.Element {
+export function renderErrorState(error: Error, onRetry?: () => void): JSX.Element {
   const { title, detail } = getErrorMessages(error);
+  const isTimeout = error.message === ERROR_MESSAGES.TIMEOUT;
 
   return (
     <div style={MODAL_STYLES.errorContainer}>
       <div style={MODAL_STYLES.errorIcon}>⚠️</div>
       <h3 style={MODAL_STYLES.errorTitle}>{title}</h3>
       <p style={MODAL_STYLES.errorMessage}>{detail}</p>
+      {isTimeout && onRetry && (
+        <button
+          onClick={onRetry}
+          aria-label="Reintentar"
+          style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1rem',
+            backgroundColor: '#3B82F6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: 500,
+          }}
+        >
+          Reintentar
+        </button>
+      )}
     </div>
   );
 }
@@ -71,14 +99,7 @@ export function renderErrorState(error: Error): JSX.Element {
  * {activeTab === 'metadata' && renderMetadataTab(partData)}
  */
 export function renderMetadataTab(partData: PartDetail): JSX.Element {
-  return (
-    <div>
-      <h3 style={{ marginTop: 0 }}>Metadatos de la Pieza</h3>
-      <pre style={{ fontSize: '0.875rem', overflowX: 'auto' }}>
-        {JSON.stringify(partData, null, 2)}
-      </pre>
-    </div>
-  );
+  return <PartMetadataPanel part={partData} initialExpandedSection="info" />;
 }
 
 /**
@@ -92,12 +113,31 @@ export function renderMetadataTab(partData: PartDetail): JSX.Element {
  */
 export function renderValidationTab(partData: PartDetail): JSX.Element {
   if (partData.validation_report) {
+    const hasErrors = !partData.validation_report.is_valid && partData.validation_report.errors;
+    
     return (
       <div>
         <h3 style={{ marginTop: 0 }}>Reporte de Validación</h3>
-        <pre style={{ fontSize: '0.875rem', overflowX: 'auto' }}>
-          {JSON.stringify(partData.validation_report, null, 2)}
-        </pre>
+        {hasErrors && (
+          <>
+            <p style={{ color: '#ef4444', fontWeight: 'bold' }}>
+              Errores de validación detectados
+            </p>
+            <ul data-testid="validation-errors-list" style={{ listStyleType: 'disc', paddingLeft: '1.5rem' }}>
+              {partData.validation_report.errors.map((error, idx) => (
+                <li key={idx} style={{ marginBottom: '0.5rem' }}>
+                  <strong>{error.category}</strong> ({error.target}): {error.message}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <details style={{ marginTop: '1rem' }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>Ver JSON completo</summary>
+          <pre style={{ fontSize: '0.875rem', overflowX: 'auto', marginTop: '0.5rem' }}>
+            {JSON.stringify(partData.validation_report, null, 2)}
+          </pre>
+        </details>
       </div>
     );
   }
@@ -119,5 +159,11 @@ export function renderValidationTab(partData: PartDetail): JSX.Element {
  * {activeTab === 'viewer' && renderViewerTab(currentPartId)}
  */
 export function renderViewerTab(partId: string): JSX.Element {
-  return <ModelLoader partId={partId} />;
+  return (
+    <ViewerErrorBoundary>
+      <PartViewerCanvas>
+        <ModelLoader partId={partId} />
+      </PartViewerCanvas>
+    </ViewerErrorBoundary>
+  );
 }

@@ -1,63 +1,20 @@
 # Technical Specification: T-1008-FRONT
 
-**Ticket ID:** T-1008-FRONT  
-**Story:** US-010 - Visor 3D Web  
-**Sprint:** Sprint 6 (Week 11-12, 2026)  
-**Estimación:** 1 Story Point (~2 hours)  
-**Responsable:** Frontend Developer  
-**Prioridad:** 🟡 P2 (Nice-to-have, improves UX)  
-**Status:** 🟡 **READY FOR TDD-RED**
+**Status:** ENRICHMENT COMPLETE — Ready for TDD-Red  
+**Created:** 2026-02-25  
+**Author:** AI Assistant (Claude Sonnet 4.5)  
+**Workflow Step:** 1/5 (Pre-TDD Blueprint)
 
 ---
 
 ## 1. Ticket Summary
 
-- **Tipo:** FRONT
-- **Alcance:** Create `MetadataSidebar` component that displays detailed part metadata in the modal's Metadata tab. Shows geometric info (dimensions, triangle count), workshop assignment, timestamps, and provides "Copy Metadata" button for sharing.
+- **Tipo:** FRONT (React Component)
+- **Alcance:** Crear componente `<PartMetadataPanel>` para reemplazar el tab "Metadata" actual en PartDetailModal. Display estructurado de 12 campos de PartDetail agrupados en 4 secciones colapsables: Info, Workshop, Geometry, Validation Summary.
 - **Dependencias:**
-  - **Upstream:** T-1002-BACK (✅ MUST BE DONE) - PartDetailResponse provides metadata
-  - **Downstream:** T-1007-FRONT (Modal embeds MetadataSidebar in Metadata tab)
-
-### Problem Statement
-When viewing a part in the modal, users need to:
-- **See technical specs:** Dimensions (bbox), file size, triangle count
-- **Identify part:** ISO code, tipología, workshop assignment
-- **Check status:** Creation date, processing status
-- **Share data:** Copy metadata to clipboard for reports/emails
-
-**Current behavior:** T-0508 PartDetailModal shows only ISO code, status badge, and workshop name (3 fields).
-
-**Target behavior:** MetadataSidebar shows 10+ fields in organized sections with copy-to-clipboard functionality.
-
-### Current State (Before Implementation)
-```
-PartDetailModal.tsx (Metadata Tab)
-  └─ ❌ No metadata component, tab is empty
-```
-
-### Target State (After Implementation)
-```
-PartDetailModal.tsx (Metadata Tab)
-  └─ MetadataSidebar
-      ├─ Identification Section:
-      │   ├─ ISO Code
-      │   ├─ Tipología
-      │   └─ Status
-      ├─ Workshop Section:
-      │   ├─ Workshop Name
-      │   ├─ Workshop ID (UUID)
-      │   └─ Assignment Date
-      ├─ Geometry Section:
-      │   ├─ Dimensions (bbox → width x height x depth)
-      │   ├─ Triangle Count
-      │   ├─ File Size (MB)
-      │   └─ File Format (GLB)
-      ├─ Timestamps Section:
-      │   ├─ Created At
-      │   └─ Last Updated (if available)
-      └─ Actions:
-          └─ [📋 Copy Metadata] button
-```
+  - **T-1007-FRONT** ✅ (PartDetailModal con tab system implementado, helper renderMetadataTab() a reemplazar)
+  - **T-1002-BACK** ✅ (GET /api/parts/{id} endpoint devolviendo PartDetail con 12 campos)
+  - **Architectural Pattern:** PartDetailModal inline styles pattern (no Tailwind por Portal rendering)
 
 ---
 

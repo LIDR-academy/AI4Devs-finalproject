@@ -199,8 +199,17 @@ export const ERROR_MESSAGES = {
   FETCH_FAILED_DETAIL: 'No se pudo cargar la información de la pieza. Por favor, intenta nuevamente.',
   NAVIGATION_FAILED: 'Error al navegar',
   NAVIGATION_FAILED_DETAIL: 'No se pudo cargar la información de navegación.',
+  TIMEOUT: 'La carga está tardando demasiado',
+  TIMEOUT_DETAIL: 'La conexión está tardando más de lo esperado. Por favor, verifica tu conexión a internet e intenta nuevamente.',
   GENERIC_ERROR: 'Error desconocido',
   GENERIC_ERROR_DETAIL: 'Ocurrió un error inesperado. Por favor, cierra el modal e intenta nuevamente.',
+} as const;
+
+/**
+ * Timeout configuration
+ */
+export const TIMEOUT_CONFIG = {
+  PART_DETAIL_FETCH_MS: 10000, // 10 seconds (ERR-INT-02)
 } as const;
 
 /**
@@ -209,8 +218,8 @@ export const ERROR_MESSAGES = {
 export const ARIA_LABELS = {
   MODAL: 'Modal de detalles de pieza',
   CLOSE_BUTTON: 'Cerrar modal',
-  PREV_BUTTON: 'Pieza anterior',
-  NEXT_BUTTON: 'Pieza siguiente',
+  PREV_BUTTON: 'Parte anterior',
+  NEXT_BUTTON: 'Parte siguiente',
   TAB_LIST: 'Opciones de visualización',
   TAB_VIEWER: 'Ver modelo 3D',
   TAB_METADATA: 'Ver metadatos',
