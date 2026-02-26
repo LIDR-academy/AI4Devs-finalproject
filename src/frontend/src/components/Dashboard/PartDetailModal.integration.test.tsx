@@ -74,7 +74,7 @@ describe('PartDetailModal - T-1007-FRONT Integration', () => {
   const mockAdjacentParts: AdjacentPartsInfo = {
     prev_id: 'uuid-prev',
     next_id: 'uuid-next',
-    current_index: 5,
+    current_index: 4,
     total_count: 20,
   };
 
@@ -145,10 +145,11 @@ describe('PartDetailModal - T-1007-FRONT Integration', () => {
       const metadataTab = screen.getByRole('tab', { name: /metadatos/i });
       fireEvent.click(metadataTab);
 
-      // Verify metadata content appears (placeholder)
+      // Verify metadata content appears (PartMetadataPanel renders)
       await waitFor(() => {
         expect(screen.queryByTestId('model-loader')).not.toBeInTheDocument();
-        expect(screen.getByText(/metadatos de la pieza/i)).toBeInTheDocument();
+        // PartMetadataPanel renders section "Información" with label "Código ISO"
+        expect(screen.getByText(/código iso/i)).toBeInTheDocument();
       });
     });
 

@@ -218,8 +218,8 @@ export const TIMEOUT_CONFIG = {
 export const ARIA_LABELS = {
   MODAL: 'Modal de detalles de pieza',
   CLOSE_BUTTON: 'Cerrar modal',
-  PREV_BUTTON: 'Parte anterior',
-  NEXT_BUTTON: 'Parte siguiente',
+  PREV_BUTTON: 'Pieza anterior',
+  NEXT_BUTTON: 'Pieza siguiente',
   TAB_LIST: 'Opciones de visualización',
   TAB_VIEWER: 'Ver modelo 3D',
   TAB_METADATA: 'Ver metadatos',

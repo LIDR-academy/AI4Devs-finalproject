@@ -1,18 +1,21 @@
 # Active Context
 
 ## Current Sprint
-Sprint 5 / US-010 - Visor 3D Web | **WAVE 3 COMPLETE ✅** (2026-02-26) | **T-1002-BACK ✅ + T-1003-BACK ✅ + T-1004-FRONT ✅ + T-1005-FRONT ✅ + T-1006-FRONT ✅ + T-1007-FRONT ✅ + T-1008-FRONT ✅ + T-1009-TEST-FRONT ✅** | All 8 tickets completed, 22/22 integration tests passing
+Sprint 6 — Next User Story (TBD) or Tech Debt Sprint
 
 ## Active Ticket
-**NONE** — US-010 Wave 3 COMPLETE ✅ | All 8 tickets completed (T-1002 to T-1009) | Ready for US-010 final audit or next User Story
+**NONE** — US-010 ✅ COMPLETED & CLOSED (2026-02-26) | Waiting for next sprint assignment
 
 ### Next Sprint Planning Options
-1. **US-010 Final Audit** — Comprehensive code review of entire Wave 3 (8 tickets, 3500+ lines)
-2. **US-011 (Next US)** — New user story (TBD)
-3. **Tech Debt Sprint** — Refactor/optimize existing code, update documentation
+1. **US-007: Cambio de Estado (Ciclo de Vida)** — State machine logic for part lifecycle transitions
+2. **US-013: Login/Auth** — Supabase Auth integration with protected routes
+3. **US-009: Evidencia de Fabricación** — Photo upload on completion
+4. **Tech Debt Sprint** — Fix T-1007 test regression (9 failing tests), refactor/optimize existing code
 
 ## Recently Completed
-- **T-1009-TEST-FRONT: 3D Viewer Integration Tests** — ✅ TDD COMPLETE & READY FOR AUDIT (2026-02-26) | **22/22 tests PASSING (100%)** | TDD Workflow (Steps 1-4/5: ENRICH→RED→GREEN→REFACTOR COMPLETE)
+- **US-010: Visor 3D Web** — ✅ COMPLETED & CLOSED (2026-02-26 13:00) | **User Story aprobada para cierre** | End-to-End Audit [Prompt #199] | **9/9 tickets completados** (T-1001-INFRA → T-1009-TEST-FRONT) | **Acceptance Criteria: 3/3 cumplidos** (Happy Path: orbit controls + auto-centering ✓, Edge Case: BBoxProxy fallback + spinner ✓, Error Handling: ViewerErrorBoundary con mensajes user-friendly ✓) | **Tests: 22/22 PASSING (100%)** — viewer-integration 8/8 ✓, viewer-edge-cases 5/5 ✓, viewer-error-handling 5/5 ✓, viewer-performance 4/4 ✓ (PERF + A11Y WCAG 2.1) | **DoD: 8/8 cumplido** (código production-ready, JSDoc completo, TypeScript strict, Clean Architecture con 4 custom hooks, zero debug artifacts, documentación completa 16 archivos) | **Componentes Core:** PartDetailModal (227 lines refactored), ModelLoader (264 lines), PartViewerCanvas (201 lines con 3-point lighting), ViewerErrorBoundary (181 lines con 5 error patterns), PartMetadataPanel (250 lines) | **Stack:** React 18 + Three.js/R3F + Vitest + MSW | **Valoración: 100/100 Production-Ready** | Aprobado para merge a `main` | **Regresión T-1007 RESUELTA** [Prompt #200]: 9 tests corregidos en 28 min (ARIA label mismatch, mock error, assertion updates) → **31/31 tests T-1007 PASSING (100%)** ✅, **22/22 tests T-1009 PASSING (100%)** ✅, **390/396 suite completo (98.5%)** ✅, zero regresiones. **Branch ready for merge** 🚀
+
+- **T-1009-TEST-FRONT: 3D Viewer Integration Tests** — ✅ TDD COMPLETE & AUDIT APROBADO (2026-02-26) | **22/22 tests PASSING (100%)** | TDD Workflow (Steps 1-5/5: ENRICH→RED→GREEN→REFACTOR→AUDIT COMPLETE)
   - **Context:** Integration test suite ensuring PartDetailModal 3D viewer, tabs, navigation, and error handling work correctly end-to-end
   - **Technical Spec:** `docs/US-010/T-1009-TEST-FRONT-TechnicalSpec-ENRICHED.md` (650 lines)
   - **Handoff Document:** `docs/US-010/T-1009-TEST-FRONT-HANDOFF.md` (850+ lines) — Complete GREEN phase documentation with code snippets, decisions, error flows, deployment checklist

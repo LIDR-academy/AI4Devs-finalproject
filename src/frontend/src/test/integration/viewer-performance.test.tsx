@@ -329,8 +329,8 @@ describe('T-1009-TEST-FRONT: 3D Viewer Integration Tests - Performance & Accessi
     await user.tab();
 
     // Assert: Focus moves to Prev button or Next button
-    const prevButton = screen.getByLabelText(/parte anterior/i);
-    const nextButton = screen.getByLabelText(/parte siguiente/i);
+    const prevButton = screen.getByLabelText(/pieza anterior/i);
+    const nextButton = screen.getByLabelText(/pieza siguiente/i);
     expect(prevButton).toHaveFocus(); // First navigation button
 
     // Act: Tab to next element

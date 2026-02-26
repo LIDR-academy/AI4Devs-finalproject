@@ -240,8 +240,8 @@ describe('T-1009-TEST-FRONT: 3D Viewer Integration Tests - Edge Cases', () => {
    * 
    * GIVEN: User opens modal for the first part in the filtered list
    * WHEN: Modal renders with navigation controls
-   * THEN: "Parte anterior" button should be disabled (no previous part exists)
-   * AND: "Parte siguiente" button should be enabled
+   * THEN: "Pieza anterior" button should be disabled (no previous part exists)
+   * AND: "Pieza siguiente" button should be enabled
    * AND: Position indicator shows "Pieza 1 de N"
    */
   it('EC-INT-04: should disable Prev button when viewing first part in list', async () => {
@@ -273,11 +273,11 @@ describe('T-1009-TEST-FRONT: 3D Viewer Integration Tests - Edge Cases', () => {
     expect(positionIndicator).toHaveTextContent('Pieza 1 de');
 
     // Assert: Prev button is disabled
-    const prevButton = screen.getByLabelText(/parte anterior/i);
+    const prevButton = screen.getByLabelText(/pieza anterior/i);
     expect(prevButton).toBeDisabled();
 
     // Assert: Next button is enabled
-    const nextButton = screen.getByLabelText(/parte siguiente/i);
+    const nextButton = screen.getByLabelText(/pieza siguiente/i);
     expect(nextButton).not.toBeDisabled();
   });
 
@@ -286,8 +286,8 @@ describe('T-1009-TEST-FRONT: 3D Viewer Integration Tests - Edge Cases', () => {
    * 
    * GIVEN: User opens modal for the last part in the filtered list
    * WHEN: Modal renders with navigation controls
-   * THEN: "Parte siguiente" button should be disabled (no next part exists)
-   * AND: "Parte anterior" button should be enabled
+   * THEN: "Pieza siguiente" button should be disabled (no next part exists)
+   * AND: "Pieza anterior" button should be enabled
    * AND: Position indicator shows "Pieza N de N"
    */
   it('EC-INT-05: should disable Next button when viewing last part in list', async () => {
@@ -319,11 +319,11 @@ describe('T-1009-TEST-FRONT: 3D Viewer Integration Tests - Edge Cases', () => {
     expect(positionIndicator).toHaveTextContent('Pieza 20 de 20');
 
     // Assert: Next button is disabled
-    const nextButton = screen.getByLabelText(/parte siguiente/i);
+    const nextButton = screen.getByLabelText(/pieza siguiente/i);
     expect(nextButton).toBeDisabled();
 
     // Assert: Prev button is enabled
-    const prevButton = screen.getByLabelText(/parte anterior/i);
+    const prevButton = screen.getByLabelText(/pieza anterior/i);
     expect(prevButton).not.toBeDisabled();
   });
 });

@@ -236,7 +236,7 @@ describe('T-1009-TEST-FRONT: 3D Viewer Integration Tests - Happy Path', () => {
     });
 
     // Find navigation controls (should be in modal header or footer)
-    const prevButton = screen.getByLabelText(/parte anterior/i);
+    const prevButton = screen.getByLabelText(/pieza anterior/i);
     expect(prevButton).not.toBeDisabled(); // prev_id exists
 
     // Setup mock for navigation of new part
@@ -298,7 +298,7 @@ describe('T-1009-TEST-FRONT: 3D Viewer Integration Tests - Happy Path', () => {
       expect(screen.getByText(mockPartDetailCapitel.iso_code)).toBeInTheDocument();
     });
 
-    const nextButton = screen.getByLabelText(/parte siguiente/i);
+    const nextButton = screen.getByLabelText(/pieza siguiente/i);
     expect(nextButton).not.toBeDisabled();
 
     // Setup mock for navigation of new part
