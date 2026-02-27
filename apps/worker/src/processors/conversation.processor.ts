@@ -3,6 +3,7 @@ import { Job } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
 import { saveMessage, getMessages, saveConversationState, getConversationState } from '../dynamodb/dynamodb.service';
+import { publishConversationUpdate, publishConversationComplete } from '../redis-publisher';
 import {
   ConversationState,
   PendingAddress,
@@ -136,6 +137,7 @@ async function processGetAddressJourney(
   await saveMessage(conversationId, 'system', systemPrompt);
   await saveMessage(conversationId, 'user', userPrompt);
   await saveMessage(conversationId, 'assistant', assistantMessage);
+  await publishConversationUpdate(conversationId, 'assistant', assistantMessage);
 
   // Initialize state
   await saveConversationState(conversationId, { phase: 'WAITING_ADDRESS', failedAttempts: 0 } as ConversationState);
@@ -156,6 +158,7 @@ async function processInformationJourney(
     `Tu pedido será enviado pronto. ¡Gracias por tu compra!`;
 
   await saveMessage(conversationId, 'assistant', message);
+  await publishConversationUpdate(conversationId, 'assistant', message);
   console.log(`[INFORMATION] Conversation ${conversationId}: ${message}`);
   return { conversationId, message, conversationType: 'INFORMATION' };
 }
@@ -239,12 +242,15 @@ async function handleWaitingAddress(ctx: HandlerContext) {
         ? `I'm having trouble understanding your address. A support agent will contact you shortly.`
         : `No he podido entender tu dirección. Un agente de soporte se pondrá en contacto contigo pronto.`;
       await saveMessage(conversationId, 'assistant', msg);
+      await publishConversationUpdate(conversationId, 'assistant', msg);
+      await publishConversationComplete(conversationId, 'ESCALATED');
       return { conversationId, status: 'escalated' };
     }
 
     await saveConversationState(conversationId, newState);
     const msg = buildAddressNotFoundMessage(language);
     await saveMessage(conversationId, 'assistant', msg);
+    await publishConversationUpdate(conversationId, 'assistant', msg);
     return { conversationId, status: 'waiting_address', message: msg };
   }
 
@@ -282,6 +288,7 @@ async function handleWaitingAddress(ctx: HandlerContext) {
     await saveConversationState(conversationId, newState);
     const msg = buildDisambiguationMessage(gmapsResults, language);
     await saveMessage(conversationId, 'assistant', msg);
+    await publishConversationUpdate(conversationId, 'assistant', msg);
     console.log(`[PROCESS_RESPONSE] → WAITING_DISAMBIGUATION (${gmapsResults.length} options)`);
     return { conversationId, status: 'waiting_disambiguation', message: msg };
   }
@@ -323,6 +330,7 @@ async function handleDisambiguation(ctx: HandlerContext) {
   // Re-send disambiguation if choice unclear
   const msg = buildDisambiguationMessage(options, language);
   await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
   return { conversationId, status: 'waiting_disambiguation', message: msg };
 }
 
@@ -354,6 +362,7 @@ async function handleBuildingDetails(ctx: HandlerContext) {
   // Unknown — re-ask
   const msg = buildBuildingDetailsRequest(pending, language);
   await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
   return { conversationId, status: 'waiting_building_details', message: msg };
 }
 
@@ -381,6 +390,7 @@ async function handleConfirmation(ctx: HandlerContext) {
   // UNKNOWN — re-send confirmation request
   const msg = buildConfirmationRequest(pending, language);
   await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
   return { conversationId, status: 'waiting_confirmation', message: msg };
 }
 
@@ -394,6 +404,7 @@ async function advanceFromPending(ctx: HandlerContext, pending: PendingAddress) 
     await saveConversationState(conversationId, newState);
     const msg = buildBuildingDetailsRequest(pending, language);
     await saveMessage(conversationId, 'assistant', msg);
+    await publishConversationUpdate(conversationId, 'assistant', msg);
     console.log(`[PROCESS_RESPONSE] → WAITING_BUILDING_DETAILS`);
     return { conversationId, status: 'waiting_building_details', message: msg };
   }
@@ -403,6 +414,7 @@ async function advanceFromPending(ctx: HandlerContext, pending: PendingAddress) 
   await saveConversationState(conversationId, newState);
   const msg = buildConfirmationRequest(pending, language);
   await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
   console.log(`[PROCESS_RESPONSE] → WAITING_CONFIRMATION`);
   return { conversationId, status: 'waiting_confirmation', message: msg };
 }
@@ -417,6 +429,7 @@ async function finalizeAddress(ctx: HandlerContext, pending: PendingAddress) {
       ? `There was an issue saving your address. Please try again later.`
       : `Ha ocurrido un error al guardar tu dirección. Por favor, inténtalo de nuevo más tarde.`;
     await saveMessage(conversationId, 'assistant', msg);
+    await publishConversationUpdate(conversationId, 'assistant', msg);
     return { conversationId, status: 'sync_failed' };
   }
 
@@ -464,6 +477,8 @@ async function finalizeAddress(ctx: HandlerContext, pending: PendingAddress) {
 
   const successMsg = buildSyncSuccessMessage(pending, language);
   await saveMessage(conversationId, 'assistant', successMsg);
+  await publishConversationUpdate(conversationId, 'assistant', successMsg);
+  await publishConversationComplete(conversationId, 'COMPLETED');
 
   console.log(`[PROCESS_RESPONSE] ✅ Address confirmed & synced for order ${orderId}: ${addrText}`);
   return { conversationId, orderId, status: 'address_confirmed', address: addrText, message: successMsg };

@@ -229,3 +229,158 @@ El endpoint SSE se consumirá en CU03-A6. No hay cambios de frontend en este tic
 - [ ] Inyectar `MockSseService` en `MockConversationsController`
 - [ ] Registrar `MockSseService` en `MockModule` providers
 - [ ] Verificar manualmente que al crear una conversación mock el SSE emite el mensaje inicial del agente
+
+---
+
+## [ENHANCED] Historia enriquecida
+
+### Problema crítico: Import circular en el Worker
+
+El ticket original propone exportar `redisPublisher` desde `apps/worker/src/main.ts`. Esto crea un **import circular**: `main.ts` importa `conversation.processor.ts`, y el processor importaría `main.ts`. Node.js resuelve los circulares con `undefined` en runtime, rompiendo el publisher silenciosamente.
+
+**Solución correcta**: crear un archivo dedicado `apps/worker/src/redis-publisher.ts`:
+
+```typescript
+import Redis from 'ioredis';
+
+const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
+export const redisPublisher = new Redis(redisUrl);
+
+export async function publishConversationUpdate(
+  conversationId: string,
+  role: string,
+  content: string,
+): Promise<void> {
+  const payload = JSON.stringify({ role, content, timestamp: new Date().toISOString() });
+  await redisPublisher.publish(`conversation:${conversationId}:update`, payload);
+}
+
+export async function publishConversationComplete(
+  conversationId: string,
+  status: 'COMPLETED' | 'ESCALATED' | 'TIMEOUT',
+): Promise<void> {
+  await redisPublisher.publish(
+    `conversation:${conversationId}:update`,
+    JSON.stringify({ event: 'conversation:complete', status }),
+  );
+}
+```
+
+`main.ts` no importa este archivo. `conversation.processor.ts` lo importa directamente. No hay ciclo.
+
+> **Nota sobre ioredis vs parseRedisUrl**: `ioredis` acepta la URL string directamente (`new Redis(url)`). No usar `parseRedisUrl()` — esa función existe solo para el objeto `connection` de BullMQ que requiere `{ host, port }`.
+
+---
+
+### Variables de entorno requeridas
+
+Verificar que `REDIS_URL` está presente en:
+
+| Archivo | Estado esperado |
+|---------|----------------|
+| `apps/worker/.env` | Ya existente (lo usa BullMQ) |
+| `apps/api/.env` | Añadir si no está → `REDIS_URL=redis://localhost:6379` |
+| `.env.example` (raíz) | Documentar la variable |
+
+---
+
+### MockSseService: error handling al arrancar
+
+Si Redis no está disponible en el arranque, el `psubscribe` lanza un error pero la app no debe caerse. El handler de error en el constructor es suficiente, pero añadir también el evento `error` de la conexión:
+
+```typescript
+constructor() {
+  const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
+  this.subscriber = new Redis(redisUrl);
+  this.subscriber.on('error', (err) =>
+    console.error('[SSE] Redis connection error:', err.message),
+  );
+  this.subscriber.psubscribe('conversation:*:update', (err) => {
+    if (err) console.error('[SSE] Redis psubscribe error:', err);
+  });
+  this.subscriber.on('pmessage', (_pattern, channel, message) => {
+    // Canal format: "conversation:<uuid>:update" → split(':')[1] es seguro con UUIDs
+    const conversationId = channel.split(':')[1];
+    this.subject.next({ conversationId, data: message });
+  });
+}
+```
+
+---
+
+### Archivos a modificar / crear
+
+| Archivo | Acción |
+|---------|--------|
+| `apps/worker/src/redis-publisher.ts` | **Nuevo** — cliente Redis + helpers de publish |
+| `apps/worker/src/main.ts` | Sin cambios (no exportar redisPublisher desde aquí) |
+| `apps/worker/src/processors/conversation.processor.ts` | Modificar — importar desde `redis-publisher.ts` y llamar tras cada `saveMessage('assistant', ...)` |
+| `apps/api/src/mock/mock-sse.service.ts` | **Nuevo** — `MockSseService` con psubscribe + Subject RxJS |
+| `apps/api/src/mock/mock-conversations.controller.ts` | Modificar — añadir `@Sse` endpoint e inyectar `MockSseService` |
+| `apps/api/src/mock/mock.module.ts` | Modificar — añadir `MockSseService` a `providers` |
+| `apps/api/.env` | Verificar / añadir `REDIS_URL` |
+
+---
+
+### Puntos exactos en `conversation.processor.ts` donde añadir publish
+
+Tras cada `saveMessage(conversationId, 'assistant', msg)` añadir:
+
+```typescript
+await publishConversationUpdate(conversationId, 'assistant', msg);
+```
+
+Handlers afectados:
+- `processGetAddressJourney` — mensaje inicial del agente
+- `processInformationJourney` — mensaje informativo
+- `handleWaitingAddress` — dirección no entendida
+- `handleDisambiguation` — mensaje de desambiguación
+- `handleBuildingDetails` — solicitud de detalles del edificio
+- `handleConfirmation` — mensaje de confirmación / sync
+
+Tras actualizar `status` a estado terminal en Prisma:
+
+```typescript
+await publishConversationComplete(conversationId, 'COMPLETED'); // o 'ESCALATED' / 'TIMEOUT'
+```
+
+---
+
+### Tests requeridos
+
+Seguir el patrón de `mock-orders.controller.spec.ts` (NestJS Testing + supertest).
+
+#### `apps/api/src/mock/mock-sse.service.spec.ts`
+
+```typescript
+describe('MockSseService', () => {
+  it('subscribe() retorna Observable filtrado por conversationId', (done) => {
+    // Mock del cliente Redis, simular pmessage
+    // Verificar que solo llegan mensajes de la conversación correcta
+  });
+
+  it('onModuleDestroy() llama a subscriber.disconnect()', () => {
+    // Verificar que se llama disconnect al destruir el módulo
+  });
+});
+```
+
+#### `apps/api/src/mock/mock-conversations.controller.spec.ts` — añadir caso SSE
+
+```typescript
+it('GET /:conversationId/events retorna Observable de MockSseService', () => {
+  // Verificar que el método events() delega a sseService.subscribe(conversationId)
+});
+```
+
+---
+
+### Criterios de aceptación
+
+- [ ] El endpoint `GET /api/mock/conversations/:conversationId/events` responde con `Content-Type: text/event-stream`
+- [ ] Al crear una conversación mock (`POST /mock/orders`), el SSE emite el mensaje inicial del agente dentro de los 5 segundos siguientes
+- [ ] El mensaje SSE tiene el formato `data: {"role":"assistant","content":"...","timestamp":"..."}`
+- [ ] Al finalizar la conversación, el SSE emite `data: {"event":"conversation:complete","status":"COMPLETED"}`
+- [ ] Si Redis no está disponible, la API arranca sin excepción y loguea el error de conexión
+- [ ] No hay import circular en el Worker (verificar con `madge --circular apps/worker/src`)
+- [ ] Tests unitarios pasan: `pnpm test --filter api`
