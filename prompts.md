@@ -581,6 +581,77 @@ Corrige los 2 warnings (W1 y W2) tal y como lo sugieres, y realiza las 2 mejoras
 
 ---
 
+#### cu03-shopping-simulations
+
+**Prompt 1** *(Modo Plan — Exploración):*
+
+```
+/opsx/explore Quiero emepzar a implementar la interacción de Adresles con los usuarios en un chat para recabar la dirección de entrega cuando se haya hecho una compra en Modo Adresles.
+Mi idea es añadir en web-admin un apartado para poder probar dichas conversaciones con un agente AI de Platform OpenAI. En dicho apartado debo tener varias opciones para poder inciar conversaciones de cualquier Journey, de forma que se simule la llegada de una compra de dicho jouney, y automáticamente Adresles le enviase un mensaje al Usuario para empezar la conversación y racabar la dirección de entrega. Se tiene que poder ver el mensaje enviado por Adresles, y una especie de chat  donde el usaurio pueda responder al Agente y empezar la conversación hasta que el Agente Adresles consiga el objetivo. En definitiva, en ese apartado de simulación de compras hay que simular una especie de WhatsApp, aunque nosotros no vamos a hacer integración con WhatsApp, sólo con OpenAI para poder tener la conversación con el Agente Adresles, y con GMaps para verificar las direcciones de entrega.
+Como IA experta en desarrollo de producto haz un plan detallado para realizar este desarrollo. Pregúntame todo lo que necesites para poder ajustar el plan al máximo a lo que ya tenemos desarrollado, o para entender mejor cualquier especto que consideres pendiente de definición.
+```
+
+> **Resumen de objetivos alcanzados:** Se analizó en profundidad el codebase existente (monorepo con NestJS, Next.js 16, BullMQ Worker, OpenAI, GMaps, Supabase + DynamoDB). Se identificó lo ya implementado: endpoints mock (`POST /api/mock/orders`, `POST /api/mock/conversations/:id/reply`, `GET /api/mock/conversations/:id/history`), Worker BullMQ con máquina de estados para GET_ADDRESS, componentes de chat existentes en `web-admin`. Se realizaron preguntas clave sobre tiempo real (SSE vs polling vs manual) y configuración del Journey (visual vs JSON). El usuario eligió SSE para tiempo real y configuración visual con usuarios de la seed. Se generó un plan estructurado con 7 tareas divididas en Serie A (simulación básica) y Serie B (sub-journeys avanzados).
+
+---
+
+**Prompt 2** *(Modo Plan):*
+
+```
+Aplica los siguientes cambios al Plan:
+El layout que tenga la CONFIGURACIÓN arriba, siempre visible, y el CHAT debajo de la CONFIGURACIÓN, scrollable a medida que se va desarrollando la conversación.
+El pedido se debe añadir a la base de datos una vez creado, e ir actualiándolo a medida que progresa la conversación y el usuario confirma la dirección, o actualizar el Usuario si decide registrarse en Adresles o guardar una dirección en Adresles (una vez registrado).
+Las conversaciones se deben poder guardar y visualizar más tarde desde el panel de admin.
+Si el usuario está registrado y decide una dirección contraria a las que ya tiene guardadas, Adresles debe preguntarle al final, una vez confirmada, si quiere guardarla en su libreta de direcciones. Y si el usuario no está registrado, pero en el proceso se registra, también tiene que preguntarle si queire guardar la dirección usada en la libreta.
+Cuando el usuario no está registrado en Adresles, siempre debe proponer registrarlo al final del proceso de obtener la dirección de entrega.
+En el proceso de elección de compra simulada, que sea mediante una página emergente donde pregunte cada uno de los campos necesarios para procesar una compra, y que en dichos campos puedan ser autocompletados añadiendo por ejemplo un usuario que ya pertenezca a la base de datos. La tienda es el único dato que forzosamente tiene que ser un desplegable de las tiendas existentes ya en la base de datos. El resto se pueden completar seleccionando el usuario, o manualmente.
+Pregúntame todo aquello que te resulte contradictorio o te falte información.
+```
+
+> **Resumen de objetivos alcanzados:** Se enriqueció el plan con cambios significativos: layout vertical con barra de resumen fija arriba y chat scrollable abajo; persistencia real en DB (Order→COMPLETED + syncedAt, creación de OrderAddress, actualización de User.isRegistered, creación de Address en libreta), con mensaje al usuario confirmando ambas actualizaciones (tienda simulada + Adresles real); conversaciones visualizables desde el panel admin via la ruta `/conversations/[id]` ya existente; flujo de oferta de registro al final para usuarios no registrados; flujo de guardar dirección en libreta para usuarios registrados con dirección nueva; configuración del pedido mediante modal emergente (Dialog de Shadcn) con tienda obligatoria en select y comprador con autocompletado bloqueante o entrada manual.
+
+---
+
+**Prompt 3** *(Modo Plan):*
+
+```
+Dentro del plan corrige lo siguiente en el paso único, manteniendo este orden:
+- Tienda (ok como lo has dejado)
+- Modo (toggle) — ADRESLES / TRADICIONAL
+- Comprador: ok al combobox con búsqueda de usuarios existentes y los autocompletados, y ok al relleno manual creando usuario nuevo. Ok también al badge visual, si no está registrado debe indicar No Registrado Adresles, y obviemente ninguna dirección disponible, porque no está registrado en Adresles.
+- Dirección: aparece si y sólo si el modo escogido es TRADICIONAL, porque se tiene que añadir información de la dirección de entrega indicada en modo tradicional. estos campos siempre se meten manualmente, pero añadir un botón para que se puedan introducir aleatoriamente de una selección de 20 direcciones inventadas (no correspondientes a las de los usuarios registrados).
+- ¿Es regalo? Ok con el toggle. Si sí, ok con el combobox igual que para el Comprador.
+- Parámetros simulados del eCommerce: Toogle con pregunta de registro, si sí, Toggle con pregunta de dirección, si sí, campso de dirección a añadir manualmente, o con botón aleatorio de auto-registro usando las mismas 20 direcciones inventadas.
+- Productos - Simular con botón aleatorio entre 20 posibles diferentes compras, las ucales no sólo incluyen importe y moneda, sino la breve descripción de los ítems (tal cual ya está definidio en la base de datos).
+```
+
+> **Resumen de objetivos alcanzados:** Se definió el orden exacto y la lógica condicional del modal de configuración en 7 campos: (1) Tienda — select obligatorio de DB; (2) Modo — toggle ADRESLES/TRADICIONAL; (3) Comprador — combobox DB con autocompletado bloqueante o manual, badges "Registrado Adresles · N direcciones" / "No Registrado Adresles · 0 direcciones"; (4) Dirección — solo visible en TRADICIONAL, campos manuales + botón "Dirección aleatoria" de catálogo de 20 ficticias; (5) ¿Es regalo? — toggle con combobox idéntico al Comprador para el destinatario; (6) Parámetros eCommerce — solo visible en ADRESLES, doble toggle de registro y dirección con campos de dirección + botón aleatorio; (7) Productos — botón "Productos aleatorios" del catálogo de 20 compras ficticias con ítems, importe y moneda, listado editable.
+
+---
+
+**Prompt 4** *(Modo Plan):*
+
+```
+Ahora modifica la plan para que en vez de meter en los To-dos la ejecución de los cambios sólo meta la generación de tickets en formato markdown con todos los cambios que se deben hacer, a meter dentro de la carpeta openspec/changes (pero no dentro de archive). Se tiene que desglosar toda esta planificación en tickets pequeños para los que no se necesite más de una sesión en su completo desarrollo y ejecución. En esta planificación se tiene que considerar que los tickets generados han de tener una estructura similara a @openspec/changes/archive/2026-02-23-cu02-frontend-admin/cu02-frontend-admin.md , @openspec/changes/archive/2026-02-24-t01-orders-sorting/T01-orders-sorting.md , @openspec/changes/archive/2026-02-25-t02-orders-filters/T02-orders-filters.md y @openspec/changes/archive/2026-02-26-t03-users-sorting-filters/T03-users-sorting-filters.md .
+Pregúntame si la tarea no ha quedado clara.
+```
+
+> **Resumen de objetivos alcanzados:** Se transformaron los to-dos del plan de "tareas de implementación" a "tareas de generación de tickets markdown". Se desglosó el trabajo en 10 tickets de una sesión cada uno, agrupados en Serie A (simulación básica funcional) y Serie B (sub-journeys avanzados): CU03-A1 a CU03-A6 (endpoint stores, SSE, DTO, layout, modal, chat) y CU03-B1 a CU03-B4 (sync DB, propuestas de dirección, registro voluntario, libreta de direcciones). Se definió la tabla de prerrequisitos entre tickets y la estructura de carpetas en `openspec/changes/`.
+
+---
+
+**Prompt 5** *(Modo Agent):*
+
+```
+Implement the plan as specified, it is attached for your reference. Do NOT edit the plan file itself.
+
+To-do's from the plan have already been created. Do not create them again. Mark them as in_progress as you work, starting with the first one. Don't stop until you have completed all the to-dos.
+```
+
+> **Resumen de objetivos alcanzados:** Se generaron los 10 tickets OpenSpec completos en `openspec/changes/`, siguiendo la misma estructura que T01–T03 (historia de usuario, descripción funcional, arquitectura de la solución con código TypeScript específico, lista de tareas con checkboxes). **Serie A**: CU03-A1 (`GET /api/admin/stores`), CU03-A2 (SSE con Redis pub/sub + `MockSseService` + `@Sse` endpoint), CU03-A3 (extensión DTO mock con campos eCommerce y regalo manual), CU03-A4 (ruta `/simulate` con layout vertical, sidebar, `SimulationPage`, `OrderSummaryBar`), CU03-A5 (modal completo con catálogos de 20 direcciones ficticias y 20 compras ficticias en `simulate-data.ts`), CU03-A6 (`SimulationChat` con EventSource SSE, `TypingIndicator`, scroll automático, input de respuesta). **Serie B**: CU03-B1 (Worker actualiza `Order→COMPLETED` + `syncedAt`, mensaje confirmando tienda simulada + Adresles), CU03-B2 (nueva fase `WAITING_ADDRESS_PROPOSAL_CONFIRM`, sub-journeys 2.1 y 2.3 con dirección propuesta), CU03-B3 (nueva fase `WAITING_REGISTER`, flujo de registro voluntario con actualización real de `User`), CU03-B4 (nueva fase `WAITING_SAVE_ADDRESS`, oferta de guardar dirección con detección de dirección nueva y creación de `Address` en Prisma).
+
+---
+
 ### 6. Tickets de Trabajo
 
 #### t01-orders-sorting
