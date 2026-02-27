@@ -8,6 +8,7 @@ const mockAdminService = {
   getOrders: jest.fn(),
   getUsers: jest.fn(),
   getConversationMessages: jest.fn(),
+  getStores: jest.fn(),
 };
 
 describe('AdminController (integration HTTP)', () => {
@@ -191,6 +192,34 @@ describe('AdminController (integration HTTP)', () => {
         ...defaultUserParams,
         registered: 'true',
       });
+    });
+  });
+
+  describe('GET /admin/stores', () => {
+    it('responde 200 con la lista de tiendas', async () => {
+      const payload = {
+        data: [
+          { id: 's1', name: 'Tienda A', url: 'https://a.com', platform: 'WOOCOMMERCE', ecommerceName: 'EcomA' },
+        ],
+      };
+      mockAdminService.getStores.mockResolvedValue(payload);
+
+      const res = await request(app.getHttpServer())
+        .get('/admin/stores')
+        .expect(200);
+
+      expect(res.body).toEqual(payload);
+      expect(mockAdminService.getStores).toHaveBeenCalledTimes(1);
+    });
+
+    it('responde 200 con data vacía si no hay tiendas activas', async () => {
+      mockAdminService.getStores.mockResolvedValue({ data: [] });
+
+      const res = await request(app.getHttpServer())
+        .get('/admin/stores')
+        .expect(200);
+
+      expect(res.body).toEqual({ data: [] });
     });
   });
 

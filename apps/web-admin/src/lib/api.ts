@@ -7,6 +7,7 @@ import type {
   OrdersFilters,
   UserSortByColumn,
   UsersFilters,
+  StoresResponse,
 } from '@/types/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -58,3 +59,6 @@ export const getConversationMessages = (
   id: string,
 ): Promise<ConversationMessagesResponse> =>
   apiFetch(`/api/admin/conversations/${id}/messages`);
+
+export const getStores = (): Promise<StoresResponse> =>
+  apiFetch<StoresResponse>('/api/admin/stores');

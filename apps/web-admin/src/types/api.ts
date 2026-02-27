@@ -167,3 +167,17 @@ export const ORDER_MODE_LABELS: Record<OrderMode, string> = {
   ADRESLES: 'Adresles',
   TRADITIONAL: 'Tradicional',
 };
+
+export type StorePlatform = 'WOOCOMMERCE' | 'PRESTASHOP' | 'MAGENTO' | 'SHOPIFY';
+
+export interface SimulateStore {
+  id: string;
+  name: string;
+  url: string;
+  platform: StorePlatform;
+  ecommerceName: string;
+}
+
+export interface StoresResponse {
+  data: SimulateStore[];
+}

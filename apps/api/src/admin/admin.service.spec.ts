@@ -16,6 +16,9 @@ const mockPrisma = {
   conversation: {
     findUnique: jest.fn(),
   },
+  store: {
+    findMany: jest.fn(),
+  },
   $transaction: jest.fn(),
 };
 
@@ -602,6 +605,57 @@ describe('AdminService', () => {
       const result = await service.getConversationMessages('conv-1');
 
       expect(result.messages).toEqual([]);
+    });
+  });
+
+  describe('getStores', () => {
+    it('devuelve las tiendas activas mapeadas con ecommerceName', async () => {
+      const rawStores = [
+        {
+          id: 's1',
+          name: 'Tienda A',
+          url: 'https://a.com',
+          platform: 'WOOCOMMERCE',
+          ecommerce: { commercialName: 'EcomA', legalName: 'EcomA SL' },
+        },
+      ];
+      mockPrisma.store.findMany.mockResolvedValue(rawStores);
+
+      const result = await service.getStores();
+
+      expect(result.data).toEqual([
+        { id: 's1', name: 'Tienda A', url: 'https://a.com', platform: 'WOOCOMMERCE', ecommerceName: 'EcomA' },
+      ]);
+      expect(mockPrisma.store.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: 'ACTIVE' },
+          orderBy: [{ ecommerce: { commercialName: 'asc' } }, { name: 'asc' }],
+        }),
+      );
+    });
+
+    it('usa legalName como fallback cuando commercialName es null', async () => {
+      mockPrisma.store.findMany.mockResolvedValue([
+        {
+          id: 's2',
+          name: 'Tienda B',
+          url: 'https://b.com',
+          platform: 'SHOPIFY',
+          ecommerce: { commercialName: null, legalName: 'EcomB Legal SL' },
+        },
+      ]);
+
+      const result = await service.getStores();
+
+      expect(result.data[0].ecommerceName).toBe('EcomB Legal SL');
+    });
+
+    it('devuelve data vacía si no hay tiendas activas', async () => {
+      mockPrisma.store.findMany.mockResolvedValue([]);
+
+      const result = await service.getStores();
+
+      expect(result.data).toEqual([]);
     });
   });
 });

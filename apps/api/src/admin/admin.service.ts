@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, StorePlatform } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MockConversationsService } from '../mock/mock-conversations.service';
 
@@ -18,6 +18,14 @@ export interface GetUsersParams {
   sortDir?: string;
   q?: string;
   registered?: string;
+}
+
+export interface SimulateStore {
+  id: string;
+  name: string;
+  url: string;
+  platform: StorePlatform;
+  ecommerceName: string;
 }
 
 const VALID_STATUSES = [
@@ -212,6 +220,30 @@ export class AdminService {
     }
 
     return { AND: conditions };
+  }
+
+  async getStores(): Promise<{ data: SimulateStore[] }> {
+    const stores = await this.prisma.store.findMany({
+      where: { status: 'ACTIVE' },
+      orderBy: [{ ecommerce: { commercialName: 'asc' } }, { name: 'asc' }],
+      select: {
+        id: true,
+        name: true,
+        url: true,
+        platform: true,
+        ecommerce: { select: { commercialName: true, legalName: true } },
+      },
+    });
+
+    return {
+      data: stores.map((s) => ({
+        id: s.id,
+        name: s.name,
+        url: s.url,
+        platform: s.platform,
+        ecommerceName: s.ecommerce.commercialName ?? s.ecommerce.legalName,
+      })),
+    };
   }
 
   async getConversationMessages(conversationId: string) {

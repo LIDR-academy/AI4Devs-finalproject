@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-26  
-> ✅ **Change completado**: t03-users-sorting-filters (27/27 tareas) — pendiente de `/opsx-archive`
+> **Última actualización**: 2026-02-27  
+> ✅ **Change completado**: cu03-a1-stores-endpoint (15/15 tareas) — pendiente de `/opsx-archive`
 
 ## 📖 Inicio Rápido
 
@@ -68,8 +68,9 @@ Aquí se documentarán:
 | [2026-02-24](./sessions/2026-02-24-t01-orders-sorting.md) | T01 — Ordenación de Columnas en Pedidos — Completado | ✅ Completado (30/30 tareas) |
 | [2026-02-25](./sessions/2026-02-25-t02-orders-filters.md) | T02 — Filtros y Búsqueda en Tabla de Pedidos — Completado | ✅ Completado (34/34 tareas) |
 | [2026-02-26](./sessions/2026-02-26-t03-users-sorting-filters.md) | T03 — Ordenación y Filtros en Tabla de Usuarios — Completado | ✅ Completado (27/27 tareas) |
+| [2026-02-27](./sessions/2026-02-27-cu03-a1-stores-endpoint.md) | CU03-A1 — Endpoint GET /api/admin/stores — Completado | ✅ Completado (15/15 tareas) |
 
-**Próximo change**: `/opsx-archive t03-users-sorting-filters` → luego continuar con el backlog (ver `ticket_generation.md`).
+**Próximo change**: `/opsx-archive cu03-a1-stores-endpoint` → luego continuar con el backlog (ver `ticket_generation.md`).
 
 ## 🔄 Flujo de Trabajo
 
@@ -141,7 +142,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-26  
+**Última revisión**: 2026-02-27  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: T03 completado — ordenación dinámica y filtros server-side en tabla de usuarios (5 columnas ordenables, search box con debounce, control segmentado Registrado). 8 componentes frontend nuevos/modificados. `buildUsersOrderBy` + `buildUsersWhere` en backend. 99 tests pasando. Deuda técnica W1 (DTO `@IsIn` vs. fallback silencioso) documentada en spec.  
+**Cambios recientes**: CU03-A1 completado — endpoint `GET /api/admin/stores` en AdminModule. `SimulateStore` con `platform: StorePlatform` (enum de Prisma). Fallback `commercialName ?? legalName`. 5 tests nuevos, 104/104 pasando. Frontend: `StorePlatform`, `SimulateStore`, `StoresResponse`, `getStores()`.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

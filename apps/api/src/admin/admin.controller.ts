@@ -91,6 +91,11 @@ export class AdminController {
     });
   }
 
+  @Get('stores')
+  getStores() {
+    return this.adminService.getStores();
+  }
+
   @Get('conversations/:conversationId/messages')
   getConversationMessages(@Param('conversationId') conversationId: string) {
     return this.adminService.getConversationMessages(conversationId);
