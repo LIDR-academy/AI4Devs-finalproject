@@ -767,6 +767,100 @@ actualiza @memory-bank , revisando que se incluya lo  realizado en esta sersión
 
 ---
 
+#### t03-users-sorting-filters
+
+**Prompt 1** *(Modo Agent):*
+
+```
+Vamos a iniciar un nuevo ticket de frontend. lee primero los archivos de @memory-bank , y a continuación genera un ticket T03 de frontend para agregar sorting y filtering a la páginad eUsuarios igual que se hizo en los tickets 1 y 2 con la página de Pedidos.
+De momento sólo genera el documento markdown "T03-frontend-users-sorting&filters.md" con la misma estructura y diseños que @openspec/changes/archive/2026-02-24-t01-orders-sorting/T01-frontend-orders-sorting.md  y @openspec/changes/archive/2026-02-25-t02-orders-filters/T02-orders-filters.md , pero adaptados a la página de Usuarios.
+Dentor de la página de usuarios las columnas ordenables son Nombre, Email (vacíos al final ), Pedidos, Direcciones y Última interacción. La vista por defecto es ordenados de forma descendente por la columna Última interacción (arriba el más reciente). La barra de búsqueda para los filtros debe poder buscar por nombre o email, y poder filtar con botones la columna Registrado.
+```
+
+> **Resumen de objetivos alcanzados:** Se leyeron los archivos del memory-bank y los tickets T01 y T02 de referencia. Se creó el archivo `openspec/changes/T03-frontend-users-sorting-filters.md` (912 líneas) con la especificación completa del ticket, adaptada al dominio de usuarios: 5 columnas ordenables (Nombre, Email con nulls al final, Pedidos, Direcciones, Última interacción por defecto DESC), filtro de búsqueda por nombre/email con debounce 300ms, control segmentado de selección única `[Todos]/[Registrado]/[No registrado]` para el filtro de registro, arquitectura frontend completa (tipos, componentes, page) y backend completa (`buildUsersOrderBy`, `buildUsersWhere`, `GetUsersParams`, `UsersQuery` DTO), criterios de aceptación exhaustivos y tabla de archivos a crear/modificar.
+
+---
+
+**Prompt 2** *(Modo Agent):*
+
+```
+/enrich-us @openspec/changes/T03-frontend-users-sorting-filters.md
+```
+
+> **Resumen de objetivos alcanzados:** Se aplicó el comando `/enrich-us` evaluando el ticket T03 contra las mejores prácticas de producto. El ticket ya era muy sólido técnicamente, pero se identificaron y añadieron tres gaps críticos para la autonomía completa del desarrollador: (1) **`<Suspense>` boundary obligatorio** — `UsersSortableColumnHeader` usa `useSearchParams()`, lo que requiere envolver `UsersTable` en `<Suspense fallback={<UsersTableSkeleton />}>` en la página para evitar la advertencia de build de Next.js App Router; el snippet de `page.tsx` se actualizó con el código exacto y la advertencia explicativa. (2) **Sección "Documentación a actualizar post-implementación"** — nueva sección con instrucciones precisas para actualizar `openspec/specs/admin-dashboard/spec.md`, `openspec/specs/admin-api/spec.md` (tabla completa de query params del endpoint usuarios), y crear el nuevo `openspec/specs/users-sorting-filters/spec.md` y la nota de sesión en `memory-bank/sessions/`. (3) **Criterios de build/compilación** — nueva subsección con 3 checks: `tsc --noEmit` sin errores, ausencia de la advertencia Suspense en el build de Next.js, y no regresión de los 40+ tests existentes.
+
+---
+
+**Prompt 3** *(Modo Agent):*
+
+```
+/opsx-ff @openspec/changes/T03-frontend-users-sorting-filters.md
+```
+
+> **Resumen de objetivos alcanzados:** Se ejecutó el skill `openspec-ff-change` para el change `t03-users-sorting-filters`, generando los 4 artefactos OpenSpec en secuencia: `proposal.md` (justificación del cambio, capacidades nueva `users-sorting-filters` y modificadas `admin-dashboard`/`admin-api`, impacto y rollback); `design.md` (6 decisiones técnicas: control segmentado vs. dropdown multi-select para el filtro booleano `isRegistered`, `useSearchParams()` en `UsersSortableColumnHeader` desde el inicio para evitar la regresión W1 de T02, métodos privados `buildUsersOrderBy`/`buildUsersWhere`, `<Suspense>` explícito, ordenación por `_count` de relaciones en Prisma, `isDeleted: false` como condición base invariable); `specs/users-sorting-filters/spec.md` (nueva capability con 6 requirements y 20+ scenarios en formato SHALL/WHEN/THEN); `specs/admin-dashboard/spec.md` y `specs/admin-api/spec.md` (deltas MODIFIED con tabla de columnas actualizada, FilterBar, subtítulo dinámico y tabla completa de query params del endpoint); y `tasks.md` (26 tareas en 8 grupos: backend DTO → lógica → tests → frontend tipos → componentes nuevos → modificados → page → verificación). Todos los artefactos marcados como `done`.
+
+---
+
+**Prompt 4** *(Modo Agent):*
+
+```
+/opsx-apply t03-frontend-users-sorting-filters
+```
+
+> **Resumen de objetivos alcanzados:** Se implementaron las 27 tareas del change. **Backend**: interfaz `GetUsersParams` exportada en `admin.service.ts`; DTO `UsersQuery extends PaginationQuery` en `admin.controller.ts` con `@IsIn` para `sortBy` (5 valores), `sortDir`, `registered` y `@IsString` para `q`; propiedad privada `validUserSortColumns`; métodos privados `buildUsersOrderBy` (5 casos con `nulls: 'last'` para escalares y `_count` para relaciones) y `buildUsersWhere` (condición base `{ isDeleted: false }`, OR sobre `firstName`/`lastName`/`email` con `mode: 'insensitive'`, filtro `registered` booleano); firma de `getUsers()` refactorizada a `(page, limit, params: GetUsersParams = {})`; `prisma.user.count({ where })` compartiendo el mismo `where` que `findMany`; 18 nuevos tests en `admin.service.spec.ts` (12 de `buildUsersOrderBy`, 6 de `buildUsersWhere`) y tests de controlador actualizados — 40/40 tests pasando. **Frontend**: tipos `UserSortByColumn`, `VALID_USER_SORT_COLUMNS`, `DEFAULT_USER_SORT`, `DEFAULT_USER_DIR`, `UsersFilters`, `USER_REGISTERED_FILTER_LABELS` en `types/api.ts`; `getUsers()` en `lib/api.ts` con `sortBy`, `sortDir` y `filters`; 5 componentes nuevos: `users-sortable-column-header.tsx` (usa `useSearchParams` para preservar filtros al ordenar), `users-search-input.tsx`, `users-registered-filter.tsx` (control segmentado `[Todos]/[Registrado]/[No registrado]`), `users-active-filter-chips.tsx`, `users-filter-bar.tsx` (coordinador con `buildUrl()` centralizado y debounce 300ms); modificados `users-table.tsx` (`'use client'`, props `sortBy`/`sortDir`, `aria-sort`) y `users-empty-state.tsx` (prop `hasFilters`); `users/page.tsx` refactorizado como Server Component con `await searchParams`, validación con allowlist, subtítulo dinámico `meta.total`, `<Suspense fallback={<UsersTableSkeleton />}>` y `UsersFilterBar`. `tsc --noEmit` sin errores.
+
+---
+
+**Prompt 5** *(Modo Agent):*
+
+```
+/opsx-verify t03-users-sorting-filters
+```
+
+> **Resumen de objetivos alcanzados:** Se realizó la verificación completa en tres dimensiones (Completeness, Correctness, Coherence). Se confirmaron 27/27 tareas completas, todos los artefactos en estado `done` y cobertura de los escenarios de spec. Se detectó un **WARNING** (W1): el DTO `UsersQuery` usa `@IsIn` con `ValidationPipe`, provocando que clientes externos que envíen `sortBy` inválido reciban HTTP 400 en lugar del 200 especificado en la spec (fallback silencioso). Se identificó un segundo warning (W2): cuando `sortBy` es inválido, `sortDir` también se fuerza al default — comportamiento no documentado explícitamente en la spec. Se identificó una sugerencia (S1): posible stale closure en el `useRef` del debounce del `UsersFilterBar`.
+
+---
+
+**Prompt 6** *(Modo Ask):*
+
+```
+Explica mas detenidamente el W1 para saber qué decisión tomar. Cuáles son los riesgos con cada una de las opciones y qué archivos habría que cambiar
+```
+
+> **Resumen de objetivos alcanzados:** Se analizaron en detalle las tres opciones para resolver W1: **Opción A** (no cambiar código, documentar la deuda técnica en el spec) — sin riesgo inmediato, requiere solo actualizar `openspec/specs/admin-api/spec.md`; **Opción B** (eliminar `@IsIn` de `UsersQuery.sortBy`, `sortDir` y `registered`, delegando validación de valores al servicio) — requiere cambios en `admin.controller.ts`, `admin.controller.spec.ts` y el spec, con riesgo bajo pero elimina la capa de validación temprana del DTO; **Opción C** (pipe de transformación custom que haga el fallback en el controlador) — máxima fidelidad a la spec pero mayor complejidad. Se detallaron los archivos afectados y el nivel de riesgo de cada opción.
+
+---
+
+**Prompt 7** *(Modo Agent):*
+
+```
+Arregla el W1 con la Opción A + la nota para refactorizar tanto UserQuery como OrdersQuery. Para el W2 el comportamiento presente es el deseado, basta con documentarlo en el spec. Para la S1 acepta el patrón como está.
+```
+
+> **Resumen de objetivos alcanzados:** Se aplicaron las tres decisiones del usuario: (1) **W1 — Opción A**: sin cambio de código; se añadió una nota detallada de deuda técnica en el escenario "sortBy inválido hace fallback silencioso" de `openspec/specs/admin-api/spec.md`, indicando que eliminar `@IsIn` de `UsersQuery.sortBy`, `sortDir`, `registered` y `OrdersQuery.sortBy` queda pendiente como refactor en `admin.controller.ts` y sus tests. (2) **W2**: se documentó en el spec el comportamiento de diseño — `sortDir` solo se respeta cuando `sortBy` también es válido; si `sortBy` cae al fallback, ambos se fuerzan a los defaults, tanto en el servicio como en el Server Component. (3) **S1**: el patrón de `useRef` con debounce se aceptó como está, sin cambios.
+
+---
+
+**Prompt 8** *(Modo Agent):*
+
+```
+actualiza @memory-bank , revisando que se incluya lo realizado en esta sersión
+```
+
+> **Resumen de objetivos alcanzados:** Se creó el archivo `memory-bank/sessions/2026-02-26-t03-users-sorting-filters.md` con el registro completo de la sesión: resumen de implementación backend y frontend, tabla de componentes nuevos y archivos modificados, decisiones técnicas tomadas durante la verificación (W1/W2/S1) y deuda técnica documentada. Se actualizó `memory-bank/README.md`: fecha y change activo actualizados, nueva sesión añadida a la tabla de sesiones, sección "Próximo change" apuntando al archive pendiente de T03.
+
+---
+
+**Prompt 9** *(Modo Agent):*
+
+```
+/opsx-archive t03-users-sorting-filters
+```
+
+> **Resumen de objetivos alcanzados:** Tras confirmar 4/4 artefactos completos y 27/27 tareas marcadas `[x]`, se evaluó el estado de sync de los delta specs. Los delta specs de `admin-api` y `admin-dashboard` ya estaban sincronizados con los specs principales (vía `/update-docs` de la sesión anterior). La delta spec de la nueva capability `users-sorting-filters` no existía aún en `openspec/specs/`. El usuario eligió sincronizar antes de archivar: se creó `openspec/specs/users-sorting-filters/spec.md` con el contenido completo (6 requirements, ~30 scenarios). Finalmente se movió el directorio del change a `openspec/changes/archive/2026-02-26-t03-users-sorting-filters/`.
+
+---
+
 ### 7. Pull Requests
 
 **Prompt 1** *(Modo Agent):*

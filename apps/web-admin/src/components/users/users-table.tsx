@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Table,
   TableBody,
@@ -9,24 +11,77 @@ import {
 import { UserRegisteredBadge } from './user-registered-badge';
 import { formatFullName, formatPhone } from '@/lib/utils';
 import { RelativeDateCell } from './relative-date-cell';
-import type { AdminUser } from '@/types/api';
+import { UsersSortableColumnHeader } from './users-sortable-column-header';
+import type { AdminUser, UserSortByColumn, SortDir } from '@/types/api';
 
 interface UsersTableProps {
   users: AdminUser[];
+  sortBy: UserSortByColumn;
+  sortDir: SortDir;
 }
 
-export function UsersTable({ users }: UsersTableProps) {
+export function UsersTable({ users, sortBy, sortDir }: UsersTableProps) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead scope="col">Nombre</TableHead>
+          <TableHead
+            scope="col"
+            aria-sort={sortBy === 'name' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+          >
+            <UsersSortableColumnHeader
+              column="name"
+              label="Nombre"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
           <TableHead scope="col">Teléfono</TableHead>
-          <TableHead scope="col">Email</TableHead>
+          <TableHead
+            scope="col"
+            aria-sort={sortBy === 'email' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+          >
+            <UsersSortableColumnHeader
+              column="email"
+              label="Email"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
           <TableHead scope="col">Registrado</TableHead>
-          <TableHead scope="col">Pedidos</TableHead>
-          <TableHead scope="col">Direcciones</TableHead>
-          <TableHead scope="col">Última interacción</TableHead>
+          <TableHead
+            scope="col"
+            aria-sort={sortBy === 'orders' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+          >
+            <UsersSortableColumnHeader
+              column="orders"
+              label="Pedidos"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
+          <TableHead
+            scope="col"
+            aria-sort={sortBy === 'addresses' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+          >
+            <UsersSortableColumnHeader
+              column="addresses"
+              label="Direcciones"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
+          <TableHead
+            scope="col"
+            aria-sort={sortBy === 'lastInteraction' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+          >
+            <UsersSortableColumnHeader
+              column="lastInteraction"
+              label="Última interacción"
+              currentSort={sortBy}
+              currentDir={sortDir}
+            />
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

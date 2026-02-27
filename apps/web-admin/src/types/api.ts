@@ -122,6 +122,21 @@ export const VALID_SORT_COLUMNS: SortByColumn[] = ['ref', 'store', 'user', 'amou
 export const DEFAULT_SORT: SortByColumn = 'date';
 export const DEFAULT_DIR: SortDir = 'desc';
 
+export type UserSortByColumn = 'name' | 'email' | 'orders' | 'addresses' | 'lastInteraction';
+export const VALID_USER_SORT_COLUMNS: UserSortByColumn[] = ['name', 'email', 'orders', 'addresses', 'lastInteraction'];
+export const DEFAULT_USER_SORT: UserSortByColumn = 'lastInteraction';
+export const DEFAULT_USER_DIR: SortDir = 'desc';
+
+export interface UsersFilters {
+  q?: string;
+  registered?: 'true' | 'false';
+}
+
+export const USER_REGISTERED_FILTER_LABELS: Record<string, string> = {
+  true: 'Registrado',
+  false: 'No registrado',
+};
+
 export interface OrdersFilters {
   q?: string;
   status?: OrderStatus[];

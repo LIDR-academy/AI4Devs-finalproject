@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-25  
-> ✅ **Change completado**: t02-orders-filters (34/34 tareas) — pendiente de `/opsx-archive`
+> **Última actualización**: 2026-02-26  
+> ✅ **Change completado**: t03-users-sorting-filters (27/27 tareas) — pendiente de `/opsx-archive`
 
 ## 📖 Inicio Rápido
 
@@ -67,8 +67,9 @@ Aquí se documentarán:
 | [2026-02-23](./sessions/2026-02-23-cu02-frontend-admin.md) | CU-02 Frontend Admin Dashboard — Completado | ✅ Completado (40/40 tareas) |
 | [2026-02-24](./sessions/2026-02-24-t01-orders-sorting.md) | T01 — Ordenación de Columnas en Pedidos — Completado | ✅ Completado (30/30 tareas) |
 | [2026-02-25](./sessions/2026-02-25-t02-orders-filters.md) | T02 — Filtros y Búsqueda en Tabla de Pedidos — Completado | ✅ Completado (34/34 tareas) |
+| [2026-02-26](./sessions/2026-02-26-t03-users-sorting-filters.md) | T03 — Ordenación y Filtros en Tabla de Usuarios — Completado | ✅ Completado (27/27 tareas) |
 
-**Próximo change**: `/opsx-archive t02-orders-filters` → luego `cu02-webhook-ecommerce-sync` (Webhook real WooCommerce).
+**Próximo change**: `/opsx-archive t03-users-sorting-filters` → luego continuar con el backlog (ver `ticket_generation.md`).
 
 ## 🔄 Flujo de Trabajo
 
@@ -140,7 +141,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-25  
+**Última revisión**: 2026-02-26  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: T02 completado — filtros server-side en tabla de pedidos (búsqueda texto, multi-select estado/modo, date range picker). 6 nuevos componentes frontend. `buildWhere()` en backend. 40 tests pasando. `SortableColumnHeader` corregido para preservar filtros al cambiar sort. Docs de specs actualizadas.  
+**Cambios recientes**: T03 completado — ordenación dinámica y filtros server-side en tabla de usuarios (5 columnas ordenables, search box con debounce, control segmentado Registrado). 8 componentes frontend nuevos/modificados. `buildUsersOrderBy` + `buildUsersWhere` en backend. 99 tests pasando. Deuda técnica W1 (DTO `@IsIn` vs. fallback silencioso) documentada en spec.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

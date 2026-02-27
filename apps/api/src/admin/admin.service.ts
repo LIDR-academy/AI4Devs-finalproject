@@ -13,6 +13,13 @@ export interface GetOrdersParams {
   to?: string;
 }
 
+export interface GetUsersParams {
+  sortBy?: string;
+  sortDir?: string;
+  q?: string;
+  registered?: string;
+}
+
 const VALID_STATUSES = [
   'PENDING_PAYMENT',
   'PENDING_ADDRESS',
@@ -31,6 +38,8 @@ export class AdminService {
   ) {}
 
   private readonly validSortColumns = ['ref', 'store', 'user', 'amount', 'date'];
+
+  private readonly validUserSortColumns = ['name', 'email', 'orders', 'addresses', 'lastInteraction'];
 
   async getOrders(
     page: number,
@@ -135,24 +144,74 @@ export class AdminService {
     }
   }
 
-  async getUsers(page: number, limit: number) {
+  async getUsers(page: number, limit: number, params: GetUsersParams = {}) {
     const skip = (page - 1) * limit;
+    const isValidSort =
+      params.sortBy !== undefined &&
+      this.validUserSortColumns.includes(params.sortBy);
+    const resolvedSort = isValidSort ? params.sortBy! : 'lastInteraction';
+    const dir: 'asc' | 'desc' =
+      isValidSort ? (params.sortDir === 'asc' ? 'asc' : 'desc') : 'desc';
+    const orderBy = this.buildUsersOrderBy(resolvedSort, dir);
+    const where = this.buildUsersWhere(params);
 
     const [data, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
-        where: { isDeleted: false },
+        where,
         include: {
           phone: true,
           _count: { select: { orders: true, addresses: true } },
         },
-        orderBy: { lastInteractionAt: { sort: 'desc', nulls: 'last' } },
+        orderBy,
         skip,
         take: limit,
       }),
-      this.prisma.user.count({ where: { isDeleted: false } }),
+      this.prisma.user.count({ where }),
     ]);
 
     return { data, meta: { page, limit, total } };
+  }
+
+  private buildUsersOrderBy(sortBy: string, dir: 'asc' | 'desc') {
+    switch (sortBy) {
+      case 'name':
+        return [
+          { firstName: { sort: dir, nulls: 'last' as const } },
+          { lastName: { sort: dir, nulls: 'last' as const } },
+        ];
+      case 'email':
+        return [{ email: { sort: dir, nulls: 'last' as const } }];
+      case 'orders':
+        return [{ orders: { _count: dir } }];
+      case 'addresses':
+        return [{ addresses: { _count: dir } }];
+      case 'lastInteraction':
+      default:
+        return [{ lastInteractionAt: { sort: dir, nulls: 'last' as const } }];
+    }
+  }
+
+  private buildUsersWhere(params: GetUsersParams): Prisma.UserWhereInput {
+    const conditions: Prisma.UserWhereInput[] = [{ isDeleted: false }];
+
+    if (params.q && params.q.trim()) {
+      const q = params.q.trim();
+      conditions.push({
+        OR: [
+          { firstName: { contains: q, mode: 'insensitive' } },
+          { lastName: { contains: q, mode: 'insensitive' } },
+          { email: { contains: q, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (params.registered === 'true') {
+      conditions.push({ isRegistered: true });
+    } else if (params.registered === 'false') {
+      conditions.push({ isRegistered: false });
+    }
+
+    return { AND: conditions };
   }
 
   async getConversationMessages(conversationId: string) {

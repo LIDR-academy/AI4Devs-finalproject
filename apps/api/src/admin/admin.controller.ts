@@ -12,6 +12,24 @@ class PaginationQuery {
   limit?: string;
 }
 
+class UsersQuery extends PaginationQuery {
+  @IsOptional()
+  @IsIn(['name', 'email', 'orders', 'addresses', 'lastInteraction'])
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortDir?: string;
+
+  @IsOptional()
+  @IsString()
+  q?: string;
+
+  @IsOptional()
+  @IsIn(['true', 'false'])
+  registered?: string;
+}
+
 class OrdersQuery extends PaginationQuery {
   @IsOptional()
   @IsIn(['ref', 'store', 'user', 'amount', 'date'])
@@ -62,10 +80,15 @@ export class AdminController {
   }
 
   @Get('users')
-  getUsers(@Query() query: PaginationQuery) {
+  getUsers(@Query() query: UsersQuery) {
     const page = Math.max(1, parseInt(query.page ?? '1', 10) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(query.limit ?? '50', 10) || 50));
-    return this.adminService.getUsers(page, limit);
+    return this.adminService.getUsers(page, limit, {
+      sortBy: query.sortBy,
+      sortDir: query.sortDir,
+      q: query.q,
+      registered: query.registered,
+    });
   }
 
   @Get('conversations/:conversationId/messages')

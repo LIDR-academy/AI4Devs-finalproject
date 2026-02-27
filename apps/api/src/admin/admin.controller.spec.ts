@@ -131,6 +131,13 @@ describe('AdminController (integration HTTP)', () => {
   });
 
   describe('GET /admin/users', () => {
+    const defaultUserParams = {
+      sortBy: undefined,
+      sortDir: undefined,
+      q: undefined,
+      registered: undefined,
+    };
+
     it('responde 200 con usuarios paginados', async () => {
       const payload = {
         data: [{ id: 'u1' }],
@@ -143,7 +150,47 @@ describe('AdminController (integration HTTP)', () => {
         .expect(200);
 
       expect(res.body).toEqual(payload);
-      expect(mockAdminService.getUsers).toHaveBeenCalledWith(1, 50);
+      expect(mockAdminService.getUsers).toHaveBeenCalledWith(1, 50, defaultUserParams);
+    });
+
+    it('pasa sortBy=name y sortDir=asc al servicio', async () => {
+      mockAdminService.getUsers.mockResolvedValue({ data: [], meta: {} });
+
+      await request(app.getHttpServer())
+        .get('/admin/users?sortBy=name&sortDir=asc')
+        .expect(200);
+
+      expect(mockAdminService.getUsers).toHaveBeenCalledWith(1, 50, {
+        ...defaultUserParams,
+        sortBy: 'name',
+        sortDir: 'asc',
+      });
+    });
+
+    it('pasa q=garcia al servicio', async () => {
+      mockAdminService.getUsers.mockResolvedValue({ data: [], meta: {} });
+
+      await request(app.getHttpServer())
+        .get('/admin/users?q=garcia')
+        .expect(200);
+
+      expect(mockAdminService.getUsers).toHaveBeenCalledWith(1, 50, {
+        ...defaultUserParams,
+        q: 'garcia',
+      });
+    });
+
+    it('pasa registered=true al servicio', async () => {
+      mockAdminService.getUsers.mockResolvedValue({ data: [], meta: {} });
+
+      await request(app.getHttpServer())
+        .get('/admin/users?registered=true')
+        .expect(200);
+
+      expect(mockAdminService.getUsers).toHaveBeenCalledWith(1, 50, {
+        ...defaultUserParams,
+        registered: 'true',
+      });
     });
   });
 

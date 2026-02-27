@@ -94,23 +94,34 @@ La tabla SHALL mostrar un skeleton de 8 filas durante la carga (`loading.tsx`) y
 
 ---
 
-### Requirement: Vista de usuarios con badge registrado/no registrado
+### Requirement: Vista de usuarios con ordenación, filtros y badge registrado/no registrado
 La página `/users` SHALL obtener los usuarios vía `GET /api/admin/users` (Server Component) y renderizarlos en una tabla Shadcn.
 
 **Columnas de la tabla (en orden):**
 
-| Columna | Origen | Notas |
-|---------|--------|-------|
-| Nombre | `firstName + lastName` | `formatFullName(firstName, lastName)` — "—" si ambos null |
-| Teléfono | `phone.e164` | `formatPhone(e164)` |
-| Email | `email` | "—" si null |
-| Registrado | `isRegistered` | `<UserRegisteredBadge>` |
-| Pedidos | `_count.orders` | Número entero |
-| Direcciones | `_count.addresses` | Número entero |
-| Última interacción | `lastInteractionAt` | `formatRelativeDate()` — "Hace 2h"; tooltip con fecha absoluta; "—" si null |
+| Columna            | Origen                 | Ordenable | Notas                                                                       |
+| ------------------ | ---------------------- | --------- | --------------------------------------------------------------------------- |
+| Nombre             | `firstName + lastName` | ✅         | `formatFullName(firstName, lastName)` — "—" si ambos null                   |
+| Teléfono           | `phone.e164`           | ✗         | `formatPhone(e164)`                                                         |
+| Email              | `email`                | ✅         | "—" si null                                                                 |
+| Registrado         | `isRegistered`         | ✗         | `<UserRegisteredBadge>`                                                     |
+| Pedidos            | `_count.orders`        | ✅         | Número entero                                                               |
+| Direcciones        | `_count.addresses`     | ✅         | Número entero                                                               |
+| Última interacción | `lastInteractionAt`    | ✅         | `formatRelativeDate()` — "Hace 2h"; tooltip con fecha absoluta; "—" si null |
 
-**Filtro**: solo usuarios con `isDeleted = false` (aplicado en backend).
-**Ordenación**: por `lastInteractionAt` descendente (nulos al final).
+**Ordenación**: dinámica vía query params `?sort=<columna>&dir=<asc|desc>`. Por defecto: `lastInteraction DESC` (más recientes primero, nulls al final). Ver spec `admin-api` para requisitos completos de ordenación.
+
+**Filtros**: la tabla SHALL ir precedida de la barra de filtros `UsersFilterBar` con dos controles:
+- **Search box**: búsqueda por nombre o email, debounce 300ms, botón X para limpiar.
+- **Control segmentado de registro**: `[Todos] / [Registrado] / [No registrado]`, toggle inmediato.
+
+El estado de filtros y sort se persiste en URL (`?sort=&dir=&q=&registered=`). Sort y filtros coexisten y se preservan mutuamente al cambiar cualquiera de ellos.
+
+**Subtítulo de la página**: SHALL mostrar `"N usuario(s) encontrado(s)"` donde N es `meta.total` (total filtrado devuelto por la API).
+
+La tabla SHALL mostrar un skeleton de filas durante la carga y un empty state adaptativo:
+- Sin usuarios y sin filtros: icono `Users` + "Sin usuarios todavía. Los usuarios aparecerán aquí cuando interactúen con Adresles."
+- Sin resultados con filtros activos: icono `Users` + "Sin resultados" + "Prueba a ajustar o limpiar los filtros activos."
 
 La columna "Registrado" SHALL usar `UserRegisteredBadge`:
 - `isRegistered = true` → `bg-brand-teal/10 text-brand-teal` — texto "Sí"
@@ -120,6 +131,14 @@ La columna "Registrado" SHALL usar `UserRegisteredBadge`:
 - **WHEN** el usuario accede a `/users` y hay usuarios disponibles
 - **THEN** la tabla muestra una fila por usuario con las 7 columnas especificadas
 
+#### Scenario: Barra de filtros precede a la tabla
+- **WHEN** el usuario accede a `/users`
+- **THEN** se muestra la barra de filtros (`UsersFilterBar`) encima de la tabla
+
+#### Scenario: Subtítulo muestra el conteo filtrado
+- **WHEN** hay 3 usuarios registrados de un total de 10 y el filtro `?registered=true` está activo
+- **THEN** el subtítulo muestra "3 usuarios encontrados"
+
 #### Scenario: Badge registrado
 - **WHEN** `isRegistered = true`
 - **THEN** el badge muestra "Sí" con fondo `bg-brand-teal/10`
@@ -128,9 +147,13 @@ La columna "Registrado" SHALL usar `UserRegisteredBadge`:
 - **WHEN** `isRegistered = false`
 - **THEN** el badge muestra "No" con fondo `bg-gray-100`
 
-#### Scenario: Estado vacío cuando no hay usuarios
-- **WHEN** la API devuelve `data: []`
-- **THEN** se muestra `UsersEmptyState` con icono `Users` y mensaje informativo
+#### Scenario: Estado vacío sin filtros activos
+- **WHEN** la API devuelve `data: []` y no hay filtros activos
+- **THEN** se muestra `UsersEmptyState` con mensaje "Sin usuarios todavía"
+
+#### Scenario: Estado vacío con filtros activos
+- **WHEN** la API devuelve `data: []` y hay al menos un filtro activo
+- **THEN** se muestra `UsersEmptyState` con mensaje "Sin resultados" y "Prueba a ajustar o limpiar los filtros activos."
 
 ---
 
@@ -303,10 +326,15 @@ apps/web-admin/
 │   │   │   ├── orders-date-filter.tsx           ← 'use client' — Popover date range picker nativo
 │   │   │   └── orders-active-filter-chips.tsx   ← 'use client' — chips de filtros activos + Limpiar todo
 │   │   ├── users/
-│   │   │   ├── users-table.tsx                  ← Server Component — Shadcn Table
-│   │   │   ├── users-table-skeleton.tsx         ← Skeleton de filas
-│   │   │   ├── users-empty-state.tsx            ← Users icon + texto vacío
-│   │   │   └── user-registered-badge.tsx        ← Badge Sí/No por isRegistered
+│   │   │   ├── users-table.tsx                      ← 'use client' — Shadcn Table con ordenación
+│   │   │   ├── users-sortable-column-header.tsx     ← 'use client' — cabecera sortable; preserva filtros activos
+│   │   │   ├── users-table-skeleton.tsx             ← Skeleton de filas (fallback Suspense)
+│   │   │   ├── users-empty-state.tsx                ← Users icon + texto vacío/sin resultados (prop hasFilters)
+│   │   │   ├── users-filter-bar.tsx                 ← 'use client' — coordinador de filtros + buildUrl()
+│   │   │   ├── users-search-input.tsx               ← 'use client' — input con debounce 300ms
+│   │   │   ├── users-registered-filter.tsx          ← 'use client' — control segmentado Todos/Registrado/No registrado
+│   │   │   ├── users-active-filter-chips.tsx        ← 'use client' — chips de filtros activos + Limpiar todo
+│   │   │   └── user-registered-badge.tsx            ← Badge Sí/No por isRegistered
 │   │   └── chat/
 │   │       ├── chat-view.tsx                    ← 'use client' — scroll al último mensaje
 │   │       ├── chat-view-skeleton.tsx           ← Skeleton de burbujas
@@ -358,8 +386,20 @@ export const getOrders = (
   return apiFetch(`/api/admin/orders?${params.toString()}`);
 };
 
-export const getUsers = (page = 1, limit = 50): Promise<UsersResponse> =>
-  apiFetch(`/api/admin/users?page=${page}&limit=${limit}`);
+export const getUsers = (
+  page = 1,
+  limit = 50,
+  sortBy?: UserSortByColumn,
+  sortDir?: SortDir,
+  filters?: UsersFilters,
+): Promise<UsersResponse> => {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (sortBy) params.set('sortBy', sortBy);
+  if (sortDir) params.set('sortDir', sortDir);
+  if (filters?.q) params.set('q', filters.q);
+  if (filters?.registered) params.set('registered', filters.registered);
+  return apiFetch(`/api/admin/users?${params.toString()}`);
+};
 
 export const getConversationMessages = (id: string): Promise<ConversationMessagesResponse> =>
   apiFetch(`/api/admin/conversations/${id}/messages`);

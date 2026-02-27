@@ -5,6 +5,8 @@ import type {
   SortByColumn,
   SortDir,
   OrdersFilters,
+  UserSortByColumn,
+  UsersFilters,
 } from '@/types/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -37,8 +39,20 @@ export const getOrders = (
   return apiFetch(`/api/admin/orders?${params.toString()}`);
 };
 
-export const getUsers = (page = 1, limit = 50): Promise<UsersResponse> =>
-  apiFetch(`/api/admin/users?page=${page}&limit=${limit}`);
+export const getUsers = (
+  page = 1,
+  limit = 50,
+  sortBy?: UserSortByColumn,
+  sortDir?: SortDir,
+  filters?: UsersFilters,
+): Promise<UsersResponse> => {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (sortBy) params.set('sortBy', sortBy);
+  if (sortDir) params.set('sortDir', sortDir);
+  if (filters?.q) params.set('q', filters.q);
+  if (filters?.registered) params.set('registered', filters.registered);
+  return apiFetch(`/api/admin/users?${params.toString()}`);
+};
 
 export const getConversationMessages = (
   id: string,

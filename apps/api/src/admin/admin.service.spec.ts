@@ -312,21 +312,229 @@ describe('AdminService', () => {
     it('devuelve lista vacía cuando no hay usuarios', async () => {
       mockPrisma.$transaction.mockResolvedValue([[], 0]);
 
-      const result = await service.getUsers(1, 50);
+      const result = await service.getUsers(1, 50, {});
 
       expect(result.data).toEqual([]);
       expect(result.meta.total).toBe(0);
     });
 
-    it('filtra usuarios con isDeleted = true (no aparecen en resultados)', async () => {
+    it('siempre incluye isDeleted: false como condición base', async () => {
       mockPrisma.$transaction.mockResolvedValue([[], 0]);
 
-      await service.getUsers(1, 50);
+      await service.getUsers(1, 50, {});
 
-      // El findMany debe recibir where: { isDeleted: false } para excluir usuarios borrados
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { isDeleted: false },
+          where: { AND: [{ isDeleted: false }] },
+        }),
+      );
+    });
+
+    it('count se llama con el mismo where que findMany', async () => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+
+      await service.getUsers(1, 50, { registered: 'true' });
+
+      expect(mockPrisma.user.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isRegistered: true }] },
+        }),
+      );
+    });
+  });
+
+  describe('buildUsersOrderBy (via getUsers)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sin sortBy → fallback a lastInteraction desc', async () => {
+      await service.getUsers(1, 50, {});
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ lastInteractionAt: { sort: 'desc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy inválido → fallback a lastInteraction desc', async () => {
+      await service.getUsers(1, 50, { sortBy: 'invalido', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ lastInteractionAt: { sort: 'desc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=name asc → firstName asc + lastName asc, nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'name', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { firstName: { sort: 'asc', nulls: 'last' } },
+            { lastName: { sort: 'asc', nulls: 'last' } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=name desc → firstName desc + lastName desc, nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'name', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { firstName: { sort: 'desc', nulls: 'last' } },
+            { lastName: { sort: 'desc', nulls: 'last' } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=email asc → email asc nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'email', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ email: { sort: 'asc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=email desc → email desc nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'email', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ email: { sort: 'desc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=orders asc → orders { _count: asc }', async () => {
+      await service.getUsers(1, 50, { sortBy: 'orders', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ orders: { _count: 'asc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=orders desc → orders { _count: desc }', async () => {
+      await service.getUsers(1, 50, { sortBy: 'orders', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ orders: { _count: 'desc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=addresses asc → addresses { _count: asc }', async () => {
+      await service.getUsers(1, 50, { sortBy: 'addresses', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ addresses: { _count: 'asc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=addresses desc → addresses { _count: desc }', async () => {
+      await service.getUsers(1, 50, { sortBy: 'addresses', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ addresses: { _count: 'desc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=lastInteraction asc → lastInteractionAt asc nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'lastInteraction', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ lastInteractionAt: { sort: 'asc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=lastInteraction desc → lastInteractionAt desc nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'lastInteraction', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ lastInteractionAt: { sort: 'desc', nulls: 'last' } }],
+        }),
+      );
+    });
+  });
+
+  describe('buildUsersWhere (via getUsers)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sin params → solo isDeleted: false', async () => {
+      await service.getUsers(1, 50, {});
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }] },
+        }),
+      );
+    });
+
+    it('q → OR sobre firstName, lastName, email, mode insensitive', async () => {
+      await service.getUsers(1, 50, { q: 'garcia' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { isDeleted: false },
+              {
+                OR: [
+                  { firstName: { contains: 'garcia', mode: 'insensitive' } },
+                  { lastName: { contains: 'garcia', mode: 'insensitive' } },
+                  { email: { contains: 'garcia', mode: 'insensitive' } },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('registered=true → isRegistered: true', async () => {
+      await service.getUsers(1, 50, { registered: 'true' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isRegistered: true }] },
+        }),
+      );
+    });
+
+    it('registered=false → isRegistered: false', async () => {
+      await service.getUsers(1, 50, { registered: 'false' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isRegistered: false }] },
+        }),
+      );
+    });
+
+    it('q + registered=true → AND con ambos filtros', async () => {
+      await service.getUsers(1, 50, { q: 'garcia', registered: 'true' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { isDeleted: false },
+              { OR: expect.any(Array) },
+              { isRegistered: true },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('registered con valor inválido → se ignora (sin filtro isRegistered)', async () => {
+      await service.getUsers(1, 50, { registered: 'invalido' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }] },
         }),
       );
     });
