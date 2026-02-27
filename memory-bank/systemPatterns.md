@@ -8,8 +8,8 @@ The system relies on a **Memory Bank** architecture where state is explicitly do
 src/
 ├── backend/      # FastAPI service (Python 3.11+)
 ├── frontend/     # React 18 + TypeScript + Vite
-├── agent/        # LangGraph agent (future)
-└── shared/       # Shared utilities
+├── agent/        # Celery worker (implemented): rhino3dm + trimesh + open3d
+└── shared/       # Shared utilities (placeholder)
 ```
 
 ## Core Components
@@ -685,16 +685,24 @@ src/agent/
 ├── celery_app.py       # Celery instance configuration
 ├── config.py           # Environment-based settings (Pydantic)
 ├── constants.py        # Centralized configuration values
-├── tasks.py            # Celery task definitions
+├── models.py           # Pydantic task models
+├── tasks/              # Celery task package (modular — tasks.py deleted 2026-02-27)
+│   ├── __init__.py     # Re-exports: health_check, validate_file, generate_low_poly_glb
+│   ├── file_validation.py     # health_check + validate_file tasks
+│   └── geometry_processing.py # generate_low_poly_glb task (trimesh + open3d)
+├── services/           # Domain services (rhino parser, validators, db, file download)
+├── infra/              # Supabase client for agent
 ├── requirements.txt    # Dependencies
 └── Dockerfile          # Multi-stage build (dev/prod)
 ```
 
 **Responsibilities**:
-- **celery_app.py**: Initialize Celery app, configure broker/backend, import tasks
+- **celery_app.py**: Initialize Celery app, configure broker/backend
 - **config.py**: Environment variables validation (CELERY_BROKER_URL, DATABASE_URL, etc.)
 - **constants.py**: Task timeouts, retry policies, task names (immutable config)
-- **tasks.py**: Business logic for async tasks (@celery_app.task decorators)
+- **tasks/**: Business logic for async tasks (@celery_app.task decorators)
+  - `file_validation.py`: validate .3dm via rhino3dm parser
+  - `geometry_processing.py`: generate low-poly GLB via trimesh + open3d
 
 ### Constants Centralization (Agent Specific)
 **Pattern**: All timeout values, retry policies, and task names in `src/agent/constants.py`.
@@ -723,7 +731,7 @@ celery_app.conf.update(
     worker_prefetch_multiplier=WORKER_PREFETCH_MULTIPLIER,
 )
 
-# tasks.py
+# tasks/file_validation.py (previously tasks.py — refactored to package 2026-02-27)
 from constants import TASK_HEALTH_CHECK, TASK_MAX_RETRIES, TASK_RETRY_DELAY_SECONDS
 
 @celery_app.task(

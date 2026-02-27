@@ -417,6 +417,36 @@ Este archivo documenta todas las decisiones importantes tomadas durante el desar
 
 ---
 
-  - ✅ **Ganamos:** [beneficios]
-  - ⚠️ **Perdemos:** [trade-offs]
-```
+
+## 2026-02-27 - Auditoría de Organización del Repositorio (post-Entrega 2)
+- **Contexto:** Post-US-010, antes de iniciar Sprint 6, se realizó una auditoría completa de la organización del repositorio para limpiar deuda de estructura acumulada durante el desarrollo acelerado de Entregas 1 y 2.
+- **Decisión:** Ejecutar limpieza proactiva en 4 bloques: (1) eliminar código muerto, (2) reorganizar scripts raíz, (3) limpiar artifacts macOS de git tracking, (4) generar reporte documental.
+- **Cambios aplicados:**
+  - `src/agent/tasks.py` ELIMINADO — shadowed por `src/agent/tasks/` package (Python da precedencia al package; todos los tests ya usaban `src.agent.tasks.geometry_processing`)
+  - `src/agent/src/` ELIMINADO — directorio vacío, huérfano de refactoring anterior
+  - `src/frontend/src/stores/partsStore.ts` ELIMINADO — placeholder T-0504 sin ningún import; `parts.store.ts` es el store activo (T-0505/T-0506)
+  - `tests/models/` ELIMINADO — 2 archivos .3dm (4.6 MB + 9 MB) sin referencias en ningún test; fixture activo en `tests/fixtures/test-model.3dm`
+  - `setup_structure.sh` MOVIDO → `scripts/setup_structure.sh`
+  - `test.bat` MOVIDO → `scripts/test.bat`
+  - `scripts/prompt_146.txt` MOVIDO → `memory-bank/archive/prompt_146.txt`
+  - `.DS_Store` × 3 (raíz, `docs/`, `memory-bank/`) desregistrados de git con `git rm --cached`
+  - `.env` verificado como no-trackeado ✅
+- **Consecuencias:**
+  - ✅ **Ganamos:** ~14 MB en binarios liberados, 0 archivos huérfanos, raíz del repo limpia (solo archivos de configuración de proyecto), git tracking correcto para .DS_Store
+  - ⚠️ **Perdemos:** Nada — todos los archivos eliminados eran código muerto o no referenciados
+- **Documentación:** `docs/REPO-AUDIT-2026-02-27.md` generado con inventario completo
+
+---
+
+## 2026-02-27 - Auditoría Dual de Documentación (README.md + readme-official.md)
+- **Contexto:** README.md y readme-official.md estaban desactualizados respecto a la implementación real tras completar Entrega 2 (US-001, US-002, US-005, US-010). readme-official.md tenía contenido ficticio (secciones 5, 6, 7) y instrucciones de instalación nativas (npm install, pip install, poetry, alembic, brew).
+- **Decisión:** Auditoría completa contra el código real y reescritura. Restricción: 100% Docker-first (sin instrucciones nativas en documentación).
+- **Hallazgo crítico — Stack:** El agente NO usa LangGraph ni OpenAI. Usa `rhino3dm + trimesh + open3d` para validación rule-based y generación de low-poly GLB. Toda la documentación previa que mencionaba "LangGraph + GPT-4" era especificación planificada, no implementada.
+- **Hallazgo crítico — Seguridad:** Credenciales reales de Supabase encontradas en `AGENTS.md` sección `❌ INCORRECTO` (project ref, password, JWT completo). Sanitizadas a `[REDACTED]`. Credenciales también en git history — pendiente rotación.
+- **Cambios en README.md:** Tech stack (sin LangGraph/OpenAI, con rhino3dm+trimesh+open3d), paso 4 nativo eliminado, variables .env corregidas, estado actualizado (US-001/002/005/010 ✅, >400 tests), CI/CD activo, AI tool actualizado.
+- **Cambios en readme-official.md:** Sección 1.3 (estado real), 1.4 (Docker-first 4 pasos), 2.3 (estructura src/ monorepo real), 4 (5 endpoints reales), 5 (US-001/005/010 reales), 6 (tickets T-002/T-032/T-0503 reales), 7 (PRs #36/#38/#32 reales).
+- **Consecuencias:**
+  - ✅ **Ganamos:** Documentación coherente con código real, credenciales sanitizadas, evaluadores académicos pueden verificar el proyecto
+  - ⚠️ **Pendiente:** Rotar password Supabase y service role key (expuestos en git history)
+
+---

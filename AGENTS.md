@@ -112,10 +112,10 @@ Cuando crees documentación con ejemplos, usa SIEMPRE placeholders genéricos:
 
 #### ❌ INCORRECTO (Expone credenciales reales):
 ```yaml
-SUPABASE_URL=https://ebqapsoyjmdkhdxnkikz.supabase.co
-SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVicWFwc295am1ka2hkeG5raWt6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDMyOTAwMiwiZXhwIjoyMDg1OTA1MDAyfQ.JEKDxZGbHhq3fp_AUCXvCW6mj3XCXjpJbYWuLhNgGZQ
-SUPABASE_DB_PASSWORD=Farolina-14-Supabase
-SUPABASE_DATABASE_URL=postgresql://postgres.ebqapsoyjmdkhdxnkikz:Farolina-14-Supabase@aws-1-eu-central-1.pooler.supabase.com:6543/postgres
+SUPABASE_URL=https://xxxxxxxxxxxxxxxxxxx.supabase.co
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.[REDACTED — nunca incluir JWT real en documentación]
+SUPABASE_DB_PASSWORD=[REDACTED — nunca incluir contraseña real en documentación]
+SUPABASE_DATABASE_URL=postgresql://postgres.xxxxxxxxxxxxxxxxxxx:[REDACTED]@aws-1-region.pooler.supabase.com:6543/postgres
 ```
 
 #### ✅ CORRECTO (Usa placeholders):

@@ -120,3 +120,31 @@
 - Feasibility Phase: CLOSED (archived)
 - Documentation Phase: COMPLETE (Phases 1-8)
 - Current Phase: EXECUTION & DEVELOPMENT
+
+---
+
+## Sprint 6 — Tech Debt & Documentation (2026-02-27)
+
+### Auditoría Dual de Documentación
+- **README.md**: ✅ Actualizado — tech stack real (sin LangGraph/OpenAI), Docker-first, US completadas, CI/CD activo, AI tool correcto
+- **readme-official.md**: ✅ Reescrito — secciones 1.4 (instalación Docker), 2.3 (estructura src/ real), 4 (5 endpoints reales), 5/6/7 (US/tickets/PRs reales)
+- **AGENTS.md**: ✅ Sanitizado — credenciales reales eliminadas de ejemplo `❌ INCORRECTO`
+
+### Auditoría de Organización del Repositorio
+- `src/agent/tasks.py` — ELIMINADO (código muerto, shadowed por `tasks/` package)
+- `src/agent/src/` — ELIMINADO (directorio vacío)
+- `src/frontend/src/stores/partsStore.ts` — ELIMINADO (placeholder T-0504, sin imports)
+- `tests/models/` — ELIMINADO (2 archivos .3dm 13.6 MB, no referenciados en tests)
+- `setup_structure.sh` + `test.bat` — MOVIDOS a `scripts/`
+- `scripts/prompt_146.txt` — MOVIDO a `memory-bank/archive/`
+- `.DS_Store` × 3 — REMOVIDOS del git tracking (`git rm --cached`)
+- `docs/REPO-AUDIT-2026-02-27.md` — Generado (inventario completo + decisiones)
+
+### Actualizaciones Memory Bank
+- `techContext.md`: AI assistant → Claude Code (claude-sonnet-4-6), trimesh/open3d/numpy añadidos
+- `systemPatterns.md`: agent → Celery worker (no LangGraph), estructura `tasks/` actualizada
+- `decisions.md`: Template huérfano eliminado, 2 nuevos ADRs (repo audit + docs audit)
+- `progress.md`: Esta entrada ✅
+
+### Pendiente (acción usuario)
+- ⚠️ Rotar credenciales Supabase (password + service role key) — expuestas en git history de AGENTS.md

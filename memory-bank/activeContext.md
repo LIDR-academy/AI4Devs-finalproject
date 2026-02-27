@@ -1,16 +1,22 @@
 # Active Context
 
 ## Current Sprint
-Sprint 6 — Next User Story (TBD) or Tech Debt Sprint
+Sprint 6 — Tech Debt & Documentation (2026-02-27 COMPLETADO) | Próximo: Next User Story (TBD)
 
 ## Active Ticket
-**NONE** — US-010 ✅ COMPLETED & CLOSED (2026-02-26) | Waiting for next sprint assignment
+**NONE** — Sprint 6 Tech Debt completado (2026-02-27) | Waiting for next sprint assignment
+
+### Sprint 6 Completado (2026-02-27)
+- ✅ Auditoría Dual de Documentación (README.md + readme-official.md) — contenido real vs ficticio
+- ✅ Auditoría de Organización del Repositorio — 12 issues resueltos, 14 MB liberados
+- ✅ Sanitización de seguridad (AGENTS.md — credenciales reales eliminadas)
+- ✅ Memory Bank actualizado (techContext, systemPatterns, decisions, progress)
+- ⚠️ **Pendiente usuario:** Rotar credenciales Supabase (DB password + service role key)
 
 ### Next Sprint Planning Options
 1. **US-007: Cambio de Estado (Ciclo de Vida)** — State machine logic for part lifecycle transitions
 2. **US-013: Login/Auth** — Supabase Auth integration with protected routes
 3. **US-009: Evidencia de Fabricación** — Photo upload on completion
-4. **Tech Debt Sprint** — Fix T-1007 test regression (9 failing tests), refactor/optimize existing code
 
 ## Recently Completed
 - **US-010: Visor 3D Web** — ✅ COMPLETED & CLOSED (2026-02-26 13:00) | **User Story aprobada para cierre** | End-to-End Audit [Prompt #199] | **9/9 tickets completados** (T-1001-INFRA → T-1009-TEST-FRONT) | **Acceptance Criteria: 3/3 cumplidos** (Happy Path: orbit controls + auto-centering ✓, Edge Case: BBoxProxy fallback + spinner ✓, Error Handling: ViewerErrorBoundary con mensajes user-friendly ✓) | **Tests: 22/22 PASSING (100%)** — viewer-integration 8/8 ✓, viewer-edge-cases 5/5 ✓, viewer-error-handling 5/5 ✓, viewer-performance 4/4 ✓ (PERF + A11Y WCAG 2.1) | **DoD: 8/8 cumplido** (código production-ready, JSDoc completo, TypeScript strict, Clean Architecture con 4 custom hooks, zero debug artifacts, documentación completa 16 archivos) | **Componentes Core:** PartDetailModal (227 lines refactored), ModelLoader (264 lines), PartViewerCanvas (201 lines con 3-point lighting), ViewerErrorBoundary (181 lines con 5 error patterns), PartMetadataPanel (250 lines) | **Stack:** React 18 + Three.js/R3F + Vitest + MSW | **Valoración: 100/100 Production-Ready** | Aprobado para merge a `main` | **Regresión T-1007 RESUELTA** [Prompt #200]: 9 tests corregidos en 28 min (ARIA label mismatch, mock error, assertion updates) → **31/31 tests T-1007 PASSING (100%)** ✅, **22/22 tests T-1009 PASSING (100%)** ✅, **390/396 suite completo (98.5%)** ✅, zero regresiones. **Branch ready for merge** 🚀

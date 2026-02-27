@@ -44,12 +44,13 @@ Sistema enterprise que transforma archivos CAD estáticos (Rhino .3dm) en un **g
 ## 🛠️ Stack Tecnológico
 
 ```yaml
-Frontend:  React 18 + TypeScript + Three.js + Zustand + Vite
-Backend:   FastAPI + Celery Workers + Redis Queue
-AI/ML:     LangGraph + OpenAI GPT-4 Turbo
-Database:  Supabase (PostgreSQL 15 + Auth + Realtime)
-Storage:   S3-compatible buckets
-CAD:       rhino3dm + glTF/GLB conversion
+Frontend:  React 18 + TypeScript + Three.js / React-Three-Fiber + Zustand + Vite
+Backend:   FastAPI (Python 3.11) + Celery Workers + Redis
+Agent:     rhino3dm 8 + trimesh + open3d (validación y conversión 3D low-poly)
+Database:  PostgreSQL 15 (Docker) + Supabase Cloud (Auth + Realtime)
+Storage:   Supabase Storage (S3-compatible) + CloudFront CDN
+CAD:       rhino3dm + glTF/GLB + pipeline de decimación low-poly
+Infra:     Docker Compose (5 servicios) + GitHub Actions CI/CD
 ```
 
 ---
@@ -70,7 +71,7 @@ CAD:       rhino3dm + glTF/GLB conversion
 git clone https://github.com/sagrada-familia/parts-manager.git
 cd parts-manager
 cp .env.example .env
-# Edita .env con los valores reales (SUPABASE_URL, SUPABASE_KEY, SUPABASE_DATABASE_URL, OPENAI_API_KEY, etc.)
+# Edita .env con los valores reales (SUPABASE_URL, SUPABASE_KEY, DATABASE_PASSWORD, REDIS_PASSWORD, etc.)
 ```
 
 2. Levantar servicios en contenedores (dev):
@@ -85,13 +86,16 @@ make up
 make init-db
 ```
 
-4. Ejecutar solo backend (para desarrollo local sin Docker):
+4. Levantar todos los servicios (backend + frontend + agent-worker):
 
 ```bash
-cd src/backend
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
+make up-all
+# Frontend:   http://localhost:5173
+# Backend API: http://localhost:8000
+# API Docs:    http://localhost:8000/docs
 ```
+
+> **Nota**: Python, Node.js, Redis y PostgreSQL **no son necesarios en el host**. Todo el entorno corre dentro de Docker.
 
 ### Testing
 
@@ -145,7 +149,7 @@ make test-front
 
 ## 🤖 Desarrollo Asistido por IA
 
-Este proyecto utiliza **GitHub Copilot** (Claude Sonnet 4.5) como asistente de desarrollo. 
+Este proyecto utiliza **Claude Code** (claude-sonnet-4-6) como asistente de desarrollo.
 
 ### Guías de Trabajo
 - **[AGENTS.MD](./AGENTS.md)**: Reglas globales del AI Assistant (logging, workflow, definition of done)
@@ -156,8 +160,8 @@ Este proyecto utiliza **GitHub Copilot** (Claude Sonnet 4.5) como asistente de d
 - **[CI/CD Guide](./.github/CI-CD-GUIDE.md)**: Documentación completa del pipeline GitHub Actions
 - **[Secrets Setup](./.github/SECRETS-SETUP.md)**: ⚠️ **ACCIÓN REQUERIDA** - Configurar secrets antes de merge
 
-**Estado del CI/CD**: ⏸️ **Pending secrets configuration**  
-Para activar el pipeline, sigue las instrucciones en [SECRETS-SETUP.md](./.github/SECRETS-SETUP.md)
+**Estado del CI/CD**: ✅ **Activo** — 5 jobs: lint, test-backend, test-frontend, security-scan (Trivy + pip-audit + npm audit), build Docker
+Ver configuración en [SECRETS-SETUP.md](./.github/SECRETS-SETUP.md)
 
 ### Memory Bank
 Sistema de estado compartido para trabajo multi-agente:
@@ -170,8 +174,18 @@ Sistema de estado compartido para trabajo multi-agente:
 
 ## 📊 Estado del Proyecto
 
-✅ **Completado**: Documentación técnica completa (Fases 1-7)  
-🚧 **En Desarrollo**: Implementación del MVP (Fase 8)
+✅ **Completado (Entrega 2)**:
+- **US-001**: Upload de archivos .3dm con presigned URLs y validación
+- **US-002**: Validación automática con agente "The Librarian" (Celery + rhino3dm)
+- **US-005**: Dashboard 3D interactivo de piezas (Three.js + LOD + filtros + Zustand)
+- **US-010**: Visor 3D Web (PartDetailModal, ModelLoader, ErrorBoundary, CDN)
+- **Tests**: ~400+ PASS (backend + frontend + agent, cobertura >80%)
+- **DevSecOps**: multi-stage Docker, healthchecks, resource limits, CI/CD (GitHub Actions)
+
+🔮 **Pendiente (Entrega 3)**:
+- US-007: Cambio de estado con ciclo de vida completo
+- US-013: Login y autenticación (Supabase Auth)
+- US-009: Evidencia de fabricación (foto en completado)
 
 ---
 

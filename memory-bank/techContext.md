@@ -1,8 +1,8 @@
 # Tech Context
 
 ## Development Environment
-- **IDE**: VS Code / Google Antigravity
-- **AI Assistant**: GitHub Copilot (Claude Sonnet 4.5)
+- **IDE**: VS Code
+- **AI Assistant**: Claude Code (claude-sonnet-4-6)
 - **Documentation Format**: Markdown
 - **Version Control**: Git
 
@@ -50,6 +50,10 @@
 
 ### File Processing
 - **rhino3dm** 8.4.0 - Rhino .3dm file parsing and geometry validation (T-024/T-025/T-026/T-027)
+- **trimesh** 4.0.5 - Mesh decimation (`simplify_quadric_decimation`) for low-poly GLB generation (T-0502-AGENT)
+- **open3d** 0.18.0 - Backend engine for trimesh decimation algorithm (required dependency)
+- **numpy** <2.0 - Pinned to 1.x for trimesh 4.0.5 compatibility (`ptp()` removed in numpy 2.0)
+- **rtree** 1.1.0 - Spatial index for trimesh (required dependency)
 
 ### Future Dependencies (Not Yet Implemented)
 - **flower** 2.0.1 - Celery monitoring UI (T-033-INFRA, optional)
