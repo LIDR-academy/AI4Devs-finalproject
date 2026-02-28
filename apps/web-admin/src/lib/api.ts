@@ -62,3 +62,6 @@ export const getConversationMessages = (
 
 export const getStores = (): Promise<StoresResponse> =>
   apiFetch<StoresResponse>('/api/admin/stores');
+
+export const getUsersForSimulate = (): Promise<UsersResponse> =>
+  apiFetch<UsersResponse>('/api/admin/users?limit=100&sortBy=name&sortDir=asc');
