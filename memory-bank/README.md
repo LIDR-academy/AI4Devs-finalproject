@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-27  
-> ✅ **Change completado**: cu03-a1-stores-endpoint (15/15 tareas) — pendiente de `/opsx-archive`
+> **Última actualización**: 2026-02-28  
+> ✅ **Change archivado**: cu03-a3-mock-dto-extension → `openspec/changes/archive/2026-02-28-cu03-a3-mock-dto-extension/`
 
 ## 📖 Inicio Rápido
 
@@ -23,16 +23,20 @@ Decisiones clave que guían el desarrollo del proyecto:
 | [003](./architecture/003-nestjs-backend.md) | NestJS como Framework Backend | ✅ Aceptada | 2026-01-30 |
 | [004](./architecture/004-openai-gpt4.md) | OpenAI GPT-4 para Conversaciones | ✅ Aceptada | 2026-01-30 |
 | [005](./architecture/005-bullmq-worker-conversations.md) | BullMQ + Worker Dedicado para Conversaciones IA | ✅ Aceptada | 2026-02-21 |
+| [006](./architecture/006-sse-redis-pubsub.md) | SSE + Redis Pub/Sub para Notificaciones Real-Time | ✅ Aceptada | 2026-02-27 |
+| [007](./architecture/007-shared-types-package.md) | `packages/shared-types` — Fuente Única de Tipos Compartidos | ✅ Aceptada | 2026-02-28 |
 
 ## 🎨 Patrones y Convenciones
 
-_Pendiente de documentar durante la fase de implementación_
+| Archivo | Descripción | Última actualización |
+|---------|-------------|---------------------|
+| [validation-patterns.md](./patterns/validation-patterns.md) | DTOs con `class-validator`, Query/Body/Nested, `ValidationPipe`, tests de controller con `supertest` | 2026-02-28 |
+| [real-time-sse-patterns.md](./patterns/real-time-sse-patterns.md) | SSE con NestJS, Redis Pub/Sub con `ioredis`, `psubscribe`, RxJS `Subject` | 2026-02-27 |
 
-Aquí se documentarán:
+Pendiente de documentar:
 - Límites de agregados DDD
 - Estrategia de manejo de errores
 - Convenciones de API REST
-- Estrategia de testing
 
 ## 📚 Referencias Externas
 
@@ -69,8 +73,10 @@ Aquí se documentarán:
 | [2026-02-25](./sessions/2026-02-25-t02-orders-filters.md) | T02 — Filtros y Búsqueda en Tabla de Pedidos — Completado | ✅ Completado (34/34 tareas) |
 | [2026-02-26](./sessions/2026-02-26-t03-users-sorting-filters.md) | T03 — Ordenación y Filtros en Tabla de Usuarios — Completado | ✅ Completado (27/27 tareas) |
 | [2026-02-27](./sessions/2026-02-27-cu03-a1-stores-endpoint.md) | CU03-A1 — Endpoint GET /api/admin/stores — Completado | ✅ Completado (15/15 tareas) |
+| [2026-02-27](./sessions/2026-02-27-cu03-a2-sse-infrastructure.md) | CU03-A2 — Infraestructura SSE Real-Time — Completado | ✅ Completado (35/35 tareas) |
+| [2026-02-28](./sessions/2026-02-28-cu03-a3-mock-dto-extension.md) | CU03-A3 — Extensión DTO Mock con Campos eCommerce — Completado | ✅ Completado (29/29 tareas) |
 
-**Próximo change**: `/opsx-archive cu03-a1-stores-endpoint` → luego continuar con el backlog (ver `ticket_generation.md`).
+**Próximo change**: continuar con el backlog (ver `ticket_generation.md`).
 
 ## 🔄 Flujo de Trabajo
 
@@ -105,10 +111,13 @@ memory-bank/
 │   ├── 002-supabase-dynamodb.md
 │   ├── 003-nestjs-backend.md
 │   ├── 004-openai-gpt4.md
-│   └── 005-bullmq-worker-conversations.md
+│   ├── 005-bullmq-worker-conversations.md
+│   ├── 006-sse-redis-pubsub.md
+│   └── 007-shared-types-package.md
 │
 ├── patterns/                   # Patrones y convenciones
-│   └── (pendiente durante implementación)
+│   ├── validation-patterns.md  # DTOs, class-validator, supertest
+│   └── real-time-sse-patterns.md # SSE, Redis Pub/Sub, RxJS
 │
 ├── sessions/                   # Aprendizajes de sesiones pasadas
 │   └── (se documenta conforme avanza el proyecto)
@@ -142,7 +151,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-27  
+**Última revisión**: 2026-02-28  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: CU03-A1 completado — endpoint `GET /api/admin/stores` en AdminModule. `SimulateStore` con `platform: StorePlatform` (enum de Prisma). Fallback `commercialName ?? legalName`. 5 tests nuevos, 104/104 pasando. Frontend: `StorePlatform`, `SimulateStore`, `StoresResponse`, `getStores()`.  
+**Cambios recientes**: CU03-A3 completado — extensión DTO mock con `buyer_registered_ecommerce`, `buyer_ecommerce_address`, `gift_recipient`. Nuevo paquete `packages/shared-types` (`@adresles/shared-types`) con `MockOrderContext`, `ProcessConversationJobData`, `ProcessResponseJobData`. `turbo.json` actualizado con `dev.dependsOn: ["^build"]`. 7 tests nuevos (3 service + 4 controller), 121/121 pasando.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

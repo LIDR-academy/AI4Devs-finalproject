@@ -1,20 +1,12 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
+import {
+  ProcessConversationJobData,
+  ProcessResponseJobData,
+} from '@adresles/shared-types';
 
-export interface ProcessConversationJobData {
-  conversationId: string;
-  orderId: string;
-  userId: string;
-  conversationType: string;
-}
-
-export interface ProcessResponseJobData {
-  conversationId: string;
-  orderId: string;
-  userId: string;
-  userMessage: string;
-}
+export { ProcessConversationJobData, ProcessResponseJobData } from '@adresles/shared-types';
 
 @Injectable()
 export class QueueService implements OnModuleDestroy {

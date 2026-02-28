@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueService } from '../queue/queue.service';
 import { ConversationType, UserType } from '@prisma/client';
+import { MockOrderContext } from '@adresles/shared-types';
 
 @Injectable()
 export class ConversationsService {
@@ -17,6 +18,7 @@ export class ConversationsService {
     userType: UserType;
     isRegisteredAdresles?: boolean;
     hasAddressAdresles?: boolean;
+    context?: MockOrderContext;
   }) {
     const conversation = await this.prisma.conversation.create({
       data: {
@@ -34,6 +36,7 @@ export class ConversationsService {
       orderId: params.orderId,
       userId: params.userId,
       conversationType: params.conversationType,
+      context: params.context,
     });
 
     return conversation;

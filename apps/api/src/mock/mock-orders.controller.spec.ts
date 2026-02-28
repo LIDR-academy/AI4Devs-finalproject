@@ -203,5 +203,90 @@ describe('MockOrdersController (integration)', () => {
 
       expect(mockMockOrdersService.processMockOrder).toHaveBeenCalledTimes(1);
     });
+
+    describe('campos opcionales de contexto eCommerce — validación', () => {
+      it('returns 201 when gift_recipient has all required fields', async () => {
+        mockMockOrdersService.processMockOrder.mockResolvedValue({
+          order_id: 'order-uuid-gift',
+          conversation_id: 'conv-uuid-gift',
+        });
+
+        const payload = {
+          ...adreslesPayload,
+          gift_recipient: {
+            first_name: 'Lucía',
+            last_name: 'García',
+            phone: '+34612345099',
+          },
+        };
+
+        await request(app.getHttpServer())
+          .post('/mock/orders')
+          .send(payload)
+          .expect(201);
+
+        expect(mockMockOrdersService.processMockOrder).toHaveBeenCalledTimes(1);
+      });
+
+      it('returns 400 when gift_recipient is missing required field phone', async () => {
+        const payload = {
+          ...adreslesPayload,
+          gift_recipient: { first_name: 'Lucía', last_name: 'García' },
+        };
+
+        await request(app.getHttpServer())
+          .post('/mock/orders')
+          .send(payload)
+          .expect(400);
+
+        expect(mockMockOrdersService.processMockOrder).not.toHaveBeenCalled();
+      });
+
+      it('returns 201 when buyer_ecommerce_address has all required fields', async () => {
+        mockMockOrdersService.processMockOrder.mockResolvedValue({
+          order_id: 'order-uuid-addr',
+          conversation_id: 'conv-uuid-addr',
+        });
+
+        const payload = {
+          ...adreslesPayload,
+          buyer_registered_ecommerce: true,
+          buyer_ecommerce_address: {
+            full_address: 'Calle Fuencarral 45, 3º, 28004 Madrid',
+            street: 'Calle Fuencarral',
+            number: '45',
+            postal_code: '28004',
+            city: 'Madrid',
+            country: 'ES',
+          },
+        };
+
+        await request(app.getHttpServer())
+          .post('/mock/orders')
+          .send(payload)
+          .expect(201);
+
+        expect(mockMockOrdersService.processMockOrder).toHaveBeenCalledTimes(1);
+      });
+
+      it('returns 400 when buyer_ecommerce_address is missing required field country', async () => {
+        const payload = {
+          ...adreslesPayload,
+          buyer_ecommerce_address: {
+            full_address: 'Calle Fuencarral 45, 28004 Madrid',
+            street: 'Calle Fuencarral',
+            postal_code: '28004',
+            city: 'Madrid',
+          },
+        };
+
+        await request(app.getHttpServer())
+          .post('/mock/orders')
+          .send(payload)
+          .expect(400);
+
+        expect(mockMockOrdersService.processMockOrder).not.toHaveBeenCalled();
+      });
+    });
   });
 });

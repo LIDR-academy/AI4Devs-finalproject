@@ -2,6 +2,11 @@
 import { Job } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
+import {
+  ProcessConversationJobData,
+  ProcessResponseJobData,
+  MockOrderContext,
+} from '@adresles/shared-types';
 import { saveMessage, getMessages, saveConversationState, getConversationState } from '../dynamodb/dynamodb.service';
 import { publishConversationUpdate, publishConversationComplete } from '../redis-publisher';
 import {
@@ -26,20 +31,7 @@ import {
 const prisma = new PrismaClient();
 
 // ─── Job data types ───────────────────────────────────────────────────────────
-
-export interface ProcessConversationJobData {
-  conversationId: string;
-  orderId: string;
-  userId: string;
-  conversationType: string;
-}
-
-export interface ProcessResponseJobData {
-  conversationId: string;
-  orderId: string;
-  userId: string;
-  userMessage: string;
-}
+// Imported from @adresles/shared-types — single source of truth shared with API
 
 // ─── Language helpers ─────────────────────────────────────────────────────────
 
@@ -110,14 +102,14 @@ async function generateWithOpenAI(systemPrompt: string, userPrompt: string): Pro
 // ─── process-conversation ─────────────────────────────────────────────────────
 
 export async function conversationProcessor(job: Job<ProcessConversationJobData>) {
-  const { conversationId, orderId, userId, conversationType } = job.data;
+  const { conversationId, orderId, userId, conversationType, context } = job.data;
 
   const user = await prisma.user.findUnique({ where: { id: userId }, include: { phone: true } });
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { store: true } });
 
   if (!user || !order) throw new Error(`User ${userId} or Order ${orderId} not found`);
 
-  if (conversationType === 'GET_ADDRESS') return processGetAddressJourney(conversationId, user, order);
+  if (conversationType === 'GET_ADDRESS') return processGetAddressJourney(conversationId, user, order, context);
   if (conversationType === 'INFORMATION') return processInformationJourney(conversationId, user, order);
 
   throw new Error(`Unknown conversation type: ${conversationType}`);
@@ -127,6 +119,7 @@ async function processGetAddressJourney(
   conversationId: string,
   user: { firstName: string | null; lastName: string | null; preferredLanguage: string | null },
   order: { externalOrderNumber: string | null; store: { name: string } },
+  _context?: MockOrderContext,
 ) {
   const name = user.firstName ?? 'Cliente';
   const language = getLanguageName(user.preferredLanguage);

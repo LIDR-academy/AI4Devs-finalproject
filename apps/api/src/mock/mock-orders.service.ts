@@ -52,6 +52,11 @@ export class MockOrdersService {
       userId,
       conversationType: 'GET_ADDRESS',
       userType: UserType.BUYER,
+      context: {
+        buyerRegisteredEcommerce: dto.buyer_registered_ecommerce ?? false,
+        buyerEcommerceAddress: dto.buyer_ecommerce_address ?? null,
+        giftRecipient: dto.gift_recipient ?? null,
+      },
     });
 
     return { order_id: order.id, conversation_id: conversation.id };

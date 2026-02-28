@@ -8,6 +8,7 @@ import {
   ValidateNested,
   IsUrl,
   IsEmail,
+  IsBoolean,
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -93,6 +94,17 @@ export class MockOrderItemDto {
   price!: number;
 }
 
+export class MockGiftRecipientDto {
+  @IsString()
+  first_name!: string;
+
+  @IsString()
+  last_name!: string;
+
+  @IsString()
+  phone!: string;
+}
+
 export type MockOrderMode = 'adresles' | 'tradicional';
 
 export class CreateMockOrderDto {
@@ -134,4 +146,20 @@ export class CreateMockOrderDto {
 
   @IsString()
   currency!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  buyer_registered_ecommerce?: boolean;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MockAddressDto)
+  @IsObject()
+  buyer_ecommerce_address?: MockAddressDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MockGiftRecipientDto)
+  @IsObject()
+  gift_recipient?: MockGiftRecipientDto;
 }

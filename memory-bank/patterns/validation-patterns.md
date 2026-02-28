@@ -162,6 +162,88 @@ export class AdminService {
 
 > **Nulls al final**: Para campos opcionales (ej. `externalOrderNumber`), usar `{ sort: dir, nulls: 'last' }` en lugar de `dir` directamente.
 
+### 7. DTO Anidado — `@ValidateNested` + `@Type` + `@IsObject`
+
+Cuando un campo del body es un objeto con su propio conjunto de validaciones, se necesita una clase DTO separada y tres decoradores en la propiedad padre:
+
+```typescript
+import { IsOptional, ValidateNested, IsObject } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class MockGiftRecipientDto {
+  @IsString()
+  first_name!: string;
+
+  @IsString()
+  last_name!: string;
+
+  @IsString()
+  phone!: string;
+}
+
+export class CreateMockOrderDto {
+  // ...
+
+  @IsOptional()
+  @ValidateNested()           // Activa la validación recursiva del objeto
+  @Type(() => MockGiftRecipientDto) // class-transformer: instancia la clase correcta
+  @IsObject()                 // Garantiza que el valor es un objeto (no un string/array)
+  gift_recipient?: MockGiftRecipientDto;
+}
+```
+
+> **Orden de decoradores**: `@ValidateNested()` debe ir antes de `@Type()`. Si falta `@Type()`, class-transformer no instancia la clase y `@ValidateNested` no ejecuta las validaciones internas. Si falta `@IsObject()`, un valor no-objeto como `"texto"` pasaría la primera comprobación.
+
+> **Campos requeridos en el DTO anidado**: En `MockGiftRecipientDto`, `phone` es requerida (sin `@IsOptional()`). Si llega un objeto sin `phone`, el `ValidationPipe` devuelve **HTTP 400** con el mensaje `phone must be a string`. Esto se verifica con un test de controller con `supertest`.
+
+### 8. Tests de Validación del Controller con `supertest` + `ValidationPipe`
+
+El único lugar donde se puede verificar que el `ValidationPipe` real rechaza payloads inválidos es en un test de controller que levante la aplicación NestJS completa:
+
+```typescript
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import * as request from 'supertest';
+
+describe('POST /mock/orders — validación de campos opcionales', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [MockOrdersController],
+      providers: [{ provide: MockOrdersService, useValue: mockService }],
+    }).compile();
+
+    app = module.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }));
+    await app.init();
+  });
+
+  it('returns 400 when gift_recipient is missing required field phone', async () => {
+    await request(app.getHttpServer())
+      .post('/mock/orders')
+      .send({ ...validPayload, gift_recipient: { first_name: 'Ana', last_name: 'Ruiz' } })
+      .expect(400);
+
+    expect(mockService.processMockOrder).not.toHaveBeenCalled();
+  });
+
+  it('returns 201 when gift_recipient has all required fields', async () => {
+    mockService.processMockOrder.mockResolvedValue({ order_id: '...', conversation_id: '...' });
+    await request(app.getHttpServer())
+      .post('/mock/orders')
+      .send({ ...validPayload, gift_recipient: { first_name: 'Ana', last_name: 'Ruiz', phone: '+34600...' } })
+      .expect(201);
+  });
+});
+```
+
+> **Qué cubre este patrón que los tests de servicio no cubren**: Los tests de `*.service.spec.ts` mockean el servicio y no ejecutan el `ValidationPipe` — solo verifican lógica de negocio. Los tests de `*.controller.spec.ts` con `app.useGlobalPipes(new ValidationPipe(...))` son los únicos que garantizan que los decoradores de `class-validator` en el DTO funcionan correctamente ante payloads HTTP reales.
+
 ---
 
 ## Configuración de Referencia
@@ -196,3 +278,5 @@ Con `forbidNonWhitelisted: true`, se lanza `HTTP 400 Bad Request` — mucho más
 | 2026-02-24 | Patrón identificado — `AdminController.PaginationQuery` sin decoradores causaba HTTP 400 en `/api/admin/orders` y `/api/admin/users` |
 | 2026-02-24 | Añadido patrón 5: DTO con herencia y `@IsIn` para validación de enums (ticket `t01-orders-sorting`) |
 | 2026-02-24 | Añadido patrón 6: `buildOrderBy()` privado para ordenación dinámica con Prisma |
+| 2026-02-28 | Añadido patrón 7: DTO anidado con `@ValidateNested` + `@Type` + `@IsObject` (change `cu03-a3-mock-dto-extension`) |
+| 2026-02-28 | Añadido patrón 8: tests de validación de controller con `supertest` + `ValidationPipe` real |

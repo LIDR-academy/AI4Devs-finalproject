@@ -186,6 +186,71 @@ describe('MockOrdersService', () => {
     });
   });
 
+  describe('processMockOrder — campos de contexto eCommerce', () => {
+    it('pasa context con buyerRegisteredEcommerce y buyerEcommerceAddress a createAndEnqueue', async () => {
+      const ecommerceAddress = {
+        full_address: 'Calle Fuencarral 45, 3º, 28004 Madrid',
+        street: 'Calle Fuencarral',
+        number: '45',
+        postal_code: '28004',
+        city: 'Madrid',
+        country: 'ES',
+      };
+      const dto: CreateMockOrderDto = {
+        ...baseAdreslesDto,
+        buyer_registered_ecommerce: true,
+        buyer_ecommerce_address: ecommerceAddress,
+      };
+
+      await service.processMockOrder(dto);
+
+      expect(mockConversations.createAndEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: expect.objectContaining({
+            buyerRegisteredEcommerce: true,
+            buyerEcommerceAddress: ecommerceAddress,
+          }),
+        }),
+      );
+    });
+
+    it('pasa context con valores por defecto cuando no se envían campos opcionales', async () => {
+      await service.processMockOrder(baseAdreslesDto);
+
+      expect(mockConversations.createAndEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: {
+            buyerRegisteredEcommerce: false,
+            buyerEcommerceAddress: null,
+            giftRecipient: null,
+          },
+        }),
+      );
+    });
+
+    it('pasa context con giftRecipient cuando se incluye destinatario de regalo', async () => {
+      const giftRecipient = {
+        first_name: 'Lucía',
+        last_name: 'García',
+        phone: '+34612345099',
+      };
+      const dto: CreateMockOrderDto = {
+        ...baseAdreslesDto,
+        gift_recipient: giftRecipient,
+      };
+
+      await service.processMockOrder(dto);
+
+      expect(mockConversations.createAndEnqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: expect.objectContaining({
+            giftRecipient,
+          }),
+        }),
+      );
+    });
+  });
+
   describe('processMockOrder — modo tradicional sin dirección', () => {
     it('throws BadRequestException when mode is tradicional and address is missing', async () => {
       const { address: _addr, ...dtoWithoutAddress } = baseTraditionalDto;
