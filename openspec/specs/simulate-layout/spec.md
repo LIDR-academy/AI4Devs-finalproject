@@ -1,7 +1,7 @@
 # Spec: Simulate Layout — Dashboard Admin
 
 > **Origen**: [`cu03-a4-simulate-layout`](../../changes/archive/2026-02-28-cu03-a4-simulate-layout/)  
-> **Última actualización**: 2026-02-28
+> **Última actualización**: 2026-03-01
 
 ---
 
@@ -53,24 +53,27 @@ La página `/simulate` SHALL precargar en el servidor (Server Component) la list
 
 La página `/simulate` SHALL mostrar un layout vertical con tres zonas usando `flex flex-col h-full`:
 - **Zona A** (barra de resumen): `shrink-0`, siempre visible
-- **Zona B** (área de chat): `flex-1 overflow-y-auto`, ocupa el espacio restante
-- **Zona C** (input): `border-t`, visible solo cuando hay conversación activa
+- **Zona B** (área de chat): ocupa el espacio restante; cuando no hay conversación activa, es `flex-1 overflow-y-auto` implícitamente en `SimulationEmptyState`; cuando hay conversación activa, el wrapper es `flex-1 flex flex-col overflow-hidden` para que `SimulationChat` gestione su propio scroll interno
+- **Zona C** (input): gestionada internamente por `SimulationChat` — ya no es un div separado en `SimulationPage`
 
 #### Scenario: Layout ocupa la altura completa de la pantalla
 
 - **WHEN** el administrador abre `/simulate` en pantalla completa
 - **THEN** el layout SHALL ocupar toda la altura disponible sin desbordamiento de scroll en el contenedor raíz
-- **AND** la Zona B SHALL ser la única zona con scroll vertical interno
+- **AND** solo la zona de mensajes dentro de `SimulationChat` SHALL tener scroll vertical interno
 
-#### Scenario: Zona C oculta cuando no hay conversación activa
+#### Scenario: Estado vacío — sin conversación activa
 
-- **WHEN** no hay `activeConversation` en el estado de `SimulationPage`
-- **THEN** la Zona C (input de respuesta) SHALL estar completamente oculta
+- **WHEN** `activeConversation` es `null`
+- **THEN** `SimulationPage` SHALL renderizar `SimulationEmptyState` directamente (sin wrapper adicional de zona B/C)
+- **AND** la Zona C (input) SHALL estar completamente ausente del DOM
 
-#### Scenario: Zona C visible cuando hay conversación activa
+#### Scenario: Chat activo — con conversación activa
 
-- **WHEN** `activeConversation` tiene un valor en el estado de `SimulationPage`
-- **THEN** la Zona C SHALL renderizarse en el pie de la página
+- **WHEN** `activeConversation` tiene un valor válido
+- **THEN** `SimulationPage` SHALL renderizar un wrapper `div.flex-1.flex.flex-col.overflow-hidden` conteniendo `SimulationChat`
+- **AND** `SimulationChat` SHALL gestionar internamente la zona de mensajes scrollable (Zona B) y el input fijo (Zona C)
+- **AND** NO SHALL existir ningún div placeholder de Zona C separado en `SimulationPage`
 
 ---
 
@@ -105,10 +108,10 @@ Cuando no hay conversación activa, la Zona B SHALL mostrar un estado vacío cen
 
 - **WHEN** `onConversationStarted` se llama con datos de conversación válidos
 - **THEN** `SimulationEmptyState` SHALL dejar de renderizarse
-- **AND** el placeholder de `SimulationChat` (CU03-A6) SHALL ocupar la Zona B
+- **AND** `SimulationChat` SHALL ocupar la Zona B
 
 #### Scenario: Botón "Nueva Simulación" en estado vacío abre el modal
 
 - **WHEN** el administrador hace clic en "+ Nueva Simulación" desde el estado vacío
 - **THEN** `modalOpen` SHALL cambiar a `true`
-- **AND** `OrderConfigModal` SHALL renderizarse (CU03-A5)
+- **AND** `OrderConfigModal` SHALL renderizarse

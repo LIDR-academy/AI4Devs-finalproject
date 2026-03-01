@@ -1,6 +1,7 @@
 import type {
   OrdersResponse,
   UsersResponse,
+  ConversationMessage,
   ConversationMessagesResponse,
   SortByColumn,
   SortDir,
@@ -74,5 +75,27 @@ export async function startSimulation(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+  });
+}
+
+export function createConversationEventSource(conversationId: string): EventSource {
+  return new EventSource(
+    `${API_URL}/api/mock/conversations/${conversationId}/events`,
+  );
+}
+
+export async function getConversationHistory(
+  conversationId: string,
+): Promise<ConversationMessage[]> {
+  return apiFetch<ConversationMessage[]>(
+    `/api/mock/conversations/${conversationId}/history`,
+  );
+}
+
+export async function sendReply(conversationId: string, message: string): Promise<void> {
+  await apiFetch(`/api/mock/conversations/${conversationId}/reply`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message }),
   });
 }

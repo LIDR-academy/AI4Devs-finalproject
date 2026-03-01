@@ -3,6 +3,7 @@
 **App**: `apps/web-admin` (Next.js 16 — componentes cliente)  
 **Estado**: Pendiente de implementación  
 **Fecha**: 2026-02-27  
+**Revisado**: 2026-03-01 (enriquecimiento técnico — correcciones de bugs, tipos, layout, race condition)  
 **Prerrequisitos**: CU03-A2 completado (SSE endpoint disponible), CU03-A5 completado (`SimulationPage` ya recibe `conversationId`)
 
 ---
@@ -51,7 +52,13 @@ Cuando la conversación finaliza, el input se reemplaza por un mensaje de estado
 
 ### Carga inicial del historial
 
-Al abrir el chat (conversationId disponible), se hace una petición `GET /api/mock/conversations/:id/history` para cargar los mensajes existentes antes de abrir el SSE. Luego se abre el EventSource y los nuevos mensajes se añaden al estado local.
+Al abrir el chat (conversationId disponible), se sigue esta secuencia **en orden estricto** para evitar race conditions:
+
+1. **Primero** se abre el `EventSource` (SSE). Esto garantiza que si el Worker publica un mensaje durante el tiempo que tarda la petición HTTP al historial, no se pierde (el evento ya está escuchado).
+2. **Luego** se hace una petición `GET /api/mock/conversations/:id/history` para cargar los mensajes previos.
+3. Los mensajes del historial se colocan en el estado local. Los nuevos mensajes SSE que lleguen a partir de ese momento se añaden al estado de forma incremental.
+
+> **Nota de respuesta del endpoint**: `GET /api/mock/conversations/:id/history` retorna un **array directo** `DynamoMessage[]`, **no** un objeto `{ messages: [...] }`. La función `getConversationHistory` en `api.ts` debe tiparlo correctamente como `Promise<ConversationMessage[]>` y usarse directamente sin acceso a `.messages`.
 
 ---
 
@@ -80,25 +87,47 @@ export function TypingIndicator() {
 
 ### `apps/web-admin/src/components/simulate/simulation-chat.tsx` (nuevo)
 
-Client Component que gestiona el historial de mensajes, la suscripción SSE y el envío de respuestas:
+Client Component que gestiona el historial de mensajes, la suscripción SSE y el envío de respuestas.
+
+> **Correcciones respecto al borrador inicial**:
+> - `setIsSending(true)` (no `false`) al enviar un mensaje.
+> - El SSE se abre **antes** de cargar el historial para evitar race condition.
+> - `getConversationHistory` retorna `ConversationMessage[]` directamente (array, no `{ messages }`).
+> - `Button` importado desde `@/components/ui/button`.
+> - `FinalStatusMessage` definido como subcomponente inline.
+> - `orderId` eliminado de `SimulationChatProps` (no se usa en este componente).
 
 ```typescript
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import { ChatBubble } from '@/components/chat/chat-bubble';
 import { TypingIndicator } from './typing-indicator';
-import { ConversationMessage } from '@/types/api';
+import type { ConversationMessage } from '@/types/api';
 import { sendReply, getConversationHistory } from '@/lib/api';
 
 type ConversationFinalStatus = 'COMPLETED' | 'ESCALATED' | 'TIMEOUT' | null;
 
-interface SimulationChatProps {
-  conversationId: string;
-  orderId: string;
+const FINAL_STATUS_LABELS: Record<NonNullable<ConversationFinalStatus>, string> = {
+  COMPLETED: 'Conversación completada ✓',
+  ESCALATED: 'Conversación escalada a soporte',
+  TIMEOUT: 'Conversación terminada por tiempo de espera',
+};
+
+function FinalStatusMessage({ status }: { status: NonNullable<ConversationFinalStatus> }) {
+  return (
+    <p className="text-center text-sm text-muted-foreground py-2">
+      {FINAL_STATUS_LABELS[status]}
+    </p>
+  );
 }
 
-export function SimulationChat({ conversationId, orderId }: SimulationChatProps) {
+interface SimulationChatProps {
+  conversationId: string;
+}
+
+export function SimulationChat({ conversationId }: SimulationChatProps) {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [finalStatus, setFinalStatus] = useState<ConversationFinalStatus>(null);
@@ -106,29 +135,21 @@ export function SimulationChat({ conversationId, orderId }: SimulationChatProps)
   const [isSending, setIsSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Cargar historial inicial
-  useEffect(() => {
-    getConversationHistory(conversationId).then((data) => {
-      const visible = data.messages.filter((m) => m.role !== 'system');
-      setMessages(visible);
-      // Si hay mensajes del agente, no mostrar typing
-      if (visible.some((m) => m.role === 'assistant')) {
-        setIsTyping(false);
-      } else {
-        setIsTyping(true); // Agente aún no ha respondido
-      }
-    });
-  }, [conversationId]);
-
-  // Suscribir a SSE
+  // Suscribir a SSE PRIMERO para no perder eventos publicados durante la carga del historial
   useEffect(() => {
     const es = new EventSource(`/api/mock/conversations/${conversationId}/events`);
 
     es.onmessage = (event) => {
-      const payload = JSON.parse(event.data);
+      const payload = JSON.parse(event.data) as {
+        event?: string;
+        status?: string;
+        role?: string;
+        content?: string;
+        timestamp?: string;
+      };
 
       if (payload.event === 'conversation:complete') {
-        setFinalStatus(payload.status);
+        setFinalStatus(payload.status as ConversationFinalStatus);
         setIsTyping(false);
         es.close();
         return;
@@ -138,8 +159,8 @@ export function SimulationChat({ conversationId, orderId }: SimulationChatProps)
         const newMsg: ConversationMessage = {
           messageId: crypto.randomUUID(),
           role: 'assistant',
-          content: payload.content,
-          timestamp: payload.timestamp,
+          content: payload.content ?? '',
+          timestamp: payload.timestamp ?? new Date().toISOString(),
           expiresAt: 0,
         };
         setMessages((prev) => [...prev, newMsg]);
@@ -152,6 +173,16 @@ export function SimulationChat({ conversationId, orderId }: SimulationChatProps)
     return () => es.close();
   }, [conversationId]);
 
+  // Cargar historial inicial DESPUÉS de abrir el SSE
+  useEffect(() => {
+    getConversationHistory(conversationId).then((history) => {
+      const visible = history.filter((m) => m.role !== 'system');
+      setMessages(visible);
+      // Mostrar typing solo si el agente aún no ha respondido
+      setIsTyping(!visible.some((m) => m.role === 'assistant'));
+    });
+  }, [conversationId]);
+
   // Scroll automático al último mensaje
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -162,10 +193,9 @@ export function SimulationChat({ conversationId, orderId }: SimulationChatProps)
 
     const userMessage = inputValue.trim();
     setInputValue('');
-    setIsSending(false);
+    setIsSending(true);  // ← era false (bug corregido)
     setIsTyping(true);
 
-    // Añadir mensaje del usuario localmente
     setMessages((prev) => [
       ...prev,
       {
@@ -178,6 +208,7 @@ export function SimulationChat({ conversationId, orderId }: SimulationChatProps)
     ]);
 
     await sendReply(conversationId, userMessage);
+    setIsSending(false);
   }, [inputValue, isSending, finalStatus, conversationId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -213,14 +244,14 @@ export function SimulationChat({ conversationId, orderId }: SimulationChatProps)
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={isTyping || !!finalStatus}
+              disabled={isTyping || isSending}
               placeholder="Escribe tu respuesta..."
               rows={1}
               className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal disabled:opacity-50"
             />
             <Button
               onClick={handleSend}
-              disabled={!inputValue.trim() || isTyping || !!finalStatus || isSending}
+              disabled={!inputValue.trim() || isTyping || isSending}
               size="sm"
             >
               Enviar
@@ -235,9 +266,13 @@ export function SimulationChat({ conversationId, orderId }: SimulationChatProps)
 
 ### `apps/web-admin/src/lib/api.ts` — nuevas funciones
 
+> **Importante**: `GET /api/mock/conversations/:id/history` retorna `DynamoMessage[]` — un **array directo**, no `{ messages: [...] }`. El tipo de respuesta en el frontend debe ser `ConversationMessage[]`.
+
 ```typescript
-export async function getConversationHistory(conversationId: string) {
-  return apiFetch<{ messages: ConversationMessage[] }>(
+export async function getConversationHistory(
+  conversationId: string,
+): Promise<ConversationMessage[]> {
+  return apiFetch<ConversationMessage[]>(
     `/api/mock/conversations/${conversationId}/history`,
   );
 }
@@ -251,35 +286,81 @@ export async function sendReply(conversationId: string, message: string): Promis
 }
 ```
 
-### Integración en `simulation-page.tsx`
-
-Reemplazar el `<div>{/* placeholder para CU03-A6 */}</div>` con:
+Añadir también el import de `ConversationMessage` al inicio del archivo `api.ts`:
 
 ```typescript
+import type { ..., ConversationMessage } from '@/types/api';
+```
+
+### Integración en `simulation-page.tsx`
+
+El layout actual tiene la Zona B y la Zona C como divs separados en `simulation-page.tsx`. `SimulationChat` gestiona **ambas zonas internamente**, por lo que hay que reestructurar el layout. La zona `flex-1 overflow-y-auto` que hoy envuelve el contenido condicional pasa a ser `flex-1 flex flex-col overflow-hidden` para que `SimulationChat` pueda gestionar su propio scroll interno.
+
+**Estructura actual** (en `simulation-page.tsx`):
+
+```tsx
+{/* Zona B: área de chat scrollable */}
+<div className="flex-1 overflow-y-auto">
+  {!activeConversation ? (
+    <SimulationEmptyState onNewSimulation={() => setModalOpen(true)} />
+  ) : (
+    <div>{/* SimulationChat — CU03-A6 */}</div>
+  )}
+</div>
+
+{/* Zona C: input fijo — CU03-A6 */}
 {activeConversation && (
-  <SimulationChat
-    conversationId={activeConversation.conversationId}
-    orderId={activeConversation.orderId}
-  />
+  <div className="border-t p-4">
+    {/* ChatInput — CU03-A6 */}
+  </div>
 )}
 ```
 
-La Zona C (input) está dentro de `SimulationChat` para que gestione su propio estado. La estructura del layout debe ajustarse: `simulation-page.tsx` envuelve la Zona B+C con `flex-1 flex flex-col overflow-hidden`, y `SimulationChat` gestiona internamente el `flex-1 overflow-y-auto` de la zona de mensajes más el input fijo.
+**Estructura final** (reemplazar ambos bloques):
+
+```tsx
+{/* Zona B+C: chat scrollable + input — gestionados por SimulationChat */}
+{!activeConversation ? (
+  <SimulationEmptyState onNewSimulation={() => setModalOpen(true)} />
+) : (
+  <div className="flex-1 flex flex-col overflow-hidden">
+    <SimulationChat conversationId={activeConversation.conversationId} />
+  </div>
+)}
+```
+
+Cuando `!activeConversation`, `SimulationEmptyState` ocupa el espacio completo (`flex-1 overflow-y-auto` ya está en el padre). Cuando hay conversación, el wrapper `flex-1 flex flex-col overflow-hidden` permite que `SimulationChat` gestione su scroll interno.
 
 ---
 
 ## Lista de tareas
 
-- [ ] Crear `apps/web-admin/src/components/simulate/typing-indicator.tsx` con animación de tres puntos
-- [ ] Crear `apps/web-admin/src/components/simulate/simulation-chat.tsx` con gestión de historial, SSE y envío
-- [ ] Implementar carga inicial del historial via `GET /api/mock/conversations/:id/history`
-- [ ] Implementar suscripción SSE via `EventSource` con manejo de evento `conversation:complete`
-- [ ] Implementar scroll automático al último mensaje en cada actualización
-- [ ] Implementar envío de mensaje via `POST /api/mock/conversations/:id/reply` + añadir mensaje de usuario localmente
-- [ ] Implementar estado de input deshabilitado mientras `isTyping` o `finalStatus !== null`
-- [ ] Mostrar mensaje de estado final cuando la conversación termina (COMPLETED / ESCALATED / TIMEOUT)
-- [ ] Añadir funciones `getConversationHistory()` y `sendReply()` en `apps/web-admin/src/lib/api.ts`
-- [ ] Integrar `SimulationChat` en `simulation-page.tsx` (reemplazando el placeholder de CU03-A4)
-- [ ] Ajustar el layout de `simulation-page.tsx` para que Zona B+C sean `flex-1 flex flex-col overflow-hidden`
+### Nuevos archivos
+
+- [ ] Crear `apps/web-admin/src/components/simulate/typing-indicator.tsx` con animación de tres puntos `animate-bounce` con delays 0ms / 150ms / 300ms
+- [ ] Crear `apps/web-admin/src/components/simulate/simulation-chat.tsx`:
+  - Abrir `EventSource` ANTES de cargar el historial (evitar race condition)
+  - `FinalStatusMessage` como subcomponente inline con `FINAL_STATUS_LABELS`
+  - `SimulationChatProps` solo con `conversationId` (sin `orderId`)
+  - `setIsSending(true)` al enviar (no `false`)
+  - Import de `Button` desde `@/components/ui/button`
+
+### Modificaciones en archivos existentes
+
+- [ ] Añadir `getConversationHistory()` en `apps/web-admin/src/lib/api.ts`:
+  - Tipo de retorno: `Promise<ConversationMessage[]>` (array directo, no `{ messages }`)
+  - Añadir import de `ConversationMessage` al inicio del archivo
+- [ ] Añadir `sendReply()` en `apps/web-admin/src/lib/api.ts` (POST con `{ message }`)
+- [ ] Reestructurar layout de `apps/web-admin/src/components/simulate/simulation-page.tsx`:
+  - Eliminar la Zona B (`div.flex-1.overflow-y-auto` con el placeholder) y la Zona C separada
+  - Reemplazar por bloque condicional: `SimulationEmptyState` si no hay conversación, `div.flex-1.flex.flex-col.overflow-hidden > SimulationChat` si la hay
+  - Pasar solo `conversationId` a `SimulationChat` (sin `orderId`)
+
+### Verificación funcional
+
 - [ ] Verificar que los mensajes del agente aparecen en tiempo real sin recargar la página
 - [ ] Verificar que el indicador de escritura aparece tras enviar una respuesta y desaparece al recibir la del agente
+- [ ] Verificar que el scroll automático lleva al último mensaje en cada actualización
+- [ ] Verificar que el input se deshabilita mientras `isTyping` o `isSending`
+- [ ] Verificar que al completarse la conversación (`conversation:complete`) se muestra el mensaje de estado final y el input desaparece
+- [ ] Ejecutar `tsc --noEmit` en `apps/web-admin` sin errores de compilación

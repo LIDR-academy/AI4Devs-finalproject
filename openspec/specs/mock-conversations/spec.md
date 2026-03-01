@@ -58,6 +58,21 @@ Al actualizar el estado de la conversación a un estado terminal, el processor S
 - **WHEN** el processor actualiza `Conversation.status` a `ESCALATED`
 - **THEN** llama a `publishConversationComplete(conversationId, 'ESCALATED')`
 
+### Requirement: El endpoint de historial excluye el item de estado interno `__state__`
+
+`GET /api/mock/conversations/:conversationId/history` SHALL retornar únicamente los mensajes de conversación (`role: system | user | assistant`). El item DynamoDB con `messageId = '__state__'` (usado por el Worker para persistir la fase de la máquina de estados) SHALL ser filtrado y NO aparecer en la respuesta.
+
+#### Scenario: Historial sin item de estado
+- **WHEN** un cliente solicita `GET /api/mock/conversations/:id/history`
+- **THEN** la respuesta es un array JSON de `DynamoMessage[]`
+- **AND** ningún elemento del array tiene `messageId = '__state__'`
+- **AND** ningún elemento carece de los campos `role`, `content` o `timestamp`
+
+#### Scenario: Historial con item de estado presente en DynamoDB
+- **WHEN** DynamoDB contiene el item `{ conversationId, messageId: '__state__', state: '...', expiresAt: N }` para la conversación
+- **THEN** ese item NO aparece en la respuesta del endpoint de historial
+- **AND** los mensajes de conversación (role: system/user/assistant) sí aparecen
+
 ### Requirement: `REDIS_URL` está disponible en el entorno de la API
 
 La variable de entorno `REDIS_URL` SHALL estar definida en `apps/api/.env` para que `MockSseService` pueda conectarse a Redis. Si no está presente, el servicio SHALL usar el fallback `redis://localhost:6379` y loguear un aviso.

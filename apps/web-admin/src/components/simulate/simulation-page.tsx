@@ -5,6 +5,7 @@ import { SimulateStore, AdminUser } from '@/types/api';
 import { OrderSummaryBar } from './order-summary-bar';
 import { SimulationEmptyState } from './simulation-empty-state';
 import { OrderConfigModal } from './order-config-modal';
+import { SimulationChat } from './simulation-chat';
 
 interface ActiveConversation {
   conversationId: string;
@@ -30,19 +31,15 @@ export function SimulationPage({ stores, users }: SimulationPageProps) {
         onChangeOrder={() => setModalOpen(true)}
       />
 
-      {/* Zona B: área de chat scrollable */}
-      <div className="flex-1 overflow-y-auto">
-        {!activeConversation ? (
-          <SimulationEmptyState onNewSimulation={() => setModalOpen(true)} />
-        ) : (
-          <div>{/* SimulationChat — CU03-A6 */}</div>
-        )}
-      </div>
-
-      {/* Zona C: input fijo — CU03-A6 */}
-      {activeConversation && (
-        <div className="border-t p-4">
-          {/* ChatInput — CU03-A6 */}
+      {/* Zona B+C: gestionadas por SimulationChat cuando hay conversación activa */}
+      {!activeConversation ? (
+        <SimulationEmptyState onNewSimulation={() => setModalOpen(true)} />
+      ) : (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <SimulationChat
+            key={activeConversation.conversationId}
+            conversationId={activeConversation.conversationId}
+          />
         </div>
       )}
 

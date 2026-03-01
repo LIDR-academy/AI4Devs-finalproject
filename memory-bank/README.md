@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-02-28  
-> ✅ **Change completado**: cu03-a5-order-config-modal — `OrderConfigModal` completo (26 tareas), `UserCombobox`, `simulate-data.ts`, mapeo eCommerce line1/line2 → street
+> **Última actualización**: 2026-03-01  
+> ✅ **Change completado**: cu03-a6-simulation-chat — `SimulationChat` (SSE + historial + envío), `TypingIndicator`, `createConversationEventSource`, `key` prop reset, filtro `__state__` en API, `safeTimeLabel` en `ChatBubble`
 
 ## 📖 Inicio Rápido
 
@@ -31,8 +31,8 @@ Decisiones clave que guían el desarrollo del proyecto:
 | Archivo | Descripción | Última actualización |
 |---------|-------------|---------------------|
 | [validation-patterns.md](./patterns/validation-patterns.md) | DTOs con `class-validator`, Query/Body/Nested, `ValidationPipe`, tests de controller con `supertest` | 2026-02-28 |
-| [real-time-sse-patterns.md](./patterns/real-time-sse-patterns.md) | SSE con NestJS, Redis Pub/Sub con `ioredis`, `psubscribe`, RxJS `Subject` | 2026-02-27 |
-| [frontend-form-patterns.md](./patterns/frontend-form-patterns.md) | Formulario-modal con `useState` local, `canSubmit` derivado, mapeo `line1`/`line2` → `street`/`full_address`, combobox con estado derivado | 2026-02-28 |
+| [real-time-sse-patterns.md](./patterns/real-time-sse-patterns.md) | SSE con NestJS, Redis Pub/Sub con `ioredis`, `psubscribe`, RxJS `Subject`; `EventSource` con URL absoluta en Next.js | 2026-03-01 |
+| [frontend-form-patterns.md](./patterns/frontend-form-patterns.md) | Formulario-modal con `useState` local, `canSubmit` derivado, mapeo `line1`/`line2` → `street`/`full_address`, combobox con estado derivado, `safeTimeLabel`, `key` prop reset | 2026-03-01 |
 
 Pendiente de documentar:
 - Límites de agregados DDD
@@ -78,8 +78,9 @@ Pendiente de documentar:
 | [2026-02-28](./sessions/2026-02-28-cu03-a3-mock-dto-extension.md) | CU03-A3 — Extensión DTO Mock con Campos eCommerce — Completado | ✅ Completado (29/29 tareas) |
 | [2026-02-28](./sessions/2026-02-28-cu03-a4-simulate-layout.md) | CU03-A4 — Layout /simulate y enlace en Sidebar — Completado | ✅ Completado (17/17 tareas) |
 | [2026-02-28](./sessions/2026-02-28-cu03-a5-order-config-modal.md) | CU03-A5 — Modal de Configuración de Pedido — Completado | ✅ Completado (26/26 tareas + S1/S2/S3) |
+| [2026-03-01](./sessions/2026-03-01-cu03-a6-simulation-chat.md) | CU03-A6 — Chat de Simulación SSE en Tiempo Real — Completado | ✅ Completado (22/22 tareas) |
 
-**Próximo change**: CU03-A6 — Integración conversación IA en la sección de Simulación.
+**Próximo change**: CU03-A7 (pendiente de definir).
 
 ## 🔄 Flujo de Trabajo
 
@@ -155,7 +156,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-02-28  
+**Última revisión**: 2026-03-01  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: CU03-A5 completado — `OrderConfigModal` completo, `UserCombobox` con estado derivado, `simulate-data.ts` (20 dir. ficticias), mapeo eCommerce `line1`/`line2` → `street`/`full_address`, `<Toaster />` fuera de `<Providers>`. Nuevo patrón documentado: `frontend-form-patterns.md`.  
+**Cambios recientes**: CU03-A6 completado — `SimulationChat` (SSE + historial + envío), `TypingIndicator`, `createConversationEventSource`, `key` prop reset, filtro `__state__` en API, `safeTimeLabel` en `ChatBubble`. Patrones nuevos documentados: patrón 5 (`safeTimeLabel`) y patrón 6 (`key` prop reset) en `frontend-form-patterns.md`; patrón 5 (`EventSource` URL absoluta) en `real-time-sse-patterns.md`.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

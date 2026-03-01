@@ -70,7 +70,9 @@ export class MockConversationsService {
         ScanIndexForward: true,
       }),
     );
-    return (result.Items ?? []) as DynamoMessage[];
+    return (result.Items ?? []).filter(
+      (item) => item['messageId'] !== '__state__',
+    ) as DynamoMessage[];
   }
 
   private async saveUserMessage(conversationId: string, content: string): Promise<void> {

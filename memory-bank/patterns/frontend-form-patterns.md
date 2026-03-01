@@ -181,9 +181,84 @@ Los badges en el desplegable usan el campo `status` del tipo `AdminUser`:
 
 ---
 
+---
+
+## 5. Parseo defensivo de timestamps de API en componentes de presentación
+
+### Problema
+
+Los datos que llegan de DynamoDB vía API REST pueden incluir ítems técnicos (ej. el item de estado `__state__` del Worker) que no tienen el campo `timestamp`. Si el componente hace `new Date(message.timestamp)` sin validar, obtiene `Invalid Date` y `date-fns format()` lanza `RangeError: Invalid time value`, crashando el componente.
+
+### Solución: helper `safeTimeLabel`
+
+```typescript
+function safeTimeLabel(timestamp: string): string {
+  if (!timestamp) return '';
+  const d = new Date(timestamp);
+  return isNaN(d.getTime()) ? '' : format(d, 'HH:mm');
+}
+```
+
+### Regla de aplicación
+
+> Todo componente de presentación que muestre una hora derivada de un campo `timestamp: string` de la API SHALL validar el valor antes de pasarlo a `date-fns format()`. La causa raíz (filtrar ítems inválidos en el backend) sigue siendo la solución correcta; este helper es una defensa adicional.
+
+### Origen
+
+CU03-A6 — `ChatBubble` crashaba con el item `__state__` de DynamoDB que llegaba sin `timestamp` antes de que el backend implementase el filtro.
+
+- **Implementación**: `apps/web-admin/src/components/chat/chat-bubble.tsx:10-14`
+
+---
+
+---
+
+## 6. Reset completo de estado con prop `key` en React
+
+### Cuándo usar
+
+Cuando un componente con estado complejo (`useState` múltiple) debe reiniciarse completamente al cambiar su "identidad" (ej. una conversación diferente, un pedido diferente, un usuario diferente).
+
+### Problema
+
+Si el padre pasa un nuevo `id` como prop pero el componente no se desmonta, todos los `useState` mantienen sus valores anteriores. Los `useEffect` con el `id` en sus deps se re-ejecutan, pero **los estados no se resetean**.
+
+```typescript
+// ❌ MAL — finalStatus, messages, etc. persisten al cambiar conversationId
+<SimulationChat conversationId={activeConversation.conversationId} />
+```
+
+### Solución: prop `key` con el identificador de identidad
+
+```typescript
+// ✅ CORRECTO — React desmonta y remonta el componente al cambiar conversationId
+<SimulationChat
+  key={activeConversation.conversationId}
+  conversationId={activeConversation.conversationId}
+/>
+```
+
+Al cambiar `key`, React:
+1. **Desmonta** el componente anterior → los `useEffect` cleanup se ejecutan (ej. cierra `EventSource`)
+2. **Monta** un componente nuevo → todos los `useState` se inicializan desde cero
+
+### Regla de aplicación
+
+> Usar `key={entity.id}` siempre que un componente con estado interno complejo deba "empezar de cero" cuando cambia la entidad que representa. No confundir con el `key` de listas (`map`) que es para reconciliación.
+
+### Origen
+
+CU03-A6 — `SimulationChat` se reutilizaba entre simulaciones, lo que hacía que `finalStatus: 'ESCALATED'` de una conversación anterior contaminase la siguiente.
+
+- **Implementación**: `apps/web-admin/src/components/simulate/simulation-page.tsx:40`
+
+---
+
 ## Referencias
 
 - **`apps/web-admin/src/components/simulate/order-config-modal.tsx`** — Implementación de referencia (patrones 1 y 3)
 - **`apps/web-admin/src/components/simulate/user-combobox.tsx`** — Implementación de referencia (patrones 2 y 4)
 - **`apps/web-admin/src/lib/simulate-data.ts`** — Catálogo de direcciones ficticias y `toAddressPayload`
+- **`apps/web-admin/src/components/simulate/simulation-chat.tsx`** — Implementación de referencia (patrones 4 y 6)
+- **`apps/web-admin/src/components/chat/chat-bubble.tsx`** — Implementación de referencia (patrón 5)
 - **Sesión**: [2026-02-28-cu03-a5-order-config-modal.md](../sessions/2026-02-28-cu03-a5-order-config-modal.md)

@@ -7,8 +7,14 @@ interface ChatBubbleProps {
   message: ConversationMessage;
 }
 
+function safeTimeLabel(timestamp: string): string {
+  if (!timestamp) return '';
+  const d = new Date(timestamp);
+  return isNaN(d.getTime()) ? '' : format(d, 'HH:mm');
+}
+
 export function ChatBubble({ message }: ChatBubbleProps) {
-  const timeLabel = format(new Date(message.timestamp), 'HH:mm');
+  const timeLabel = safeTimeLabel(message.timestamp);
 
   if (message.role === 'system') {
     return (

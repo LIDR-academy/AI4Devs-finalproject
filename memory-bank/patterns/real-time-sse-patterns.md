@@ -228,6 +228,46 @@ this.subscriber.on('pmessage', (_pattern, channel, message) => {
 
 ---
 
+---
+
+## Patrón 5: EventSource con URL absoluta vía helper centralizado
+
+### Problema
+
+`new EventSource('/api/mock/...')` usa una URL relativa que el navegador resuelve contra el origen de la página Next.js (ej. `localhost:3001`), **no** contra la API NestJS (ej. `localhost:3000`). El resultado es un 404.
+
+A diferencia de `fetch`, `EventSource` no pasa por el `apiFetch` wrapper, por lo que no hereda `API_URL` automáticamente.
+
+### Solución: helper en `api.ts`
+
+```typescript
+// apps/web-admin/src/lib/api.ts
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+
+export function createConversationEventSource(conversationId: string): EventSource {
+  return new EventSource(
+    `${API_URL}/api/mock/conversations/${conversationId}/events`,
+  );
+}
+```
+
+**Uso en el componente**:
+```typescript
+import { createConversationEventSource } from '@/lib/api';
+
+useEffect(() => {
+  const es = createConversationEventSource(conversationId);
+  // ...
+  return () => es.close();
+}, [conversationId]);
+```
+
+### Regla de aplicación
+
+> Todo `new EventSource(...)` en el frontend SHALL usar una URL absoluta construida con `API_URL`. Centralizar la creación en `api.ts` garantiza que los cambios de entorno (`NEXT_PUBLIC_API_URL`) se propaguen automáticamente sin tocar los componentes.
+
+---
+
 ## Historial
 
 | Fecha | Evento |
@@ -235,3 +275,4 @@ this.subscriber.on('pmessage', (_pattern, channel, message) => {
 | 2026-02-27 | Patrones 1–4 identificados en CU03-A2 SSE Infrastructure |
 | 2026-02-27 | Patrón de circular imports resuelto con `redis-publisher.ts` dedicado |
 | 2026-02-27 | Patrón de mock `ioredis` ES module documentado tras error `ioredis_1.default is not a constructor` |
+| 2026-03-01 | Patrón 5 identificado en CU03-A6: EventSource con URL relativa produce 404 en Next.js |
