@@ -181,3 +181,41 @@ export interface SimulateStore {
 export interface StoresResponse {
   data: SimulateStore[];
 }
+
+export interface CreateMockOrderPayload {
+  store: { name: string; url: string };
+  external_order_id: string;
+  buyer: { first_name: string; last_name: string; phone: string; email?: string };
+  mode: 'adresles' | 'tradicional';
+  address?: {
+    full_address: string;
+    street: string;
+    number?: string;
+    floor?: string;
+    door?: string;
+    postal_code: string;
+    city: string;
+    province?: string;
+    country: string;
+  };
+  buyer_registered_ecommerce?: boolean;
+  buyer_ecommerce_address?: {
+    full_address: string;
+    street: string;
+    number?: string;
+    floor?: string;
+    postal_code: string;
+    city: string;
+    province?: string;
+    country: string;
+  };
+  gift_recipient?: { first_name: string; last_name: string; phone: string };
+  items?: Array<{ name: string; quantity: number; price: number }>;
+  total_amount: number;
+  currency: string;
+}
+
+export interface StartSimulationResult {
+  order_id: string;
+  conversation_id: string;
+}

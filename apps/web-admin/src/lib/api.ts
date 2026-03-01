@@ -8,15 +8,16 @@ import type {
   UserSortByColumn,
   UsersFilters,
   StoresResponse,
+  CreateMockOrderPayload,
+  StartSimulationResult,
 } from '@/types/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 
-async function apiFetch<T>(path: string): Promise<T> {
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    next: { revalidate: 30 },
-    // Evita errores en build time cuando el API no está disponible
     cache: 'no-store',
+    ...init,
   });
   if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
   return res.json() as Promise<T>;
@@ -65,3 +66,13 @@ export const getStores = (): Promise<StoresResponse> =>
 
 export const getUsersForSimulate = (): Promise<UsersResponse> =>
   apiFetch<UsersResponse>('/api/admin/users?limit=100&sortBy=name&sortDir=asc');
+
+export async function startSimulation(
+  payload: CreateMockOrderPayload,
+): Promise<StartSimulationResult> {
+  return apiFetch<StartSimulationResult>('/api/mock/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
