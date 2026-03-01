@@ -23,6 +23,7 @@ import { useMeditationList, usePlaybackInfo } from '../hooks/playback';
 import { usePlayerStore } from '../state/playback';
 import { MeditationList, MeditationPlayer } from '../components/playback';
 import type { MeditationItem } from '../api/generated/playback/src';
+import { MeditationBuilderHero } from '@/components/MeditationBuilderHero';
 
 /**
  * MeditationLibraryPage Component
@@ -104,8 +105,8 @@ export const MeditationLibraryPage: React.FC = () => {
   }, [currentMeditationId]);
 
   return (
-    <div className="meditation-library-page">
-      {/* Header */}
+    <div className="meditation-builder" data-testid="meditation-builder">
+      <MeditationBuilderHero />
       <header className="library-header">
         <h1>Meditation Library</h1>
         <p className="library-description">
@@ -113,44 +114,36 @@ export const MeditationLibraryPage: React.FC = () => {
           Click "Play" to listen to or watch a meditation.
         </p>
       </header>
-
-      {/* Meditation List */}
-      <main className="library-content">
-        <MeditationList
-          meditations={meditations}
-          onPlay={handlePlay}
-          isLoading={isLoadingList}
-          error={listError?.message}
-        />
-      </main>
-
-      {/* Player (sticky footer - only shown when meditation selected) */}
+      <section className="library-content">
+        <div className="library-content__container">
+          <MeditationList
+            meditations={meditations}
+            onPlay={handlePlay}
+            isLoading={isLoadingList}
+            error={listError?.message}
+            className="meditation-list--wide"
+          />
+        </div>
+      </section>
       {currentMeditationId && (
         <aside className="library-player-container">
-          {/* Loading state while fetching playback info */}
           {isLoadingPlayback && (
             <div className="player-loading">
               <p>Loading playback information...</p>
             </div>
           )}
-
-          {/* API error (e.g. 409 not ready yet) */}
           {playbackError && (
             <div className="player-error" role="alert">
               <p>⚠️ {playbackError.message}</p>
               <button onClick={resetPlayer}>Close</button>
             </div>
           )}
-
-          {/* Media playback error (audio/video failed to load) */}
           {mediaError && !playbackError && (
             <div className="player-error" role="alert">
               <p>⚠️ {mediaError}</p>
               <button onClick={() => setMediaError(null)}>Close</button>
             </div>
           )}
-
-          {/* Player (only show when playback info loaded) */}
           {!isLoadingPlayback && !playbackError && playbackInfo && (
             <MeditationPlayer
               meditationId={currentMeditationId}

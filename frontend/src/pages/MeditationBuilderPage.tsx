@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { MeditationBuilderHero } from '@/components/MeditationBuilderHero';
 import {
   TextEditor,
   OutputTypeIndicator,
@@ -193,103 +194,66 @@ export function MeditationBuilderPage() {
   // ⬇️ PANTALLA PRINCIPAL
   return (
     <div className="meditation-builder" data-testid="meditation-builder">
-      <header className="meditation-builder__header">
-        <div className="meditation-builder__hero-glow" aria-hidden="true" />
-
-        {/* Decorative scattered symbols */}
-        <div className="meditation-builder__deco" aria-hidden="true">
-          {/* Left column — 3 zones */}
-          <span className="deco-symbol deco-symbol--1">☸</span>
-          <span className="deco-symbol deco-symbol--2">∞</span>
-          <span className="deco-symbol deco-symbol--3">✦</span>
-          {/* Left-mid — 2 small accents */}
-          <span className="deco-symbol deco-symbol--4">◉</span>
-          <span className="deco-symbol deco-symbol--5">✿</span>
-          {/* Right column — 3 zones */}
-          <span className="deco-symbol deco-symbol--6">☯</span>
-          <span className="deco-symbol deco-symbol--7">❂</span>
-          <span className="deco-symbol deco-symbol--8">✶</span>
-          {/* Right-mid — 2 small accents */}
-          <span className="deco-symbol deco-symbol--9">⊕</span>
-          <span className="deco-symbol deco-symbol--10">❋</span>
-          {/* Top corners */}
-          <span className="deco-symbol deco-symbol--11">◈</span>
-          <span className="deco-symbol deco-symbol--12">✧</span>
-          {/* Centre zone — mid-band fills */}
-          <span className="deco-symbol deco-symbol--m1">○</span>
-          <span className="deco-symbol deco-symbol--m2">♱</span>
-          <span className="deco-symbol deco-symbol--m3">⌘</span>
-          <span className="deco-symbol deco-symbol--m4">✾</span>
-          <span className="deco-symbol deco-symbol--m5">⋆</span>
-          <span className="deco-symbol deco-symbol--m6">◌</span>
-        </div>
-
-        <div className="meditation-builder__hero-content">
-          <p className="meditation-builder__hero-eyebrow">Your personal sanctuary</p>
-          <h1 className="meditation-builder__hero-title">Meditation Builder</h1>
-          <p className="meditation-builder__hero-sub">Craft immersive meditations with AI-generated voice, visuals &amp; music</p>
-
-          {/* Status indicator */}
-          <div style={{ marginTop: '1.5rem' }}>
-          {generation.isCompleted ? (
-            <div className="generation-result--success-header" style={{
-              fontSize: '1.2rem',
-              color: '#4caf50',
-              backgroundColor: '#1a1a1a',
-              padding: '1rem',
-              borderRadius: '8px',
-              display: 'inline-block',
-              border: '1px solid #4caf50'
-            }}>
-              <div style={{ marginBottom: '8px' }}>
-                ✅ <strong>Generation Complete!</strong> Duration: <strong>{formatDuration(generation.result?.durationSeconds || 0)}</strong>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                {generation.result?.mediaUrl && (
-                  <a href={generation.result.mediaUrl} download className="btn btn--primary btn--small" style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem' }}>
-                    📥 Download {generation.result.type === 'VIDEO' ? 'Video' : 'Audio'}
-                  </a>
-                )}
-                {generation.result?.subtitleUrl && (
-                  <a href={generation.result.subtitleUrl} download className="btn btn--secondary btn--small" style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem' }}>
-                    📄 Subtitles
-                  </a>
-                )}
-                <button onClick={() => generation.reset()} className="btn btn--text" style={{ fontSize: '0.9rem', marginLeft: '8px', color: '#888' }}>
-                  Clear
-                </button>
-              </div>
+      <MeditationBuilderHero />
+      {/* Status indicator (solo en builder) */}
+      <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+        {generation.isCompleted ? (
+          <div className="generation-result--success-header" style={{
+            fontSize: '1.2rem',
+            color: '#4caf50',
+            backgroundColor: '#1a1a1a',
+            padding: '1rem',
+            borderRadius: '8px',
+            display: 'inline-block',
+            border: '1px solid #4caf50'
+          }}>
+            <div style={{ marginBottom: '8px' }}>
+              ✅ <strong>Generation Complete!</strong> Duration: <strong>{formatDuration(generation.result?.durationSeconds || 0)}</strong>
             </div>
-          ) : generation.isFailed ? (
-            <div style={{
-              fontSize: '1.2rem',
-              color: '#f44336',
-              backgroundColor: '#1a1a1a',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              display: 'inline-block',
-              border: '1px solid #f44336'
-            }}>
-              ❌ <strong>Generation Failed</strong>
-              <button onClick={() => generation.reset()} className="btn btn--text" style={{ fontSize: '0.9rem', marginLeft: '12px', color: '#ffc107' }}>
-                Try Again
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              {generation.result?.mediaUrl && (
+                <a href={generation.result.mediaUrl} download className="btn btn--primary btn--small" style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem' }}>
+                  📥 Download {generation.result.type === 'VIDEO' ? 'Video' : 'Audio'}
+                </a>
+              )}
+              {generation.result?.subtitleUrl && (
+                <a href={generation.result.subtitleUrl} download className="btn btn--secondary btn--small" style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem' }}>
+                  📄 Subtitles
+                </a>
+              )}
+              <button onClick={() => generation.reset()} className="btn btn--text" style={{ fontSize: '0.9rem', marginLeft: '8px', color: '#888' }}>
+                Clear
               </button>
             </div>
-          ) : estimatedDuration > 0 ? (
-            <div className="meditation-builder__estimated-duration" style={{ 
-              fontSize: '1.2rem', 
-              color: '#646cff',
-              backgroundColor: '#1a1a1a',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              display: 'inline-block'
-            }}>
-              <span>Estimated Duration: <strong>{formatDuration(estimatedDuration)}</strong></span>
-            </div>
-          ) : null}
           </div>
-        </div>
-      </header>
+        ) : generation.isFailed ? (
+          <div style={{
+            fontSize: '1.2rem',
+            color: '#f44336',
+            backgroundColor: '#1a1a1a',
+            padding: '0.5rem 1rem',
+            borderRadius: '8px',
+            display: 'inline-block',
+            border: '1px solid #f44336'
+          }}>
+            ❌ <strong>Generation Failed</strong>
+            <button onClick={() => generation.reset()} className="btn btn--text" style={{ fontSize: '0.9rem', marginLeft: '12px', color: '#ffc107' }}>
+              Try Again
+            </button>
+          </div>
+        ) : estimatedDuration > 0 ? (
+          <div className="meditation-builder__estimated-duration" style={{ 
+            fontSize: '1.2rem', 
+            color: '#646cff',
+            backgroundColor: '#1a1a1a',
+            padding: '0.5rem 1rem',
+            borderRadius: '8px',
+            display: 'inline-block'
+          }}>
+            <span>Estimated Duration: <strong>{formatDuration(estimatedDuration)}</strong></span>
+          </div>
+        ) : null}
+      </div>
 
     {generationError && (
       <div role="alert">⚠️ {generationError}</div>

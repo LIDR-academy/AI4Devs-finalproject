@@ -85,7 +85,7 @@ describe('LoginPage', () => {
 
     it('should render a subtitle explaining the purpose', () => {
       render(<TestApp />);
-      expect(screen.getByText(/accede con tu cuenta de google/i)).toBeInTheDocument();
+      expect(screen.getByText(/sign in with google to instantly create, preview and save immersive ai-guided meditations/i)).toBeInTheDocument();
     });
   });
 

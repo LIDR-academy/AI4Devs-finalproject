@@ -89,7 +89,7 @@ export function AppHeader() {
           className="app-header__logout"
           onClick={handleLogout}
           data-testid="header-logout-button"
-          title="Logout"
+          title="Cerrar sesión"
         >
           <svg
             className="app-header__logout-icon"
@@ -105,7 +105,7 @@ export function AppHeader() {
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          <span>Logout</span>
+          <span>Cerrar sesión</span>
         </button>
       </div>
     </header>

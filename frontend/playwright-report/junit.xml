@@ -1,16 +1,221 @@
-<testsuites id="" name="" tests="6" failures="0" skipped="0" errors="0" time="65.813379">
-<testsuite name="auth-login.spec.ts" timestamp="2026-02-26T17:41:32.287Z" hostname="chromium" tests="6" failures="0" skipped="0" time="96.016" errors="0">
-<testcase name="Auth Login Flows › C1 — New user: after login sees empty library" classname="auth-login.spec.ts" time="21.216">
+<testsuites id="" name="" tests="31" failures="10" skipped="0" errors="0" time="115.7743339999998">
+<testsuite name="ai-generation.spec.ts" timestamp="2026-03-01T20:59:34.413Z" hostname="chromium" tests="7" failures="0" skipped="0" time="98.394" errors="0">
+<testcase name="AI Generation Flow › should show loading state during AI text generation" classname="ai-generation.spec.ts" time="15.518">
 </testcase>
-<testcase name="Auth Login Flows › C2 — Existing user: after login library shows previous meditations" classname="auth-login.spec.ts" time="17.651">
+<testcase name="AI Generation Flow › should handle AI text generation errors gracefully" classname="ai-generation.spec.ts" time="15.503">
 </testcase>
-<testcase name="Auth Login Flows › C3 — No session: accessing /library redirects to /login" classname="auth-login.spec.ts" time="15.82">
+<testcase name="AI Generation Flow › should show loading state during AI image generation" classname="ai-generation.spec.ts" time="12.149">
 </testcase>
-<testcase name="Auth Login Flows › C3 — No session: accessing / redirects to /login" classname="auth-login.spec.ts" time="13.714">
+<testcase name="AI Generation Flow › should display AI-generated image immediately after generation" classname="ai-generation.spec.ts" time="12.614">
 </testcase>
-<testcase name="Auth Login Flows › C4 — Logout: clears session and redirects to /login" classname="auth-login.spec.ts" time="13.834">
+<testcase name="AI Generation Flow › should update output type to VIDEO after AI image generation" classname="ai-generation.spec.ts" time="15.024">
 </testcase>
-<testcase name="Auth Login Flows › C5 — Cancellation: /login shows no error after Google flow is cancelled" classname="auth-login.spec.ts" time="13.781">
+<testcase name="AI Generation Flow › should disable generate buttons during any AI operation" classname="ai-generation.spec.ts" time="12.796">
+</testcase>
+<testcase name="AI Generation Flow › should preserve user text while showing AI-generated suggestions" classname="ai-generation.spec.ts" time="14.79">
+</testcase>
+</testsuite>
+<testsuite name="auth-login.spec.ts" timestamp="2026-03-01T20:59:34.413Z" hostname="chromium" tests="6" failures="3" skipped="0" time="132.316" errors="0">
+<testcase name="Auth Login Flows › C1 — New user: after login sees empty library" classname="auth-login.spec.ts" time="13.984">
+</testcase>
+<testcase name="Auth Login Flows › C2 — Existing user: after login library shows previous meditations" classname="auth-login.spec.ts" time="13.862">
+</testcase>
+<testcase name="Auth Login Flows › C3 — No session: accessing /library redirects to /login" classname="auth-login.spec.ts" time="14.417">
+</testcase>
+<testcase name="Auth Login Flows › C3 — No session: accessing / redirects to /login" classname="auth-login.spec.ts" time="30.018">
+<failure message="auth-login.spec.ts:189:3 C3 — No session: accessing / redirects to /login" type="FAILURE">
+<![CDATA[  [chromium] › auth-login.spec.ts:189:3 › Auth Login Flows › C3 — No session: accessing / redirects to /login 
+
+    Test timeout of 30000ms exceeded while setting up "page".
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Auth Login Flows › C4 — Logout: clears session and redirects to /login" classname="auth-login.spec.ts" time="30.021">
+<failure message="auth-login.spec.ts:197:3 C4 — Logout: clears session and redirects to /login" type="FAILURE">
+<![CDATA[  [chromium] › auth-login.spec.ts:197:3 › Auth Login Flows › C4 — Logout: clears session and redirects to /login 
+
+    Test timeout of 30000ms exceeded while setting up "page".
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Auth Login Flows › C5 — Cancellation: /login shows no error after Google flow is cancelled" classname="auth-login.spec.ts" time="30.014">
+<failure message="auth-login.spec.ts:226:3 C5 — Cancellation: /login shows no error after Google flow is cancelled" type="FAILURE">
+<![CDATA[  [chromium] › auth-login.spec.ts:226:3 › Auth Login Flows › C5 — Cancellation: /login shows no error after Google flow is cancelled 
+
+    Test timeout of 30000ms exceeded while setting up "page".
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="manual-composition.spec.ts" timestamp="2026-03-01T20:59:34.413Z" hostname="chromium" tests="6" failures="2" skipped="0" time="90.04" errors="0">
+<testcase name="Manual Composition Flow › should display the meditation builder interface" classname="manual-composition.spec.ts" time="8.599">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve meditation text exactly as entered" classname="manual-composition.spec.ts" time="30.023">
+<failure message="manual-composition.spec.ts:88:3 should preserve meditation text exactly as entered" type="FAILURE">
+<![CDATA[  [chromium] › manual-composition.spec.ts:88:3 › Manual Composition Flow › should preserve meditation text exactly as entered 
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      59 |
+      60 | test.describe('Manual Composition Flow', () => {
+    > 61 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      62 |     // Mock compositions API (required for MeditationBuilderPage to load)
+      63 |     await mockCompositionsApi(page);
+      64 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\manual-composition.spec.ts:61:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Manual Composition Flow › should indicate PODCAST output type when no image is selected" classname="manual-composition.spec.ts" time="7.12">
+</testcase>
+<testcase name="Manual Composition Flow › should support very long meditation text" classname="manual-composition.spec.ts" time="30.016">
+<failure message="manual-composition.spec.ts:119:3 should support very long meditation text" type="FAILURE">
+<![CDATA[  [chromium] › manual-composition.spec.ts:119:3 › Manual Composition Flow › should support very long meditation text 
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      59 |
+      60 | test.describe('Manual Composition Flow', () => {
+    > 61 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      62 |     // Mock compositions API (required for MeditationBuilderPage to load)
+      63 |     await mockCompositionsApi(page);
+      64 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\manual-composition.spec.ts:61:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Manual Composition Flow › should clear text when user deletes it" classname="manual-composition.spec.ts" time="7.25">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve text with special characters and line breaks" classname="manual-composition.spec.ts" time="7.032">
+</testcase>
+</testsuite>
+<testsuite name="media-preview.spec.ts" timestamp="2026-03-01T20:59:34.413Z" hostname="chromium" tests="7" failures="5" skipped="0" time="163.823" errors="0">
+<testcase name="Media Preview › should display music selector interface" classname="media-preview.spec.ts" time="30.021">
+<failure message="media-preview.spec.ts:168:3 should display music selector interface" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:168:3 › Media Preview › should display music selector interface 
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      153 |
+      154 | test.describe('Media Preview', () => {
+    > 155 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      156 |     // Set up media API mocks
+      157 |     await mockMediaAPIs(page);
+      158 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:155:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Media Preview › should display AI-generated image preview immediately after generation" classname="media-preview.spec.ts" time="30.013">
+<failure message="media-preview.spec.ts:174:3 should display AI-generated image preview immediately after generation" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:174:3 › Media Preview › should display AI-generated image preview immediately after generation 
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      153 |
+      154 | test.describe('Media Preview', () => {
+    > 155 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      156 |     // Set up media API mocks
+      157 |     await mockMediaAPIs(page);
+      158 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:155:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Media Preview › should show image preview with clearly visible content" classname="media-preview.spec.ts" time="30.014">
+<failure message="media-preview.spec.ts:192:3 should show image preview with clearly visible content" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:192:3 › Media Preview › should show image preview with clearly visible content 
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      153 |
+      154 | test.describe('Media Preview', () => {
+    > 155 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      156 |     // Set up media API mocks
+      157 |     await mockMediaAPIs(page);
+      158 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:155:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Media Preview › should allow removing AI-generated image" classname="media-preview.spec.ts" time="30.021">
+<failure message="media-preview.spec.ts:207:3 should allow removing AI-generated image" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:207:3 › Media Preview › should allow removing AI-generated image 
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      153 |
+      154 | test.describe('Media Preview', () => {
+    > 155 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      156 |     // Set up media API mocks
+      157 |     await mockMediaAPIs(page);
+      158 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:155:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Media Preview › should update output type when image is added or removed" classname="media-preview.spec.ts" time="4.509">
+</testcase>
+<testcase name="Media Preview › should handle missing or failed image previews gracefully" classname="media-preview.spec.ts" time="30.017">
+<failure message="media-preview.spec.ts:256:3 should handle missing or failed image previews gracefully" type="FAILURE">
+<![CDATA[  [chromium] › media-preview.spec.ts:256:3 › Media Preview › should handle missing or failed image previews gracefully 
+
+    Test timeout of 30000ms exceeded while running "beforeEach" hook.
+
+      153 |
+      154 | test.describe('Media Preview', () => {
+    > 155 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      156 |     // Set up media API mocks
+      157 |     await mockMediaAPIs(page);
+      158 |
+        at C:\Users\javier.vidal\.vscode\projects\AI4Devs-finalproject\frontend\tests\e2e\media-preview.spec.ts:155:8
+
+    Error: browserContext.newPage: Test timeout of 30000ms exceeded.
+]]>
+</failure>
+</testcase>
+<testcase name="Media Preview › should persist image preview state after page interactions" classname="media-preview.spec.ts" time="9.228">
+</testcase>
+</testsuite>
+<testsuite name="playback\list-meditations.spec.ts" timestamp="2026-03-01T20:59:34.413Z" hostname="chromium" tests="2" failures="0" skipped="0" time="17.979" errors="0">
+<testcase name="Meditation Library - Listing › should display all meditations with correct state labels" classname="playback\list-meditations.spec.ts" time="8.219">
+</testcase>
+<testcase name="Meditation Library - Listing › should show empty state message when no meditations are found" classname="playback\list-meditations.spec.ts" time="9.76">
+</testcase>
+</testsuite>
+<testsuite name="playback\play-meditation.spec.ts" timestamp="2026-03-01T20:59:34.413Z" hostname="chromium" tests="2" failures="0" skipped="0" time="17.265" errors="0">
+<testcase name="Meditation Library - Playback › should enable play button only for completed meditations" classname="playback\play-meditation.spec.ts" time="8.591">
+</testcase>
+<testcase name="Meditation Library - Playback › should load player when a meditation is selected" classname="playback\play-meditation.spec.ts" time="8.674">
+</testcase>
+</testsuite>
+<testsuite name="playback\playback-error.spec.ts" timestamp="2026-03-01T20:59:34.413Z" hostname="chromium" tests="1" failures="0" skipped="0" time="12.567" errors="0">
+<testcase name="Meditation Library - Error Handling › should show error message when playback fails with 409" classname="playback\playback-error.spec.ts" time="12.567">
 </testcase>
 </testsuite>
 </testsuites>

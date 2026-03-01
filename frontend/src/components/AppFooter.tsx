@@ -8,10 +8,10 @@ export function AppFooter() {
             alt="Stressed4Heaven"
             className="app-footer__logo"
           />
-          <span className="app-footer__name">Stressed4Heaven</span>
+          <span className="app-footer__name">2Stressed4Heaven</span>
         </div>
         <p className="app-footer__copy">
-          &copy; {new Date().getFullYear()} Stressed4Heaven. All rights reserved.
+          &copy; {new Date().getFullYear()} 2Stressed4Heaven. All rights reserved.
         </p>
       </div>
     </footer>

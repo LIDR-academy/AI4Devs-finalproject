@@ -150,7 +150,7 @@ describe('GenerateMeditationButton', () => {
       
       const button = screen.getByTestId('generate-meditation-button');
       expect(button).toHaveClass('btn');
-      expect(button).toHaveClass('btn--primary');
+      expect(button).toHaveClass('btn--blue');
       expect(button).toHaveClass('btn--large');
       expect(button).toHaveClass('generate-meditation-button');
     });

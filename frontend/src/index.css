@@ -62,12 +62,13 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 1rem 2rem;
+  padding: 1rem 0; /* Remove horizontal padding so container touches edge if needed and aligns better */
+  background-color: #0b0e14; /* Slightly darker to make common-styled sections pop */
 }
 
 #root {
   max-width: 1280px;
-  width: 100%;
+  width: 95%; /* Give a small side margin on mobile/small screens */
 }
 
 /* App shell — full height flex column so footer sticks to bottom */
@@ -79,18 +80,212 @@ body {
 
 .app__main {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shared Radial Gradient Styles for all major Sections (Header, Card, Footer) */
+.app-header, 
+.login-card, 
+.app-footer {
+  background-color: #07090f !important;
+  background-image:
+    radial-gradient(ellipse 70% 80% at 15% 50%, rgba(90, 45, 190, 0.45) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 85% 45%, rgba(20, 70, 160, 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 50% 105%, rgba(40, 120, 150, 0.3) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 40% at 65% 20%, rgba(130, 60, 200, 0.25) 0%, transparent 50%) !important;
+  border: 1px solid rgba(150, 130, 255, 0.12) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  max-width: 1280px !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 1.75rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.login-card__logo-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 1.2rem; /* Extra space above logo for visual balance */
+  margin-bottom: 1.1rem;
+}
+
+.login-card__logo--large {
+  max-width: 420px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 28px rgba(150, 130, 255, 0.38));
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.login-card__header {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.login-card__tagline {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #f0f0ff;
+  margin-bottom: 0.5rem;
+}
+
+.login-card__badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(45, 212, 191, 0.1);
+  color: #2dd4bf;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(45, 212, 191, 0.2);
+}
+
+.login-card__benefits {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: rgba(200, 200, 220, 0.6);
+  font-weight: 600;
 }
 
 /* Footer */
 .app-footer {
-  margin-top: 2.5rem;
-  border-top: 1px solid rgba(150, 130, 255, 0.1);
-  background: rgba(10, 10, 20, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 14px;
+  margin-top: 0.5rem; /* Reduced gap to bring footer closer */
   padding: 1.25rem 1.5rem;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.02);
 }
+
+/* Login page — centered modern card */
+.login-page {
+  flex: 1; /* take remaining vertical space inside .app__main */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0; /* Reduced top/bottom padding to minimize wasted space */
+}
+
+.login-card {
+  padding: 3.5rem 2.2rem 2.5rem; /* Large top padding to ensure logo is fully contained */
+  min-height: 520px; /* Reduced min-height slightly so it doesn't push sections away unnecessarily */
+  box-shadow: 0 40px 100px rgba(2, 6, 20, 0.9), inset 0 1px 0 rgba(255,255,255,0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.3rem;
+  position: relative;
+}
+
+.login-card h1 {
+  font-size: 2rem;
+  margin: 0;
+  font-weight: 700;
+  background: linear-gradient(90deg, #f0f0ff 0%, #c6ccff 60%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.login-subtitle {
+  color: rgba(200,200,220,0.7);
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+.login-error {
+  color: #ff9aa2;
+  background: rgba(255, 90, 90, 0.06);
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.login-button-wrapper {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Try to style the Google button rendered by @react-oauth/google.
+   Selector targets a button inside the wrapper; keeps it full-width and prominent. */
+.login-button-wrapper button {
+  width: 100%;
+  max-width: 320px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0ff 100%) !important;
+  color: #0b1220 !important;
+  box-shadow: 0 6px 24px rgba(4,6,20,0.6) !important;
+  border: 1px solid rgba(10,10,20,0.06) !important;
+}
+
+.login-button-wrapper button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* Polished CTA appearance for Google button */
+.login-button-wrapper button {
+  background: #ffffff !important;
+  color: #0b1220 !important;
+  box-shadow: 0 10px 30px rgba(2,6,20,0.45) !important;
+  border-radius: 12px !important;
+  padding: 0.9rem 1.1rem !important;
+  font-weight: 800 !important;
+}
+
+.login-button-wrapper button:active {
+  transform: translateY(0) !important;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -18px;
+  width: 220px;
+  height: 18px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(124,58,237,0.12), rgba(45,212,191,0.06));
+  filter: blur(8px);
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+.login-card:hover {
+  /* No transform or movement */
+  box-shadow: 0 40px 100px rgba(2, 6, 20, 0.9), inset 0 1px 0 rgba(255,255,255,0.03);
+  /* transition can remain for box-shadow smoothness if desired */
+}
+
+@media (max-width: 520px) {
+  .login-card { padding: 1.25rem; }
+  .login-card h1 { font-size: 1.6rem; }
+}
+
+/* login uses the full meditation-builder header to preserve decorative symbols */
 
 .app-footer__inner {
   display: flex;
@@ -140,7 +335,8 @@ body {
 .meditation-builder__header {
   position: relative;
   width: 100%;
-  padding: 2rem 2rem 1.75rem;
+  min-height: 268px !important;
+  padding: 40px 32px !important;
   margin-bottom: 0;
   text-align: center;
   overflow: hidden;
@@ -150,8 +346,11 @@ body {
     radial-gradient(ellipse 55% 70% at 85% 55%, rgba(20, 70, 160, 0.35) 0%, transparent 55%),
     radial-gradient(ellipse 50% 60% at 50% 105%, rgba(40, 120, 150, 0.25) 0%, transparent 55%),
     radial-gradient(ellipse 30% 40% at 60% 20%, rgba(130, 60, 200, 0.2) 0%, transparent 50%);
-  border-radius: 16px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .meditation-builder__hero-glow {
@@ -702,7 +901,44 @@ body {
 }
 
 .library-content {
-  margin-top: 0;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.library-content__container {
+  width: 100%;
+  max-width: none;
+  background: none;
+  border-radius: 20px;
+  margin: 0;
+  padding: 0;
+}
+
+.meditation-list--wide {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  background: none;
+  border-radius: 20px;
+  padding: 0;
+}
+
+.meditation-list--wide .meditation-list__table {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.meditation-list--wide {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  background: none;
+  border-radius: 20px;
 }
 
 .meditation-list__th {
@@ -1013,6 +1249,117 @@ body {
 }
 
 /* List Summary */
+
+/* ---------------------- Shared hero gradient surfaces ---------------------- */
+/* subtle hero-like radial gradients applied to header/footer/login surfaces */
+.app-header,
+.app-footer {
+  background-color: #07090f;
+  background-image:
+    radial-gradient(ellipse 70% 80% at 15% 50%, rgba(90, 45, 190, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 85% 55%, rgba(20, 70, 160, 0.12) 0%, transparent 55%);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+/* make the footer match the hero tone */
+.app-footer {
+  border-top: 1px solid rgba(255,255,255,0.03);
+  background-image:
+    radial-gradient(ellipse 55% 70% at 85% 55%, rgba(20, 70, 160, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 40% at 60% 20%, rgba(130, 60, 200, 0.06) 0%, transparent 50%);
+}
+
+/* Ensure login card carries the same feel */
+.login-card {
+  background-image:
+    radial-gradient(ellipse 60% 70% at 20% 40%, rgba(90, 45, 190, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 60% at 80% 50%, rgba(20, 70, 160, 0.08) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(10,10,14,0.85), rgba(6,6,16,0.6));
+}
+
+/* Professional header inside login card */
+.login-card__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.login-card__logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 6px 18px rgba(2,6,20,0.5);
+}
+
+.login-card__tagline {
+  font-weight: 700;
+  color: rgba(235,235,245,0.95);
+  font-size: 1rem;
+}
+
+.login-card__badge {
+  margin-left: auto;
+  background: linear-gradient(90deg, rgba(124,58,237,0.12), rgba(45,212,191,0.06));
+  color: rgba(220,220,240,0.9);
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.login-card__benefits {
+  display: flex;
+  gap: 1rem;
+  color: rgba(185,185,205,0.9);
+  font-weight: 600;
+}
+
+.login-card__logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.2rem; /* Extra space above logo for visual balance */
+  margin-bottom: 1.1rem;
+}
+
+.login-card__logo--large {
+  max-width: 420px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 28px rgba(150, 130, 255, 0.38));
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+/* Reduce the negative lift on small screens */
+@media (max-width: 520px) {
+  .login-card { margin-top: -18px; padding: 1.25rem; min-height: auto; }
+  .login-card__tagline { font-size: 0.95rem; }
+  .login-card__logo-wrap { margin-top: -48px; }
+  .login-card__logo--large { width: 120px; height: 120px; }
+}
+
+/* CTA polish fallback in case provider button markup differs */
+.login-button-wrapper > .cta-google {
+  width: 100%;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  background: #fff !important;
+  color: #0b1220 !important;
+  box-shadow: 0 10px 30px rgba(2,6,20,0.45) !important;
+}
+
+/* small responsive tweak */
+@media (max-width: 520px) {
+  .login-card { margin-top: -18px; padding: 1.25rem; }
+  .login-card__tagline { font-size: 0.95rem; }
+}
 .meditation-list__summary {
   margin-top: 0.5rem; /* Reduced from 1.5rem */
   text-align: right;
@@ -1135,4 +1482,21 @@ body {
   font-size: 0.85rem;
   padding-top: 1rem;
   border-top: 1px solid #333;
+}
+
+/* Ensure meditation-builder__header is always tall and consistent */
+.meditation-builder__header {
+  min-height: 260px;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Remove compact variant if present */
+.meditation-builder--compact {
+  min-height: 320px;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
