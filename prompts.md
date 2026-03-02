@@ -946,6 +946,50 @@ Tu tarea es analizar todas las diferencias (git diff) entre la rama actual y la 
 
 **Prompt 2:**
 
+```
+# ROLE
+Actúa como un Senior Staff Engineer. Tu objetivo es redactar el documento `PR 20260302.md` replicando la excelencia técnica, el tono y la estructura visual de @PR 20260210.md .
+
+# CONTEXTO DIFERENCIAL (ETAPA 2)
+Este es el segundo hito del proyecto Adresles. 
+- **Misión:** Transformar la planificación anterior en un **Monorepo funcional (MVP Mock)**.
+- **Alcance:** Implementación base de Backend (NestJS), Frontend (React) y Worker (BullMQ). 
+- **Nota clave:** Es un "Mock"; las integraciones con OpenAI y Google Maps están preparadas pero devuelven datos estáticos para validar el flujo.
+
+# DATOS DEL REPOSITORIO (INPUT PARA ANÁLISIS)
+**1. Archivos nuevos/modificados (v2 vs v1):**
+@c:\Users\sergi\.cursor\projects\c-Users-sergi-GitHub-Local-AI4Devs-AI4Devs-finalproject\terminals\7.txt:296-654 
+
+# ESTRATEGIA DE REDACCIÓN (PROMPT ENGINEERING)
+Para evitar un documento inabarcable debido al gran volumen de archivos, aplica estas reglas:
+1. **Abstracción de Componentes:** No menciones archivos individuales de la carpeta `apps/web-admin/src/components/ui/`. Agrúpalos como "Implementación de Sistema de Diseño base (Shadcn/UI)".
+2. **Foco en el Delta Arquitectural:** Lo más importante es el paso a **Monorepo (Turborepo)** y la separación de preocupaciones en `apps/` y `packages/`.
+3. **Análisis de ADRs:** Céntrate exclusivamente en los nuevos ADRs (del 005 al 009) que definen el uso de Redis, SSE y Prisma Shared.
+
+# ESTRUCTURA OBLIGATORIA
+Genera el documento `PR 20260302.md` con estas secciones:
+
+1.  **Información General:** Tabla con Rama origen (`v2`), Rama destino (`v1`), Autor, Fecha y Tipo de Cambio (Feature/Architecture).
+2.  **Resumen Ejecutivo:** "De la Especificación a la Realidad". Explica el valor de haber construido el esqueleto Monorepo y el flujo funcional Mock.
+3.  **Estadísticas de Cambios:** Tabla con distribución estimada por:
+    - **Infraestructura/Monorepo** (Turbo, Configs)
+    - **Backend API** (NestJS, Controllers, Mocks)
+    - **Frontend Admin** (Next.js, UI Components, Simulate Chat)
+    - **Worker & Shared** (BullMQ, Prisma DB, Shared Types)
+4.  **Análisis por Bloques (¿Qué cambia y por qué?):**
+    - **Evolución a Monorepo:** Explicar la ventaja de `packages/shared-types` y `packages/prisma-db`.
+    - **Backend & Eventos:** Mencionar el módulo Mock y la infraestructura de eventos SSE/Redis.
+    - **Frontend & Simulación:** Describir la interfaz de gestión de pedidos y el simulador de chat.
+5.  **Decisiones Arquitecturales (ADRs):** Lista resumida de los ADR-005 al ADR-009.
+6.  **Estructura del Proyecto:** Árbol de directorios de alto nivel (máximo 3 niveles de profundidad).
+7.  **Checklist de Validación:** (Linting, TypeScript, Prisma Sync, Mock Testing).
+8.  **Roadmap Próximo:** "Hacia la Integración Real" (OpenAI + GMaps).
+
+Genera el contenido íntegramente en **español**, con un tono profesional y estratégico.
+```
+
+---
+
 **Prompt 3:**
 
 ---

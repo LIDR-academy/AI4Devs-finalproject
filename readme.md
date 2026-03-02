@@ -29,13 +29,14 @@ Adresles es una plataforma SaaS B2B2C que revoluciona la experiencia de checkout
 
 ### **0.4. URL del proyecto:**
 
-https://github.com/SValduezaL/AI4Devs-finalproject/tree/finalproject-SVL
+https://github.com/SValduezaL/AI4Devs-finalproject
 
-> Repositorio público en GitHub
+> Repositorio público en GitHub  
+> Ramas principales: `finalproject-SVL` (base), `finalproject-SVL-v2` (Monorepo MVP Mock)
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-https://github.com/SValduezaL/AI4Devs-finalproject/tree/finalproject-SVL
+https://github.com/SValduezaL/AI4Devs-finalproject
 
 > Repositorio público accesible directamente desde GitHub
 
@@ -87,7 +88,7 @@ https://github.com/SValduezaL/AI4Devs-finalproject/tree/finalproject-SVL
 | ------------------------- | ---------------------------------------------- | ------------------------------------------- |
 | **Plugin de Checkout**    | Integración en el proceso de pago              | 🔄 Pendiente (MVP usa entrada JSON mock)    |
 | **Webhook de Compras**    | Recepción automática de pedidos en tiempo real | ✅ Implementado (POST /api/mock/orders)     |
-| **Dashboard de Gestión**  | Monitorización de pedidos y conversaciones     | ✅ Implementado (CU-02 MVP)                 |
+| **Dashboard de Gestión**  | Monitorización de pedidos y conversaciones     | ✅ Implementado (Orders, Users, Simulate con chat SSE) |
 | **API de Sincronización** | Actualización de direcciones en el sistema     | 🔄 Mockeado (log estructurado/notificación) |
 | **Prueba gratuita**       | 1 mes sin coste para evaluar el servicio       | ✅ Definido en modelo de negocio            |
 
@@ -96,7 +97,7 @@ https://github.com/SValduezaL/AI4Devs-finalproject/tree/finalproject-SVL
 | Función                           | Descripción                                           | Estado                              |
 | --------------------------------- | ----------------------------------------------------- | ----------------------------------- |
 | **Orquestador de Conversaciones** | Gestión del flujo conversacional con GPT-4            | ✅ Implementado (Backend NestJS)    |
-| **Motor de Journeys**             | Selección automática del flujo según contexto usuario | ✅ Implementado (GET_ADDRESS, INFORMATION, ResponseProcessor) |
+| **Motor de Journeys**             | Selección automática del flujo según contexto usuario | ✅ Implementado (GET_ADDRESS, INFORMATION; sub-journeys: propuesta dir, registro, libreta) |
 | **Sistema de Reminders**          | Recordatorios tras 15 min sin respuesta               | ⏳ Pendiente post-MVP               |
 | **Validador de Direcciones**      | Google Maps API + detección datos faltantes           | ✅ Diseñado (Implementación real)   |
 | **Escalado a Soporte**            | Envío de incidencias por email cuando IA no resuelve  | ✅ Diseñado                         |
@@ -169,7 +170,7 @@ La conversación con el agente IA (GPT-4) incluye:
 > 📖 **Journeys detallados**: [Adresles_Business.md - Sección 1.6](./Adresles_Business.md#16-user-journeys-detallados)  
 > 📖 **Diagramas de secuencia**: [Adresles_Business.md - Sección 4.8](./Adresles_Business.md#48-diagramas-de-secuencia)
 
-> ⚠️ **Nota**: El proyecto se encuentra en fase de diseño y documentación. Las capturas de pantalla y videotutoriales se generarán durante la fase de implementación.
+> ⚠️ **Estado actual (marzo 2026)**: Monorepo funcional con MVP Mock operativo. Backend (API + Worker), frontend admin con simulador de chat en tiempo real. Integraciones OpenAI y Google Maps preparadas pero mockeadas. Ver [PR 20260302.md](./PR%2020260302.md) y [memory-bank/README.md](./memory-bank/README.md).
 
 ### **1.4. Instrucciones de instalación:**
 
@@ -188,23 +189,28 @@ La conversación con el agente IA (GPT-4) incluye:
 - **CI/CD**: GitHub Actions
 - **Hosting**: Servidor dedicado Konsole H (backend) + Vercel (dashboard admin)
 
-#### **Estructura del Proyecto (Diseñada)**
+#### **Estructura del Proyecto (Monorepo Turborepo)**
 
 ```
 adresles/
 ├── apps/
 │   ├── api/                    # Backend NestJS
 │   ├── worker/                 # Worker BullMQ para conversaciones
-│   ├── web-chat/              # Frontend Chat (React + Vite)
-│   └── web-admin/             # Frontend Admin (Next.js)
+│   ├── web-chat/               # Frontend Chat (React + Vite) — pendiente
+│   └── web-admin/              # Frontend Admin (Next.js 16)
 ├── packages/
-│   ├── shared-types/          # TypeScript types compartidos
-│   └── api-client/            # Cliente API generado
+│   ├── prisma-db/              # @adresles/prisma-db — schema, migraciones, seed, cliente Prisma
+│   └── shared-types/           # @adresles/shared-types — tipos BullMQ, DTOs compartidos
 ├── infrastructure/
-│   ├── docker/                # Docker Compose configs
-│   └── scripts/               # Scripts de deployment
-└── openspec/                  # Especificaciones SDD
+│   ├── docker/                 # Docker Compose (PostgreSQL, Redis, DynamoDB Local)
+│   └── scripts/                # setup-dynamodb.ts, etc.
+├── memory-bank/                # Contexto persistente, ADRs, patrones
+├── openspec/                   # Specs, changes archivados
+└── turbo.json                  # Turborepo config
 ```
+
+> 📖 **ADR Schema compartido**: [memory-bank/architecture/009-prisma-db-package.md](./memory-bank/architecture/009-prisma-db-package.md)  
+> 📖 **ADR Tipos compartidos**: [memory-bank/architecture/007-shared-types-package.md](./memory-bank/architecture/007-shared-types-package.md)
 
 #### **Servicios Externos Requeridos**
 
@@ -262,35 +268,41 @@ cd AI4Devs-finalproject
 pnpm install
 
 # 3. Configurar variables de entorno
-# Copiar y editar los .env de cada app (ver sección anterior)
+# Copiar y editar apps/api/.env y apps/worker/.env (ver sección anterior)
 
-# 4. Iniciar servicios con Docker Compose
-docker-compose up -d redis
+# 4. Iniciar servicios con Docker Compose (PostgreSQL, Redis, DynamoDB Local)
+docker compose -f infrastructure/docker/docker-compose.yml up -d
 
-# 5. Ejecutar migraciones de base de datos (Supabase/PostgreSQL)
-cd apps/api && npx prisma migrate dev
+# 5. Configurar DynamoDB Local (tabla adresles-messages)
+pnpm dynamo:setup
 
-# 6. Cargar datos de prueba (ecommerce + store mock)
-cd apps/api && npx prisma db seed
+# 6. Generar cliente Prisma (packages/prisma-db)
+pnpm db:generate
 
-# 7. Iniciar aplicaciones en modo desarrollo
-# API Backend
+# 7. Ejecutar migraciones (desde packages/prisma-db)
+pnpm db:migrate
+
+# 8. Cargar datos de prueba (ecommerce + store mock)
+pnpm db:seed
+
+# 9. Iniciar aplicaciones en modo desarrollo (Turborepo resuelve dependencias)
+pnpm dev
+# O por separado:
 pnpm --filter api dev          # http://localhost:3000
-
-# Worker BullMQ
-pnpm --filter worker dev       # (background, sin UI)
-
-# Dashboard Admin
+pnpm --filter worker dev       # (background)
 pnpm --filter web-admin dev    # http://localhost:3001
 
-# Ejecutar tests (desde apps/api)
-cd apps/api && pnpm test
-cd apps/api && pnpm test:cov
+# Ejecutar tests
+pnpm test                     # Todos los workspaces
+pnpm --filter api test        # Solo API
+pnpm --filter worker test     # Solo Worker
+pnpm --filter api test:cov    # API con cobertura
 ```
 
 > 📖 **Arquitectura completa**: [Adresles_Business.md - Fase 4](./Adresles_Business.md#fase-4-diseño-de-alto-nivel)  
-> 📖 **Stack detallado**: [memory-bank/tech-stack.md](./memory-bank/project-context/tech-stack.md)  
-> 📖 **Docker Compose**: [Adresles_Business.md - Sección 4.7](./Adresles_Business.md#47-docker-compose---configuración)
+> 📖 **Stack detallado**: [memory-bank/project-context/tech-stack.md](./memory-bank/project-context/tech-stack.md)  
+> 📖 **Memory-Bank (índice)**: [memory-bank/README.md](./memory-bank/README.md)  
+> 📖 **Docker Compose**: [infrastructure/docker/docker-compose.yml](./infrastructure/docker/docker-compose.yml)
 
 ---
 
@@ -396,7 +408,8 @@ C4Container
 | **Infrastructure as Code** | Docker Compose para reproducibilidad                                                 |
 
 > 📖 **Diagramas C4 completos**: [Adresles_Business.md - Secciones 4.2-4.4](./Adresles_Business.md#42-diagrama-c4---nivel-1-contexto-del-sistema)  
-> 📖 **ADR Arquitectura**: [memory-bank/architecture/001-monolith-modular.md](./memory-bank/architecture/001-monolith-modular.md)
+> 📖 **ADR Arquitectura**: [memory-bank/architecture/001-monolith-modular.md](./memory-bank/architecture/001-monolith-modular.md)  
+> 📖 **ADRs 005-009 (BullMQ, SSE, shared-types, prisma-db)**: [memory-bank/README.md#-decisiones-arquitecturales-adrs](./memory-bank/README.md#-decisiones-arquitecturales-adrs)
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -415,15 +428,17 @@ C4Container
 
 **Módulos principales**:
 
-- `mock/`: Endpoint `POST /api/mock/orders` — orquestación por modo (adresles / tradicional)
+- `mock/`: `POST /api/mock/orders` — orquestación por modo (adresles / tradicional); `POST /api/mock/conversations/:id/reply` — respuesta simulada; `GET /api/mock/conversations/:id/events` — SSE en tiempo real (Redis Pub/Sub)
 - `orders/`: Gestión del ciclo de vida de pedidos y cálculo de fee
 - `users/`: Búsqueda o creación de usuario por teléfono E.164
 - `conversations/`: Creación de conversación y encola job BullMQ
 - `stores/`: Búsqueda o creación de tienda por URL
 - `ecommerce-sync/`: Simulación de sincronización con eCommerce (mock)
-- `admin/`: Endpoints de visualización para el dashboard admin (`GET /admin/orders`, `GET /admin/users`, `GET /admin/conversations/:id/messages`)
+- `admin/`: Endpoints de visualización para el dashboard admin (`GET /admin/orders`, `GET /admin/users`, `GET /admin/stores`, `GET /admin/conversations/:id/messages`)
 - `queue/`: Configuración de BullMQ (cola `process-conversation` y `process-response`)
-- `prisma/`: Módulo de acceso a base de datos (Prisma ORM + Supabase)
+- `prisma/`: Módulo de acceso a base de datos (Prisma desde `@adresles/prisma-db`)
+
+> 📖 **ADR SSE + Redis Pub/Sub**: [memory-bank/architecture/006-sse-redis-pubsub.md](./memory-bank/architecture/006-sse-redis-pubsub.md)
 
 #### **Worker - Conversation Processor (BullMQ)**
 
@@ -438,10 +453,14 @@ C4Container
 
 **Procesadores y servicios principales**:
 
-- `processors/conversation.processor.ts`: Consume cola `process-conversation`; gestiona journeys `GET_ADDRESS` (llama a OpenAI, guarda en DynamoDB) e `INFORMATION` (confirmación tradicional)
-- `processors/response.processor.ts`: Máquina de estados para cola `process-response`; valida dirección con Google Maps, detecta edificios (solicita datos adicionales), confirma y sincroniza
-- `services/address.service.ts`: Integración con Google Maps API
+- `processors/conversation.processor.ts`: Consume cola `process-conversation`; journeys `GET_ADDRESS` (llama a OpenAI, guarda en DynamoDB, publica en Redis), `INFORMATION` (confirmación tradicional); sub-journeys: propuesta de dirección guardada (2.1/2.3), registro voluntario (3.x), libreta de direcciones (offerSaveAddress, WAITING_SAVE_ADDRESS_LABEL)
+- `processors/response.processor.ts`: Máquina de estados para cola `process-response`; valida dirección con Google Maps, detecta edificios (solicita datos adicionales), confirma y sincroniza; interpreta intenciones (registro, guardar dirección)
+- `services/address.service.ts`: Integración con Google Maps API (mock en MVP)
 - `dynamodb/dynamodb.service.ts`: Escritura y lectura de mensajes en DynamoDB
+- `redis-publisher.ts`: Publica eventos en Redis (`conversation:{id}:update`) para SSE
+
+> 📖 **ADR BullMQ + Worker**: [memory-bank/architecture/005-bullmq-worker-conversations.md](./memory-bank/architecture/005-bullmq-worker-conversations.md)  
+> 📖 **Patrones Worker**: [memory-bank/patterns/worker-testing-patterns.md](./memory-bank/patterns/worker-testing-patterns.md)
 
 #### **Frontend - Chat App (React + Vite)**
 
@@ -468,9 +487,10 @@ C4Container
 **Responsabilidades**:
 
 - Panel de visualización para administradores de eCommerce
-- Tabla de pedidos con estados, badges y enlace a chat
-- Tabla de usuarios con registro relativo y tooltips accesibles
+- Tabla de pedidos con ordenación, filtros (estado, modo, fecha, búsqueda) y enlace a chat
+- Tabla de usuarios con ordenación, filtros (registro, búsqueda) y tooltips accesibles
 - Visor de chat con burbujas por rol, metadatos de conversación y banner TTL
+- **Simulador** (`/simulate`): Configuración de pedido mock (usuario, tienda, modo), chat en vivo con SSE, indicador de escritura, badges de estado
 
 **Stack**:
 
@@ -528,10 +548,10 @@ C4Container
 **Uso**: Validación de direcciones, normalización de formato, obtención de coordenadas
 
 **Redis**  
-**Propósito**: Cache + Cola de mensajes  
-**Uso**: BullMQ jobs, cache de sesiones, PubSub para WebSocket
+**Propósito**: Cache + Cola de mensajes + Bus de eventos  
+**Uso**: BullMQ jobs (process-conversation, process-response), Redis Pub/Sub para SSE (Worker → API → Frontend)
 
-> 📖 **Stack completo**: [memory-bank/tech-stack.md](./memory-bank/project-context/tech-stack.md)
+> 📖 **Stack completo**: [memory-bank/project-context/tech-stack.md](./memory-bank/project-context/tech-stack.md)
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -542,82 +562,96 @@ adresles/
 ├── apps/                              # Aplicaciones
 │   ├── api/                           # Backend NestJS
 │   │   ├── src/
-│   │   │   ├── admin/                 # AdminModule — dashboard endpoints
-│   │   │   ├── conversations/         # ConversationsService — crea y encola
-│   │   │   ├── ecommerce-sync/        # EcommerceSyncService — sync mock
-│   │   │   ├── mock/                  # 🎯 MockOrdersController POST /api/mock/orders
-│   │   │   ├── orders/                # OrdersService — ciclo de vida + fee
-│   │   │   ├── prisma/                # PrismaModule (Prisma ORM + Supabase)
-│   │   │   ├── queue/                 # BullMQ — colas process-conversation / process-response
-│   │   │   ├── shared/                # fee.utils, helpers
-│   │   │   ├── stores/                # StoresService — findOrCreate por URL
-│   │   │   ├── users/                 # UsersService — findOrCreate por teléfono E.164
+│   │   │   ├── admin/                 # AdminModule — dashboard endpoints (orders, users, stores, conversations)
+│   │   │   ├── conversations/        # ConversationsService — crea y encola
+│   │   │   ├── ecommerce-sync/       # EcommerceSyncService — sync mock
+│   │   │   ├── mock/                 # MockOrdersController, MockConversationsController, MockSseService
+│   │   │   │                         # POST /api/mock/orders, POST .../reply, GET .../events (SSE)
+│   │   │   ├── orders/               # OrdersService — ciclo de vida + fee
+│   │   │   ├── prisma/               # PrismaService (importa @adresles/prisma-db)
+│   │   │   ├── queue/                # BullMQ — colas process-conversation / process-response
+│   │   │   ├── stores/               # StoresService — findOrCreate por URL
+│   │   │   ├── users/                # UsersService — findOrCreate por teléfono E.164
 │   │   │   ├── app.module.ts
 │   │   │   └── main.ts
-│   │   ├── prisma/
-│   │   │   ├── migrations/            # 3 migraciones versionadas (Supabase)
-│   │   │   ├── schema.prisma          # Modelos: Ecommerce, Store, User, Order, etc.
-│   │   │   └── seed.ts                # Seeds de ecommerce y store mock
+│   │   ├── prisma.config.ts          # Apunta a packages/prisma-db
 │   │   └── package.json
 │   │
 │   ├── worker/                        # Worker BullMQ para conversaciones
 │   │   ├── src/
 │   │   │   ├── processors/
-│   │   │   │   └── conversation.processor.ts  # Journeys GET_ADDRESS e INFORMATION
+│   │   │   │   └── conversation.processor.ts  # Journeys, sub-journeys (propuesta dir, registro, libreta)
 │   │   │   ├── services/
-│   │   │   │   └── address.service.ts          # Google Maps API
+│   │   │   │   └── address.service.ts
 │   │   │   ├── dynamodb/
 │   │   │   │   └── dynamodb.service.ts         # Tabla adresles-messages (TTL 90d)
+│   │   │   ├── redis-publisher.ts               # Publica en Redis para SSE
 │   │   │   └── main.ts
-│   │   └── package.json
+│   │   └── package.json              # prisma.schema → @adresles/prisma-db
 │   │
-│   ├── web-chat/                      # Frontend Chat (React + Vite) — pendiente implementación
+│   ├── web-chat/                      # Frontend Chat (React + Vite) — pendiente
 │   │   └── package.json
 │   │
 │   └── web-admin/                     # Frontend Admin (Next.js 16)
 │       ├── src/
 │       │   ├── app/
-│       │   │   ├── globals.css        # Tokens de marca con @theme (Tailwind v4)
-│       │   │   ├── layout.tsx         # Sidebar + TooltipProvider global
+│       │   │   ├── globals.css
+│       │   │   ├── layout.tsx
 │       │   │   ├── page.tsx           # Redirect a /orders
-│       │   │   ├── orders/            # Tabla de pedidos + badges
-│       │   │   ├── users/             # Tabla de usuarios + fecha relativa
+│       │   │   ├── orders/            # Tabla pedidos + ordenación + filtros
+│       │   │   ├── users/             # Tabla usuarios + ordenación + filtros
+│       │   │   ├── simulate/          # Simulador de chat (config + chat SSE)
 │       │   │   └── conversations/[conversationId]/  # Visor de chat con burbujas
 │       │   ├── components/
-│       │   │   ├── ui/                # Shadcn/ui (table, badge, button, skeleton, tooltip)
+│       │   │   ├── ui/                # Shadcn/ui
 │       │   │   ├── layout/            # Sidebar, Providers
-│       │   │   ├── orders/            # OrdersTable, OrderStatusBadge, OrderModeBadge
-│       │   │   ├── users/             # UsersTable, UserRegisteredBadge, RelativeDateCell
-│       │   │   └── chat/              # ChatView, ChatBubble, ChatExpiryBanner, ConversationBadges
+│       │   │   ├── orders/            # OrdersTable, filtros, badges
+│       │   │   ├── users/             # UsersTable, filtros, RelativeDateCell
+│       │   │   ├── simulate/          # OrderConfigModal, SimulationChat, UserCombobox
+│       │   │   └── chat/              # ChatView, ChatBubble, ChatExpiryBanner
 │       │   ├── lib/
-│       │   │   ├── api.ts             # Funciones fetch hacia API NestJS
-│       │   │   └── utils.ts
 │       │   └── types/
-│       │       └── api.ts             # Tipos TypeScript de respuesta API
-│       ├── components.json
-│       ├── next.config.ts
 │       └── package.json
 │
-├── memory-bank/                       # Documentación persistente
-│   ├── project-context/               # Contexto del proyecto
-│   ├── architecture/                  # ADRs
-│   ├── sessions/                      # Notas por sesión de desarrollo
-│   └── references/                    # Referencias rápidas
+├── packages/
+│   ├── prisma-db/                     # @adresles/prisma-db
+│   │   ├── schema.prisma              # Fuente única de verdad
+│   │   ├── migrations/
+│   │   ├── generated/                 # Cliente Prisma
+│   │   ├── seed.ts
+│   │   └── package.json
+│   └── shared-types/                   # @adresles/shared-types
+│       ├── src/index.ts               # ProcessConversationJobData, ProcessResponseJobData, MockOrderContext
+│       └── package.json
 │
-├── openspec/                          # Especificaciones SDD
-│   ├── specs/                         # Estándares del proyecto
-│   └── changes/                       # Cambios específicos por feature
+├── infrastructure/
+│   ├── docker/
+│   │   └── docker-compose.yml         # PostgreSQL, Redis, DynamoDB Local
+│   └── scripts/
+│       └── setup-dynamodb.ts
 │
-├── docs/
-│   ├── mock-orders-ui.html            # UI de prueba para POST /api/mock/orders
-│   └── MOCK-ORDERS-README.md          # Guía de uso del endpoint mock
+├── memory-bank/                       # Contexto persistente
+│   ├── project-context/               # overview, tech-stack, domain-glossary
+│   ├── architecture/                  # ADRs 001-009
+│   ├── patterns/                      # validation, real-time-sse, frontend-form, prisma-shared, worker-testing
+│   ├── sessions/                      # Sesiones por change
+│   └── references/
+│       └── business-doc-map.md
 │
-├── package.json                       # Monorepo root
-├── pnpm-workspace.yaml               # Configuración workspaces
-├── turbo.json                         # Turborepo config
-├── Adresles_Business.md              # Documento de diseño completo
-└── README.md                          # Este archivo
+├── openspec/
+│   ├── specs/                         # Estándares, data-model
+│   └── changes/archive/              # Changes completados (CU-01, CU-02, T01-T03, CU03-A1-A6, CU03-B1-B4, infra)
+│
+├── package.json                       # Scripts: dev, build, db:generate, db:migrate, db:seed, dynamo:setup
+├── pnpm-workspace.yaml
+├── turbo.json
+├── Adresles_Business.md
+└── readme.md                          # Este archivo
 ```
+
+> 📖 **Memory-Bank (índice)**: [memory-bank/README.md](./memory-bank/README.md)  
+> 📖 **Patrón Prisma compartido**: [memory-bank/patterns/prisma-shared-package-patterns.md](./memory-bank/patterns/prisma-shared-package-patterns.md)  
+> 📖 **Patrón SSE**: [memory-bank/patterns/real-time-sse-patterns.md](./memory-bank/patterns/real-time-sse-patterns.md)
 
 #### **Patrón de Organización: Domain-Driven Design (DDD)**
 
@@ -639,7 +673,8 @@ El backend sigue principios de DDD con **Bounded Contexts** claros:
 - ✅ Onboarding rápido de nuevos desarrolladores
 
 > 📖 **Estructura completa**: [Adresles_Business.md - Sección 4.5](./Adresles_Business.md#45-estructura-del-proyecto)  
-> 📖 **Backend Standards**: [openspec/specs/backend-standards.mdc](./openspec/specs/backend-standards.mdc)
+> 📖 **Backend Standards**: [openspec/specs/backend-standards.mdc](./openspec/specs/backend-standards.mdc)  
+> 📖 **Changes archivados**: [openspec/changes/archive/](./openspec/changes/archive/) — CU-01, CU-02, T01-T03, CU03-A1-A6, CU03-B1-B4, infra-prisma-shared-schema
 
 ### **2.4. Infraestructura y despliegue**
 
@@ -826,29 +861,41 @@ CREATE POLICY "orders_isolation" ON "order"
 
 #### **Tests implementados — Backend API (apps/api)**
 
-**CU-01 — 37 tests, 100% pasan**
+**CU-01, CU-02, CU03-A1-A6 — Tests API, 100% pasan**
 
 | Archivo | Tests | Cobertura |
 |---------|-------|-----------|
-| `src/shared/fee.utils.spec.ts` | Fórmula de fee (bordes e intermedios) | Lógica de cálculo |
 | `src/orders/orders.service.spec.ts` | `createFromMock`, `updateStatus`, `createAddressFromConversation` | Servicio de pedidos |
-| `src/users/users.service.spec.ts` | `findOrCreateByPhone` (crear/actualizar/preservar email, prefijos internacionales) | Servicio de usuarios |
-| `src/mock/mock-orders.service.spec.ts` | Orquestación modos adresles y tradicional; `BadRequestException` sin dirección | Orquestación mock |
-| `src/mock/mock-orders.controller.spec.ts` | HTTP `supertest`; 400 para campos inválidos, URL inválida, email inválido | Controller HTTP |
+| `src/users/users.service.spec.ts` | `findOrCreateByPhone` | Servicio de usuarios |
+| `src/mock/mock-orders.service.spec.ts` | Orquestación modos adresles y tradicional | Orquestación mock |
+| `src/mock/mock-orders.controller.spec.ts` | HTTP `supertest`; validación 400 | Controller HTTP |
+| `src/mock/mock-sse.service.spec.ts` | Suscripción Redis, filtro por conversationId | SSE + Pub/Sub |
+| `src/admin/admin.service.spec.ts` | Paginación, filtrado, datos relacionales | Admin service |
+| `src/admin/admin.controller.spec.ts` | Integración HTTP endpoints admin | Admin controller |
 
-**CU-02 — Tests admin, todos pasan**
+#### **Tests implementados — Worker (apps/worker)**
+
+**CU03-B1-B4 — Tests Worker, 100% pasan**
 
 | Archivo | Tests |
 |---------|-------|
-| `src/admin/admin.service.spec.ts` | Paginación, filtrado `isDeleted: false`, datos relacionales, usuarios eliminados |
-| `src/admin/admin.controller.spec.ts` | Integración HTTP con `supertest` para los 3 endpoints admin |
+| `src/processors/conversation.processor.spec.ts` | Journeys GET_ADDRESS, INFORMATION; sub-journeys (propuesta dirección, registro, libreta) |
+| `src/services/address.service.spec.ts` | Validación Google Maps (mock) |
+| `src/redis-publisher.spec.ts` | `publishConversationUpdate`, `publishConversationComplete` |
+| `src/dynamodb/dynamodb.service.spec.ts` | saveMessage, getMessages |
+
+> 📖 **Patrón testing Worker**: [memory-bank/patterns/worker-testing-patterns.md](./memory-bank/patterns/worker-testing-patterns.md)
 
 #### **Comandos de tests**
 
 ```bash
-# Desde apps/api
-cd apps/api && pnpm test          # Todos los tests
-cd apps/api && pnpm test:cov      # Con cobertura
+# Todos los workspaces (Turborepo)
+pnpm test
+
+# Por app
+pnpm --filter api test
+pnpm --filter api test:cov
+pnpm --filter worker test
 ```
 
 #### **Tests pendientes (post-MVP)**
@@ -981,7 +1028,8 @@ erDiagram
         string currency
         decimal fee_percentage
         decimal fee_amount
-        enum status "PENDING_ADDRESS|READY_TO_PROCESS|COMPLETED|FAILED|CANCELLED"
+        enum status "PENDING_PAYMENT|PENDING_ADDRESS|READY_TO_PROCESS|COMPLETED|CANCELED"
+        string status_source "ADRESLES|STORE nullable"
         boolean is_gift
         jsonb items_summary
         timestamp webhook_received_at
@@ -1075,7 +1123,8 @@ erDiagram
 | **ECommerce/Store**         | Indefinido mientras activo                 | Datos de negocio críticos              |
 
 > 📖 **Modelo de datos completo**: [Adresles_Business.md - Fase 3](./Adresles_Business.md#fase-3-modelado-de-datos)  
-> 📖 **ADR Base de Datos**: [memory-bank/architecture/002-supabase-dynamodb.md](./memory-bank/architecture/002-supabase-dynamodb.md)
+> 📖 **ADR Base de Datos**: [memory-bank/architecture/002-supabase-dynamodb.md](./memory-bank/architecture/002-supabase-dynamodb.md)  
+> 📖 **Glosario (OrderStatus, StatusSource, syncedAt)**: [memory-bank/project-context/domain-glossary.md](./memory-bank/project-context/domain-glossary.md)
 
 ### **3.2. Descripción de entidades principales:**
 
@@ -1221,12 +1270,13 @@ Representa un pedido realizado en una tienda online.
 | `currency`              | VARCHAR(3)    | NOT NULL                | Moneda (ISO 4217: EUR, USD, GBP...)                                             |
 | `fee_percentage`        | DECIMAL(5,2)  | NOT NULL                | % de fee aplicado (2.5% - 5%)                                                   |
 | `fee_amount`            | DECIMAL(12,2) | NOT NULL                | Importe de fee cobrado a eCommerce                                              |
-| `status`                | TEXT          | NOT NULL, CHECK         | `PENDING_ADDRESS` \| `READY_TO_PROCESS` \| `COMPLETED` \| `FAILED` \| `CANCELLED` |
+| `status`                | TEXT          | NOT NULL, CHECK         | `PENDING_PAYMENT` \| `PENDING_ADDRESS` \| `READY_TO_PROCESS` \| `COMPLETED` \| `CANCELED` |
+| `status_source`         | TEXT          | CHECK, NULL             | `ADRESLES` \| `STORE` — quién originó el último cambio de estado                |
 | `is_gift`               | BOOLEAN       | DEFAULT false           | Pedido es un regalo (modo regalo activo)                                        |
 | `items_summary`         | JSONB         |                         | Resumen de productos comprados                                                  |
 | `webhook_received_at`   | TIMESTAMPTZ   | NOT NULL                | Cuándo se recibió el webhook del eCommerce                                      |
 | `address_confirmed_at`  | TIMESTAMPTZ   |                         | Cuándo el usuario confirmó la dirección                                         |
-| `synced_at`             | TIMESTAMPTZ   |                         | Cuándo se sincronizó con eCommerce                                              |
+| `synced_at`             | TIMESTAMPTZ   |                         | Último cambio de estado (seteado con status_source)                             |
 | `created_at`            | TIMESTAMPTZ   | NOT NULL, DEFAULT now() | Fecha de creación                                                               |
 | `updated_at`            | TIMESTAMPTZ   | NOT NULL, DEFAULT now() | Última modificación                                                             |
 
@@ -1237,28 +1287,17 @@ Representa un pedido realizado en una tienda online.
 - `1:1` con **ORDER_ADDRESS** (un pedido tiene una dirección confirmada)
 - `1:1` con **GIFT_RECIPIENT** (si `is_gift = true`)
 
-**Estados del pedido**:
+**Estados del pedido** (MVP Mock):
 
-```mermaid
-stateDiagram-v2
-    [*] --> PENDING_ADDRESS : Modo adresles (sin dirección)
-    [*] --> READY_TO_PROCESS : Modo tradicional (con dirección)
+- `PENDING_PAYMENT`: Webhook recibido, pago pendiente de confirmar
+- `PENDING_ADDRESS`: Modo adresles, esperando dirección del usuario
+- `READY_TO_PROCESS`: **Estado final del MVP** — dirección confirmada; para adresles: Worker completa `finalizeAddress()`; para tradicional: asignado al crear
+- `COMPLETED`: Reservado para integración real con eCommerce (no usado en MVP mock)
+- `CANCELED`: Pedido cancelado
 
-    PENDING_ADDRESS --> READY_TO_PROCESS : Dirección confirmada por conversación
-    PENDING_ADDRESS --> ESCALATED : Timeout/Escalado
-    PENDING_ADDRESS --> CANCELLED : Cancelado
+**StatusSource** (`status_source`): `ADRESLES` (sistema cambió estado) \| `STORE` (tienda cambió). Se setea junto con `synced_at`.
 
-    READY_TO_PROCESS --> COMPLETED : Sync OK
-    READY_TO_PROCESS --> FAILED : Sync fails
-
-    ESCALATED --> COMPLETED : Resuelto
-
-    FAILED --> COMPLETED : Retry exitoso
-    FAILED --> FAILED : Retry fallido
-
-    COMPLETED --> [*]
-    CANCELLED --> [*]
-```
+> 📖 **Glosario OrderStatus**: [memory-bank/project-context/domain-glossary.md](./memory-bank/project-context/domain-glossary.md)
 
 **Fórmula de fee**:
 
@@ -1782,7 +1821,56 @@ El backend expone una API REST + WebSocket para comunicación en tiempo real. A 
 
 ---
 
-### **Endpoint 4: Dashboard Admin — Pedidos, Usuarios y Chat**
+### **Endpoint 4: Mock Conversations — Respuesta y SSE (Simulador)**
+
+```yaml
+/api/mock/conversations/{conversationId}/reply:
+    post:
+        summary: Envía respuesta simulada del usuario (simulador /simulate)
+        description: |
+            Permite al simulador enviar respuestas del usuario. Encola job process-response
+            en BullMQ. El Worker procesa y publica en Redis. El frontend recibe via SSE.
+        parameters:
+            - name: conversationId
+              in: path
+              required: true
+              schema: { type: string, format: uuid }
+        requestBody:
+            required: true
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        required: [content]
+                        properties:
+                            content:
+                                type: string
+                                example: "Calle Mayor 123, Madrid"
+        responses:
+            "200": { description: Mensaje recibido, procesando en background }
+            "404": { description: Conversación no encontrada }
+
+/api/mock/conversations/{conversationId}/events:
+    get:
+        summary: SSE — Eventos en tiempo real de la conversación
+        description: |
+            Server-Sent Events. El Worker publica en Redis; la API reenvía al cliente.
+            Incluye mensajes del asistente y eventos terminales (conversation:complete).
+        parameters:
+            - name: conversationId
+              in: path
+              required: true
+              schema: { type: string, format: uuid }
+        responses:
+            "200":
+                description: Stream SSE (text/event-stream)
+```
+
+> 📖 **Patrón SSE**: [memory-bank/patterns/real-time-sse-patterns.md](./memory-bank/patterns/real-time-sse-patterns.md)
+
+---
+
+### **Endpoint 5: Dashboard Admin — Pedidos, Usuarios y Chat**
 
 ```yaml
 /admin/orders:
@@ -1864,7 +1952,9 @@ components:
             description: Firma HMAC del webhook de WooCommerce
 ```
 
-> 📖 **API completa**: [Adresles_Business.md - Sección 4.12](./Adresles_Business.md#412-api-endpoints-principales)
+> 📖 **API completa**: [Adresles_Business.md - Sección 4.12](./Adresles_Business.md#412-api-endpoints-principales)  
+> 📖 **Spec mock-orders-api**: [openspec/specs/mock-orders-api/spec.md](./openspec/specs/mock-orders-api/spec.md)  
+> 📖 **Spec mock-conversations**: [openspec/specs/mock-conversations/spec.md](./openspec/specs/mock-conversations/spec.md)
 
 ---
 
@@ -2285,6 +2375,51 @@ Esta Pull Request representa **la fundación completa del proyecto Adresles**. N
 
 ---
 
-### **Pull Request 2:**
+### **Pull Request 2: Monorepo Funcional (MVP Mock) — Etapa 2**
+
+#### 📋 Información General
+
+- **Rama origen**: `finalproject-SVL-v2`
+- **Rama destino**: `finalproject-SVL`
+- **Autor**: Sergio Valdueza Lozano
+- **Fecha**: 2 de marzo de 2026
+- **Tipo de cambio**: Feature + Architecture
+- **Estado**: ✅ Listo para revisión y merge
+- **Link**: [Ver PR completa](./PR%2020260302.md)
+
+#### 🎯 Resumen Ejecutivo
+
+Transformación de la planificación documental (Etapa 1) en un **Monorepo funcional** capaz de ejecutar el flujo completo del MVP en modo Mock. Incluye:
+
+- **Monorepo Turborepo**: `apps/` (api, web-admin, worker) y `packages/` (prisma-db, shared-types)
+- **Flujo end-to-end Mock**: API → BullMQ → Worker → Redis Pub/Sub → SSE → Frontend
+- **Simulador** (`/simulate`): Configuración de pedido, chat en vivo con SSE
+- **Worker completo**: Journeys GET_ADDRESS, INFORMATION; sub-journeys (propuesta dirección, registro voluntario, libreta de direcciones)
+
+#### 📊 ADRs Incorporados (005-009)
+
+| ADR | Título |
+|-----|--------|
+| [005](./memory-bank/architecture/005-bullmq-worker-conversations.md) | BullMQ + Worker Dedicado para Conversaciones IA |
+| [006](./memory-bank/architecture/006-sse-redis-pubsub.md) | SSE + Redis Pub/Sub para Real-Time |
+| [007](./memory-bank/architecture/007-shared-types-package.md) | `packages/shared-types` — Tipos compartidos |
+| [008](./memory-bank/architecture/008-prisma-schema-worker-opcion-c.md) | Worker apunta al schema del API (obsoleto, sustituido por 009) |
+| [009](./memory-bank/architecture/009-prisma-db-package.md) | `packages/prisma-db` — Fuente única del schema Prisma |
+
+#### 🚀 Principales Cambios
+
+- **packages/prisma-db**: Schema, migraciones, seed y cliente Prisma centralizado
+- **packages/shared-types**: `ProcessConversationJobData`, `ProcessResponseJobData`, `MockOrderContext`
+- **API**: Módulo mock con `POST /reply`, `GET /events` (SSE); MockSseService (Redis Pub/Sub)
+- **Worker**: redis-publisher, conversation.processor con sub-journeys (address proposals, registration, address book)
+- **web-admin**: Página `/simulate`, OrderConfigModal, SimulationChat, filtros y ordenación en Orders/Users
+
+#### 📚 Referencias
+
+- **Documentación completa**: [PR 20260302.md](./PR%2020260302.md)
+- **Memory-Bank**: [memory-bank/README.md](./memory-bank/README.md)
+- **Sesiones relacionadas**: [memory-bank/sessions/](./memory-bank/sessions/) (2026-02-21 a 2026-03-02)
+
+---
 
 ### **Pull Request 3:**
