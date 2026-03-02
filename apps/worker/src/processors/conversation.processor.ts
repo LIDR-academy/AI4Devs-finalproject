@@ -1,6 +1,6 @@
 // dotenv is loaded in main.ts with override:true
 import { Job } from 'bullmq';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@adresles/prisma-db';
 import OpenAI from 'openai';
 import {
   ProcessConversationJobData,

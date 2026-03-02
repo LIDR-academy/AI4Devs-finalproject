@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, StorePlatform } from '@prisma/client';
+import { Prisma, StorePlatform } from '@adresles/prisma-db';
 import { PrismaService } from '../prisma/prisma.service';
 import { MockConversationsService } from '../mock/mock-conversations.service';
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMockOrderDto, MockAddressDto } from '../mock/dto/create-mock-order.dto';
 import { calculateFee } from '../shared/fee.utils';
-import { OrderStatus, StatusSource } from '@prisma/client';
+import { OrderStatus, StatusSource } from '@adresles/prisma-db';
 
 export interface CreateAddressOptions {
   address: MockAddressDto;

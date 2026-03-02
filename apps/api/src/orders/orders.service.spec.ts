@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMockOrderDto } from '../mock/dto/create-mock-order.dto';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus } from '@adresles/prisma-db';
 
 const mockPrisma = {
   order: {

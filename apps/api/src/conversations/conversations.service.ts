@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueService } from '../queue/queue.service';
-import { ConversationType, UserType } from '@prisma/client';
+import { ConversationType, UserType } from '@adresles/prisma-db';
 import { MockOrderContext } from '@adresles/shared-types';
 
 @Injectable()

@@ -2,7 +2,7 @@
 
 > **Contexto persistente del proyecto para sesiones de IA**  
 > **Última actualización**: 2026-03-02  
-> ✅ **Change completado**: cu03-b1-worker-db-sync — `StatusSource` enum, `syncedAt`/`statusSource` en pedidos, schema del Worker → API (ADR-008), bug TRADITIONAL→COMPLETED corregido, `buildSyncSuccessMessage` con `storeName`
+> ✅ **Change completado**: infra-prisma-shared-schema — `packages/prisma-db` (Opción B, ADR-009), schema+migraciones+seed centralizados, `@adresles/prisma-db` en dependencies
 
 ## 📖 Inicio Rápido
 
@@ -26,6 +26,7 @@ Decisiones clave que guían el desarrollo del proyecto:
 | [006](./architecture/006-sse-redis-pubsub.md) | SSE + Redis Pub/Sub para Notificaciones Real-Time | ✅ Aceptada | 2026-02-27 |
 | [007](./architecture/007-shared-types-package.md) | `packages/shared-types` — Fuente Única de Tipos Compartidos | ✅ Aceptada | 2026-02-28 |
 | [008](./architecture/008-prisma-schema-worker-opcion-c.md) | Worker apunta al schema Prisma del API (Opción C, stepping stone) | ✅ Aceptada | 2026-03-02 |
+| [009](./architecture/009-prisma-db-package.md) | `packages/prisma-db` — Fuente Única del Schema Prisma (Opción B) | ✅ Aceptada | 2026-03-02 |
 
 ## 🎨 Patrones y Convenciones
 
@@ -34,6 +35,7 @@ Decisiones clave que guían el desarrollo del proyecto:
 | [validation-patterns.md](./patterns/validation-patterns.md) | DTOs con `class-validator`, Query/Body/Nested, `ValidationPipe`, tests de controller con `supertest` | 2026-02-28 |
 | [real-time-sse-patterns.md](./patterns/real-time-sse-patterns.md) | SSE con NestJS, Redis Pub/Sub con `ioredis`, `psubscribe`, RxJS `Subject`; `EventSource` con URL absoluta en Next.js | 2026-03-01 |
 | [frontend-form-patterns.md](./patterns/frontend-form-patterns.md) | Formulario-modal con `useState` local, `canSubmit` derivado, mapeo `line1`/`line2` → `street`/`full_address`, combobox con estado derivado, `safeTimeLabel`, `key` prop reset | 2026-03-01 |
+| [prisma-shared-package-patterns.md](./patterns/prisma-shared-package-patterns.md) | Schema+migraciones+seed en `packages/prisma-db`, `dependencies` vs devDependencies, `db:seed` desde root, shadow DB y checksum | 2026-03-02 |
 
 Pendiente de documentar:
 - Límites de agregados DDD
@@ -81,8 +83,9 @@ Pendiente de documentar:
 | [2026-02-28](./sessions/2026-02-28-cu03-a5-order-config-modal.md) | CU03-A5 — Modal de Configuración de Pedido — Completado | ✅ Completado (26/26 tareas + S1/S2/S3) |
 | [2026-03-01](./sessions/2026-03-01-cu03-a6-simulation-chat.md) | CU03-A6 — Chat de Simulación SSE en Tiempo Real — Completado | ✅ Completado (22/22 tareas) |
 | [2026-03-02](./sessions/2026-03-02-cu03-b1-worker-db-sync.md) | CU03-B1 — Worker DB Sync: StatusSource + Schema Compartido — Completado | ✅ Completado (30/30 tareas) |
+| [2026-03-02](./sessions/2026-03-02-infra-prisma-shared-schema.md) | infra-prisma-shared-schema — packages/prisma-db (Opción B, ADR-009) — Completado | ✅ Completado (19/19 tareas) |
 
-**Próximo change**: `infra-prisma-shared-schema` (Opción B: `packages/prisma-db`) o siguiente CU03.
+**Próximo change**: siguiente CU03 o nuevo change según prioridad.
 
 ## 🔄 Flujo de Trabajo
 
@@ -120,12 +123,14 @@ memory-bank/
 │   ├── 005-bullmq-worker-conversations.md
 │   ├── 006-sse-redis-pubsub.md
 │   ├── 007-shared-types-package.md
-│   └── 008-prisma-schema-worker-opcion-c.md
+│   ├── 008-prisma-schema-worker-opcion-c.md
+│   └── 009-prisma-db-package.md
 │
 ├── patterns/                   # Patrones y convenciones
 │   ├── validation-patterns.md       # DTOs, class-validator, supertest
 │   ├── real-time-sse-patterns.md    # SSE, Redis Pub/Sub, RxJS
-│   └── frontend-form-patterns.md   # Formularios modal, dirección eCommerce, combobox
+│   ├── frontend-form-patterns.md   # Formularios modal, dirección eCommerce, combobox
+│   └── prisma-shared-package-patterns.md  # Schema+migraciones+seed en packages/prisma-db
 │
 ├── sessions/                   # Aprendizajes de sesiones pasadas
 │   └── (se documenta conforme avanza el proyecto)
@@ -161,5 +166,5 @@ Este memory-bank permite a la IA:
 
 **Última revisión**: 2026-03-02  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: CU03-B1 completado — `StatusSource` enum (ADRESLES|STORE), `syncedAt`+`statusSource` en pedidos ADRESLES y TRADITIONAL, schema del Worker apunta al API (ADR-008), bug TRADITIONAL→COMPLETED corregido, `buildSyncSuccessMessage` con `storeName` en 3 idiomas. ADR-008 creado. Glosario v1.5: semántica de `READY_TO_PROCESS`/`COMPLETED` corregida, términos `StatusSource` y `syncedAt` añadidos.  
+**Cambios recientes**: infra-prisma-shared-schema completado — `packages/prisma-db` (ADR-009), schema+migraciones+seed centralizados, `@adresles/prisma-db` en dependencies, `db:seed` desde root. Patrón prisma-shared-package-patterns y sesión documentados.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

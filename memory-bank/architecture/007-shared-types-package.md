@@ -50,7 +50,7 @@ Crear un paquete privado de workspace `packages/shared-types` (`@adresles/shared
 
 - **Sin drift de tipos**: `ProcessConversationJobData`, `ProcessResponseJobData` y `MockOrderContext` tienen una única definición.
 - **Mejor DX**: Autocompletado y errores de tipo en ambas apps cuando el contrato cambia.
-- **Patrón escalable**: Añadir nuevos tipos compartidos no requiere decisión nueva — van a `packages/shared-types/src/index.ts`.
+- **Patrón escalable**: Añadir nuevos tipos compartidos no requiere decisión nueva — van a `packages/shared-types/src/index.ts`. El mismo patrón se extendió a `packages/prisma-db` ([ADR-009](./009-prisma-db-package.md)) para el schema Prisma compartido.
 
 ### ❌ Negativas (Trade-offs)
 

@@ -5,7 +5,7 @@ import { OrdersService } from '../orders/orders.service';
 import { ConversationsService } from '../conversations/conversations.service';
 import { EcommerceSyncService } from '../ecommerce-sync/ecommerce-sync.service';
 import { CreateMockOrderDto } from './dto/create-mock-order.dto';
-import { ConversationType, UserType } from '@prisma/client';
+import { ConversationType, UserType } from '@adresles/prisma-db';
 
 export interface MockOrderResult {
   order_id: string;

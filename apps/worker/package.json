@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "prisma": {
-    "schema": "../api/prisma/schema.prisma"
+    "schema": "../../packages/prisma-db/schema.prisma"
   },
   "scripts": {
     "build": "tsc",
@@ -13,10 +13,10 @@
     "test:cov": "jest --coverage"
   },
   "dependencies": {
+    "@adresles/prisma-db": "workspace:*",
     "@adresles/shared-types": "workspace:*",
     "@aws-sdk/client-dynamodb": "^3.995.0",
     "@aws-sdk/lib-dynamodb": "^3.995.0",
-    "@prisma/client": "^5.22.0",
     "bullmq": "^5.0.0",
     "ioredis": "^5.4.0",
     "openai": "^4.0.0"
