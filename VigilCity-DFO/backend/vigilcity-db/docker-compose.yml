@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:14  # Usar la imagen oficial de PostgreSQL
+    container_name: vigilcity-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}  # Mapeo de variable de entorno
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Mapeo de variable de entorno
+      POSTGRES_DB: ${POSTGRES_DB}  # Mapeo de variable de entorno
+    ports:
+      - "5432:5432"  # Puerto en el que la DB será accesible
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data  # Montar volumen para persistencia de datos
+    networks:
+      - vigilcity-network
+
+networks:
+  vigilcity-network:
+    driver: bridge
