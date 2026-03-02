@@ -15,6 +15,7 @@ import {
   extractAddressFromConversation,
   validateWithGoogleMaps,
   buildPendingAddress,
+  buildAddressProposalMessage,
   pendingAddressNeedsBuildingDetails,
   interpretUserIntent,
   buildAddressDisplayText,
@@ -115,16 +116,154 @@ export async function conversationProcessor(job: Job<ProcessConversationJobData>
   throw new Error(`Unknown conversation type: ${conversationType}`);
 }
 
+function addressToPendingAddress(addr: {
+  fullAddress: string;
+  street: string;
+  number: string | null;
+  postalCode: string;
+  city: string;
+  province: string | null;
+  country: string;
+  block: string | null;
+  staircase: string | null;
+  floor: string | null;
+  door: string | null;
+  additionalInfo: string | null;
+}): PendingAddress {
+  return {
+    gmapsFormatted: addr.fullAddress,
+    gmapsPlaceId: null,
+    latitude: null,
+    longitude: null,
+    street: addr.street,
+    number: addr.number ?? null,
+    postalCode: addr.postalCode,
+    city: addr.city,
+    province: addr.province ?? null,
+    country: addr.country,
+    block: addr.block ?? null,
+    staircase: addr.staircase ?? null,
+    floor: addr.floor ?? null,
+    door: addr.door ?? null,
+    additionalInfo: addr.additionalInfo ?? null,
+    couldBeBuilding: false,
+    userConfirmedNoDetails: true,
+  };
+}
+
+function ecommerceAddressToPending(addr: {
+  full_address: string;
+  street: string;
+  number?: string;
+  postal_code: string;
+  city: string;
+  province?: string;
+  country: string;
+  block?: string;
+  staircase?: string;
+  floor?: string;
+  door?: string;
+  additional_info?: string;
+}): PendingAddress {
+  return {
+    gmapsFormatted: addr.full_address,
+    gmapsPlaceId: null,
+    latitude: null,
+    longitude: null,
+    street: addr.street,
+    number: addr.number ?? null,
+    postalCode: addr.postal_code,
+    city: addr.city,
+    province: addr.province ?? null,
+    country: addr.country,
+    block: addr.block ?? null,
+    staircase: addr.staircase ?? null,
+    floor: addr.floor ?? null,
+    door: addr.door ?? null,
+    additionalInfo: addr.additional_info ?? null,
+    couldBeBuilding: false,
+    userConfirmedNoDetails: true,
+  };
+}
+
 async function processGetAddressJourney(
   conversationId: string,
-  user: { firstName: string | null; lastName: string | null; preferredLanguage: string | null },
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    preferredLanguage: string | null;
+    isRegistered: boolean;
+  },
   order: { externalOrderNumber: string | null; store: { name: string } },
-  _context?: MockOrderContext,
+  context?: MockOrderContext,
 ) {
   const name = user.firstName ?? 'Cliente';
   const language = getLanguageName(user.preferredLanguage);
   const systemPrompt = buildGetAddressSystemPrompt(language);
-  const userPrompt = buildGetAddressUserPrompt({ name, storeName: order.store.name, orderNumber: order.externalOrderNumber, language });
+  const storeName = order.store.name;
+
+  // ─── Sub-journey 2.1: usuario registrado con dirección en Adresles ──
+  if (user.isRegistered) {
+    const savedAddresses = await prisma.address.findMany({
+      where: { userId: user.id, isDeleted: false },
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
+      take: 1,
+    });
+
+    if (savedAddresses.length > 0) {
+      const saved = savedAddresses[0];
+      const proposedPending = addressToPendingAddress({
+        fullAddress: saved.fullAddress,
+        street: saved.street,
+        number: saved.number,
+        postalCode: saved.postalCode,
+        city: saved.city,
+        province: saved.province,
+        country: saved.country,
+        block: saved.block,
+        staircase: saved.staircase,
+        floor: saved.floor,
+        door: saved.door,
+        additionalInfo: saved.additionalInfo,
+      });
+
+      const msg = buildAddressProposalMessage(proposedPending, storeName, 'adresles', language);
+      await saveMessage(conversationId, 'system', systemPrompt);
+      await saveMessage(conversationId, 'assistant', msg);
+      await saveConversationState(conversationId, {
+        phase: 'WAITING_ADDRESS_PROPOSAL_CONFIRM',
+        pendingAddress: proposedPending,
+        failedAttempts: 0,
+      });
+      await publishConversationUpdate(conversationId, 'assistant', msg);
+
+      console.log(`[GET_ADDRESS] Sub-journey 2.1 — proposed Adresles saved address to ${name}`);
+      return { conversationId, message: msg, conversationType: 'GET_ADDRESS' };
+    }
+  }
+
+  // ─── Sub-journey 2.3: usuario no registrado con dirección eCommerce ──
+  if (!user.isRegistered && context?.buyerRegisteredEcommerce && context.buyerEcommerceAddress) {
+    const addr = context.buyerEcommerceAddress;
+    const proposedPending = ecommerceAddressToPending(addr);
+
+    const msg = buildAddressProposalMessage(proposedPending, storeName, 'ecommerce', language);
+    await saveMessage(conversationId, 'system', systemPrompt);
+    await saveMessage(conversationId, 'assistant', msg);
+    await saveConversationState(conversationId, {
+      phase: 'WAITING_ADDRESS_PROPOSAL_CONFIRM',
+      pendingAddress: proposedPending,
+      failedAttempts: 0,
+    });
+    await publishConversationUpdate(conversationId, 'assistant', msg);
+
+    console.log(`[GET_ADDRESS] Sub-journey 2.3 — proposed eCommerce address to ${name}`);
+    return { conversationId, message: msg, conversationType: 'GET_ADDRESS' };
+  }
+
+  // ─── Sub-journey 2.2 / 2.4: pregunta dirección estándar ──
+  const userPrompt = buildGetAddressUserPrompt({ name, storeName, orderNumber: order.externalOrderNumber, language });
   const assistantMessage = await generateWithOpenAI(systemPrompt, userPrompt);
 
   await saveMessage(conversationId, 'system', systemPrompt);
@@ -132,10 +271,9 @@ async function processGetAddressJourney(
   await saveMessage(conversationId, 'assistant', assistantMessage);
   await publishConversationUpdate(conversationId, 'assistant', assistantMessage);
 
-  // Initialize state
   await saveConversationState(conversationId, { phase: 'WAITING_ADDRESS', failedAttempts: 0 } as ConversationState);
 
-  console.log(`[GET_ADDRESS] Conversation ${conversationId} — sent to ${name}: ${assistantMessage}`);
+  console.log(`[GET_ADDRESS] Sub-journey 2.2/2.4 — asked for address from ${name}: ${assistantMessage}`);
   return { conversationId, message: assistantMessage, conversationType: 'GET_ADDRESS' };
 }
 
@@ -203,6 +341,7 @@ export async function processResponseProcessor(job: Job<ProcessResponseJobData>)
 
   const handlers: Record<ConversationState['phase'], (ctx: HandlerContext) => Promise<unknown>> = {
     WAITING_ADDRESS: handleWaitingAddress,
+    WAITING_ADDRESS_PROPOSAL_CONFIRM: handleAddressProposalConfirm,
     WAITING_DISAMBIGUATION: handleDisambiguation,
     WAITING_BUILDING_DETAILS: handleBuildingDetails,
     WAITING_CONFIRMATION: handleConfirmation,
@@ -212,6 +351,26 @@ export async function processResponseProcessor(job: Job<ProcessResponseJobData>)
 }
 
 // ─── Phase handlers ───────────────────────────────────────────────────────────
+
+async function handleAddressProposalConfirm(ctx: HandlerContext) {
+  const { userMessage, state, language } = ctx;
+  const pending = state.pendingAddress!;
+
+  const intent = await interpretUserIntent('WAITING_CONFIRMATION', userMessage, language);
+  console.log(`[PROCESS_RESPONSE] Address proposal confirm intent: ${intent.type}`);
+
+  if (intent.type === 'CONFIRM') {
+    return finalizeAddress(ctx, pending);
+  }
+
+  // Usuario rechaza o da otra dirección → transicionar a WAITING_ADDRESS
+  const correctedCtx: HandlerContext = {
+    ...ctx,
+    userMessage: intent.type === 'REJECT_AND_CORRECT' && intent.correction ? intent.correction : userMessage,
+    state: { phase: 'WAITING_ADDRESS', failedAttempts: 0 },
+  };
+  return handleWaitingAddress(correctedCtx);
+}
 
 async function handleWaitingAddress(ctx: HandlerContext) {
   const { conversationId, userMessage, state, language } = ctx;

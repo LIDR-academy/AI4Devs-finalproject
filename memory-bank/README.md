@@ -2,7 +2,7 @@
 
 > **Contexto persistente del proyecto para sesiones de IA**  
 > **Última actualización**: 2026-03-02  
-> ✅ **Change completado**: infra-prisma-shared-schema — `packages/prisma-db` (Opción B, ADR-009), schema+migraciones+seed centralizados, `@adresles/prisma-db` en dependencies
+> ✅ **Change completado**: cu03-b2-worker-address-proposals — sub-journeys 2.1 y 2.3 (proponer dirección Adresles/eCommerce)
 
 ## 📖 Inicio Rápido
 
@@ -84,8 +84,9 @@ Pendiente de documentar:
 | [2026-03-01](./sessions/2026-03-01-cu03-a6-simulation-chat.md) | CU03-A6 — Chat de Simulación SSE en Tiempo Real — Completado | ✅ Completado (22/22 tareas) |
 | [2026-03-02](./sessions/2026-03-02-cu03-b1-worker-db-sync.md) | CU03-B1 — Worker DB Sync: StatusSource + Schema Compartido — Completado | ✅ Completado (30/30 tareas) |
 | [2026-03-02](./sessions/2026-03-02-infra-prisma-shared-schema.md) | infra-prisma-shared-schema — packages/prisma-db (Opción B, ADR-009) — Completado | ✅ Completado (19/19 tareas) |
+| [2026-03-02](./sessions/2026-03-02-cu03-b2-worker-address-proposals.md) | CU03-B2 — Worker: Sub-journeys 2.1 y 2.3 (proponer dirección guardada) — Completado | ✅ Completado (13/13 tareas) |
 
-**Próximo change**: siguiente CU03 o nuevo change según prioridad.
+**Próximo change**: CU03-B3 (registro post-confirmación) o CU03-B4 (libreta direcciones).
 
 ## 🔄 Flujo de Trabajo
 
@@ -166,5 +167,5 @@ Este memory-bank permite a la IA:
 
 **Última revisión**: 2026-03-02  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: infra-prisma-shared-schema completado — `packages/prisma-db` (ADR-009), schema+migraciones+seed centralizados, `@adresles/prisma-db` en dependencies, `db:seed` desde root. Patrón prisma-shared-package-patterns y sesión documentados.  
+**Cambios recientes**: CU03-B2 completado — sub-journeys 2.1 (Adresles) y 2.3 (eCommerce) para proponer dirección guardada; fase `WAITING_ADDRESS_PROPOSAL_CONFIRM`; sesión documentada.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

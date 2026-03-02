@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 
 export type ConversationPhase =
   | 'WAITING_ADDRESS'
+  | 'WAITING_ADDRESS_PROPOSAL_CONFIRM'
   | 'WAITING_DISAMBIGUATION'
   | 'WAITING_BUILDING_DETAILS'
   | 'WAITING_CONFIRMATION';
@@ -393,6 +394,36 @@ function mockInterpretIntent(phase: ConversationPhase, msg: string): UserIntent 
 }
 
 // ─── Message builders ─────────────────────────────────────────────────────────
+
+export function buildAddressProposalMessage(
+  pending: PendingAddress,
+  storeName: string,
+  source: 'adresles' | 'ecommerce',
+  language: string,
+): string {
+  const addressText = buildAddressDisplayText(pending);
+  const sourceText =
+    source === 'adresles'
+      ? language === 'English'
+        ? 'your saved Adresles address'
+        : 'tu dirección guardada en Adresles'
+      : language === 'English'
+        ? `your address registered at ${storeName}`
+        : `tu dirección registrada en ${storeName}`;
+
+  if (language === 'English') {
+    return (
+      `Hi! We've received your order from ${storeName}. ` +
+      `Shall we send it to ${sourceText}?\n\n**${addressText}**\n\n` +
+      `Reply "Yes" to confirm or give me a different address.`
+    );
+  }
+  return (
+    `¡Hola! Hemos recibido tu pedido de ${storeName}. ` +
+    `¿Te lo enviamos a ${sourceText}?\n\n**${addressText}**\n\n` +
+    `Responde "Sí" para confirmar o indícame otra dirección.`
+  );
+}
 
 export function buildAddressDisplayText(pending: PendingAddress): string {
   const parts = [

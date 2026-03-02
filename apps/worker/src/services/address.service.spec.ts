@@ -1,4 +1,8 @@
-import { buildSyncSuccessMessage, type PendingAddress } from './address.service';
+import {
+  buildSyncSuccessMessage,
+  buildAddressProposalMessage,
+  type PendingAddress,
+} from './address.service';
 
 const pending: PendingAddress = {
   gmapsFormatted: 'Calle Mayor 1, 28001 Madrid, Spain',
@@ -50,5 +54,40 @@ describe('buildSyncSuccessMessage', () => {
 
     expect(msg).toContain('Tienda Demo');
     expect(msg).toContain('registrada correctamente');
+  });
+});
+
+describe('buildAddressProposalMessage', () => {
+  it('generates Spanish message for adresles source', () => {
+    const msg = buildAddressProposalMessage(pending, 'TiendaX', 'adresles', 'Spanish');
+
+    expect(msg).toContain('tu dirección guardada en Adresles');
+    expect(msg).toContain('Responde "Sí" para confirmar');
+    expect(msg).toContain('TiendaX');
+    expect(msg).toContain('Calle Mayor');
+    expect(msg).toContain('28001');
+  });
+
+  it('generates English message for adresles source', () => {
+    const msg = buildAddressProposalMessage(pending, 'StoreY', 'adresles', 'English');
+
+    expect(msg).toContain('your saved Adresles address');
+    expect(msg).toContain('Reply "Yes" to confirm');
+    expect(msg).toContain('StoreY');
+  });
+
+  it('generates Spanish message for ecommerce source', () => {
+    const msg = buildAddressProposalMessage(pending, 'ModaMujer', 'ecommerce', 'Spanish');
+
+    expect(msg).toContain('tu dirección registrada en ModaMujer');
+    expect(msg).toContain('Responde "Sí" para confirmar');
+  });
+
+  it('generates English message for ecommerce source', () => {
+    const msg = buildAddressProposalMessage(pending, 'FashionStore', 'ecommerce', 'English');
+
+    expect(msg).toContain('your address registered at FashionStore');
+    expect(msg).toContain('Reply "Yes" to confirm');
+    expect(msg).toContain('FashionStore');
   });
 });
