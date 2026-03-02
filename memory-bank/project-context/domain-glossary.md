@@ -2,7 +2,7 @@
 
 > **Última actualización**: 2026-02-19  
 > **Documento fuente**: [Adresles_Business.md - Glosario](../../Adresles_Business.md#glosario)  
-> ⚠️ **Actualizado v1.4**: OrderStatus redefinido; nuevos términos Phone, OrderMode, PaymentType, AddressOrigin
+> ⚠️ **Actualizado v1.5**: Order Status — READY_TO_PROCESS es el estado final del MVP (COMPLETED solo para integración real); nuevos términos StatusSource y syncedAt
 
 ---
 
@@ -127,10 +127,26 @@ Rol del usuario en una conversación: `BUYER` (comprador) o `RECIPIENT` (destina
 #### **Order Status**
 Estados del pedido:
 - `PENDING_PAYMENT`: Webhook recibido, pago pendiente de confirmar
-- `PENDING_ADDRESS`: Pago confirmado, esperando dirección del usuario
-- `READY_TO_PROCESS`: Dirección confirmada, pendiente de sincronizar con eCommerce
-- `COMPLETED`: Dirección sincronizada con eCommerce exitosamente
+- `PENDING_ADDRESS`: Pago confirmado, esperando dirección del usuario (solo modo ADRESLES)
+- `READY_TO_PROCESS`: Dirección confirmada y registrada — **estado final del MVP**. Para pedidos ADRESLES: se alcanza cuando el Worker completa `finalizeAddress()`. Para pedidos TRADITIONAL: se asigna en el momento de creación.
+- `COMPLETED`: Reservado para cuando exista integración real con el eCommerce (la tienda confirma que procesó el pedido). **No se usa en el MVP mock** — los pedidos simulados nunca alcanzan este estado.
 - `CANCELED`: Pedido cancelado (pago fallido o usuario cancela)
+
+> ⚠️ **Corrección v1.5**: `READY_TO_PROCESS` es el estado final del MVP, no `COMPLETED`. `COMPLETED` estaba siendo asignado incorrectamente por `processTraditionalOrder()` — bug corregido en `cu03-b1-worker-db-sync`.
+
+#### **StatusSource**
+Enum que registra quién originó el último cambio de estado de un pedido:
+- `ADRESLES`: El sistema Adresles cambió el estado (ej: Worker completa `finalizeAddress()` tras confirmar dirección)
+- `STORE`: La tienda online cambió el estado (ej: creación de pedido TRADITIONAL, o futura integración real con eCommerce)
+
+Se almacena en el campo `statusSource` del modelo `Order` (nullable — registros anteriores a `cu03-b1-worker-db-sync` tienen `NULL`). Siempre se setea junto con `syncedAt`.
+
+#### **syncedAt**
+Timestamp del último cambio de estado de un pedido. Se setea simultáneamente con `statusSource` en cada transición relevante:
+- Creación de pedido TRADITIONAL: `syncedAt = now`, `statusSource = STORE`
+- Confirmación de dirección ADRESLES (en `finalizeAddress()`): `syncedAt = now`, `statusSource = ADRESLES`
+
+Complementa a `addressConfirmedAt` (timestamp específico de cuándo el usuario confirmó la dirección en conversación).
 
 #### **Conversation Status**
 Estados de la conversación:
@@ -249,7 +265,8 @@ Proceso donde el usuario puede optar por registrarse en Adresles después de com
 
 ---
 
-**Última actualización**: 2026-02-19  
+**Última actualización**: 2026-03-02  
 **Mantenido por**: Sergio  
 **Cambios v1.4**: OrderStatus actualizado (nuevos estados PENDING_PAYMENT, READY_TO_PROCESS, COMPLETED, CANCELED); añadidos términos Phone, OrderMode, PaymentType, AddressOrigin  
+**Cambios v1.5**: Order Status — semántica corregida: READY_TO_PROCESS es el estado final del MVP; COMPLETED reservado para integración real. Añadidos términos StatusSource y syncedAt (`cu03-b1-worker-db-sync`)  
 **Evoluciona con**: Cada nuevo término del dominio que surja durante el desarrollo

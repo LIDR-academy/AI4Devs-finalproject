@@ -102,6 +102,8 @@ describe('OrdersService', () => {
             status: 'READY_TO_PROCESS',
             orderMode: 'TRADITIONAL',
             addressConfirmedAt: expect.any(Date),
+            syncedAt: expect.any(Date),
+            statusSource: 'STORE',
           }),
         }),
       );
@@ -137,7 +139,7 @@ describe('OrdersService', () => {
       expect(callData.feeAmount).toBeCloseTo(1.944, 2);
     });
 
-    it('does not set addressConfirmedAt when status is PENDING_ADDRESS', async () => {
+    it('does not set addressConfirmedAt, syncedAt or statusSource when status is PENDING_ADDRESS', async () => {
       mockPrisma.order.create.mockResolvedValue({ id: 'order-1' });
 
       await service.createFromMock(baseDto, 'store-1', 'user-1', {
@@ -147,6 +149,8 @@ describe('OrdersService', () => {
 
       const callData = mockPrisma.order.create.mock.calls[0][0].data;
       expect(callData.addressConfirmedAt).toBeUndefined();
+      expect(callData.syncedAt).toBeUndefined();
+      expect(callData.statusSource).toBeUndefined();
     });
   });
 

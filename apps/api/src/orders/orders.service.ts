@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMockOrderDto, MockAddressDto } from '../mock/dto/create-mock-order.dto';
 import { calculateFee } from '../shared/fee.utils';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, StatusSource } from '@prisma/client';
 
 export interface CreateAddressOptions {
   address: MockAddressDto;
@@ -45,6 +45,8 @@ export class OrdersService {
         itemsSummary: dto.items ? (dto.items as object) : undefined,
         webhookReceivedAt: now,
         addressConfirmedAt: isAddressReady ? now : undefined,
+        syncedAt: isAddressReady ? now : undefined,
+        statusSource: isAddressReady ? StatusSource.STORE : undefined,
       },
     });
 
@@ -128,11 +130,11 @@ export class OrdersService {
   async updateStatus(
     orderId: string,
     status: OrderStatus,
-    timestamps?: { addressConfirmedAt?: Date; syncedAt?: Date },
+    options?: { addressConfirmedAt?: Date; syncedAt?: Date; statusSource?: StatusSource },
   ) {
     return this.prisma.order.update({
       where: { id: orderId },
-      data: { status, ...timestamps },
+      data: { status, ...options },
     });
   }
 }

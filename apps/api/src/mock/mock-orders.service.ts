@@ -94,10 +94,6 @@ export class MockOrdersService {
       recipientPhone: dto.buyer.phone,
     });
 
-    await this.orders.updateStatus(order.id, 'COMPLETED', {
-      syncedAt: new Date(),
-    });
-
     return { order_id: order.id, conversation_id: conversation.id };
   }
 }

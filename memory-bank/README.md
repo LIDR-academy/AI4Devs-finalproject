@@ -1,8 +1,8 @@
 # Memory Bank - Adresles
 
 > **Contexto persistente del proyecto para sesiones de IA**  
-> **Última actualización**: 2026-03-01  
-> ✅ **Change completado**: cu03-a6-simulation-chat — `SimulationChat` (SSE + historial + envío), `TypingIndicator`, `createConversationEventSource`, `key` prop reset, filtro `__state__` en API, `safeTimeLabel` en `ChatBubble`
+> **Última actualización**: 2026-03-02  
+> ✅ **Change completado**: cu03-b1-worker-db-sync — `StatusSource` enum, `syncedAt`/`statusSource` en pedidos, schema del Worker → API (ADR-008), bug TRADITIONAL→COMPLETED corregido, `buildSyncSuccessMessage` con `storeName`
 
 ## 📖 Inicio Rápido
 
@@ -25,6 +25,7 @@ Decisiones clave que guían el desarrollo del proyecto:
 | [005](./architecture/005-bullmq-worker-conversations.md) | BullMQ + Worker Dedicado para Conversaciones IA | ✅ Aceptada | 2026-02-21 |
 | [006](./architecture/006-sse-redis-pubsub.md) | SSE + Redis Pub/Sub para Notificaciones Real-Time | ✅ Aceptada | 2026-02-27 |
 | [007](./architecture/007-shared-types-package.md) | `packages/shared-types` — Fuente Única de Tipos Compartidos | ✅ Aceptada | 2026-02-28 |
+| [008](./architecture/008-prisma-schema-worker-opcion-c.md) | Worker apunta al schema Prisma del API (Opción C, stepping stone) | ✅ Aceptada | 2026-03-02 |
 
 ## 🎨 Patrones y Convenciones
 
@@ -79,8 +80,9 @@ Pendiente de documentar:
 | [2026-02-28](./sessions/2026-02-28-cu03-a4-simulate-layout.md) | CU03-A4 — Layout /simulate y enlace en Sidebar — Completado | ✅ Completado (17/17 tareas) |
 | [2026-02-28](./sessions/2026-02-28-cu03-a5-order-config-modal.md) | CU03-A5 — Modal de Configuración de Pedido — Completado | ✅ Completado (26/26 tareas + S1/S2/S3) |
 | [2026-03-01](./sessions/2026-03-01-cu03-a6-simulation-chat.md) | CU03-A6 — Chat de Simulación SSE en Tiempo Real — Completado | ✅ Completado (22/22 tareas) |
+| [2026-03-02](./sessions/2026-03-02-cu03-b1-worker-db-sync.md) | CU03-B1 — Worker DB Sync: StatusSource + Schema Compartido — Completado | ✅ Completado (30/30 tareas) |
 
-**Próximo change**: CU03-A7 (pendiente de definir).
+**Próximo change**: `infra-prisma-shared-schema` (Opción B: `packages/prisma-db`) o siguiente CU03.
 
 ## 🔄 Flujo de Trabajo
 
@@ -117,7 +119,8 @@ memory-bank/
 │   ├── 004-openai-gpt4.md
 │   ├── 005-bullmq-worker-conversations.md
 │   ├── 006-sse-redis-pubsub.md
-│   └── 007-shared-types-package.md
+│   ├── 007-shared-types-package.md
+│   └── 008-prisma-schema-worker-opcion-c.md
 │
 ├── patterns/                   # Patrones y convenciones
 │   ├── validation-patterns.md       # DTOs, class-validator, supertest
@@ -156,7 +159,7 @@ Este memory-bank permite a la IA:
 
 ---
 
-**Última revisión**: 2026-03-01  
+**Última revisión**: 2026-03-02  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: CU03-A6 completado — `SimulationChat` (SSE + historial + envío), `TypingIndicator`, `createConversationEventSource`, `key` prop reset, filtro `__state__` en API, `safeTimeLabel` en `ChatBubble`. Patrones nuevos documentados: patrón 5 (`safeTimeLabel`) y patrón 6 (`key` prop reset) en `frontend-form-patterns.md`; patrón 5 (`EventSource` URL absoluta) en `real-time-sse-patterns.md`.  
+**Cambios recientes**: CU03-B1 completado — `StatusSource` enum (ADRESLES|STORE), `syncedAt`+`statusSource` en pedidos ADRESLES y TRADITIONAL, schema del Worker apunta al API (ADR-008), bug TRADITIONAL→COMPLETED corregido, `buildSyncSuccessMessage` con `storeName` en 3 idiomas. ADR-008 creado. Glosario v1.5: semántica de `READY_TO_PROCESS`/`COMPLETED` corregida, términos `StatusSource` y `syncedAt` añadidos.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

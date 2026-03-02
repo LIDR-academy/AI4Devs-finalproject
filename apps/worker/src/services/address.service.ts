@@ -470,16 +470,16 @@ export function buildUnknownIntentMessage(language: string): string {
   return `No he entendido tu respuesta. Por favor, responde "sí" para confirmar la dirección o dime qué quieres corregir.`;
 }
 
-export function buildSyncSuccessMessage(pending: PendingAddress, language: string): string {
+export function buildSyncSuccessMessage(pending: PendingAddress, language: string, storeName: string): string {
   const addr = buildAddressDisplayText(pending);
 
   if (language === 'English') {
-    return `✅ Your delivery address has been registered successfully!\n📍 ${addr}\n\nYour order is now being processed. Thank you!`;
+    return `✅ Your delivery address has been successfully registered in ${storeName}!\n📍 ${addr}\n\nYour order status has been updated both in ${storeName} and in Adresles. It is now ready to be processed. Thank you!`;
   }
   if (language === 'French') {
-    return `✅ Votre adresse de livraison a été enregistrée avec succès !\n📍 ${addr}\n\nVotre commande est en cours de traitement. Merci !`;
+    return `✅ Votre adresse de livraison a été enregistrée avec succès dans ${storeName} !\n📍 ${addr}\n\nLe statut de votre commande a été mis à jour dans ${storeName} et dans Adresles. Elle est maintenant prête à être traitée. Merci !`;
   }
-  return `✅ ¡Tu dirección de entrega ha sido registrada correctamente en la tienda!\n📍 ${addr}\n\nTu pedido ya puede ser procesado. ¡Gracias!`;
+  return `✅ ¡Tu dirección de entrega ha sido registrada correctamente en ${storeName}!\n📍 ${addr}\n\nEl estado de tu pedido ha sido actualizado tanto en ${storeName} como en Adresles. Ya puede ser procesado. ¡Gracias!`;
 }
 
 // ─── eCommerce sync simulation ────────────────────────────────────────────────
@@ -487,10 +487,13 @@ export function buildSyncSuccessMessage(pending: PendingAddress, language: strin
 export async function simulateEcommerceSync(
   orderId: string,
   pending: PendingAddress,
+  storeName?: string,
 ): Promise<{ success: boolean; statusCode: number }> {
   const addr = buildAddressDisplayText(pending);
-  console.log(`[ECOMMERCE_SYNC] → Simulating POST /ecommerce/orders/${orderId}/address`);
-  console.log(`[ECOMMERCE_SYNC] → Payload: { address: "${addr}" }`);
-  console.log(`[ECOMMERCE_SYNC] ← 200 OK (mock)`);
+  const store = storeName ? ` [${storeName}]` : '';
+  const syncedAt = new Date().toISOString();
+  console.log(`[SYNC_SIMULATED]${store} → POST /ecommerce/orders/${orderId}/address`);
+  console.log(`[SYNC_SIMULATED]${store} → Payload: { address: "${addr}" }`);
+  console.log(`[SYNC_SIMULATED]${store} ← 200 OK (mock) | status=READY_TO_PROCESS | syncedAt=${syncedAt}`);
   return { success: true, statusCode: 200 };
 }

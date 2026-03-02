@@ -39,6 +39,11 @@ enum OrderStatus {
   CANCELED
 }
 
+enum StatusSource {
+  ADRESLES
+  STORE
+}
+
 enum OrderMode {
   TRADITIONAL
   ADRESLES
@@ -236,9 +241,10 @@ model Order {
   isGift              Boolean     @default(false) @map("is_gift")
   itemsSummary        Json?       @map("items_summary")
   webhookReceivedAt   DateTime    @map("webhook_received_at")
-  addressConfirmedAt  DateTime?   @map("address_confirmed_at")
-  syncedAt            DateTime?   @map("synced_at")
-  createdAt           DateTime    @default(now()) @map("created_at")
+  addressConfirmedAt  DateTime?     @map("address_confirmed_at")
+  syncedAt            DateTime?     @map("synced_at")
+  statusSource        StatusSource? @map("status_source")
+  createdAt           DateTime      @default(now()) @map("created_at")
   updatedAt           DateTime    @updatedAt @map("updated_at")
 
   store         Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)

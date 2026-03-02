@@ -415,7 +415,7 @@ async function advanceFromPending(ctx: HandlerContext, pending: PendingAddress) 
 async function finalizeAddress(ctx: HandlerContext, pending: PendingAddress) {
   const { conversationId, orderId, language, user } = ctx;
 
-  const syncResult = await simulateEcommerceSync(orderId, pending);
+  const syncResult = await simulateEcommerceSync(orderId, pending, ctx.order.store.name);
 
   if (!syncResult.success) {
     const msg = language === 'English'
@@ -460,7 +460,12 @@ async function finalizeAddress(ctx: HandlerContext, pending: PendingAddress) {
 
   await prisma.order.update({
     where: { id: orderId },
-    data: { status: 'READY_TO_PROCESS', addressConfirmedAt: now },
+    data: {
+      status: 'READY_TO_PROCESS',
+      addressConfirmedAt: now,
+      syncedAt: now,
+      statusSource: 'ADRESLES',
+    },
   });
 
   await prisma.conversation.update({
@@ -468,11 +473,11 @@ async function finalizeAddress(ctx: HandlerContext, pending: PendingAddress) {
     data: { status: 'COMPLETED', completedAt: now },
   });
 
-  const successMsg = buildSyncSuccessMessage(pending, language);
+  const successMsg = buildSyncSuccessMessage(pending, language, ctx.order.store.name);
   await saveMessage(conversationId, 'assistant', successMsg);
   await publishConversationUpdate(conversationId, 'assistant', successMsg);
   await publishConversationComplete(conversationId, 'COMPLETED');
 
-  console.log(`[PROCESS_RESPONSE] ✅ Address confirmed & synced for order ${orderId}: ${addrText}`);
+  console.log(`[PROCESS_RESPONSE] ✅ Address confirmed for order ${orderId}: status=READY_TO_PROCESS, syncedAt=${now.toISOString()}, statusSource=ADRESLES`);
   return { conversationId, orderId, status: 'address_confirmed', address: addrText, message: successMsg };
 }

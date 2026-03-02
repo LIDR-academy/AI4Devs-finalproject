@@ -2,6 +2,9 @@
   "name": "worker",
   "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "schema": "../api/prisma/schema.prisma"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/main.ts",

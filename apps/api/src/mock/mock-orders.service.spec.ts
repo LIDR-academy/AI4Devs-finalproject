@@ -175,14 +175,10 @@ describe('MockOrdersService', () => {
       );
     });
 
-    it('updates order status to COMPLETED after sync', async () => {
+    it('does not update order status after sync — READY_TO_PROCESS is the final MVP state', async () => {
       await service.processMockOrder(baseTraditionalDto);
 
-      expect(mockOrders.updateStatus).toHaveBeenCalledWith(
-        'order-1',
-        'COMPLETED',
-        expect.objectContaining({ syncedAt: expect.any(Date) }),
-      );
+      expect(mockOrders.updateStatus).not.toHaveBeenCalled();
     });
   });
 
