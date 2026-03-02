@@ -2,7 +2,7 @@
 
 > **Contexto persistente del proyecto para sesiones de IA**  
 > **Última actualización**: 2026-03-02  
-> ✅ **Change completado**: cu03-b2-worker-address-proposals — sub-journeys 2.1 y 2.3 (proponer dirección Adresles/eCommerce)
+> ✅ **Change completado**: cu03-b3-worker-registration — flujo de registro voluntario post-confirmación (WAITING_REGISTER, email vía chat)
 
 ## 📖 Inicio Rápido
 
@@ -36,6 +36,7 @@ Decisiones clave que guían el desarrollo del proyecto:
 | [real-time-sse-patterns.md](./patterns/real-time-sse-patterns.md) | SSE con NestJS, Redis Pub/Sub con `ioredis`, `psubscribe`, RxJS `Subject`; `EventSource` con URL absoluta en Next.js | 2026-03-01 |
 | [frontend-form-patterns.md](./patterns/frontend-form-patterns.md) | Formulario-modal con `useState` local, `canSubmit` derivado, mapeo `line1`/`line2` → `street`/`full_address`, combobox con estado derivado, `safeTimeLabel`, `key` prop reset | 2026-03-01 |
 | [prisma-shared-package-patterns.md](./patterns/prisma-shared-package-patterns.md) | Schema+migraciones+seed en `packages/prisma-db`, `dependencies` vs devDependencies, `db:seed` desde root, shadow DB y checksum | 2026-03-02 |
+| [worker-testing-patterns.md](./patterns/worker-testing-patterns.md) | Mock de Prisma/Redis/DynamoDB en specs del processor para evitar "open handles" en Jest | 2026-03-02 |
 
 Pendiente de documentar:
 - Límites de agregados DDD
@@ -85,8 +86,9 @@ Pendiente de documentar:
 | [2026-03-02](./sessions/2026-03-02-cu03-b1-worker-db-sync.md) | CU03-B1 — Worker DB Sync: StatusSource + Schema Compartido — Completado | ✅ Completado (30/30 tareas) |
 | [2026-03-02](./sessions/2026-03-02-infra-prisma-shared-schema.md) | infra-prisma-shared-schema — packages/prisma-db (Opción B, ADR-009) — Completado | ✅ Completado (19/19 tareas) |
 | [2026-03-02](./sessions/2026-03-02-cu03-b2-worker-address-proposals.md) | CU03-B2 — Worker: Sub-journeys 2.1 y 2.3 (proponer dirección guardada) — Completado | ✅ Completado (13/13 tareas) |
+| [2026-03-02](./sessions/2026-03-02-cu03-b3-worker-registration.md) | CU03-B3 — Worker: Flujo de registro voluntario post-confirmación — Completado | ✅ Completado (27/27 tareas) |
 
-**Próximo change**: CU03-B3 (registro post-confirmación) o CU03-B4 (libreta direcciones).
+**Próximo change**: CU03-B4 (libreta direcciones).
 
 ## 🔄 Flujo de Trabajo
 
@@ -131,7 +133,8 @@ memory-bank/
 │   ├── validation-patterns.md       # DTOs, class-validator, supertest
 │   ├── real-time-sse-patterns.md    # SSE, Redis Pub/Sub, RxJS
 │   ├── frontend-form-patterns.md   # Formularios modal, dirección eCommerce, combobox
-│   └── prisma-shared-package-patterns.md  # Schema+migraciones+seed en packages/prisma-db
+│   ├── prisma-shared-package-patterns.md  # Schema+migraciones+seed en packages/prisma-db
+│   └── worker-testing-patterns.md   # Mock Prisma/Redis/DynamoDB para specs del Worker
 │
 ├── sessions/                   # Aprendizajes de sesiones pasadas
 │   └── (se documenta conforme avanza el proyecto)
@@ -167,5 +170,5 @@ Este memory-bank permite a la IA:
 
 **Última revisión**: 2026-03-02  
 **Mantenido por**: Sergio (desarrollo individual)  
-**Cambios recientes**: CU03-B2 completado — sub-journeys 2.1 (Adresles) y 2.3 (eCommerce) para proponer dirección guardada; fase `WAITING_ADDRESS_PROPOSAL_CONFIRM`; sesión documentada.  
+**Cambios recientes**: CU03-B3 completado — flujo de registro voluntario (WAITING_REGISTER, WAITING_REGISTER_EMAIL, email vía chat); patrón worker-testing para mock Prisma/Redis/DynamoDB y evitar open handles en Jest.  
 **Evoluciona con**: Cada decisión arquitectural o patrón significativo

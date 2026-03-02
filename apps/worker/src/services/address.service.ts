@@ -7,7 +7,10 @@ export type ConversationPhase =
   | 'WAITING_ADDRESS_PROPOSAL_CONFIRM'
   | 'WAITING_DISAMBIGUATION'
   | 'WAITING_BUILDING_DETAILS'
-  | 'WAITING_CONFIRMATION';
+  | 'WAITING_CONFIRMATION'
+  | 'WAITING_REGISTER'
+  | 'WAITING_REGISTER_EMAIL'
+  | 'WAITING_SAVE_ADDRESS';
 
 export interface PendingAddress {
   gmapsFormatted: string;
@@ -32,6 +35,7 @@ export interface PendingAddress {
 export interface ConversationState {
   phase: ConversationPhase;
   pendingAddress?: PendingAddress;
+  confirmedAddress?: PendingAddress;
   gmapsOptions?: GmapsResult[];
   failedAttempts?: number;
 }
@@ -511,6 +515,53 @@ export function buildSyncSuccessMessage(pending: PendingAddress, language: strin
     return `✅ Votre adresse de livraison a été enregistrée avec succès dans ${storeName} !\n📍 ${addr}\n\nLe statut de votre commande a été mis à jour dans ${storeName} et dans Adresles. Elle est maintenant prête à être traitée. Merci !`;
   }
   return `✅ ¡Tu dirección de entrega ha sido registrada correctamente en ${storeName}!\n📍 ${addr}\n\nEl estado de tu pedido ha sido actualizado tanto en ${storeName} como en Adresles. Ya puede ser procesado. ¡Gracias!`;
+}
+
+export function buildRegistrationOfferMessage(language: string): string {
+  if (language === 'English') {
+    return (
+      `By the way, did you know you can register with Adresles for free? ` +
+      `Next time you shop, I'll confirm your address automatically without you having to type it again. ` +
+      `Would you like to register now? (reply "Yes" or "No")`
+    );
+  }
+  return (
+    `Por cierto, ¿sabías que puedes registrarte en Adresles de forma gratuita? ` +
+    `Así, en tu próxima compra confirmaré tu dirección automáticamente sin que tengas que escribirla de nuevo. ` +
+    `¿Te gustaría registrarte ahora? (responde "Sí" o "No")`
+  );
+}
+
+export function buildRegistrationEmailRequestMessage(language: string): string {
+  if (language === 'English') {
+    return `To complete your registration, please provide your email address.`;
+  }
+  return `Para completar tu registro, indícame tu correo electrónico.`;
+}
+
+export function buildRegistrationSuccessMessage(language: string): string {
+  if (language === 'English') {
+    return `Great! You're now registered with Adresles. Thank you for trusting us!`;
+  }
+  return `¡Perfecto! Ya estás registrado en Adresles. ¡Gracias por confiar en nosotros!`;
+}
+
+export function buildRegistrationDeclinedMessage(language: string): string {
+  if (language === 'English') {
+    return `No problem! Have a great day! 😊`;
+  }
+  return `¡Sin problema! ¡Hasta pronto! 😊`;
+}
+
+/** Simplified RFC 5322-like: local@domain.tld, max 254 chars */
+const EMAIL_REGEX = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/;
+
+export function extractEmailFromMessage(message: string): string | null {
+  const trimmed = message.trim();
+  if (!trimmed || trimmed.length > 254) return null;
+  const match = trimmed.match(EMAIL_REGEX);
+  const email = match?.[0] ?? null;
+  return email && email.length <= 254 ? email : null;
 }
 
 // ─── eCommerce sync simulation ────────────────────────────────────────────────

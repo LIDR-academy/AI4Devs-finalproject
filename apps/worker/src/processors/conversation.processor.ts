@@ -25,6 +25,11 @@ import {
   buildAddressNotFoundMessage,
   buildUnknownIntentMessage,
   buildSyncSuccessMessage,
+  buildRegistrationOfferMessage,
+  buildRegistrationEmailRequestMessage,
+  buildRegistrationSuccessMessage,
+  buildRegistrationDeclinedMessage,
+  extractEmailFromMessage,
   simulateEcommerceSync,
   ConversationMessage,
 } from '../services/address.service';
@@ -308,6 +313,7 @@ interface HandlerContext {
     firstName: string | null;
     lastName: string | null;
     preferredLanguage: string | null;
+    isRegistered: boolean;
     phone: { id: string } | null;
   };
   order: { externalOrderNumber: string | null; store: { name: string } };
@@ -345,6 +351,9 @@ export async function processResponseProcessor(job: Job<ProcessResponseJobData>)
     WAITING_DISAMBIGUATION: handleDisambiguation,
     WAITING_BUILDING_DETAILS: handleBuildingDetails,
     WAITING_CONFIRMATION: handleConfirmation,
+    WAITING_REGISTER: handleWaitingRegister,
+    WAITING_REGISTER_EMAIL: handleWaitingRegisterEmail,
+    WAITING_SAVE_ADDRESS: handleWaitingSaveAddress,
   };
 
   return handlers[state.phase](ctx);
@@ -546,6 +555,80 @@ async function handleConfirmation(ctx: HandlerContext) {
   return { conversationId, status: 'waiting_confirmation', message: msg };
 }
 
+async function handleWaitingRegister(ctx: HandlerContext) {
+  const { conversationId, state, language } = ctx;
+  const confirmedAddress = state.confirmedAddress!;
+
+  const intent = await interpretUserIntent('WAITING_CONFIRMATION', ctx.userMessage, language);
+  console.log(`[PROCESS_RESPONSE] Registration offer intent: ${intent.type}`);
+
+  if (intent.type === 'CONFIRM') {
+    const msg = buildRegistrationEmailRequestMessage(language);
+    await saveMessage(conversationId, 'assistant', msg);
+    await publishConversationUpdate(conversationId, 'assistant', msg);
+    await saveConversationState(conversationId, {
+      phase: 'WAITING_REGISTER_EMAIL',
+      confirmedAddress,
+    });
+    return { conversationId, status: 'waiting_register_email', message: msg };
+  }
+
+  const msg = buildRegistrationDeclinedMessage(language);
+  await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
+  const now = new Date();
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { status: 'COMPLETED', completedAt: now },
+  });
+  await publishConversationComplete(conversationId, 'COMPLETED');
+  return { conversationId, status: 'registration_declined', message: msg };
+}
+
+async function handleWaitingRegisterEmail(ctx: HandlerContext) {
+  const { conversationId, userId, userMessage, state, language } = ctx;
+  const confirmedAddress = state.confirmedAddress!;
+
+  const email = extractEmailFromMessage(userMessage);
+  console.log(`[PROCESS_RESPONSE] Registration email extracted: ${email ?? 'null'}`);
+
+  if (!email) {
+    const msg = buildRegistrationEmailRequestMessage(language);
+    await saveMessage(conversationId, 'assistant', msg);
+    await publishConversationUpdate(conversationId, 'assistant', msg);
+    return { conversationId, status: 'waiting_register_email', message: msg };
+  }
+
+  const now = new Date();
+  await prisma.user.update({
+    where: { id: userId },
+    data: { isRegistered: true, registeredAt: now, email },
+  });
+  console.log(`[PROCESS_RESPONSE] User ${userId} registered in Adresles`);
+
+  const msg = buildRegistrationSuccessMessage(language);
+  await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
+
+  await saveConversationState(conversationId, {
+    phase: 'WAITING_SAVE_ADDRESS',
+    confirmedAddress,
+  });
+  return { conversationId, status: 'registered', message: msg };
+}
+
+async function handleWaitingSaveAddress(ctx: HandlerContext) {
+  const { conversationId, language } = ctx;
+  const now = new Date();
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { status: 'COMPLETED', completedAt: now },
+  });
+  await publishConversationComplete(conversationId, 'COMPLETED');
+  console.log(`[PROCESS_RESPONSE] WAITING_SAVE_ADDRESS (temp handler): conversation ${conversationId} closed`);
+  return { conversationId, status: 'address_confirmed' };
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function advanceFromPending(ctx: HandlerContext, pending: PendingAddress) {
@@ -627,14 +710,26 @@ async function finalizeAddress(ctx: HandlerContext, pending: PendingAddress) {
     },
   });
 
+  const successMsg = buildSyncSuccessMessage(pending, language, ctx.order.store.name);
+  await saveMessage(conversationId, 'assistant', successMsg);
+  await publishConversationUpdate(conversationId, 'assistant', successMsg);
+
+  if (!user.isRegistered) {
+    const registerMsg = buildRegistrationOfferMessage(language);
+    await saveMessage(conversationId, 'assistant', registerMsg);
+    await publishConversationUpdate(conversationId, 'assistant', registerMsg);
+    await saveConversationState(conversationId, {
+      phase: 'WAITING_REGISTER',
+      confirmedAddress: pending,
+    });
+    console.log(`[PROCESS_RESPONSE] ✅ Address confirmed, offered registration for order ${orderId}`);
+    return { conversationId, orderId, status: 'waiting_register', address: addrText };
+  }
+
   await prisma.conversation.update({
     where: { id: conversationId },
     data: { status: 'COMPLETED', completedAt: now },
   });
-
-  const successMsg = buildSyncSuccessMessage(pending, language, ctx.order.store.name);
-  await saveMessage(conversationId, 'assistant', successMsg);
-  await publishConversationUpdate(conversationId, 'assistant', successMsg);
   await publishConversationComplete(conversationId, 'COMPLETED');
 
   console.log(`[PROCESS_RESPONSE] ✅ Address confirmed for order ${orderId}: status=READY_TO_PROCESS, syncedAt=${now.toISOString()}, statusSource=ADRESLES`);
