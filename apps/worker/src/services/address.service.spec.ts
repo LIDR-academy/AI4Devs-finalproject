@@ -5,6 +5,10 @@ import {
   buildRegistrationEmailRequestMessage,
   buildRegistrationSuccessMessage,
   buildRegistrationDeclinedMessage,
+  buildSaveAddressOfferMessage,
+  buildSaveAddressLabelRequestMessage,
+  buildAddressSavedMessage,
+  buildAddressNotSavedMessage,
   extractEmailFromMessage,
   type PendingAddress,
 } from './address.service';
@@ -167,5 +171,63 @@ describe('extractEmailFromMessage', () => {
   it('returns null for empty or whitespace', () => {
     expect(extractEmailFromMessage('')).toBeNull();
     expect(extractEmailFromMessage('   ')).toBeNull();
+  });
+});
+
+describe('buildSaveAddressOfferMessage', () => {
+  it('generates Spanish message with address', () => {
+    const msg = buildSaveAddressOfferMessage(pending, 'Spanish');
+    expect(msg).toContain('libreta de Adresles');
+    expect(msg).toContain('Sí');
+    expect(msg).toContain('No');
+    expect(msg).toContain('Calle Mayor');
+  });
+
+  it('generates English message with address', () => {
+    const msg = buildSaveAddressOfferMessage(pending, 'English');
+    expect(msg).toContain('address book');
+    expect(msg).toContain('Yes');
+    expect(msg).toContain('No');
+    expect(msg).toContain('Calle Mayor');
+  });
+});
+
+describe('buildSaveAddressLabelRequestMessage', () => {
+  it('generates Spanish message', () => {
+    const msg = buildSaveAddressLabelRequestMessage('Spanish');
+    expect(msg).toMatch(/cómo quieres llamar|llamar/i);
+    expect(msg).toContain('Casa');
+  });
+
+  it('generates English message', () => {
+    const msg = buildSaveAddressLabelRequestMessage('English');
+    expect(msg).toMatch(/call this address|e\.g\./i);
+    expect(msg).toContain('Home');
+  });
+});
+
+describe('buildAddressSavedMessage', () => {
+  it('generates Spanish message', () => {
+    const msg = buildAddressSavedMessage('Spanish');
+    expect(msg).toContain('guardada');
+    expect(msg).toContain('libreta');
+  });
+
+  it('generates English message', () => {
+    const msg = buildAddressSavedMessage('English');
+    expect(msg).toContain('saved');
+    expect(msg).toContain('address book');
+  });
+});
+
+describe('buildAddressNotSavedMessage', () => {
+  it('generates Spanish message', () => {
+    const msg = buildAddressNotSavedMessage('Spanish');
+    expect(msg).toMatch(/sin problema|hasta pronto/i);
+  });
+
+  it('generates English message', () => {
+    const msg = buildAddressNotSavedMessage('English');
+    expect(msg).toMatch(/no problem|great day/i);
   });
 });

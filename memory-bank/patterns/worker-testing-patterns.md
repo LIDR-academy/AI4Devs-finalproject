@@ -1,7 +1,7 @@
 # Patrones de Testing — Worker (BullMQ)
 
 > **Última actualización**: 2026-03-02  
-> **Origen**: CU03-B3 Worker Registration + fix "open handles"
+> **Origen**: CU03-B3 Worker Registration + fix "open handles"; CU03-B4 libreta (interpretUserIntent mock, mockClear)
 
 ---
 
@@ -35,7 +35,7 @@ jest.mock('@adresles/prisma-db', () => {
     conversation: { findUnique: jest.fn(), update: jest.fn() },
     order: { findUnique: jest.fn(), update: jest.fn() },
     orderAddress: { create: jest.fn() },
-    address: { findMany: jest.fn() },
+    address: { findMany: jest.fn(), create: jest.fn() },
     $disconnect: jest.fn().mockResolvedValue(undefined),
   };
   return { PrismaClient: jest.fn(() => mockPrisma) };
@@ -63,3 +63,61 @@ jest.mock('../dynamodb/dynamodb.service', () => ({
 ### Alternativa: redis-publisher.spec.ts
 
 Para specs que solo usan `redis-publisher`, se mockea `ioredis` en lugar del módulo completo (ver `redis-publisher.spec.ts`). Así el publisher se carga pero usa un cliente Redis mockeado.
+
+---
+
+## Patrón: Mock de interpretUserIntent para evitar llamadas a OpenAI
+
+### Problema
+
+Los handlers `handleWaitingSaveAddress`, `handleConfirmation`, etc. llaman a `interpretUserIntent()` (OpenAI) para clasificar Sí/No. En tests esto provoca 429 (quota) o lentitud.
+
+### Solución: Mockear interpretUserIntent en address.service
+
+```typescript
+jest.mock('../services/address.service', () => {
+  const actual = jest.requireActual('../services/address.service');
+  return {
+    ...actual,
+    interpretUserIntent: jest.fn().mockImplementation(async (_phase: string, msg: string) => {
+      const lower = msg.toLowerCase().trim();
+      if (['sí', 'si', 'yes', 'ok'].some((w) => lower === w || lower.startsWith(w)))
+        return { type: 'CONFIRM' };
+      if (lower.startsWith('no') || lower === 'no')
+        return { type: 'REJECT_AND_CORRECT', correction: msg };
+      return { type: 'UNKNOWN' };
+    }),
+  };
+});
+```
+
+### Regla
+
+> Si el spec del processor cubre fases que usan `interpretUserIntent` (WAITING_SAVE_ADDRESS, WAITING_CONFIRMATION, etc.), mockear esa función para devolver intents determinísticos sin OpenAI.
+
+---
+
+## Patrón: mockClear para tests con aserciones "no fue llamado"
+
+### Problema
+
+Cuando un test verifica que un mock **no** fue llamado (ej: `expect(instance.address.create).not.toHaveBeenCalled()`), falla si otros tests del mismo archivo sí lo llamaron, porque el mock acumula todas las invocaciones.
+
+### Solución: mockClear en beforeEach del describe afectado
+
+En el `beforeEach` del bloque de tests que hace aserciones "no llamado", limpiar el mock antes de ejecutar:
+
+```typescript
+beforeEach(async () => {
+  const instance = new (PrismaClient as jest.Mock)();
+  // ... otros mocks ...
+  (instance.address.create as jest.Mock).mockClear();
+  (instance.address.findMany as jest.Mock).mockClear();
+});
+```
+
+Así cada test parte con cero invocaciones para esos mocks.
+
+### Regla
+
+> Si un test asevera que un mock no fue llamado, usar `mockClear()` en el beforeEach de ese describe para aislar las aserciones.

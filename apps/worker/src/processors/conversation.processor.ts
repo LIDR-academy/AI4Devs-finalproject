@@ -29,6 +29,10 @@ import {
   buildRegistrationEmailRequestMessage,
   buildRegistrationSuccessMessage,
   buildRegistrationDeclinedMessage,
+  buildSaveAddressOfferMessage,
+  buildSaveAddressLabelRequestMessage,
+  buildAddressSavedMessage,
+  buildAddressNotSavedMessage,
   extractEmailFromMessage,
   simulateEcommerceSync,
   ConversationMessage,
@@ -354,6 +358,7 @@ export async function processResponseProcessor(job: Job<ProcessResponseJobData>)
     WAITING_REGISTER: handleWaitingRegister,
     WAITING_REGISTER_EMAIL: handleWaitingRegisterEmail,
     WAITING_SAVE_ADDRESS: handleWaitingSaveAddress,
+    WAITING_SAVE_ADDRESS_LABEL: handleWaitingSaveAddressLabel,
   };
 
   return handlers[state.phase](ctx);
@@ -610,23 +615,105 @@ async function handleWaitingRegisterEmail(ctx: HandlerContext) {
   await saveMessage(conversationId, 'assistant', msg);
   await publishConversationUpdate(conversationId, 'assistant', msg);
 
-  await saveConversationState(conversationId, {
-    phase: 'WAITING_SAVE_ADDRESS',
-    confirmedAddress,
-  });
-  return { conversationId, status: 'registered', message: msg };
+  return offerSaveAddress({ ...ctx, state: { ...state, confirmedAddress } }, confirmedAddress);
 }
 
-async function handleWaitingSaveAddress(ctx: HandlerContext) {
-  const { conversationId, language } = ctx;
+function sanitizeAddressLabel(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return 'Mi dirección';
+  return trimmed.slice(0, 80);
+}
+
+async function closeConversation(ctx: HandlerContext) {
+  const { conversationId } = ctx;
   const now = new Date();
   await prisma.conversation.update({
     where: { id: conversationId },
     data: { status: 'COMPLETED', completedAt: now },
   });
   await publishConversationComplete(conversationId, 'COMPLETED');
-  console.log(`[PROCESS_RESPONSE] WAITING_SAVE_ADDRESS (temp handler): conversation ${conversationId} closed`);
-  return { conversationId, status: 'address_confirmed' };
+  return { conversationId, status: 'completed' };
+}
+
+async function offerSaveAddress(ctx: HandlerContext, confirmedAddress: PendingAddress) {
+  const { conversationId, userId, language } = ctx;
+
+  const existingAddresses = await prisma.address.findMany({
+    where: { userId, isDeleted: false },
+  });
+  const isNewAddress = !existingAddresses.some(
+    (a) => a.fullAddress.trim().toLowerCase() === confirmedAddress.gmapsFormatted.trim().toLowerCase(),
+  );
+
+  if (!isNewAddress) {
+    return closeConversation(ctx);
+  }
+
+  const msg = buildSaveAddressOfferMessage(confirmedAddress, language);
+  await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
+  await saveConversationState(conversationId, {
+    phase: 'WAITING_SAVE_ADDRESS',
+    confirmedAddress,
+  });
+  console.log(`[PROCESS_RESPONSE] offerSaveAddress: new address offered for conversation ${conversationId}`);
+  return { conversationId, status: 'waiting_save_address' };
+}
+
+async function handleWaitingSaveAddress(ctx: HandlerContext) {
+  const { conversationId, userMessage, state, language } = ctx;
+
+  const intent = await interpretUserIntent('WAITING_CONFIRMATION', userMessage, language);
+  console.log(`[PROCESS_RESPONSE] WAITING_SAVE_ADDRESS intent: ${intent.type}`);
+
+  if (intent.type === 'CONFIRM') {
+    const msg = buildSaveAddressLabelRequestMessage(language);
+    await saveMessage(conversationId, 'assistant', msg);
+    await publishConversationUpdate(conversationId, 'assistant', msg);
+    await saveConversationState(conversationId, {
+      phase: 'WAITING_SAVE_ADDRESS_LABEL',
+      confirmedAddress: state.confirmedAddress,
+    });
+    console.log(`[PROCESS_RESPONSE] handleWaitingSaveAddress: asking for label`);
+    return { conversationId, status: 'waiting_save_address_label' };
+  }
+
+  const msg = buildAddressNotSavedMessage(language);
+  await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
+  return closeConversation(ctx);
+}
+
+async function handleWaitingSaveAddressLabel(ctx: HandlerContext) {
+  const { conversationId, userId, userMessage, state, language } = ctx;
+  const confirmedAddress = state.confirmedAddress!;
+
+  const label = sanitizeAddressLabel(userMessage);
+
+  await prisma.address.create({
+    data: {
+      userId,
+      label,
+      fullAddress: confirmedAddress.gmapsFormatted,
+      street: confirmedAddress.street,
+      number: confirmedAddress.number ?? undefined,
+      block: confirmedAddress.block ?? undefined,
+      staircase: confirmedAddress.staircase ?? undefined,
+      floor: confirmedAddress.floor ?? undefined,
+      door: confirmedAddress.door ?? undefined,
+      postalCode: confirmedAddress.postalCode,
+      city: confirmedAddress.city,
+      province: confirmedAddress.province ?? undefined,
+      country: confirmedAddress.country,
+      isDefault: false,
+    },
+  });
+
+  const msg = buildAddressSavedMessage(language);
+  await saveMessage(conversationId, 'assistant', msg);
+  await publishConversationUpdate(conversationId, 'assistant', msg);
+  console.log(`[PROCESS_RESPONSE] handleWaitingSaveAddressLabel: address saved with label "${label}"`);
+  return closeConversation(ctx);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -726,12 +813,5 @@ async function finalizeAddress(ctx: HandlerContext, pending: PendingAddress) {
     return { conversationId, orderId, status: 'waiting_register', address: addrText };
   }
 
-  await prisma.conversation.update({
-    where: { id: conversationId },
-    data: { status: 'COMPLETED', completedAt: now },
-  });
-  await publishConversationComplete(conversationId, 'COMPLETED');
-
-  console.log(`[PROCESS_RESPONSE] ✅ Address confirmed for order ${orderId}: status=READY_TO_PROCESS, syncedAt=${now.toISOString()}, statusSource=ADRESLES`);
-  return { conversationId, orderId, status: 'address_confirmed', address: addrText, message: successMsg };
+  return offerSaveAddress(ctx, pending);
 }

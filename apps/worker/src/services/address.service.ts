@@ -10,7 +10,8 @@ export type ConversationPhase =
   | 'WAITING_CONFIRMATION'
   | 'WAITING_REGISTER'
   | 'WAITING_REGISTER_EMAIL'
-  | 'WAITING_SAVE_ADDRESS';
+  | 'WAITING_SAVE_ADDRESS'
+  | 'WAITING_SAVE_ADDRESS_LABEL';
 
 export interface PendingAddress {
   gmapsFormatted: string;
@@ -550,6 +551,37 @@ export function buildRegistrationDeclinedMessage(language: string): string {
   if (language === 'English') {
     return `No problem! Have a great day! 😊`;
   }
+  return `¡Sin problema! ¡Hasta pronto! 😊`;
+}
+
+export function buildSaveAddressOfferMessage(pending: PendingAddress, language: string): string {
+  const addressText = buildAddressDisplayText(pending);
+  if (language === 'English') {
+    return (
+      `Would you like to save this address in your Adresles address book for future use?\n\n` +
+      `**${addressText}**\n\n(reply "Yes" or "No")`
+    );
+  }
+  return (
+    `¿Te gustaría guardar esta dirección en tu libreta de Adresles para usarla en el futuro?\n\n` +
+    `**${addressText}**\n\n(responde "Sí" o "No")`
+  );
+}
+
+export function buildSaveAddressLabelRequestMessage(language: string): string {
+  if (language === 'English') {
+    return `What would you like to call this address? (e.g. Home, Work)`;
+  }
+  return `¿Cómo quieres llamar a esta dirección? (ej: Casa, Trabajo)`;
+}
+
+export function buildAddressSavedMessage(language: string): string {
+  if (language === 'English') return `Done! Address saved to your Adresles address book. 📋`;
+  return `¡Listo! Dirección guardada en tu libreta de Adresles. 📋`;
+}
+
+export function buildAddressNotSavedMessage(language: string): string {
+  if (language === 'English') return `No problem! Have a great day! 😊`;
   return `¡Sin problema! ¡Hasta pronto! 😊`;
 }
 
