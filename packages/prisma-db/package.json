@@ -1,0 +1,28 @@
+{
+  "name": "@adresles/prisma-db",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./generated/index.js",
+  "types": "./generated/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./generated/index.d.ts",
+      "import": "./generated/index.js",
+      "require": "./generated/index.js",
+      "default": "./generated/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "prisma generate",
+    "seed": "ts-node seed.ts"
+  },
+  "files": ["schema.prisma", "generated", "seed.ts", "migrations"],
+  "devDependencies": {
+    "@prisma/client": "5.22.0",
+    "prisma": "5.22.0",
+    "ts-node": "^10.9.0"
+  },
+  "prisma": {
+    "seed": "ts-node seed.ts"
+  }
+}

@@ -164,7 +164,7 @@ obj/
 *.user
 *.suo
 *.cache
-packages/
+# packages/  # Reservado para NuGet (.NET). En este monorepo Node.js, packages/ son workspace packages y deben versionarse.
 
 # ============================================
 # Bases de Datos
