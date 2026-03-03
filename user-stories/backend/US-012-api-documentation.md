@@ -1,5 +1,9 @@
 # US-012: API Documentation with Swagger
 
+[Trello Card](https://trello.com/c/GysUujHm)
+
+
+
 ## Description
 As a **developer**, I want comprehensive API documentation using Swagger/OpenAPI, so that API consumers can easily understand and integrate with the IPFS gateway.
 

@@ -1,5 +1,9 @@
 # US-205: Pre-commit Hooks Configuration
 
+[Trello Card](https://trello.com/c/vOkq9OWg)
+
+
+
 ## Description
 As a **developer**, I want pre-commit hooks configured for code quality enforcement, so that code standards are maintained automatically before commits.
 

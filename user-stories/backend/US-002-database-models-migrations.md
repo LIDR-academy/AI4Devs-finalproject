@@ -1,5 +1,9 @@
 # US-002: Database Models and Migrations
 
+[Trello Card](https://trello.com/c/8rgjZdjj)
+
+
+
 ## Description
 As a **developer**, I want to define the database models using SQLModel and configure Alembic for migrations, so that the application has a robust data layer with version-controlled schema changes.
 

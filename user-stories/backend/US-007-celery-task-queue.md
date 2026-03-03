@@ -1,5 +1,9 @@
 # US-007: Celery Task Queue Setup
 
+[Trello Card](https://trello.com/c/ADhHq7Fb)
+
+
+
 ## Description
 As a **developer**, I want to configure Celery with Redis as the message broker, so that the application can handle asynchronous tasks like large file uploads and content pinning operations.
 

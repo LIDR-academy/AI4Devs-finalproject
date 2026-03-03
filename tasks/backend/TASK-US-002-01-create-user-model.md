@@ -1,5 +1,9 @@
 # TASK-US-002-01: Create User Model
 
+[Trello Card](https://trello.com/c/qTvMy721)
+
+
+
 ## Parent User Story
 [US-002: Database Models and Migrations](../../user-stories/backend/US-002-database-models-migrations.md)
 

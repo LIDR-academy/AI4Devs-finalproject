@@ -1,5 +1,9 @@
 # US-203: CI/CD Pipeline
 
+[Trello Card](https://trello.com/c/UU4NOoY3)
+
+
+
 ## Description
 As a **DevOps engineer**, I want to set up a CI/CD pipeline using GitHub Actions, so that code is automatically tested and deployed upon merging to main branches.
 

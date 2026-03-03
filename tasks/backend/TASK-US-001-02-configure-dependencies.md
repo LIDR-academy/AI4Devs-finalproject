@@ -1,5 +1,9 @@
 # TASK-US-001-02: Configure Dependencies
 
+[Trello Card](https://trello.com/c/iVE3vvSq)
+
+
+
 ## Parent User Story
 [US-001: Project Setup and Configuration](../../user-stories/backend/US-001-project-setup-configuration.md)
 

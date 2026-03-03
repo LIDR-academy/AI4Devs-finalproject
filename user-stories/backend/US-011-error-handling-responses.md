@@ -1,5 +1,9 @@
 # US-011: Error Handling and Standardized Responses
 
+[Trello Card](https://trello.com/c/nq5YMver)
+
+
+
 ## Description
 As a **developer**, I want consistent error handling and standardized API responses, so that clients can easily understand and handle all API interactions.
 

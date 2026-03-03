@@ -1,5 +1,9 @@
 # TASK-US-101-01: Initialize Next.js Project
 
+[Trello Card](https://trello.com/c/47bLsCOA)
+
+
+
 ## Parent User Story
 [US-101: Frontend Project Setup](../../user-stories/frontend/US-101-frontend-project-setup.md)
 

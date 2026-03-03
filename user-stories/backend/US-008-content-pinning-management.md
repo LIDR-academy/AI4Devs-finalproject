@@ -1,5 +1,9 @@
 # US-008: Content Pinning Management
 
+[Trello Card](https://trello.com/c/BzhfKUh8)
+
+
+
 ## Description
 As a **user**, I want to pin and unpin my content on the IPFS network, so that I can ensure important files remain available or remove files I no longer need.
 

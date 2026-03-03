@@ -1,5 +1,9 @@
 # US-001: Backend Project Setup and Configuration
 
+[Trello Card](https://trello.com/c/AymPQTiG)
+
+
+
 ## Description
 As a **developer**, I want to set up the backend project structure with all necessary configurations, so that the development team can start implementing features with a consistent and well-organized codebase.
 

@@ -1,5 +1,9 @@
 # TASK-US-001-03: Implement Flask Factory
 
+[Trello Card](https://trello.com/c/q3BTqX6j)
+
+
+
 ## Parent User Story
 [US-001: Project Setup and Configuration](../../user-stories/backend/US-001-project-setup-configuration.md)
 

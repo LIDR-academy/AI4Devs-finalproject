@@ -1,5 +1,9 @@
 # US-003: User Registration and Authentication
 
+[Trello Card](https://trello.com/c/SjxegmK1)
+
+
+
 ## Description
 As a **user**, I want to register for the IPFS gateway service using my email address, so that I can receive an API key to access the platform's features.
 

@@ -1,5 +1,9 @@
 # TASK-US-001-01: Create Directory Structure
 
+[Trello Card](https://trello.com/c/AyxCNGIj)
+
+
+
 ## Parent User Story
 [US-001: Project Setup and Configuration](../../user-stories/backend/US-001-project-setup-configuration.md)
 

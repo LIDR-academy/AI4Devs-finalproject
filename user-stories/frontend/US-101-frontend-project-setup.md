@@ -1,5 +1,9 @@
 # US-101: Frontend Project Setup
 
+[Trello Card](https://trello.com/c/dx8OLRjc)
+
+
+
 ## Description
 As a **developer**, I want to set up the Next.js frontend project with proper structure and configurations, so that the team can develop the user interface efficiently.
 

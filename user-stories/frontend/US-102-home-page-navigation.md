@@ -1,5 +1,9 @@
 # US-102: Home Page and Navigation
 
+[Trello Card](https://trello.com/c/X290n0Wz)
+
+
+
 ## Description
 As a **visitor**, I want to see a welcoming home page with clear navigation, so that I can understand what the IPFS gateway offers and easily access different sections.
 

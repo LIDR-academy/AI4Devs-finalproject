@@ -1,5 +1,9 @@
 # US-202: Deployment Scripts
 
+[Trello Card](https://trello.com/c/g32f84HI)
+
+
+
 ## Description
 As a **DevOps engineer**, I want CLI scripts (Bash and PowerShell) for managing Docker deployments, so that deployments can be automated and consistent across different platforms.
 
