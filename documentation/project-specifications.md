@@ -4,7 +4,7 @@
     The IPFS Gateway project aims to create a robust and scalable api that allows users to access and store content on the InterPlanetary File System (IPFS) network. The gateway will serve as a bridge between traditional web applications and the decentralized IPFS network, enabling seamless content delivery and retrieval.
     The platform will be based on filebase-ipfs, leveraging its capabilities to interact with the IPFS network. The gateway will provide a user-friendly interface and a set of APIs for developers to integrate IPFS functionality into their applications easily.
     To date the API will be available for free to all users, with plans to introduce premium features and services in the future to support the project's sustainability and growth.
-    The main gaol of this API is to give access to a CID (Content Identifier) based storage system that is decentralized and secure, allowing users to store and retrieve content without relying on centralized servers.
+    The main goal of this API is to give access to a CID (Content Identifier) based storage system that is decentralized and secure, allowing users to store and retrieve content without relying on centralized servers.
     The application will be a SaaS (Software as a Service) and as such will handle user management, authentication, and in the future billing for premium features.
 
 ## Features and functionalities
@@ -54,7 +54,7 @@
 
   b. Docker containers for consistent deployment environments
 
-  d. CI/CD pipeline for automated testing and deployment with github actions
+  d. CI/CD pipeline for automated testing and deployment with GitHub Actions
   
   e. Monitoring and logging tools for performance tracking and issue resolution
 
@@ -169,7 +169,7 @@
 2. **Access to IPFS network**: 
 
     Ensure access to the IPFS network through filebase-ipfs for testing and development purposes.
-    The access credentials and configuration details are already stored securely using environment variables under the environment file .env. The environement variable is named FILEBASE_IPFS_API_KEY.
+    The access credentials and configuration details are already stored securely using environment variables under the environment file .env. The environment variable is named FILEBASE_IPFS_API_KEY.
     The access to the IPFS network will be used for uploading and retrieving content during development and testing. It will be achieved through the filebase S3 compatible API. For this reason you will use the `boto3` library to interact with the S3 compatible API provided by filebase-ipfs.
  
 ### API and Database ###

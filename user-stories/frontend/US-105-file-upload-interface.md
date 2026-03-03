@@ -30,11 +30,15 @@ As a **user**, I want to upload files through a user-friendly interface, so that
 | Constraint | Value |
 |------------|-------|
 | Max file size | 100 MB |
-| Allowed types | All (with optional filtering) |
+| Allowed types | **Whitelist only**: Images (`image/jpeg`, `image/png`, `image/webp`, `image/gif` → `.jpg,.jpeg,.png,.webp,.gif`), Documents (`application/pdf`, `text/plain`, `application/json` → `.pdf,.txt,.json`), Video (`video/mp4`, `video/webm` → `.mp4,.webm`) |
 | Max concurrent | 3 files |
+
+**Type validation policy:** Frontend file-type filtering is **UX-only** (early feedback). Backend validation is the source of truth and must enforce the exact same MIME/extension whitelist server-side.
+**Sync requirement:** Any whitelist change in frontend must be mirrored in backend validation rules in the same change set to prevent drift.
 
 ## Technical Notes
 - Use react-dropzone for drag-and-drop
+- Configure react-dropzone `accept` to the same MIME/extension whitelist above
 - Implement chunked upload for large files (future)
 - Show upload speed and ETA
 - Handle network interruptions gracefully

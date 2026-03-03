@@ -28,43 +28,72 @@ import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-// Create axios instance
-export const apiClient: AxiosInstance = axios.create({
-  baseURL: API_URL,
-  timeout: 30000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+/**
+ * Configuration for creating an API client.
+ * 
+ * Note: For production, use HttpOnly cookies or short-lived rotated tokens.
+ * Do NOT store sensitive credentials in localStorage.
+ */
+export interface ApiClientConfig {
+  /**
+   * Optional function to provide the API key at request time.
+   * Called for each request; return the current API key or undefined if unavailable.
+   * 
+   * Recommended: Use context/provider to supply this from secure storage (HttpOnly cookie, session, etc.)
+   */
+  getApiKey?: () => string | undefined;
+}
 
-// Request interceptor to add API key
-apiClient.interceptors.request.use(
-  (config) => {
-    const apiKey = localStorage.getItem("api_key");
-    if (apiKey) {
-      config.headers["X-API-Key"] = apiKey;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+/**
+ * Factory function to create a configured API client.
+ * 
+ * @param config - Configuration object with optional getApiKey provider
+ * @returns Configured Axios instance
+ */
+export function createApiClient(config: ApiClientConfig = {}): AxiosInstance {
+  const client = axios.create({
+    baseURL: API_URL,
+    timeout: 30000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
-// Response interceptor for error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // Clear stored credentials
-      localStorage.removeItem("api_key");
-      localStorage.removeItem("user_email");
-      // Redirect to login if not already there
-      if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-        window.location.href = "/login";
+  // Request interceptor to add API key (if provided via config)
+  client.interceptors.request.use(
+    (requestConfig) => {
+      if (typeof window !== "undefined" && config.getApiKey) {
+        const apiKey = config.getApiKey();
+        if (apiKey) {
+          requestConfig.headers["X-API-Key"] = apiKey;
+        }
       }
+      return requestConfig;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // Response interceptor for error handling
+  client.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError) => {
+      if (error.response?.status === 401) {
+        // Handle unauthorized: redirect to login (browser-only)
+        if (typeof window !== "undefined") {
+          if (!window.location.pathname.includes("/login")) {
+            window.location.href = "/login";
+          }
+        }
+      }
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
-);
+  );
+
+  return client;
+}
+
+// Create default instance without API key provider (callers must supply their own)
+export const apiClient: AxiosInstance = createApiClient();
 
 // Type definitions
 export interface ApiResponse<T> {
@@ -280,9 +309,13 @@ export function usePinContent() {
 - [ ] TypeScript types are complete
 
 ## Notes
-- Store API key in localStorage (consider more secure options for production)
+- **API Key Security**: Do NOT store API keys in localStorage. Instead:
+  - Use HttpOnly cookies set by the backend (most secure)
+  - Use short-lived rotated tokens stored in-memory or sessionStorage
+  - Pass the API key via the `getApiKey` callback in `createApiClient()` config
 - Use React Query for caching and state management
 - Add proper error handling and user feedback
+- For production, enable token rotation and expiration policies
 
 ## Completion Status
 - [ ] 0% - Not Started

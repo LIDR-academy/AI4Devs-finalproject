@@ -20,7 +20,9 @@ As an **administrator**, I want to revoke or reactivate user API keys, so that I
 - [ ] `POST /renew` endpoint generates a new API key for the user
 - [ ] `POST /revoke` endpoint allows admin to revoke any API key
 - [ ] `POST /reactivate` endpoint allows admin to reactivate revoked keys
-- [ ] All endpoints require valid API key authentication (except renew which uses email)
+- [ ] `POST /renew` requires authenticated user context (`Authorization: Bearer <api_key>` or valid session)
+- [ ] `POST /renew` enforces step-up verification (one-time code from email or MFA) before key rotation
+- [ ] Anonymous or email-only renewal requests are rejected (401/403)
 - [ ] Admin-only endpoints validate admin privileges
 - [ ] All actions are logged in AuditLog
 - [ ] Email notification is sent on key renewal (future enhancement)
@@ -48,11 +50,12 @@ Response (200 OK):
 ### Renew API Key
 ```
 POST /renew
+Authorization: Bearer ipfs_gw_xxxxxxxxxxxxx
 Content-Type: application/json
 
 Request:
 {
-    "email": "user@example.com"
+    "verification_code": "123456"
 }
 
 Response (200 OK):
@@ -63,6 +66,42 @@ Response (200 OK):
         "api_key": "ipfs_gw_new_xxxxxxxxxxxxx"
     }
 }
+```
+
+### Step-up Verification Flow for Renewal
+```
+1) Authenticated user requests step-up code
+POST /renew/challenge
+Authorization: Bearer ipfs_gw_xxxxxxxxxxxxx
+
+Response (202 Accepted):
+{
+    "status": 202,
+    "message": "Verification code sent"
+}
+
+2) Authenticated user confirms renewal with step-up factor
+POST /renew
+Authorization: Bearer ipfs_gw_xxxxxxxxxxxxx
+Content-Type: application/json
+
+Request:
+{
+    "verification_code": "123456"
+}
+
+Response (200 OK):
+{
+    "status": 200,
+    "message": "New API key generated",
+    "data": {
+        "api_key": "ipfs_gw_new_xxxxxxxxxxxxx"
+    }
+}
+
+Rejected examples:
+- Missing Authorization/session -> 401 Unauthorized
+- Email-only request payload without authenticated context -> 403 Forbidden
 ```
 
 ### Revoke API Key (Admin Only)
@@ -106,6 +145,9 @@ Response (200 OK):
 - Admin validation through `is_admin` flag on User model
 - Use secure token generation for new API keys
 - Implement proper authorization checks
+- Require step-up verification for sensitive credential rotation (`POST /renew`)
+- Support authenticated renewals via API key bearer auth or server session
+- Log renew challenge and confirm events in AuditLog with outcome/status
 
 ## Dependencies
 - US-001: Project Setup and Configuration
@@ -128,11 +170,15 @@ flowchart TD
     end
     
     subgraph Renew
-        A2[POST /renew] --> B2{Valid Email?}
-        B2 -->|No| C2[Return 404]
-        B2 -->|Yes| D2[Generate New Key]
-        D2 --> E2[Invalidate Old Key]
-        E2 --> F2[Return New Key]
+        A2[POST /renew/challenge + Auth] --> B2{Authenticated User?}
+        B2 -->|No| C2[Return 401]
+        B2 -->|Yes| D2[Send One-Time Code]
+        D2 --> E2[POST /renew + Code + Auth]
+        E2 --> F2{Valid Step-up Factor?}
+        F2 -->|No| G2[Return 403]
+        F2 -->|Yes| H2[Generate New Key]
+        H2 --> I2[Invalidate Old Key]
+        I2 --> J2[Return New Key]
     end
     
     subgraph Admin Actions

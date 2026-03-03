@@ -162,42 +162,42 @@ This document provides a comprehensive summary of all user stories for the IPFS 
 ## Recommended Sprint Plan
 
 ### Sprint 1 (Week 1-2): Foundation
-- ✅ US-001: Backend Project Setup
-- ✅ US-002: Database Models
-- ✅ US-011: Error Handling
-- ✅ US-101: Frontend Project Setup
-- ✅ US-205: Pre-commit Hooks
+- [ ] US-001: Backend Project Setup
+- [ ] US-002: Database Models
+- [ ] US-011: Error Handling
+- [ ] US-101: Frontend Project Setup
+- [ ] US-205: Pre-commit Hooks
 
 ### Sprint 2 (Week 3-4): Authentication
-- ✅ US-003: User Registration
-- ✅ US-004: API Key Management
-- ✅ US-009: Rate Limiting
-- ✅ US-102: Home Page
-- ✅ US-103: Registration Page
-- ✅ US-104: Login & Dashboard
+- [ ] US-003: User Registration
+- [ ] US-004: API Key Management
+- [ ] US-009: Rate Limiting
+- [ ] US-102: Home Page
+- [ ] US-103: Registration Page
+- [ ] US-104: Login & Dashboard
 
 ### Sprint 3 (Week 5-6): Core Features Part 1
-- ✅ US-007: Celery Setup
-- ✅ US-005: File Upload Backend
-- ✅ US-105: File Upload Frontend
-- ✅ US-109: Error Handling UI
+- [ ] US-007: Celery Setup
+- [ ] US-005: File Upload Backend
+- [ ] US-105: File Upload Frontend
+- [ ] US-109: Error Handling UI
 
 ### Sprint 4 (Week 7-8): Core Features Part 2
-- ✅ US-006: File Retrieval Backend
-- ✅ US-008: Content Pinning
-- ✅ US-106: File Retrieval Frontend
-- ✅ US-107: Files Management
-- ✅ US-201: Docker Configuration
+- [ ] US-006: File Retrieval Backend
+- [ ] US-008: Content Pinning
+- [ ] US-106: File Retrieval Frontend
+- [ ] US-107: Files Management
+- [ ] US-201: Docker Configuration
 
 ### Sprint 5 (Week 9-10): Polish & Deployment
-- ✅ US-010: Audit Logging
-- ✅ US-012: API Documentation
-- ✅ US-013: Backend Testing
-- ✅ US-108: Documentation Pages
-- ✅ US-110: Frontend Testing
-- ✅ US-202: Deployment Scripts
-- ✅ US-203: CI/CD Pipeline
-- ✅ US-204: Monitoring
+- [ ] US-010: Audit Logging
+- [ ] US-012: API Documentation
+- [ ] US-013: Backend Testing
+- [ ] US-108: Documentation Pages
+- [ ] US-110: Frontend Testing
+- [ ] US-202: Deployment Scripts
+- [ ] US-203: CI/CD Pipeline
+- [ ] US-204: Monitoring
 
 ---
 

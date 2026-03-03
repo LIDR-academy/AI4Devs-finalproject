@@ -33,7 +33,7 @@ As a **registered user**, I want to log in to my account and access a dashboard,
 5. **Quick Actions**: Upload, Retrieve, View All Files
 
 ## Technical Notes
-- Store API key in secure HTTP-only context or encrypted localStorage
+- Never store API/session secrets in localStorage; use backend-issued auth cookies with `HttpOnly`, `Secure`, and `SameSite` attributes, and when API keys are required for backend calls, route through a server-side proxy or token-exchange flow instead of exposing long-lived secrets to browser storage.
 - Implement auth context/provider for state management
 - Use React Query or SWR for data fetching and caching
 - Implement optimistic UI updates

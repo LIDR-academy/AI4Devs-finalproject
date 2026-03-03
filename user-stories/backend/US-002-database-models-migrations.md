@@ -27,7 +27,7 @@ As a **developer**, I want to define the database models using SQLModel and conf
 ## Technical Notes
 - Use SQLModel which combines SQLAlchemy and Pydantic
 - Configure PostgreSQL as the database backend
-- Use UUID for primary keys where appropriate
+- Use integer, auto-increment primary keys consistently for all entities (`User/USER`, `File/FILE`, and `AuditLog/AUDITLOG`): `id: int` with autoincrement enabled in models and migrations
 - Implement timestamps using arrow library
 - Connection string: `postgresql+psycopg2://user:pass@localhost:5432/ipfs_gateway`
 

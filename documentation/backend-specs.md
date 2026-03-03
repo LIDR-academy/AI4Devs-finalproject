@@ -9,7 +9,10 @@ The API will follow RESTful principles and will include the following endpoints:
    - `POST /status`: Retrieve the status of an API key (active, inactive, revoked).
    - `POST /revoke`: Revoke an API key. Only the administrator API key can perform this action.
    - `POST /reactivate`: Reactivate a revoked API key. Only the administrator API key can perform this action.
-   - `POST /renew`: Resend a new API key to the user. the user must input its email to receive a new API key.
+   - `POST /renew`: Rotate an API key for an existing account. Simple email‑only requests are **not allowed**. Two supported flows are:
+        1. **Authenticated key rotation** – the caller submits the existing valid API key (via `Authorization: Bearer <key>` header or session cookie); server verifies ownership and issues a new key.
+        2. **Token‑based renewal** – a `POST /renew/request` endpoint accepts an email and sends a short‑lived, single‑use signed token via email. The user then calls `POST /renew/confirm` with the token (in request body or header) to receive the rotated key. Tokens must expire (e.g. 15 min), be single‑use, and server‑side rate‑limited with audit logging.
+       Any request lacking proper authentication or a valid token is rejected with 401/403. Rate limits and audit entries must be enforced on both endpoints to prevent abuse.
 2. **Content Upload and Retrieval**:
    - `POST /upload`: Upload a file to the IPFS network and receive a CID.
    - `GET /retrieve/<cid>`: Retrieve a file from the IPFS network using its CID.

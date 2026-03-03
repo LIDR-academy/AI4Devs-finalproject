@@ -18,6 +18,11 @@ As a **system administrator**, I want all significant actions to be logged in an
 - [ ] All admin actions are logged (revoke, reactivate)
 - [ ] AuditLog entries include user_id, action, timestamp, details
 - [ ] Details field captures relevant context (CID, file size, IP address)
+- [ ] IP retention window is enforced via configuration (default: 90 days)
+- [ ] After retention, raw IPs are redacted to irreversible hash or masked form (IPv4 last octet masked / IPv6 prefix-only)
+- [ ] Redaction is append-only: original entry is retained, marked redacted, and a redaction event is written to the audit trail
+- [ ] `GET /admin/audit-logs` enforces admin-only access for viewing raw vs. masked IP values
+- [ ] Retention/redaction configuration changes are logged for compliance
 - [ ] Audit logs are accessible only by administrators
 - [ ] `GET /admin/audit-logs` endpoint returns paginated logs
 - [ ] Logs can be filtered by user, action type, date range
@@ -26,7 +31,7 @@ As a **system administrator**, I want all significant actions to be logged in an
 
 ## API Specification (Admin Only)
 ```
-GET /admin/audit-logs?page=1&per_page=50&user_id=123&action=upload&from=2026-01-01&to=2026-01-31
+GET /admin/audit-logs?page=1&per_page=50&user_id=123&action=upload&from=2026-01-01&to=2026-01-31&include_raw_ip=false
 X-API-Key: admin_api_key
 
 Response (200 OK):
@@ -44,7 +49,10 @@ Response (200 OK):
                     "cid": "QmXxxxxxxxxxx",
                     "filename": "document.pdf",
                     "size": 1048576,
-                    "ip_address": "192.168.1.100"
+                    "ip_address": "192.168.1.0/24",
+                    "ip_redacted": true,
+                    "ip_redaction_method": "mask_ipv4_last_octet",
+                    "ip_retention_days": 90
                 }
             }
         ],
@@ -57,6 +65,11 @@ Response (200 OK):
     }
 }
 ```
+
+Renewed/raw view behavior:
+- `include_raw_ip=true` may return raw IP values only for authorized administrators, based on existing admin access control.
+- Anonymous or non-admin access is rejected.
+- When retention has expired, raw values are not returned and redacted representation is enforced.
 
 ## Action Types
 | Action | Description |
@@ -74,7 +87,9 @@ Response (200 OK):
 
 ## Technical Notes
 - Use async logging to minimize performance impact
-- Store IP addresses for security analysis
+- Store IP addresses for security analysis with retention/redaction controls
+- Retention and redaction parameters must be configurable (e.g., `AUDIT_IP_RETENTION_DAYS=90`, `AUDIT_IP_REDACTION_MODE=hash|mask`)
+- Redaction runs as an append-only operation: mark the source record redacted and write an explicit `ip_redaction_applied` audit event with timestamp and method
 - Include request ID for correlation
 - Consider log rotation/archival for large datasets
 - Implement proper indexing for efficient queries

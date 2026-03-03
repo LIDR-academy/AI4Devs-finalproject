@@ -16,15 +16,19 @@ As a **DevOps engineer**, I want to set up a CI/CD pipeline using GitHub Actions
 ## Acceptance Criteria
 - [ ] GitHub Actions workflow for backend tests
 - [ ] GitHub Actions workflow for frontend tests
-- [ ] Lint and security checks on pull requests
+- [ ] Security checks on pull requests are explicit and stack-aligned:
+    - Backend (Python): Bandit + Safety (or Snyk)
+    - Frontend (JavaScript/TypeScript): npm audit + ESLint security plugins (or Snyk)
+    - Containers: Trivy or Grype image scans
 - [ ] Test coverage reporting
-- [ ] Docker image building on main branch
+- [ ] Docker image building on main branch and push to `ghcr.io` after successful tests/scans
 - [ ] Automatic deployment to staging on merge
 - [ ] Manual approval for production deployment
 - [ ] Secrets management for credentials
 - [ ] Caching for faster builds
 - [ ] Status badges in README
 - [ ] Slack/Discord notifications (optional)
+- [ ] GitHub Actions workflows enforce scan gates before build/push/deploy steps
 
 ## Workflow Files
 ```
@@ -60,6 +64,9 @@ flowchart LR
 - Store test results as artifacts
 - Use environment secrets for sensitive data
 - Implement concurrency control
+- CI requirements: GitHub Actions must run backend/frontend/container security scans on PRs and main
+- On successful scan/test stages, build and push Docker images to `ghcr.io`
+- Publish workflow status badges in README and optionally send Slack/Discord notifications on pipeline results
 
 ## Dependencies
 - US-001: Backend Project Setup

@@ -40,7 +40,7 @@ class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, nullable=False, index=True, max_length=255)
     password_hash: str = Field(nullable=False)
-    api_key: str = Field(unique=True, nullable=False, index=True, max_length=64)
+    api_key: str = Field(unique=True, nullable=False, index=True, max_length=100)
     is_active: bool = Field(default=True)
     is_admin: bool = Field(default=False)
     is_deleted: bool = Field(default=False)
@@ -105,7 +105,12 @@ class User(SQLModel, table=True):
         self.updated_at = arrow.utcnow().datetime
     
     def revoke(self) -> None:
-        """Revoke the user's API key."""
+        """Revoke the user's API key by rotating the credential.
+        
+        Invalidates the current API key by replacing it with a newly generated one,
+        ensuring that the old key cannot be used even if is_active checks are bypassed.
+        """
+        self.api_key = self.generate_api_key()
         self.is_active = False
         self.updated_at = arrow.utcnow().datetime
     

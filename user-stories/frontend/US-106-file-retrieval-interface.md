@@ -34,7 +34,8 @@ As a **user**, I want to retrieve files from IPFS using their CID, so that I can
 | Others | Download only |
 
 ## Technical Notes
-- Validate CID format (Qm... or bafy...)
+- Validate CID format using a CID library (e.g., `multiformats` `CID.parse` / `CID.asCID`) in form/input validation logic; treat input as valid only if parsing succeeds.
+- On parse failure (exception or null result), show a clear validation error (e.g., "Invalid CID format") instead of prefix-based checks.
 - Use streaming for large file downloads
 - Implement proper MIME type handling
 - Cache retrieved file metadata

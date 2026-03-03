@@ -23,6 +23,7 @@ Create the IPFS service layer that integrates with Filebase's S3-compatible API 
 """IPFS Service for Filebase S3-compatible API integration."""
 
 import logging
+import threading
 from typing import BinaryIO, Optional
 from dataclasses import dataclass
 
@@ -97,19 +98,27 @@ class IPFSService:
     """Service for interacting with Filebase IPFS via S3 API."""
     
     def __init__(self):
-        """Initialize the IPFS service with S3 client."""
+        """Initialize the IPFS service with thread-safe S3 client initialization."""
         self._client = None
+        self._client_lock = threading.Lock()
     
     @property
     def client(self):
-        """Lazy initialization of S3 client."""
+        """Lazy initialization of S3 client with double-checked locking.
+        
+        Uses double-checked locking to ensure thread-safe initialization:
+        first checks without lock for performance, then acquires lock and
+        re-checks before creating the client to prevent race conditions.
+        """
         if self._client is None:
-            self._client = boto3.client(
-                "s3",
-                endpoint_url=FILEBASE_ENDPOINT_URL,
-                aws_access_key_id=FILEBASE_IPFS_API_KEY,
-                aws_secret_access_key=FILEBASE_IPFS_API_SECRET,
-            )
+            with self._client_lock:
+                if self._client is None:
+                    self._client = boto3.client(
+                        "s3",
+                        endpoint_url=FILEBASE_ENDPOINT_URL,
+                        aws_access_key_id=FILEBASE_IPFS_API_KEY,
+                        aws_secret_access_key=FILEBASE_IPFS_API_SECRET,
+                    )
         return self._client
     
     @filebase_circuit_breaker
@@ -171,12 +180,6 @@ class IPFSService:
             )
             
             cid = response["Metadata"].get("cid", "")
-            
-            if not cid:
-                # Fallback: CID might be in different location
-                cid = response.get("ResponseMetadata", {}).get(
-                    "HTTPHeaders", {}
-                ).get("x-amz-meta-cid", "")
             
             logger.info(f"Upload successful. CID: {cid}")
             
@@ -289,13 +292,32 @@ Add to `config/default.py`:
 ```python
 # Filebase Configuration
 FILEBASE_ENDPOINT_URL = env.get("FILEBASE_ENDPOINT_URL", "https://s3.filebase.com")
-FILEBASE_IPFS_API_KEY = env.get("FILEBASE_IPFS_API_KEY", "")
-FILEBASE_IPFS_API_SECRET = env.get("FILEBASE_IPFS_API_SECRET", "")
-FILEBASE_BUCKET_NAME = env.get("FILEBASE_BUCKET_NAME", "")
+FILEBASE_IPFS_API_KEY = env.get("FILEBASE_IPFS_API_KEY")
+FILEBASE_IPFS_API_SECRET = env.get("FILEBASE_IPFS_API_SECRET")
+FILEBASE_BUCKET_NAME = env.get("FILEBASE_BUCKET_NAME")
 
 # Circuit Breaker Configuration
 CIRCUIT_BREAKER_FAIL_MAX = int(env.get("CIRCUIT_BREAKER_FAIL_MAX", "5"))
 CIRCUIT_BREAKER_RESET_TIMEOUT = int(env.get("CIRCUIT_BREAKER_RESET_TIMEOUT", "60"))
+
+
+def validate_filebase_config():
+    """Validate required Filebase configuration at startup.
+    
+    Raises:
+        ValueError: If any required Filebase credential is missing.
+    """
+    required_vars = {
+        "FILEBASE_IPFS_API_KEY": FILEBASE_IPFS_API_KEY,
+        "FILEBASE_IPFS_API_SECRET": FILEBASE_IPFS_API_SECRET,
+        "FILEBASE_BUCKET_NAME": FILEBASE_BUCKET_NAME,
+    }
+    missing = [name for name, value in required_vars.items() if not value]
+    if missing:
+        raise ValueError(
+            f"Missing required Filebase configuration: {', '.join(missing)}. "
+            "Please set these environment variables before starting the application."
+        )
 ```
 
 ## Acceptance Criteria
@@ -304,12 +326,15 @@ CIRCUIT_BREAKER_RESET_TIMEOUT = int(env.get("CIRCUIT_BREAKER_RESET_TIMEOUT", "60
 - [ ] Retry logic handles transient errors
 - [ ] Proper error handling and logging
 - [ ] All methods have proper type hints and docstrings
+- [ ] Filebase credentials are validated at startup via `validate_filebase_config()`
+- [ ] Missing credentials raise `ValueError` with clear variable names before app starts
 
 ## Notes
 - Filebase uses S3-compatible API
-- CID is returned in response headers
+- CID is returned in response headers (primary source: `response["Metadata"]["cid"]`)
 - Circuit breaker prevents cascading failures
 - Tenacity provides configurable retry logic
+- **Important**: Call `validate_filebase_config()` in `core/__init__.py` (Flask app factory) or in `application.py` at startup to fail fast if credentials are missing
 
 ## Completion Status
 - [ ] 0% - Not Started
