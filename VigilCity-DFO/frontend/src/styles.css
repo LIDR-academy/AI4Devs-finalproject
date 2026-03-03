@@ -1,0 +1,26 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+html, body { 
+  height: 100%; 
+}
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif; 
+}
+
+.comments-dialog {
+  max-width: 80vw !important;
+  max-height: 90vh !important;
+}
+
+.comments-dialog .mat-dialog-container {
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.cdk-overlay-pane {
+  max-width: 90vw !important;
+}
