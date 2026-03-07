@@ -8,11 +8,9 @@
 
 3.2 Frontend (SPA)
 - Core: React v19.2.
-- Build System: Vite v6.x.
+- Build System: Vite v7.x.
 - Styling: Tailwind CSS v4.0.
--State Management:
-TanStack Query para sincronizar con NestJS.
-Zustand para controlar la UI y la sesión.
+- State Management: TanStack Query para datos del servidor; AuthContext para sesión.
 - Forms: React Hook Form.
 
 3.3 Infraestructura de Datos

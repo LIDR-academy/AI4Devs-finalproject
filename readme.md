@@ -15,7 +15,7 @@
 
 ### **0.1. Tu nombre completo:**
 
-Juan Camilo Jaramillo Alzate
+_[Completar]_
 
 ### **0.2. Nombre del proyecto:**
 
@@ -47,7 +47,7 @@ TravelSplit elimina la friccion financiera en viajes grupales. Los grupos de ami
 
 ### **1.2. Caracteristicas y funcionalidades principales:**
 
-- **Autenticacion:** Registro (email, nombre, password > 6 caracteres), login con JWT y sesion persistente.
+- **Autenticacion:** Registro (email, nombre, contraseña mínimo 8 caracteres con al menos una mayúscula, una minúscula y un número), login con JWT y sesion persistente.
 - **Gestion de viajes:** Crear viajes con nombre y moneda (COP o USD), listar viajes activos e historicos, invitar participantes por email (Strict User Policy: solo usuarios registrados), unirse por codigo alfanumerico.
 - **Gestion de gastos:** Registrar gastos con titulo, monto, pagador, beneficiarios (split), categoria (Comida, Transporte, Alojamiento, Entretenimiento, Varios), foto opcional. Feed con paginacion ordenado por fecha descendente.
 - **Saldos:** Calculo de total gastado por usuario vs cuota justa (fair share), visualizacion de deudas tipo "Juan debe $50.000 a Pedro", algoritmo de liquidacion para minimizar transacciones.
@@ -68,6 +68,47 @@ _[Incluir capturas de pantalla o videotutorial segun disponibilidad]_
 - npm o yarn
 - Docker y Docker Compose (para PostgreSQL)
 
+**Opción A: Orquestación con Docker (todo en uno)**
+
+Desde la raíz del repositorio se pueden levantar la base de datos (PostgreSQL), el backend (NestJS) y el frontend (Vite) con Docker Compose.
+
+**Requisitos:** Docker y Docker Compose instalados. No es necesario tener Node.js ni npm en el host.
+
+**Primera vez (build e inicio):**
+
+```bash
+# En la raíz del proyecto (TravelSplit/)
+docker-compose up --build
+```
+
+Con `--build` se construyen las imágenes de Backend y Frontend (según `Backend/Dockerfile` y `Frontend/Dockerfile`) y se levantan los tres servicios. Para ejecutar en segundo plano use `-d`:
+
+```bash
+docker-compose up --build -d
+```
+
+**Inicios posteriores (imágenes ya construidas):**
+
+```bash
+docker-compose up -d
+```
+
+**URLs de acceso:**
+- **Frontend:** http://localhost:5173
+- **API:** http://localhost:3000/api
+- **Swagger:** http://localhost:3000/api/docs
+
+**Comportamiento:** El backend espera a que PostgreSQL esté listo (healthcheck), ejecuta las migraciones TypeORM y arranca la API. La primera vez puede tardar unos segundos. El código de Backend y Frontend se monta con volúmenes para hot-reload en desarrollo.
+
+**Variables de entorno (Docker):** Opcionalmente, cree un archivo `.env` en la raíz con `JWT_SECRET=<valor-seguro>`. Si no existe, se usa un valor por defecto solo válido para desarrollo.
+
+**Comandos útiles:**
+- Ver logs: `docker-compose logs -f`
+- Parar servicios: `docker-compose down`
+- Reconstruir tras cambiar dependencias (p. ej. package.json): `docker-compose build --no-cache frontend` y luego `docker-compose up -d`
+
+**Opción B: Instalación manual (Backend y Frontend en local)**
+
 **Backend:**
 
 ```bash
@@ -79,6 +120,8 @@ docker-compose up -d
 npm run migration:run
 npm run start:dev
 ```
+
+> En Windows (CMD/PowerShell) usar `copy .env.example .env` en lugar de `cp`.
 
 **Frontend:**
 
@@ -247,10 +290,15 @@ flowchart TB
             use_auth[useAuth]
             use_trip_detail[useTripDetail]
             use_expense_form[useExpenseForm]
+            use_expenses_list[useExpensesList]
+            use_trip_balances[useTripBalances]
+            use_home_data[useHomePageData]
         end
         subgraph Services["Services"]
             auth_svc[authService]
             trips_svc[tripsService]
+            expense_svc[expenseService]
+            balance_svc[balanceService]
             api_client[apiClient]
         end
         auth_context[AuthContext]
@@ -261,9 +309,12 @@ flowchart TB
     home --> header
     home --> bottom_tab
     home --> join_btn
+    home --> use_home_data
     trips_list --> trip_card
+    trips_list --> use_expenses_list
     trip_detail --> balance_card
     trip_detail --> join_modal
+    trip_detail --> use_trip_balances
     expense_form --> expense_form_mol
     expense_form_mol --> amount_input
     expense_form_mol --> payer_sel
@@ -276,8 +327,13 @@ flowchart TB
     use_auth --> auth_svc
     use_trip_detail --> trips_svc
     use_expense_form --> trips_svc
+    use_expenses_list --> expense_svc
+    use_trip_balances --> balance_svc
+    use_home_data --> trips_svc
     auth_svc --> api_client
     trips_svc --> api_client
+    expense_svc --> api_client
+    balance_svc --> api_client
     api_client -->|HTTPS/REST| backend_api
     protected_route --> auth_context
     use_auth --> auth_context
@@ -289,7 +345,7 @@ flowchart TB
 
 | Contenedor | Componentes principales | Tecnologias |
 |------------|-------------------------|-------------|
-| **Frontend Web Application** | Pages (HomePage, LoginPage, TripsListPage, TripDetailPage, CreateTripPage, ExpenseFormPage), Organisms (Header, BottomTabBar, JoinTripModal), Molecules (TripCard, BalanceCard, ExpenseForm, FormField, PayerSelector, BeneficiariesSelector, CategorySelector), Atoms (Button, Input, AmountInput, CategoryPill, ImageUpload), Hooks (useAuth, useTripDetail, useExpenseForm), Services (authService, tripsService, apiClient), AuthContext | React 19, Vite 7, Tailwind CSS 4, TanStack Query, React Hook Form, Zod |
+| **Frontend Web Application** | Pages (HomePage, LoginPage, TripsListPage, TripDetailPage, CreateTripPage, ExpenseFormPage), Organisms (Header, BottomTabBar, JoinTripModal, TripSettingsModal), Molecules (TripCard, BalanceCard, ExpenseForm, FormField, PayerSelector, BeneficiariesSelector, CategorySelector, EmptyState, ErrorState, ParticipantBalanceCard), Atoms (Button, Input, AmountInput, CategoryPill, ImageUpload, Toast, Skeleton), Hooks (useAuth, useTripDetail, useExpenseForm, useExpenseFormData, useExpensesList, useTripParticipants, useHomePageData, useTripBalances), Services (authService, tripsService, expenseService, balanceService, apiClient), AuthContext | React 19, Vite 7, Tailwind CSS 4, TanStack Query, React Hook Form, Zod |
 | **Backend API** | AuthController, AuthService, UsersController, UsersService, TripsController, TripsService, HealthController, HealthService, JwtAuthGuard, JwtStrategy, AllExceptionsFilter, UserMapper, TripMapper, BaseEntity | NestJS 11, TypeScript, Express, TypeORM, Passport JWT, Swagger, class-validator |
 | **PostgreSQL Database** | Almacenamiento de entidades (User, Trip, TripParticipant, Expense, ExpenseSplit, ExpenseCategory) | PostgreSQL 17 |
 | **File Storage** | Almacenamiento de imagenes de recibos | File System Local / S3 Compatible |
@@ -347,7 +403,7 @@ La tabla de componentes en la seccion 2.1 proporciona el inventario completo ali
 |------------|------------|-----------------|
 | **Frontend** | apiClient | Cliente HTTP base con interceptors JWT; punto unico de comunicacion con el Backend |
 | **Frontend** | AuthContext | Contexto global de autenticacion; provee estado de sesion a ProtectedRoute y hooks |
-| **Frontend** | useAuth, useTripDetail, useExpenseForm | Hooks que encapsulan logica de negocio y consumo de API; delegan en Services |
+| **Frontend** | useAuth, useTripDetail, useExpenseForm, useExpenseFormData, useExpensesList, useTripParticipants, useHomePageData, useTripBalances | Hooks que encapsulan logica de negocio y consumo de API; delegan en Services |
 | **Backend** | JwtAuthGuard, JwtStrategy | Proteccion de rutas; validacion de tokens y extraccion de usuario autenticado |
 | **Backend** | AllExceptionsFilter | Formateo consistente de excepciones HTTP; logging centralizado |
 | **Backend** | UserMapper, TripMapper | Transformacion Entity -> DTO; aislamiento del contrato de API |
@@ -381,7 +437,8 @@ TravelSplit/
 │       ├── schemas/       # Zod
 │       ├── services/      # auth, trip, expense, balance
 │       └── types/
-└── docs/                  # PRD, diagramas C4/ER, backlog
+├── docs/                  # PRD, diagramas C4/ER, backlog
+└── openspec/              # Specs and change proposals (see AGENTS.md)
 ```
 
 ### **2.4. Infraestructura y despliegue**
@@ -518,7 +575,7 @@ paths:
               properties:
                 nombre: { type: string, example: "Juan Perez" }
                 email: { type: string, format: email, example: "juan@example.com" }
-                contraseña: { type: string, minLength: 7, example: "password123" }
+                contraseña: { type: string, minLength: 8, example: "miPassword123", description: "Minimo 8 caracteres; al menos una mayuscula, una minuscula y un numero" }
       responses:
         '201':
           description: Usuario registrado y autenticado
@@ -572,7 +629,7 @@ paths:
 
 ### Endpoint 3: POST /trips/:trip_id/expenses
 
-Crea un gasto en un viaje (requiere JWT, ser participante).
+Crea un gasto en un viaje (requiere JWT, ser participante). El pagador es el usuario autenticado (no se envia `payer_id` en el body).
 
 ```yaml
 paths:
@@ -659,16 +716,4 @@ paths:
 
 ## 7. Pull Requests
 
-_[Documentar 3 Pull Requests realizadas durante el desarrollo del proyecto]_
 
-**Pull Request 1**
-
-_[Titulo, descripcion, enlace, cambios principales]_
-
-**Pull Request 2**
-
-_[Titulo, descripcion, enlace, cambios principales]_
-
-**Pull Request 3**
-
-_[Titulo, descripcion, enlace, cambios principales]_

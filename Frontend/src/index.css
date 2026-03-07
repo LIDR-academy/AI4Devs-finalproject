@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #F8FAFC; /* slate-50 */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* Hide scrollbar for horizontal scrollable elements */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  -webkit-overflow-scrolling: touch;  /* Smooth scrolling on iOS */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Enable touch panning for horizontal scroll containers */
+.category-scroll {
+  touch-action: pan-x;  /* Enable horizontal panning/scroll with touch */
+  cursor: grab;  /* Show grab cursor on desktop to indicate draggable */
+}
+
+.category-scroll:active {
+  cursor: grabbing;  /* Show grabbing cursor when actively scrolling */
+}
