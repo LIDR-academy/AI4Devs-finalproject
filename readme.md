@@ -25,14 +25,16 @@ José Miguel Padilla Mundaca
 Sistema único e integrado que unifica la gestión de requerimientos, incidentes, proyectos y actividades internas (reemplazando Whaticket, OTRS/Znuny y SIHR), con imputación de tiempo, ciclos de vida configurables, SLA por hitos, encuestas post-cierre y trazabilidad completa para las áreas de Desarrollo (DII), Soporte TI y Procesos.
 
 ### **0.4. URL del proyecto:**
-Pendiente.
+https://aplicaciones.kibernum.com/takumi
 
-> Cuando exista, puede ser pública o privada; en ese caso comparte los accesos de manera segura (por ejemplo a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando [onetimesecret](https://onetimesecret.com/)).
+**Acceso demo (para evaluadores):**
+- **Correo:** demo@lidr.com  
+- **Contraseña:** lidrjp2026
 
 ### **0.5. URL o archivo comprimido del repositorio**
-Pendiente.
+Archivo comprimido del código del proyecto (raíz del repositorio): [takumi-main.zip](takumi-main.zip).
 
-> Cuando exista, puede estar en público o en privado; comparte los accesos de forma segura o envía un archivo zip con el contenido si aplica.
+> Cuando exista repositorio en línea, puede estar en público o en privado; comparte los accesos de forma segura o usa este zip con el contenido del proyecto.
 
 
 ---
@@ -66,121 +68,170 @@ El producto tiene como propósito ofrecer un **sistema único e integrado** que 
 Pendiente (hasta disponer de versión desplegada con flujos principales).
 
 ### **1.4. Instrucciones de instalación:**
-Pendiente (hasta tener proyecto Laravel/Angular y pasos documentados).
+
+Las instrucciones de instalación detalladas están en el **README.md del proyecto** (el que viene dentro del zip con el código). Resumen:
+
+**Cómo ejecutar (instalación y puesta en marcha)**
+
+**Con Docker (recomendado)**
+
+```bash
+docker compose up -d
+```
+
+Frontend y backend quedan en los puertos definidos en `docker-compose.yml` (por defecto frontend 4200, backend 8000). Los puertos del proyecto se definen en `.project-config`.
+
+**Sin Docker**
+
+*Backend (Laravel):*
+
+```bash
+cd takumi-backend
+cp .env.example .env
+php artisan key:generate
+# Configurar .env (DB_*, APP_URL, etc.)
+composer install
+php artisan db:create
+php artisan migrate --seed
+php artisan serve --host=0.0.0.0 --port=3232
+```
+
+*Frontend (Angular):*
+
+```bash
+cd takumi-frontend
+npm install
+npm start
+```
+
+Los puertos se definen en `.project-config` (ej. `FRONTEND_PORT=3131`, `BACKEND_PORT=3232`). Para acceso remoto: backend con `--host=0.0.0.0` y frontend con `ng serve --host 0.0.0.0 --disable-host-check --port=<FRONTEND_PORT>`.
+
+**Permisos y propiedad del proyecto**
+
+No ejecutar con sudo. Si hay archivos con propietario root:
+
+```bash
+sudo ./scripts/fix-project-ownership.sh
+```
+
+**Despliegue en producción**
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Guía detallada: `docs/guias/DESPLIEGUE_PRODUCCION.md` (dentro del zip del proyecto).
+
+> **Nota:** Todo lo anterior está en el README.md del código del proyecto, sección «Cómo ejecutar» (aprox. líneas 399–430). El backend requiere configurar `.env` (BD, APP_URL, etc.) antes de `composer install` y migraciones.
 
 ---
 
 ## 2. Arquitectura del Sistema
 
-> **Nota:** Toda esta sección es **tentativa**. Se basa en la documentación de las Etapas 4 y 5; aún no existe código ni despliegue, y podrá ajustarse durante el desarrollo.
+> Esta sección refleja la **arquitectura actual** del proyecto TAKUMI (frontend Angular + API Laravel, autenticación JWT), según el README del código del proyecto.
 
 ---
 
-### **2.1. Diagrama de arquitectura:**
+### **2.1. Patrón arquitectónico**
 
-A nivel de arquitectura, el sistema sigue un estilo **SPA + API** (o **cliente–servidor con frontend desacoplado**): un cliente web tipo **Single Page Application** (Angular) en una carpeta y un servidor de aplicaciones que expone **API REST** (Laravel) en otra, comunicados solo por HTTP/JSON.
-El proyecto tendrá **backend y frontend en carpetas separadas** (por ejemplo `backend/` para Laravel y `frontend/` para Angular), comunicados vía API REST.
-El **backend** se diseña como **monolito modular** con **comunicación basada en eventos** entre sus componentes.
-El **frontend** es una aplicación **Angular** en su propia carpeta: consume la API del backend para listados y detalle de casos, formularios (crear caso, asignaciones, mensajes), tableros Kanban por área y, en su caso, pantallas de configuración; no contiene lógica de negocio crítica (validaciones duras y reglas viven en el backend).
-**Qué significa “monolito modular” (en el backend):** es una **única aplicación backend** (un solo proceso/servidor Laravel), pero organizada en **módulos bien delimitados** (Core de Casos, Ciclo de Vida, Asignaciones, SLA, etc.), cada uno con responsabilidades claras y comunicación mediante eventos internos. No es un “monolito enmarañado” (todo mezclado) ni microservicios (varios backends desplegados por separado): es un solo backend con fronteras internas claras, lo que simplifica operación y despliegue y facilita mantener o extraer módulos más adelante si hiciera falta.
-
-**Tecnologías (según Etapa 5):** Backend PHP 8+ / Laravel, servidor Apache; frontend Angular; base de datos MySQL; integración correo vía Microsoft Graph (MVP). Autenticación: usuario/contraseña, API corporativa de permisos, reCAPTCHA v3.
-
-**Beneficios:** un solo despliegue, stack conocido, comunicación por eventos que desacopla módulos y permite trazabilidad (evento_log). **Sacrificios/déficits:** un único punto de despliegue (escalado vertical o réplicas del mismo monolito), stack único en backend; los integradores externos (correo, WhatsApp) son puntos de fallo que se abordan con tolerancia a fallos y desacoplamiento.
-
-Diagrama lógico de componentes y flujo de eventos (Etapa 4):
+Se utiliza una arquitectura en capas: cliente Angular consume la API REST de Laravel; las peticiones pasan por middleware (throttle, JWT); los controladores delegan en servicios y modelos; la persistencia está en MySQL.
 
 ```mermaid
-flowchart TD
-  A[Gestor de Casos] -->|CasoCreado| B[Motor de Ciclo de Vida]
-  A -->|CasoCreado| C[Motor SLA y Metricas]
-  A -->|CasoCreado| D[Evidencia y Auditoria]
-  A -->|CasoCreado| E[Comunicacion y Notificaciones]
-
-  F[Gestor de Asignaciones] -->|AreaAsignada / ResponsableAsignado| C
-  F -->|AreaAsignada / ResponsableAsignado| D
-  F -->|AreaAsignada / ResponsableAsignado| E
-
-  B -->|EstadoCambiado| C
-  B -->|EstadoCambiado| D
-  B -->|EstadoCambiado| E
-
-  G[Imputacion de Tiempo] -->|TiempoImputado| C
-  G -->|TiempoImputado| D
-
-  E -->|MensajeRegistrado| D
-  E -->|MensajeRegistrado| H[Motor de Cierre Automatico]
-  H -->|CasoCerrado| B
-
-  C -->|SLAProximoAVencer / SLAIncumplido| E
-
-  I[Configuracion Administrativa] -->|ConfiguracionActualizada| B
-  I -->|ConfiguracionActualizada| C
-  I -->|ConfiguracionActualizada| E
+graph TB
+    subgraph Cliente["Capa de usuario"]
+        User((Usuario))
+    end
+    subgraph Frontend["Frontend Angular"]
+        UI[Componentes]
+        SVC[Servicios]
+        UI --> SVC
+    end
+    subgraph Backend["Backend Laravel"]
+        API[API Routes]
+        MW[Middleware JWT]
+        CTRL[Controllers]
+        MOD[Models]
+        API --> MW --> CTRL --> MOD
+    end
+    subgraph Datos["Datos"]
+        DB[(MySQL)]
+    end
+    User --> UI
+    SVC -->|HTTP + Bearer| API
+    MOD --> DB
 ```
 
 ---
 
-### **2.2. Descripción de componentes principales:**
+### **2.2. Flujo de datos**
 
-| Componente | Responsabilidad | Tecnología prevista |
-|------------|-----------------|---------------------|
-| **Core de Casos (Case Management)** | Creación del Caso, identificación única, tipo de trabajo y metadatos; emite CasoCreado/CasoActualizado. | Laravel (módulo/servicios). |
-| **Motor de Ciclo de Vida (Lifecycle Engine)** | Estados y transiciones; validación de reglas duras (sin saltos ni retrocesos); historial de estados; emite EstadoCambiado. | Laravel. |
-| **Gestor de Asignaciones** | Asignación de área y responsables; reasignación sin cambiar estado; historial; emite AreaAsignada, ResponsableAsignado. | Laravel. |
-| **Comunicación y Notificaciones** | Mensajes y notas internas asociadas al caso; notificaciones por eventos; emite MensajeRegistrado. | Laravel + canal correo (Graph). |
-| **Motor de SLA y Métricas** | Medición de SLA y métricas por eventos; alertas (próximo a vencer, incumplido); no altera el flujo del caso. | Laravel. |
-| **Imputación de Tiempo** | Registro de horas por caso/usuario/área; emite TiempoImputado. | Laravel. |
-| **Evidencia y Auditoría** | Historial de estados y asignaciones; registro de acciones; evento_log; trazabilidad inmutable. | Laravel + MySQL. |
-| **Motor de Cierre Automático** | Cierre por inactividad (ej. 14 días); emite CasoCerrado con motivo auditable. | Laravel. |
-| **Encuestas** | Encuesta al cierre; envío por correo (MVP); respuesta sin login. | Laravel. |
-| **Configuración (Admin)** | Ciclos de vida, estados, transiciones, SLA, catálogos; emite ConfiguracionActualizada. | Laravel. |
-| **Integrador Correo** | Ingreso y comunicación por Office365 (Microsoft Graph). | Laravel + Graph API. |
-| **Integrador WhatsApp** | Diseñado; fuera de MVP. | Post-MVP. |
-| **Asistente IA** | Sugerencias en modo mixto (umbral 0,85); no ejecuta reglas duras. | Laravel + servicio IA. |
-| **Frontend (Kanban y UI)** | Tableros Kanban por área; formularios y listados de casos. | Angular. |
+El flujo típico: el usuario interactúa con un componente Angular; el servicio llama al API mediante HTTP; el interceptor añade el token Bearer; el backend valida JWT, ejecuta el controlador y el modelo accede a la BD; la respuesta vuelve al frontend.
 
-Todos los componentes del backend se comunican mediante **eventos internos** (catálogo canónico: CasoCreado, EstadoCambiado, AreaAsignada, ResponsableAsignado, MensajeRegistrado, TiempoImputado, SLAProximoAVencer, SLAIncumplido, CasoCerrado, ConfiguracionActualizada, etc.).
-
----
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-Pendiente (hasta tener el proyecto creado). La estructura de alto nivel será:
-
-- **`backend/`** — Aplicación Laravel (API, reglas de negocio, eventos, persistencia). Dentro, reflejar los módulos lógicos (Casos, Ciclo de Vida, Asignaciones, Comunicaciones, SLA, etc.) en carpetas o namespaces por dominio.
-- **`frontend/`** — Aplicación Angular (UI: listados, detalle de caso, formularios, Kanban, login, etc.). Consume la API del backend; la estructura interna (módulos por feature o por pantalla) se definirá al crear el proyecto.
+```mermaid
+graph TD
+    A[Usuario] -->|Interactúa| B[Componente Angular]
+    B -->|Llama| C[Servicio Auth/API]
+    C -->|Envía HTTP| D[Interceptor]
+    D -->|Añade Bearer| E[Backend API]
+    E -->|Valida| F[Middleware JWT]
+    F -->|OK| G[Controller]
+    G -->|Consulta/Actualiza| H[Modelo Eloquent]
+    H -->|SQL| I[(MySQL)]
+    I -->|Datos| H
+    H --> G
+    G -->|JSON| E
+    E -->|Respuesta| C
+    C -->|Actualiza estado| B
+```
 
 ---
 
-### **2.4. Infraestructura y despliegue**
+### **2.3. Arquitectura contextual completa**
 
-Pendiente (hasta definir entorno de despliegue, servidor, base de datos en entorno objetivo y proceso de despliegue).
+Visión integrada: usuario, frontend, backend, base de datos y servicios externos (reCAPTCHA, API corporativa).
+
+```mermaid
+graph TB
+    subgraph Usuario["Capa de usuario"]
+        U((Usuario))
+    end
+    subgraph Frontend["Frontend"]
+        A[Angular App]
+        A1[LoginComponent]
+        A2[HomeComponent]
+        A3[NavComponent]
+        A --> A1
+        A --> A2
+        A --> A3
+    end
+    subgraph Backend["Backend"]
+        R[API Routes]
+        M[Middleware JWT]
+        C[AuthController]
+        E[ExampleController]
+        R --> M --> C
+        R --> M --> E
+    end
+    subgraph BD["Base de datos"]
+        MySQL[(MySQL)]
+    end
+    subgraph Externos["Servicios externos"]
+        RC[reCAPTCHA]
+        CORP[API Corporativa]
+    end
+    U --> A
+    A -->|HTTPS| R
+    C --> CORP
+    A1 --> RC
+    E --> MySQL
+```
 
 ---
 
-### **2.5. Seguridad**
+### **2.4. Gestión de estado**
 
-Tentativo, según Etapa 5 y paquete CU-13 (Seguridad básica y permisos):
-
-- **Autenticación:** usuario y contraseña; validación de credenciales contra API corporativa externa.
-- **Protección de endpoints:** ningún endpoint de gestión de casos público; solo excepciones explícitas (por ejemplo, encuestas por token).
-- **reCAPTCHA v3** en pantalla de login.
-- **Permisos:** obtenidos desde API corporativa (menús/acciones); principio de mínimo privilegio y segmentación por área.
-- **Auditoría:** acciones relevantes y trazabilidad en evento_log (sin implementar aún).
-
----
-
-### **2.6. Tests**
-
-Tentativo, según estrategia de pruebas de la Etapa 5:
-
-- **Unitarias:** reglas de negocio y validaciones (p. ej. transiciones, validadores RUT/NIT).
-- **Integración:** módulos y eventos (publicación/consumo de eventos, persistencia).
-- **End-to-end:** creación y gestión de casos, Kanban y transiciones, correo entrante, cierre automático, encuestas.
-- **Idempotencia y seguridad:** pruebas específicas cuando los integradores y la autenticación estén implementados.
-
-Nada de lo anterior está implementado aún; se irá aplicando según el avance del desarrollo.
+- **Frontend:** estado de sesión (token, usuario, permisos) en `AuthService` y `sessionStorage`; señales para reactividad. No hay store global (NgRx) en el MVP.
+- **Backend:** estado stateless; sesión vía JWT en cada petición.
 
 ---
 
@@ -374,7 +425,230 @@ erDiagram
 
 > Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad.
 
-**Estado:** Pendiente. Los endpoints se definen en los paquetes de la Etapa 6 (carpeta `documentacion-sdd/06 - Etapa 6 (Ejecucion y Construccion)/HU/`); la especificación en formato OpenAPI se incorporará cuando se disponga del contrato estable.
+Base URL: `{host}/api/v1`. Autenticación: Bearer JWT en header `Authorization` para todos los endpoints excepto login.
+
+---
+
+### **4.1. OpenAPI — Endpoints principales (máximo 3)**
+
+```yaml
+openapi: 3.0.3
+info:
+  title: API TAKUMI
+  version: 1.0.0
+  description: API REST del sistema TAKUMI (gestión de casos). Prefijo base /api/v1.
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password, recaptcha_token]
+      properties:
+        username: { type: string, example: "demo@lidr.com" }
+        password: { type: string, format: password }
+        recaptcha_token: { type: string, description: "Token reCAPTCHA v3" }
+    LoginResponse:
+      type: object
+      properties:
+        access_token: { type: string }
+        token_type: { type: string, example: "bearer" }
+        user: { type: object }
+        permissions: { type: array, items: { type: string } }
+    CrearCasoRequest:
+      type: object
+      required: [id_pais, id_tipo_identificador, identificador, nombre, id_tipo_trabajo]
+      properties:
+        id_pais: { type: integer }
+        id_tipo_identificador: { type: integer }
+        identificador: { type: string }
+        nombre: { type: string }
+        correo: { type: string, nullable: true }
+        telefono: { type: string, nullable: true }
+        id_tipo_trabajo: { type: integer }
+        id_subtipo: { type: integer, nullable: true }
+        descripcion: { type: string, nullable: true }
+    CrearCasoResponse:
+      type: object
+      properties:
+        id_caso: { type: integer }
+        codigo_caso: { type: string, example: "CASO-000001" }
+    ListadoCasosResponse:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/CasoResumen" } }
+        meta: { type: object, description: "Paginación (current_page, total, per_page, etc.)" }
+    CasoResumen:
+      type: object
+      properties:
+        id: { type: integer }
+        codigo_caso: { type: string }
+        id_pais: { type: integer }
+        id_tipo_trabajo: { type: integer }
+        descripcion: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        contacto: { type: object, properties: { nombre: {}, identificador: {} } }
+
+paths:
+  /auth/login:
+    post:
+      summary: Login (obtener JWT)
+      description: Autenticación con usuario, contraseña y reCAPTCHA. Ruta en whitelist (sin Bearer). Rate limit 10 req/min.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200": { description: "OK", content: { application/json: { schema: { $ref: "#/components/schemas/LoginResponse" } } } }
+        "401": { description: "Credenciales inválidas" }
+        "422": { description: "Validación fallida (ej. reCAPTCHA)" }
+
+  /casos:
+    post:
+      summary: Crear caso (CU-01, T6-004)
+      description: Crea un caso; busca o crea el contacto por (id_pais, id_tipo_identificador, identificador). Valida RUT/cédula según tipo. Genera codigo_caso único.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CrearCasoRequest" }
+      responses:
+        "201": { description: "Caso creado", content: { application/json: { schema: { $ref: "#/components/schemas/CrearCasoResponse" } } } }
+        "401": { description: "No autenticado" }
+        "422": { description: "Validación fallida (RUT/NIT inválido, tipo inexistente, etc.)" }
+    get:
+      summary: Listado paginado de casos (T6-007)
+      description: Devuelve lista de casos con filtros opcionales. Respuesta con CasoResumenResource.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: page_size
+          in: query
+          schema: { type: integer }
+        - name: codigo_caso
+          in: query
+          schema: { type: string }
+        - name: id_pais
+          in: query
+          schema: { type: integer }
+        - name: id_tipo_trabajo
+          in: query
+          schema: { type: integer }
+        - name: fecha_creacion_desde
+          in: query
+          schema: { type: string, format: date }
+        - name: fecha_creacion_hasta
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        "200": { description: "OK", content: { application/json: { schema: { $ref: "#/components/schemas/ListadoCasosResponse" } } } }
+        "401": { description: "No autenticado" }
+        "422": { description: "Validación de parámetros fallida" }
+```
+
+---
+
+### **4.2. Ejemplos de petición y respuesta**
+
+**1. POST /api/v1/auth/login**
+
+*Petición:*
+```json
+{
+  "username": "demo@lidr.com",
+  "password": "lidrjp2026",
+  "recaptcha_token": "<token_reCAPTCHA_v3>"
+}
+```
+
+*Respuesta 200:*
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "token_type": "bearer",
+  "user": { "id": 1, "name": "Demo", "email": "demo@lidr.com" },
+  "permissions": ["menu.dashboard", "menu.listado-casos", "menu.crear-caso"]
+}
+```
+
+---
+
+**2. POST /api/v1/casos** (crear caso)
+
+*Petición (Authorization: Bearer &lt;token&gt;):*
+```json
+{
+  "id_pais": 1,
+  "id_tipo_identificador": 1,
+  "identificador": "12.345.678-9",
+  "nombre": "Juan Pérez",
+  "correo": "juan@ejemplo.com",
+  "telefono": null,
+  "id_tipo_trabajo": 1,
+  "id_subtipo": null,
+  "descripcion": "Solicitud de acceso al sistema X"
+}
+```
+
+*Respuesta 201:*
+```json
+{
+  "id_caso": 42,
+  "codigo_caso": "CASO-000042"
+}
+```
+
+*Respuesta 422 (ej. RUT inválido):*
+```json
+{
+  "message": "El RUT ingresado no es válido.",
+  "errors": { "identificador": ["El RUT ingresado no es válido."] }
+}
+```
+
+---
+
+**3. GET /api/v1/casos** (listado paginado)
+
+*Petición (Authorization: Bearer &lt;token&gt;):*
+```
+GET /api/v1/casos?page=1&page_size=10&id_tipo_trabajo=1
+```
+
+*Respuesta 200:*
+```json
+{
+  "data": [
+    {
+      "id": 42,
+      "codigo_caso": "CASO-000042",
+      "id_pais": 1,
+      "id_tipo_trabajo": 1,
+      "descripcion": "Solicitud de acceso al sistema X",
+      "created_at": "2026-03-06T10:00:00.000000Z",
+      "contacto": { "nombre": "Juan Pérez", "identificador": "12.345.678-9" }
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "total": 1,
+    "per_page": 10
+  }
+}
+```
 
 ---
 
@@ -507,9 +781,162 @@ erDiagram
 
 ---
 
-**Pull Request 2**
+**Pull Request 2 — Autenticación, backend (catálogos, casos, API), frontend (crear caso, listado, detalle) y layout**
 
-*(Pendiente de documentar.)*
+- **Título (sugerido):** `feat: autenticación JWT, catálogos y casos (backend), UI crear/listado/detalle caso, layout y marca (T6-001 a T6-012)`
+- **Descripción detallada:**
+  - **Qué cambia:** Frontend: pantalla de login, AuthService, interceptor Bearer, authGuard, menús según permisos (T6-086, T6-087); layout con sidebar/topbar y marca (brand-assets); UI Crear caso con catálogos y ng-select (T6-006); UI Listado de casos con filtros y paginación (T6-011); UI Detalle de caso (T6-012). Backend: migraciones y seeds de catálogos (T6-001), modelo Contacto y validación RUT/CC (T6-002), modelo Caso y CodigoCasoService (T6-003), POST /casos y evento_log CasoCreado (T6-004, T6-005), GET /casos (listado), GET /casos/{id} y por-codigo (T6-007 a T6-010), Resources CasoResumen/CasoDetalle. Flujo, scripts, decisiones y documentación (log tiempos, pruebas, design system, decisiones 0005–0009).
+  - **Por qué:** Implementar el flujo completo de autenticación, catálogos, creación de casos y consulta (listado y detalle) para cumplir el MVP documentado en la Etapa 6 y permitir uso real del sistema.
+  - **Impacto:** El usuario puede iniciar sesión, ver menús según permisos, crear casos desde la UI, listar y filtrar casos y abrir el detalle; el backend persiste casos con código único y evento_log; base para siguientes PRs (SLA, comunicaciones, etc.).
+- **Referencia a HU / ticket:** **HU Crear caso (CU-01)** → T6-004 (POST /casos), T6-006 (UI Crear caso); **HU Consultar caso** → T6-007 (GET /casos), T6-008/T6-009 (detalle), T6-011 (listado), T6-012 (detalle UI); T6-001 (BD/catálogos), T6-002 (Contacto), T6-003 (Caso), T6-005 (evento_log), T6-086/T6-087 (login y menús).
+
+**Resumen de alcance del PR (detalle):**
+
+<details>
+<summary>Desplegar resumen completo del PR 2</summary>
+
+## 1. Autenticación y sesión (frontend)
+
+### T6-086 — Login Angular, guard e interceptor
+- **Pantalla de login** (`/login`): formulario usuario/contraseña según mockup UI-05.
+- **AuthService**: `login()`, `logout()`, `getToken()`, `isAuthenticated()`, token y usuario en signals + `sessionStorage`.
+- **Interceptor HTTP**: cabecera `Authorization: Bearer <token>` en peticiones API (salvo login); ante 401 → logout y redirección a `/login`.
+- **Guard de rutas** (`authGuard`): sin sesión → redirige a `/login`.
+- **Rutas**: `/login` (pública), `/` y rutas hijas protegidas por `authGuard`.
+- **Marca**: título "Takumi — Service Desk", favicon y logo desde `brand-assets/` (logo Kibernum en login, `logo_kib.png`).
+- **Footer**: "Kibernum - Desarrollo Informático Interno (DII) 2026" (con lógica de año actual).
+- **Login**: icono ojo para mostrar/ocultar contraseña; checkbox "Recordar sesión" (solo usuario en `localStorage`); "¿Olvidó su contraseña?" debajo del botón (orden de tabulación).
+
+### T6-087 — Menús según permisos
+- **AuthService**: persistencia y exposición de `permissions` (sessionStorage + signal).
+- **PermissionService**: `hasPermission(permiso)`, `hasAnyPermission(permisos)`.
+- **Menú dinámico**: configuración en `menu.config.ts` (Inicio, Crear caso, Dashboard, Mantenedores) con permiso opcional; **NavComponent** filtra ítems según permisos.
+- **Backend**: usuarios demo/demo2 con permisos mock (`menu.dashboard`, `menu.mantenedores`) para probar el menú.
+
+---
+
+## 2. Backend — Base de datos y catálogos
+
+### T6-001 — Migraciones y seed de catálogos
+- **Migraciones**: tablas `paises`, `tipos_identificador`, `tipos_trabajo` (id, codigo, nombre, timestamps).
+- **Seeders**: PaisSeeder (CL, CO, US), TipoIdentificadorSeeder (RUT, CC, OTRO), TipoTrabajoSeeder (Incidente, Solicitud, etc.); **DatabaseSeeder** los invoca.
+- **Comando** `php artisan db:create`: crea la BD con datos de `.env` (conexión sin BD para `CREATE DATABASE`).
+- **Script** `scripts/create-database.sh`: alternativa para crear la BD desde bash.
+
+### T6-002 — Modelo Contacto y validación
+- **Migración** `contactos`: id, id_pais, id_tipo_identificador, identificador, nombre, correo, telefono; índice único `(id_pais, id_tipo_identificador, identificador)`.
+- **Modelos**: Pais, TipoIdentificador, Contacto (relaciones).
+- **Reglas**: `RutValido` (Chile, módulo 11, formato xx.xxx.xxx-x), `CedulaCiudadaniaValida` (Colombia, solo dígitos, largo configurable).
+- **Config** `identificadores.php` y mensajes en `lang/es/validation.php`.
+- **Catálogo**: NIT sustituido por **CC (Cédula de ciudadanía)** en TipoIdentificadorSeeder.
+
+---
+
+## 3. Backend — Casos (modelo, creación, evento)
+
+### T6-003 — Modelo Caso y código único
+- **Migraciones**: `codigo_caso_secuencia` (next_value), `casos` (id, codigo_caso UNIQUE, id_contacto, id_pais, id_tipo_trabajo, id_subtipo nullable, descripcion, timestamps).
+- **Modelos**: TipoTrabajo, Caso (relaciones con Contacto, Pais, TipoTrabajo).
+- **CodigoCasoService**: `siguiente()` en transacción con lock, formato configurable (ej. CASO-000001).
+
+### T6-004 — Endpoint POST /api/v1/casos
+- **CrearCasoRequest**: validación según tipo identificador (RUT, CC, OTRO); campos requeridos/opcionales.
+- **CrearCasoService**: findOrCreate contacto (RUT formateado), generación de codigo_caso, creación del caso; respuesta `{ id_caso, codigo_caso }`.
+- **CasoController::store**: 201 con id_caso y codigo_caso; 422 por validación; ruta protegida por JWT.
+
+### T6-005 — Evento CasoCreado (evento_log)
+- **Migración** `evento_log`: id, event_type, correlation_id, payload (longText), id_caso nullable, created_at.
+- **Modelo** EventoLog; escritura dentro de la misma transacción que crea el caso.
+- **Payload**: caso_id, codigo_caso, canal_origen=ui, tipo_trabajo, solicitante (nombre, identificador, etc.).
+
+---
+
+## 4. Backend — API listado y detalle
+
+### T6-007 — GET /api/v1/casos (listado paginado)
+- **ListadoCasosRequest**: validación de query (page, page_size, codigo_caso, id_pais, id_tipo_trabajo, fecha_creacion_desde/hasta).
+- **CasoController::index**: filtros, orden `updated_at` desc, paginación; respuesta `{ data, meta }` con ítems que incluyen contacto (nombre, correo).
+
+### T6-008 — GET /api/v1/casos/{id}
+- **CasoController::show**: detalle por ID (route model binding); caso + pais, tipo_trabajo, estado_actual (placeholder), contacto con pais.
+
+### T6-009 — GET /api/v1/casos/por-codigo/{codigo_caso}
+- **CasoController::showByCodigo**: mismo payload que detalle por ID; ruta registrada antes de `/casos/{caso}`.
+
+### T6-010 — API Resources para Caso
+- **CasoResumenResource**: serialización del ítem de listado (id, codigo_caso, id_pais, id_tipo_trabajo, descripcion, fechas, contacto nombre/correo).
+- **CasoDetalleResource**: serialización del detalle (caso + pais, tipo_trabajo, estado_actual, contacto con pais).
+- **CasoController**: refactor para usar ambos Resources; eliminado `buildDetallePayload`.
+
+---
+
+## 5. Frontend — UI Crear caso (T6-006)
+
+- **Ruta** `/crear-caso` protegida por authGuard.
+- **CatalogosController** (Laravel): GET `/api/v1/catalogos/paises`, `/tipos-identificador`, `/tipos-trabajo` (JWT).
+- **CrearCasoComponent**: formulario reactivo en dos bloques (Datos del solicitante, Datos del caso); **ng-select** para país, tipo identificador y tipo trabajo (librería según design system).
+- **CasoService**: `getPaises()`, `getTiposIdentificador()`, `getTiposTrabajo()`, `crearCaso(body)`.
+- **Validación**: mensajes por campo (inline), aria-invalid/describedby; layout en 2 columnas en escritorio.
+- **Alineación mockup UI-03**: breadcrumbs, título "Nueva solicitud de servicio", secciones con iconos numerados, barra de acciones fija (Cancelar, Crear caso).
+- **Estilos globales** para ng-select (clase `.app-select`): una sola definición; borde, flecha, placeholder sin superposición.
+
+---
+
+## 6. Frontend — UI Listado y detalle (T6-011, T6-012)
+
+### T6-011 — Listado de casos
+- **Ruta** `/listado-casos`; ítem en menú "Listado de casos".
+- **ListadoCasosComponent**: carga catálogos (países, tipos trabajo) y primera página de casos; **filtros** (código, país, tipo trabajo, fechas); **tabla** (Código, País con bandera, Tipo trabajo en pill, Contacto, Correo, Fecha actualización); **paginación** (page_size, anterior/siguiente, "Mostrando X–Y de Z").
+- **Ruta** `/casos/:id` → DetalleCasoComponent (sustituye placeholder).
+- **Topbar** (layout): Ayuda, Configuración, avatar con iniciales; checkbox "Incluir casos cerrados" (deshabilitado, tooltip "Próximamente").
+- **Locale** es-CL registrado; formato fecha `dd-MM-yyyy HH:mm`.
+- **Banderas**: librería **flag-icons** (CSS desde CDN) para mostrar país en listado y detalle.
+- **Colores**: fondos con gradientes, pills para tipo trabajo, tabla con hover y acentos primary/info.
+
+### T6-012 — Detalle de caso
+- **CasoService.getCaso(id)** y modelo/interfaz CasoDetalle.
+- **DetalleCasoComponent**: breadcrumbs (Inicio > Listado de casos > codigo_caso); **header** con código, pills (tipo trabajo, país con bandera, estado); **tabs** (Información activa; Comunicaciones/SLA placeholder); **card Información general** (campos + caja descripción); **card Datos del solicitante** (nombre, correo, teléfono, identificador, país con iconos); **card Comunicaciones** "Próximamente".
+- **Estados**: loading, 404 ("Caso no encontrado"), error genérico, éxito.
+- **Estilo**: cards con borde de color, pills, colores primary/info/success; bandera en pill de país (flag-icons).
+
+---
+
+## 7. Layout y marca (transversal)
+
+- **Layout UI-00**: **MainLayoutComponent** con **sidebar** (logo Headset + Takumi + Service Desk, menú según permisos, botón colapsar) y **topbar** (título de página, búsqueda placeholder, notificaciones, usuario + Cerrar sesión).
+- **Rutas**: rutas hijas bajo el layout (Inicio, Crear caso, Listado de casos, Dashboard, Mantenedores, Detalle caso).
+- **Login**: cabecera con logo Kibernum (imagen grande), "Takumi", "Service Desk Corporate"; sin texto "KIBERNUM" duplicado; "¿Olvidó su contraseña?" debajo del botón.
+- **Home**: solo "Bienvenido" (sin componente de ejemplo); opcionalmente cards de accesos rápidos.
+- **Márgenes**: padding horizontal generoso en main y footer para no verse pegado a los bordes.
+- **Brand**: todos los assets desde **brand-assets/** (raíz); script `copy-brand-assets` (prestart/prebuild) copia a `src/assets/brand/`.
+
+---
+
+## 8. Flujo, scripts y artefactos
+
+- **Log de tiempos**: registro de **Fecha y hora inicio** al comenzar la issue; **Tiempo IA** y **Tiempo Humano** por segmentos (entregas y revisiones).
+- **Cierre de iteración**: actualizar matriz (Estado Cerrado), log_tiempos, log_pruebas → **commit** → **push** → **crear MR** en GitLab (`glab mr create`).
+- **Pruebas**: ejecución con `./scripts/run-tests-and-archive.sh` (unit front, unit back, E2E); resultados en **docs/artifacts/resultados-pruebas/** con subcarpetas `unit-front/`, `unit-back/`, `e2e/`; video y screenshot en E2E (obligatorio).
+- **Nombre autor**: `scripts/get-author-name.sh` (campo raíz `name` del JSON de GitLab).
+- **Cobertura**: Karma text-summary; script archiva cobertura en carpeta de resultados.
+- **Playwright**: `PLAYWRIGHT_OUTPUT_DIR` y `PLAYWRIGHT_HTML_REPORT_DIR` por ejecución para que cada run tenga su reporte.
+- **README**: actualización según `docs/plantillas/prompt_documentacion.md`; verificación de completitud al añadir pantallas/tickets/interfaces.
+- **Mockups**: lectura obligatoria de `HU/docs/mockups/` al redactar requisito ampliado (sección "Mockup de referencia") y al diseñar/implementar pantallas.
+- **Design system**: listas desplegables con **librería** (ng-select); estilos **globales** para componentes compartidos; iconografía (Lucide); validación visible por campo; uso del ancho en escritorio en todas las pantallas.
+- **Comando** `php artisan casos:truncate`: trunca `evento_log` y `casos` y reinicia la secuencia de codigo_caso.
+- **Docker**: nota en README §12 para limpiar imágenes antiguas (`sudo docker system prune -a -f`).
+
+---
+
+## 9. Decisiones registradas (docs/artifacts/decisiones/)
+
+- 0005: Identificador Colombia → Cédula de ciudadanía (no NIT).
+- 0006: T6-006 catálogos vía API y ruta `/crear-caso`.
+- 0007: ng-select para listas desplegables (no componente propio).
+- 0008: Iconografía con Lucide.
+- 0009: Cierre de iteración incluye commit, push y creación de MR.
+
+</details>
 
 ---
 
