@@ -1,0 +1,2 @@
+"""Audit logging service placeholder."""
+

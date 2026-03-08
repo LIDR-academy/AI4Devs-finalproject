@@ -603,3 +603,47 @@ The frontend provides the user interface for all platform interactions. Proper s
 
 **Pull Request 3**
 
+---
+
+## 8. Backend Bootstrap (US-001)
+
+La base del backend ya esta creada en `backend/` usando Flask application factory.
+
+### 8.1. Estructura base
+
+- `backend/core/`: modulos de dominio (`users`, `files`, `auth`, `common`)
+- `backend/config/`: configuraciones por entorno (`development`, `staging`, `production`, `testing`)
+- `backend/server/config/logs.py`: configuracion centralizada de logs
+- `backend/application.py`: entrypoint para ejecucion local
+- `tests/backend/`: pruebas unitarias con `unittest`
+
+### 8.2. Setup local backend
+
+```bash
+cd backend
+uv venv .venv
+source .venv/bin/activate
+uv pip install -e ".[dev]"
+cp .env.example .env
+python application.py
+```
+
+### 8.3. Ejecutar pruebas
+
+```bash
+cd ..
+python -m unittest discover -s tests/backend -p "test_*.py" -v
+```
+
+### 8.4. Flujo de inicio del backend
+
+```mermaid
+flowchart LR
+    A[Cargar .env] --> B[Resolver clase de configuracion]
+    B --> C[Validar variables requeridas]
+    C --> D[Configurar logging]
+    D --> E[Inicializar extensiones]
+    E --> F[Registrar blueprints y handlers]
+    F --> G[Aplicacion lista]
+```
+
