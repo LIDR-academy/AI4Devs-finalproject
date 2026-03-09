@@ -5,8 +5,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 import arrow
-from passlib.hash import bcrypt
 from sqlmodel import Field, Relationship, SQLModel
+from werkzeug.security import check_password_hash, generate_password_hash
 
 if TYPE_CHECKING:
 	from core.common.models import AuditLog
@@ -35,12 +35,12 @@ class User(SQLModel, table=True):
 
 	def set_password(self, password: str) -> None:
 		"""Hash and persist a plain text password."""
-		self.password_hash = bcrypt.hash(password)
+		self.password_hash = generate_password_hash(password)
 		self.updated_at = arrow.utcnow().datetime
 
 	def verify_password(self, password: str) -> bool:
 		"""Verify a plain text password against the stored hash."""
-		return bcrypt.verify(password, self.password_hash)
+		return check_password_hash(self.password_hash, password)
 
 	@staticmethod
 	def generate_api_key() -> str:

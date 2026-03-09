@@ -385,10 +385,12 @@ X-API-Key: ipfs_gw_your_api_key_here
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/v1/users/register` | Register new user |
-| `POST` | `/status` | Get API key status |
-| `POST` | `/renew` | Renew API key |
-| `POST` | `/revoke` | Revoke API key (admin) |
-| `POST` | `/reactivate` | Reactivate API key (admin) |
+| `GET` | `/api/v1/users/status` | Health-style user route check |
+| `POST` | `/api/v1/users/status` | Get API key status (`active`, `inactive`, `revoked`) |
+| `POST` | `/api/v1/users/renew/challenge` | Start API key renewal step-up challenge |
+| `POST` | `/api/v1/users/renew` | Renew API key with verification code |
+| `POST` | `/api/v1/users/revoke` | Revoke API key (admin) |
+| `POST` | `/api/v1/users/reactivate` | Reactivate API key (admin) |
 
 #### File Operations
 
@@ -432,6 +434,40 @@ Registration endpoint constraints:
 - Password validation rules are enforced before hashing.
 - Duplicate email returns `422 Unprocessable Entity`.
 - Rate limiting is set to `5` requests per hour per IP.
+
+#### API Key Status
+```bash
+curl -X POST http://localhost:5000/api/v1/users/status \
+    -H "X-API-Key: ipfs_gw_your_api_key_here"
+```
+
+#### API Key Renewal (Step-Up)
+Step 1: request verification challenge
+```bash
+curl -X POST http://localhost:5000/api/v1/users/renew/challenge \
+    -H "X-API-Key: ipfs_gw_your_api_key_here"
+```
+
+Step 2: renew key with verification code
+```bash
+curl -X POST http://localhost:5000/api/v1/users/renew \
+    -H "Content-Type: application/json" \
+    -H "X-API-Key: ipfs_gw_your_api_key_here" \
+    -d '{"verification_code": "123456"}'
+```
+
+#### Admin Revoke / Reactivate
+```bash
+curl -X POST http://localhost:5000/api/v1/users/revoke \
+    -H "Content-Type: application/json" \
+    -H "X-API-Key: ipfs_gw_admin_api_key_here" \
+    -d '{"user_email": "user@example.com"}'
+
+curl -X POST http://localhost:5000/api/v1/users/reactivate \
+    -H "Content-Type: application/json" \
+    -H "X-API-Key: ipfs_gw_admin_api_key_here" \
+    -d '{"user_email": "user@example.com"}'
+```
 
 #### Upload File
 ```bash
