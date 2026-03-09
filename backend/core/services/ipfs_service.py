@@ -35,6 +35,11 @@ class UploadError(Exception):
 	pass
 
 
+class RetrievalError(Exception):
+	"""Exception raised during file retrieval operations."""
+	pass
+
+
 class IPFSService:
 	"""Service for uploading files to IPFS via Filebase S3-compatible API."""
     
@@ -80,7 +85,7 @@ class IPFSService:
 	def _ensure_client(self) -> None:
 		"""Ensure Filebase client is initialized before any remote operation."""
 		if self.client is None:
-			raise UploadError(
+			raise ValueError(
 				"Filebase client is not configured. Set FILEBASE_ACCESS_KEY and FILEBASE_SECRET_KEY."
 			)
     
@@ -237,17 +242,11 @@ class IPFSService:
 			logger.error(f"Unexpected error during file upload: {e}")
 			raise UploadError(f"Unexpected error during upload: {str(e)}") from e
     
-	def retrieve_file(self, key: str) -> BytesIO:
-		"""Retrieve a file from IPFS via Filebase.
+	def _retrieve_file_with_retry(self, key: str) -> bytes:
+		"""Internal method to retrieve file with retry logic.
         
-		Args:
-			key: Filename/key of the file to retrieve
-            
-		Returns:
-			BytesIO object containing file data
-            
-		Raises:
-			UploadError: If retrieval fails
+		Uses tenacity for exponential backoff retry logic.
+		Handles NoSuchKey errors specifically.
 		"""
 		try:
 			self._ensure_client()
@@ -258,21 +257,127 @@ class IPFSService:
 				Key=key,
 			)
             
-			file_data = BytesIO(response["Body"].read())
-			logger.info(f"Successfully retrieved file '{key}'")
+			file_data = response["Body"].read()
+			logger.info(f"Successfully retrieved file '{key}' ({len(file_data)} bytes)")
             
 			return file_data
         
 		except ClientError as e:
 			error_code = e.response.get("Error", {}).get("Code", "Unknown")
-			logger.error(f"Failed to retrieve file '{key}': {error_code}")
-			raise UploadError(
-				f"Failed to retrieve file '{key}': {error_code}"
-			) from e
+			if error_code == "NoSuchKey":
+				logger.warning(f"File '{key}' not found in Filebase")
+				raise RetrievalError(f"File not found: '{key}'") from e
+			logger.error(f"AWS/Filebase error during retrieval: {error_code} - {e}")
+			raise
+	
+	@retry(
+		stop=stop_after_attempt(3),  # Max 3 attempts
+		wait=wait_exponential(multiplier=1, min=2, max=10),  # 2-10s exponential
+		retry=retry_if_exception_type((ClientError, BotoCoreError)),
+		before_sleep=lambda retry_state: logger.warning(
+			f"Retrying retrieval, attempt {retry_state.attempt_number} "
+			f"(next retry in {retry_state.next_action.sleep}s)"
+		),
+	)
+	def _retrieve_file_with_retry_decorated(self, key: str) -> bytes:
+		"""Decorated version using both circuit breaker and retry."""
+		return self._retrieve_file_with_retry(key=key)
+
+	def _retrieve_with_resilience(self, key: str) -> bytes:
+		"""Apply circuit breaker around retry-enabled retrieval."""
+		return self.circuit_breaker.call(
+			self._retrieve_file_with_retry_decorated,
+			key=key,
+		)
+    
+	def retrieve_file(self, key: str) -> bytes:
+		"""Retrieve a file from IPFS via Filebase.
+        
+		Implements:
+		- Circuit breaker pattern for fault tolerance
+		- Exponential backoff retry logic
+		- Proper error handling for missing files
+		- Full file loaded into memory
+        
+		Args:
+			key: Filename/key of the file to retrieve
+            
+		Returns:
+			bytes: File contents as bytes
+            
+		Raises:
+			RetrievalError: If file not found or retrieval fails
+		"""
+		try:
+			result = self._retrieve_with_resilience(key=key)
+			return result
+        
+		except RetryError as e:
+			root_exc = e.last_attempt.exception()
+			logger.error(f"Retrieval failed after 3 retries: {root_exc}")
+			raise RetrievalError(
+				f"Failed to retrieve file after retries: {str(root_exc)}"
+			) from root_exc
+        
+		except RetrievalError:
+			# Re-raise retrieval errors (e.g., file not found)
+			raise
         
 		except Exception as e:
 			logger.error(f"Unexpected error during file retrieval: {e}")
-			raise UploadError(f"Unexpected error during retrieval: {str(e)}") from e
+			raise RetrievalError(f"Unexpected error during retrieval: {str(e)}") from e
+	
+	def retrieve_file_stream(self, key: str, chunk_size: int = 65536):
+		"""Retrieve a file from IPFS via Filebase as a stream.
+        
+		Use this method for large files to avoid loading entire file into memory.
+		Yields chunks of data.
+        
+		Args:
+			key: Filename/key of the file to retrieve
+			chunk_size: Size of chunks to yield (default: 64KB)
+            
+		Yields:
+			bytes: Chunks of file data
+            
+		Raises:
+			RetrievalError: If file not found or retrieval fails
+		"""
+		try:
+			self._ensure_client()
+			logger.debug(f"Streaming file '{key}' from Filebase (chunk_size={chunk_size})")
+            
+			response = self.client.get_object(
+				Bucket=self.bucket_name,
+				Key=key,
+			)
+            
+			body = response["Body"]
+			total_bytes = 0
+            
+			# Stream file in chunks
+			while True:
+				chunk = body.read(chunk_size)
+				if not chunk:
+					break
+				total_bytes += len(chunk)
+				yield chunk
+            
+			logger.info(f"Successfully streamed file '{key}' ({total_bytes} bytes)")
+        
+		except ClientError as e:
+			error_code = e.response.get("Error", {}).get("Code", "Unknown")
+			if error_code == "NoSuchKey":
+				logger.warning(f"File '{key}' not found in Filebase")
+				raise RetrievalError(f"File not found: '{key}'") from e
+			logger.error(f"AWS/Filebase error during streaming: {error_code} - {e}")
+			raise RetrievalError(
+				f"Failed to stream file '{key}': {error_code}"
+			) from e
+        
+		except Exception as e:
+			logger.error(f"Unexpected error during file streaming: {e}")
+			raise RetrievalError(f"Unexpected error during streaming: {str(e)}") from e
     
 	def pin_content(self, cid: str) -> bool:
 		"""Ensure content is pinned on IPFS.
