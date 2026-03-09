@@ -44,9 +44,9 @@ def upgrade() -> None:
         sa.Column("uploaded_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("cid"),
+        sa.UniqueConstraint("user_id", "cid", name="uq_files_user_id_cid"),
     )
-    op.create_index("ix_files_cid", "files", ["cid"], unique=True)
+    op.create_index("ix_files_cid", "files", ["cid"], unique=False)
     op.create_index("ix_files_user_id", "files", ["user_id"], unique=False)
 
     op.create_table(

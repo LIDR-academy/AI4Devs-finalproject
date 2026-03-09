@@ -27,10 +27,17 @@ def validate_email(email: str) -> str:
 
 def validate_password(password: str) -> str:
 	"""Validate password constraints used for registration."""
-	clean = sanitize_text(password)
-	if len(clean) < MIN_PASSWORD_LEN or len(clean) > MAX_PASSWORD_LEN:
-		raise ValidationError("Password must be between 8 and 128 characters")
-	return clean
+	if not isinstance(password, str):
+		raise ValidationError("Invalid request payload")
+	if any(ord(char) < 32 or ord(char) == 127 for char in password):
+		raise ValidationError("Password contains invalid control characters")
+	if password != password.strip():
+		raise ValidationError("Password must not include leading or trailing whitespace")
+	if len(password) < MIN_PASSWORD_LEN or len(password) > MAX_PASSWORD_LEN:
+		raise ValidationError(
+			f"Password must be between {MIN_PASSWORD_LEN} and {MAX_PASSWORD_LEN} characters"
+		)
+	return password
 
 
 def sanitize_text(value: str) -> str:

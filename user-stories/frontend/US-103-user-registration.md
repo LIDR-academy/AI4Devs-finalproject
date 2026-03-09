@@ -18,8 +18,9 @@ As a **new user**, I want to register for the IPFS gateway service, so that I ca
 - [ ] Client-side validation for email format and password strength
 - [ ] Real-time validation feedback
 - [ ] Submit button with loading state
-- [ ] Success message displays API key prominently
+- [ ] Success message displays API key once and prominently
 - [ ] Copy-to-clipboard functionality for API key
+- [ ] Download/export option is provided so users can save the API key once
 - [ ] Link to login page for existing users
 - [ ] Error messages are user-friendly and actionable
 - [ ] Form is accessible (ARIA labels, keyboard navigation)
@@ -37,7 +38,9 @@ As a **new user**, I want to register for the IPFS gateway service, so that I ca
 - Use Zod for schema validation
 - Implement password strength indicator
 - Show/hide password toggle
-- Store API key securely (consider secure storage)
+- Do not persist API keys in browser storage (`localStorage`/`sessionStorage`)
+- In registration success/export logic, show key once with copy + download options only
+- If persistence is required, prefer server-side storage/proxy patterns or OS-level secure storage designs
 - Use toast notifications for feedback
 
 ## Dependencies
@@ -107,8 +110,12 @@ flowchart TD
 |  | ipfs_gw_abc123xyz789...             [📋]  |  |
 |  +--------------------------------------------+  |
 |                                                  |
-|  ⚠️ Save this key securely. You won't be able   |
-|  to see it again!                                |
+|  [Download .txt]                                 |
+|                                                  |
+|  ⚠️ This key is shown once. Do not store it in   |
+|  localStorage/sessionStorage.                    |
+|  Use server-side or OS-level secure storage if   |
+|  persistence is required.                        |
 |                                                  |
 |  [        Go to Dashboard        ]               |
 |                                                  |

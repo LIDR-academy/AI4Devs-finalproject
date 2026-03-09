@@ -141,17 +141,17 @@ export interface UploadResponse {
 export const api = {
   // Authentication
   register: async (data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> => {
-    const response = await apiClient.post<ApiResponse<RegisterResponse>>("/register", data);
+    const response = await apiClient.post<ApiResponse<RegisterResponse>>("/api/v1/users/register", data);
     return response.data;
   },
 
   getStatus: async (): Promise<ApiResponse<StatusResponse>> => {
-    const response = await apiClient.post<ApiResponse<StatusResponse>>("/status");
+    const response = await apiClient.get<ApiResponse<StatusResponse>>("/api/v1/users/status");
     return response.data;
   },
 
   renewApiKey: async (email: string): Promise<ApiResponse<{ api_key: string }>> => {
-    const response = await apiClient.post<ApiResponse<{ api_key: string }>>("/renew", { email });
+    const response = await apiClient.post<ApiResponse<{ api_key: string }>>("/api/v1/users/renew", { email });
     return response.data;
   },
 
@@ -163,7 +163,7 @@ export const api = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await apiClient.post<ApiResponse<UploadResponse>>("/upload", formData, {
+    const response = await apiClient.post<ApiResponse<UploadResponse>>("/api/v1/files/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -178,14 +178,14 @@ export const api = {
   },
 
   retrieveFile: async (cid: string): Promise<Blob> => {
-    const response = await apiClient.get(`/retrieve/${cid}`, {
+    const response = await apiClient.get(`/api/v1/files/retrieve/${cid}`, {
       responseType: "blob",
     });
     return response.data;
   },
 
   getFileInfo: async (cid: string): Promise<ApiResponse<FileInfo>> => {
-    const response = await apiClient.get<ApiResponse<FileInfo>>(`/files/${cid}`);
+    const response = await apiClient.get<ApiResponse<FileInfo>>(`/api/v1/files/${cid}`);
     return response.data;
   },
 
@@ -198,7 +198,7 @@ export const api = {
       pages: number;
     };
   }>> => {
-    const response = await apiClient.get("/files", {
+    const response = await apiClient.get("/api/v1/files", {
       params: { page, per_page: perPage },
     });
     return response.data;
@@ -206,12 +206,12 @@ export const api = {
 
   // Pinning Operations
   pinContent: async (cid: string): Promise<ApiResponse<{ cid: string; pinned: boolean }>> => {
-    const response = await apiClient.post(`/pin/${cid}`);
+    const response = await apiClient.post(`/api/v1/files/pinning/${cid}`);
     return response.data;
   },
 
   unpinContent: async (cid: string): Promise<ApiResponse<{ cid: string; pinned: boolean }>> => {
-    const response = await apiClient.post(`/unpin/${cid}`);
+    const response = await apiClient.delete(`/api/v1/files/pinning/${cid}`);
     return response.data;
   },
 };
@@ -311,7 +311,8 @@ export function usePinContent() {
 ## Notes
 - **API Key Security**: Do NOT store API keys in localStorage. Instead:
   - Use HttpOnly cookies set by the backend (most secure)
-  - Use short-lived rotated tokens stored in-memory or sessionStorage
+  - Use short-lived rotated tokens stored in-memory only (no localStorage/sessionStorage)
+  - For registration UX, show API key once with copy/download export and avoid browser persistence
   - Pass the API key via the `getApiKey` callback in `createApiClient()` config
 - Use React Query for caching and state management
 - Add proper error handling and user feedback
