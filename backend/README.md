@@ -106,6 +106,100 @@ curl http://localhost:5000/api/v1/files/upload/status/550e8400-e29b-41d4-a716-44
 }
 ```
 
+---
+
+### File Retrieval (US-006)
+
+Retrieve files from IPFS with intelligent caching, streaming, and access control.
+
+#### GET /api/v1/files/retrieve/:cid
+
+Retrieve a file by its Content Identifier (CID).
+
+**Request:**
+```bash
+curl http://localhost:5000/api/v1/files/retrieve/QmXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
+	-H "X-API-Key: your_api_key_here"
+```
+
+**Request (Force Download):**
+```bash
+curl http://localhost:5000/api/v1/files/retrieve/QmXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx?download \
+	-H "X-API-Key: your_api_key_here" \
+	-O
+```
+
+**Request (With Cache Validation):**
+```bash
+curl http://localhost:5000/api/v1/files/retrieve/QmXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
+	-H "X-API-Key: your_api_key_here" \
+	-H "If-None-Match: \"QmXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\""
+```
+
+**Response (Success - 200 OK):**
+```
+HTTP/1.1 200 OK
+Content-Type: application/pdf
+Content-Disposition: inline; filename="document.pdf"
+ETag: "QmXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+Cache-Control: public, max-age=31536000, immutable
+Last-Modified: Mon, 09 Mar 2026 15:30:00 GMT
+X-File-ID: 42
+X-Content-CID: QmXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+[Binary file content]
+```
+
+**Response (Not Modified - 304):**
+```
+HTTP/1.1 304 Not Modified
+ETag: "QmXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+Cache-Control: public, max-age=31536000, immutable
+Last-Modified: Mon, 09 Mar 2026 15:30:00 GMT
+```
+
+**Response (Access Denied - 403):**
+```json
+{
+	"error": "Access denied: not file owner"
+}
+```
+
+**Response (Not Found - 404):**
+```json
+{
+	"error": "File not found"
+}
+```
+
+#### Features
+
+- **Authorization**: Only file owners can retrieve their files
+- **HTTP Caching**: 
+	- ETag based on CID (content-addressed identifier)
+	- 304 Not Modified responses for cached content
+	- Immutable caching with 1-year max-age
+	- Supports If-None-Match and If-Modified-Since headers
+- **Streaming**: Large files streamed in 64KB chunks to minimize memory usage
+- **MIME Type Detection**: Automatic detection from file extension with custom mappings
+- **Content Disposition**: 
+	- Inline display by default
+	- Force download with `?download` query parameter
+- **Retrieval Tracking**: 
+	- Updates `retrieval_count` on each access
+	- Records `last_retrieved_at` timestamp
+- **Audit Logging**: All retrieval attempts logged with:
+	- Resource type and ID
+	- IP address
+	- User agent
+	- Access decision (success, denied, cached, failed)
+- **Error Handling**:
+	- Circuit breaker pattern for IPFS connectivity
+	- Retry logic with exponential backoff
+	- Proper HTTP status codes (200, 304, 403, 404, 500)
+
+---
+
 ### Features
 
 - **Multipart file upload** via form data (`multipart/form-data`)
@@ -183,5 +277,6 @@ Run unit tests for file upload functionality:
 ```bash
 python -m unittest tests.backend.test_file_validators -v
 python -m unittest tests.backend.test_ipfs_service -v
+python -m unittest discover -s tests/backend -p "test_*.py" -v
 ```
 

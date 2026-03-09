@@ -195,8 +195,7 @@ class TestIPFSServiceRetrieve(unittest.TestCase):
         
         result = self.service.retrieve_file("test.txt")
         
-        self.assertIsInstance(result, BytesIO)
-        self.assertEqual(result.getvalue(), file_data)
+        self.assertEqual(result, file_data)
     
     def test_retrieve_file_not_found(self):
         """Should handle file not found."""
