@@ -15,7 +15,10 @@ if str(BACKEND_DIR) not in sys.path:
 from config.testing import TestingConfig
 from core import create_app, get_engine
 from core.users.models import User
-from core.users.verification import _verification_codes
+from core.users.verification import (
+	_test_get_verification_code, 
+	_test_clear_all_codes
+)
 
 
 class TestRenewEndpoint(unittest.TestCase):
@@ -47,7 +50,7 @@ class TestRenewEndpoint(unittest.TestCase):
 			self.user_id = self.test_user.id
 
 	def tearDown(self) -> None:
-		_verification_codes.clear()
+		_test_clear_all_codes(self.app)
 		SQLModel.metadata.drop_all(get_engine())
 		self.temp_dir.cleanup()
 
@@ -59,7 +62,7 @@ class TestRenewEndpoint(unittest.TestCase):
 		)
 
 		self.assertEqual(response.status_code, 202)
-		self.assertIn(self.user_id, _verification_codes)
+		self.assertIsNotNone(_test_get_verification_code(self.user_id, self.app))
 
 	def test_challenge_requires_api_key(self) -> None:
 		"""Challenge endpoint should require valid API key."""
@@ -75,7 +78,8 @@ class TestRenewEndpoint(unittest.TestCase):
 			headers={"X-API-Key": "ipfs_gw_test_key_12345"},
 		)
 		
-		code = _verification_codes[self.user_id]["code"]
+		code = _test_get_verification_code(self.user_id, self.app)
+		self.assertIsNotNone(code)
 		
 		# Renew with code
 		response = self.client.post(
@@ -118,7 +122,8 @@ class TestRenewEndpoint(unittest.TestCase):
 			headers={"X-API-Key": "ipfs_gw_test_key_12345"},
 		)
 		
-		code = _verification_codes[self.user_id]["code"]
+		code = _test_get_verification_code(self.user_id, self.app)
+		self.assertIsNotNone(code)
 		
 		# Renew with code
 		response = self.client.post(

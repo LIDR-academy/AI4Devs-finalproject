@@ -10,4 +10,5 @@ class TestingConfig(DefaultConfig):
 	DEBUG = False
 	TESTING = True
 	DATABASE_URL = "sqlite:///:memory:"
+	USE_MEMORY_VERIFICATION_STORE = True  # Use in-memory Redis adapter for tests
 
