@@ -38,24 +38,33 @@ class UploadError(Exception):
 class IPFSService:
 	"""Service for uploading files to IPFS via Filebase S3-compatible API."""
     
-	def __init__(self):
+	def __init__(self, strict: bool = True):
 		"""Initialize IPFS service with Filebase S3 client and circuit breaker."""
-		self.bucket_name = os.getenv(
-			"FILEBASE_BUCKET",
-			"ipfs-gateway"
+		# Circuit breaker is always available, even if client credentials are missing.
+		self.circuit_breaker = CircuitBreaker(
+			fail_max=5,
+			reset_timeout=60,
+			exclude=[ValidationError],
+			name="filebase-circuit-breaker",
 		)
-		self.api_key = os.getenv("FILEBASE_ACCESS_KEY")
-		self.api_secret = os.getenv("FILEBASE_SECRET_KEY")
+
+		self.bucket_name = os.getenv("FILEBASE_BUCKET", "ipfs-gateway") or "ipfs-gateway"
+		self.api_key = os.getenv("FILEBASE_ACCESS_KEY") or os.getenv("FILEBASE_API_KEY")
+		self.api_secret = os.getenv("FILEBASE_SECRET_KEY") or os.getenv("FILEBASE_API_SECRET")
 		self.endpoint = os.getenv(
 			"FILEBASE_ENDPOINT",
 			"https://s3.filebase.com"
 		)
+		self.client = None
         
 		if not self.api_key or not self.api_secret:
-			raise ValueError(
-				"Filebase API credentials not configured. "
-				"Set FILEBASE_ACCESS_KEY and FILEBASE_SECRET_KEY environment variables."
-			)
+			if strict:
+				raise ValueError(
+					"Filebase API credentials not configured. "
+					"Set FILEBASE_ACCESS_KEY and FILEBASE_SECRET_KEY environment variables."
+				)
+			logger.warning("Filebase credentials not configured; IPFS client disabled for this runtime")
+			return
         
 		# Initialize S3 client for Filebase
 		self.client = boto3.client(
@@ -66,15 +75,14 @@ class IPFSService:
 			region_name="us-east-1",
 		)
         
-		# Initialize circuit breaker for Filebase API
-		self.circuit_breaker = CircuitBreaker(
-			fail_max=5,  # Open after 5 consecutive failures
-			reset_timeout=60,  # Attempt recovery after 60 seconds
-			exclude=[ValidationError],  # Don't count validation errors
-			name="filebase-circuit-breaker",
-		)
-        
 		logger.info("IPFS service initialized with Filebase backend")
+
+	def _ensure_client(self) -> None:
+		"""Ensure Filebase client is initialized before any remote operation."""
+		if self.client is None:
+			raise UploadError(
+				"Filebase client is not configured. Set FILEBASE_ACCESS_KEY and FILEBASE_SECRET_KEY."
+			)
     
 	def _upload_file_with_retry(
 		self,
@@ -89,6 +97,7 @@ class IPFSService:
 		Decorated with circuit breaker for fault tolerance.
 		"""
 		try:
+			self._ensure_client()
 			# Read file size
 			file.seek(0, 2)  # Seek to end
 			file_size = file.tell()
@@ -137,7 +146,6 @@ class IPFSService:
 			logger.error(f"AWS/Filebase error during upload: {error_code} - {e}")
 			raise
     
-	@circuit_breaker
 	@retry(
 		stop=stop_after_attempt(3),  # Max 3 attempts
 		wait=wait_exponential(multiplier=1, min=2, max=10),  # 2-10s exponential
@@ -156,6 +164,22 @@ class IPFSService:
 	) -> UploadResult:
 		"""Decorated version using both circuit breaker and retry."""
 		return self._upload_file_with_retry(
+			file=file,
+			filename=filename,
+			content_type=content_type,
+			metadata=metadata,
+		)
+
+	def _upload_with_resilience(
+		self,
+		file: BinaryIO,
+		filename: str,
+		content_type: str = "application/octet-stream",
+		metadata: Optional[Dict[str, str]] = None,
+	) -> UploadResult:
+		"""Apply circuit breaker around retry-enabled upload."""
+		return self.circuit_breaker.call(
+			self._upload_file_with_retry_decorated,
 			file=file,
 			filename=filename,
 			content_type=content_type,
@@ -190,7 +214,7 @@ class IPFSService:
 			ValidationError: If input validation fails
 		"""
 		try:
-			result = self._upload_file_with_retry_decorated(
+			result = self._upload_with_resilience(
 				file=file,
 				filename=filename,
 				content_type=content_type,
@@ -226,6 +250,7 @@ class IPFSService:
 			UploadError: If retrieval fails
 		"""
 		try:
+			self._ensure_client()
 			logger.debug(f"Retrieving file '{key}' from Filebase")
             
 			response = self.client.get_object(
@@ -289,6 +314,7 @@ class IPFSService:
 			UploadError: If unpinning fails
 		"""
 		try:
+			self._ensure_client()
 			logger.debug(f"Unpinning content for key: {key}")
             
 			# Delete from Filebase S3 bucket
@@ -321,5 +347,5 @@ class IPFSService:
 
 
 # Global instance
-ipfs_service = IPFSService()
+ipfs_service = IPFSService(strict=False)
 

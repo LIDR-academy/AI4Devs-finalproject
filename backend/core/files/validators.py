@@ -168,8 +168,8 @@ def generate_safe_filename(original_filename: str) -> str:
     # Validate first
     validate_filename(original_filename)
     
-    # Get file extension
-    _, ext = os.path.splitext(original_filename)
+    # Preserve multi-part suffixes (for example, .tar.gz)
+    ext = "".join(Path(original_filename).suffixes)
     
     # Ensure extension is safe
     if ext and len(ext) > 10:

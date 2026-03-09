@@ -35,8 +35,8 @@ class TestIPFSServiceInitialization(unittest.TestCase):
     """Test IPFS service initialization."""
     
     @patch.dict("os.environ", {
-        "FILEBASE_API_KEY": "test_key",
-        "FILEBASE_API_SECRET": "test_secret",
+        "FILEBASE_ACCESS_KEY": "test_key",
+        "FILEBASE_SECRET_KEY": "test_secret",
     })
     @patch("core.services.ipfs_service.boto3.client")
     def test_ipfs_service_init_success(self, mock_boto3):
@@ -187,9 +187,9 @@ class TestIPFSServiceRetrieve(unittest.TestCase):
         """Should successfully retrieve file."""
         file_data = b"test content"
         
-        mock_response = MagicMock()
-        mock_response.__getitem__ = MagicMock(side_effect=lambda x: MagicMock())
-        mock_response["Body"].read.return_value = file_data
+        body = MagicMock()
+        body.read.return_value = file_data
+        mock_response = {"Body": body}
         
         self.mock_client.get_object.return_value = mock_response
         
