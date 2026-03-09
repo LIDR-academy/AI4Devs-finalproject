@@ -41,22 +41,26 @@ class IPFSService:
 	def __init__(self):
 		"""Initialize IPFS service with Filebase S3 client and circuit breaker."""
 		self.bucket_name = os.getenv(
-			"FILEBASE_BUCKET_NAME",
+			"FILEBASE_BUCKET",
 			"ipfs-gateway"
 		)
-		self.api_key = os.getenv("FILEBASE_API_KEY")
-		self.api_secret = os.getenv("FILEBASE_API_SECRET")
+		self.api_key = os.getenv("FILEBASE_ACCESS_KEY")
+		self.api_secret = os.getenv("FILEBASE_SECRET_KEY")
+		self.endpoint = os.getenv(
+			"FILEBASE_ENDPOINT",
+			"https://s3.filebase.com"
+		)
         
 		if not self.api_key or not self.api_secret:
 			raise ValueError(
 				"Filebase API credentials not configured. "
-				"Set FILEBASE_API_KEY and FILEBASE_API_SECRET environment variables."
+				"Set FILEBASE_ACCESS_KEY and FILEBASE_SECRET_KEY environment variables."
 			)
         
 		# Initialize S3 client for Filebase
 		self.client = boto3.client(
 			"s3",
-			endpoint_url="https://s3.filebase.com",
+			endpoint_url=self.endpoint,
 			aws_access_key_id=self.api_key,
 			aws_secret_access_key=self.api_secret,
 			region_name="us-east-1",
