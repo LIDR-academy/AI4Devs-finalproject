@@ -647,3 +647,73 @@ flowchart LR
     F --> G[Aplicacion lista]
 ```
 
+## 9. Database Models and Migrations (US-002)
+
+Se implementaron los modelos SQLModel base con llaves primarias enteras autoincrementales y relaciones:
+
+- `backend/core/users/models.py`: entidad `User`
+- `backend/core/files/models.py`: entidad `File`
+- `backend/core/common/models.py`: entidad `AuditLog`
+
+### 9.1. Migraciones Alembic
+
+- Entorno de migraciones: `backend/migrations/env.py`
+- Revision inicial: `backend/migrations/versions/0001_initial_models.py`
+
+Comandos recomendados:
+
+```bash
+cd backend
+alembic upgrade head
+alembic downgrade base
+```
+
+### 9.2. Validacion de migraciones por entorno (SQLite)
+
+Se valido el ciclo de migraciones para escenarios local/staging/production usando archivos SQLite separados:
+
+- Local (destroy/recreate): `downgrade base` + `upgrade head`
+- Staging (update mode): `upgrade head` sobre base existente
+- Production (update mode): `upgrade head` sobre base existente
+
+### 9.3. Diagrama ERD actualizado
+
+```mermaid
+erDiagram
+    USER ||--o{ FILE : uploads
+    USER ||--o{ AUDIT_LOG : generates
+
+    USER {
+        int id PK
+        string email UK
+        string password_hash
+        string api_key UK
+        bool is_active
+        bool is_admin
+        bool is_deleted
+        int usage_count
+        datetime created_at
+        datetime updated_at
+        datetime last_renewed_at
+    }
+
+    FILE {
+        int id PK
+        string cid UK
+        int user_id FK
+        string original_filename
+        string safe_filename
+        int size
+        bool pinned
+        datetime uploaded_at
+    }
+
+    AUDIT_LOG {
+        int id PK
+        int user_id FK
+        string action
+        datetime timestamp
+        text details
+    }
+```
+

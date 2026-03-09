@@ -61,11 +61,18 @@ def init_extensions(app: Flask) -> None:
 
 	from sqlmodel import create_engine
 
-	db_engine = create_engine(
-		app.config["DATABASE_URL"],
-		echo=app.config.get("SQLALCHEMY_ECHO", False),
-		pool_pre_ping=True,
-	)
+	database_url = app.config["DATABASE_URL"]
+	engine_kwargs = {
+		"echo": app.config.get("SQLALCHEMY_ECHO", False),
+		"pool_pre_ping": True,
+	}
+	if database_url.startswith("sqlite"):
+		engine_kwargs["connect_args"] = {"check_same_thread": False}
+	else:
+		engine_kwargs["pool_size"] = app.config.get("DB_POOL_SIZE", 5)
+		engine_kwargs["max_overflow"] = app.config.get("DB_MAX_OVERFLOW", 10)
+
+	db_engine = create_engine(database_url, **engine_kwargs)
 
 
 def register_blueprints(app: Flask) -> None:
