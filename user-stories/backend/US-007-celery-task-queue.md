@@ -21,7 +21,8 @@ As a **developer**, I want to configure Celery with Redis as the message broker,
 - [ ] Async pinning/unpinning tasks are implemented
 - [ ] Task status can be queried via API
 - [ ] Failed tasks are retried with exponential backoff
-- [ ] Dead letter queue is configured for failed tasks
+- [ ] Application-level failed-task queue is configured for Redis using Celery `task_failure` signal or task `on_failure` hook (replacing native DLQ)
+- [ ] Failed-task inspection and replay endpoints are available
 - [ ] Task monitoring is available (Flower or similar)
 - [ ] Celery beat is configured for scheduled tasks (future)
 
@@ -36,6 +37,10 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TIMEZONE = "UTC"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 300  # 5 minutes
+
+# Redis-backed failed-task queue (application-level DLQ pattern)
+CELERY_FAILED_TASKS_REDIS_URL = "redis://localhost:6379/1"
+CELERY_FAILED_TASKS_KEY = "celery:failed_tasks"
 ```
 
 ## API Specification (Task Status)
@@ -71,6 +76,10 @@ Response (200 OK - In Progress):
 
 ## Technical Notes
 - Use Redis as both broker and result backend
+- Keep `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` on Redis; do not rely on native broker DLQ semantics
+- Implement failure capture via Celery `task_failure` signal or per-task `on_failure` hook
+- Persist failed task payloads/metadata to a dedicated Redis list or DB for later inspection
+- Provide API endpoints to inspect and replay failed tasks
 - Implement custom task base class for common error handling
 - Use task_id to track and query task status
 - Implement progress reporting for long-running tasks
@@ -100,7 +109,7 @@ flowchart TD
         I -->|Yes| J[Store Result]
         I -->|No| K{Retry?}
         K -->|Yes| H
-        K -->|No| L[Move to DLQ]
+        K -->|No| L[Capture Failure via task_failure/on_failure]
     end
     
     D --> G

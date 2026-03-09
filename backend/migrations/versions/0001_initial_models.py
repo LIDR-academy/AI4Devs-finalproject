@@ -22,9 +22,9 @@ def upgrade() -> None:
         sa.Column("is_admin", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("usage_count", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.Column("last_renewed_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("last_renewed_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("api_key"),
         sa.UniqueConstraint("email"),
@@ -41,12 +41,12 @@ def upgrade() -> None:
         sa.Column("safe_filename", sa.String(length=255), nullable=False),
         sa.Column("size", sa.Integer(), nullable=False),
         sa.Column("pinned", sa.Boolean(), nullable=False, server_default=sa.true()),
-        sa.Column("uploaded_at", sa.DateTime(), nullable=False),
+        sa.Column("uploaded_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("cid"),
+        sa.UniqueConstraint("user_id", "cid", name="uq_files_user_id_cid"),
     )
-    op.create_index("ix_files_cid", "files", ["cid"], unique=True)
+    op.create_index("ix_files_cid", "files", ["cid"], unique=False)
     op.create_index("ix_files_user_id", "files", ["user_id"], unique=False)
 
     op.create_table(
@@ -54,7 +54,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("action", sa.String(length=120), nullable=False),
-        sa.Column("timestamp", sa.DateTime(), nullable=False),
+        sa.Column("timestamp", sa.DateTime(timezone=True), nullable=False),
         sa.Column("details", sa.Text(), nullable=False, server_default="{}"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),

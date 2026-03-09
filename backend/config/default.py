@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
+DEFAULT_SECRET_KEY = "change-me-in-production"
+
 
 class DefaultConfig:
 	"""Default Flask application configuration."""
@@ -22,7 +24,7 @@ class DefaultConfig:
 	HOST = os.getenv("HOST", "0.0.0.0")
 	PORT = int(os.getenv("PORT", "5000"))
 
-	SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
+	SECRET_KEY = os.getenv("SECRET_KEY", DEFAULT_SECRET_KEY)
 	DATABASE_NAME = os.getenv("DATABASE_NAME", "ipfs_gateway.db")
 	DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATABASE_NAME}")
 	SQLALCHEMY_ECHO = os.getenv("SQLALCHEMY_ECHO", "false").lower() == "true"

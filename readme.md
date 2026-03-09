@@ -370,6 +370,8 @@ Production: https://api.ipfs-gateway.com
 Development: http://localhost:5000
 ```
 
+All examples below are shown as absolute paths. In the current backend implementation, endpoints are mounted under `/api/v1/users`.
+
 ### Authentication
 All API requests (except registration) require an API key in the header:
 ```
@@ -382,7 +384,7 @@ X-API-Key: ipfs_gw_your_api_key_here
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/register` | Register new user |
+| `POST` | `/api/v1/users/register` | Register new user |
 | `POST` | `/status` | Get API key status |
 | `POST` | `/renew` | Renew API key |
 | `POST` | `/revoke` | Revoke API key (admin) |
@@ -408,7 +410,7 @@ X-API-Key: ipfs_gw_your_api_key_here
 
 #### Register User
 ```bash
-curl -X POST https://api.ipfs-gateway.com/register \
+curl -X POST https://api.ipfs-gateway.com/api/v1/users/register \
   -H "Content-Type: application/json" \
   -d '{"email": "user@example.com", "password": "SecurePass123!"}'
 ```
@@ -424,6 +426,12 @@ curl -X POST https://api.ipfs-gateway.com/register \
   }
 }
 ```
+
+Registration endpoint constraints:
+- Email format validation and normalization are enforced.
+- Password validation rules are enforced before hashing.
+- Duplicate email returns `422 Unprocessable Entity`.
+- Rate limiting is set to `5` requests per hour per IP.
 
 #### Upload File
 ```bash

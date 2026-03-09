@@ -14,16 +14,16 @@ As a **user**, I want to register for the IPFS gateway service using my email ad
 ⭐⭐⭐ Medium-High
 
 ## Acceptance Criteria
-- [ ] `POST /register` endpoint accepts email and password
-- [ ] Email validation is performed (format and uniqueness)
-- [ ] Password is securely hashed using bcrypt
-- [ ] Unique API key is generated upon successful registration
-- [ ] API key is returned in the response
-- [ ] User is created with `is_active=True` by default
-- [ ] Registration is logged in AuditLog
-- [ ] Proper error responses for invalid input, duplicate email
-- [ ] Rate limiting is applied to prevent abuse
-- [ ] Input sanitization prevents injection attacks
+- [x] `POST /register` endpoint accepts email and password
+- [x] Email validation is performed (format and uniqueness)
+- [x] Password is securely hashed using bcrypt
+- [x] Unique API key is generated upon successful registration
+- [x] API key is returned in the response
+- [x] User is created with `is_active=True` by default
+- [x] Registration is logged in AuditLog
+- [x] Proper error responses for invalid input, duplicate email
+- [x] Rate limiting is applied to prevent abuse
+- [x] Input sanitization prevents injection attacks
 
 ## API Specification
 ```
@@ -68,7 +68,13 @@ Error Response (422 Unprocessable Entity):
 6 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Completed on feature branch `feature/US-003-user-registration-authentication-czo`
+
+## Implementation Notes
+- Registration endpoint implemented in `backend/core/users/routes/register.py` (`POST /api/v1/users/register`).
+- Input validation and sanitization implemented in `backend/core/common/validators.py` using `email-validator` and strict password rules.
+- Registration service implemented in `backend/core/users/services.py` with duplicate-email guard, bcrypt hashing, unique API key generation, and AuditLog creation.
+- Test coverage added in `tests/backend/test_registration_auth.py` for success, duplicate email, invalid input, audit logging, and rate limiting.
 
 ## Workflow Diagram
 ```mermaid

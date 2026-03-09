@@ -31,6 +31,7 @@ import boto3
 from botocore.exceptions import ClientError, BotoCoreError
 from pybreaker import CircuitBreaker
 from tenacity import (
+    RetryError,
     retry,
     stop_after_attempt,
     wait_exponential,
@@ -38,10 +39,10 @@ from tenacity import (
 )
 
 from config.default import (
-    FILEBASE_ENDPOINT_URL,
-    FILEBASE_IPFS_API_KEY,
-    FILEBASE_IPFS_API_SECRET,
-    FILEBASE_BUCKET_NAME,
+    FILEBASE_ENDPOINT,
+    FILEBASE_ACCESS_KEY,
+    FILEBASE_SECRET_KEY,
+    FILEBASE_BUCKET,
     CIRCUIT_BREAKER_FAIL_MAX,
     CIRCUIT_BREAKER_RESET_TIMEOUT,
 )
@@ -115,21 +116,12 @@ class IPFSService:
                 if self._client is None:
                     self._client = boto3.client(
                         "s3",
-                        endpoint_url=FILEBASE_ENDPOINT_URL,
-                        aws_access_key_id=FILEBASE_IPFS_API_KEY,
-                        aws_secret_access_key=FILEBASE_IPFS_API_SECRET,
+                        endpoint_url=FILEBASE_ENDPOINT,
+                        aws_access_key_id=FILEBASE_ACCESS_KEY,
+                        aws_secret_access_key=FILEBASE_SECRET_KEY,
                     )
         return self._client
     
-    @filebase_circuit_breaker
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((ClientError, BotoCoreError)),
-        before_sleep=lambda retry_state: logger.warning(
-            f"Retrying upload, attempt {retry_state.attempt_number}"
-        ),
-    )
     def upload_file(
         self,
         file: BinaryIO,
@@ -152,42 +144,66 @@ class IPFSService:
             UploadError: If upload fails after retries.
         """
         try:
-            # Get file size
-            file.seek(0, 2)  # Seek to end
-            size = file.tell()
-            file.seek(0)  # Seek back to start
-            
-            extra_args = {
-                "ContentType": content_type,
-            }
-            if metadata:
-                extra_args["Metadata"] = metadata
-            
-            logger.info(f"Uploading file: {filename}, size: {size}")
-            
-            # Upload to Filebase
-            self.client.upload_fileobj(
-                file,
-                FILEBASE_BUCKET_NAME,
-                filename,
-                ExtraArgs=extra_args,
+            return self._upload_file_with_retry(
+                file=file,
+                filename=filename,
+                content_type=content_type,
+                metadata=metadata,
             )
-            
-            # Get the CID from response headers
-            response = self.client.head_object(
-                Bucket=FILEBASE_BUCKET_NAME,
-                Key=filename,
-            )
-            
-            cid = response["Metadata"].get("cid", "")
-            
-            logger.info(f"Upload successful. CID: {cid}")
-            
-            return UploadResult(cid=cid, size=size, key=filename)
-            
-        except (ClientError, BotoCoreError) as e:
-            logger.error(f"Upload failed: {e}")
-            raise UploadError(f"Failed to upload file: {e}") from e
+        except RetryError as e:
+            root_exc = e.last_attempt.exception()
+            logger.error(f"Upload failed after retries: {root_exc}")
+            raise UploadError(f"Failed to upload file after retries: {root_exc}") from root_exc
+
+    @filebase_circuit_breaker
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((ClientError, BotoCoreError)),
+        before_sleep=lambda retry_state: logger.warning(
+            f"Retrying upload, attempt {retry_state.attempt_number}"
+        ),
+    )
+    def _upload_file_with_retry(
+        self,
+        file: BinaryIO,
+        filename: str,
+        content_type: str = "application/octet-stream",
+        metadata: Optional[dict] = None,
+    ) -> UploadResult:
+        """Upload implementation retried on original boto exceptions."""
+        # Get file size
+        file.seek(0, 2)  # Seek to end
+        size = file.tell()
+        file.seek(0)  # Seek back to start
+
+        extra_args = {
+            "ContentType": content_type,
+        }
+        if metadata:
+            extra_args["Metadata"] = metadata
+
+        logger.info(f"Uploading file: {filename}, size: {size}")
+
+        # Upload to Filebase
+        self.client.upload_fileobj(
+            file,
+            FILEBASE_BUCKET,
+            filename,
+            ExtraArgs=extra_args,
+        )
+
+        # Get the CID from response headers
+        response = self.client.head_object(
+            Bucket=FILEBASE_BUCKET,
+            Key=filename,
+        )
+
+        cid = response["Metadata"].get("cid", "")
+
+        logger.info(f"Upload successful. CID: {cid}")
+
+        return UploadResult(cid=cid, size=size, key=filename)
     
     @filebase_circuit_breaker
     @retry(
@@ -291,14 +307,14 @@ ipfs_service = IPFSService()
 Add to `config/default.py`:
 ```python
 # Filebase Configuration
-FILEBASE_ENDPOINT_URL = env.get("FILEBASE_ENDPOINT_URL", "https://s3.filebase.com")
-FILEBASE_IPFS_API_KEY = env.get("FILEBASE_IPFS_API_KEY")
-FILEBASE_IPFS_API_SECRET = env.get("FILEBASE_IPFS_API_SECRET")
-FILEBASE_BUCKET_NAME = env.get("FILEBASE_BUCKET_NAME")
+FILEBASE_ENDPOINT = os.getenv("FILEBASE_ENDPOINT", "https://s3.filebase.com")
+FILEBASE_ACCESS_KEY = os.getenv("FILEBASE_ACCESS_KEY")
+FILEBASE_SECRET_KEY = os.getenv("FILEBASE_SECRET_KEY")
+FILEBASE_BUCKET = os.getenv("FILEBASE_BUCKET")
 
 # Circuit Breaker Configuration
-CIRCUIT_BREAKER_FAIL_MAX = int(env.get("CIRCUIT_BREAKER_FAIL_MAX", "5"))
-CIRCUIT_BREAKER_RESET_TIMEOUT = int(env.get("CIRCUIT_BREAKER_RESET_TIMEOUT", "60"))
+CIRCUIT_BREAKER_FAIL_MAX = int(os.getenv("CIRCUIT_BREAKER_FAIL_MAX", "5"))
+CIRCUIT_BREAKER_RESET_TIMEOUT = int(os.getenv("CIRCUIT_BREAKER_RESET_TIMEOUT", "60"))
 
 
 def validate_filebase_config():
@@ -308,9 +324,9 @@ def validate_filebase_config():
         ValueError: If any required Filebase credential is missing.
     """
     required_vars = {
-        "FILEBASE_IPFS_API_KEY": FILEBASE_IPFS_API_KEY,
-        "FILEBASE_IPFS_API_SECRET": FILEBASE_IPFS_API_SECRET,
-        "FILEBASE_BUCKET_NAME": FILEBASE_BUCKET_NAME,
+        "FILEBASE_ACCESS_KEY": FILEBASE_ACCESS_KEY,
+        "FILEBASE_SECRET_KEY": FILEBASE_SECRET_KEY,
+        "FILEBASE_BUCKET": FILEBASE_BUCKET,
     }
     missing = [name for name, value in required_vars.items() if not value]
     if missing:

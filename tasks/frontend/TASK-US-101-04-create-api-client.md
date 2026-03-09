@@ -92,8 +92,33 @@ export function createApiClient(config: ApiClientConfig = {}): AxiosInstance {
   return client;
 }
 
-// Create default instance without API key provider (callers must supply their own)
-export const apiClient: AxiosInstance = createApiClient();
+// Shared API client instance - initialized via initializeApiClient when config is available
+let sharedApiClient: AxiosInstance | null = null;
+
+/**
+ * Initialize the shared API client with API key provider.
+ * Must be called once during app initialization with a valid getApiKey function.
+ * 
+ * @param getApiKey Function that provides the current API key
+ */
+export function initializeApiClient(getApiKey: () => string | undefined): void {
+  sharedApiClient = createApiClient({ getApiKey });
+}
+
+/**
+ * Get the configured shared API client instance.
+ * Ensure initializeApiClient has been called before using this.
+ * 
+ * @returns The shared configured API client
+ * @throws Error if called before initializeApiClient
+ */
+export function getApiClient(): AxiosInstance {
+  if (!sharedApiClient) {
+    // Fallback to unconfigured client if initialization wasn't done
+    sharedApiClient = createApiClient();
+  }
+  return sharedApiClient;
+}
 
 // Type definitions
 export interface ApiResponse<T> {
@@ -137,21 +162,21 @@ export interface UploadResponse {
   uploaded_at: string;
 }
 
-// API Functions
+// API Functions - use getApiClient() to ensure API key is included
 export const api = {
   // Authentication
   register: async (data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> => {
-    const response = await apiClient.post<ApiResponse<RegisterResponse>>("/register", data);
+    const response = await getApiClient().post<ApiResponse<RegisterResponse>>("/api/v1/users/register", data);
     return response.data;
   },
 
   getStatus: async (): Promise<ApiResponse<StatusResponse>> => {
-    const response = await apiClient.post<ApiResponse<StatusResponse>>("/status");
+    const response = await getApiClient().get<ApiResponse<StatusResponse>>("/api/v1/users/status");
     return response.data;
   },
 
   renewApiKey: async (email: string): Promise<ApiResponse<{ api_key: string }>> => {
-    const response = await apiClient.post<ApiResponse<{ api_key: string }>>("/renew", { email });
+    const response = await getApiClient().post<ApiResponse<{ api_key: string }>>("/api/v1/users/renew", { email });
     return response.data;
   },
 
@@ -163,7 +188,7 @@ export const api = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await apiClient.post<ApiResponse<UploadResponse>>("/upload", formData, {
+    const response = await getApiClient().post<ApiResponse<UploadResponse>>("/api/v1/files/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -178,14 +203,17 @@ export const api = {
   },
 
   retrieveFile: async (cid: string): Promise<Blob> => {
-    const response = await apiClient.get(`/retrieve/${cid}`, {
+    const response = await getApiClient().get(`/api/v1/files/retrieve/${cid}`, {
       responseType: "blob",
     });
     return response.data;
   },
 
+  // TODO: getFileInfo and listFiles routes not yet implemented in backend (US-006)
+  // Uncomment after backend implements GET /api/v1/files/{cid} and GET /api/v1/files
+  /*
   getFileInfo: async (cid: string): Promise<ApiResponse<FileInfo>> => {
-    const response = await apiClient.get<ApiResponse<FileInfo>>(`/files/${cid}`);
+    const response = await getApiClient().get<ApiResponse<FileInfo>>(`/api/v1/files/${cid}`);
     return response.data;
   },
 
@@ -198,20 +226,21 @@ export const api = {
       pages: number;
     };
   }>> => {
-    const response = await apiClient.get("/files", {
+    const response = await getApiClient().get("/api/v1/files", {
       params: { page, per_page: perPage },
     });
     return response.data;
   },
+  */
 
   // Pinning Operations
   pinContent: async (cid: string): Promise<ApiResponse<{ cid: string; pinned: boolean }>> => {
-    const response = await apiClient.post(`/pin/${cid}`);
+    const response = await getApiClient().post(`/api/v1/files/pinning/${cid}`);
     return response.data;
   },
 
   unpinContent: async (cid: string): Promise<ApiResponse<{ cid: string; pinned: boolean }>> => {
-    const response = await apiClient.post(`/unpin/${cid}`);
+    const response = await getApiClient().delete(`/api/v1/files/pinning/${cid}`);
     return response.data;
   },
 };
@@ -261,12 +290,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "react-hot-toast";
 
+// TODO: useFiles hook depends on api.listFiles (US-006)
+// Uncomment after backend implements GET /api/v1/files
+/*
 export function useFiles(page: number = 1, perPage: number = 20) {
   return useQuery({
     queryKey: ["files", page, perPage],
     queryFn: () => api.listFiles(page, perPage),
   });
 }
+*/
 
 export function useUploadFile() {
   const queryClient = useQueryClient();
@@ -275,7 +308,8 @@ export function useUploadFile() {
     mutationFn: ({ file, onProgress }: { file: File; onProgress?: (p: number) => void }) =>
       api.uploadFile(file, onProgress),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["files"] });
+      // TODO: Invalidate file list query once useFiles is implemented
+      // queryClient.invalidateQueries({ queryKey: ["files"] });
       toast.success("File uploaded successfully!");
     },
     onError: (error: Error) => {
@@ -311,7 +345,8 @@ export function usePinContent() {
 ## Notes
 - **API Key Security**: Do NOT store API keys in localStorage. Instead:
   - Use HttpOnly cookies set by the backend (most secure)
-  - Use short-lived rotated tokens stored in-memory or sessionStorage
+  - Use short-lived rotated tokens stored in-memory only (no localStorage/sessionStorage)
+  - For registration UX, show API key once with copy/download export and avoid browser persistence
   - Pass the API key via the `getApiKey` callback in `createApiClient()` config
 - Use React Query for caching and state management
 - Add proper error handling and user feedback
