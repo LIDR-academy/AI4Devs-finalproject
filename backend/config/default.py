@@ -23,8 +23,11 @@ class DefaultConfig:
 	PORT = int(os.getenv("PORT", "5000"))
 
 	SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
-	DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///ipfs_gateway.db")
+	DATABASE_NAME = os.getenv("DATABASE_NAME", "ipfs_gateway.db")
+	DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATABASE_NAME}")
 	SQLALCHEMY_ECHO = os.getenv("SQLALCHEMY_ECHO", "false").lower() == "true"
+	DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
+	DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "10"))
 
 	REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 	CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
