@@ -98,10 +98,19 @@ class TestRenewEndpoint(unittest.TestCase):
 
 	def test_renew_with_invalid_code_returns_401(self) -> None:
 		"""Invalid verification code should return 401."""
+		# Create a real stored challenge so we exercise mismatch logic.
+		self.client.post(
+			"/api/v1/users/renew/challenge",
+			headers={"X-API-Key": "ipfs_gw_test_key_12345"},
+		)
+		stored_code = _test_get_verification_code(self.user_id, self.app)
+		self.assertIsNotNone(stored_code)
+		wrong_code = "000000" if stored_code != "000000" else "111111"
+
 		response = self.client.post(
 			"/api/v1/users/renew",
 			headers={"X-API-Key": "ipfs_gw_test_key_12345"},
-			json={"verification_code": "000000"},
+			json={"verification_code": wrong_code},
 		)
 
 		self.assertEqual(response.status_code, 401)

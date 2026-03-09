@@ -5,6 +5,7 @@ from __future__ import annotations
 import secrets
 import time
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 from flask import current_app
 from redis import Redis
@@ -14,6 +15,16 @@ if TYPE_CHECKING:
 
 # In-memory storage for testing (when Redis is unavailable/mocked)
 _test_verification_codes = {}
+
+
+def _redact_redis_url(redis_url: str) -> str:
+	"""Return a safe Redis URL string without credentials."""
+	parsed = urlparse(redis_url)
+	host = parsed.hostname or "unknown-host"
+	port = parsed.port
+	if port is not None:
+		return f"{parsed.scheme}://{host}:{port}"
+	return f"{parsed.scheme}://{host}"
 
 
 def _get_redis_client() -> Redis:
@@ -27,9 +38,15 @@ def _get_redis_client() -> Redis:
 	"""
 	# Check if we're using in-memory test storage (for testing)
 	if current_app.config.get("USE_MEMORY_VERIFICATION_STORE", False):
-		return _MemoryRedisAdapter()
+		if current_app.testing or current_app.config.get("TESTING", False):
+			return _MemoryRedisAdapter()
+		raise RuntimeError(
+			"USE_MEMORY_VERIFICATION_STORE is enabled outside testing. "
+			"Disable it for non-test environments."
+		)
 	
 	redis_url = current_app.config.get("REDIS_URL", "redis://localhost:6379/0")
+	safe_redis_url = _redact_redis_url(redis_url)
 	try:
 		client = Redis.from_url(
 			redis_url, 
@@ -43,7 +60,7 @@ def _get_redis_client() -> Redis:
 	except Exception as exc:
 		# Fail fast on Redis misconfiguration in production
 		raise RuntimeError(
-			f"Failed to connect to Redis at {redis_url}. "
+			f"Failed to connect to Redis at {safe_redis_url}. "
 			"Verify REDIS_URL is correct and Redis is running."
 		) from exc
 
