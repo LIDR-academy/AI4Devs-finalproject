@@ -1,9 +1,16 @@
 """Tests for file validation utilities."""
 
 import unittest
+from pathlib import Path
+import sys
 
-from core.common.exceptions import ValidationError
-from core.files.validators import (
+ROOT = Path(__file__).resolve().parents[2]
+BACKEND_DIR = ROOT / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+from core.common.exceptions import ValidationError  # pyright: ignore[reportMissingImports]
+from core.files.validators import (  # pyright: ignore[reportMissingImports]
     validate_filename,
     validate_file_size,
     validate_mime_type,

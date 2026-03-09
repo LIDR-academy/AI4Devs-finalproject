@@ -1,5 +1,6 @@
 """Celery tasks for file operations."""
 
+import json
 import logging
 from io import BytesIO
 
@@ -74,13 +75,15 @@ def upload_file_async(
             audit = AuditLog(
                 user_id=user_id,
                 action="file_upload",
-                details={
-                    "cid": result.cid,
-                    "filename": original_filename,
-                    "size": file_size,
-                    "status": "completed",
-                    "task_id": self.request.id,
-                }
+                details=json.dumps(
+                    {
+                        "cid": result.cid,
+                        "filename": original_filename,
+                        "size": file_size,
+                        "status": "completed",
+                        "task_id": self.request.id,
+                    }
+                ),
             )
             session.add(audit)
             session.commit()
@@ -110,12 +113,14 @@ def upload_file_async(
                 audit = AuditLog(
                     user_id=user_id,
                     action="file_upload",
-                    details={
-                        "filename": original_filename,
-                        "status": "failed",
-                        "error": str(e),
-                        "task_id": self.request.id,
-                    }
+                    details=json.dumps(
+                        {
+                            "filename": original_filename,
+                            "status": "failed",
+                            "error": str(e),
+                            "task_id": self.request.id,
+                        }
+                    ),
                 )
                 session.add(audit)
                 session.commit()
@@ -136,12 +141,14 @@ def upload_file_async(
             audit = AuditLog(
                 user_id=user_id,
                 action="file_upload",
-                details={
-                    "filename": original_filename,
-                    "status": "failed",
-                    "error": f"Unexpected error: {str(e)}",
-                    "task_id": self.request.id,
-                }
+                details=json.dumps(
+                    {
+                        "filename": original_filename,
+                        "status": "failed",
+                        "error": f"Unexpected error: {str(e)}",
+                        "task_id": self.request.id,
+                    }
+                ),
             )
             session.add(audit)
             session.commit()
