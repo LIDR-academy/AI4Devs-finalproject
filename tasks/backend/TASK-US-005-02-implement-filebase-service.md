@@ -39,10 +39,10 @@ from tenacity import (
 )
 
 from config.default import (
-    FILEBASE_ENDPOINT_URL,
-    FILEBASE_IPFS_API_KEY,
-    FILEBASE_IPFS_API_SECRET,
-    FILEBASE_BUCKET_NAME,
+    FILEBASE_ENDPOINT,
+    FILEBASE_ACCESS_KEY,
+    FILEBASE_SECRET_KEY,
+    FILEBASE_BUCKET,
     CIRCUIT_BREAKER_FAIL_MAX,
     CIRCUIT_BREAKER_RESET_TIMEOUT,
 )
@@ -116,9 +116,9 @@ class IPFSService:
                 if self._client is None:
                     self._client = boto3.client(
                         "s3",
-                        endpoint_url=FILEBASE_ENDPOINT_URL,
-                        aws_access_key_id=FILEBASE_IPFS_API_KEY,
-                        aws_secret_access_key=FILEBASE_IPFS_API_SECRET,
+                        endpoint_url=FILEBASE_ENDPOINT,
+                        aws_access_key_id=FILEBASE_ACCESS_KEY,
+                        aws_secret_access_key=FILEBASE_SECRET_KEY,
                     )
         return self._client
     
@@ -188,14 +188,14 @@ class IPFSService:
         # Upload to Filebase
         self.client.upload_fileobj(
             file,
-            FILEBASE_BUCKET_NAME,
+            FILEBASE_BUCKET,
             filename,
             ExtraArgs=extra_args,
         )
 
         # Get the CID from response headers
         response = self.client.head_object(
-            Bucket=FILEBASE_BUCKET_NAME,
+            Bucket=FILEBASE_BUCKET,
             Key=filename,
         )
 
@@ -307,14 +307,14 @@ ipfs_service = IPFSService()
 Add to `config/default.py`:
 ```python
 # Filebase Configuration
-FILEBASE_ENDPOINT_URL = env.get("FILEBASE_ENDPOINT_URL", "https://s3.filebase.com")
-FILEBASE_IPFS_API_KEY = env.get("FILEBASE_IPFS_API_KEY")
-FILEBASE_IPFS_API_SECRET = env.get("FILEBASE_IPFS_API_SECRET")
-FILEBASE_BUCKET_NAME = env.get("FILEBASE_BUCKET_NAME")
+FILEBASE_ENDPOINT = os.getenv("FILEBASE_ENDPOINT", "https://s3.filebase.com")
+FILEBASE_ACCESS_KEY = os.getenv("FILEBASE_ACCESS_KEY")
+FILEBASE_SECRET_KEY = os.getenv("FILEBASE_SECRET_KEY")
+FILEBASE_BUCKET = os.getenv("FILEBASE_BUCKET")
 
 # Circuit Breaker Configuration
-CIRCUIT_BREAKER_FAIL_MAX = int(env.get("CIRCUIT_BREAKER_FAIL_MAX", "5"))
-CIRCUIT_BREAKER_RESET_TIMEOUT = int(env.get("CIRCUIT_BREAKER_RESET_TIMEOUT", "60"))
+CIRCUIT_BREAKER_FAIL_MAX = int(os.getenv("CIRCUIT_BREAKER_FAIL_MAX", "5"))
+CIRCUIT_BREAKER_RESET_TIMEOUT = int(os.getenv("CIRCUIT_BREAKER_RESET_TIMEOUT", "60"))
 
 
 def validate_filebase_config():
@@ -324,9 +324,9 @@ def validate_filebase_config():
         ValueError: If any required Filebase credential is missing.
     """
     required_vars = {
-        "FILEBASE_IPFS_API_KEY": FILEBASE_IPFS_API_KEY,
-        "FILEBASE_IPFS_API_SECRET": FILEBASE_IPFS_API_SECRET,
-        "FILEBASE_BUCKET_NAME": FILEBASE_BUCKET_NAME,
+        "FILEBASE_ACCESS_KEY": FILEBASE_ACCESS_KEY,
+        "FILEBASE_SECRET_KEY": FILEBASE_SECRET_KEY,
+        "FILEBASE_BUCKET": FILEBASE_BUCKET,
     }
     missing = [name for name, value in required_vars.items() if not value]
     if missing:

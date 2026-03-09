@@ -99,6 +99,45 @@ class TestConfigValidation(unittest.TestCase):
 
         validate_env_config(config)
 
+    def test_production_rejects_insecure_default_internal_api_key(self) -> None:
+        """Production config must not accept the insecure default INTERNAL_API_KEY."""
+        config = {
+            "SECRET_KEY": "secure-secret",
+            "DATABASE_URL": "sqlite:///test.db",
+            "APP_ENV": "production",
+            "INTERNAL_API_KEY": "dev-internal-api-key",
+        }
+        with self.assertRaises(ValidationError) as ctx:
+            validate_env_config(config)
+
+        self.assertIn("Invalid INTERNAL_API_KEY for production", str(ctx.exception))
+
+    def test_production_rejects_insecure_default_admin_token(self) -> None:
+        """Production config must not accept the insecure default ADMIN_TOKEN."""
+        config = {
+            "SECRET_KEY": "secure-secret",
+            "DATABASE_URL": "sqlite:///test.db",
+            "APP_ENV": "production",
+            "INTERNAL_API_KEY": "secure-internal-key",
+            "ADMIN_TOKEN": "dev-admin-token",
+        }
+        with self.assertRaises(ValidationError) as ctx:
+            validate_env_config(config)
+
+        self.assertIn("Invalid ADMIN_TOKEN for production", str(ctx.exception))
+
+    def test_production_accepts_secure_tokens(self) -> None:
+        """Production config should accept non-default secure tokens."""
+        config = {
+            "SECRET_KEY": "secure-secret",
+            "DATABASE_URL": "sqlite:///test.db",
+            "APP_ENV": "production",
+            "INTERNAL_API_KEY": "prod-internal-key-xyz",
+            "ADMIN_TOKEN": "prod-admin-token-xyz",
+        }
+        # Should not raise
+        validate_env_config(config)
+
 
 if __name__ == "__main__":
     unittest.main()

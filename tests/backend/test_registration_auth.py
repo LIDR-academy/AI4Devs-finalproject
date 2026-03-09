@@ -93,6 +93,26 @@ class TestUserRegistration(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 422)
 
+    def test_register_password_missing_uppercase_returns_422(self) -> None:
+        """Password missing uppercase letter should fail with 422."""
+        response = self.client.post(
+            "/api/v1/users/register",
+            json={"email": "nouppercase@example.com", "password": "strongpassword123"},
+            environ_overrides={"REMOTE_ADDR": "203.0.113.6"},
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("uppercase letter", response.get_json()["message"].lower())
+
+    def test_register_password_missing_digit_returns_422(self) -> None:
+        """Password missing digit should fail with 422."""
+        response = self.client.post(
+            "/api/v1/users/register",
+            json={"email": "nodigit@example.com", "password": "StrongPassword"},
+            environ_overrides={"REMOTE_ADDR": "203.0.113.7"},
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("digit", response.get_json()["message"].lower())
+
     def test_register_rate_limit_enforced(self) -> None:
         """Registration endpoint should enforce 5 requests per hour per IP."""
         for idx in range(5):

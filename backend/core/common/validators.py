@@ -37,6 +37,10 @@ def validate_password(password: str) -> str:
 		raise ValidationError(
 			f"Password must be between {MIN_PASSWORD_LEN} and {MAX_PASSWORD_LEN} characters"
 		)
+	if not any(char.isupper() for char in password):
+		raise ValidationError("Password must contain at least one uppercase letter")
+	if not any(char.isdigit() for char in password):
+		raise ValidationError("Password must contain at least one digit")
 	return password
 
 
