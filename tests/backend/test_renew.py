@@ -34,10 +34,11 @@ class TestRenewEndpoint(unittest.TestCase):
 
 		self.app = create_app(RenewTestConfig)
 		self.client = self.app.test_client()
-		SQLModel.metadata.create_all(get_engine())
+		self.engine = get_engine()
+		SQLModel.metadata.create_all(self.engine)
 
 		# Create test user
-		with Session(get_engine()) as session:
+		with Session(self.engine) as session:
 			self.test_user = User(
 				email="test@example.com",
 				password_hash="hashed_password",
@@ -51,7 +52,8 @@ class TestRenewEndpoint(unittest.TestCase):
 
 	def tearDown(self) -> None:
 		_test_clear_all_codes(self.app)
-		SQLModel.metadata.drop_all(get_engine())
+		SQLModel.metadata.drop_all(self.engine)
+		self.engine.dispose()
 		self.temp_dir.cleanup()
 
 	def test_challenge_returns_202(self) -> None:

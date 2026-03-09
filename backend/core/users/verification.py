@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+import time
 from typing import TYPE_CHECKING
 
 from flask import current_app
@@ -30,7 +31,15 @@ def _get_redis_client() -> Redis:
 	
 	redis_url = current_app.config.get("REDIS_URL", "redis://localhost:6379/0")
 	try:
-		return Redis.from_url(redis_url, decode_responses=True)
+		client = Redis.from_url(
+			redis_url, 
+			decode_responses=True,
+			socket_connect_timeout=5,
+			socket_timeout=5
+		)
+		# Validate connection immediately
+		client.ping()
+		return client
 	except Exception as exc:
 		# Fail fast on Redis misconfiguration in production
 		raise RuntimeError(
@@ -44,15 +53,29 @@ class _MemoryRedisAdapter:
 	
 	def setex(self, key: str, ttl: int, value: str) -> None:
 		"""Set a key with expiration."""
-		_test_verification_codes[key] = value
+		expiry = time.time() + ttl
+		_test_verification_codes[key] = {"value": value, "expiry": expiry}
 	
 	def getdel(self, key: str) -> str | None:
 		"""Atomically get and delete a key."""
-		return _test_verification_codes.pop(key, None)
+		entry = _test_verification_codes.pop(key, None)
+		if entry is None:
+			return None
+		# Check expiration
+		if time.time() > entry["expiry"]:
+			return None
+		return entry["value"]
 	
 	def get(self, key: str) -> str | None:
 		"""Get a key value."""
-		return _test_verification_codes.get(key)
+		entry = _test_verification_codes.get(key)
+		if entry is None:
+			return None
+		# Check expiration
+		if time.time() > entry["expiry"]:
+			del _test_verification_codes[key]
+			return None
+		return entry["value"]
 	
 	def delete(self, key: str) -> int:
 		"""Delete a key."""
