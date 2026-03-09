@@ -132,6 +132,11 @@ class TestRenewEndpoint(unittest.TestCase):
 			json={"verification_code": code},
 		)
 		
+		# Assert renewal succeeded before testing old key
+		self.assertEqual(response.status_code, 200)
+		data = response.get_json()
+		self.assertIn("api_key", data.get("data", {}))
+		
 		# Try to use old key
 		old_key_response = self.client.post(
 			"/api/v1/users/renew/challenge",

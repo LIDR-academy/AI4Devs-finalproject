@@ -20,7 +20,9 @@ def _get_redis_client() -> Redis:
 	
 	Returns:
 		Redis client connected to REDIS_URL from config.
-		Falls back to test in-memory dict if Redis is unavailable.
+		
+	Raises:
+		RuntimeError: If Redis connection fails outside test environment.
 	"""
 	# Check if we're using in-memory test storage (for testing)
 	if current_app.config.get("USE_MEMORY_VERIFICATION_STORE", False):
@@ -29,9 +31,12 @@ def _get_redis_client() -> Redis:
 	redis_url = current_app.config.get("REDIS_URL", "redis://localhost:6379/0")
 	try:
 		return Redis.from_url(redis_url, decode_responses=True)
-	except Exception:
-		# Fallback to in-memory storage if Redis connection fails
-		return _MemoryRedisAdapter()
+	except Exception as exc:
+		# Fail fast on Redis misconfiguration in production
+		raise RuntimeError(
+			f"Failed to connect to Redis at {redis_url}. "
+			"Verify REDIS_URL is correct and Redis is running."
+		) from exc
 
 
 class _MemoryRedisAdapter:

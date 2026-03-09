@@ -18,3 +18,15 @@ celery = Celery(
 )
 celery.conf.update(flask_app.config)
 
+
+class ContextTask(celery.Task):
+	"""Task subclass that pushes Flask app context before execution."""
+	
+	def __call__(self, *args, **kwargs):
+		"""Execute task within Flask app context."""
+		with flask_app.app_context():
+			return self.run(*args, **kwargs)
+
+
+celery.Task = ContextTask
+
