@@ -106,6 +106,10 @@ class DefaultConfig:
 		"default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 	)
 	REQUEST_ID_HEADER = os.getenv("REQUEST_ID_HEADER", "X-Request-ID")
+	AUDIT_LOG_DEFERRED_WRITE = os.getenv("AUDIT_LOG_DEFERRED_WRITE", "true").lower() == "true"
+	AUDIT_IP_RETENTION_DAYS = int(os.getenv("AUDIT_IP_RETENTION_DAYS", "90"))
+	AUDIT_IP_REDACTION_MODE = os.getenv("AUDIT_IP_REDACTION_MODE", "mask")
+	AUDIT_REDACTION_BATCH_SIZE = int(os.getenv("AUDIT_REDACTION_BATCH_SIZE", "200"))
 
 	LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 	LOG_FILE = os.getenv("LOG_FILE", "logs/app.log")

@@ -99,6 +99,13 @@ class TestReactivateEndpoint(unittest.TestCase):
 				)
 			).all()
 			self.assertEqual(len(logs), 1)
+			config_logs = session.exec(
+				select(AuditLog).where(
+					AuditLog.user_id == user.id,
+					AuditLog.action == "audit_configuration_updated",
+				)
+			).all()
+			self.assertEqual(len(config_logs), 1)
 
 	def test_reactivate_with_non_admin_key_returns_403(self) -> None:
 		"""Non-admin users cannot reactivate API keys."""

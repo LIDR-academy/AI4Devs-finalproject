@@ -7,8 +7,8 @@ from sqlmodel import Session, select
 from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user, require_api_key
 from core.common.exceptions import AuthenticationError, ValidationError
-from core.common.models import AuditLog
 from core.common.validators import validate_verification_code
+from core.services.audit_service import add_audit_log, queue_audit_log
 from core.users.models import User
 from core.users.verification import generate_verification_code, verify_code
 
@@ -33,6 +33,7 @@ def register_routes(bp: Blueprint) -> None:
 		# TODO: Send code via email (future enhancement)
 		# For now, log it for testing
 		print(f"Verification code for {user.email}: {code}")
+		queue_audit_log(user_id=user.id, action="api_key_renew_challenge_requested", details={"status": "sent"})
 		
 		return jsonify({
 			"status": 202,
@@ -65,13 +66,12 @@ def register_routes(bp: Blueprint) -> None:
 			# Verify step-up code
 			if not verify_code(user.id, verification_code):
 				# Log failed attempt
-				audit = AuditLog(
+				add_audit_log(
+					session,
 					user_id=user.id,
 					action="api_key_renew_failed",
-					timestamp=arrow.utcnow().datetime,
-					details='{"reason": "invalid_verification_code"}',
+					details={"reason": "invalid_verification_code"},
 				)
-				session.add(audit)
 				session.commit()
 				raise AuthenticationError("Invalid or expired verification code")
 			
@@ -88,13 +88,7 @@ def register_routes(bp: Blueprint) -> None:
 			session.add(db_user)
 			
 			# Log successful renewal
-			audit = AuditLog(
-				user_id=db_user.id,
-				action="api_key_renewed",
-				timestamp=arrow.utcnow().datetime,
-				details='{"status": "success"}',
-			)
-			session.add(audit)
+			add_audit_log(session, user_id=db_user.id, action="api_key_renewed", details={"status": "success"})
 			session.commit()
 			
 			return jsonify({

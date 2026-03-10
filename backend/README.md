@@ -325,6 +325,7 @@ Last-Modified: Mon, 09 Mar 2026 15:30:00 GMT
 	- IP address
 	- User agent
 	- Access decision (success, denied, cached, failed)
+	- Request ID correlation for cross-service tracing
 - **Error Handling**:
 	- Circuit breaker pattern for IPFS connectivity
 	- Retry logic with exponential backoff
@@ -505,6 +506,31 @@ Success (`202 Accepted`):
 - File records are never deleted during unpin (soft operation).
 - Operations are queued to Celery `pinning` queue and tracked by task status API.
 - Audit logs are recorded for queued/completed operations and authorization failures.
+
+### Audit Logging (US-010)
+
+- `GET /api/v1/users/admin/audit-logs` returns paginated audit records for admin users only.
+- Supported query parameters:
+	- `page` and `per_page`
+	- `user_id`
+	- `action`
+	- `from` and `to` using ISO-8601 dates
+	- `include_raw_ip=true` for explicitly requested raw IP visibility on non-expired entries
+- Audit entries now include request correlation IDs when available.
+- Raw IP addresses are retained only for `AUDIT_IP_RETENTION_DAYS` and then redacted in-place.
+- `AUDIT_IP_REDACTION_MODE` supports `mask` and `hash`.
+- Redaction events are appended as `ip_redaction_applied` audit records to preserve an append-only trail.
+
+#### Audit Configuration
+
+Add the following environment variables in `.env` when tuning audit retention:
+
+```bash
+AUDIT_LOG_DEFERRED_WRITE=true
+AUDIT_IP_RETENTION_DAYS=90
+AUDIT_IP_REDACTION_MODE=mask
+AUDIT_REDACTION_BATCH_SIZE=200
+```
 
 ---
 

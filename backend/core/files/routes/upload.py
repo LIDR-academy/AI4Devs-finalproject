@@ -11,7 +11,6 @@ from werkzeug.datastructures import FileStorage
 from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user, require_api_key
 from core.common.exceptions import ValidationError
-from core.common.models import AuditLog
 from core.files.models import File
 from core.files.validators import (
     generate_safe_filename,
@@ -19,6 +18,7 @@ from core.files.validators import (
     validate_filename,
     validate_mime_type,
 )
+from core.services.audit_service import queue_audit_log
 from core.services.ipfs_service import UploadError, ipfs_service
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ def register_routes(bp):
     @require_api_key
     def upload_file() -> tuple:
         user = get_current_user()
+        user_id = int(user.id) if user.id is not None else 0
 
         if "file" not in request.files:
             return jsonify({"status": 400, "message": "No file provided", "error": "file_required"}), 400
@@ -52,14 +53,15 @@ def register_routes(bp):
             file_size = len(file_content)
             validate_file_size(file_size, MAX_FILE_SIZE)
             safe_filename = generate_safe_filename(file.filename)
+            original_filename = file.filename or safe_filename
 
             if file_size > ASYNC_UPLOAD_THRESHOLD:
                 from core.tasks.file_tasks import upload_file_async
 
                 task = upload_file_async.delay(
-                    user_id=user.id,
+                    user_id=user_id,
                     filename=safe_filename,
-                    original_filename=file.filename,
+                    original_filename=original_filename,
                     file_data=file_content,
                     content_type=file.content_type or "application/octet-stream",
                 )
@@ -78,34 +80,32 @@ def register_routes(bp):
                 file=BytesIO(file_content),
                 filename=safe_filename,
                 content_type=file.content_type or "application/octet-stream",
-                metadata={"user_id": str(user.id), "original_filename": file.filename},
+                metadata={"user_id": str(user_id), "original_filename": original_filename},
             )
 
             with Session(get_engine()) as session:
                 db_file = File(
-                    user_id=user.id,
+                    user_id=user_id,
                     cid=result.cid,
-                    original_filename=file.filename,
+                    original_filename=original_filename,
                     safe_filename=safe_filename,
                     size=file_size,
                     pinned=True,
                 )
                 session.add(db_file)
-                session.add(
-                    AuditLog(
-                        user_id=user.id,
-                        action="file_upload",
-                        details=json.dumps(
-                            {
-                                "cid": result.cid,
-                                "filename": file.filename,
-                                "size": file_size,
-                                "status": "completed",
-                            }
-                        ),
-                    )
-                )
                 session.commit()
+                queue_audit_log(
+                    user_id=user_id,
+                    action="file_upload",
+                    resource_type="file",
+                    resource_id=db_file.id,
+                    details={
+                        "cid": result.cid,
+                        "filename": original_filename,
+                        "size": file_size,
+                        "status": "completed",
+                    },
+                )
 
                 return jsonify(
                     {
@@ -113,7 +113,7 @@ def register_routes(bp):
                         "message": "File uploaded successfully",
                         "data": {
                             "cid": result.cid,
-                            "original_filename": file.filename,
+                            "original_filename": original_filename,
                             "size": file_size,
                             "pinned": True,
                             "uploaded_at": db_file.uploaded_at.isoformat(),

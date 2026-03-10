@@ -9,8 +9,8 @@ from celery import shared_task
 from sqlmodel import Session, select
 
 from core import get_engine
-from core.common.models import AuditLog
 from core.files.models import File
+from core.services.audit_service import add_audit_log
 from core.services.ipfs_service import UploadError, ipfs_service
 
 logger = logging.getLogger(__name__)
@@ -54,12 +54,13 @@ def pin_content_async(self, user_id: int, cid: str) -> dict:
 
 			db_file.pinned = True
 			session.add(db_file)
-			session.add(
-				AuditLog(
-					user_id=user_id,
-					action="file_pin",
-					details=json.dumps({"cid": cid, "status": "completed", "task_id": self.request.id}),
-				)
+			add_audit_log(
+				session,
+				user_id=user_id,
+				action="file_pin",
+				resource_type="file",
+				resource_id=db_file.id,
+				details={"cid": cid, "status": "completed", "task_id": self.request.id},
 			)
 			session.commit()
 
@@ -93,12 +94,13 @@ def unpin_content_async(self, user_id: int, cid: str) -> dict:
 
 			db_file.pinned = False
 			session.add(db_file)
-			session.add(
-				AuditLog(
-					user_id=user_id,
-					action="file_unpin",
-					details=json.dumps({"cid": cid, "status": "completed", "task_id": self.request.id}),
-				)
+			add_audit_log(
+				session,
+				user_id=user_id,
+				action="file_unpin",
+				resource_type="file",
+				resource_id=db_file.id,
+				details={"cid": cid, "status": "completed", "task_id": self.request.id},
 			)
 			session.commit()
 
