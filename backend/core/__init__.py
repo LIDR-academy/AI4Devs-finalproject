@@ -16,6 +16,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 
 from config.validate_config import validate_env_config
 from core.common.exceptions import APIException
+from core.common.responses import build_error_payload
 from server.config.logs import configure_logging
 
 REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -88,14 +89,8 @@ def get_request_id() -> str | None:
 
 
 def _build_error_payload(status: int, message: str, code: str | None = None) -> dict[str, Any]:
-	"""Build a standard JSON error payload with request tracing metadata."""
-	payload: dict[str, Any] = {"status": status, "message": message}
-	if code:
-		payload["code"] = code
-	request_id = get_request_id()
-	if request_id:
-		payload["request_id"] = request_id
-	return payload
+	"""Backward-compatible proxy for the centralized error payload builder."""
+	return build_error_payload(status, message, code=code)
 
 
 def create_app(settings_module: str | type[Any] = "config.development.DevelopmentConfig") -> Flask:
@@ -223,7 +218,7 @@ def register_error_handlers(app: Flask) -> None:
 
 	@app.errorhandler(APIException)
 	def handle_api_exception(error: APIException):
-		return jsonify(_build_error_payload(error.status_code, error.message, error.code)), error.status_code
+		return jsonify(build_error_payload(error.status_code, error.message, code=error.code, details=error.details)), error.status_code
 
 	@app.errorhandler(RequestEntityTooLarge)
 	def handle_request_too_large(_error):

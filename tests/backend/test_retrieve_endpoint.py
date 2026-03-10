@@ -111,7 +111,9 @@ class TestRetrieveEndpoint(unittest.TestCase):
 		
 		# Assert
 		self.assertEqual(response.status_code, 404)
-		self.assertIn("error", response.json)
+		self.assertEqual(response.json["status"], 404)
+		self.assertEqual(response.json["code"], "NOT_FOUND")
+		self.assertIn("message", response.json)
 	
 	@patch("core.files.routes.retrieve.get_session")
 	@patch("core.files.routes.retrieve.get_current_user")
@@ -137,8 +139,9 @@ class TestRetrieveEndpoint(unittest.TestCase):
 		
 		# Assert
 		self.assertEqual(response.status_code, 403)
-		self.assertIn("error", response.json)
-		self.assertIn("denied", response.json["error"].lower())
+		self.assertEqual(response.json["status"], 403)
+		self.assertEqual(response.json["code"], "FORBIDDEN")
+		self.assertIn("denied", response.json["message"].lower())
 	
 	@patch("core.files.routes.retrieve.get_session")
 	@patch("core.files.routes.retrieve.get_current_user")
@@ -272,7 +275,9 @@ class TestRetrieveEndpoint(unittest.TestCase):
 		
 		# Assert
 		self.assertEqual(response.status_code, 500)
-		self.assertIn("error", response.json)
+		self.assertEqual(response.json["status"], 500)
+		self.assertEqual(response.json["code"], "RETRIEVAL_ERROR")
+		self.assertIn("message", response.json)
 	
 	@patch("core.files.routes.retrieve.get_session")
 	@patch("core.files.routes.retrieve.get_current_user")

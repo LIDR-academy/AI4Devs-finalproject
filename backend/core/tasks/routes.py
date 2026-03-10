@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from celery.result import AsyncResult
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 
 from core import configured_limit
 from core.auth.decorators import require_api_key
+from core.common.responses import error_response, success_response
 from core.tasks.failed_tasks import list_failed_tasks, replay_failed_task
 
 
@@ -58,13 +59,13 @@ def create_tasks_blueprint() -> Blueprint:
             payload["result"] = task_result.result
         elif state == "FAILURE":
             payload["progress"] = progress
-            payload["error"] = str(task_result.info)
+            payload["message"] = str(task_result.info)
         else:
             payload["progress"] = progress
             if message:
                 payload["message"] = message
 
-        return jsonify({"status": 200, "data": payload}), 200
+        return success_response(200, data=payload)
 
     @bp.get("/failed")
     @configured_limit("RATE_LIMIT_ADMIN")
@@ -77,7 +78,7 @@ def create_tasks_blueprint() -> Blueprint:
         offset = max(0, offset)
 
         items = list_failed_tasks(limit=limit, offset=offset)
-        return jsonify({"status": 200, "data": {"items": items, "limit": limit, "offset": offset}}), 200
+        return success_response(200, data={"items": items, "limit": limit, "offset": offset})
 
     @bp.post("/failed/<string:failure_id>/replay")
     @configured_limit("RATE_LIMIT_ADMIN")
@@ -86,17 +87,8 @@ def create_tasks_blueprint() -> Blueprint:
         """Replay a failed task by failure identifier."""
         try:
             replay_info = replay_failed_task(failure_id)
-            return (
-                jsonify(
-                    {
-                        "status": 202,
-                        "message": "Failed task replay queued",
-                        "data": replay_info,
-                    }
-                ),
-                202,
-            )
+            return success_response(202, message="Failed task replay queued", data=replay_info)
         except KeyError:
-            return jsonify({"status": 404, "message": "Failed task not found"}), 404
+            return error_response(404, "Failed task not found", code="NOT_FOUND")
 
     return bp
