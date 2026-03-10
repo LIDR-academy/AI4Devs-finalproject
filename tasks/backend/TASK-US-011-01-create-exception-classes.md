@@ -4,6 +4,8 @@ Define a custom exception hierarchy to standardize how API failures are represen
 
 [Trello Card](https://trello.com/c/BmOvcGoz)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/11)
+
 ## Parent User Story
 [US-011: Error Handling and Standardized Responses](../../user-stories/backend/US-011-error-handling-responses.md)
 
