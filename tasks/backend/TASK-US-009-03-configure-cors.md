@@ -4,6 +4,9 @@ Harden cross-origin access rules so browser clients can call the API safely with
 
 [Trello Card](https://trello.com/c/1hSfJ0iC)
 
+## Pull Request
+[PR #9](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/9)
+
 ## Parent User Story
 [US-009: Rate Limiting and Security](../../user-stories/backend/US-009-rate-limiting-security.md)
 

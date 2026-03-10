@@ -4,6 +4,9 @@ Add defensive HTTP response headers to reduce browser-based attack surface acros
 
 [Trello Card](https://trello.com/c/wb5nBy2u)
 
+## Pull Request
+[PR #9](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/9)
+
 ## Parent User Story
 [US-009: Rate Limiting and Security](../../user-stories/backend/US-009-rate-limiting-security.md)
 
