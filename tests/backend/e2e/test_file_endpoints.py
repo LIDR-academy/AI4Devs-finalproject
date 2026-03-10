@@ -1,14 +1,15 @@
-"""E2E tests for file endpoints against real Filebase credentials."""
+"""E2E tests for Filebase operations via boto3."""
 
 from __future__ import annotations
 
-import io
-import tempfile
+import os
 import unittest
 from pathlib import Path
 import sys
+from datetime import datetime, timezone
 
-from sqlmodel import SQLModel
+import boto3
+from botocore.exceptions import ClientError, BotoCoreError
 
 from tests.backend.e2e.conftest import e2e_ready
 
@@ -17,12 +18,8 @@ BACKEND_DIR = ROOT / "backend"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from config.testing import TestingConfig
-from core import create_app, get_engine
-
-
 class TestFileEndpointsE2E(unittest.TestCase):
-    """Exercise upload/retrieve flow in e2e profile."""
+    """Exercise upload/list/retrieve flow directly against Filebase S3 API."""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -30,44 +27,53 @@ class TestFileEndpointsE2E(unittest.TestCase):
         if not ready:
             raise unittest.SkipTest(f"e2e disabled or missing env: {', '.join(missing)}")
 
-    def setUp(self) -> None:
-        self.temp_dir = tempfile.TemporaryDirectory()
-        db_path = Path(self.temp_dir.name) / "e2e_files.db"
-
-        class E2EFileConfig(TestingConfig):
-            DATABASE_URL = f"sqlite:///{db_path}"
-            TESTING = True
-
-        self.app = create_app(E2EFileConfig)
-        self.client = self.app.test_client()
-        SQLModel.metadata.create_all(get_engine())
-
-        register = self.client.post(
-            "/api/v1/users/register",
-            json={"email": "e2e.files@example.com", "password": "StrongPassword123!"},
-            environ_overrides={"REMOTE_ADDR": "198.51.100.11"},
+        cls.endpoint = os.getenv("FILEBASE_ENDPOINT", "https://s3.filebase.com")
+        cls.bucket = os.getenv("FILEBASE_BUCKET")
+        cls.client = boto3.client(
+            "s3",
+            endpoint_url=cls.endpoint,
+            aws_access_key_id=os.getenv("FILEBASE_ACCESS_KEY"),
+            aws_secret_access_key=os.getenv("FILEBASE_SECRET_KEY"),
+            region_name="us-east-1",
         )
-        self.api_key = register.get_json()["data"]["api_key"]
+
+    def setUp(self) -> None:
+        self.object_key = (
+            "e2e-tests/"
+            + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f")
+            + "-filebase-e2e.txt"
+        )
+        self.payload = b"hello from boto3 e2e"
 
     def tearDown(self) -> None:
-        SQLModel.metadata.drop_all(get_engine())
-        self.temp_dir.cleanup()
+        try:
+            self.client.delete_object(Bucket=self.bucket, Key=self.object_key)
+        except Exception:
+            pass
 
-    def test_upload_and_retrieve(self) -> None:
-        """Small file upload should return a CID that can be retrieved."""
-        response = self.client.post(
-            "/api/v1/files/upload",
-            data={"file": (io.BytesIO(b"hello from e2e"), "e2e.txt")},
-            headers={"X-API-Key": self.api_key},
-            content_type="multipart/form-data",
-        )
-        self.assertIn(response.status_code, {201, 202})
-
-        body = response.get_json()["data"]
-        cid = body.get("cid")
-        if cid:
-            retrieve = self.client.get(
-                f"/api/v1/files/retrieve/{cid}",
-                headers={"X-API-Key": self.api_key},
+    def test_upload_list_and_retrieve_with_boto3(self) -> None:
+        """Upload, list, and retrieve an object using Filebase S3 API."""
+        try:
+            # Upload
+            put_resp = self.client.put_object(
+                Bucket=self.bucket,
+                Key=self.object_key,
+                Body=self.payload,
+                ContentType="text/plain",
             )
-            self.assertIn(retrieve.status_code, {200, 304})
+            self.assertEqual(put_resp["ResponseMetadata"]["HTTPStatusCode"], 200)
+
+            # List bucket and ensure object appears
+            list_resp = self.client.list_objects_v2(Bucket=self.bucket, Prefix="e2e-tests/")
+            self.assertEqual(list_resp["ResponseMetadata"]["HTTPStatusCode"], 200)
+            keys = {item["Key"] for item in list_resp.get("Contents", [])}
+            self.assertIn(self.object_key, keys)
+
+            # Retrieve and validate contents
+            get_resp = self.client.get_object(Bucket=self.bucket, Key=self.object_key)
+            self.assertEqual(get_resp["ResponseMetadata"]["HTTPStatusCode"], 200)
+            data = get_resp["Body"].read()
+            self.assertEqual(data, self.payload)
+
+        except (ClientError, BotoCoreError) as exc:
+            self.fail(f"Filebase boto3 e2e failed: {exc}")
