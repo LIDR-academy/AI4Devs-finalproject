@@ -305,7 +305,28 @@ Technology Stack
 
 ### **2.6. Tests**
 
-> Describe brevemente algunos de los tests realizados
+El backend cuenta con una suite de pruebas organizada en:
+
+- `tests/backend/unit/`: pruebas unitarias e integraciones aisladas con `unittest`.
+- `tests/backend/e2e/`: pruebas end-to-end contra servicios reales (Filebase + Redis) usando variables de entorno.
+- `tests/backend/factories/`: factorias de datos de prueba (`factory-boy`).
+- `tests/backend/cassettes/`: grabaciones HTTP de VCR para reproducibilidad.
+
+Comandos principales:
+
+```bash
+# Unit tests
+python -m unittest discover -s tests/backend/unit -p "test_*.py" -v
+
+# E2E tests (requiere backend/.env y RUN_E2E_TESTS=1)
+RUN_E2E_TESTS=1 python -m unittest discover -s tests/backend/e2e -p "test_*.py" -v
+
+# Coverage (objetivo mínimo 80%)
+coverage run -m unittest discover -s tests/backend/unit -p "test_*.py"
+coverage report
+```
+
+La ejecución automática en CI/CD está definida en `.github/workflows/backend-tests.yml`.
 
 ---
 

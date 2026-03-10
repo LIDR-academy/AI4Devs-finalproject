@@ -919,6 +919,7 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
     { name = "tenacity" },
+    { name = "vcrpy" },
     { name = "werkzeug" },
 ]
 
@@ -979,6 +980,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.0,<3.0.0" },
     { name = "sqlmodel", specifier = ">=0.0.16,<1.0.0" },
     { name = "tenacity", specifier = ">=8.2.0,<9.0.0" },
+    { name = "vcrpy", specifier = ">=5.1.0" },
     { name = "vcrpy", marker = "extra == 'dev'", specifier = ">=5.1.0,<6.0.0" },
     { name = "werkzeug", specifier = ">=3.0.0,<4.0.0" },
 ]

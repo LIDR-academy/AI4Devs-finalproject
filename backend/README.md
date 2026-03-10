@@ -105,7 +105,15 @@ ps aux | grep -E "python application.py|celery|redis-server"
 ## Tests
 
 ```bash
-python -m unittest discover -s ../tests/backend -p "test_*.py"
+# Run all backend unit tests
+python -m unittest discover -s ../tests/backend/unit -p "test_*.py" -v
+
+# Optional: run e2e tests with real Filebase/Redis from backend/.env
+RUN_E2E_TESTS=1 python -m unittest discover -s ../tests/backend/e2e -p "test_*.py" -v
+
+# Coverage gate (minimum 80%)
+coverage run -m unittest discover -s ../tests/backend/unit -p "test_*.py"
+coverage report
 ```
 
 ## Security Controls
