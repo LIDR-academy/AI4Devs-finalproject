@@ -33,7 +33,7 @@ As a **developer**, I want comprehensive API documentation using Swagger/OpenAPI
 6. **Error Handling**: Standard error responses
 
 ## Technical Notes
-- Use Flasgger for Swagger integration
+- Use Flasgger for Swagger integration [https://github.com/flasgger/flasgger]
 - Define schemas using Pydantic/Marshmallow
 - Include rate limit information
 - Document async operation patterns
@@ -67,8 +67,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-012-01-configure-flasgger.md
-- TASK-US-012-02-document-auth-endpoints.md
-- TASK-US-012-03-document-file-endpoints.md
-- TASK-US-012-04-document-admin-endpoints.md
-- TASK-US-012-05-add-examples.md
+- [TASK-US-012-01: Configure Flasgger](../../tasks/backend/TASK-US-012-01-configure-flasgger.md)
+- [TASK-US-012-02: Document Auth Endpoints](../../tasks/backend/TASK-US-012-02-document-auth-endpoints.md)
+- [TASK-US-012-03: Document File Endpoints](../../tasks/backend/TASK-US-012-03-document-file-endpoints.md)
+- [TASK-US-012-04: Document Admin Endpoints](../../tasks/backend/TASK-US-012-04-document-admin-endpoints.md)
+- [TASK-US-012-05: Add Examples and Schemas](../../tasks/backend/TASK-US-012-05-add-examples.md)
