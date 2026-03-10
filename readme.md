@@ -512,6 +512,43 @@ curl -X GET https://api.ipfs-gateway.com/retrieve/QmXoypizjW3WknFiJnKLwHCnL72ved
 | `500` | Internal Server Error |
 | `503` | Service Unavailable - IPFS service down |
 
+### Standard Response Contract (US-011)
+
+From US-011 onward, API responses use a consistent JSON envelope.
+
+Success responses:
+```json
+{
+    "status": 200,
+    "message": "Operation successful",
+    "data": {
+        "key": "value"
+    },
+    "request_id": "optional-request-id"
+}
+```
+
+Error responses:
+```json
+{
+    "status": 422,
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "details": [
+        {
+            "field": "email",
+            "message": "Invalid email format"
+        }
+    ],
+    "request_id": "optional-request-id"
+}
+```
+
+Notes:
+- `request_id` is included when available and can be propagated via `X-Request-ID`.
+- Internal server errors are sanitized for clients and fully logged server-side.
+- `GET /api/v1/users/status` remains a lightweight compatibility health-style route.
+
 
 
 ---

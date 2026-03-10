@@ -11,6 +11,7 @@ from werkzeug.datastructures import FileStorage
 from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user, require_api_key
 from core.common.exceptions import ValidationError
+from core.common.responses import error_response, success_response
 from core.files.models import File
 from core.files.validators import (
     generate_safe_filename,
@@ -38,11 +39,11 @@ def register_routes(bp):
         user_id = int(user.id) if user.id is not None else 0
 
         if "file" not in request.files:
-            return jsonify({"status": 400, "message": "No file provided", "error": "file_required"}), 400
+            return error_response(400, "No file provided", code="FILE_REQUIRED")
 
         file: FileStorage = request.files["file"]
         if not file or file.filename == "":
-            return jsonify({"status": 400, "message": "No file selected", "error": "file_empty"}), 400
+            return error_response(400, "No file selected", code="FILE_EMPTY")
 
         try:
             validate_filename(file.filename)
@@ -65,16 +66,14 @@ def register_routes(bp):
                     file_data=file_content,
                     content_type=file.content_type or "application/octet-stream",
                 )
-                return jsonify(
-                    {
-                        "status": 202,
-                        "message": "File upload queued",
-                        "data": {
-                            "task_id": str(task.id),
-                            "status_url": f"/api/v1/files/upload/status/{task.id}",
-                        },
-                    }
-                ), 202
+                return success_response(
+                    202,
+                    message="File upload queued",
+                    data={
+                        "task_id": str(task.id),
+                        "status_url": f"/api/v1/files/upload/status/{task.id}",
+                    },
+                )
 
             result = ipfs_service.upload_file(
                 file=BytesIO(file_content),
@@ -107,38 +106,31 @@ def register_routes(bp):
                     },
                 )
 
-                return jsonify(
-                    {
-                        "status": 201,
-                        "message": "File uploaded successfully",
-                        "data": {
-                            "cid": result.cid,
-                            "original_filename": original_filename,
-                            "size": file_size,
-                            "pinned": True,
-                            "uploaded_at": db_file.uploaded_at.isoformat(),
-                        },
-                    }
-                ), 201
+                return success_response(
+                    201,
+                    message="File uploaded successfully",
+                    data={
+                        "cid": result.cid,
+                        "original_filename": original_filename,
+                        "size": file_size,
+                        "pinned": True,
+                        "uploaded_at": db_file.uploaded_at.isoformat(),
+                    },
+                )
 
         except ValidationError as exc:
             logger.warning("Validation error for user %s: %s", user.id, exc)
-            return jsonify({"status": 400, "message": str(exc), "error": "validation_error"}), 400
+            return error_response(exc.status_code, exc.message, code=exc.code, details=exc.details)
         except UploadError as exc:
             logger.error("Upload error for user %s: %s", user.id, exc)
-            return (
-                jsonify(
-                    {
-                        "status": 503,
-                        "message": "File upload service temporarily unavailable",
-                        "error": "upload_service_error",
-                    }
-                ),
+            return error_response(
                 503,
+                "File upload service temporarily unavailable",
+                code="UPLOAD_SERVICE_ERROR",
             )
         except Exception as exc:
             logger.error("Unexpected error during upload for user %s: %s", user.id, exc, exc_info=True)
-            return jsonify({"status": 500, "message": "Internal server error", "error": "internal_error"}), 500
+            return error_response(500, "Internal server error", code="INTERNAL_ERROR")
 
     @bp.get("/upload/status/<task_id>")
     @configured_limit("RATE_LIMIT_TASKS")
@@ -150,40 +142,30 @@ def register_routes(bp):
 
             task_result = AsyncResult(task_id, app=celery)
             if task_result.state == "PENDING":
-                return jsonify({"status": "pending", "task_id": task_id, "progress": 0}), 200
+                return success_response(200, data={"task_id": task_id, "state": "PENDING", "progress": 0, "message": "Task is pending"})
             if task_result.state == "STARTED":
-                return jsonify({"status": "in_progress", "task_id": task_id, "progress": 50}), 200
+                return success_response(200, data={"task_id": task_id, "state": "STARTED", "progress": 50, "message": "Task is in progress"})
             if task_result.state == "SUCCESS":
-                return jsonify(
-                    {
-                        "status": "completed",
+                return success_response(
+                    200,
+                    data={
                         "task_id": task_id,
+                        "state": "SUCCESS",
                         "progress": 100,
-                        "data": task_result.result,
-                    }
-                ), 201
+                        "result": task_result.result,
+                    },
+                )
             if task_result.state == "FAILURE":
-                return jsonify({"status": "failed", "task_id": task_id, "error": str(task_result.info)}), 500
-            return (
-                jsonify(
-                    {
-                        "status": task_result.state.lower(),
-                        "task_id": task_id,
-                        "progress": 50 if task_result.state == "RETRY" else 0,
-                    }
-                ),
+                return error_response(500, "Task failed", code="TASK_FAILED", details={"task_id": task_id, "error": str(task_result.info)})
+            return success_response(
                 200,
+                data={
+                    "task_id": task_id,
+                    "state": task_result.state,
+                    "progress": 50 if task_result.state == "RETRY" else 0,
+                },
             )
         except Exception as exc:
             logger.error("Error retrieving task status %s: %s", task_id, exc)
-            return (
-                jsonify(
-                    {
-                        "status": "error",
-                        "task_id": task_id,
-                        "error": "Unable to retrieve task status",
-                    }
-                ),
-                500,
-            )
+            return error_response(500, "Unable to retrieve task status", code="TASK_STATUS_ERROR", details={"task_id": task_id})
 

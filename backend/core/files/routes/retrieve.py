@@ -4,12 +4,13 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from flask import jsonify, request, Response, stream_with_context
+from flask import request, Response, stream_with_context
 from sqlmodel import Session
 
 from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user
 from core.common.exceptions import ValidationError
+from core.common.responses import error_response
 from core.files.authorization import check_file_access_by_cid
 from core.files.cache_headers import (
 	add_cache_headers,
@@ -109,7 +110,9 @@ def register_routes(bp):
 					logger.warning(
 						f"Access denied for user {user.id} to CID {cid}: {reason}"
 					)
-					return jsonify({"error": reason}), 403 if file_record else 404
+					if file_record:
+						return error_response(403, reason, code="FORBIDDEN")
+					return error_response(404, reason, code="NOT_FOUND")
 				
 				# Check cache headers (304 Not Modified)
 				etag = generate_etag(cid)
@@ -228,14 +231,14 @@ def register_routes(bp):
 					
 					# Check if file not found in IPFS
 					if "not found" in str(e).lower():
-						return jsonify({"error": "File not found in IPFS storage"}), 404
-					
-					return jsonify({"error": "Failed to retrieve file"}), 500
+						return error_response(404, "File not found in IPFS storage", code="NOT_FOUND")
+
+					return error_response(500, "Failed to retrieve file", code="RETRIEVAL_ERROR")
 			
 			except ValidationError as e:
 				logger.warning(f"Invalid retrieval request for CID {cid}: {e}")
-				return jsonify({"error": str(e)}), 422
+				return error_response(422, e.message, code=e.code, details=e.details)
 			except Exception as e:
 				logger.error(f"Unexpected error during file retrieval: {e}", exc_info=True)
-				return jsonify({"error": "Internal server error"}), 500
+				return error_response(500, "Internal server error", code="INTERNAL_ERROR")
 

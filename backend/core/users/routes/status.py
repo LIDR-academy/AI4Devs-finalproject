@@ -5,6 +5,7 @@ from sqlmodel import Session
 
 from core import configured_limit, get_engine
 from core.auth.decorators import find_user_by_api_key
+from core.common.responses import error_response, success_response
 
 
 def register_routes(bp: Blueprint) -> None:
@@ -27,16 +28,13 @@ def register_routes(bp: Blueprint) -> None:
 
 		api_key = request.headers.get("X-API-Key", "").strip()
 		if not api_key:
-			return jsonify({"status": 401, "error": "Missing X-API-Key header"}), 401
+			return error_response(401, "Missing X-API-Key header", code="AUTHENTICATION_FAILED")
 		
 		with Session(get_engine()) as session:
 			user = find_user_by_api_key(session, api_key)
 			
 			if not user:
-				return jsonify({
-					"status": 401,
-					"error": "Invalid API key"
-				}), 401
+				return error_response(401, "Invalid API key", code="AUTHENTICATION_FAILED")
 			
 			# Determine status based on user flags
 			if user.is_deleted:
@@ -46,13 +44,14 @@ def register_routes(bp: Blueprint) -> None:
 			else:
 				status_value = "inactive"
 			
-			return jsonify({
-				"status": 200,
-				"data": {
+			return success_response(
+				200,
+				message="API key status retrieved",
+				data={
 					"api_key_status": status_value,
 					"created_at": user.created_at.isoformat(),
 					"last_renewed_at": user.last_renewed_at.isoformat() if user.last_renewed_at else None,
 					"usage_count": user.usage_count,
-				}
-			}), 200
+				},
+			)
 
