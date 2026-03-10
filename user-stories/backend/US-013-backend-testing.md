@@ -2,6 +2,8 @@
 
 [Trello Card](https://trello.com/c/ilKJm2EM)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/13)
+
 
 
 ## Description

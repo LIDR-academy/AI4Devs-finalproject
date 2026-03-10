@@ -2,6 +2,8 @@
 
 [Trello Card](https://trello.com/c/Yw8ZfSrF)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/13)
+
 ## Parent User Story
 [US-013: Backend Testing Suite](../../user-stories/backend/US-013-backend-testing.md)
 
