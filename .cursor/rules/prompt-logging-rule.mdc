@@ -1,0 +1,83 @@
+---
+alwaysApply: true
+---
+# CursorRule: Sistema de Registro Automático de Prompts de Usuario
+
+## Propósito
+Esta regla establece el protocolo obligatorio para que el agente de IA registre automáticamente todos los prompts de usuario en el archivo de documentación `/docs/prompts-AMP.md`, facilitando el seguimiento y análisis de las interacciones.
+
+## Funcionamiento
+- **Ejecución automática:** El agente debe registrar cada prompt inmediatamente después de recibirlo, sin necesidad de instrucción explícita.
+- **Obligatoriedad:** Este proceso es obligatorio para todos los prompts, independientemente de su contenido o complejidad.
+
+## Sistema de Categorización
+Cada prompt debe ser clasificado en **una categoría específica** utilizando las siguientes opciones predefinidas con sus emojis correspondientes:
+
+### Categorías Disponibles:
+- 📦 **Descripción general del producto** - Información sobre funcionalidades y características del producto
+- 🏗️ **Diagrama de arquitectura** - Visualizaciones y representaciones gráficas del sistema
+- 🧩 **Descripción de componentes principales** - Módulos, servicios y elementos clave del sistema
+- 🗂️ **Descripción de alto nivel del proyecto y estructura de ficheros** - Organización general y estructura del proyecto
+- ☁️ **Infraestructura y despliegue** - Configuración de servidores, contenedores y procesos de deployment
+- 🛡️ **Seguridad** - Autenticación, autorización, protección de datos y medidas de seguridad
+- 🧪 **Tests** - Estrategias de testing, casos de prueba y cobertura de código
+- 🗃️ **Modelo de datos** - Estructura de bases de datos, esquemas y relaciones
+- 🔌 **Especificación de la API** - Endpoints, parámetros, respuestas y documentación de APIs
+- 👤 **Historias de usuario** - Requisitos funcionales y casos de uso del sistema
+- 🎟️ **Tickets de trabajo** - Tareas, bugs y mejoras del proyecto
+
+## Estructura del Registro
+Cada entrada debe seguir este formato estandarizado:
+
+### Prompt [Número]:
+- **Categoría:** `[Emoji] [Nombre categoría]`
+- **Prompt:** 
+    ```
+    [Texto completo del prompt del usuario]
+    ```
+- **LLM:** [Modelo y versión utilizada]
+
+## Instrucciones de Implementación
+1. **Ubicación:** Todos los prompts se almacenan en el archivo `/docs/prompts-AMP.md`
+2. **Numeración:** Los prompts se registran secuencialmente (Prompt 1, Prompt 2, Prompt N)
+3. **Categorización:** Asignar la categoría más relevante basándose en el contenido del prompt
+4. **Formato:** Mantener la estructura y formato especificados para consistencia
+5. **Inmediatez:** Realizar el registro inmediatamente después de recibir cada prompt
+
+## Ejemplos de Registro
+
+### Prompt 1:
+- **Categoría:** `📦 Descripción general del producto`
+- **Prompt:** 
+    ```
+    ¿Cómo puedo implementar autenticación JWT en Node.js?
+    ```
+- **LLM:** GPT-4.1
+
+### Prompt 2:
+- **Categoría:** `🏗️ Diagrama de arquitectura`
+- **Prompt:** 
+    ```
+    Genera un diagrama de arquitectura para el backend.
+    ```
+- **LLM:** GPT-4.1
+
+### Prompt 3:
+- **Categoría:** `🔌 Especificación de la API`
+- **Prompt:** 
+    ```
+    Diseña la estructura de la API REST para el sistema de usuarios.
+    ```
+- **LLM:** GPT-4.1
+
+*El registro continúa secuencialmente para todos los prompts subsiguientes.*
+
+---
+
+## Notas Importantes
+- **Consistencia:** Mantener el formato establecido para facilitar el análisis posterior
+- **Precisión:** Asignar categorías que reflejen fielmente el contenido del prompt
+- **Completitud:** Registrar el prompt completo sin omisiones o modificaciones
+- **Trazabilidad:** El sistema de numeración permite rastrear la evolución de las consultas
+
+---
