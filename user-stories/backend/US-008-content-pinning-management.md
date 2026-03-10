@@ -1,6 +1,7 @@
 # US-008: Content Pinning Management
 
 [Trello Card](https://trello.com/c/BzhfKUh8)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/8)
 
 
 
@@ -109,7 +110,7 @@ Response (409 Conflict):
 6 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Completed
 
 ## Workflow Diagram
 ```mermaid
@@ -136,8 +137,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-008-01-create-pin-endpoint.md
-- TASK-US-008-02-create-unpin-endpoint.md
-- TASK-US-008-03-implement-pin-celery-task.md
-- TASK-US-008-04-implement-unpin-celery-task.md
-- TASK-US-008-05-add-authorization-checks.md
+- [TASK-US-008-01: Create Pin Endpoint](../../tasks/backend/TASK-US-008-01-create-pin-endpoint.md) - [Trello](https://trello.com/c/OkQhuAHa)
+- [TASK-US-008-02: Create Unpin Endpoint](../../tasks/backend/TASK-US-008-02-create-unpin-endpoint.md) - [Trello](https://trello.com/c/pCDlUsq8)
+- [TASK-US-008-03: Implement Pin Celery Task](../../tasks/backend/TASK-US-008-03-implement-pin-celery-task.md) - [Trello](https://trello.com/c/R9S3zyHp)
+- [TASK-US-008-04: Implement Unpin Celery Task](../../tasks/backend/TASK-US-008-04-implement-unpin-celery-task.md) - [Trello](https://trello.com/c/IVMoiDEP)
+- [TASK-US-008-05: Add Authorization Checks](../../tasks/backend/TASK-US-008-05-add-authorization-checks.md) - [Trello](https://trello.com/c/HPup4bgh)

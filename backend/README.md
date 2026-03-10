@@ -376,6 +376,96 @@ Both endpoints return `202 Accepted` with `task_id` and `status_url`.
 
 ---
 
+### Content Pinning Management (US-008)
+
+Pin/unpin operations are authenticated, ownership-protected, and executed asynchronously through Celery.
+
+#### POST /api/v1/files/pin/:cid
+
+Queue pinning operation for a user-owned file.
+
+```bash
+curl -X POST http://localhost:5000/api/v1/files/pin/<cid> \
+	-H "X-API-Key: your_api_key_here"
+```
+
+Success (`202 Accepted`):
+
+```json
+{
+	"status": 202,
+	"message": "Pinning request queued",
+	"data": {
+		"task_id": "uuid-task-id",
+		"status_url": "/api/v1/tasks/uuid-task-id/status",
+		"cid": "QmX..."
+	}
+}
+```
+
+#### POST /api/v1/files/unpin/:cid
+
+Queue unpinning operation for a user-owned file.
+
+```bash
+curl -X POST http://localhost:5000/api/v1/files/unpin/<cid> \
+	-H "X-API-Key: your_api_key_here"
+```
+
+Success (`202 Accepted`):
+
+```json
+{
+	"status": 202,
+	"message": "Unpinning request queued",
+	"data": {
+		"task_id": "uuid-task-id",
+		"status_url": "/api/v1/tasks/uuid-task-id/status",
+		"cid": "QmX..."
+	}
+}
+```
+
+#### Pin/Unpin Error Responses
+
+```json
+{
+	"status": 404,
+	"message": "Content not found"
+}
+```
+
+```json
+{
+	"status": 403,
+	"message": "Access denied to this content"
+}
+```
+
+```json
+{
+	"status": 409,
+	"message": "Content is already pinned"
+}
+```
+
+```json
+{
+	"status": 409,
+	"message": "Content is already unpinned"
+}
+```
+
+#### US-008 Notes
+
+- API key is required on all pinning endpoints (`X-API-Key` header).
+- Users can only pin/unpin files they own.
+- File records are never deleted during unpin (soft operation).
+- Operations are queued to Celery `pinning` queue and tracked by task status API.
+- Audit logs are recorded for queued/completed operations and authorization failures.
+
+---
+
 ### Features
 
 - **Multipart file upload** via form data (`multipart/form-data`)

@@ -322,6 +322,10 @@ class IPFSService:
 		except RetrievalError:
 			# Re-raise retrieval errors (e.g., file not found)
 			raise
+
+		except ValueError:
+			# Preserve configuration/runtime client errors for callers/tests.
+			raise
         
 		except Exception as e:
 			logger.error(f"Unexpected error during file retrieval: {e}")

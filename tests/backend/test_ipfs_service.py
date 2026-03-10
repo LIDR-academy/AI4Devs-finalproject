@@ -11,6 +11,7 @@ from core.services.ipfs_service import (
     IPFSService,
     UploadResult,
     UploadError,
+    RetrievalError,
     ipfs_service,
 )
 
@@ -37,6 +38,7 @@ class TestIPFSServiceInitialization(unittest.TestCase):
     @patch.dict("os.environ", {
         "FILEBASE_ACCESS_KEY": "test_key",
         "FILEBASE_SECRET_KEY": "test_secret",
+        "FILEBASE_BUCKET": "ipfs-gateway",
     })
     @patch("core.services.ipfs_service.boto3.client")
     def test_ipfs_service_init_success(self, mock_boto3):
@@ -204,7 +206,7 @@ class TestIPFSServiceRetrieve(unittest.TestCase):
             "GetObject"
         )
         
-        with self.assertRaises(UploadError):
+        with self.assertRaises(RetrievalError):
             self.service.retrieve_file("nonexistent.txt")
 
 
