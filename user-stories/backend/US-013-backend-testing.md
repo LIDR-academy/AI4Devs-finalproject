@@ -6,6 +6,7 @@
 
 ## Description
 As a **developer**, I want a comprehensive testing suite for the backend, so that code quality is maintained and regressions are prevented.
+The unit tests suite is already present. All the unit tests should be moved into the directory `tests/backend/unit/` 
 
 ## Priority
 🟠 **High** - Essential for code quality.
@@ -15,7 +16,7 @@ As a **developer**, I want a comprehensive testing suite for the backend, so tha
 
 ## Acceptance Criteria
 - [ ] Unit tests cover all service functions
-- [ ] Integration tests cover all API endpoints
+- [ ] Integration tests (e2e) cover all API endpoints - using real calls and .env file to filebase
 - [ ] Test fixtures are created using Faker
 - [ ] HTTP interactions are recorded with VCR
 - [ ] Test database is isolated from development
@@ -35,7 +36,7 @@ As a **developer**, I want a comprehensive testing suite for the backend, so tha
 
 ## Test Structure
 ```
-backend/tests/
+tests/backend/
 ├── __init__.py
 ├── conftest.py              # Shared fixtures
 ├── factories/               # Test data factories
@@ -48,7 +49,7 @@ backend/tests/
 │   ├── __init__.py
 │   ├── test_services.py
 │   └── test_utils.py
-├── integration/
+├── e2e/                     
 │   ├── __init__.py
 │   ├── test_auth_endpoints.py
 │   ├── test_file_endpoints.py
@@ -57,12 +58,13 @@ backend/tests/
 ```
 
 ## Technical Notes
-- Use pytest as the test framework
-- Use pytest-asyncio for async tests
+- Use unittest as the test framework
 - Use Factory Boy for test data generation
 - Use VCRpy to record/replay HTTP interactions
 - Configure separate test database
-- Use pytest-cov for coverage reporting
+- Use coverage.py for coverage reporting
+- e2e tests should use the .env file to do real calls to filebase through its S3 api
+- e2e tests should use the .env file to use real redis instance
 
 ## Dependencies
 - US-001: Project Setup and Configuration
@@ -89,10 +91,10 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-013-01-setup-pytest-config.md
-- TASK-US-013-02-create-test-fixtures.md
-- TASK-US-013-03-create-factories.md
-- TASK-US-013-04-write-unit-tests.md
-- TASK-US-013-05-write-integration-tests.md
-- TASK-US-013-06-configure-vcr.md
-- TASK-US-013-07-setup-coverage.md
+- [TASK-US-013-01: Setup pytest configuration](../../tasks/backend/TASK-US-013-01-setup-pytest-config.md)
+- [TASK-US-013-02: Create test fixtures (conftest.py)](../../tasks/backend/TASK-US-013-02-create-test-fixtures.md)
+- [TASK-US-013-03: Create test data factories](../../tasks/backend/TASK-US-013-03-create-factories.md)
+- [TASK-US-013-04: Write unit tests (move existing + add new)](../../tasks/backend/TASK-US-013-04-write-unit-tests.md)
+- [TASK-US-013-05: Write e2e integration tests](../../tasks/backend/TASK-US-013-05-write-integration-tests.md)
+- [TASK-US-013-06: Configure VCRpy for HTTP recording](../../tasks/backend/TASK-US-013-06-configure-vcr.md)
+- [TASK-US-013-07: Setup code coverage reporting](../../tasks/backend/TASK-US-013-07-setup-coverage.md)
