@@ -200,6 +200,92 @@ Last-Modified: Mon, 09 Mar 2026 15:30:00 GMT
 
 ---
 
+### Celery Task Queue (US-007)
+
+Celery is configured with Redis for async task execution and status tracking.
+
+#### Worker and Monitoring
+
+Start Celery worker:
+
+```bash
+cd backend
+celery -A core.celery_worker.celery worker -l info -Q upload,pinning,default
+```
+
+Start Celery beat (future scheduled tasks):
+
+```bash
+cd backend
+celery -A core.celery_worker.celery beat -l info
+```
+
+Start Flower monitoring:
+
+```bash
+cd backend
+celery -A core.celery_worker.celery flower --port=5555
+```
+
+#### GET /api/v1/tasks/:task_id/status
+
+Get status for any async task.
+
+```bash
+curl http://localhost:5000/api/v1/tasks/550e8400-e29b-41d4-a716-446655440000/status \
+	-H "X-API-Key: your_api_key_here"
+```
+
+Response example:
+
+```json
+{
+	"status": 200,
+	"data": {
+		"task_id": "550e8400-e29b-41d4-a716-446655440000",
+		"state": "PROGRESS",
+		"progress": 65,
+		"message": "Uploading to IPFS..."
+	}
+}
+```
+
+#### Failed-task inspection and replay
+
+List failed tasks captured by `task_failure` signal:
+
+```bash
+curl "http://localhost:5000/api/v1/tasks/failed?limit=20&offset=0" \
+	-H "X-API-Key: your_api_key_here"
+```
+
+Replay one failed task:
+
+```bash
+curl -X POST http://localhost:5000/api/v1/tasks/failed/<failure_id>/replay \
+	-H "X-API-Key: your_api_key_here"
+```
+
+#### Async pin/unpin endpoints
+
+Queue pin operation:
+
+```bash
+curl -X POST http://localhost:5000/api/v1/files/pin/<cid> \
+	-H "X-API-Key: your_api_key_here"
+```
+
+Queue unpin operation:
+
+```bash
+curl -X POST http://localhost:5000/api/v1/files/unpin/<cid> \
+	-H "X-API-Key: your_api_key_here"
+```
+
+Both endpoints return `202 Accepted` with `task_id` and `status_url`.
+
+---
+
 ### Features
 
 - **Multipart file upload** via form data (`multipart/form-data`)
