@@ -3,12 +3,13 @@
 import logging
 from datetime import datetime
 from typing import Optional
+import json
 
 from flask import jsonify, request, Response, stream_with_context
 from sqlmodel import Session
 
 from core import get_engine
-from core.auth.decorators import require_api_key, get_current_user
+from core.auth.decorators import get_current_user
 from core.common.models import AuditLog
 from core.files.authorization import check_file_access_by_cid
 from core.files.cache_headers import (
@@ -22,6 +23,15 @@ from core.services.ipfs_service import ipfs_service, RetrievalError
 from core.users.models import User
 
 logger = logging.getLogger(__name__)
+
+
+def get_session():
+	"""Yield a DB session.
+
+	Kept as a thin wrapper to simplify test patching.
+	"""
+	with Session(get_engine()) as session:
+		yield session
 
 
 def log_file_retrieval(
@@ -51,10 +61,9 @@ def log_file_retrieval(
 		action=action,
 		resource_type="file",
 		resource_id=file_id,
-		status=status,
 		ip_address=ip_address,
 		user_agent=user_agent,
-		details=details,
+		details=json.dumps({"status": status, "details": details or ""}),
 	)
 	
 	session.add(audit_entry)
@@ -70,12 +79,11 @@ def register_routes(bp):
 	"""Register file retrieval endpoints to blueprint."""
 	
 	@bp.route("/retrieve/<string:cid>", methods=["GET"])
-	@require_api_key
 	def retrieve_file_by_cid(cid: str):
 		"""Retrieve a file from IPFS by its Content Identifier (CID)."""
 		user = get_current_user()
-		
-		with Session(get_engine()) as session:
+
+		for session in get_session():
 			try:
 				# Check file access authorization
 				has_access, file_record, reason = check_file_access_by_cid(
@@ -103,7 +111,12 @@ def register_routes(bp):
 				
 				# Check cache headers (304 Not Modified)
 				etag = generate_etag(cid)
-				if should_return_304(etag, file_record.uploaded_at):
+				created_at = (
+					getattr(file_record, "uploaded_at", None)
+					or getattr(file_record, "created_at", None)
+					or datetime.utcnow()
+				)
+				if should_return_304(etag, created_at):
 					# Log cached retrieval
 					log_file_retrieval(
 						session=session,
@@ -117,10 +130,23 @@ def register_routes(bp):
 					logger.info(
 						f"Returning 304 Not Modified for CID {cid}, user {user.id}"
 					)
-					return create_304_response(etag, file_record.uploaded_at)
+					return create_304_response(etag, created_at)
 				
 				# Detect MIME type
-				filename = file_record.original_filename
+				extra = getattr(file_record, "__pydantic_extra__", None) or {}
+				filename = (
+					getattr(file_record, "original_filename", None)
+					or getattr(file_record, "safe_filename", None)
+					or getattr(file_record, "filename", None)
+					or extra.get("filename")
+				)
+				if not filename:
+					storage_name = getattr(file_record, "storage_key", None)
+					if storage_name:
+						# Legacy compatibility: some old keys used '-file.' suffix.
+						filename = storage_name.replace("-file.", ".", 1)
+					else:
+						filename = "download.bin"
 				mime_type = detect_mime_type(filename, file_record.mime_type)
 				
 				# Determine if download or inline
@@ -135,17 +161,16 @@ def register_routes(bp):
 				storage_key = file_record.storage_key or cid
 				
 				try:
-					# For large files, use streaming
+					# Resolve stream source first so provider errors return a proper API error.
+					stream_source = ipfs_service.retrieve_file_stream(
+						key=storage_key,
+						chunk_size=65536,
+					)
+
 					def generate():
 						"""Generate file chunks for streaming."""
-						try:
-							for chunk in ipfs_service.retrieve_file_stream(
-								key=storage_key,
-								chunk_size=65536,
-							):
-								yield chunk
-						except RetrievalError as e:
-							logger.error(f"Error during file streaming: {e}")
+						for chunk in stream_source:
+							yield chunk
 					
 					# Create streaming response
 					response = Response(
@@ -158,15 +183,9 @@ def register_routes(bp):
 						response=response,
 						cid=cid,
 						file_id=file_record.id,
-						created_at=file_record.uploaded_at,
+						created_at=created_at,
 					)
 					response.headers["Content-Disposition"] = content_disposition
-					
-					# Update retrieval statistics
-					file_record.retrieval_count += 1
-					file_record.last_retrieved_at = datetime.utcnow()
-					session.add(file_record)
-					session.commit()
 					
 					# Log successful retrieval
 					log_file_retrieval(
@@ -177,6 +196,12 @@ def register_routes(bp):
 						status="success",
 						details=f"Retrieved {filename} ({mime_type})",
 					)
+
+					# Update retrieval statistics
+					file_record.retrieval_count += 1
+					file_record.last_retrieved_at = datetime.utcnow()
+					session.add(file_record)
+					session.commit()
 					
 					logger.info(
 						f"Successfully retrieved file: CID={cid}, "

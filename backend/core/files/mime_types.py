@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 # Custom MIME types not in standard library
 CUSTOM_MIME_TYPES = {
+	".js": "application/javascript",
 	".md": "text/markdown",
 	".markdown": "text/markdown",
 	".yaml": "application/yaml",
@@ -27,6 +28,7 @@ CUSTOM_MIME_TYPES = {
 	".ogg": "audio/ogg",
 	".opus": "audio/opus",
 	".m4a": "audio/mp4",
+	".tar.gz": "application/gzip",
 }
 
 # MIME types that should not be compressed (already compressed)
@@ -93,11 +95,25 @@ def detect_mime_type(
 	if stored_mime_type and stored_mime_type.strip():
 		logger.debug(f"Using stored MIME type: {stored_mime_type}")
 		return stored_mime_type
+
+	# Handle full filename multi-part extension mappings first.
+	lower_filename = filename.lower()
+	for extension, mime_type in CUSTOM_MIME_TYPES.items():
+		if extension.startswith(".") and lower_filename.endswith(extension):
+			logger.debug(
+				f"Detected MIME type for '{filename}' using custom multi-part mapping: {mime_type}"
+			)
+			return mime_type
 	
 	# Detect from file extension
 	mime_type, _ = mimetypes.guess_type(filename)
 	
 	if mime_type:
+		# Normalize legacy/less-useful mappings to project-preferred values.
+		if mime_type == "text/javascript":
+			return "application/javascript"
+		if mime_type == "chemical/x-xyz":
+			return "application/octet-stream"
 		logger.debug(f"Detected MIME type for '{filename}': {mime_type}")
 		return mime_type
 	

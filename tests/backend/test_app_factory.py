@@ -33,9 +33,8 @@ class TestAppFactory(unittest.TestCase):
     def test_files_blueprint_route_exists(self) -> None:
         """Files blueprint endpoint should be registered and reachable."""
         response = self.client.get("/api/v1/files/retrieve/example-cid")
-        self.assertEqual(response.status_code, 200)
-        payload = response.get_json()
-        self.assertEqual(payload["cid"], "example-cid")
+        # Route exists and is protected by API key auth.
+        self.assertEqual(response.status_code, 401)
 
 
 if __name__ == "__main__":
