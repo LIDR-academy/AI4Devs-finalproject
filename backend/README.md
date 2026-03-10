@@ -9,7 +9,97 @@ uv venv .venv
 source .venv/bin/activate
 uv pip install -e ".[dev]"
 cp .env.example .env
+```
+
+## Running the Application
+
+### Prerequisites
+
+Ensure Redis is installed and running (required for Celery task queue):
+
+```bash
+# Check if Redis is running
+redis-cli ping
+# Should return: PONG
+
+# If not running, start Redis (choose one method):
+# Method 1: As a daemon
+redis-server --daemonize yes --port 6379
+
+# Method 2: In foreground (separate terminal)
+redis-server --port 6379
+```
+
+### Starting All Services
+
+**Terminal 1 - Flask Backend:**
+```bash
+cd backend
+source ../.venv/bin/activate
 python application.py
+# Backend will run on http://localhost:5000
+```
+
+**Terminal 2 - Celery Worker:**
+```bash
+cd backend
+source ../.venv/bin/activate
+celery -A core.celery_worker.celery worker -l info -Q upload,pinning,default
+# Processes async tasks for file uploads, pinning, etc.
+```
+
+**Terminal 3 (Optional) - Flower Monitoring:**
+```bash
+cd backend
+source ../.venv/bin/activate
+celery -A core.celery_worker.celery flower --port=5555
+# Web UI available at http://localhost:5555
+```
+
+### Stopping All Services
+
+**Stop Flask Backend:**
+```bash
+# Press Ctrl+C in Terminal 1
+# Or find and kill the process:
+pkill -f "python application.py"
+```
+
+**Stop Celery Worker:**
+```bash
+# Press Ctrl+C in Terminal 2
+# Or find and kill the process:
+pkill -f "celery.*worker"
+```
+
+**Stop Flower (if running):**
+```bash
+# Press Ctrl+C in Terminal 3
+# Or find and kill the process:
+pkill -f "celery.*flower"
+```
+
+**Stop Redis (if started as daemon):**
+```bash
+redis-cli shutdown
+# Or:
+pkill redis-server
+```
+
+### Checking Service Status
+
+```bash
+# Check Flask backend
+curl http://localhost:5000/health || echo "Backend not running"
+
+# Check Redis
+redis-cli ping || echo "Redis not running"
+
+# Check Celery worker (via Flower or task test)
+curl http://localhost:5555 || echo "Flower not running"
+
+# List all running processes
+ps aux | grep -E "python application.py|celery|redis-server"
 ```
 
 ## Tests
