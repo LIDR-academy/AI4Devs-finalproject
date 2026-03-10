@@ -125,7 +125,7 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-010-01-create-audit-service.md
-- TASK-US-010-02-implement-async-logging.md
-- TASK-US-010-03-create-admin-logs-endpoint.md
-- TASK-US-010-04-add-log-filtering.md
+- [TASK-US-010-01: Create Audit Service](../../tasks/backend/TASK-US-010-01-create-audit-service.md)
+- [TASK-US-010-02: Implement Async Logging](../../tasks/backend/TASK-US-010-02-implement-async-logging.md)
+- [TASK-US-010-03: Create Admin Logs Endpoint](../../tasks/backend/TASK-US-010-03-create-admin-logs-endpoint.md)
+- [TASK-US-010-04: Add Log Filtering](../../tasks/backend/TASK-US-010-04-add-log-filtering.md)
