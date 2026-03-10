@@ -108,7 +108,7 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-011-01-create-exception-classes.md
-- TASK-US-011-02-create-response-wrapper.md
-- TASK-US-011-03-implement-error-handlers.md
-- TASK-US-011-04-add-request-logging.md
+- [TASK-US-011-01: Create Exception Classes](../../tasks/backend/TASK-US-011-01-create-exception-classes.md)
+- [TASK-US-011-02: Create Response Wrapper](../../tasks/backend/TASK-US-011-02-create-response-wrapper.md)
+- [TASK-US-011-03: Implement Error Handlers](../../tasks/backend/TASK-US-011-03-implement-error-handlers.md)
+- [TASK-US-011-04: Add Request Logging](../../tasks/backend/TASK-US-011-04-add-request-logging.md)
