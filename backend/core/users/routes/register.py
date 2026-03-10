@@ -2,7 +2,7 @@
 
 from flask import Blueprint, jsonify, request
 
-from core import limiter
+from core import configured_limit
 from core.common.exceptions import ValidationError
 from core.users.services import register_user
 
@@ -11,7 +11,7 @@ def register_routes(bp: Blueprint) -> None:
 	"""Register user registration endpoint."""
 
 	@bp.post("/register")
-	@limiter.limit("5/hour")
+	@configured_limit("RATE_LIMIT_REGISTRATION")
 	def register():
 		payload = request.get_json(silent=True)
 		if not isinstance(payload, dict):

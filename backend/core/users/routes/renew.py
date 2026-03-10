@@ -4,10 +4,11 @@ import arrow
 from flask import Blueprint, jsonify, request
 from sqlmodel import Session, select
 
-from core import get_engine
-from core.auth.decorators import require_api_key, get_current_user
+from core import configured_limit, get_engine
+from core.auth.decorators import get_current_user, require_api_key
 from core.common.exceptions import AuthenticationError, ValidationError
 from core.common.models import AuditLog
+from core.common.validators import validate_verification_code
 from core.users.models import User
 from core.users.verification import generate_verification_code, verify_code
 
@@ -16,6 +17,7 @@ def register_routes(bp: Blueprint) -> None:
 	"""Register API key renewal endpoints."""
 	
 	@bp.post("/renew/challenge")
+	@configured_limit("RATE_LIMIT_RENEW")
 	@require_api_key
 	def renew_challenge():
 		"""Initiate API key renewal with step-up verification challenge.
@@ -38,6 +40,7 @@ def register_routes(bp: Blueprint) -> None:
 		}), 202
 	
 	@bp.post("/renew")
+	@configured_limit("RATE_LIMIT_RENEW")
 	@require_api_key
 	def renew():
 		"""Renew API key with step-up verification.
@@ -49,12 +52,14 @@ def register_routes(bp: Blueprint) -> None:
 			New API key on successful verification.
 		"""
 		user = get_current_user()
-		data = request.get_json()
+		data = request.get_json(silent=True)
+		if not isinstance(data, dict):
+			raise ValidationError("Invalid JSON payload")
 		
-		if not data or "verification_code" not in data:
+		if "verification_code" not in data:
 			raise ValidationError("Missing verification_code in request body")
 		
-		verification_code = data["verification_code"]
+		verification_code = validate_verification_code(str(data["verification_code"]))
 		
 		with Session(get_engine()) as session:
 			# Verify step-up code

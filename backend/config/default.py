@@ -13,6 +13,11 @@ load_dotenv(BASE_DIR / ".env")
 DEFAULT_SECRET_KEY = "change-me-in-production"
 
 
+def _split_csv(value: str) -> list[str]:
+	"""Split a comma-separated environment value into a clean list."""
+	return [item.strip() for item in value.split(",") if item.strip()]
+
+
 class DefaultConfig:
 	"""Default Flask application configuration."""
 
@@ -61,6 +66,46 @@ class DefaultConfig:
 	INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "dev-internal-api-key")
 	ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "dev-admin-token")
 	ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*")
+	CORS_METHODS = _split_csv(os.getenv("CORS_METHODS", "GET,POST,OPTIONS"))
+	CORS_ALLOW_HEADERS = _split_csv(os.getenv("CORS_ALLOW_HEADERS", "Content-Type,X-API-Key,X-Request-ID"))
+	CORS_EXPOSE_HEADERS = _split_csv(
+		os.getenv(
+			"CORS_EXPOSE_HEADERS",
+			"X-RateLimit-Limit,X-RateLimit-Remaining,X-RateLimit-Reset,Retry-After,X-Request-ID",
+		)
+	)
+	CORS_MAX_AGE = int(os.getenv("CORS_MAX_AGE", "3600"))
+	CORS_SUPPORTS_CREDENTIALS = os.getenv("CORS_SUPPORTS_CREDENTIALS", "false").lower() == "true"
+
+	MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(100 * 1024 * 1024)))
+
+	RATE_LIMIT_DEFAULT = os.getenv("RATE_LIMIT_DEFAULT", "300/hour")
+	RATE_LIMIT_REGISTRATION = os.getenv("RATE_LIMIT_REGISTRATION", "5/hour")
+	RATE_LIMIT_UPLOAD = os.getenv("RATE_LIMIT_UPLOAD", "20/hour")
+	RATE_LIMIT_RETRIEVE = os.getenv("RATE_LIMIT_RETRIEVE", "100/hour")
+	RATE_LIMIT_PINNING = os.getenv("RATE_LIMIT_PINNING", "50/hour")
+	RATE_LIMIT_STATUS = os.getenv("RATE_LIMIT_STATUS", "10/hour")
+	RATE_LIMIT_RENEW = os.getenv("RATE_LIMIT_RENEW", "10/hour")
+	RATE_LIMIT_ADMIN = os.getenv("RATE_LIMIT_ADMIN", "100/hour")
+	RATE_LIMIT_TASKS = os.getenv("RATE_LIMIT_TASKS", "60/hour")
+	RATELIMIT_STORAGE_URI = os.getenv(
+		"RATELIMIT_STORAGE_URI",
+		"memory://" if APP_ENV == "testing" else REDIS_URL,
+	)
+	RATELIMIT_HEADERS_ENABLED = os.getenv("RATELIMIT_HEADERS_ENABLED", "true").lower() == "true"
+	RATELIMIT_STRATEGY = os.getenv("RATELIMIT_STRATEGY", "fixed-window")
+
+	SECURITY_HEADER_X_CONTENT_TYPE_OPTIONS = os.getenv(
+		"SECURITY_HEADER_X_CONTENT_TYPE_OPTIONS",
+		"nosniff",
+	)
+	SECURITY_HEADER_X_FRAME_OPTIONS = os.getenv("SECURITY_HEADER_X_FRAME_OPTIONS", "DENY")
+	SECURITY_HEADER_REFERRER_POLICY = os.getenv("SECURITY_HEADER_REFERRER_POLICY", "no-referrer")
+	SECURITY_HEADER_CONTENT_SECURITY_POLICY = os.getenv(
+		"SECURITY_HEADER_CONTENT_SECURITY_POLICY",
+		"default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+	)
+	REQUEST_ID_HEADER = os.getenv("REQUEST_ID_HEADER", "X-Request-ID")
 
 	LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 	LOG_FILE = os.getenv("LOG_FILE", "logs/app.log")

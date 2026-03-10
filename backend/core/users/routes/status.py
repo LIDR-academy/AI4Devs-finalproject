@@ -1,16 +1,17 @@
 """API key status check endpoint."""
 
 from flask import Blueprint, jsonify, request
-from sqlmodel import Session, select
+from sqlmodel import Session
 
-from core import get_engine
-from core.users.models import User
+from core import configured_limit, get_engine
+from core.auth.decorators import find_user_by_api_key
 
 
 def register_routes(bp: Blueprint) -> None:
 	"""Register status endpoint."""
 	
 	@bp.route("/status", methods=["GET", "POST"])
+	@configured_limit("RATE_LIMIT_STATUS")
 	def status():
 		"""Check API key status, even for inactive/revoked keys.
 		
@@ -24,12 +25,12 @@ def register_routes(bp: Blueprint) -> None:
 			# Compatibility route for health-style checks used by existing tests.
 			return jsonify({"status": "active"}), 200
 
-		api_key = request.headers.get("X-API-Key")
+		api_key = request.headers.get("X-API-Key", "").strip()
+		if not api_key:
+			return jsonify({"status": 401, "error": "Missing X-API-Key header"}), 401
 		
 		with Session(get_engine()) as session:
-			user = session.exec(
-				select(User).where(User.api_key == api_key)
-			).first()
+			user = find_user_by_api_key(session, api_key)
 			
 			if not user:
 				return jsonify({

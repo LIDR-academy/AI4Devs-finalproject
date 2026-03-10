@@ -5,10 +5,11 @@ import json
 from flask import Blueprint, jsonify
 from sqlmodel import Session, select
 
-from core import get_engine
+from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user, require_api_key
 from core.common.models import AuditLog
 from core.files.models import File
+from core.files.validators import validate_cid
 from core.tasks.pinning_tasks import pin_content_async, unpin_content_async
 
 
@@ -26,10 +27,12 @@ def register_routes(bp: Blueprint) -> None:
 	"""Register async pinning endpoints."""
 
 	@bp.post("/pin/<string:cid>")
+	@configured_limit("RATE_LIMIT_PINNING")
 	@require_api_key
 	def pin_file(cid: str):
 		"""Queue async pin operation for content CID."""
 		user = get_current_user()
+		cid = validate_cid(cid)
 		with Session(get_engine()) as session:
 			db_file = _get_file_by_cid(session, cid)
 			if db_file is None:
@@ -75,10 +78,12 @@ def register_routes(bp: Blueprint) -> None:
 		), 202
 
 	@bp.post("/unpin/<string:cid>")
+	@configured_limit("RATE_LIMIT_PINNING")
 	@require_api_key
 	def unpin_file(cid: str):
 		"""Queue async unpin operation for content CID."""
 		user = get_current_user()
+		cid = validate_cid(cid)
 		with Session(get_engine()) as session:
 			db_file = _get_file_by_cid(session, cid)
 			if db_file is None:

@@ -8,12 +8,17 @@ from flask import jsonify, request
 from sqlmodel import Session
 from werkzeug.datastructures import FileStorage
 
+from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user, require_api_key
 from core.common.exceptions import ValidationError
 from core.common.models import AuditLog
-from core import get_engine
 from core.files.models import File
-from core.files.validators import generate_safe_filename, validate_file_size, validate_filename
+from core.files.validators import (
+    generate_safe_filename,
+    validate_file_size,
+    validate_filename,
+    validate_mime_type,
+)
 from core.services.ipfs_service import UploadError, ipfs_service
 
 logger = logging.getLogger(__name__)
@@ -26,6 +31,7 @@ def register_routes(bp):
     """Register file upload endpoints to blueprint."""
 
     @bp.post("/upload")
+    @configured_limit("RATE_LIMIT_UPLOAD")
     @require_api_key
     def upload_file() -> tuple:
         user = get_current_user()
@@ -39,6 +45,9 @@ def register_routes(bp):
 
         try:
             validate_filename(file.filename)
+            declared_content_type = (file.content_type or "").strip()
+            if declared_content_type and declared_content_type != "application/octet-stream":
+                validate_mime_type(declared_content_type)
             file_content = file.read()
             file_size = len(file_content)
             validate_file_size(file_size, MAX_FILE_SIZE)
@@ -132,6 +141,7 @@ def register_routes(bp):
             return jsonify({"status": 500, "message": "Internal server error", "error": "internal_error"}), 500
 
     @bp.get("/upload/status/<task_id>")
+    @configured_limit("RATE_LIMIT_TASKS")
     @require_api_key
     def upload_status(task_id: str) -> tuple:
         try:

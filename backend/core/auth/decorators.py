@@ -1,7 +1,9 @@
 """Authentication and authorization decorators for user API keys."""
 
+import hmac
 from functools import wraps
 from typing import TYPE_CHECKING
+
 from flask import request
 from sqlmodel import Session, select
 
@@ -10,6 +12,28 @@ from core.common.exceptions import AuthenticationError, AuthorizationError
 
 if TYPE_CHECKING:
 	from core.users.models import User
+
+
+DUMMY_API_KEY = "ipfs_gw_" + ("0" * 64)
+
+
+def _extract_api_key_from_request() -> str:
+	"""Return the API key header value or raise when it is missing."""
+	api_key = request.headers.get("X-API-Key", "").strip()
+	if not api_key:
+		raise AuthenticationError("Missing X-API-Key header")
+	return api_key
+
+
+def find_user_by_api_key(session: Session, api_key: str) -> "User | None":
+	"""Find a user by API key while performing constant-time value verification."""
+	from core.users.models import User
+
+	candidate = session.exec(select(User).where(User.api_key == api_key)).first()
+	reference_key = candidate.api_key if candidate else DUMMY_API_KEY
+	if not hmac.compare_digest(api_key, reference_key):
+		return None
+	return candidate
 
 
 def require_api_key(f):
@@ -25,17 +49,10 @@ def require_api_key(f):
 	"""
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
-		api_key = request.headers.get("X-API-Key")
-		
-		if not api_key:
-			raise AuthenticationError("Missing X-API-Key header")
+		api_key = _extract_api_key_from_request()
 		
 		with Session(get_engine()) as session:
-			from core.users.models import User
-
-			user = session.exec(
-				select(User).where(User.api_key == api_key)
-			).first()
+			user = find_user_by_api_key(session, api_key)
 			
 			if not user:
 				raise AuthenticationError("Invalid API key")
@@ -64,17 +81,10 @@ def require_admin(f):
 	"""
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
-		api_key = request.headers.get("X-API-Key")
-		
-		if not api_key:
-			raise AuthenticationError("Missing X-API-Key header")
+		api_key = _extract_api_key_from_request()
 		
 		with Session(get_engine()) as session:
-			from core.users.models import User
-
-			user = session.exec(
-				select(User).where(User.api_key == api_key)
-			).first()
+			user = find_user_by_api_key(session, api_key)
 			
 			if not user:
 				raise AuthenticationError("Invalid API key")
@@ -104,17 +114,10 @@ def get_current_user() -> "User":
 	Raises:
 		AuthenticationError: If no valid API key in request.
 	"""
-	api_key = request.headers.get("X-API-Key")
-	
-	if not api_key:
-		raise AuthenticationError("Missing X-API-Key header")
+	api_key = _extract_api_key_from_request()
 	
 	with Session(get_engine()) as session:
-		from core.users.models import User
-
-		user = session.exec(
-			select(User).where(User.api_key == api_key)
-		).first()
+		user = find_user_by_api_key(session, api_key)
 		
 		if not user or user.is_deleted or not user.is_active:
 			raise AuthenticationError("Invalid or inactive API key")

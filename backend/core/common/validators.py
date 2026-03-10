@@ -9,6 +9,7 @@ from email_validator import EmailNotValidError, validate_email as email_validate
 from core.common.exceptions import ValidationError
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+VERIFICATION_CODE_RE = re.compile(r"^\d{6}$")
 MIN_PASSWORD_LEN = 8
 MAX_PASSWORD_LEN = 128
 
@@ -53,5 +54,13 @@ def sanitize_text(value: str) -> str:
 		raise ValidationError("Field cannot be empty")
 	if any(ord(char) < 32 for char in cleaned):
 		raise ValidationError("Invalid characters in input")
+	return cleaned
+
+
+def validate_verification_code(code: str) -> str:
+	"""Validate a six-digit step-up verification code."""
+	cleaned = sanitize_text(code)
+	if not VERIFICATION_CODE_RE.fullmatch(cleaned):
+		raise ValidationError("verification_code must be a 6-digit string")
 	return cleaned
 

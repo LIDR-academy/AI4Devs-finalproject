@@ -10,6 +10,8 @@ class TestingConfig(DefaultConfig):
 	DEBUG = False
 	TESTING = True
 	DATABASE_URL = "sqlite:///:memory:"
+	RATELIMIT_STORAGE_URI = "memory://"
+	RATELIMIT_ENABLED = False
 	USE_MEMORY_VERIFICATION_STORE = True  # Use in-memory Redis adapter for tests
 	USE_MEMORY_FAILED_TASK_STORE = True
 	CELERY_TASK_ALWAYS_EAGER = True
