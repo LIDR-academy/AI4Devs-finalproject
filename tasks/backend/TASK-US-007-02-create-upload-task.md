@@ -2,6 +2,7 @@
 
 Implement the asynchronous upload task used for large file operations.
 [Trello Card](https://trello.com/c/oKAw3jfA)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/7)
 
 ## Parent User Story
 [US-007: Celery Task Queue Setup](../../user-stories/backend/US-007-celery-task-queue.md)

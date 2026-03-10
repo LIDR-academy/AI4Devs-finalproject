@@ -1,6 +1,7 @@
 # US-007: Celery Task Queue Setup
 
 [Trello Card](https://trello.com/c/ADhHq7Fb)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/7)
 
 
 

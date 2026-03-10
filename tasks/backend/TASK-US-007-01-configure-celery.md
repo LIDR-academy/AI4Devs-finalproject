@@ -2,6 +2,7 @@
 
 Set up the Celery foundation for async processing in the backend.
 [Trello Card](https://trello.com/c/AptLG67m)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/7)
 
 ## Parent User Story
 [US-007: Celery Task Queue Setup](../../user-stories/backend/US-007-celery-task-queue.md)

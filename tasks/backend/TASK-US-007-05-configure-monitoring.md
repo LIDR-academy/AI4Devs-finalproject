@@ -2,6 +2,7 @@
 
 Implement failed-task capture/replay flow and operator monitoring for Celery.
 [Trello Card](https://trello.com/c/samR9pAo)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/7)
 
 ## Parent User Story
 [US-007: Celery Task Queue Setup](../../user-stories/backend/US-007-celery-task-queue.md)

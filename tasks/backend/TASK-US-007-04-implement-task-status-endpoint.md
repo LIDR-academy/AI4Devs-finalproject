@@ -2,6 +2,7 @@
 
 Expose API endpoint(s) to query asynchronous task status and results.
 [Trello Card](https://trello.com/c/cfLLta02)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/7)
 
 ## Parent User Story
 [US-007: Celery Task Queue Setup](../../user-stories/backend/US-007-celery-task-queue.md)
