@@ -7,9 +7,9 @@ from sqlmodel import Session, select
 
 from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user, require_api_key
-from core.common.models import AuditLog
 from core.files.models import File
 from core.files.validators import validate_cid
+from core.services.audit_service import queue_audit_log
 from core.tasks.pinning_tasks import pin_content_async, unpin_content_async
 
 
@@ -39,32 +39,26 @@ def register_routes(bp: Blueprint) -> None:
 				return jsonify({"status": 404, "message": "Content not found"}), 404
 
 			if db_file.user_id != user.id:
-				session.add(
-					AuditLog(
-						user_id=user.id,
-						action="file_pin_forbidden",
-						resource_type="file",
-						resource_id=db_file.id,
-						details=json.dumps({"cid": cid, "reason": "ownership_mismatch"}),
-					)
+				queue_audit_log(
+					user_id=user.id,
+					action="file_pin_forbidden",
+					resource_type="file",
+					resource_id=db_file.id,
+					details={"cid": cid, "reason": "ownership_mismatch"},
 				)
-				session.commit()
 				return jsonify({"status": 403, "message": "Access denied to this content"}), 403
 
 			if db_file.pinned:
 				return jsonify({"status": 409, "message": "Content is already pinned"}), 409
 
-			task = pin_content_async.delay(user.id, cid)
-			session.add(
-				AuditLog(
-					user_id=user.id,
-					action="file_pin_queued",
-					resource_type="file",
-					resource_id=db_file.id,
-					details=json.dumps({"cid": cid, "task_id": str(task.id)}),
-				)
+			task = getattr(pin_content_async, "delay")(user.id, cid)
+			queue_audit_log(
+				user_id=user.id,
+				action="file_pin_queued",
+				resource_type="file",
+				resource_id=db_file.id,
+				details={"cid": cid, "task_id": str(task.id)},
 			)
-			session.commit()
 		return jsonify(
 			{
 				"status": 202,
@@ -90,32 +84,26 @@ def register_routes(bp: Blueprint) -> None:
 				return jsonify({"status": 404, "message": "Content not found"}), 404
 
 			if db_file.user_id != user.id:
-				session.add(
-					AuditLog(
-						user_id=user.id,
-						action="file_unpin_forbidden",
-						resource_type="file",
-						resource_id=db_file.id,
-						details=json.dumps({"cid": cid, "reason": "ownership_mismatch"}),
-					)
+				queue_audit_log(
+					user_id=user.id,
+					action="file_unpin_forbidden",
+					resource_type="file",
+					resource_id=db_file.id,
+					details={"cid": cid, "reason": "ownership_mismatch"},
 				)
-				session.commit()
 				return jsonify({"status": 403, "message": "Access denied to this content"}), 403
 
 			if not db_file.pinned:
 				return jsonify({"status": 409, "message": "Content is already unpinned"}), 409
 
-			task = unpin_content_async.delay(user.id, cid)
-			session.add(
-				AuditLog(
-					user_id=user.id,
-					action="file_unpin_queued",
-					resource_type="file",
-					resource_id=db_file.id,
-					details=json.dumps({"cid": cid, "task_id": str(task.id)}),
-				)
+			task = getattr(unpin_content_async, "delay")(user.id, cid)
+			queue_audit_log(
+				user_id=user.id,
+				action="file_unpin_queued",
+				resource_type="file",
+				resource_id=db_file.id,
+				details={"cid": cid, "task_id": str(task.id)},
 			)
-			session.commit()
 		return jsonify(
 			{
 				"status": 202,

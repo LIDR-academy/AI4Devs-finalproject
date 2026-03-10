@@ -70,8 +70,9 @@ class TestUserRegistration(unittest.TestCase):
             self.assertIsNotNone(user)
             self.assertIsNotNone(user.id)
             logs = session.exec(select(AuditLog).where(AuditLog.user_id == user.id)).all()
-            self.assertEqual(len(logs), 1)
-            self.assertEqual(logs[0].action, "user_registered")
+            self.assertGreaterEqual(len(logs), 1)
+            self.assertTrue(any(log.action == "user_registered" for log in logs))
+            self.assertTrue(any(log.action == "audit_configuration_updated" for log in logs))
 
     def test_register_duplicate_email_returns_422(self) -> None:
         """Registering with an existing email should fail with 422."""

@@ -161,9 +161,12 @@ def register_request_hooks(app: Flask) -> None:
 	@app.before_request
 	def assign_request_id() -> None:
 		g.request_id = _sanitize_request_id(request.headers.get(app.config.get("REQUEST_ID_HEADER", "X-Request-ID"))) or uuid4().hex
+		g.pending_audit_events = []
 
 	@app.after_request
 	def apply_security_headers(response):
+		from core.services.audit_service import flush_pending_audit_logs
+
 		request_id_header = app.config.get("REQUEST_ID_HEADER", "X-Request-ID")
 		request_id = get_request_id()
 		if request_id:
@@ -188,6 +191,11 @@ def register_request_hooks(app: Flask) -> None:
 				response.status_code,
 				request.remote_addr,
 			)
+
+		try:
+			flush_pending_audit_logs()
+		except Exception:
+			app.logger.exception("Failed to flush deferred audit log events")
 
 		return response
 

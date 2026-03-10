@@ -14,20 +14,20 @@ As a **system administrator**, I want all significant actions to be logged in an
 ⭐⭐ Medium
 
 ## Acceptance Criteria
-- [ ] All user actions are logged (register, upload, retrieve, pin, unpin)
-- [ ] All admin actions are logged (revoke, reactivate)
-- [ ] AuditLog entries include user_id, action, timestamp, details
-- [ ] Details field captures relevant context (CID, file size, IP address)
-- [ ] IP retention window is enforced via configuration (default: 90 days)
-- [ ] After retention, raw IPs are redacted to irreversible hash or masked form (IPv4 last octet masked / IPv6 prefix-only)
-- [ ] Redaction is append-only: original entry is retained, marked redacted, and a redaction event is written to the audit trail
-- [ ] `GET /admin/audit-logs` enforces admin-only access for viewing raw vs. masked IP values
-- [ ] Retention/redaction configuration changes are logged for compliance
-- [ ] Audit logs are accessible only by administrators
-- [ ] `GET /admin/audit-logs` endpoint returns paginated logs
-- [ ] Logs can be filtered by user, action type, date range
-- [ ] Audit logs are never deleted (append-only)
-- [ ] Performance impact is minimized (async logging)
+- [x] All user actions are logged (register, upload, retrieve, pin, unpin)
+- [x] All admin actions are logged (revoke, reactivate)
+- [x] AuditLog entries include user_id, action, timestamp, details
+- [x] Details field captures relevant context (CID, file size, IP address)
+- [x] IP retention window is enforced via configuration (default: 90 days)
+- [x] After retention, raw IPs are redacted to irreversible hash or masked form (IPv4 last octet masked / IPv6 prefix-only)
+- [x] Redaction is append-only: original entry is retained, marked redacted, and a redaction event is written to the audit trail
+- [x] `GET /admin/audit-logs` enforces admin-only access for viewing raw vs. masked IP values
+- [x] Retention/redaction configuration changes are logged for compliance
+- [x] Audit logs are accessible only by administrators
+- [x] `GET /admin/audit-logs` endpoint returns paginated logs
+- [x] Logs can be filtered by user, action type, date range
+- [x] Audit logs are never deleted (append-only)
+- [x] Performance impact is minimized (async logging)
 
 ## API Specification (Admin Only)
 ```
@@ -103,7 +103,7 @@ Renewed/raw view behavior:
 4 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Completed
 
 ## Workflow Diagram
 ```mermaid

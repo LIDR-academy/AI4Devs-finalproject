@@ -9,7 +9,7 @@ from sqlmodel import Session
 
 from core import get_engine
 from core.files.models import File
-from core.common.models import AuditLog
+from core.services.audit_service import add_audit_log
 from core.services.ipfs_service import ipfs_service, UploadError
 
 logger = logging.getLogger(__name__)
@@ -75,20 +75,20 @@ def upload_file_async(
             session.add(db_file)
             
             # Log to audit trail
-            audit = AuditLog(
+            add_audit_log(
+                session,
                 user_id=user_id,
                 action="file_upload",
-                details=json.dumps(
-                    {
-                        "cid": result.cid,
-                        "filename": original_filename,
-                        "size": file_size,
-                        "status": "completed",
-                        "task_id": self.request.id,
-                    }
-                ),
+                resource_type="file",
+                resource_id=db_file.id,
+                details={
+                    "cid": result.cid,
+                    "filename": original_filename,
+                    "size": file_size,
+                    "status": "completed",
+                    "task_id": self.request.id,
+                },
             )
-            session.add(audit)
             session.commit()
             
             logger.info(
@@ -114,19 +114,17 @@ def upload_file_async(
         except self.MaxRetriesExceededError:
             # Log final failure
             with Session(get_engine()) as session:
-                audit = AuditLog(
+                add_audit_log(
+                    session,
                     user_id=user_id,
                     action="file_upload",
-                    details=json.dumps(
-                        {
-                            "filename": original_filename,
-                            "status": "failed",
-                            "error": str(e),
-                            "task_id": self.request.id,
-                        }
-                    ),
+                    details={
+                        "filename": original_filename,
+                        "status": "failed",
+                        "error": str(e),
+                        "task_id": self.request.id,
+                    },
                 )
-                session.add(audit)
                 session.commit()
             
             return {
@@ -142,19 +140,17 @@ def upload_file_async(
         )
         
         with Session(get_engine()) as session:
-            audit = AuditLog(
+            add_audit_log(
+                session,
                 user_id=user_id,
                 action="file_upload",
-                details=json.dumps(
-                    {
-                        "filename": original_filename,
-                        "status": "failed",
-                        "error": f"Unexpected error: {str(e)}",
-                        "task_id": self.request.id,
-                    }
-                ),
+                details={
+                    "filename": original_filename,
+                    "status": "failed",
+                    "error": f"Unexpected error: {str(e)}",
+                    "task_id": self.request.id,
+                },
             )
-            session.add(audit)
             session.commit()
         
         return {

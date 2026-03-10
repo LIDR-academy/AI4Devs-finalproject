@@ -69,6 +69,14 @@ class TestModelRelationships(unittest.TestCase):
         foreign_key_targets = {fk.target_fullname for fk in audit_table.foreign_keys}
         self.assertIn("users.id", foreign_key_targets)
 
+    def test_audit_log_includes_redaction_columns(self) -> None:
+        """Audit log table should expose request-correlation and redaction metadata."""
+        audit_columns = set(getattr(AuditLog, "__table__").columns.keys())
+        self.assertIn("request_id", audit_columns)
+        self.assertIn("ip_redacted", audit_columns)
+        self.assertIn("ip_redaction_method", audit_columns)
+        self.assertIn("ip_redacted_at", audit_columns)
+
 
 if __name__ == "__main__":
     unittest.main()

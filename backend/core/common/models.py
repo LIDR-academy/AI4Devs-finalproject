@@ -24,5 +24,9 @@ class AuditLog(SQLModel, table=True):
     details: str = Field(default="{}", nullable=False)
     ip_address: Optional[str] = Field(default=None, max_length=45)
     user_agent: Optional[str] = Field(default=None, max_length=255)
+    request_id: Optional[str] = Field(default=None, max_length=128, index=True)
+    ip_redacted: bool = Field(default=False, nullable=False, index=True)
+    ip_redaction_method: Optional[str] = Field(default=None, max_length=64)
+    ip_redacted_at: Optional[datetime] = Field(default=None)
 
     user: "User" = Relationship(back_populates="audit_logs")

@@ -3,7 +3,6 @@
 import logging
 from datetime import datetime
 from typing import Optional
-import json
 
 from flask import jsonify, request, Response, stream_with_context
 from sqlmodel import Session
@@ -11,7 +10,6 @@ from sqlmodel import Session
 from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user
 from core.common.exceptions import ValidationError
-from core.common.models import AuditLog
 from core.files.authorization import check_file_access_by_cid
 from core.files.cache_headers import (
 	add_cache_headers,
@@ -21,6 +19,7 @@ from core.files.cache_headers import (
 )
 from core.files.mime_types import detect_mime_type, get_content_disposition
 from core.files.validators import validate_cid
+from core.services.audit_service import add_audit_log
 from core.services.ipfs_service import ipfs_service, RetrievalError
 from core.users.models import User
 
@@ -57,18 +56,17 @@ def log_file_retrieval(
 	# Get request metadata
 	ip_address = request.remote_addr
 	user_agent = request.headers.get("User-Agent", "Unknown")
-	
-	audit_entry = AuditLog(
+
+	add_audit_log(
+		session,
 		user_id=user.id,
 		action=action,
 		resource_type="file",
 		resource_id=file_id,
 		ip_address=ip_address,
 		user_agent=user_agent,
-		details=json.dumps({"status": status, "details": details or ""}),
+		details={"status": status, "details": details or ""},
 	)
-	
-	session.add(audit_entry)
 	session.commit()
 	
 	logger.debug(
@@ -237,6 +235,7 @@ def register_routes(bp):
 			except ValidationError as e:
 				logger.warning(f"Invalid retrieval request for CID {cid}: {e}")
 				return jsonify({"error": str(e)}), 422
+			except Exception as e:
 				logger.error(f"Unexpected error during file retrieval: {e}", exc_info=True)
 				return jsonify({"error": "Internal server error"}), 500
 
