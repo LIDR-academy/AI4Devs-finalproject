@@ -1,8 +1,9 @@
 """File validation utilities for IPFS gateway uploads."""
 
-import os
-import uuid
 import logging
+import os
+import re
+import uuid
 from pathlib import Path
 from typing import Optional, Set
 
@@ -47,6 +48,24 @@ DANGEROUS_PATTERNS = [
     "\\",
     "\x00",
 ]
+
+# Conservative CID validation that supports common base58/base32 values.
+CID_PATTERN = re.compile(r"^[A-Za-z0-9]{3,128}$")
+
+
+def validate_cid(cid: str) -> str:
+    """Validate a content identifier used in file routes."""
+    if not isinstance(cid, str):
+        raise ValidationError("CID must be a string")
+
+    cleaned = cid.strip()
+    if not cleaned:
+        raise ValidationError("CID is required")
+
+    if not CID_PATTERN.fullmatch(cleaned):
+        raise ValidationError("CID format is invalid")
+
+    return cleaned
 
 
 def validate_filename(filename: str) -> None:

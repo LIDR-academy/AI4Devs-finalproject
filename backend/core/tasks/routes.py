@@ -7,6 +7,7 @@ from typing import Any
 from celery.result import AsyncResult
 from flask import Blueprint, jsonify, request
 
+from core import configured_limit
 from core.auth.decorators import require_api_key
 from core.tasks.failed_tasks import list_failed_tasks, replay_failed_task
 
@@ -27,6 +28,7 @@ def create_tasks_blueprint() -> Blueprint:
     bp = Blueprint("tasks", __name__, url_prefix="/api/v1/tasks")
 
     @bp.get("/<string:task_id>/status")
+    @configured_limit("RATE_LIMIT_TASKS")
     @require_api_key
     def get_task_status(task_id: str):
         """Return Celery task state and result details."""
@@ -65,6 +67,7 @@ def create_tasks_blueprint() -> Blueprint:
         return jsonify({"status": 200, "data": payload}), 200
 
     @bp.get("/failed")
+    @configured_limit("RATE_LIMIT_ADMIN")
     @require_api_key
     def get_failed_tasks():
         """List failed tasks captured in the application-level failed queue."""
@@ -77,6 +80,7 @@ def create_tasks_blueprint() -> Blueprint:
         return jsonify({"status": 200, "data": {"items": items, "limit": limit, "offset": offset}}), 200
 
     @bp.post("/failed/<string:failure_id>/replay")
+    @configured_limit("RATE_LIMIT_ADMIN")
     @require_api_key
     def replay_failed_task_route(failure_id: str):
         """Replay a failed task by failure identifier."""

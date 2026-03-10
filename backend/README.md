@@ -108,6 +108,48 @@ ps aux | grep -E "python application.py|celery|redis-server"
 python -m unittest discover -s ../tests/backend -p "test_*.py"
 ```
 
+## Security Controls
+
+The backend now applies centralized rate limiting, request tracing, and browser-hardening response headers.
+
+### Rate limiting
+
+- Registration uses a per-IP limit.
+- Upload, retrieve, pinning, status, renew, admin, and task endpoints use API-key-aware limits.
+- Limit values are configured through environment variables such as `RATE_LIMIT_UPLOAD` and `RATE_LIMIT_ADMIN`.
+- When enabled, responses expose `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After`.
+
+### Request tracing
+
+- Clients can supply `X-Request-ID`.
+- Invalid request IDs are replaced with a generated identifier.
+- The request ID is returned in the response headers and included in centralized error payloads.
+
+### Security headers
+
+All API responses include:
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Referrer-Policy: no-referrer`
+- `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`
+
+### CORS configuration
+
+Configure allowed browser access with these environment variables:
+
+```bash
+ALLOWED_ORIGINS=https://frontend.example.com
+CORS_METHODS=GET,POST,OPTIONS
+CORS_ALLOW_HEADERS=Content-Type,X-API-Key,X-Request-ID
+CORS_EXPOSE_HEADERS=X-RateLimit-Limit,X-RateLimit-Remaining,X-RateLimit-Reset,Retry-After,X-Request-ID
+CORS_MAX_AGE=3600
+```
+
+### Payload limits
+
+Set `MAX_CONTENT_LENGTH` to reject oversized request bodies before route processing. Oversized requests return `413 Request payload too large` and include the request ID in the JSON error response.
+
 ## API Documentation
 
 ### File Upload (US-005)

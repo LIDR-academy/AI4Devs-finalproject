@@ -8,8 +8,9 @@ import json
 from flask import jsonify, request, Response, stream_with_context
 from sqlmodel import Session
 
-from core import get_engine
+from core import configured_limit, get_engine
 from core.auth.decorators import get_current_user
+from core.common.exceptions import ValidationError
 from core.common.models import AuditLog
 from core.files.authorization import check_file_access_by_cid
 from core.files.cache_headers import (
@@ -19,6 +20,7 @@ from core.files.cache_headers import (
 	should_return_304,
 )
 from core.files.mime_types import detect_mime_type, get_content_disposition
+from core.files.validators import validate_cid
 from core.services.ipfs_service import ipfs_service, RetrievalError
 from core.users.models import User
 
@@ -79,9 +81,11 @@ def register_routes(bp):
 	"""Register file retrieval endpoints to blueprint."""
 	
 	@bp.route("/retrieve/<string:cid>", methods=["GET"])
+	@configured_limit("RATE_LIMIT_RETRIEVE")
 	def retrieve_file_by_cid(cid: str):
 		"""Retrieve a file from IPFS by its Content Identifier (CID)."""
 		user = get_current_user()
+		cid = validate_cid(cid)
 
 		for session in get_session():
 			try:
@@ -230,7 +234,9 @@ def register_routes(bp):
 					
 					return jsonify({"error": "Failed to retrieve file"}), 500
 			
-			except Exception as e:
+			except ValidationError as e:
+				logger.warning(f"Invalid retrieval request for CID {cid}: {e}")
+				return jsonify({"error": str(e)}), 422
 				logger.error(f"Unexpected error during file retrieval: {e}", exc_info=True)
 				return jsonify({"error": "Internal server error"}), 500
 

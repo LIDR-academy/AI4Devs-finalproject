@@ -1,9 +1,11 @@
 """Unit tests for user authentication decorators."""
 
+import hmac
 import tempfile
 import unittest
 from pathlib import Path
 import sys
+from unittest.mock import patch
 
 from sqlmodel import SQLModel, Session
 
@@ -108,6 +110,16 @@ class TestRequireApiKey(unittest.TestCase):
 		)
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(response.json["message"], "success")
+
+	@patch("core.auth.decorators.hmac.compare_digest", wraps=hmac.compare_digest)
+	def test_valid_api_key_uses_constant_time_compare(self, compare_digest_mock):
+		"""Decorator should use constant-time comparison for API key validation."""
+		response = self.client.get(
+			"/protected",
+			headers={"X-API-Key": "test-api-key-active"}
+		)
+		self.assertEqual(response.status_code, 200)
+		compare_digest_mock.assert_called()
 	
 	def test_inactive_api_key(self):
 		"""Test request with inactive user API key."""

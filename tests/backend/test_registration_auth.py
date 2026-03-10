@@ -28,13 +28,18 @@ class TestUserRegistration(unittest.TestCase):
         class RegistrationTestConfig(TestingConfig):
             DATABASE_URL = f"sqlite:///{db_path}"
             TESTING = True
+            RATELIMIT_ENABLED = True
 
         self.app = create_app(RegistrationTestConfig)
         self.client = self.app.test_client()
-        SQLModel.metadata.create_all(get_engine())
+        engine = get_engine()
+        self.assertIsNotNone(engine)
+        SQLModel.metadata.create_all(engine)
 
     def tearDown(self) -> None:
-        SQLModel.metadata.drop_all(get_engine())
+        engine = get_engine()
+        self.assertIsNotNone(engine)
+        SQLModel.metadata.drop_all(engine)
         self.temp_dir.cleanup()
 
     def test_register_success_returns_api_key(self) -> None:
@@ -63,6 +68,7 @@ class TestUserRegistration(unittest.TestCase):
         with Session(get_engine()) as session:
             user = session.exec(select(User).where(User.email == "audit@example.com")).first()
             self.assertIsNotNone(user)
+            self.assertIsNotNone(user.id)
             logs = session.exec(select(AuditLog).where(AuditLog.user_id == user.id)).all()
             self.assertEqual(len(logs), 1)
             self.assertEqual(logs[0].action, "user_registered")
