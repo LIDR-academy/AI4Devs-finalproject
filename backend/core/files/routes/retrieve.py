@@ -82,7 +82,63 @@ def register_routes(bp):
 	@bp.route("/retrieve/<string:cid>", methods=["GET"])
 	@configured_limit("RATE_LIMIT_RETRIEVE")
 	def retrieve_file_by_cid(cid: str):
-		"""Retrieve a file from IPFS by its Content Identifier (CID)."""
+		"""Retrieve a file from IPFS by CID.
+		---
+		tags:
+		  - Files
+		summary: Retrieve file by CID
+		description: Retrieve and stream file content for a CID owned by the authenticated user.
+		produces:
+		  - application/octet-stream
+		  - application/json
+		parameters:
+		  - in: path
+		    name: cid
+		    type: string
+		    required: true
+		    example: bafybeigdyrzt5x6z6xj5ir3f6m42cdbw2m5g3m6twjv7mmyr4y6nblfuca
+		  - in: query
+		    name: download
+		    type: string
+		    required: false
+		    example: "1"
+		responses:
+		  200:
+		    description: File stream returned successfully
+		    headers:
+		      Content-Disposition:
+		        type: string
+		      ETag:
+		        type: string
+		  304:
+		    description: Client cache is still valid
+		  401:
+		    description: Invalid API key
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  403:
+		    description: Access denied for requested CID
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  404:
+		    description: File not found
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  422:
+		    description: Invalid CID
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  500:
+		    description: Retrieval error
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
+		"""
 		user = get_current_user()
 		cid = validate_cid(cid)
 

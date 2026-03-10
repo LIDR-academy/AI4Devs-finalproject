@@ -1,10 +1,9 @@
 """File upload routes for IPFS gateway."""
 
-import json
 import logging
 from io import BytesIO
 
-from flask import jsonify, request
+from flask import request
 from sqlmodel import Session
 from werkzeug.datastructures import FileStorage
 
@@ -35,6 +34,88 @@ def register_routes(bp):
     @configured_limit("RATE_LIMIT_UPLOAD")
     @require_api_key
     def upload_file() -> tuple:
+        """Upload a file to IPFS.
+        ---
+        tags:
+          - Files
+        summary: Upload file
+        description: Upload a file to IPFS/Filebase; large files are queued asynchronously.
+        consumes:
+          - multipart/form-data
+        produces:
+          - application/json
+        parameters:
+          - in: formData
+            name: file
+            type: file
+            required: true
+            description: File to upload
+        responses:
+          201:
+            description: File uploaded immediately
+            schema:
+              allOf:
+                - $ref: '#/definitions/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        cid:
+                          type: string
+                          example: bafybeigdyrzt5x6...
+                        original_filename:
+                          type: string
+                          example: report.pdf
+                        size:
+                          type: integer
+                          example: 1048576
+                        pinned:
+                          type: boolean
+                          example: true
+          202:
+            description: File queued for async upload
+            schema:
+              allOf:
+                - $ref: '#/definitions/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        task_id:
+                          type: string
+                          example: 2b7e1516-28ae-4a6f-bf6f-0f4d9f152f59
+                        status_url:
+                          type: string
+                          example: /api/v1/files/upload/status/2b7e1516-28ae-4a6f-bf6f-0f4d9f152f59
+          400:
+            description: Missing file or empty selection
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          401:
+            description: Invalid API key
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          413:
+            description: File too large
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          422:
+            description: Validation error
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          503:
+            description: Upload service unavailable
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          429:
+            description: Rate limit exceeded
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+        security:
+          - ApiKeyAuth: []
+        """
         user = get_current_user()
         user_id = int(user.id) if user.id is not None else 0
 
@@ -136,6 +217,53 @@ def register_routes(bp):
     @configured_limit("RATE_LIMIT_TASKS")
     @require_api_key
     def upload_status(task_id: str) -> tuple:
+        """Get status of an asynchronous file upload task.
+        ---
+        tags:
+          - Tasks
+        summary: Upload task status
+        produces:
+          - application/json
+        parameters:
+          - in: path
+            name: task_id
+            type: string
+            required: true
+            example: 2b7e1516-28ae-4a6f-bf6f-0f4d9f152f59
+        responses:
+          200:
+            description: Task state information
+            schema:
+              allOf:
+                - $ref: '#/definitions/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        task_id:
+                          type: string
+                        state:
+                          type: string
+                          enum: [PENDING, STARTED, SUCCESS, FAILURE, RETRY]
+                        progress:
+                          type: integer
+                          example: 50
+          401:
+            description: Invalid API key
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          429:
+            description: Rate limit exceeded
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          500:
+            description: Task failed or status error
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+        security:
+          - ApiKeyAuth: []
+        """
         try:
             from celery.result import AsyncResult
             from core.celery_worker import celery
@@ -168,4 +296,3 @@ def register_routes(bp):
         except Exception as exc:
             logger.error("Error retrieving task status %s: %s", task_id, exc)
             return error_response(500, "Unable to retrieve task status", code="TASK_STATUS_ERROR", details={"task_id": task_id})
-

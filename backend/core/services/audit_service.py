@@ -7,7 +7,7 @@ import ipaddress
 import json
 import math
 from datetime import datetime
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import arrow
 from flask import current_app, g, has_app_context, has_request_context, request
@@ -16,7 +16,9 @@ from sqlmodel import Session, select
 
 from core import get_engine, get_request_id
 from core.common.models import AuditLog
-from core.users.models import User
+
+if TYPE_CHECKING:
+	from core.users.models import User
 
 _PENDING_AUDIT_EVENTS_KEY = "pending_audit_events"
 _AUDIT_CONFIGURATION_ACTION = "audit_configuration_updated"
@@ -302,6 +304,8 @@ def query_audit_logs(
 	include_raw_ip: bool = False,
 ) -> dict[str, Any]:
 	"""Query and paginate audit logs for the admin API."""
+	from core.users.models import User
+
 	redact_expired_audit_logs()
 	engine = get_engine()
 	if engine is None:

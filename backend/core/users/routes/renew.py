@@ -20,10 +20,38 @@ def register_routes(bp: Blueprint) -> None:
 	@configured_limit("RATE_LIMIT_RENEW")
 	@require_api_key
 	def renew_challenge():
-		"""Initiate API key renewal with step-up verification challenge.
-		
-		Returns:
-			202 response indicating verification code sent.
+		"""Initiate API key renewal verification challenge.
+		---
+		tags:
+		  - Users
+		summary: Request renewal challenge
+		description: Generate a short-lived verification code used to confirm API key renewal.
+		produces:
+		  - application/json
+		responses:
+		  202:
+		    description: Verification challenge generated
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		        - type: object
+		          properties:
+		            status:
+		              type: integer
+		              example: 202
+		            message:
+		              type: string
+		              example: Verification code sent
+		  401:
+		    description: Missing or invalid API key
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
 		"""
 		user = get_current_user()
 		
@@ -44,13 +72,50 @@ def register_routes(bp: Blueprint) -> None:
 	@configured_limit("RATE_LIMIT_RENEW")
 	@require_api_key
 	def renew():
-		"""Renew API key with step-up verification.
-		
-		Request body must include:
-			- verification_code: 6-digit code from challenge
-		
-		Returns:
-			New API key on successful verification.
+		"""Renew API key using verification code.
+		---
+		tags:
+		  - Users
+		summary: Renew API key
+		description: Rotate the current API key after validating the renewal verification code.
+		consumes:
+		  - application/json
+		produces:
+		  - application/json
+		parameters:
+		  - in: body
+		    name: body
+		    required: true
+		    schema:
+		      $ref: '#/definitions/VerificationRequest'
+		responses:
+		  200:
+		    description: API key renewed successfully
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		        - type: object
+		          properties:
+		            data:
+		              type: object
+		              properties:
+		                api_key:
+		                  type: string
+		                  example: ipfs_gw_abcdef0123456789
+		  401:
+		    description: Invalid API key or verification code
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  422:
+		    description: Invalid request payload
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
 		"""
 		user = get_current_user()
 		data = request.get_json(silent=True)
