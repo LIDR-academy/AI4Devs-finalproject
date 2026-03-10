@@ -312,16 +312,17 @@ El backend cuenta con una suite de pruebas organizada en:
 - `tests/backend/factories/`: factorias de datos de prueba (`factory-boy`).
 - `tests/backend/cassettes/`: grabaciones HTTP de VCR para reproducibilidad.
 
-Comandos principales:
+Comandos principales (ejecutar desde la **raíz del proyecto**):
 
 ```bash
-# Unit tests
+# Pruebas unitarias
 python -m unittest discover -s tests/backend/unit -p "test_*.py" -v
 
-# E2E tests (requiere backend/.env y RUN_E2E_TESTS=1)
+# Pruebas E2E contra servicios reales (requiere backend/.env y RUN_E2E_TESTS=1)
+# Asegúrate de que FILEBASE_ACCESS_KEY, FILEBASE_SECRET_KEY, FILEBASE_BUCKET y REDIS_URL estén en backend/.env
 RUN_E2E_TESTS=1 python -m unittest discover -s tests/backend/e2e -p "test_*.py" -v
 
-# Coverage (objetivo mínimo 80%)
+# Cobertura (objetivo mínimo 80%)
 coverage run -m unittest discover -s tests/backend/unit -p "test_*.py"
 coverage report
 ```

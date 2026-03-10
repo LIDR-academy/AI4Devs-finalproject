@@ -104,11 +104,14 @@ ps aux | grep -E "python application.py|celery|redis-server"
 
 ## Tests
 
+All test commands must be run from the **`backend/`** directory (i.e. after `cd backend`).
+
 ```bash
 # Run all backend unit tests
 python -m unittest discover -s ../tests/backend/unit -p "test_*.py" -v
 
-# Optional: run e2e tests with real Filebase/Redis from backend/.env
+# Run e2e tests against real services (requires backend/.env and RUN_E2E_TESTS=1)
+# Ensure FILEBASE_ACCESS_KEY, FILEBASE_SECRET_KEY, FILEBASE_BUCKET and REDIS_URL are set in backend/.env
 RUN_E2E_TESTS=1 python -m unittest discover -s ../tests/backend/e2e -p "test_*.py" -v
 
 # Coverage gate (minimum 80%)
