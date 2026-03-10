@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% set active = "prompts" %}
+{% block title %}Prompts · Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .version-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .version-card.active-version { border-color: rgba(34,197,94,0.4); }
+  .version-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .version-header:hover { background: var(--surface2); }
+  .version-left { display: flex; align-items: center; gap: 12px; }
+  .version-number {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text3);
+    width: 36px;
+    text-align: center;
+  }
+  .version-card.active-version .version-number { color: var(--green); }
+  .version-meta { }
+  .version-title { font-size: 13px; color: var(--text); margin-bottom: 2px; }
+  .version-sub { font-size: 11px; color: var(--text3); }
+  .version-body {
+    padding: 16px 18px;
+    display: none;
+    border-top: 1px solid var(--border);
+  }
+  .version-body.expanded { display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Historial de Prompts</div>
+    <div class="topbar-sub">Versionado completo del system prompt del chatbot</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-sm" onclick="loadPrompts()">↻ Actualizar</button>
+  </div>
+</div>
+
+<div class="content">
+  <div id="statsRow" class="grid-3" style="margin-bottom:20px"></div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header">
+      <span class="card-title">⚡ Prompt activo</span>
+      <span class="badge badge-active">EN USO</span>
+    </div>
+    <div class="card-body">
+      <div class="code-block" id="activePromptContent" style="min-height:80px">
+        <div class="loading"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Todas las versiones</span>
+      <span id="totalVersions" style="font-size:11px;color:var(--text3)">—</span>
+    </div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:10px" id="versionList">
+      <div style="text-align:center;padding:24px;color:var(--text3)">
+        <div class="loading"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadPrompts() {
+  try {
+    const [prompts, active] = await Promise.all([
+      apiCall('/api/v1/prompts'),
+      apiCall('/api/v1/prompts/active').catch(() => null)
+    ]);
+
+    document.getElementById('totalVersions').textContent = `${prompts.length} versiones`;
+
+    // Stats
+    const humanChanges = prompts.filter(p => p.created_by === 'admin').length;
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">Total versiones</div>
+        <div class="stat-value">${prompts.length}</div>
+        <div class="stat-sub">desde el inicio</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mejoras aplicadas</div>
+        <div class="stat-value" style="color:var(--green)">${humanChanges}</div>
+        <div class="stat-sub">por el admin vía meta-agente</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Versión activa</div>
+        <div class="stat-value" style="color:var(--accent2)">v${active ? active.version_number : '—'}</div>
+        <div class="stat-sub">prompt en producción</div>
+      </div>
+    `;
+
+    // Active prompt
+    if (active) {
+      document.getElementById('activePromptContent').textContent = active.content;
+    }
+
+    // Version list
+    const list = document.getElementById('versionList');
+    if (prompts.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="icon">⚡</div><p>Sin versiones</p></div>`;
+      return;
+    }
+
+    list.innerHTML = prompts.map(p => `
+      <div class="version-card ${p.is_active ? 'active-version' : ''}">
+        <div class="version-header" onclick="toggleVersion('v${p.version_number}')">
+          <div class="version-left">
+            <div class="version-number">v${p.version_number}</div>
+            <div class="version-meta">
+              <div class="version-title">
+                ${p.is_active ? '✅ Versión activa' : 'Versión anterior'}
+                ${p.feedback_analysis_id
+                  ? `<span style="margin-left:6px;font-size:10px;color:var(--accent2)">· generada por meta-agente</span>`
+                  : `<span style="margin-left:6px;font-size:10px;color:var(--text3)">· prompt inicial</span>`}
+              </div>
+              <div class="version-sub">
+                Creado por <strong>${p.created_by}</strong> · ${timeAgo(p.created_at)}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${!p.is_active ? `<button class="btn btn-ghost btn-sm"
+              onclick="event.stopPropagation(); activateVersion('${p.id}', ${p.version_number})">
+              Activar
+            </button>` : '<span class="badge badge-active">ACTIVA</span>'}
+            <span style="color:var(--text3);font-size:14px" id="chevron-v${p.version_number}">▼</span>
+          </div>
+        </div>
+        <div class="version-body" id="body-v${p.version_number}">
+          <div class="code-block">${p.content}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function toggleVersion(id) {
+  const body = document.getElementById(`body-${id}`);
+  const chevron = document.getElementById(`chevron-${id}`);
+  const isExpanded = body.classList.contains('expanded');
+  body.classList.toggle('expanded', !isExpanded);
+  chevron.textContent = isExpanded ? '▼' : '▲';
+}
+
+async function activateVersion(promptId, versionNum) {
+  if (!confirm(`¿Activar la versión v${versionNum}? El chatbot usará este prompt inmediatamente.`)) return;
+  try {
+    await apiCall(`/api/v1/prompts/${promptId}/activate`, 'POST');
+    showToast(`✅ Versión v${versionNum} activada correctamente`);
+    loadPrompts();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+loadPrompts();
+</script>
+{% endblock %}

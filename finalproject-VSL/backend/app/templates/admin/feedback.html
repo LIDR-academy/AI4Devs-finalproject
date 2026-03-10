@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+{% set active = "feedback" %}
+{% block title %}Feedback · Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .analysis-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+  .analysis-header {
+    padding: 12px 16px;
+    background: rgba(59,130,246,0.08);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--accent2);
+    font-weight: 500;
+  }
+  .analysis-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .analysis-section-title { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+
+  .prompt-diff {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .diff-col { }
+  .diff-label { font-size: 10px; margin-bottom: 6px; }
+  .diff-old .diff-label { color: var(--red); }
+  .diff-new .diff-label { color: var(--green); }
+  .diff-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    min-height: 100px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 700px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0;
+    background: var(--surface);
+    z-index: 1;
+  }
+  .modal-title { font-family: var(--sans); font-size: 14px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; }
+  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 8px; justify-content: flex-end;
+    position: sticky; bottom: 0;
+    background: var(--surface);
+  }
+
+  .info-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .info-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    flex: 1;
+  }
+  .info-block .label { font-size: 10px; color: var(--text3); margin-bottom: 3px; letter-spacing: 0.5px; }
+  .info-block .value { font-size: 13px; color: var(--text); line-height: 1.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Feedback del Administrador</div>
+    <div class="topbar-sub">Gestión del ciclo de mejora continua</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-sm" onclick="loadFeedback()">↻ Actualizar</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Feedbacks registrados</span>
+      <span id="fbCount" style="font-size:11px;color:var(--text3)">Cargando...</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Estado</th>
+            <th>Problema reportado</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="fbTable">
+          <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3)">
+            <div class="loading"><span></span><span></span><span></span></div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Analysis Modal -->
+<div class="modal-overlay" id="analysisModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🤖 Meta-Agente — Análisis de Feedback</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div style="text-align:center;padding:40px;color:var(--text3)">
+        <div class="loading"><span></span><span></span><span></span></div>
+        <div style="margin-top:12px;font-size:12px">Analizando con el meta-agente...</div>
+      </div>
+    </div>
+    <div class="modal-footer" id="modalFooter" style="display:none">
+      <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+      <button class="btn btn-danger" id="rejectBtn" onclick="rejectProposal()">✕ Rechazar</button>
+      <button class="btn btn-success" id="applyBtn" onclick="applyProposal()">✓ Aplicar propuesta</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentFeedbackId = null;
+let currentAnalysis = null;
+
+async function loadFeedback() {
+  try {
+    const data = await apiCall('/api/v1/feedback');
+    const tbody = document.getElementById('fbTable');
+    document.getElementById('fbCount').textContent = `${data.length} registros`;
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4">
+        <div class="empty-state"><div class="icon">📋</div>
+        <p>No hay feedback todavía.<br>Ve a una conversación y reporta un problema.</p></div>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(f => {
+      const actions = f.status === 'PENDING'
+        ? `<button class="btn btn-primary btn-sm" onclick="openAnalysis('${f.id}', false)">
+             ⚡ Analizar
+           </button>`
+        : f.status === 'ANALYSED'
+        ? `<button class="btn btn-ghost btn-sm" onclick="openAnalysis('${f.id}', true)">
+             👁 Ver análisis
+           </button>`
+        : `<span style="color:var(--text3);font-size:11px">${f.status}</span>`;
+
+      return `
+        <tr>
+          <td><span class="badge badge-${f.status.toLowerCase()}">${f.status}</span></td>
+          <td style="max-width:400px">
+            <div style="color:var(--text);margin-bottom:3px;font-size:12px">${f.admin_comment}</div>
+            ${f.expected_response
+              ? `<div style="color:var(--text3);font-size:11px">Esperado: ${f.expected_response.substring(0,80)}...</div>`
+              : ''}
+          </td>
+          <td style="color:var(--text3);font-size:11px;white-space:nowrap">${timeAgo(f.created_at)}</td>
+          <td>${actions}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function openAnalysis(feedbackId, alreadyAnalysed) {
+  currentFeedbackId = feedbackId;
+  document.getElementById('analysisModal').classList.add('show');
+  document.getElementById('modalFooter').style.display = 'none';
+  document.getElementById('modalBody').innerHTML = `
+    <div style="text-align:center;padding:40px;color:var(--text3)">
+      <div class="loading"><span></span><span></span><span></span></div>
+      <div style="margin-top:12px;font-size:12px">
+        ${alreadyAnalysed ? 'Cargando análisis...' : 'El meta-agente está analizando el feedback...'}
+      </div>
+    </div>
+  `;
+
+  try {
+    const data = await apiCall(`/api/v1/feedback/${feedbackId}/analyse`, 'POST');
+    currentAnalysis = data;
+    renderAnalysis(data);
+  } catch(e) {
+    document.getElementById('modalBody').innerHTML = `
+      <div style="text-align:center;padding:32px;color:var(--red)">
+        ⚠️ Error: ${e.message}
+      </div>
+    `;
+  }
+}
+
+function renderAnalysis(data) {
+  const isPrompt = data.root_cause === 'PROMPT';
+  const causeColor = isPrompt ? 'var(--purple)' : 'var(--yellow)';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="info-row">
+      <div class="info-block">
+        <div class="label">CAUSA RAÍZ</div>
+        <div class="value">
+          <span class="badge badge-prompt">${data.root_cause}</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="analysis-section-title">Análisis del meta-agente</div>
+      <div class="code-block">${data.analysis}</div>
+    </div>
+
+    ${isPrompt && data.proposed_prompt ? `
+      <div>
+        <div class="analysis-section-title">Comparativa de prompts</div>
+        <div class="prompt-diff">
+          <div class="diff-col diff-old">
+            <div class="diff-label">❌ Prompt actual</div>
+            <div class="diff-content" id="currentPromptDisplay">Cargando...</div>
+          </div>
+          <div class="diff-col diff-new">
+            <div class="diff-label">✅ Prompt propuesto</div>
+            <div class="diff-content">${data.proposed_prompt}</div>
+          </div>
+        </div>
+      </div>
+    ` : `
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:14px;">
+        <div style="color:var(--yellow);font-size:12px;margin-bottom:6px">⚠️ Causa no atribuible al prompt</div>
+        <div style="color:var(--text2);font-size:12px;line-height:1.6">
+          El meta-agente determinó que el problema no está en el prompt del sistema.
+          No se puede aplicar ninguna mejora automática para esta causa.
+        </div>
+      </div>
+    `}
+  `;
+
+  // Load current active prompt for comparison
+  if (isPrompt && data.proposed_prompt) {
+    apiCall('/api/v1/prompts/active').then(p => {
+      const el = document.getElementById('currentPromptDisplay');
+      if (el) el.textContent = p.content;
+    }).catch(() => {});
+
+    document.getElementById('modalFooter').style.display = 'flex';
+    document.getElementById('applyBtn').style.display = isPrompt ? 'inline-flex' : 'none';
+    document.getElementById('rejectBtn').style.display = isPrompt ? 'inline-flex' : 'none';
+  } else {
+    document.getElementById('modalFooter').style.display = 'flex';
+    document.getElementById('applyBtn').style.display = 'none';
+    document.getElementById('rejectBtn').style.display = 'none';
+  }
+}
+
+async function applyProposal() {
+  if (!confirm('¿Aplicar esta propuesta? El chatbot usará el nuevo prompt inmediatamente.')) return;
+  try {
+    document.getElementById('applyBtn').disabled = true;
+    await apiCall(`/api/v1/feedback/${currentFeedbackId}/apply`, 'POST');
+    showToast('✅ Propuesta aplicada. Nuevo prompt activo.');
+    closeModal();
+    loadFeedback();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+    document.getElementById('applyBtn').disabled = false;
+  }
+}
+
+async function rejectProposal() {
+  try {
+    await apiCall(`/api/v1/feedback/${currentFeedbackId}/reject`, 'POST');
+    showToast('Propuesta rechazada. El prompt no ha cambiado.');
+    closeModal();
+    loadFeedback();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function closeModal() {
+  document.getElementById('analysisModal').classList.remove('show');
+  currentFeedbackId = null;
+  currentAnalysis = null;
+}
+
+loadFeedback();
+</script>
+{% endblock %}

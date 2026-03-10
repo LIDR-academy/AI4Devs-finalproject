@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% set active = "conversations" %}
+{% block title %}Conversación · Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .convo-messages { display: flex; flex-direction: column; gap: 12px; }
+  .msg-row { display: flex; gap: 10px; }
+  .msg-row.user { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .msg-row.assistant .msg-avatar { background: linear-gradient(135deg,#3b82f6,#7c3aed); }
+  .msg-row.user .msg-avatar { background: var(--surface2); border: 1px solid var(--border); }
+  .msg-content { max-width: 80%; }
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .msg-row.assistant .msg-bubble { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .msg-row.user .msg-bubble { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: var(--text); }
+  .msg-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+  .msg-time { font-size: 10px; color: var(--text3); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 560px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title { font-family: var(--sans); font-size: 14px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; }
+  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .form-label { font-size: 11px; color: var(--text3); margin-bottom: 5px; letter-spacing: 0.5px; }
+  textarea.form-input, input.form-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    resize: vertical;
+  }
+  textarea.form-input:focus, input.form-input:focus { border-color: var(--accent); }
+  .modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .ref-bubble {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .ref-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Detalle de Conversación</div>
+    <div class="topbar-sub" id="convSubtitle">Cargando...</div>
+  </div>
+  <div class="topbar-actions">
+    <a href="/admin/conversations" class="btn btn-ghost btn-sm">← Volver</a>
+  </div>
+</div>
+
+<div class="content">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Mensajes</span>
+      <span style="font-size:11px;color:var(--text3)" id="msgCount">—</span>
+    </div>
+    <div class="card-body">
+      <div class="convo-messages" id="messagesContainer">
+        <div style="text-align:center;padding:32px;color:var(--text3)">
+          <div class="loading"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal-overlay" id="feedbackModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📋 Reportar problema</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="ref-label">Mensaje a corregir:</div>
+        <div class="ref-bubble" id="modalRefMsg">—</div>
+      </div>
+      <div>
+        <div class="form-label">DESCRIPCIÓN DEL PROBLEMA *</div>
+        <textarea class="form-input" id="adminComment" rows="3"
+          placeholder="¿Qué falló en esta respuesta?"></textarea>
+      </div>
+      <div>
+        <div class="form-label">RESPUESTA ESPERADA (opcional)</div>
+        <textarea class="form-input" id="expectedResponse" rows="3"
+          placeholder="¿Cómo debería haber respondido el bot?"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="submitFeedbackBtn" onclick="submitFeedback()">
+        Enviar feedback
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const convId = "{{ conversation_id }}";
+let selectedMessageId = null;
+
+async function loadConversation() {
+  try {
+    const data = await apiCall(`/api/v1/conversations/${convId}`);
+    document.getElementById('convSubtitle').textContent =
+      `Session: ${data.session_id} · ${data.messages.length} mensajes`;
+    document.getElementById('msgCount').textContent = `${data.messages.length} mensajes`;
+
+    const container = document.getElementById('messagesContainer');
+    if (data.messages.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="icon">💬</div><p>Sin mensajes</p></div>`;
+      return;
+    }
+
+    container.innerHTML = data.messages.map(msg => {
+      const isAssistant = msg.role === 'assistant';
+      const feedbackBadge = msg.has_feedback
+        ? `<span class="badge badge-${msg.feedback_status?.toLowerCase() || 'pending'}">${msg.feedback_status}</span>`
+        : '';
+
+      const reportBtn = isAssistant && !msg.has_feedback
+        ? `<button class="btn btn-ghost btn-sm" onclick="openFeedbackModal('${msg.id}', \`${msg.content.replace(/`/g,'\\`')}\`)">
+             ⚑ Reportar
+           </button>`
+        : '';
+
+      return `
+        <div class="msg-row ${msg.role}">
+          <div class="msg-avatar">${isAssistant ? '🤖' : '👤'}</div>
+          <div class="msg-content">
+            <div class="msg-bubble">${msg.content}</div>
+            <div class="msg-meta">
+              <span class="msg-time">${timeAgo(msg.created_at)}</span>
+              ${feedbackBadge}
+              ${reportBtn}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function openFeedbackModal(msgId, content) {
+  selectedMessageId = msgId;
+  document.getElementById('modalRefMsg').textContent = content.substring(0, 200) + (content.length > 200 ? '...' : '');
+  document.getElementById('adminComment').value = '';
+  document.getElementById('expectedResponse').value = '';
+  document.getElementById('feedbackModal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('feedbackModal').classList.remove('show');
+  selectedMessageId = null;
+}
+
+async function submitFeedback() {
+  const comment = document.getElementById('adminComment').value.trim();
+  if (!comment) { showToast('La descripción del problema es obligatoria', 'error'); return; }
+
+  const btn = document.getElementById('submitFeedbackBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    await apiCall('/api/v1/feedback', 'POST', {
+      message_id: selectedMessageId,
+      admin_comment: comment,
+      expected_response: document.getElementById('expectedResponse').value.trim() || null
+    });
+    showToast('✅ Feedback registrado correctamente');
+    closeModal();
+    loadConversation();
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enviar feedback';
+  }
+}
+
+loadConversation();
+</script>
+{% endblock %}
