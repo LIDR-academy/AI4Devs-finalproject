@@ -82,8 +82,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-009-01-configure-rate-limiting.md
-- TASK-US-009-02-implement-input-validation.md
-- TASK-US-009-03-configure-cors.md
-- TASK-US-009-04-add-security-headers.md
-- TASK-US-009-05-implement-request-tracing.md
+- [TASK-US-009-01: Configure Rate Limiting](../../tasks/backend/TASK-US-009-01-configure-rate-limiting.md)
+- [TASK-US-009-02: Implement Input Validation](../../tasks/backend/TASK-US-009-02-implement-input-validation.md)
+- [TASK-US-009-03: Configure CORS](../../tasks/backend/TASK-US-009-03-configure-cors.md)
+- [TASK-US-009-04: Add Security Headers](../../tasks/backend/TASK-US-009-04-add-security-headers.md)
+- [TASK-US-009-05: Implement Request Tracing](../../tasks/backend/TASK-US-009-05-implement-request-tracing.md)
