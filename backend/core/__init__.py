@@ -78,10 +78,12 @@ def init_extensions(app: Flask) -> None:
 def register_blueprints(app: Flask) -> None:
 	"""Register all API blueprints."""
 	from core.files import files_bp
+	from core.tasks.routes import create_tasks_blueprint
 	from core.users import users_bp
 
 	app.register_blueprint(users_bp)
 	app.register_blueprint(files_bp)
+	app.register_blueprint(create_tasks_blueprint())
 
 	try:
 		from flasgger import Swagger

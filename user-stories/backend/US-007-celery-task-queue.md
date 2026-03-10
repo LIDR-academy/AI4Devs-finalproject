@@ -1,6 +1,7 @@
 # US-007: Celery Task Queue Setup
 
 [Trello Card](https://trello.com/c/ADhHq7Fb)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/7)
 
 
 
@@ -92,7 +93,7 @@ Response (200 OK - In Progress):
 6 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Implemented on branch `feature/US-007-celery-task-queue-czo`
 
 ## Workflow Diagram
 ```mermaid

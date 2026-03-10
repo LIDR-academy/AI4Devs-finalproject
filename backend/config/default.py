@@ -34,6 +34,24 @@ class DefaultConfig:
 	REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 	CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
 	CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_URL)
+	CELERY_TASK_SERIALIZER = os.getenv("CELERY_TASK_SERIALIZER", "json")
+	CELERY_RESULT_SERIALIZER = os.getenv("CELERY_RESULT_SERIALIZER", "json")
+	CELERY_ACCEPT_CONTENT = [
+		c.strip() for c in os.getenv("CELERY_ACCEPT_CONTENT", "json").split(",") if c.strip()
+	]
+	CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE", "UTC")
+	CELERY_TASK_TRACK_STARTED = os.getenv("CELERY_TASK_TRACK_STARTED", "true").lower() == "true"
+	CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", "300"))
+	CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("CELERY_TASK_SOFT_TIME_LIMIT", "270"))
+	CELERY_TASK_DEFAULT_QUEUE = os.getenv("CELERY_TASK_DEFAULT_QUEUE", "default")
+	CELERY_TASK_ROUTES = {
+		"core.tasks.file_tasks.upload_file_async": {"queue": "upload"},
+		"core.tasks.pinning_tasks.pin_content_async": {"queue": "pinning"},
+		"core.tasks.pinning_tasks.unpin_content_async": {"queue": "pinning"},
+	}
+
+	CELERY_FAILED_TASKS_REDIS_URL = os.getenv("CELERY_FAILED_TASKS_REDIS_URL", "redis://localhost:6379/1")
+	CELERY_FAILED_TASKS_KEY = os.getenv("CELERY_FAILED_TASKS_KEY", "celery:failed_tasks")
 
 	FILEBASE_ACCESS_KEY = os.getenv("FILEBASE_ACCESS_KEY", "")
 	FILEBASE_SECRET_KEY = os.getenv("FILEBASE_SECRET_KEY", "")

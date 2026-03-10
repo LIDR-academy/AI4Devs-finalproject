@@ -43,10 +43,12 @@ def upload_file_async(
     """
     try:
         logger.info(f"Starting async upload for user {user_id}: {original_filename}")
+        self.update_state(state="PROGRESS", meta={"progress": 10, "message": "Preparing upload"})
         
         # Convert bytes to file-like object
         file_obj = BytesIO(file_data)
         file_size = len(file_data)
+        self.update_state(state="PROGRESS", meta={"progress": 35, "message": "Uploading to IPFS"})
         
         # Upload to Filebase/IPFS
         result = ipfs_service.upload_file(
@@ -61,6 +63,7 @@ def upload_file_async(
         
         # Save file metadata to database
         with Session(get_engine()) as session:
+            self.update_state(state="PROGRESS", meta={"progress": 80, "message": "Persisting metadata"})
             db_file = File(
                 user_id=user_id,
                 cid=result.cid,
@@ -99,6 +102,7 @@ def upload_file_async(
                 "filename": original_filename,
                 "size": file_size,
                 "file_id": db_file.id,
+                "progress": 100,
             }
     
     except UploadError as e:
