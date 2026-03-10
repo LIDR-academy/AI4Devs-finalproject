@@ -378,6 +378,20 @@ All API requests (except registration) require an API key in the header:
 X-API-Key: ipfs_gw_your_api_key_here
 ```
 
+### Swagger / OpenAPI Documentation
+Interactive API documentation is available directly from the backend:
+```
+Swagger UI:  http://localhost:5000/swagger
+OpenAPI JSON: http://localhost:5000/swagger.json
+```
+
+The generated specification includes:
+- API versioning under `/api/v1`
+- API key security (`X-API-Key` header)
+- Request and response schemas
+- Error envelope schemas (`status`, `message`, `code`, `details`, `request_id`)
+- Endpoint examples for interactive testing
+
 ### Endpoints
 
 #### User Management
@@ -396,17 +410,24 @@ X-API-Key: ipfs_gw_your_api_key_here
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/upload` | Upload file to IPFS |
-| `GET` | `/retrieve/<cid>` | Retrieve file by CID |
-| `GET` | `/files` | List user's files |
-| `GET` | `/tasks/<task_id>/status` | Check async task status |
+| `POST` | `/api/v1/files/upload` | Upload file to IPFS |
+| `GET` | `/api/v1/files/upload/status/<task_id>` | Check file-upload async task status |
+| `GET` | `/api/v1/files/retrieve/<cid>` | Retrieve file by CID |
 
 #### Content Pinning
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/pin/<cid>` | Pin content |
-| `POST` | `/unpin/<cid>` | Unpin content |
+| `POST` | `/api/v1/files/pin/<cid>` | Pin content |
+| `POST` | `/api/v1/files/unpin/<cid>` | Unpin content |
+
+#### Task Operations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/tasks/<task_id>/status` | Check async task status |
+| `GET` | `/api/v1/tasks/failed` | List failed tasks |
+| `POST` | `/api/v1/tasks/failed/<failure_id>/replay` | Replay failed task |
 
 ### Request/Response Examples
 

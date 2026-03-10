@@ -1,4 +1,4 @@
-"""API key status check endpoint."""
+"""API key status and health-check endpoints."""
 
 from flask import Blueprint, jsonify, request
 from sqlmodel import Session
@@ -10,21 +10,85 @@ from core.common.responses import error_response, success_response
 
 def register_routes(bp: Blueprint) -> None:
 	"""Register status endpoint."""
-	
-	@bp.route("/status", methods=["GET", "POST"])
+
+	@bp.get("/status")
+	@configured_limit("RATE_LIMIT_STATUS")
+	def status_health():
+		"""Service health probe for users blueprint.
+		---
+		tags:
+		  - Health
+		summary: Users service health status
+		description: Lightweight liveness endpoint used by internal checks.
+		produces:
+		  - application/json
+		responses:
+		  200:
+		    description: Service is active
+		    schema:
+		      type: object
+		      properties:
+		        status:
+		          type: string
+		          example: active
+		security: []
+		"""
+		# Compatibility route for health-style checks used by existing tests.
+		return jsonify({"status": "active"}), 200
+
+	@bp.post("/status")
 	@configured_limit("RATE_LIMIT_STATUS")
 	def status():
-		"""Check API key status, even for inactive/revoked keys.
-		
-		Note: This endpoint does NOT use @require_api_key to allow users
-		to check why their key isn't working (inactive/revoked status).
-		
-		Returns:
-			JSON response with API key status information.
+		"""Check API key status.
+		---
+		tags:
+		  - Users
+		summary: API key status
+		description: Returns status details for the API key provided in X-API-Key.
+		produces:
+		  - application/json
+		parameters:
+		  - in: header
+		    name: X-API-Key
+		    required: true
+		    type: string
+		    example: ipfs_gw_0123456789abcdef
+		responses:
+		  200:
+		    description: API key status retrieved
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		        - type: object
+		          properties:
+		            data:
+		              type: object
+		              properties:
+		                api_key_status:
+		                  type: string
+		                  enum: [active, inactive, revoked]
+		                  example: active
+		                created_at:
+		                  type: string
+		                  format: date-time
+		                last_renewed_at:
+		                  type: string
+		                  format: date-time
+		                  nullable: true
+		                usage_count:
+		                  type: integer
+		                  example: 12
+		  401:
+		    description: Missing or invalid API key
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
 		"""
-		if request.method == "GET":
-			# Compatibility route for health-style checks used by existing tests.
-			return jsonify({"status": "active"}), 200
 
 		api_key = request.headers.get("X-API-Key", "").strip()
 		if not api_key:

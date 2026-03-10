@@ -15,6 +15,7 @@ from flask_limiter.util import get_remote_address
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from config.validate_config import validate_env_config
+from config.swagger import SWAGGER_CONFIG, SWAGGER_TEMPLATE
 from core.common.exceptions import APIException
 from core.common.responses import build_error_payload
 from server.config.logs import configure_logging
@@ -134,6 +135,13 @@ def init_extensions(app: Flask) -> None:
 	)
 	limiter.init_app(app)
 
+	try:
+		from flasgger import Swagger
+
+		Swagger(app, config=SWAGGER_CONFIG, template=SWAGGER_TEMPLATE)
+	except Exception:
+		app.logger.warning("Flasgger not available; Swagger docs disabled")
+
 	from sqlmodel import create_engine
 
 	database_url = app.config["DATABASE_URL"]
@@ -204,13 +212,6 @@ def register_blueprints(app: Flask) -> None:
 	app.register_blueprint(users_bp)
 	app.register_blueprint(files_bp)
 	app.register_blueprint(create_tasks_blueprint())
-
-	try:
-		from flasgger import Swagger
-
-		Swagger(app)
-	except Exception:
-		app.logger.warning("Flasgger not available; Swagger docs disabled")
 
 
 def register_error_handlers(app: Flask) -> None:

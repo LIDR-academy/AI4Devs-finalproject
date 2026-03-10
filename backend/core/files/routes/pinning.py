@@ -30,7 +30,47 @@ def register_routes(bp: Blueprint) -> None:
 	@configured_limit("RATE_LIMIT_PINNING")
 	@require_api_key
 	def pin_file(cid: str):
-		"""Queue async pin operation for content CID."""
+		"""Queue asynchronous pin operation for a CID.
+		---
+		tags:
+		  - Files
+		summary: Pin file content
+		description: Queue a background task to pin content for the authenticated owner.
+		produces:
+		  - application/json
+		parameters:
+		  - in: path
+		    name: cid
+		    type: string
+		    required: true
+		    example: bafybeigdyrzt5x6z6xj5ir3f6m42cdbw2m5g3m6twjv7mmyr4y6nblfuca
+		responses:
+		  202:
+		    description: Pinning queued
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		  401:
+		    description: Invalid API key
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  403:
+		    description: Access denied
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  404:
+		    description: Content not found
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  409:
+		    description: Content already pinned
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
+		"""
 		user = get_current_user()
 		cid = validate_cid(cid)
 		with Session(get_engine()) as session:
@@ -75,7 +115,47 @@ def register_routes(bp: Blueprint) -> None:
 	@configured_limit("RATE_LIMIT_PINNING")
 	@require_api_key
 	def unpin_file(cid: str):
-		"""Queue async unpin operation for content CID."""
+		"""Queue asynchronous unpin operation for a CID.
+		---
+		tags:
+		  - Files
+		summary: Unpin file content
+		description: Queue a background task to unpin content for the authenticated owner.
+		produces:
+		  - application/json
+		parameters:
+		  - in: path
+		    name: cid
+		    type: string
+		    required: true
+		    example: bafybeigdyrzt5x6z6xj5ir3f6m42cdbw2m5g3m6twjv7mmyr4y6nblfuca
+		responses:
+		  202:
+		    description: Unpinning queued
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		  401:
+		    description: Invalid API key
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  403:
+		    description: Access denied
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  404:
+		    description: Content not found
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  409:
+		    description: Content already unpinned
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
+		"""
 		user = get_current_user()
 		cid = validate_cid(cid)
 		with Session(get_engine()) as session:

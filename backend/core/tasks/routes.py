@@ -32,7 +32,49 @@ def create_tasks_blueprint() -> Blueprint:
     @configured_limit("RATE_LIMIT_TASKS")
     @require_api_key
     def get_task_status(task_id: str):
-        """Return Celery task state and result details."""
+        """Return asynchronous task state and details.
+        ---
+        tags:
+          - Tasks
+        summary: Task status
+        produces:
+          - application/json
+        parameters:
+          - in: path
+            name: task_id
+            type: string
+            required: true
+            example: 2b7e1516-28ae-4a6f-bf6f-0f4d9f152f59
+        responses:
+          200:
+            description: Current task status
+            schema:
+              allOf:
+                - $ref: '#/definitions/SuccessEnvelope'
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        task_id:
+                          type: string
+                        state:
+                          type: string
+                          example: SUCCESS
+                        progress:
+                          type: integer
+                          example: 100
+          401:
+            description: Invalid API key
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          429:
+            description: Rate limit exceeded
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+        security:
+          - ApiKeyAuth: []
+        """
         celery_app = None
         try:
             from core.celery_worker import celery as celery_app
@@ -71,7 +113,43 @@ def create_tasks_blueprint() -> Blueprint:
     @configured_limit("RATE_LIMIT_ADMIN")
     @require_api_key
     def get_failed_tasks():
-        """List failed tasks captured in the application-level failed queue."""
+        """List failed tasks captured in the failed-task queue.
+        ---
+        tags:
+          - Tasks
+        summary: List failed tasks
+        produces:
+          - application/json
+        parameters:
+          - in: query
+            name: limit
+            type: integer
+            required: false
+            default: 50
+            example: 50
+          - in: query
+            name: offset
+            type: integer
+            required: false
+            default: 0
+            example: 0
+        responses:
+          200:
+            description: Failed tasks retrieved
+            schema:
+              allOf:
+                - $ref: '#/definitions/SuccessEnvelope'
+          401:
+            description: Invalid API key
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          429:
+            description: Rate limit exceeded
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+        security:
+          - ApiKeyAuth: []
+        """
         limit = request.args.get("limit", default=50, type=int)
         offset = request.args.get("offset", default=0, type=int)
         limit = max(1, min(limit, 200))
@@ -84,7 +162,40 @@ def create_tasks_blueprint() -> Blueprint:
     @configured_limit("RATE_LIMIT_ADMIN")
     @require_api_key
     def replay_failed_task_route(failure_id: str):
-        """Replay a failed task by failure identifier."""
+        """Replay a failed task by failure identifier.
+        ---
+        tags:
+          - Tasks
+        summary: Replay failed task
+        produces:
+          - application/json
+        parameters:
+          - in: path
+            name: failure_id
+            type: string
+            required: true
+            example: failed-1710100012-9f87c6
+        responses:
+          202:
+            description: Replay queued
+            schema:
+              allOf:
+                - $ref: '#/definitions/SuccessEnvelope'
+          401:
+            description: Invalid API key
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          404:
+            description: Failed task not found
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+          429:
+            description: Rate limit exceeded
+            schema:
+              $ref: '#/definitions/ErrorEnvelope'
+        security:
+          - ApiKeyAuth: []
+        """
         try:
             replay_info = replay_failed_task(failure_id)
             return success_response(202, message="Failed task replay queued", data=replay_info)
