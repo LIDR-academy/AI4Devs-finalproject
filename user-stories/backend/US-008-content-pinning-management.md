@@ -1,6 +1,7 @@
 # US-008: Content Pinning Management
 
 [Trello Card](https://trello.com/c/BzhfKUh8)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/8)
 
 
 

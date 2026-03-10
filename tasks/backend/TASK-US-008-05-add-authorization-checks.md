@@ -3,6 +3,7 @@
 Implement user ownership verification to ensure users can only pin/unpin their own content.
 
 [Trello Card](https://trello.com/c/HPup4bgh)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/8)
 
 ## Parent User Story
 [US-008: Content Pinning Management](../../user-stories/backend/US-008-content-pinning-management.md)

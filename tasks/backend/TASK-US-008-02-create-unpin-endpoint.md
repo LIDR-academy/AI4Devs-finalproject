@@ -3,6 +3,7 @@
 Implement the POST /api/v1/files/unpin/:cid endpoint for asynchronous content unpinning.
 
 [Trello Card](https://trello.com/c/pCDlUsq8)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/8)
 
 ## Parent User Story
 [US-008: Content Pinning Management](../../user-stories/backend/US-008-content-pinning-management.md)

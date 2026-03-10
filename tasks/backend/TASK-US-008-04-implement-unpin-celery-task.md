@@ -3,6 +3,7 @@
 Create the asynchronous Celery task that performs the actual IPFS content unpinning operation.
 
 [Trello Card](https://trello.com/c/IVMoiDEP)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/8)
 
 ## Parent User Story
 [US-008: Content Pinning Management](../../user-stories/backend/US-008-content-pinning-management.md)
