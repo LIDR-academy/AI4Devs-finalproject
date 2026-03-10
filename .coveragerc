@@ -1,0 +1,24 @@
+[run]
+branch = True
+source =
+    backend/core
+    backend/config
+omit =
+    */tests/*
+    */migrations/*
+    */__init__.py
+
+[report]
+show_missing = True
+skip_covered = False
+fail_under = 80
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

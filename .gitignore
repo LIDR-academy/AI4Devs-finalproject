@@ -125,6 +125,9 @@ override:
 # local VS Code settings
 .vscode/
 
+# Recorded HTTP interactions for backend tests
+tests/backend/cassettes/*.yaml
+
 # PyCharm
 .idea/
 
