@@ -2,6 +2,8 @@
 
 [Trello Card](https://trello.com/c/eAzIcw9s)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/12)
+
 ## Parent User Story
 [US-012: API Documentation with Swagger](../../user-stories/backend/US-012-api-documentation.md)
 
