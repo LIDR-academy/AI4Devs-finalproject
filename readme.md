@@ -322,6 +322,8 @@ frontend/
 
 Con US-102, esta base se extendio con una landing page orientada a visitantes, navegacion responsive con menu hamburguesa, metadatos SEO por pagina y footer con accesos rapidos a rutas clave.
 
+Con US-103, se incorporo el flujo de registro de usuarios en `src/app/(auth)/register/page.tsx`, incluyendo validacion con React Hook Form + Zod, indicador de fortaleza de password, modal de exito con API key de una sola visualizacion (copiar/descargar) y redireccion a dashboard sin persistir la key en `localStorage`/`sessionStorage`.
+
 ```mermaid
 flowchart TD
     A[App Router Pages] --> B[Layout + Providers]
