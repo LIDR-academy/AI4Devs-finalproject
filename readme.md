@@ -293,7 +293,41 @@ Technology Stack
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+El proyecto sigue una arquitectura en capas con separación entre `backend/` (API Flask) y `frontend/` (Next.js App Router).
+
+Para US-101 se estableció la base de frontend con estructura modular por dominio:
+
+```text
+frontend/
+├── src/
+│   ├── app/                    # Páginas, layout global y boundaries loading/error
+│   │   ├── (auth)/             # Login, register, dashboard
+│   │   ├── upload/
+│   │   ├── retrieve/
+│   │   ├── files/
+│   │   └── docs/
+│   ├── components/
+│   │   ├── ui/                 # Button, Input, Card, Spinner, Skeleton
+│   │   ├── layout/             # Header, Footer, Container
+│   │   └── providers/          # React Query + toaster global
+│   ├── hooks/                  # Hooks de auth/files/toast
+│   ├── lib/                    # API client, constantes y utilidades
+│   ├── stores/                 # Zustand store
+│   └── types/                  # Tipos compartidos
+├── tests/e2e/                  # Playwright
+├── jest.config.cjs
+├── playwright.config.ts
+└── package.json
+```
+
+```mermaid
+flowchart TD
+    A[App Router Pages] --> B[Layout + Providers]
+    B --> C[Reusable Components]
+    B --> D[Hooks + Zustand]
+    D --> E[Typed API Client]
+    E --> F[Backend API]
+```
 
 ### **2.4. Infraestructura y despliegue**
 
@@ -312,6 +346,12 @@ El backend cuenta con una suite de pruebas organizada en:
 - `tests/backend/factories/`: factorias de datos de prueba (`factory-boy`).
 - `tests/backend/cassettes/`: grabaciones HTTP de VCR para reproducibilidad.
 
+El frontend cuenta con una suite de pruebas organizada en:
+
+- `tests/frontend/unit/`: pruebas unitarias de utilidades.
+- `tests/frontend/components/`: pruebas de componentes base.
+- `frontend/tests/e2e/`: pruebas E2E con Playwright.
+
 Comandos principales (ejecutar desde la **raíz del proyecto**):
 
 ```bash
@@ -325,6 +365,14 @@ RUN_E2E_TESTS=1 python -m unittest discover -s tests/backend/e2e -p "test_*.py" 
 # Cobertura (objetivo mínimo 80%)
 coverage run -m unittest discover -s tests/backend/unit -p "test_*.py"
 coverage report
+
+# Frontend
+cd frontend
+npm run lint
+npm run type-check
+npm run test
+npm run build
+npm run test:e2e
 ```
 
 La ejecución automática en CI/CD está definida en `.github/workflows/backend-tests.yml`.
