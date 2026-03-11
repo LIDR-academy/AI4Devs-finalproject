@@ -57,5 +57,8 @@ Build the registration form component with email and password inputs, client-sid
 - Do not implement validation logic here (see TASK-US-103-02)
 - Do not handle API key display here (see TASK-US-103-03)
 
+## Pull Request
+- [PR #16: US-103 implement user registration page and API key success flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/16)
+
 ## Completion Status
 - [x] 100% - Completed

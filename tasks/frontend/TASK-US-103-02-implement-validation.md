@@ -56,5 +56,8 @@ Add email format validation, password strength rules, and real-time validation f
 - Strength indicator should be visual (e.g., color bar)
 - Consider accessibility for strength indicator (aria-live region)
 
+## Pull Request
+- [PR #16: US-103 implement user registration page and API key success flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/16)
+
 ## Completion Status
 - [x] 100% - Completed

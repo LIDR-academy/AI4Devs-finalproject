@@ -66,5 +66,8 @@ Ensure registration form and success modal are fully accessible with ARIA labels
 - Follow WAI-ARIA authoring practices
 - Ensure modals follow ARIA dialog pattern
 
+## Pull Request
+- [PR #16: US-103 implement user registration page and API key success flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/16)
+
 ## Completion Status
 - [x] 100% - Completed

@@ -58,5 +58,8 @@ Build modal component that displays API key with copy-to-clipboard and download 
 - Ensure download filename includes timestamp for user clarity
 - Modal should be responsive and accessible
 
+## Pull Request
+- [PR #16: US-103 implement user registration page and API key success flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/16)
+
 ## Completion Status
 - [x] 100% - Completed

@@ -127,3 +127,6 @@ flowchart TD
 - [TASK-US-103-02: Implement Validation](../../tasks/frontend/TASK-US-103-02-implement-validation.md)
 - [TASK-US-103-03: Create Success Modal](../../tasks/frontend/TASK-US-103-03-create-success-modal.md)
 - [TASK-US-103-04: Add Accessibility](../../tasks/frontend/TASK-US-103-04-add-accessibility.md)
+
+## Pull Request
+- [PR #16: US-103 implement user registration page and API key success flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/16)
