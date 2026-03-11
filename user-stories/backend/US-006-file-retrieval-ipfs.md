@@ -14,18 +14,18 @@ As a **user**, I want to retrieve files from the IPFS network using their CID, s
 ⭐⭐⭐ Medium-High
 
 ## Acceptance Criteria
-- [ ] `GET /retrieve/<cid>` endpoint returns file content
-- [ ] Valid API key is required for retrieval
-- [ ] File is fetched from Filebase/IPFS network
-- [ ] Original filename is preserved in Content-Disposition header
-- [ ] Proper MIME type is set in Content-Type header
-- [ ] Caching headers are set for performance
-- [ ] Circuit breaker pattern protects against Filebase API failures
-- [ ] Retry logic handles transient errors
-- [ ] 404 is returned for non-existent CIDs
-- [ ] User can only retrieve their own files (authorization check)
-- [ ] Retrieval is logged in AuditLog
-- [ ] Usage count is incremented for the user
+- [x] `GET /retrieve/<cid>` endpoint returns file content
+- [x] Valid API key is required for retrieval
+- [x] File is fetched from Filebase/IPFS network
+- [x] Original filename is preserved in Content-Disposition header
+- [x] Proper MIME type is set in Content-Type header
+- [x] Caching headers are set for performance
+- [x] Circuit breaker pattern protects against Filebase API failures
+- [x] Retry logic handles transient errors
+- [x] 404 is returned for non-existent CIDs
+- [x] User can only retrieve their own files (authorization check)
+- [x] Retrieval is logged in AuditLog
+- [x] Usage count is incremented for the user
 
 ## API Specification
 ```
@@ -72,7 +72,7 @@ Error Response (403 Forbidden):
 8 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Completed
 
 ## Workflow Diagram
 ```mermaid
@@ -96,8 +96,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-006-01-create-retrieve-endpoint.md
-- TASK-US-006-02-implement-file-streaming.md
-- TASK-US-006-03-implement-authorization-check.md
-- TASK-US-006-04-add-caching-headers.md
-- TASK-US-006-05-implement-content-type-detection.md
+- [TASK-US-006-01: Create Retrieve Endpoint](../../tasks/backend/TASK-US-006-01-create-retrieve-endpoint.md)
+- [TASK-US-006-02: Implement File Streaming](../../tasks/backend/TASK-US-006-02-implement-file-streaming.md)
+- [TASK-US-006-03: Implement Authorization Check](../../tasks/backend/TASK-US-006-03-implement-authorization-check.md)
+- [TASK-US-006-04: Add Caching Headers](../../tasks/backend/TASK-US-006-04-add-caching-headers.md)
+- [TASK-US-006-05: Implement Content Type Detection](../../tasks/backend/TASK-US-006-05-implement-content-type-detection.md)

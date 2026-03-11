@@ -367,4 +367,4 @@ if __name__ == "__main__":
 - File model should reference User model via foreign key
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Completed

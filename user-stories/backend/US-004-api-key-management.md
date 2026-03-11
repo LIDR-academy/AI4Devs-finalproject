@@ -16,17 +16,17 @@ As an **administrator**, I want to revoke or reactivate user API keys, so that I
 ⭐⭐⭐ Medium-High
 
 ## Acceptance Criteria
-- [ ] `POST /status` endpoint returns API key status (active, inactive, revoked)
-- [ ] `POST /renew` endpoint generates a new API key for the user
-- [ ] `POST /revoke` endpoint allows admin to revoke any API key
-- [ ] `POST /reactivate` endpoint allows admin to reactivate revoked keys
-- [ ] `POST /renew` requires authenticated user context (`Authorization: Bearer <api_key>` or valid session)
-- [ ] `POST /renew` enforces step-up verification (one-time code from email or MFA) before key rotation
-- [ ] Anonymous or email-only renewal requests are rejected (401/403)
-- [ ] Admin-only endpoints validate admin privileges
-- [ ] All actions are logged in AuditLog
-- [ ] Email notification is sent on key renewal (future enhancement)
-- [ ] Old API key is invalidated upon renewal
+- [x] `POST /status` endpoint returns API key status (active, inactive, revoked)
+- [x] `POST /renew` endpoint generates a new API key for the user
+- [x] `POST /revoke` endpoint allows admin to revoke any API key
+- [x] `POST /reactivate` endpoint allows admin to reactivate revoked keys
+- [x] `POST /renew` requires authenticated user context (`Authorization: Bearer <api_key>` or valid session)
+- [x] `POST /renew` enforces step-up verification (one-time code from email or MFA) before key rotation
+- [x] Anonymous or email-only renewal requests are rejected (401/403)
+- [x] Admin-only endpoints validate admin privileges
+- [x] All actions are logged in AuditLog
+- [x] Email notification is sent on key renewal (future enhancement)
+- [x] Old API key is invalidated upon renewal
 
 ## API Specifications
 
@@ -158,7 +158,7 @@ Response (200 OK):
 8 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Completed
 
 ## Workflow Diagram
 ```mermaid
@@ -191,9 +191,9 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-004-01-create-status-endpoint.md
-- TASK-US-004-02-create-renew-endpoint.md
-- TASK-US-004-03-create-revoke-endpoint.md
-- TASK-US-004-04-create-reactivate-endpoint.md
-- TASK-US-004-05-implement-auth-decorator.md
-- TASK-US-004-06-implement-admin-decorator.md
+- [TASK-US-004-01: Create Status Endpoint](../../tasks/backend/TASK-US-004-01-create-status-endpoint.md)
+- [TASK-US-004-02: Create Renew Endpoint](../../tasks/backend/TASK-US-004-02-create-renew-endpoint.md)
+- [TASK-US-004-03: Create Revoke Endpoint](../../tasks/backend/TASK-US-004-03-create-revoke-endpoint.md)
+- [TASK-US-004-04: Create Reactivate Endpoint](../../tasks/backend/TASK-US-004-04-create-reactivate-endpoint.md)
+- [TASK-US-004-05: Implement Auth Decorator](../../tasks/backend/TASK-US-004-05-implement-auth-decorator.md)
+- [TASK-US-004-06: Implement Admin Decorator](../../tasks/backend/TASK-US-004-06-implement-admin-decorator.md)

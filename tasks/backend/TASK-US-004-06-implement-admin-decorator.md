@@ -204,4 +204,4 @@ if __name__ == "__main__":
 - Used by `/revoke` and `/reactivate` endpoints
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Completed
