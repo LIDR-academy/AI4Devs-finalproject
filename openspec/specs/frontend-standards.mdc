@@ -1,0 +1,638 @@
+---
+description: Estándares de desarrollo frontend, mejores prácticas y convenciones para Adresles, React (Chat App) + Next.js (Dashboard Admin), TypeScript, TanStack Query, Zustand, Socket.io, Tailwind CSS, Shadcn/ui, incluyendo patrones de componentes, gestión de estado, directrices de UI/UX y prácticas de pruebas
+globs:
+    [
+        "frontend/src/**/*.{js,jsx,ts,tsx}",
+        "apps/web-chat/src/**/*.{js,jsx,ts,tsx}",
+        "apps/web-admin/src/**/*.{js,jsx,ts,tsx}",
+        "frontend/playwright/**/*.{ts,js}",
+        "apps/*/playwright/**/*.{ts,js}",
+        "frontend/tsconfig.json",
+        "apps/*/tsconfig.json",
+        "frontend/playwright.config.ts",
+        "frontend/package.json",
+        "apps/*/package.json",
+    ]
+alwaysApply: true
+---
+
+# Configuración y Mejores Prácticas del Proyecto Frontend
+
+## Tabla de Contenidos
+
+- [Visión General](#visión-general)
+- [Stack Tecnológico](#stack-tecnológico)
+    - [Tecnologías Centrales](#tecnologías-centrales)
+    - [Framework de UI](#framework-de-ui)
+    - [Gestión de Estado y Flujo de Datos](#gestión-de-estado-y-flujo-de-datos)
+    - [Framework de Pruebas](#framework-de-pruebas)
+    - [Herramientas de Desarrollo](#herramientas-de-desarrollo)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Estándares de Codificación](#estándares-de-codificación)
+    - [Lenguaje y Convenciones de Nomenclatura](#lenguaje-y-convenciones-de-nomenclatura)
+    - [Convenciones de Componentes](#convenciones-de-componentes)
+    - [Gestión de Estado](#gestión-de-estado)
+    - [Arquitectura de Capa de Servicio](#arquitectura-de-capa-de-servicio)
+- [Estándares de UI/UX](#estándares-de-uiux)
+    - [Integración con Bootstrap](#integración-con-bootstrap)
+    - [Manejo de Formularios](#manejo-de-formularios)
+    - [Patrones de Navegación](#patrones-de-navegación)
+    - [Accesibilidad](#accesibilidad)
+- [Estándares de Pruebas](#estándares-de-pruebas)
+    - [Pruebas End-to-End con Playwright](#pruebas-end-to-end-con-playwright)
+    - [Organización de Pruebas](#organización-de-pruebas)
+- [Estándares de Configuración](#estándares-de-configuración)
+    - [Configuración de TypeScript](#configuración-de-typescript)
+    - [Configuración de ESLint](#configuración-de-eslint)
+    - [Configuración de Entorno](#configuración-de-entorno)
+- [Mejores Prácticas de Rendimiento](#mejores-prácticas-de-rendimiento)
+    - [Optimización de Componentes](#optimización-de-componentes)
+    - [Optimización de Bundle](#optimización-de-bundle)
+    - [Eficiencia de API](#eficiencia-de-api)
+- [Flujo de Trabajo de Desarrollo](#flujo-de-trabajo-de-desarrollo)
+    - [Flujo de Trabajo de Git](#flujo-de-trabajo-de-git)
+    - [Scripts de Desarrollo](#scripts-de-desarrollo)
+    - [Calidad de Código](#calidad-de-código)
+- [Estrategia de Migración](#estrategia-de-migración)
+    - [Migración a TypeScript](#migración-a-typescript)
+    - [Modernización de Componentes](#modernización-de-componentes)
+
+---
+
+## Visión General
+
+Este documento describe las mejores prácticas, convenciones y estándares utilizados en las aplicaciones frontend de Adresles. Estas prácticas aseguran consistencia de código, mantenibilidad y experiencia de desarrollo óptima.
+
+## Aplicaciones Frontend de Adresles
+
+El proyecto Adresles tiene **dos aplicaciones frontend independientes**:
+
+### 1. Chat App (React + Vite)
+
+- **Propósito**: Aplicación conversacional para usuarios finales
+- **Stack**: React 18, Vite, TypeScript, TanStack Query, Zustand, Socket.io
+- **Características**: SPA interactiva, tiempo real, PWA-ready
+- **Ubicación**: `apps/web-chat/`
+
+### 2. Dashboard Admin (Next.js)
+
+- **Propósito**: Panel de administración para eCommerce
+- **Stack**: Next.js 14, React 18, TypeScript, TailwindCSS, Shadcn/ui
+- **Características**: SSR, Server Components, SEO optimizado
+- **Ubicación**: `apps/web-admin/`
+- **Deployment**: Vercel (free tier)
+
+Ver [ADR-001](../../memory-bank/architecture/001-monolith-modular.md) para decisiones arquitecturales.
+
+## Stack Tecnológico
+
+### Tecnologías Centrales
+
+- **React**: Librería UI (v18.x) - Ambas apps
+- **TypeScript**: Lenguaje principal (strict mode) - Ambas apps
+- **Vite**: Build tool para Chat App (v5.x)
+- **Next.js**: Framework para Dashboard Admin (v14.x)
+
+### Data Fetching y Estado (Chat App)
+
+- **TanStack Query (v5.x)**: Data fetching, cache, sincronización con servidor
+- **Zustand (v4.x)**: State management global ligero (usuario actual, preferencias)
+- **React Hooks**: useState, useEffect para estado local de componentes
+
+### Real-time y Comunicación
+
+- **Socket.io Client (v4.x)**: WebSocket connection para chat en tiempo real (Chat App)
+- **Axios**: Cliente HTTP para comunicación con API REST (ambas apps)
+
+### UI y Estilos
+
+- **TailwindCSS (v3.x)**: Utility-first CSS (Dashboard Admin)
+- **Shadcn/ui**: Componentes UI accesibles y customizables (Dashboard Admin)
+- **React Router DOM (v6.x)**: Routing en Chat App
+
+### Framework de Pruebas
+
+- **Playwriht 1.58.0**: Pruebas end-to-end
+- **Jest**: Pruebas unitarias (vía Create React App)
+- **React Testing Library**: Utilidades de prueba de componentes
+
+### Herramientas de Desarrollo
+
+- **ESLint**: Linting de código con reglas específicas de React
+- **TypeScript**: Verificación de tipos estática
+- **Web Vitals**: Monitoreo de rendimiento
+
+## Estructura del Proyecto
+
+### Chat App (apps/web-chat/)
+
+```
+apps/web-chat/
+├── src/
+│   ├── components/          # Componentes UI reutilizables
+│   │   ├── ui/             # Componentes base (Button, Input, Card)
+│   │   └── chat/           # Componentes específicos de chat
+│   ├── services/           # API services (axios)
+│   ├── hooks/              # Custom hooks
+│   ├── stores/             # Zustand stores (user, preferences)
+│   ├── lib/                # Utilidades y helpers
+│   ├── types/              # TypeScript types/interfaces
+│   ├── App.tsx             # Componente raíz con Router
+│   ├── main.tsx            # Entry point (Vite)
+│   └── index.css           # Estilos globales
+├── public/                 # Assets estáticos
+├── index.html              # HTML entry (Vite)
+├── vite.config.ts          # Configuración Vite
+├── tsconfig.json           # TypeScript config
+└── package.json            # Dependencies
+```
+
+### Dashboard Admin (apps/web-admin/)
+
+```
+apps/web-admin/
+├── src/
+│   ├── app/                # Next.js App Router
+│   │   ├── (auth)/        # Grupo de rutas autenticadas
+│   │   ├── api/           # API Routes (Next.js)
+│   │   ├── layout.tsx     # Root layout
+│   │   └── page.tsx       # Home page
+│   ├── components/         # React components
+│   │   ├── ui/            # Shadcn/ui components
+│   │   └── features/      # Feature-specific components
+│   ├── lib/                # Utilidades
+│   └── types/              # TypeScript types
+├── public/                 # Assets estáticos
+├── next.config.js          # Next.js config
+├── tailwind.config.ts      # Tailwind config
+├── tsconfig.json           # TypeScript config
+└── package.json            # Dependencies
+```
+
+## Estándares de Codificación
+
+### Convenciones de Nomenclatura
+
+- **Nomenclatura de Componentes**: Usar PascalCase para componentes React (ej., `CandidateCard`, `PositionDetails`, `RecruiterDashboard`)
+- **Nomenclatura de Variables**: Usar camelCase para variables y funciones (ej., `candidateId`, `handleSubmit`, `fetchPositions`)
+- **Nomenclatura de Constantes**: Usar UPPER_SNAKE_CASE para constantes (ej., `MAX_CANDIDATES_PER_PAGE`, `API_BASE_URL`)
+- **Nomenclatura de Tipos/Interfaces**: Usar PascalCase para tipos e interfaces (ej., `CandidateData`, `PositionProps`, `ICandidateService`)
+- **Nomenclatura de Archivos**: Usar PascalCase para archivos de componentes (ej., `CandidateCard.tsx`, `PositionDetails.tsx`) y camelCase para archivos de utilidades (ej., `candidateService.js`, `apiUtils.ts`)
+- **Nomenclatura de Clases CSS**: Usar kebab-case para clases CSS (ej., `candidate-card`, `position-details`)
+- **Nomenclatura de Hooks**: Usar camelCase comenzando con prefijo "use" (ej., `useCandidate`, `usePositionData`, `useFormValidation`)
+
+**Ejemplos:**
+
+```typescript
+// Bien: Todo el código en inglés
+// Bien: Todos los comentarios en español
+import React, { useState, useEffect } from 'react';
+
+type CandidateCardProps = {
+    candidate: Candidate;
+    index: number;
+    onClick: (candidate: Candidate) => void;
+};
+
+const CandidateCard: React.FC<CandidateCardProps> = ({ candidate, index, onClick }) => {
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Manejar el evento de clic en la tarjeta del candidato
+    const handleCardClick = () => {
+        onClick(candidate);
+    };
+
+    return (
+        <div className="candidate-card" onClick={handleCardClick}>
+            {/* JSX del componente */}
+        </div>
+    );
+};
+
+// Evitar: Nombres en otro idioma diferente al inglés
+// Evitar: Comentarios en otro idioma diferente al español
+const TarjetaCandidato: React.FC<PropsTarjetaCandidato> = ({ candidato, indice, alHacerClic }) => {
+    const [estaCargando, setEstaCargando] = useState(false);
+
+    // Handle candidate card click event
+    const manejarClicTarjeta = () => {
+        alHacerClic(candidato);
+    };
+
+    return (
+        <div className="tarjeta-candidato" onClick={manejarClicTarjeta}>
+            {/* Component JSX */}
+        </div>
+    );
+};
+```
+
+**Mensajes de Error y Logs de Consola:**
+
+```typescript
+// Bien: Mensajes de error en español
+catch (error) {
+    console.error('Error al obtener candidatos:', error);
+    setError('No se pudieron cargar los candidatos. Por favor, inténtelo de nuevo más tarde.');
+}
+
+// Evitar: Mensajes en otro idioma diferente al español
+catch (error) {
+    console.error('Failed to fetch candidates:', error);
+    setError('Unable to load candidates. Please try again later.');
+}
+```
+
+**Ejemplos de Capa de Servicio:**
+
+```typescript
+// Bien: Comunicación con humanos en español
+export const candidateService = {
+    getAllCandidates: async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/candidates`);
+            return response.data;
+        } catch (error) {
+            console.error("Error al obtener candidatos:", error);
+            throw error;
+        }
+    },
+};
+
+// Evitar: Comunicación con humanos en otro idioma diferente al español
+export const servicioCandidatos = {
+    obtenerTodosLosCandidatos: async () => {
+        try {
+            const respuesta = await axios.get(`${API_BASE_URL}/candidates`);
+            return respuesta.data;
+        } catch (error) {
+            console.error("Error fetching candidates:", error);
+            throw error;
+        }
+    },
+};
+```
+
+### Convenciones de Componentes
+
+#### Componentes Funcionales
+
+- **Usar siempre componentes funcionales** con hooks en lugar de componentes de clase
+- Usar **TypeScript para componentes nuevos** cuando sea posible
+- Mantener **JavaScript para componentes legacy** hasta la migración
+
+```typescript
+// Preferido - Componente funcional TypeScript
+import React, { useState, useEffect } from "react";
+
+type Position = {
+    id: number;
+    title: string;
+    status: "Open" | "Contratado" | "Cerrado" | "Borrador";
+};
+
+const Positions: React.FC = () => {
+    const [positions, setPositions] = useState<Position[]>([]);
+    // Lógica del componente
+};
+```
+
+#### Props de Componente
+
+- **Definir interfaces TypeScript** para props de componente al usar TypeScript
+- Usar **desestructuración** para props
+- Incluir **valores predeterminados** donde sea apropiado
+
+```typescript
+type CandidateCardProps = {
+    candidate: Candidate;
+    index: number;
+    onClick: (candidate: Candidate) => void;
+};
+
+const CandidateCard: React.FC<CandidateCardProps> = ({
+    candidate,
+    index,
+    onClick,
+}) => {
+    // Implementación del componente
+};
+```
+
+### Gestión de Estado
+
+#### Estado Local con Hooks
+
+- Usar **useState** para estado a nivel de componente
+- Usar **useEffect** para efectos secundarios y obtención de datos
+- **Extraer hooks personalizados** para lógica con estado reutilizable
+
+```javascript
+const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    status: "Borrador",
+});
+
+const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+    }));
+};
+```
+
+#### Estados de Carga y Error
+
+- **Siempre manejar estados de carga** para operaciones asíncronas
+- **Implementar manejo de errores** con mensajes amigables para el usuario
+- **Usar componentes Alert de React Bootstrap** para retroalimentación
+
+```javascript
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
+const [success, setSuccess] = useState("");
+
+// En función asíncrona
+try {
+    setLoading(true);
+    const data = await apiCall();
+    setSuccess("Operation completed successfully");
+} catch (error) {
+    setError("Error message: " + error.message);
+} finally {
+    setLoading(false);
+}
+```
+
+### Arquitectura de Capa de Servicio
+
+#### Servicios de API
+
+- **Centralizar llamadas de API** en archivos de servicio
+- Usar **axios** para peticiones HTTP
+- **Exportar objetos de servicio** con métodos agrupados
+- **Manejar errores a nivel de servicio** cuando sea apropiado
+
+```javascript
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:3010";
+
+export const positionService = {
+    getAllPositions: async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/positions`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching positions:", error);
+            throw error;
+        }
+    },
+
+    updatePosition: async (id, positionData) => {
+        try {
+            const response = await axios.put(
+                `${API_BASE_URL}/positions/${id}`,
+                positionData,
+            );
+            return response.data;
+        } catch (error) {
+            console.error("Error updating position:", error);
+            throw error;
+        }
+    },
+};
+```
+
+## Estándares de UI/UX
+
+### Integración con Bootstrap
+
+- Usar **componentes React Bootstrap** en lugar de Bootstrap plano
+- **Importar CSS de Bootstrap** en el componente App principal
+- Seguir **sistema de grid responsivo de Bootstrap** (Container, Row, Col)
+
+```javascript
+import {
+    Container,
+    Row,
+    Col,
+    Card,
+    Button,
+    Form,
+    Alert,
+} from "react-bootstrap";
+```
+
+### Manejo de Formularios
+
+- Usar **componentes controlados** para entradas de formulario
+- Implementar **validación en tiempo real** donde sea apropiado
+- **Deshabilitar botones de envío** durante el envío del formulario
+- **Limpiar estado del formulario** después del envío exitoso
+
+```javascript
+<Form onSubmit={handleSubmit}>
+    <Form.Group className="mb-3">
+        <Form.Label>Title *</Form.Label>
+        <Form.Control
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleInputChange}
+            required
+        />
+    </Form.Group>
+    <Button type="submit" disabled={saving}>
+        {saving ? "Saving..." : "Save"}
+    </Button>
+</Form>
+```
+
+### Patrones de Navegación
+
+- Usar **React Router** para toda la navegación
+- **Implementar breadcrumbs** con navegación hacia atrás
+- Usar **navegación programática** con hook useNavigate
+
+```javascript
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
+
+// Ejemplos de navegación
+<Button variant="link" onClick={() => navigate("/")}>
+    ← Back to Dashboard
+</Button>;
+```
+
+### Accesibilidad
+
+- Incluir atributos **aria-label** para elementos interactivos
+- Usar **elementos HTML semánticos**
+- Asegurar soporte de **navegación por teclado**
+- Proporcionar **texto alternativo** para imágenes
+
+```javascript
+<Form.Control
+    type="text"
+    placeholder="Search by title"
+    aria-label="Search positions by title"
+/>
+```
+
+## Estándares de Pruebas
+
+### Pruebas End-to-End con Playwright
+
+- **Probar flujos de trabajo de usuario** en lugar de detalles de implementación
+- Usar atributos **data-testid** para selección confiable de elementos
+- **Organizar pruebas por funcionalidad** (candidates.cy.ts, positions.cy.ts)
+- **Incluir pruebas de API** junto con pruebas de UI
+
+```typescript
+describe("Positions API - Update", () => {
+    beforeEach(() => {
+        cy.window().then((win) => {
+            win.localStorage.clear();
+        });
+    });
+
+    it("should update a position successfully", () => {
+        const updateData = {
+            title: "Updated Test Position",
+            status: "Open",
+        };
+
+        cy.request({
+            method: "PUT",
+            url: `${API_URL}/positions/${testPositionId}`,
+            body: updateData,
+        }).then((response) => {
+            expect(response.status).to.eq(200);
+            expect(response.body.data.title).to.eq(updateData.title);
+        });
+    });
+});
+```
+
+### Organización de Pruebas
+
+- **Agrupar pruebas relacionadas** con bloques describe
+- **Usar nombres descriptivos de prueba** que expliquen el comportamiento esperado
+- **Probar tanto escenarios exitosos como de error**
+- **Incluir casos extremos** y pruebas de validación
+
+## Estándares de Configuración
+
+### Configuración de TypeScript
+
+- Habilitar **modo estricto** para verificación de tipos
+- Usar **mapeo de rutas** con "@/\*" para importaciones más limpias
+- Incluir **tanto tipos de Playwright como de Node**
+- Configurar **target ES5** para compatibilidad más amplia
+
+```json
+{
+    "compilerOptions": {
+        "strict": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        },
+        "types": ["playwright", "node"]
+    }
+}
+```
+
+### Configuración de ESLint
+
+- Extender configuración de **React App**
+- Incluir **reglas de Jest** para pruebas
+- **Formato automático de código** y detección de errores
+- **Estilo de código consistente** en todo el proyecto
+
+### Configuración de Entorno
+
+- Usar **variables de entorno** para URLs de API
+- **Separar configuraciones** para desarrollo y producción
+- **Configurar Playwright** con ajustes específicos de entorno
+
+```javascript
+// playwright.config.ts
+export default defineConfig({
+    e2e: {
+        baseUrl: "http://localhost:3000",
+        env: {
+            API_URL: "http://localhost:3010",
+        },
+    },
+});
+```
+
+## Mejores Prácticas de Rendimiento
+
+### Optimización de Componentes
+
+- **Carga diferida** de componentes cuando sea apropiado
+- **Memoizar cálculos costosos** con useMemo
+- **Evitar re-renderizados innecesarios** con useCallback
+- **Extraer lógica reutilizable** en hooks personalizados
+
+### Optimización de Bundle
+
+- **Tree shaking** habilitado a través de Create React App
+- **Code splitting** a nivel de ruta
+- **Optimizar imágenes** y recursos estáticos
+- **Monitorear tamaño de bundle** con herramientas de compilación
+
+### Eficiencia de API
+
+- **Implementar manejo adecuado de errores** para peticiones de red
+- **Cachear respuestas de API** donde sea apropiado
+- **Usar estados de carga** para mejorar rendimiento percibido
+- **Agrupar llamadas de API** cuando sea posible
+
+## Flujo de Trabajo de Desarrollo
+
+- **Ramas de Funcionalidad**: Desarrollar funcionalidades en ramas separadas, agregando sufijo descriptivo "-frontend" para permitir trabajar en paralelo y evitar conflictos o colisiones
+- **Commits Descriptivos**: Escribir mensajes de commit descriptivos en español
+- **Revisión de Código**: Revisión de código antes de fusionar
+- **Ramas Pequeñas**: Mantener ramas pequeñas y enfocadas
+
+### Scripts de Desarrollo
+
+```bash
+npm start          # Servidor de desarrollo
+npm test           # Ejecutar pruebas unitarias
+npm run build      # Compilación de producción
+npm run playwright:open    # Abrir ejecutor de pruebas Playwright
+npm run playwright:run     # Ejecutar pruebas Playwright sin interfaz
+```
+
+### Calidad de Código
+
+- **Validación de ESLint** antes de commits
+- **Compilación de TypeScript** sin errores
+- **Todas las pruebas pasando** antes del despliegue
+- **Monitoreo de rendimiento** con Web Vitals
+
+## Estrategia de Migración
+
+### Migración a TypeScript
+
+- **Migración gradual** de JavaScript a TypeScript
+- **Componentes nuevos en TypeScript** por defecto
+- **Mantener componentes JavaScript** existentes hasta refactor planificado
+- **Agregar tipos incrementalmente** al código existente
+
+### Modernización de Componentes
+
+- **Componentes funcionales** sobre componentes de clase
+- **Hooks** en lugar de métodos de ciclo de vida
+- **Componentes React Bootstrap** para consistencia
+- **Principios de diseño responsivo** en todo el proyecto
+
+Este documento sirve como la base para mantener calidad y consistencia de código en toda la aplicación frontend del Proyecto Final del Máster AI4Devs. Todos los miembros del equipo deben seguir estas prácticas para asegurar una base de código mantenible y escalable.

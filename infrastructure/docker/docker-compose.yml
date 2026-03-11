@@ -1,0 +1,31 @@
+# Adresles - Docker Compose para desarrollo local
+# Ver Adresles_Business.md Sección 4.7
+
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: AI4Devs-adresles-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  # PostgreSQL para desarrollo (alternativa a Supabase local)
+  postgres:
+    image: postgres:15-alpine
+    container_name: AI4Devs-adresles-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: adresles
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  redis-data:
+  postgres-data:

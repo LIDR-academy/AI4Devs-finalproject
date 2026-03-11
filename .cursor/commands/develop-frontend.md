@@ -1,0 +1,1 @@
+../../openspec/.commands/develop-frontend.md

@@ -1,0 +1,103 @@
+---
+description: Estándares y mejores prácticas para documentación técnica en este proyecto, incluyendo estructura de documentación, procesos de actualización y reglas de lenguaje.
+globs:
+alwaysApply: true
+---
+# Reglas y Patrones para documentación y especificaciones de IA
+
+## Introducción
+La documentación técnica se aplica a toda la documentación relativa al proyecto, como el modelo de datos, README, especificaciones de API y otros documentos MD que describen cómo el proyecto está estructurado, funciona y opera.
+Las especificaciones de IA se refieren a los documentos que explican a los agentes de IA cómo comportarse, documentar, planificar, codificar, etc., lo que incluye acuerdos de equipo, estándares y convenciones.
+
+## Reglas generales
+
+### IDIOMA Y CONVENCIONES DE NOMENCLATURA
+
+- Código fuente
+   - Todos los identificadores DEBEN estar en INGLÉS:
+      - Nombres de clases
+      - Funciones / métodos
+      - Variables
+      - Interfaces
+      - Tipos
+      - Enums
+      - Constantes
+      - Archivos de código
+      - Claves de configuración
+   - El idioma del lenguaje de programación no se traduce (keywords, APIs, librerías).
+
+- Comentarios y documentación
+   - TODOS los comentarios dentro del código deben escribirse EXCLUSIVAMENTE EN ESPAÑOL.
+   - TODOS los archivos de documentación (.md, .mdc, README, ADR, etc.) deben estar EXCLUSIVAMENTE EN ESPAÑOL.
+   - Explicaciones de lógica, reglas de negocio, decisiones técnicas y advertencias se redactan siempre en ESPAÑOL.
+
+- Prohibiciones
+   - ❌ No mezclar idiomas dentro del mismo comentario o documento.
+   - ❌ No usar español en nombres de código.
+   - ❌ No usar inglés en comentarios o documentación.
+
+- Ejemplos correctos:
+   - En archivo de código
+      ``` ts
+      // Calcula el total del pedido aplicando impuestos y descuentos
+      function calculateOrderTotal(orderItems: OrderItem[]): number {
+        // Validamos que existan artículos en el pedido
+        if (orderItems.length === 0) {
+          return 0;
+        }
+
+        return orderItems.reduce((total, item) => {
+          return total + item.price * item.quantity;
+        }, 0);
+      }
+      ```
+   - En archivo markdown como 'README.md'
+
+      ``` md
+      # Cálculo del total del pedido
+
+      Este módulo se encarga de calcular el importe total de un pedido teniendo en cuenta
+      los artículos, cantidades y precios unitarios.
+      ```
+
+- Ejemplo incorrecto:
+
+   - En archivo de código
+      ```ts
+      // Calculate order total ❌ (idioma incorrecto)
+      function calcularTotalPedido(items) { ❌
+      ```
+
+## Documentación Técnica
+Antes de hacer cualquier commit o git push, o si se te pide documentar un commit, debes SIEMPRE revisar qué documentación técnica debe actualizarse.
+
+Al actualizar documentación, haré lo siguiente:
+1. Revisar todos los cambios recientes en el código base
+2. Identificar qué archivos de documentación necesitan actualizaciones basándose en los cambios. Algunos ejemplos claros:
+   - Para cambios en el modelo de datos: Actualizar la sección de definición del modelo de datos en data-model.md
+   - Para cambios en la API: Actualizar api-spec.yml
+   - Para cambios en bibliotecas, migraciones de base de datos o cualquier cosa que cambie el proceso de instalación, actualizar *-standards.mdc
+3. Actualizar cada archivo de documentación afectado, manteniendo consistencia con la documentación existente
+4. Asegurar que toda la documentación esté correctamente formateada y siga la estructura establecida
+5. Verificar que todos los cambios estén reflejados con precisión en la documentación
+6. Reportar qué archivos fueron actualizados y qué cambios se hicieron
+
+## Especificaciones de IA
+
+Esta regla establece un proceso obligatorio para que la IA:
+*   Aprenda de la retroalimentación del usuario, orientación y sugerencias durante las interacciones.
+*   Identifique oportunidades para mejorar las Reglas de Desarrollo existentes basándose en estos aprendizajes de manera proactiva.
+*   Mantenga la asistencia de la IA alineada con las necesidades del proyecto en evolución y las expectativas del usuario.
+*   Incorpore la retroalimentación del usuario en el marco operativo de la IA para maximizar su valor.
+
+Esta regla es aplicable después de cualquier interacción donde el usuario proporcione retroalimentación explícita o implícita, sugerencias, correcciones, información nueva o exprese preferencias. **La IA DEBE analizar activamente todas las interacciones del usuario en busca de tales oportunidades de aprendizaje, no solo esperar pasivamente retroalimentación directa, para refinar proactivamente su comprensión y las mejores prácticas del proyecto.**
+
+### Errores Comunes y Anti-Patrones a ser evitados por la IA
+
+*   **Omitir el Proceso de Aprobación:** Aplicar modificaciones de reglas sin obtener primero la revisión y aprobación explícita del usuario.
+*   **Propuestas Desvinculadas:** Proponer cambios de reglas sin conectarlos claramente con la retroalimentación específica del usuario o los conocimientos obtenidos de la interacción.
+*   **Modificaciones Imprecisas:** Sugerir modificaciones sin identificar con precisión qué regla o secciones específicas dentro de una regla deben cambiarse, dificultando la revisión efectiva del usuario.
+*   **Retroalimentación No Atendida:** No iniciar el proceso de aprendizaje y revisión cuando el usuario proporciona retroalimentación relevante que podría mejorar las reglas.
+*   **Expansión del Alcance:** Actualizar múltiples reglas no relacionadas simultáneamente o hacer cambios que excedan el alcance de la retroalimentación recibida.
+*   **Cambios de Reglas No Solicitados:** Modificar reglas de manera proactiva cuando no hay conexión directa con la retroalimentación del usuario o una oportunidad de aprendizaje. Las actualizaciones de reglas deben ser reactivas e impulsadas por retroalimentación.
+*   **Falta de Confirmación de Actualización:** No notificar al usuario después de que una modificación de regla ha sido implementada exitosamente tras su aprobación.
