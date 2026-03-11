@@ -123,7 +123,7 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-103-01-create-registration-form.md
-- TASK-US-103-02-implement-validation.md
-- TASK-US-103-03-create-success-modal.md
-- TASK-US-103-04-add-accessibility.md
+- [TASK-US-103-01: Create Registration Form](../../tasks/frontend/TASK-US-103-01-create-registration-form.md)
+- [TASK-US-103-02: Implement Validation](../../tasks/frontend/TASK-US-103-02-implement-validation.md)
+- [TASK-US-103-03: Create Success Modal](../../tasks/frontend/TASK-US-103-03-create-success-modal.md)
+- [TASK-US-103-04: Add Accessibility](../../tasks/frontend/TASK-US-103-04-add-accessibility.md)
