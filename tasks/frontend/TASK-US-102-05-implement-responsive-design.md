@@ -45,5 +45,8 @@ Verify rendering and usability on representative viewport sizes for phones, tabl
 - Validate both portrait and landscape behavior for mobile widths
 - Keep interaction targets large enough for touch devices
 
+## Pull Request
+- [PR #15: US-102 implement home page and responsive navigation](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/15)
+
 ## Completion Status
 - [x] 100% - Completed

@@ -98,3 +98,6 @@ flowchart TD
 - [TASK-US-102-03: Create Home Page](../../tasks/frontend/TASK-US-102-03-create-home-page.md)
 - [TASK-US-102-04: Create Footer](../../tasks/frontend/TASK-US-102-04-create-footer.md)
 - [TASK-US-102-05: Implement Responsive Design](../../tasks/frontend/TASK-US-102-05-implement-responsive-design.md)
+
+## Pull Request
+- [PR #15: US-102 implement home page and responsive navigation](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/15)

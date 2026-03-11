@@ -48,5 +48,8 @@ Check spacing, typography rhythm, and visual hierarchy between hero/features/how
 - Reuse existing components from `components/layout` to avoid duplication
 - Favor semantic tags over generic containers where possible
 
+## Pull Request
+- [PR #15: US-102 implement home page and responsive navigation](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/15)
+
 ## Completion Status
 - [x] 100% - Completed

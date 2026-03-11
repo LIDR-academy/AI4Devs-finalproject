@@ -44,5 +44,8 @@ Match spacing, typography, and color tokens from layout theme.
 - Reuse layout container primitives for alignment consistency
 - Avoid adding external links without clear purpose
 
+## Pull Request
+- [PR #15: US-102 implement home page and responsive navigation](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/15)
+
 ## Completion Status
 - [x] 100% - Completed

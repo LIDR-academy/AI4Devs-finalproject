@@ -51,5 +51,8 @@ Ensure all links resolve to existing App Router pages.
 - Avoid hardcoded styles that break at small screens
 - Reuse button/utility classes from shared UI primitives
 
+## Pull Request
+- [PR #15: US-102 implement home page and responsive navigation](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/15)
+
 ## Completion Status
 - [x] 100% - Completed
