@@ -19,8 +19,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IPFS Gateway Frontend",
-  description: "Next.js frontend foundation for the IPFS Gateway platform",
+  title: {
+    default: "IPFS Gateway",
+    template: "%s | IPFS Gateway",
+  },
+  description: "Secure gateway to upload, retrieve, and manage decentralized files with IPFS.",
 };
 
 export default function RootLayout({

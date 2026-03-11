@@ -9,7 +9,7 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run dev -- --port 3101",
+    command: "PORT=3101 HOSTNAME=127.0.0.1 node .next/standalone/server.js",
     port: 3101,
     cwd: ".",
     reuseExistingServer: false,
