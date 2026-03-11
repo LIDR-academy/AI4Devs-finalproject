@@ -93,8 +93,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-102-01-create-layout-component.md
-- TASK-US-102-02-create-navigation.md
-- TASK-US-102-03-create-home-page.md
-- TASK-US-102-04-create-footer.md
-- TASK-US-102-05-implement-responsive-design.md
+- [TASK-US-102-01: Create Layout Component](../../tasks/frontend/TASK-US-102-01-create-layout-component.md)
+- [TASK-US-102-02: Create Navigation](../../tasks/frontend/TASK-US-102-02-create-navigation.md)
+- [TASK-US-102-03: Create Home Page](../../tasks/frontend/TASK-US-102-03-create-home-page.md)
+- [TASK-US-102-04: Create Footer](../../tasks/frontend/TASK-US-102-04-create-footer.md)
+- [TASK-US-102-05: Implement Responsive Design](../../tasks/frontend/TASK-US-102-05-implement-responsive-design.md)
