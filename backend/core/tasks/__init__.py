@@ -1,0 +1,2 @@
+"""Celery task package."""
+

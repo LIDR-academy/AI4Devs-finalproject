@@ -1,0 +1,356 @@
+# TASK-US-101-04: Create API Client
+
+[Trello Card](https://trello.com/c/u28mIROl)
+
+
+
+## Parent User Story
+[US-101: Frontend Project Setup](../../user-stories/frontend/US-101-frontend-project-setup.md)
+
+## Description
+Create a centralized API client for communicating with the backend. This includes setting up Axios with interceptors, React Query for data fetching, and typed API functions.
+
+## Priority
+🔴 Critical
+
+## Estimated Time
+2 hours
+
+## Detailed Steps
+
+### 1. Create API Client (src/lib/api.ts)
+```typescript
+/**
+ * API Client for IPFS Gateway Backend
+ */
+
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from "axios";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+/**
+ * Configuration for creating an API client.
+ * 
+ * Note: For production, use HttpOnly cookies or short-lived rotated tokens.
+ * Do NOT store sensitive credentials in localStorage.
+ */
+export interface ApiClientConfig {
+  /**
+   * Optional function to provide the API key at request time.
+   * Called for each request; return the current API key or undefined if unavailable.
+   * 
+   * Recommended: Use context/provider to supply this from secure storage (HttpOnly cookie, session, etc.)
+   */
+  getApiKey?: () => string | undefined;
+}
+
+/**
+ * Factory function to create a configured API client.
+ * 
+ * @param config - Configuration object with optional getApiKey provider
+ * @returns Configured Axios instance
+ */
+export function createApiClient(config: ApiClientConfig = {}): AxiosInstance {
+  const client = axios.create({
+    baseURL: API_URL,
+    timeout: 30000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  // Request interceptor to add API key (if provided via config)
+  client.interceptors.request.use(
+    (requestConfig) => {
+      if (typeof window !== "undefined" && config.getApiKey) {
+        const apiKey = config.getApiKey();
+        if (apiKey) {
+          requestConfig.headers["X-API-Key"] = apiKey;
+        }
+      }
+      return requestConfig;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // Response interceptor for error handling
+  client.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError) => {
+      if (error.response?.status === 401) {
+        // Handle unauthorized: redirect to login (browser-only)
+        if (typeof window !== "undefined") {
+          if (!window.location.pathname.includes("/login")) {
+            window.location.href = "/login";
+          }
+        }
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  return client;
+}
+
+// Shared API client instance - initialized via initializeApiClient when config is available
+let sharedApiClient: AxiosInstance | null = null;
+
+/**
+ * Initialize the shared API client with API key provider.
+ * Must be called once during app initialization with a valid getApiKey function.
+ * 
+ * @param getApiKey Function that provides the current API key
+ */
+export function initializeApiClient(getApiKey: () => string | undefined): void {
+  sharedApiClient = createApiClient({ getApiKey });
+}
+
+/**
+ * Get the configured shared API client instance.
+ * Ensure initializeApiClient has been called before using this.
+ * 
+ * @returns The shared configured API client
+ * @throws Error if called before initializeApiClient
+ */
+export function getApiClient(): AxiosInstance {
+  if (!sharedApiClient) {
+    // Fallback to unconfigured client if initialization wasn't done
+    sharedApiClient = createApiClient();
+  }
+  return sharedApiClient;
+}
+
+// Type definitions
+export interface ApiResponse<T> {
+  status: number;
+  message: string;
+  data?: T;
+  errors?: Array<{ field: string; message: string }>;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  email: string;
+  api_key: string;
+}
+
+export interface StatusResponse {
+  api_key_status: "active" | "inactive" | "revoked";
+  created_at: string;
+  last_renewed_at: string | null;
+  usage_count: number;
+}
+
+export interface FileInfo {
+  id: number;
+  cid: string;
+  original_filename: string;
+  size: number;
+  pinned: boolean;
+  uploaded_at: string;
+}
+
+export interface UploadResponse {
+  cid: string;
+  original_filename: string;
+  size: number;
+  pinned: boolean;
+  uploaded_at: string;
+}
+
+// API Functions - use getApiClient() to ensure API key is included
+export const api = {
+  // Authentication
+  register: async (data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> => {
+    const response = await getApiClient().post<ApiResponse<RegisterResponse>>("/api/v1/users/register", data);
+    return response.data;
+  },
+
+  getStatus: async (): Promise<ApiResponse<StatusResponse>> => {
+    const response = await getApiClient().get<ApiResponse<StatusResponse>>("/api/v1/users/status");
+    return response.data;
+  },
+
+  renewApiKey: async (email: string): Promise<ApiResponse<{ api_key: string }>> => {
+    const response = await getApiClient().post<ApiResponse<{ api_key: string }>>("/api/v1/users/renew", { email });
+    return response.data;
+  },
+
+  // File Operations
+  uploadFile: async (
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Promise<ApiResponse<UploadResponse>> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await getApiClient().post<ApiResponse<UploadResponse>>("/api/v1/files/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total && onProgress) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(progress);
+        }
+      },
+    });
+    return response.data;
+  },
+
+  retrieveFile: async (cid: string): Promise<Blob> => {
+    const response = await getApiClient().get(`/api/v1/files/retrieve/${cid}`, {
+      responseType: "blob",
+    });
+    return response.data;
+  },
+
+  // TODO: getFileInfo and listFiles routes not yet implemented in backend (US-006)
+  // Uncomment after backend implements GET /api/v1/files/{cid} and GET /api/v1/files
+  /*
+  getFileInfo: async (cid: string): Promise<ApiResponse<FileInfo>> => {
+    const response = await getApiClient().get<ApiResponse<FileInfo>>(`/api/v1/files/${cid}`);
+    return response.data;
+  },
+
+  listFiles: async (page: number = 1, perPage: number = 20): Promise<ApiResponse<{
+    files: FileInfo[];
+    pagination: {
+      page: number;
+      per_page: number;
+      total: number;
+      pages: number;
+    };
+  }>> => {
+    const response = await getApiClient().get("/api/v1/files", {
+      params: { page, per_page: perPage },
+    });
+    return response.data;
+  },
+  */
+
+  // Pinning Operations
+  pinContent: async (cid: string): Promise<ApiResponse<{ cid: string; pinned: boolean }>> => {
+    const response = await getApiClient().post(`/api/v1/files/pinning/${cid}`);
+    return response.data;
+  },
+
+  unpinContent: async (cid: string): Promise<ApiResponse<{ cid: string; pinned: boolean }>> => {
+    const response = await getApiClient().delete(`/api/v1/files/pinning/${cid}`);
+    return response.data;
+  },
+};
+
+export default api;
+```
+
+### 2. Create React Query Setup (src/lib/query-client.ts)
+```typescript
+import { QueryClient } from "@tanstack/react-query";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
+```
+
+### 3. Create Query Provider (src/components/providers/query-provider.tsx)
+```typescript
+"use client";
+
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/query-client";
+import { ReactNode } from "react";
+
+export function QueryProvider({ children }: { children: ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+}
+```
+
+### 4. Create Custom Hooks (src/hooks/use-files.ts)
+```typescript
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { toast } from "react-hot-toast";
+
+// TODO: useFiles hook depends on api.listFiles (US-006)
+// Uncomment after backend implements GET /api/v1/files
+/*
+export function useFiles(page: number = 1, perPage: number = 20) {
+  return useQuery({
+    queryKey: ["files", page, perPage],
+    queryFn: () => api.listFiles(page, perPage),
+  });
+}
+*/
+
+export function useUploadFile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ file, onProgress }: { file: File; onProgress?: (p: number) => void }) =>
+      api.uploadFile(file, onProgress),
+    onSuccess: () => {
+      // TODO: Invalidate file list query once useFiles is implemented
+      // queryClient.invalidateQueries({ queryKey: ["files"] });
+      toast.success("File uploaded successfully!");
+    },
+    onError: (error: Error) => {
+      toast.error(`Upload failed: ${error.message}`);
+    },
+  });
+}
+
+export function usePinContent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (cid: string) => api.pinContent(cid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["files"] });
+      toast.success("Content pinned successfully!");
+    },
+    onError: (error: Error) => {
+      toast.error(`Pinning failed: ${error.message}`);
+    },
+  });
+}
+```
+
+## Acceptance Criteria
+- [ ] API client is created with proper interceptors
+- [ ] All API endpoints are typed
+- [ ] React Query is set up with provider
+- [ ] Custom hooks are created for common operations
+- [ ] Error handling is consistent
+- [ ] TypeScript types are complete
+
+## Notes
+- **API Key Security**: Do NOT store API keys in localStorage. Instead:
+  - Use HttpOnly cookies set by the backend (most secure)
+  - Use short-lived rotated tokens stored in-memory only (no localStorage/sessionStorage)
+  - For registration UX, show API key once with copy/download export and avoid browser persistence
+  - Pass the API key via the `getApiKey` callback in `createApiClient()` config
+- Use React Query for caching and state management
+- Add proper error handling and user feedback
+- For production, enable token rotation and expiration policies
+
+## Completion Status
+- [ ] 0% - Not Started
