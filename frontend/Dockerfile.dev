@@ -1,0 +1,30 @@
+# Development Dockerfile for Frontend
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies for development including wget for health checks
+RUN apk add --no-cache git wget
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose ports for dev server and HMR
+EXPOSE 3000 24678
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs \
+    && adduser -S nextjs -u 1001 \
+    && chown -R nextjs:nodejs /app
+
+USER nextjs
+
+# Start development server
+CMD ["npm", "run", "dev"]

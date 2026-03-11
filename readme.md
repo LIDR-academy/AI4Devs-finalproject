@@ -15,18 +15,27 @@
 
 ### **0.1. Tu nombre completo:**
 
+Victoria Manzanal Carmona
+
 ### **0.2. Nombre del proyecto:**
+
+**_Comparador de plantillas SEPE_**
 
 ### **0.3. Descripción breve del proyecto:**
 
+El objetivo es construir una **aplicación de comparación de plantillas del SEPE** para el equipo de arquitectura de producto. El enfoque principal es la **velocidad de desarrollo** para obtener un producto mínimo viable (MVP) rápidamente usando las capacidades agénticas de la IA, utilizando un stack que se alinee con las capacidades del equipo.
+
+**_Objetivo adicional:_** testear metedologías de desarrollo con IA: agent-os y memory-bank para construir un proceso interno de desarrollo con IA.
+
 ### **0.4. URL del proyecto:**
+
+_Por definir_
 
 > Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+https://github.com/vmanzanal/AI4Devs-finalproject
 
 ---
 
@@ -36,17 +45,34 @@
 
 ### **1.1. Objetivo:**
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+**_Propósito:_** El objetivo es construir un comparador que nos permita gestionar de manera más eficiente los cambios anárquicos en las plantillas de contratos legales publicados por el amado Sericio Público de Empleo Estatal y que nos genera mucho trabajo recurrente y de poco valor
+
+**_¿Qué valor aporta?_** El valor que aporta es la automatización de procesos para liberar al equipo de trabajo recurrente y de poco valor adicional. Ahora el proceso de adaptación y comparación de estas plantillas es manual, además de ser un trabajo de poco valor, al ser manual es más susceptible de errores.
+
+**_¿Para quién?_** Desarrollo interno para el equipo de arquitectura de producto puede ser util para otros actores internos de la empresa como el equipo de AMS del Cloud
+
+**_Valor adicional_** Demostrar con un ejemplo tangible que se pueden contruir productos y herramientas en IA que nos ayuden a ser más productivos y por tanto competitivos. La idea de este proyecto no es nueva, pero sin IA llevaría meses de desarrollo, con IA espero poder tener las funcionalidades esenciales en 30-40 horas de trabajo
+
+**Para más información ver: [Mission](.agent-os/product/mission.md)**
 
 ### **1.2. Características y funcionalidades principales:**
 
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+- **Comparar** las diferencias en la estructura de documentos y formularios AcroForm (PDF).
+- **Catalogar** plantillas y mantener un historial de comparaciones.
+- **Actualizar** archivos de mapeo `JSON` para reflejar los cambios en las plantillas.
+- **Automatizar** el _scraping_ de la web del SEPE para detectar nuevas versiones.
+- **Aprovechar al máximo la IA** para asistir en todo el proceso de desarrollo.
+
+**Para más información ver: [Roadmap](.agent-os/product/roadmap.md)**
+
+_El entregable de proyecto del Máster IA4Devs puede no contener todas las funcionales desarrollo 🥲_
 
 ### **1.3. Diseño y experiencia de usuario:**
 
 > Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
 
 ### **1.4. Instrucciones de instalación:**
+
 > Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
 
 ---
@@ -54,8 +80,8 @@
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
 
+> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -64,6 +90,47 @@
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 > Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+
+#### **2.3.1. Backend python FastAPI**
+
+```
+backend/
+├── app/                    # 📦 Código principal de la aplicación
+│   ├── main.py            # 🚀 Punto de entrada (como index.js en Node)
+│   ├── core/              # ⚙️ Configuración y funciones centrales
+│   │   ├── config.py      # 📋 Variables de entorno y configuración
+│   │   ├── database.py    # 🗄️ Conexión a base de datos
+│   │   └── exceptions.py  # ❌ Errores personalizados
+│   ├── models/            # 🏗️ Modelos de base de datos (como esquemas)
+│   ├── api/v1/            # 🌐 Rutas de la API versión 1
+│   ├── services/          # 💼 Lógica de negocio
+│   └── utils/             # 🔧 Funciones auxiliares
+├── tests/                 # 🧪 Tests automatizados
+├── requirements.txt       # 📋 Lista de dependencias (como package.json)
+└── pyproject.toml        # ⚙️ Configuración del proyecto
+```
+
+#### **2.3.1. Frontend React 19 + Vite + Tailwind**
+
+```
+frontend/
+├── src/
+│   ├── components/         # Reusable UI components
+│   │   ├── auth/          # Authentication components (ProtectedRoute)
+│   │   ├── layout/        # Layout components (Header, Sidebar, Layout)
+│   │   └── ui/            # Basic UI components (LoadingSpinner)
+│   ├── contexts/          # React contexts (Auth, Theme)
+│   ├── pages/             # Page components
+│   │   ├── auth/          # Login, Register pages
+│   │   ├── templates/     # Template management pages
+│   │   └── comparisons/   # Comparison pages
+│   ├── services/          # API services (apiService, authService)
+│   ├── types/             # TypeScript type definitions
+│   ├── hooks/             # Custom hooks (ready for implementation)
+│   ├── utils/             # Utility functions
+│   └── test/              # Test setup and test files
+└── Configuration files... # All development and deployment configs
+```
 
 ### **2.4. Infraestructura y despliegue**
 
@@ -84,7 +151,6 @@
 ### **3.1. Diagrama del modelo de datos:**
 
 > Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
-
 
 ### **3.2. Descripción de entidades principales:**
 
@@ -112,7 +178,7 @@
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto.
 
 **Ticket 1**
 
@@ -131,4 +197,3 @@
 **Pull Request 2**
 
 **Pull Request 3**
-

@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Review and document the existing JWT-based authentication system in the SEPE Templates Comparator backend, ensuring full compliance with SOLID principles (particularly Single Responsibility Principle) and verifying that all required cryptographic and tokenization utilities are properly implemented using FastAPI, PyJWT, and passlib[bcrypt]. The review should confirm proper separation of concerns between security utilities, token management, authentication dependencies, and API endpoints, while identifying any missing service layer functions or architectural improvements needed for maintainability and testability.

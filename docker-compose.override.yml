@@ -1,0 +1,63 @@
+# Docker Compose override for development environment
+version: "3.8"
+
+services:
+  # Development overrides for backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./backend:/app:cached
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    ports:
+      - "8000:8000"
+      - "5678:5678" # Debug port
+
+  # Development overrides for frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+    volumes:
+      - ./frontend:/app:cached
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+      - "24678:24678" # HMR port
+
+  # Development database with exposed port
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  # Development Redis with exposed port
+  redis:
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+
+  # Development worker with debug logging
+  worker:
+    command: celery -A app.services.celery_app worker --loglevel=debug --concurrency=2
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./backend:/app:cached
+
+volumes:
+  postgres_data:
+  backend_uploads:
+  backend_logs:

@@ -1,0 +1,47 @@
+[flake8]
+# Flake8 configuration for SEPE Templates Comparator
+
+# Maximum line length
+max-line-length = 88
+
+# Ignore specific error codes
+extend-ignore = 
+    # E203: whitespace before ':' (conflicts with black)
+    E203,
+    # W503: line break before binary operator (conflicts with black)
+    W503,
+    # E501: line too long (handled by black)
+    E501,
+    # F401: imported but unused (handled by isort and mypy)
+    F401
+
+# Exclude directories
+exclude = 
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .mypy_cache,
+    .venv,
+    venv,
+    build,
+    dist,
+    migrations,
+    .tox
+
+# Maximum complexity
+max-complexity = 10
+
+# Import order style
+import-order-style = google
+
+# Docstring conventions
+docstring-convention = google
+
+# Per-file ignores
+per-file-ignores =
+    # Tests can have longer lines and unused imports
+    tests/*:E501,F401,F811
+    # Init files can have unused imports
+    __init__.py:F401
+    # Migration files can be complex
+    migrations/*:E501,C901

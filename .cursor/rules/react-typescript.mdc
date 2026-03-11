@@ -1,0 +1,76 @@
+---
+globs: *.tsx,*.ts
+description: TypeScript standards for React components and type definitions
+---
+
+# React TypeScript Standards
+
+## Type Definitions
+- Use interfaces for object shapes, types for unions/primitives
+- Define component props interfaces explicitly
+- Use generic types for reusable components
+- Export types/interfaces that might be used elsewhere
+
+## Component Typing
+- Use `React.FC<Props>` or explicit return type annotations
+- Type children prop as `React.ReactNode`
+- Use event handler types: `React.MouseEvent`, `React.ChangeEvent`, etc.
+- Type refs with specific element types: `React.RefObject<HTMLInputElement>`
+
+## Props and State Typing
+- Make required props explicit, optional props with `?`
+- Use union types for variant props
+- Type callbacks with proper parameter and return types
+- Use generic constraints for flexible but type-safe components
+
+## Common Type Patterns
+```tsx
+// Event handlers
+type HandleClick = (event: React.MouseEvent<HTMLButtonElement>) => void;
+type HandleChange = (event: React.ChangeEvent<HTMLInputElement>) => void;
+
+// Generic component props
+interface ListProps<T> {
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
+  keyExtractor: (item: T) => string | number;
+}
+
+// Ref forwarding
+const Input = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>(({ className, ...props }, ref) => {
+  return (
+    <input
+      ref={ref}
+      className={`input ${className}`}
+      {...props}
+    />
+  );
+});
+
+// Context typing
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
+
+const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
+
+// Custom hook typing
+const useTheme = (): ThemeContextType => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return context;
+};
+```
+
+## Type Safety Guidelines
+- Avoid `any` type - use `unknown` if truly unknown
+- Use type assertions sparingly and with type guards
+- Prefer type narrowing over type assertions
+- Use strict TypeScript configuration
+- Leverage utility types: `Partial`, `Pick`, `Omit`, etc.
