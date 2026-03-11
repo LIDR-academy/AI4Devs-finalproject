@@ -1,0 +1,15 @@
+**ORDEN DE PROMPTS**
+1. Prompt planning de Salmantour (Definido los primeros pasos para definir la estructura base del proyecto
+2. "Realiza el primer paso que has definido". (Recibido el stack tecnológico a utilizar en forma de contexto)
+3. Realiza el segundo paso, definir la estructura de carpetas. Ten en cuenta el stack tecnológico que hemos definido. (Desarrollado la estructura base de la app)
+4. Prompts para que me guiasen paso a paso para ejecutar un Hello World básico en mi móvil con Expo Go.
+5. En los siguientes pasos, desarrolló documentos de markdown que explican aspectos base de la aplicación que ya habíamos definido, como `ARCHITECTURE.md` (explicación de la arquitectura desarrollada), `README.md` (explicación general del proyecto y de su finalidad), `SETUP.md` (explicación de cómo iniciar la aplicación, únicamente la parte del frontend en este punto).
+6. Prompt para desarrollar un `DEVELOPMENT.md` que explica un planteamiento temporal definido para el proyecto. Esta planificación me ayudará para que el copilot desarrolle la aplicación paso a paso, siguiendo la planificación definida como guía.
+7. Inicié otro chat, con el contexto de los archivos de documentación que acabábamos de crear y una explicación básica para que entendiese todo el contexto de la app a desarrollar. Le pedí que, basándose en la Fase 2 del planning temporal (realizar un prototipo), definiese las tareas que añadiría al backlog de GitHub project, atribuyendo peso según su coste temporal, y un orden para desarrollar cada una de ellas y obtener el prototipo funcional. Prompt: contexto_prototipo.md
+8. Con toda la documentación técnica realizada en el chat anterior, empecé un nuevo chat al que le atribuí el rol de "Desarrollador experto de aplicaciones móviles con React Native, Expo y Zustand, especializado en la creación del sistema de usuarios de la aplicación". Los prompts realizados con este modelo (Claude Sonnet 4.5 en modo agente, copilot) están recogidos en el documento "prompts_autenticacion.md"
+9. Volví al chat "PM" para realizar las Tareas de GitHub Project y la documentación técnica para el Sprint 2 (Mapa y Medallas)
+10. Empecé un chat nuevo como "Desarrollador experto de aplicaciones móviles con React Native, Expo y Zustand" para el desarrollo de este Sprint. Para ello, tomé como base el prompt de contexto que hice para el anterior chat (Sprint 1), y lo modifiqué un poco para reflejar el contexto actual de la app y dirigirlo hacia el desarrollo de la funcionalidad del mapa. La conversación con este chat está en el archivo `prompts_mapa_medallas.md`.
+11. Repetí el mismo proceso de definición de Tareas con el chat PM y nueva conversación para los Sprints 3 y 4. Los prompts de estos sprints aparecen recogidos en `prompts_vista_progreso.md`
+12. El Sprint 5 fue realizado con prompts recogidos en `prompts_favoritos_gallery.md`.
+13. El Sprint 6 fue realizado con prompts recogidos en `prompts_vista_friends.md`.
+14. Auditoría final y la implementación completa de tests unitarios en `prompts_revision_tests.md`
