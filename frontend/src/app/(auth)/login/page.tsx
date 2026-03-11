@@ -1,3 +1,16 @@
+import type { Metadata } from "next";
+
+import { LoginForm } from "@/components/auth/login-form";
+
+export const metadata: Metadata = {
+  title: "Login",
+  description: "Login to IPFS Gateway using your API key.",
+};
+
 export default function LoginPage() {
-  return <div className="rounded-xl border border-slate-200 bg-white p-6">Login page placeholder</div>;
+  return (
+    <section className="mx-auto max-w-3xl">
+      <LoginForm />
+    </section>
+  );
 }
