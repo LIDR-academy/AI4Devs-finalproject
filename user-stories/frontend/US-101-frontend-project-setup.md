@@ -93,8 +93,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-101-01-init-nextjs-project.md
-- TASK-US-101-02-configure-typescript.md
-- TASK-US-101-03-setup-tailwind.md
-- TASK-US-101-04-create-api-client.md
-- TASK-US-101-05-setup-base-components.md
+- [TASK-US-101-01: Initialize Next.js Project](../../tasks/frontend/TASK-US-101-01-init-nextjs-project.md)
+- [TASK-US-101-02: Configure TypeScript](../../tasks/frontend/TASK-US-101-02-configure-typescript.md)
+- [TASK-US-101-03: Setup Tailwind](../../tasks/frontend/TASK-US-101-03-setup-tailwind.md)
+- [TASK-US-101-04: Create API Client](../../tasks/frontend/TASK-US-101-04-create-api-client.md)
+- [TASK-US-101-05: Setup Base Components](../../tasks/frontend/TASK-US-101-05-setup-base-components.md)
