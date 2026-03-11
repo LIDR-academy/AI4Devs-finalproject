@@ -62,5 +62,8 @@ Confirm styles compile and hot-reload correctly.
 - Avoid hardcoded one-off colors in components when token exists
 - Ensure class naming remains readable when composing long utility chains
 
+## Pull Request
+- [PR #14: US-101 frontend project setup foundation](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/14)
+
 ## Completion Status
 - [x] 100% - Completed

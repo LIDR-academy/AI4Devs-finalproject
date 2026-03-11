@@ -352,5 +352,8 @@ export function usePinContent() {
 - Add proper error handling and user feedback
 - For production, enable token rotation and expiration policies
 
+## Pull Request
+- [PR #14: US-101 frontend project setup foundation](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/14)
+
 ## Completion Status
 - [x] 100% - Completed

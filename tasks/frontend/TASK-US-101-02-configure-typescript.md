@@ -64,5 +64,8 @@ npm run lint
 - Prefer `unknown` + explicit narrowing for untrusted API payloads
 - Re-run type-check before each frontend PR merge
 
+## Pull Request
+- [PR #14: US-101 frontend project setup foundation](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/14)
+
 ## Completion Status
 - [x] 100% - Completed
