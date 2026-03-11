@@ -320,6 +320,8 @@ frontend/
 └── package.json
 ```
 
+Con US-102, esta base se extendio con una landing page orientada a visitantes, navegacion responsive con menu hamburguesa, metadatos SEO por pagina y footer con accesos rapidos a rutas clave.
+
 ```mermaid
 flowchart TD
     A[App Router Pages] --> B[Layout + Providers]
@@ -367,7 +369,6 @@ coverage run -m unittest discover -s tests/backend/unit -p "test_*.py"
 coverage report
 
 # Frontend
-cd frontend
 npm run lint
 npm run type-check
 npm run test
