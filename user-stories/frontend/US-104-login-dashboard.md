@@ -109,8 +109,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-104-01-create-login-form.md
-- TASK-US-104-02-implement-auth-context.md
-- TASK-US-104-03-create-dashboard-layout.md
-- TASK-US-104-04-create-stats-components.md
-- TASK-US-104-05-implement-session-management.md
+- [TASK-US-104-01: Create Login Form](../../tasks/frontend/TASK-US-104-01-create-login-form.md)
+- [TASK-US-104-02: Implement Auth Context](../../tasks/frontend/TASK-US-104-02-implement-auth-context.md)
+- [TASK-US-104-03: Create Dashboard Layout](../../tasks/frontend/TASK-US-104-03-create-dashboard-layout.md)
+- [TASK-US-104-04: Create Stats Components](../../tasks/frontend/TASK-US-104-04-create-stats-components.md)
+- [TASK-US-104-05: Implement Session Management](../../tasks/frontend/TASK-US-104-05-implement-session-management.md)
