@@ -161,12 +161,12 @@ export function RegisterForm() {
     toast.success("API key downloaded");
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!registrationResult) {
       return;
     }
 
-    login(registrationResult.apiKey, registrationResult.email);
+    await login(registrationResult.apiKey, registrationResult.email);
     setRegistrationResult(null);
     router.push("/dashboard");
   };
@@ -312,7 +312,7 @@ export function RegisterForm() {
         <RegistrationSuccessDialog
           apiKey={registrationResult.apiKey}
           email={registrationResult.email}
-          onContinue={handleContinue}
+          onContinue={() => void handleContinue()}
           onCopy={handleCopyApiKey}
           onDownload={handleDownloadApiKey}
         />

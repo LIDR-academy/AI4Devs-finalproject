@@ -1,8 +1,20 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, type PropsWithChildren } from "react";
+import { useEffect, useState, type PropsWithChildren } from "react";
 import { Toaster } from "react-hot-toast";
+
+import { useAuth } from "@/hooks/use-auth";
+
+function SessionBootstrap() {
+  const { hydrateSession } = useAuth();
+
+  useEffect(() => {
+    void hydrateSession();
+  }, [hydrateSession]);
+
+  return null;
+}
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(
@@ -19,6 +31,7 @@ export function AppProviders({ children }: PropsWithChildren) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <SessionBootstrap />
       {children}
       <Toaster position="top-right" />
     </QueryClientProvider>

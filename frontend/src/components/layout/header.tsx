@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useAuth } from "@/hooks/use-auth";
 import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,19 @@ const NAV = [
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
+
+  const navItems = isAuthenticated
+    ? NAV.map((item) => (item.href === "/login" ? { href: "/dashboard", label: "Dashboard" } : item))
+    : NAV;
+
+  const handleLogout = async () => {
+    await logout();
+    setMobileOpen(false);
+    router.push("/login");
+  };
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname?.startsWith(href));
 
@@ -43,7 +56,7 @@ export function Header() {
         </button>
 
         <nav className="hidden items-center gap-2 text-sm text-slate-600 md:flex" aria-label="Primary">
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <Link
               className={cn(
                 "rounded-md px-3 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
@@ -55,6 +68,15 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          {isAuthenticated ? (
+            <button
+              className="rounded-md px-3 py-2 transition hover:bg-slate-100 hover:text-slate-900"
+              onClick={() => void handleLogout()}
+              type="button"
+            >
+              Logout
+            </button>
+          ) : null}
         </nav>
       </div>
 
@@ -64,7 +86,7 @@ export function Header() {
         id="mobile-nav"
       >
         <div className="flex flex-col gap-1">
-          {NAV.map((item) => (
+          {navItems.map((item) => (
             <Link
               className={cn(
                 "rounded-md px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
@@ -77,6 +99,15 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          {isAuthenticated ? (
+            <button
+              className="rounded-md px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100"
+              onClick={() => void handleLogout()}
+              type="button"
+            >
+              Logout
+            </button>
+          ) : null}
         </div>
       </nav>
     </header>

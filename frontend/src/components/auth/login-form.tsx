@@ -12,7 +12,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/hooks/use-auth";
-import { createApiClient } from "@/lib/api";
 
 const loginSchema = z.object({
   email: z
@@ -61,10 +60,7 @@ export function LoginForm() {
 
   const onSubmit = handleSubmit(async ({ email, apiKey }) => {
     try {
-      const client = createApiClient({ getApiKey: () => apiKey });
-      await client.post("/api/v1/users/status");
-
-      login(apiKey, email);
+      await login(apiKey, email);
       toast.success("Login successful");
       router.push("/dashboard");
     } catch (error) {

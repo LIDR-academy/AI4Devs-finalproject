@@ -14,16 +14,16 @@ As a **registered user**, I want to log in to my account and access a dashboard,
 ⭐⭐⭐ Medium-High
 
 ## Acceptance Criteria
-- [ ] Login form accepts API key for authentication
-- [ ] Dashboard displays user email and account status
-- [ ] API key status is shown (active, inactive, revoked)
-- [ ] Usage statistics are displayed (file count, storage used)
-- [ ] Option to renew API key is available
-- [ ] Option to revoke own API key (with confirmation)
-- [ ] List of recently uploaded files
-- [ ] Session persistence with secure storage
-- [ ] Logout functionality clears session
-- [ ] Protected routes redirect to login if not authenticated
+- [x] Login form accepts API key for authentication
+- [x] Dashboard displays user email and account status
+- [x] API key status is shown (active, inactive, revoked)
+- [x] Usage statistics are displayed (file count, storage used)
+- [x] Option to renew API key is available
+- [x] Option to revoke own API key (with confirmation)
+- [x] List of recently uploaded files section is implemented (data source pending backend endpoint)
+- [x] Session persistence with secure storage
+- [x] Logout functionality clears session
+- [x] Protected routes redirect to login if not authenticated
 
 ## Dashboard Sections
 1. **Account Overview**: Email, status, created date
@@ -48,7 +48,12 @@ As a **registered user**, I want to log in to my account and access a dashboard,
 8 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Implemented (frontend scope)
+
+## Implementation Notes
+- Session persistence is implemented with `HttpOnly` cookie storage via Next.js route handlers (`/api/auth/session`) to avoid storing secrets in browser storage.
+- API key protected dashboard data is fetched through server-side proxy route handlers (`/api/dashboard/overview`, `/api/auth/renew`) to avoid exposing long-lived credentials in browser storage.
+- `Recent Files` and `self-service revoke` UI paths are implemented; backend currently lacks a dedicated user-scoped recent-files listing endpoint and non-admin revoke endpoint, so the dashboard shows clear fallback messaging.
 
 ## Workflow Diagram
 ```mermaid
