@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lean Canvas – Corporate Carpool (MVP)</title>
+<style>
+  :root{
+    --blue: #B8D6F0;         /* card accent (blue) */
+    --grey: #E9EDF3;         /* card accent (grey) */
+    --border: #8AA0B6;       /* thin border */
+    --text: #0F172A;         /* slate-900 */
+    --muted: #334155;        /* slate-700 */
+    --radius: 14px;
+    --gap: 16px;
+    --pad: 18px;
+    --title: 12px;
+    --body: 15px;
+  }
+
+  * { box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+    color:var(--text);
+    background:#fff;
+    line-height:1.45;
+  }
+
+  .wrap{
+    max-width: 1280px;
+    margin: 24px auto;
+    padding: 0 20px 40px;
+  }
+
+  header{
+    margin-bottom: 12px;
+  }
+  header h1{
+    font-size: 20px;
+    margin: 0 0 6px;
+    font-weight: 700;
+    letter-spacing:.2px;
+  }
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  /* GRID: 5 equal columns on desktop; 2 on tablets; 1 on mobile */
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-auto-rows: minmax(140px, auto);
+    gap: var(--gap);
+    margin-top: 18px;
+  }
+
+  /* Card base */
+  .card{
+    border:1px solid var(--border);
+    border-radius: var(--radius);
+    background:#fff;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* Accent bar (like your example) */
+  .card .head{
+    padding: 10px var(--pad);
+    font-weight:800;
+    letter-spacing:.4px;
+    text-transform: uppercase;
+    font-size: var(--title);
+    border-bottom:1px solid var(--border);
+  }
+  .card.blue .head{ background: var(--blue); }
+  .card.grey .head{ background: var(--grey); }
+
+  .card .body{
+    padding: var(--pad);
+    font-size: var(--body);
+  }
+  .card .body ul{
+    margin:0;
+    padding-left: 18px;
+  }
+  .card .body li{ margin: 6px 0; }
+
+  /* Bottom row spans: Cost (span 3), Revenue (span 2) */
+  .costs { grid-column: 1 / span 3; }
+  .revenue{ grid-column: 4 / span 2; }
+
+  /* Responsive */
+  @media (max-width: 1024px){
+    .grid{ grid-template-columns: repeat(2, 1fr); }
+    .costs, .revenue{ grid-column: auto / span 1; }
+  }
+  @media (max-width: 640px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  /* Print-friendly tweaks */
+  @media print{
+    body{ background:#fff; }
+    .wrap{ padding:0; margin:0; }
+    .grid{ gap:12px; }
+    .card{ break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Lean Canvas — Corporate Carpool (MVP)</h1>
+      <p>Structured like the traditional LC: 5 columns × 2 rows, plus bottom row (Cost Structure ×3, Revenue/Benefits ×2).</p>
+    </header>
+
+    <section class="grid">
+      <!-- Row 1 -->
+      <article class="card grey">
+        <div class="head">Problem</div>
+        <div class="body">
+          <ul>
+            <li>High commuting costs (fuel, parking, tolls)</li>
+            <li>Few sustainable daily options</li>
+            <li>Low vehicle occupancy</li>
+            <li>Company goal to reduce CO2 & improve wellbeing</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card blue">
+        <div class="head">Solution (MVP)</div>
+        <div class="body">
+          <ul>
+            <li>SSO login</li>
+            <li>Minimal profile (zone, role, schedule)</li>
+            <li>Publish rides (driver)</li>
+            <li>Search & reserve (rider)</li>
+            <li>Basic confirmations/notifications</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card grey">
+        <div class="head">Unique Value Proposition</div>
+        <div class="body">
+          <ul>
+            <li>Internal & secure carpooling tailored to employees</li>
+            <li>Reduces cost & coordination friction</li>
+            <li>Cuts parking pressure and CO2</li>
+            <li>Integrates with corporate tools (SSO, calendar, intranet)</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card blue">
+        <div class="head">Unfair Advantage</div>
+        <div class="body">
+          <ul>
+            <li>Private data & GDPR compliance</li>
+            <li>Fit to culture & internal policies</li>
+            <li>Incentives & reporting aligned with company goals</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card grey">
+        <div class="head">Customer Segments</div>
+        <div class="body">
+          <ul>
+            <li>Employees (drivers & riders)</li>
+            <li>HR & Sustainability (reporting)</li>
+            <li>Facilities/Operations (parking & mobility)</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Row 2 -->
+      <article class="card blue">
+        <div class="head">Existing Alternatives</div>
+        <div class="body">
+          <ul>
+            <li>Spreadsheets / email</li>
+            <li>Generic carpool apps</li>
+            <li>Shuttles / unmanaged parking</li>
+            <li>Third-party tools (Hoop, KINTO, etc.)</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card grey">
+        <div class="head">Key Metrics</div>
+        <div class="body">
+          <ul>
+            <li>Registered / active employees</li>
+            <li>Trips per week & average occupancy</li>
+            <li>CO2 avoided (shared km)</li>
+            <li>Repeat / retention rate</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card blue">
+        <div class="head">High-Level Concept</div>
+        <div class="body">
+          <ul>
+            <li>Simple corporate platform to coordinate daily carpooling</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card grey">
+        <div class="head">Channels</div>
+        <div class="body">
+          <ul>
+            <li>Intranet / newsletter / signage</li>
+            <li>Internal ambassadors (pilot)</li>
+            <li>Teams/Slack notifications</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card blue">
+        <div class="head">Early Adopters</div>
+        <div class="body">
+          <ul>
+            <li>Sites with parking pressure</li>
+            <li>Teams with similar hours</li>
+            <li>Companies with sustainability targets</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Row 3 (spans) -->
+      <article class="card grey costs">
+        <div class="head">Cost Structure</div>
+        <div class="body">
+          <ul>
+            <li>Build & maintenance (MVP)</li>
+            <li>Infra/hosting</li>
+            <li>IT support & incident management</li>
+            <li>Internal comms & adoption</li>
+            <li>Evolution (matching, metrics, incentives)</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card blue revenue">
+        <div class="head">Revenue Streams / Benefits</div>
+        <div class="body">
+          <ul>
+            <li>No external monetization (internal benefit)</li>
+            <li>Lower parking/commute cost</li>
+            <li>ESG/RSC compliance & brand</li>
+            <li>Employee wellbeing & retention</li>
+          </ul>
+        </div>
+      </article>
+    </section>
+  </div>
+</body>
+</html>

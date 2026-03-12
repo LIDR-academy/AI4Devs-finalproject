@@ -1,0 +1,79 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "trips": "Voyages",
+    "search": "Recherche",
+    "bookings": "Réservations",
+    "history": "Historique",
+    "profile": "Profil"
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "clear": "Effacer",
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "openMenu": "Ouvrir le menu"
+  },
+  "messages": {
+    "success": "Opération réussie",
+    "error": "Erreur dans l'opération",
+    "loading": "Chargement...",
+    "noData": "Aucune donnée disponible",
+    "tryAgain": "Réessayer"
+  },
+  "language": {
+    "select": "Sélectionner la langue",
+    "catalan": "Català",
+    "spanish": "Español",
+    "romanian": "Română",
+    "ukrainian": "Українська",
+    "english": "English",
+    "french": "Français"
+  },
+  "home": {
+    "title": "bonÀreaGo",
+    "subtitle": "Votre plateforme d'entreprise pour partager des trajets. Réduisez les coûts et contribuez à la durabilité.",
+    "getStarted": "Commencer maintenant",
+    "createTrip": "Créer un trajet",
+    "searchTrips": "Rechercher des trajets",
+    "features": {
+      "share": {
+        "title": "Partagez votre trajet",
+        "description": "Offrez des places disponibles dans vos trajets d'entreprise et aidez vos collègues"
+      },
+      "find": {
+        "title": "Trouvez des correspondances",
+        "description": "Notre algorithme intelligent vous trouve les meilleurs trajets selon votre localisation et horaire"
+      },
+      "save": {
+        "title": "Économisez des coûts",
+        "description": "Réduisez les dépenses de transport en partageant des trajets avec des collègues de travail"
+      }
+    },
+    "howItWorks": {
+      "title": "Comment ça marche ?",
+      "subtitle": "Trois étapes simples pour commencer à partager des trajets",
+      "steps": {
+        "create": {
+          "title": "Créez votre trajet",
+          "description": "Publiez votre trajet d'entreprise avec origine, destination et horaire"
+        },
+        "search": {
+          "title": "Recherchez des correspondances",
+          "description": "Trouvez des trajets compatibles avec votre localisation et horaire"
+        },
+        "book": {
+          "title": "Réservez et voyagez",
+          "description": "Confirmez votre réservation et profitez du trajet partagé"
+        }
+      }
+    }
+  }
+}

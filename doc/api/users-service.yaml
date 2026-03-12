@@ -1,0 +1,84 @@
+openapi: 3.0.3
+info:
+  title: Users Service
+  version: 0.1.0
+servers:
+  - url: http://localhost:8081
+paths:
+  /users/me:
+    get:
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      description: Requires Authorization header. Example: `Authorization: Bearer eyJ...`
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+    put:
+      summary: Update current user profile (minimal fields)
+      security:
+        - bearerAuth: []
+      description: Requires Authorization header. Example: `Authorization: Bearer eyJ...`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        sedeId:
+          type: string
+          nullable: true
+        zone:
+          type: string
+          description: Barrio/CP (no dirección exacta)
+        roles:
+          type: array
+          items:
+            type: string
+    UserUpdate:
+      type: object
+      properties:
+        sedeId:
+          type: string
+          nullable: true
+        zone:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string

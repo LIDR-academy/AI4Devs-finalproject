@@ -1,0 +1,20 @@
+{
+  "title": "Профіль",
+  "personal": {
+    "title": "Особиста інформація",
+    "name": "Ім'я",
+    "email": "Email",
+    "phone": "Телефон",
+    "office": "Офіс"
+  },
+  "preferences": {
+    "title": "Налаштування",
+    "language": "Мова",
+    "notifications": "Сповіщення",
+    "privacy": "Приватність"
+  },
+  "actions": {
+    "save": "Зберегти зміни",
+    "edit": "Редагувати профіль"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "title": "Rezervări",
+  "list": {
+    "title": "Rezervările mele",
+    "empty": "Nu ai rezervări",
+    "bookFirst": "Fă prima ta rezervare"
+  },
+  "status": {
+    "pending": "În așteptare",
+    "confirmed": "Confirmată",
+    "cancelled": "Anulată"
+  },
+  "actions": {
+    "view": "Vezi",
+    "cancel": "Anulează"
+  },
+  "confirmation": {
+    "title": "Rezervare confirmată",
+    "message": "Rezervarea ta a fost confirmată cu succes"
+  }
+}

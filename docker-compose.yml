@@ -1,0 +1,230 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgis/postgis:15-3.4
+    container_name: covoituraje_db
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      - "5434:5432"  # Puerto externo 5434 para evitar conflictos
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6-alpine
+    container_name: covoituraje_redis
+    ports:
+      - "6379:6379"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: covoituraje_keycloak
+    command: ["start-dev", "--http-port=8080"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/app
+      KC_DB_USERNAME: app
+      KC_DB_PASSWORD: app
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: covoituraje_mailhog
+    ports:
+      - "8025:8025"   # UI
+      - "1025:1025"   # SMTP
+    environment:
+      # SMTP configuration for notifications
+      MH_SMTP_BIND_ADDR: 0.0.0.0:1025
+      MH_UI_BIND_ADDR: 0.0.0.0:8025
+
+  # Servicios de desarrollo para microservicios
+  trips-service:
+    build:
+      context: ./Backend
+      dockerfile: trips-service/Dockerfile
+    container_name: covoituraje_trips_service
+    environment:
+      - DATABASE_URL=jdbc:postgresql://db:5432/app
+      - DATABASE_USER=app
+      - DATABASE_PASSWORD=app
+      - OIDC_ISSUER_URI=http://localhost:8080/realms/covoituraje
+      - OIDC_JWKS_URI=http://keycloak:8080/realms/covoituraje/protocol/openid-connect/certs
+      - REQUIRE_ROLE_EMPLOYEE=false
+      - AUTH_DISABLED=true
+      - AUTH_BYPASS_USER_ID=user-001
+      - ALLOWED_ORIGINS=*
+      # VAPID Keys for Push Notifications
+      - VAPID_PUBLIC_KEY=BHW9bFosH5N-wdRkQLPnZt8yB4-YJ_7Ol-BHr-wNiD4ADNky1D01Sbd7O7DEDJyugJNs3JCCgfv7Pu3g-o8ZydA
+      - VAPID_PRIVATE_KEY=cS7i2NUlX_oa589_Nl7OAJE7vSNj3UfTYkb8gSgZy54
+      - VAPID_SUBJECT=mailto:admin@covoituraje.com
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - services
+
+  users-service:
+    build:
+      context: ./Backend
+      dockerfile: users-service/Dockerfile
+    container_name: covoituraje_users_service
+    environment:
+      - DATABASE_URL=jdbc:postgresql://db:5432/app
+      - DATABASE_USER=app
+      - DATABASE_PASSWORD=app
+      - OIDC_ISSUER_URI=http://localhost:8080/realms/covoituraje
+      - OIDC_JWKS_URI=http://keycloak:8080/realms/covoituraje/protocol/openid-connect/certs
+      - REQUIRE_ROLE_EMPLOYEE=false
+      - AUTH_DISABLED=true
+      - AUTH_BYPASS_USER_ID=user-001
+      - ALLOWED_ORIGINS=*
+      # VAPID Keys for Push Notifications
+      - VAPID_PUBLIC_KEY=BHW9bFosH5N-wdRkQLPnZt8yB4-YJ_7Ol-BHr-wNiD4ADNky1D01Sbd7O7DEDJyugJNs3JCCgfv7Pu3g-o8ZydA
+      - VAPID_PRIVATE_KEY=cS7i2NUlX_oa589_Nl7OAJE7vSNj3UfTYkb8gSgZy54
+      - VAPID_SUBJECT=mailto:admin@covoituraje.com
+    ports:
+      - "8082:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - services
+
+  booking-service:
+    build:
+      context: ./Backend
+      dockerfile: booking-service/Dockerfile
+    container_name: covoituraje_booking_service
+    environment:
+      - DATABASE_URL=jdbc:postgresql://db:5432/app
+      - DATABASE_USER=app
+      - DATABASE_PASSWORD=app
+      - OIDC_ISSUER_URI=http://localhost:8080/realms/covoituraje
+      - OIDC_JWKS_URI=http://keycloak:8080/realms/covoituraje/protocol/openid-connect/certs
+      - REQUIRE_ROLE_EMPLOYEE=false
+      - AUTH_DISABLED=true
+      - AUTH_BYPASS_USER_ID=user-001
+      - TRIPS_SERVICE_URL=http://trips-service:8080/api
+      - USERS_SERVICE_URL=http://users-service:8080/api
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8080/api
+      - ALLOWED_ORIGINS=*
+    ports:
+      - "8083:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      trips-service:
+        condition: service_started
+      users-service:
+        condition: service_started
+    profiles:
+      - services
+
+  matching-service:
+    build:
+      context: ./Backend
+      dockerfile: matching-service/Dockerfile
+    container_name: covoituraje_matching_service
+    environment:
+      - DATABASE_URL=jdbc:postgresql://db:5432/app
+      - DATABASE_USER=app
+      - DATABASE_PASSWORD=app
+      - OIDC_ISSUER_URI=http://localhost:8080/realms/covoituraje
+      - OIDC_JWKS_URI=http://keycloak:8080/realms/covoituraje/protocol/openid-connect/certs
+      - REQUIRE_ROLE_EMPLOYEE=false
+      - AUTH_DISABLED=true
+      - AUTH_BYPASS_USER_ID=user-001
+      - TRIPS_SERVICE_URL=http://trips-service:8080/api
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8080/api
+      - ALLOWED_ORIGINS=*
+    ports:
+      - "8084:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      trips-service:
+        condition: service_started
+    profiles:
+      - services
+
+  # Frontend para desarrollo
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost:8081/api
+        - VITE_USERS_API_BASE_URL=http://localhost:8082/api
+        - VITE_TRIPS_API_BASE_URL=http://localhost:8081/api
+        - VITE_BOOKING_API_BASE_URL=http://localhost:8083/api
+        - VITE_MATCHING_API_BASE_URL=http://localhost:8084/api
+        - VITE_OIDC_ISSUER=http://localhost:8080/realms/covoituraje
+        - VITE_OIDC_CLIENT_ID=covoituraje-frontend
+        - VITE_OIDC_REDIRECT_URI=http://localhost:3000/callback
+        - VITE_AUTH_DISABLED=true
+        - BUILD_ID=${BUILD_ID-0}
+    container_name: covoituraje_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - trips-service
+      - users-service
+      - booking-service
+      - matching-service
+      - notification-service
+    profiles:
+      - services
+
+  notification-service:
+    build:
+      context: ./Backend
+      dockerfile: notification-service/Dockerfile
+    container_name: covoituraje_notification_service
+    environment:
+      - DATABASE_URL=jdbc:postgresql://db:5432/app
+      - DATABASE_USER=app
+      - DATABASE_PASSWORD=app
+      - OIDC_ISSUER_URI=http://localhost:8080/realms/covoituraje
+      - OIDC_JWKS_URI=http://keycloak:8080/realms/covoituraje/protocol/openid-connect/certs
+      - REQUIRE_ROLE_EMPLOYEE=false
+      - AUTH_DISABLED=true
+      - AUTH_BYPASS_USER_ID=user-001
+      - ALLOWED_ORIGINS=*
+      # VAPID Keys for Push Notifications
+      - VAPID_PUBLIC_KEY=BHW9bFosH5N-wdRkQLPnZt8yB4-YJ_7Ol-BHr-wNiD4ADNky1D01Sbd7O7DEDJyugJNs3JCCgfv7Pu3g-o8ZydA
+      - VAPID_PRIVATE_KEY=cS7i2NUlX_oa589_Nl7OAJE7vSNj3UfTYkb8gSgZy54
+      - VAPID_SUBJECT=mailto:admin@covoituraje.com
+      # SMTP Configuration
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USER=
+      - SMTP_PASSWORD=
+      - FROM_EMAIL=noreply@covoituraje.com
+    ports:
+      - "8085:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - services
+
+volumes:
+  db_data:
