@@ -75,6 +75,7 @@ export function DashboardView() {
   const { logout } = useAuth();
   const [verificationCode, setVerificationCode] = useState("");
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const [challengeCode, setChallengeCode] = useState<string | null>(null);
   const [isRequestingCode, setIsRequestingCode] = useState(false);
   const [isRenewing, setIsRenewing] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
@@ -110,9 +111,14 @@ export function DashboardView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "challenge" }),
       });
-      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      const payload = (await response.json().catch(() => null)) as { message?: string; data?: { verificationCode?: string } } | null;
       if (!response.ok) {
         throw new Error(payload?.message ?? "Failed to request renewal challenge");
+      }
+      const code = payload?.data?.verificationCode ?? null;
+      setChallengeCode(code);
+      if (code) {
+        setVerificationCode(code);
       }
       toast.success(payload?.message ?? "Verification code requested");
     } catch (requestError) {
@@ -144,6 +150,7 @@ export function DashboardView() {
 
       setNewApiKey(payload?.data?.newApiKey ?? null);
       setVerificationCode("");
+      setChallengeCode(null);
       toast.success("API key renewed successfully");
       void refetch();
     } catch (requestError) {
@@ -253,6 +260,14 @@ export function DashboardView() {
                     {isRevoking ? "Processing..." : "Revoke API Key"}
                   </Button>
                 </div>
+
+                {challengeCode ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    <p className="font-semibold">Verification code</p>
+                    <p className="mt-1 text-xs text-amber-700">Copy this code into the field below, then click Confirm Renew. It expires shortly.</p>
+                    <code className="mt-2 block overflow-x-auto rounded bg-slate-900 px-2 py-1 text-base font-bold tracking-widest text-amber-300 select-all">{challengeCode}</code>
+                  </div>
+                ) : null}
 
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input

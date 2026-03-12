@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   const action = payload?.action;
 
   if (action === "challenge") {
-    const challenge = await callBackend<never>("/api/v1/users/renew/challenge", {
+    const challenge = await callBackend<{ verification_code?: string }>("/api/v1/users/renew/challenge", {
       method: "POST",
       apiKey: session.apiKey,
     });
@@ -49,6 +49,9 @@ export async function POST(request: Request) {
       {
         status: challenge.status,
         message: challenge.body?.message ?? (challenge.ok ? "Verification code requested" : "Challenge request failed"),
+        data: challenge.ok && challenge.body?.data?.verification_code
+          ? { verificationCode: challenge.body.data.verification_code }
+          : undefined,
       },
       { status: challenge.status },
     );

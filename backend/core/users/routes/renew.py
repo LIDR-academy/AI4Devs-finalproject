@@ -58,14 +58,16 @@ def register_routes(bp: Blueprint) -> None:
 		# Generate and send verification code
 		code = generate_verification_code(user.id)
 		
-		# TODO: Send code via email (future enhancement)
-		# For now, log it for testing
+		# TODO: Replace with email delivery once SMTP is configured.
+		# Until then, return the code directly in the response so the
+		# frontend can display it to the user.
 		print(f"Verification code for {user.email}: {code}")
 		queue_audit_log(user_id=user.id, action="api_key_renew_challenge_requested", details={"status": "sent"})
 		
 		return jsonify({
 			"status": 202,
-			"message": "Verification code sent"
+			"message": "Verification code sent",
+			"data": {"verification_code": code},
 		}), 202
 	
 	@bp.post("/renew")
