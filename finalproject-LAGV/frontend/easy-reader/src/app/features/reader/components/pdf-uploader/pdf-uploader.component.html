@@ -1,0 +1,71 @@
+<div class="uploader-container">
+  <div class="upload-modal">
+    <div class="modal-header">
+      <div class="header-left">
+        <div class="cloud-icon-circle">
+          <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <div class="header-text">
+          <h2>Upload files</h2>
+          <p>Select and upload the files of your choice</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="close-btn" (click)="closeComponent()">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="drop-zone" 
+         *ngIf="!currentFile"
+         [class.dragging]="isDragging"
+         (dragenter)="onDragEnter($event)"
+         (dragleave)="onDragLeave($event)"
+         (dragover)="onDragOver($event)"
+         (drop)="onDrop($event)"
+         (click)="openFileDialog()">
+      <div class="cloud-icon">
+        <i class="fas fa-file-pdf"></i>
+      </div>
+      <h3>Choose a file or drag & drop it here</h3>
+      <p>PDF files up to 10MB</p>
+      <button class="browse-button">Browse File</button>
+    </div>
+
+    <div class="file-list" *ngIf="currentFile">
+      <div class="file-item" 
+           [class.uploading]="currentFile.status === 'uploading'"
+           [class.completed]="currentFile.status === 'completed'">
+        <div class="file-icon">PDF</div>
+        <div class="file-details">
+          <div class="file-info">
+            <div class="file-name-row">
+              <span class="filename">{{ currentFile.name }}</span>
+              <button class="action-button"
+                      (click)="removeFile()">
+                <i class="fas" 
+                   [class.fa-times]="currentFile.status === 'uploading'"
+                   [class.fa-trash]="currentFile.status === 'completed'">
+                </i>
+              </button>
+            </div>
+            <div class="file-status-row">
+              <span class="file-size">{{ currentFile.size }}</span>
+              <span class="bullet">•</span>
+              <span class="status">
+                {{ currentFile.status === 'uploading' ? 'Uploading...' : 'Completed' }}
+              </span>
+            </div>
+          </div>
+          <div class="progress-bar" *ngIf="currentFile.status === 'uploading'">
+            <div class="progress" [style.width.%]="currentFile.progress"></div>
+          </div>
+        </div>
+      </div>
+
+      <app-reading-options *ngIf="currentFile.status === 'completed'">
+      </app-reading-options>
+    </div>
+  </div>
+</div>
