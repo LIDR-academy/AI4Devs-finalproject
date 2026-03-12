@@ -56,5 +56,8 @@ Implement robust session management for authenticated users, including persisten
 - Add logging hooks for debugging auth/session transitions
 - Self-service revoke action is wired with confirmation UX; backend currently exposes admin-only revoke endpoint, so UI returns a clear not-available message.
 
+## Pull Request
+- [PR #17: US-104 implement login dashboard with secure session flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/17)
+
 ## Completion Status
 - [x] 100% - Completed

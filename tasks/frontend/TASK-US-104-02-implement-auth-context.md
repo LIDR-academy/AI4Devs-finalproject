@@ -55,5 +55,8 @@ Create or extend authentication context to hold session state, user identity, an
 - Prefer server-validated session state over client trust
 - Reuse existing API client and error mapping helpers
 
+## Pull Request
+- [PR #17: US-104 implement login dashboard with secure session flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/17)
+
 ## Completion Status
 - [x] 100% - Completed

@@ -47,6 +47,9 @@ As a **registered user**, I want to log in to my account and access a dashboard,
 ## Estimated Effort
 8 hours
 
+## Pull Request
+- [PR #17: US-104 implement login dashboard with secure session flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/17)
+
 ## Completion Status
 - [x] 100% - Implemented (frontend scope)
 

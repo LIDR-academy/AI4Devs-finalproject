@@ -56,5 +56,8 @@ Build reusable dashboard components that surface account key status, usage metri
 - Align naming and formatting with backend contract fields
 - Backend currently exposes usage count via `/api/v1/users/status` but not user-scoped recent-files listing; dashboard displays an explicit fallback message.
 
+## Pull Request
+- [PR #17: US-104 implement login dashboard with secure session flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/17)
+
 ## Completion Status
 - [x] 100% - Completed

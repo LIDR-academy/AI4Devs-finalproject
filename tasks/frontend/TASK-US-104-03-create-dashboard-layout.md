@@ -55,5 +55,8 @@ Create the main dashboard page structure with account overview, top-level dashbo
 - Align spacing/typography with existing frontend design conventions
 - Do not hardcode business data; consume from auth/data layer
 
+## Pull Request
+- [PR #17: US-104 implement login dashboard with secure session flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/17)
+
 ## Completion Status
 - [x] 100% - Completed

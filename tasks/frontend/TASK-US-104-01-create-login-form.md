@@ -56,5 +56,8 @@ Implement the login form UI for API-key based authentication, including field va
 - Keep API integration isolated through existing API client abstractions
 - Avoid exposing long-lived secrets in browser storage
 
+## Pull Request
+- [PR #17: US-104 implement login dashboard with secure session flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/17)
+
 ## Completion Status
 - [x] 100% - Completed
