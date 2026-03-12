@@ -4,6 +4,16 @@ import { Header } from "@/components/layout/header";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/",
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}));
+
+jest.mock("@/hooks/use-auth", () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    logout: jest.fn(),
+  }),
 }));
 
 describe("Header", () => {

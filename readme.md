@@ -8,6 +8,9 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [Backend Bootstrap (US-001)](#8-backend-bootstrap-us-001)
+9. [Database Models and Migrations (US-002)](#9-database-models-and-migrations-us-002)
+10. [Frontend Auth and Dashboard (US-104)](#10-frontend-auth-and-dashboard-us-104)
 
 ---
 
@@ -159,6 +162,64 @@ flowchart TB
     style REDIS fill:#dc382d,color:#fff
     style FILEBASE fill:#00d395,color:#fff
 ```
+
+## 10. Frontend Auth and Dashboard (US-104)
+
+Se implemento el flujo de autenticacion por API key y dashboard de usuario en `frontend/` con enfoque de seguridad en sesion.
+
+### 10.1. Cambios principales
+
+- Login por API key con formulario validado (`/login`).
+- Dashboard protegido (`/dashboard`) con:
+    - Account Overview
+    - API Key Status + renovacion por challenge/codigo
+    - Usage Statistics
+    - Recent Files section (con fallback explicito mientras no exista endpoint backend de listado)
+    - Quick Actions
+- Logout y redireccion de rutas protegidas cuando no hay sesion valida.
+
+### 10.2. Estrategia de sesion segura
+
+- No se almacena API key en `localStorage` ni `sessionStorage`.
+- La sesion se guarda en cookie `HttpOnly` via rutas internas Next.js (`/api/auth/session`).
+- El frontend no llama endpoints sensibles con API key desde cliente cuando no es necesario; usa proxy server-side.
+
+### 10.3. Rutas API internas (Next.js)
+
+- `POST/GET/DELETE /api/auth/session`
+- `POST /api/auth/renew`
+- `POST /api/auth/revoke` (retorna bloqueo explicito: backend actual solo soporta revoke admin)
+- `GET /api/dashboard/overview`
+
+### 10.4. Arquitectura de flujo
+
+```mermaid
+flowchart LR
+        U[Browser] --> L[Login Form]
+        L --> S[/api/auth/session POST]
+        S --> B[/api/v1/users/status backend]
+        B --> S
+        S --> C[(HttpOnly session cookie)]
+
+        U --> D[Dashboard]
+        D --> O[/api/dashboard/overview GET]
+        O --> B
+        O --> D
+
+        D --> R[/api/auth/renew POST]
+        R --> RB[/api/v1/users/renew/challenge + /renew]
+        RB --> R
+        R --> C
+```
+
+### 10.5. Pruebas ejecutadas
+
+- `npm run type-check`
+- `npm test` (Jest: unit + integration)
+- `npm run build`
+- `npm run test:e2e` (Playwright)
+
+Nota: para ejecutar E2E repetidas veces en local, puede ser necesario limpiar contadores de rate limiting en Redis del entorno de desarrollo.
 
     Request Flow Diagram:
 
