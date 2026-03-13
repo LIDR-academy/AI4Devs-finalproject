@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { Copy, ExternalLink, RefreshCw, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, ChevronUp, Copy, ExternalLink, RefreshCw, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,8 @@ async function copyToClipboard(text: string) {
 }
 
 export function UploadProgressItem({ entry, onCancel, onRemove, onRetry }: UploadProgressItemProps) {
+  const [showDetails, setShowDetails] = useState(false);
+
   const previewUrl = useMemo(() => {
     if (!entry.file.type.startsWith("image/")) {
       return null;
@@ -119,22 +121,30 @@ export function UploadProgressItem({ entry, onCancel, onRemove, onRetry }: Uploa
 
           {entry.error ? <p className="mt-3 text-sm text-rose-700">{entry.error}</p> : null}
 
-          {entry.cid ? (
-            <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
-              <p className="font-semibold">CID ready</p>
-              <code className="mt-2 block overflow-x-auto rounded bg-slate-900 px-2 py-1 text-emerald-300">{entry.cid}</code>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button className="gap-2" onClick={() => void handleCopy()} type="button" variant="ghost">
-                  <Copy className="h-4 w-4" />
-                  Copy CID
-                </Button>
-                <a className="inline-flex" href={`https://ipfs.io/ipfs/${entry.cid}`} rel="noreferrer noopener" target="_blank">
-                  <Button className="gap-2" type="button" variant="ghost">
-                    <ExternalLink className="h-4 w-4" />
-                    View on IPFS
-                  </Button>
-                </a>
-              </div>
+          {entry.cid && entry.status === "done" ? (
+            <div className="mt-3">
+              <Button className="gap-2" onClick={() => setShowDetails((previous) => !previous)} type="button" variant="ghost">
+                {showDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {showDetails ? "Hide details" : "Show details"}
+              </Button>
+              {showDetails ? (
+                <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+                  <p className="font-semibold">CID ready</p>
+                  <code className="mt-2 block overflow-x-auto rounded bg-slate-900 px-2 py-1 text-emerald-300">{entry.cid}</code>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button className="gap-2" onClick={() => void handleCopy()} type="button" variant="ghost">
+                      <Copy className="h-4 w-4" />
+                      Copy CID
+                    </Button>
+                    <a className="inline-flex" href={`https://ipfs.io/ipfs/${entry.cid}`} rel="noreferrer noopener" target="_blank">
+                      <Button className="gap-2" type="button" variant="ghost">
+                        <ExternalLink className="h-4 w-4" />
+                        View on IPFS
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
 

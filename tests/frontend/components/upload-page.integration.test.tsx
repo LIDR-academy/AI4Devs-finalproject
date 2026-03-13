@@ -140,9 +140,19 @@ describe("UploadPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("CID ready")).toBeInTheDocument();
       expect(screen.getAllByText("hello.txt").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("bafy-direct-cid").length).toBeGreaterThan(0);
+      expect(screen.getByRole("button", { name: "Show details" })).toBeInTheDocument();
+      expect(screen.getAllByText("bafy-direct-cid").length).toBe(1);
+    });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Show details" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("CID ready")).toBeInTheDocument();
+      expect(screen.getAllByText("bafy-direct-cid").length).toBeGreaterThan(1);
+      expect(screen.getByRole("button", { name: "Hide details" })).toBeInTheDocument();
     });
   });
 
@@ -170,7 +180,7 @@ describe("UploadPage", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText("CID ready")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Show details" })).toBeInTheDocument();
     });
 
     await act(async () => {
