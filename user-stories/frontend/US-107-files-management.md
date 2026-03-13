@@ -101,9 +101,9 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-107-01-create-file-table.md
-- TASK-US-107-02-implement-grid-view.md
-- TASK-US-107-03-add-sorting-filtering.md
-- TASK-US-107-04-implement-pagination.md
-- TASK-US-107-05-add-bulk-actions.md
-- TASK-US-107-06-create-file-details-modal.md
+- [TASK-US-107-01-create-file-table.md](../../tasks/frontend/TASK-US-107-01-create-file-table.md)
+- [TASK-US-107-02-implement-grid-view.md](../../tasks/frontend/TASK-US-107-02-implement-grid-view.md)
+- [TASK-US-107-03-add-sorting-filtering.md](../../tasks/frontend/TASK-US-107-03-add-sorting-filtering.md)
+- [TASK-US-107-04-implement-pagination.md](../../tasks/frontend/TASK-US-107-04-implement-pagination.md)
+- [TASK-US-107-05-add-bulk-actions.md](../../tasks/frontend/TASK-US-107-05-add-bulk-actions.md)
+- [TASK-US-107-06-create-file-details-modal.md](../../tasks/frontend/TASK-US-107-06-create-file-details-modal.md)
