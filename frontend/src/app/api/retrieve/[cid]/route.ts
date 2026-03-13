@@ -63,7 +63,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ cid:
     );
   }
 
-  const response = new NextResponse(backendResponse.body, {
+  const responseBody = await backendResponse.arrayBuffer();
+
+  const response = new NextResponse(responseBody, {
     status: 200,
     headers: {
       "Cache-Control": backendResponse.headers.get("cache-control") ?? "no-store",
@@ -76,6 +78,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ cid:
   const contentLength = backendResponse.headers.get("content-length");
   if (contentLength) {
     response.headers.set("Content-Length", contentLength);
+  } else {
+    response.headers.set("Content-Length", String(responseBody.byteLength));
   }
 
   const lastModified = backendResponse.headers.get("last-modified");

@@ -69,6 +69,7 @@ def upload_file_async(
                 cid=result.cid,
                 original_filename=original_filename,
                 safe_filename=filename,
+                storage_key=filename,
                 size=file_size,
                 pinned=True,
             )
