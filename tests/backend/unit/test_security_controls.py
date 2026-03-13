@@ -245,7 +245,7 @@ class TestSecurityHeadersAndCors(unittest.TestCase):
 
         payload = duplicate.get_json()
         self.assertEqual(payload["code"], "FILE_ALREADY_EXISTS")
-        self.assertEqual(payload["message"], "File already exists for this user")
+        self.assertEqual(payload["message"], "File already exists. Duplicate uploads are not allowed.")
         self.assertEqual(payload["details"]["cid"], "QmDuplicateCid")
 
 

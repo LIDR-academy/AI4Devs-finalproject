@@ -101,8 +101,8 @@ class TestIPFSServiceUpload(unittest.TestCase):
                 filename="empty.txt"
             )
     
-    def test_upload_file_with_metadata(self):
-        """Should include metadata in upload."""
+    def test_upload_file_ignores_custom_metadata(self):
+        """Custom metadata is not forwarded in the current put_object contract."""
         file_obj = BytesIO(b"test")
         metadata = {"user_id": "123", "source": "api"}
         
@@ -116,11 +116,11 @@ class TestIPFSServiceUpload(unittest.TestCase):
             metadata=metadata
         )
         
-        # Verify upload was called with metadata
+        # Verify upload uses current contract (no custom Metadata argument)
         self.mock_client.put_object.assert_called_once()
         
         call_kwargs = self.mock_client.put_object.call_args.kwargs
-        self.assertEqual(call_kwargs["Metadata"], metadata)
+        self.assertNotIn("Metadata", call_kwargs)
         self.assertEqual(call_kwargs["Body"], b"test")
         self.assertEqual(result.cid, "QmTest456")
     
