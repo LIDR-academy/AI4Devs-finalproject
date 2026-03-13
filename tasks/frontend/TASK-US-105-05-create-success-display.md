@@ -10,6 +10,9 @@ Quick description: Show the returned CID with a copy-to-clipboard button after a
 ## Description
 After each successful upload the user sees the IPFS CID inline in the progress item, can copy it to the clipboard, and has a link to view the file on an IPFS gateway. A collapsible "Upload History" section below the queue tracks all uploads completed in the current browser session.
 
+## Pull Request
+- [PR #19: US-105 implement secure file upload interface](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/19)
+
 ## Priority
 🟠 High
 

@@ -10,6 +10,9 @@ Quick description: Build the drag-and-drop / click-to-browse file zone using `re
 ## Description
 Create the reusable dropzone UI component that accepts files via drag-and-drop or the native file picker. The component enforces the allowed MIME types and 100 MB per-file size ceiling at selection time (UX feedback only — backend is the enforcement authority).
 
+## Pull Request
+- [PR #19: US-105 implement secure file upload interface](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/19)
+
 ## Priority
 🔴 Critical
 

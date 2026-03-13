@@ -111,8 +111,6 @@ flowchart TD
 ```
 
 ## Related Tasks
-- [TASK-US-105-01: Create Dropzone Component](../../tasks/frontend/TASK-US-105-01-create-dropzone-component.md)
-- [TASK-US-105-02: Implement File Validation](../../tasks/frontend/TASK-US-105-02-implement-file-validation.md)
-- [TASK-US-105-03: Create Upload Progress Component](../../tasks/frontend/TASK-US-105-03-create-progress-component.md)
-- [TASK-US-105-04: Implement Upload Logic](../../tasks/frontend/TASK-US-105-04-implement-upload-logic.md)
-- [TASK-US-105-05: Create Success Display and Upload History](../../tasks/frontend/TASK-US-105-05-create-success-display.md)
+
+## Pull Request
+- [PR #19: US-105 implement secure file upload interface](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/19)

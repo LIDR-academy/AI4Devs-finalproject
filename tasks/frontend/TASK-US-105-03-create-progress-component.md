@@ -10,6 +10,9 @@ Quick description: Build the per-file progress bar and status row that shows upl
 ## Description
 Create `src/components/upload/upload-progress-item.tsx` and a wrapping list `src/components/upload/upload-queue.tsx`. Each item reflects the live `UploadEntry` state from the upload store/hook and exposes a cancel callback.
 
+## Pull Request
+- [PR #19: US-105 implement secure file upload interface](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/19)
+
 ## Priority
 🟠 High
 

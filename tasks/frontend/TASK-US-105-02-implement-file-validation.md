@@ -10,6 +10,9 @@ Quick description: Extract client-side file validation logic (MIME type, file si
 ## Description
 Centralise all pre-upload validation rules in `src/lib/file-validation.ts`. This keeps the dropzone component thin and makes validation rules easy to update when the backend whitelist changes.
 
+## Pull Request
+- [PR #19: US-105 implement secure file upload interface](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/19)
+
 ## Priority
 🔴 Critical
 

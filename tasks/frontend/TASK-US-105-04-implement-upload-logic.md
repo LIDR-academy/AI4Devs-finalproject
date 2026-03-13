@@ -10,6 +10,9 @@ Quick description: Implement the `useUpload` hook that manages the upload queue,
 ## Description
 All upload state and side-effects live in a `useUpload` hook backed by a Zustand store. Files are uploaded one-at-a-time (or up to `MAX_CONCURRENT_FILES`) using `XMLHttpRequest` so that upload progress events are available. The API key is sent through the session cookie (server-side proxy route) — never from browser storage.
 
+## Pull Request
+- [PR #19: US-105 implement secure file upload interface](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/19)
+
 ## Priority
 🔴 Critical
 
