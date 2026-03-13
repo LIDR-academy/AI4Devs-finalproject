@@ -1,0 +1,1 @@
+../../openspec/.commands/plan-frontend-ticket.md

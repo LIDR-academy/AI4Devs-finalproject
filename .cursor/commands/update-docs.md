@@ -1,0 +1,1 @@
+../../openspec/.commands/update-docs.md
