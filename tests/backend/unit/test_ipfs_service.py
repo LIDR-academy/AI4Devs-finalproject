@@ -117,21 +117,19 @@ class TestIPFSServiceUpload(unittest.TestCase):
         )
         
         # Verify upload was called with metadata
-        self.mock_client.upload_fileobj.assert_called_once()
+        self.mock_client.put_object.assert_called_once()
         
-        call_kwargs = self.mock_client.upload_fileobj.call_args[1]
-        self.assertIn("ExtraArgs", call_kwargs)
-        self.assertEqual(
-            call_kwargs["ExtraArgs"]["Metadata"],
-            metadata
-        )
+        call_kwargs = self.mock_client.put_object.call_args.kwargs
+        self.assertEqual(call_kwargs["Metadata"], metadata)
+        self.assertEqual(call_kwargs["Body"], b"test")
+        self.assertEqual(result.cid, "QmTest456")
     
     def test_upload_file_retry_on_transient_error(self):
         """Should retry on transient errors."""
         file_obj = BytesIO(b"test")
         
         # First call fails, second succeeds
-        self.mock_client.upload_fileobj.side_effect = [
+        self.mock_client.put_object.side_effect = [
             ClientError(
                 {"Error": {"Code": "ServiceUnavailable"}},
                 "PutObject"
@@ -151,14 +149,19 @@ class TestIPFSServiceUpload(unittest.TestCase):
         )
         
         self.assertEqual(result.cid, "QmTest789")
-        self.assertEqual(self.mock_client.upload_fileobj.call_count, 2)
+        self.assertEqual(self.mock_client.put_object.call_count, 2)
+
+        first_call = self.mock_client.put_object.call_args_list[0].kwargs
+        second_call = self.mock_client.put_object.call_args_list[1].kwargs
+        self.assertEqual(first_call["Body"], b"test")
+        self.assertEqual(second_call["Body"], b"test")
     
     def test_upload_file_fails_after_max_retries(self):
         """Should fail after max retries."""
         file_obj = BytesIO(b"test")
         
         # Always fail
-        self.mock_client.upload_fileobj.side_effect = ClientError(
+        self.mock_client.put_object.side_effect = ClientError(
             {"Error": {"Code": "ServiceUnavailable"}},
             "PutObject"
         )
@@ -173,7 +176,7 @@ class TestIPFSServiceUpload(unittest.TestCase):
             )
         
         # Should attempt 3 times
-        self.assertEqual(self.mock_client.upload_fileobj.call_count, 3)
+            self.assertEqual(self.mock_client.put_object.call_count, 3)
 
 
 class TestIPFSServiceRetrieve(unittest.TestCase):
@@ -263,7 +266,7 @@ class TestCircuitBreakerIntegration(unittest.TestCase):
     def test_circuit_breaker_opens_after_failures(self):
         """Should open after max failures."""
         # Cause failures
-        self.mock_client.upload_fileobj.side_effect = ClientError(
+        self.mock_client.put_object.side_effect = ClientError(
             {"Error": {"Code": "ServiceUnavailable"}},
             "PutObject"
         )
