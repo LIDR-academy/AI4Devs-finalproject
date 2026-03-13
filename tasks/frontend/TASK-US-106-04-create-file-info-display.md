@@ -4,6 +4,8 @@ Show core file metadata alongside retrieval results.
 
 [Trello Card](https://trello.com/c/A0DKgC5O/274-task-us-106-04-create-file-metadata-display)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/21)
+
 ## Parent User Story
 [US-106: File Retrieval Interface](../../user-stories/frontend/US-106-file-retrieval-interface.md)
 

@@ -4,6 +4,8 @@ Provide reliable file download action for retrieved content.
 
 [Trello Card](https://trello.com/c/qOzeoKAV/271-task-us-106-03-create-download-handler)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/21)
+
 ## Parent User Story
 [US-106: File Retrieval Interface](../../user-stories/frontend/US-106-file-retrieval-interface.md)
 

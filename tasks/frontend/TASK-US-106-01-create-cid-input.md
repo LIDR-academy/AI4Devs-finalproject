@@ -4,6 +4,8 @@ Create the CID entry form and enforce strict CID parsing validation before retri
 
 [Trello Card](https://trello.com/c/s9V52slu/270-task-us-106-01-create-cid-input-and-validation)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/21)
+
 ## Parent User Story
 [US-106: File Retrieval Interface](../../user-stories/frontend/US-106-file-retrieval-interface.md)
 

@@ -4,6 +4,8 @@ Track recent retrievals and generate shareable retrieval links.
 
 [Trello Card](https://trello.com/c/mN1PJjp2/272-task-us-106-05-implement-retrieval-history-and-share-link)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/21)
+
 ## Parent User Story
 [US-106: File Retrieval Interface](../../user-stories/frontend/US-106-file-retrieval-interface.md)
 
