@@ -53,8 +53,12 @@ export function isPdfMime(mimeType: string): boolean {
   return mimeType === "application/pdf";
 }
 
+export function isVideoMime(mimeType: string): boolean {
+  return /^video\//.test(mimeType);
+}
+
 export function canPreviewMime(mimeType: string): boolean {
-  return isImageMime(mimeType) || isTextMime(mimeType) || isPdfMime(mimeType);
+  return isImageMime(mimeType) || isTextMime(mimeType) || isPdfMime(mimeType) || isVideoMime(mimeType);
 }
 
 export function formatUploadedAt(value: string | null): string {

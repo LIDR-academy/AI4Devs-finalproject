@@ -112,4 +112,37 @@ describe("RetrievePage", () => {
       expect(screen.getByText("File not found")).toBeInTheDocument();
     });
   });
+
+  it("renders a video preview for video MIME types", async () => {
+    const headers = new Map<string, string>([
+      ["content-type", "video/mp4"],
+      ["content-disposition", 'inline; filename="clip.mp4"'],
+      ["content-length", "12345"],
+    ]);
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      headers: {
+        get: (key: string) => headers.get(key.toLowerCase()) ?? null,
+      },
+      blob: async () => ({
+        size: 12345,
+        text: async () => "",
+      }),
+    });
+
+    render(<RetrievePage />);
+
+    fireEvent.change(screen.getByLabelText("Enter CID"), {
+      target: { value: "bafybeigdyrzt5x6z6xj5ir3f6m42cdbw2m5g3m6twjv7mmyr4y6nblfuca" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Retrieve" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Preview loop: first 5 seconds.")).toBeInTheDocument();
+      expect(screen.getByText("video/mp4")).toBeInTheDocument();
+    });
+
+    expect(document.querySelector("video")).not.toBeNull();
+  });
 });

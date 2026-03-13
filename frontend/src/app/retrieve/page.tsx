@@ -18,6 +18,7 @@ import {
   isImageMime,
   isPdfMime,
   isTextMime,
+  isVideoMime,
   mergeHistoryEntry,
   parseRetrievalMetadata,
   RETRIEVAL_HISTORY_STORAGE_KEY,
@@ -254,6 +255,28 @@ export default function RetrievePage() {
               <pre className="max-h-[420px] overflow-auto rounded-md bg-slate-50 p-4 text-xs text-slate-800">
                 {result.textPreview ?? "No preview available for this text file."}
               </pre>
+            ) : null}
+
+            {result && canPreview && isVideoMime(result.metadata.mimeType) ? (
+              <div className="space-y-2">
+                <video
+                  className="max-h-[420px] w-full rounded-md border border-slate-200 bg-black"
+                  controls
+                  muted
+                  onTimeUpdate={(event) => {
+                    const video = event.currentTarget;
+                    if (video.currentTime >= 5) {
+                      video.currentTime = 0;
+                      void video.play().catch(() => {
+                        // Ignore autoplay/play promise errors in locked browser contexts.
+                      });
+                    }
+                  }}
+                  playsInline
+                  src={result.objectUrl}
+                />
+                <p className="text-xs text-slate-600">Preview loop: first 5 seconds.</p>
+              </div>
             ) : null}
 
             {result && !canPreview ? (
