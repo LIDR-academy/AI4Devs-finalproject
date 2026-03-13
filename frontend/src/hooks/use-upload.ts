@@ -39,6 +39,7 @@ export function useUpload() {
   const history = useUploadStore((state) => state.history);
   const addEntries = useUploadStore((state) => state.addEntries);
   const updateEntry = useUploadStore((state) => state.updateEntry);
+  const removeEntry = useUploadStore((state) => state.removeEntry);
   const addHistory = useUploadStore((state) => state.addHistory);
   const clearHistory = useUploadStore((state) => state.clearHistory);
   const resetAll = useUploadStore((state) => state.resetAll);
@@ -331,12 +332,25 @@ export function useUpload() {
     });
   };
 
+  const remove = (id: string) => {
+    clearPoll(id);
+
+    const xhr = xhrMapRef.current.get(id);
+    if (xhr) {
+      xhr.abort();
+    }
+
+    xhrMapRef.current.delete(id);
+    removeEntry(id);
+  };
+
   return {
     entries,
     history,
     enqueue,
     cancel,
     retry,
+    remove,
     clearHistory,
     activeUploads: entries.filter((entry) => entry.status === "uploading" || entry.status === "processing").length,
   };

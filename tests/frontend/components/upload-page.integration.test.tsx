@@ -146,6 +146,43 @@ describe("UploadPage", () => {
     });
   });
 
+  it("allows removing a completed upload from the queue", async () => {
+    xhrScenario = {
+      status: 201,
+      body: {
+        status: 201,
+        message: "File uploaded successfully",
+        data: {
+          mode: "direct",
+          cid: "bafy-direct-cid",
+          originalFilename: "hello.txt",
+          size: 5,
+          uploadedAt: "2026-03-13T08:00:00.000Z",
+        },
+      },
+      progressSteps: [25, 100],
+    };
+
+    render(<UploadPage />);
+
+    await act(async () => {
+      dropHandler?.([new File(["hello"], "hello.txt", { type: "text/plain" })], []);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("CID ready")).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "Remove" }).click();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("CID ready")).not.toBeInTheDocument();
+      expect(screen.getByText("No files in the queue yet. Select files above to start uploading.")).toBeInTheDocument();
+    });
+  });
+
   it("polls async upload status until the CID is available", async () => {
     jest.useFakeTimers();
 

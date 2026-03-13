@@ -8,10 +8,11 @@ import { UploadProgressItem } from "./upload-progress-item";
 type UploadQueueProps = {
   entries: UploadEntry[];
   onCancel: (id: string) => void;
+  onRemove: (id: string) => void;
   onRetry: (id: string) => void;
 };
 
-export function UploadQueue({ entries, onCancel, onRetry }: UploadQueueProps) {
+export function UploadQueue({ entries, onCancel, onRemove, onRetry }: UploadQueueProps) {
   const activeCount = entries.filter((entry) => entry.status === "uploading" || entry.status === "processing").length;
 
   return (
@@ -33,7 +34,7 @@ export function UploadQueue({ entries, onCancel, onRetry }: UploadQueueProps) {
       ) : (
         <div className="space-y-3">
           {entries.map((entry) => (
-            <UploadProgressItem entry={entry} key={entry.id} onCancel={onCancel} onRetry={onRetry} />
+            <UploadProgressItem entry={entry} key={entry.id} onCancel={onCancel} onRemove={onRemove} onRetry={onRetry} />
           ))}
         </div>
       )}

@@ -13,7 +13,7 @@ import { useUpload } from "@/hooks/use-upload";
 
 export default function UploadPage() {
   const [selectionErrors, setSelectionErrors] = useState<string[]>([]);
-  const { entries, history, enqueue, cancel, retry, clearHistory, activeUploads } = useUpload();
+  const { entries, history, enqueue, cancel, retry, remove, clearHistory, activeUploads } = useUpload();
 
   const completedCount = entries.filter((entry) => entry.status === "done").length;
 
@@ -81,7 +81,7 @@ export default function UploadPage() {
           </Card>
         </div>
 
-        <UploadQueue entries={entries} onCancel={cancel} onRetry={retry} />
+        <UploadQueue entries={entries} onCancel={cancel} onRemove={remove} onRetry={retry} />
         <UploadHistory history={history} onClear={clearHistory} />
       </div>
     </ProtectedRoute>

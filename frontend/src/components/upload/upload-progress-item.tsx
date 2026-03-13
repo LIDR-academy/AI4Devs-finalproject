@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { Copy, ExternalLink, RefreshCw, X } from "lucide-react";
+import { Copy, ExternalLink, RefreshCw, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import type { UploadEntry } from "@/types/upload";
 type UploadProgressItemProps = {
   entry: UploadEntry;
   onCancel: (id: string) => void;
+  onRemove: (id: string) => void;
   onRetry: (id: string) => void;
 };
 
@@ -54,7 +55,7 @@ async function copyToClipboard(text: string) {
   fallbackCopy(text);
 }
 
-export function UploadProgressItem({ entry, onCancel, onRetry }: UploadProgressItemProps) {
+export function UploadProgressItem({ entry, onCancel, onRemove, onRetry }: UploadProgressItemProps) {
   const previewUrl = useMemo(() => {
     if (!entry.file.type.startsWith("image/")) {
       return null;
@@ -148,6 +149,12 @@ export function UploadProgressItem({ entry, onCancel, onRetry }: UploadProgressI
               <Button className="gap-2" onClick={() => onRetry(entry.id)} type="button" variant="ghost">
                 <RefreshCw className="h-4 w-4" />
                 Retry
+              </Button>
+            )}
+            {(entry.status === "error" || entry.status === "done") && (
+              <Button className="gap-2" onClick={() => onRemove(entry.id)} type="button" variant="ghost">
+                <Trash2 className="h-4 w-4" />
+                Remove
               </Button>
             )}
           </div>
