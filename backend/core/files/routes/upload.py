@@ -170,6 +170,7 @@ def register_routes(bp):
                     cid=result.cid,
                     original_filename=original_filename,
                     safe_filename=safe_filename,
+                  storage_key=safe_filename,
                     size=file_size,
                     pinned=True,
                 )

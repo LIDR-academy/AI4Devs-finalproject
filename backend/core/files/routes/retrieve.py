@@ -1,5 +1,6 @@
 """File retrieval routes."""
 
+from itertools import chain
 import logging
 from datetime import datetime
 from typing import Optional
@@ -217,19 +218,27 @@ def register_routes(bp):
 					inline=not force_download,
 				)
 				
-				# Retrieve file from IPFS/Filebase
-				# Use storage_key if available, fallback to CID
-				storage_key = file_record.storage_key or cid
+				# Retrieve file from IPFS/Filebase.
+				# Legacy rows may miss storage_key, so fallback to safe_filename before CID.
+				storage_key = (
+					getattr(file_record, "storage_key", None)
+					or getattr(file_record, "safe_filename", None)
+					or cid
+				)
 				
 				try:
-					# Resolve stream source first so provider errors return a proper API error.
+					# Prime the stream before sending headers so missing keys do not surface as
+					# post-response generator exceptions in Werkzeug.
 					stream_source = ipfs_service.retrieve_file_stream(
 						key=storage_key,
 						chunk_size=65536,
 					)
+					first_chunk = next(stream_source, None)
 
 					def generate():
 						"""Generate file chunks for streaming."""
+						if first_chunk is not None:
+							yield first_chunk
 						for chunk in stream_source:
 							yield chunk
 					

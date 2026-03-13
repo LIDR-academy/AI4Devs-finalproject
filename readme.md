@@ -12,6 +12,7 @@
 9. [Database Models and Migrations (US-002)](#9-database-models-and-migrations-us-002)
 10. [Frontend Auth and Dashboard (US-104)](#10-frontend-auth-and-dashboard-us-104)
 11. [Frontend File Upload Interface (US-105)](#11-frontend-file-upload-interface-us-105)
+12. [Frontend File Retrieval Interface (US-106)](#12-frontend-file-retrieval-interface-us-106)
 
 ---
 
@@ -272,6 +273,51 @@ flowchart LR
 - `npm run test:e2e`
 
 Nota: para ejecutar E2E repetidas veces en local, puede ser necesario limpiar contadores de rate limiting en Redis del entorno de desarrollo.
+
+## 12. Frontend File Retrieval Interface (US-106)
+
+Se implemento la interfaz de recuperacion de archivos en `/retrieve` con validacion estricta de CID mediante libreria dedicada, proxy seguro en Next.js, previsualizacion por tipo de contenido y utilidades de historial.
+
+### 12.1. Cambios principales
+
+- Pagina `/retrieve` protegida con:
+    - input CID + validacion por parseo (`multiformats`)
+    - boton de recuperacion con estado de carga
+    - gestion de errores para CID invalido y CIDs inexistentes/no autorizados
+    - panel de metadatos (nombre, tamano, tipo, fecha)
+    - previsualizacion para `image/*`, `text/*`/`json`/`xml`, y `application/pdf`
+    - boton de descarga del archivo recuperado
+    - historial reciente de recuperaciones en `localStorage`
+    - generacion y copia de enlace compartible por CID
+- Nueva ruta interna Next.js:
+    - `GET /api/retrieve/[cid]`
+
+### 12.2. Seguridad y coherencia backend/frontend
+
+- La API key no se expone al cliente para recuperar archivos.
+- `/api/retrieve/[cid]` lee la cookie de sesion `HttpOnly` y reenvia la solicitud al backend con `X-API-Key`.
+- El proxy valida formato CID antes de llamar backend y devuelve errores consistentes al cliente.
+
+### 12.3. Flujo de recuperacion
+
+```mermaid
+flowchart LR
+        U[Browser Retrieve UI] --> V[CID parse validation]
+        V --> P[/api/retrieve/[cid] GET]
+        P --> B[/api/v1/files/retrieve/<cid> backend]
+        B -->|200 stream + headers| P
+        P --> U
+        U --> M[Metadata panel + preview]
+        U --> H[Recent retrievals history]
+        U --> S[Share-link generation]
+```
+
+### 12.4. Pruebas ejecutadas
+
+- `npm run type-check`
+- `npm run lint`
+- `npm test`
+- `npm run build`
 
     Request Flow Diagram:
 

@@ -2,6 +2,8 @@
 
 [Trello Card](https://trello.com/c/31Jk1FWs)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/21)
+
 
 
 ## Description
@@ -14,16 +16,16 @@ As a **user**, I want to retrieve files from IPFS using their CID, so that I can
 ⭐⭐ Medium
 
 ## Acceptance Criteria
-- [ ] Input field for entering CID
-- [ ] CID format validation
-- [ ] Search/retrieve button with loading state
-- [ ] File preview for supported types (images, text, PDF)
-- [ ] Download button for file
-- [ ] File metadata display (name, size, type, upload date)
-- [ ] Error handling for invalid/non-existent CIDs
-- [ ] Recent retrievals history
-- [ ] Share link generation
-- [ ] Responsive design
+- [x] Input field for entering CID
+- [x] CID format validation
+- [x] Search/retrieve button with loading state
+- [x] File preview for supported types (images, text, PDF)
+- [x] Download button for file
+- [x] File metadata display (name, size, type, upload date)
+- [x] Error handling for invalid/non-existent CIDs
+- [x] Recent retrievals history
+- [x] Share link generation
+- [x] Responsive design
 
 ## Supported Preview Types
 | Type | Preview |
@@ -50,7 +52,7 @@ As a **user**, I want to retrieve files from IPFS using their CID, so that I can
 6 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Completed
 
 ## Workflow Diagram
 ```mermaid

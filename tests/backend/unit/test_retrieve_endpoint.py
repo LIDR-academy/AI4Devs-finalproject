@@ -340,6 +340,68 @@ class TestRetrieveEndpoint(unittest.TestCase):
 		call_args = mock_ipfs.retrieve_file_stream.call_args
 		self.assertEqual(call_args.kwargs["key"], "test-file.txt")
 
+	@patch("core.files.routes.retrieve.get_session")
+	@patch("core.files.routes.retrieve.get_current_user")
+	@patch("core.files.routes.retrieve.check_file_access_by_cid")
+	@patch("core.files.routes.retrieve.ipfs_service")
+	def test_retrieve_file_falls_back_to_safe_filename_when_storage_key_missing(
+		self, mock_ipfs, mock_check_access, mock_get_user, mock_get_session
+	):
+		"""Test retrieval uses safe_filename when storage_key is missing."""
+		legacy_file = File(
+			id=11,
+			filename="legacy.txt",
+			cid="QmLegacy123",
+			size=512,
+			user_id=1,
+			storage_key=None,
+			safe_filename="legacy-safe.txt",
+			mime_type="text/plain",
+			retrieval_count=0,
+			created_at=datetime(2024, 1, 1, 12, 0, 0),
+		)
+
+		mock_get_session.return_value = iter([self.mock_session])
+		mock_get_user.return_value = self.mock_user
+		mock_check_access.return_value = (True, legacy_file, "Access granted")
+		mock_ipfs.retrieve_file_stream.return_value = iter([b"legacy-content"])
+
+		response = self.client.get(
+			"/api/v1/files/retrieve/QmLegacy123",
+			headers={"X-API-Key": "test-api-key"},
+		)
+
+		self.assertEqual(response.status_code, 200)
+		call_args = mock_ipfs.retrieve_file_stream.call_args
+		self.assertEqual(call_args.kwargs["key"], "legacy-safe.txt")
+
+	@patch("core.files.routes.retrieve.get_session")
+	@patch("core.files.routes.retrieve.get_current_user")
+	@patch("core.files.routes.retrieve.check_file_access_by_cid")
+	@patch("core.files.routes.retrieve.ipfs_service")
+	def test_retrieve_file_returns_404_before_streaming_when_storage_key_missing(
+		self, mock_ipfs, mock_check_access, mock_get_user, mock_get_session
+	):
+		"""Initial stream failures should become a normal 404 response, not a streamed exception."""
+		from core.services.ipfs_service import RetrievalError
+
+		def failing_stream():
+			raise RetrievalError("File not found: 'missing-key'")
+			yield b""  # pragma: no cover
+
+		mock_get_session.return_value = iter([self.mock_session])
+		mock_get_user.return_value = self.mock_user
+		mock_check_access.return_value = (True, self.mock_file, "Access granted")
+		mock_ipfs.retrieve_file_stream.return_value = failing_stream()
+
+		response = self.client.get(
+			"/api/v1/files/retrieve/QmTest123",
+			headers={"X-API-Key": "test-api-key"},
+		)
+
+		self.assertEqual(response.status_code, 404)
+		self.assertEqual(response.json["code"], "NOT_FOUND")
+
 
 if __name__ == "__main__":
 	unittest.main()
