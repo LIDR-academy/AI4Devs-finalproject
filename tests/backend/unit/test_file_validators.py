@@ -138,6 +138,29 @@ class TestValidateMimeType(unittest.TestCase):
         
         with self.assertRaises(ValidationError):
             validate_mime_type("application/vnd.apple.installer+xml")
+
+        with self.assertRaises(ValidationError):
+            validate_mime_type("application/zip")
+
+        with self.assertRaises(ValidationError):
+            validate_mime_type("audio/mpeg")
+
+    def test_allowed_mime_types_match_frontend_story_whitelist(self):
+        """Whitelist must stay aligned with the US-105 frontend contract."""
+        self.assertEqual(
+            ALLOWED_MIME_TYPES,
+            {
+                "text/plain",
+                "application/pdf",
+                "application/json",
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/webp",
+                "video/mp4",
+                "video/webm",
+            },
+        )
     
     def test_validate_mime_type_empty(self):
         """Should reject empty MIME type."""

@@ -4,6 +4,7 @@ import logging
 from io import BytesIO
 
 from flask import request
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from werkzeug.datastructures import FileStorage
 
@@ -173,7 +174,22 @@ def register_routes(bp):
                     pinned=True,
                 )
                 session.add(db_file)
-                session.commit()
+                try:
+                  session.commit()
+                except IntegrityError as exc:
+                  session.rollback()
+                  logger.info(
+                    "Duplicate upload rejected for user %s and cid %s: %s",
+                    user_id,
+                    result.cid,
+                    exc,
+                  )
+                  return error_response(
+                    409,
+                    "File already exists. Duplicate uploads are not allowed.",
+                    code="FILE_ALREADY_EXISTS",
+                    details={"cid": result.cid},
+                  )
                 queue_audit_log(
                     user_id=user_id,
                     action="file_upload",

@@ -119,6 +119,13 @@ coverage run -m unittest discover -s ../tests/backend/unit -p "test_*.py"
 coverage report
 ```
 
+command to launch from the root of the project:
+
+```bash
+RUN_E2E_TESTS=1 /PROJECTS/python/ipfs-saas-ai4devs/.venv/bin/python -m unittest discover -s tests/backend/e2e -p 'test_*.py' -v
+```
+
+
 ## Security Controls
 
 The backend now applies centralized rate limiting, request tracing, and browser-hardening response headers.

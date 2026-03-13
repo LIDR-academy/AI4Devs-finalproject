@@ -11,6 +11,7 @@
 8. [Backend Bootstrap (US-001)](#8-backend-bootstrap-us-001)
 9. [Database Models and Migrations (US-002)](#9-database-models-and-migrations-us-002)
 10. [Frontend Auth and Dashboard (US-104)](#10-frontend-auth-and-dashboard-us-104)
+11. [Frontend File Upload Interface (US-105)](#11-frontend-file-upload-interface-us-105)
 
 ---
 
@@ -218,6 +219,57 @@ flowchart LR
 - `npm test` (Jest: unit + integration)
 - `npm run build`
 - `npm run test:e2e` (Playwright)
+
+## 11. Frontend File Upload Interface (US-105)
+
+Se implemento la interfaz de carga de archivos en `frontend/` con cola de subida, validacion temprana y flujo seguro a traves de proxy server-side.
+
+### 11.1. Cambios principales
+
+- Pagina `/upload` protegida con:
+    - zona drag-and-drop y click-to-browse
+    - validacion client-side de tipo / tamano / nombre de archivo
+    - cola de subida con progreso por archivo
+    - cancelacion y retry en errores
+    - vista de exito con CID, copy-to-clipboard y enlace IPFS
+    - historial de subidas de la sesion actual
+- Nuevas rutas internas Next.js:
+    - `POST /api/upload`
+    - `GET /api/upload/status/[taskId]`
+- Estado local de subidas e historial con Zustand.
+
+### 11.2. Seguridad y coherencia backend/frontend
+
+- El navegador nunca envia la API key directamente al backend para subidas.
+- La API key se recupera desde la cookie `HttpOnly` en el proxy Next.js.
+- El whitelist MIME de frontend y backend se alineo al contrato de US-105:
+    - `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+    - `application/pdf`, `text/plain`, `application/json`
+    - `video/mp4`, `video/webm`
+
+### 11.3. Flujo de subida
+
+```mermaid
+flowchart LR
+        U[Browser Upload UI] --> D[react-dropzone + client validation]
+        D --> Q[Upload queue in Zustand]
+        Q --> P[/api/upload POST]
+        P --> B[/api/v1/files/upload backend]
+        B -->|201| Q
+        B -->|202 task_id| S[/api/upload/status/[taskId] GET]
+        S --> T[/api/v1/files/upload/status/<task_id> backend]
+        T --> Q
+        Q --> H[Session upload history + CID actions]
+```
+
+### 11.4. Pruebas ejecutadas
+
+- `npm run type-check`
+- `npm run lint`
+- `npm test`
+- `python -m unittest tests/backend/unit/test_file_validators.py`
+- `npm run build`
+- `npm run test:e2e`
 
 Nota: para ejecutar E2E repetidas veces en local, puede ser necesario limpiar contadores de rate limiting en Redis del entorno de desarrollo.
 

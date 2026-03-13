@@ -111,19 +111,15 @@ class IPFSService:
 			if file_size == 0:
 				raise ValidationError("Cannot upload empty files")
             
-			# Prepare S3 metadata
-			s3_metadata = metadata or {}
+			file_payload = file.read()
             
-			# Upload to Filebase
+			# Upload to Filebase using put_object (aligned with e2e contract).
 			logger.debug(f"Uploading file '{filename}' ({file_size} bytes) to Filebase")
-			self.client.upload_fileobj(
-				file,
-				self.bucket_name,
-				filename,
-				ExtraArgs={
-					"ContentType": content_type,
-					"Metadata": s3_metadata,
-				}
+			self.client.put_object(
+				Bucket=self.bucket_name,
+				Key=filename,
+				Body=file_payload,
+				ContentType=content_type,
 			)
             
 			# Get object metadata to retrieve CID

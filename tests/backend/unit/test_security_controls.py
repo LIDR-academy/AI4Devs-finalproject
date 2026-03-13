@@ -222,6 +222,32 @@ class TestSecurityHeadersAndCors(unittest.TestCase):
         self.assertEqual(second.status_code, 201)
         self.assertEqual(other_user.status_code, 201)
 
+    @patch("core.files.routes.upload.ipfs_service.upload_file")
+    def test_upload_duplicate_cid_returns_conflict(self, upload_file_mock) -> None:
+        """Uploading the same CID twice for one user should return 409 instead of 500."""
+        upload_file_mock.return_value = UploadResult(cid="QmDuplicateCid", size=5, key="safe.txt")
+
+        first = self.client.post(
+            "/api/v1/files/upload",
+            headers=self.primary_headers,
+            data={"file": (BytesIO(b"hello"), "doc1.txt", "text/plain")},
+            content_type="multipart/form-data",
+        )
+        duplicate = self.client.post(
+            "/api/v1/files/upload",
+            headers=self.primary_headers,
+            data={"file": (BytesIO(b"world"), "doc2.txt", "text/plain")},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(duplicate.status_code, 409)
+
+        payload = duplicate.get_json()
+        self.assertEqual(payload["code"], "FILE_ALREADY_EXISTS")
+        self.assertEqual(payload["message"], "File already exists. Duplicate uploads are not allowed.")
+        self.assertEqual(payload["details"]["cid"], "QmDuplicateCid")
+
 
 class TestPayloadSizeLimit(unittest.TestCase):
     """Verify request payload limits are enforced centrally."""
