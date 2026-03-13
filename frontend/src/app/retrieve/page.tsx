@@ -265,7 +265,7 @@ export default function RetrievePage() {
                   muted
                   onTimeUpdate={(event) => {
                     const video = event.currentTarget;
-                    if (video.currentTime >= 5) {
+                    if (video.currentTime >= 15) {
                       video.currentTime = 0;
                       void video.play().catch(() => {
                         // Ignore autoplay/play promise errors in locked browser contexts.
@@ -275,7 +275,7 @@ export default function RetrievePage() {
                   playsInline
                   src={result.objectUrl}
                 />
-                <p className="text-xs text-slate-600">Preview loop: first 5 seconds.</p>
+                <p className="text-xs text-slate-600">Preview loop: first 15 seconds.</p>
               </div>
             ) : null}
 

@@ -139,7 +139,7 @@ describe("RetrievePage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Retrieve" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Preview loop: first 5 seconds.")).toBeInTheDocument();
+      expect(screen.getByText("Preview loop: first 15 seconds.")).toBeInTheDocument();
       expect(screen.getByText("video/mp4")).toBeInTheDocument();
     });
 
