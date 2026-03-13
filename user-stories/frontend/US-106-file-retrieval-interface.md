@@ -110,8 +110,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-106-01-create-cid-input.md
-- TASK-US-106-02-implement-file-preview.md
-- TASK-US-106-03-create-download-handler.md
-- TASK-US-106-04-create-file-info-display.md
-- TASK-US-106-05-implement-retrieval-history.md
+- [TASK-US-106-01: Create CID Input and Validation](../../tasks/frontend/TASK-US-106-01-create-cid-input.md)
+- [TASK-US-106-02: Implement File Preview](../../tasks/frontend/TASK-US-106-02-implement-file-preview.md)
+- [TASK-US-106-03: Create Download Handler](../../tasks/frontend/TASK-US-106-03-create-download-handler.md)
+- [TASK-US-106-04: Create File Metadata Display](../../tasks/frontend/TASK-US-106-04-create-file-info-display.md)
+- [TASK-US-106-05: Implement Retrieval History and Share Link](../../tasks/frontend/TASK-US-106-05-implement-retrieval-history.md)
