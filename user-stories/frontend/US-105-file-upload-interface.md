@@ -14,17 +14,17 @@ As a **user**, I want to upload files through a user-friendly interface, so that
 ⭐⭐⭐ Medium-High
 
 ## Acceptance Criteria
-- [ ] Drag-and-drop file upload zone
-- [ ] Click to browse file selection
-- [ ] File type and size validation before upload
-- [ ] Upload progress indicator
-- [ ] Multiple file upload support
-- [ ] Cancel upload functionality
-- [ ] Success message with CID and copy button
-- [ ] Error handling with retry option
-- [ ] File preview for images
-- [ ] Upload history on the page
-- [ ] Responsive design for mobile uploads
+- [x] Drag-and-drop file upload zone
+- [x] Click to browse file selection
+- [x] File type and size validation before upload
+- [x] Upload progress indicator
+- [x] Multiple file upload support
+- [x] Cancel upload functionality
+- [x] Success message with CID and copy button
+- [x] Error handling with retry option
+- [x] File preview for images
+- [x] Upload history on the page
+- [x] Responsive design for mobile uploads
 
 ## Upload Constraints
 | Constraint | Value |
@@ -54,7 +54,13 @@ As a **user**, I want to upload files through a user-friendly interface, so that
 8 hours
 
 ## Completion Status
-- [ ] 0% - Not Started
+- [x] 100% - Implemented (frontend scope)
+
+## Implementation Notes
+- The upload page is protected by the existing secure session flow from US-104 and uses a server-side Next.js proxy (`/api/upload`, `/api/upload/status/[taskId]`) so the API key never leaves the server-held session cookie.
+- The UI implements drag-and-drop browsing, per-file progress, retry/cancel controls, image previews, and in-session upload history with CID copy / external view actions.
+- Large uploads are normalized through async task polling so both synchronous (`201`) and queued (`202`) backend uploads land in the same queue/history UI.
+- The backend MIME whitelist was aligned with the exact US-105 contract to prevent frontend/backend drift.
 
 ## Workflow Diagram
 ```mermaid

@@ -11,7 +11,7 @@ from core.common.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
-# Allowed MIME types (update as needed)
+# Allowed MIME types for the current frontend upload contract.
 ALLOWED_MIME_TYPES = {
     "text/plain",
     "application/pdf",
@@ -20,19 +20,8 @@ ALLOWED_MIME_TYPES = {
     "image/png",
     "image/gif",
     "image/webp",
-    "application/zip",
-    "application/x-tar",
-    "application/gzip",
     "video/mp4",
     "video/webm",
-    "audio/mpeg",
-    "audio/wav",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/vnd.ms-powerpoint",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 }
 
 # Maximum file size (100MB)
