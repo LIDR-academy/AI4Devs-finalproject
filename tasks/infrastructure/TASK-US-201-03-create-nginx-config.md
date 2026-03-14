@@ -4,6 +4,8 @@ Create Nginx reverse proxy configuration and container setup for frontend/backen
 
 [Trello Card](https://trello.com/c/5BVuL6Df)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/29)
+
 ## Parent User Story
 [US-201: Docker Configuration](../../user-stories/infrastructure/US-201-docker-configuration.md)
 

@@ -4,6 +4,8 @@ Create deployment helper files and documentation for Dockerized environment oper
 
 [Trello Card](https://trello.com/c/oQGV41y6)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/29)
+
 ## Parent User Story
 [US-201: Docker Configuration](../../user-stories/infrastructure/US-201-docker-configuration.md)
 

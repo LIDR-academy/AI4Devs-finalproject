@@ -4,6 +4,8 @@ Create a multi-stage Dockerfile for the Next.js frontend optimized for productio
 
 [Trello Card](https://trello.com/c/LXUvHXXR)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/29)
+
 ## Parent User Story
 [US-201: Docker Configuration](../../user-stories/infrastructure/US-201-docker-configuration.md)
 

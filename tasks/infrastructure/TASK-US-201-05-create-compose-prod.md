@@ -4,6 +4,8 @@ Create production Docker Compose configuration for stable deployment behavior.
 
 [Trello Card](https://trello.com/c/mDkhntuG)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/29)
+
 ## Parent User Story
 [US-201: Docker Configuration](../../user-stories/infrastructure/US-201-docker-configuration.md)
 
