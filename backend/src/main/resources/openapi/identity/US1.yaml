@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: Meditation Builder - Identity API
+  description: |
+    API for Google OAuth login, session management and protected-resource access control.
+
+    Bounded Context: **Identity** (new BC — US1)
+
+    Core capabilities derived from BDD When steps:
+    - **C1/C2** – Authenticate with Google credential and get own session token (upsert: creates profile on first access, recovers it on subsequent accesses)
+    - **C3** – Protected resources respond 401 when no valid session token is present (enforced by security filter, documented here for contract completeness)
+    - **C4** – Invalidate the active session (logout)
+
+    > C5 (cancel Google authorization screen) is handled exclusively on the frontend; it generates no backend capability.
+
+    Architecture: Hexagonal (Ports & Adapters), BDD-First, API-First
+    Bounded Context: `com.hexagonal.identity`
+
+    Authentication flow:
+    1. Frontend obtains Google `id_token` via `@react-oauth/google`
+    2. Frontend POSTs `id_token` to `POST /identity/auth/google`
+    3. Backend validates `id_token` against Google JWKS, upserts `PerfilDeUsuario`, issues own JWT
+    4. Frontend stores JWT in memory (Zustand); sends it as `Authorization: Bearer <jwt>` on every request
+    5. All other BC endpoints require valid Bearer JWT via the shared security filter
+
+  version: 1.0.0
+  contact:
+    name: Meditation Builder Team
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Identity
+    description: Authentication and session management
+
+paths:
+  /identity/auth/google:
+    post:
+      tags:
+        - Identity
+      summary: Authenticate with Google credential and obtain session token
+      description: |
+        Validates the Google `id_token` received from the frontend and:
+        - **First access** (C1): creates a `PerfilDeUsuario` with a new UUID and returns the session token + profile data.
+        - **Subsequent access** (C2): recovers the existing `PerfilDeUsuario` and returns a fresh session token + profile data.
+
+        The returned `sessionToken` is a signed JWT issued by this backend (not a Google token).
+        It must be sent as `Authorization: Bearer <sessionToken>` in all subsequent requests.
+
+        Maps to BDD scenarios:
+        - "Primer acceso de un usuario nuevo con su cuenta de Gmail"
+        - "Acceso recurrente de un usuario ya registrado"
+      operationId: authenticateWithGoogle
+      security: []   # Public endpoint — no session required to call it (this IS the login endpoint)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleAuthRequest'
+            examples:
+              firstAccess:
+                summary: First-time login with Google id_token
+                value:
+                  idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ..."
+      responses:
+        '200':
+          description: Authentication successful. Returns own session token and user profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Successful login (new or returning user)
+                  value:
+                    sessionToken: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1NTBlO..."
+                    userId: "550e8400-e29b-41d4-a716-446655440001"
+                    nombre: "Ana García"
+                    correo: "ana@gmail.com"
+                    urlFoto: "https://lh3.googleusercontent.com/a/..."
+        '400':
+          description: Missing or malformed request body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Google id_token is invalid or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidToken:
+                  summary: Google token rejected
+                  value:
+                    code: "INVALID_GOOGLE_TOKEN"
+                    message: "No ha sido posible iniciar sesion. Por favor, intentalo de nuevo."
+        '500':
+          description: Internal server error during authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /identity/auth/logout:
+    post:
+      tags:
+        - Identity
+      summary: Invalidate the active session
+      description: |
+        Invalidates the current session. After this call, the `sessionToken` sent in the
+        Authorization header is no longer accepted by the security filter.
+
+        Maps to BDD scenario:
+        - "Cierre de sesion"
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Session invalidated successfully. No content returned.
+        '401':
+          description: No valid session token provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Session JWT issued by this backend after successful Google authentication.
+        Obtained from `POST /identity/auth/google` → `sessionToken` field.
+
+  schemas:
+    GoogleAuthRequest:
+      type: object
+      required:
+        - idToken
+      properties:
+        idToken:
+          type: string
+          description: The Google `id_token` obtained from the frontend OAuth flow via `@react-oauth/google`.
+          example: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ..."
+
+    AuthResponse:
+      type: object
+      required:
+        - sessionToken
+        - userId
+        - nombre
+        - correo
+      properties:
+        sessionToken:
+          type: string
+          description: |
+            JWT issued by this backend. Must be sent as `Authorization: Bearer <sessionToken>`
+            in all subsequent authenticated requests. Not a Google token.
+          example: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1NTBlO..."
+        userId:
+          type: string
+          format: uuid
+          description: The internal UUID that identifies this user across all bounded contexts.
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        nombre:
+          type: string
+          description: Display name obtained from the user's Google account.
+          example: "Ana García"
+        correo:
+          type: string
+          format: email
+          description: Email address of the user's Gmail account.
+          example: "ana@gmail.com"
+        urlFoto:
+          type: string
+          format: uri
+          nullable: true
+          description: URL of the user's Google profile picture. May be null if not available.
+          example: "https://lh3.googleusercontent.com/a/AAcHTtdA..."
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code.
+          example: "INVALID_GOOGLE_TOKEN"
+        message:
+          type: string
+          description: Human-readable error message (shown to the user when appropriate).
+          example: "No ha sido posible iniciar sesion. Por favor, intentalo de nuevo."
