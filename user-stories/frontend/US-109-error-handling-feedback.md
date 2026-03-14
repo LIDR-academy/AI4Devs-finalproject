@@ -99,8 +99,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-109-01-setup-toast-system.md
-- TASK-US-109-02-create-error-pages.md
-- TASK-US-109-03-create-loading-skeletons.md
-- TASK-US-109-04-create-empty-states.md
-- TASK-US-109-05-implement-error-boundary.md
+- [TASK-US-109-01: Setup Toast Notification System](../../tasks/frontend/TASK-US-109-01-setup-toast-system.md)
+- [TASK-US-109-02: Create Custom Error Pages (403/404/500/Offline)](../../tasks/frontend/TASK-US-109-02-create-error-pages.md)
+- [TASK-US-109-03: Implement Loading Skeletons and Form Validation Feedback](../../tasks/frontend/TASK-US-109-03-create-loading-skeletons.md)
+- [TASK-US-109-04: Build Empty States and Destructive Action Confirmations](../../tasks/frontend/TASK-US-109-04-create-empty-states.md)
+- [TASK-US-109-05: Add Error Boundary, Retry Flows, and Rate Limit/Session Feedback](../../tasks/frontend/TASK-US-109-05-implement-error-boundary.md)
