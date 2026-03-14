@@ -88,8 +88,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-202-01-create-bash-script.md
-- TASK-US-202-02-create-powershell-script.md
-- TASK-US-202-03-implement-build-commands.md
-- TASK-US-202-04-implement-deploy-commands.md
-- TASK-US-202-05-add-logging.md
+- [TASK-US-202-01: Create Bash Script](../../tasks/infrastructure/TASK-US-202-01-create-bash-script.md)
+- [TASK-US-202-02: Create PowerShell Script](../../tasks/infrastructure/TASK-US-202-02-create-powershell-script.md)
+- [TASK-US-202-03: Implement Build Commands](../../tasks/infrastructure/TASK-US-202-03-implement-build-commands.md)
+- [TASK-US-202-04: Implement Deploy Commands](../../tasks/infrastructure/TASK-US-202-04-implement-deploy-commands.md)
+- [TASK-US-202-05: Add Logging](../../tasks/infrastructure/TASK-US-202-05-add-logging.md)
