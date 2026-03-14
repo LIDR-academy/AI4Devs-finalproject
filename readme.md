@@ -18,6 +18,7 @@
 15. [Frontend Error Handling and Feedback (US-109)](#15-frontend-error-handling-and-feedback-us-109)
 16. [Frontend Testing Suite (US-110)](#16-frontend-testing-suite-us-110)
 17. [Docker Configuration (US-201)](#17-docker-configuration-us-201)
+18. [Deployment Scripts (US-202)](#18-deployment-scripts-us-202)
 
 ---
 
@@ -656,6 +657,40 @@ Para produccion-like:
 cp deployment/.env.example deployment/.env
 docker compose -f deployment/docker-compose.prod.yml up --build -d
 ```
+
+## 18. Deployment Scripts (US-202)
+
+Se implemento una CLI de despliegue multiplataforma para operaciones Docker en `deployment/scripts/`:
+
+- `deploy.sh` para Linux/macOS.
+- `deploy.ps1` para Windows PowerShell.
+
+### 18.1. Capacidades incluidas
+
+- Menu interactivo con opciones numeradas.
+- Seleccion de entorno (`development`, `staging`, `production`).
+- Listado de imagenes, build con tag, retag y push a registry.
+- Despliegue por `docker compose`, logs por stack/servicio y control stop/restart.
+- Modo `dry-run`, validacion de dependencias y logging en `deployment/logs/`.
+
+### 18.2. Uso rapido
+
+```bash
+./deployment/scripts/deploy.sh
+./deployment/scripts/deploy.sh --dry-run --env development --registry ghcr.io/your-org
+```
+
+```powershell
+.\deployment\scripts\deploy.ps1
+.\deployment\scripts\deploy.ps1 -DryRun -Env development -Registry ghcr.io/your-org
+```
+
+### 18.3. Validacion en este entorno
+
+- `bash -n deployment/scripts/deploy.sh` completado sin errores.
+- Parse de `deploy.ps1` pendiente de validacion local en Windows (no hay `pwsh` instalado en este entorno Linux).
+- `docker compose -f deployment/docker-compose.dev.yml config -q` valido.
+- Intento de `docker compose ... up -d --build` iniciado; la descarga de metadata/base images desde Docker Hub no completo dentro de la ventana de ejecucion de la sesion, por lo que el smoke test de arranque total queda como pendiente operativo del entorno.
 
 ### **2.5. Seguridad**
 

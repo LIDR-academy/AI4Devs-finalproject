@@ -53,6 +53,61 @@ deployment/
 | Docker        | 24.x            |
 | Docker Compose | 2.x (plugin)  |
 
+## Deployment CLI Scripts (US-202)
+
+US-202 adds interactive deployment scripts with command parity across Linux/macOS and Windows:
+
+- `deployment/scripts/deploy.sh` (Bash)
+- `deployment/scripts/deploy.ps1` (PowerShell)
+
+Both scripts include:
+
+- Interactive menu-based operations
+- Environment selection (`development`, `staging`, `production`)
+- Image listing, build, retag, and registry push helpers
+- Compose-based deploy/stop/restart and logs commands
+- Dry-run support and timestamped logs under `deployment/logs/`
+
+### Linux/macOS Usage
+
+```bash
+chmod +x deployment/scripts/deploy.sh
+./deployment/scripts/deploy.sh
+
+# Optional flags
+./deployment/scripts/deploy.sh --dry-run --env development --registry ghcr.io/your-org
+```
+
+### Windows Usage
+
+```powershell
+# If execution policy blocks scripts in your environment:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+.\deployment\scripts\deploy.ps1
+
+# Optional flags
+.\deployment\scripts\deploy.ps1 -DryRun -Env development -Registry ghcr.io/your-org
+```
+
+### Menu Reference
+
+```text
+1. Select Environment
+2. List Images
+3. Build Images
+4. Tag/Rename Image
+5. Push to Registry
+6. Deploy Application
+7. Run Single Container
+8. View Logs
+9. Stop Services
+10. Restart Services
+11. Toggle Dry-Run
+12. Set Registry URL
+0. Exit
+```
+
 ---
 
 ## Quick Start — Development
