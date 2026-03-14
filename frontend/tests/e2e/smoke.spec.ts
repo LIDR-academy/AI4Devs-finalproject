@@ -1,6 +1,34 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 let sharedCredentials: { email: string; apiKey: string } | null = null;
+
+async function ensureAuthenticated(page: Page) {
+  if (!sharedCredentials) {
+    const uniqueEmail = `qa-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+
+    await page.goto("/register");
+    await page.locator("#email").fill(uniqueEmail);
+    await page.locator("#password").fill("StrongPass1!");
+    await page.locator("#confirmPassword").fill("StrongPass1!");
+    await page.getByRole("button", { name: "Create Account" }).click();
+
+    await expect(page.getByRole("dialog")).toBeVisible();
+    sharedCredentials = {
+      email: uniqueEmail,
+      apiKey: (await page.locator("code").first().innerText()).trim(),
+    };
+
+    await page.getByRole("button", { name: "Go to Dashboard" }).click();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    return;
+  }
+
+  await page.goto("/login");
+  await page.locator("#login-email").fill(sharedCredentials.email);
+  await page.locator("#apiKey").fill(sharedCredentials.apiKey);
+  await page.getByRole("button", { name: "Login" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+}
 
 test("home page renders key sections", async ({ page }) => {
   await page.goto("/");
@@ -77,10 +105,6 @@ test("user can login with API key and reach dashboard", async ({ page }) => {
 });
 
 test("authenticated user can upload a file and see the CID", async ({ page }) => {
-  if (!sharedCredentials) {
-    throw new Error("Missing shared credentials from registration flow");
-  }
-
   await page.route("**/api/upload", async (route) => {
     await route.fulfill({
       status: 201,
@@ -99,10 +123,7 @@ test("authenticated user can upload a file and see the CID", async ({ page }) =>
     });
   });
 
-  await page.goto("/login");
-  await page.locator("#login-email").fill(sharedCredentials.email);
-  await page.locator("#apiKey").fill(sharedCredentials.apiKey);
-  await page.getByRole("button", { name: "Login" }).click();
+  await ensureAuthenticated(page);
 
   await page.goto("/upload");
   await expect(page.getByRole("heading", { name: "Upload Files" })).toBeVisible();
@@ -113,7 +134,105 @@ test("authenticated user can upload a file and see the CID", async ({ page }) =>
     buffer: Buffer.from("hello world"),
   });
 
+  await page.getByRole("button", { name: "Show details" }).click();
   await expect(page.getByText("CID ready")).toBeVisible();
   await expect(page.getByText("bafy-playwright-cid").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Copy CID" })).toBeVisible();
+});
+
+test("authenticated user can browse files page and open details", async ({ page }) => {
+  let filesPayload = [
+    {
+      cid: "bafy-files-cid-1",
+      original_filename: "doc-1.pdf",
+      size: 2048,
+      pinned: true,
+      uploaded_at: "2026-03-13T09:30:00.000Z",
+      content_type: "application/pdf",
+    },
+    {
+      cid: "bafy-files-cid-2",
+      original_filename: "image-2.png",
+      size: 1024,
+      pinned: false,
+      uploaded_at: "2026-03-13T09:35:00.000Z",
+      content_type: "image/png",
+    },
+  ];
+
+  await page.route("**/api/auth/session", async (route) => {
+    if (route.request().method() !== "GET" || !sharedCredentials) {
+      await route.continue();
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: 200,
+        data: {
+          email: sharedCredentials.email,
+          apiKeyStatus: "active",
+          createdAt: "2026-03-13T09:00:00.000Z",
+          lastRenewedAt: null,
+          usageCount: 12,
+        },
+      }),
+    });
+  });
+
+  await page.route("**/api/files?**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: 200,
+        data: filesPayload,
+        meta: {
+          page: 1,
+          page_size: 10,
+          total: filesPayload.length,
+          total_pages: 1,
+          sort_by: "uploaded",
+          sort_order: "desc",
+          search: "",
+          pinned: "all",
+        },
+      }),
+    });
+  });
+
+  await page.route("**/api/files/bafy-files-cid-2", async (route) => {
+    filesPayload = filesPayload.filter((file) => file.cid !== "bafy-files-cid-2");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: 200,
+        message: "File deleted successfully",
+      }),
+    });
+  });
+
+  page.on("dialog", async (dialog) => {
+    await dialog.accept();
+  });
+
+  await ensureAuthenticated(page);
+
+  await page.goto("/files");
+  await expect(page.getByRole("heading", { name: "My Files" })).toBeVisible();
+  await expect(page.getByText("doc-1.pdf")).toBeVisible();
+
+  await page.getByRole("button", { name: "Grid" }).click();
+  await expect(page.getByText("image-2.png")).toBeVisible();
+
+  await page.getByRole("button", { name: "Open details for doc-1.pdf" }).click();
+  await expect(page.getByRole("dialog", { name: "File details drawer" })).toBeVisible();
+  await expect(page.getByText("application/pdf")).toBeVisible();
+
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "Delete image-2.png" }).click();
+  await expect(page.getByText("image-2.png")).not.toBeVisible();
 });

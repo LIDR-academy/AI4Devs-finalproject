@@ -3,9 +3,10 @@
 import logging
 from io import BytesIO
 
+import arrow
 from flask import request
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+from sqlmodel import Session, select
 from werkzeug.datastructures import FileStorage
 
 from core import configured_limit, get_engine
@@ -26,6 +27,38 @@ logger = logging.getLogger(__name__)
 
 MAX_FILE_SIZE = 100 * 1024 * 1024
 ASYNC_UPLOAD_THRESHOLD = 10 * 1024 * 1024
+
+
+def _restore_soft_deleted_file(
+  session: Session,
+  *,
+  user_id: int,
+  cid: str,
+  original_filename: str,
+  safe_filename: str,
+  file_size: int,
+  mime_type: str,
+) -> File | None:
+  """Restore a soft-deleted file record for the same user and CID."""
+  existing = session.exec(
+    select(File).where(File.user_id == user_id, File.cid == cid)
+  ).first()
+  if existing is None or existing.deleted_at is None:
+    return None
+
+  now = arrow.utcnow().datetime
+  existing.deleted_at = None
+  existing.pinned = True
+  existing.original_filename = original_filename
+  existing.safe_filename = safe_filename
+  existing.storage_key = safe_filename
+  existing.size = file_size
+  existing.mime_type = mime_type
+  existing.uploaded_at = now
+  session.add(existing)
+  session.commit()
+  session.refresh(existing)
+  return existing
 
 
 def register_routes(bp):
@@ -132,6 +165,7 @@ def register_routes(bp):
             declared_content_type = (file.content_type or "").strip()
             if declared_content_type and declared_content_type != "application/octet-stream":
                 validate_mime_type(declared_content_type)
+            upload_content_type = declared_content_type or "application/octet-stream"
             file_content = file.read()
             file_size = len(file_content)
             validate_file_size(file_size, MAX_FILE_SIZE)
@@ -146,7 +180,7 @@ def register_routes(bp):
                     filename=safe_filename,
                     original_filename=original_filename,
                     file_data=file_content,
-                    content_type=file.content_type or "application/octet-stream",
+                    content_type=upload_content_type,
                 )
                 return success_response(
                     202,
@@ -160,7 +194,7 @@ def register_routes(bp):
             result = ipfs_service.upload_file(
                 file=BytesIO(file_content),
                 filename=safe_filename,
-                content_type=file.content_type or "application/octet-stream",
+                content_type=upload_content_type,
                 metadata={"user_id": str(user_id), "original_filename": original_filename},
             )
 
@@ -170,27 +204,46 @@ def register_routes(bp):
                     cid=result.cid,
                     original_filename=original_filename,
                     safe_filename=safe_filename,
-                  storage_key=safe_filename,
+                    storage_key=safe_filename,
                     size=file_size,
+                    mime_type=upload_content_type,
                     pinned=True,
                 )
                 session.add(db_file)
                 try:
-                  session.commit()
+                    session.commit()
                 except IntegrityError as exc:
-                  session.rollback()
-                  logger.info(
-                    "Duplicate upload rejected for user %s and cid %s: %s",
-                    user_id,
-                    result.cid,
-                    exc,
-                  )
-                  return error_response(
-                    409,
-                    "File already exists. Duplicate uploads are not allowed.",
-                    code="FILE_ALREADY_EXISTS",
-                    details={"cid": result.cid},
-                  )
+                    session.rollback()
+                    restored_file = _restore_soft_deleted_file(
+                        session,
+                        user_id=user_id,
+                        cid=result.cid,
+                        original_filename=original_filename,
+                        safe_filename=safe_filename,
+                        file_size=file_size,
+                        mime_type=upload_content_type,
+                    )
+                    if restored_file is None:
+                        logger.info(
+                            "Duplicate upload rejected for user %s and cid %s: %s",
+                            user_id,
+                            result.cid,
+                            exc,
+                        )
+                        return error_response(
+                            409,
+                            "File already exists. Duplicate uploads are not allowed.",
+                            code="FILE_ALREADY_EXISTS",
+                            details={"cid": result.cid},
+                        )
+
+                    db_file = restored_file
+                    logger.info(
+                        "Restored soft-deleted upload for user %s and cid %s",
+                        user_id,
+                        result.cid,
+                    )
+
                 queue_audit_log(
                     user_id=user_id,
                     action="file_upload",

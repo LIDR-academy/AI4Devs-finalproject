@@ -13,6 +13,7 @@
 10. [Frontend Auth and Dashboard (US-104)](#10-frontend-auth-and-dashboard-us-104)
 11. [Frontend File Upload Interface (US-105)](#11-frontend-file-upload-interface-us-105)
 12. [Frontend File Retrieval Interface (US-106)](#12-frontend-file-retrieval-interface-us-106)
+13. [Frontend Files Management Page (US-107)](#13-frontend-files-management-page-us-107)
 
 ---
 
@@ -318,6 +319,60 @@ flowchart LR
 - `npm run lint`
 - `npm test`
 - `npm run build`
+
+## 13. Frontend Files Management Page (US-107)
+
+Se implemento la pagina `/files` para gestionar los archivos subidos por el usuario con listado paginado, vista grid, filtros y acciones de pinning a traves de proxies seguros en Next.js.
+
+### 13.1. Cambios principales
+
+- Pagina `/files` protegida con:
+    - vista tabla con columnas Name, CID, Size, Pinned, Uploaded y Actions
+    - vista grid con tarjetas, miniaturas placeholder y acciones rapidas
+    - busqueda por nombre o CID con debounce
+    - filtro por estado de pinning
+    - ordenacion por nombre, tamano, fecha y pin status
+    - paginacion server-side con total y rango visible
+    - seleccion multiple y acciones bulk pin/unpin
+    - drawer lateral de detalles con metadatos y acciones contextuales
+    - estado vacio para usuarios sin archivos
+- Nuevas rutas internas Next.js:
+    - `GET /api/files`
+    - `POST /api/files/[cid]/pin`
+- Nuevo endpoint backend:
+    - `GET /api/v1/files`
+
+### 13.2. Seguridad y coherencia backend/frontend
+
+- La lista y las acciones de pin/unpin usan proxy server-side con API key obtenida desde cookie `HttpOnly`.
+- El listado backend devuelve solo archivos del usuario autenticado y soporta busqueda, filtro y ordenacion compatibles con la UI.
+- Las acciones de pin/unpin mantienen actualizacion optimista en frontend y despues invalidan cache para sincronizar con backend.
+
+### 13.3. Flujo de gestion de archivos
+
+```mermaid
+flowchart LR
+        U[Browser Files UI] --> Q[React Query state]
+        Q --> P[/api/files GET]
+        P --> B[/api/v1/files backend]
+        B --> P
+        P --> Q
+        Q --> T[List or grid rendering]
+        Q --> D[Details drawer]
+        T --> A[/api/files/[cid]/pin POST]
+        A --> BP[/api/v1/files/pin or /unpin backend]
+        BP --> A
+        A --> Q
+```
+
+### 13.4. Pruebas ejecutadas
+
+- `npm run type-check`
+- `npm test`
+- `npm run lint`
+- `npm run build`
+- `npm run test:e2e`
+- `/PROJECTS/python/ipfs-saas-ai4devs/.venv/bin/python -m unittest discover -s tests/backend/unit`
 
     Request Flow Diagram:
 
@@ -644,6 +699,7 @@ The generated specification includes:
 |--------|----------|-------------|
 | `POST` | `/api/v1/files/upload` | Upload file to IPFS |
 | `GET` | `/api/v1/files/upload/status/<task_id>` | Check file-upload async task status |
+| `GET` | `/api/v1/files` | List authenticated user's files with pagination and filters |
 | `GET` | `/api/v1/files/retrieve/<cid>` | Retrieve file by CID |
 
 #### Content Pinning
