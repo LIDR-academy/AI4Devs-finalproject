@@ -116,8 +116,8 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-108-01-setup-docs-structure.md
-- TASK-US-108-02-write-getting-started.md
-- TASK-US-108-03-write-api-reference.md
-- TASK-US-108-04-create-code-examples.md
-- TASK-US-108-05-implement-search.md
+- [TASK-US-108-01: Setup Documentation Page Structure](../../tasks/frontend/TASK-US-108-01-setup-docs-structure.md)
+- [TASK-US-108-02: Write Getting Started Guide](../../tasks/frontend/TASK-US-108-02-write-getting-started.md)
+- [TASK-US-108-03: Write API Reference](../../tasks/frontend/TASK-US-108-03-write-api-reference.md)
+- [TASK-US-108-04: Create Code Examples with Copy Button](../../tasks/frontend/TASK-US-108-04-create-code-examples.md)
+- [TASK-US-108-05: Implement Documentation Search](../../tasks/frontend/TASK-US-108-05-implement-search.md)
