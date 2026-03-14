@@ -4,6 +4,8 @@ Introduce robust runtime error handling with retry options, session timeout noti
 
 [Trello Card](https://trello.com/c/676HhPvT)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/25)
+
 ## Parent User Story
 [US-109: Error Handling and Feedback UI](../../user-stories/frontend/US-109-error-handling-feedback.md)
 

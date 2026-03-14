@@ -4,6 +4,8 @@ Create meaningful empty states and confirmation dialogs for destructive actions 
 
 [Trello Card](https://trello.com/c/nQu2xRiz)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/25)
+
 ## Parent User Story
 [US-109: Error Handling and Feedback UI](../../user-stories/frontend/US-109-error-handling-feedback.md)
 

@@ -4,6 +4,8 @@ Add loading skeletons for async pages and consistent inline validation error dis
 
 [Trello Card](https://trello.com/c/Ep2VbR3w)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/25)
+
 ## Parent User Story
 [US-109: Error Handling and Feedback UI](../../user-stories/frontend/US-109-error-handling-feedback.md)
 
