@@ -1,6 +1,7 @@
 # US-202: Deployment Scripts
 
 [Trello Card](https://trello.com/c/g32f84HI)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30)
 
 
 
@@ -14,20 +15,20 @@ As a **DevOps engineer**, I want CLI scripts (Bash and PowerShell) for managing 
 ⭐⭐⭐ Medium-High
 
 ## Acceptance Criteria
-- [ ] Bash script (`deploy.sh`) for Linux/macOS
-- [ ] PowerShell script (`deploy.ps1`) for Windows
-- [ ] Interactive menu with numbered options
-- [ ] Environment selection (development, staging, production)
-- [ ] List existing Docker images
-- [ ] Build images with version tagging
-- [ ] Rename/retag images
-- [ ] Push images to Docker registry
-- [ ] Deploy using docker-compose
-- [ ] Run individual containers in detached mode
-- [ ] View container logs
-- [ ] Stop/restart services
-- [ ] Input validation and error handling
-- [ ] Colored output for better UX
+- [x] Bash script (`deploy.sh`) for Linux/macOS
+- [x] PowerShell script (`deploy.ps1`) for Windows
+- [x] Interactive menu with numbered options
+- [x] Environment selection (development, staging, production)
+- [x] List existing Docker images
+- [x] Build images with version tagging
+- [x] Rename/retag images
+- [x] Push images to Docker registry
+- [x] Deploy using docker-compose
+- [x] Run individual containers in detached mode
+- [x] View container logs
+- [x] Stop/restart services
+- [x] Input validation and error handling
+- [x] Colored output for better UX
 
 ## Menu Options
 ```
@@ -68,6 +69,10 @@ Enter choice:
 
 ## Completion Status
 - [ ] 0% - Not Started
+- [ ] 25% - In Progress
+- [ ] 50% - In Progress
+- [ ] 75% - In Progress
+- [x] 90% - Implementation Complete (final runtime checks pending in target OS/network)
 
 ## Workflow Diagram
 ```mermaid
