@@ -3,6 +3,7 @@
 Implement Docker image listing, build, and tagging/retagging commands used by the deployment CLI scripts.
 
 [Trello Card](https://trello.com/c/Ts2wQ3ml)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30)
 
 ## Parent User Story
 [US-202: Deployment Scripts](../../user-stories/infrastructure/US-202-deployment-scripts.md)

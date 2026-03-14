@@ -3,6 +3,7 @@
 Create a Bash deployment CLI script (`deploy.sh`) for Linux/macOS with an interactive menu and core Docker deployment operations.
 
 [Trello Card](https://trello.com/c/v0zGNdGs)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30)
 
 ## Parent User Story
 [US-202: Deployment Scripts](../../user-stories/infrastructure/US-202-deployment-scripts.md)

@@ -1,6 +1,7 @@
 # US-202: Deployment Scripts
 
 [Trello Card](https://trello.com/c/g32f84HI)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30)
 
 
 

@@ -3,6 +3,7 @@
 Implement deployment and runtime operations in CLI scripts (compose deploy, single-container run, logs, stop/restart).
 
 [Trello Card](https://trello.com/c/FfyFN3JN)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30)
 
 ## Parent User Story
 [US-202: Deployment Scripts](../../user-stories/infrastructure/US-202-deployment-scripts.md)

@@ -3,6 +3,7 @@
 Create a PowerShell deployment CLI script (`deploy.ps1`) for Windows with feature parity to the Bash script.
 
 [Trello Card](https://trello.com/c/yUTJadfa)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30)
 
 ## Parent User Story
 [US-202: Deployment Scripts](../../user-stories/infrastructure/US-202-deployment-scripts.md)

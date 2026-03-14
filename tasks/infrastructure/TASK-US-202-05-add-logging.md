@@ -3,6 +3,7 @@
 Add structured logging, dry-run behavior, dependency checks, and defensive validation across deployment scripts.
 
 [Trello Card](https://trello.com/c/MOjTRjZ5)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30)
 
 ## Parent User Story
 [US-202: Deployment Scripts](../../user-stories/infrastructure/US-202-deployment-scripts.md)
