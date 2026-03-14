@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { LoginForm } from "@/components/auth/login-form";
+import { toast } from "@/lib/toast";
 
 const pushMock = jest.fn();
 const loginMock = jest.fn();
@@ -60,5 +61,36 @@ describe("LoginForm", () => {
       expect(screen.getByText("Email is required")).toBeInTheDocument();
       expect(screen.getByText("API key is required")).toBeInTheDocument();
     });
+  });
+
+  it("shows backend error message and field error when login fails", async () => {
+    loginMock.mockRejectedValue({
+      response: {
+        data: {
+          message: "Session timeout or invalid credentials",
+        },
+      },
+    });
+
+    render(<LoginForm />);
+
+    fireEvent.change(screen.getByLabelText("Email"), {
+      target: { value: "user@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("API Key"), {
+      target: { value: "bad_key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Login" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Invalid API key")).toBeInTheDocument();
+      expect(toast.error).toHaveBeenCalledWith("Session timeout or invalid credentials");
+      expect(pushMock).not.toHaveBeenCalled();
+    });
+  });
+
+  it("renders register link", () => {
+    render(<LoginForm />);
+    expect(screen.getByRole("link", { name: "Register" })).toHaveAttribute("href", "/register");
   });
 });

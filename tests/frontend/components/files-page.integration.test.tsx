@@ -1,7 +1,9 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 
 import FilesPage from "@/app/files/page";
+
+import { createMockFile } from "../fixtures/mockData";
+import { renderWithProviders } from "../utils/test-utils";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -37,19 +39,7 @@ jest.mock("@/lib/toast", () => ({
 }));
 
 function renderWithQueryClient() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <FilesPage />
-    </QueryClientProvider>,
-  );
+  return renderWithProviders(<FilesPage />);
 }
 
 describe("FilesPage", () => {
@@ -69,14 +59,10 @@ describe("FilesPage", () => {
       json: async () => ({
         status: 200,
         data: [
-          {
-            cid: "bafybeigdyrzt5x6z6xj5ir3f6m42cdbw2m5g3m6twjv7mmyr4y6nblfuca",
+          createMockFile({
             original_filename: "notes.txt",
-            size: 1024,
             pinned: true,
-            uploaded_at: "2026-03-13T10:00:00.000Z",
-            content_type: "text/plain",
-          },
+          }),
         ],
         meta: {
           page: 1,

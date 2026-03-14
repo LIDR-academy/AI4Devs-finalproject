@@ -16,6 +16,7 @@
 13. [Frontend Files Management Page (US-107)](#13-frontend-files-management-page-us-107)
 14. [Frontend Documentation Pages (US-108)](#14-frontend-documentation-pages-us-108)
 15. [Frontend Error Handling and Feedback (US-109)](#15-frontend-error-handling-and-feedback-us-109)
+16. [Frontend Testing Suite (US-110)](#16-frontend-testing-suite-us-110)
 
 ---
 
@@ -166,6 +167,62 @@ flowchart TB
     style POSTGRES fill:#336791,color:#fff
     style REDIS fill:#dc382d,color:#fff
     style FILEBASE fill:#00d395,color:#fff
+```
+
+## 16. Frontend Testing Suite (US-110)
+
+Se fortalecio la estrategia de pruebas del frontend para cerrar cobertura funcional y calidad de regresion en CI.
+
+### 16.1. Alcance implementado
+
+- Cobertura unificada para pruebas unitarias, de componentes y accesibilidad (Jest).
+- E2E de rutas criticas con Playwright (autenticacion, upload, files, retrieve).
+- Infraestructura de mocking reutilizable para pruebas aisladas (fixtures/factories + mocks por suite).
+- Utilidades compartidas de render para reducir duplicacion en pruebas con providers.
+- Pipeline CI dedicado para frontend con type-check, lint, cobertura, build y E2E.
+
+### 16.2. Estructura de testing
+
+```text
+tests/frontend/
+├── a11y/
+│   └── pages.a11y.test.tsx
+├── components/
+├── fixtures/
+│   └── mockData.ts
+├── unit/
+└── utils/
+    └── test-utils.tsx
+```
+
+### 16.3. Configuracion y calidad
+
+- `frontend/jest.config.cjs` define `coverageThreshold` global (statements/functions/lines >= 70%, branches >= 65%).
+- `frontend/jest.setup.ts` centraliza setup compartido para pruebas frontend.
+- `frontend/package.json` agrega `test:coverage` para reportes de cobertura.
+- `.github/workflows/frontend-tests.yml` ejecuta validaciones frontend en CI (incluyendo Playwright).
+
+### 16.4. Flujo de validacion
+
+```mermaid
+flowchart TD
+    A[Type Check] --> B[Lint]
+    B --> C[Jest Unit + Components + A11y]
+    C --> D[Coverage >= 70%]
+    D --> E[Build Next.js]
+    E --> F[Playwright E2E]
+    F --> G[Ready for QA]
+```
+
+### 16.5. Comandos principales
+
+```bash
+cd frontend
+npm run type-check
+npm run lint
+npm run test:coverage
+npm run build
+npm run test:e2e
 ```
 
 ## 10. Frontend Auth and Dashboard (US-104)
