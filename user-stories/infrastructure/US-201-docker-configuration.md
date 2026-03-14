@@ -95,9 +95,9 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-201-01-create-backend-dockerfile.md
-- TASK-US-201-02-create-frontend-dockerfile.md
-- TASK-US-201-03-create-nginx-config.md
-- TASK-US-201-04-create-compose-dev.md
-- TASK-US-201-05-create-compose-prod.md
-- TASK-US-201-06-create-deployment-scripts.md
+- [TASK-US-201-01: Create Backend Dockerfile](../../tasks/infrastructure/TASK-US-201-01-create-backend-dockerfile.md)
+- [TASK-US-201-02: Create Frontend Dockerfile](../../tasks/infrastructure/TASK-US-201-02-create-frontend-dockerfile.md)
+- [TASK-US-201-03: Create Nginx Config](../../tasks/infrastructure/TASK-US-201-03-create-nginx-config.md)
+- [TASK-US-201-04: Create Compose Dev](../../tasks/infrastructure/TASK-US-201-04-create-compose-dev.md)
+- [TASK-US-201-05: Create Compose Prod](../../tasks/infrastructure/TASK-US-201-05-create-compose-prod.md)
+- [TASK-US-201-06: Create Deployment Scripts](../../tasks/infrastructure/TASK-US-201-06-create-deployment-scripts.md)
