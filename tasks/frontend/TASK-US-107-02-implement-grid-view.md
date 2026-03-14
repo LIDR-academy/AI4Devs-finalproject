@@ -4,6 +4,8 @@ Add a grid-based visualization for files with thumbnails and quick actions.
 
 [Trello Card](https://trello.com/c/IIlDrkue)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/22)
+
 ## Parent User Story
 [US-107: Files Management Page](../../user-stories/frontend/US-107-files-management.md)
 

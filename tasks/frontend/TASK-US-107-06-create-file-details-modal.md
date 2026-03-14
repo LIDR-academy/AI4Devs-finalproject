@@ -4,6 +4,8 @@ Create a details modal/drawer for inspecting a file and accessing contextual act
 
 [Trello Card](https://trello.com/c/cW5D62De)
 
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/22)
+
 ## Parent User Story
 [US-107: Files Management Page](../../user-stories/frontend/US-107-files-management.md)
 
