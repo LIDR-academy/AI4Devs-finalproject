@@ -36,6 +36,38 @@ jobs:
       - name: Unit/component/a11y tests with coverage
         run: npm run test:coverage
 
+      - name: Enforce minimum frontend coverage (82%)
+        env:
+          COVERAGE_MIN: "82"
+        run: |
+          node -e '
+          const fs = require("fs");
+          const min = Number(process.env.COVERAGE_MIN || 82);
+          const reportPath = "coverage/lcov.info";
+
+          if (!fs.existsSync(reportPath)) {
+            console.error(`Coverage report not found at ${reportPath}`);
+            process.exit(1);
+          }
+
+          const report = fs.readFileSync(reportPath, "utf8");
+          const linesFound = [...report.matchAll(/^LF:(\d+)$/gm)].reduce((sum, match) => sum + Number(match[1]), 0);
+          const linesHit = [...report.matchAll(/^LH:(\d+)$/gm)].reduce((sum, match) => sum + Number(match[1]), 0);
+
+          if (!linesFound) {
+            console.error("Coverage report contains no executable lines (LF=0)");
+            process.exit(1);
+          }
+
+          const lineCoverage = (linesHit / linesFound) * 100;
+          console.log(`Frontend line coverage: ${lineCoverage.toFixed(2)}% (minimum required: ${min}%)`);
+
+          if (lineCoverage < min) {
+            console.error(`Coverage gate failed: ${lineCoverage.toFixed(2)}% < ${min}%`);
+            process.exit(1);
+          }
+          '
+
       - name: Build frontend
         run: npm run build
 
