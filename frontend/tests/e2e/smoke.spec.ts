@@ -1,31 +1,141 @@
 import { test, expect, type Page } from "@playwright/test";
 
-let sharedCredentials: { email: string; apiKey: string } | null = null;
+type Credentials = {
+  email: string;
+  apiKey: string;
+};
 
-async function ensureAuthenticated(page: Page) {
-  if (!sharedCredentials) {
-    const uniqueEmail = `qa-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+function createCredentials(): Credentials {
+  const token = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return {
+    email: `qa-${token}@example.com`,
+    apiKey: `ipfs_gw_${token.replace(/[^a-z0-9]/gi, "")}`,
+  };
+}
 
-    await page.goto("/register");
-    await page.locator("#email").fill(uniqueEmail);
-    await page.locator("#password").fill("StrongPass1!");
-    await page.locator("#confirmPassword").fill("StrongPass1!");
-    await page.getByRole("button", { name: "Create Account" }).click();
+async function mockAuthBackend(page: Page, credentials: Credentials) {
+  let isAuthenticated = false;
 
-    await expect(page.getByRole("dialog")).toBeVisible();
-    sharedCredentials = {
-      email: uniqueEmail,
-      apiKey: (await page.locator("code").first().innerText()).trim(),
-    };
+  await page.route("**/api/v1/users/register", async (route) => {
+    const payload = route.request().postDataJSON() as { email?: string } | null;
+    const email = payload?.email ?? credentials.email;
 
-    await page.getByRole("button", { name: "Go to Dashboard" }).click();
-    await expect(page).toHaveURL(/\/dashboard$/);
-    return;
-  }
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: 201,
+        message: "User registered successfully",
+        data: {
+          email,
+          api_key: credentials.apiKey,
+        },
+      }),
+    });
+  });
 
+  await page.route("**/api/auth/session", async (route) => {
+    const method = route.request().method();
+
+    if (method === "POST") {
+      isAuthenticated = true;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: 200,
+          data: {
+            email: credentials.email,
+            apiKeyStatus: "active",
+            createdAt: "2026-03-13T09:00:00.000Z",
+            lastRenewedAt: null,
+            usageCount: 12,
+          },
+        }),
+      });
+      return;
+    }
+
+    if (method === "GET") {
+      await route.fulfill({
+        status: isAuthenticated ? 200 : 401,
+        contentType: "application/json",
+        body: JSON.stringify(
+          isAuthenticated
+            ? {
+                status: 200,
+                data: {
+                  email: credentials.email,
+                  apiKeyStatus: "active",
+                  createdAt: "2026-03-13T09:00:00.000Z",
+                  lastRenewedAt: null,
+                  usageCount: 12,
+                },
+              }
+            : {
+                status: 401,
+                message: "Authentication required",
+              },
+        ),
+      });
+      return;
+    }
+
+    if (method === "DELETE") {
+      isAuthenticated = false;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ status: 200, message: "Session cleared" }),
+      });
+      return;
+    }
+
+    await route.continue();
+  });
+
+  await page.route("**/api/dashboard/overview", async (route) => {
+    await route.fulfill({
+      status: isAuthenticated ? 200 : 401,
+      contentType: "application/json",
+      body: JSON.stringify(
+        isAuthenticated
+          ? {
+              status: 200,
+              message: "Dashboard overview fetched",
+              data: {
+                account: {
+                  email: credentials.email,
+                  apiKeyStatus: "active",
+                  createdAt: "2026-03-13T09:00:00.000Z",
+                  lastRenewedAt: null,
+                },
+                usage: {
+                  requestCount: 12,
+                  fileCount: 2,
+                  storageUsedBytes: 3072,
+                },
+                recentFiles: [],
+                capabilities: {
+                  renewApiKey: true,
+                  revokeApiKey: true,
+                  recentFilesAvailable: false,
+                },
+              },
+            }
+          : {
+              status: 401,
+              message: "Authentication required",
+            },
+      ),
+    });
+  });
+}
+
+async function loginWithApiKey(page: Page, credentials: Credentials) {
   await page.goto("/login");
-  await page.locator("#login-email").fill(sharedCredentials.email);
-  await page.locator("#apiKey").fill(sharedCredentials.apiKey);
+  await page.locator("#login-email").fill(credentials.email);
+  await page.locator("#apiKey").fill(credentials.apiKey);
   await page.getByRole("button", { name: "Login" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 }
@@ -50,7 +160,8 @@ test("mobile navigation toggles", async ({ page }) => {
 });
 
 test("user can register and continue to dashboard", async ({ page }) => {
-  const uniqueEmail = `qa-${Date.now()}@example.com`;
+  const credentials = createCredentials();
+  await mockAuthBackend(page, credentials);
 
   await page.goto("/register");
   await page.getByRole("button", { name: "Show password" }).click();
@@ -58,7 +169,7 @@ test("user can register and continue to dashboard", async ({ page }) => {
   await page.getByRole("button", { name: "Hide password" }).click();
   await expect(page.locator("#password")).toHaveAttribute("type", "password");
 
-  await page.locator("#email").fill(uniqueEmail);
+  await page.locator("#email").fill(credentials.email);
   await page.locator("#password").fill("StrongPass1!");
   await page.locator("#confirmPassword").fill("StrongPass1!");
   await page.getByRole("button", { name: "Create Account" }).click();
@@ -66,11 +177,6 @@ test("user can register and continue to dashboard", async ({ page }) => {
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByText("Your API key is ready")).toBeVisible();
   await expect(page.locator("code")).toContainText("ipfs_gw_");
-
-  sharedCredentials = {
-    email: uniqueEmail,
-    apiKey: (await page.locator("code").first().innerText()).trim(),
-  };
 
   await page.getByRole("button", { name: "Go to Dashboard" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
@@ -85,26 +191,22 @@ test("dashboard route redirects to login when unauthenticated", async ({ page })
 });
 
 test("user can login with API key and reach dashboard", async ({ page }) => {
-  if (!sharedCredentials) {
-    throw new Error("Missing shared credentials from registration flow");
-  }
+  const credentials = createCredentials();
+  await mockAuthBackend(page, credentials);
 
-  await page.goto("/login");
-  await page.locator("#login-email").fill(sharedCredentials.email);
-  await page.locator("#apiKey").fill(sharedCredentials.apiKey);
-  await page.getByRole("button", { name: "Login" }).click();
+  await loginWithApiKey(page, credentials);
 
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.getByRole("button", { name: "Logout" }).first().click();
   await expect(page).toHaveURL(/\/login/);
 
-  await page.locator("#login-email").fill(sharedCredentials.email);
-  await page.locator("#apiKey").fill(sharedCredentials.apiKey);
-  await page.getByRole("button", { name: "Login" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await loginWithApiKey(page, credentials);
 });
 
 test("authenticated user can upload a file and see the CID", async ({ page }) => {
+  const credentials = createCredentials();
+  await mockAuthBackend(page, credentials);
+
   await page.route("**/api/upload", async (route) => {
     await route.fulfill({
       status: 201,
@@ -123,7 +225,7 @@ test("authenticated user can upload a file and see the CID", async ({ page }) =>
     });
   });
 
-  await ensureAuthenticated(page);
+  await loginWithApiKey(page, credentials);
 
   await page.goto("/upload");
   await expect(page.getByRole("heading", { name: "Upload Files" })).toBeVisible();
@@ -141,6 +243,9 @@ test("authenticated user can upload a file and see the CID", async ({ page }) =>
 });
 
 test("authenticated user can browse files page and open details", async ({ page }) => {
+  const credentials = createCredentials();
+  await mockAuthBackend(page, credentials);
+
   let filesPayload = [
     {
       cid: "bafy-files-cid-1",
@@ -159,28 +264,6 @@ test("authenticated user can browse files page and open details", async ({ page 
       content_type: "image/png",
     },
   ];
-
-  await page.route("**/api/auth/session", async (route) => {
-    if (route.request().method() !== "GET" || !sharedCredentials) {
-      await route.continue();
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        status: 200,
-        data: {
-          email: sharedCredentials.email,
-          apiKeyStatus: "active",
-          createdAt: "2026-03-13T09:00:00.000Z",
-          lastRenewedAt: null,
-          usageCount: 12,
-        },
-      }),
-    });
-  });
 
   await page.route("**/api/files?**", async (route) => {
     await route.fulfill({
@@ -219,7 +302,7 @@ test("authenticated user can browse files page and open details", async ({ page 
     await dialog.accept();
   });
 
-  await ensureAuthenticated(page);
+  await loginWithApiKey(page, credentials);
 
   await page.goto("/files");
   await expect(page.getByRole("heading", { name: "My Files" })).toBeVisible();
