@@ -99,4 +99,76 @@ describe("RegisterForm", () => {
       expect(success).toHaveBeenCalled();
     });
   });
+
+  test("copies and downloads API key from success dialog", async () => {
+    (api.register as jest.Mock).mockResolvedValue({
+      status: 201,
+      message: "Registration successful",
+      data: {
+        email: "copy.user@example.com",
+        api_key: "ipfs_gw_copy_123456",
+      },
+    });
+
+    const anchorClickSpy = jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+
+    render(<RegisterForm />);
+
+    fireEvent.input(screen.getByLabelText("Email"), { target: { value: "copy.user@example.com" } });
+    fireEvent.input(screen.getByLabelText("Password"), { target: { value: "StrongPass1!" } });
+    fireEvent.input(screen.getByLabelText("Confirm Password"), { target: { value: "StrongPass1!" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy key" }));
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith("ipfs_gw_copy_123456");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Download .txt" }));
+    expect(URL.createObjectURL).toHaveBeenCalled();
+    expect(anchorClickSpy).toHaveBeenCalled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:test-url");
+
+    anchorClickSpy.mockRestore();
+  });
+
+  test("shows email-specific error when backend reports email already registered", async () => {
+    (api.register as jest.Mock).mockRejectedValue({
+      response: {
+        data: {
+          message: "Email already registered",
+        },
+      },
+    });
+
+    render(<RegisterForm />);
+
+    fireEvent.input(screen.getByLabelText("Email"), { target: { value: "existing.user@example.com" } });
+    fireEvent.input(screen.getByLabelText("Password"), { target: { value: "StrongPass1!" } });
+    fireEvent.input(screen.getByLabelText("Confirm Password"), { target: { value: "StrongPass1!" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
+
+    expect((await screen.findAllByText("This email is already registered. Try logging in instead.")).length).toBeGreaterThan(0);
+    expect(error).toHaveBeenCalledWith("Email already registered");
+  });
+
+  test("shows root error when backend response does not include credentials", async () => {
+    (api.register as jest.Mock).mockResolvedValue({
+      status: 201,
+      message: "Registration successful",
+      data: null,
+    });
+
+    render(<RegisterForm />);
+
+    fireEvent.input(screen.getByLabelText("Email"), { target: { value: "broken.user@example.com" } });
+    fireEvent.input(screen.getByLabelText("Password"), { target: { value: "StrongPass1!" } });
+    fireEvent.input(screen.getByLabelText("Confirm Password"), { target: { value: "StrongPass1!" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
+
+    expect((await screen.findAllByText("Registration response did not include user credentials")).length).toBeGreaterThan(0);
+    expect(error).toHaveBeenCalledWith("Registration response did not include user credentials");
+  });
 });
