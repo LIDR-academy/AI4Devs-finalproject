@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 import sys
 
-from sqlmodel import SQLModel, Session
+from sqlmodel import SQLModel, Session, select
 
 ROOT = Path(__file__).resolve().parents[3]
 BACKEND_DIR = ROOT / "backend"
@@ -247,6 +247,47 @@ class TestSecurityHeadersAndCors(unittest.TestCase):
         self.assertEqual(payload["code"], "FILE_ALREADY_EXISTS")
         self.assertEqual(payload["message"], "File already exists. Duplicate uploads are not allowed.")
         self.assertEqual(payload["details"]["cid"], "QmDuplicateCid")
+
+    @patch("core.files.routes.upload.ipfs_service.upload_file")
+    def test_reupload_after_soft_delete_restores_file(self, upload_file_mock) -> None:
+        """Re-uploading a soft-deleted CID should restore the file row and return success."""
+        upload_file_mock.return_value = UploadResult(cid="QmReuploadCid", size=5, key="safe.txt")
+
+        first_upload = self.client.post(
+            "/api/v1/files/upload",
+            headers=self.primary_headers,
+            data={"file": (BytesIO(b"hello"), "doc1.txt", "text/plain")},
+            content_type="multipart/form-data",
+        )
+        delete_response = self.client.delete(
+            "/api/v1/files/QmReuploadCid",
+            headers=self.primary_headers,
+        )
+        second_upload = self.client.post(
+            "/api/v1/files/upload",
+            headers=self.primary_headers,
+            data={"file": (BytesIO(b"world"), "doc2.txt", "text/plain")},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(first_upload.status_code, 201)
+        self.assertEqual(delete_response.status_code, 200)
+        self.assertEqual(second_upload.status_code, 201)
+
+        with Session(self.engine) as session:
+            owner = session.exec(
+                select(User).where(User.api_key == "ipfs_gw_security_primary")
+            ).first()
+            self.assertIsNotNone(owner)
+            assert owner is not None
+            restored_files = session.exec(
+                select(File).where(
+                    File.user_id == owner.id,
+                    File.cid == "QmReuploadCid",
+                )
+            ).all()
+            self.assertEqual(len(restored_files), 1)
+            self.assertIsNone(restored_files[0].deleted_at)
 
 
 class TestPayloadSizeLimit(unittest.TestCase):

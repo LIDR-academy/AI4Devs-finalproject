@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronLeft, ChevronRight, Copy, Download, Eye, Grid3X3, List, Pin, PinOff, Search } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy, Download, Eye, Grid3X3, List, Pin, PinOff, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -90,6 +90,34 @@ async function setPinState(cid: string, targetPinned: boolean): Promise<void> {
   const payload = (await response.json().catch(() => null)) as { message?: string } | null;
   if (!response.ok) {
     throw new Error(payload?.message ?? "Unable to update pin state");
+  }
+}
+
+async function deleteSingleFile(cid: string): Promise<void> {
+  const response = await fetch(`/api/files/${encodeURIComponent(cid)}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+
+  const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+  if (!response.ok) {
+    throw new Error(payload?.message ?? "Unable to delete file");
+  }
+}
+
+async function deleteBulkFiles(cids: string[]): Promise<void> {
+  const response = await fetch("/api/files/delete/bulk", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ cids }),
+    cache: "no-store",
+  });
+
+  const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+  if (!response.ok) {
+    throw new Error(payload?.message ?? "Unable to delete selected files");
   }
 }
 
@@ -188,6 +216,84 @@ export default function FilesPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: ({ cid }: { cid: string }) => deleteSingleFile(cid),
+    onMutate: async ({ cid }) => {
+      await queryClient.cancelQueries({ queryKey: ["files-management"] });
+      const previousData = queryClient.getQueriesData<FilesResponse>({ queryKey: ["files-management"] });
+
+      for (const [key, value] of previousData) {
+        if (!value) {
+          continue;
+        }
+        queryClient.setQueryData<FilesResponse>(key, {
+          ...value,
+          data: value.data.filter((file) => file.cid !== cid),
+          meta: {
+            ...value.meta,
+            total: Math.max(0, value.meta.total - 1),
+          },
+        });
+      }
+
+      return { previousData };
+    },
+    onError: (error, _variables, context) => {
+      for (const [key, value] of context?.previousData ?? []) {
+        queryClient.setQueryData(key, value);
+      }
+      toast.error(error instanceof Error ? error.message : "Delete failed");
+    },
+    onSuccess: (_data, variables) => {
+      toast.success("File deleted successfully");
+      setDetailsFile(null);
+      setSelectedCids((previous) => previous.filter((cid) => cid !== variables.cid));
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["files-management"] });
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: ({ cids }: { cids: string[] }) => deleteBulkFiles(cids),
+    onMutate: async ({ cids }) => {
+      await queryClient.cancelQueries({ queryKey: ["files-management"] });
+      const previousData = queryClient.getQueriesData<FilesResponse>({ queryKey: ["files-management"] });
+
+      for (const [key, value] of previousData) {
+        if (!value) {
+          continue;
+        }
+        queryClient.setQueryData<FilesResponse>(key, {
+          ...value,
+          data: value.data.filter((file) => !cids.includes(file.cid)),
+          meta: {
+            ...value.meta,
+            total: Math.max(0, value.meta.total - cids.length),
+          },
+        });
+      }
+
+      return { previousData };
+    },
+    onError: (error, _variables, context) => {
+      for (const [key, value] of context?.previousData ?? []) {
+        queryClient.setQueryData(key, value);
+      }
+      toast.error(error instanceof Error ? error.message : "Bulk delete failed");
+    },
+    onSuccess: (_data, variables) => {
+      toast.success(`${variables.cids.length} file(s) deleted`);
+      setSelectedCids([]);
+      if (detailsFile && variables.cids.includes(detailsFile.cid)) {
+        setDetailsFile(null);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["files-management"] });
+    },
+  });
+
   const selectedFiles = useMemo(() => {
     const selectedSet = new Set(selectedCids);
     return files.filter((file) => selectedSet.has(file.cid));
@@ -235,7 +341,24 @@ export default function FilesPage() {
     link.click();
   };
 
-  const isBusy = pinMutation.isPending || bulkMutation.isPending;
+  const onDeleteSingle = (file: FileInfo) => {
+    if (!window.confirm(`Delete ${file.original_filename}? This action cannot be undone from the UI.`)) {
+      return;
+    }
+    deleteMutation.mutate({ cid: file.cid });
+  };
+
+  const onDeleteBulk = () => {
+    if (selectedCids.length === 0) {
+      return;
+    }
+    if (!window.confirm(`Delete ${selectedCids.length} selected file(s)? This action cannot be undone from the UI.`)) {
+      return;
+    }
+    bulkDeleteMutation.mutate({ cids: selectedCids });
+  };
+
+  const isBusy = pinMutation.isPending || bulkMutation.isPending || deleteMutation.isPending || bulkDeleteMutation.isPending;
   const currentPage = meta?.page ?? query.page;
   const currentPageSize = meta?.page_size ?? query.pageSize;
   const rangeStart = files.length === 0 ? 0 : (currentPage - 1) * currentPageSize + 1;
@@ -328,6 +451,10 @@ export default function FilesPage() {
             </Button>
             <Button disabled={selectedCids.length === 0 || isBusy} onClick={() => setSelectedCids([])} variant="ghost">
               Clear selection ({selectedCids.length})
+            </Button>
+            <Button disabled={selectedCids.length === 0 || isBusy} onClick={onDeleteBulk} variant="ghost">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete selected
             </Button>
           </div>
         </Card>
@@ -424,6 +551,15 @@ export default function FilesPage() {
                               >
                                 {file.pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                               </Button>
+                              <Button
+                                aria-label={`Delete ${file.original_filename}`}
+                                className="h-8 px-2"
+                                disabled={isBusy}
+                                onClick={() => onDeleteSingle(file)}
+                                variant="ghost"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </td>
                         </tr>
@@ -476,6 +612,15 @@ export default function FilesPage() {
                           variant="ghost"
                         >
                           {file.pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                        </Button>
+                        <Button
+                          aria-label={`Delete ${file.original_filename}`}
+                          className="h-8 px-2"
+                          disabled={isBusy}
+                          onClick={() => onDeleteSingle(file)}
+                          variant="ghost"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </Card>
@@ -570,6 +715,10 @@ export default function FilesPage() {
                 >
                   {detailsFile.pinned ? <PinOff className="mr-2 h-4 w-4" /> : <Pin className="mr-2 h-4 w-4" />}
                   {detailsFile.pinned ? "Unpin" : "Pin"}
+                </Button>
+                <Button disabled={isBusy} onClick={() => onDeleteSingle(detailsFile)} variant="ghost">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
                 </Button>
               </div>
             </div>

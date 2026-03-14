@@ -23,7 +23,7 @@ As a **user**, I want to view and manage all my uploaded files in one place, so 
 - [x] Pagination for large file lists
 - [x] Pin/unpin toggle for each file
 - [x] Download action for each file
-- [ ] Delete action with confirmation (future)
+- [x] Delete action with confirmation
 - [x] Bulk actions (pin/unpin multiple)
 - [x] File details modal/drawer
 - [x] Empty state for new users
@@ -109,3 +109,4 @@ flowchart TD
 - [TASK-US-107-04-implement-pagination.md](../../tasks/frontend/TASK-US-107-04-implement-pagination.md)
 - [TASK-US-107-05-add-bulk-actions.md](../../tasks/frontend/TASK-US-107-05-add-bulk-actions.md)
 - [TASK-US-107-06-create-file-details-modal.md](../../tasks/frontend/TASK-US-107-06-create-file-details-modal.md)
+- [TASK-US-107-07-delete-files-with-confirmation.md](../../tasks/frontend/TASK-US-107-07-delete-files-with-confirmation.md)

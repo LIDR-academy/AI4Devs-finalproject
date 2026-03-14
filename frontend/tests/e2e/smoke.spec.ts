@@ -141,6 +141,25 @@ test("authenticated user can upload a file and see the CID", async ({ page }) =>
 });
 
 test("authenticated user can browse files page and open details", async ({ page }) => {
+  let filesPayload = [
+    {
+      cid: "bafy-files-cid-1",
+      original_filename: "doc-1.pdf",
+      size: 2048,
+      pinned: true,
+      uploaded_at: "2026-03-13T09:30:00.000Z",
+      content_type: "application/pdf",
+    },
+    {
+      cid: "bafy-files-cid-2",
+      original_filename: "image-2.png",
+      size: 1024,
+      pinned: false,
+      uploaded_at: "2026-03-13T09:35:00.000Z",
+      content_type: "image/png",
+    },
+  ];
+
   await page.route("**/api/auth/session", async (route) => {
     if (route.request().method() !== "GET" || !sharedCredentials) {
       await route.continue();
@@ -169,28 +188,11 @@ test("authenticated user can browse files page and open details", async ({ page 
       contentType: "application/json",
       body: JSON.stringify({
         status: 200,
-        data: [
-          {
-            cid: "bafy-files-cid-1",
-            original_filename: "doc-1.pdf",
-            size: 2048,
-            pinned: true,
-            uploaded_at: "2026-03-13T09:30:00.000Z",
-            content_type: "application/pdf",
-          },
-          {
-            cid: "bafy-files-cid-2",
-            original_filename: "image-2.png",
-            size: 1024,
-            pinned: false,
-            uploaded_at: "2026-03-13T09:35:00.000Z",
-            content_type: "image/png",
-          },
-        ],
+        data: filesPayload,
         meta: {
           page: 1,
           page_size: 10,
-          total: 2,
+          total: filesPayload.length,
           total_pages: 1,
           sort_by: "uploaded",
           sort_order: "desc",
@@ -199,6 +201,22 @@ test("authenticated user can browse files page and open details", async ({ page 
         },
       }),
     });
+  });
+
+  await page.route("**/api/files/bafy-files-cid-2", async (route) => {
+    filesPayload = filesPayload.filter((file) => file.cid !== "bafy-files-cid-2");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: 200,
+        message: "File deleted successfully",
+      }),
+    });
+  });
+
+  page.on("dialog", async (dialog) => {
+    await dialog.accept();
   });
 
   await ensureAuthenticated(page);
@@ -213,4 +231,8 @@ test("authenticated user can browse files page and open details", async ({ page 
   await page.getByRole("button", { name: "Open details for doc-1.pdf" }).click();
   await expect(page.getByRole("dialog", { name: "File details drawer" })).toBeVisible();
   await expect(page.getByText("application/pdf")).toBeVisible();
+
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "Delete image-2.png" }).click();
+  await expect(page.getByText("image-2.png")).not.toBeVisible();
 });

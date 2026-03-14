@@ -4,8 +4,10 @@ import json
 import logging
 from io import BytesIO
 
+import arrow
 from celery import shared_task
-from sqlmodel import Session
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, select
 
 from core import get_engine
 from core.files.models import File
@@ -13,6 +15,36 @@ from core.services.audit_service import add_audit_log
 from core.services.ipfs_service import ipfs_service, UploadError
 
 logger = logging.getLogger(__name__)
+
+
+def _restore_soft_deleted_file(
+    session: Session,
+    *,
+    user_id: int,
+    cid: str,
+    original_filename: str,
+    safe_filename: str,
+    file_size: int,
+) -> File | None:
+    """Restore a soft-deleted file row for a duplicate CID upload."""
+    existing = session.exec(
+        select(File).where(File.user_id == user_id, File.cid == cid)
+    ).first()
+    if existing is None or existing.deleted_at is None:
+        return None
+
+    now = arrow.utcnow().datetime
+    existing.deleted_at = None
+    existing.pinned = True
+    existing.original_filename = original_filename
+    existing.safe_filename = safe_filename
+    existing.storage_key = safe_filename
+    existing.size = file_size
+    existing.uploaded_at = now
+    session.add(existing)
+    session.commit()
+    session.refresh(existing)
+    return existing
 
 
 @shared_task(
@@ -74,6 +106,28 @@ def upload_file_async(
                 pinned=True,
             )
             session.add(db_file)
+            try:
+                session.commit()
+            except IntegrityError as exc:
+                session.rollback()
+                restored_file = _restore_soft_deleted_file(
+                    session,
+                    user_id=user_id,
+                    cid=result.cid,
+                    original_filename=original_filename,
+                    safe_filename=filename,
+                    file_size=file_size,
+                )
+                if restored_file is None:
+                    raise exc
+                db_file = restored_file
+                logger.info(
+                    "Async upload restored soft-deleted file for user %s and cid %s",
+                    user_id,
+                    result.cid,
+                )
+
+            session.refresh(db_file)
             
             # Log to audit trail
             add_audit_log(
