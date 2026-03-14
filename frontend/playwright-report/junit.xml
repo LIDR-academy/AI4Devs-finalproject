@@ -1,0 +1,78 @@
+<testsuites id="" name="" tests="31" failures="0" skipped="0" errors="0" time="81.28513399999999">
+<testsuite name="ai-generation.spec.ts" timestamp="2026-03-14T19:40:56.876Z" hostname="chromium" tests="7" failures="0" skipped="0" time="110.224" errors="0">
+<testcase name="AI Generation Flow › should show loading state during AI text generation" classname="ai-generation.spec.ts" time="15.481">
+</testcase>
+<testcase name="AI Generation Flow › should handle AI text generation errors gracefully" classname="ai-generation.spec.ts" time="15.353">
+</testcase>
+<testcase name="AI Generation Flow › should show loading state during AI image generation" classname="ai-generation.spec.ts" time="14.823">
+</testcase>
+<testcase name="AI Generation Flow › should display AI-generated image immediately after generation" classname="ai-generation.spec.ts" time="15.513">
+</testcase>
+<testcase name="AI Generation Flow › should update output type to VIDEO after AI image generation" classname="ai-generation.spec.ts" time="15.875">
+</testcase>
+<testcase name="AI Generation Flow › should disable generate buttons during any AI operation" classname="ai-generation.spec.ts" time="15.236">
+</testcase>
+<testcase name="AI Generation Flow › should preserve user text while showing AI-generated suggestions" classname="ai-generation.spec.ts" time="17.943">
+</testcase>
+</testsuite>
+<testsuite name="auth-login.spec.ts" timestamp="2026-03-14T19:40:56.876Z" hostname="chromium" tests="6" failures="0" skipped="0" time="95.806" errors="0">
+<testcase name="Auth Login Flows › C1 — New user: after login sees empty library" classname="auth-login.spec.ts" time="13.338">
+</testcase>
+<testcase name="Auth Login Flows › C2 — Existing user: after login library shows previous meditations" classname="auth-login.spec.ts" time="14.508">
+</testcase>
+<testcase name="Auth Login Flows › C3 — No session: accessing /library redirects to /login" classname="auth-login.spec.ts" time="12.058">
+</testcase>
+<testcase name="Auth Login Flows › C3 — No session: accessing / redirects to /login" classname="auth-login.spec.ts" time="17.015">
+</testcase>
+<testcase name="Auth Login Flows › C4 — Logout: clears session and redirects to /login" classname="auth-login.spec.ts" time="20.383">
+</testcase>
+<testcase name="Auth Login Flows › C5 — Cancellation: /login shows no error after Google flow is cancelled" classname="auth-login.spec.ts" time="18.504">
+</testcase>
+</testsuite>
+<testsuite name="manual-composition.spec.ts" timestamp="2026-03-14T19:40:56.876Z" hostname="chromium" tests="6" failures="0" skipped="0" time="109.865" errors="0">
+<testcase name="Manual Composition Flow › should display the meditation builder interface" classname="manual-composition.spec.ts" time="20.119">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve meditation text exactly as entered" classname="manual-composition.spec.ts" time="19.266">
+</testcase>
+<testcase name="Manual Composition Flow › should indicate PODCAST output type when no image is selected" classname="manual-composition.spec.ts" time="17.554">
+</testcase>
+<testcase name="Manual Composition Flow › should support very long meditation text" classname="manual-composition.spec.ts" time="20.682">
+</testcase>
+<testcase name="Manual Composition Flow › should clear text when user deletes it" classname="manual-composition.spec.ts" time="14.551">
+</testcase>
+<testcase name="Manual Composition Flow › should preserve text with special characters and line breaks" classname="manual-composition.spec.ts" time="17.693">
+</testcase>
+</testsuite>
+<testsuite name="media-preview.spec.ts" timestamp="2026-03-14T19:40:56.876Z" hostname="chromium" tests="7" failures="0" skipped="0" time="84.096" errors="0">
+<testcase name="Media Preview › should display music selector interface" classname="media-preview.spec.ts" time="14.217">
+</testcase>
+<testcase name="Media Preview › should display AI-generated image preview immediately after generation" classname="media-preview.spec.ts" time="12.375">
+</testcase>
+<testcase name="Media Preview › should show image preview with clearly visible content" classname="media-preview.spec.ts" time="13.546">
+</testcase>
+<testcase name="Media Preview › should allow removing AI-generated image" classname="media-preview.spec.ts" time="10.813">
+</testcase>
+<testcase name="Media Preview › should update output type when image is added or removed" classname="media-preview.spec.ts" time="11.5">
+</testcase>
+<testcase name="Media Preview › should handle missing or failed image previews gracefully" classname="media-preview.spec.ts" time="10.999">
+</testcase>
+<testcase name="Media Preview › should persist image preview state after page interactions" classname="media-preview.spec.ts" time="10.646">
+</testcase>
+</testsuite>
+<testsuite name="playback\list-meditations.spec.ts" timestamp="2026-03-14T19:40:56.876Z" hostname="chromium" tests="2" failures="0" skipped="0" time="15.357" errors="0">
+<testcase name="Meditation Library - Listing › should display all meditations with correct state labels" classname="playback\list-meditations.spec.ts" time="10.754">
+</testcase>
+<testcase name="Meditation Library - Listing › should show empty state message when no meditations are found" classname="playback\list-meditations.spec.ts" time="4.603">
+</testcase>
+</testsuite>
+<testsuite name="playback\play-meditation.spec.ts" timestamp="2026-03-14T19:40:56.876Z" hostname="chromium" tests="2" failures="0" skipped="0" time="12.361" errors="0">
+<testcase name="Meditation Library - Playback › should enable play button only for completed meditations" classname="playback\play-meditation.spec.ts" time="8.313">
+</testcase>
+<testcase name="Meditation Library - Playback › should load player when a meditation is selected" classname="playback\play-meditation.spec.ts" time="4.048">
+</testcase>
+</testsuite>
+<testsuite name="playback\playback-error.spec.ts" timestamp="2026-03-14T19:40:56.876Z" hostname="chromium" tests="1" failures="0" skipped="0" time="12.965" errors="0">
+<testcase name="Meditation Library - Error Handling › should show error message when playback fails with 409" classname="playback\playback-error.spec.ts" time="12.965">
+</testcase>
+</testsuite>
+</testsuites>

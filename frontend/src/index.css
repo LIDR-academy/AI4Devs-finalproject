@@ -1,0 +1,1502 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
+
+/* Orange button for local image selection */
+.btn--orange {
+  background: linear-gradient(135deg, #c2410c 0%, #ea580c 55%, #f97316 100%);
+  color: white;
+  box-shadow: 0 2px 12px rgba(194, 65, 12, 0.35);
+}
+
+.btn--orange:hover:not(:disabled) {
+  background: linear-gradient(135deg, #9a3412 0%, #c2410c 55%, #ea580c 100%);
+  box-shadow: 0 4px 18px rgba(194, 65, 12, 0.5);
+}
+.text-editor--error .text-editor__textarea {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 2px #e74c3c33;
+}
+
+.toast-error {
+  position: fixed;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #e74c3c;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  z-index: 9999;
+  box-shadow: 0 2px 16px #e74c3c44;
+  animation: fadeInOut 2.5s;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+:root {
+  font-family: 'Nunito', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0; /* Remove horizontal padding so container touches edge if needed and aligns better */
+  background-color: #0b0e14; /* Slightly darker to make common-styled sections pop */
+}
+
+#root {
+  max-width: 1280px;
+  width: 95%; /* Give a small side margin on mobile/small screens */
+}
+
+/* App shell — full height flex column so footer sticks to bottom */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 2rem);
+}
+
+.app__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shared Radial Gradient Styles for all major Sections (Header, Card, Footer) */
+.app-header, 
+.login-card, 
+.app-footer {
+  background-color: #07090f !important;
+  background-image:
+    radial-gradient(ellipse 70% 80% at 15% 50%, rgba(90, 45, 190, 0.45) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 85% 45%, rgba(20, 70, 160, 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 50% 105%, rgba(40, 120, 150, 0.3) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 40% at 65% 20%, rgba(130, 60, 200, 0.25) 0%, transparent 50%) !important;
+  border: 1px solid rgba(150, 130, 255, 0.12) !important;
+  border-radius: 20px !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  max-width: 1280px !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 1.75rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.login-card__logo-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 1.2rem; /* Extra space above logo for visual balance */
+  margin-bottom: 1.1rem;
+}
+
+.login-card__logo--large {
+  max-width: 420px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 28px rgba(150, 130, 255, 0.38));
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.login-card__header {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.login-card__tagline {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #f0f0ff;
+  margin-bottom: 0.5rem;
+}
+
+.login-card__badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: rgba(45, 212, 191, 0.1);
+  color: #2dd4bf;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(45, 212, 191, 0.2);
+}
+
+.login-card__benefits {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: rgba(200, 200, 220, 0.6);
+  font-weight: 600;
+}
+
+/* Footer */
+.app-footer {
+  margin-top: 0.5rem; /* Reduced gap to bring footer closer */
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+/* Login page — centered modern card */
+.login-page {
+  flex: 1; /* take remaining vertical space inside .app__main */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0; /* Reduced top/bottom padding to minimize wasted space */
+}
+
+.login-card {
+  padding: 3.5rem 2.2rem 2.5rem; /* Large top padding to ensure logo is fully contained */
+  min-height: 520px; /* Reduced min-height slightly so it doesn't push sections away unnecessarily */
+  box-shadow: 0 40px 100px rgba(2, 6, 20, 0.9), inset 0 1px 0 rgba(255,255,255,0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.3rem;
+  position: relative;
+}
+
+.login-card h1 {
+  font-size: 2rem;
+  margin: 0;
+  font-weight: 700;
+  background: linear-gradient(90deg, #f0f0ff 0%, #c6ccff 60%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.login-subtitle {
+  color: rgba(200,200,220,0.7);
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+.login-error {
+  color: #ff9aa2;
+  background: rgba(255, 90, 90, 0.06);
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.login-button-wrapper {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Try to style the Google button rendered by @react-oauth/google.
+   Selector targets a button inside the wrapper; keeps it full-width and prominent. */
+.login-button-wrapper button {
+  width: 100%;
+  max-width: 320px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0ff 100%) !important;
+  color: #0b1220 !important;
+  box-shadow: 0 6px 24px rgba(4,6,20,0.6) !important;
+  border: 1px solid rgba(10,10,20,0.06) !important;
+}
+
+.login-button-wrapper button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* Polished CTA appearance for Google button */
+.login-button-wrapper button {
+  background: #ffffff !important;
+  color: #0b1220 !important;
+  box-shadow: 0 10px 30px rgba(2,6,20,0.45) !important;
+  border-radius: 12px !important;
+  padding: 0.9rem 1.1rem !important;
+  font-weight: 800 !important;
+}
+
+.login-button-wrapper button:active {
+  transform: translateY(0) !important;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -18px;
+  width: 220px;
+  height: 18px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(124,58,237,0.12), rgba(45,212,191,0.06));
+  filter: blur(8px);
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+.login-card:hover {
+  /* No transform or movement */
+  box-shadow: 0 40px 100px rgba(2, 6, 20, 0.9), inset 0 1px 0 rgba(255,255,255,0.03);
+  /* transition can remain for box-shadow smoothness if desired */
+}
+
+@media (max-width: 520px) {
+  .login-card { padding: 1.25rem; }
+  .login-card h1 { font-size: 1.6rem; }
+}
+
+/* login uses the full meditation-builder header to preserve decorative symbols */
+
+.app-footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.app-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.app-footer__logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  /* Blending so it merges with the dark background */
+  mix-blend-mode: lighten;
+  filter: drop-shadow(0 0 8px rgba(150, 130, 255, 0.4));
+}
+
+.app-footer__name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #e8e8ff, #a5a9ff, #7c82f5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-footer__copy {
+  font-size: 0.78rem;
+  color: rgba(160, 160, 180, 0.5);
+  letter-spacing: 0.02em;
+}
+
+.meditation-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.meditation-builder__header {
+  position: relative;
+  width: 100%;
+  min-height: 268px !important;
+  padding: 40px 32px !important;
+  margin-bottom: 0;
+  text-align: center;
+  overflow: hidden;
+  background-color: #07090f;
+  background-image:
+    radial-gradient(ellipse 70% 80% at 15% 50%, rgba(90, 45, 190, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 85% 55%, rgba(20, 70, 160, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 50% 105%, rgba(40, 120, 150, 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 40% at 60% 20%, rgba(130, 60, 200, 0.2) 0%, transparent 50%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.meditation-builder__hero-glow {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle 600px at 50% 50%, rgba(100, 108, 255, 0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.meditation-builder__deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.deco-symbol {
+  position: absolute;
+  font-style: normal;
+  line-height: 1;
+  user-select: none;
+  mix-blend-mode: screen;
+}
+
+/* ── LEFT COLUMN ─────────────────────────────────────────── */
+/* Dharma wheel — top-left large anchor */
+.deco-symbol--1  { top: 8%;  left: 3%;   font-size: 5.5rem; opacity: 0.11; color: #b0a0ff; transform: rotate(-10deg);  filter: blur(0.3px); }
+/* Infinity — mid-left */
+.deco-symbol--2  { top: 46%; left: 5%;   font-size: 4rem;   opacity: 0.09; color: #9080ee; transform: rotate(8deg);    filter: blur(0.8px); }
+/* 4-point star — bottom-left */
+.deco-symbol--3  { top: 76%; left: 4%;   font-size: 3rem;   opacity: 0.10; color: #c0b0ff; transform: rotate(-20deg);  filter: blur(0.5px); }
+/* ── LEFT-MID ACCENTS ────────────────────────────────────── */
+/* Bullseye — upper-left mid */
+.deco-symbol--4  { top: 18%; left: 17%;  font-size: 2.2rem; opacity: 0.08; color: #a090dd; transform: rotate(0deg);    filter: blur(1px);   }
+/* Flower — lower-left mid */
+.deco-symbol--5  { top: 68%; left: 19%;  font-size: 1.8rem; opacity: 0.09; color: #d0b0ff; transform: rotate(30deg);   filter: blur(0.6px); }
+/* ── RIGHT COLUMN ────────────────────────────────────────── */
+/* Yin-yang — top-right large anchor */
+.deco-symbol--6  { top: 10%; right: 4%;  font-size: 5rem;   opacity: 0.11; color: #80c0ff; transform: rotate(12deg);   filter: blur(0.3px); }
+/* Sparkle — mid-right */
+.deco-symbol--7  { top: 48%; right: 5%;  font-size: 3.5rem; opacity: 0.09; color: #a0d0ee; transform: rotate(-15deg);  filter: blur(0.8px); }
+/* 6-point star — bottom-right */
+.deco-symbol--8  { top: 74%; right: 3%;  font-size: 3.2rem; opacity: 0.10; color: #90b8ff; transform: rotate(18deg);   filter: blur(0.5px); }
+/* ── RIGHT-MID ACCENTS ───────────────────────────────────── */
+/* Circled plus — upper-right mid */
+.deco-symbol--9  { top: 20%; right: 18%; font-size: 2rem;   opacity: 0.08; color: #b0d0ff; transform: rotate(-8deg);   filter: blur(1px);   }
+/* Heavy asterisk — lower-right mid */
+.deco-symbol--10 { top: 66%; right: 20%; font-size: 1.9rem; opacity: 0.09; color: #c0a8ff; transform: rotate(25deg);   filter: blur(0.6px); }
+/* ── TOP CORNERS (very faint, large, blurry) ─────────────── */
+/* Diamond — far top-left */
+.deco-symbol--11 { top: 2%;  left: 28%;  font-size: 6rem;   opacity: 0.04; color: #a0a8ff; transform: rotate(-5deg);   filter: blur(3px);   }
+/* White star — far top-right */
+.deco-symbol--12 { top: 2%;  right: 27%; font-size: 5.5rem; opacity: 0.04; color: #b0c8ff; transform: rotate(8deg);    filter: blur(3px);   }
+
+/* ── CENTRE ZONE (left 30–70%) ────────────────────────────────── */
+/* Large open circle — upper centre-left */
+.deco-symbol--m1 { top: 12%; left: 30%;  font-size: 6rem;   opacity: 0.05; color: #a0b0ff; transform: rotate(-5deg);   filter: blur(2.5px); }
+/* Outlined leaf — lower centre-left */
+.deco-symbol--m2 { top: 72%; left: 33%;  font-size: 3.5rem; opacity: 0.07; color: #c0d0ff; transform: rotate(15deg);   filter: blur(1px);   }
+/* Command/flower — upper centre-right */
+.deco-symbol--m3 { top: 10%; right: 30%; font-size: 5rem;   opacity: 0.06; color: #90a8ee; transform: rotate(-12deg);  filter: blur(2px);   }
+/* 6-petal flower — lower centre-right */
+.deco-symbol--m4 { top: 70%; right: 32%; font-size: 3rem;   opacity: 0.08; color: #b8c8ff; transform: rotate(20deg);   filter: blur(1px);   }
+/* Small star — true centre-left mid */
+.deco-symbol--m5 { top: 44%; left: 36%;  font-size: 2.5rem; opacity: 0.07; color: #d0b8ff; transform: rotate(8deg);    filter: blur(1.5px); }
+/* Dotted circle — true centre-right mid */
+.deco-symbol--m6 { top: 44%; right: 35%; font-size: 2.5rem; opacity: 0.07; color: #a8d0ff; transform: rotate(-8deg);   filter: blur(1.5px); }
+
+.meditation-builder__hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.meditation-builder__hero-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(165, 169, 255, 0.6);
+}
+
+.meditation-builder__hero-title {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #e8e8ff 0%, #a5a9ff 40%, #7c82f5 70%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.meditation-builder__hero-sub {
+  font-size: 1rem;
+  color: rgba(200, 200, 220, 0.55);
+  font-weight: 400;
+  max-width: 480px;
+  line-height: 1.6;
+  margin-top: 0.2rem;
+}
+
+.meditation-builder__content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.meditation-builder__left,
+.meditation-builder__right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Only the left top card stretches — right column stacks naturally from top */
+.meditation-builder__left .card:first-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Textarea card inner layout: title + editor(flex:1) + button */
+.meditation-builder__left .card:first-child .text-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Visual Content card also stretches so bottom cards align */
+.meditation-builder__right .card:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  background: rgba(10, 10, 20, 0.75);
+  border-radius: 14px;
+  padding: 1.5rem;
+  border: 1px solid rgba(150, 130, 255, 0.12);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 1.05rem;
+}
+
+.card__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: rgba(165, 169, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card__title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 0.85em;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #a5a9ff, #7c82f5);
+  flex-shrink: 0;
+}
+
+/* Text Editor */
+.text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.text-editor__textarea {
+  width: 100%;
+  min-height: 150px;
+  flex: 1;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(150, 130, 255, 0.15);
+  background: rgba(6, 6, 16, 0.6);
+  color: rgba(220, 220, 240, 0.9);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.text-editor__textarea:focus {
+  outline: none;
+  border-color: rgba(165, 169, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.08);
+}
+
+.text-editor__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.text-editor__char-count--warning {
+  color: #ff6b6b;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.btn--primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #a855f7 100%);
+  color: white;
+  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.35);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 55%, #9333ea 100%);
+  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn--secondary {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(150, 130, 255, 0.15);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2d3748 0%, #475569 100%);
+  border-color: rgba(150, 130, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn--danger {
+  background: linear-gradient(135deg, #be123c 0%, #e11d48 55%, #f43f5e 100%);
+  color: white;
+  box-shadow: 0 2px 12px rgba(190, 18, 60, 0.35);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #9f1239 0%, #be123c 55%, #e11d48 100%);
+  box-shadow: 0 4px 18px rgba(190, 18, 60, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn--blue {
+  background: linear-gradient(135deg, #0f766e 0%, #0d9488 55%, #2dd4bf 100%);
+  color: white;
+  box-shadow: 0 2px 12px rgba(15, 118, 110, 0.35);
+}
+
+.btn--blue:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0c5e57 0%, #0f766e 55%, #14b8a6 100%);
+  box-shadow: 0 4px 18px rgba(15, 118, 110, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn--navy {
+  background: linear-gradient(135deg, #0c1e45 0%, #162d6b 55%, #1e40af 100%);
+  color: white;
+  box-shadow: 0 2px 14px rgba(12, 30, 69, 0.55);
+}
+
+.btn--navy:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1a3580 0%, #2350c8 55%, #3b6ee8 100%);
+  box-shadow: 0 6px 26px rgba(30, 64, 175, 0.65);
+  transform: translateY(-1px);
+}
+
+.btn--large {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--loading {
+  position: relative;
+}
+
+.btn--loading::after {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Output Type Indicator */
+.output-type-indicator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: white;
+}
+
+.output-type-indicator:not([aria-disabled="true"]):hover {
+  transform: translateY(-1px);
+}
+
+.output-type-indicator--podcast {
+  background: linear-gradient(135deg, #0c1e45 0%, #162d6b 55%, #1e40af 100%);
+  box-shadow: 0 2px 14px rgba(12, 30, 69, 0.55);
+}
+
+.output-type-indicator--podcast:not([aria-disabled="true"]):hover {
+  background: linear-gradient(135deg, #1a3580 0%, #2350c8 55%, #3b6ee8 100%);
+  box-shadow: 0 6px 26px rgba(30, 64, 175, 0.65);
+}
+
+.output-type-indicator--video {
+  background: linear-gradient(135deg, #0f766e 0%, #0d9488 55%, #2dd4bf 100%);
+  box-shadow: 0 2px 12px rgba(15, 118, 110, 0.35);
+}
+
+.output-type-indicator--video:not([aria-disabled="true"]):hover {
+  background: linear-gradient(135deg, #0c5e57 0%, #0f766e 55%, #14b8a6 100%);
+  box-shadow: 0 4px 18px rgba(15, 118, 110, 0.55);
+}
+
+.output-type-indicator__icon {
+  font-size: 1.75rem;
+}
+
+.output-type-indicator__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.output-type-indicator__label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  letter-spacing: 0.04em;
+}
+
+.output-type-indicator__type {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* Music Selector */
+.music-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.music-selector__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.music-selector__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(150, 130, 255, 0.12);
+  background: rgba(8, 8, 18, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.music-selector__item:hover {
+  border-color: rgba(165, 169, 255, 0.35);
+  background: rgba(100, 108, 255, 0.06);
+}
+
+.music-selector__item--selected {
+  border-color: rgba(165, 169, 255, 0.45);
+  background: rgba(100, 108, 255, 0.1);
+}
+
+.music-selector__item-name {
+  flex: 1;
+}
+
+/* Music Preview */
+.music-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(8, 8, 18, 0.5);
+  border-radius: 10px;
+  border: 1px solid rgba(150, 130, 255, 0.12);
+}
+
+.music-preview__info {
+  flex: 1;
+}
+
+.music-preview__name {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.music-preview__status {
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.music-preview--disabled {
+  opacity: 0.5;
+}
+
+/* Image Preview */
+.image-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.image-preview__container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: rgba(8, 8, 18, 0.6);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(150, 130, 255, 0.1);
+}
+
+.image-preview__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-preview__placeholder {
+  color: #666;
+  text-align: center;
+}
+
+.image-preview__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Generate Buttons */
+.generate-btn-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .meditation-builder__content {
+    grid-template-columns: 1fr;
+  }
+
+  .meditation-builder__left .card:first-child,
+  .meditation-builder__right .card:last-child {
+    flex: none;
+  }
+
+  .meditation-builder__left .card:first-child .text-editor {
+    flex: none;
+  }
+
+  .text-editor__textarea {
+    flex: none;
+    min-height: 200px;
+  }
+}
+
+/* Meditation Library - Table View */
+.meditation-library-page {
+  max-width: 1100px; /* Aligned with video player width for consistency */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Compact gap */
+  padding-bottom: 80px;
+}
+
+/* More space specifically for the player container */
+.library-player-container {
+  margin-top: 0; /* Align directly below the summary */
+  border-top: 1px solid #333;
+  padding-top: 1rem;
+}
+
+.library-header {
+  text-align: left;
+  border-bottom: 2px solid #333;
+  padding-bottom: 0.75rem; /* Reduced from 1.5rem */
+}
+
+.library-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem; /* Reduced from 0.5rem */
+  background: linear-gradient(to right, #646cff, #f5576c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.library-description {
+  color: #888;
+  font-size: 1.1rem;
+  margin-top: 0; /* Ensures no extra top margin */
+}
+
+.library-content {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.library-content__container {
+  width: 100%;
+  max-width: none;
+  background: none;
+  border-radius: 20px;
+  margin: 0;
+  padding: 0;
+}
+
+.meditation-list--wide {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  background: none;
+  border-radius: 20px;
+  padding: 0;
+}
+
+.meditation-list--wide .meditation-list__table {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.meditation-list--wide {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  background: none;
+  border-radius: 20px;
+}
+
+.meditation-list__th {
+  text-align: left;
+  padding: 0.5rem 1rem; /* Reduced padding */
+  color: #666;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.meditation-row {
+  background: #1a1a1a;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 8px; /* Note: border-radius on TR only works with specific border-collapse */
+}
+
+/* Emulating rounded rows in table */
+.meditation-row td {
+  padding: 0.85rem 1rem; /* Reduced from 1.25rem */
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+}
+
+.meditation-row td:first-child {
+  border-left: 1px solid #333;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.meditation-row td:last-child {
+  border-right: 1px solid #333;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.meditation-row:hover {
+  background: #242424;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.meditation-row--disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.meditation-row--disabled:hover {
+  transform: none;
+  background: #1a1a1a;
+  box-shadow: none;
+}
+
+.meditation-row__title-text {
+  font-weight: 500;
+  color: #fff;
+  font-size: 1rem;
+  max-width: 600px; /* Allow longer titles to occupy more table width */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meditation-row__date {
+  color: #888;
+  font-size: 0.9rem;
+  white-space: nowrap; /* Keep date on a single line */
+}
+
+.meditation-row__status {
+  width: 120px;
+}
+
+.meditation-row__actions {
+  text-align: center;
+  width: 150px;
+}
+
+.meditation-list__table thead th:last-child {
+  text-align: center;
+}
+
+/* State Labels - Modern Minimalist */
+.state-label {
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.state-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.state-completed {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+.state-completed::before { background: #2ecc71; }
+
+.state-processing {
+  background: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+}
+.state-processing::before { background: #3498db; }
+
+.state-pending {
+  background: rgba(149, 165, 166, 0.15);
+  color: #95a5a6;
+}
+.state-pending::before { background: #95a5a6; }
+
+.state-failed {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+.state-failed::before { background: #e74c3c; }
+
+/* Small buttons */
+.btn--sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+/* ─── Unified App Header ───────────────────────────────────────────────── */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1.5rem;
+  height: 60px;
+  background: rgba(18, 18, 20, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 1rem;
+}
+
+/* Brand */
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.app-header__brand-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.app-header__brand-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.app-header__brand-quote em {
+  font-style: italic;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: #c0c0cc;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.app-header__brand-author {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #666;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* Center nav */
+.app-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.app-header__nav-link {
+  position: relative;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #888;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: color 0.18s, background 0.18s;
+}
+
+.app-header__nav-link:hover {
+  color: #e0e0e0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-header__nav-link--active {
+  color: #a5a9ff;
+  background: rgba(100, 108, 255, 0.12);
+}
+
+.app-header__nav-link--active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: #646cff;
+  border-radius: 2px;
+}
+
+/* User section */
+.app-header__user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.app-header__avatar-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(100, 108, 255, 0.5);
+  flex-shrink: 0;
+  background: #2a2a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-header__avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.app-header__avatar-initials {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a5a9ff;
+  user-select: none;
+}
+
+.app-header__name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #c8c8d0;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-header__divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.app-header__logout {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #888;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
+  white-space: nowrap;
+}
+
+.app-header__logout:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+.app-header__logout-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* List Summary */
+
+/* ---------------------- Shared hero gradient surfaces ---------------------- */
+/* subtle hero-like radial gradients applied to header/footer/login surfaces */
+.app-header,
+.app-footer {
+  background-color: #07090f;
+  background-image:
+    radial-gradient(ellipse 70% 80% at 15% 50%, rgba(90, 45, 190, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 85% 55%, rgba(20, 70, 160, 0.12) 0%, transparent 55%);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+/* make the footer match the hero tone */
+.app-footer {
+  border-top: 1px solid rgba(255,255,255,0.03);
+  background-image:
+    radial-gradient(ellipse 55% 70% at 85% 55%, rgba(20, 70, 160, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 40% at 60% 20%, rgba(130, 60, 200, 0.06) 0%, transparent 50%);
+}
+
+/* Ensure login card carries the same feel */
+.login-card {
+  background-image:
+    radial-gradient(ellipse 60% 70% at 20% 40%, rgba(90, 45, 190, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 60% at 80% 50%, rgba(20, 70, 160, 0.08) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(10,10,14,0.85), rgba(6,6,16,0.6));
+}
+
+/* Professional header inside login card */
+.login-card__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.login-card__logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 6px 18px rgba(2,6,20,0.5);
+}
+
+.login-card__tagline {
+  font-weight: 700;
+  color: rgba(235,235,245,0.95);
+  font-size: 1rem;
+}
+
+.login-card__badge {
+  margin-left: auto;
+  background: linear-gradient(90deg, rgba(124,58,237,0.12), rgba(45,212,191,0.06));
+  color: rgba(220,220,240,0.9);
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.login-card__benefits {
+  display: flex;
+  gap: 1rem;
+  color: rgba(185,185,205,0.9);
+  font-weight: 600;
+}
+
+.login-card__logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.2rem; /* Extra space above logo for visual balance */
+  margin-bottom: 1.1rem;
+}
+
+.login-card__logo--large {
+  max-width: 420px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 28px rgba(150, 130, 255, 0.38));
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+/* Reduce the negative lift on small screens */
+@media (max-width: 520px) {
+  .login-card { margin-top: -18px; padding: 1.25rem; min-height: auto; }
+  .login-card__tagline { font-size: 0.95rem; }
+  .login-card__logo-wrap { margin-top: -48px; }
+  .login-card__logo--large { width: 120px; height: 120px; }
+}
+
+/* CTA polish fallback in case provider button markup differs */
+.login-button-wrapper > .cta-google {
+  width: 100%;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  background: #fff !important;
+  color: #0b1220 !important;
+  box-shadow: 0 10px 30px rgba(2,6,20,0.45) !important;
+}
+
+/* small responsive tweak */
+@media (max-width: 520px) {
+  .login-card { margin-top: -18px; padding: 1.25rem; }
+  .login-card__tagline { font-size: 0.95rem; }
+}
+.meditation-list__summary {
+  margin-top: 0.5rem; /* Reduced from 1.5rem */
+  text-align: right;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem; /* Reduced from 2rem */
+  padding: 0.25rem 0; /* Reduced from 1rem */
+}
+
+.pagination__pages {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pagination__btn {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.pagination__btn:hover:not(:disabled) {
+  background: #333;
+  border-color: #646cff;
+}
+
+.pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination__page-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #888;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination__page-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pagination__page-btn--active {
+  background: #646cff;
+  color: #fff;
+  border-color: #646cff;
+  font-weight: 600;
+}
+
+.pagination__page-btn--active:hover {
+  background: #5d56f3;
+}
+
+.meditation-player {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem; /* Reduced from 2rem */
+  border: 1px solid #333;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.meditation-player__title {
+  font-size: 1.25rem; /* Reduced from 1.5rem to save vertical space */
+  font-weight: 600;
+  margin-bottom: 1.5rem; /* Reduced from 2rem */
+  color: #fff;
+  line-height: 1.4;
+  /* Truncate if exceptionally long to keep player compact */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Max 2 lines for player title */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.meditation-player__media {
+  margin-bottom: 1rem; /* Reduced from 1.5rem */
+  display: flex;
+  justify-content: center;
+}
+
+.meditation-player__video {
+  width: 100%;
+  max-width: 1100px; /* Much larger video player */
+  border-radius: 8px;
+  aspect-ratio: 16/9;
+  background: #000;
+}
+
+.meditation-player__audio {
+  width: 100%;
+  max-width: 800px; /* Larger audio controls */
+  filter: invert(0.9) hue-rotate(180deg); /* Modern dark look for default audio player controls */
+}
+
+.meditation-player__info {
+  display: flex;
+  justify-content: space-between;
+  color: #888;
+  font-size: 0.85rem;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+}
+
+/* Ensure meditation-builder__header is always tall and consistent */
+.meditation-builder__header {
+  min-height: 260px;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Remove compact variant if present */
+.meditation-builder--compact {
+  min-height: 320px;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
