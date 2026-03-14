@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Copy, Download, FileSearch, History, Link2 } from "lucide-react";
+import { Copy, Download, ExternalLink, FileSearch, History, Link2 } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Button } from "@/components/ui/button";
@@ -329,6 +329,16 @@ export default function RetrievePage() {
                   <Link2 className="mr-2 h-4 w-4" />
                   Share link
                 </Button>
+                <a
+                  aria-label="Open on IPFS.io"
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-transparent px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  href={`https://ipfs.io/ipfs/${result.metadata.cid}`}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Open on IPFS.io
+                </a>
               </div>
             ) : null}
           </Card>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronLeft, ChevronRight, Copy, Download, Eye, Grid3X3, List, Pin, PinOff, Search, Trash2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy, Download, ExternalLink, Eye, Grid3X3, List, Pin, PinOff, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
@@ -775,6 +775,15 @@ export default function FilesPage() {
                               <Button aria-label={`Download ${file.original_filename}`} className="h-8 px-2" onClick={() => onDownload(file.cid)} variant="ghost">
                                 <Download className="h-4 w-4" />
                               </Button>
+                              <a
+                                aria-label={`Open ${file.original_filename} on IPFS.io`}
+                                className="inline-flex h-8 items-center justify-center rounded-md bg-transparent px-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                                href={`https://ipfs.io/ipfs/${file.cid}`}
+                                rel="noopener noreferrer"
+                                target="_blank"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
                               <Button aria-label={`Open details for ${file.original_filename}`} className="h-8 px-2" onClick={() => setDetailsFile(file)} variant="ghost">
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -837,6 +846,15 @@ export default function FilesPage() {
                         <Button aria-label={`Download ${file.original_filename}`} className="h-8 px-2" onClick={() => onDownload(file.cid)} variant="ghost">
                           <Download className="h-4 w-4" />
                         </Button>
+                        <a
+                          aria-label={`Open ${file.original_filename} on IPFS.io`}
+                          className="inline-flex h-8 items-center justify-center rounded-md bg-transparent px-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                          href={`https://ipfs.io/ipfs/${file.cid}`}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
                         <Button aria-label={`Open details for ${file.original_filename}`} className="h-8 px-2" onClick={() => setDetailsFile(file)} variant="ghost">
                           <Eye className="h-4 w-4" />
                         </Button>
