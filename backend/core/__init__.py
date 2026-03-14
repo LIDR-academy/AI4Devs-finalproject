@@ -213,6 +213,11 @@ def register_blueprints(app: Flask) -> None:
 	app.register_blueprint(files_bp)
 	app.register_blueprint(create_tasks_blueprint())
 
+	@app.route("/health")
+	def health_check():
+		"""Liveness probe used by Docker health checks and load balancers."""
+		return jsonify({"status": "ok", "service": "ipfs-gateway-backend"}), 200
+
 
 def register_error_handlers(app: Flask) -> None:
 	"""Register global error handlers."""

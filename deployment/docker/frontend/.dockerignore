@@ -1,0 +1,31 @@
+# Frontend build context — exclude heavy directories not needed in the image
+
+node_modules/
+.next/
+coverage/
+test-results/
+tests/
+test/
+
+# Environment files (injected at runtime)
+.env
+*.env
+!.env.example
+
+# IDE / OS noise
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Git
+.git/
+.gitignore

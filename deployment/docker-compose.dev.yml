@@ -1,0 +1,159 @@
+# docker-compose.dev.yml
+# Development stack — mounts source code for hot reload, no resource limits
+# Usage: docker compose -f deployment/docker-compose.dev.yml up --build
+#
+# Requires: deployment/.env  (copy from deployment/.env.example and fill in values)
+
+name: ipfs-gateway-dev
+
+services:
+
+  # --------------------------------------------------------------------------
+  # PostgreSQL
+  # --------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-ipfs_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ipfs_password}
+      POSTGRES_DB:       ${POSTGRES_DB:-ipfs_gateway}
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ipfs_net
+
+  # --------------------------------------------------------------------------
+  # Redis
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data_dev:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ipfs_net
+
+  # --------------------------------------------------------------------------
+  # Backend (Flask dev server with source mount)
+  # --------------------------------------------------------------------------
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../deployment/docker/backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_SETTINGS_MODULE: config.development.DevelopmentConfig
+      APP_DEBUG:           "true"
+      DATABASE_URL:        postgresql://${POSTGRES_USER:-ipfs_user}:${POSTGRES_PASSWORD:-ipfs_password}@postgres:5432/${POSTGRES_DB:-ipfs_gateway}
+      REDIS_URL:           redis://redis:6379/0
+      CELERY_BROKER_URL:   redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      RATELIMIT_STORAGE_URI: redis://redis:6379/0
+    volumes:
+      # Mount source for live code reloading
+      - ../backend:/app:cached
+      - /app/.venv
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - ipfs_net
+    command: >
+      flask run
+        --host=0.0.0.0
+        --port=5000
+        --reload
+
+  # --------------------------------------------------------------------------
+  # Celery worker
+  # --------------------------------------------------------------------------
+  celery:
+    build:
+      context: ../backend
+      dockerfile: ../deployment/docker/celery/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_SETTINGS_MODULE: config.development.DevelopmentConfig
+      DATABASE_URL:        postgresql://${POSTGRES_USER:-ipfs_user}:${POSTGRES_PASSWORD:-ipfs_password}@postgres:5432/${POSTGRES_DB:-ipfs_gateway}
+      REDIS_URL:           redis://redis:6379/0
+      CELERY_BROKER_URL:   redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ../backend:/app:cached
+      - /app/.venv
+    depends_on:
+      - postgres
+      - redis
+      - backend
+    networks:
+      - ipfs_net
+    command: >
+      celery -A celery_worker.celery worker
+        --loglevel=info
+        --concurrency=2
+
+  # --------------------------------------------------------------------------
+  # Frontend (Next.js dev server with source mount)
+  # --------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../deployment/docker/frontend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost/api
+    volumes:
+      - ../frontend:/app:cached
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - ipfs_net
+    command: npm run dev
+
+  # --------------------------------------------------------------------------
+  # Nginx reverse proxy
+  # --------------------------------------------------------------------------
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - ipfs_net
+
+# --------------------------------------------------------------------------
+# Named volumes
+# --------------------------------------------------------------------------
+volumes:
+  postgres_data_dev:
+  redis_data_dev:
+
+# --------------------------------------------------------------------------
+# Network
+# --------------------------------------------------------------------------
+networks:
+  ipfs_net:
+    driver: bridge

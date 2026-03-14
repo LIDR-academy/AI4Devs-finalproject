@@ -17,6 +17,7 @@
 14. [Frontend Documentation Pages (US-108)](#14-frontend-documentation-pages-us-108)
 15. [Frontend Error Handling and Feedback (US-109)](#15-frontend-error-handling-and-feedback-us-109)
 16. [Frontend Testing Suite (US-110)](#16-frontend-testing-suite-us-110)
+17. [Docker Configuration (US-201)](#17-docker-configuration-us-201)
 
 ---
 
@@ -197,7 +198,7 @@ tests/frontend/
 
 ### 16.3. Configuracion y calidad
 
-- `frontend/jest.config.cjs` define `coverageThreshold` global (statements/functions/lines >= 70%, branches >= 65%).
+- `frontend/jest.config.cjs` define `coverageThreshold` global (lines >= 82%, functions/statements >= 70%, branches >= 65%).
 - `frontend/jest.setup.ts` centraliza setup compartido para pruebas frontend.
 - `frontend/package.json` agrega `test:coverage` para reportes de cobertura.
 - `.github/workflows/frontend-tests.yml` ejecuta validaciones frontend en CI (incluyendo Playwright).
@@ -208,7 +209,7 @@ tests/frontend/
 flowchart TD
     A[Type Check] --> B[Lint]
     B --> C[Jest Unit + Components + A11y]
-    C --> D[Coverage >= 70%]
+    C --> D[Coverage >= 82%]
     D --> E[Build Next.js]
     E --> F[Playwright E2E]
     F --> G[Ready for QA]
@@ -609,6 +610,52 @@ flowchart TD
 ### **2.4. Infraestructura y despliegue**
 
 > Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+
+## 17. Docker Configuration (US-201)
+
+Se implemento la base de containerizacion para backend, frontend, worker y reverse proxy en `deployment/`, siguiendo reglas de seguridad y estandarizacion para entornos dev/prod.
+
+### 17.1. Artefactos creados
+
+- `deployment/docker/backend/Dockerfile` (multi-stage, Python 3.11-slim, non-root, healthcheck)
+- `deployment/docker/frontend/Dockerfile` (multi-stage, Node 20-alpine, Next.js standalone, non-root)
+- `deployment/docker/celery/Dockerfile` (multi-stage, worker dedicado, non-root)
+- `deployment/docker/nginx/Dockerfile` y `deployment/docker/nginx/nginx.conf`
+- `deployment/docker-compose.yml` (entrypoint local por defecto)
+- `deployment/docker-compose.dev.yml` (desarrollo con montajes de codigo)
+- `deployment/docker-compose.prod.yml` (produccion con healthchecks y limites CPU/RAM)
+- `deployment/.env.example` y `deployment/README.md`
+- scripts operativos: `deployment/scripts/dev-up.sh`, `deployment/scripts/dev-down.sh`, `deployment/scripts/prod-up.sh`, `deployment/scripts/prod-down.sh`
+
+### 17.2. Salud y seguridad en contenedores
+
+- Ejecucion como usuario no-root en backend/frontend/celery.
+- Multi-stage builds para reducir tamano y superficie de ataque.
+- Health checks declarados en Dockerfiles y compose prod.
+- Variables sensibles externalizadas en `.env` (con plantilla versionada en `.env.example`).
+- Volumenes persistentes para PostgreSQL, Redis y logs backend en produccion.
+- Logging driver configurado en compose prod (`json-file` con rotacion de logs).
+
+### 17.3. Validacion realizada
+
+- Validacion de sintaxis compose:
+    - `docker compose -f deployment/docker-compose.dev.yml config --quiet`
+    - `docker compose -f deployment/docker-compose.prod.yml config --quiet`
+- Bloqueador detectado en este entorno al descargar capas base desde Docker Hub (`context deadline exceeded`), por lo que la prueba de arranque end-to-end queda pendiente hasta estabilizar conectividad de pull.
+
+### 17.4. Flujo de despliegue local
+
+```bash
+cp deployment/.env.example deployment/.env
+docker compose -f deployment/docker-compose.dev.yml up --build
+```
+
+Para produccion-like:
+
+```bash
+cp deployment/.env.example deployment/.env
+docker compose -f deployment/docker-compose.prod.yml up --build -d
+```
 
 ### **2.5. Seguridad**
 
