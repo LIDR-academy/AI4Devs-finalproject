@@ -1,0 +1,41 @@
+{
+  "name": "citaya",
+  "version": "1.0.0",
+  "description": "Plataforma web CitaYa - Sistema de reserva de citas médicas",
+  "private": true,
+  "author": "Luis Enrique Alonso Sierra",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build --no-cache",
+    "docker:logs": "docker-compose logs -f",
+    "docker:logs:backend": "docker-compose logs -f backend",
+    "docker:logs:frontend": "docker-compose logs -f frontend",
+    "docker:logs:worker": "docker-compose logs -f worker",
+    "docker:restart": "docker-compose restart",
+    "docker:clean": "docker-compose down -v",
+    "db:migrate": "docker-compose exec backend npm run migration:run",
+    "db:rollback": "docker-compose exec backend npm run migration:revert",
+    "db:seed": "docker-compose exec backend npm run seed",
+    "db:shell": "docker-compose exec mysql mysql -u citaya_user -p citaya_dev",
+    "redis:shell": "docker-compose exec redis redis-cli"
+  },
+  "keywords": [
+    "citas-medicas",
+    "reservas",
+    "nextjs",
+    "nodejs",
+    "typescript",
+    "docker"
+  ],
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "workspaces": []
+}

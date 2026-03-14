@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Instalar dependencias del sistema necesarias para compilar módulos nativos
+RUN apk add --no-cache python3 make g++
+
+# Copiar archivos de configuración de dependencias
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Instalar dependencias
+RUN npm ci
+
+# Reconstruir módulos nativos (especialmente bcrypt) para la arquitectura correcta
+RUN npm rebuild bcrypt --build-from-source
+
+# Copiar código fuente
+COPY . .
+
+# Exponer puerto
+EXPOSE 4000
+
+# Comando para desarrollo (hot reload con ts-node-dev)
+CMD ["npm", "run", "dev"]
