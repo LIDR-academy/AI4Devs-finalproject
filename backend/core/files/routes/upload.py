@@ -37,6 +37,7 @@ def _restore_soft_deleted_file(
   original_filename: str,
   safe_filename: str,
   file_size: int,
+  mime_type: str,
 ) -> File | None:
   """Restore a soft-deleted file record for the same user and CID."""
   existing = session.exec(
@@ -52,6 +53,7 @@ def _restore_soft_deleted_file(
   existing.safe_filename = safe_filename
   existing.storage_key = safe_filename
   existing.size = file_size
+  existing.mime_type = mime_type
   existing.uploaded_at = now
   session.add(existing)
   session.commit()
@@ -163,6 +165,7 @@ def register_routes(bp):
             declared_content_type = (file.content_type or "").strip()
             if declared_content_type and declared_content_type != "application/octet-stream":
                 validate_mime_type(declared_content_type)
+            upload_content_type = declared_content_type or "application/octet-stream"
             file_content = file.read()
             file_size = len(file_content)
             validate_file_size(file_size, MAX_FILE_SIZE)
@@ -177,7 +180,7 @@ def register_routes(bp):
                     filename=safe_filename,
                     original_filename=original_filename,
                     file_data=file_content,
-                    content_type=file.content_type or "application/octet-stream",
+                    content_type=upload_content_type,
                 )
                 return success_response(
                     202,
@@ -191,7 +194,7 @@ def register_routes(bp):
             result = ipfs_service.upload_file(
                 file=BytesIO(file_content),
                 filename=safe_filename,
-                content_type=file.content_type or "application/octet-stream",
+                content_type=upload_content_type,
                 metadata={"user_id": str(user_id), "original_filename": original_filename},
             )
 
@@ -203,6 +206,7 @@ def register_routes(bp):
                     safe_filename=safe_filename,
                     storage_key=safe_filename,
                     size=file_size,
+                    mime_type=upload_content_type,
                     pinned=True,
                 )
                 session.add(db_file)
@@ -217,6 +221,7 @@ def register_routes(bp):
                         original_filename=original_filename,
                         safe_filename=safe_filename,
                         file_size=file_size,
+                        mime_type=upload_content_type,
                     )
                     if restored_file is None:
                         logger.info(

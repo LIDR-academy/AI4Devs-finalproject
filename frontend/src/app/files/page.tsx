@@ -28,7 +28,167 @@ type FilesResponse = {
   meta: FilesMeta;
 };
 
+type PreviewKind = "image" | "video" | "text" | "file";
+
+const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "avif"]);
+const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "ogg", "mov", "m4v"]);
+const TEXT_EXTENSIONS = new Set(["txt", "md", "csv", "json", "xml", "log", "yaml", "yml", "js", "ts", "tsx", "py", "html", "css"]);
+
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
+
+const MAX_TEXT_PREVIEW_BYTES = 256 * 1024;
+
+function isTextPreviewMime(mimeType?: string): boolean {
+  const normalized = (mimeType ?? "").toLowerCase();
+  return (
+    normalized.startsWith("text/")
+    || normalized === "application/json"
+    || normalized === "application/xml"
+    || normalized === "application/javascript"
+  );
+}
+
+function buildRetrieveUrl(cid: string): string {
+  return `/api/retrieve/${encodeURIComponent(cid)}`;
+}
+
+function getFileExtension(filename: string): string {
+  const parts = filename.toLowerCase().split(".");
+  if (parts.length < 2) {
+    return "";
+  }
+  return parts[parts.length - 1] ?? "";
+}
+
+function getPreviewKind(mimeType: string | undefined, filename: string): PreviewKind {
+  const normalized = (mimeType ?? "").toLowerCase();
+  if (normalized.startsWith("image/")) {
+    return "image";
+  }
+  if (normalized.startsWith("video/")) {
+    return "video";
+  }
+  if (isTextPreviewMime(normalized)) {
+    return "text";
+  }
+
+  const extension = getFileExtension(filename);
+  if (IMAGE_EXTENSIONS.has(extension)) {
+    return "image";
+  }
+  if (VIDEO_EXTENSIONS.has(extension)) {
+    return "video";
+  }
+  if (TEXT_EXTENSIONS.has(extension)) {
+    return "text";
+  }
+
+  return "file";
+}
+
+function GridFilePreview({ file }: { file: FileInfo }) {
+  const previewKind = getPreviewKind(file.content_type, file.original_filename);
+  const isImage = previewKind === "image";
+  const isVideo = previewKind === "video";
+  const isText = previewKind === "text";
+  const previewUrl = buildRetrieveUrl(file.cid);
+  const [textPreview, setTextPreview] = useState<string | null>(null);
+  const [textPreviewError, setTextPreviewError] = useState(false);
+
+  useEffect(() => {
+    if (!isText || file.size > MAX_TEXT_PREVIEW_BYTES) {
+      setTextPreview(null);
+      setTextPreviewError(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setTextPreview(null);
+    setTextPreviewError(false);
+
+    void fetch(previewUrl, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Text preview not available");
+        }
+        const body = await response.text();
+        const compact = body.replace(/\s+/g, " ").trim();
+        setTextPreview(compact.slice(0, 220) || "(empty text file)");
+      })
+      .catch((error: unknown) => {
+        if ((error as { name?: string })?.name === "AbortError") {
+          return;
+        }
+        setTextPreviewError(true);
+      });
+
+    return () => controller.abort();
+  }, [file.size, isText, previewUrl]);
+
+  if (isImage) {
+    return (
+      <img
+        alt={`Preview of ${file.original_filename}`}
+        className="h-20 w-full rounded-md bg-slate-100 object-cover"
+        loading="lazy"
+        src={previewUrl}
+      />
+    );
+  }
+
+  if (isVideo) {
+    return (
+      <video
+        aria-label={`Preview of ${file.original_filename}`}
+        className="h-20 w-full rounded-md bg-slate-100 object-cover"
+        controls
+        muted
+        onTimeUpdate={(event) => {
+          if (event.currentTarget.currentTime >= 15) {
+            event.currentTarget.pause();
+          }
+        }}
+        playsInline
+        preload="metadata"
+        src={`${previewUrl}#t=0,15`}
+      />
+    );
+  }
+
+  if (isText) {
+    if (file.size > MAX_TEXT_PREVIEW_BYTES) {
+      return (
+        <div className="flex h-20 items-center justify-center rounded-md bg-slate-100 px-3 text-center text-xs text-slate-500">
+          Text preview unavailable for files larger than 256 KB.
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-20 overflow-hidden rounded-md bg-slate-100 p-2">
+        {textPreviewError ? (
+          <p className="text-xs text-slate-500">Text preview unavailable.</p>
+        ) : textPreview === null ? (
+          <p className="text-xs text-slate-500">Loading text preview...</p>
+        ) : (
+          <p aria-label={`Preview text for ${file.original_filename}`} className="line-clamp-4 break-words text-xs text-slate-700">
+            {textPreview}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-20 items-center justify-center rounded-md bg-slate-100 text-sm font-semibold text-slate-500">
+      No preview
+    </div>
+  );
+}
 
 function buildQueryParams(query: FilesQueryState): string {
   const params = new URLSearchParams();
@@ -572,21 +732,24 @@ export default function FilesPage() {
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {files.map((file) => {
                   const selected = selectedCids.includes(file.cid);
+                  const previewKind = getPreviewKind(file.content_type, file.original_filename);
+                  const previewLabel = previewKind.charAt(0).toUpperCase() + previewKind.slice(1);
                   return (
                     <Card className="space-y-3" key={file.cid}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-slate-900">{file.original_filename}</p>
                           <p className="truncate text-xs text-slate-600">{truncateCid(file.cid)}</p>
+                          <span className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700" aria-label={`Preview type ${previewLabel} for ${file.original_filename}`}>
+                            {previewLabel}
+                          </span>
                         </div>
                         <button aria-label={`Select ${file.original_filename}`} className={`rounded border p-1 ${selected ? "border-emerald-500 bg-emerald-50" : "border-slate-300"}`} onClick={() => toggleRowSelection(file.cid)} type="button">
                           <Check className={`h-3 w-3 ${selected ? "text-emerald-700" : "text-slate-400"}`} />
                         </button>
                       </div>
 
-                      <div className="flex h-20 items-center justify-center rounded-md bg-slate-100 text-sm font-semibold text-slate-500">
-                        {file.content_type?.startsWith("image/") ? "Image" : "File"}
-                      </div>
+                      <GridFilePreview file={file} />
 
                       <div className="space-y-1 text-xs text-slate-600">
                         <p>Size: {formatFileSize(file.size)}</p>

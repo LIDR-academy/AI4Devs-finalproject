@@ -249,6 +249,37 @@ class TestSecurityHeadersAndCors(unittest.TestCase):
         self.assertEqual(payload["details"]["cid"], "QmDuplicateCid")
 
     @patch("core.files.routes.upload.ipfs_service.upload_file")
+    def test_upload_persists_mime_type(self, upload_file_mock) -> None:
+        """Uploaded file rows should persist MIME type for preview/classification features."""
+        upload_file_mock.return_value = UploadResult(cid="QmMimeCid", size=5, key="safe.txt")
+
+        response = self.client.post(
+            "/api/v1/files/upload",
+            headers=self.primary_headers,
+            data={"file": (BytesIO(b"hello"), "mime-image.png", "image/png")},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        with Session(self.engine) as session:
+            owner = session.exec(
+                select(User).where(User.api_key == "ipfs_gw_security_primary")
+            ).first()
+            self.assertIsNotNone(owner)
+            assert owner is not None
+
+            saved = session.exec(
+                select(File).where(
+                    File.user_id == owner.id,
+                    File.cid == "QmMimeCid",
+                )
+            ).first()
+            self.assertIsNotNone(saved)
+            assert saved is not None
+            self.assertEqual(saved.mime_type, "image/png")
+
+    @patch("core.files.routes.upload.ipfs_service.upload_file")
     def test_reupload_after_soft_delete_restores_file(self, upload_file_mock) -> None:
         """Re-uploading a soft-deleted CID should restore the file row and return success."""
         upload_file_mock.return_value = UploadResult(cid="QmReuploadCid", size=5, key="safe.txt")

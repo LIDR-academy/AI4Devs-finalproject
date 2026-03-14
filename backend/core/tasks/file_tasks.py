@@ -25,6 +25,7 @@ def _restore_soft_deleted_file(
     original_filename: str,
     safe_filename: str,
     file_size: int,
+    mime_type: str,
 ) -> File | None:
     """Restore a soft-deleted file row for a duplicate CID upload."""
     existing = session.exec(
@@ -40,6 +41,7 @@ def _restore_soft_deleted_file(
     existing.safe_filename = safe_filename
     existing.storage_key = safe_filename
     existing.size = file_size
+    existing.mime_type = mime_type
     existing.uploaded_at = now
     session.add(existing)
     session.commit()
@@ -103,6 +105,7 @@ def upload_file_async(
                 safe_filename=filename,
                 storage_key=filename,
                 size=file_size,
+                mime_type=content_type,
                 pinned=True,
             )
             session.add(db_file)
@@ -117,6 +120,7 @@ def upload_file_async(
                     original_filename=original_filename,
                     safe_filename=filename,
                     file_size=file_size,
+                    mime_type=content_type,
                 )
                 if restored_file is None:
                     raise exc

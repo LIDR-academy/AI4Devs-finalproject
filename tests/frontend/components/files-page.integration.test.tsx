@@ -141,6 +141,88 @@ describe("FilesPage", () => {
     });
   });
 
+  it("renders image, video, and text previews in grid mode", async () => {
+    (global.fetch as jest.Mock).mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url.startsWith("/api/files?")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            status: 200,
+            data: [
+              {
+                cid: "bafy-preview-image",
+                original_filename: "preview-image.png",
+                size: 2048,
+                pinned: true,
+                uploaded_at: "2026-03-13T10:00:00.000Z",
+                content_type: null,
+              },
+              {
+                cid: "bafy-preview-video",
+                original_filename: "preview-video.mp4",
+                size: 4096,
+                pinned: false,
+                uploaded_at: "2026-03-13T10:01:00.000Z",
+                content_type: null,
+              },
+              {
+                cid: "bafy-preview-text",
+                original_filename: "preview-text.txt",
+                size: 120,
+                pinned: false,
+                uploaded_at: "2026-03-13T10:02:00.000Z",
+                content_type: "text/plain",
+              },
+            ],
+            meta: {
+              page: 1,
+              page_size: 10,
+              total: 3,
+              total_pages: 1,
+              sort_by: "uploaded",
+              sort_order: "desc",
+              search: "",
+              pinned: "all",
+            },
+          }),
+        });
+      }
+
+      if (url === "/api/retrieve/bafy-preview-text") {
+        return Promise.resolve({
+          ok: true,
+          text: async () => "This is a text preview body for the grid card.",
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ status: 200 }),
+      });
+    });
+
+    renderWithQueryClient();
+
+    await waitFor(() => {
+      expect(screen.getByText("preview-image.png")).toBeInTheDocument();
+      expect(screen.getByText("preview-video.mp4")).toBeInTheDocument();
+      expect(screen.getByText("preview-text.txt")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Grid" }));
+
+    await waitFor(() => {
+      expect(screen.getByAltText("Preview of preview-image.png")).toBeInTheDocument();
+      expect(screen.getByLabelText("Preview of preview-video.mp4")).toBeInTheDocument();
+      expect(screen.getByLabelText("Preview text for preview-text.txt")).toHaveTextContent("This is a text preview body");
+      expect(screen.getByLabelText("Preview type Image for preview-image.png")).toBeInTheDocument();
+      expect(screen.getByLabelText("Preview type Video for preview-video.mp4")).toBeInTheDocument();
+      expect(screen.getByLabelText("Preview type Text for preview-text.txt")).toBeInTheDocument();
+    });
+  });
+
   it("triggers pin action for a row", async () => {
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
