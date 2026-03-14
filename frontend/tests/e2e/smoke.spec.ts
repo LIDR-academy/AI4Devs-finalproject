@@ -234,5 +234,8 @@ test("authenticated user can browse files page and open details", async ({ page 
 
   await page.getByRole("button", { name: "Close" }).click();
   await page.getByRole("button", { name: "Delete image-2.png" }).click();
-  await expect(page.getByText("image-2.png")).not.toBeVisible();
+  const confirmDialog = page.getByRole("dialog");
+  await expect(confirmDialog).toBeVisible();
+  await confirmDialog.getByRole("button", { exact: true, name: "Delete" }).click();
+  await expect(page.getByRole("button", { name: "Open details for image-2.png" })).toHaveCount(0);
 });

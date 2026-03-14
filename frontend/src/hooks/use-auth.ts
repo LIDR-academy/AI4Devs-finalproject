@@ -3,6 +3,17 @@
 import { useMemo } from "react";
 
 import { useAuthStore } from "@/stores/auth-store";
+import { toast } from "@/lib/toast";
+
+let sessionTimeoutNotified = false;
+
+function notifySessionTimeout(message: string) {
+  if (sessionTimeoutNotified) {
+    return;
+  }
+  sessionTimeoutNotified = true;
+  toast.warning(message);
+}
 
 type SessionPayload = {
   email: string;
@@ -50,9 +61,13 @@ export function useAuth() {
           const data = await readSessionResponse(response);
           if (!data) {
             clearSession();
+            if (response.status === 401) {
+              notifySessionTimeout("Session timeout or invalid credentials. Please log in again.");
+            }
             throw new Error("Invalid email or API key");
           }
 
+          sessionTimeoutNotified = false;
           setSession(data);
         } catch (error) {
           clearSession();
@@ -80,10 +95,14 @@ export function useAuth() {
 
           const data = await readSessionResponse(response);
           if (!data) {
+            if (response.status === 401) {
+              notifySessionTimeout("Your session has expired. Please log in again.");
+            }
             clearSession();
             return;
           }
 
+          sessionTimeoutNotified = false;
           setSession(data);
         } catch {
           clearSession();

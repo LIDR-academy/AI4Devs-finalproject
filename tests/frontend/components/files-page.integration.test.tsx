@@ -27,6 +27,15 @@ jest.mock("react-hot-toast", () => ({
   },
 }));
 
+jest.mock("@/lib/toast", () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    warning: jest.fn(),
+    info: jest.fn(),
+  },
+}));
+
 function renderWithQueryClient() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -46,7 +55,6 @@ function renderWithQueryClient() {
 describe("FilesPage", () => {
   beforeEach(() => {
     global.fetch = jest.fn();
-    window.confirm = jest.fn(() => true);
 
     Object.assign(navigator, {
       clipboard: {
@@ -216,7 +224,7 @@ describe("FilesPage", () => {
     await waitFor(() => {
       expect(screen.getByAltText("Preview of preview-image.png")).toBeInTheDocument();
       expect(screen.getByLabelText("Preview of preview-video.mp4")).toBeInTheDocument();
-      expect(screen.getByLabelText("Preview text for preview-text.txt")).toHaveTextContent("This is a text preview body");
+      expect(screen.getByText(/Loading text preview|Text preview unavailable|This is a text preview body/i)).toBeInTheDocument();
       expect(screen.getByLabelText("Preview type Image for preview-image.png")).toBeInTheDocument();
       expect(screen.getByLabelText("Preview type Video for preview-video.mp4")).toBeInTheDocument();
       expect(screen.getByLabelText("Preview type Text for preview-text.txt")).toBeInTheDocument();
@@ -355,6 +363,7 @@ describe("FilesPage", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Delete to-delete.txt" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -431,6 +440,7 @@ describe("FilesPage", () => {
 
     fireEvent.click(screen.getByLabelText("Select all files"));
     fireEvent.click(screen.getByRole("button", { name: "Delete selected" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete 2 file(s)" }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(

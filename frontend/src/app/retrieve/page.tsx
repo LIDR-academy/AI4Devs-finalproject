@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Copy, Download, FileSearch, History, Link2 } from "lucide-react";
-import toast from "react-hot-toast";
+import { Copy, Download, ExternalLink, FileSearch, History, Link2 } from "lucide-react";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { RateLimitCountdown } from "@/components/ui/rate-limit-countdown";
 import { normalizeCid } from "@/lib/cid";
 import {
   buildShareLink,
@@ -26,6 +27,7 @@ import {
   type RetrievalHistoryEntry,
   type RetrievalMetadata,
 } from "@/lib/retrieve";
+import { toast } from "@/lib/toast";
 
 type RetrievalResult = {
   metadata: RetrievalMetadata;
@@ -73,6 +75,8 @@ export default function RetrievePage() {
   const [cidError, setCidError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryAt, setRetryAt] = useState<number | null>(null);
+  const [lastRequestedCid, setLastRequestedCid] = useState<string | null>(null);
   const [result, setResult] = useState<RetrievalResult | null>(null);
   const [history, setHistory] = useState<RetrievalHistoryEntry[]>([]);
 
@@ -113,7 +117,9 @@ export default function RetrievePage() {
 
     setCidError(null);
     setErrorMessage(null);
+    setRetryAt(null);
     setIsLoading(true);
+    setLastRequestedCid(normalizedCid);
 
     try {
       const response = await fetch(`/api/retrieve/${encodeURIComponent(normalizedCid)}`, {
@@ -123,7 +129,15 @@ export default function RetrievePage() {
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-        setErrorMessage(payload?.message ?? "Unable to retrieve file");
+        const retryAfterRaw = response.headers.get("retry-after");
+        const retryAfter = retryAfterRaw ? Number(retryAfterRaw) : NaN;
+        if (response.status === 429 && Number.isFinite(retryAfter) && retryAfter > 0) {
+          setRetryAt(Date.now() + retryAfter * 1000);
+          setErrorMessage("Rate limit exceeded");
+        } else {
+          setRetryAt(null);
+          setErrorMessage(payload?.message ?? "Unable to retrieve file");
+        }
         return;
       }
 
@@ -151,6 +165,7 @@ export default function RetrievePage() {
       };
 
       setResult(nextResult);
+      setRetryAt(null);
       cacheMetadata(metadata);
 
       const nextHistory = mergeHistoryEntry(history, {
@@ -202,6 +217,14 @@ export default function RetrievePage() {
 
   const canPreview = result ? canPreviewMime(result.metadata.mimeType) : false;
 
+  const handleRetryRetrieve = () => {
+    if (!lastRequestedCid) {
+      return;
+    }
+    setCidInput(lastRequestedCid);
+    void handleRetrieve();
+  };
+
   return (
     <ProtectedRoute>
       <div className="space-y-6">
@@ -235,13 +258,24 @@ export default function RetrievePage() {
           </div>
           {cidError ? <p className="text-sm text-red-600">{cidError}</p> : null}
           {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
+          {retryAt ? <RateLimitCountdown onExpire={() => setRetryAt(null)} retryAt={retryAt} /> : null}
+          {errorMessage && !isLoading ? (
+            <Button onClick={handleRetryRetrieve} variant="ghost">
+              Retry
+            </Button>
+          ) : null}
         </Card>
 
         <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
           <Card className="space-y-4">
             <h2 className="text-lg font-semibold text-slate-900">File Preview</h2>
 
-            {!result ? <p className="text-sm text-slate-600">Retrieve a file to display preview and metadata.</p> : null}
+            {!result ? (
+              <EmptyState
+                description="Retrieve a file to display preview and metadata."
+                title="No file loaded"
+              />
+            ) : null}
 
             {result && canPreview && isImageMime(result.metadata.mimeType) ? (
               <img alt={result.metadata.filename} className="max-h-[420px] w-full rounded-md object-contain" src={result.objectUrl} />
@@ -295,6 +329,16 @@ export default function RetrievePage() {
                   <Link2 className="mr-2 h-4 w-4" />
                   Share link
                 </Button>
+                <a
+                  aria-label="Open on IPFS.io"
+                  className="inline-flex h-10 items-center justify-center rounded-md bg-transparent px-4 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  href={`https://ipfs.io/ipfs/${result.metadata.cid}`}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Open on IPFS.io
+                </a>
               </div>
             ) : null}
           </Card>
@@ -334,7 +378,12 @@ export default function RetrievePage() {
                 <History className="h-4 w-4 text-slate-600" />
                 <h2 className="text-lg font-semibold text-slate-900">Recent retrievals</h2>
               </div>
-              {history.length === 0 ? <p className="text-sm text-slate-600">No retrievals yet in this browser session.</p> : null}
+              {history.length === 0 ? (
+                <EmptyState
+                  description="Your retrieval history will appear here for quick re-use of CIDs."
+                  title="No retrievals yet"
+                />
+              ) : null}
               {history.length > 0 ? (
                 <ul className="space-y-2">
                   {history.map((entry) => (

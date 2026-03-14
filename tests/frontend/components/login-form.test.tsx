@@ -11,11 +11,12 @@ jest.mock("next/navigation", () => ({
   }),
 }));
 
-jest.mock("react-hot-toast", () => ({
-  __esModule: true,
-  default: {
+jest.mock("@/lib/toast", () => ({
+  toast: {
     success: jest.fn(),
     error: jest.fn(),
+    warning: jest.fn(),
+    info: jest.fn(),
   },
 }));
 

@@ -1,14 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronLeft, ChevronRight, Copy, Download, Eye, Grid3X3, List, Pin, PinOff, Search, Trash2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy, Download, ExternalLink, Eye, Grid3X3, List, Pin, PinOff, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import toast from "react-hot-toast";
 
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DEFAULT_FILES_QUERY,
   formatDate,
@@ -21,7 +23,39 @@ import {
   type FilesViewMode,
   type PinnedFilter,
 } from "@/lib/files-management";
+import { toast } from "@/lib/toast";
 import type { FileInfo } from "@/types/file";
+
+class RequestError extends Error {
+  constructor(
+    message: string,
+    public readonly status?: number,
+    public readonly retryAfterSeconds?: number,
+  ) {
+    super(message);
+  }
+}
+
+function parseRetryAfterSeconds(headers: Headers): number | undefined {
+  const raw = headers.get("retry-after");
+  if (!raw) {
+    return undefined;
+  }
+  const asNumber = Number(raw);
+  if (Number.isFinite(asNumber) && asNumber >= 0) {
+    return asNumber;
+  }
+  return undefined;
+}
+
+function notifyRequestError(error: unknown, fallback: string) {
+  if (error instanceof RequestError && error.status === 429 && error.retryAfterSeconds) {
+    toast.warning(`Rate limit exceeded. Retry in ${error.retryAfterSeconds}s.`);
+    return;
+  }
+
+  toast.error(error instanceof Error ? error.message : fallback);
+}
 
 type FilesResponse = {
   data: FileInfo[];
@@ -97,14 +131,19 @@ function GridFilePreview({ file }: { file: FileInfo }) {
 
   useEffect(() => {
     if (!isText || file.size > MAX_TEXT_PREVIEW_BYTES) {
-      setTextPreview(null);
-      setTextPreviewError(false);
-      return;
+      const rafId = window.requestAnimationFrame(() => {
+        setTextPreview(null);
+        setTextPreviewError(false);
+      });
+      return () => window.cancelAnimationFrame(rafId);
     }
 
+    const resetRafId = window.requestAnimationFrame(() => {
+      setTextPreview(null);
+      setTextPreviewError(false);
+    });
+
     const controller = new AbortController();
-    setTextPreview(null);
-    setTextPreviewError(false);
 
     void fetch(previewUrl, {
       method: "GET",
@@ -126,7 +165,10 @@ function GridFilePreview({ file }: { file: FileInfo }) {
         setTextPreviewError(true);
       });
 
-    return () => controller.abort();
+    return () => {
+      window.cancelAnimationFrame(resetRafId);
+      controller.abort();
+    };
   }, [file.size, isText, previewUrl]);
 
   if (isImage) {
@@ -218,7 +260,11 @@ async function fetchFiles(query: FilesQueryState): Promise<FilesResponse> {
     | null;
 
   if (!response.ok) {
-    throw new Error(payload?.message ?? "Unable to load files");
+    throw new RequestError(
+      payload?.message ?? "Unable to load files",
+      response.status,
+      parseRetryAfterSeconds(response.headers),
+    );
   }
 
   return {
@@ -249,7 +295,11 @@ async function setPinState(cid: string, targetPinned: boolean): Promise<void> {
 
   const payload = (await response.json().catch(() => null)) as { message?: string } | null;
   if (!response.ok) {
-    throw new Error(payload?.message ?? "Unable to update pin state");
+    throw new RequestError(
+      payload?.message ?? "Unable to update pin state",
+      response.status,
+      parseRetryAfterSeconds(response.headers),
+    );
   }
 }
 
@@ -261,7 +311,11 @@ async function deleteSingleFile(cid: string): Promise<void> {
 
   const payload = (await response.json().catch(() => null)) as { message?: string } | null;
   if (!response.ok) {
-    throw new Error(payload?.message ?? "Unable to delete file");
+    throw new RequestError(
+      payload?.message ?? "Unable to delete file",
+      response.status,
+      parseRetryAfterSeconds(response.headers),
+    );
   }
 }
 
@@ -277,7 +331,11 @@ async function deleteBulkFiles(cids: string[]): Promise<void> {
 
   const payload = (await response.json().catch(() => null)) as { message?: string } | null;
   if (!response.ok) {
-    throw new Error(payload?.message ?? "Unable to delete selected files");
+    throw new RequestError(
+      payload?.message ?? "Unable to delete selected files",
+      response.status,
+      parseRetryAfterSeconds(response.headers),
+    );
   }
 }
 
@@ -288,6 +346,8 @@ export default function FilesPage() {
   const [searchInput, setSearchInput] = useState("");
   const [selectedCids, setSelectedCids] = useState<string[]>([]);
   const [detailsFile, setDetailsFile] = useState<FileInfo | null>(null);
+  const [confirmSingleDelete, setConfirmSingleDelete] = useState<FileInfo | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const filesQuery = useQuery({
     queryKey: ["files-management", query],
@@ -331,7 +391,7 @@ export default function FilesPage() {
       for (const [key, value] of context?.previousData ?? []) {
         queryClient.setQueryData(key, value);
       }
-      toast.error(error instanceof Error ? error.message : "Unable to update pin state");
+      notifyRequestError(error, "Unable to update pin state");
     },
     onSuccess: (_data, variables) => {
       toast.success(variables.targetPinned ? "Pin request queued" : "Unpin request queued");
@@ -365,7 +425,7 @@ export default function FilesPage() {
       for (const [key, value] of context?.previousData ?? []) {
         queryClient.setQueryData(key, value);
       }
-      toast.error(error instanceof Error ? error.message : "Bulk action failed");
+      notifyRequestError(error, "Bulk action failed");
     },
     onSuccess: (_data, variables) => {
       toast.success(variables.targetPinned ? "Bulk pin queued" : "Bulk unpin queued");
@@ -402,7 +462,7 @@ export default function FilesPage() {
       for (const [key, value] of context?.previousData ?? []) {
         queryClient.setQueryData(key, value);
       }
-      toast.error(error instanceof Error ? error.message : "Delete failed");
+      notifyRequestError(error, "Delete failed");
     },
     onSuccess: (_data, variables) => {
       toast.success("File deleted successfully");
@@ -440,7 +500,7 @@ export default function FilesPage() {
       for (const [key, value] of context?.previousData ?? []) {
         queryClient.setQueryData(key, value);
       }
-      toast.error(error instanceof Error ? error.message : "Bulk delete failed");
+      notifyRequestError(error, "Bulk delete failed");
     },
     onSuccess: (_data, variables) => {
       toast.success(`${variables.cids.length} file(s) deleted`);
@@ -502,20 +562,27 @@ export default function FilesPage() {
   };
 
   const onDeleteSingle = (file: FileInfo) => {
-    if (!window.confirm(`Delete ${file.original_filename}? This action cannot be undone from the UI.`)) {
-      return;
-    }
-    deleteMutation.mutate({ cid: file.cid });
+    setConfirmSingleDelete(file);
   };
 
   const onDeleteBulk = () => {
     if (selectedCids.length === 0) {
       return;
     }
-    if (!window.confirm(`Delete ${selectedCids.length} selected file(s)? This action cannot be undone from the UI.`)) {
+    setConfirmBulkDelete(true);
+  };
+
+  const confirmSingleDeletion = () => {
+    if (!confirmSingleDelete) {
       return;
     }
+    deleteMutation.mutate({ cid: confirmSingleDelete.cid });
+    setConfirmSingleDelete(null);
+  };
+
+  const confirmBulkDeletion = () => {
     bulkDeleteMutation.mutate({ cids: selectedCids });
+    setConfirmBulkDelete(false);
   };
 
   const isBusy = pinMutation.isPending || bulkMutation.isPending || deleteMutation.isPending || bulkDeleteMutation.isPending;
@@ -629,11 +696,20 @@ export default function FilesPage() {
           </Card>
         ) : null}
 
-        {!filesQuery.isError && files.length === 0 && !filesQuery.isLoading ? (
-          <Card className="text-center">
-            <p className="text-lg font-semibold text-slate-900">No files yet</p>
-            <p className="mt-2 text-sm text-slate-600">Upload your first file to start managing content here.</p>
+        {filesQuery.isLoading && files.length === 0 ? (
+          <Card className="space-y-3">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
           </Card>
+        ) : null}
+
+        {!filesQuery.isError && files.length === 0 && !filesQuery.isLoading ? (
+          <EmptyState
+            description="Upload your first file to start managing content here."
+            title="No files yet"
+          />
         ) : null}
 
         {!filesQuery.isError && files.length > 0 ? (
@@ -699,6 +775,15 @@ export default function FilesPage() {
                               <Button aria-label={`Download ${file.original_filename}`} className="h-8 px-2" onClick={() => onDownload(file.cid)} variant="ghost">
                                 <Download className="h-4 w-4" />
                               </Button>
+                              <a
+                                aria-label={`Open ${file.original_filename} on IPFS.io`}
+                                className="inline-flex h-8 items-center justify-center rounded-md bg-transparent px-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                                href={`https://ipfs.io/ipfs/${file.cid}`}
+                                rel="noopener noreferrer"
+                                target="_blank"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
                               <Button aria-label={`Open details for ${file.original_filename}`} className="h-8 px-2" onClick={() => setDetailsFile(file)} variant="ghost">
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -761,6 +846,15 @@ export default function FilesPage() {
                         <Button aria-label={`Download ${file.original_filename}`} className="h-8 px-2" onClick={() => onDownload(file.cid)} variant="ghost">
                           <Download className="h-4 w-4" />
                         </Button>
+                        <a
+                          aria-label={`Open ${file.original_filename} on IPFS.io`}
+                          className="inline-flex h-8 items-center justify-center rounded-md bg-transparent px-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                          href={`https://ipfs.io/ipfs/${file.cid}`}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
                         <Button aria-label={`Open details for ${file.original_filename}`} className="h-8 px-2" onClick={() => setDetailsFile(file)} variant="ghost">
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -897,6 +991,30 @@ export default function FilesPage() {
         {!filesQuery.isLoading && selectedFiles.length > 0 ? (
           <p className="text-xs text-slate-500">{selectedFiles.length} file(s) selected for bulk actions.</p>
         ) : null}
+
+        <ConfirmDialog
+          cancelLabel="Cancel"
+          confirmLabel="Delete"
+          description={
+            confirmSingleDelete
+              ? `Delete ${confirmSingleDelete.original_filename}? This action cannot be undone from the UI.`
+              : ""
+          }
+          onCancel={() => setConfirmSingleDelete(null)}
+          onConfirm={confirmSingleDeletion}
+          open={Boolean(confirmSingleDelete)}
+          title="Delete file"
+        />
+
+        <ConfirmDialog
+          cancelLabel="Cancel"
+          confirmLabel={`Delete ${selectedCids.length} file(s)`}
+          description={`Delete ${selectedCids.length} selected file(s)? This action cannot be undone from the UI.`}
+          onCancel={() => setConfirmBulkDelete(false)}
+          onConfirm={confirmBulkDeletion}
+          open={confirmBulkDelete}
+          title="Delete selected files"
+        />
       </div>
     </ProtectedRoute>
   );

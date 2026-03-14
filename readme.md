@@ -15,6 +15,7 @@
 12. [Frontend File Retrieval Interface (US-106)](#12-frontend-file-retrieval-interface-us-106)
 13. [Frontend Files Management Page (US-107)](#13-frontend-files-management-page-us-107)
 14. [Frontend Documentation Pages (US-108)](#14-frontend-documentation-pages-us-108)
+15. [Frontend Error Handling and Feedback (US-109)](#15-frontend-error-handling-and-feedback-us-109)
 
 ---
 
@@ -654,6 +655,62 @@ npm run lint
 ```
 
 Tests de integración en `tests/frontend/components/docs-page.integration.test.tsx` — 29 tests — todos pasan.
+
+---
+
+## 15. Frontend Error Handling and Feedback (US-109)
+
+Se implementó una capa transversal de feedback y manejo de errores en `frontend/` para ofrecer mensajes claros, recuperación guiada y estados de carga/vacío consistentes en toda la aplicación.
+
+### 15.1. Cambios principales
+
+- Sistema de notificaciones unificado:
+    - Nuevo helper `src/lib/toast.ts` con variantes `success`, `error`, `warning`, `info`.
+    - Integración en `login`, `register`, dashboard y flujos de páginas de archivos.
+    - Configuración global del `Toaster` en `app-providers`.
+- Páginas y estados de error personalizados:
+    - `src/app/not-found.tsx` para 404.
+    - `src/app/forbidden/page.tsx` para 403.
+    - Mejora de `src/app/error.tsx` para fallback 500 con reintento.
+    - `src/components/providers/offline-banner.tsx` para estado offline.
+- Estados de carga y vacío:
+    - `src/app/files/loading.tsx` y `src/app/retrieve/loading.tsx`.
+    - Nuevo componente `src/components/ui/empty-state.tsx`.
+- Confirmaciones de acciones destructivas:
+    - Nuevo `src/components/ui/confirm-dialog.tsx`.
+    - Reemplazo de confirmaciones nativas por modal en operaciones de borrado.
+- Manejo avanzado de errores de red y límites:
+    - Nuevo `src/components/ui/rate-limit-countdown.tsx`.
+    - Mensajes con countdown para `429` usando `Retry-After`.
+    - Aviso de expiración de sesión desde `src/hooks/use-auth.ts`.
+
+### 15.2. Flujo de feedback
+
+```mermaid
+flowchart TD
+    A[User Action] --> B{Request Result}
+    B -->|Success| C[Show Success Toast]
+    B -->|Validation Error| D[Inline Form Errors]
+    B -->|403| E[Forbidden Page]
+    B -->|404| F[Not Found Page]
+    B -->|429| G[Warning Toast + Retry Countdown]
+    B -->|Network Offline| H[Offline Banner + Retry CTA]
+    B -->|Unexpected Runtime| I[App Error Boundary Fallback]
+```
+
+### 15.3. Pruebas ejecutadas
+
+```bash
+npm run type-check
+npm run lint
+npm test -- --runInBand
+npm run build
+```
+
+Resultados:
+- `67/67` tests de Jest pasando.
+- Build de producción de Next.js completado correctamente.
+- Lint sin errores (2 warnings conocidos por `no-img-element` en previews).
 
 ---
 

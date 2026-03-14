@@ -1,21 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CodeBlock } from "@/components/docs/code-block";
-import type { Metadata } from "next";
 
-// NOTE: metadata export is not used in client components; place in a separate file
-// or use a parent server component. Kept here as a constant for reference.
-const PAGE_METADATA = {
-  title: "Code Examples",
-  description: "Full working code examples for the IPFS Gateway API in cURL, Python, and JavaScript.",
-};
-void PAGE_METADATA;
+import { CodeBlock } from "@/components/docs/code-block";
 
 const TABS = ["cURL", "Python", "JavaScript"] as const;
 type Tab = (typeof TABS)[number];
-
-// ── cURL examples ─────────────────────────────────────────────────────────────
 
 const CURL_REGISTER = `curl -X POST https://your-domain.com/api/v1/users/register \\
   -H "Content-Type: application/json" \\
@@ -34,8 +24,6 @@ const CURL_LIST = `curl https://your-domain.com/api/v1/files \\
 
 const CURL_DELETE = `curl -X DELETE https://your-domain.com/api/v1/files/bafkreih5... \\
   -H "X-API-Key: YOUR_API_KEY"`;
-
-// ── Python examples ───────────────────────────────────────────────────────────
 
 const PYTHON_REGISTER = `import requests
 
@@ -86,8 +74,6 @@ headers = {"X-API-Key": "YOUR_API_KEY"}
 
 response = requests.delete(url, headers=headers)
 print(response.json()["message"])`;
-
-// ── JavaScript examples ───────────────────────────────────────────────────────
 
 const JS_REGISTER = `const response = await fetch("https://your-domain.com/api/v1/users/register", {
   method: "POST",
@@ -147,12 +133,7 @@ const response = await fetch(
 const data = await response.json();
 console.log(data.message);`;
 
-// ── Content map ───────────────────────────────────────────────────────────────
-
-const EXAMPLES: Record<
-  Tab,
-  { id: string; title: string; code: string; language: string; filename: string }[]
-> = {
+const EXAMPLES: Record<Tab, { id: string; title: string; code: string; language: string; filename: string }[]> = {
   cURL: [
     { id: "curl-register", title: "Register", code: CURL_REGISTER, language: "bash", filename: "register.sh" },
     { id: "curl-upload", title: "Upload a file", code: CURL_UPLOAD, language: "bash", filename: "upload.sh" },
@@ -176,8 +157,6 @@ const EXAMPLES: Record<
   ],
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export default function CodeExamplesPage() {
   const [activeTab, setActiveTab] = useState<Tab>("cURL");
 
@@ -190,45 +169,41 @@ export default function CodeExamplesPage() {
         </p>
       </div>
 
-      {/* Language tabs */}
       <div
-        role="tablist"
         aria-label="Select programming language"
-        className="flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 w-fit"
+        className="flex w-fit gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1"
+        role="tablist"
       >
         {TABS.map((tab) => (
           <button
             key={tab}
-            role="tab"
-            aria-selected={activeTab === tab}
-            id={`tab-${tab.toLowerCase()}`}
             aria-controls={`panel-${tab.toLowerCase()}`}
-            onClick={() => setActiveTab(tab)}
+            aria-selected={activeTab === tab}
             className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              activeTab === tab
-                ? "bg-white text-emerald-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+              activeTab === tab ? "bg-white text-emerald-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
             }`}
+            id={`tab-${tab.toLowerCase()}`}
+            onClick={() => setActiveTab(tab)}
+            role="tab"
           >
             {tab}
           </button>
         ))}
       </div>
 
-      {/* Tab panels */}
       {TABS.map((tab) => (
         <div
           key={tab}
-          role="tabpanel"
-          id={`panel-${tab.toLowerCase()}`}
           aria-labelledby={`tab-${tab.toLowerCase()}`}
-          hidden={activeTab !== tab}
           className="space-y-6"
+          hidden={activeTab !== tab}
+          id={`panel-${tab.toLowerCase()}`}
+          role="tabpanel"
         >
           {EXAMPLES[tab].map(({ id, title, code, language, filename }) => (
-            <section key={id} id={id}>
+            <section id={id} key={id}>
               <h2 className="mb-2 text-base font-semibold text-slate-800">{title}</h2>
-              <CodeBlock code={code} language={language} filename={filename} />
+              <CodeBlock code={code} filename={filename} language={language} />
             </section>
           ))}
         </div>
