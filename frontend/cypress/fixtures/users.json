@@ -1,0 +1,26 @@
+{
+  "patient": {
+    "id": "patient-1",
+    "email": "patient@test.com",
+    "firstName": "Paciente",
+    "lastName": "E2E",
+    "role": "patient",
+    "emailVerified": true
+  },
+  "doctor": {
+    "id": "doctor-1",
+    "email": "doctor@test.com",
+    "firstName": "Doctor",
+    "lastName": "E2E",
+    "role": "doctor",
+    "emailVerified": true
+  },
+  "admin": {
+    "id": "admin-1",
+    "email": "admin@test.com",
+    "firstName": "Admin",
+    "lastName": "E2E",
+    "role": "admin",
+    "emailVerified": true
+  }
+}

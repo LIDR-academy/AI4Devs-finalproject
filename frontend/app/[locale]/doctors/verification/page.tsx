@@ -1,0 +1,147 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import UploadForm from '@/app/components/verification/UploadForm';
+import { VerificationDocumentStatus } from '@/lib/api/verification';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  useUploadVerificationDoc,
+  useVerificationDocs,
+} from '@/hooks/useVerificationDocs';
+import PageHeader from '@/app/components/ui/PageHeader';
+import StateMessage from '@/app/components/ui/StateMessage';
+
+function formatDate(date: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-MX', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(date));
+}
+
+export default function DoctorVerificationPage() {
+  const t = useTranslations('doctorVerification');
+  const { user, isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const docsQuery = useVerificationDocs();
+  const uploadMutation = useUploadVerificationDoc();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push(`/${locale}/login`);
+    }
+  }, [isAuthenticated, loading, locale, router]);
+
+  useEffect(() => {
+    if (!loading && isAuthenticated && user?.role !== 'doctor') {
+      router.push(`/${locale}/appointments`);
+    }
+  }, [isAuthenticated, loading, locale, router, user?.role]);
+
+  if (loading || docsQuery.isLoading) {
+    return <div className="mx-auto max-w-4xl p-4 text-slate-600">{t('loading')}</div>;
+  }
+
+  if (!isAuthenticated || user?.role !== 'doctor') {
+    return null;
+  }
+
+  const mapError = (error: Error): string => {
+    switch (error.message) {
+      case 'INVALID_FILE_TYPE':
+        return t('errors.invalidType');
+      case 'FILE_TOO_LARGE':
+        return t('errors.fileTooLarge');
+      case 'MALWARE_DETECTED':
+        return t('errors.malwareDetected');
+      default:
+        return t('errors.generic');
+    }
+  };
+
+  const renderStatusBadge = (status: VerificationDocumentStatus) => {
+    const colorClass =
+      status === 'approved'
+        ? 'bg-green-100 text-green-700'
+        : status === 'rejected'
+          ? 'bg-red-100 text-red-700'
+          : 'bg-yellow-100 text-yellow-700';
+
+    return (
+      <span className={`inline-block px-2 py-1 rounded-full text-xs ${colorClass}`}>
+        {t(`status.${status}`)}
+      </span>
+    );
+  };
+
+  return (
+    <div className="mx-auto max-w-4xl p-4 sm:p-6">
+      <PageHeader title={t('title')} subtitle={t('subtitle')} />
+
+      {successMessage && (
+        <div className="mb-4">
+          <StateMessage message={successMessage} variant="success" />
+        </div>
+      )}
+
+      {uploadMutation.isError && (
+        <div className="mb-4">
+          <StateMessage
+            message={uploadMutation.error instanceof Error ? mapError(uploadMutation.error) : t('errors.generic')}
+            variant="error"
+          />
+        </div>
+      )}
+
+      <UploadForm
+        isUploading={uploadMutation.isPending}
+        onSubmit={async ({ file, documentType }) => {
+          setSuccessMessage(null);
+          const response = await uploadMutation.mutateAsync({ file, documentType });
+          setSuccessMessage(response.message || t('success'));
+          await docsQuery.refetch();
+        }}
+      />
+
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 className="text-lg font-semibold mb-3">{t('listTitle')}</h2>
+
+        {docsQuery.isError ? (
+          <StateMessage
+            message={
+              docsQuery.error instanceof Error ? docsQuery.error.message : t('errors.loadDocuments')
+            }
+            variant="error"
+          />
+        ) : (docsQuery.data?.length || 0) === 0 ? (
+          <StateMessage message={t('emptyList')} />
+        ) : (
+          <div className="space-y-2">
+            {docsQuery.data?.map((doc) => (
+              <div
+                key={doc.id}
+                className="flex flex-col gap-2 rounded-md border border-slate-200 p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="font-medium text-slate-900">{doc.originalFilename}</p>
+                  <p className="text-sm text-slate-600">
+                    {t(`documentTypeOptions.${doc.documentType}`)} - {doc.mimeType}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {formatDate(doc.createdAt, locale)} - {doc.fileSizeBytes} bytes
+                  </p>
+                </div>
+                {renderStatusBadge(doc.status)}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
