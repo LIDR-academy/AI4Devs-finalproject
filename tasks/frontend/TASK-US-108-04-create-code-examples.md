@@ -47,6 +47,8 @@ Medium
 ## Completion Status
 - [x] 100% - Completed
 
+[PR #24](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/24)
+
 ### Implementation Notes
 - Created `src/app/docs/code-examples/page.tsx` (client component for language tabs)
 - Three language tabs: cURL, Python, JavaScript

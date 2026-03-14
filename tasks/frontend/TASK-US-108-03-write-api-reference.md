@@ -40,6 +40,8 @@ High
 ## Completion Status
 - [x] 100% - Completed
 
+[PR #24](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/24)
+
 ### Implementation Notes
 - Created `src/app/docs/api-reference/page.tsx`
 - All endpoints documented: 4 Users, 7 Files, 1 Tasks

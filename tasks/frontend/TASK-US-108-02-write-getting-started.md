@@ -40,6 +40,8 @@ High
 ## Completion Status
 - [x] 100% - Completed
 
+[PR #24](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/24)
+
 ### Implementation Notes
 - Created `src/app/docs/getting-started/page.tsx`
 - Four sections: Quick Start (3-step list), Registration Walkthrough, First Upload Tutorial (cURL + JSON response), API Key Management
