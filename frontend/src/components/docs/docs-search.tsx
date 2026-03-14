@@ -42,8 +42,11 @@ export function DocsSearch() {
   useEffect(() => {
     clearTimeout(debounceRef.current);
     if (!query.trim()) {
-      setResults([]);
-      setOpen(false);
+      debounceRef.current = window.setTimeout(() => {
+        setResults([]);
+        setOpen(false);
+        setActiveIndex(-1);
+      }, 0);
       return;
     }
     debounceRef.current = window.setTimeout(() => {

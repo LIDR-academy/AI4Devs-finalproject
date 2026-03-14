@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import RetrievePage from "@/app/retrieve/page";
 
@@ -21,11 +21,12 @@ jest.mock("@/hooks/use-auth", () => ({
   }),
 }));
 
-jest.mock("react-hot-toast", () => ({
-  __esModule: true,
-  default: {
+jest.mock("@/lib/toast", () => ({
+  toast: {
     success: jest.fn(),
     error: jest.fn(),
+    warning: jest.fn(),
+    info: jest.fn(),
   },
 }));
 
@@ -98,6 +99,10 @@ describe("RetrievePage", () => {
   it("shows API error for missing file", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
+      status: 404,
+      headers: {
+        get: () => null,
+      },
       json: async () => ({ message: "File not found" }),
     });
 
@@ -111,6 +116,34 @@ describe("RetrievePage", () => {
     await waitFor(() => {
       expect(screen.getByText("File not found")).toBeInTheDocument();
     });
+  });
+
+  it("shows rate-limit countdown for 429 with Retry-After", async () => {
+    jest.useFakeTimers();
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: {
+        get: (key: string) => (key.toLowerCase() === "retry-after" ? "4" : null),
+      },
+      json: async () => ({ message: "Too many requests" }),
+    });
+
+    render(<RetrievePage />);
+
+    fireEvent.change(screen.getByLabelText("Enter CID"), {
+      target: { value: "bafybeigdyrzt5x6z6xj5ir3f6m42cdbw2m5g3m6twjv7mmyr4y6nblfuca" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Retrieve" }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Rate limit exceeded. Retry in/i)).toBeInTheDocument();
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(4000);
+    });
+    jest.useRealTimers();
   });
 
   it("renders a video preview for video MIME types", async () => {

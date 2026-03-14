@@ -21,7 +21,9 @@ export function TableOfContents() {
       text: el.textContent ?? "",
       level: parseInt(el.tagName[1], 10),
     }));
-    setHeadings(parsed);
+      const rafId = window.requestAnimationFrame(() => {
+        setHeadings(parsed);
+      });
 
     if (parsed.length === 0) return;
 
@@ -42,6 +44,7 @@ export function TableOfContents() {
     }
 
     return () => {
+      window.cancelAnimationFrame(rafId);
       observerRef.current?.disconnect();
     };
   }, []);
