@@ -14,6 +14,7 @@
 11. [Frontend File Upload Interface (US-105)](#11-frontend-file-upload-interface-us-105)
 12. [Frontend File Retrieval Interface (US-106)](#12-frontend-file-retrieval-interface-us-106)
 13. [Frontend Files Management Page (US-107)](#13-frontend-files-management-page-us-107)
+14. [Frontend Documentation Pages (US-108)](#14-frontend-documentation-pages-us-108)
 
 ---
 
@@ -593,6 +594,66 @@ npm run test:e2e
 ```
 
 La ejecución automática en CI/CD está definida en `.github/workflows/backend-tests.yml`.
+
+---
+
+## 14. Frontend Documentation Pages (US-108)
+
+Se implementó la sección `/docs` completa con navegación lateral, búsqueda en tiempo real, tabla de contenidos automática y páginas de contenido en TSX puro (sin MDX).
+
+### 14.1. Cambios principales
+
+- Nuevas rutas de documentación:
+    - `/docs` — Página de inicio con tarjetas de sección y Quick Start
+    - `/docs/getting-started` — Guía de inicio rápido, registro, primera carga y gestión de API key
+    - `/docs/authentication` — Uso del header `X-API-Key`, endpoints públicos, buenas prácticas de seguridad
+    - `/docs/api-reference` — Referencia completa de todos los endpoints REST (Users, Files, Tasks) con ejemplos de request/response y tabla de códigos de error
+    - `/docs/code-examples` — Ejemplos listos para usar en cURL, Python y JavaScript con selector de lenguaje
+    - `/docs/faq` — Preguntas frecuentes sobre IPFS, CIDs, rate limits y gestión de claves
+- Nuevos componentes compartidos:
+    - `CodeBlock` — Bloque de código con resaltado de lenguaje y botón de copia al portapapeles
+    - `DocsSearch` — Búsqueda con debounce 150ms, navegación por teclado (↑↓ Enter Escape) y resaltado de coincidencias
+    - `DocsSidebar` — Navegación jerárquica con enlace activo resaltado, submenús expandibles y drawer en mobile
+    - `TableOfContents` — TOC auto-generado con IntersectionObserver para rastrear la sección activa
+    - `Callout` — Caja de aviso de tipo `info`, `warning` o `tip`
+- Nuevo índice de búsqueda estático: `src/lib/docs-search-index.ts` (28 entradas, 6 secciones)
+- Layout de tres columnas: sidebar fijo + contenido + TOC lateral
+
+### 14.2. Arquitectura de documentación
+
+```mermaid
+graph TD
+    L[docs/layout.tsx<br/>DocsSearch + DocsSidebar + TOC] --> H[docs/page.tsx<br/>Home - tarjetas de sección]
+    L --> GS[docs/getting-started/page.tsx]
+    L --> AU[docs/authentication/page.tsx]
+    L --> AR[docs/api-reference/page.tsx]
+    L --> CE[docs/code-examples/page.tsx]
+    L --> FA[docs/faq/page.tsx]
+    DS[DocsSearch] --> SI[docs-search-index.ts<br/>28 entradas]
+    GS --> CB[CodeBlock]
+    GS --> CA[Callout]
+    AR --> CB
+    CE --> CB
+    AU --> CB
+    AU --> CA
+    FA --> CA
+```
+
+### 14.3. Decisiones de implementación
+
+- **Sin MDX**: Las páginas se implementaron como componentes TSX puros para evitar cambios en la configuración de Next.js y dependencias adicionales.
+- **Sin librería de búsqueda externa**: Filtrado simple con `String.includes` sobre un índice estático. Sin dependencias de `fuse.js` ni equivalentes.
+- **Componentes cliente mínimos**: Solo los componentes interactivos (`DocsSearch`, `DocsSidebar`, `CodeBlock`, `TableOfContents`, `CodeExamplesPage`) llevan `"use client"`. El layout y las páginas de contenido son server components.
+
+### 14.4. Pruebas ejecutadas
+
+```
+npm run type-check
+npm test
+npm run lint
+```
+
+Tests de integración en `tests/frontend/components/docs-page.integration.test.tsx` — 29 tests — todos pasan.
 
 ---
 
