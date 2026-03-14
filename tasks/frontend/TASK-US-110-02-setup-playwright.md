@@ -33,5 +33,8 @@ Set up and stabilize Playwright configuration for running reliable browser-based
 - Keep runtime stable and avoid flaky defaults.
 - Prefer deterministic waits and selectors.
 
+## Pull Request
+- [PR #28: US-110 frontend testing suite hardening](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/28)
+
 ## Completion Status
 - [x] 100% - Completed

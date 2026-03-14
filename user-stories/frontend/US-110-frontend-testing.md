@@ -73,6 +73,9 @@ tests/frontend/
 ## Estimated Effort
 10 hours
 
+## Pull Request
+- [PR #28: US-110 frontend testing suite hardening](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/28)
+
 ## Completion Status
 - [x] 100% - Completed
 

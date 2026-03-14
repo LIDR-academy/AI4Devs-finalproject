@@ -33,5 +33,8 @@ Set up Jest so unit and component tests run consistently in the frontend project
 - Keep config compatible with existing React Testing Library tests.
 - Avoid introducing breaking changes to current test commands.
 
+## Pull Request
+- [PR #28: US-110 frontend testing suite hardening](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/28)
+
 ## Completion Status
 - [x] 100% - Completed

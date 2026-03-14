@@ -33,5 +33,8 @@ Implement and stabilize E2E test scenarios for the most critical frontend paths:
 - Focus on high-value journeys over exhaustive permutations.
 - Keep tests independent to simplify debugging.
 
+## Pull Request
+- [PR #28: US-110 frontend testing suite hardening](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/28)
+
 ## Completion Status
 - [x] 100% - Completed

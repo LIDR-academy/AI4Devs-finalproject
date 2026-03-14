@@ -33,5 +33,8 @@ Build shared test helpers that reduce duplication and improve consistency across
 - Keep helpers minimal and composable.
 - Prefer explicit data fixtures over implicit magic defaults.
 
+## Pull Request
+- [PR #28: US-110 frontend testing suite hardening](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/28)
+
 ## Completion Status
 - [x] 100% - Completed

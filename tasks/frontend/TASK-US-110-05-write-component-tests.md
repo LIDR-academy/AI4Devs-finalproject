@@ -33,5 +33,8 @@ Add component-level tests for the most important frontend UI components and user
 - Prefer role-based selectors for accessibility alignment.
 - Avoid over-coupling tests to internal implementation details.
 
+## Pull Request
+- [PR #28: US-110 frontend testing suite hardening](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/28)
+
 ## Completion Status
 - [x] 100% - Completed
