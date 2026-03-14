@@ -5,7 +5,7 @@
 
 
 ## Description
-As a **developer**, I want a comprehensive testing suite for the frontend, so that code quality is maintained and user experience is consistent.
+As a **developer**, I want a comprehensive testing suite for the frontend, so that code quality is maintained and user experience is consistent. The tests suite for the frontend is already well underway, but this user story will focus on expanding the test coverage to include unit tests for utility functions, component tests for React components, and end-to-end tests for critical user flows. This will ensure that the frontend is robust, maintainable, and delivers a high-quality user experience.
 
 ## Priority
 🟠 **High** - Essential for code quality.
@@ -35,7 +35,7 @@ As a **developer**, I want a comprehensive testing suite for the frontend, so th
 
 ## Test Structure
 ```
-frontend/tests/
+tests/frontend/
 ├── unit/
 │   ├── utils.test.ts
 │   └── hooks.test.ts
@@ -94,10 +94,10 @@ flowchart TD
 ```
 
 ## Related Tasks
-- TASK-US-110-01-setup-jest-config.md
-- TASK-US-110-02-setup-playwright.md
-- TASK-US-110-03-create-test-utilities.md
-- TASK-US-110-04-write-unit-tests.md
-- TASK-US-110-05-write-component-tests.md
-- TASK-US-110-06-write-e2e-tests.md
-- TASK-US-110-07-setup-coverage.md
+- [TASK-US-110-01: Setup Jest Configuration](../../tasks/frontend/TASK-US-110-01-setup-jest-config.md)
+- [TASK-US-110-02: Setup Playwright](../../tasks/frontend/TASK-US-110-02-setup-playwright.md)
+- [TASK-US-110-03: Create Test Utilities](../../tasks/frontend/TASK-US-110-03-create-test-utilities.md)
+- [TASK-US-110-04: Write Unit Tests](../../tasks/frontend/TASK-US-110-04-write-unit-tests.md)
+- [TASK-US-110-05: Write Component Tests](../../tasks/frontend/TASK-US-110-05-write-component-tests.md)
+- [TASK-US-110-06: Write End-to-End Tests](../../tasks/frontend/TASK-US-110-06-write-e2e-tests.md)
+- [TASK-US-110-07: Setup Coverage and Reporting](../../tasks/frontend/TASK-US-110-07-setup-coverage.md)
