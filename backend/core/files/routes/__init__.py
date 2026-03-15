@@ -1,0 +1,2 @@
+"""Files routes package."""
+
