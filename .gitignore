@@ -1,0 +1,410 @@
+# =============================================================================
+# NURA PROJECT - .gitignore
+# AI-First Multi-Agent Onboarding Platform
+# =============================================================================
+
+# =============================================================================
+# CUSTOM PROJECT IGNORES
+# =============================================================================
+.ignore/
+.ignore
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# =============================================================================
+# VIRTUAL ENVIRONMENTS
+# =============================================================================
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+conda-meta/
+
+# virtualenv
+pyvenv.cfg
+
+# =============================================================================
+# IDEs & EDITORS
+# =============================================================================
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# OPERATING SYSTEMS
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# LOGS & TEMPORARY FILES
+# =============================================================================
+# Logs
+*.log
+logs/
+*.log.*
+log/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary folders
+tmp/
+temp/
+.tmp/
+
+# =============================================================================
+# DATABASES
+# =============================================================================
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# PostgreSQL
+*.sql
+*.dump
+
+# Redis
+dump.rdb
+
+# =============================================================================
+# ENVIRONMENT & CREDENTIALS
+# =============================================================================
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.envrc
+
+# AWS Credentials
+.aws/
+aws-credentials.json
+credentials.json
+
+# SSH Keys
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# =============================================================================
+# AI/ML SPECIFIC
+# =============================================================================
+# Models
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.pb
+
+# Datasets
+data/
+dataset/
+datasets/
+*.csv
+*.tsv
+*.parquet
+
+# Weights & Biases
+wandb/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Tensorboard
+tensorboard_logs/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# =============================================================================
+# WEB/FRONTEND (if any)
+# =============================================================================
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+build/
+dist/
+out/
+
+# =============================================================================
+# STREAMLIT SPECIFIC
+# =============================================================================
+# Streamlit cache
+.streamlit/
+
+# =============================================================================
+# FASTAPI/UVICORN SPECIFIC
+# =============================================================================
+# FastAPI cache
+.fastapi/
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# =============================================================================
+# TERRAFORM/INFRASTRUCTURE
+# =============================================================================
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars
+
+# =============================================================================
+# CI/CD
+# =============================================================================
+# GitHub Actions
+.github/workflows/secrets/
+
+# Jenkins
+.jenkins/
+
+# =============================================================================
+# CACHE DIRECTORIES
+# =============================================================================
+# General cache
+.cache/
+cache/
+.cached/
+
+# Python cache
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# =============================================================================
+# DOCUMENTATION BUILD
+# =============================================================================
+# Sphinx
+docs/_build/
+docs/build/
+
+# MkDocs
+site/
+
+# =============================================================================
+# MONITORING & OBSERVABILITY
+# =============================================================================
+# Prometheus
+*.prom
+
+# Grafana
+grafana/data/
+
+# =============================================================================
+# MISC
+# =============================================================================
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+
+# IDE workspace files
+*.workspace
+*.project
+
+# OS generated files
+.DS_Store?
+Icon?
+
+# =============================================================================
+# END OF .gitignore
+# =============================================================================
