@@ -1,0 +1,36 @@
+Puedes acceder a:
+PostgreSQL en localhost:5432
+pgAdmin en localhost:5050
+Para conectarte a pgAdmin:
+1. Accede a http://localhost:5050
+2. Login con admin@admin.com / admin123
+Añade un nuevo servidor:
+Host: postgres
+Port: 5432
+Database: cartera_db
+Username: admin
+Password: admin123
+
+
+servicios de clasificacion
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python get-pip.py
+# Navegar al directorio del servicio de clasificación
+cd project/services/classification
+# Instalar las dependencias
+pip install -r requirements.txt
+
+1. Correr el contenedor Docker para PostgreSQL
+# Detener y eliminar los contenedores actuales
+docker-compose down -v
+
+# Volver a levantar los contenedores
+docker-compose up -d
+
+2. Servicios de clasificacion
+python src/run.py
+
+3. Servicios de collection
+npm run dev
+
+http://localhost:3000/api-docs
