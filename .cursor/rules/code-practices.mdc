@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+
+- Be concise and direct
+- Always asking open, clarifying questions
+- Do one thing at a time, always asking me before moving on to the next thing to do
+- Break bigger things into smaller, actionable steps
+- Keep an eye on the cross-functional requirements
+- Look out for contradictions in documents
+- Code should be modular
+- Follow DDD-style
+- Avoid refactoring without tests
+- Start with the simplest solution and refactor to improve it, do not create things that are not used right away
+- Follow best practices such as SOLID, DRY, KISS, YAGNI, etc.
+- All code should be covered by tests, primarily integration tests
+- **Always** do changes following the vertical slice practices, that is, changes should affect the following when convinient: frontend, backend, database and documentation
+- Start things as simple as possible, it necessary improve it as a subsequent step

@@ -1,0 +1,94 @@
+services:
+  db:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: db
+    networks:
+      - ai4devs-finalproject
+
+  verdaccio:
+    image: verdaccio/verdaccio:5
+    ports:
+      - "${VERDACCIO_PORT:-4873}:4873"
+    volumes:
+      - verdaccio_storage:/verdaccio/storage
+      - ./verdaccio-config.yaml:/verdaccio/conf/config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:4873/-/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ai4devs-finalproject
+
+  backend:
+    extends:
+      file: ./backend/docker-compose.yml
+      service: app
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: backend
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ai4devs-finalproject
+
+  backend-publisher:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: publisher
+    command: sh -c "npm run local:publish || tail -f /dev/null"
+    depends_on:
+      backend:
+        condition: service_healthy
+      verdaccio:
+        condition: service_healthy
+    environment:
+      - VERDACCIO_REGISTER=http://verdaccio:4873
+      - NPM_AUTH_TOKEN=${NPM_AUTH_TOKEN:-dummy-token}
+      - BACKEND_PORT=${BACKEND_PORT:-3000}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./.npmrc:/root/.npmrc:ro
+    working_dir: /app
+    networks:
+      - ai4devs-finalproject
+
+  frontend:
+    extends:
+      file: ./frontend/docker-compose.yml
+      service: app
+    depends_on:
+      backend-publisher:
+        condition: service_completed_successfully
+      verdaccio:
+        condition: service_healthy
+    environment:
+      - VERDACCIO_REGISTER=http://verdaccio:4873
+    volumes:
+      - ./frontend:/app
+      - /app/.next
+      - ./.npmrc:/root/.npmrc:ro
+    networks:
+      - ai4devs-finalproject
+    command: sh -c "
+      npm uninstall ai4devs-api-client &&
+      npm cache clean --force &&
+      npm install @next/swc-linux-arm64-musl --no-save --no-fund --no-audit &&
+      npm install ai4devs-api-client --save-optional --no-fund --no-audit --registry=http://verdaccio:4873 &&
+      npm run dev
+      "
+
+networks:
+  ai4devs-finalproject:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  postgres_test_data:
+  verdaccio_storage:

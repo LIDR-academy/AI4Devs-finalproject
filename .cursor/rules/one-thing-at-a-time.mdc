@@ -1,0 +1,18 @@
+---
+alwaysApply: false
+---
+- Instead of stopping what you're doing, create a file `session.md` to capture bugs and ideas to be worked later
+- When you noticed that something from the list has been solved, remove them from `session.md`
+
+Follow this template:
+
+- **ADHD-XXX**: Title
+  - **GitHub Issue**: #[TBD](https://github.com/user/repo/issues/TBD)
+  - **Description**: LOREM
+  - **Environment**: LOREM
+  - **Priority**: High/Medium/Low
+  - **Component**: LOREM
+  - **What user was doing**: LOREM
+  - **Closing**: instructions to do before removing this ADHD entry
+
+Avoid changing code, just create and/or edit `session.md`

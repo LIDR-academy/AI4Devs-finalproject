@@ -1,0 +1,12 @@
+storage: /verdaccio/storage
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+port: ${VERDACCIO_PORT:-4873}
+packages:
+  '**':
+    access: $all
+    publish: $all
+    proxy: npmjs
+logs:
+  - {type: stdout, format: pretty, level: http}

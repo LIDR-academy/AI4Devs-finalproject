@@ -1,0 +1,52 @@
+---
+description: Container architecture and testing container management rules to be used when using docker and/or testing
+alwaysApply: false
+---
+
+## Container Architecture
+
+### Root Docker Compose
+- **Location**: Root folder contains main docker-compose.yml
+- **Purpose**: Orchestrates all submodules in an ecosystem
+- **Structure**: Uses docker-compose files from git submodules
+- **Requirement**: Each submodule must work independently
+
+### Submodule Independence
+- Each submodule should be able to run standalone
+- Root docker-compose provides integration layer
+- Submodules maintain their own container configurations
+
+## Testing Containers
+
+### Environment
+- **Purpose**: Integration and E2E tests
+- **Configuration**: Uses `.env.test` environment
+- **Isolation**: Separate from development containers
+
+### Management
+- **Start Command**: `npm run test:run` from root
+- **Behavior**: 
+  - If containers already running → proceed with tests
+  - If containers not running → start containers first, then run tests
+- **Usage**: when running tests and commands, they will happen in testing containers, if you think they should happen directly on the submodule or in the development containers, you should ask
+
+## Backend Publishing
+
+### Container Purpose
+- **Name**: `backend-publisher`
+- **Function**: Shortcut to publish backend submodule client
+- **Consumer**: Frontend submodule
+- **Usage**: `npm run local:publish` is run when container goes up, and then the container dies
+
+### Version Management
+- **Local Publishing**: **Keeps** the client package version
+- **Implication**: Version numbers unreliable for checking frontend-backend client sync
+- **Note**: Only backend release to production will change version
+
+## Key Principles
+
+1. **TDD-First**: Testing containers are primary development environment
+2. **Submodule Independence**: Each module must function standalone
+3. **Ecosystem Integration**: Root provides unified container orchestration
+4. **Test Isolation**: Testing containers separate from development environment
+5. **Composition**: Prefer running docker compose rather than docker commands
