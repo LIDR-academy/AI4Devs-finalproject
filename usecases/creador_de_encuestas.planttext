@@ -1,0 +1,26 @@
+@startuml
+skinparam rectangle {
+  BackgroundColor #lightblue
+  BorderColor #000
+}
+skinparam actor {
+  BackgroundColor #lightgreen
+}
+
+actor "Creador de Encuestas" as Creator
+
+rectangle "Sistema de Encuestas" {
+  usecase "Crear encuesta básica" as UC1
+  usecase "Crear encuesta compleja" as UC2
+  usecase "Personalizar plantilla" as UC3 #FFCCCC
+  usecase "Agregar nuevos tipos de preguntas" as UC4
+  usecase "Modificar lógica de salto" as UC5
+}
+
+Creator -> UC1
+Creator -> UC2
+Creator -> UC3
+Creator -> UC4
+Creator -> UC5
+
+@enduml

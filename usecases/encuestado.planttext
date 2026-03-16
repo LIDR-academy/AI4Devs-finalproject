@@ -1,0 +1,23 @@
+@startuml
+actor "Encuestado" as User
+
+skinparam rectangle {
+  BackgroundColor #lightblue
+  BorderColor #000
+}
+skinparam actor {
+  BackgroundColor #red
+}
+
+
+rectangle "Sistema de Encuestas" {
+  usecase "Completar encuesta" as UC11
+  usecase "Navegar por encuesta compleja" as UC12
+  usecase "Subir archivos" as UC13 #FFCCCC
+}
+
+User -> UC11
+User -> UC12
+User -> UC13
+
+@enduml

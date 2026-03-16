@@ -1,0 +1,26 @@
+@startuml
+actor "Administrador de la Plataforma" as Admin
+
+skinparam rectangle {
+  BackgroundColor #lightblue
+  BorderColor #000
+}
+skinparam actor {
+  BackgroundColor #cyan
+}
+
+rectangle "Sistema de Encuestas" {
+  usecase "Gestionar múltiples encuestas" as UC6
+  usecase "Compartir encuestas" as UC7
+  usecase "Configurar opciones de recopilación" as UC8
+  usecase "Analizar resultados" as UC9
+  usecase "Exportar datos" as UC10
+}
+
+Admin -> UC6
+Admin -> UC7
+Admin -> UC8
+Admin -> UC9
+Admin -> UC10
+
+@enduml
