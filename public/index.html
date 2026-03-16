@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Herramientas - Astillero La Roca</title>
+    
+    <!-- TailwindCSS desde CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        
+        /* Responsive fixes para botones de Dashboard y Histórico */
+        @media (max-width: 768px) {
+            .dashboard-card {
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+            
+            .dashboard-card button {
+                width: 100%;
+                padding: 0.75rem 1rem !important;
+                font-size: 0.875rem !important;
+                justify-content: center;
+            }
+            
+            .dashboard-card h3 {
+                font-size: 1.25rem !important;
+            }
+            
+            .dashboard-card p {
+                font-size: 0.875rem !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-card button {
+                padding: 0.625rem 0.75rem !important;
+                font-size: 0.8125rem !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- Formulario de login -->
+        <div id="loginForm" class="max-w-md mx-auto bg-slate-800 rounded-xl shadow-2xl p-8 border border-slate-700">
+            <div class="text-center mb-8">
+                <div class="bg-gradient-to-r from-blue-500 to-cyan-500 w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Astillero La Roca</h2>
+                <p class="text-slate-400 mt-2">Acceso al Sistema</p>
+            </div>
+            <form id="emailForm" class="space-y-6" onsubmit="return false">
+                <div>
+                    <label for="email" class="block text-sm font-semibold text-slate-300 mb-2">Email del trabajador</label>
+                    <input type="email" id="email" name="email" required
+                           class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                           placeholder="ejemplo@astillero.com">
+                </div>
+                <button type="button" id="btnSendCode"
+                        class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 transform transition-all duration-200 hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Solicitar Código de Acceso
+                </button>
+            </form>
+
+            <form id="codeForm" class="space-y-6 hidden" onsubmit="return false">
+                <div>
+                    <label for="code" class="block text-sm font-semibold text-slate-300 mb-2">Código de acceso</label>
+                    <input type="text" id="code" name="code" required maxlength="8"
+                           class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white text-center text-lg tracking-widest placeholder-slate-500 focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:outline-none transition-all"
+                           placeholder="••••••••">
+                </div>
+                <button type="button" id="btnValidateCode"
+                        class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-800 transform transition-all duration-200 hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Verificar Código de Acceso
+                </button>
+            </form>
+        </div>
+
+        <!-- Contenido principal -->
+        <div id="mainContent" class="hidden space-y-8">
+            <header class="flex justify-between items-center bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
+                <div>
+                    <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Astillero La Roca</h1>
+                    <p class="text-slate-400 mt-1">Sistema de Gestión y Control de Herramientas</p>
+                </div>
+                <button id="btnLogout" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Cerrar Sesión
+                </button>
+            </header>
+
+            <!-- Acciones principales -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Usar herramienta -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-xl shadow-xl border border-slate-700 hover:border-blue-500 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-blue-500 p-3 rounded-lg shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Usar Herramienta</h3>
+                                <p class="text-slate-400 text-sm">Registra el uso</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-300 text-sm">Registra y asigna una herramienta a tu nombre para comenzar a utilizarla</p>
+                        <button id="btnOpenUsar" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Registrar Uso
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dejar herramienta -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-xl shadow-xl border border-slate-700 hover:border-orange-500 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/20">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-orange-500 p-3 rounded-lg shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Devolver Herramienta</h3>
+                                <p class="text-slate-400 text-sm">Finaliza el uso</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-300 text-sm">Devuelve una herramienta que tengas en tu posesión y registra la ubicación donde la depositas</p>
+                        <button id="btnOpenDejar" class="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                            Devolver Ahora
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Consultar ubicación -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-xl shadow-xl border border-slate-700 hover:border-yellow-500 transition-all duration-300 hover:shadow-2xl hover:shadow-yellow-500/20">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-yellow-500 p-3 rounded-lg shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Buscar Herramienta</h3>
+                                <p class="text-slate-400 text-sm">Localiza ubicación y estado</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-300 text-sm">Consulta dónde se encuentra cualquier herramienta y quién la está usando</p>
+                        <button id="btnOpenConsultar" class="w-full bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Buscar Ahora
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acceso rápido al Dashboard -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-xl shadow-xl border border-slate-700 hover:border-purple-500 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20">
+                <div class="flex justify-between items-center dashboard-card">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-purple-500 p-4 rounded-xl shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">Dashboard de Herramientas</h3>
+                            <p class="text-slate-300 mt-1">Vista en tiempo real del estado de todas las herramientas del astillero</p>
+                        </div>
+                    </div>
+                    <button id="btnOpenDashboard" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-4 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2 text-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Ver Dashboard
+                    </button>
+                </div>
+            </div>
+
+            <!-- Acceso rápido al Histórico -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-xl shadow-xl border border-slate-700 hover:border-pink-500 transition-all duration-300 hover:shadow-2xl hover:shadow-pink-500/20">
+                <div class="flex justify-between items-center dashboard-card">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-pink-500 p-4 rounded-xl shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">Histórico de Movimientos</h3>
+                            <p class="text-slate-300 mt-1">Registro completo de todos los usos y movimientos de herramientas</p>
+                        </div>
+                    </div>
+                    <button id="btnOpenHistorico" class="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white px-8 py-4 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2 text-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Ver Histórico
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de mensajes -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-70 overflow-y-auto h-full w-full backdrop-blur-sm">
+        <div class="relative top-20 mx-auto p-6 border border-slate-600 w-96 shadow-2xl rounded-xl bg-slate-800">
+            <div class="mt-3 text-center">
+                <h3 id="modalTitle" class="text-xl leading-6 font-bold text-white"></h3>
+                <div id="modalContent" class="mt-4 px-7 py-3 text-slate-300">
+                    <!-- Contenido del modal -->
+                </div>
+                <div class="items-center px-4 py-3 mt-4">
+                    <button id="modalClose" class="px-6 py-3 bg-gradient-to-r from-slate-600 to-slate-700 text-white text-base font-semibold rounded-lg shadow-lg hover:from-slate-700 hover:to-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 transition-all duration-200 hover:scale-105">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+    <!-- Scripts de la aplicación -->
+    <script src="js/api.js?v=1.0.5"></script>
+    <script src="js/auth.js?v=1.0.5"></script>
+    <script src="js/herramientas.js?v=1.0.5"></script>
+    <script src="js/app.js?v=1.0.5"></script>
+    <script src="js/debug.js?v=1.0.5"></script>
+</body>
+</html>

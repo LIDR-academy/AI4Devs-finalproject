@@ -1,0 +1,36 @@
+# Activar el motor de reescritura
+RewriteEngine On
+RewriteBase /AI4Devs-finalproject/
+
+# Permitir acceso directo a archivos estáticos en public
+RewriteCond %{REQUEST_URI} \.(js|css|png|jpg|jpeg|gif)$
+RewriteCond %{REQUEST_URI} ^/AI4Devs-finalproject/public/
+RewriteRule ^(.*)$ - [L]
+
+# Manejar las peticiones API
+RewriteCond %{REQUEST_URI} ^/AI4Devs-finalproject/api/
+RewriteRule ^api/(.*)$ src/index.php [L,QSA]
+
+# Proteger archivos sensibles
+<FilesMatch "^(composer\.json|composer\.lock|package\.json|package-lock\.json|\.(git|env|config|yml|xml))$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Redirigir el resto a index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]
+
+# Redirigir la raíz al index.html público
+RewriteRule ^$ public/index.html [L]
+
+# Servir archivos estáticos de public directamente
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_URI} ^/AI4Devs-finalproject/public/
+RewriteRule ^ - [L]
+
+# Redirigir todas las demás solicitudes válidas al frontend
+RewriteCond %{REQUEST_URI} ^/AI4Devs-finalproject/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ public/index.html [L]

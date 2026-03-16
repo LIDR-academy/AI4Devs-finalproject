@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Herramientas - Astillero</title>
+    
+    <!-- TailwindCSS desde CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8 bg-slate-800 p-6 rounded-xl shadow-2xl border border-slate-700">
+            <div>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">Dashboard de Herramientas</h1>
+                <p class="text-slate-400 mt-2">Vista en tiempo real del estado de las herramientas</p>
+            </div>
+            <button id="btnClose" aria-label="Cerrar ventana" class="bg-slate-700 hover:bg-slate-600 text-white px-3 sm:px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span class="hidden sm:inline" aria-hidden="true">Cerrar ventana</span>
+            </button>
+        </header>
+
+        <!-- Dashboard -->
+        <div class="bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white">Estado de Herramientas</h2>
+                <div class="flex gap-3">
+                    <button id="btnRefreshDashboard" aria-label="Actualizar tablero" class="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-3 sm:px-6 py-3 rounded-lg text-sm font-bold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span class="hidden sm:inline" aria-hidden="true">Actualizar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-blue-900 to-blue-800 p-6 rounded-xl border border-blue-600 shadow-xl">
+                    <p class="text-sm text-blue-300 font-semibold mb-2">Total Herramientas</p>
+                    <p id="totalHerramientas" class="text-4xl font-bold text-white">0</p>
+                </div>
+                <div class="bg-gradient-to-br from-green-900 to-emerald-800 p-6 rounded-xl border border-green-600 shadow-xl">
+                    <p class="text-sm text-green-300 font-semibold mb-2">Disponibles</p>
+                    <p id="herramientasDisponibles" class="text-4xl font-bold text-white">0</p>
+                </div>
+                <div class="bg-gradient-to-br from-red-900 to-rose-800 p-6 rounded-xl border border-red-600 shadow-xl">
+                    <p class="text-sm text-red-300 font-semibold mb-2">En Uso</p>
+                    <p id="herramientasEnUso" class="text-4xl font-bold text-white">0</p>
+                </div>
+            </div>
+
+            <!-- Lista de herramientas -->
+            <div id="dashboardContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-8 pt-6 border-t border-slate-700 flex justify-between items-center">
+                <div class="text-sm text-slate-400">
+                    <span class="font-semibold">Último refresco:</span> <span id="ultimoRefresco" class="text-slate-300">-</span>
+                </div>
+                <div class="text-sm text-slate-400">
+                    <span class="font-semibold">Auto-actualización:</span> <span class="text-slate-300">Cada 5 minutos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+    <!-- Scripts de la aplicación -->
+    <script src="js/api.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/session-utils.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        // Inicialización cuando se carga la página
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Crear instancia del dashboard
+                window.dashboard = new Dashboard();
+                
+                // Verificar sesión en el servidor (seguridad)
+                if (!await checkSessionOrRedirect()) {
+                    return; // Ya redirigió al login
+                }
+
+                // Obtener token CSRF
+                await api.getCsrfToken();
+                
+                // Inicializar dashboard
+                await window.dashboard.init();
+
+                // Botón cerrar
+                const btnClose = document.getElementById('btnClose');
+                if (btnClose) {
+                    btnClose.addEventListener('click', () => {
+                        window.close();
+                    });
+                }
+            } catch (error) {
+                console.error('Error durante la inicialización:', error);
+                showToast('Error al inicializar el dashboard', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

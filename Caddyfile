@@ -1,0 +1,46 @@
+:8080 {
+	root * /app/public
+	encode gzip
+
+	# Headers CORS
+	header {
+		Access-Control-Allow-Origin *
+		Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+		Access-Control-Allow-Headers "Content-Type, Authorization, X-CSRF-Token"
+	}
+
+	# Archivos PHP en /public (diagnóstico) - FrankenPHP
+	@php {
+		path *.php
+	}
+
+	handle @php {
+		php
+	}
+
+	# Peticiones API - FrankenPHP
+	@api {
+		path /api/*
+	}
+
+	handle @api {
+		root * /app
+		rewrite * /src/index.php
+		php
+	}
+
+	# Archivos estáticos (js, css, imágenes, etc.)
+	@static {
+		path *.js *.css *.png *.jpg *.jpeg *.gif *.svg *.ico *.woff *.woff2 *.ttf *.eot
+	}
+
+	handle @static {
+		file_server
+	}
+
+	# Para rutas HTML, servir index.html (SPA fallback)
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}

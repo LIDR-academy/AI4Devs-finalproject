@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Usos - Astillero</title>
+    
+    <!-- TailwindCSS desde CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8 bg-slate-800 p-6 rounded-xl shadow-2xl border border-slate-700">
+            <div>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-pink-400 to-rose-400 bg-clip-text text-transparent">Histórico de Movimientos</h1>
+                <p class="text-slate-400 mt-2">Registro completo de movimientos de herramientas</p>
+            </div>
+            <button id="btnClose" class="bg-slate-700 hover:bg-slate-600 text-white px-3 sm:px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-105 shadow-lg flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span class="hidden sm:inline">Cerrar ventana</span>
+            </button>
+        </header>
+
+        <!-- Histórico -->
+        <div class="bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white">Movimientos de Herramientas</h2>
+                <div class="flex gap-3">
+                    <button id="btnRefreshHistorico" class="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white px-3 sm:px-6 py-3 rounded-lg text-sm font-bold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span class="hidden sm:inline">Actualizar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Filtrar por herramienta</label>
+                    <input type="text" id="filtroHerramienta" placeholder="Nombre de la herramienta"
+                           class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Filtrar por operario</label>
+                    <input type="text" id="filtroOperario" placeholder="Nombre del operario"
+                           class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Filtrar por ubicación</label>
+                    <input type="text" id="filtroUbicacion" placeholder="Nombre de la ubicación"
+                           class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Resultados por página</label>
+                    <select id="resultadosPorPagina" class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-pink-500 focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all">
+                        <option value="10">10 por página</option>
+                        <option value="25" selected>25 por página</option>
+                        <option value="50">50 por página</option>
+                        <option value="100">100 por página</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla de histórico -->
+            <div class="overflow-x-auto rounded-lg border border-slate-700">
+                <table class="min-w-full divide-y divide-slate-700">
+                    <thead class="bg-slate-900">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Herramienta</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Operario</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Ubicación</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Fecha Inicio</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Fecha Fin</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historicoBody" class="bg-slate-800 divide-y divide-slate-700">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mensaje cuando no hay datos -->
+            <div id="noDataMessage" class="hidden text-center py-12 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-xl font-semibold text-white">No hay movimientos registrados</p>
+            </div>
+
+            <!-- Controles de paginación -->
+            <div class="mt-6 bg-slate-900 p-4 rounded-lg border border-slate-700">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="text-sm text-slate-400">
+                        <span id="infoRegistros" class="font-semibold text-white">Cargando...</span>
+                    </div>
+                </div>
+                <div id="paginacionContainer" class="mt-4">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-8 pt-6 border-t border-slate-700 flex justify-between items-center">
+                <div class="text-sm text-slate-400">
+                    <span class="font-semibold">Total de registros:</span> <span id="totalRegistros" class="text-white font-bold">0</span>
+                </div>
+                <div class="text-sm text-slate-400">
+                    <span class="font-semibold">Último refresco:</span> <span id="ultimoRefresco" class="text-slate-300">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+    <!-- Scripts de la aplicación -->
+    <script src="js/api.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/session-utils.js"></script>
+    <script src="js/historico.js"></script>
+    <script>
+        // Función global para formatear fechas
+        window.formatDate = function(date) {
+            if (!date) return '-';
+            if (typeof date === 'string') {
+                date = new Date(date);
+            }
+            return date.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+
+        // Inicialización cuando se carga la página
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Crear instancia del histórico
+                window.historico = new Historico();
+                
+                // Verificar sesión en el servidor (seguridad)
+                if (!await checkSessionOrRedirect()) {
+                    return; // Ya redirigió al login
+                }
+
+                // Obtener token CSRF
+                await api.getCsrfToken();
+                
+                // Inicializar histórico
+                await window.historico.init();
+
+                // Botón cerrar
+                const btnClose = document.getElementById('btnClose');
+                if (btnClose) {
+                    btnClose.addEventListener('click', () => {
+                        window.close();
+                    });
+                }
+            } catch (error) {
+                console.error('Error durante la inicialización:', error);
+                showToast('Error al inicializar el histórico', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
