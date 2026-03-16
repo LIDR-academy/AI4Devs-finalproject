@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if form.instance.pk %}{% trans "Editar Categoría" %}{% else %}{% trans "Nueva Categoría" %}{% endif %} - Gamy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-green': '#2D5C50',
+                        'game-salmon': '#E78787',
+                        'game-beige': '#D8D0B8',
+                        'game-dark-salmon': '#D57272'
+                    },
+                    fontFamily: {
+                        'game': ['"Roboto Slab"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-game-green min-h-screen font-game">
+    <!-- Header -->
+    <header class="bg-game-salmon p-4">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'catalog:home' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Inicio" %}
+                </a>
+                <a href="{% url 'catalog:category_list' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Categorías" %}
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-xl p-8">
+                <h1 class="text-3xl font-bold text-game-green mb-6">
+                    {% if form.instance.pk %}
+                        ✏️ {% trans "Editar Categoría:" %} {{ form.instance.slug }}
+                    {% else %}
+                        ➕ {% trans "Nueva Categoría" %}
+                    {% endif %}
+                </h1>
+
+                <!-- Form Errors -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Slug Field -->
+                    <div class="mb-6">
+                        <label for="{{ form.slug.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.slug.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.slug }}
+                        {% if form.slug.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.slug.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-gray-500 text-xs mt-1">{% trans "Identificador único (solo letras minúsculas, números y guiones). Ej: juegos-de-cartas" %}</p>
+                    </div>
+
+                    <!-- Icon Field -->
+                    <div class="mb-6">
+                        <label for="{{ form.icon.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.icon.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.icon }}
+                        {% if form.icon.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.icon.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-gray-500 text-xs mt-1">{% trans "Emoji o icono representativo. Ej: 🎴 🧩 🎲" %}</p>
+                    </div>
+
+                    <div class="border-t border-gray-200 my-6"></div>
+
+                    <!-- Spanish Fields -->
+                    <h2 class="text-xl font-semibold text-game-green mb-4">🇪🇸 Español</h2>
+                    <div class="mb-6">
+                        <label for="{{ form.name_es.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.name_es.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.name_es }}
+                        {% if form.name_es.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.name_es.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="mb-6">
+                        <label for="{{ form.description_es.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.description_es.label }}
+                        </label>
+                        {{ form.description_es }}
+                        {% if form.description_es.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.description_es.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="border-t border-gray-200 my-6"></div>
+
+                    <!-- English Fields -->
+                    <h2 class="text-xl font-semibold text-game-green mb-4">🇬🇧 English</h2>
+                    <div class="mb-6">
+                        <label for="{{ form.name_en.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.name_en.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.name_en }}
+                        {% if form.name_en.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.name_en.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="mb-6">
+                        <label for="{{ form.description_en.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.description_en.label }}
+                        </label>
+                        {{ form.description_en }}
+                        {% if form.description_en.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.description_en.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="border-t border-gray-200 my-6"></div>
+
+                    <!-- French Fields -->
+                    <h2 class="text-xl font-semibold text-game-green mb-4">🇫🇷 Français</h2>
+                    <div class="mb-6">
+                        <label for="{{ form.name_fr.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.name_fr.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.name_fr }}
+                        {% if form.name_fr.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.name_fr.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="mb-6">
+                        <label for="{{ form.description_fr.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.description_fr.label }}
+                        </label>
+                        {{ form.description_fr }}
+                        {% if form.description_fr.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.description_fr.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="border-t border-gray-200 my-6"></div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-between items-center">
+                        <a href="{% url 'catalog:category_list' %}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-6 rounded-lg transition">
+                            ❌ {% trans "Cancelar" %}
+                        </a>
+                        <button type="submit" class="bg-game-salmon hover:bg-game-dark-salmon text-white font-medium py-2 px-6 rounded-lg transition">
+                            💾 {% if form.instance.pk %}{% trans "Actualizar" %}{% else %}{% trans "Crear" %}{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

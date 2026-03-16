@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ game.get_name }} - Gamy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-green': '#2D5C50',
+                        'game-salmon': '#E78787',
+                        'game-beige': '#D8D0B8',
+                        'game-dark-salmon': '#D57272'
+                    },
+                    fontFamily: {
+                        'game': ['"Roboto Slab"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-game-green min-h-screen font-game">
+    <!-- Header -->
+    <header class="bg-game-salmon p-4">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'catalog:home' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Inicio" %}
+                </a>
+                <a href="{% url 'catalog:game_list' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Juegos" %}
+                </a>
+            </div>
+            <div class="flex items-center space-x-3">
+                {% if user.is_authenticated %}
+                    <span class="text-white">{{ user.first_name|default:user.username }}</span>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                        {% trans "Iniciar Sesión" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-5xl mx-auto">
+            <!-- Back Button -->
+            <div class="mb-4">
+                <a href="{% url 'catalog:game_list' %}" class="text-game-beige hover:text-white transition inline-flex items-center">
+                    ← {% trans "Volver al catálogo" %}
+                </a>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="md:flex">
+                    <!-- Game Image -->
+                    <div class="md:w-1/2 bg-gray-100 flex items-center justify-center p-4">
+                        {% if game.image %}
+                        <img src="{{ game.image.url }}" alt="{{ game.get_name }}" class="max-w-full max-h-96 object-contain">
+                        {% else %}
+                        <div class="w-full h-96 bg-gradient-to-br from-game-green to-game-salmon flex items-center justify-center">
+                            <span class="text-9xl text-white">🎲</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Game Details -->
+                    <div class="md:w-1/2 p-8">
+                        <h1 class="text-3xl font-bold text-game-green mb-4">{{ game.get_name }}</h1>
+
+                        <!-- Categories -->
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            {% for category in game.categories.all %}
+                            <span class="bg-game-beige text-game-green px-3 py-1 rounded-full text-sm">
+                                {{ category.icon }} {{ category.get_name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Quick Info -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            {% if game.min_players and game.max_players %}
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-sm text-gray-600">👥 {% trans "Jugadores" %}</p>
+                                <p class="text-lg font-semibold text-gray-800">{{ game.min_players }}-{{ game.max_players }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if game.min_age %}
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-sm text-gray-600">🎂 {% trans "Edad mínima" %}</p>
+                                <p class="text-lg font-semibold text-gray-800">{{ game.min_age }}+</p>
+                            </div>
+                            {% endif %}
+
+                            {% if game.min_playtime and game.max_playtime %}
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-sm text-gray-600">⏱️ {% trans "Tiempo de juego" %}</p>
+                                <p class="text-lg font-semibold text-gray-800">{{ game.min_playtime }}-{{ game.max_playtime }} min</p>
+                            </div>
+                            {% endif %}
+
+                            {% if game.difficulty %}
+                            <div class="bg-gray-50 p-3 rounded">
+                                <p class="text-sm text-gray-600">📊 {% trans "Dificultad" %}</p>
+                                <p class="text-lg font-semibold text-gray-800">{{ game.get_difficulty_display }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        {% if game.description_es %}
+                        <div class="mb-6">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-2">{% trans "Descripción" %}</h2>
+                            <p class="text-gray-600">{{ game.get_description }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if user.is_authenticated %}
+                        <!-- Additional Info for Registered Users -->
+                        <div class="border-t pt-4 mb-6">
+                            {% if game.publisher %}
+                            <p class="text-sm text-gray-600 mb-2">
+                                <strong>{% trans "Editorial:" %}</strong> {{ game.publisher }}
+                            </p>
+                            {% endif %}
+                            {% if game.year_published %}
+                            <p class="text-sm text-gray-600 mb-2">
+                                <strong>{% trans "Año:" %}</strong> {{ game.year_published }}
+                            </p>
+                            {% endif %}
+                            {% if game.rules_url %}
+                            <p class="text-sm mb-2">
+                                <a href="{{ game.rules_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">
+                                    📖 {% trans "Descargar reglas" %}
+                                </a>
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <!-- Call to Action for Non-Authenticated Users -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                            <p class="text-sm text-gray-700 mb-3">
+                                🔒 {% trans "Inicia sesión para acceder a información completa sobre el juego, reglas y más recursos." %}
+                            </p>
+                            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="bg-game-salmon hover:bg-game-dark-salmon text-white px-4 py-2 rounded inline-block transition">
+                                {% trans "Iniciar Sesión" %}
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        <!-- Staff Actions -->
+                        {% if user.is_staff %}
+                        <div class="flex gap-3 pt-4 border-t">
+                            <a href="{% url 'catalog:game_update' game.slug %}" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-center py-2 rounded transition">
+                                ✏️ {% trans "Editar" %}
+                            </a>
+                            <a href="{% url 'catalog:game_delete' game.slug %}" class="flex-1 bg-red-500 hover:bg-red-600 text-white text-center py-2 rounded transition">
+                                🗑️ {% trans "Eliminar" %}
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Catálogo de Juegos" %} - Gamy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-green': '#2D5C50',
+                        'game-salmon': '#E78787',
+                        'game-beige': '#D8D0B8',
+                        'game-dark-salmon': '#D57272'
+                    },
+                    fontFamily: {
+                        'game': ['"Roboto Slab"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-game-green min-h-screen font-game">
+    <!-- Header -->
+    <header class="bg-game-salmon p-4">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'catalog:home' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Inicio" %}
+                </a>
+                <span class="text-white font-semibold">{% trans "Juegos" %}</span>
+                {% if user.is_staff %}
+                <a href="{% url 'catalog:category_list' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Categorías" %}
+                </a>
+                {% endif %}
+            </div>
+            <div class="flex items-center space-x-3">
+                {% if user.is_authenticated %}
+                    <span class="text-white">{{ user.first_name|default:user.username }}</span>
+                    <a href="{% url 'accounts:dashboard' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                        {% trans "Mi Cuenta" %}
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                        {% trans "Iniciar Sesión" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header Section -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-game-beige mb-2">{% trans "Catálogo de Juegos" %}</h1>
+                    <p class="text-game-beige text-opacity-80">
+                        {% if total_games %}
+                            {% trans "Mostrando" %} {{ games|length }} {% trans "de" %} {{ total_games }} {% trans "juegos" %}
+                        {% else %}
+                            {% trans "No hay juegos disponibles" %}
+                        {% endif %}
+                    </p>
+                </div>
+                {% if user.is_staff %}
+                <a href="{% url 'catalog:game_create' %}" class="bg-game-salmon hover:bg-game-dark-salmon text-white px-6 py-3 rounded-lg transition duration-300 font-medium">
+                    ➕ {% trans "Nuevo Juego" %}
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <form method="get" class="flex flex-col md:flex-row gap-4">
+                    <!-- Search -->
+                    <div class="flex-1">
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
+                            🔍 {% trans "Buscar juego" %}
+                        </label>
+                        <input type="text" name="search" id="search" value="{{ request.GET.search }}"
+                               placeholder="{% trans 'Nombre del juego...' %}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-game-green focus:border-game-green">
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="flex-1">
+                        <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+                            🎯 {% trans "Filtrar por categoría" %}
+                        </label>
+                        <select name="category" id="category"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-game-green focus:border-game-green">
+                            <option value="">{% trans "Todas las categorías" %}</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.slug }}" {% if request.GET.category == cat.slug %}selected{% endif %}>
+                                    {{ cat.icon }} {{ cat.get_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex items-end">
+                        <button type="submit" class="bg-game-green hover:bg-opacity-90 text-white px-6 py-2 rounded-md transition">
+                            {% trans "Filtrar" %}
+                        </button>
+                        {% if request.GET.search or request.GET.category %}
+                        <a href="{% url 'catalog:game_list' %}" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition">
+                            ✖️
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative border mb-2" role="alert">
+                            <span class="block sm:inline">{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Games Grid -->
+            {% if games %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for game in games %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 flex flex-col">
+                    <!-- Game Image -->
+                    {% if game.image %}
+                    <div class="w-full h-48 overflow-hidden bg-gray-100">
+                        <img src="{{ game.image.url }}" alt="{{ game.get_name }}" class="w-full h-full object-contain">
+                    </div>
+                    {% else %}
+                    <div class="w-full h-48 bg-gradient-to-br from-game-green to-game-salmon flex items-center justify-center">
+                        <span class="text-6xl text-white">🎲</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Game Info -->
+                    <div class="p-4 flex-1 flex flex-col">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-2">{{ game.get_name }}</h3>
+                        
+                        <!-- Categories -->
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            {% for category in game.categories.all|slice:":3" %}
+                            <span class="text-xs bg-game-beige text-game-green px-2 py-1 rounded">
+                                {{ category.icon }} {{ category.get_name }}
+                            </span>
+                            {% endfor %}
+                            {% if game.categories.count > 3 %}
+                            <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
+                                +{{ game.categories.count|add:"-3" }}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Game Details -->
+                        <div class="text-sm text-gray-600 mb-3 flex-1">
+                            {% if game.min_players and game.max_players %}
+                            <p>👥 {{ game.min_players }}-{{ game.max_players }} {% trans "jugadores" %}</p>
+                            {% endif %}
+                            {% if game.min_age %}
+                            <p>🎂 {{ game.min_age }}+ {% trans "años" %}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex gap-2">
+                            <a href="{% url 'catalog:game_detail' game.slug %}" class="flex-1 bg-game-green hover:bg-opacity-90 text-white text-center py-2 rounded transition">
+                                {% trans "Ver más" %}
+                            </a>
+                            {% if user.is_staff %}
+                            <a href="{% url 'catalog:game_update' game.slug %}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition">
+                                ✏️
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="mt-8 flex justify-center">
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% if page_obj.has_previous %}
+                    <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        ⏮️
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        ◀️ {% trans "Anterior" %}
+                    </a>
+                    {% endif %}
+
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                        {% trans "Página" %} {{ page_obj.number }} {% trans "de" %} {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {% trans "Siguiente" %} ▶️
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"
+                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        ⏭️
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="bg-white rounded-lg shadow-md p-12 text-center">
+                <div class="text-6xl mb-4">🎲</div>
+                <h2 class="text-2xl font-bold text-gray-700 mb-2">{% trans "No se encontraron juegos" %}</h2>
+                <p class="text-gray-500">
+                    {% if request.GET.search or request.GET.category %}
+                        {% trans "Intenta ajustar los filtros de búsqueda." %}
+                    {% else %}
+                        {% trans "Aún no hay juegos en el catálogo." %}
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>
