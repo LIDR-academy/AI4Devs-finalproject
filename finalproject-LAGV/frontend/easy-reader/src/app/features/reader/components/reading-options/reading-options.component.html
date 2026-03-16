@@ -1,0 +1,72 @@
+<div class="reading-options">
+  <h3>Select Reading Mode</h3>
+  <div class="options-container">
+
+    <label class="option" *ngIf="showManualOption">
+      <input type="radio" 
+             name="readingMode" 
+             value="accelerometer"
+             [(ngModel)]="selectedMode">
+      <div class="option-content">
+        <span class="radio-label">Manual (Beta) - <span class="future-feature">Problems with CORS</span></span>
+        <span class="description">Manual scrolling control</span>
+      </div>
+    </label>
+
+    <label class="option" *ngIf="showVoiceCommandsOption">
+      <input type="radio" 
+             name="readingMode" 
+             value="voiceCommands"
+             [(ngModel)]="selectedMode"
+             checked>
+      <div class="option-content">
+        <span class="radio-label">Voice Commands</span>
+        <span class="description">Control the viewer with voice commands</span>
+      </div>
+    </label>
+
+    <label class="option" *ngIf="showTextToSpeechOption">
+      <input type="radio" 
+             name="readingMode" 
+             value="textToSpeech"
+             [(ngModel)]="selectedMode">
+      <div class="option-content">
+        <span class="radio-label">Text to Speech</span>
+        <span class="description">Convert text to spoken words</span>
+      </div>
+    </label>
+
+    <label class="option disabled-option" *ngIf="showAccelerometerOption">
+      <input type="radio" 
+             name="readingMode" 
+             value="accelerometer"
+             [(ngModel)]="selectedMode"
+             disabled>
+      <div class="option-content">
+        <span class="radio-label">Accelerometer - <span class="in-development">In Development</span></span>
+        <span class="description">Control with device movement</span>
+      </div>
+    </label>
+    
+    <label class="option disabled-option" *ngIf="showFaceDetectionOption">
+      <input type="radio" 
+             name="readingMode" 
+             value="faceDetection"
+             [(ngModel)]="selectedMode"
+             disabled>
+      <div class="option-content">
+        <span class="radio-label">Face Detection - <span class="future-feature">Future Feature</span></span>
+        <span class="description">Auto-scroll based on face position</span>
+      </div>
+    </label>
+    <div class="unsupported-message" *ngIf="showUnsupportedMessage">
+      <p>Accelerometer control is not available on this device</p>
+    </div>
+
+    <button class="continue-button" 
+            (click)="onContinue()"
+            [disabled]="!selectedMode">
+      Continue to Reader
+    </button>
+  </div>
+</div> 

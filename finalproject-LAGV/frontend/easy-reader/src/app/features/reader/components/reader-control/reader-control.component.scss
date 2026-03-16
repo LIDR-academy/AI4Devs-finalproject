@@ -1,0 +1,69 @@
+.reader-control {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(5px);
+  padding: 8px 20px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+  border: 1px solid transparent;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.95), rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.95));
+
+  &.hidden {
+    transform: translateY(57%);
+    
+    @media (max-width: 768px) {
+      transform: translateY(0);
+    }
+  }
+
+  &::before {
+    content: '\f077'; /* Código Unicode para el icono de flecha hacia arriba (Font Awesome) */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #6366F1;
+    font-size: 16px;
+    background-color: transparent;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  &.no-arrow::before {
+    display: none;
+  }
+  
+  &:hover {
+    transform: translateY(0);
+  }
+  
+  &:hover::before {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  
+  .voice-reader-container {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .voice-command-container {
+    width: 100%;
+  }
+  
+  // Siempre expandido en dispositivos móviles
+  @media (max-width: 768px) {
+    transform: translateY(0);
+    
+    &::before {
+      display: none;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+<div class="reader-control" [class.hidden]="isHidden" [class.no-arrow]="readingMode === 'voiceCommands'">
+  <div class="voice-reader-container" *ngIf="readingMode === 'textToSpeech'">
+      <app-voice-reader></app-voice-reader>
+  </div>
+  <div class="voice-command-container" *ngIf="readingMode === 'voiceCommands' && readerMode === 'pdf'">
+    <app-voice-command></app-voice-command>
+  </div>
+  <div class="voice-command-container" *ngIf="readingMode === 'voiceCommands' && readerMode === 'web'">
+    <app-voice-command-iframe></app-voice-command-iframe>
+  </div>
+  <!--button class="control-button" (click)="changeReadingMode()">
+    <i class="fas fa-exchange-alt"></i>
+  </button-->
+</div> 

@@ -1,0 +1,14 @@
+<div class="url-viewer-container">
+  <div class="iframe-wrapper">
+    <iframe 
+      id="web-content-iframe"
+      *ngIf="safeUrl" 
+      [src]="safeUrl" 
+      frameborder="0" 
+      class="web-content-iframe"
+      title="Contenido web"
+      sandbox="allow-scripts allow-popups allow-forms"
+      loading="lazy">
+    </iframe>
+  </div>
+</div> 
