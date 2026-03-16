@@ -1,0 +1,159 @@
+name: 📦 02 - ARTIFACTS - Package and Upload to S3
+
+on:
+  workflow_run:
+    workflows: ["🧪 01 - CI - Continuous Integration"]
+    types:
+      - completed
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Build Environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  package-and-upload:
+    name: 📦 Package Artifacts and Upload to S3
+    runs-on: ubuntu-latest
+    environment: dev
+    if: (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: 🔄 Checkout Code (for deployment info)
+        uses: actions/checkout@v4
+
+      - name: 🎯 Set Environment Variables
+        run: |
+          echo "BUILD_VERSION=build-$(date +%Y%m%d-%H%M%S)-$(echo $GITHUB_SHA | cut -c1-8)" >> $GITHUB_ENV
+          echo "🏷️ Build version: build-$(date +%Y%m%d-%H%M%S)-$(echo $GITHUB_SHA | cut -c1-8)"
+          
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "WORKFLOW_RUN_ID=${{ github.event.workflow_run.id }}" >> $GITHUB_ENV
+            echo "📋 Using workflow run ID: ${{ github.event.workflow_run.id }}"
+          else
+            echo "WORKFLOW_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+            echo "📋 Using current run ID: ${{ github.run_id }}"
+          fi
+
+      - name: ⚙️ Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔍 Check Available Artifacts
+        run: |
+          echo "🔍 Checking available artifacts for workflow run: ${{ env.WORKFLOW_RUN_ID }}"
+          
+          # List artifacts using GitHub API
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ env.WORKFLOW_RUN_ID }}/artifacts" \
+               | jq '.artifacts[] | {name: .name, expired: .expired, created_at: .created_at}'
+
+      - name: 📥 Download Backend Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build
+          path: ./backend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.WORKFLOW_RUN_ID }}
+        continue-on-error: true
+        id: download-backend
+
+      - name: 📥 Download Frontend Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: ./frontend-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.WORKFLOW_RUN_ID }}
+        continue-on-error: true
+        id: download-frontend
+
+      - name: ✅ Verify Downloads
+        run: |
+          echo "🔍 Verifying artifact downloads..."
+          
+          if [ "${{ steps.download-backend.outcome }}" = "success" ]; then
+            echo "✅ Backend artifacts downloaded successfully"
+            ls -la ./backend-artifacts/
+          else
+            echo "❌ Backend artifacts download failed"
+            exit 1
+          fi
+          
+          if [ "${{ steps.download-frontend.outcome }}" = "success" ]; then
+            echo "✅ Frontend artifacts downloaded successfully"
+            ls -la ./frontend-artifacts/
+          else
+            echo "❌ Frontend artifacts download failed"
+            exit 1
+          fi
+
+      - name: 📦 Package Backend Artifacts
+        run: |
+          echo "📦 Creating backend.zip..."
+          
+          # Create backend archive directly
+          cd backend-artifacts
+          zip -r ../backend.zip .
+          cd ..
+          
+          echo "📊 Backend package created: $(du -sh backend.zip)"
+
+      - name: 📦 Package Frontend Artifacts
+        run: |
+          echo "📦 Creating frontend.zip..."
+          
+          # Create frontend archive directly
+          cd frontend-artifacts
+          zip -r ../frontend.zip .
+          cd ..
+          
+          echo "📊 Frontend package created: $(du -sh frontend.zip)"
+
+      - name: ☁️ Upload Backend to S3
+        run: |
+          echo "☁️ Uploading backend.zip to S3..."
+          
+          # Upload latest backend (overwrites previous)
+          aws s3 cp backend.zip "s3://${{ secrets.AWS_S3_BUCKET }}/deployments/backend.zip"
+          
+          echo "✅ Backend upload completed!"
+
+      - name: ☁️ Upload Frontend to S3
+        run: |
+          echo "☁️ Uploading frontend.zip to S3..."
+          
+          # Upload latest frontend (overwrites previous)
+          aws s3 cp frontend.zip "s3://${{ secrets.AWS_S3_BUCKET }}/deployments/frontend.zip"
+          
+          echo "✅ Frontend upload completed!"
+
+      - name: 📊 Build Summary
+        run: |
+          echo "## 📦 Artifact Packages Created!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Package Details:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.BUILD_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: $GITHUB_REF_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Source**: Downloaded from CI artifacts (Run ID: ${{ env.WORKFLOW_RUN_ID }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 S3 Artifacts (Latest Only):" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend**: \`s3://${{ secrets.AWS_S3_BUCKET }}/deployments/backend.zip\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend**: \`s3://${{ secrets.AWS_S3_BUCKET }}/deployments/frontend.zip\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Ready for Deployment:" >> $GITHUB_STEP_SUMMARY
+          echo "Use the **DEPLOY** workflow to deploy these packages to EC2." >> $GITHUB_STEP_SUMMARY

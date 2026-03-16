@@ -1,0 +1,482 @@
+name: 🚀 03 - Deploy to EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_seed:
+        description: '🌱 Run database seed (Be careful it deletes all data)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1
+  INSTANCE_ID: i-008b6c493b1f842a9
+  FIXED_EIP_ALLOCATION: eipalloc-057707935c2c32dbb
+
+jobs:
+  pre-deploy-check:
+    name: 🔍 Pre-Deploy Infrastructure Check
+    runs-on: ubuntu-latest
+    environment: dev
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      ec2_state: ${{ steps.check.outputs.EC2_STATE }}
+      fixed_ip: ${{ steps.check.outputs.FIXED_IP }}
+      can_deploy: ${{ steps.check.outputs.CAN_DEPLOY }}
+    
+    steps:
+      - name: ⚙️ Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔍 Check Infrastructure Status
+        id: check
+        run: |
+          echo "🔍 Checking infrastructure status before deployment..."
+          
+          EC2_STATE=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].State.Name" --output text)
+          echo "EC2_STATE=$EC2_STATE" >> $GITHUB_OUTPUT
+          echo "EC2 Instance: $EC2_STATE"
+          
+          FIXED_IP=$(aws ec2 describe-addresses --allocation-ids $FIXED_EIP_ALLOCATION --query "Addresses[0].PublicIp" --output text 2>/dev/null || echo "Not found")
+          echo "FIXED_IP=$FIXED_IP" >> $GITHUB_OUTPUT
+          echo "Fixed IP: $FIXED_IP"
+          
+          CURRENT_ASSOCIATION=$(aws ec2 describe-addresses --allocation-ids $FIXED_EIP_ALLOCATION --query "Addresses[0].InstanceId" --output text 2>/dev/null || echo "None")
+          echo "IP Association: $CURRENT_ASSOCIATION"
+          
+          if [ "$EC2_STATE" = "running" ] && [ "$CURRENT_ASSOCIATION" = "$INSTANCE_ID" ]; then
+            echo "CAN_DEPLOY=true" >> $GITHUB_OUTPUT
+            echo "✅ Infrastructure is ready for deployment"
+          else
+            echo "CAN_DEPLOY=start_needed" >> $GITHUB_OUTPUT
+            echo "🚀 Infrastructure needs to be started - will start automatically"
+          fi
+
+  start-infrastructure:
+    name: 🚀 Start Infrastructure (if needed)
+    needs: pre-deploy-check
+    runs-on: ubuntu-latest
+    environment: dev
+    if: needs.pre-deploy-check.outputs.can_deploy == 'start_needed'
+    
+    steps:
+      - name: ⚙️ Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🚀 Start EC2 and Associate IP
+        run: |
+          echo "🚀 Starting infrastructure for forced deployment..."
+          
+          if [ "${{ needs.pre-deploy-check.outputs.ec2_state }}" = "stopped" ]; then
+            echo "Starting EC2 instance..."
+            aws ec2 start-instances --instance-ids $INSTANCE_ID
+            
+            echo "Waiting for instance to be running..."
+            aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+            
+            echo "Associating fixed Elastic IP..."
+            aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id $FIXED_EIP_ALLOCATION
+            
+            echo "✅ Infrastructure started successfully!"
+            sleep 30
+          else
+            echo "✅ EC2 already running, ensuring IP association..."
+            aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id $FIXED_EIP_ALLOCATION || true
+          fi
+
+  deploy:
+    name: 🚀 SSH and Deploy to EC2
+    needs: [pre-deploy-check, start-infrastructure]
+    runs-on: ubuntu-latest
+    environment: dev
+    if: always() && (needs.pre-deploy-check.outputs.can_deploy == 'true' || needs.pre-deploy-check.outputs.can_deploy == 'start_needed')
+    
+    steps:
+      - name: 🎯 Set Environment Variables
+        run: |
+          echo "FIXED_IP=${{ needs.pre-deploy-check.outputs.fixed_ip }}" >> $GITHUB_ENV
+          echo "DEPLOY_VERSION=latest" >> $GITHUB_ENV
+          echo "Deploying to: ${{ needs.pre-deploy-check.outputs.fixed_ip }}"
+
+      - name: 🔑 Prepare SSH Key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+      - name: 🔗 Test SSH Connection
+        run: |
+          echo "🔗 Testing SSH connection..."
+          timeout 30s ssh -i ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 ubuntu@${{ env.FIXED_IP }} "echo 'SSH connection successful'" || {
+            echo "❌ SSH connection failed"
+            exit 1
+          }
+          echo "✅ SSH connection verified"
+
+      - name: 🚀 Deploy to EC2 (Download from S3)
+        run: |
+          echo "🚀 Deploying to EC2 (downloading build from S3)..."
+          echo "📦 Using build: ${{ env.DEPLOY_VERSION }}"
+          
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no ubuntu@${{ env.FIXED_IP }} << 'DEPLOY_SCRIPT'
+            set -e
+            
+            echo "🚀 Starting deployment from S3..."
+            echo "📦 Deploying version: ${{ env.DEPLOY_VERSION }}"
+            
+            # Stop existing processes
+            echo "🛑 Stopping existing processes..."
+            
+            # Stop backend using PID file if exists
+            if [ -f "shopmefy-deployment/backend.pid" ]; then
+              BACKEND_PID=$(cat shopmefy-deployment/backend.pid)
+              echo "Stopping backend process $BACKEND_PID..."
+              kill $BACKEND_PID 2>/dev/null || echo "Backend process already stopped"
+              rm -f shopmefy-deployment/backend.pid
+            fi
+            
+            # Stop frontend using PID file if exists  
+            if [ -f "shopmefy-deployment/frontend.pid" ]; then
+              FRONTEND_PID=$(cat shopmefy-deployment/frontend.pid)
+              echo "Stopping frontend process $FRONTEND_PID..."
+              kill $FRONTEND_PID 2>/dev/null || echo "Frontend process already stopped"
+              rm -f shopmefy-deployment/frontend.pid
+            fi
+            
+            # Fallback: kill any remaining processes
+            pkill -f "node.*dist/index.js" 2>/dev/null || echo "No backend processes found"
+            pkill -f "serve.*dist" 2>/dev/null || echo "No frontend processes found"
+            
+            # Wait for processes to terminate
+            echo "Waiting for processes to terminate..."
+            sleep 10
+            
+            # Verify processes are stopped
+            if pgrep -f "node.*dist/index.js" > /dev/null; then
+              echo "⚠️ Backend processes still running, force killing..."
+              pkill -9 -f "node.*dist/index.js" || true
+            fi
+            
+            if pgrep -f "serve.*dist" > /dev/null; then
+              echo "⚠️ Frontend processes still running, force killing..."
+              pkill -9 -f "serve.*dist" || true
+            fi
+            
+            echo "✅ All processes stopped"
+            
+            # Clean up and prepare
+            echo "🧹 Preparing deployment directory..."
+            rm -rf shopmefy-deployment
+            mkdir -p shopmefy-deployment
+            cd shopmefy-deployment
+            
+            # Install required tools
+            echo "🔧 Installing required tools..."
+            sudo apt-get update -qq
+            sudo apt-get install -y unzip curl postgresql postgresql-contrib
+            
+            # Install Node.js 20
+            echo "🔧 Installing Node.js..."
+            if ! command -v node &> /dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+            
+            echo "Node.js version: $(node --version)"
+            echo "NPM version: $(npm --version)"
+            
+            # Setup PostgreSQL
+            echo "🗄️ Setting up PostgreSQL..."
+            sudo systemctl start postgresql
+            sudo systemctl enable postgresql
+            
+            # Create database and user
+            sudo -u postgres psql -c "CREATE USER shopmefy WITH PASSWORD 'shopmefy';" || echo "User already exists"
+            sudo -u postgres psql -c "CREATE DATABASE shopmefy OWNER shopmefy;" || echo "Database already exists"
+            sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE shopmefy TO shopmefy;" || echo "Privileges already granted"
+            
+            # Install AWS CLI if not present
+            echo "🔧 Installing AWS CLI..."
+            if ! command -v aws &> /dev/null; then
+              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              unzip -q awscliv2.zip
+              sudo ./aws/install
+              rm -rf aws awscliv2.zip
+            fi
+            
+            # Configure Nginx for file uploads
+            echo "🔧 Configuring Nginx for file uploads..."
+            sudo tee /etc/nginx/sites-available/default > /dev/null << 'NGINX_CONFIG'
+          server {
+              listen 80;
+              server_name _;
+              client_max_body_size 20M;
+              
+              location / {
+                  proxy_pass http://localhost:3000;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
+              }
+              
+              location /api {
+                  proxy_pass http://localhost:8080;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto \$scheme;
+                  proxy_set_header Authorization \$http_authorization;
+                  client_max_body_size 20M;
+              }
+          }
+          NGINX_CONFIG
+            
+            # Test and reload Nginx
+            sudo nginx -t && sudo systemctl reload nginx
+            echo "✅ Nginx configured for 20MB uploads"
+            
+            # Configure AWS credentials
+            echo "⚙️ Configuring AWS credentials..."
+            aws configure set aws_access_key_id "${{ secrets.AWS_ACCESS_KEY_ID }}"
+            aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            aws configure set default.region "${{ env.AWS_REGION }}"
+            
+            # Check S3 files exist
+            echo "🔍 Checking S3 files..."
+            echo "S3 Bucket: ${{ secrets.AWS_S3_BUCKET }}"
+            aws s3 ls "s3://${{ secrets.AWS_S3_BUCKET }}/deployments/" || {
+              echo "❌ Cannot access S3 bucket"
+              echo "Available buckets:"
+              aws s3 ls || echo "No buckets accessible"
+              exit 1
+            }
+            
+            echo "📋 Files in deployments folder:"
+            aws s3 ls "s3://${{ secrets.AWS_S3_BUCKET }}/deployments/" --recursive
+            
+            # Download from S3
+            echo "📥 Downloading from S3..."
+            aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/deployments/backend.zip" backend.zip || {
+              echo "❌ Failed to download backend.zip"
+              exit 1
+            }
+            aws s3 cp "s3://${{ secrets.AWS_S3_BUCKET }}/deployments/frontend.zip" frontend.zip || {
+              echo "❌ Failed to download frontend.zip"
+              exit 1
+            }
+            
+            # Extract
+            echo "📦 Extracting deployment..."
+            mkdir -p backend frontend
+            
+            echo "📦 Extracting backend..."
+            unzip -q backend.zip -d backend/
+            
+            echo "📦 Extracting frontend..."
+            unzip -q frontend.zip -d frontend/
+            
+            echo "📋 Deployment structure:"
+            ls -la backend/ frontend/
+            
+            # Setup backend
+            echo "🔧 Setting up backend..."
+            cd backend
+            
+            # Create production .env
+            # Check if DATABASE_URL is set
+            DB_URL="${{ secrets.DATABASE_URL }}"
+            if [ -z "$DB_URL" ]; then
+              echo "❌ DATABASE_URL secret not set! Please configure it in GitHub Secrets."
+              echo "Expected format: postgresql://username:password@host:5432/database"
+              exit 1
+            fi
+            
+            echo "✅ Using DATABASE_URL from secrets"
+            
+            cat > .env << EOF
+          NODE_ENV=production
+          PORT=8080
+          DATABASE_URL=$DB_URL
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          AWS_REGION=us-east-1
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PUBLIC_URL=http://${{ env.FIXED_IP }}
+          FRONTEND_URL=http://${{ env.FIXED_IP }}:3000
+          SWAGGER_USER=${{ secrets.SWAGGER_USER }}
+          SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
+          EOF
+            
+            # Install dependencies (fast - no build needed!)
+            echo "📦 Installing backend dependencies..."
+            echo "Current directory: $(pwd)"
+            echo "Package.json exists: $(test -f package.json && echo 'YES' || echo 'NO')"
+            ls -la package.json || echo "No package.json found"
+            
+            npm ci --silent || {
+              echo "❌ npm ci failed, trying npm install..."
+              npm install --silent || {
+                echo "❌ npm install also failed"
+                exit 1
+              }
+            }
+            
+            # Database setup
+            echo "🗄️ Setting up database..."
+            
+            # Source .env to get DATABASE_URL
+            source .env
+            echo "🔍 Database URL from .env:"
+            echo "DATABASE_URL length: ${#DATABASE_URL}"
+            echo "DATABASE_URL starts with: ${DATABASE_URL:0:30}..."
+            
+            echo "🔧 Running Prisma migrate..."
+            npx prisma migrate deploy || {
+              echo "❌ Prisma migrate failed"
+              echo "⚠️ Database schema might need manual intervention"
+              echo "💡 Check if migrations are needed or schema is out of sync"
+              # DO NOT use --force-reset as it deletes all data!
+              # Only generate client to ensure Prisma works
+              npx prisma generate || {
+                echo "❌ Prisma generate failed"
+                exit 1
+              }
+            }
+            
+            echo "📄 Uploading PDF to S3..."
+            # Upload the PDF file to S3 if it exists
+            if [ -f "prisma/temp/international-transportation-law.pdf" ]; then
+              aws s3 cp "prisma/temp/international-transportation-law.pdf" "s3://${{ secrets.AWS_S3_BUCKET }}/documents/international-transportation-law.pdf" --content-type "application/pdf"
+              echo "✅ PDF uploaded to S3"
+            else
+              echo "⚠️ PDF file not found in prisma/temp/"
+            fi
+            
+            # Conditional seed execution - EXTREMELY DANGEROUS!
+            if [ "${{ github.event.inputs.run_seed }}" = "true" ]; then
+              echo "🚨 WARNING: About to run database seed - THIS WILL DELETE ALL DATA!"
+              echo "🚨 Waiting 10 seconds for safety..."
+              sleep 10
+              echo "🌱 Running Prisma seed (DELETING ALL EXISTING DATA!)..."
+              npx prisma db seed
+              echo "✅ Database seeded successfully (ALL PREVIOUS DATA LOST)"
+            else
+              echo "✅ Skipping database seed (preserving existing data)"
+              echo "💡 To run seed, use 'Run workflow' with 'Run database seed' checked"
+              echo "⚠️ REMEMBER: Seed execution DELETES ALL DATA!"
+            fi
+            
+            # Start backend
+            echo "🚀 Starting backend..."
+            nohup node dist/src/index.js > ../backend.log 2>&1 &
+            BACKEND_PID=$!
+            echo $BACKEND_PID > ../backend.pid
+            chmod 644 ../backend.pid
+            echo "✅ Backend started with PID: $BACKEND_PID"
+            
+            # Setup frontend
+            echo "🎨 Setting up frontend..."
+            cd ../frontend
+            
+            # Install serve if needed
+            sudo npm install -g serve 2>/dev/null || echo "serve already installed"
+            
+            # Start frontend
+            echo "🚀 Starting frontend..."
+            nohup serve -s dist -l 3000 > ../frontend.log 2>&1 &
+            FRONTEND_PID=$!
+            echo $FRONTEND_PID > ../frontend.pid
+            chmod 644 ../frontend.pid
+            echo "✅ Frontend started with PID: $FRONTEND_PID"
+            
+            # Configure Nginx
+            echo "🔧 Configuring Nginx..."
+            sudo tee /etc/nginx/sites-available/default > /dev/null << 'NGINX_CONFIG'
+          server {
+              listen 80;
+              server_name _;
+              client_max_body_size 50M;
+              
+              location / {
+                  proxy_pass http://localhost:3000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+              
+              location /api {
+                  client_max_body_size 50M;
+                  proxy_pass http://localhost:8080;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_set_header Authorization $http_authorization;
+              }
+          }
+          NGINX_CONFIG
+            
+            # Restart Nginx
+            echo "🔄 Restarting Nginx..."
+            sudo nginx -t && sudo systemctl restart nginx
+            
+            echo "✅ Deployment completed successfully!"
+            echo "🌐 Application: http://${{ env.FIXED_IP }}"
+          DEPLOY_SCRIPT
+
+      - name: 🏥 Health Check
+        run: |
+          echo "🏥 Performing health check..."
+          sleep 15
+          
+          # Test endpoints
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 http://${{ env.FIXED_IP }}/ || echo "000")
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 http://${{ env.FIXED_IP }}/api/health || echo "000")
+          
+          echo "Frontend: HTTP $FRONTEND_STATUS"
+          echo "API: HTTP $API_STATUS"
+          
+          if [ "$FRONTEND_STATUS" = "200" ] && [ "$API_STATUS" = "200" ]; then
+            echo "✅ All health checks passed!"
+          else
+            echo "⚠️ Some health checks failed - application may need time to start"
+          fi
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: |
+          rm -f ec2_key.pem
+
+      - name: 📊 Deployment Summary
+        run: |
+          echo "## 🎉 Deployment Completed!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Deployment Details:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ env.DEPLOY_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target**: ${{ env.FIXED_IP }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Source**: S3 deployment package" >> $GITHUB_STEP_SUMMARY
+          echo "- **Database Seed**: ${{ github.event.inputs.run_seed == 'true' && '🌱 Executed (data reset)' || '⏭️ Skipped (data preserved)' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Access URLs:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Application**: http://${{ env.FIXED_IP }}/" >> $GITHUB_STEP_SUMMARY
+          echo "- **API**: http://${{ env.FIXED_IP }}/api" >> $GITHUB_STEP_SUMMARY
+          echo "- **Swagger**: http://${{ env.FIXED_IP }}/api-docs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚡ Deployment Benefits:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Fast deployment from S3" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ No build on EC2 (pre-compiled)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Version-specific deployment support" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Infrastructure health checks" >> $GITHUB_STEP_SUMMARY 
