@@ -1,0 +1,199 @@
+# US-004: API Key Management
+
+[Trello Card](https://trello.com/c/XHnl3bU5)
+
+
+
+## Description
+As a **user**, I want to manage my API key (check status, renew, revoke), so that I can maintain secure access to the IPFS gateway services.
+
+As an **administrator**, I want to revoke or reactivate user API keys, so that I can manage platform access and security.
+
+## Priority
+🟠 **High** - Essential for security and access control.
+
+## Difficulty
+⭐⭐⭐ Medium-High
+
+## Acceptance Criteria
+- [x] `POST /status` endpoint returns API key status (active, inactive, revoked)
+- [x] `POST /renew` endpoint generates a new API key for the user
+- [x] `POST /revoke` endpoint allows admin to revoke any API key
+- [x] `POST /reactivate` endpoint allows admin to reactivate revoked keys
+- [x] `POST /renew` requires authenticated user context (`Authorization: Bearer <api_key>` or valid session)
+- [x] `POST /renew` enforces step-up verification (one-time code from email or MFA) before key rotation
+- [x] Anonymous or email-only renewal requests are rejected (401/403)
+- [x] Admin-only endpoints validate admin privileges
+- [x] All actions are logged in AuditLog
+- [x] Email notification is sent on key renewal (future enhancement)
+- [x] Old API key is invalidated upon renewal
+
+## API Specifications
+
+### Check API Key Status
+```
+POST /status
+X-API-Key: ipfs_gw_xxxxxxxxxxxxx
+
+Response (200 OK):
+{
+    "status": 200,
+    "data": {
+        "api_key_status": "active",
+        "created_at": "2026-01-15T10:30:00Z",
+        "last_renewed_at": "2026-01-20T14:00:00Z",
+        "usage_count": 150
+    }
+}
+```
+
+### Renew API Key
+```
+POST /renew
+Authorization: Bearer ipfs_gw_xxxxxxxxxxxxx
+Content-Type: application/json
+
+Request:
+{
+    "verification_code": "123456"
+}
+
+Response (200 OK):
+{
+    "status": 200,
+    "message": "New API key generated",
+    "data": {
+        "api_key": "ipfs_gw_new_xxxxxxxxxxxxx"
+    }
+}
+```
+
+### Step-up Verification Flow for Renewal
+```
+1) Authenticated user requests step-up code
+POST /renew/challenge
+Authorization: Bearer ipfs_gw_xxxxxxxxxxxxx
+
+Response (202 Accepted):
+{
+    "status": 202,
+    "message": "Verification code sent"
+}
+
+2) Authenticated user confirms renewal with step-up factor
+POST /renew
+Authorization: Bearer ipfs_gw_xxxxxxxxxxxxx
+Content-Type: application/json
+
+Request:
+{
+    "verification_code": "123456"
+}
+
+Response (200 OK):
+{
+    "status": 200,
+    "message": "New API key generated",
+    "data": {
+        "api_key": "ipfs_gw_new_xxxxxxxxxxxxx"
+    }
+}
+
+Rejected examples:
+- Missing Authorization/session -> 401 Unauthorized
+- Email-only request payload without authenticated context -> 403 Forbidden
+```
+
+### Revoke API Key (Admin Only)
+```
+POST /revoke
+X-API-Key: admin_api_key
+Content-Type: application/json
+
+Request:
+{
+    "user_email": "user@example.com"
+}
+
+Response (200 OK):
+{
+    "status": 200,
+    "message": "API key revoked successfully"
+}
+```
+
+### Reactivate API Key (Admin Only)
+```
+POST /reactivate
+X-API-Key: admin_api_key
+Content-Type: application/json
+
+Request:
+{
+    "user_email": "user@example.com"
+}
+
+Response (200 OK):
+{
+    "status": 200,
+    "message": "API key reactivated successfully"
+}
+```
+
+## Technical Notes
+- Implement API key authentication as a decorator
+- Admin validation through `is_admin` flag on User model
+- Use secure token generation for new API keys
+- Implement proper authorization checks
+- Require step-up verification for sensitive credential rotation (`POST /renew`)
+- Support authenticated renewals via API key bearer auth or server session
+- Log renew challenge and confirm events in AuditLog with outcome/status
+
+## Dependencies
+- US-001: Project Setup and Configuration
+- US-002: Database Models and Migrations
+- US-003: User Registration and Authentication
+
+## Estimated Effort
+8 hours
+
+## Completion Status
+- [x] 100% - Completed
+
+## Workflow Diagram
+```mermaid
+flowchart TD
+    subgraph Status Check
+        A1[POST /status] --> B1{Valid API Key?}
+        B1 -->|No| C1[Return 401]
+        B1 -->|Yes| D1[Return Status]
+    end
+    
+    subgraph Renew
+        A2[POST /renew/challenge + Auth] --> B2{Authenticated User?}
+        B2 -->|No| C2[Return 401]
+        B2 -->|Yes| D2[Send One-Time Code]
+        D2 --> E2[POST /renew + Code + Auth]
+        E2 --> F2{Valid Step-up Factor?}
+        F2 -->|No| G2[Return 403]
+        F2 -->|Yes| H2[Generate New Key]
+        H2 --> I2[Invalidate Old Key]
+        I2 --> J2[Return New Key]
+    end
+    
+    subgraph Admin Actions
+        A3[POST /revoke or /reactivate] --> B3{Valid Admin Key?}
+        B3 -->|No| C3[Return 403]
+        B3 -->|Yes| D3[Update User Status]
+        D3 --> E3[Log Action]
+        E3 --> F3[Return Success]
+    end
+```
+
+## Related Tasks
+- [TASK-US-004-01: Create Status Endpoint](../../tasks/backend/TASK-US-004-01-create-status-endpoint.md)
+- [TASK-US-004-02: Create Renew Endpoint](../../tasks/backend/TASK-US-004-02-create-renew-endpoint.md)
+- [TASK-US-004-03: Create Revoke Endpoint](../../tasks/backend/TASK-US-004-03-create-revoke-endpoint.md)
+- [TASK-US-004-04: Create Reactivate Endpoint](../../tasks/backend/TASK-US-004-04-create-reactivate-endpoint.md)
+- [TASK-US-004-05: Implement Auth Decorator](../../tasks/backend/TASK-US-004-05-implement-auth-decorator.md)
+- [TASK-US-004-06: Implement Admin Decorator](../../tasks/backend/TASK-US-004-06-implement-admin-decorator.md)

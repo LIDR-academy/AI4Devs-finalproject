@@ -1,0 +1,168 @@
+"""API key renewal endpoints with step-up verification."""
+
+import arrow
+from flask import Blueprint, jsonify, request
+from sqlmodel import Session, select
+
+from core import configured_limit, get_engine
+from core.auth.decorators import get_current_user, require_api_key
+from core.common.exceptions import AuthenticationError, ValidationError
+from core.common.validators import validate_verification_code
+from core.services.audit_service import add_audit_log, queue_audit_log
+from core.users.models import User
+from core.users.verification import generate_verification_code, verify_code
+
+
+def register_routes(bp: Blueprint) -> None:
+	"""Register API key renewal endpoints."""
+	
+	@bp.post("/renew/challenge")
+	@configured_limit("RATE_LIMIT_RENEW")
+	@require_api_key
+	def renew_challenge():
+		"""Initiate API key renewal verification challenge.
+		---
+		tags:
+		  - Users
+		summary: Request renewal challenge
+		description: Generate a short-lived verification code used to confirm API key renewal.
+		produces:
+		  - application/json
+		responses:
+		  202:
+		    description: Verification challenge generated
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		        - type: object
+		          properties:
+		            status:
+		              type: integer
+		              example: 202
+		            message:
+		              type: string
+		              example: Verification code sent
+		  401:
+		    description: Missing or invalid API key
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
+		"""
+		user = get_current_user()
+		
+		# Generate and send verification code
+		code = generate_verification_code(user.id)
+		
+		# TODO: Replace with email delivery once SMTP is configured.
+		# Until then, return the code directly in the response so the
+		# frontend can display it to the user.
+		print(f"Verification code for {user.email}: {code}")
+		queue_audit_log(user_id=user.id, action="api_key_renew_challenge_requested", details={"status": "sent"})
+		
+		return jsonify({
+			"status": 202,
+			"message": "Verification code sent",
+			"data": {"verification_code": code},
+		}), 202
+	
+	@bp.post("/renew")
+	@configured_limit("RATE_LIMIT_RENEW")
+	@require_api_key
+	def renew():
+		"""Renew API key using verification code.
+		---
+		tags:
+		  - Users
+		summary: Renew API key
+		description: Rotate the current API key after validating the renewal verification code.
+		consumes:
+		  - application/json
+		produces:
+		  - application/json
+		parameters:
+		  - in: body
+		    name: body
+		    required: true
+		    schema:
+		      $ref: '#/definitions/VerificationRequest'
+		responses:
+		  200:
+		    description: API key renewed successfully
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		        - type: object
+		          properties:
+		            data:
+		              type: object
+		              properties:
+		                api_key:
+		                  type: string
+		                  example: ipfs_gw_abcdef0123456789
+		  401:
+		    description: Invalid API key or verification code
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  422:
+		    description: Invalid request payload
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
+		"""
+		user = get_current_user()
+		data = request.get_json(silent=True)
+		if not isinstance(data, dict):
+			raise ValidationError("Invalid JSON payload")
+		
+		if "verification_code" not in data:
+			raise ValidationError("Missing verification_code in request body")
+		
+		verification_code = validate_verification_code(str(data["verification_code"]))
+		
+		with Session(get_engine()) as session:
+			# Verify step-up code
+			if not verify_code(user.id, verification_code):
+				# Log failed attempt
+				add_audit_log(
+					session,
+					user_id=user.id,
+					action="api_key_renew_failed",
+					details={"reason": "invalid_verification_code"},
+				)
+				session.commit()
+				raise AuthenticationError("Invalid or expired verification code")
+			
+			# Get fresh user from database
+			db_user = session.exec(
+				select(User).where(User.id == user.id)
+			).first()
+			
+			if not db_user:
+				raise AuthenticationError("User not found")
+			
+			# Generate new API key
+			new_api_key = db_user.renew_api_key()
+			session.add(db_user)
+			
+			# Log successful renewal
+			add_audit_log(session, user_id=db_user.id, action="api_key_renewed", details={"status": "success"})
+			session.commit()
+			
+			return jsonify({
+				"status": 200,
+				"message": "New API key generated",
+				"data": {
+					"api_key": new_api_key
+				}
+			}), 200
+

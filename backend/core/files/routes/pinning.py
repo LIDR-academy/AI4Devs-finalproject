@@ -1,0 +1,198 @@
+"""File pinning routes."""
+
+import json
+
+from flask import Blueprint, jsonify
+from sqlmodel import Session, select
+
+from core import configured_limit, get_engine
+from core.auth.decorators import get_current_user, require_api_key
+from core.files.models import File
+from core.files.validators import validate_cid
+from core.services.audit_service import queue_audit_log
+from core.tasks.pinning_tasks import pin_content_async, unpin_content_async
+
+
+def _get_file_by_cid(session: Session, cid: str) -> File | None:
+	"""Return non-deleted file by CID."""
+	return session.exec(
+		select(File).where(
+			File.cid == cid,
+			File.deleted_at == None,
+		)
+	).first()
+
+
+def register_routes(bp: Blueprint) -> None:
+	"""Register async pinning endpoints."""
+
+	@bp.post("/pin/<string:cid>")
+	@configured_limit("RATE_LIMIT_PINNING")
+	@require_api_key
+	def pin_file(cid: str):
+		"""Queue asynchronous pin operation for a CID.
+		---
+		tags:
+		  - Files
+		summary: Pin file content
+		description: Queue a background task to pin content for the authenticated owner.
+		produces:
+		  - application/json
+		parameters:
+		  - in: path
+		    name: cid
+		    type: string
+		    required: true
+		    example: bafybeigdyrzt5x6z6xj5ir3f6m42cdbw2m5g3m6twjv7mmyr4y6nblfuca
+		responses:
+		  202:
+		    description: Pinning queued
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		  401:
+		    description: Invalid API key
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  403:
+		    description: Access denied
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  404:
+		    description: Content not found
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  409:
+		    description: Content already pinned
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
+		"""
+		user = get_current_user()
+		cid = validate_cid(cid)
+		with Session(get_engine()) as session:
+			db_file = _get_file_by_cid(session, cid)
+			if db_file is None:
+				return jsonify({"status": 404, "message": "Content not found"}), 404
+
+			if db_file.user_id != user.id:
+				queue_audit_log(
+					user_id=user.id,
+					action="file_pin_forbidden",
+					resource_type="file",
+					resource_id=db_file.id,
+					details={"cid": cid, "reason": "ownership_mismatch"},
+				)
+				return jsonify({"status": 403, "message": "Access denied to this content"}), 403
+
+			if db_file.pinned:
+				return jsonify({"status": 409, "message": "Content is already pinned"}), 409
+
+			task = getattr(pin_content_async, "delay")(user.id, cid)
+			queue_audit_log(
+				user_id=user.id,
+				action="file_pin_queued",
+				resource_type="file",
+				resource_id=db_file.id,
+				details={"cid": cid, "task_id": str(task.id)},
+			)
+		return jsonify(
+			{
+				"status": 202,
+				"message": "Pinning request queued",
+				"data": {
+					"task_id": str(task.id),
+					"status_url": f"/api/v1/tasks/{task.id}/status",
+					"cid": cid,
+				},
+			}
+		), 202
+
+	@bp.post("/unpin/<string:cid>")
+	@configured_limit("RATE_LIMIT_PINNING")
+	@require_api_key
+	def unpin_file(cid: str):
+		"""Queue asynchronous unpin operation for a CID.
+		---
+		tags:
+		  - Files
+		summary: Unpin file content
+		description: Queue a background task to unpin content for the authenticated owner.
+		produces:
+		  - application/json
+		parameters:
+		  - in: path
+		    name: cid
+		    type: string
+		    required: true
+		    example: bafybeigdyrzt5x6z6xj5ir3f6m42cdbw2m5g3m6twjv7mmyr4y6nblfuca
+		responses:
+		  202:
+		    description: Unpinning queued
+		    schema:
+		      allOf:
+		        - $ref: '#/definitions/SuccessEnvelope'
+		  401:
+		    description: Invalid API key
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  403:
+		    description: Access denied
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  404:
+		    description: Content not found
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		  409:
+		    description: Content already unpinned
+		  429:
+		    description: Rate limit exceeded
+		    schema:
+		      $ref: '#/definitions/ErrorEnvelope'
+		security:
+		  - ApiKeyAuth: []
+		"""
+		user = get_current_user()
+		cid = validate_cid(cid)
+		with Session(get_engine()) as session:
+			db_file = _get_file_by_cid(session, cid)
+			if db_file is None:
+				return jsonify({"status": 404, "message": "Content not found"}), 404
+
+			if db_file.user_id != user.id:
+				queue_audit_log(
+					user_id=user.id,
+					action="file_unpin_forbidden",
+					resource_type="file",
+					resource_id=db_file.id,
+					details={"cid": cid, "reason": "ownership_mismatch"},
+				)
+				return jsonify({"status": 403, "message": "Access denied to this content"}), 403
+
+			if not db_file.pinned:
+				return jsonify({"status": 409, "message": "Content is already unpinned"}), 409
+
+			task = getattr(unpin_content_async, "delay")(user.id, cid)
+			queue_audit_log(
+				user_id=user.id,
+				action="file_unpin_queued",
+				resource_type="file",
+				resource_id=db_file.id,
+				details={"cid": cid, "task_id": str(task.id)},
+			)
+		return jsonify(
+			{
+				"status": 202,
+				"message": "Unpinning request queued",
+				"data": {
+					"task_id": str(task.id),
+					"status_url": f"/api/v1/tasks/{task.id}/status",
+					"cid": cid,
+				},
+			}
+		), 202
+

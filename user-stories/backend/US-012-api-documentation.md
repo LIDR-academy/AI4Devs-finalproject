@@ -1,0 +1,75 @@
+# US-012: API Documentation with Swagger
+
+[Trello Card](https://trello.com/c/GysUujHm)
+
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/12)
+
+
+## Description
+As a **developer**, I want comprehensive API documentation using Swagger/OpenAPI, so that API consumers can easily understand and integrate with the IPFS gateway.
+
+## Priority
+🟡 **Medium** - Important for developer experience.
+
+## Difficulty
+⭐⭐ Medium
+
+## Acceptance Criteria
+- [x] Swagger UI is accessible at `/swagger` endpoint
+- [x] All API endpoints are documented
+- [x] Request/response schemas are defined
+- [x] Authentication method is documented
+- [x] Example requests and responses are provided
+- [x] Error responses are documented
+- [x] API versioning is reflected in documentation
+- [x] Interactive testing is available via Swagger UI
+- [x] OpenAPI 3.0 specification is exported as JSON
+
+## Documentation Sections
+1. **Authentication**: How to use API keys
+2. **User Management**: Registration, status, renew, revoke
+3. **File Operations**: Upload, retrieve
+4. **Content Pinning**: Pin, unpin
+5. **Admin Operations**: Audit logs, user management
+6. **Error Handling**: Standard error responses
+
+## Technical Notes
+- Use Flasgger for Swagger integration [https://github.com/flasgger/flasgger]
+- Define schemas using Pydantic/Marshmallow
+- Include rate limit information
+- Document async operation patterns
+- Version API endpoints (v1)
+
+## Dependencies
+- US-001: Project Setup and Configuration
+- US-003 to US-011: All API endpoints
+
+## Estimated Effort
+4 hours
+
+## Completion Status
+- [x] 100% - Completed
+
+## Workflow Diagram
+```mermaid
+flowchart TD
+    A[Flask App] --> B[Flasgger Init]
+    B --> C[Load OpenAPI Specs]
+    C --> D[/swagger UI]
+    C --> E[/swagger.json]
+    
+    subgraph Documentation
+        F[Route Decorators] --> G[Docstrings]
+        G --> H[Schema Definitions]
+        H --> I[Examples]
+    end
+    
+    F --> C
+```
+
+## Related Tasks
+- [TASK-US-012-01: Configure Flasgger](../../tasks/backend/TASK-US-012-01-configure-flasgger.md)
+- [TASK-US-012-02: Document Auth Endpoints](../../tasks/backend/TASK-US-012-02-document-auth-endpoints.md)
+- [TASK-US-012-03: Document File Endpoints](../../tasks/backend/TASK-US-012-03-document-file-endpoints.md)
+- [TASK-US-012-04: Document Admin Endpoints](../../tasks/backend/TASK-US-012-04-document-admin-endpoints.md)
+- [TASK-US-012-05: Add Examples and Schemas](../../tasks/backend/TASK-US-012-05-add-examples.md)

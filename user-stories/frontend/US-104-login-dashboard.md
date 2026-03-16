@@ -1,0 +1,124 @@
+# US-104: User Login and Dashboard
+
+[Trello Card](https://trello.com/c/PSgruFvw)
+
+
+
+## Description
+As a **registered user**, I want to log in to my account and access a dashboard, so that I can view my API key status, usage statistics, and manage my account.
+
+## Priority
+🔴 **Critical** - Core user experience.
+
+## Difficulty
+⭐⭐⭐ Medium-High
+
+## Acceptance Criteria
+- [x] Login form accepts API key for authentication
+- [x] Dashboard displays user email and account status
+- [x] API key status is shown (active, inactive, revoked)
+- [x] Usage statistics are displayed (file count, storage used)
+- [x] Option to renew API key is available
+- [x] Option to revoke own API key (with confirmation)
+- [x] List of recently uploaded files section is implemented (data source pending backend endpoint)
+- [x] Session persistence with secure storage
+- [x] Logout functionality clears session
+- [x] Protected routes redirect to login if not authenticated
+
+## Dashboard Sections
+1. **Account Overview**: Email, status, created date
+2. **API Key Status**: Current status, last renewed, actions
+3. **Usage Statistics**: Files uploaded, storage used, requests made
+4. **Recent Files**: Last 5-10 uploaded files with quick actions
+5. **Quick Actions**: Upload, Retrieve, View All Files
+
+## Technical Notes
+- Never store API/session secrets in localStorage; use backend-issued auth cookies with `HttpOnly`, `Secure`, and `SameSite` attributes, and when API keys are required for backend calls, route through a server-side proxy or token-exchange flow instead of exposing long-lived secrets to browser storage.
+- Implement auth context/provider for state management
+- Use React Query or SWR for data fetching and caching
+- Implement optimistic UI updates
+- Add session timeout handling
+
+## Dependencies
+- US-101: Frontend Project Setup
+- US-102: Home Page and Navigation
+- US-004: API Key Management (Backend)
+
+## Estimated Effort
+8 hours
+
+## Pull Request
+- [PR #17: US-104 implement login dashboard with secure session flow](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/17)
+
+## Completion Status
+- [x] 100% - Implemented (frontend scope)
+
+## Implementation Notes
+- Session persistence is implemented with `HttpOnly` cookie storage via Next.js route handlers (`/api/auth/session`) to avoid storing secrets in browser storage.
+- API key protected dashboard data is fetched through server-side proxy route handlers (`/api/dashboard/overview`, `/api/auth/renew`) to avoid exposing long-lived credentials in browser storage.
+- `Recent Files` and `self-service revoke` UI paths are implemented; backend currently lacks a dedicated user-scoped recent-files listing endpoint and non-admin revoke endpoint, so the dashboard shows clear fallback messaging.
+
+## Workflow Diagram
+```mermaid
+flowchart TD
+    A[Login Page] --> B[Enter API Key]
+    B --> C[Validate with Backend]
+    C --> D{Valid?}
+    D -->|No| E[Show Error]
+    E --> B
+    D -->|Yes| F[Store Session]
+    F --> G[Dashboard]
+    
+    subgraph Dashboard
+        H[Account Overview]
+        I[API Key Status]
+        J[Usage Stats]
+        K[Recent Files]
+        L[Quick Actions]
+    end
+    
+    G --> H
+    G --> I
+    G --> J
+    G --> K
+    G --> L
+    
+    M[Logout] --> N[Clear Session]
+    N --> A
+```
+
+## Wireframe
+```
++--------------------------------------------------+
+|  Dashboard                           [Logout]    |
++--------------------------------------------------+
+|                                                  |
+|  Welcome, user@example.com                       |
+|                                                  |
+|  +----------------+  +-------------------------+ |
+|  | API Key Status |  | Usage Statistics        | |
+|  | ✅ Active      |  | Files: 42               | |
+|  | Last renewed:  |  | Storage: 256 MB         | |
+|  | 2026-01-15     |  | Requests: 1,250         | |
+|  | [Renew] [Revoke]|  +-------------------------+ |
+|  +----------------+                              |
+|                                                  |
+|  Recent Files                      [View All →] |
+|  +--------------------------------------------+ |
+|  | document.pdf    | Qm... | 2026-01-29 | 📥  | |
+|  | image.png       | Qm... | 2026-01-28 | 📥  | |
+|  | data.json       | Qm... | 2026-01-27 | 📥  | |
+|  +--------------------------------------------+ |
+|                                                  |
+|  Quick Actions                                   |
+|  [Upload File]  [Retrieve by CID]  [Manage Pins]|
+|                                                  |
++--------------------------------------------------+
+```
+
+## Related Tasks
+- [TASK-US-104-01: Create Login Form](../../tasks/frontend/TASK-US-104-01-create-login-form.md)
+- [TASK-US-104-02: Implement Auth Context](../../tasks/frontend/TASK-US-104-02-implement-auth-context.md)
+- [TASK-US-104-03: Create Dashboard Layout](../../tasks/frontend/TASK-US-104-03-create-dashboard-layout.md)
+- [TASK-US-104-04: Create Stats Components](../../tasks/frontend/TASK-US-104-04-create-stats-components.md)
+- [TASK-US-104-05: Implement Session Management](../../tasks/frontend/TASK-US-104-05-implement-session-management.md)

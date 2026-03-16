@@ -1,0 +1,2 @@
+"""Users routes package."""
+

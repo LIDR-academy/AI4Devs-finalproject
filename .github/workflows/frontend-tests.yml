@@ -1,0 +1,108 @@
+name: Frontend Tests
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main, feature/**]
+
+jobs:
+  frontend-unit-component:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit/component/a11y tests with coverage
+        run: npm run test:coverage
+
+      - name: Enforce minimum frontend coverage (82%)
+        env:
+          COVERAGE_MIN: "82"
+        run: |
+          node -e '
+          const fs = require("fs");
+          const min = Number(process.env.COVERAGE_MIN || 82);
+          const reportPath = "coverage/lcov.info";
+
+          if (!fs.existsSync(reportPath)) {
+            console.error(`Coverage report not found at ${reportPath}`);
+            process.exit(1);
+          }
+
+          const report = fs.readFileSync(reportPath, "utf8");
+          const linesFound = [...report.matchAll(/^LF:(\d+)$/gm)].reduce((sum, match) => sum + Number(match[1]), 0);
+          const linesHit = [...report.matchAll(/^LH:(\d+)$/gm)].reduce((sum, match) => sum + Number(match[1]), 0);
+
+          if (!linesFound) {
+            console.error("Coverage report contains no executable lines (LF=0)");
+            process.exit(1);
+          }
+
+          const lineCoverage = (linesHit / linesFound) * 100;
+          console.log(`Frontend line coverage: ${lineCoverage.toFixed(2)}% (minimum required: ${min}%)`);
+
+          if (lineCoverage < min) {
+            console.error(`Coverage gate failed: ${lineCoverage.toFixed(2)}% < ${min}%`);
+            process.exit(1);
+          }
+          '
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    needs: frontend-unit-component
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright e2e tests
+        run: npm run test:e2e

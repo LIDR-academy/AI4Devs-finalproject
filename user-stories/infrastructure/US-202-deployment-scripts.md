@@ -1,0 +1,100 @@
+# US-202: Deployment Scripts
+
+[Trello Card](https://trello.com/c/g32f84HI)
+[Pull Request](https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30)
+
+
+
+## Description
+As a **DevOps engineer**, I want CLI scripts (Bash and PowerShell) for managing Docker deployments, so that deployments can be automated and consistent across different platforms.
+
+## Priority
+🟡 **Medium** - Important for operations.
+
+## Difficulty
+⭐⭐⭐ Medium-High
+
+## Acceptance Criteria
+- [x] Bash script (`deploy.sh`) for Linux/macOS
+- [x] PowerShell script (`deploy.ps1`) for Windows
+- [x] Interactive menu with numbered options
+- [x] Environment selection (development, staging, production)
+- [x] List existing Docker images
+- [x] Build images with version tagging
+- [x] Rename/retag images
+- [x] Push images to Docker registry
+- [x] Deploy using docker-compose
+- [x] Run individual containers in detached mode
+- [x] View container logs
+- [x] Stop/restart services
+- [x] Input validation and error handling
+- [x] Colored output for better UX
+
+## Menu Options
+```
+===========================================
+  IPFS Gateway Deployment CLI
+===========================================
+
+Current Environment: development
+
+1. Select Environment
+2. List Images
+3. Build Images
+4. Tag/Rename Image
+5. Push to Registry
+6. Deploy Application
+7. Run Single Container
+8. View Logs
+9. Stop Services
+10. Restart Services
+0. Exit
+
+Enter choice:
+```
+
+## Technical Notes
+- Use consistent exit codes
+- Implement logging to deployment/logs/
+- Support dry-run mode
+- Handle interrupts gracefully (Ctrl+C)
+- Validate Docker/docker-compose availability
+- Support custom registry configuration
+
+## Dependencies
+- US-201: Docker Configuration
+
+## Estimated Effort
+8 hours
+
+## Completion Status
+- [ ] 0% - Not Started
+- [ ] 25% - In Progress
+- [ ] 50% - In Progress
+- [ ] 75% - In Progress
+- [x] 90% - Implementation Complete (final runtime checks pending in target OS/network)
+
+## Workflow Diagram
+```mermaid
+flowchart TD
+    A[Start Script] --> B{Docker Available?}
+    B -->|No| C[Error & Exit]
+    B -->|Yes| D[Show Menu]
+    D --> E[Get User Choice]
+    E --> F{Valid Choice?}
+    F -->|No| G[Show Error]
+    G --> D
+    F -->|Yes| H[Execute Command]
+    H --> I{Success?}
+    I -->|Yes| J[Show Success]
+    I -->|No| K[Show Error]
+    J --> D
+    K --> D
+```
+
+## Related Tasks
+- [TASK-US-202-01: Create Bash Script](../../tasks/infrastructure/TASK-US-202-01-create-bash-script.md)
+- [TASK-US-202-02: Create PowerShell Script](../../tasks/infrastructure/TASK-US-202-02-create-powershell-script.md)
+- [TASK-US-202-03: Implement Build Commands](../../tasks/infrastructure/TASK-US-202-03-implement-build-commands.md)
+- [TASK-US-202-04: Implement Deploy Commands](../../tasks/infrastructure/TASK-US-202-04-implement-deploy-commands.md)
+- [TASK-US-202-05: Add Logging](../../tasks/infrastructure/TASK-US-202-05-add-logging.md)
