@@ -1,134 +1,117 @@
-## Índice
+# 🚀 Genesis – Framework Empresarial de Desarrollo Fullstack
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+## 📘 Ficha del Proyecto
 
----
+### 🧭 Descripción General
+**Genesis** es un proyecto base de arquitectura empresarial diseñado para el **desarrollo ágil de aplicaciones fullstack modernas** con integración de **inteligencia artificial**.  
+Su objetivo es unificar la forma en que se crean, despliegan y mantienen las soluciones tecnológicas de la compañía, permitiendo iniciar cualquier nuevo desarrollo **desde el módulo de negocio** sin reconstruir la infraestructura técnica.
 
-## 0. Ficha del proyecto
-
-### **0.1. Tu nombre completo:**
-
-### **0.2. Nombre del proyecto:**
-
-### **0.3. Descripción breve del proyecto:**
-
-### **0.4. URL del proyecto:**
-
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
-
-### 0.5. URL o archivo comprimido del repositorio
-
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+Genesis sirve como un **punto de partida estructural, técnico y metodológico**, garantizando estándares de **calidad, seguridad, interoperabilidad y escalabilidad** en todos los productos desarrollados bajo su marco.
 
 ---
 
-## 1. Descripción general del producto
+### 🎯 Objetivos del Proyecto
 
-> Describe en detalle los siguientes aspectos del producto:
+#### Objetivo General
+Construir una **plataforma base (framework interno)** que permita el desarrollo modular, rápido y seguro de aplicaciones empresariales, integradas con el ecosistema de datos y servicios de la organización.
 
-### **1.1. Objetivo:**
-
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
-
-### **1.2. Características y funcionalidades principales:**
-
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
-
-### **1.3. Diseño y experiencia de usuario:**
-
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
-
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+#### Objetivos Específicos
+- Estandarizar la arquitectura técnica y de desarrollo en todos los proyectos.  
+- Reducir tiempos de inicio de nuevos desarrollos mediante módulos clonables.  
+- Integrar de forma nativa nuevos productos de negocio mediante IA.  
+- Centralizar la seguridad, autenticación y despliegue CI/CD.  
+- Promover la reutilización de componentes y la colaboración entre equipos.  
+- Facilitar la documentación y trazabilidad de todos los módulos de negocio.
 
 ---
 
-## 2. Arquitectura del Sistema
+### 🏗️ Alcance
 
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+Genesis cubre:
 
-
-### **2.2. Descripción de componentes principales:**
-
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
-
-### **2.4. Infraestructura y despliegue**
-
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
-
-### **2.5. Seguridad**
-
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
-
-### **2.6. Tests**
-
-> Describe brevemente algunos de los tests realizados
+- Backend completo (**API REST Node.js + Express**).  
+- Frontend modular (**React + Vite + TailwindCSS**).  
+- Integración de **IA** (`ai-integration` con metaprompts y servicios por módulo).  
+- Conexión estándar a las APIs de la organización.  
+- **Pipelines CI/CD** listos para DevOps.  
+- **Documentación técnica centralizada**.
 
 ---
 
-## 3. Modelo de Datos
+### 🧩 Componentes Principales
 
-### **3.1. Diagrama del modelo de datos:**
-
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
-
-
-### **3.2. Descripción de entidades principales:**
-
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
-
----
-
-## 4. Especificación de la API
-
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+| Componente | Descripción |
+|-------------|-------------|
+| **Backend** | API REST Node.js con autenticación JWT, estructura modular y middlewares centralizados. |
+| **Frontend** | Aplicación SPA React + Vite con layout base, rutas y componentes reutilizables. |
+| **AI Integration** | Carpeta de prompts, metaprompts y scripts de análisis que sirven como base para integración de nuevos productos. |
+| **CI/CD** | Pipelines YAML para build, test, deploy y versionado automatizado. |
+| **Infraestructura** | Contenedores Docker. |
+| **Documentación** | Estructura Markdown en `/docs/` con manual técnico, seguridad y guías de despliegue. |
 
 ---
 
-## 5. Historias de Usuario
-
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
-
-**Historia de Usuario 1**
-
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
-
----
-
-## 6. Tickets de Trabajo
-
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
-
-**Ticket 1**
-
-**Ticket 2**
-
-**Ticket 3**
+### 🧠 Beneficios Esperados
+- Disminución del tiempo de arranque de nuevos proyectos hasta en un **70%**.  
+- Homogeneización de la arquitectura de software de toda la organización.  
+- Mayor trazabilidad, control y gobernanza de los desarrollos.  
+- Integración directa con herramientas de **IA** y analítica.  
+- Seguridad centralizada usuarios roles aplicativos
+- Despliegues más rápidos y confiables con **CI/CD**.  
+- Cultura de desarrollo basada en **reutilización y automatización**.
 
 ---
 
-## 7. Pull Requests
+### 👥 Equipo del Proyecto
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+| Rol | Responsable | Funciones |
+|-----|--------------|-----------|
+| **Product Owner** | Dirección de Tecnología | Define lineamientos, requerimientos y alcance del framework. |
+| **Arquitecto de Software** | — | Diseña la arquitectura base, modularidad y patrones. |
+| **DevOps Engineer** | Equipo Infraestructura | Configura pipelines, despliegues y entornos. |
+| **Desarrollador Fullstack** | Equipo Desarrollo | Implementa módulos base y verifica extensibilidad. |
+| **Ingeniero de Prompts** | Equipo IA / Datos | Diseña y estructura los metaprompts y su integración. |
+| **QA / Auditor de Calidad** | — | Valida estándares, pruebas y seguridad. |
 
-**Pull Request 1**
+---
 
-**Pull Request 2**
+## ⚙️ 2. Arquitectura del Sistema
 
-**Pull Request 3**
+### 2.1 Visión General
+El proyecto **Genesis** implementa una arquitectura **modular, escalable y desacoplada**, basada en servicios y componentes reutilizables.  
+Su propósito es estandarizar la estructura de todos los desarrollos empresariales, garantizando interoperabilidad con los sistemas existentes.
 
+El enfoque arquitectónico sigue el principio de **“construir una sola vez, reutilizar siempre”**, permitiendo que nuevos módulos de negocio se creen directamente sobre la base de Genesis mediante un proceso automatizado de clonación y configuración inicial.
+
+---
+
+### 2.2 Diagrama de Arquitectura General
+
+                   ┌────────────────────────────┐
+                   │        FRONTEND SPA         │
+                   │   (React + Vite + Tailwind) │
+                   └────────────┬────────────────┘
+                                │
+                     API REST HTTPS / JWT
+                                │
+             ┌──────────────────┴──────────────────┐
+             │                                     │
+     ┌──────────────┐                    ┌────────────────┐
+     │  Backend API │                    │ AI Integration  │
+     │ (Node.js /   │                    │ (OpenAI / GPT / │
+     │  Express)    │                    │ Metaprompts)    │
+     └───────┬──────┘                    └───────┬─────────┘
+             │                                    │
+             │ SQL / HTTP                         │
+             ▼                                    ▼
+   ┌───────────────────────┐        ┌────────────────────────┐
+   │ Data Warehouse (DWH) │◄──────►│   Analytical Services   │
+   │ SQL Server / Synapse │        │                         │
+   └─────────┬────────────┘        └────────────────────────┘
+             │
+             │
+             ▼
+   ┌────────────────────────┐
+   │ Azure DevOps / CI-CD   │
+   │ (Pipelines / IaC)      │
+   └────────────────────────┘
