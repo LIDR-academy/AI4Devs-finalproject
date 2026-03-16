@@ -80,10 +80,21 @@ A continuación se presenta una tabla resumen de las funcionalidades principales
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+[Quick video tour of the UI](quick-tour-application.mp4)
 
 ### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+1. Clona el repositorio:
+```bash
+git clone https://github.com/your-org/your-repo.git
+cd your-repo
+```
+2. Configurar el backend:
+ referirse a secciones 8 y 9 para detalles de setup, modelos y migraciones.
+ referirse a [README Backend](backend/README.md) para instrucciones específicas del backend.
+
+3. Configurar el frontend:
+ referirse a [README Frontend](frontend/README.md) para instrucciones específicas del frontend.
 
 ---
 
@@ -875,6 +886,22 @@ Resultados:
 
 ---
 
+## 16. Resumen de tareas (Backend y Frontend)
+
+#### Backend MVP Summary
+
+Resumen ejecutivo de historias y tareas del backend, con estado por US, esfuerzo estimado y progreso consolidado.
+
+- [Ver backend-us-tasks-summary.md](documentation/backend-us-tasks-summary.md)
+
+#### Frontend MVP Summary
+
+Resumen ejecutivo de historias y tareas del frontend, incluyendo avance por US, estimaciones y estado actual de entregables.
+
+- [Ver frontend-us-tasks-summary.md](documentation/frontend-us-tasks-summary.md)
+
+---
+
 ## 3. Modelo de Datos
 
 ### **3.1. Diagrama del modelo de datos:**
@@ -1267,10 +1294,13 @@ The frontend provides the user interface for all platform interactions. Proper s
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
 **Pull Request 1**
+- Documentacion: https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/1
 
 **Pull Request 2**
+- Codigo: https://github.com/mentally-gamez-soft/ipfs-saas-ai4devs/pull/30
 
 **Pull Request 3**
+- Ultima PR:
 
 ---
 
@@ -1385,4 +1415,16 @@ erDiagram
         text details
     }
 ```
+
+---
+
+## Footer
+
+| Field | Value |
+|-------|-------|
+| Author | [![Author](https://img.shields.io/badge/Christian-ZOROR-0A66C2?style=for-the-badge&logo=github&logoColor=white)](https://www.linkedin.com/in/christian-zoror-127662105/) |
+| LinkedIn | [![LinkedIn](https://img.shields.io/badge/View%20Profile-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/christian-zoror-127662105/) |
+| Project | ![Project](https://img.shields.io/badge/IPFS-Gateway-2F80ED?style=for-the-badge&logo=ipfs&logoColor=white) |
+| Estimated Full Time | ![Estimated Full Time](https://img.shields.io/badge/152h-82h%20backend%20%2B%2070h%20frontend-16A34A?style=for-the-badge&logo=clockify&logoColor=white) |
+| Formation | [![Formation](https://img.shields.io/badge/Ai4Devs-Program-7C3AED?style=for-the-badge&logo=googleclassroom&logoColor=white)](https://www.lidr.co/ia-devs/) |
 
