@@ -1,0 +1,9 @@
+<button class="mt-1 w-full" mat-flat-button color="secondary" [disabled]="disabled" [matTooltip]="'Shortcut:'+shortcut">
+    @if (!disabled) {
+    <div class="flex justify-between items-center ">
+        <mat-icon [svgIcon]="'heroicons_outline:'+icon"></mat-icon>
+        <span>{{label}}</span>
+    </div>
+    }
+    @if (loading) { <mat-progress-spinner [diameter]="24" [mode]="'indeterminate'"></mat-progress-spinner> }
+</button>

@@ -1,0 +1,38 @@
+name:  BackendCoreFinance
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  runner:
+    name: Checkout Runner
+    runs-on: [self-hosted, Linux, X64, development, finantix]
+    steps:
+      - name: Validar runner
+        run: echo "✅ Runner conectado correctamente en $HOSTNAME"
+      
+      - name: Mostrar etiquetas del runner
+        run: echo "Labels self-hosted, Linux, X64, development, finantix"
+
+
+  build:
+    needs: runner
+    name: Build and Deploy to Development
+    runs-on: [self-hosted, development, finantix]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Reconstrucción de la Imagen
+        run: docker compose -f ./docker-compose.prod.yml build
+
+      - name: Inicialización de Docker Compose
+        run: docker compose -f ./docker-compose.prod.yml up -d
+
+      - name: Eliminación de imagenes obsoletas o dangling
+        run: docker rmi $(docker images -f dangling=true -q) || echo 'No existen imagenes <none>'
+      
+      - name: Limpieza del cache de Docker
+        run: docker system prune -f

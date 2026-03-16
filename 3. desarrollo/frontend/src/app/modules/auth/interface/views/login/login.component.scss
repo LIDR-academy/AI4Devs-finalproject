@@ -1,0 +1,53 @@
+.login-container {
+  overflow: hidden;
+}
+
+.branding-section {
+  position: relative;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.form-section {
+  overflow-y: auto;
+}
+
+.login-form {
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.attempts-indicator,
+.error-message {
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.form-footer {
+  a {
+    transition: color 0.2s;
+    &:hover {
+      color: var(--primary-color, #3b82f6);
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .form-section {
+    background-color: #1e293b;
+  }
+}
+

@@ -1,134 +1,198 @@
-## Índice
+# 📑 ÍNDICE MAESTRO - RRFinances Project
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+**Estado del Proyecto:** ✅ Estructurado y Listo para Desarrollo  
+**Fecha de Actualización:** 20 de Enero de 2026  
+**Estructura de Fases:** 4 Fases Completas
 
 ---
 
-## 0. Ficha del proyecto
+## 🎯 ORDEN DE LECTURA RECOMENDADO
 
-### **0.1. Tu nombre completo:**
+### **FASE 1: ANÁLISIS** 📋
+*Entender QUÉ se va a hacer y POR QUÉ*
 
-### **0.2. Nombre del proyecto:**
+#### Carpeta: `1. analisis/01-requisitos/`
+1. **[01-PRD-RRFinances.md](1.%20analisis/01-requisitos/01-PRD-RRFinances.md)** ⭐ **LECTURA OBLIGATORIA #1**
+   - Documento de Requisitos del Producto
+   - Define objetivos, alcance, usuarios, módulos principales
+   - Especificación funcional completa
+   - **Tiempo:** 45 min
 
-### **0.3. Descripción breve del proyecto:**
+#### Carpeta: `1. analisis/02-especificaciones/`
+2. **[02-Casos-de-Uso.md](1.%20analisis/02-especificaciones/02-Casos-de-Uso.md)** ⭐ **LECTURA OBLIGATORIA #2**
+   - Escenarios de uso de cada módulo
+   - Flujos de interacción usuario-sistema
+   - **Tiempo:** 30 min
 
-### **0.4. URL del proyecto:**
-
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
-
-### 0.5. URL o archivo comprimido del repositorio
-
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
-
----
-
-## 1. Descripción general del producto
-
-> Describe en detalle los siguientes aspectos del producto:
-
-### **1.1. Objetivo:**
-
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
-
-### **1.2. Características y funcionalidades principales:**
-
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
-
-### **1.3. Diseño y experiencia de usuario:**
-
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
-
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+3. **[03-User-Stories.md](1.%20analisis/02-especificaciones/03-User-Stories.md)** ⭐ **LECTURA OBLIGATORIA #3**
+   - 5 User Stories principales del proyecto
+   - Criterios de aceptación
+   - **Tiempo:** 20 min
 
 ---
 
-## 2. Arquitectura del Sistema
+### **FASE 2: DISEÑO** 🎨
+*Entender CÓMO se va a hacer*
 
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+#### Carpeta: `2. diseño/01-arquitectura/`
+4. **[01-Arquitectura-C4.md](2.%20diseño/01-arquitectura/01-Arquitectura-C4.md)** ⭐ **LECTURA OBLIGATORIA #4**
+   - Diagrama C4 - Sistema completo
+   - Contenedores (Frontend, Backend, BD)
+   - Componentes principales
+   - **Tiempo:** 30 min
 
+#### Carpeta: `2. diseño/02-diagramas/`
+5. **[01-Entidades-Modelo-Datos.md](2.%20diseño/02-diagramas/01-Entidades-Modelo-Datos.md)** ⭐ **LECTURA IMPORTANTE**
+   - Descripción de todas las entidades
+   - Relaciones entre tablas
+   - **Tiempo:** 40 min
 
-### **2.2. Descripción de componentes principales:**
+6. **[02-Data-Model-Diagram.md](2.%20diseño/02-diagramas/02-Data-Model-Diagram.md)**
+   - Diagrama ER visual de la base de datos
+   - **Tiempo:** 15 min
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+7. **[03-Componentes-Backend.md](2.%20diseño/02-diagramas/03-Componentes-Backend.md)**
+   - Arquitectura de microservicios backend
+   - Módulos NestJS
+   - **Tiempo:** 25 min
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+8. **[04-Componentes-Frontend.md](2.%20diseño/02-diagramas/04-Componentes-Frontend.md)**
+   - Estructura de componentes Angular
+   - Rutas y módulos
+   - **Tiempo:** 25 min
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+9. **[05-Secuencia.md](2.%20diseño/02-diagramas/05-Secuencia.md)**
+   - Diagramas de secuencia de flujos principales
+   - Interacción entre componentes
+   - **Tiempo:** 20 min
 
-### **2.4. Infraestructura y despliegue**
+10. **[06-Despliegue.md](2.%20diseño/02-diagramas/06-Despliegue.md)**
+    - Infraestructura de deployment
+    - Docker, Kubernetes, CI/CD
+    - **Tiempo:** 25 min
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+11. **[07-Paquetes-Modulos.md](2.%20diseño/02-diagramas/07-Paquetes-Modulos.md)**
+    - Organización de paquetes
+    - Dependencias entre módulos
+    - **Tiempo:** 20 min
 
-### **2.5. Seguridad**
-
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
-
-### **2.6. Tests**
-
-> Describe brevemente algunos de los tests realizados
-
----
-
-## 3. Modelo de Datos
-
-### **3.1. Diagrama del modelo de datos:**
-
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
-
-
-### **3.2. Descripción de entidades principales:**
-
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
-
----
-
-## 4. Especificación de la API
-
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
-
----
-
-## 5. Historias de Usuario
-
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
-
-**Historia de Usuario 1**
-
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
+12. **[08-Seguridad.md](2.%20diseño/02-diagramas/08-Seguridad.md)**
+    - Arquitectura de seguridad
+    - WAF, IDS/IPS, Vault, etc.
+    - **Tiempo:** 30 min
 
 ---
 
-## 6. Tickets de Trabajo
+### **FASE 3: DESARROLLO** 💻
+*Los TICKETS a implementar*
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+#### Carpeta: `3. desarrollo/00-tickets/`
 
-**Ticket 1**
+| Bloque | Archivo | Tickets | Focus | Horas Est. |
+|--------|---------|---------|-------|-----------|
+| 1 | **01-Tickets-Bloque-01.md** | 1-50 | Setup, Auth, Multi-tenancy | 119h |
+| 2 | **02-Tickets-Bloque-02.md** | 51-100 | Catálogos, Frontend Auth, Users | 121.5h |
+| 3 | **03-Tickets-Bloque-03.md** | 101-150 | Users Frontend, Clientes Backend | 118.5h |
+| 4 | **04-Tickets-Bloque-04.md** | 151-200 | Clientes Frontend, Búsqueda | 120h |
+| 5 | **05-Tickets-Bloque-05.md** | 201-250 | Testing, Docs, Security | 123.5h |
+| 6 | **06-Tickets-Bloque-06.md** | 251-300 | CI/CD, Monitoring, i18n | 128h |
+| 7 | **07-Tickets-Bloque-07.md** | 301-350 | Analytics, Advanced Features | 131.5h |
+| 8 | **08-Tickets-Bloque-08.md** | 351-400 | Production Prep, Hardening | 127.5h |
+| 9 | **09-Tickets-Bloque-09.md** | 401-427 | Polish, Launch, Closure | 65.5h |
 
-**Ticket 2**
-
-**Ticket 3**
+**Total:** 427 tickets | ~1,056 horas | 6.6 meses (equipo 2BE + 2FE)
 
 ---
 
-## 7. Pull Requests
+### **FASE 4: DOCUMENTACIÓN** 📚
+*Referencias y especificaciones técnicas*
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+#### Carpeta: `4. documentacion/01-tecnica/`
 
-**Pull Request 1**
+- **[00-Resumen-Proyecto.md](4.%20documentacion/01-tecnica/00-Resumen-Proyecto.md)**
+  - Resumen ejecutivo completo del proyecto
+  - Estadísticas, stack, métricas
+  - **Referencia rápida**
 
-**Pull Request 2**
+- **[_01-Referencias-Prompts.md](4.%20documentacion/01-tecnica/_01-Referencias-Prompts.md)**
+  - Prompts de generación utilizados
+  - Guía para reproducibilidad
 
-**Pull Request 3**
+- **[_02-Sudolang-Spec.sudo](4.%20documentacion/01-tecnica/_02-Sudolang-Spec.suo)**
+  - Especificación técnica en Sudo Lang
+  - Pseudocódigo de lógica crítica
+
+---
+
+## 📊 MATRIZ DE DEPENDENCIAS
+
+```
+FASE 1: ANÁLISIS (Pre-requisito absoluto)
+  ├─ 01-PRD-RRFinances.md
+  ├─ 02-Casos-de-Uso.md
+  └─ 03-User-Stories.md
+          ↓
+FASE 2: DISEÑO (Dependiente de Análisis)
+  ├─ 01-Arquitectura-C4.md
+  ├─ 01-Entidades-Modelo-Datos.md
+  ├─ 02-Data-Model-Diagram.md
+  ├─ 03-Componentes-Backend.md
+  ├─ 04-Componentes-Frontend.md
+  ├─ 05-Secuencia.md
+  ├─ 06-Despliegue.md
+  ├─ 07-Paquetes-Modulos.md
+  └─ 08-Seguridad.md
+          ↓
+FASE 3: DESARROLLO (Dependiente de Diseño)
+  ├─ 01-Tickets-Bloque-01.md
+  ├─ 02-Tickets-Bloque-02.md
+  ├─ ... (secuencial)
+  └─ 09-Tickets-Bloque-09.md
+          ↓
+FASE 4: DOCUMENTACIÓN (Referencia permanente)
+  ├─ 00-Resumen-Proyecto.md
+  ├─ _01-Referencias-Prompts.md
+  └─ _02-Sudolang-Spec.sudo
+```
+
+---
+
+## 🚀 CÓMO USAR ESTA ESTRUCTURA
+
+### **Para Arquitectos:**
+1. Leer FASE 1 completa (60 min)
+2. Leer FASE 2 completa (3 horas)
+3. Referencia: FASE 4
+
+### **Para Desarrolladores Backend:**
+1. Leer FASE 1 completa (60 min)
+2. Leer: Arquitectura C4, Componentes Backend, Data Model (1.5 horas)
+3. Iniciar FASE 3 desde Bloque 1
+
+### **Para Desarrolladores Frontend:**
+1. Leer FASE 1 completa (60 min)
+2. Leer: Arquitectura C4, Componentes Frontend, Secuencia (1.5 horas)
+3. Iniciar FASE 3 desde Bloque 2
+
+### **Para Product Owner/QA:**
+1. Leer FASE 1 completa (60 min)
+2. Leer: Casos de Uso, User Stories (30 min)
+3. Referencia rápida: Resumen Proyecto
+
+### **Para DevOps/Infra:**
+1. Leer: Arquitectura C4, Despliegue, Seguridad (1.5 horas)
+2. FASE 3 tickets de infraestructura (Bloques 5-8)
+
+---
+
+## ✅ CHECKLIST DE ONBOARDING
+
+- [X] He leído el PRD completo (FASE 1)
+- [X] He revisado todos los diagramas (FASE 2)
+- [X] He entendido la arquitectura de base de datos
+- [X] He identificado mis tickets asignados (FASE 3)
+- [X] He configurado mi ambiente local
+- [ ] He ejecutado los tests exitosamente
+
+---
 

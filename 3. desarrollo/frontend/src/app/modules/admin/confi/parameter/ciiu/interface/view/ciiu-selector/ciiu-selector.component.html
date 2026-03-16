@@ -1,0 +1,127 @@
+<div class="ciiu-selector">
+  <!-- Campo de búsqueda -->
+  <mat-form-field class="w-full" [appearance]="appearance">
+    <mat-label>{{ label }}</mat-label>
+    <input
+      matInput
+      [formControl]="searchControl"
+      [matAutocomplete]="auto"
+      [placeholder]="placeholder"
+      (focus)="onFocus()"
+      [disabled]="disabled"
+    />
+    <mat-icon matSuffix>search</mat-icon>
+    @if (loading()) {
+      <mat-spinner matSuffix diameter="20"></mat-spinner>
+    }
+    <mat-autocomplete
+      #auto="matAutocomplete"
+      [displayWith]="displayFn"
+      (optionSelected)="onOptionSelected($event)"
+    >
+      @for (option of options(); track option.ciact_cod_ciact) {
+        <mat-option [value]="option">
+          <div class="flex flex-col py-2">
+            <span class="font-medium text-sm">
+              {{ option.ciact_abr_ciact }} - {{ option.ciact_des_ciact }}
+            </span>
+            <span class="text-xs text-gray-500 mt-1">
+              {{ option.cisec_abr_cisec }} > {{ option.cidiv_abr_cidiv }} > {{ option.cigru_abr_cigru }}
+            </span>
+          </div>
+        </mat-option>
+      }
+      @if (options().length === 0 && searchControl.value?.length >= 3 && !loading()) {
+        <mat-option disabled>
+          <span class="text-gray-500">No se encontraron resultados</span>
+        </mat-option>
+      }
+    </mat-autocomplete>
+    @if (errorMessage()) {
+      <mat-error>{{ errorMessage() }}</mat-error>
+    }
+  </mat-form-field>
+
+  <!-- Jerarquía seleccionada -->
+  @if (selectedActividad() && showHierarchy) {
+    <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <h4 class="text-sm font-semibold mb-3 text-gray-700">Jerarquía CIIU</h4>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <!-- Sección -->
+        <div class="ciiu-level">
+          <span class="text-xs text-gray-500 block mb-1">Sección (Nivel 1)</span>
+          <span class="text-sm font-medium">
+            {{ selectedActividad()!.jerarquia.seccion.abreviatura }} - 
+            {{ selectedActividad()!.jerarquia.seccion.descripcion | slice:0:50 }}
+            @if (selectedActividad()!.jerarquia.seccion.descripcion.length > 50) {
+              ...
+            }
+          </span>
+        </div>
+        <!-- División -->
+        <div class="ciiu-level">
+          <span class="text-xs text-gray-500 block mb-1">División (Nivel 2)</span>
+          <span class="text-sm font-medium">
+            {{ selectedActividad()!.jerarquia.division.abreviatura }} - 
+            {{ selectedActividad()!.jerarquia.division.descripcion | slice:0:50 }}
+            @if (selectedActividad()!.jerarquia.division.descripcion.length > 50) {
+              ...
+            }
+          </span>
+        </div>
+        <!-- Grupo -->
+        <div class="ciiu-level">
+          <span class="text-xs text-gray-500 block mb-1">Grupo (Nivel 3)</span>
+          <span class="text-sm font-medium">
+            {{ selectedActividad()!.jerarquia.grupo.abreviatura }} - 
+            {{ selectedActividad()!.jerarquia.grupo.descripcion | slice:0:50 }}
+            @if (selectedActividad()!.jerarquia.grupo.descripcion.length > 50) {
+              ...
+            }
+          </span>
+        </div>
+        <!-- Clase -->
+        <div class="ciiu-level">
+          <span class="text-xs text-gray-500 block mb-1">Clase (Nivel 4)</span>
+          <span class="text-sm font-medium">
+            {{ selectedActividad()!.jerarquia.clase.abreviatura }} - 
+            {{ selectedActividad()!.jerarquia.clase.descripcion | slice:0:50 }}
+            @if (selectedActividad()!.jerarquia.clase.descripcion.length > 50) {
+              ...
+            }
+          </span>
+        </div>
+        <!-- Subclase -->
+        <div class="ciiu-level">
+          <span class="text-xs text-gray-500 block mb-1">Subclase (Nivel 5)</span>
+          <span class="text-sm font-medium">
+            {{ selectedActividad()!.jerarquia.subclase.abreviatura }} - 
+            {{ selectedActividad()!.jerarquia.subclase.descripcion | slice:0:50 }}
+            @if (selectedActividad()!.jerarquia.subclase.descripcion.length > 50) {
+              ...
+            }
+          </span>
+        </div>
+        <!-- Actividad + Semáforo -->
+        <div class="ciiu-level">
+          <span class="text-xs text-gray-500 block mb-1">Actividad (Nivel 6)</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-medium">
+              {{ selectedActividad()!.abreviatura }}
+            </span>
+            <span
+              class="px-2 py-0.5 text-xs rounded-full font-medium"
+              [ngClass]="getSemaforoClass(selectedActividad()!.semaforo.codigo)"
+            >
+              {{ selectedActividad()!.semaforo.descripcion }}
+            </span>
+          </div>
+          <p class="text-xs text-gray-600 mt-1">
+            {{ selectedActividad()!.descripcion }}
+          </p>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

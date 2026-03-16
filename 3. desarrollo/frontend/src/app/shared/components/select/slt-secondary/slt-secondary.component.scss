@@ -1,0 +1,58 @@
+/* Estilo para el contenedor */
+.w-100 {
+  position: relative;
+}
+
+/* Estilo del input */
+input.form-control {
+  width: 100%;
+  padding-right: 30px; /* Espacio para el icono de búsqueda si lo quieres más tarde */
+  position: relative;
+  z-index: 1;
+}
+
+/* Estilo para la lista de sugerencias */
+ul.list-group {
+  width: 100%;
+  max-height: 200px;
+  margin-top: 5px;
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+
+/* Estilo para cada item de la lista */
+li.list-group-item {
+  cursor: pointer;
+  padding: 8px 10px;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover sobre cada sugerencia */
+li.list-group-item:hover {
+  background-color: #f1f1f1;
+}
+
+/* Resaltar la opción seleccionada */
+li.list-group-item.active {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Si el input está en estado inválido */
+input.form-control.is-invalid {
+  border-color: #dc3545;
+}
+
+/* Si el input está en estado válido */
+input.form-control.is-valid {
+  border-color: #28a745;
+}
+
+/* Estilo de los mensajes de error */
+.invalid-feedback {
+  font-size: 0.875rem;
+  color: #dc3545;
+}

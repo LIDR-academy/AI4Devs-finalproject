@@ -1,0 +1,208 @@
+SoftwareDevelopmentProcess {
+  State {
+    PRD: ""
+    UserPersonas: []
+    Requirements: []
+    UserStories: []
+    WorkTickets: []
+    DevLanguage: ""
+    DevDirectory: ""
+    MarkdownSummary: ""
+  }
+
+  Constraints {
+    Ensure PRD is uploaded before proceeding.
+    Ensure each role completes their actions before moving to the next.
+    Generate only one User Story per user persona.
+    Ensure work tickets are small and granular, with maximum 3 hours effort each.
+    Break down any task exceeding 3 hours into smaller sub-tickets.
+    Ensure development language and directory are defined before starting implementation.
+  }
+
+  UploadPRD() {
+    log("Por favor, sube el Documento de Requisitos del Producto (PRD) o copia y pega el texto del PRD aquí:")
+    PRD = getInput("Inserta el PRD aquí:")
+  }
+
+  ProductOwner {
+    ReviewPRD() {
+      log("El Product Owner revisará el PRD para definir los 'User Personas' y los requisitos.")
+      UserPersonas = extractUserPersonas(PRD)
+      Requirements = extractRequirements(PRD)
+      log("User Personas y Requisitos definidos.")
+      confirmation = getInput("¿Confirmas esta información extraída del PRD? [Sí/No]. Si respondes 'No', podrás modificar lo que necesites:")
+
+      if (confirmation.toLowerCase() == "no") {
+        log("Indica qué deseas cambiar y proporciona los nuevos valores.")
+        log("El sistema procesará automáticamente tus cambios.")
+      }
+    }
+  }
+
+  BusinessAnalyst {
+    ReviewPRDAndCalculateUserStories() {
+      log("El Business Analyst revisará el PRD y calculará el número posible de 'User Stories'.")
+      UserStories = calculateUserStories(PRD, UserPersonas)
+      log("User Stories alineadas con User Personas.")
+    }
+
+    GenerateUserStoriesAutomatically() {
+      choice = getInput("Indicar si quieres generar 'User Stories' automáticamente: [Sí/No]")
+      if (choice == "Sí") {
+        UserStories = generateUserStoriesAutomatically()
+        log("User Stories generadas automáticamente.")
+      } else {
+        specificUserStory = getInput("Usa el siguiente User Story: [pega el User Story aquí]:")
+        analyzeUserStory(specificUserStory)
+      }
+    }
+
+    AnalyzeUserStory() {
+      for each story in UserStories {
+        log("Analizando User Story actual...")
+        analyze(story)
+        valid = validateUserStory(story, PRD, UserPersonas)
+        if (!valid) {
+          log("Este User Story está fuera del alcance del PRD.")
+        }
+      }
+    }
+  }
+
+  SoftwareArchitectAndTechLead {
+    GenerateWorkTickets() {
+      log("Generación de Tickets de Trabajo (Jira).")
+      for each story in UserStories {
+        tickets = calculateWorkTickets(story)
+        WorkTickets += tickets
+        for each ticket in tickets {
+          log("Generar cada 'Ticket de Trabajo (Jira)':")
+          log("ID del Ticket: $ticket.id")
+          log("Título: $ticket.title")
+          log("Descripción: $ticket.description")
+          log("Criterios de aceptación: $ticket.acceptanceCriteria")
+          log("Prioridad: $ticket.priority")
+          log("Esfuerzo estimado (horas): $ticket.effort")
+        }
+      }
+      log("Tickets de Trabajo generados.")
+    }
+
+    GenerateDocumentationAndTestPlan() {
+      log("Generar documento de especificación BDD y plan de pruebas.")
+      specificationDocument = generateSpecificationDocument(UserStories, WorkTickets)
+      testPlan = generateTestPlan(UserStories, WorkTickets)
+      log("Documento de especificación y Plan de Pruebas generados.")
+    }
+  }
+
+  DeveloperExpert {
+    SetupDevelopmentEnvironment() {
+      log("Configuración del entorno de desarrollo.")
+      DevLanguage = getInput("Indica el lenguaje en el que eres experto (por ejemplo: JavaScript, Python, PHP, etc.):")
+      DevDirectory = getInput("Indica el directorio o ruta donde se desarrollarán las funcionalidades:")
+      log("Lenguaje seleccionado: $DevLanguage")
+      log("Directorio de trabajo: $DevDirectory")
+      confirmation = getInput("¿Confirmas estos datos? [Sí/No]")
+      if (confirmation.toLowerCase() != "sí") {
+        SetupDevelopmentEnvironment()
+      }
+    }
+
+    DevelopUserStories() {
+      log("Inicio de desarrollo de funcionalidades según las historias de usuario.")
+      for each story in UserStories {
+        log("Desarrollando historia de usuario: $story.title")
+        log("Ubicación: $DevDirectory")
+        log("Lenguaje de desarrollo: $DevLanguage")
+
+        codeStub = generateCodeSkeleton(story, DevLanguage)
+        log("Código base generado:")
+        log(codeStub)
+
+        review = getInput("¿Deseas proceder al siguiente desarrollo? [Sí/No]")
+        if (review.toLowerCase() != "sí") {
+          log("Deteniendo proceso hasta confirmación manual.")
+          waitForUser()
+        }
+      }
+      log("Desarrollo de todas las historias completado.")
+    }
+  }
+
+  GenerateMarkdownSummary() {
+    log("Generando resumen del proceso en formato Markdown...")
+
+    MarkdownSummary = """
+      # 🧩 Software Development Process Summary
+
+      ## 📄 PRD
+      $PRD
+
+      ## 👥 User Personas
+      $UserPersonas
+
+      ## 📋 Requirements
+      $Requirements
+
+      ## 🧑‍💻 User Stories
+      $UserStories
+
+      ## 🧾 Work Tickets
+      $WorkTickets
+
+      ## 🖥️ Development Environment
+      **Language:** $DevLanguage  
+      **Directory:** $DevDirectory
+
+      ## 🗒️ Notes
+      - Código base generado para cada historia de usuario.
+      - Validaciones y confirmaciones registradas en cada etapa.
+      - Plan de pruebas y documentación BDD generados automáticamente.
+    """
+
+    saveFile("Software_Development_Process_Summary.md", MarkdownSummary)
+    log("Archivo Markdown 'Software_Development_Process_Summary.md' generado correctamente.")
+  }
+
+  ProceedWithNextUserStory() {
+    choice = getInput("¿Deseas proceder con el siguiente 'User Story'? [Sí/No]")
+    if (choice == "Sí") {
+      nextUserStory()
+    } else {
+      finalize()
+    }
+  }
+
+  FinalOutput() {
+    log("Salida Final:")
+    log("- Historias de usuario desarrolladas.")
+    log("- Tickets técnicos completados.")
+    log("- Documentos BDD y plan de pruebas generados.")
+    log("- Código fuente inicial disponible en $DevDirectory.")
+    log("- Archivo Markdown con resumen de prompts y resultados generado.")
+    GenerateMarkdownSummary()
+  }
+
+  Commands {
+    /uploadPRD | UploadPRD
+    /productOwnerReview | ProductOwner.ReviewPRD
+    /businessAnalystReview | BusinessAnalyst.ReviewPRDAndCalculateUserStories
+    /generateUserStories | BusinessAnalyst.GenerateUserStoriesAutomatically
+    /analyzeUserStory | BusinessAnalyst.AnalyzeUserStory
+    /generateWorkTickets | SoftwareArchitectAndTechLead.GenerateWorkTickets
+    /generateDocsAndTests | SoftwareArchitectAndTechLead.GenerateDocumentationAndTestPlan
+    /setupDevEnv | DeveloperExpert.SetupDevelopmentEnvironment
+    /developUserStories | DeveloperExpert.DevelopUserStories
+    /generateMarkdown | GenerateMarkdownSummary
+    /proceedWithNextUserStory | ProceedWithNextUserStory
+    /finalOutput | FinalOutput
+  }
+
+  welcome() {
+    log("Bienvenido al proceso de desarrollo de software.")
+    log("Este flujo guiará desde el PRD hasta la implementación final, con un resumen Markdown al cierre.")
+  }
+}
+
+welcome()

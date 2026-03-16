@@ -1,0 +1,12 @@
+[submodule "ms-core"]
+	path = ms-core
+	url = https://github.com/XXXXXXXXX/MS-CORE.git
+[submodule "ms-perso"]
+	path = ms-perso
+	url = https://github.com/XXXXXXXXX/MS-PERSO.git
+[submodule "ms-confi"]
+	path = ms-confi
+	url = https://github.com/XXXXXXXXX/MS-CONFI.git
+[submodule "ms-auth"]
+	path = ms-auth
+	url = https://github.com/XXXXXXXXX/MS-AUTH.git

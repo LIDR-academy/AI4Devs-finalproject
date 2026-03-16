@@ -1,0 +1,2 @@
+export * from './cllab.entity';
+

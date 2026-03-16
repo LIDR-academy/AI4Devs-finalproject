@@ -1,0 +1,15 @@
+<content-wrapper class="w-full p-4">
+    <form [formGroup]="form_group">
+        <div class="mt-8 grid w-full gap-6 sm:grid-cols-4">
+            <ipt-primary class="sm:col-span-1" formControlName="empre_cod_empre" icon="key" label="Código"></ipt-primary>
+            <ipt-primary class="sm:col-span-3" formControlName="empre_abr_empre" icon="building-office-2" label="Abreviación"></ipt-primary>
+            <ipt-primary class="sm:col-span-4" formControlName="empre_nom_empre" icon="building-office" label="Empresa"></ipt-primary>
+            <ipt-primary class="sm:col-span-2" formControlName="empre_cod_conse" icon="qr-code" label="Código del Conse" type="number"></ipt-primary>
+            <ipt-primary class="sm:col-span-2" formControlName="empre_cta_bce" icon="qr-code" label="Código del BCE" type="number"></ipt-primary>
+        </div>
+        <div class="flex items-center justify-end gap-2 mt-3">
+            <btn-secondary (click)="onCancel()" />
+            <btn-primary (click)="onClickSave()" label="Actualizar" icon="pencil" />
+        </div>
+    </form>
+</content-wrapper>

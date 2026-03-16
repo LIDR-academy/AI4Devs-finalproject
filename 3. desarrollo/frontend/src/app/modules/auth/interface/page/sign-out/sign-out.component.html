@@ -1,0 +1,35 @@
+<div class="flex min-w-0 flex-auto flex-col items-center sm:justify-center">
+    <div class="w-full px-4 py-8 sm:bg-card sm:w-auto sm:rounded-2xl sm:p-12 sm:shadow">
+        <div class="mx-auto w-full max-w-80 sm:mx-0 sm:w-80">
+            <!-- Logo -->
+            <div class="mx-auto w-12">
+                <img src="images/logo/logo.svg" />
+            </div>
+
+            <!-- Title -->
+            <div class="mt-8 text-center text-4xl font-extrabold leading-tight tracking-tight">
+                !Has cerrado sesión¡
+            </div>
+            <div class="mt-0.5 flex justify-center font-medium">
+                <!-- Redirect countdown -->
+                @if (countdown > 0) {
+
+                Redireccionando en
+                {{ countdown | i18nPlural: countdownMapping }}
+                }
+
+                <!-- Redirect message -->
+                @if (countdown === 0) {
+                Tu sesión ha expirado. Gracias por usar nuestra aplicación.
+                }
+            </div>
+
+            <!-- Form footer -->
+            <div class="text-secondary mt-8 text-center text-md font-medium">
+                <span>Ir a</span>
+                <a class="ml-1 text-primary-500 hover:underline" [routerLink]="['/sign-in']">Iniciar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

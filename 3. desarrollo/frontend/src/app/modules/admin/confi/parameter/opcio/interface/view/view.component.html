@@ -1,0 +1,133 @@
+<div class="flex min-w-0 flex-auto flex-col w-full m-2">
+    <mat-form-field>
+        <mat-label>Filter</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Mia" #input />
+    </mat-form-field>
+
+    <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8">
+        <!-- Columnas principales -->
+        <ng-container matColumnDef="opcio_cod_opcio">
+            <th mat-header-cell *matHeaderCellDef> Código </th>
+            <td mat-cell *matCellDef="let row"> {{ row.opcio_cod_opcio }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="opcio_des_opcio">
+            <th mat-header-cell *matHeaderCellDef> Descripción </th>
+            <td mat-cell *matCellDef="let row"> {{ row.opcio_des_opcio }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="opcio_est_opcio">
+            <th mat-header-cell *matHeaderCellDef> Estado </th>
+            <td mat-cell *matCellDef="let row"> {{ row.opcio_est_opcio }} </td>
+        </ng-container>
+
+        <!-- Expand button nivel 1 -->
+        <ng-container matColumnDef="expandParent">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let element">
+                <button mat-icon-button aria-label="expand row" *ngIf="element.opcio_men_opcio?.length"
+                    (click)="toggle(element, $event)">
+                    <mat-icon>{{ isExpanded(element) ? "keyboard_arrow_up" : "keyboard_arrow_down" }}</mat-icon>
+                </button>
+            </td>
+        </ng-container>
+
+        <!-- Header row -->
+        <tr mat-header-row *matHeaderRowDef="columnsToDisplayWithExpand"></tr>
+
+        <!-- Data rows -->
+        <tr mat-row *matRowDef="let element; columns: columnsToDisplay" class="example-element-row"
+            [class.example-expanded-row]="isExpanded(element)" (click)="toggle(element, $event)">
+        </tr>
+
+        <!-- Expanded detail row nivel 2 -->
+        <tr mat-row *matRowDef="let row; columns: ['expandedDetailParent']" class="example-detail-row nivel-2"></tr>
+
+        <ng-container matColumnDef="expandedDetailParent">
+            <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplayWithExpand.length">
+                <div *ngIf="isExpanded(element)">
+                    <table mat-table [dataSource]="element.opcio_men_opcio" multiTemplateDataRows
+                        class="mat-elevation-z2 rounded-sm shadow-sm bg-slate-100 border">
+                        <!-- Reuso de columnas en subtabla -->
+                        <ng-container matColumnDef="opcio_cod_opcio">
+                            <th mat-header-cell *matHeaderCellDef> Código </th>
+                            <td mat-cell *matCellDef="let child">{{ child.opcio_cod_opcio }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="opcio_des_opcio">
+                            <th mat-header-cell *matHeaderCellDef> Descripción </th>
+                            <td mat-cell *matCellDef="let child">{{ child.opcio_des_opcio }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="opcio_est_opcio">
+                            <th mat-header-cell *matHeaderCellDef> Estado </th>
+                            <td mat-cell *matCellDef="let child">{{ child.opcio_est_opcio }}</td>
+                        </ng-container>
+
+                        <!-- Expand button nivel 2 -->
+                        <ng-container matColumnDef="expandChild">
+                            <th mat-header-cell *matHeaderCellDef></th>
+                            <td mat-cell *matCellDef="let child">
+                                <button mat-icon-button aria-label="expand row" *ngIf="child.opcio_men_opcio?.length"
+                                    (click)="toggle(child, $event)">
+                                    <mat-icon>{{ isExpanded(child) ? "keyboard_arrow_up" : "keyboard_arrow_down"
+                                        }}</mat-icon>
+                                </button>
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row
+                            *matHeaderRowDef="['opcio_cod_opcio','opcio_des_opcio','opcio_est_opcio','expandChild']">
+                        </tr>
+                       <!--  <tr mat-row
+                            *matRowDef="let child; columns: ['opcio_cod_opcio','opcio_des_opcio','opcio_est_opcio','expandChild']"
+                            [class.example-expanded-row]="isExpanded(child)">
+                        </tr> -->
+
+                        <tr mat-row *matRowDef="let child; columns: ['opcio_cod_opcio','opcio_des_opcio','opcio_est_opcio','expandChild']"
+                            [class.example-expanded-row]="isExpanded(child)" (click)="toggle(child, $event)">
+                        </tr>
+
+                        <!-- Expanded detail row nivel 3 -->
+                        <tr mat-row *matRowDef="let row; columns: ['expandedDetailChild']"
+                            class="example-detail-row nivel-3"></tr>
+
+                        <ng-container matColumnDef="expandedDetailChild">
+                            <td mat-cell *matCellDef="let child" [attr.colspan]="4">
+                                <div *ngIf="isExpanded(child)">
+                                    <table mat-table [dataSource]="child.opcio_men_opcio"
+                                        class="mat-elevation-z1 rounded-sm shadow-sm bg-slate-200">
+                                        <ng-container matColumnDef="opcio_cod_opcio">
+                                            <th mat-header-cell *matHeaderCellDef> Código </th>
+                                            <td mat-cell *matCellDef="let grandChild">{{ grandChild.opcio_cod_opcio }}
+                                            </td>
+                                        </ng-container>
+                                        <ng-container matColumnDef="opcio_des_opcio">
+                                            <th mat-header-cell *matHeaderCellDef> Descripción </th>
+                                            <td mat-cell *matCellDef="let grandChild">{{ grandChild.opcio_des_opcio }}
+                                            </td>
+                                        </ng-container>
+                                        <ng-container matColumnDef="opcio_est_opcio">
+                                            <th mat-header-cell *matHeaderCellDef> Estado </th>
+                                            <td mat-cell *matCellDef="let grandChild">{{ grandChild.opcio_est_opcio }}
+                                            </td>
+                                        </ng-container>
+
+                                        <tr mat-header-row
+                                            *matHeaderRowDef="['opcio_cod_opcio','opcio_des_opcio','opcio_est_opcio']">
+                                        </tr>
+                                        <tr mat-row
+                                            *matRowDef="let grandChild; columns: ['opcio_cod_opcio','opcio_des_opcio','opcio_est_opcio']">
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </ng-container>
+                    </table>
+                </div>
+            </td>
+        </ng-container>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[6]"></mat-paginator>
+</div>

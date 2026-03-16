@@ -1,0 +1,64 @@
+<div class="-m-6 flex max-h-screen max-w-240 flex-col md:min-w-160">
+    <!-- Header -->
+    <div class="flex h-16 flex-0 items-center justify-between bg-primary pl-6 pr-3 text-on-primary sm:pl-8 sm:pr-5">
+        <div class="text-lg font-medium">{{data.title}} información</div>
+        <button mat-icon-button (click)="cancelForm()" [tabIndex]="-1">
+            <mat-icon class="text-current" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+        </button>
+    </div>
+
+    <form [formGroup]="form" class="flex flex-auto flex-col overflow-y-auto p-6 sm:p-8">
+        <div class="row">
+            <div *ngFor="let field of data.config" class="mt-1">
+                @switch (field.type) {
+                @case ('hidden') { 
+                    <ipt-primary [label]="field.label" [formControlName]="field.name" type="text" class="hidden" /> 
+                }
+                @case ('select') { 
+                    <slt-primary [label]="field.label" [formControlName]="field.name" [options]="field.options" /> 
+                }
+                @case ('select-advanced') { 
+                    <slt-secondary [label]="field.label" [formControlName]="field.name" [options]="field.options" [data]="field.data" /> 
+                }
+                @default { 
+                    <ipt-primary [label]="field.label" [formControlName]="field.name" [type]="field.type" /> 
+                }
+                }
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-4 flex flex-col justify-between sm:mt-6 sm:flex-row sm:items-center">
+            <div class="-ml-2">
+                <!-- Attach file -->
+                <button mat-icon-button>
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:paper-clip'"></mat-icon>
+                </button>
+                <!-- Insert link -->
+                <button mat-icon-button>
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:link'"></mat-icon>
+                </button>
+                <!-- Insert emoji -->
+                <button mat-icon-button>
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:face-smile'"></mat-icon>
+                </button>
+                <!-- Insert image -->
+                <button mat-icon-button>
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:photo'"></mat-icon>
+                </button>
+            </div>
+
+            <div class="mt-4 flex items-center sm:mt-0">
+                <!-- Discard -->
+                <button class="ml-auto sm:ml-0" mat-stroked-button (click)="cancelForm()">
+                    Cancelar
+                </button>
+                <!-- Send -->
+                <button class="order-first sm:order-last" mat-flat-button (click)="submitForm()">
+                    Guardar
+                </button>
+
+            </div>
+        </div>
+    </form>
+</div>

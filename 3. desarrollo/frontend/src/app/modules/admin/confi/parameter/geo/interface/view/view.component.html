@@ -1,0 +1,231 @@
+<div class="geo-catalog-container flex min-w-0 flex-auto flex-col w-full m-2">
+  <!-- Header -->
+  <div class="header flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Catálogo Geográfico</h1>
+      <p class="text-gray-500">Gestión de Provincias, Cantones y Parroquias</p>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      <mat-slide-toggle 
+        [checked]="showInactive()"
+        (change)="onToggleInactive()">
+        Mostrar inactivos
+      </mat-slide-toggle>
+    </div>
+  </div>
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb flex items-center gap-2 mb-4 text-sm">
+    <span 
+      class="cursor-pointer hover:text-primary"
+      [class.font-bold]="!selectedProvincia()"
+      (click)="facade.selectProvincia(null)">
+      Provincias
+    </span>
+    
+    @if (selectedProvincia()) {
+      <mat-icon class="text-gray-400">chevron_right</mat-icon>
+      <span 
+        class="cursor-pointer hover:text-primary"
+        [class.font-bold]="selectedProvincia() && !selectedCanton()">
+        {{ selectedProvincia()!.provi_nom_provi }}
+      </span>
+    }
+    
+    @if (selectedCanton()) {
+      <mat-icon class="text-gray-400">chevron_right</mat-icon>
+      <span class="font-bold">
+        {{ selectedCanton()!.canto_nom_canto }}
+      </span>
+    }
+  </div>
+
+  <!-- Content Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- PROVINCIAS -->
+    <mat-card class="overflow-hidden">
+      <mat-card-header class="bg-gray-50 px-4 py-3">
+        <mat-card-title class="text-lg flex justify-between items-center w-full">
+          <span>Provincias</span>
+          <button mat-icon-button color="primary" (click)="openProvinciaDialog()">
+            <mat-icon>add</mat-icon>
+          </button>
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content class="p-0">
+        @if (loading()) {
+          <div class="flex justify-center p-8">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+        } @else {
+          <div class="max-h-96 overflow-auto">
+            @for (provincia of provincias(); track provincia.provi_cod_provi) {
+              <div 
+                class="flex items-center justify-between px-4 py-3 border-b hover:bg-gray-50 cursor-pointer"
+                [class.bg-primary-50]="selectedProvincia()?.provi_cod_provi === provincia.provi_cod_provi"
+                (click)="onSelectProvincia(provincia)">
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-sm bg-gray-200 px-2 py-1 rounded">
+                    {{ provincia.provi_cod_prov }}
+                  </span>
+                  <span [class.text-gray-400]="!provincia.provi_flg_acti">
+                    {{ provincia.provi_nom_provi }}
+                  </span>
+                  @if (!provincia.provi_flg_acti) {
+                    <mat-chip class="text-xs">Inactivo</mat-chip>
+                  }
+                </div>
+                
+                <div class="flex gap-1">
+                  <button mat-icon-button (click)="openProvinciaDialog(provincia); $event.stopPropagation()">
+                    <mat-icon class="text-sm">edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="onDeleteProvincia(provincia); $event.stopPropagation()">
+                    <mat-icon class="text-sm">delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="p-8 text-center text-gray-500">
+                No hay provincias registradas
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- CANTONES -->
+    <mat-card class="overflow-hidden">
+      <mat-card-header class="bg-gray-50 px-4 py-3">
+        <mat-card-title class="text-lg flex justify-between items-center w-full">
+          <span>Cantones</span>
+          <button 
+            mat-icon-button 
+            color="primary" 
+            [disabled]="!selectedProvincia()"
+            (click)="openCantonDialog()">
+            <mat-icon>add</mat-icon>
+          </button>
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content class="p-0">
+        @if (!selectedProvincia()) {
+          <div class="p-8 text-center text-gray-500">
+            Seleccione una provincia
+          </div>
+        } @else if (loadingCantones()) {
+          <div class="flex justify-center p-8">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+        } @else {
+          <div class="max-h-96 overflow-auto">
+            @for (canton of cantones(); track canton.canto_cod_canto) {
+              <div 
+                class="flex items-center justify-between px-4 py-3 border-b hover:bg-gray-50 cursor-pointer"
+                [class.bg-primary-50]="selectedCanton()?.canto_cod_canto === canton.canto_cod_canto"
+                (click)="onSelectCanton(canton)">
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-sm bg-gray-200 px-2 py-1 rounded">
+                    {{ canton.canto_cod_cant }}
+                  </span>
+                  <span [class.text-gray-400]="!canton.canto_flg_acti">
+                    {{ canton.canto_nom_canto }}
+                  </span>
+                  @if (!canton.canto_flg_acti) {
+                    <mat-chip class="text-xs">Inactivo</mat-chip>
+                  }
+                </div>
+                
+                <div class="flex gap-1">
+                  <button mat-icon-button (click)="openCantonDialog(canton); $event.stopPropagation()">
+                    <mat-icon class="text-sm">edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="onDeleteCanton(canton); $event.stopPropagation()">
+                    <mat-icon class="text-sm">delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="p-8 text-center text-gray-500">
+                No hay cantones en esta provincia
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- PARROQUIAS -->
+    <mat-card class="overflow-hidden">
+      <mat-card-header class="bg-gray-50 px-4 py-3">
+        <mat-card-title class="text-lg flex justify-between items-center w-full">
+          <span>Parroquias</span>
+          <button 
+            mat-icon-button 
+            color="primary" 
+            [disabled]="!selectedCanton()"
+            (click)="openParroquiaDialog()">
+            <mat-icon>add</mat-icon>
+          </button>
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content class="p-0">
+        @if (!selectedCanton()) {
+          <div class="p-8 text-center text-gray-500">
+            Seleccione un cantón
+          </div>
+        } @else if (loadingParroquias()) {
+          <div class="flex justify-center p-8">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+        } @else {
+          <div class="max-h-96 overflow-auto">
+            @for (parroquia of parroquias(); track parroquia.parro_cod_parro) {
+              <div class="flex items-center justify-between px-4 py-3 border-b hover:bg-gray-50">
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-sm bg-gray-200 px-2 py-1 rounded">
+                    {{ parroquia.parro_cod_parr }}
+                  </span>
+                  <span [class.text-gray-400]="!parroquia.parro_flg_acti">
+                    {{ parroquia.parro_nom_parro }}
+                  </span>
+                  @if (parroquia.parro_tip_area) {
+                    <mat-chip 
+                      class="text-xs"
+                      [class.bg-blue-100]="parroquia.parro_tip_area === 'U'"
+                      [class.bg-green-100]="parroquia.parro_tip_area === 'R'">
+                      {{ getTipoAreaLabel(parroquia.parro_tip_area) }}
+                    </mat-chip>
+                  }
+                  @if (!parroquia.parro_flg_acti) {
+                    <mat-chip class="text-xs bg-gray-200">Inactivo</mat-chip>
+                  }
+                </div>
+                
+                <div class="flex gap-1">
+                  <button mat-icon-button (click)="openParroquiaDialog(parroquia)">
+                    <mat-icon class="text-sm">edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="onDeleteParroquia(parroquia)">
+                    <mat-icon class="text-sm">delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="p-8 text-center text-gray-500">
+                No hay parroquias en este cantón
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+

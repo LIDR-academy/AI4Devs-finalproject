@@ -1,0 +1,120 @@
+<!-- Loading bar -->
+<fuse-loading-bar></fuse-loading-bar>
+
+<!-- Navigation -->
+@if (isScreenSmall) {
+    <fuse-vertical-navigation
+        class="dark bg-gray-900 print:hidden"
+        [mode]="'over'"
+        [name]="'mainNavigation'"
+        [navigation]="navigation.default"
+        [opened]="false"
+    >
+        <!-- Navigation header hook -->
+        <ng-container fuseVerticalNavigationContentHeader>
+            <!-- Logo -->
+            <div class="flex h-20 items-center px-8 pt-6">
+                <img
+                    class="w-24"
+                    src="images/logo/logo-text-on-dark.svg"
+                    alt="Logo image"
+                />
+            </div>
+        </ng-container>
+    </fuse-vertical-navigation>
+}
+
+<!-- Wrapper -->
+<div
+    class="flex w-full min-w-0 flex-auto flex-col items-center bg-gray-200 dark:bg-card"
+>
+    <!-- Header -->
+    <div
+        class="relative z-49 flex w-full justify-center overflow-hidden bg-primary-700 print:hidden"
+    >
+        <div
+            class="bg-card w-full max-w-360 overflow-hidden border-b sm:m-8 sm:mb-0 sm:rounded-t-xl sm:py-3 sm:shadow-2xl md:mx-8 md:mt-12 md:pb-3 md:pt-4"
+        >
+            <!-- Top bar -->
+            <div
+                class="relative flex h-16 flex-0 flex-auto items-center px-4 md:px-6"
+            >
+                <!-- Logo -->
+                @if (!isScreenSmall) {
+                    <div class="mx-2 flex items-center">
+                        <!-- Light version -->
+                        <img
+                            class="w-24 dark:hidden"
+                            src="images/logo/logo-text.svg"
+                            alt="Logo image"
+                        />
+                        <!-- Dark version -->
+                        <img
+                            class="hidden w-24 dark:flex"
+                            src="images/logo/logo-text-on-dark.svg"
+                            alt="Logo image"
+                        />
+                    </div>
+                }
+                <!-- Navigation toggle button -->
+                @if (isScreenSmall) {
+                    <button
+                        mat-icon-button
+                        (click)="toggleNavigation('mainNavigation')"
+                    >
+                        <mat-icon
+                            [svgIcon]="'heroicons_outline:bars-3'"
+                        ></mat-icon>
+                    </button>
+                }
+                <!-- Components -->
+                <div
+                    class="ml-auto flex items-center space-x-1 pl-2 sm:space-x-2"
+                >
+                    <languages></languages>
+                    <fuse-fullscreen class="hidden md:block"></fuse-fullscreen>
+                    <search [appearance]="'bar'"></search>
+                    <shortcuts></shortcuts>
+                    <messages></messages>
+                    <notifications></notifications>
+                    <user></user>
+                </div>
+            </div>
+            <!-- Bottom bar -->
+            @if (!isScreenSmall) {
+                <div
+                    class="relative flex h-16 flex-0 flex-auto items-center px-4"
+                >
+                    <fuse-horizontal-navigation
+                        [name]="'mainNavigation'"
+                        [navigation]="navigation.horizontal"
+                    ></fuse-horizontal-navigation>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex w-full flex-auto justify-center sm:px-8">
+        <div
+            class="bg-default flex w-full flex-auto flex-col sm:max-w-360 sm:overflow-hidden sm:shadow-xl"
+        >
+            <!-- *ngIf="true" hack is required here for router-outlet to work correctly.
+                 Otherwise, layout changes won't be registered and the view won't be updated! -->
+            @if (true) {
+                <router-outlet></router-outlet>
+            }
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="relative z-49 flex w-full justify-center print:hidden">
+        <div
+            class="bg-card flex h-14 w-full max-w-360 items-center border-t px-6 dark:bg-default sm:h-20 sm:shadow-xl md:px-8"
+        >
+            <span class="text-secondary font-medium"
+                >Fuse &copy; {{ currentYear }}</span
+            >
+        </div>
+    </div>
+</div>
