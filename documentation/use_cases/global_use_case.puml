@@ -1,0 +1,136 @@
+@startuml
+title UNLOKD - Diagrama de Casos de Uso
+
+left to right direction
+
+actor Usuario as User
+actor Dispositivo as Device
+actor Invitado as Guest
+
+rectangle "Autenticación y perfil" {
+  usecase "Registrar cuenta" as UC_Register
+  usecase "Iniciar sesión" as UC_Login
+  usecase "Cerrar sesión" as UC_Logout
+  usecase "Gestionar perfil" as UC_Profile
+  usecase "Gestionar presencia" as UC_Presence
+  usecase "Bloquear usuario" as UC_Block
+  usecase "Reportar usuario" as UC_Report
+}
+
+rectangle "Contactos" {
+  usecase "Importar contactos" as UC_ImportContacts
+  usecase "Añadir contacto" as UC_AddContact
+  usecase "Eliminar contacto" as UC_RemoveContact
+  usecase "Invitar contacto externo" as UC_InviteContact
+}
+
+rectangle "Mensajería básica" {
+  usecase "Crear chat 1 a 1" as UC_CreateDirectChat
+  usecase "Crear chat grupal" as UC_CreateGroupChat
+  usecase "Gestionar miembros de chat" as UC_ManageMembers
+  usecase "Enviar mensaje de texto" as UC_SendText
+  usecase "Enviar mensaje multimedia" as UC_SendMedia
+  usecase "Recibir mensaje en tiempo real" as UC_ReceiveRealtime
+  usecase "Ver historial de mensajes" as UC_ViewHistory
+  usecase "Ver indicadores de estado" as UC_MessageStatus
+}
+
+rectangle "Sistema de condiciones" {
+  usecase "Enviar mensaje con visualización única" as UC_SendOneTime
+  usecase "Enviar mensaje temporizado" as UC_SendTimed
+  usecase "Enviar mensaje con contraseña" as UC_SendPassword
+  usecase "Enviar mensaje con quiz" as UC_SendQuiz
+  usecase "Enviar mensaje con biometría" as UC_SendBiometric
+  usecase "Enviar mensaje con captcha" as UC_SendCaptcha
+  usecase "Enviar mensaje con condiciones combinadas" as UC_SendCombined
+  usecase "Intentar desbloquear mensaje" as UC_TryUnlock
+  usecase "Ver feedback de desbloqueo" as UC_UnlockFeedback
+  usecase "Autodestrucción tras lectura" as UC_AutoDelete
+}
+
+rectangle "Experiencia y gamificación" {
+  usecase "Ver previsualización bloqueada" as UC_ViewPreview
+  usecase "Ver contador regresivo" as UC_Countdown
+  usecase "Recibir notificación de mensaje desbloqueado" as UC_NotifyUnlocked
+  usecase "Ver historial de mensajes desbloqueados" as UC_UnlockHistory
+  usecase "Usar plantillas prediseñadas" as UC_UseTemplates
+  usecase "Usar banco de acertijos" as UC_UseRiddles
+  usecase "Obtener logros" as UC_Achievements
+  usecase "Participar en cacería del tesoro" as UC_TreasureHunt
+  usecase "Crear acertijos visuales" as UC_CreatePuzzles
+}
+
+rectangle "Social y viralidad" {
+  usecase "Invitar amigos con enlace" as UC_InviteLink
+  usecase "Explorar desafíos públicos" as UC_PublicChallenges
+  usecase "Publicar plantillas en marketplace" as UC_PublishTemplates
+  usecase "Compartir logros en redes" as UC_ShareAchievements
+}
+
+rectangle "Seguridad y privacidad" {
+  usecase "Cifrado extremo a extremo" as UC_E2EE
+  usecase "Proteger contra capturas de pantalla" as UC_AntiScreenshot
+  usecase "Modo incógnito" as UC_Incognito
+  usecase "Gestionar tokens de notificación" as UC_ManagePushTokens
+}
+
+' Relaciones actor -> casos de uso
+
+User --> UC_Register
+User --> UC_Login
+User --> UC_Logout
+User --> UC_Profile
+User --> UC_Presence
+User --> UC_Block
+User --> UC_Report
+
+User --> UC_ImportContacts
+User --> UC_AddContact
+User --> UC_RemoveContact
+User --> UC_InviteContact
+
+User --> UC_CreateDirectChat
+User --> UC_CreateGroupChat
+User --> UC_ManageMembers
+User --> UC_SendText
+User --> UC_SendMedia
+User --> UC_ViewHistory
+User --> UC_MessageStatus
+
+User --> UC_SendOneTime
+User --> UC_SendTimed
+User --> UC_SendPassword
+User --> UC_SendQuiz
+User --> UC_SendBiometric
+User --> UC_SendCaptcha
+User --> UC_SendCombined
+User --> UC_TryUnlock
+User --> UC_UnlockFeedback
+User --> UC_AutoDelete
+
+User --> UC_ViewPreview
+User --> UC_Countdown
+User --> UC_NotifyUnlocked
+User --> UC_UnlockHistory
+User --> UC_UseTemplates
+User --> UC_UseRiddles
+User --> UC_Achievements
+User --> UC_TreasureHunt
+User --> UC_CreatePuzzles
+
+User --> UC_InviteLink
+User --> UC_PublicChallenges
+User --> UC_PublishTemplates
+User --> UC_ShareAchievements
+
+User --> UC_E2EE
+User --> UC_AntiScreenshot
+User --> UC_Incognito
+User --> UC_ManagePushTokens
+
+Device --> UC_AntiScreenshot
+Device --> UC_E2EE
+
+Guest --> UC_InviteLink
+
+@enduml

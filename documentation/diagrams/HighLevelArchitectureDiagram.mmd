@@ -1,0 +1,56 @@
+flowchart LR
+    subgraph Clients
+        MobileApp["App móvil UNLOKD"]
+        WebApp["Aplicación web UNLOKD"]
+    end
+
+    subgraph BackendCore["Backend monolítico modular"]
+        API["Módulo API / HTTP"]
+        AppLayer["Capa de aplicación"]
+        DomainLayer["Módulos de dominio:
+- Auth & Usuarios
+- Mensajería
+- Motor de condiciones
+- Estadísticas"]
+        InfraLayer["Capa de infraestructura:
+- Repositorios
+- Integraciones externas"]
+    end
+
+    subgraph RealtimeService["Servicio de tiempo real"]
+        WS["Gateway WebSocket"]
+    end
+
+    subgraph MediaService["Servicio de multimedia"]
+        MediaAPI["Worker / API multimedia"]
+        MediaStorage["Almacenamiento de archivos (ej. S3/Cloud Storage)"]
+    end
+
+    subgraph NotificationService["Servicio de notificaciones"]
+        PushWorker["Worker de notificaciones"]
+        PushProviders["Proveedores push (FCM, APNs)"]
+    end
+
+    subgraph DataStores["Almacenes de datos"]
+        MainDB["Base de datos principal (ej. relacional)"]
+        Cache["Cache / Cola (ej. Redis)"]
+    end
+
+    MobileApp -->|"HTTP/REST"| API
+    WebApp -->|"HTTP/REST"| API
+    MobileApp -->|"WebSocket"| WS
+    WebApp -->|"WebSocket"| WS
+
+    API --> AppLayer
+    AppLayer --> DomainLayer
+    DomainLayer --> InfraLayer
+
+    InfraLayer --> MainDB
+    InfraLayer --> Cache
+
+    DomainLayer -->|"Eventos / tareas async"| MediaService
+    DomainLayer -->|"Eventos / tareas async"| NotificationService
+    WS --> BackendCore
+
+    MediaAPI --> MediaStorage
+    PushWorker --> PushProviders
