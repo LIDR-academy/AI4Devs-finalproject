@@ -1,0 +1,175 @@
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto, ChangePasswordDto, UpdateProfileImageDto } from './dto/update-user.dto';
+import { UserRole } from '../../common/enums/user-role.enum';
+export declare class UsersController {
+    private readonly usersService;
+    constructor(usersService: UsersService);
+    create(createUserDto: CreateUserDto): Promise<{
+        message: string;
+        user: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string;
+            role: UserRole;
+            isActive: boolean;
+            profileImage: string;
+            dateOfBirth: Date;
+            gender: string;
+            emailVerified: boolean;
+            emailVerificationToken: string;
+            passwordResetToken: string;
+            passwordResetExpires: Date;
+            lastLogin: Date;
+            barbershop: import("../barbershops/entities/barbershop.entity").Barbershop;
+            barbershop_id: string | null;
+            clientAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            barberAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    findAll(page?: number, limit?: number, role?: UserRole): Promise<{
+        users: import("./entities/user.entity").User[];
+        total: number;
+        totalPages: number;
+        currentPage: number;
+    }>;
+    findByRole(role: UserRole): Promise<import("./entities/user.entity").User[]>;
+    findBarbersByBarbershop(barbershopId: string): Promise<import("./entities/user.entity").User[]>;
+    findOne(id: string): Promise<{
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        phone: string;
+        role: UserRole;
+        isActive: boolean;
+        profileImage: string;
+        dateOfBirth: Date;
+        gender: string;
+        emailVerified: boolean;
+        emailVerificationToken: string;
+        passwordResetToken: string;
+        passwordResetExpires: Date;
+        lastLogin: Date;
+        barbershop: import("../barbershops/entities/barbershop.entity").Barbershop;
+        barbershop_id: string | null;
+        clientAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+        barberAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    update(id: string, updateUserDto: UpdateUserDto): Promise<{
+        message: string;
+        user: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string;
+            role: UserRole;
+            isActive: boolean;
+            profileImage: string;
+            dateOfBirth: Date;
+            gender: string;
+            emailVerified: boolean;
+            emailVerificationToken: string;
+            passwordResetToken: string;
+            passwordResetExpires: Date;
+            lastLogin: Date;
+            barbershop: import("../barbershops/entities/barbershop.entity").Barbershop;
+            barbershop_id: string | null;
+            clientAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            barberAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    updateProfileImage(id: string, updateProfileImageDto: UpdateProfileImageDto): Promise<{
+        message: string;
+        user: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string;
+            role: UserRole;
+            isActive: boolean;
+            profileImage: string;
+            dateOfBirth: Date;
+            gender: string;
+            emailVerified: boolean;
+            emailVerificationToken: string;
+            passwordResetToken: string;
+            passwordResetExpires: Date;
+            lastLogin: Date;
+            barbershop: import("../barbershops/entities/barbershop.entity").Barbershop;
+            barbershop_id: string | null;
+            clientAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            barberAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    changePassword(id: string, changePasswordDto: ChangePasswordDto): Promise<{
+        message: string;
+    }>;
+    activate(id: string): Promise<{
+        message: string;
+        user: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string;
+            role: UserRole;
+            isActive: boolean;
+            profileImage: string;
+            dateOfBirth: Date;
+            gender: string;
+            emailVerified: boolean;
+            emailVerificationToken: string;
+            passwordResetToken: string;
+            passwordResetExpires: Date;
+            lastLogin: Date;
+            barbershop: import("../barbershops/entities/barbershop.entity").Barbershop;
+            barbershop_id: string | null;
+            clientAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            barberAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    deactivate(id: string): Promise<{
+        message: string;
+        user: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phone: string;
+            role: UserRole;
+            isActive: boolean;
+            profileImage: string;
+            dateOfBirth: Date;
+            gender: string;
+            emailVerified: boolean;
+            emailVerificationToken: string;
+            passwordResetToken: string;
+            passwordResetExpires: Date;
+            lastLogin: Date;
+            barbershop: import("../barbershops/entities/barbershop.entity").Barbershop;
+            barbershop_id: string | null;
+            clientAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            barberAppointments: import("../appointments/entities/appointment.entity").Appointment[];
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    remove(id: string): Promise<{
+        message: string;
+    }>;
+}
