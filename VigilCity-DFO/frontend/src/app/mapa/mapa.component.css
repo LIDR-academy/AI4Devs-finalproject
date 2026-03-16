@@ -1,0 +1,13 @@
+/* Opción 1: Usando altura fija */
+google-map {
+  width: 100%;
+  height: 85vh;  /* Ajusta este valor según necesites, 85vh = 85% del alto de la ventana */
+  display: block;
+}
+
+/* O Opción 2: Usando altura y ancho fijos */
+google-map {
+  width: 100%;
+  height: 800px;  /* Ajusta este valor en píxeles según necesites */
+  display: block;
+}
