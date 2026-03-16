@@ -1,0 +1,3 @@
+# Prompts
+
+There was an initial prompt stored in the memory bank of the project under `memory-bank/user/PROJECT_SEED.md`, which was passed to the plan-project command. From there, we iteratively followed the workflow described in `workflow.md` to develop the project. Note that there were some pivots done during the development process, for instance we dropped i18n to focus on Spain (and Spanish) only. Once the MVP was ready and deployed we started working on the plan for the mobile app, which involves a deep refactor of the web app to group shared packages, making a full split between the web and the api, etc. The project seed also provided a reference implementation which had mockups for the pages etc for reference.
