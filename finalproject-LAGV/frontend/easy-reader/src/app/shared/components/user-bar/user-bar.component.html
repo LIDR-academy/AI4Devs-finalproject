@@ -1,0 +1,43 @@
+<div class="user-bar">
+  <ng-container *ngIf="user$ | async as user; else notLoggedIn">
+    <div class="user-profile" (click)="toggleMenu()">
+      <div class="avatar-container">
+        <span class="avatar" *ngIf="!user.photoURL">
+          {{ user.displayName?.charAt(0) || user.email?.charAt(0) || 'U' }}
+        </span>
+        <img *ngIf="user.photoURL" [src]="user.photoURL" [alt]="user.displayName || 'Usuario'" class="avatar-img">
+      </div>
+    </div>
+    
+    <div class="menu-container" [class.active]="isMenuOpen">
+      <div class="user-menu">
+        <div class="user-info">
+          <div class="avatar-large">
+            <span *ngIf="!user.photoURL" class="avatar-letter">
+              {{ user.displayName?.charAt(0) || user.email?.charAt(0) || 'U' }}
+            </span>
+            <img *ngIf="user.photoURL" [src]="user.photoURL" [alt]="user.displayName || 'Usuario'" class="avatar-img-large">
+          </div>
+          <h2 class="user-name">Hi, {{ user.displayName || 'User' }}!</h2>
+          <p class="user-email">{{ user.email }}</p>
+        </div>
+        
+        <div class="menu-actions">
+          <button (click)="logout()" class="sign-out-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="#444">
+              <path d="M0 0h24v24H0z" fill="none"/>
+              <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+            </svg>
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="backdrop" *ngIf="isMenuOpen" (click)="toggleMenu()"></div>
+  </ng-container>
+  
+  <ng-template #notLoggedIn>
+    <!-- Puedes mostrar algo para usuarios no autenticados si lo deseas -->
+  </ng-template>
+</div> 

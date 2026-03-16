@@ -1,0 +1,25 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    <div class="logo-container">
+      <h1 class="app-title">Easy Reader</h1>
+      <p class="app-slogan">Reading made effortlessly simple</p>
+    </div>
+    
+    <div class="login-box">
+      <h2 class="login-title">Sign in to your account</h2>
+      
+      <button (click)="loginWithGoogle()" class="google-button">
+        <img src="assets/images/google-icon.svg" alt="Google" class="google-icon">
+        Continue with Google
+      </button>
+      
+      <div class="divider">
+        <span>OR</span>
+      </div>
+      
+      <button (click)="continueWithoutAccount()" class="without-account-button">
+        Continue without Account
+      </button>
+    </div>
+  </div>
+</div> 
