@@ -1,0 +1,98 @@
+# Meditation Builder - Local Development Configuration
+# =====================================================
+# Profile: local
+# Usage: Set SPRING_PROFILES_ACTIVE=local or use default
+
+spring:
+  # PostgreSQL database - Docker container (same as production)
+  # Start with: docker-compose up -d postgres
+  datasource:
+    url: jdbc:postgresql://localhost:5432/meditation
+    driver-class-name: org.postgresql.Driver
+    username: meditation_user
+    password: meditation_pass
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  # File upload limits (for music and images)
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  # JPA with PostgreSQL - same as production
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        default_schema: generation
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+  # Flyway for database migrations - same as production
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    default-schema: generation
+
+# OpenAI - Use real API for local development
+# Set OPENAI_API_KEY environment variable with your key
+openai:
+  api-key: ${OPENAI_API_KEY}
+
+# Media Catalog - Local mock or development service
+media-catalog:
+  base-url: ${MEDIA_CATALOG_URL:http://localhost:8081}
+
+# AWS S3 - LocalStack for local development
+aws:
+  region: us-east-1
+  s3:
+    endpoint: ${AWS_ENDPOINT_URL:http://localhost:4566}
+    bucket-name: ${S3_BUCKET_NAME:meditation-media}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY_ID:test}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:test}
+
+# FFmpeg - Local development (expects FFmpeg in PATH or custom path)
+ffmpeg:
+  path: ${FFMPEG_PATH:ffmpeg}
+  enable-fallback: true
+
+# Google Cloud Text-to-Speech Configuration
+# When disabled, the system uses FFmpeg silent audio fallback for development
+google-cloud:
+  tts:
+    enabled: ${GOOGLE_TTS_ENABLED:true}
+    # Credentials file path (if enabled)
+    credentials-path: ${GOOGLE_APPLICATION_CREDENTIALS:C:/Github copilot/meditation-487517-ce210ad855ee.json}
+    # Or base64-encoded credentials (for Docker)
+    credentials-json: ${GOOGLE_CREDENTIALS_JSON:}
+    # Voice configuration
+    voice:
+      language-code: es-ES
+      name: es-ES-Standard-B
+      gender: MALE
+    # Audio configuration
+    audio:
+      encoding: MP3
+      sample-rate: 48000
+      speaking-rate: 0.85
+      pitch: 0.0
+      volume-gain-db: 0.0
+
+# Development logging - more verbose
+logging:
+  level:
+    com.hexagonal.meditationbuilder: DEBUG
+    org.springframework.web.client: DEBUG
+    com.hexagonal.meditation.generation: DEBUG
+    com.hexagonal.meditation.generation.infrastructure.out.adapter.tts: DEBUG

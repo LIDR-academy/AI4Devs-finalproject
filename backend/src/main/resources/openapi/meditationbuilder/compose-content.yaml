@@ -1,0 +1,598 @@
+openapi: 3.0.3
+info:
+  title: Meditation Builder - Compose Content API
+  description: |
+    API for composing meditation content with optional AI assistance.
+    
+    Supports 8 core capabilities:
+    1. Access Meditation Builder (initialize composition)
+    2. Define Meditation Text (manual entry)
+    3. AI Text Generation/Enhancement (works with empty, keywords, or existing content)
+    4. AI Image Generation
+    5. Determine Output Type - Podcast (without image)
+    6. Determine Output Type - Video (with image)
+    7. Preview Selected Music
+    8. Preview Image
+    
+    Architecture: Hexagonal (Ports & Adapters)
+    BDD-First, API-First approach
+  version: 1.0.0
+  contact:
+    name: Meditation Builder Team
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Composition
+    description: Meditation composition management
+  - name: AI Generation
+    description: AI-powered content generation
+  - name: Preview
+    description: Media preview capabilities
+
+paths:
+  /compositions:
+    post:
+      tags:
+        - Composition
+      summary: Create new meditation composition
+      description: |
+        Capability 1: Access Meditation Builder and initialize composition.
+        Creates an empty composition with mandatory text field.
+        Maps to Scenario 1: "Access Meditation Builder and see text field"
+      operationId: createComposition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCompositionRequest'
+      responses:
+        '201':
+          description: Composition created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompositionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+
+  /compositions/text/generate:
+    post:
+      tags:
+        - AI Generation
+      summary: Generate or enhance meditation text with AI (global, no composition required)
+      description: |
+        Capability 3: AI Text Generation/Enhancement.
+        Works with empty field, keywords, or existing content.
+        Unified endpoint for both "from scratch" and "enhancement".
+        No composition required.
+        Maps to Scenario 3: "AI text generation and enhancement"
+      operationId: generateTextGlobal
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateTextRequest'
+      responses:
+        '200':
+          description: Text generated/enhanced successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextContentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /compositions/image/generate:
+    post:
+      tags:
+        - AI Generation
+      summary: Generate AI image for meditation (global, no composition required)
+      description: |
+        Capability 4: AI Image Generation.
+        Generates an AI image from the provided text prompt.
+        Unified global endpoint (no composition required).
+        Maps to Scenario 4: "Generate AI image"
+      operationId: generateImageGlobal
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              description: Text prompt for AI image generation
+              minLength: 1
+              maxLength: 10000
+      responses:
+        '200':
+          description: Image generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageReferenceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /compositions/{compositionId}/music:
+    put:
+      tags:
+        - Composition
+      summary: Select music for composition
+      description: |
+        Select background music from media catalog.
+        Used in output type determination.
+      operationId: selectMusic
+      parameters:
+        - $ref: '#/components/parameters/CompositionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelectMusicRequest'
+      responses:
+        '200':
+          description: Music selected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompositionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /compositions/{compositionId}/image:
+    put:
+      tags:
+        - Composition
+      summary: Set image for composition
+      description: |
+        Set manual or AI-generated image.
+        Triggers output type change to VIDEO.
+      operationId: setImage
+      parameters:
+        - $ref: '#/components/parameters/CompositionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetImageRequest'
+      responses:
+        '200':
+          description: Image set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompositionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    delete:
+      tags:
+        - Composition
+      summary: Remove image from composition
+      description: |
+        Remove selected image.
+        Triggers output type change to PODCAST.
+      operationId: removeImage
+      parameters:
+        - $ref: '#/components/parameters/CompositionId'
+      responses:
+        '200':
+          description: Image removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompositionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /compositions/{compositionId}/output-type:
+    get:
+      tags:
+        - Composition
+      summary: Get output type determination
+      description: |
+        Capabilities 5 & 6: Determine Output Type.
+        Returns PODCAST when no image selected.
+        Returns VIDEO when image selected (manual or AI).
+        Maps to:
+        - Scenario 5: "Output type podcast without image"
+        - Scenario 6: "Output type video with image"
+      operationId: getOutputType
+      parameters:
+        - $ref: '#/components/parameters/CompositionId'
+      responses:
+        '200':
+          description: Output type determined successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutputTypeResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /compositions/{compositionId}/preview/music:
+    get:
+      tags:
+        - Preview
+      summary: Preview selected music
+      description: |
+        Capability 7: Preview Selected Music.
+        Returns music preview URL for audio playback.
+        Maps to Scenario 7: "Preview music"
+      operationId: previewMusic
+      parameters:
+        - $ref: '#/components/parameters/CompositionId'
+      responses:
+        '200':
+          description: Music preview URL returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MusicPreviewResponse'
+        '400':
+          description: No music selected
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /compositions/{compositionId}/preview/image:
+    get:
+      tags:
+        - Preview
+      summary: Preview selected image
+      description: |
+        Capability 8: Preview Image.
+        Returns image preview URL for display.
+        Maps to Scenario 8: "Preview image"
+      operationId: previewImage
+      parameters:
+        - $ref: '#/components/parameters/CompositionId'
+      responses:
+        '200':
+          description: Image preview URL returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImagePreviewResponse'
+        '400':
+          description: No image selected
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /compositions/{compositionId}:
+    get:
+      tags:
+        - Composition
+      summary: Get composition details
+      description: Retrieve full composition state
+      operationId: getComposition
+      parameters:
+        - $ref: '#/components/parameters/CompositionId'
+      responses:
+        '200':
+          description: Composition retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompositionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    CompositionId:
+      name: compositionId
+      in: path
+      required: true
+      description: Unique identifier for the meditation composition
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # GenerateImageRequest schema removed; endpoint now accepts plain string (text/plain)
+    CompositionResponse:
+      type: object
+      required:
+        - id
+        - textContent
+        - outputType
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Composition unique identifier
+        textContent:
+          type: string
+          description: Meditation text content (preserved exactly as entered)
+          maxLength: 10000
+        musicReference:
+          type: string
+          nullable: true
+          description: Reference to selected music (null if not selected)
+        imageReference:
+          type: string
+          nullable: true
+          description: Reference to image (manual or AI-generated, null if not selected)
+        outputType:
+          $ref: '#/components/schemas/OutputType'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      example:
+        id: "550e8400-e29b-41d4-a716-446655440000"
+        textContent: "Close your eyes and breathe deeply..."
+        musicReference: "calm-ocean-waves"
+        imageReference: null
+        outputType: "PODCAST"
+        createdAt: "2026-01-28T20:00:00Z"
+        updatedAt: "2026-01-28T20:05:00Z"
+
+    CreateCompositionRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: Initial meditation text content
+          minLength: 1
+          maxLength: 10000
+      example:
+        text: "Start your meditation journey"
+
+    UpdateTextRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: Meditation text content
+          minLength: 1
+          maxLength: 10000
+      example:
+        text: "Close your eyes and breathe deeply..."
+
+    GenerateTextRequest:
+      type: object
+      properties:
+        existingText:
+          type: string
+          nullable: true
+          description: Existing text to enhance (null for generation from scratch)
+          maxLength: 10000
+        context:
+          type: string
+          nullable: true
+          description: Keywords or context for generation
+          maxLength: 500
+      example:
+        existingText: "Breathe deeply"
+        context: "relaxation, mindfulness"
+
+    TextContentResponse:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: Generated or enhanced meditation text
+          maxLength: 10000
+      example:
+        text: "Close your eyes and breathe deeply. Feel the air filling your lungs..."
+
+    ImageReferenceResponse:
+      type: object
+      required:
+        - imageReference
+      properties:
+        imageReference:
+          type: string
+          description: Reference to AI-generated image
+      example:
+        imageReference: "ai-generated-sunset-beach-12345"
+
+
+    SelectMusicRequest:
+      type: object
+      required:
+        - musicReference
+      properties:
+        musicReference:
+          type: string
+          description: Reference to music from media catalog
+      example:
+        musicReference: "calm-ocean-waves"
+
+    SetImageRequest:
+      type: object
+      required:
+        - imageReference
+      properties:
+        imageReference:
+          type: string
+          description: Reference to image (manual or AI-generated)
+      example:
+        imageReference: "sunset-beach-001"
+
+    OutputType:
+      type: string
+      enum:
+        - PODCAST
+        - VIDEO
+      description: |
+        Output type determined by image presence:
+        - PODCAST: No image selected (audio-only)
+        - VIDEO: Image selected (manual or AI-generated)
+
+    OutputTypeResponse:
+      type: object
+      required:
+        - outputType
+      properties:
+        outputType:
+          $ref: '#/components/schemas/OutputType'
+      example:
+        outputType: "PODCAST"
+
+    MusicPreviewResponse:
+      type: object
+      required:
+        - previewUrl
+        - musicReference
+      properties:
+        previewUrl:
+          type: string
+          format: uri
+          description: URL for music preview playback
+        musicReference:
+          type: string
+          description: Reference to selected music
+      example:
+        previewUrl: "https://media.example.com/preview/calm-ocean-waves.mp3"
+        musicReference: "calm-ocean-waves"
+
+    ImagePreviewResponse:
+      type: object
+      required:
+        - previewUrl
+        - imageReference
+      properties:
+        previewUrl:
+          type: string
+          format: uri
+          description: URL for image preview display
+        imageReference:
+          type: string
+          description: Reference to selected image
+      example:
+        previewUrl: "https://media.example.com/preview/sunset-beach-001.jpg"
+        imageReference: "sunset-beach-001"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - timestamp
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: object
+          nullable: true
+          description: Additional error details
+      example:
+        error: "VALIDATION_ERROR"
+        message: "Text content exceeds maximum length of 10000 characters"
+        timestamp: "2026-01-28T20:00:00Z"
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters or validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "VALIDATION_ERROR"
+            message: "Text content is required"
+            timestamp: "2026-01-28T20:00:00Z"
+
+    NotFound:
+      description: Composition not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NOT_FOUND"
+            message: "Composition with id 550e8400-e29b-41d4-a716-446655440000 not found"
+            timestamp: "2026-01-28T20:00:00Z"
+
+    RateLimitExceeded:
+      description: AI service rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "RATE_LIMIT_EXCEEDED"
+            message: "AI generation rate limit exceeded. Please try again later."
+            timestamp: "2026-01-28T20:00:00Z"
+
+    ServiceUnavailable:
+      description: AI service temporarily unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "AI_SERVICE_UNAVAILABLE"
+            message: "AI text generation service is temporarily unavailable"
+            timestamp: "2026-01-28T20:00:00Z"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INTERNAL_SERVER_ERROR"
+            message: "An unexpected error occurred"
+            timestamp: "2026-01-28T20:00:00Z"

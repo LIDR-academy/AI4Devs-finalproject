@@ -1,0 +1,69 @@
+# Meditation Builder - Test Configuration
+# ========================================
+# Profile: test
+# Usage: Automatically active during tests
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  # H2 in-memory database for integration tests
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS GENERATION
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA with H2 - auto-generate schema
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+
+  # Disable Flyway in tests - use JPA auto-schema instead
+  flyway:
+    enabled: false
+
+# Media preview configuration
+media:
+  preview:
+    base-url: http://localhost:8081/api/media/preview
+
+# OpenAI - Will be overridden by @DynamicPropertySource in tests
+openai:
+  base-url: http://localhost:8089
+  api-key: test-api-key-for-integration-tests
+  text:
+    model: gpt-4
+  image:
+    model: dall-e-3
+
+# AI properties for prompt templates
+ai:
+  text:
+    system-prompt: "You are a meditation script writer."
+  image:
+    style-prompt: "peaceful meditation scene"
+
+# Media Catalog - Will be overridden by @DynamicPropertySource in tests
+media-catalog:
+  base-url: http://localhost:8089
+  connect-timeout-ms: 5000
+  read-timeout-ms: 10000
+
+# Retry - Faster retries for tests
+retry:
+  max-attempts: 2
+  initial-interval: 100ms
+  multiplier: 1.5
+  max-interval: 500ms
+
+# Logging configuration
+logging:
+  level:
+    root: WARN
+    com.hexagonal.meditationbuilder: INFO

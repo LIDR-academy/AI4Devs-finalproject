@@ -1,0 +1,82 @@
+# Local Development Configuration Example
+# Copy this file to application-local.yml and customize with your settings
+
+spring:
+  profiles:
+    active: local
+
+# Local database configuration (use PostgreSQL from Docker Compose)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/meditation_db
+    username: postgres
+    password: postgres
+
+# S3/LocalStack configuration for local development
+  cloud:
+    aws:
+      s3:
+        endpoint: http://localhost:4566
+        region: us-east-1
+
+# Google Cloud Text-to-Speech Configuration
+# See GOOGLE-TTS-SETUP.md for detailed setup instructions
+google-cloud:
+  tts:
+    # Set to true to enable Google Cloud TTS (requires credentials)
+    # Set to false to use FFmpeg silent audio fallback
+    enabled: ${GOOGLE_TTS_ENABLED:false}
+    
+    # OPTION 1: Path to credentials JSON file
+    # Download from: https://console.cloud.google.com/iam-admin/serviceaccounts
+    credentials-path: ${GOOGLE_APPLICATION_CREDENTIALS:C:\\Users\\YourUser\\.gcp\\meditation-tts.json}
+    
+    # OPTION 2: Base64-encoded credentials (for Docker/Kubernetes)
+    # credentials-json: ${GOOGLE_CREDENTIALS_JSON:}
+    
+    # Voice configuration
+    voice:
+      language-code: es-ES
+      # Premium voices (best quality):
+      # es-ES-Neural2-A (Female), es-ES-Neural2-B (Male), es-ES-Neural2-F (Male)
+      # Standard voices: es-ES-Standard-A (Female), es-ES-Standard-B (Male)
+      name: es-ES-Neural2-B
+      gender: MALE  # MALE, FEMALE, NEUTRAL
+    
+    # Audio configuration
+    audio:
+      encoding: MP3
+      sample-rate: 48000
+      # Speaking rate: 0.25 (very slow) to 4.0 (very fast)
+      # For meditation, use 0.8-0.9 for calm, slow speech
+      speaking-rate: 0.85
+      # Pitch: -20.0 (lower) to 20.0 (higher)
+      pitch: 0.0
+      # Volume: -96.0 (quiet) to 16.0 (loud)
+      volume-gain-db: 0.0
+
+# FFmpeg Configuration
+# FFmpeg is required for video rendering and TTS fallback
+ffmpeg:
+  path: ${FFMPEG_PATH:ffmpeg}
+  # Enable fallback when FFmpeg or Google TTS fails
+  enable-fallback: true
+
+# OpenAI Configuration (for content generation)
+openai:
+  api-key: ${OPENAI_API_KEY:your-api-key-here}
+  text:
+    model: gpt-4
+    temperature: 0.7
+  image:
+    model: dall-e-3
+    quality: standard
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.hexagonal.meditation: DEBUG
+    # Enable to see Google TTS details
+    com.hexagonal.meditation.generation.infrastructure.out.adapter.tts: DEBUG
+    # Enable to see FFmpeg details
+    com.hexagonal.meditation.generation.infrastructure.out.adapter.ffmpeg: DEBUG

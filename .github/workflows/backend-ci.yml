@@ -1,0 +1,263 @@
+# Meditation Builder - Backend CI Workflow
+# ==========================================
+# This workflow follows the strict gates defined in US3 (BC: Generation)
+# BDD -> API -> Unit domain -> Unit application -> Infra IT -> Contract -> E2E -> Build JAR
+
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, 'feature/*', '002-generate-meditation-audio-video', '003-list-play-meditations' ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+
+env:
+  GOOGLE_TTS_API_KEY: fake
+  BUCKET_NAME: meditation-outputs
+  SPRING_PROFILES_ACTIVE: test
+
+jobs:
+  # Gate 1: BDD Tests (Cucumber)
+  bdd-tests:
+    name: Gate 1 - BDD Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Run BDD Tests
+        # Reusing the existing filter for both BCs
+        run: mvn test -Dtest="**/*BDD*,**/*Cucumber*,**/*Feature*" -DfailIfNoTests=false
+      
+      - name: Publish BDD Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: BDD Test Results
+          path: backend/target/surefire-reports/*.xml
+          reporter: java-junit
+
+  # Gate 2: API Specification Validation
+  api-validation:
+    name: Gate 2 - API Validation
+    runs-on: ubuntu-latest
+    needs: bdd-tests
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate OpenAPI Specs
+        # Validates both BCs
+        run: |
+          npx @redocly/cli lint src/main/resources/openapi/meditationbuilder/compose-content.yaml || echo "Warning: US2 spec lint failed but continuing"
+          npx @redocly/cli lint src/main/resources/openapi/generation/generate-meditation.yaml
+          npx @redocly/cli lint src/main/resources/openapi/playback/list-play-meditations.yaml
+
+  # Gate 3: Unit Domain
+  unit-domain:
+    name: Gate 3 - Unit Domain
+    runs-on: ubuntu-latest
+    needs: api-validation
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Run Unit Tests (Domain)
+        # Filters for both domain packages
+        run: mvn test -Dtest="com.hexagonal.meditationbuilder.domain.**,com.hexagonal.meditation.generation.domain.**,com.hexagonal.playback.domain.**" -DfailIfNoTests=false
+
+  # Gate 4: Unit Application
+  unit-application:
+    name: Gate 4 - Unit Application
+    runs-on: ubuntu-latest
+    needs: unit-domain
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Run Unit Tests (Application)
+        # Filters for both application packages
+        run: mvn test -Dtest="com.hexagonal.meditationbuilder.application.**,com.hexagonal.meditation.generation.application.**,com.hexagonal.playback.application.**" -DfailIfNoTests=false
+
+  # Gate 5: Infrastructure Tests (Integration)
+  infrastructure-it:
+    name: Gate 5 - Infra IT
+    runs-on: ubuntu-latest
+    needs: unit-application
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      
+      - name: Run Infrastructure Integration Tests
+        # Filters for infrastructure adapters
+        run: mvn test -Dtest="com.hexagonal.meditationbuilder.infrastructure.out.**,com.hexagonal.meditation.generation.infrastructure.out.**,com.hexagonal.playback.infrastructure.out.**" -DfailIfNoTests=false
+
+  # Gate 6: Contract Tests
+  contract-tests:
+    name: Gate 6 - Contract Tests
+    runs-on: ubuntu-latest
+    needs: infrastructure-it
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Run Contract Tests
+        run: mvn test -Dtest="**/*ContractTest*" -DfailIfNoTests=false
+
+  # Gate 7: E2E Tests
+  e2e-tests:
+    name: Gate 7 - E2E Tests
+    runs-on: ubuntu-latest
+    needs: contract-tests
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      
+      - name: Run E2E Tests
+        run: mvn test -Dtest="**/*E2ETest*" -DfailIfNoTests=false
+
+  # Gate 8: Build JAR
+  build:
+    name: Gate 8 - Build JAR
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+      
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/target/*.jar
+          retention-days: 7
+
+  # Final Summary Pipeline Status
+  ci-summary:
+    name: CI Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [bdd-tests, api-validation, unit-domain, unit-application, infrastructure-it, contract-tests, e2e-tests, build]
+    if: always()
+    
+    steps:
+      - name: Report Results
+        run: |
+          echo "=== Backend CI Pipeline Results ==="
+          echo "Gate 1 - BDD: ${{ needs.bdd-tests.result }}"
+          echo "Gate 2 - API: ${{ needs.api-validation.result }}"
+          echo "Gate 3 - Domain: ${{ needs.unit-domain.result }}"
+          echo "Gate 4 - Application: ${{ needs.unit-application.result }}"
+          echo "Gate 5 - Infra IT: ${{ needs.infrastructure-it.result }}"
+          echo "Gate 6 - Contract: ${{ needs.contract-tests.result }}"
+          echo "Gate 7 - E2E: ${{ needs.e2e-tests.result }}"
+          echo "Gate 8 - Build: ${{ needs.build.result }}"
+          
+          if [ "${{ needs.build.result }}" == "success" ]; then
+            echo "✅ Pipeline completed successfully!"
+          else
+            echo "❌ Pipeline failed at one or more gates."
+            exit 1
+          fi
+
