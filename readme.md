@@ -665,6 +665,12 @@ Se implemento una CLI de despliegue multiplataforma para operaciones Docker en `
 - `deploy.sh` para Linux/macOS.
 - `deploy.ps1` para Windows PowerShell.
 
+Tambien se agregaron scripts operativos para el flujo de release a VPS:
+
+- `deployment/scripts/prod-pull.sh`: construye y publica imagenes de produccion en registry privado.
+- `deployment/scripts/upload-to-vps.sh`: wrapper para centralizar el comando en `deployment/scripts/`.
+- `upload-deployment-to-vps.sh` (raiz del proyecto): sube el directorio `deployment/` completo al VPS en `/root/DELIVERIES/ai4devs/`.
+
 ### 18.1. Capacidades incluidas
 
 - Menu interactivo con opciones numeradas.
@@ -678,6 +684,22 @@ Se implemento una CLI de despliegue multiplataforma para operaciones Docker en `
 ```bash
 ./deployment/scripts/deploy.sh
 ./deployment/scripts/deploy.sh --dry-run --env development --registry ghcr.io/your-org
+```
+
+Flujo de release recomendado (build -> push -> upload -> pull en VPS):
+
+```bash
+# Local: construir y publicar imagenes
+./deployment/scripts/prod-pull.sh
+
+# Local: sincronizar directorio deployment/ al VPS
+./upload-deployment-to-vps.sh
+# o
+./deployment/scripts/upload-to-vps.sh
+
+# VPS: arrancar con pull desde registry privado
+cd /root/DELIVERIES/ai4devs/deployment
+./scripts/prod-up.sh
 ```
 
 ```powershell

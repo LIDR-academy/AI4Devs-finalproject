@@ -9,4 +9,5 @@ if [[ ! -f "$ROOT_DIR/deployment/.env" ]]; then
 fi
 
 cd "$ROOT_DIR"
-docker compose -f deployment/docker-compose.prod.yml up --build -d
+docker compose -f deployment/docker-compose.prod.yml pull
+docker compose -f deployment/docker-compose.prod.yml up -d

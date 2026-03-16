@@ -199,7 +199,13 @@ deploy_application() {
   compose_file="$(get_compose_file)"
   project="$(compose_project_name)"
 
-  run_cmd "COMPOSE_PROJECT_NAME='$project' docker compose -f '$compose_file' up --build -d"
+  if [[ "$CURRENT_ENV" == "development" ]]; then
+    run_cmd "COMPOSE_PROJECT_NAME='$project' docker compose -f '$compose_file' up --build -d"
+    return
+  fi
+
+  run_cmd "COMPOSE_PROJECT_NAME='$project' docker compose -f '$compose_file' pull"
+  run_cmd "COMPOSE_PROJECT_NAME='$project' docker compose -f '$compose_file' up -d"
 }
 
 run_single_container() {

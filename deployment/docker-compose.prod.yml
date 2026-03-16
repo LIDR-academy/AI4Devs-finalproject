@@ -77,9 +77,8 @@ services:
   # Backend (Gunicorn / Flask production)
   # --------------------------------------------------------------------------
   backend:
-    build:
-      context: ../backend
-      dockerfile: ../deployment/docker/backend/Dockerfile
+    image: ${PRIVATE_DOCKER_REPOSITORY}:ipfs-gateway-prod-backend-latest
+    pull_policy: always
     restart: always
     env_file:
       - .env
@@ -125,9 +124,8 @@ services:
   # Celery worker
   # --------------------------------------------------------------------------
   celery:
-    build:
-      context: ../backend
-      dockerfile: ../deployment/docker/celery/Dockerfile
+    image: ${PRIVATE_DOCKER_REPOSITORY}:ipfs-gateway-prod-celery-latest
+    pull_policy: always
     restart: always
     env_file:
       - .env
@@ -175,21 +173,23 @@ services:
   # Frontend (Next.js standalone)
   # --------------------------------------------------------------------------
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: ../deployment/docker/frontend/Dockerfile
+    image: ${PRIVATE_DOCKER_REPOSITORY}:ipfs-gateway-prod-frontend-latest
+    pull_policy: always
     restart: always
     env_file:
       - .env
     environment:
-      NEXT_PUBLIC_API_URL:  /api
+      NEXT_PUBLIC_API_URL:  ""
+      BACKEND_API_URL:      http://backend:5000
+    ports:
+      - "3000:3000"
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - ipfs_net
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -212,9 +212,8 @@ services:
   # Nginx
   # --------------------------------------------------------------------------
   nginx:
-    build:
-      context: ./docker/nginx
-      dockerfile: Dockerfile
+    image: ${PRIVATE_DOCKER_REPOSITORY}:ipfs-gateway-prod-nginx-latest
+    pull_policy: always
     restart: always
     ports:
       - "80:80"

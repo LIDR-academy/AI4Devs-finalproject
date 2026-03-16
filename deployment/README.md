@@ -2,6 +2,10 @@
 
 This directory contains all Docker and container-orchestration artefacts for the IPFS Gateway platform.
 
+Project-level helper script related to deployment:
+
+- `upload-deployment-to-vps.sh` (repository root) uploads this entire `deployment/` directory to the VPS target path `/root/DELIVERIES/ai4devs/`.
+
 ## Architecture
 
 ```mermaid
@@ -45,6 +49,41 @@ deployment/
 ├── scripts/                    # Helper shell scripts for common workflows
 └── README.md                   # This file
 ```
+
+Repository root:
+
+```text
+upload-deployment-to-vps.sh     # Upload deployment/ to VPS (/root/DELIVERIES/ai4devs/)
+```
+
+## Production Image Shipping Workflow
+
+```mermaid
+flowchart LR
+  A[Local repo] --> B[Run deployment/scripts/prod-pull.sh]
+  B --> C[Build 4 images
+backend, celery, frontend, nginx]
+  C --> D[Push to PRIVATE_DOCKER_REPOSITORY]
+  D --> E[Run ./upload-deployment-to-vps.sh]
+  E --> F[VPS receives /root/DELIVERIES/ai4devs/deployment]
+  F --> G[Run deployment/scripts/prod-up.sh on VPS]
+  G --> H[docker compose pull]
+  H --> I[docker compose up -d]
+```
+
+## Script Reference
+
+| Script | Location | Purpose |
+|--------|----------|---------|
+| `dev-up.sh` | `deployment/scripts/` | Start development stack with build (`docker compose ... up --build`). |
+| `dev-down.sh` | `deployment/scripts/` | Stop development stack (`docker compose ... down`). |
+| `prod-up.sh` | `deployment/scripts/` | Pull production images from registry and start stack. |
+| `prod-down.sh` | `deployment/scripts/` | Stop production stack. |
+| `prod-pull.sh` | `deployment/scripts/` | Build and push latest production images to `PRIVATE_DOCKER_REPOSITORY`. |
+| `deploy.sh` | `deployment/scripts/` | Interactive deployment CLI for Linux/macOS. |
+| `deploy.ps1` | `deployment/scripts/` | Interactive deployment CLI for Windows PowerShell. |
+| `upload-to-vps.sh` | `deployment/scripts/` | Wrapper that calls root `upload-deployment-to-vps.sh`. |
+| `upload-deployment-to-vps.sh` | repository root | Upload local `deployment/` directory to VPS at `/root/DELIVERIES/ai4devs/`. |
 
 ## Prerequisites
 
@@ -148,7 +187,7 @@ After the backend container is running, apply Alembic migrations:
 
 ```bash
 docker compose -f deployment/docker-compose.dev.yml exec backend \
-  flask db upgrade
+  alembic upgrade head
 ```
 
 ### 4. Stop the stack
@@ -172,10 +211,24 @@ cp deployment/.env.example deployment/.env
 
 > **Security note:** Ensure `SECRET_KEY`, `POSTGRES_PASSWORD`, `FILEBASE_ACCESS_KEY`, `FILEBASE_SECRET_KEY`, `INTERNAL_API_KEY`, and `ADMIN_TOKEN` contain strong random values.
 
-### 2. Build and start the stack
+Set the private registry image variable in `deployment/.env`:
+
+```env
+PRIVATE_DOCKER_REPOSITORY=CHANGE_TO_YOUR_DOCKER_REGISTRY
+```
+
+With this value, production compose will pull these exact images:
+
+- `CHANGE_TO_YOUR_DOCKER_REGISTRY:ipfs-gateway-prod-backend-latest`
+- `CHANGE_TO_YOUR_DOCKER_REGISTRY:ipfs-gateway-prod-celery-latest`
+- `CHANGE_TO_YOUR_DOCKER_REGISTRY:ipfs-gateway-prod-frontend-latest`
+- `CHANGE_TO_YOUR_DOCKER_REGISTRY:ipfs-gateway-prod-nginx-latest`
+
+### 2. Pull and start the stack
 
 ```bash
-docker compose -f deployment/docker-compose.prod.yml up --build -d
+docker compose -f deployment/docker-compose.prod.yml pull
+docker compose -f deployment/docker-compose.prod.yml up -d
 ```
 
 Or with helper scripts:
@@ -183,15 +236,34 @@ Or with helper scripts:
 ```bash
 ./deployment/scripts/dev-up.sh
 ./deployment/scripts/dev-down.sh
+./deployment/scripts/prod-pull.sh
 ./deployment/scripts/prod-up.sh
 ./deployment/scripts/prod-down.sh
+./deployment/scripts/upload-to-vps.sh
+./upload-deployment-to-vps.sh
+```
+
+Recommended release sequence from repository root:
+
+```bash
+# 1) Build and push updated production images to registry
+./deployment/scripts/prod-pull.sh
+
+# 2) Upload deployment files/scripts to VPS
+./upload-deployment-to-vps.sh
+# or
+./deployment/scripts/upload-to-vps.sh
+
+# 3) On VPS: pull and start updated stack
+cd /root/DELIVERIES/ai4devs/deployment
+./scripts/prod-up.sh
 ```
 
 ### 3. Apply database migrations
 
 ```bash
 docker compose -f deployment/docker-compose.prod.yml exec backend \
-  flask db upgrade
+  alembic upgrade head
 ```
 
 ### 4. Verify health

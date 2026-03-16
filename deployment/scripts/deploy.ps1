@@ -172,7 +172,14 @@ function Deploy-Application {
     Validate-EnvFile
     $composeFile = Get-ComposeFile
     $projectName = Get-ProjectName
-    Invoke-CommandSafe "`$env:COMPOSE_PROJECT_NAME='$projectName'; docker compose -f '$composeFile' up --build -d"
+
+    if ($script:CurrentEnv -eq 'development') {
+        Invoke-CommandSafe "`$env:COMPOSE_PROJECT_NAME='$projectName'; docker compose -f '$composeFile' up --build -d"
+        return
+    }
+
+    Invoke-CommandSafe "`$env:COMPOSE_PROJECT_NAME='$projectName'; docker compose -f '$composeFile' pull"
+    Invoke-CommandSafe "`$env:COMPOSE_PROJECT_NAME='$projectName'; docker compose -f '$composeFile' up -d"
 }
 
 function Run-SingleContainer {

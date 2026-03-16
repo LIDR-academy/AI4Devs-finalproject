@@ -31,7 +31,17 @@ export function getSessionMaxAgeSeconds() {
 }
 
 export function getBackendApiUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+  const backendApiUrl = process.env.BACKEND_API_URL?.trim();
+  if (backendApiUrl) {
+    return backendApiUrl.replace(/\/$/, "");
+  }
+
+  const publicApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (publicApiUrl && /^https?:\/\//i.test(publicApiUrl)) {
+    return publicApiUrl.replace(/\/$/, "");
+  }
+
+  return "http://localhost:5000";
 }
 
 export function encodeSessionCookie(payload: SessionCookiePayload) {
