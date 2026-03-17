@@ -32,6 +32,7 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/serve-static": "^5.0.4",
     "@nestjs/swagger": "^11.2.3",
     "@nestjs/typeorm": "^11.0.0",
     "@types/bcrypt": "^6.0.0",
@@ -50,8 +51,8 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.0",
     "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
@@ -86,7 +87,9 @@
       "ts"
     ],
     "rootDir": ".",
-    "roots": ["<rootDir>/src"],
+    "roots": [
+      "<rootDir>/src"
+    ],
     "testRegex": "\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

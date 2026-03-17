@@ -34,5 +34,7 @@ npm run test:e2e
 
 - `API_BASE_URL` – backend API root (default `http://localhost:3000/api`)
 - `PLAYWRIGHT_BASE_URL` – frontend URL for E2E (default `http://localhost:5173`)
+- `E2E_TEST_EMAIL` – email for the E2E test user (required for global-setup and E2E tests). Example: `e2e-test@travelsplit.local`
+- `E2E_TEST_PASSWORD` – password for the E2E test user (required; must satisfy backend rules). Example: `E2eTest123`
 
-If the backend is not reachable, global-setup writes an error into the seed file and API tests skip with a clear message.
+If the backend is not reachable, global-setup writes an error into the seed file and API tests skip with a clear message. If `E2E_TEST_EMAIL` or `E2E_TEST_PASSWORD` is missing, global-setup writes an error and tests skip.

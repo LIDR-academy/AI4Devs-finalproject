@@ -11,13 +11,16 @@ This document describes the continuous integration and deployment pipeline for T
 
 ### GitHub Secrets
 
-For CI to pass, configure the following repository secret in GitHub (Settings > Secrets and variables > Actions):
+For CI to pass, configure the following repository secrets in GitHub (Settings > Secrets and variables > Actions):
 
-| Secret       | Description |
-|-------------|-------------|
-| `JWT_SECRET` | Used by the backend E2E job (migrations and tests). Must be at least 32 characters. Use a strong, random value (e.g. generated with `openssl rand -base64 32`). |
+| Secret | Description |
+|--------|-------------|
+| `JWT_SECRET` | Used by the backend E2E job (migrations and tests). Must be at least 32 characters. Use a strong, random value (e.g. `openssl rand -base64 32`). |
+| `E2E_POSTGRES_PASSWORD` | Password for the PostgreSQL service used in E2E Backend and E2E QA jobs. Use a dedicated test value (e.g. a random string); avoid reusing production credentials. |
+| `E2E_TEST_EMAIL` | Email for the E2E test user (global-setup and Playwright). Example: `e2e-test@travelsplit.local`. |
+| `E2E_TEST_PASSWORD` | Password for the E2E test user. Must satisfy backend password rules (e.g. min 8 chars, upper, lower, digit). Example: `E2eTest123`. |
 
-Without `JWT_SECRET`, the **E2E Backend** job will fail when running migrations or tests that depend on the auth module.
+Without these secrets, the **E2E Backend** and **E2E QA** jobs will fail when starting Postgres or running global-setup.
 
 ### CD (optional)
 
@@ -62,7 +65,7 @@ npm run test
 | Unit Backend   | Jest unit tests (no database). |
 | Unit Frontend | Vitest unit tests. |
 | E2E Backend   | Starts PostgreSQL 17 as a service, runs migrations, then Jest E2E tests. Requires `JWT_SECRET`. |
-| E2E QA         | Disabled by default (`if: false`). When enabled, runs Playwright API project against backend started via Docker Compose. |
+| E2E QA         | Runs Playwright API project against backend started via Docker Compose. Requires `E2E_POSTGRES_PASSWORD`, `JWT_SECRET`, `E2E_TEST_EMAIL`, `E2E_TEST_PASSWORD`. |
 
 ### CD jobs
 

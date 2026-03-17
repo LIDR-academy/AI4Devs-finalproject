@@ -11,27 +11,60 @@ dotenv.config({ path: '.env' });
  * This file is used by TypeORM CLI commands (migration:run, migration:revert, etc.)
  * and must be separate from NestJS's configuration.
  *
- * Usage:
- *   npm run migration:run
- *   npm run migration:revert
- *   npm run migration:show
- *
- * Note: Environment variables should be loaded from .env or .env.local files.
+ * Supports:
+ * - DATABASE_URL (e.g. from Render "Connect database") – parsed for host, port, user, password, database
+ * - Otherwise DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_NAME
  */
 
-// Use process.cwd() which works with ts-node
 const root_dir = process.cwd();
+
+function getConnectionFromEnv(): {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  database: string;
+  ssl?: boolean | { rejectUnauthorized: boolean };
+} {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl) {
+    const url = new URL(databaseUrl);
+    const database = url.pathname.replace(/^\//, '') || 'travelsplit';
+    const ssl =
+      url.searchParams.get('sslmode') === 'require' || databaseUrl.includes('sslmode=require')
+        ? { rejectUnauthorized: false }
+        : undefined;
+    return {
+      host: url.hostname,
+      port: parseInt(url.port || '5432', 10),
+      username: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      database,
+      ...(ssl && { ssl }),
+    };
+  }
+  return {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    username: process.env.DB_USERNAME || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    database: process.env.DB_NAME || 'travelsplit',
+  };
+}
+
+const conn = getConnectionFromEnv();
 
 const dataSource = new DataSource({
   type: 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-  username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'travelsplit',
+  host: conn.host,
+  port: conn.port,
+  username: conn.username,
+  password: conn.password,
+  database: conn.database,
+  ...(conn.ssl && { ssl: conn.ssl }),
   entities: [path.join(root_dir, 'src', '**', '*.entity{.ts,.js}')],
   migrations: [path.join(root_dir, 'src', 'migrations', '**', '*.{ts,js}')],
-  synchronize: false, // Never use synchronize with migrations
+  synchronize: false,
   logging: process.env.DB_LOGGING === 'true',
   migrationsTableName: 'migrations',
 });

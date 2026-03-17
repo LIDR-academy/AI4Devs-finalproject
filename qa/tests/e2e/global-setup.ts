@@ -12,11 +12,11 @@ import { request as httpsRequest } from 'https';
 const SEED_PATH = resolve(process.cwd(), 'tests', 'e2e', '.auth', 'seed.json');
 const API_BASE = (process.env.API_BASE_URL ?? 'http://localhost:3000/api').replace(/\/?$/, '');
 
-const TEST_USER = {
-  nombre: 'E2E Test User',
-  email: 'e2e-test@travelsplit.local',
-  contraseña: 'E2eTest123',
-};
+function getTestUser(): { nombre: string; email: string; contraseña: string } {
+  const email = process.env.E2E_TEST_EMAIL ?? '';
+  const contraseña = process.env.E2E_TEST_PASSWORD ?? '';
+  return { nombre: 'E2E Test User', email, contraseña };
+}
 
 async function fetchJson<T>(
   url: string,
@@ -97,6 +97,14 @@ export default async function globalSetup(): Promise<void> {
 
   console.log(`[global-setup] API_BASE=${API_BASE}`);
 
+  const testUser = getTestUser();
+  if (!testUser.email || !testUser.contraseña) {
+    seed.error = 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set (e.g. in CI secrets or .env).';
+    writeSeed(seed);
+    console.error(`[global-setup] ${seed.error}`);
+    return;
+  }
+
   try {
     let token: string;
     let userId: string;
@@ -106,8 +114,8 @@ export default async function globalSetup(): Promise<void> {
       {
         method: 'POST',
         body: JSON.stringify({
-          email: TEST_USER.email,
-          contraseña: TEST_USER.contraseña,
+          email: testUser.email,
+          contraseña: testUser.contraseña,
         }),
       }
     );
@@ -122,7 +130,7 @@ export default async function globalSetup(): Promise<void> {
         `${API_BASE}/auth/register`,
         {
           method: 'POST',
-          body: JSON.stringify(TEST_USER),
+          body: JSON.stringify(testUser),
         }
       );
       if (registerRes.status !== 201 || !registerRes.data?.accessToken || !registerRes.data?.user?.id) {

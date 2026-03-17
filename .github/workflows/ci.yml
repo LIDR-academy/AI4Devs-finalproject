@@ -150,7 +150,7 @@ jobs:
         image: postgres:17-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ${{ secrets.E2E_POSTGRES_PASSWORD }}
           POSTGRES_DB: travelsplit_test
         ports:
           - 5432:5432
@@ -164,7 +164,7 @@ jobs:
       DB_HOST: localhost
       DB_PORT: 5432
       DB_USERNAME: postgres
-      DB_PASSWORD: postgres
+      DB_PASSWORD: ${{ secrets.E2E_POSTGRES_PASSWORD }}
       DB_NAME: travelsplit_test
       NODE_ENV: test
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -207,9 +207,11 @@ jobs:
     needs: [e2e-backend]
     env:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${{ secrets.E2E_POSTGRES_PASSWORD }}
       POSTGRES_DB: travelsplit_test
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5

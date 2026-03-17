@@ -9,9 +9,12 @@ import { resolve } from 'path';
 const BUNDLE_PATH = resolve(process.cwd(), 'data', '2026-03-16-expenses.json');
 const SEED_PATH = resolve(process.cwd(), 'tests', 'e2e', '.auth', 'seed.json');
 
-/** E2E test user credentials; must match global-setup so login works in browser. */
-export const E2E_TEST_EMAIL = 'e2e-test@travelsplit.local';
-export const E2E_TEST_PASSWORD = 'E2eTest123';
+/**
+ * E2E test user credentials; must match global-setup so login works in browser.
+ * Set via env (e.g. E2E_TEST_EMAIL, E2E_TEST_PASSWORD) or CI secrets.
+ */
+export const E2E_TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? '';
+export const E2E_TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? '';
 
 export interface Seed {
   AUTH_TOKEN?: string;
