@@ -16,8 +16,8 @@ interface HeaderProps {
    */
   title?: string;
   /**
-   * Custom actions to render
-   * Replaces default navigation actions when provided
+   * Custom actions to render (e.g. "Crear Viaje").
+   * When provided, rendered before default actions (Inicio, user, Cerrar Sesión) so both are visible.
    */
   actions?: ReactNode;
   /**
@@ -109,10 +109,21 @@ export const Header = ({
     </nav>
   );
 
+  const actionsContent = showActions ? (
+    actions ? (
+      <nav className="flex items-center gap-4" aria-label="Main navigation">
+        {actions}
+        {defaultActions}
+      </nav>
+    ) : (
+      defaultActions
+    )
+  ) : null;
+
   return (
-    <header className="sticky top-0 z-40 bg-white shadow border-b border-slate-200">
-      <div className="w-full px-6">
-        <div className="h-16 flex items-center gap-4">
+    <header className="sticky top-0 z-40 h-16 min-h-16 flex-shrink-0 bg-white shadow border-b border-slate-200">
+      <div className="w-full h-full px-6">
+        <div className="h-full min-h-16 flex items-center gap-4">
           {showBackButton && (
             <button
               type="button"
@@ -123,8 +134,8 @@ export const Header = ({
               <ArrowLeft size={24} />
             </button>
           )}
-          <h1 className="text-xl font-heading font-semibold text-slate-900 flex-1">{title}</h1>
-          {showActions && (actions || defaultActions)}
+          <h1 className="text-xl font-heading font-semibold text-slate-900 flex-1 truncate">{title}</h1>
+          {actionsContent}
         </div>
       </div>
     </header>

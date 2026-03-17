@@ -13,14 +13,28 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { getUserTrips } from '@/services/trip.service';
 import type { TripResponse } from '@/types/trip.types';
 
+/** Header actions for /trips: Create trip button (logout and nav come from Header default actions) */
+const TripsHeaderActions = ({ navigate }: { navigate: (path: string) => void }) => (
+  <Button
+    variant="primary"
+    size="md"
+    onClick={() => navigate('/trips/new')}
+    className="flex items-center gap-2"
+    aria-label="Crear nuevo viaje"
+  >
+    <Plus size={20} />
+    <span className="hidden sm:inline">Crear Viaje</span>
+  </Button>
+);
+
 /**
  * Loading state component
  * Shows skeleton while trips are loading
  */
-const LoadingState = () => {
+const LoadingState = ({ navigate }: { navigate: (path: string) => void }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Header title="Mis Viajes" />
+      <Header title="Mis Viajes" actions={<TripsHeaderActions navigate={navigate} />} />
       <main className="flex-1 px-6 py-8">
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
@@ -152,14 +166,14 @@ export function TripsListPage() {
 
   // Loading state
   if (isLoading) {
-    return <LoadingState />;
+    return <LoadingState navigate={navigate} />;
   }
 
   // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
-        <Header title="Mis Viajes" />
+        <Header title="Mis Viajes" actions={<TripsHeaderActions navigate={navigate} />} />
         <main className="flex-1 flex items-center justify-center px-6">
           <ErrorState
             message="No pudimos cargar tus viajes. Intenta de nuevo."
@@ -174,7 +188,7 @@ export function TripsListPage() {
   if (!trips || trips.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
-        <Header title="Mis Viajes" />
+        <Header title="Mis Viajes" actions={<TripsHeaderActions navigate={navigate} />} />
         <main className="flex-1">
           <EmptyState
             icon={<MapIcon size={64} />}
@@ -199,21 +213,7 @@ export function TripsListPage() {
   // Success state - Show trips list
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
-      <Header
-        title="Mis Viajes"
-        actions={
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => navigate('/trips/new')}
-            className="flex items-center gap-2"
-            aria-label="Crear nuevo viaje"
-          >
-            <Plus size={20} />
-            <span className="hidden sm:inline">Crear Viaje</span>
-          </Button>
-        }
-      />
+      <Header title="Mis Viajes" actions={<TripsHeaderActions navigate={navigate} />} />
       <main className="flex-1 px-6 py-8">
         {/* Mobile-first: Content centered on desktop to simulate app experience */}
         <div className="max-w-md mx-auto">
