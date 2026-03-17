@@ -5,11 +5,13 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   HttpCode,
   HttpStatus,
   Request,
   ParseUUIDPipe,
   ForbiddenException,
+  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -21,6 +23,7 @@ import {
   ApiConflictResponse,
   ApiForbiddenResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UsersService } from '../services/users.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -74,6 +77,29 @@ export class UsersController {
 
     // Mapear entidades a DTOs de respuesta (sin información sensible)
     return users.map((user) => UserMapper.toResponseDto(user));
+  }
+
+  /**
+   * Search for a user by email. Used by invite flows (e.g. add participants).
+   * Returns 404 if not found so the client can show "user not registered".
+   *
+   * @method search
+   * @param email - Email query parameter
+   * @returns User data (id, nombre, email) when found
+   * @example GET /users/search?email=user@example.com
+   */
+  @Get('search')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Search user by email' })
+  @ApiQuery({ name: 'email', description: 'User email to search', required: true })
+  @ApiResponse({ status: 200, description: 'User found', type: UserResponseDto })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  async search(@Query('email') email: string): Promise<UserResponseDto> {
+    const user = await this.usersService.findByEmail(email?.trim() ?? '');
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return UserMapper.toResponseDto(user);
   }
 
   /**

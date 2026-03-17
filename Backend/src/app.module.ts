@@ -39,7 +39,7 @@ const serveFrontend =
       ? [
           ServeStaticModule.forRoot({
             rootPath: publicPath,
-            exclude: ['/api', '/api/:path*'],
+            exclude: ['/api', '/api/(.*)'],
           }),
         ]
       : []),
