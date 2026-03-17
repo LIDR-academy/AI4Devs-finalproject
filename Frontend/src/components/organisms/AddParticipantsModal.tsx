@@ -186,8 +186,8 @@ export function AddParticipantsModal({
               type="email"
               placeholder="maria@example.com"
               value={searchEmail}
-              onChange={(e) => setSearchEmail(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => setSearchEmail(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   handleSearchUser();
@@ -281,12 +281,7 @@ export function AddParticipantsModal({
                 `Invitar (${emailsToAdd.length})`
               )}
             </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
+            <Button variant="secondary" size="lg" onClick={handleClose} disabled={isSubmitting}>
               Cancelar
             </Button>
           </div>

@@ -23,9 +23,6 @@ export class AddParticipantsDto {
   })
   @IsArray({ message: 'memberEmails must be an array' })
   @ArrayMinSize(1, { message: 'At least one email is required' })
-  @IsEmail(
-    {},
-    { each: true, message: 'Each email must be valid' },
-  )
+  @IsEmail({}, { each: true, message: 'Each email must be valid' })
   memberEmails!: string[];
 }

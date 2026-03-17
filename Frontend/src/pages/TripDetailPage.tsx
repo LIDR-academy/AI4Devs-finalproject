@@ -633,9 +633,7 @@ export function TripDetailPage() {
                   }
                   action={
                     trip.userRole === 'CREATOR' ? (
-                      <Button
-                        onClick={() => setIsAddParticipantsModalOpen(true)}
-                      >
+                      <Button onClick={() => setIsAddParticipantsModalOpen(true)}>
                         Invitar Participante
                       </Button>
                     ) : undefined

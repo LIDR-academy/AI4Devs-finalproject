@@ -40,7 +40,7 @@ export const RegisterPage = () => {
 
   const mutation = useMutation({
     mutationFn: (data: RegisterRequest) => registerUser(data),
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.accessToken && data.user) {
         setSession(data.accessToken, data.user);
       }

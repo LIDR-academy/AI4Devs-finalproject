@@ -222,9 +222,7 @@ export async function addTripParticipants(
     if (response.status === 403) {
       message = 'Solo el creador del viaje puede agregar participantes';
     } else if (response.status === 404) {
-      message =
-        errorData.message ||
-        'Viaje no encontrado o uno de los usuarios no está registrado';
+      message = errorData.message || 'Viaje no encontrado o uno de los usuarios no está registrado';
     } else if (response.status === 401) {
       message = 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.';
     }

@@ -482,7 +482,10 @@ export class TripsService {
       },
     });
 
-    if (!creatorParticipation || creatorParticipation.role !== ParticipantRole.CREATOR) {
+    if (
+      !creatorParticipation ||
+      creatorParticipation.role !== ParticipantRole.CREATOR
+    ) {
       throw new ForbiddenException(
         'Solo el creador del viaje puede agregar participantes',
       );
@@ -501,7 +504,9 @@ export class TripsService {
     });
 
     const emailToUser = new Map(users.map((u) => [u.email, u]));
-    const candidateUserIds = users.map((u) => u.id).filter((id) => id !== userId);
+    const candidateUserIds = users
+      .map((u) => u.id)
+      .filter((id) => id !== userId);
     const existingParticipants =
       candidateUserIds.length > 0
         ? await this.tripParticipantRepository.find({
