@@ -3,6 +3,11 @@
  */
 
 /**
+ * Supported trip currencies (re-exported for use in balance components).
+ */
+export type TripCurrency = 'COP' | 'USD';
+
+/**
  * Participant balance information
  * Contains balance details for a single participant
  */

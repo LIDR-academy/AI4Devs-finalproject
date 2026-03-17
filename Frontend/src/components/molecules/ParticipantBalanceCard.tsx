@@ -39,9 +39,7 @@ export const ParticipantBalanceCard = ({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-base font-semibold text-slate-900 truncate">
-              {user_name}
-            </h4>
+            <h4 className="text-base font-semibold text-slate-900 truncate">{user_name}</h4>
             {isCurrentUser && (
               <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                 Tú
@@ -64,17 +62,13 @@ export const ParticipantBalanceCard = ({
         {/* Total Owed */}
         <div className="flex items-center justify-between text-sm">
           <span className="text-slate-600">Total que debe</span>
-          <span className="font-medium text-slate-900">
-            {formatCurrency(total_owed, currency)}
-          </span>
+          <span className="font-medium text-slate-900">{formatCurrency(total_owed, currency)}</span>
         </div>
 
         {/* Net Balance */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-200">
           <span className="text-sm font-semibold text-slate-900">Balance neto</span>
-          <span
-            className={`text-sm font-bold px-3 py-1 rounded-full ${balanceColorClass}`}
-          >
+          <span className={`text-sm font-bold px-3 py-1 rounded-full ${balanceColorClass}`}>
             {formatCurrency(Math.abs(balance), currency)}
             {balance > 0.01 && ' (le deben)'}
             {balance < -0.01 && ' (debe)'}

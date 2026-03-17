@@ -63,7 +63,11 @@ const formatShortDate = (dateString: string): string => {
  * Used in HomePage to show recent expenses section
  * Follows Design System: bg-white, rounded-xl, p-4, shadow-sm
  */
-export const RecentExpenseCard = ({ expense, currency = 'COP', onClick }: RecentExpenseCardProps) => {
+export const RecentExpenseCard = ({
+  expense,
+  currency = 'COP',
+  onClick,
+}: RecentExpenseCardProps) => {
   const baseClassName =
     'bg-white rounded-xl p-4 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-200';
   const cursorClass = onClick ? 'cursor-pointer' : 'cursor-default';

@@ -87,10 +87,7 @@ export class BalancesController {
     @Param('trip_id', ParseUUIDPipe) trip_id: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<BalancesResponseDto> {
-    return this.balances_service.calculateBalances(
-      trip_id,
-      req.user!.id,
-    );
+    return this.balances_service.calculateBalances(trip_id, req.user!.id);
   }
 
   /**
@@ -142,9 +139,6 @@ export class BalancesController {
     @Param('trip_id', ParseUUIDPipe) trip_id: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<SettleResponseDto> {
-    return this.balances_service.settleBalances(
-      trip_id,
-      req.user!.id,
-    );
+    return this.balances_service.settleBalances(trip_id, req.user!.id);
   }
 }

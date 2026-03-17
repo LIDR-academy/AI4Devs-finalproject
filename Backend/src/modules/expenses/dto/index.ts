@@ -9,3 +9,4 @@ export {
   ExpenseListResponseDto,
   ExpensePaginationMeta,
 } from './expense-list-response.dto';
+export { ExpenseCategoryResponseDto } from './expense-category-response.dto';

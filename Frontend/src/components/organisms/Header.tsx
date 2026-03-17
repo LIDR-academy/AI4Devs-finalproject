@@ -123,9 +123,7 @@ export const Header = ({
               <ArrowLeft size={24} />
             </button>
           )}
-          <h1 className="text-xl font-heading font-semibold text-slate-900 flex-1">
-            {title}
-          </h1>
+          <h1 className="text-xl font-heading font-semibold text-slate-900 flex-1">{title}</h1>
           {showActions && (actions || defaultActions)}
         </div>
       </div>

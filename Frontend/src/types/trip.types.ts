@@ -110,6 +110,8 @@ export interface Balance {
   toName: string; // Person who is owed
   amount: number; // Amount in trip currency
   badgeColor: 'red' | 'green' | 'blue'; // Badge color based on debt type
+  tripId?: string; // Trip ID for multi-trip home view
+  tripName?: string; // Trip name for display
 }
 
 /**
@@ -128,4 +130,6 @@ export interface RecentExpense {
   date: string; // ISO date string
   amount: number; // Amount in trip currency
   participantCount: number; // Number of people involved
+  tripId?: string; // Trip ID for navigation
+  tripName?: string; // Trip name for display
 }

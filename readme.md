@@ -438,7 +438,12 @@ TravelSplit/
 │       ├── services/      # auth, trip, expense, balance
 │       └── types/
 ├── docs/                  # PRD, diagramas C4/ER, backlog
-└── openspec/              # Specs and change proposals (see AGENTS.md)
+├── openspec/              # Specs and change proposals (see AGENTS.md)
+└── qa/                    # QA: E2E and API tests, schema, data, tools
+    ├── schema/            # JSON schema for case bundles
+    ├── data/              # Test data (e.g. expense bundles)
+    ├── tools/              # Validation scripts (e.g. validate-cases.mjs)
+    └── tests/e2e/         # Playwright E2E and API specs, global-setup
 ```
 
 ### **2.4. Infraestructura y despliegue**
@@ -457,8 +462,9 @@ TravelSplit/
 
 ### **2.6. Tests**
 
-- Backend: Jest para tests unitarios y e2e. Comando: `npm run test`, `npm run test:e2e`.
-- Tests de servicios y controladores segun convenciones del proyecto.
+- **Backend:** Jest para tests unitarios y e2e. Comando: `cd Backend && npm run test`, `npm run test:e2e`.
+- **QA (E2E y API):** Tests con Playwright en la carpeta `qa/`. Desde la raíz: `npm run test:e2e` (delega a `qa/`). Requiere Backend en marcha; ver `qa/tests/e2e/README.md`.
+- Tests de servicios y controladores según convenciones del proyecto.
 
 ---
 

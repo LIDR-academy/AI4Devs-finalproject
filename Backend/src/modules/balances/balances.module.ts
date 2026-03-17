@@ -23,12 +23,7 @@ import { BalancesService } from './services/balances.service';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Expense,
-      ExpenseSplit,
-      TripParticipant,
-      Trip,
-    ]),
+    TypeOrmModule.forFeature([Expense, ExpenseSplit, TripParticipant, Trip]),
   ],
   controllers: [BalancesController],
   providers: [BalancesService],

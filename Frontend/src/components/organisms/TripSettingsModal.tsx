@@ -220,8 +220,7 @@ export function TripSettingsModal({
   if (!isOpen) return null;
 
   const isValid = name.trim().length > 0 && name.trim().length <= 255;
-  const hasChanges =
-    name.trim() !== trip.name || status !== (trip.status as 'ACTIVE' | 'CLOSED');
+  const hasChanges = name.trim() !== trip.name || status !== (trip.status as 'ACTIVE' | 'CLOSED');
 
   return (
     <div
@@ -261,7 +260,8 @@ export function TripSettingsModal({
 
         {/* Description */}
         <p id="trip-settings-description" className="mb-6 text-sm text-slate-600">
-          Edita el nombre del viaje o cambia su estado. La moneda y el código no se pueden modificar.
+          Edita el nombre del viaje o cambia su estado. La moneda y el código no se pueden
+          modificar.
         </p>
 
         {/* Form */}
@@ -397,12 +397,7 @@ export function TripSettingsModal({
               type="submit"
               variant="primary"
               className="flex-1"
-              disabled={
-                isLoading ||
-                isClosingTrip ||
-                !isValid ||
-                !hasChanges
-              }
+              disabled={isLoading || isClosingTrip || !isValid || !hasChanges}
             >
               {isLoading ? (
                 <>

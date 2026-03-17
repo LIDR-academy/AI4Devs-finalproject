@@ -15,12 +15,7 @@ interface JoinTripModalProps {
  * Complex organism with form, validation, API integration, and accessibility features
  * Follows Atomic Design: Located in organisms/ due to high complexity (10+ elements, API calls, multiple states)
  */
-export function JoinTripModal({
-  isOpen,
-  onClose,
-  onSuccess,
-  onError,
-}: JoinTripModalProps) {
+export function JoinTripModal({ isOpen, onClose, onSuccess, onError }: JoinTripModalProps) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);

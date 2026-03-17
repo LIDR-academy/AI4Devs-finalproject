@@ -24,19 +24,22 @@ export class ParticipantBalanceDto {
   user_email!: string;
 
   @ApiProperty({
-    description: 'Total gastado por el usuario (suma de gastos donde es pagador)',
+    description:
+      'Total gastado por el usuario (suma de gastos donde es pagador)',
     example: 150000.0,
   })
   total_spent!: number;
 
   @ApiProperty({
-    description: 'Total que debe el usuario (suma de amount_owed en expense_splits)',
+    description:
+      'Total que debe el usuario (suma de amount_owed en expense_splits)',
     example: 75000.0,
   })
   total_owed!: number;
 
   @ApiProperty({
-    description: 'Balance neto (total_spent - total_owed). Positivo = le deben, Negativo = debe',
+    description:
+      'Balance neto (total_spent - total_owed). Positivo = le deben, Negativo = debe',
     example: 75000.0,
   })
   balance!: number;

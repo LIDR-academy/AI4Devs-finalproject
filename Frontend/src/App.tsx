@@ -10,6 +10,7 @@ import { ExpenseFormPage } from '@/pages/ExpenseFormPage';
 import { TripsListPage } from '@/pages/TripsListPage';
 import { TripDetailPage } from '@/pages/TripDetailPage';
 import { CreateTripPage } from '@/pages/CreateTripPage';
+import { ProfilePage } from '@/pages/ProfilePage';
 import { ProtectedRoute } from '@/components/molecules/ProtectedRoute';
 
 /**
@@ -110,6 +111,14 @@ function App() {
               element: (
                 <ProtectedRoute>
                   <ExpenseFormPage />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: '/profile',
+              element: (
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               ),
             },

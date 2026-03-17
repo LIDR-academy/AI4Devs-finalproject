@@ -5,7 +5,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserCheck, UserX, X } from 'lucide-react';
 import { Header } from '@/components';
-import { createTripSchema, type CreateTripFormData } from '@/schemas/trip.schema';
+import { createTripSchema } from '@/schemas/trip.schema';
+
+/** Form input type (currency optional before default is applied). */
+interface CreateTripFormInput {
+  name: string;
+  currency?: 'COP' | 'USD';
+}
 import { createTrip } from '@/services/trip.service';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
@@ -79,7 +85,7 @@ export function CreateTripPage() {
     setError,
     watch,
     setValue,
-  } = useForm<CreateTripFormData>({
+  } = useForm<CreateTripFormInput>({
     resolver: zodResolver(createTripSchema),
     defaultValues: {
       currency: 'COP',
@@ -191,7 +197,7 @@ export function CreateTripPage() {
     setParticipants(participants.filter(p => p.email !== email));
   };
 
-  const onSubmit = (data: CreateTripFormData) => {
+  const onSubmit = (data: CreateTripFormInput) => {
     const creator = participants.find(p => p.isCreator && p.email);
 
     if (!creator) {
@@ -206,7 +212,8 @@ export function CreateTripPage() {
     const memberEmails = participants.filter(p => !p.isCreator).map(p => p.email);
 
     mutation.mutate({
-      ...data,
+      name: data.name,
+      currency: data.currency ?? 'COP',
       memberEmails: memberEmails.length > 0 ? memberEmails : undefined,
     });
   };

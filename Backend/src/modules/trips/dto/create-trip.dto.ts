@@ -78,7 +78,8 @@ export class CreateTripDto {
    * @example TripCurrency.COP
    */
   @ApiProperty({
-    description: 'Moneda del viaje (COP o USD). Si no se especifica, por defecto es COP',
+    description:
+      'Moneda del viaje (COP o USD). Si no se especifica, por defecto es COP',
     enum: TripCurrency,
     example: TripCurrency.COP,
     required: false,

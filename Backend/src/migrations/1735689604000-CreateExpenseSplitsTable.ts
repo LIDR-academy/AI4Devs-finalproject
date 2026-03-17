@@ -106,12 +106,21 @@ export class CreateExpenseSplitsTable1735689604000 implements MigrationInterface
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop foreign keys
-    await queryRunner.dropForeignKey('expense_splits', 'FK_expense_splits_user');
-    await queryRunner.dropForeignKey('expense_splits', 'FK_expense_splits_expense');
+    await queryRunner.dropForeignKey(
+      'expense_splits',
+      'FK_expense_splits_user',
+    );
+    await queryRunner.dropForeignKey(
+      'expense_splits',
+      'FK_expense_splits_expense',
+    );
 
     // Drop indexes
     await queryRunner.dropIndex('expense_splits', 'IDX_expense_splits_user_id');
-    await queryRunner.dropIndex('expense_splits', 'IDX_expense_splits_expense_id');
+    await queryRunner.dropIndex(
+      'expense_splits',
+      'IDX_expense_splits_expense_id',
+    );
 
     // Drop table
     await queryRunner.dropTable('expense_splits');

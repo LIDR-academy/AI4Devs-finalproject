@@ -1,8 +1,4 @@
-import {
-  Map as MapIcon,
-  Users as UsersIcon,
-  Calendar as CalendarIcon,
-} from 'lucide-react';
+import { Map as MapIcon, Users as UsersIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { TripResponse, TripListItem, TripCurrency } from '@/types/trip.types';
 import { formatRelativeDate } from '@/utils/date';

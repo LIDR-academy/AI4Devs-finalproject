@@ -241,4 +241,3 @@ export async function updateTrip(
 
   return response.json();
 }
-

@@ -1,0 +1,16 @@
+{
+  "name": "travelsplit-qa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install",
+    "validate": "node tools/validate-cases.mjs data/2026-03-16-expenses.json schema/case-bundle.schema.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "ajv": "^8.12.0",
+    "typescript": "^5.7.2"
+  }
+}

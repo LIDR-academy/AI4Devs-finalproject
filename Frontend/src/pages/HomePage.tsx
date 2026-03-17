@@ -114,7 +114,7 @@ const HomePageNotAuthenticated = () => {
               {benefits.map(benefit => (
                 <div key={benefit.title} className="bg-slate-50 rounded-xl p-6">
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">{benefit.icon}</div>
+                    <div className="shrink-0 mt-1">{benefit.icon}</div>
                     <div>
                       <h3 className="text-xl font-heading font-semibold text-slate-900 mb-2">
                         {benefit.title}
@@ -206,7 +206,6 @@ const HomePageWithTrips = () => {
     balances,
     recentExpenses,
     totalSpent,
-    isLoading,
     balancesLoading,
     expensesLoading,
     error,
@@ -225,118 +224,128 @@ const HomePageWithTrips = () => {
 
           {/* Total Gastado Section */}
           <section>
-          <div className="bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-6 h-6 text-violet-200 flex-shrink-0" aria-hidden="true" />
-              <h2 className="text-lg font-heading font-semibold text-white">Total Gastado</h2>
+            <div className="bg-linear-to-br from-violet-600 to-violet-700 rounded-2xl p-6 shadow-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-6 h-6 text-violet-200 shrink-0" aria-hidden="true" />
+                <h2 className="text-lg font-heading font-semibold text-white">Total Gastado</h2>
+              </div>
+              <p className="text-3xl font-bold text-white mb-1">
+                {formatCurrency(totalSpent, defaultCurrency)}
+              </p>
+              <p className="text-sm text-violet-200">
+                En {trips.length} {trips.length === 1 ? 'viaje' : 'viajes'}
+              </p>
             </div>
-            <p className="text-3xl font-bold text-white mb-1">
-              {formatCurrency(totalSpent, defaultCurrency)}
-            </p>
-            <p className="text-sm text-violet-200">
-              En {trips.length} {trips.length === 1 ? 'viaje' : 'viajes'}
-            </p>
-          </div>
-        </section>
+          </section>
 
-        {/* Viajes Recientes Section */}
-        {recentTrips.length > 0 && (
-          <section>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-heading font-semibold text-slate-900">Viajes Recientes</h2>
-              {trips.length > 3 && (
-                <Link
-                  to="/trips"
-                  className="text-sm text-violet-600 font-medium hover:underline focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 rounded-lg px-2 py-1"
-                  aria-label="Ver todos mis viajes"
-                >
-                  Ver todos
-                </Link>
-              )}
-            </div>
-            <div className="space-y-4">
-              {recentTrips.map(trip => (
-                <TripCard key={trip.id} trip={trip} />
-              ))}
-            </div>
-          </section>
-        )}
+          {/* Viajes Recientes Section */}
+          {recentTrips.length > 0 && (
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-heading font-semibold text-slate-900">
+                  Viajes Recientes
+                </h2>
+                {trips.length > 3 && (
+                  <Link
+                    to="/trips"
+                    className="text-sm text-violet-600 font-medium hover:underline focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 rounded-lg px-2 py-1"
+                    aria-label="Ver todos mis viajes"
+                  >
+                    Ver todos
+                  </Link>
+                )}
+              </div>
+              <div className="space-y-4">
+                {recentTrips.map(trip => (
+                  <TripCard key={trip.id} trip={trip} />
+                ))}
+              </div>
+            </section>
+          )}
 
-        {/* Saldos Section */}
-        {balancesLoading ? (
-          <section>
-            <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-16 w-full rounded-xl" />
-              ))}
-            </div>
-          </section>
-        ) : balances.length > 0 ? (
-          <section>
-            <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
-            <div className="space-y-3">
-              {balances.map(balance => (
-                <BalanceCard
-                  key={balance.id}
-                  balance={balance}
-                  currency={balance.tripId ? trips.find(t => t.id === balance.tripId)?.currency : defaultCurrency}
-                />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {/* Gastos Recientes Section */}
-        {expensesLoading ? (
-          <section>
-            <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Gastos Recientes</h2>
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="h-20 w-full rounded-xl" />
-              ))}
-            </div>
-          </section>
-        ) : recentExpenses.length > 0 ? (
-          <section>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-heading font-semibold text-slate-900">Gastos Recientes</h2>
-              {trips.length > 0 && (
-                <Link
-                  to="/trips"
-                  className="text-sm text-violet-600 font-medium hover:underline focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 rounded-lg px-2 py-1"
-                  aria-label="Ver todos mis viajes"
-                >
-                  Ver todos
-                </Link>
-              )}
-            </div>
-            <div className="space-y-3">
-              {recentExpenses.map(({ expense, currency }) => (
-                <ExpenseCard
-                  key={expense.id}
-                  expense={expense}
-                  currency={(currency as TripCurrency) || defaultCurrency}
-                  onClick={() => {
-                    if (expense.trip_id) {
-                      navigate(`/trips/${expense.trip_id}`);
+          {/* Saldos Section */}
+          {balancesLoading ? (
+            <section>
+              <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
+              </div>
+            </section>
+          ) : balances.length > 0 ? (
+            <section>
+              <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">Saldos</h2>
+              <div className="space-y-3">
+                {balances.map(balance => (
+                  <BalanceCard
+                    key={balance.id}
+                    balance={balance}
+                    currency={
+                      balance.tripId
+                        ? trips.find(t => t.id === balance.tripId)?.currency
+                        : defaultCurrency
                     }
-                  }}
-                />
-              ))}
-            </div>
-          </section>
-        ) : null}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Gastos Recientes Section */}
+          {expensesLoading ? (
+            <section>
+              <h2 className="text-lg font-heading font-semibold text-slate-900 mb-4">
+                Gastos Recientes
+              </h2>
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                ))}
+              </div>
+            </section>
+          ) : recentExpenses.length > 0 ? (
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-heading font-semibold text-slate-900">
+                  Gastos Recientes
+                </h2>
+                {trips.length > 0 && (
+                  <Link
+                    to="/trips"
+                    className="text-sm text-violet-600 font-medium hover:underline focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 rounded-lg px-2 py-1"
+                    aria-label="Ver todos mis viajes"
+                  >
+                    Ver todos
+                  </Link>
+                )}
+              </div>
+              <div className="space-y-3">
+                {recentExpenses.map(({ expense, currency }) => (
+                  <ExpenseCard
+                    key={expense.id}
+                    expense={expense}
+                    currency={(currency as TripCurrency) || defaultCurrency}
+                    onClick={() => {
+                      if (expense.trip_id) {
+                        navigate(`/trips/${expense.trip_id}`);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {/* Error State */}
-          {error && (
+          {error ? (
             <section>
               <ErrorState
                 message="Hubo un problema al cargar algunos datos. Intenta de nuevo."
                 onRetry={() => refetch()}
               />
             </section>
-          )}
+          ) : null}
         </div>
       </main>
     </div>

@@ -107,6 +107,20 @@ export function useAuth() {
     });
   }, []);
 
+  /**
+   * Updates the current user in state and localStorage (e.g. after profile update)
+   * @param user - New user data (id, nombre, email)
+   */
+  const setUser = useCallback((user: User | null) => {
+    if (user) {
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      setAuthState(prev => (prev.token ? { ...prev, user } : prev));
+    } else {
+      localStorage.removeItem(USER_KEY);
+      setAuthState(prev => ({ ...prev, user: null }));
+    }
+  }, []);
+
   // Check authentication status on mount
   useEffect(() => {
     checkAuth();
@@ -117,5 +131,6 @@ export function useAuth() {
     login,
     logout,
     checkAuth,
+    setUser,
   };
 }

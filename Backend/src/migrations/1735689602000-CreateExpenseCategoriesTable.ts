@@ -10,9 +10,7 @@ import {
  * Migration to create the expense_categories table.
  * Creates the table and inserts initial category data.
  */
-export class CreateExpenseCategoriesTable1735689602000
-  implements MigrationInterface
-{
+export class CreateExpenseCategoriesTable1735689602000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({

@@ -307,8 +307,7 @@ export class TripsController {
     description: 'No autorizado. Se requiere autenticación.',
   })
   @ApiForbiddenResponse({
-    description:
-      'No tienes acceso a este viaje o no eres el creador del viaje',
+    description: 'No tienes acceso a este viaje o no eres el creador del viaje',
   })
   @ApiNotFoundResponse({
     description: 'Viaje no encontrado',

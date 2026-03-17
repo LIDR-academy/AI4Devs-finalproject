@@ -88,6 +88,11 @@ export interface CreateExpenseResponse {
 }
 
 /**
+ * Supported trip currencies (re-exported for use in expense components).
+ */
+export type TripCurrency = 'COP' | 'USD';
+
+/**
  * Expense item in list response.
  * Contains all public fields of an expense from the backend.
  */
@@ -104,6 +109,11 @@ export interface ExpenseListItem {
   beneficiaries: ExpenseBeneficiaryResponse[];
   createdAt: Date | string; // Backend returns Date, but JSON parsing converts to string
   updatedAt: Date | string; // Backend returns Date, but JSON parsing converts to string
+  payer?: {
+    id: string;
+    nombre: string;
+    email: string;
+  };
 }
 
 /**

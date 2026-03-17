@@ -1,0 +1,256 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+env:
+  NODE_VERSION: '22'
+
+permissions:
+  contents: read
+
+jobs:
+  lint-backend:
+    name: Lint Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: Backend/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles('Backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-backend-
+
+      - name: Install dependencies
+        working-directory: Backend
+        run: npm ci
+
+      - name: Lint
+        working-directory: Backend
+        run: npm run lint
+
+      - name: Check format
+        working-directory: Backend
+        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
+
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: Frontend/node_modules
+          key: ${{ runner.os }}-node-frontend-${{ hashFiles('Frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-frontend-
+
+      - name: Install dependencies
+        working-directory: Frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: Frontend
+        run: npm run lint
+
+      - name: Check format
+        working-directory: Frontend
+        run: npm run format:check
+
+  unit-backend:
+    name: Unit Tests Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: Backend/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles('Backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-backend-
+
+      - name: Install dependencies
+        working-directory: Backend
+        run: npm ci
+
+      - name: Unit tests
+        working-directory: Backend
+        run: npm run test
+
+  unit-frontend:
+    name: Unit Tests Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: Frontend/node_modules
+          key: ${{ runner.os }}-node-frontend-${{ hashFiles('Frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-frontend-
+
+      - name: Install dependencies
+        working-directory: Frontend
+        run: npm ci
+
+      - name: Unit tests
+        working-directory: Frontend
+        run: npm run test
+
+  e2e-backend:
+    name: E2E Backend
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: travelsplit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: travelsplit_test
+      NODE_ENV: test
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: Backend/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles('Backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-backend-
+
+      - name: Install dependencies
+        working-directory: Backend
+        run: npm ci
+
+      - name: Run migrations
+        working-directory: Backend
+        run: npm run migration:run
+
+      - name: E2E tests
+        working-directory: Backend
+        run: npm run test:e2e
+
+  e2e-qa:
+    name: E2E QA (Playwright API)
+    runs-on: ubuntu-latest
+    if: true
+    needs: [e2e-backend]
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: travelsplit_test
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start Backend and Postgres
+        run: |
+          docker compose up -d postgres backend
+          echo "Waiting for backend..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          curl -sf http://localhost:3000/api/health || exit 1
+
+      - name: Run migrations
+        run: docker compose run --rm backend npm run migration:run
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: qa/package-lock.json
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: qa/node_modules
+          key: ${{ runner.os }}-node-qa-${{ hashFiles('qa/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-qa-
+
+      - name: Install dependencies
+        working-directory: qa
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: qa
+        run: npm run test:e2e:install
+
+      - name: Playwright API tests
+        working-directory: qa
+        env:
+          API_BASE_URL: http://localhost:3000/api
+        run: npm run test:e2e -- --project=api

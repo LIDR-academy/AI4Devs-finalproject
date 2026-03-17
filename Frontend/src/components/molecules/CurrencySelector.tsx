@@ -18,9 +18,7 @@ export const CurrencySelector = ({
 }: CurrencySelectorProps) => {
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-slate-700 mb-1">
-        Moneda del viaje
-      </label>
+      <label className="block text-sm font-medium text-slate-700 mb-1">Moneda del viaje</label>
       <select
         value={selected_currency || 'COP'}
         onChange={e => on_select(e.target.value as TripCurrency)}

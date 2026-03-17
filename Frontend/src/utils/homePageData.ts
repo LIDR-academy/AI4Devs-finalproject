@@ -4,7 +4,7 @@
 
 import type { ExpenseListItem } from '@/types/expense.types';
 import type { Balance, RecentExpense, TripCurrency, ExpenseCategory } from '@/types/trip.types';
-import type { BalancesResponse, SettleTransaction } from '@/types/balance.types';
+import type { SettleTransaction } from '@/types/balance.types';
 import type { TripListItem } from '@/types/trip.types';
 
 /**
@@ -42,7 +42,8 @@ function mapCategoryNameToExpenseCategory(categoryName: string): ExpenseCategory
 export function mapExpenseListItemToRecentExpense(
   expense: ExpenseListItem,
   tripName: string,
-  currency: TripCurrency,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future display/formatting
+  _currency: TripCurrency,
 ): RecentExpense {
   // Get payer name - try to get from expense data if available
   // For now, we'll use a placeholder since ExpenseListItem doesn't include payer name

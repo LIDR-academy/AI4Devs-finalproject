@@ -1,10 +1,4 @@
-import {
-  IsUUID,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  Min,
-} from 'class-validator';
+import { IsUUID, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -47,7 +41,10 @@ export class CreateExpenseBeneficiaryDto {
   @Type(() => Number)
   @IsNumber(
     { maxDecimalPlaces: 2 },
-    { message: 'El amount_owed debe ser un número válido con máximo 2 decimales' },
+    {
+      message:
+        'El amount_owed debe ser un número válido con máximo 2 decimales',
+    },
   )
   @Min(0.01, { message: 'El amount_owed debe ser mayor a 0' })
   amount_owed?: number;

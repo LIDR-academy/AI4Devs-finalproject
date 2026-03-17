@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<LoginResponse>;
   logout: () => void;
   checkAuth: () => void;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

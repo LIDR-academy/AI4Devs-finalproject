@@ -15,6 +15,18 @@ import { BalancesResponseDto } from '../dto/balances-response.dto';
 import { SettleTransactionDto } from '../dto/settle-transaction.dto';
 import { SettleResponseDto } from '../dto/settle-response.dto';
 
+/** Raw row from getRawOne for total expenses query. */
+interface RawTotalRow {
+  total?: string | number;
+}
+
+/** Raw row from getRawMany for user amount aggregates. */
+interface RawUserAmountRow {
+  user_id: string;
+  total_spent?: string | number;
+  total_owed?: string | number;
+}
+
 /**
  * Service for Balances.
  * Responsibility: Contains business logic for calculating and settling balances.
@@ -102,9 +114,7 @@ export class BalancesService {
       this.logger.warn(
         `User is not a participant: trip_id=${trip_id}, user_id=${user_id}`,
       );
-      throw new ForbiddenException(
-        'No eres participante de este viaje',
-      );
+      throw new ForbiddenException('No eres participante de este viaje');
     }
 
     // Verify trip exists
@@ -143,9 +153,9 @@ export class BalancesService {
       .select('COALESCE(SUM(expense.amount), 0)', 'total')
       .where('expense.tripId = :trip_id', { trip_id })
       .andWhere('expense.deletedAt IS NULL')
-      .getRawOne();
+      .getRawOne<RawTotalRow>();
 
-    const total_expenses = Number(total_expenses_result?.total || 0);
+    const total_expenses = Number(total_expenses_result?.total ?? 0);
 
     // Calculate total spent per user (where user is payer)
     const total_spent_query = await this.expenseRepository
@@ -155,11 +165,11 @@ export class BalancesService {
       .where('expense.tripId = :trip_id', { trip_id })
       .andWhere('expense.deletedAt IS NULL')
       .groupBy('expense.payerId')
-      .getRawMany();
+      .getRawMany<RawUserAmountRow>();
 
     const total_spent_map = new Map<string, number>();
     total_spent_query.forEach((row) => {
-      total_spent_map.set(row.user_id, Number(row.total_spent));
+      total_spent_map.set(row.user_id, Number(row.total_spent ?? 0));
     });
 
     // Calculate total owed per user (sum of amount_owed in expense_splits)
@@ -172,11 +182,11 @@ export class BalancesService {
       .andWhere('expense.deletedAt IS NULL')
       .andWhere('split.deletedAt IS NULL')
       .groupBy('split.userId')
-      .getRawMany();
+      .getRawMany<RawUserAmountRow>();
 
     const total_owed_map = new Map<string, number>();
     total_owed_query.forEach((row) => {
-      total_owed_map.set(row.user_id, Number(row.total_owed));
+      total_owed_map.set(row.user_id, Number(row.total_owed ?? 0));
     });
 
     // Build balances array
@@ -245,10 +255,7 @@ export class BalancesService {
         break;
       }
 
-      const amount = Math.min(
-        Math.abs(debtor.balance),
-        creditor.balance,
-      );
+      const amount = Math.min(Math.abs(debtor.balance), creditor.balance);
 
       if (amount > 0.01) {
         transactions.push({

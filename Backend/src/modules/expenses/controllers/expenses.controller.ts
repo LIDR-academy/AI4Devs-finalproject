@@ -177,18 +177,15 @@ export class ExpensesController {
     description: 'No eres participante de este viaje',
   })
   @ApiNotFoundResponse({
-    description: 'El viaje o el gasto no existe, o el gasto no pertenece a este viaje',
+    description:
+      'El viaje o el gasto no existe, o el gasto no pertenece a este viaje',
   })
   async findOne(
     @Param('trip_id', ParseUUIDPipe) trip_id: string,
     @Param('expense_id', ParseUUIDPipe) expense_id: string,
     @Request() req: AuthenticatedRequest,
   ): Promise<ExpenseResponseDto> {
-    return this.expenses_service.findOneById(
-      trip_id,
-      expense_id,
-      req.user!.id,
-    );
+    return this.expenses_service.findOneById(trip_id, expense_id, req.user!.id);
   }
 
   /**

@@ -211,7 +211,10 @@ describe('UsersService', () => {
     });
 
     it('should allow update when email is unchanged', async () => {
-      const dtoWithSameEmail = { nombre: 'Nuevo Nombre', email: mockUser.email };
+      const dtoWithSameEmail = {
+        nombre: 'Nuevo Nombre',
+        email: mockUser.email,
+      };
       const updatedUser = { ...mockUser, nombre: 'Nuevo Nombre' };
       userRepository.findOne.mockResolvedValueOnce(mockUser);
       userRepository.save.mockResolvedValue(updatedUser);

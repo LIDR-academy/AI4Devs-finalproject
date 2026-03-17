@@ -113,9 +113,7 @@ export async function getTripSettledBalances(tripId: string): Promise<SettleResp
  * @param transactions - Array of settle transactions
  * @returns Array of Balance objects
  */
-export function mapSettleTransactionsToBalances(
-  transactions: SettleTransaction[],
-): Balance[] {
+export function mapSettleTransactionsToBalances(transactions: SettleTransaction[]): Balance[] {
   return transactions.map((transaction, index) => ({
     id: `${transaction.from_user_id}-${transaction.to_user_id}-${index}`,
     fromName: transaction.from_user_name,

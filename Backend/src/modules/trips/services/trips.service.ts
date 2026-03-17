@@ -576,7 +576,12 @@ export class TripsService {
       hasMore: safePage * safeLimit < totalParticipants,
     };
 
-    const result = { trip, paginationMeta, userRole, totalAmount: total_amount };
+    const result = {
+      trip,
+      paginationMeta,
+      userRole,
+      totalAmount: total_amount,
+    };
 
     // Guardar en caché por 5 minutos
     await this.cacheManager.set(cacheKey, result, 300);

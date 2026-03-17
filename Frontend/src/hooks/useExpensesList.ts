@@ -38,12 +38,7 @@ export function useExpensesList(
     ...(category_id && { category_id }),
   };
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['expenses', tripId, query],
     queryFn: () => getExpensesByTrip(tripId!, query),
     enabled: !!tripId,
