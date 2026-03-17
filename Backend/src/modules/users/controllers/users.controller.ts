@@ -91,8 +91,16 @@ export class UsersController {
   @Get('search')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Search user by email' })
-  @ApiQuery({ name: 'email', description: 'User email to search', required: true })
-  @ApiResponse({ status: 200, description: 'User found', type: UserResponseDto })
+  @ApiQuery({
+    name: 'email',
+    description: 'User email to search',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User found',
+    type: UserResponseDto,
+  })
   @ApiNotFoundResponse({ description: 'User not found' })
   async search(@Query('email') email: string): Promise<UserResponseDto> {
     const user = await this.usersService.findByEmail(email?.trim() ?? '');
