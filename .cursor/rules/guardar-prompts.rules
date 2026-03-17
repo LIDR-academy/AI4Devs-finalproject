@@ -1,0 +1,20 @@
+{
+  "documentationRules": {
+    "promptLogging": {
+      "description": "Registrar todas las interacciones con agentes de IA",
+      "targetFile": "@prompts/prompts-LBN.md",
+      "format": {
+        "template": "## Prompt [Número]\n**Fecha:** [fecha en la que se realiza el prompt, leida del sistema, en el formado día-mes-año]\n**Modelo:** [modelo de IA utilizado]\n\n**Usuario:**\n[prompt introducido por el usuario]\n\n**Asistente:**\n[prompt completo de salida del agente]",
+        "sections": [
+          "Número de prompt",
+          "Fecha (día-mes-año)",
+          "Modelo utilizado",
+          "Prompt del usuario",
+          "Respuesta del asistente"
+        ]
+      },
+      "required": true,
+      "automate": true
+    }
+  }
+} 

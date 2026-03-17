@@ -1,0 +1,49 @@
+{
+  "plantillaHistoriaUsuario": {
+    "estructura": {
+      "titulo": "Título de la Historia de Usuario",
+      "narrativa": {
+        "formato": "Como [rol del usuario], quiero [acción que desea realizar el usuario], para que [beneficio que espera obtener el usuario].",
+        "ejemplo": "Como usuario de negocio, quiero crear una nueva tarea, para que pueda solicitar desarrollos al departamento de tecnología."
+      },
+      "criteriosAceptacion": {
+        "descripcion": "Lista de condiciones específicas que deben cumplirse para considerar completada la historia",
+        "formato": [
+          "[Detalle específico de funcionalidad]",
+          "[Detalle específico de funcionalidad]",
+          "[Detalle específico de funcionalidad]"
+        ]
+      },
+      "notasAdicionales": {
+        "descripcion": "Información complementaria relevante para el desarrollo",
+        "formato": [
+          "[Cualquier consideración adicional]"
+        ]
+      },
+      "historiasRelacionadas": {
+        "descripcion": "Referencias a otras historias que tienen dependencia o relación",
+        "formato": [
+          "[Relaciones con otras historias de usuario]"
+        ]
+      },
+      "tareas": {
+        "descripcion": "Desglose de trabajos necesarios para completar la historia",
+        "formato": [
+          "[Lista de tareas y subtareas para que esta historia pueda ser completada]"
+        ]
+      }
+    },
+    "estimacion": {
+      "descripcion": "Tabla para estimar cada item en el backlog",
+      "formato": "| Item | Impacto en usuario/negocio | Urgencia | Complejidad/Esfuerzo | Riesgos/Dependencias |\n|------|----------------------------|----------|----------------------|----------------------|\n|      |                            |          |                      |                      |",
+      "ejemploItem": "US-01: Crear tarea",
+      "valoresImpacto": ["Alto", "Medio", "Bajo"],
+      "valoresUrgencia": ["Alta", "Media", "Baja"],
+      "valoresComplejidad": ["Alta (8+)", "Media (5)", "Baja (2)"],
+      "valoresRiesgo": ["Alto", "Medio", "Bajo", "N/A"]
+    },
+    "documentacionMarkdown": {
+      "ejemplo": "# US-01: Creación de tarea por usuario de negocio\n\n## Historia de Usuario\n\n**Como** usuario de negocio,  \n**quiero** crear una nueva tarea en el sistema,  \n**para que** pueda solicitar desarrollos al departamento de tecnología.\n\n## Criterios de Aceptación\n\n- El formulario debe incluir todos los campos obligatorios (asunto, descripción, prioridad)\n- Al crear la tarea, debe sincronizarse automáticamente con Redmine\n- El usuario debe recibir confirmación visual de que la tarea se ha creado correctamente\n\n## Notas Adicionales\n\n- La interfaz debe seguir las guías de diseño establecidas para TaskDistributor\n- El rendimiento de creación no debe superar los 2 segundos\n\n## Historias de Usuario Relacionadas\n\n- US-02: Edición de tarea\n- US-08: Visualización de tareas pendientes\n\n## Tareas\n\n- Diseñar interfaz de formulario de creación\n- Implementar validaciones de campos\n- Desarrollar integración con API de Redmine\n- Implementar almacenamiento en base de datos local\n- Crear pruebas unitarias y de integración\n\n## Estimación\n\n| Item | Impacto en usuario/negocio | Urgencia | Complejidad/Esfuerzo | Riesgos/Dependencias |\n|------|----------------------------|----------|----------------------|----------------------|\n| US-01: Creación de tarea | Alto | Alta | Media (5) | Medio - Depende de disponibilidad de API Redmine |"
+    }
+  }
+} 

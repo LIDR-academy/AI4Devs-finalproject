@@ -1,0 +1,252 @@
+/* Contenedor principal de proyectos actuales */
+.current-projects-container {
+  margin-top: 12px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #6c757d;
+}
+
+.current-projects-empty {
+  padding: 4px 0;
+  text-align: center;
+}
+
+/* Header con funcionalidad expandible */
+.current-projects-header {
+  margin-bottom: 8px;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+.projects-count {
+  font-size: 0.7em;
+  padding: 2px 6px;
+  background-color: #6c757d !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.expand-icon {
+  transition: transform 0.2s ease;
+}
+
+.expand-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Vista resumida (colapsada) */
+.projects-summary {
+  padding-left: 8px;
+}
+
+.projects-summary-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-summary-item {
+  padding: 2px 6px;
+  border-radius: 3px;
+  border-left: 2px solid transparent;
+}
+
+.project-summary-item strong {
+  color: #212529;
+  font-weight: 600;
+}
+
+.project-summary-item .text-muted {
+  color: #6c757d !important;
+}
+
+/* Vista expandida */
+.projects-detailed-view {
+  padding-top: 8px;
+  border-top: 1px solid #dee2e6;
+}
+
+.project-detail-card {
+  background-color: white;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-left: 3px solid transparent;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.project-detail-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.project-detail-card:last-child {
+  margin-bottom: 0;
+}
+
+.project-name {
+  font-size: 0.9em;
+  color: #212529;
+  font-weight: 600;
+}
+
+.project-date-info,
+.project-info {
+  display: flex;
+  align-items: center;
+  font-size: 0.8em;
+}
+
+.project-date-info strong,
+.project-info strong {
+  color: #495057;
+  font-weight: 600;
+}
+
+.project-date-info small,
+.project-info small {
+  color: #495057;
+}
+
+.status-badge {
+  font-size: 0.7em;
+  padding: 2px 6px;
+  font-weight: 600;
+}
+
+/* Mejorar contraste de badges de estado */
+.status-badge.bg-primary {
+  background-color: #0d6efd !important;
+  color: #ffffff !important;
+}
+
+.status-badge.bg-warning {
+  background-color: #fd7e14 !important;
+  color: #000000 !important; /* Texto negro para mejor contraste */
+}
+
+.status-badge.bg-info {
+  background-color: #0dcaf0 !important;
+  color: #000000 !important; /* Texto negro para mejor contraste */
+}
+
+.status-badge.bg-secondary {
+  background-color: #6c757d !important;
+  color: #ffffff !important;
+}
+
+/* Estados de proyectos con códigos de colores mejorados */
+
+/* En progreso - Azul */
+.project-in-progress {
+  border-left-color: #0d6efd !important;
+}
+
+.project-in-progress .project-summary-item {
+  border-left-color: #0d6efd;
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Finalizando pronto - Naranja */
+.project-finishing-soon {
+  border-left-color: #fd7e14 !important;
+}
+
+.project-finishing-soon .project-summary-item {
+  border-left-color: #fd7e14;
+  background-color: rgba(253, 126, 20, 0.1);
+}
+
+/* Por iniciar - Verde claro */
+.project-starting-soon {
+  border-left-color: #20c997 !important;
+}
+
+.project-starting-soon .project-summary-item {
+  border-left-color: #20c997;
+  background-color: rgba(32, 201, 151, 0.1);
+}
+
+/* Mejorar contraste de iconos */
+.project-date-info .text-primary,
+.project-info .text-primary {
+  color: #0d6efd !important;
+}
+
+.project-date-info .text-muted,
+.project-info .text-muted {
+  color: #6c757d !important;
+}
+
+/* Responsividad */
+@media (max-width: 576px) {
+  .current-projects-container {
+    padding: 6px;
+  }
+  
+  .project-detail-card {
+    padding: 6px;
+  }
+  
+  .project-date-info,
+  .project-info {
+    font-size: 0.75em;
+  }
+  
+  .project-name {
+    font-size: 0.85em;
+  }
+}
+
+/* Animaciones */
+.current-projects-container {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estados de hover para interactividad */
+.projects-summary-row .project-summary-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: translateX(2px);
+  transition: all 0.2s ease;
+}
+
+/* Mejoras para tooltips y estados visuales */
+.project-detail-card.project-in-progress:hover {
+  border-left-color: #0b5ed7 !important;
+}
+
+.project-detail-card.project-finishing-soon:hover {
+  border-left-color: #e55a00 !important;
+}
+
+.project-detail-card.project-starting-soon:hover {
+  border-left-color: #1aa179 !important;
+}
+
+/* Asegurar que los textos muted sigan siendo legibles */
+.current-projects-container .text-muted {
+  color: #6c757d !important;
+  font-weight: 500;
+} 

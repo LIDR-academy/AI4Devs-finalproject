@@ -1,0 +1,58 @@
+{
+  "plantillaTicketTrabajo": {
+    "estructura": {
+      "titulo": {
+        "descripcion": "Título descriptivo y conciso del ticket",
+        "ejemplo": "Implementación de Autenticación de Dos Factores (2FA)"
+      },
+      "descripcion": {
+        "descripcion": "Detalles sobre el trabajo a realizar, contexto y objetivos",
+        "ejemplo": "Añadir autenticación de dos factores para mejorar la seguridad del login de usuarios. Debe soportar aplicaciones de autenticación como Authenticator y mensajes SMS."
+      },
+      "criteriosAceptacion": {
+        "descripcion": "Lista de condiciones específicas que deben cumplirse para considerar completado el ticket",
+        "formato": [
+          "- Los usuarios pueden seleccionar 2FA desde su perfil.",
+          "- Soporte para Google Authenticator y SMS.",
+          "- Los usuarios deben confirmar el dispositivo 2FA durante la configuración."
+        ]
+      },
+      "prioridad": {
+        "descripcion": "Nivel de importancia del ticket",
+        "valores": ["Alta", "Media", "Baja"],
+        "ejemplo": "Alta"
+      },
+      "estimacion": {
+        "descripcion": "Complejidad o esfuerzo estimado para completar el ticket",
+        "formato": "Puntos de historia (1, 2, 3, 5, 8, 13, 21)",
+        "ejemplo": "8 puntos de historia"
+      },
+      "asignado": {
+        "descripcion": "Persona o equipo responsable de la implementación",
+        "ejemplo": "Equipo de Backend"
+      },
+      "etiquetas": {
+        "descripcion": "Categorías o clasificaciones relevantes para el ticket",
+        "formato": "Lista separada por comas",
+        "ejemplo": "Seguridad, Backend, Sprint 10"
+      },
+      "comentarios": {
+        "descripcion": "Notas adicionales, consideraciones o contexto",
+        "ejemplo": "Verificar la compatibilidad con la base de usuarios internacionales para el envío de SMS."
+      },
+      "enlaces": {
+        "descripcion": "Referencias a documentos, recursos o tickets relacionados",
+        "ejemplo": "Documento de Especificación de Requerimientos de Seguridad"
+      },
+      "historialCambios": {
+        "descripcion": "Registro de modificaciones realizadas al ticket",
+        "formato": [
+          "- [Fecha] - [Usuario] - [Cambio realizado]"
+        ]
+      }
+    },
+    "plantillaMarkdown": {
+      "ejemplo": "# Implementación de Autenticación de Dos Factores (2FA)\n\n## Descripción\nAñadir autenticación de dos factores para mejorar la seguridad del login de usuarios. Debe soportar aplicaciones de autenticación como Authenticator y mensajes SMS.\n\n## Criterios de Aceptación\n- Los usuarios pueden seleccionar 2FA desde su perfil.\n- Soporte para Google Authenticator y SMS.\n- Los usuarios deben confirmar el dispositivo 2FA durante la configuración.\n\n## Detalles\n**Prioridad**: Alta\n**Estimación**: 8 puntos de historia\n**Asignado a**: Equipo de Backend\n**Etiquetas**: Seguridad, Backend, Sprint 10\n\n## Comentarios\nVerificar la compatibilidad con la base de usuarios internacionales para el envío de SMS.\n\n## Enlaces\nDocumento de Especificación de Requerimientos de Seguridad\n\n## Historial de Cambios\n- 2025-05-06 - Leonardo Benítez - Creación del ticket\n- 2025-05-07 - Equipo Backend - Añadidos criterios de aceptación adicionales"
+    }
+  }
+} 

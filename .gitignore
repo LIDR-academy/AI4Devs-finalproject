@@ -1,0 +1,93 @@
+# Ignorar la carpeta docs/originales
+/docs/espec/originales/*
+
+# Ignorar todo el contenido de la carpeta styleguide
+/styleguide/
+
+# Dependencias
+/node_modules/
+/.pnp
+.pnp.js
+/taskdistributor-bbdd/node_modules/
+/backend/node_modules/
+
+# Testing
+/coverage/
+
+# Producción
+/build/
+/dist/
+
+# Archivos misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Prisma
+/prisma/migrations/*_migrating_*
+.prisma/
+generated/
+migrations-old/
+/taskdistributor-bbdd/prisma/migrations/*_migrating_*
+
+# Supabase
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# Archivos de caché
+.cache/
+.eslintcache
+.stylelintcache
+
+# Archivos temporales
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Archivos de bloqueo de dependencias (opcional, incluir si se desea mantener bloqueo)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml 
+
+# dependencies
+/frontend/node_modules
+/frontend/.pnp
+/frontend/.pnp.js
+
+# testing
+/frontend/coverage
+
+# production
+/frontend/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

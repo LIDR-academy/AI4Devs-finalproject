@@ -1,0 +1,1790 @@
+{
+  "info": {
+    "name": "TaskDistributor API",
+    "description": "Colección completa para probar la API de TaskDistributor - Sistema de gestión y distribución de tareas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "taskdistributor-api-collection",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Verificar que la API está funcionando correctamente"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success property', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Login - Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@taskdistributor.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Iniciar sesión como administrador"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('token');",
+                  "    pm.globals.set('authToken', jsonData.data.token);",
+                  "});",
+                  "",
+                  "pm.test('User role is ADMIN', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user.role).to.eql('ADMIN');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Negocio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"negocio@taskdistributor.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Iniciar sesión como usuario de negocio"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('token');",
+                  "    pm.globals.set('negocioToken', jsonData.data.token);",
+                  "});",
+                  "",
+                  "pm.test('User role is NEGOCIO', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user.role).to.eql('NEGOCIO');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Tecnología",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tecnologia@taskdistributor.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Iniciar sesión como usuario de tecnología"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('token');",
+                  "    pm.globals.set('authToken', jsonData.data.token);",
+                  "});",
+                  "",
+                  "pm.test('User role is TECNOLOGIA', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user.role).to.eql('TECNOLOGIA');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register - Nuevo Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario de Prueba\",\n  \"email\": \"prueba@taskdistributor.com\",\n  \"password\": \"password123\",\n  \"role\": \"NEGOCIO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Registrar un nuevo usuario (solo para desarrollo/testing)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "Obtener el perfil del usuario autenticado"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has user data', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('name');",
+                  "    pm.expect(jsonData.data).to.have.property('email');",
+                  "    pm.expect(jsonData.data).to.have.property('role');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Cerrar sesión del usuario autenticado"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tareas - Sistema de Filtros (US-08-02)",
+      "item": [
+        {
+          "name": "Listar Todas las Tareas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            },
+            "description": "Obtener listado completo de tareas sin filtros"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has tasks array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('tasks');",
+                  "    pm.expect(jsonData.data.tasks).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Response has pagination', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('pagination');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar por Departamento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?departamento=Marketing",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "departamento",
+                  "value": "Marketing"
+                }
+              ]
+            },
+            "description": "Filtrar tareas por departamento específico"
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por Estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?status_id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "status_id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Filtrar tareas por estado específico"
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por Prioridad",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?priority_id=4",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "priority_id",
+                  "value": "4"
+                }
+              ]
+            },
+            "description": "Filtrar tareas por prioridad alta"
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por Etapa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?etapa=planificada",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "etapa",
+                  "value": "planificada"
+                }
+              ]
+            },
+            "description": "Filtrar tareas por etapa específica"
+          },
+          "response": []
+        },
+        {
+          "name": "Búsqueda por Texto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?search=notificaciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "notificaciones"
+                }
+              ]
+            },
+            "description": "Buscar tareas por texto en título, descripción, etc."
+          },
+          "response": []
+        },
+        {
+          "name": "Filtros Combinados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?departamento=Marketing&status_id=1&sort_by=priority&sort_order=desc&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "departamento",
+                  "value": "Marketing"
+                },
+                {
+                  "key": "status_id",
+                  "value": "1"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "priority"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "desc"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Ejemplo de múltiples filtros combinados con ordenamiento"
+          },
+          "response": []
+        },
+        {
+          "name": "Tareas Pendientes de Planificar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?pendientes_planificar=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "pendientes_planificar",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Filtrar solo tareas que tienen responsable y funcional pero no están planificadas"
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por Rango de Fechas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?fecha_inicio_desde=2025-01-01&fecha_fin_hasta=2025-03-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "fecha_inicio_desde",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "fecha_fin_hasta",
+                  "value": "2025-03-31"
+                }
+              ]
+            },
+            "description": "Filtrar tareas por rango de fechas de planificación"
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por Estimación de Sprints",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?estimacion_sprints_min=2&estimacion_sprints_max=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "estimacion_sprints_min",
+                  "value": "2"
+                },
+                {
+                  "key": "estimacion_sprints_max",
+                  "value": "3"
+                }
+              ]
+            },
+            "description": "Filtrar tareas por rango de estimación en sprints"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Tarea por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/10001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "10001"]
+            },
+            "description": "Obtener detalles completos de una tarea específica"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has task data', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('subject');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estadísticas de Tareas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "stats"]
+            },
+            "description": "Obtener estadísticas y KPIs de las tareas"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has statistics', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('total_tareas');",
+                  "    pm.expect(jsonData.data).to.have.property('por_etapa');",
+                  "    pm.expect(jsonData.data).to.have.property('por_estado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Opciones de Filtros Dinámicos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/filter-options",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "filter-options"]
+            },
+            "description": "Obtener valores únicos disponibles para construir filtros dinámicos"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has filter options', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('departamentos');",
+                  "    pm.expect(jsonData.data).to.have.property('equipos');",
+                  "    pm.expect(jsonData.data).to.have.property('estados');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Estimación de Tareas (US-05)",
+      "item": [
+        {
+          "name": "Actualizar Estimación - Éxito",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estimacion_sprints\": 3,\n  \"factor_carga\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/10001/estimation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "10001", "estimation"]
+            },
+            "description": "Actualizar estimación de una tarea (solo usuarios TECNOLOGIA pueden realizar esta acción)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success property', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Response has updated task data', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('estimacion_sprints');",
+                  "    pm.expect(jsonData.data).to.have.property('factor_carga');",
+                  "});",
+                  "",
+                  "pm.test('Estimation values are updated', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.estimacion_sprints).to.eql(3);",
+                  "    pm.expect(jsonData.data.factor_carga).to.eql(2);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar Estimación - Valores Decimales",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estimacion_sprints\": 2.5,\n  \"factor_carga\": 1.5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/10002/estimation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "10002", "estimation"]
+            },
+            "description": "Actualizar estimación con valores decimales (ejemplo: 2.5 sprints, 1.5 factor de carga)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Decimal values are accepted', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.estimacion_sprints).to.eql(2.5);",
+                  "    pm.expect(jsonData.data.factor_carga).to.eql(1.5);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar Estimación - Tarea No Encontrada",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estimacion_sprints\": 3,\n  \"factor_carga\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/999999/estimation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "999999", "estimation"]
+            },
+            "description": "Probar actualización de estimación en tarea inexistente"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error message is correct', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('no encontrada');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar Estimación - Datos Inválidos",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estimacion_sprints\": -1,\n  \"factor_carga\": 25\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/10001/estimation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "10001", "estimation"]
+            },
+            "description": "Probar validaciones con datos fuera de rango (sprints negativo, factor > 20)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Validation error message', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('debe estar entre');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar Estimación - Campos Faltantes",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estimacion_sprints\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/10001/estimation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "10001", "estimation"]
+            },
+            "description": "Probar validación cuando faltan campos obligatorios"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Missing field error', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('obligatorios');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar Estimación - Sin Autenticación",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estimacion_sprints\": 3,\n  \"factor_carga\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/10001/estimation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "10001", "estimation"]
+            },
+            "description": "Probar acceso sin token de autenticación"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Authentication required error', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar Estimación - Usuario NEGOCIO (Sin Permisos)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{negocioToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estimacion_sprints\": 3,\n  \"factor_carga\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/10001/estimation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "10001", "estimation"]
+            },
+            "description": "Probar acceso con usuario de NEGOCIO (debe fallar - solo TECNOLOGIA puede estimar)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Nota: Ejecutar primero 'Login - Negocio' para obtener negocioToken",
+                  "console.log('Probando acceso con usuario NEGOCIO - debe retornar 403');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test('Permission denied error', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('permisos');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Equipos",
+      "item": [
+        {
+          "name": "Listar Todos los Equipos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipos"]
+            },
+            "description": "Obtener listado completo de equipos"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has equipos array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('equipos');",
+                  "    pm.expect(jsonData.data.equipos).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Response has pagination', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('pagination');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar Equipos por Tipo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos?tipo=INTERNO",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipos"],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "INTERNO"
+                }
+              ]
+            },
+            "description": "Filtrar equipos por tipo (INTERNO/EXTERNO)"
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar Equipos Activos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos?activo=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipos"],
+              "query": [
+                {
+                  "key": "activo",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Filtrar solo equipos activos"
+          },
+          "response": []
+        },
+        {
+          "name": "Ordenar Equipos por Capacidad",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos?sort_by=capacidad&sort_order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipos"],
+              "query": [
+                {
+                  "key": "sort_by",
+                  "value": "capacidad"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "desc"
+                }
+              ]
+            },
+            "description": "Ordenar equipos por capacidad de forma descendente"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Equipo por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipos", "1"]
+            },
+            "description": "Obtener detalles de un equipo específico"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has equipo data', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('nombre');",
+                  "    pm.expect(jsonData.data).to.have.property('tipo');",
+                  "    pm.expect(jsonData.data).to.have.property('capacidad');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Equipo No Encontrado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipos", "999999"]
+            },
+            "description": "Probar respuesta cuando el equipo no existe"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error message is correct', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('no encontrado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estadísticas de Equipos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "equipos", "stats"]
+            },
+            "description": "Obtener estadísticas generales de equipos"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has statistics', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('total_equipos');",
+                  "    pm.expect(jsonData.data).to.have.property('equipos_internos');",
+                  "    pm.expect(jsonData.data).to.have.property('equipos_externos');",
+                  "    pm.expect(jsonData.data).to.have.property('equipos_activos');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Departamentos",
+      "item": [
+        {
+          "name": "Listar Todos los Departamentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/departamentos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departamentos"]
+            },
+            "description": "Obtener listado completo de departamentos"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has departamentos array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('departamentos');",
+                  "    pm.expect(jsonData.data.departamentos).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Response has pagination', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('pagination');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar Departamentos por Texto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/departamentos?search=Marketing",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departamentos"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Marketing"
+                }
+              ]
+            },
+            "description": "Buscar departamentos por nombre o descripción"
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar Departamentos Activos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/departamentos?activo=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departamentos"],
+              "query": [
+                {
+                  "key": "activo",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Filtrar solo departamentos activos"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Departamento por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/departamentos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departamentos", "1"]
+            },
+            "description": "Obtener detalles de un departamento específico"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has departamento data', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('nombre');",
+                  "    pm.expect(jsonData.data).to.have.property('activo');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Departamento No Encontrado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/departamentos/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departamentos", "999999"]
+            },
+            "description": "Probar respuesta cuando el departamento no existe"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error message is correct', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.false;",
+                  "    pm.expect(jsonData.message).to.include('no encontrado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estadísticas de Departamentos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/departamentos/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departamentos", "stats"]
+            },
+            "description": "Obtener estadísticas generales de departamentos"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has statistics', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('total_departamentos');",
+                  "    pm.expect(jsonData.data).to.have.property('departamentos_activos');",
+                  "    pm.expect(jsonData.data).to.have.property('departamentos_inactivos');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Redmine API - Verificación",
+      "item": [
+        {
+          "name": "Listar Issues de Redmine (con custom_fields)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/redmine/issues?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "redmine", "issues"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Consultar directamente issues de Redmine para verificar que incluye custom_fields con departamento"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has issues array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('issues');",
+                  "    pm.expect(jsonData.data.issues).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Issues have custom_fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.issues.length > 0) {",
+                  "        pm.expect(jsonData.data.issues[0]).to.have.property('custom_fields');",
+                  "        console.log('Custom fields encontrados:', JSON.stringify(jsonData.data.issues[0].custom_fields, null, 2));",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Custom field departamento exists', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.issues.length > 0) {",
+                  "        var issue = jsonData.data.issues[0];",
+                  "        var departamentoField = issue.custom_fields.find(cf => cf.name === 'departamento');",
+                  "        if (departamentoField) {",
+                  "            console.log('Campo departamento encontrado:', departamentoField);",
+                  "            pm.expect(departamentoField).to.have.property('value');",
+                  "        } else {",
+                  "            console.log('Campo departamento NO encontrado en custom_fields');",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener Issue específico de Redmine",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/redmine/issues/10001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "redmine", "issues", "10001"]
+            },
+            "description": "Obtener un issue específico de Redmine con todos sus custom_fields"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Issue has custom_fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.issue).to.have.property('custom_fields');",
+                  "    console.log('Custom fields del issue:', JSON.stringify(jsonData.data.issue.custom_fields, null, 2));",
+                  "});",
+                  "",
+                  "pm.test('Check all custom fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var customFields = jsonData.data.issue.custom_fields;",
+                  "    ",
+                  "    customFields.forEach(function(field) {",
+                  "        console.log('Custom field found: ' + field.name + ' = ' + field.value);",
+                  "    });",
+                  "    ",
+                  "    var departamento = customFields.find(cf => cf.name === 'departamento');",
+                  "    var responsable = customFields.find(cf => cf.name === 'responsable_negocio');",
+                  "    var funcional = customFields.find(cf => cf.name === 'funcional');",
+                  "    ",
+                  "    console.log('Departamento:', departamento ? departamento.value : 'NO ENCONTRADO');",
+                  "    console.log('Responsable Negocio:', responsable ? responsable.value : 'NO ENCONTRADO');",
+                  "    console.log('Funcional:', funcional ? funcional.value : 'NO ENCONTRADO');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verificar Tareas Combinadas (Redmine + BD)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?limit=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "3"
+                }
+              ]
+            },
+            "description": "Verificar que las tareas combinadas incluyen información de departamento desde Redmine y BD"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Tasks have department information', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data.tasks.length > 0) {",
+                  "        jsonData.data.tasks.forEach(function(task, index) {",
+                  "            console.log('Tarea ' + (index + 1) + ':');",
+                  "            console.log('  ID: ' + task.id);",
+                  "            console.log('  Subject: ' + task.subject);",
+                  "            console.log('  Departamento (Redmine): ' + (task.departamento || 'NO ENCONTRADO'));",
+                  "            console.log('  Departamento ID (BD): ' + (task.departamento_id || 'NO ENCONTRADO'));",
+                  "            console.log('  Departamento Nombre (BD): ' + (task.departamento_nombre || 'NO ENCONTRADO'));",
+                  "            console.log('  Responsable Negocio: ' + (task.responsable_negocio || 'NO ENCONTRADO'));",
+                  "            console.log('  Funcional: ' + (task.funcional || 'NO ENCONTRADO'));",
+                  "            console.log('  ---');",
+                  "        });",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('At least one task has department info', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var hasAnyDepartment = false;",
+                  "    ",
+                  "    if (jsonData.data.tasks.length > 0) {",
+                  "        jsonData.data.tasks.forEach(function(task) {",
+                  "            if (task.departamento || task.departamento_nombre) {",
+                  "                hasAnyDepartment = true;",
+                  "            }",
+                  "        });",
+                  "    }",
+                  "    ",
+                  "    if (!hasAnyDepartment) {",
+                  "        console.log('⚠️  NINGUNA tarea tiene información de departamento. Posibles causas:');",
+                  "        console.log('1. Redmine no está devolviendo custom_fields');",
+                  "        console.log('2. El campo \"departamento\" no existe en Redmine');",
+                  "        console.log('3. Las tareas no tienen el campo departamento configurado');",
+                  "    } else {",
+                  "        console.log('✅ Al menos una tarea tiene información de departamento');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Documentación",
+      "item": [
+        {
+          "name": "API Documentation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs"]
+            },
+            "description": "Obtener documentación de endpoints disponibles"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "negocioToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Scripts que se ejecutan antes de cada petición",
+          "console.log('Ejecutando petición a: ' + request.url);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Scripts que se ejecutan después de cada petición",
+          "console.log('Respuesta recibida con status: ' + pm.response.code);"
+        ]
+      }
+    }
+  ]
+} 

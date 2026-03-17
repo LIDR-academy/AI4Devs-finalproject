@@ -1,0 +1,189 @@
+.task-planning-page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.task-info-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.task-info-card .card-header {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border-bottom: none;
+}
+
+.estimation-summary {
+  border-left: 4px solid #28a745;
+}
+
+.estimation-summary h6 {
+  color: #495057;
+  font-weight: 600;
+}
+
+.task-metadata strong {
+  color: #495057;
+}
+
+/* Recommendations list styles */
+.recommendations-container {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.recommendation-card {
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.recommendation-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.recommendation-score {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.score-excellent {
+  color: #28a745;
+}
+
+.score-good {
+  color: #ffc107;
+}
+
+.score-fair {
+  color: #fd7e14;
+}
+
+.score-poor {
+  color: #dc3545;
+}
+
+.affinity-stars {
+  color: #ffc107;
+}
+
+.capacity-bar {
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.capacity-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.capacity-available {
+  background-color: #28a745;
+}
+
+.capacity-warning {
+  background-color: #ffc107;
+}
+
+.capacity-danger {
+  background-color: #dc3545;
+}
+
+/* Planning form styles */
+.planning-form-section {
+  border-top: 1px solid #dee2e6;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.date-picker-container {
+  position: relative;
+}
+
+.conflict-alert {
+  border-left: 4px solid #dc3545;
+  background-color: #f8d7da;
+}
+
+.warning-alert {
+  border-left: 4px solid #ffc107;
+  background-color: #fff3cd;
+}
+
+.planning-summary {
+  background: linear-gradient(135deg, #e8f5e8, #d4edda);
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+}
+
+.planning-summary .summary-item {
+  border-bottom: 1px solid #c3e6cb;
+  padding: 0.75rem 0;
+}
+
+.planning-summary .summary-item:last-child {
+  border-bottom: none;
+}
+
+/* Team badge styles */
+.team-internal {
+  background-color: #28a745;
+  color: white;
+}
+
+.team-external {
+  background-color: #6f42c1;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .task-planning-page {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .recommendation-card {
+    margin-bottom: 1rem;
+  }
+  
+  .estimation-summary {
+    margin-top: 1rem;
+  }
+}
+
+/* Animation for loading states */
+.recommendation-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.recommendation-loading .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Custom scrollbar for recommendations */
+.recommendations-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.recommendations-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.recommendations-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.recommendations-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+} 

@@ -1,0 +1,277 @@
+.algorithm-explanation-card {
+  border: 2px solid #e3f2fd;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.algorithm-explanation-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.algorithm-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 2px solid #dee2e6;
+}
+
+.algorithm-header h5 {
+  color: #495057;
+  font-weight: 600;
+}
+
+.toggle-details-btn {
+  transition: all 0.2s ease;
+}
+
+.toggle-details-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Fórmula Principal */
+.formula-alert {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+}
+
+.formula-title {
+  font-size: 1.1rem;
+  color: #856404;
+}
+
+.formula-container {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ffc107;
+  text-align: center;
+}
+
+.formula {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+  background: transparent;
+  padding: 0;
+}
+
+/* Resumen de Factores */
+.factors-summary {
+  margin-top: 1.5rem;
+}
+
+.factor-summary-card {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 16px;
+  height: 100%;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.factor-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #007bff, #28a745, #ffc107, #dc3545);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.factor-summary-card:hover::before {
+  opacity: 1;
+}
+
+.factor-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.factor-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.factor-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.factor-weight {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.weight-badge {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 6px 12px;
+}
+
+.factor-bar {
+  margin-top: 8px;
+}
+
+/* Detalles del Factor */
+.factor-detail-card {
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.factor-detail-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+}
+
+.factor-detail-title {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.factor-description {
+  color: #6c757d;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.calculation-info, .example-info {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.calculation-info strong, .example-info strong {
+  color: #007bff;
+}
+
+.example-info code {
+  background: #f8f9fa;
+  color: #e83e8c;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.85rem;
+}
+
+/* Visualización de Peso */
+.weight-visualization {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.weight-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.weight-number {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.weight-percent {
+  font-size: 0.7rem;
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+}
+
+/* Consideraciones */
+.considerations-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.considerations-list {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.considerations-list li {
+  margin-bottom: 4px;
+}
+
+/* Animaciones */
+.factor-summary-card,
+.factor-detail-card {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.factor-summary-card:nth-child(1) { animation-delay: 0.1s; }
+.factor-summary-card:nth-child(2) { animation-delay: 0.2s; }
+.factor-summary-card:nth-child(3) { animation-delay: 0.3s; }
+.factor-summary-card:nth-child(4) { animation-delay: 0.4s; }
+
+.factor-detail-card:nth-child(1) { animation-delay: 0.1s; }
+.factor-detail-card:nth-child(2) { animation-delay: 0.2s; }
+.factor-detail-card:nth-child(3) { animation-delay: 0.3s; }
+.factor-detail-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .formula {
+    font-size: 0.85rem;
+  }
+  
+  .factor-name {
+    font-size: 0.8rem;
+  }
+  
+  .weight-circle {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .weight-number {
+    font-size: 1rem;
+  }
+  
+  .algorithm-explanation-card {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .algorithm-header h5 {
+    font-size: 1rem;
+  }
+  
+  .formula-container {
+    padding: 8px;
+  }
+  
+  .formula {
+    font-size: 0.75rem;
+  }
+  
+  .factor-summary-card {
+    padding: 12px;
+  }
+} 

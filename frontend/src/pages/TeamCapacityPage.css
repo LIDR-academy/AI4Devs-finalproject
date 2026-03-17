@@ -1,0 +1,54 @@
+.team-capacity-page {
+  padding: 1rem;
+}
+
+.team-capacity-list {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.team-capacity-list .card:last-child {
+  margin-bottom: 0;
+}
+
+/* Estilos para barras de progreso */
+.progress {
+  border-radius: 4px;
+}
+
+/* Animaciones sutiles */
+.team-capacity-list .card {
+  transition: box-shadow 0.2s ease;
+}
+
+.team-capacity-list .card:hover {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .team-capacity-page {
+    padding: 0.5rem;
+  }
+  
+  .display-6 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Estados de sobrecarga con colores sutiles */
+.border-danger {
+  border-left: 4px solid #dc3545 !important;
+}
+
+.border-warning {
+  border-left: 4px solid #ffc107 !important;
+}
+
+.border-success {
+  border-left: 4px solid #198754 !important;
+}
+
+.border-primary {
+  border-left: 4px solid #0d6efd !important;
+} 

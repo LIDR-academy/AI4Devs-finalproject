@@ -1,0 +1,93 @@
+{
+  "projectInfo": {
+    "name": "TaskDistributor",
+    "description": "Sistema de gestión y distribución de tareas",
+    "author": "Leonardo Benítez Núñez"
+  },
+  "stack": {
+    "backend": {
+      "framework": "Node.js",
+      "server": "Express",
+      "architecture": "RESTful API",
+      "database": "Pendiente de definir",
+      "patterns": ["MVC", "Repository", "Service Layer"]
+    },
+    "frontend": {
+      "framework": "React",
+      "stateManagement": "Redux",
+      "styling": "Bootstrap",
+      "componentModel": "Functional Components with Hooks"
+    }
+  },
+  "codingStyle": {
+    "general": [
+      "Usar ES6+ features como arrow functions, destructuring, y async/await",
+      "Seguir principios SOLID",
+      "Implementar manejo de errores adecuado",
+      "Documentar el código con JSDoc"
+    ],
+    "backend": [
+      "Organizar las rutas por recursos",
+      "Implementar middlewares para validación",
+      "Utilizar controllers para manejar solicitudes",
+      "Separar la lógica de negocio en servicios"
+    ],
+    "frontend": [
+      "Utilizar componentes pequeños y reutilizables",
+      "Separar la lógica de presentación de la lógica de negocio",
+      "Implementar lazy loading para optimización",
+      "Crear hooks personalizados para lógica compartida"
+    ],
+    "estilos": {
+      "descripcion": "La aplicación debe seguir los estilos definidos en la guía de estilos",
+      "ubicacion": "/styleguide",
+      "framework": "Bootstrap",
+      "reglas": [
+        "Utilizar los componentes de Bootstrap definidos en la guía de estilos",
+        "Mantener consistencia visual en toda la aplicación",
+        "Respetar la paleta de colores y tipografía establecidas",
+        "Seguir los patrones de diseño responsive definidos en la guía"
+      ]
+    }
+  },
+  "aiAssistantInfo": {
+    "name": "Claude 3.7 Sonnet",
+    "role": "Experto en desarrollo de software",
+    "expertise": [
+      "Arquitectura de software",
+      "Desarrollo full-stack",
+      "Buenas prácticas de codificación",
+      "Patrones de diseño",
+      "Optimización de rendimiento",
+      "Seguridad en aplicaciones web"
+    ],
+    "approach": "Ofrecer soluciones escalables, mantenibles y de alta calidad técnica siguiendo los estándares de la industria"
+  },
+  "fileStructure": {
+    "backend": {
+      "root": "/server",
+      "routes": "/server/routes",
+      "controllers": "/server/controllers",
+      "services": "/server/services",
+      "models": "/server/models",
+      "middleware": "/server/middleware",
+      "config": "/server/config",
+      "utils": "/server/utils"
+    },
+    "frontend": {
+      "root": "/client",
+      "components": "/client/src/components",
+      "pages": "/client/src/pages",
+      "hooks": "/client/src/hooks",
+      "store": "/client/src/store",
+      "services": "/client/src/services",
+      "utils": "/client/src/utils",
+      "styles": "/client/src/styles"
+    },
+    "styleguide": {
+      "root": "/styleguide",
+      "css": "/styleguide/css",
+      "js": "/styleguide/js"
+    }
+  }
+} 

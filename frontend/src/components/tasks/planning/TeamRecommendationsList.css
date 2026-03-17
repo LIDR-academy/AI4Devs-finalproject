@@ -1,0 +1,232 @@
+/* Contenedor principal de recomendaciones */
+.team-recommendations-list {
+  padding: 0;
+}
+
+/* Tarjetas de recomendación */
+.team-recommendation-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.team-recommendation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #0d6efd;
+}
+
+/* Header de la tarjeta */
+.team-recommendation-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 12px 16px;
+}
+
+.external-badge {
+  font-size: 0.7em;
+  padding: 2px 6px;
+  margin-top: 2px;
+}
+
+/* Contenedor de puntuación */
+.score-container {
+  text-align: center;
+}
+
+.score {
+  display: inline-block;
+  font-weight: bold;
+  font-size: 1.2em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: white;
+  min-width: 45px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.score-text {
+  font-size: 0.7em;
+  color: #495057;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* Colores de puntuación mejorados para mejor contraste */
+.score-excellent {
+  background-color: #157347; /* Verde más oscuro */
+  color: #ffffff;
+}
+
+.score-good {
+  background-color: #0b5ed7; /* Azul más oscuro */
+  color: #ffffff;
+}
+
+.score-fair {
+  background-color: #e8590c; /* Naranja más oscuro para mejor contraste */
+  color: #ffffff;
+}
+
+.score-poor {
+  background-color: #b02a37; /* Rojo más oscuro */
+  color: #ffffff;
+}
+
+/* Estrellas de afinidad */
+.affinity-stars {
+  color: #ffc107;
+  margin-right: 2px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+/* Cuerpo de la tarjeta */
+.team-recommendation-card .card-body {
+  padding: 16px;
+}
+
+/* Mejorar contraste de textos pequeños */
+.team-recommendation-card .card-body small {
+  color: #495057;
+  font-weight: 500;
+}
+
+.team-recommendation-card .card-body small.text-muted {
+  color: #6c757d !important;
+}
+
+.team-recommendation-card .card-body small.text-primary {
+  color: #0d6efd !important;
+  font-weight: 500;
+}
+
+/* Footer de la tarjeta */
+.team-recommendation-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid #dee2e6;
+  padding: 12px 16px;
+}
+
+.team-recommendation-card .card-footer .btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.team-recommendation-card .card-footer .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3);
+}
+
+/* Mejorar contraste de badges */
+.team-recommendation-card .badge.bg-primary {
+  background-color: #0d6efd !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.team-recommendation-card .badge.bg-success {
+  background-color: #198754 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.team-recommendation-card .badge.bg-warning {
+  background-color: #fd7e14 !important;
+  color: #000000 !important; /* Texto negro para mejor contraste en fondo naranja */
+  font-weight: 600;
+}
+
+.external-badge.bg-warning {
+  background-color: #fd7e14 !important;
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Responsividad */
+@media (max-width: 992px) {
+  .team-recommendations-list .col-lg-6 {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .team-recommendation-card .card-header,
+  .team-recommendation-card .card-body,
+  .team-recommendation-card .card-footer {
+    padding: 12px;
+  }
+  
+  .score {
+    font-size: 1em;
+    padding: 3px 6px;
+  }
+  
+  .score-text {
+    font-size: 0.65em;
+  }
+}
+
+/* Animaciones de entrada */
+.team-recommendation-card {
+  animation: slideInUp 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.team-recommendation-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.team-recommendation-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.team-recommendation-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.team-recommendation-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+@keyframes slideInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estados especiales */
+.team-recommendation-card.selected {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+/* Mejoras visuales adicionales */
+.team-recommendation-card .progress {
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.team-recommendation-card .badge {
+  font-size: 0.8em;
+  text-shadow: none;
+}
+
+/* Mejorar contraste de porcentajes en barras de progreso */
+.team-recommendation-card .progress + .d-flex small {
+  color: #495057 !important;
+  font-weight: 500;
+}
+
+/* Asegurar contraste en iconos */
+.team-recommendation-card .text-primary {
+  color: #0d6efd !important;
+}
+
+.team-recommendation-card .text-muted {
+  color: #6c757d !important;
+} 

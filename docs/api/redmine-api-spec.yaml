@@ -1,0 +1,1018 @@
+openapi: 3.0.3
+info:
+  title: Redmine API
+  description: API de Redmine para integración con el sistema TaskDistributor
+  version: 1.0.0
+  contact:
+    name: Leonardo Benítez Núñez
+servers:
+  - url: '/api'
+    description: API base de Redmine
+security:
+  - ApiKeyQuery: []
+  - ApiKeyHeader: []
+  - BasicAuth: []
+
+paths:
+  # ------------- ISSUES -------------
+  /issues.json:
+    get:
+      summary: Listar issues
+      description: Retorna la lista de issues con opciones de filtrado y paginación
+      operationId: listIssues
+      parameters:
+        - name: offset
+          in: query
+          description: Desplazamiento para paginación
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: "Límite de resultados por página (por defecto: 25, máximo: 100)"
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          description: "Campo para ordenar (ej: id, status, priority)"
+          schema:
+            type: string
+        - name: status_id
+          in: query
+          description: "Filtro por estado (ej: open, closed, *)"
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: Filtro por proyecto
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de issues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issues:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Issue'
+                  total_count:
+                    type: integer
+                    description: Número total de issues
+                  offset:
+                    type: integer
+                    description: Desplazamiento actual
+                  limit:
+                    type: integer
+                    description: Límite actual
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Crear issue
+      description: Crea un nuevo issue
+      operationId: createIssue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issue
+              properties:
+                issue:
+                  type: object
+                  required:
+                    - project_id
+                    - subject
+                  properties:
+                    project_id:
+                      type: integer
+                      description: ID del proyecto
+                    subject:
+                      type: string
+                      description: Asunto del issue
+                    description:
+                      type: string
+                      description: Descripción detallada
+                    tracker_id:
+                      type: integer
+                      description: ID del tipo de issue
+                    status_id:
+                      type: integer
+                      description: ID del estado
+                    priority_id:
+                      type: integer
+                      description: ID de la prioridad
+                    assigned_to_id:
+                      type: integer
+                      description: ID del usuario asignado
+                    start_date:
+                      type: string
+                      format: date
+                      description: Fecha de inicio (YYYY-MM-DD)
+                    due_date:
+                      type: string
+                      format: date
+                      description: Fecha de vencimiento (YYYY-MM-DD)
+      responses:
+        '201':
+          description: Issue creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issue:
+                    $ref: '#/components/schemas/Issue'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /issues/{id}.json:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID del issue
+    get:
+      summary: Obtener issue
+      description: Retorna los detalles de un issue específico
+      operationId: getIssue
+      parameters:
+        - name: include
+          in: query
+          description: Datos adicionales a incluir (children, attachments, relations, changesets, journals, watchers)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles del issue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issue:
+                    $ref: '#/components/schemas/Issue'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Actualizar issue
+      description: Actualiza un issue existente
+      operationId: updateIssue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                issue:
+                  type: object
+                  properties:
+                    subject:
+                      type: string
+                      description: Asunto del issue
+                    description:
+                      type: string
+                      description: Descripción detallada
+                    status_id:
+                      type: integer
+                      description: ID del estado
+                    priority_id:
+                      type: integer
+                      description: ID de la prioridad
+                    assigned_to_id:
+                      type: integer
+                      description: ID del usuario asignado
+                    notes:
+                      type: string
+                      description: Comentario para añadir al issue
+      responses:
+        '204':
+          description: Issue actualizado correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      summary: Eliminar issue
+      description: Elimina un issue
+      operationId: deleteIssue
+      responses:
+        '204':
+          description: Issue eliminado correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ------------- PROJECTS -------------
+  /projects.json:
+    get:
+      summary: Listar proyectos
+      description: Retorna la lista de proyectos
+      operationId: listProjects
+      parameters:
+        - name: offset
+          in: query
+          description: Desplazamiento para paginación
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Límite de resultados por página
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de proyectos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  total_count:
+                    type: integer
+                  offset:
+                    type: integer
+                  limit:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Crear proyecto
+      description: Crea un nuevo proyecto
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - project
+              properties:
+                project:
+                  type: object
+                  required:
+                    - name
+                    - identifier
+                  properties:
+                    name:
+                      type: string
+                      description: Nombre del proyecto
+                    identifier:
+                      type: string
+                      description: Identificador único
+                    description:
+                      type: string
+                      description: Descripción del proyecto
+                    homepage:
+                      type: string
+                      description: URL de la página web
+                    public:
+                      type: boolean
+                      description: Si el proyecto es público
+                    inherit_members:
+                      type: boolean
+                      description: Si hereda miembros
+      responses:
+        '201':
+          description: Proyecto creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project:
+                    $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /projects/{id}.json:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: ID o identificador del proyecto
+    get:
+      summary: Obtener proyecto
+      description: Retorna los detalles de un proyecto específico
+      operationId: getProject
+      parameters:
+        - name: include
+          in: query
+          description: Datos adicionales a incluir (trackers, issue_categories, enabled_modules)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles del proyecto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project:
+                    $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Actualizar proyecto
+      description: Actualiza un proyecto existente
+      operationId: updateProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project:
+                  $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '204':
+          description: Proyecto actualizado correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      summary: Eliminar proyecto
+      description: Elimina un proyecto
+      operationId: deleteProject
+      responses:
+        '204':
+          description: Proyecto eliminado correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ------------- USERS -------------
+  /users.json:
+    get:
+      summary: Listar usuarios
+      description: Retorna la lista de usuarios
+      operationId: listUsers
+      parameters:
+        - name: offset
+          in: query
+          description: Desplazamiento para paginación
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Límite de resultados por página
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: Filtro por estado (1=activo, 2=registrado, 3=bloqueado)
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  total_count:
+                    type: integer
+                  offset:
+                    type: integer
+                  limit:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Crear usuario
+      description: Crea un nuevo usuario
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user
+              properties:
+                user:
+                  type: object
+                  required:
+                    - login
+                    - password
+                    - firstname
+                    - lastname
+                    - mail
+                  properties:
+                    login:
+                      type: string
+                      description: Nombre de usuario
+                    password:
+                      type: string
+                      description: Contraseña
+                    firstname:
+                      type: string
+                      description: Nombre
+                    lastname:
+                      type: string
+                      description: Apellido
+                    mail:
+                      type: string
+                      description: Correo electrónico
+                    status:
+                      type: integer
+                      description: Estado (1=activo, 2=registrado, 3=bloqueado)
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /users/{id}.json:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID del usuario
+    get:
+      summary: Obtener usuario
+      description: Retorna los detalles de un usuario específico
+      operationId: getUser
+      parameters:
+        - name: include
+          in: query
+          description: Datos adicionales a incluir (memberships, groups)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles del usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Actualizar usuario
+      description: Actualiza un usuario existente
+      operationId: updateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '204':
+          description: Usuario actualizado correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      summary: Eliminar usuario
+      description: Elimina un usuario
+      operationId: deleteUser
+      responses:
+        '204':
+          description: Usuario eliminado correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/current.json:
+    get:
+      summary: Obtener usuario actual
+      description: Retorna los detalles del usuario autenticado
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Detalles del usuario autenticado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ------------- VERSIONS -------------
+  /projects/{project_id}/versions.json:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: ID o identificador del proyecto
+    get:
+      summary: Listar versiones
+      description: Retorna las versiones de un proyecto
+      operationId: listVersions
+      responses:
+        '200':
+          description: Lista de versiones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Version'
+                  total_count:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Crear versión
+      description: Crea una nueva versión para un proyecto
+      operationId: createVersion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - version
+              properties:
+                version:
+                  type: object
+                  required:
+                    - name
+                  properties:
+                    name:
+                      type: string
+                      description: Nombre de la versión
+                    status:
+                      type: string
+                      description: Estado (open, locked, closed)
+                      enum: [open, locked, closed]
+                    due_date:
+                      type: string
+                      format: date
+                      description: Fecha de vencimiento (YYYY-MM-DD)
+                    description:
+                      type: string
+                      description: Descripción de la versión
+                    sharing:
+                      type: string
+                      description: Compartición (none, descendants, hierarchy, tree, system)
+                      enum: [none, descendants, hierarchy, tree, system]
+      responses:
+        '201':
+          description: Versión creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    $ref: '#/components/schemas/Version'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /versions/{id}.json:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID de la versión
+    get:
+      summary: Obtener versión
+      description: Retorna los detalles de una versión específica
+      operationId: getVersion
+      responses:
+        '200':
+          description: Detalles de la versión
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    $ref: '#/components/schemas/Version'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Actualizar versión
+      description: Actualiza una versión existente
+      operationId: updateVersion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  $ref: '#/components/schemas/VersionUpdate'
+      responses:
+        '204':
+          description: Versión actualizada correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      summary: Eliminar versión
+      description: Elimina una versión
+      operationId: deleteVersion
+      responses:
+        '204':
+          description: Versión eliminada correctamente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    ApiKeyQuery:
+      type: apiKey
+      in: query
+      name: key
+      description: API key como parámetro de consulta
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-Redmine-API-Key
+      description: API key como encabezado HTTP
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: Autenticación básica HTTP
+  
+  schemas:
+    Issue:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único del issue
+        project:
+          $ref: '#/components/schemas/ProjectReference'
+        tracker:
+          $ref: '#/components/schemas/TrackerReference'
+        status:
+          $ref: '#/components/schemas/StatusReference'
+        priority:
+          $ref: '#/components/schemas/PriorityReference'
+        author:
+          $ref: '#/components/schemas/UserReference'
+        assigned_to:
+          $ref: '#/components/schemas/UserReference'
+        subject:
+          type: string
+          description: Asunto del issue
+        description:
+          type: string
+          description: Descripción detallada
+        start_date:
+          type: string
+          format: date
+          description: Fecha de inicio
+        due_date:
+          type: string
+          format: date
+          description: Fecha de vencimiento
+        done_ratio:
+          type: integer
+          description: Porcentaje completado (0-100)
+        created_on:
+          type: string
+          format: date-time
+          description: Fecha de creación
+        updated_on:
+          type: string
+          format: date-time
+          description: Fecha de última actualización
+    
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único del proyecto
+        name:
+          type: string
+          description: Nombre del proyecto
+        identifier:
+          type: string
+          description: Identificador único
+        description:
+          type: string
+          description: Descripción del proyecto
+        homepage:
+          type: string
+          description: URL de la página web
+        status:
+          type: integer
+          description: Estado del proyecto (1=activo, 5=archivado, 9=cerrado)
+        is_public:
+          type: boolean
+          description: Si el proyecto es público
+        created_on:
+          type: string
+          format: date-time
+          description: Fecha de creación
+        updated_on:
+          type: string
+          format: date-time
+          description: Fecha de última actualización
+    
+    ProjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre del proyecto
+        description:
+          type: string
+          description: Descripción del proyecto
+        homepage:
+          type: string
+          description: URL de la página web
+        is_public:
+          type: boolean
+          description: Si el proyecto es público
+        inherit_members:
+          type: boolean
+          description: Si hereda miembros
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único del usuario
+        login:
+          type: string
+          description: Nombre de usuario
+        firstname:
+          type: string
+          description: Nombre
+        lastname:
+          type: string
+          description: Apellido
+        mail:
+          type: string
+          description: Correo electrónico
+        created_on:
+          type: string
+          format: date-time
+          description: Fecha de creación
+        last_login_on:
+          type: string
+          format: date-time
+          description: Fecha de último acceso
+        status:
+          type: integer
+          description: Estado (1=activo, 2=registrado, 3=bloqueado)
+    
+    UserUpdate:
+      type: object
+      properties:
+        login:
+          type: string
+          description: Nombre de usuario
+        firstname:
+          type: string
+          description: Nombre
+        lastname:
+          type: string
+          description: Apellido
+        mail:
+          type: string
+          description: Correo electrónico
+        password:
+          type: string
+          description: Contraseña
+        status:
+          type: integer
+          description: Estado (1=activo, 2=registrado, 3=bloqueado)
+    
+    Version:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único de la versión
+        project:
+          $ref: '#/components/schemas/ProjectReference'
+        name:
+          type: string
+          description: Nombre de la versión
+        description:
+          type: string
+          description: Descripción de la versión
+        status:
+          type: string
+          description: Estado (open, locked, closed)
+          enum: [open, locked, closed]
+        due_date:
+          type: string
+          format: date
+          description: Fecha de vencimiento
+        sharing:
+          type: string
+          description: Compartición (none, descendants, hierarchy, tree, system)
+          enum: [none, descendants, hierarchy, tree, system]
+        created_on:
+          type: string
+          format: date-time
+          description: Fecha de creación
+        updated_on:
+          type: string
+          format: date-time
+          description: Fecha de última actualización
+    
+    VersionUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre de la versión
+        description:
+          type: string
+          description: Descripción de la versión
+        status:
+          type: string
+          description: Estado (open, locked, closed)
+          enum: [open, locked, closed]
+        due_date:
+          type: string
+          format: date
+          description: Fecha de vencimiento
+        sharing:
+          type: string
+          description: Compartición (none, descendants, hierarchy, tree, system)
+          enum: [none, descendants, hierarchy, tree, system]
+    
+    # Referencias
+    ProjectReference:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID del proyecto
+        name:
+          type: string
+          description: Nombre del proyecto
+    
+    TrackerReference:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID del tracker
+        name:
+          type: string
+          description: Nombre del tracker
+    
+    StatusReference:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID del estado
+        name:
+          type: string
+          description: Nombre del estado
+    
+    PriorityReference:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID de la prioridad
+        name:
+          type: string
+          description: Nombre de la prioridad
+    
+    UserReference:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID del usuario
+        name:
+          type: string
+          description: Nombre completo del usuario
+  
+  responses:
+    Unauthorized:
+      description: No autorizado - Credenciales inválidas o faltantes
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+    
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Not found
+    
+    UnprocessableEntity:
+      description: Entidad no procesable - Datos inválidos
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: string
+                example: ["Subject cannot be blank", "Project cannot be blank"]
+
+tags:
+  - name: issues
+    description: Operaciones relacionadas con issues/tareas
+  - name: projects
+    description: Operaciones relacionadas con proyectos
+  - name: users
+    description: Operaciones relacionadas con usuarios
+  - name: versions
+    description: Operaciones relacionadas con versiones 
