@@ -1,5 +1,6 @@
 #!/bin/sh
-# Wait for PostgreSQL, run migrations, then start the app. Use LF line endings only.
+# Wait for PostgreSQL. If a command is given (e.g. docker compose run backend npm run migration:run),
+# run only that and exit. Otherwise run migrations then start the app. Use LF line endings only.
 
 echo "Waiting for PostgreSQL at ${DB_HOST:-postgres}:${DB_PORT:-5432}..."
 node -e "
@@ -18,7 +19,13 @@ const tryConnect = () => {
 tryConnect();
 " || exit
 
-echo "PostgreSQL is ready. Running migrations..."
+echo "PostgreSQL is ready."
+
+if [ $# -gt 0 ]; then
+  exec "$@"
+fi
+
+echo "Running migrations..."
 npm run migration:run || exit
 
 echo "Starting application..."
