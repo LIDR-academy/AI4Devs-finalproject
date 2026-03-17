@@ -1,0 +1,57 @@
+/* Asegurar que los mapas de Leaflet no interfieran con modales */
+.leaflet-container {
+  z-index: 1 !important;
+  height: 100% !important;
+  width: 100% !important;
+  background-color: #f0f0f0 !important;
+}
+
+.leaflet-control-container {
+  z-index: 2 !important;
+}
+
+/* Los modales deben tener z-index más alto */
+.modal-overlay {
+  z-index: 9999 !important;
+}
+
+/* Asegurar que los popups de Leaflet no interfieran */
+.leaflet-popup {
+  z-index: 1000 !important;
+}
+
+/* Asegurar que los mapas se muestren correctamente */
+.leaflet-tile {
+  pointer-events: auto !important;
+}
+
+.leaflet-tile-container {
+  pointer-events: auto !important;
+}
+
+/* Fix para que los mapas no se vean en blanco */
+.leaflet-container img {
+  max-width: none !important;
+}
+
+/* Asegurar que los tiles se carguen correctamente */
+.leaflet-tile-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-overlay-pane {
+  z-index: 2 !important;
+}
+
+.leaflet-marker-pane {
+  z-index: 3 !important;
+}
+
+/* Fix para problemas de renderizado */
+.leaflet-container .leaflet-tile {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+
+

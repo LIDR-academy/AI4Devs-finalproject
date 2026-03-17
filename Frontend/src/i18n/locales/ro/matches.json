@@ -1,0 +1,107 @@
+{
+  "title": "Căutare Călătorii",
+  "search": {
+    "title": "Caută călătorii",
+    "direction": "Direcție",
+    "destination": "Destinație",
+    "originSede": "Sediul de Origine",
+    "destinationPlaceholder": "Selectează destinația...",
+    "time": "Ora Preferată (HH:MM)",
+    "timePlaceholder": "08:30",
+    "origin": "Locația de Origine (lat,lng)",
+    "originPlaceholder": "40.4168,-3.7038",
+    "originHelper": "Format: latitudine,longitudine",
+    "search": "Caută Călătorii",
+    "searching": "Căutare...",
+    "selectDestination": "Te rog selectează o destinație",
+    "selectOriginSede": "Te rog selectează un sediu de origine"
+  },
+  "results": {
+    "title": "Găsite {count} călătorii compatibile",
+    "empty": "Nu s-au găsit călătorii",
+    "tryDifferent": "Nu există călătorii disponibile care să corespundă criteriilor tale de căutare.",
+    "clearSearch": "Șterge Căutarea",
+    "initialTitle": "Găsește călătoria ta ideală",
+    "initialDescription": "Completează formularul de căutare pentru a găsi călătorii compatibile cu locația și programul tău."
+  },
+  "match": {
+    "driver": "Șofer",
+    "departure": "Plecare",
+    "arrival": "Sosire",
+    "seats": "Locuri",
+    "book": "Rezervă Călătoria",
+    "viewProfile": "Vezi Profilul",
+    "rate": "Evaluează",
+    "alreadyBooked": "Deja Rezervat",
+    "noSeatsAvailable": "Fără locuri disponibile",
+    "tripTo": "Călătorie către {destination}",
+    "origin": "Origine",
+    "freeSeats": "Locuri libere",
+    "compatibilityReasons": "Motive de compatibilitate",
+    "seatsPrompt": "Câte locuri vrei să rezervi? (Disponibile: {seats})",
+    "invalidSeats": "Te rog introdu un număr valid de locuri",
+    "notEnoughSeats": "Doar {seats} locuri disponibile",
+    "bookingSuccess": "Rezervarea a fost creată cu succes! {seats} loc(uri) rezervat(e). Du-te la \"Rezervări\" pentru a vedea rezervarea ta.",
+    "bookingError": "Eroare la crearea rezervării",
+    "searchError": "Eroare la căutarea potrivirilor. Te rog încearcă din nou.",
+    "selectSeats": "Selectează Locurile",
+    "availableSeats": "Locuri disponibile: {seats}",
+    "selectSeatsDescription": "Alege câte locuri vrei să rezervi",
+    "selectedSeats": "Locuri selectate",
+    "seat": "loc",
+    "seats": "locuri",
+    "confirmBooking": "Confirmă Rezervarea",
+    "route": "Traseu",
+    "showMap": "Arată Harta",
+    "hideMap": "Ascunde Harta",
+    "score": {
+      "excellent": "Excelent",
+      "good": "Bun",
+      "regular": "Regular",
+      "low": "Scăzut",
+      "description": "Scor de compatibilitate: {score}%"
+    }
+  },
+  "filters": {
+    "title": "Filtrează Rezultatele",
+    "minScore": "Scor Minim",
+    "minSeats": "Locuri Minime",
+    "dateFrom": "De la Data",
+    "dateTo": "Până la Data",
+    "sortBy": "Sortează După",
+    "sortOrder": "Ordine",
+    "clear": "Șterge Filtrele",
+    "activeCount": "{count} filtre active",
+    "scoreChip": "Scor ≥ {score}%",
+    "seatsChip": "Locuri ≥ {seats}",
+    "fromChip": "De la {date}",
+    "toChip": "Până la {date}",
+    "sort": {
+      "score": "Scor",
+      "date": "Data",
+      "seats": "Locuri Disponibile"
+    },
+    "order": {
+      "desc": "Descrescător",
+      "asc": "Crescător"
+    },
+    "seat": "loc",
+    "seats": "locuri"
+  },
+  "modals": {
+    "trustProfile": {
+      "title": "Profil de Încredere",
+      "close": "✕"
+    },
+    "rating": {
+      "title": "Evaluează Utilizatorul",
+      "close": "✕",
+      "success": "Evaluarea a fost trimisă cu succes"
+    }
+  },
+  "sede": {
+    "SEDE-1": "Sediul Madrid Centru",
+    "SEDE-2": "Sediul Madrid Nord",
+    "SEDE-3": "Sediul Barcelona"
+  }
+}

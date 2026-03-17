@@ -1,0 +1,61 @@
+require('@testing-library/jest-dom');
+const i18n = require('./src/i18n/config').default;
+
+beforeAll(async () => {
+  try {
+    await i18n.changeLanguage('es');
+  } catch (e) {
+    // Fallback to Spanish if i18n fails
+    console.warn('Failed to set i18n language:', e);
+  }
+});
+
+// Remove MapPreview mock to allow real component testing
+// jest.mock('./src/components/map/MapPreview', () => ({
+//   __esModule: true,
+//   default: () => null,
+// }));
+
+require('@testing-library/jest-dom');
+
+// Polyfills for jsdom environment
+if (typeof global.TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util');
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+}
+
+// Ensure test env - React development mode for testing only
+process.env.NODE_ENV = 'development';
+
+// Mock env.ts to avoid import.meta issues
+jest.mock('./src/env', () => ({
+  env: {
+    appName: 'bonÀreaGo',
+    oidcIssuer: 'http://localhost:8080/realms/covoituraje',
+    oidcClientId: 'covoituraje-frontend',
+    oidcRedirectUri: 'http://localhost:5173',
+    apiBaseUrl: 'http://localhost:8081',
+  }
+}));
+
+// Mock ESM-only keycloak-js to avoid transform issues in Jest
+jest.mock('keycloak-js', () => {
+  return function Keycloak() {
+    return {
+      init: jest.fn().mockResolvedValue(false),
+      updateToken: jest.fn().mockResolvedValue(false),
+      login: jest.fn(),
+      logout: jest.fn(),
+      token: undefined,
+    };
+  };
+});
+
+// Mock window.confirm for tests (guard when running in non-jsdom environments)
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'confirm', {
+    value: jest.fn(() => true),
+    writable: true
+  });
+}

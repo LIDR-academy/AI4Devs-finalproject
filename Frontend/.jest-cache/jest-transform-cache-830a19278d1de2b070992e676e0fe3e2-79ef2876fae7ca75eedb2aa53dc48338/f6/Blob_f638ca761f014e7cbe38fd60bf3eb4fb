@@ -1,0 +1,17 @@
+2d20cc254b7d00b6a1edcf4491a9e8b8
+'use strict';
+
+// jsdom does not implement Blob.text()
+function readBlobText(blob, FileReader) {
+    return new Promise((res, rej)=>{
+        const fr = new FileReader();
+        fr.onerror = rej;
+        fr.onabort = rej;
+        fr.onload = ()=>{
+            res(String(fr.result));
+        };
+        fr.readAsText(blob);
+    });
+}
+
+exports.readBlobText = readBlobText;

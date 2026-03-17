@@ -1,0 +1,27 @@
+{
+  "title": "Notificaciones Push",
+  "description": "Recibe notificaciones sobre tus reservas, matches y actualizaciones de viajes.",
+  "enable": "Activar Notificaciones",
+  "disable": "Desactivar Notificaciones",
+  "subscribed": "Las notificaciones están activadas",
+  "subscribing": "Activando...",
+  "unsubscribing": "Desactivando...",
+  "notSupported": "Las notificaciones push no son compatibles",
+  "notSupportedDescription": "Tu navegador no soporta notificaciones push. Por favor usa un navegador moderno como Chrome, Firefox o Safari.",
+  "error": "Error al actualizar la configuración de notificaciones. Por favor, inténtalo de nuevo.",
+  "permissionDenied": "Se denegó el permiso de notificaciones. Por favor, activa las notificaciones en la configuración de tu navegador.",
+  "endpoint": "Endpoint de notificaciones",
+  "privacyNote": "Solo enviamos notificaciones sobre tus reservas y matches. Puedes desactivarlas en cualquier momento.",
+  "bookingConfirmed": {
+    "title": "Reserva Confirmada",
+    "body": "Tu reserva de {seats} asiento(s) ha sido confirmada"
+  },
+  "matchFound": {
+    "title": "Nuevo Match Encontrado",
+    "body": "Se encontró un match con {score}% de compatibilidad"
+  },
+  "tripCancelled": {
+    "title": "Viaje Cancelado",
+    "body": "El viaje {tripId} ha sido cancelado"
+  }
+}

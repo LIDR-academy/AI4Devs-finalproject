@@ -1,0 +1,8 @@
+09161bd28e4f0fde9a4c9a2c240aa1a0
+'use strict';
+
+async function tab({ shift } = {}) {
+    return this.keyboard(shift === true ? '{Shift>}{Tab}{/Shift}' : shift === false ? '[/ShiftLeft][/ShiftRight]{Tab}' : '{Tab}');
+}
+
+exports.tab = tab;

@@ -1,0 +1,22 @@
+36f6924a068844259a82b82a5d49cdb2
+{
+  "title": "Sistem de încredere",
+  "profile": {
+    "title": "Profil de încredere",
+    "score": "Scor de încredere",
+    "ratings": "Evaluări",
+    "tags": "Etichete"
+  },
+  "rating": {
+    "title": "Evaluează utilizatorul",
+    "thumbsUp": "Pozitiv",
+    "thumbsDown": "Negativ",
+    "comment": "Comentariu",
+    "tags": "Etichete",
+    "submit": "Trimite evaluarea"
+  },
+  "list": {
+    "title": "Evaluări primite",
+    "empty": "Nu ai primit nicio evaluare"
+  }
+}

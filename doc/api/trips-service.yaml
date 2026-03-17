@@ -1,0 +1,168 @@
+openapi: 3.0.3
+info:
+  title: Trips Service
+  version: 0.1.0
+servers:
+  - url: http://localhost:8082
+paths:
+  /trips:
+    post:
+      summary: Create a trip
+      security:
+        - bearerAuth: []
+      description: Requires Authorization header. Example: `Authorization: Bearer eyJ...`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+    get:
+      summary: List trips
+      security:
+        - bearerAuth: []
+      description: Requires Authorization header. Example: `Authorization: Bearer eyJ...`
+      parameters:
+        - in: query
+          name: destinationSedeId
+          schema:
+            type: string
+          description: Filter by destination sede ID
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: time
+          description: Filter by start time (ISO-8601 format)
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: time
+          description: Filter by end time (ISO-8601 format)
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ACTIVE, COMPLETED]
+          description: Filter by trip status (ACTIVE for future trips, COMPLETED for past trips)
+      responses:
+        '200':
+          description: List of trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trip'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+  /trips/{id}/pair-with/{pairedTripId}:
+    post:
+      summary: Pair two trips for round-trip
+      security:
+        - bearerAuth: []
+      description: Links two trips as a round-trip pair. Both trips must belong to the same driver.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the first trip
+        - in: path
+          name: pairedTripId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the trip to pair with
+      responses:
+        '200':
+          description: Trips paired successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '400':
+          description: Bad request (invalid trip IDs or same trip)
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+        '404':
+          description: Trip not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Trip:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        driverId:
+          type: string
+          format: uuid
+        origin:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        destinationSedeId:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        seatsTotal:
+          type: integer
+        seatsFree:
+          type: integer
+        direction:
+          type: string
+          enum: [TO_SEDE, FROM_SEDE]
+        pairedTripId:
+          type: string
+          format: uuid
+          nullable: true
+    TripCreate:
+      type: object
+      required: [destinationSedeId, dateTime, seatsTotal, direction]
+      properties:
+        origin:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        destinationSedeId:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        seatsTotal:
+          type: integer
+        direction:
+          type: string
+          enum: [TO_SEDE, FROM_SEDE]

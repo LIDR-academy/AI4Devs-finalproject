@@ -1,0 +1,23 @@
+6cb9cfc658f46ff7dbe853e2c8910df1
+{
+  "title": "Sistema de confianza",
+  "profile": {
+    "title": "Perfil de confianza",
+    "score": "Puntuación de confianza",
+    "ratings": "Valoraciones",
+    "tags": "Etiquetas"
+  },
+  "rating": {
+    "title": "Valorar usuario",
+    "thumbsUp": "Positivo",
+    "thumbsDown": "Negativo",
+    "comment": "Comentario",
+    "tags": "Etiquetas",
+    "submit": "Enviar valoración"
+  },
+  "list": {
+    "title": "Valoraciones recibidas",
+    "empty": "No has recibido ninguna valoración"
+  }
+}
+

@@ -1,0 +1,31 @@
+{
+  "title": "Réservations",
+  "list": {
+    "title": "Mes réservations",
+    "empty": "Vous n'avez aucune réservation",
+    "emptyDescription": "Lorsque vous réservez un voyage, il apparaîtra ici.",
+    "emptyHint": "Allez à \"Rechercher\" pour trouver des voyages disponibles",
+    "loadingError": "Erreur lors du chargement des réservations"
+  },
+  "booking": {
+    "id": "Réservation #{{id}}",
+    "tripId": "ID du Voyage",
+    "seatsRequested": "Sièges réservés",
+    "bookingDate": "Date de réservation",
+    "status": "Statut",
+    "cancel": "Annuler la Réservation",
+    "cancelConfirm": "Êtes-vous sûr de vouloir annuler cette réservation ?",
+    "cancelSuccess": "Réservation annulée avec succès",
+    "cancelError": "Erreur lors de l'annulation de la réservation"
+  },
+  "status": {
+    "CONFIRMED": "Confirmée",
+    "PENDING": "En attente de confirmation",
+    "CANCELLED": "Annulée",
+    "badges": {
+      "CONFIRMED": "Confirmée",
+      "PENDING": "En attente",
+      "CANCELLED": "Annulée"
+    }
+  }
+}

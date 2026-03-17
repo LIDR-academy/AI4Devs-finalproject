@@ -1,0 +1,8 @@
+a73b6eb3b57465bb63405afb042c57d4
+'use strict';
+
+function cloneEvent(event) {
+    return new event.constructor(event.type, event);
+}
+
+exports.cloneEvent = cloneEvent;

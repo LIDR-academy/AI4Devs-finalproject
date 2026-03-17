@@ -1,0 +1,23 @@
+e1ba4d0f4e7f642086091aead27023cf
+{
+  "title": "Sistema de confiança",
+  "profile": {
+    "title": "Perfil de confiança",
+    "score": "Puntuació de confiança",
+    "ratings": "Valoracions",
+    "tags": "Etiquetes"
+  },
+  "rating": {
+    "title": "Valorar usuari",
+    "thumbsUp": "Positiu",
+    "thumbsDown": "Negatiu",
+    "comment": "Comentari",
+    "tags": "Etiquetes",
+    "submit": "Enviar valoració"
+  },
+  "list": {
+    "title": "Valoracions rebudes",
+    "empty": "No has rebut cap valoració"
+  }
+}
+

@@ -1,0 +1,108 @@
+{
+  "title": "Cercar Viatges",
+  "search": {
+    "title": "Cerca viatges",
+    "direction": "Direcció",
+    "destination": "Destinació",
+    "originSede": "Sede d'Origen",
+    "destinationPlaceholder": "Selecciona destinació...",
+    "time": "Hora Preferida (HH:MM)",
+    "timePlaceholder": "08:30",
+    "origin": "Ubicació d'Origen (lat,lng)",
+    "originPlaceholder": "40.4168,-3.7038",
+    "originHelper": "Format: latitud,longitud",
+    "search": "Cercar Viatges",
+    "searching": "Cercant...",
+    "selectDestination": "Si us plau selecciona una destinació",
+    "selectOriginSede": "Si us plau selecciona una sede d'origen"
+  },
+  "results": {
+    "title": "Trobats {count} viatges compatibles",
+    "empty": "No s'han trobat viatges",
+    "tryDifferent": "No hi ha viatges disponibles que coincideixin amb els teus criteris de cerca.",
+    "clearSearch": "Netejar Cerca",
+    "initialTitle": "Troba el teu viatge ideal",
+    "initialDescription": "Completa el formulari de cerca per trobar viatges compatibles amb la teva ubicació i horari."
+  },
+  "match": {
+    "driver": "Conductor",
+    "departure": "Sortida",
+    "arrival": "Arribada",
+    "seats": "Seients",
+    "book": "Reservar Viatge",
+    "viewProfile": "Veure Perfil",
+    "rate": "Valorar",
+    "alreadyBooked": "Ja Reservat",
+    "noSeatsAvailable": "Sense seients disponibles",
+    "tripTo": "Viatge a {destination}",
+    "origin": "Origen",
+    "freeSeats": "Seients lliures",
+    "compatibilityReasons": "Raons de compatibilitat",
+    "seatsPrompt": "Quants seients vols reservar? (Disponibles: {seats})",
+    "invalidSeats": "Si us plau introdueix un nombre vàlid de seients",
+    "notEnoughSeats": "Només hi ha {seats} seients disponibles",
+    "bookingSuccess": "Reserva creada exitosament! {seats} seient(s) reservat(s). Ves a \"Reserves\" per veure la teva reserva.",
+    "bookingError": "Error al crear la reserva",
+    "searchError": "Error al cercar coincidències. Si us plau torna a intentar.",
+    "selectSeats": "Seleccionar Seients",
+    "availableSeats": "Seients disponibles: {seats}",
+    "selectSeatsDescription": "Tria quants seients vols reservar",
+    "selectedSeats": "Seients seleccionats",
+    "seat": "seient",
+    "seats": "seients",
+    "confirmBooking": "Confirmar Reserva",
+    "route": "Ruta",
+    "showMap": "Mostrar Mapa",
+    "hideMap": "Ocultar Mapa",
+    "score": {
+      "excellent": "Excel·lent",
+      "good": "Bo", 
+      "regular": "Regular",
+      "low": "Baix",
+      "description": "Puntuació de compatibilitat: {score}%"
+    }
+  },
+  "filters": {
+    "title": "Filtrar Resultats",
+    "minScore": "Puntuació Mínima",
+    "minSeats": "Seients Mínims",
+    "dateFrom": "Des de Data",
+    "dateTo": "Fins a Data",
+    "sortBy": "Ordenar Per",
+    "sortOrder": "Ordre",
+    "clear": "Netejar Filtres",
+    "activeCount": "{count} filtres actius",
+    "scoreChip": "Puntuació ≥ {score}%",
+    "seatsChip": "Seients ≥ {seats}",
+    "fromChip": "Des de {date}",
+    "toChip": "Fins a {date}",
+    "sort": {
+      "score": "Puntuació",
+      "date": "Data",
+      "seats": "Seients Disponibles"
+    },
+    "order": {
+      "desc": "Descendent",
+      "asc": "Ascendent"
+    },
+    "seat": "seient",
+    "seats": "seients"
+  },
+  "modals": {
+    "trustProfile": {
+      "title": "Perfil de Confiança",
+      "close": "✕"
+    },
+    "rating": {
+      "title": "Valorar Usuari",
+      "close": "✕",
+      "success": "Valoració enviada correctament"
+    }
+  },
+  "sede": {
+    "SEDE-1": "Sede Madrid Centre",
+    "SEDE-2": "Sede Madrid Nord", 
+    "SEDE-3": "Sede Barcelona"
+  }
+}
+

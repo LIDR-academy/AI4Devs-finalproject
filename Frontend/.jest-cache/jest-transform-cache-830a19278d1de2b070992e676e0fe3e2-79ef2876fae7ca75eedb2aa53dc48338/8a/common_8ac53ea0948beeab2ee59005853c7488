@@ -1,0 +1,80 @@
+c51bfe808b6a6f465ba74ad412bbe95d
+{
+  "nav": {
+    "home": "Inicio",
+    "trips": "Viajes",
+    "search": "Buscar",
+    "bookings": "Reservas",
+    "history": "Historial",
+    "profile": "Perfil"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "create": "Crear",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "clear": "Limpiar",
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "openMenu": "Abrir menú"
+  },
+  "messages": {
+    "success": "Operación exitosa",
+    "error": "Error en la operación",
+    "loading": "Cargando...",
+    "noData": "No hay datos disponibles",
+    "tryAgain": "Inténtalo de nuevo"
+  },
+  "language": {
+    "select": "Seleccionar idioma",
+    "catalan": "Català",
+    "spanish": "Español",
+    "romanian": "Română",
+    "ukrainian": "Українська",
+    "english": "English",
+    "french": "Français"
+  },
+  "home": {
+    "title": "bonÀreaGo",
+    "subtitle": "Tu plataforma corporativa para compartir viajes. Reduce costos y contribuye a la sostenibilidad.",
+    "getStarted": "Comenzar Ahora",
+    "createTrip": "Crear Viaje",
+    "searchTrips": "Buscar Viajes",
+    "features": {
+      "share": {
+        "title": "Comparte tu Viaje",
+        "description": "Ofrece asientos disponibles en tus viajes corporativos y ayuda a tus compañeros"
+      },
+      "find": {
+        "title": "Encuentra Matches",
+        "description": "Nuestro algoritmo inteligente te encuentra los mejores viajes según tu ubicación y horario"
+      },
+      "save": {
+        "title": "Ahorra Costos",
+        "description": "Reduce gastos de transporte compartiendo viajes con compañeros de trabajo"
+      }
+    },
+    "howItWorks": {
+      "title": "¿Cómo funciona?",
+      "subtitle": "Tres simples pasos para comenzar a compartir viajes",
+      "steps": {
+        "create": {
+          "title": "Crea tu Viaje",
+          "description": "Publica tu viaje corporativo con origen, destino y horario"
+        },
+        "search": {
+          "title": "Busca Matches",
+          "description": "Encuentra viajes compatibles con tu ubicación y horario"
+        },
+        "book": {
+          "title": "Reserva y Viaja",
+          "description": "Confirma tu reserva y disfruta del viaje compartido"
+        }
+      }
+    }
+  }
+}

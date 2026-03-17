@@ -1,0 +1,44 @@
+{
+  "required": "Câmpul {{field}} este obligatoriu",
+  "email": {
+    "invalid": "Format email invalid"
+  },
+  "minLength": "Minim {{min}} caractere",
+  "maxLength": "Maxim {{max}} caractere",
+  "range": "Trebuie să fie între {{min}} și {{max}}",
+  "numeric": "Trebuie să fie un număr",
+  "phone": {
+    "invalid": "Format telefon invalid"
+  },
+  "date": {
+    "invalid": "Format dată invalid",
+    "required": "Data și ora sunt obligatorii",
+    "future": "Data trebuie să fie în viitor"
+  },
+  "time": {
+    "invalid": "Format oră invalid"
+  },
+  "futureDate": "Data trebuie să fie în viitor",
+  "positiveNumber": "Numărul trebuie să fie pozitiv",
+  "seats": {
+    "min": "Trebuie să fie cel puțin 1 loc",
+    "max": "Nu pot fi mai mult de 8 locuri",
+    "required": "Locurile sunt obligatorii"
+  },
+  "coordinates": {
+    "latitude": {
+      "required": "Latitudinea este obligatorie",
+      "range": "Latitudinea trebuie să fie între -90 și 90"
+    },
+    "longitude": {
+      "required": "Longitudinea este obligatorie",
+      "range": "Longitudinea trebuie să fie între -180 și 180"
+    }
+  },
+  "destination": {
+    "required": "Destinația este obligatorie"
+  },
+  "direction": {
+    "required": "Direcția este obligatorie"
+  }
+}

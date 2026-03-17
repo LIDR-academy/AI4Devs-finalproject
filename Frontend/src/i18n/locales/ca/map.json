@@ -1,0 +1,12 @@
+{
+  "noCoordinates": "No hi ha coordenades per mostrar el mapa.",
+  "clickButtons": "Feu clic als botons per obrir a Google Maps o Waze",
+  "location": "Ubicació del Viatge",
+  "origin": "📍 Origen",
+  "destination": "🎯 Destí",
+  "route": "🛣️ Ruta",
+  "googleMaps": "Google Maps",
+  "waze": "Waze",
+  "loadingRoute": "Carregant ruta...",
+  "approximateDistance": "Distància aproximada: {{distance}} km"
+}

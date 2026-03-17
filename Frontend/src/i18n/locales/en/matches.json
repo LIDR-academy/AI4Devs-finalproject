@@ -1,0 +1,110 @@
+{
+  "title": "Search Trips",
+  "search": {
+    "title": "Search trips",
+    "direction": "Direction",
+    "destination": "Destination",
+    "originSede": "Origin Sede",
+    "destinationPlaceholder": "Select destination...",
+    "time": "Preferred Time (HH:MM)",
+    "timePlaceholder": "08:30",
+    "origin": "Origin Location (lat,lng)",
+    "originPlaceholder": "40.4168,-3.7038",
+    "originHelper": "Format: latitude,longitude",
+    "search": "Search Trips",
+    "searching": "Searching...",
+    "selectDestination": "Please select a destination",
+    "selectOriginSede": "Please select an origin sede"
+  },
+  "results": {
+    "title": "Found {count} compatible trips",
+    "empty": "No trips found",
+    "tryDifferent": "No trips available matching your search criteria.",
+    "clearSearch": "Clear Search",
+    "initialTitle": "Find your ideal trip",
+    "initialDescription": "Complete the search form to find trips compatible with your location and schedule.",
+    "noFilteredResults": "No results match your filters",
+    "tryDifferentFilters": "Try adjusting your filter criteria to see more results."
+  },
+  "match": {
+    "driver": "Driver",
+    "departure": "Departure",
+    "arrival": "Arrival",
+    "seats": "Seats",
+    "book": "Book Trip",
+    "viewProfile": "View Profile",
+    "rate": "Rate",
+    "alreadyBooked": "Already Booked",
+    "noSeatsAvailable": "No seats available",
+    "tripTo": "Trip to {destination}",
+    "origin": "Origin",
+    "freeSeats": "Free seats",
+    "compatibilityReasons": "Compatibility reasons",
+    "seatsPrompt": "How many seats do you want to reserve? (Available: {seats})",
+    "invalidSeats": "Please enter a valid number of seats",
+    "notEnoughSeats": "Only {seats} seats available",
+    "bookingSuccess": "Booking created successfully! {seats} seat(s) reserved. Go to \"Bookings\" to see your booking.",
+    "bookingError": "Error creating booking",
+    "searchError": "Error searching matches. Please try again.",
+    "selectSeats": "Select Seats",
+    "availableSeats": "Available seats: {seats}",
+    "selectSeatsDescription": "Choose how many seats you want to book",
+    "selectedSeats": "Selected seats",
+    "seat": "seat",
+    "seats": "seats",
+    "confirmBooking": "Confirm Booking",
+    "route": "Route",
+    "showMap": "Show Map",
+    "hideMap": "Hide Map",
+    "score": {
+      "excellent": "Excellent",
+      "good": "Good", 
+      "regular": "Regular",
+      "low": "Low",
+      "description": "Compatibility score: {score}%"
+    }
+  },
+  "filters": {
+    "title": "Filter Results",
+    "minScore": "Minimum Score",
+    "minSeats": "Minimum Seats",
+    "dateFrom": "From Date",
+    "dateTo": "To Date",
+    "sortBy": "Sort By",
+    "sortOrder": "Order",
+    "clear": "Clear Filters",
+    "activeCount": "{count} active filters",
+    "scoreChip": "Score ≥ {score}%",
+    "seatsChip": "Seats ≥ {seats}",
+    "fromChip": "From {date}",
+    "toChip": "To {date}",
+    "sort": {
+      "score": "Score",
+      "date": "Date",
+      "seats": "Available Seats"
+    },
+    "order": {
+      "desc": "Descending",
+      "asc": "Ascending"
+    },
+    "seat": "seat",
+    "seats": "seats"
+  },
+  "modals": {
+    "trustProfile": {
+      "title": "Trust Profile",
+      "close": "✕"
+    },
+    "rating": {
+      "title": "Rate User",
+      "close": "✕",
+      "success": "Rating submitted successfully"
+    }
+  },
+  "sede": {
+    "SEDE-1": "Madrid Center Office",
+    "SEDE-2": "Madrid North Office", 
+    "SEDE-3": "Barcelona Office"
+  }
+}
+

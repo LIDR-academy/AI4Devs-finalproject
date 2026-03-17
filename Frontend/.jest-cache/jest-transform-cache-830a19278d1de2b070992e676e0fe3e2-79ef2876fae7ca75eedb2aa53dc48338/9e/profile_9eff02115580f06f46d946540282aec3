@@ -1,0 +1,50 @@
+430b86d6afaa24b4ad9abe8a772af388
+{
+  "title": "Mon Profil",
+  "personal": {
+    "title": "Informations Personnelles",
+    "name": "Nom",
+    "email": "Email",
+    "sede": "Bureau",
+    "schedule": "Horaire Préféré",
+    "required": "Champ obligatoire",
+    "optional": "Optionnel",
+    "namePlaceholder": "Jean Dupont",
+    "emailPlaceholder": "jean.dupont@entreprise.com",
+    "emailHelper": "Nous utilisons votre email corporatif pour les notifications",
+    "schedulePlaceholder": "08:00 - 17:00",
+    "scheduleHelper": "Optionnel: Votre horaire de travail habituel",
+    "sedePlaceholder": "Sélectionnez votre bureau"
+  },
+  "account": {
+    "title": "Informations du Compte",
+    "userId": "ID Utilisateur",
+    "role": "Rôle"
+  },
+  "notifications": {
+    "title": "Notifications Push",
+    "enable": "Activer",
+    "disable": "Désactiver",
+    "error": "Impossible d'activer/désactiver les notifications",
+    "pushApiNotSupported": "Push API non supportée"
+  },
+  "actions": {
+    "save": "Sauvegarder les Modifications",
+    "saving": "Sauvegarde...",
+    "loadError": "Impossible de charger le profil",
+    "updateSuccess": "Profil mis à jour avec succès!",
+    "updateError": "Erreur lors de la mise à jour du profil"
+  },
+  "validation": {
+    "nameMinLength": "Le nom doit contenir au moins 2 caractères",
+    "emailRequired": "L'email est obligatoire",
+    "emailInvalid": "Veuillez entrer un email valide",
+    "sedeRequired": "Le bureau est obligatoire",
+    "formErrors": "Veuillez corriger les erreurs dans le formulaire"
+  },
+  "sede": {
+    "SEDE-1": "Bureau Madrid Centre",
+    "SEDE-2": "Bureau Madrid Nord",
+    "SEDE-3": "Bureau Barcelone"
+  }
+}

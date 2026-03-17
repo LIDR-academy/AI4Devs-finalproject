@@ -1,0 +1,32 @@
+{
+  "title": "Mis Reservas",
+  "list": {
+    "title": "Mis reservas",
+    "empty": "No tienes ninguna reserva",
+    "emptyDescription": "Cuando reserves un viaje, aparecerá aquí.",
+    "emptyHint": "Ve a \"Buscar\" para encontrar viajes disponibles",
+    "loadingError": "Error al cargar las reservas"
+  },
+  "booking": {
+    "id": "Reserva #{{id}}",
+    "tripId": "ID del Viaje",
+    "seatsRequested": "Asientos reservados",
+    "bookingDate": "Fecha de reserva",
+    "status": "Estado",
+    "cancel": "Cancelar Reserva",
+    "cancelConfirm": "¿Estás seguro de que quieres cancelar esta reserva?",
+    "cancelSuccess": "Reserva cancelada exitosamente",
+    "cancelError": "Error al cancelar la reserva"
+  },
+  "status": {
+    "CONFIRMED": "Confirmada",
+    "PENDING": "Pendiente de confirmación",
+    "CANCELLED": "Cancelada",
+    "badges": {
+      "CONFIRMED": "Confirmada",
+      "PENDING": "Pendiente",
+      "CANCELLED": "Cancelada"
+    }
+  }
+}
+

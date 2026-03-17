@@ -1,0 +1,49 @@
+{
+  "title": "Мій Профіль",
+  "personal": {
+    "title": "Особиста Інформація",
+    "name": "Ім'я",
+    "email": "Email",
+    "sede": "Офіс",
+    "schedule": "Бажаний Графік",
+    "required": "Обов'язкове поле",
+    "optional": "Необов'язково",
+    "namePlaceholder": "Іван Петренко",
+    "emailPlaceholder": "ivan.petrenko@kompaniya.com",
+    "emailHelper": "Використовуємо корпоративний email для сповіщень",
+    "schedulePlaceholder": "08:00 - 17:00",
+    "scheduleHelper": "Необов'язково: Ваш звичайний робочий графік",
+    "sedePlaceholder": "Оберіть ваш офіс"
+  },
+  "account": {
+    "title": "Інформація Профілю",
+    "userId": "ID Користувача",
+    "role": "Роль"
+  },
+  "notifications": {
+    "title": "Push-сповіщення",
+    "enable": "Увімкнути",
+    "disable": "Вимкнути",
+    "error": "Не вдалося увімкнути/вимкнути сповіщення",
+    "pushApiNotSupported": "Push API не підтримується"
+  },
+  "actions": {
+    "save": "Зберегти Зміни",
+    "saving": "Збереження...",
+    "loadError": "Не вдалося завантажити профіль",
+    "updateSuccess": "Профіль успішно оновлено!",
+    "updateError": "Помилка оновлення профілю"
+  },
+  "validation": {
+    "nameMinLength": "Ім'я повинно містити принаймні 2 символи",
+    "emailRequired": "Email обов'язковий",
+    "emailInvalid": "Будь ласка, введіть дійсний email",
+    "sedeRequired": "Офіс обов'язковий",
+    "formErrors": "Будь ласка, виправте помилки у формі"
+  },
+  "sede": {
+    "SEDE-1": "Офіс Мадрид Центр",
+    "SEDE-2": "Офіс Мадрид Північ",
+    "SEDE-3": "Офіс Барселона"
+  }
+}

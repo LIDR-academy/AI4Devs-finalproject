@@ -1,0 +1,12 @@
+{
+  "noCoordinates": "Nu există coordonate pentru a afișa harta.",
+  "clickButtons": "Faceți clic pe butoane pentru a deschide în Google Maps sau Waze",
+  "location": "Locația Călătoriei",
+  "origin": "📍 Origine",
+  "destination": "🎯 Destinație",
+  "route": "🛣️ Rută",
+  "googleMaps": "Google Maps",
+  "waze": "Waze",
+  "loadingRoute": "Se încarcă ruta...",
+  "approximateDistance": "Distanța aproximativă: {{distance}} km"
+}

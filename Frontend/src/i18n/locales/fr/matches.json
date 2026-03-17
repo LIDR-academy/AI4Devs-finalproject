@@ -1,0 +1,107 @@
+{
+  "title": "Rechercher des Voyages",
+  "search": {
+    "title": "Rechercher des voyages",
+    "direction": "Direction",
+    "destination": "Destination",
+    "originSede": "Siège d'Origine",
+    "destinationPlaceholder": "Sélectionner la destination...",
+    "time": "Heure Préférée (HH:MM)",
+    "timePlaceholder": "08:30",
+    "origin": "Lieu d'Origine (lat,lng)",
+    "originPlaceholder": "40.4168,-3.7038",
+    "originHelper": "Format: latitude,longitude",
+    "search": "Rechercher des Voyages",
+    "searching": "Recherche...",
+    "selectDestination": "Veuillez sélectionner une destination",
+    "selectOriginSede": "Veuillez sélectionner un siège d'origine"
+  },
+  "results": {
+    "title": "Trouvé {count} voyages compatibles",
+    "empty": "Aucun voyage trouvé",
+    "tryDifferent": "Aucun voyage disponible correspondant à vos critères de recherche.",
+    "clearSearch": "Effacer la Recherche",
+    "initialTitle": "Trouvez votre voyage idéal",
+    "initialDescription": "Complétez le formulaire de recherche pour trouver des voyages compatibles avec votre emplacement et votre horaire."
+  },
+  "match": {
+    "driver": "Conducteur",
+    "departure": "Départ",
+    "arrival": "Arrivée",
+    "seats": "Places",
+    "book": "Réserver le Voyage",
+    "viewProfile": "Voir le Profil",
+    "rate": "Évaluer",
+    "alreadyBooked": "Déjà Réservé",
+    "noSeatsAvailable": "Aucune place disponible",
+    "tripTo": "Voyage vers {destination}",
+    "origin": "Origine",
+    "freeSeats": "Places libres",
+    "compatibilityReasons": "Raisons de compatibilité",
+    "seatsPrompt": "Combien de places voulez-vous réserver? (Disponibles: {seats})",
+    "invalidSeats": "Veuillez entrer un nombre valide de places",
+    "notEnoughSeats": "Seulement {seats} places disponibles",
+    "bookingSuccess": "Réservation créée avec succès! {seats} place(s) réservée(s). Allez à \"Réservations\" pour voir votre réservation.",
+    "bookingError": "Erreur lors de la création de la réservation",
+    "searchError": "Erreur lors de la recherche de correspondances. Veuillez réessayer.",
+    "selectSeats": "Sélectionner les Places",
+    "availableSeats": "Places disponibles : {seats}",
+    "selectSeatsDescription": "Choisissez combien de places vous voulez réserver",
+    "selectedSeats": "Places sélectionnées",
+    "seat": "place",
+    "seats": "places",
+    "confirmBooking": "Confirmer la Réservation",
+    "route": "Itinéraire",
+    "showMap": "Afficher la Carte",
+    "hideMap": "Masquer la Carte",
+    "score": {
+      "excellent": "Excellent",
+      "good": "Bon",
+      "regular": "Régulier",
+      "low": "Faible",
+      "description": "Score de compatibilité: {score}%"
+    }
+  },
+  "filters": {
+    "title": "Filtrer les Résultats",
+    "minScore": "Score Minimum",
+    "minSeats": "Places Minimales",
+    "dateFrom": "Depuis la Date",
+    "dateTo": "Jusqu'à la Date",
+    "sortBy": "Trier Par",
+    "sortOrder": "Ordre",
+    "clear": "Effacer les Filtres",
+    "activeCount": "{count} filtres actifs",
+    "scoreChip": "Score ≥ {score}%",
+    "seatsChip": "Places ≥ {seats}",
+    "fromChip": "Depuis {date}",
+    "toChip": "Jusqu'à {date}",
+    "sort": {
+      "score": "Score",
+      "date": "Date",
+      "seats": "Places Disponibles"
+    },
+    "order": {
+      "desc": "Décroissant",
+      "asc": "Croissant"
+    },
+    "seat": "place",
+    "seats": "places"
+  },
+  "modals": {
+    "trustProfile": {
+      "title": "Profil de Confiance",
+      "close": "✕"
+    },
+    "rating": {
+      "title": "Évaluer l'Utilisateur",
+      "close": "✕",
+      "success": "Évaluation envoyée avec succès"
+    }
+  },
+  "sede": {
+    "SEDE-1": "Bureau Madrid Centre",
+    "SEDE-2": "Bureau Madrid Nord",
+    "SEDE-3": "Bureau Barcelone"
+  }
+}

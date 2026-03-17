@@ -1,0 +1,20 @@
+226d3a5a290d41b5f5e0a4b6427697fd
+'use strict';
+
+var getWindow = require('./getWindow.js');
+
+function isVisible(element) {
+    const window = getWindow.getWindow(element);
+    for(let el = element; el === null || el === undefined ? undefined : el.ownerDocument; el = el.parentElement){
+        const { display, visibility } = window.getComputedStyle(el);
+        if (display === 'none') {
+            return false;
+        }
+        if (visibility === 'hidden') {
+            return false;
+        }
+    }
+    return true;
+}
+
+exports.isVisible = isVisible;

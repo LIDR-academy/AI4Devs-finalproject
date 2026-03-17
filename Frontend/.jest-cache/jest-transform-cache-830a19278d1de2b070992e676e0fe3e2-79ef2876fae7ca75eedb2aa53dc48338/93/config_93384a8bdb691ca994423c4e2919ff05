@@ -1,0 +1,151 @@
+7fe2ac13c85c86f0ba2e3a6e9e3db0d2
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const i18next_1 = __importDefault(require("i18next"));
+const react_i18next_1 = require("react-i18next");
+const i18next_browser_languagedetector_1 = __importDefault(require("i18next-browser-languagedetector"));
+// Import translation files
+const common_json_1 = __importDefault(require("./locales/ca/common.json"));
+const trips_json_1 = __importDefault(require("./locales/ca/trips.json"));
+const matches_json_1 = __importDefault(require("./locales/ca/matches.json"));
+const bookings_json_1 = __importDefault(require("./locales/ca/bookings.json"));
+const profile_json_1 = __importDefault(require("./locales/ca/profile.json"));
+const history_json_1 = __importDefault(require("./locales/ca/history.json"));
+const trust_json_1 = __importDefault(require("./locales/ca/trust.json"));
+const validation_json_1 = __importDefault(require("./locales/ca/validation.json"));
+const notifications_json_1 = __importDefault(require("./locales/ca/notifications.json"));
+const common_json_2 = __importDefault(require("./locales/es/common.json"));
+const trips_json_2 = __importDefault(require("./locales/es/trips.json"));
+const matches_json_2 = __importDefault(require("./locales/es/matches.json"));
+const bookings_json_2 = __importDefault(require("./locales/es/bookings.json"));
+const profile_json_2 = __importDefault(require("./locales/es/profile.json"));
+const history_json_2 = __importDefault(require("./locales/es/history.json"));
+const trust_json_2 = __importDefault(require("./locales/es/trust.json"));
+const validation_json_2 = __importDefault(require("./locales/es/validation.json"));
+const notifications_json_2 = __importDefault(require("./locales/es/notifications.json"));
+const common_json_3 = __importDefault(require("./locales/ro/common.json"));
+const trips_json_3 = __importDefault(require("./locales/ro/trips.json"));
+const matches_json_3 = __importDefault(require("./locales/ro/matches.json"));
+const bookings_json_3 = __importDefault(require("./locales/ro/bookings.json"));
+const profile_json_3 = __importDefault(require("./locales/ro/profile.json"));
+const history_json_3 = __importDefault(require("./locales/ro/history.json"));
+const trust_json_3 = __importDefault(require("./locales/ro/trust.json"));
+const validation_json_3 = __importDefault(require("./locales/ro/validation.json"));
+const notifications_json_3 = __importDefault(require("./locales/ro/notifications.json"));
+const common_json_4 = __importDefault(require("./locales/uk/common.json"));
+const trips_json_4 = __importDefault(require("./locales/uk/trips.json"));
+const matches_json_4 = __importDefault(require("./locales/uk/matches.json"));
+const bookings_json_4 = __importDefault(require("./locales/uk/bookings.json"));
+const profile_json_4 = __importDefault(require("./locales/uk/profile.json"));
+const history_json_4 = __importDefault(require("./locales/uk/history.json"));
+const trust_json_4 = __importDefault(require("./locales/uk/trust.json"));
+const validation_json_4 = __importDefault(require("./locales/uk/validation.json"));
+const notifications_json_4 = __importDefault(require("./locales/uk/notifications.json"));
+const common_json_5 = __importDefault(require("./locales/en/common.json"));
+const trips_json_5 = __importDefault(require("./locales/en/trips.json"));
+const matches_json_5 = __importDefault(require("./locales/en/matches.json"));
+const bookings_json_5 = __importDefault(require("./locales/en/bookings.json"));
+const profile_json_5 = __importDefault(require("./locales/en/profile.json"));
+const history_json_5 = __importDefault(require("./locales/en/history.json"));
+const trust_json_5 = __importDefault(require("./locales/en/trust.json"));
+const validation_json_5 = __importDefault(require("./locales/en/validation.json"));
+const notifications_json_5 = __importDefault(require("./locales/en/notifications.json"));
+const common_json_6 = __importDefault(require("./locales/fr/common.json"));
+const trips_json_6 = __importDefault(require("./locales/fr/trips.json"));
+const matches_json_6 = __importDefault(require("./locales/fr/matches.json"));
+const bookings_json_6 = __importDefault(require("./locales/fr/bookings.json"));
+const profile_json_6 = __importDefault(require("./locales/fr/profile.json"));
+const history_json_6 = __importDefault(require("./locales/fr/history.json"));
+const trust_json_6 = __importDefault(require("./locales/fr/trust.json"));
+const validation_json_6 = __importDefault(require("./locales/fr/validation.json"));
+const notifications_json_6 = __importDefault(require("./locales/fr/notifications.json"));
+const resources = {
+    ca: {
+        common: common_json_1.default,
+        trips: trips_json_1.default,
+        matches: matches_json_1.default,
+        bookings: bookings_json_1.default,
+        profile: profile_json_1.default,
+        history: history_json_1.default,
+        trust: trust_json_1.default,
+        validation: validation_json_1.default,
+        notifications: notifications_json_1.default,
+    },
+    es: {
+        common: common_json_2.default,
+        trips: trips_json_2.default,
+        matches: matches_json_2.default,
+        bookings: bookings_json_2.default,
+        profile: profile_json_2.default,
+        history: history_json_2.default,
+        trust: trust_json_2.default,
+        validation: validation_json_2.default,
+        notifications: notifications_json_2.default,
+    },
+    ro: {
+        common: common_json_3.default,
+        trips: trips_json_3.default,
+        matches: matches_json_3.default,
+        bookings: bookings_json_3.default,
+        profile: profile_json_3.default,
+        history: history_json_3.default,
+        trust: trust_json_3.default,
+        validation: validation_json_3.default,
+        notifications: notifications_json_3.default,
+    },
+    uk: {
+        common: common_json_4.default,
+        trips: trips_json_4.default,
+        matches: matches_json_4.default,
+        bookings: bookings_json_4.default,
+        profile: profile_json_4.default,
+        history: history_json_4.default,
+        trust: trust_json_4.default,
+        validation: validation_json_4.default,
+        notifications: notifications_json_4.default,
+    },
+    en: {
+        common: common_json_5.default,
+        trips: trips_json_5.default,
+        matches: matches_json_5.default,
+        bookings: bookings_json_5.default,
+        profile: profile_json_5.default,
+        history: history_json_5.default,
+        trust: trust_json_5.default,
+        validation: validation_json_5.default,
+        notifications: notifications_json_5.default,
+    },
+    fr: {
+        common: common_json_6.default,
+        trips: trips_json_6.default,
+        matches: matches_json_6.default,
+        bookings: bookings_json_6.default,
+        profile: profile_json_6.default,
+        history: history_json_6.default,
+        trust: trust_json_6.default,
+        validation: validation_json_6.default,
+        notifications: notifications_json_6.default,
+    },
+};
+i18next_1.default
+    .use(i18next_browser_languagedetector_1.default)
+    .use(react_i18next_1.initReactI18next)
+    .init({
+    resources,
+    lng: 'es', // Default language
+    fallbackLng: 'en',
+    defaultNS: 'common',
+    supportedLngs: ['ca', 'es', 'ro', 'uk', 'en', 'fr'],
+    interpolation: {
+        escapeValue: false
+    },
+    detection: {
+        order: ['localStorage', 'navigator', 'htmlTag'],
+        caches: ['localStorage'],
+    },
+});
+exports.default = i18next_1.default;
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiL1VzZXJzL2FkbWluL0RvY3VtZW50cy9BSTREZXZzLWZpbmFscHJvamVjdC9Gcm9udGVuZC9zcmMvaTE4bi9jb25maWcudHMiLCJtYXBwaW5ncyI6Ijs7Ozs7QUFBQSxzREFBMkI7QUFDM0IsaURBQWlEO0FBQ2pELHdHQUFnRTtBQUVoRSwyQkFBMkI7QUFDM0IsMkVBQWdEO0FBQ2hELHlFQUE4QztBQUM5Qyw2RUFBa0Q7QUFDbEQsK0VBQW9EO0FBQ3BELDZFQUFrRDtBQUNsRCw2RUFBa0Q7QUFDbEQseUVBQThDO0FBQzlDLG1GQUF3RDtBQUN4RCx5RkFBOEQ7QUFFOUQsMkVBQWdEO0FBQ2hELHlFQUE4QztBQUM5Qyw2RUFBa0Q7QUFDbEQsK0VBQW9EO0FBQ3BELDZFQUFrRDtBQUNsRCw2RUFBa0Q7QUFDbEQseUVBQThDO0FBQzlDLG1GQUF3RDtBQUN4RCx5RkFBOEQ7QUFFOUQsMkVBQWdEO0FBQ2hELHlFQUE4QztBQUM5Qyw2RUFBa0Q7QUFDbEQsK0VBQW9EO0FBQ3BELDZFQUFrRDtBQUNsRCw2RUFBa0Q7QUFDbEQseUVBQThDO0FBQzlDLG1GQUF3RDtBQUN4RCx5RkFBOEQ7QUFFOUQsMkVBQWdEO0FBQ2hELHlFQUE4QztBQUM5Qyw2RUFBa0Q7QUFDbEQsK0VBQW9EO0FBQ3BELDZFQUFrRDtBQUNsRCw2RUFBa0Q7QUFDbEQseUVBQThDO0FBQzlDLG1GQUF3RDtBQUN4RCx5RkFBOEQ7QUFFOUQsMkVBQWdEO0FBQ2hELHlFQUE4QztBQUM5Qyw2RUFBa0Q7QUFDbEQsK0VBQW9EO0FBQ3BELDZFQUFrRDtBQUNsRCw2RUFBa0Q7QUFDbEQseUVBQThDO0FBQzlDLG1GQUF3RDtBQUN4RCx5RkFBOEQ7QUFFOUQsMkVBQWdEO0FBQ2hELHlFQUE4QztBQUM5Qyw2RUFBa0Q7QUFDbEQsK0VBQW9EO0FBQ3BELDZFQUFrRDtBQUNsRCw2RUFBa0Q7QUFDbEQseUVBQThDO0FBQzlDLG1GQUF3RDtBQUN4RCx5RkFBOEQ7QUFFOUQsTUFBTSxTQUFTLEdBQUc7SUFDaEIsRUFBRSxFQUFFO1FBQ0YsTUFBTSxFQUFFLHFCQUFRO1FBQ2hCLEtBQUssRUFBRSxvQkFBTztRQUNkLE9BQU8sRUFBRSxzQkFBUztRQUNsQixRQUFRLEVBQUUsdUJBQVU7UUFDcEIsT0FBTyxFQUFFLHNCQUFTO1FBQ2xCLE9BQU8sRUFBRSxzQkFBUztRQUNsQixLQUFLLEVBQUUsb0JBQU87UUFDZCxVQUFVLEVBQUUseUJBQVk7UUFDeEIsYUFBYSxFQUFFLDRCQUFlO0tBQy9CO0lBQ0QsRUFBRSxFQUFFO1FBQ0YsTUFBTSxFQUFFLHFCQUFRO1FBQ2hCLEtBQUssRUFBRSxvQkFBTztRQUNkLE9BQU8sRUFBRSxzQkFBUztRQUNsQixRQUFRLEVBQUUsdUJBQVU7UUFDcEIsT0FBTyxFQUFFLHNCQUFTO1FBQ2xCLE9BQU8sRUFBRSxzQkFBUztRQUNsQixLQUFLLEVBQUUsb0JBQU87UUFDZCxVQUFVLEVBQUUseUJBQVk7UUFDeEIsYUFBYSxFQUFFLDRCQUFlO0tBQy9CO0lBQ0QsRUFBRSxFQUFFO1FBQ0YsTUFBTSxFQUFFLHFCQUFRO1FBQ2hCLEtBQUssRUFBRSxvQkFBTztRQUNkLE9BQU8sRUFBRSxzQkFBUztRQUNsQixRQUFRLEVBQUUsdUJBQVU7UUFDcEIsT0FBTyxFQUFFLHNCQUFTO1FBQ2xCLE9BQU8sRUFBRSxzQkFBUztRQUNsQixLQUFLLEVBQUUsb0JBQU87UUFDZCxVQUFVLEVBQUUseUJBQVk7UUFDeEIsYUFBYSxFQUFFLDRCQUFlO0tBQy9CO0lBQ0QsRUFBRSxFQUFFO1FBQ0YsTUFBTSxFQUFFLHFCQUFRO1FBQ2hCLEtBQUssRUFBRSxvQkFBTztRQUNkLE9BQU8sRUFBRSxzQkFBUztRQUNsQixRQUFRLEVBQUUsdUJBQVU7UUFDcEIsT0FBTyxFQUFFLHNCQUFTO1FBQ2xCLE9BQU8sRUFBRSxzQkFBUztRQUNsQixLQUFLLEVBQUUsb0JBQU87UUFDZCxVQUFVLEVBQUUseUJBQVk7UUFDeEIsYUFBYSxFQUFFLDRCQUFlO0tBQy9CO0lBQ0QsRUFBRSxFQUFFO1FBQ0YsTUFBTSxFQUFFLHFCQUFRO1FBQ2hCLEtBQUssRUFBRSxvQkFBTztRQUNkLE9BQU8sRUFBRSxzQkFBUztRQUNsQixRQUFRLEVBQUUsdUJBQVU7UUFDcEIsT0FBTyxFQUFFLHNCQUFTO1FBQ2xCLE9BQU8sRUFBRSxzQkFBUztRQUNsQixLQUFLLEVBQUUsb0JBQU87UUFDZCxVQUFVLEVBQUUseUJBQVk7UUFDeEIsYUFBYSxFQUFFLDRCQUFlO0tBQy9CO0lBQ0QsRUFBRSxFQUFFO1FBQ0YsTUFBTSxFQUFFLHFCQUFRO1FBQ2hCLEtBQUssRUFBRSxvQkFBTztRQUNkLE9BQU8sRUFBRSxzQkFBUztRQUNsQixRQUFRLEVBQUUsdUJBQVU7UUFDcEIsT0FBTyxFQUFFLHNCQUFTO1FBQ2xCLE9BQU8sRUFBRSxzQkFBUztRQUNsQixLQUFLLEVBQUUsb0JBQU87UUFDZCxVQUFVLEVBQUUseUJBQVk7UUFDeEIsYUFBYSxFQUFFLDRCQUFlO0tBQy9CO0NBQ0YsQ0FBQztBQUVGLGlCQUFJO0tBQ0QsR0FBRyxDQUFDLDBDQUFnQixDQUFDO0tBQ3JCLEdBQUcsQ0FBQyxnQ0FBZ0IsQ0FBQztLQUNyQixJQUFJLENBQUM7SUFDSixTQUFTO0lBQ1QsR0FBRyxFQUFFLElBQUksRUFBRSxtQkFBbUI7SUFDOUIsV0FBVyxFQUFFLElBQUk7SUFDakIsU0FBUyxFQUFFLFFBQVE7SUFDbkIsYUFBYSxFQUFFLENBQUMsSUFBSSxFQUFFLElBQUksRUFBRSxJQUFJLEVBQUUsSUFBSSxFQUFFLElBQUksRUFBRSxJQUFJLENBQUM7SUFDbkQsYUFBYSxFQUFFO1FBQ2IsV0FBVyxFQUFFLEtBQUs7S0FDbkI7SUFDRCxTQUFTLEVBQUU7UUFDVCxLQUFLLEVBQUUsQ0FBQyxjQUFjLEVBQUUsV0FBVyxFQUFFLFNBQVMsQ0FBQztRQUMvQyxNQUFNLEVBQUUsQ0FBQyxjQUFjLENBQUM7S0FDekI7Q0FDRixDQUFDLENBQUM7QUFFTCxrQkFBZSxpQkFBSSxDQUFDIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi9Vc2Vycy9hZG1pbi9Eb2N1bWVudHMvQUk0RGV2cy1maW5hbHByb2plY3QvRnJvbnRlbmQvc3JjL2kxOG4vY29uZmlnLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBpMThuIGZyb20gJ2kxOG5leHQnO1xuaW1wb3J0IHsgaW5pdFJlYWN0STE4bmV4dCB9IGZyb20gJ3JlYWN0LWkxOG5leHQnO1xuaW1wb3J0IExhbmd1YWdlRGV0ZWN0b3IgZnJvbSAnaTE4bmV4dC1icm93c2VyLWxhbmd1YWdlZGV0ZWN0b3InO1xuXG4vLyBJbXBvcnQgdHJhbnNsYXRpb24gZmlsZXNcbmltcG9ydCBjYUNvbW1vbiBmcm9tICcuL2xvY2FsZXMvY2EvY29tbW9uLmpzb24nO1xuaW1wb3J0IGNhVHJpcHMgZnJvbSAnLi9sb2NhbGVzL2NhL3RyaXBzLmpzb24nO1xuaW1wb3J0IGNhTWF0Y2hlcyBmcm9tICcuL2xvY2FsZXMvY2EvbWF0Y2hlcy5qc29uJztcbmltcG9ydCBjYUJvb2tpbmdzIGZyb20gJy4vbG9jYWxlcy9jYS9ib29raW5ncy5qc29uJztcbmltcG9ydCBjYVByb2ZpbGUgZnJvbSAnLi9sb2NhbGVzL2NhL3Byb2ZpbGUuanNvbic7XG5pbXBvcnQgY2FIaXN0b3J5IGZyb20gJy4vbG9jYWxlcy9jYS9oaXN0b3J5Lmpzb24nO1xuaW1wb3J0IGNhVHJ1c3QgZnJvbSAnLi9sb2NhbGVzL2NhL3RydXN0Lmpzb24nO1xuaW1wb3J0IGNhVmFsaWRhdGlvbiBmcm9tICcuL2xvY2FsZXMvY2EvdmFsaWRhdGlvbi5qc29uJztcbmltcG9ydCBjYU5vdGlmaWNhdGlvbnMgZnJvbSAnLi9sb2NhbGVzL2NhL25vdGlmaWNhdGlvbnMuanNvbic7XG5cbmltcG9ydCBlc0NvbW1vbiBmcm9tICcuL2xvY2FsZXMvZXMvY29tbW9uLmpzb24nO1xuaW1wb3J0IGVzVHJpcHMgZnJvbSAnLi9sb2NhbGVzL2VzL3RyaXBzLmpzb24nO1xuaW1wb3J0IGVzTWF0Y2hlcyBmcm9tICcuL2xvY2FsZXMvZXMvbWF0Y2hlcy5qc29uJztcbmltcG9ydCBlc0Jvb2tpbmdzIGZyb20gJy4vbG9jYWxlcy9lcy9ib29raW5ncy5qc29uJztcbmltcG9ydCBlc1Byb2ZpbGUgZnJvbSAnLi9sb2NhbGVzL2VzL3Byb2ZpbGUuanNvbic7XG5pbXBvcnQgZXNIaXN0b3J5IGZyb20gJy4vbG9jYWxlcy9lcy9oaXN0b3J5Lmpzb24nO1xuaW1wb3J0IGVzVHJ1c3QgZnJvbSAnLi9sb2NhbGVzL2VzL3RydXN0Lmpzb24nO1xuaW1wb3J0IGVzVmFsaWRhdGlvbiBmcm9tICcuL2xvY2FsZXMvZXMvdmFsaWRhdGlvbi5qc29uJztcbmltcG9ydCBlc05vdGlmaWNhdGlvbnMgZnJvbSAnLi9sb2NhbGVzL2VzL25vdGlmaWNhdGlvbnMuanNvbic7XG5cbmltcG9ydCByb0NvbW1vbiBmcm9tICcuL2xvY2FsZXMvcm8vY29tbW9uLmpzb24nO1xuaW1wb3J0IHJvVHJpcHMgZnJvbSAnLi9sb2NhbGVzL3JvL3RyaXBzLmpzb24nO1xuaW1wb3J0IHJvTWF0Y2hlcyBmcm9tICcuL2xvY2FsZXMvcm8vbWF0Y2hlcy5qc29uJztcbmltcG9ydCByb0Jvb2tpbmdzIGZyb20gJy4vbG9jYWxlcy9yby9ib29raW5ncy5qc29uJztcbmltcG9ydCByb1Byb2ZpbGUgZnJvbSAnLi9sb2NhbGVzL3JvL3Byb2ZpbGUuanNvbic7XG5pbXBvcnQgcm9IaXN0b3J5IGZyb20gJy4vbG9jYWxlcy9yby9oaXN0b3J5Lmpzb24nO1xuaW1wb3J0IHJvVHJ1c3QgZnJvbSAnLi9sb2NhbGVzL3JvL3RydXN0Lmpzb24nO1xuaW1wb3J0IHJvVmFsaWRhdGlvbiBmcm9tICcuL2xvY2FsZXMvcm8vdmFsaWRhdGlvbi5qc29uJztcbmltcG9ydCByb05vdGlmaWNhdGlvbnMgZnJvbSAnLi9sb2NhbGVzL3JvL25vdGlmaWNhdGlvbnMuanNvbic7XG5cbmltcG9ydCB1a0NvbW1vbiBmcm9tICcuL2xvY2FsZXMvdWsvY29tbW9uLmpzb24nO1xuaW1wb3J0IHVrVHJpcHMgZnJvbSAnLi9sb2NhbGVzL3VrL3RyaXBzLmpzb24nO1xuaW1wb3J0IHVrTWF0Y2hlcyBmcm9tICcuL2xvY2FsZXMvdWsvbWF0Y2hlcy5qc29uJztcbmltcG9ydCB1a0Jvb2tpbmdzIGZyb20gJy4vbG9jYWxlcy91ay9ib29raW5ncy5qc29uJztcbmltcG9ydCB1a1Byb2ZpbGUgZnJvbSAnLi9sb2NhbGVzL3VrL3Byb2ZpbGUuanNvbic7XG5pbXBvcnQgdWtIaXN0b3J5IGZyb20gJy4vbG9jYWxlcy91ay9oaXN0b3J5Lmpzb24nO1xuaW1wb3J0IHVrVHJ1c3QgZnJvbSAnLi9sb2NhbGVzL3VrL3RydXN0Lmpzb24nO1xuaW1wb3J0IHVrVmFsaWRhdGlvbiBmcm9tICcuL2xvY2FsZXMvdWsvdmFsaWRhdGlvbi5qc29uJztcbmltcG9ydCB1a05vdGlmaWNhdGlvbnMgZnJvbSAnLi9sb2NhbGVzL3VrL25vdGlmaWNhdGlvbnMuanNvbic7XG5cbmltcG9ydCBlbkNvbW1vbiBmcm9tICcuL2xvY2FsZXMvZW4vY29tbW9uLmpzb24nO1xuaW1wb3J0IGVuVHJpcHMgZnJvbSAnLi9sb2NhbGVzL2VuL3RyaXBzLmpzb24nO1xuaW1wb3J0IGVuTWF0Y2hlcyBmcm9tICcuL2xvY2FsZXMvZW4vbWF0Y2hlcy5qc29uJztcbmltcG9ydCBlbkJvb2tpbmdzIGZyb20gJy4vbG9jYWxlcy9lbi9ib29raW5ncy5qc29uJztcbmltcG9ydCBlblByb2ZpbGUgZnJvbSAnLi9sb2NhbGVzL2VuL3Byb2ZpbGUuanNvbic7XG5pbXBvcnQgZW5IaXN0b3J5IGZyb20gJy4vbG9jYWxlcy9lbi9oaXN0b3J5Lmpzb24nO1xuaW1wb3J0IGVuVHJ1c3QgZnJvbSAnLi9sb2NhbGVzL2VuL3RydXN0Lmpzb24nO1xuaW1wb3J0IGVuVmFsaWRhdGlvbiBmcm9tICcuL2xvY2FsZXMvZW4vdmFsaWRhdGlvbi5qc29uJztcbmltcG9ydCBlbk5vdGlmaWNhdGlvbnMgZnJvbSAnLi9sb2NhbGVzL2VuL25vdGlmaWNhdGlvbnMuanNvbic7XG5cbmltcG9ydCBmckNvbW1vbiBmcm9tICcuL2xvY2FsZXMvZnIvY29tbW9uLmpzb24nO1xuaW1wb3J0IGZyVHJpcHMgZnJvbSAnLi9sb2NhbGVzL2ZyL3RyaXBzLmpzb24nO1xuaW1wb3J0IGZyTWF0Y2hlcyBmcm9tICcuL2xvY2FsZXMvZnIvbWF0Y2hlcy5qc29uJztcbmltcG9ydCBmckJvb2tpbmdzIGZyb20gJy4vbG9jYWxlcy9mci9ib29raW5ncy5qc29uJztcbmltcG9ydCBmclByb2ZpbGUgZnJvbSAnLi9sb2NhbGVzL2ZyL3Byb2ZpbGUuanNvbic7XG5pbXBvcnQgZnJIaXN0b3J5IGZyb20gJy4vbG9jYWxlcy9mci9oaXN0b3J5Lmpzb24nO1xuaW1wb3J0IGZyVHJ1c3QgZnJvbSAnLi9sb2NhbGVzL2ZyL3RydXN0Lmpzb24nO1xuaW1wb3J0IGZyVmFsaWRhdGlvbiBmcm9tICcuL2xvY2FsZXMvZnIvdmFsaWRhdGlvbi5qc29uJztcbmltcG9ydCBmck5vdGlmaWNhdGlvbnMgZnJvbSAnLi9sb2NhbGVzL2ZyL25vdGlmaWNhdGlvbnMuanNvbic7XG5cbmNvbnN0IHJlc291cmNlcyA9IHtcbiAgY2E6IHtcbiAgICBjb21tb246IGNhQ29tbW9uLFxuICAgIHRyaXBzOiBjYVRyaXBzLFxuICAgIG1hdGNoZXM6IGNhTWF0Y2hlcyxcbiAgICBib29raW5nczogY2FCb29raW5ncyxcbiAgICBwcm9maWxlOiBjYVByb2ZpbGUsXG4gICAgaGlzdG9yeTogY2FIaXN0b3J5LFxuICAgIHRydXN0OiBjYVRydXN0LFxuICAgIHZhbGlkYXRpb246IGNhVmFsaWRhdGlvbixcbiAgICBub3RpZmljYXRpb25zOiBjYU5vdGlmaWNhdGlvbnMsXG4gIH0sXG4gIGVzOiB7XG4gICAgY29tbW9uOiBlc0NvbW1vbixcbiAgICB0cmlwczogZXNUcmlwcyxcbiAgICBtYXRjaGVzOiBlc01hdGNoZXMsXG4gICAgYm9va2luZ3M6IGVzQm9va2luZ3MsXG4gICAgcHJvZmlsZTogZXNQcm9maWxlLFxuICAgIGhpc3Rvcnk6IGVzSGlzdG9yeSxcbiAgICB0cnVzdDogZXNUcnVzdCxcbiAgICB2YWxpZGF0aW9uOiBlc1ZhbGlkYXRpb24sXG4gICAgbm90aWZpY2F0aW9uczogZXNOb3RpZmljYXRpb25zLFxuICB9LFxuICBybzoge1xuICAgIGNvbW1vbjogcm9Db21tb24sXG4gICAgdHJpcHM6IHJvVHJpcHMsXG4gICAgbWF0Y2hlczogcm9NYXRjaGVzLFxuICAgIGJvb2tpbmdzOiByb0Jvb2tpbmdzLFxuICAgIHByb2ZpbGU6IHJvUHJvZmlsZSxcbiAgICBoaXN0b3J5OiByb0hpc3RvcnksXG4gICAgdHJ1c3Q6IHJvVHJ1c3QsXG4gICAgdmFsaWRhdGlvbjogcm9WYWxpZGF0aW9uLFxuICAgIG5vdGlmaWNhdGlvbnM6IHJvTm90aWZpY2F0aW9ucyxcbiAgfSxcbiAgdWs6IHtcbiAgICBjb21tb246IHVrQ29tbW9uLFxuICAgIHRyaXBzOiB1a1RyaXBzLFxuICAgIG1hdGNoZXM6IHVrTWF0Y2hlcyxcbiAgICBib29raW5nczogdWtCb29raW5ncyxcbiAgICBwcm9maWxlOiB1a1Byb2ZpbGUsXG4gICAgaGlzdG9yeTogdWtIaXN0b3J5LFxuICAgIHRydXN0OiB1a1RydXN0LFxuICAgIHZhbGlkYXRpb246IHVrVmFsaWRhdGlvbixcbiAgICBub3RpZmljYXRpb25zOiB1a05vdGlmaWNhdGlvbnMsXG4gIH0sXG4gIGVuOiB7XG4gICAgY29tbW9uOiBlbkNvbW1vbixcbiAgICB0cmlwczogZW5UcmlwcyxcbiAgICBtYXRjaGVzOiBlbk1hdGNoZXMsXG4gICAgYm9va2luZ3M6IGVuQm9va2luZ3MsXG4gICAgcHJvZmlsZTogZW5Qcm9maWxlLFxuICAgIGhpc3Rvcnk6IGVuSGlzdG9yeSxcbiAgICB0cnVzdDogZW5UcnVzdCxcbiAgICB2YWxpZGF0aW9uOiBlblZhbGlkYXRpb24sXG4gICAgbm90aWZpY2F0aW9uczogZW5Ob3RpZmljYXRpb25zLFxuICB9LFxuICBmcjoge1xuICAgIGNvbW1vbjogZnJDb21tb24sXG4gICAgdHJpcHM6IGZyVHJpcHMsXG4gICAgbWF0Y2hlczogZnJNYXRjaGVzLFxuICAgIGJvb2tpbmdzOiBmckJvb2tpbmdzLFxuICAgIHByb2ZpbGU6IGZyUHJvZmlsZSxcbiAgICBoaXN0b3J5OiBmckhpc3RvcnksXG4gICAgdHJ1c3Q6IGZyVHJ1c3QsXG4gICAgdmFsaWRhdGlvbjogZnJWYWxpZGF0aW9uLFxuICAgIG5vdGlmaWNhdGlvbnM6IGZyTm90aWZpY2F0aW9ucyxcbiAgfSxcbn07XG5cbmkxOG5cbiAgLnVzZShMYW5ndWFnZURldGVjdG9yKVxuICAudXNlKGluaXRSZWFjdEkxOG5leHQpXG4gIC5pbml0KHtcbiAgICByZXNvdXJjZXMsXG4gICAgbG5nOiAnZXMnLCAvLyBEZWZhdWx0IGxhbmd1YWdlXG4gICAgZmFsbGJhY2tMbmc6ICdlbicsXG4gICAgZGVmYXVsdE5TOiAnY29tbW9uJyxcbiAgICBzdXBwb3J0ZWRMbmdzOiBbJ2NhJywgJ2VzJywgJ3JvJywgJ3VrJywgJ2VuJywgJ2ZyJ10sXG4gICAgaW50ZXJwb2xhdGlvbjogeyBcbiAgICAgIGVzY2FwZVZhbHVlOiBmYWxzZSBcbiAgICB9LFxuICAgIGRldGVjdGlvbjoge1xuICAgICAgb3JkZXI6IFsnbG9jYWxTdG9yYWdlJywgJ25hdmlnYXRvcicsICdodG1sVGFnJ10sXG4gICAgICBjYWNoZXM6IFsnbG9jYWxTdG9yYWdlJ10sXG4gICAgfSxcbiAgfSk7XG5cbmV4cG9ydCBkZWZhdWx0IGkxOG47XG4iXSwidmVyc2lvbiI6M30=

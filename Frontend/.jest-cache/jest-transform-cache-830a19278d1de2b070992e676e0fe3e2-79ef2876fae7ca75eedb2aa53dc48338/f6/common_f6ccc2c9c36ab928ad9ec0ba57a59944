@@ -1,0 +1,80 @@
+180953f08a7df8777c9f8d6be16cb370
+{
+  "nav": {
+    "home": "Home",
+    "trips": "Trips",
+    "search": "Search",
+    "bookings": "Bookings",
+    "history": "History",
+    "profile": "Profile"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "login": "Login",
+    "logout": "Logout",
+    "openMenu": "Open menu"
+  },
+  "messages": {
+    "success": "Operation successful",
+    "error": "Error in operation",
+    "loading": "Loading...",
+    "noData": "No data available",
+    "tryAgain": "Try again"
+  },
+  "language": {
+    "select": "Select language",
+    "catalan": "Català",
+    "spanish": "Español",
+    "romanian": "Română",
+    "ukrainian": "Українська",
+    "english": "English",
+    "french": "Français"
+  },
+  "home": {
+    "title": "bonÀreaGo",
+    "subtitle": "Your corporate platform for sharing trips. Reduce costs and contribute to sustainability.",
+    "getStarted": "Get Started",
+    "createTrip": "Create Trip",
+    "searchTrips": "Search Trips",
+    "features": {
+      "share": {
+        "title": "Share Your Trip",
+        "description": "Offer available seats on your corporate trips and help your colleagues"
+      },
+      "find": {
+        "title": "Find Matches",
+        "description": "Our intelligent algorithm finds you the best trips based on your location and schedule"
+      },
+      "save": {
+        "title": "Save Costs",
+        "description": "Reduce transportation expenses by sharing trips with work colleagues"
+      }
+    },
+    "howItWorks": {
+      "title": "How does it work?",
+      "subtitle": "Three simple steps to start sharing trips",
+      "steps": {
+        "create": {
+          "title": "Create Your Trip",
+          "description": "Post your corporate trip with origin, destination and schedule"
+        },
+        "search": {
+          "title": "Search Matches",
+          "description": "Find trips compatible with your location and schedule"
+        },
+        "book": {
+          "title": "Book and Travel",
+          "description": "Confirm your booking and enjoy the shared trip"
+        }
+      }
+    }
+  }
+}

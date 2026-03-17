@@ -1,0 +1,28 @@
+e7a188cf66154ae2018c7bc2af4d68b1
+{
+  "title": "Notifications Push",
+  "description": "Recevez des notifications sur vos réservations, correspondances et mises à jour de voyage.",
+  "enable": "Activer les Notifications",
+  "disable": "Désactiver les Notifications",
+  "subscribed": "Les notifications sont activées",
+  "subscribing": "Activation...",
+  "unsubscribing": "Désactivation...",
+  "notSupported": "Les notifications push ne sont pas supportées",
+  "notSupportedDescription": "Votre navigateur ne supporte pas les notifications push. Veuillez utiliser un navigateur moderne comme Chrome, Firefox ou Safari.",
+  "error": "Erreur lors de la mise à jour des paramètres de notification. Veuillez réessayer.",
+  "permissionDenied": "L'autorisation de notification a été refusée. Veuillez activer les notifications dans les paramètres de votre navigateur.",
+  "endpoint": "Point de terminaison des notifications",
+  "privacyNote": "Nous n'envoyons des notifications que sur vos réservations et correspondances. Vous pouvez les désactiver à tout moment.",
+  "bookingConfirmed": {
+    "title": "Réservation Confirmée",
+    "body": "Votre réservation pour {seats} place(s) a été confirmée"
+  },
+  "matchFound": {
+    "title": "Nouvelle Correspondance Trouvée",
+    "body": "Une correspondance avec {score}% de compatibilité a été trouvée"
+  },
+  "tripCancelled": {
+    "title": "Voyage Annulé",
+    "body": "Le voyage {tripId} a été annulé"
+  }
+}

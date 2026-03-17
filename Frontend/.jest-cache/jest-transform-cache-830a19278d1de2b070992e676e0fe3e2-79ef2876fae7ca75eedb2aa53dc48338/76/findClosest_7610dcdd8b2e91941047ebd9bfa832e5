@@ -1,0 +1,15 @@
+232ffc80a44eb20c71c5311f923704dd
+'use strict';
+
+function findClosest(element, callback) {
+    let el = element;
+    do {
+        if (callback(el)) {
+            return el;
+        }
+        el = el.parentElement;
+    }while (el && el !== element.ownerDocument.body)
+    return undefined;
+}
+
+exports.findClosest = findClosest;

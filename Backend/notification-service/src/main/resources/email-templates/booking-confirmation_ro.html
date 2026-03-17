@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rezervare Confirmată - Covoituraje</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 20px;
+            color: #28a745;
+            margin: 20px 0;
+        }
+        .content {
+            margin: 20px 0;
+        }
+        .trip-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .detail-value {
+            color: #212529;
+        }
+        .seats-info {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚗 Covoituraje</div>
+            <div>Platformă de Împărtășire Auto Corporativă</div>
+        </div>
+        
+        <div class="title">✅ Rezervare Confirmată</div>
+        
+        <div class="content">
+            <p>Salut {{userName}},</p>
+            <p>Rezervarea ta a fost confirmată cu succes! Totul este gata pentru călătoria ta următoare.</p>
+        </div>
+        
+        <div class="trip-details">
+            <h3>Detalii Călătorie</h3>
+            <div class="detail-row">
+                <span class="detail-label">ID Călătorie:</span>
+                <span class="detail-value">{{tripId}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Data și Ora:</span>
+                <span class="detail-value">{{tripDateTime}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">De la:</span>
+                <span class="detail-value">{{origin}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Până la:</span>
+                <span class="detail-value">{{destination}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Șofer:</span>
+                <span class="detail-value">{{driverName}}</span>
+            </div>
+        </div>
+        
+        <div class="seats-info">
+            🎫 Ai rezervat {{seats}} loc(uri) pentru această călătorie
+        </div>
+        
+        <div class="content">
+            <p><strong>Reamintiri importante:</strong></p>
+            <ul>
+                <li>Te rugăm să ajungi la punctul de întâlnire cu 5 minute înainte de plecare</li>
+                <li>Contactează șoferul dacă trebuie să faci modificări</li>
+                <li>Anulează rezervarea dacă nu poți veni (minimum 2 ore înainte)</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{appUrl}}" class="button">Vezi Detaliile Călătoriei</a>
+        </div>
+        
+        <div class="footer">
+            <p>Acesta este un mesaj automat de la Covoituraje.</p>
+            <p>Dacă ai întrebări, te rugăm să contactezi departamentul de HR.</p>
+            <p>&copy; 2024 Covoituraje. Toate drepturile rezervate.</p>
+        </div>
+    </div>
+</body>
+</html>

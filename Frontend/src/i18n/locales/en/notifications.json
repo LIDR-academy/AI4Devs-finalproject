@@ -1,0 +1,27 @@
+{
+  "title": "Push Notifications",
+  "description": "Receive notifications about your bookings, matches, and trip updates.",
+  "enable": "Enable Notifications",
+  "disable": "Disable Notifications",
+  "subscribed": "Notifications are enabled",
+  "subscribing": "Enabling...",
+  "unsubscribing": "Disabling...",
+  "notSupported": "Push notifications are not supported",
+  "notSupportedDescription": "Your browser doesn't support push notifications. Please use a modern browser like Chrome, Firefox, or Safari.",
+  "error": "Failed to update notification settings. Please try again.",
+  "permissionDenied": "Notification permission was denied. Please enable notifications in your browser settings.",
+  "endpoint": "Notification endpoint",
+  "privacyNote": "We only send notifications about your bookings and matches. You can disable them at any time.",
+  "bookingConfirmed": {
+    "title": "Booking Confirmed",
+    "body": "Your booking for {seats} seat(s) has been confirmed"
+  },
+  "matchFound": {
+    "title": "New Match Found",
+    "body": "A match with {score}% compatibility was found"
+  },
+  "tripCancelled": {
+    "title": "Trip Cancelled",
+    "body": "Trip {tripId} has been cancelled"
+  }
+}

@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: Booking Service
+  version: 0.1.0
+servers:
+  - url: http://localhost:8083/api
+paths:
+  /bookings:
+    post:
+      summary: Create a booking for a trip
+      security:
+        - bearerAuth: []
+      description: Requires Authorization header. Example: `Authorization: Bearer eyJ...`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tripId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+    get:
+      summary: List my bookings
+      security:
+        - bearerAuth: []
+      description: Requires Authorization header. Example: `Authorization: Bearer eyJ...`
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+          description: Filter by start date (ISO-8601 format)
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+          description: Filter by end date (ISO-8601 format)
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED, NOSHOW]
+          description: Filter by booking status
+      responses:
+        '200':
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+        '403':
+          description: Forbidden (insufficient permissions)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        passengerId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, CANCELLED, COMPLETED, NOSHOW]
+  
+paths:
+  /bookings/{id}/confirm:
+    put:
+      summary: Confirm a booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400': { description: Bad request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+  /bookings/{id}/cancel:
+    put:
+      summary: Cancel a booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400': { description: Bad request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: Not found }

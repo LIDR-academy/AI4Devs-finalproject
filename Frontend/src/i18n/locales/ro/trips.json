@@ -1,0 +1,105 @@
+{
+  "title": "Călătorii",
+  "create": {
+    "title": "Creează Călătorie",
+    "newTrip": "Creează Călătorie Nouă",
+    "origin": "Origine",
+    "latitude": "Latitudine Origine",
+    "longitude": "Longitudine Origine",
+    "destination": "Destinație",
+    "date": "Data și ora",
+    "seats": "Locuri disponibile",
+    "seatsTotal": "Locuri Totale",
+    "submit": "Creează călătorie",
+    "cancel": "Anulează",
+    "creating": "Se creează...",
+    "selectDestination": "Selectează o destinație",
+    "maxSeats": "Maximum 8 locuri",
+    "helpText": "Poți crea călătorii unice sau recurente. Călătoriile unice sunt perfecte pentru evenimente speciale sau călătorii ocazionale.",
+    "tripType": {
+      "label": "Tipul Călătoriei",
+      "oneTime": "Călătorie unică",
+      "recurring": "Călătorie recurentă",
+      "oneTimeDescription": "Perfectă pentru evenimente speciale sau călătorii ocazionale",
+      "recurringDescription": "Călătorii regulate (ex. navetă zilnică)"
+    },
+    "direction": {
+      "label": "Direcție",
+      "toSede": "Către sediu",
+      "fromSede": "De la sediu"
+    }
+  },
+  "list": {
+    "title": "Călătoriile Mele",
+    "empty": "Nu ai călătorii create",
+    "createFirst": "Creează prima ta călătorie",
+    "emptyDescription": "Creează prima ta călătorie pentru a începe să partajezi cu colegii tăi",
+    "tripTo": "Călătorie la {{destination}}",
+    "seatsFree": "{{free}} libere din {{total}} total"
+  },
+  "status": {
+    "active": "Activ",
+    "completed": "Finalizat",
+    "cancelled": "Anulat"
+  },
+  "actions": {
+    "view": "Vezi",
+    "edit": "Editează",
+    "cancel": "Anulează",
+    "delete": "Șterge",
+    "addSeat": "+1 Loc",
+    "show": "Arată",
+    "hide": "Ascunde"
+  },
+  "labels": {
+    "origin": "Origine:",
+    "destination": "Destinație:",
+    "time": "Oră:",
+    "seats": "Locuri:"
+  },
+  "map": {
+    "showMap": "Afișează pe Hartă",
+    "hideMap": "Ascunde Harta"
+  },
+  "edit": {
+    "title": "Editează Călătoria",
+    "mapPreview": "Previzualizare hartă",
+    "bookedSeatsWarning": "Avertisment:",
+    "seatsAlreadyBooked": "locuri sunt deja rezervate"
+  },
+  "messages": {
+    "createSuccess": "Călătorie creată cu succes!",
+    "createError": "Eroare la crearea călătoriei",
+    "updateSuccess": "Călătorie actualizată cu succes!",
+    "tripUpdated": "Călătorie actualizată cu succes",
+    "updateError": "Eroare la actualizarea călătoriei",
+    "deleteSuccess": "Călătorie anulată cu succes",
+    "deleteError": "Eroare la anularea călătoriei",
+    "loadError": "Eroare la încărcarea călătoriilor",
+    "confirmDelete": "Ești sigur că vrei să anulezi această călătorie?",
+    "formErrors": "Te rugăm să corectezi erorile din formular",
+    "seatsUpdated": "Locuri actualizate: {{total}} total, {{free}} libere"
+  },
+  "sedes": {
+    "select": "Selectează o destinație",
+    "SEDE-1": "Birou Madrid Centru",
+    "SEDE-2": "Birou Madrid Nord",
+    "SEDE-3": "Birou Barcelona"
+  },
+  "filters": {
+    "title": "Filtre",
+    "status": "Status",
+    "direction": "Direcție",
+    "destination": "Destinație",
+    "dateFrom": "Data de la",
+    "dateTo": "Data până la",
+    "allStatuses": "Toate statusurile",
+    "allDirections": "Toate direcțiile",
+    "allDestinations": "Toate destinațiile",
+    "from": "De la",
+    "to": "Până la",
+    "clearAll": "Șterge filtrele",
+    "active": "active",
+    "noResults": "Nu au fost găsite călătorii cu filtrele aplicate"
+  }
+}

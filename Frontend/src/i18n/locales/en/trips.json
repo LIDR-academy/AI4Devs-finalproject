@@ -1,0 +1,105 @@
+{
+  "title": "Trips",
+  "create": {
+    "title": "Create Trip",
+    "newTrip": "Create New Trip",
+    "origin": "Origin",
+    "latitude": "Origin Latitude",
+    "longitude": "Origin Longitude",
+    "destination": "Destination",
+    "date": "Date and time",
+    "seats": "Available seats",
+    "seatsTotal": "Total Seats",
+    "submit": "Create trip",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "selectDestination": "Select a destination",
+    "maxSeats": "Maximum 8 seats",
+    "helpText": "You can create one-time trips or recurring trips. One-time trips are perfect for special events or occasional travel.",
+    "tripType": {
+      "label": "Trip Type",
+      "oneTime": "One-time trip",
+      "recurring": "Recurring trip",
+      "oneTimeDescription": "Perfect for special events or occasional travel",
+      "recurringDescription": "Regular trips (e.g., daily commute)"
+    },
+    "direction": {
+      "label": "Direction",
+      "toSede": "To headquarters",
+      "fromSede": "From headquarters"
+    }
+  },
+  "list": {
+    "title": "My trips",
+    "empty": "You don't have any trips created",
+    "createFirst": "Create your first trip",
+    "emptyDescription": "Create your first trip to start sharing with your colleagues",
+    "tripTo": "Trip to {{destination}}",
+    "seatsFree": "{{free}} free of {{total}} total"
+  },
+  "status": {
+    "active": "Active",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "addSeat": "+1 Seat",
+    "show": "Show",
+    "hide": "Hide"
+  },
+  "labels": {
+    "origin": "Origin:",
+    "destination": "Destination:",
+    "time": "Time:",
+    "seats": "Seats:"
+  },
+  "map": {
+    "showMap": "Show on Map",
+    "hideMap": "Hide Map"
+  },
+  "edit": {
+    "title": "Edit Trip",
+    "mapPreview": "Map preview",
+    "bookedSeatsWarning": "Warning:",
+    "seatsAlreadyBooked": "seats are already booked"
+  },
+  "messages": {
+    "createSuccess": "Trip created successfully!",
+    "createError": "Error creating trip",
+    "updateSuccess": "Trip updated successfully!",
+    "tripUpdated": "Trip updated successfully",
+    "updateError": "Error updating trip",
+    "deleteSuccess": "Trip cancelled successfully",
+    "deleteError": "Error cancelling trip",
+    "loadError": "Error loading trips",
+    "confirmDelete": "Are you sure you want to cancel this trip?",
+    "formErrors": "Please correct the errors in the form",
+    "seatsUpdated": "Seats updated: {{total}} total, {{free}} free"
+  },
+  "sedes": {
+    "select": "Select a destination",
+    "SEDE-1": "Madrid Center Office",
+    "SEDE-2": "Madrid North Office",
+    "SEDE-3": "Barcelona Office"
+  },
+  "filters": {
+    "title": "Filters",
+    "status": "Status",
+    "direction": "Direction",
+    "destination": "Destination",
+    "dateFrom": "Date from",
+    "dateTo": "Date to",
+    "allStatuses": "All statuses",
+    "allDirections": "All directions",
+    "allDestinations": "All destinations",
+    "from": "From",
+    "to": "To",
+    "clearAll": "Clear filters",
+    "active": "active",
+    "noResults": "No trips found with the applied filters"
+  }
+}

@@ -1,0 +1,33 @@
+58a16a6c3744c04b813c0db5ace1dca5
+{
+  "title": "My Bookings",
+  "list": {
+    "title": "My bookings",
+    "empty": "You don't have any bookings",
+    "emptyDescription": "When you book a trip, it will appear here.",
+    "emptyHint": "Go to \"Search\" to find available trips",
+    "loadingError": "Error loading bookings"
+  },
+  "booking": {
+    "id": "Booking #{{id}}",
+    "tripId": "Trip ID",
+    "seatsRequested": "Reserved seats",
+    "bookingDate": "Booking date",
+    "status": "Status",
+    "cancel": "Cancel Booking",
+    "cancelConfirm": "Are you sure you want to cancel this booking?",
+    "cancelSuccess": "Booking cancelled successfully",
+    "cancelError": "Error cancelling booking"
+  },
+  "status": {
+    "CONFIRMED": "Confirmed",
+    "PENDING": "Pending confirmation",
+    "CANCELLED": "Cancelled",
+    "badges": {
+      "CONFIRMED": "Confirmed",
+      "PENDING": "Pending",
+      "CANCELLED": "Cancelled"
+    }
+  }
+}
+

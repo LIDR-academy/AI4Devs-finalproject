@@ -1,0 +1,44 @@
+{
+  "required": "El campo {{field}} es obligatorio",
+  "email": {
+    "invalid": "Formato de email inválido"
+  },
+  "minLength": "Mínimo {{min}} caracteres",
+  "maxLength": "Máximo {{max}} caracteres",
+  "range": "Debe estar entre {{min}} y {{max}}",
+  "numeric": "Debe ser un número",
+  "phone": {
+    "invalid": "Formato de teléfono inválido"
+  },
+  "date": {
+    "invalid": "Formato de fecha inválido",
+    "required": "La fecha y hora son obligatorias",
+    "future": "La fecha debe ser en el futuro"
+  },
+  "time": {
+    "invalid": "Formato de hora inválido"
+  },
+  "futureDate": "La fecha debe ser futura",
+  "positiveNumber": "El número debe ser positivo",
+  "seats": {
+    "min": "Debe haber al menos 1 asiento",
+    "max": "No pueden ser más de 8 asientos",
+    "required": "Los asientos son obligatorios"
+  },
+  "coordinates": {
+    "latitude": {
+      "required": "La latitud es obligatoria",
+      "range": "La latitud debe estar entre -90 y 90"
+    },
+    "longitude": {
+      "required": "La longitud es obligatoria",
+      "range": "La longitud debe estar entre -180 y 180"
+    }
+  },
+  "destination": {
+    "required": "El destino es obligatorio"
+  },
+  "direction": {
+    "required": "La dirección es obligatoria"
+  }
+}

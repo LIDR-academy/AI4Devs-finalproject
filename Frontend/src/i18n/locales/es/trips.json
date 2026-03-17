@@ -1,0 +1,118 @@
+{
+  "title": "Viajes",
+  "create": {
+    "title": "Crear Viaje",
+    "newTrip": "Crear Nuevo Viaje",
+    "origin": "Origen",
+    "latitude": "Latitud de Origen",
+    "longitude": "Longitud de Origen",
+    "destination": "Destino",
+    "date": "Fecha y hora",
+    "seats": "Asientos disponibles",
+    "seatsTotal": "Asientos Totales",
+    "submit": "Crear viaje",
+    "cancel": "Cancelar",
+    "creating": "Creando...",
+    "selectDestination": "Selecciona un destino",
+    "maxSeats": "Máximo 8 asientos",
+    "helpText": "Puedes crear viajes únicos o recurrentes. Los viajes únicos son perfectos para eventos especiales o viajes ocasionales.",
+    "tripType": {
+      "label": "Tipo de Viaje",
+      "oneTime": "Viaje único",
+      "recurring": "Viaje recurrente",
+      "oneTimeDescription": "Perfecto para eventos especiales o viajes ocasionales",
+      "recurringDescription": "Viajes regulares (ej. desplazamiento diario)"
+    },
+    "direction": {
+      "label": "Dirección",
+      "toSede": "Hacia la sede",
+      "fromSede": "Desde la sede"
+    }
+  },
+  "list": {
+    "title": "Mis viajes",
+    "empty": "No tienes ningún viaje creado",
+    "createFirst": "Crea tu primer viaje",
+    "emptyDescription": "Crea tu primer viaje para comenzar a compartir con tus compañeros",
+    "tripTo": "Viaje a {{destination}}",
+    "seatsFree": "{{free}} libres de {{total}} total"
+  },
+  "status": {
+    "active": "Activo",
+    "completed": "Completado",
+    "cancelled": "Cancelado"
+  },
+  "actions": {
+    "view": "Ver",
+    "edit": "Editar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "addSeat": "+1 Asiento",
+    "show": "Mostrar",
+    "hide": "Ocultar"
+  },
+  "labels": {
+    "origin": "Origen:",
+    "destination": "Destino:",
+    "time": "Hora:",
+    "seats": "Asientos:"
+  },
+  "map": {
+    "showMap": "Ver en Mapa",
+    "hideMap": "Ocultar Mapa"
+  },
+  "edit": {
+    "title": "Editar Viaje",
+    "mapPreview": "Vista previa del mapa",
+    "bookedSeatsWarning": "Advertencia:",
+    "seatsAlreadyBooked": "asientos ya están reservados"
+  },
+  "filters": {
+    "title": "Filtros",
+    "status": "Estado",
+    "direction": "Dirección",
+    "destination": "Destino",
+    "dateFrom": "Fecha desde",
+    "dateTo": "Fecha hasta",
+    "clearAll": "Limpiar filtros",
+    "active": "activos",
+    "allStatuses": "Todos los estados",
+    "allDirections": "Todas las direcciones",
+    "allDestinations": "Todos los destinos"
+  },
+  "messages": {
+    "createSuccess": "¡Viaje creado exitosamente!",
+    "createError": "Error al crear el viaje",
+    "updateSuccess": "¡Viaje actualizado exitosamente!",
+    "tripUpdated": "Viaje actualizado exitosamente",
+    "updateError": "Error al actualizar el viaje",
+    "deleteSuccess": "Viaje cancelado exitosamente",
+    "deleteError": "Error al cancelar el viaje",
+    "loadError": "Error al cargar los viajes",
+    "confirmDelete": "¿Estás seguro de que quieres cancelar este viaje?",
+    "formErrors": "Por favor corrige los errores en el formulario",
+    "seatsUpdated": "Asientos actualizados: {{total}} total, {{free}} libres"
+  },
+  "sedes": {
+    "select": "Selecciona un destino",
+    "SEDE-1": "Sede Madrid Centro",
+    "SEDE-2": "Sede Madrid Norte",
+    "SEDE-3": "Sede Barcelona"
+  },
+  "filters": {
+    "title": "Filtros",
+    "status": "Estado",
+    "direction": "Dirección",
+    "destination": "Destino",
+    "dateFrom": "Fecha desde",
+    "dateTo": "Fecha hasta",
+    "allStatuses": "Todos los estados",
+    "allDirections": "Todas las direcciones",
+    "allDestinations": "Todos los destinos",
+    "from": "Desde",
+    "to": "Hasta",
+    "clearAll": "Limpiar filtros",
+    "noResults": "No se encontraron viajes con los filtros aplicados"
+  }
+}
+
