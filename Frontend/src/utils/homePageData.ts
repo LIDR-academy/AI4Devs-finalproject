@@ -2,84 +2,9 @@
  * Utility functions for transforming data for HomePage display
  */
 
-import type { ExpenseListItem } from '@/types/expense.types';
-import type { Balance, RecentExpense, TripCurrency, ExpenseCategory } from '@/types/trip.types';
+import type { Balance } from '@/types/trip.types';
 import type { SettleTransaction } from '@/types/balance.types';
 import type { TripListItem } from '@/types/trip.types';
-
-/**
- * Maps category name (string) to ExpenseCategory type
- * @param categoryName - Category name from backend (e.g., "Comida", "Transporte")
- * @returns ExpenseCategory type
- */
-function mapCategoryNameToExpenseCategory(categoryName: string): ExpenseCategory {
-  const name = categoryName.toLowerCase().trim();
-
-  if (name.includes('comida') || name.includes('food')) {
-    return 'food';
-  }
-  if (name.includes('transporte') || name.includes('transport')) {
-    return 'transport';
-  }
-  if (name.includes('alojamiento') || name.includes('lodging') || name.includes('hotel')) {
-    return 'lodging';
-  }
-  if (name.includes('entretenimiento') || name.includes('entertainment')) {
-    return 'entertainment';
-  }
-
-  // Default to 'other' for any other category
-  return 'other';
-}
-
-/**
- * Maps ExpenseListItem to RecentExpense format
- * @param expense - Expense list item from backend
- * @param tripName - Name of the trip (for context)
- * @param currency - Currency of the trip
- * @returns RecentExpense object
- */
-export function mapExpenseListItemToRecentExpense(
-  expense: ExpenseListItem,
-  tripName: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future display/formatting
-  _currency: TripCurrency,
-): RecentExpense {
-  // Get payer name - try to get from expense data if available
-  // For now, we'll use a placeholder since ExpenseListItem doesn't include payer name
-  // This should be enhanced when backend includes payer info in list response
-  const paidBy = 'Usuario'; // TODO: Get actual payer name from expense data
-
-  // Calculate participant count from beneficiaries
-  const participantCount = expense.beneficiaries?.length || 1;
-
-  // Map category name to ExpenseCategory type
-  const category = mapCategoryNameToExpenseCategory(expense.category_name);
-
-  // Format date - use expense_date if available, otherwise createdAt
-  const dateString =
-    typeof expense.expense_date === 'string'
-      ? expense.expense_date
-      : expense.expense_date instanceof Date
-        ? expense.expense_date.toISOString()
-        : typeof expense.createdAt === 'string'
-          ? expense.createdAt
-          : expense.createdAt instanceof Date
-            ? expense.createdAt.toISOString()
-            : new Date().toISOString();
-
-  return {
-    id: expense.id,
-    category,
-    title: expense.title,
-    paidBy,
-    date: dateString,
-    amount: expense.amount,
-    participantCount,
-    tripId: expense.trip_id,
-    tripName,
-  };
-}
 
 /**
  * Aggregates balances from multiple trips

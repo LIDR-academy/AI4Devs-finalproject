@@ -15,7 +15,6 @@ export { DevIndicator } from './atoms/DevIndicator';
 
 // Molecules
 export { Card } from './molecules/Card';
-export { FormField } from './molecules/FormField';
 export { ProtectedRoute } from './molecules/ProtectedRoute';
 export { CategorySelector } from './molecules/CategorySelector';
 export { PayerSelector } from './molecules/PayerSelector';
