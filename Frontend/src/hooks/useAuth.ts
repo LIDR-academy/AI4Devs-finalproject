@@ -108,6 +108,22 @@ export function useAuth() {
   }, []);
 
   /**
+   * Sets session from token and user (e.g. after registration without calling login API).
+   * @param accessToken - JWT access token
+   * @param user - User data (id, nombre, email)
+   */
+  const setSession = useCallback((accessToken: string, user: User) => {
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    setAuthState({
+      isAuthenticated: true,
+      user,
+      token: accessToken,
+      isLoading: false,
+    });
+  }, []);
+
+  /**
    * Updates the current user in state and localStorage (e.g. after profile update)
    * @param user - New user data (id, nombre, email)
    */
@@ -131,6 +147,7 @@ export function useAuth() {
     login,
     logout,
     checkAuth,
+    setSession,
     setUser,
   };
 }

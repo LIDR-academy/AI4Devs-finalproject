@@ -190,6 +190,57 @@ export async function joinTripByCode(code: string): Promise<TripResponse> {
 }
 
 /**
+ * Adds participants to a trip by email. Only the CREATOR can add participants.
+ * @param tripId - Trip ID
+ * @param memberEmails - Array of user emails to add as members
+ * @returns Promise with trip data on success
+ * @throws Error with status code and message on failure
+ */
+export async function addTripParticipants(
+  tripId: string,
+  memberEmails: string[],
+): Promise<TripResponse> {
+  const token = getAuthToken();
+
+  const response = await fetch(`${API_BASE_URL}/trips/${tripId}/participants`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ memberEmails }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({
+      message: response.statusText || 'Error desconocido',
+      statusCode: response.status,
+    }));
+
+    let message = errorData.message || 'Error al agregar participantes';
+
+    if (response.status === 403) {
+      message = 'Solo el creador del viaje puede agregar participantes';
+    } else if (response.status === 404) {
+      message =
+        errorData.message ||
+        'Viaje no encontrado o uno de los usuarios no está registrado';
+    } else if (response.status === 401) {
+      message = 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.';
+    }
+
+    const error: ApiError = {
+      message,
+      statusCode: response.status,
+    };
+
+    throw error;
+  }
+
+  return response.json();
+}
+
+/**
  * Updates a trip's information
  * Only the CREATOR can update the trip
  * Can update name and status fields

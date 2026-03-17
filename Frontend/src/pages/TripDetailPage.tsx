@@ -8,6 +8,7 @@ import { ExpenseCard } from '@/components/molecules/ExpenseCard';
 import { BalanceCard } from '@/components/molecules/BalanceCard';
 import { ParticipantBalanceCard } from '@/components/molecules/ParticipantBalanceCard';
 import { TripSettingsModal } from '@/components/organisms/TripSettingsModal';
+import { AddParticipantsModal } from '@/components/organisms/AddParticipantsModal';
 import { Button } from '@/components/atoms/Button';
 import { Skeleton } from '@/components/atoms/Skeleton';
 import { useTripDetail } from '@/hooks/useTripDetail';
@@ -97,6 +98,7 @@ export function TripDetailPage() {
   const [expenses_page, set_expenses_page] = useState(1);
   const [all_expenses, set_all_expenses] = useState<ExpenseListItem[]>([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isAddParticipantsModalOpen, setIsAddParticipantsModalOpen] = useState(false);
 
   const {
     trip,
@@ -601,6 +603,19 @@ export function TripDetailPage() {
               aria-labelledby="participantes-tab"
               className="bg-white rounded-xl p-6 shadow-md"
             >
+              {trip?.userRole === 'CREATOR' && (
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-slate-900">Participantes</h3>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setIsAddParticipantsModalOpen(true)}
+                  >
+                    Agregar participante
+                  </Button>
+                </div>
+              )}
               {isLoading ? (
                 <div className="space-y-3 animate-pulse">
                   {[1, 2, 3].map(i => (
@@ -619,9 +634,7 @@ export function TripDetailPage() {
                   action={
                     trip.userRole === 'CREATOR' ? (
                       <Button
-                        onClick={() => {
-                          /* TODO: Open invite modal */
-                        }}
+                        onClick={() => setIsAddParticipantsModalOpen(true)}
                       >
                         Invitar Participante
                       </Button>
@@ -672,6 +685,20 @@ export function TripDetailPage() {
           onClose={() => setIsSettingsModalOpen(false)}
           trip={trip}
           onSuccess={handleSettingsSuccess}
+        />
+      )}
+
+      {/* Add Participants Modal */}
+      {id && (
+        <AddParticipantsModal
+          tripId={id}
+          isOpen={isAddParticipantsModalOpen}
+          onClose={() => setIsAddParticipantsModalOpen(false)}
+          onSuccess={() => {
+            refetch();
+            queryClient.invalidateQueries({ queryKey: ['trip', id] });
+            setIsAddParticipantsModalOpen(false);
+          }}
         />
       )}
     </div>

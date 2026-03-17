@@ -7,6 +7,7 @@ import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { registerUser, type RegisterRequest } from '@/services/auth.service';
 import type { ApiError } from '@/types/api.types';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 /**
  * Registration form schema
@@ -26,6 +27,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
  */
 export const RegisterPage = () => {
   const navigate = useNavigate();
+  const { setSession } = useAuthContext();
 
   const {
     register,
@@ -38,9 +40,11 @@ export const RegisterPage = () => {
 
   const mutation = useMutation({
     mutationFn: (data: RegisterRequest) => registerUser(data),
-    onSuccess: () => {
-      // Redirect to login after successful registration
-      navigate('/login');
+    onSuccess: (data) => {
+      if (data.accessToken && data.user) {
+        setSession(data.accessToken, data.user);
+      }
+      navigate('/');
     },
     onError: (error: ApiError) => {
       // Handle different error types

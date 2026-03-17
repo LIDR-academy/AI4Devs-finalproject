@@ -3,6 +3,7 @@
  * Centralizes all DTO exports for easier imports throughout the application
  */
 
+export * from './add-participants.dto';
 export * from './create-trip.dto';
 export * from './join-trip.dto';
 export * from './trip-detail-response.dto';

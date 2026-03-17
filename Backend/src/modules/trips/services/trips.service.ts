@@ -16,6 +16,7 @@ import { Trip } from '../entities/trip.entity';
 import { TripParticipant } from '../entities/trip-participant.entity';
 import { User } from '../../users/entities/user.entity';
 import { Expense } from '../../expenses/entities/expense.entity';
+import { AddParticipantsDto } from '../dto/add-participants.dto';
 import { CreateTripDto } from '../dto/create-trip.dto';
 import { UpdateTripDto } from '../dto/update-trip.dto';
 import { TripResponseDto } from '../dto/trip-response.dto';
@@ -441,6 +442,124 @@ export class TripsService {
     );
 
     return trip;
+  }
+
+  /**
+   * Adds participants to an existing trip by email.
+   * Only the CREATOR of the trip can add participants.
+   * Invited users must already be registered. Duplicates are skipped.
+   *
+   * @param tripId - ID of the trip
+   * @param userId - ID of the authenticated user (must be CREATOR)
+   * @param addParticipantsDto - DTO with memberEmails to add
+   * @returns Updated trip as TripResponseDto
+   * @throws BadRequestException if tripId is not a valid UUID
+   * @throws NotFoundException if the trip does not exist or an email is not registered
+   * @throws ForbiddenException if the user is not the CREATOR of the trip
+   */
+  async addParticipants(
+    tripId: string,
+    userId: string,
+    addParticipantsDto: AddParticipantsDto,
+  ): Promise<TripResponseDto> {
+    if (!isUUID(tripId)) {
+      throw new BadRequestException('ID de viaje inválido');
+    }
+
+    const trip = await this.tripRepository.findOne({
+      where: { id: tripId, deletedAt: IsNull() },
+    });
+
+    if (!trip) {
+      throw new NotFoundException('Viaje no encontrado');
+    }
+
+    const creatorParticipation = await this.tripParticipantRepository.findOne({
+      where: {
+        tripId,
+        userId,
+        deletedAt: IsNull(),
+      },
+    });
+
+    if (!creatorParticipation || creatorParticipation.role !== ParticipantRole.CREATOR) {
+      throw new ForbiddenException(
+        'Solo el creador del viaje puede agregar participantes',
+      );
+    }
+
+    const memberEmails = addParticipantsDto.memberEmails ?? [];
+    if (memberEmails.length === 0) {
+      return TripMapper.toResponseDto(trip);
+    }
+
+    const users = await this.userRepository.find({
+      where: {
+        email: In(memberEmails),
+        deletedAt: IsNull(),
+      },
+    });
+
+    const emailToUser = new Map(users.map((u) => [u.email, u]));
+    const candidateUserIds = users.map((u) => u.id).filter((id) => id !== userId);
+    const existingParticipants =
+      candidateUserIds.length > 0
+        ? await this.tripParticipantRepository.find({
+            where: {
+              tripId,
+              userId: In(candidateUserIds),
+              deletedAt: IsNull(),
+            },
+          })
+        : [];
+    const existingParticipantIds = new Set(
+      existingParticipants.map((p) => p.userId),
+    );
+
+    const memberParticipants: TripParticipant[] = [];
+
+    for (const email of memberEmails) {
+      const user = emailToUser.get(email);
+
+      if (!user) {
+        throw new NotFoundException(
+          `El usuario con email ${email} no está registrado. Debe registrarse primero.`,
+        );
+      }
+
+      if (user.id === userId) continue;
+      if (existingParticipantIds.has(user.id)) continue;
+
+      memberParticipants.push(
+        this.tripParticipantRepository.create({
+          trip,
+          tripId: trip.id,
+          user,
+          userId: user.id,
+          role: ParticipantRole.MEMBER,
+        }),
+      );
+    }
+
+    if (memberParticipants.length > 0) {
+      await this.tripParticipantRepository.save(memberParticipants);
+      this.logger.log(
+        `Usuario ${userId} agregó ${memberParticipants.length} participante(s) al viaje ${tripId}`,
+      );
+    }
+
+    const participantRows = await this.tripParticipantRepository.find({
+      where: { tripId, deletedAt: IsNull() },
+      select: { userId: true },
+    });
+    const participantIds = new Set(participantRows.map((p) => p.userId));
+    await Promise.all(
+      Array.from(participantIds).map((participantId) =>
+        this.invalidateTripCache(trip.id, participantId),
+      ),
+    );
+
+    return TripMapper.toResponseDto(trip);
   }
 
   /**

@@ -26,6 +26,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { TripsService } from '../services/trips.service';
+import { AddParticipantsDto } from '../dto/add-participants.dto';
 import { CreateTripDto } from '../dto/create-trip.dto';
 import { UpdateTripDto } from '../dto/update-trip.dto';
 import { JoinTripDto } from '../dto/join-trip.dto';
@@ -192,6 +193,55 @@ export class TripsController {
       req.user!.id,
     );
     return TripMapper.toResponseDto(trip);
+  }
+
+  /**
+   * Adds participants to a trip by email. Only the CREATOR of the trip can add participants.
+   *
+   * @method addParticipants
+   * @param id - Trip ID (UUID)
+   * @param addParticipantsDto - DTO with memberEmails array
+   * @param req - Authenticated request
+   * @returns Trip response DTO
+   */
+  @Post(':id/participants')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Add participants to a trip',
+    description:
+      'Allows the CREATOR of the trip to add members by email. Users must already be registered.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Trip UUID',
+    type: String,
+  })
+  @ApiOkResponse({
+    description: 'Participants added successfully',
+    type: TripResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid trip ID or validation error',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized. Authentication required.',
+  })
+  @ApiForbiddenResponse({
+    description: 'Only the creator of the trip can add participants',
+  })
+  @ApiNotFoundResponse({
+    description: 'Trip not found or one of the emails is not registered',
+  })
+  async addParticipants(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() addParticipantsDto: AddParticipantsDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TripResponseDto> {
+    return this.tripsService.addParticipants(
+      id,
+      req.user!.id,
+      addParticipantsDto,
+    );
   }
 
   /**

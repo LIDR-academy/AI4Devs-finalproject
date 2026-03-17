@@ -13,10 +13,12 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  id: string;
-  nombre: string;
-  email: string;
-  createdAt: string;
+  accessToken: string;
+  user?: {
+    id: string;
+    nombre: string;
+    email: string;
+  };
 }
 
 export interface LoginRequest {
@@ -34,9 +36,9 @@ export interface LoginResponse {
 }
 
 /**
- * Registers a new user
+ * Registers a new user and returns JWT and user (same shape as login).
  * @param data - User registration data
- * @returns Promise with user data on success
+ * @returns Promise with accessToken and user on success
  * @throws Error with status code and message on failure
  */
 export async function registerUser(data: RegisterRequest): Promise<RegisterResponse> {

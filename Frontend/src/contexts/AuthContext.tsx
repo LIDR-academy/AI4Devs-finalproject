@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<LoginResponse>;
   logout: () => void;
   checkAuth: () => void;
+  setSession: (accessToken: string, user: User) => void;
   setUser: (user: User | null) => void;
 }
 
