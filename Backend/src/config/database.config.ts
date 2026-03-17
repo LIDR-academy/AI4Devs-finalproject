@@ -18,7 +18,8 @@ function getConnectionFromEnv(): {
     const url = new URL(databaseUrl);
     const database = url.pathname.replace(/^\//, '') || 'travelsplit';
     const ssl =
-      url.searchParams.get('sslmode') === 'require' || databaseUrl.includes('sslmode=require')
+      url.searchParams.get('sslmode') === 'require' ||
+      databaseUrl.includes('sslmode=require')
         ? { rejectUnauthorized: false }
         : undefined;
     return {
