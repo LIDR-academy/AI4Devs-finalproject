@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil - Bibliothèque de Jeu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-green': '#2D5C50',
+                        'game-salmon': '#E78787',
+                        'game-beige': '#D8D0B8',
+                        'game-dark-salmon': '#D57272'
+                    },
+                    fontFamily: {
+                        'game': ['"Roboto Slab"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto Slab', serif;
+        }
+    </style>
+</head>
+<body class="bg-game-green min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-game-salmon p-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:dashboard' %}" class="bg-opacity-70 bg-white px-4 py-2 rounded text-game-green font-game hover:bg-opacity-90 transition">
+                    {% trans "Mi Dashboard" %}
+                </a>
+                <form method="post" action="{% url 'accounts:logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-opacity-70 bg-white px-4 py-2 rounded text-game-green font-game hover:bg-opacity-90 transition">
+                        {% trans "Cerrar Sesión" %}
+                    </button>
+                </form>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="bg-opacity-70 bg-white px-4 py-2 rounded text-game-green font-game hover:bg-opacity-90 transition">
+                    {% trans "Ingresar" %}
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Language selector top-right: globe icon with small active-language label and dropdown menu -->
+        <div class="relative flex items-center">
+            <div class="flex flex-col items-center">
+                <button id="lang-toggle" type="button" aria-haspopup="true" aria-expanded="false" class="bg-white bg-opacity-90 text-game-green px-3 py-2 rounded-full font-game shadow">
+                    🌐
+                </button>
+                <small class="text-game-beige text-xs mt-1">{% if LANGUAGE_CODE == 'es' %}Español{% elif LANGUAGE_CODE == 'en' %}English{% else %}Français{% endif %}</small>
+            </div>
+
+            <!-- Dropdown menu (hidden by default) -->
+            <div id="lang-menu" class="hidden absolute right-0 mt-12 bg-white rounded shadow-lg w-44 z-50">
+                <div class="p-2">
+                    <form action="{% url 'set_language' %}" method="post" class="mb-1">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.path }}">
+                        <button type="submit" name="language" value="es" class="w-full text-left px-3 py-2 hover:bg-gray-100">🇪🇸 Español</button>
+                    </form>
+                    <form action="{% url 'set_language' %}" method="post" class="mb-1">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.path }}">
+                        <button type="submit" name="language" value="en" class="w-full text-left px-3 py-2 hover:bg-gray-100">🇬🇧 English</button>
+                    </form>
+                    <form action="{% url 'set_language' %}" method="post">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.path }}">
+                        <button type="submit" name="language" value="fr" class="w-full text-left px-3 py-2 hover:bg-gray-100">🇫🇷 Français</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center justify-start pt-8 px-4">
+        <h1 class="text-game-beige text-2xl font-bold mb-8">{% trans "INICIO" %}</h1>
+        
+        <!-- Game Library Section -->
+        <div class="w-full max-w-4xl bg-game-green bg-opacity-80 rounded-lg p-6 border-2 border-game-beige shadow-lg mb-8">
+            <h2 class="text-game-beige text-xl font-bold text-center mb-4 bg-game-beige bg-opacity-30 py-2 rounded">
+                {% trans "BIBLIOTECA DE JUEGOS" %}
+            </h2>
+            
+            <div class="mb-6 text-game-beige text-sm space-y-4">
+                <p>
+                    {% trans "Bienvenido a la plataforma que está revolucionando el mundo de los juegos de mesa. Aquí encontrarás los títulos más populares y emblemáticos, donde podrás descubrir sus reglas, estrategias y curiosidades." %}
+                </p>
+                <p>
+                    {% trans "Regístrate ahora y disfruta de contenido exclusivo diseñado para verdaderos amantes de los juegos de mesa." %}
+                </p>
+            </div>
+
+            <div class="flex justify-center space-x-4">
+                <a href="{% url 'catalog:game_list' %}" class="bg-game-salmon hover:bg-game-dark-salmon text-white px-6 py-2 rounded-full transition duration-300 font-medium">
+                    {% trans "Descubrir" %}
+                </a>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:register' %}" class="bg-game-salmon hover:bg-game-dark-salmon text-white px-6 py-2 rounded-full transition duration-300 font-medium">
+                        {% trans "Registrarse" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Categories Section -->
+        {% if categories %}
+        <div class="w-full max-w-4xl mb-8">
+            <h3 class="text-game-beige text-xl font-bold mb-4 text-center">{% trans "Categorías Destacadas" %}</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {% for category in categories %}
+                <div class="bg-game-beige bg-opacity-90 rounded-lg p-4 text-center hover:bg-opacity-100 transition">
+                    <div class="text-4xl mb-2">{{ category.icon }}</div>
+                    <p class="text-game-green font-semibold">{{ category.get_name }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Featured Games -->
+        {% if featured_games %}
+        <div class="w-full max-w-4xl mb-8">
+            <h3 class="text-game-beige text-xl font-bold mb-4 text-center">{% trans "Juegos Destacados" %}</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {% for game in featured_games %}
+                <a href="{% url 'catalog:game_detail' game.slug %}" class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
+                    {% if game.image %}
+                    <div class="h-40 overflow-hidden bg-gray-100">
+                        <img src="{{ game.image.url }}" alt="{{ game.get_name }}" class="w-full h-full object-contain">
+                    </div>
+                    {% else %}
+                    <div class="h-40 bg-gradient-to-br from-game-green to-game-salmon flex items-center justify-center">
+                        <span class="text-5xl text-white">🎲</span>
+                    </div>
+                    {% endif %}
+                    <div class="p-4">
+                        <h4 class="font-bold text-game-green mb-2">{{ game.get_name }}</h4>
+                        <div class="flex flex-wrap gap-1">
+                            {% for cat in game.categories.all|slice:":2" %}
+                            <span class="text-xs bg-game-beige text-game-green px-2 py-1 rounded">
+                                {{ cat.icon }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-game-salmon p-4 mt-auto">
+        <!-- Footer content -->
+    </footer>
+
+    <!-- Language switching is handled server-side with Django i18n (form in header) -->
+    <script>
+        // Toggle language dropdown and close on outside click
+        (function(){
+            const toggle = document.getElementById('lang-toggle');
+            const menu = document.getElementById('lang-menu');
+            if(!toggle || !menu) return;
+
+            function openMenu(){
+                menu.classList.remove('hidden');
+                toggle.setAttribute('aria-expanded','true');
+            }
+            function closeMenu(){
+                menu.classList.add('hidden');
+                toggle.setAttribute('aria-expanded','false');
+            }
+
+            toggle.addEventListener('click', function(e){
+                e.stopPropagation();
+                if(menu.classList.contains('hidden')) openMenu(); else closeMenu();
+            });
+
+            // Close when clicking outside
+            document.addEventListener('click', function(e){
+                if(!menu.classList.contains('hidden')){
+                    const within = menu.contains(e.target) || toggle.contains(e.target);
+                    if(!within) closeMenu();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

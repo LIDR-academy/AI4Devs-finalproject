@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Eliminar Categoría" %} - Gamy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-green': '#2D5C50',
+                        'game-salmon': '#E78787',
+                        'game-beige': '#D8D0B8',
+                        'game-dark-salmon': '#D57272'
+                    },
+                    fontFamily: {
+                        'game': ['"Roboto Slab"', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-game-green min-h-screen font-game">
+    <!-- Header -->
+    <header class="bg-game-salmon p-4">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'catalog:home' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Inicio" %}
+                </a>
+                <a href="{% url 'catalog:category_list' %}" class="bg-white bg-opacity-70 px-4 py-2 rounded text-game-green hover:bg-opacity-90 transition">
+                    {% trans "Categorías" %}
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-white rounded-lg shadow-xl p-8">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">⚠️</div>
+                    <h1 class="text-3xl font-bold text-red-600 mb-2">{% trans "Confirmar Eliminación" %}</h1>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                {% trans "¿Estás seguro de que deseas eliminar esta categoría?" %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Info -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="text-4xl">{{ category.icon }}</div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-800">{{ category.slug }}</p>
+                            <p class="text-sm text-gray-600">{% trans "Juegos asociados:" %} {{ category.games.count }}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <p class="font-medium text-gray-700">🇪🇸 Español:</p>
+                            <p class="text-gray-600">{{ category.name_es }}</p>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-700">🇬🇧 English:</p>
+                            <p class="text-gray-600">{{ category.name_en }}</p>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-700">🇫🇷 Français:</p>
+                            <p class="text-gray-600">{{ category.name_fr }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if category.games.count > 0 %}
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">
+                                <strong>{% trans "Advertencia:" %}</strong> {% trans "Esta categoría está asociada a" %} {{ category.games.count }} {% trans "juego(s). Al eliminarla, se removerá la categoría de todos los juegos asociados." %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="flex justify-between items-center space-x-4">
+                        <a href="{% url 'catalog:category_list' %}" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-3 px-6 rounded-lg text-center transition">
+                            ↩️ {% trans "Cancelar" %}
+                        </a>
+                        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition">
+                            🗑️ {% trans "Sí, Eliminar" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
