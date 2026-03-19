@@ -1,0 +1,72 @@
+# CI/CD — Deploy a producción al hacer push a main
+#
+# Secrets necesarios en GitHub (Settings → Secrets and variables → Actions):
+#   AWS_ACCOUNT_ID        — ID de la cuenta AWS (sin guiones)
+#   AWS_ACCESS_KEY_ID     — Access key del IAM user con permisos ECR
+#   AWS_SECRET_ACCESS_KEY — Secret key correspondiente
+#   LIGHTSAIL_HOST        — IP estática de la instancia Lightsail
+#   LIGHTSAIL_SSH_KEY     — Contenido de la clave privada SSH (.pem, sin passphrase)
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-central-1.amazonaws.com
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login a ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build y push imagen API
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -f apps/api/Dockerfile \
+            -t $ECR_REGISTRY/adresles-api:$IMAGE_TAG \
+            -t $ECR_REGISTRY/adresles-api:latest \
+            .
+          docker push $ECR_REGISTRY/adresles-api:$IMAGE_TAG
+          docker push $ECR_REGISTRY/adresles-api:latest
+
+      - name: Build y push imagen Worker
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -f apps/worker/Dockerfile \
+            -t $ECR_REGISTRY/adresles-worker:$IMAGE_TAG \
+            -t $ECR_REGISTRY/adresles-worker:latest \
+            .
+          docker push $ECR_REGISTRY/adresles-worker:$IMAGE_TAG
+          docker push $ECR_REGISTRY/adresles-worker:latest
+
+      - name: Deploy a Lightsail via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ubuntu
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cd ~/adresles-prod
+            aws ecr get-login-password --region eu-central-1 | \
+              docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker compose ps
+            # Limpiar imágenes antiguas para liberar espacio en disco
+            docker image prune -f

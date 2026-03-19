@@ -1,0 +1,200 @@
+---
+description: Reglas de etiquetado de agente para tareas en archivos tasks.md de OpenSpec. Define el formato obligatorio de etiquetas, el prefijo numérico requerido por el template de OpenSpec, criterios de agrupación y ejemplos de tareas correctamente estructuradas.
+globs: ["**/openspec/changes/**/tasks.md"]
+alwaysApply: false
+---
+
+# Reglas de Etiquetado de Agente en `tasks.md`
+
+## Propósito
+
+Todo archivo `tasks.md` generado en el flujo OpenSpec DEBE incluir una etiqueta de agente en cada tarea. Esto permite que el sistema multi-agente identifique quién debe ejecutar cada tarea y facilita la planificación paralela de trabajo.
+
+El formato de `tasks.md` lo define el template en `openspec/schemas/my-workflow/templates/tasks.md`. Las etiquetas de agente se incorporan dentro del formato existente de ese template, sin romper el parsing de checkboxes del comando `opsx-apply`.
+
+## Etiquetas Válidas
+
+| Etiqueta | Agente responsable | Cuándo usar |
+|---|---|---|
+| `[architect]` | software-architect | Decisiones de diseño, definición de contratos, actualización de specs o documentación |
+| `[backend]` | backend-developer | Código en `apps/api/`, `apps/worker/`, `packages/prisma-db/`, `packages/shared-types/` |
+| `[frontend]` | frontend-developer | Código en `apps/web-admin/` (páginas, componentes, lib, types) |
+| `[qa]` | qa-engineer | Tests unitarios, tests de integración, validación de cobertura, verificación contra spec |
+
+## Formato Obligatorio
+
+El template de OpenSpec usa prefijos numéricos del tipo `N.M` para cada tarea. La etiqueta de agente se añade **después del prefijo numérico**, antes de la descripción:
+
+```markdown
+- [ ] 1.1 [etiqueta] Descripción accionable de la tarea
+```
+
+### Tarea pendiente
+
+```markdown
+- [ ] 1.1 [backend] Crear DTO `CreateOrderDto` con validadores class-validator
+```
+
+### Tarea completada
+
+```markdown
+- [x] 1.1 [backend] Crear DTO `CreateOrderDto` con validadores class-validator
+```
+
+**La etiqueta va después del prefijo numérico** (`N.M`), entre corchetes, en minúsculas.  
+El prefijo numérico es obligatorio: el comando `opsx-apply` lo usa para identificar y rastrear tareas.
+
+## Reglas de Estructura
+
+### 1. Toda tarea DEBE tener etiqueta
+
+❌ **Incorrecto** — tarea sin etiqueta:
+```markdown
+- [ ] 1.1 Crear DTO `CreateOrderDto` con validadores
+```
+
+✅ **Correcto** — tarea con prefijo numérico y etiqueta:
+```markdown
+- [ ] 1.1 [backend] Crear DTO `CreateOrderDto` con validadores class-validator
+```
+
+### 2. Las tareas se agrupan por área o bounded context
+
+Organizar en secciones `##` que describen el área funcional o módulo. Las etiquetas de agente se asignan a cada tarea individual, no a la sección completa:
+
+```markdown
+## 1. Módulo de autenticación
+
+- [ ] 1.1 [architect] Confirmar contratos: interfaces `IAuthService`, `ITokenPayload`
+- [ ] 1.2 [backend] Crear `AuthModule` con imports de `JwtModule` y `UsersModule`
+- [ ] 1.3 [backend] Implementar `AuthService.login()` con validación de credenciales
+- [ ] 1.4 [backend] Implementar `AuthService.refreshToken()` con rotación de token
+- [ ] 1.5 [backend] Crear `AuthController` con `POST /api/auth/login` y `POST /api/auth/refresh`
+- [ ] 1.6 [qa] Tests unitarios para `AuthService` (ruta feliz, token inválido, usuario no encontrado)
+- [ ] 1.7 [qa] Test de integración para `POST /api/auth/login` con supertest
+
+## 2. Frontend — integración
+
+- [ ] 2.1 [frontend] Añadir `login()` y `refreshToken()` en `src/lib/api.ts`
+- [ ] 2.2 [frontend] Crear componente `LoginForm` como Client Component con validación
+- [ ] 2.3 [qa] Verificar que el formulario muestra error en credenciales inválidas
+```
+
+### 3. Las tareas de `[qa]` van al final de cada sección
+
+Las tareas de testing se ubican después de la implementación de la que dependen, dentro de la misma sección:
+
+```markdown
+## 1. Backend — lógica de negocio
+
+- [ ] 1.1 [backend] Implementar `OrdersService.calculateFee()`
+- [ ] 1.2 [backend] Implementar `OrdersService.create()`
+- [ ] 1.3 [qa] Tests para `calculateFee()`: fee mínimo 2.5%, máximo 5%, valores límite
+- [ ] 1.4 [qa] Tests para `create()`: orden válida, importe negativo, usuario no encontrado
+```
+
+### 4. Las tareas de `[architect]` van al principio de su sección
+
+Si hay decisiones de diseño que deben resolverse antes de implementar, las tareas `[architect]` encabezan la sección:
+
+```markdown
+## 1. Diseño y contratos
+
+- [ ] 1.1 [architect] Definir el modelo de datos para `RefreshToken` en `design.md`
+- [ ] 1.2 [architect] Confirmar estrategia de rotación de tokens
+
+## 2. Backend — implementación
+
+- [ ] 2.1 [backend] Añadir modelo `RefreshToken` al schema Prisma
+- [ ] 2.2 [backend] Crear migración `add_refresh_token_table`
+- [ ] 2.3 [qa] Tests de migración y rollback
+```
+
+### 5. Cada tarea es atómica e implementable de forma autónoma
+
+Una tarea = un artefacto de código. Evitar tareas ambiguas o que mezclen responsabilidades:
+
+❌ **Incorrecto** — tarea demasiado amplia:
+```markdown
+- [ ] 1.1 [backend] Implementar toda la autenticación
+```
+
+✅ **Correcto** — tareas atómicas con prefijo numérico y etiqueta:
+```markdown
+- [ ] 1.1 [backend] Crear `JwtStrategy` en `apps/api/src/auth/jwt.strategy.ts`
+- [ ] 1.2 [backend] Crear guard `JwtAuthGuard` en `apps/api/src/auth/jwt-auth.guard.ts`
+- [ ] 1.3 [backend] Decorar endpoint `GET /api/admin/orders` con `@UseGuards(JwtAuthGuard)`
+```
+
+## Ejemplo Completo de `tasks.md` Bien Estructurado
+
+```markdown
+# Tasks: [Nombre de la Funcionalidad]
+
+## 1. Contratos y diseño
+
+- [ ] 1.1 [architect] Confirmar interfaces y endpoints en design.md antes de implementar
+
+## 2. Backend — schema y migración
+
+- [ ] 2.1 [backend] Añadir modelo `Foo` en `packages/prisma-db/schema.prisma`
+- [ ] 2.2 [backend] Crear migración `add_foo_table` con `pnpm prisma migrate dev`
+
+## 3. Backend — lógica de servicio
+
+- [ ] 3.1 [backend] Implementar `FooService.create(dto: CreateFooDto)` en `foo.service.ts`
+- [ ] 3.2 [backend] Implementar `FooService.findAll(params: FooQuery)` con filtros y paginación
+- [ ] 3.3 [qa] Tests unitarios para `FooService.create()`: caso válido, DTO inválido, conflicto unique
+- [ ] 3.4 [qa] Tests unitarios para `FooService.findAll()`: sin filtros, con filtros, resultado vacío
+
+## 4. Backend — controlador
+
+- [ ] 4.1 [backend] Crear `FooController` con `POST /api/foo` y `GET /api/foo`
+- [ ] 4.2 [backend] Crear `FooQuery` DTO con `@IsOptional()` en todos los campos de query
+- [ ] 4.3 [qa] Test de integración `POST /api/foo`: 201, 400 por DTO inválido
+- [ ] 4.4 [qa] Test de integración `GET /api/foo`: 200, paginación correcta
+
+## 5. Frontend — tipos y API client
+
+- [ ] 5.1 [frontend] Añadir interfaz `AdminFoo` en `apps/web-admin/src/types/api.ts`
+- [ ] 5.2 [frontend] Añadir `getFoos()` y `createFoo()` en `apps/web-admin/src/lib/api.ts`
+
+## 6. Frontend — componentes y página
+
+- [ ] 6.1 [frontend] Crear `apps/web-admin/src/app/foos/page.tsx` como Server Component con `force-dynamic`
+- [ ] 6.2 [frontend] Crear `apps/web-admin/src/components/foos/foos-table.tsx` como Client Component
+
+## 7. Verificación final
+
+- [ ] 7.1 [qa] Ejecutar `pnpm --filter api test:cov` con cobertura ≥90%
+- [ ] 7.2 [qa] Ejecutar `pnpm --filter web-admin build` sin errores TypeScript
+- [ ] 7.3 [qa] Verificar que no hay regresión en tests existentes
+```
+
+## Compatibilidad con `opsx-apply`
+
+El comando `opsx-apply` rastrea el progreso leyendo checkboxes `- [ ]` y `- [x]`. El formato con prefijo numérico y etiqueta es totalmente compatible:
+
+```markdown
+# Antes de completar
+- [ ] 1.1 [backend] Crear DTO `CreateFooDto`
+
+# Después de completar
+- [x] 1.1 [backend] Crear DTO `CreateFooDto`
+```
+
+La etiqueta es parte del texto de la tarea — no afecta al parsing de checkboxes.
+
+## Verificación al Generar o Modificar `tasks.md`
+
+Antes de finalizar un `tasks.md`, verificar:
+
+1. ¿Cada tarea tiene el formato `- [ ] N.M [etiqueta] descripción`?
+2. ¿Cada tarea tiene exactamente una etiqueta `[architect]`, `[backend]`, `[frontend]` o `[qa]`?
+3. ¿Las tareas están agrupadas en secciones `##` con numeración?
+4. ¿Las tareas de `[qa]` aparecen después de la implementación correspondiente?
+5. ¿Las tareas de `[architect]` (si hay) aparecen antes de la implementación que bloquean?
+6. ¿Cada tarea es lo suficientemente atómica para asignarse a un único desarrollador?
+7. ¿Cada tarea incluye referencias de archivo concretas cuando es posible?
+
+Si alguna condición no se cumple, corregir antes de entregar el documento.

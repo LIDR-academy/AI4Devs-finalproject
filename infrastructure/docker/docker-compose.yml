@@ -1,0 +1,24 @@
+# Adresles - Docker Compose para desarrollo local
+# Ver Adresles_Business.md Sección 4.7
+
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: AI4Devs-adresles-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: AI4Devs-adresles-dynamodb
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+
+volumes:
+  redis-data:

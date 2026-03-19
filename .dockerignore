@@ -1,0 +1,53 @@
+# Excluye del contexto Docker todo lo que no es necesario para el build.
+# Reduce el tamaño del contexto enviado al daemon y acelera los builds en CI/CD.
+
+# Dependencias instaladas localmente (se reinstalan dentro del contenedor)
+**/node_modules/
+
+# Outputs de build locales (se recompilan dentro del contenedor)
+**/dist/
+**/.next/
+**/build/
+
+# Outputs de Prisma generados localmente (se regeneran en el build)
+packages/prisma-db/generated/
+
+# Cobertura y reportes de tests
+**/coverage/
+**/*.lcov
+
+# Archivos de entorno con secrets reales
+.env
+.env.local
+.env.prod
+.env.dev
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# CI/CD y herramientas de desarrollo
+.github/
+.turbo/
+.cursor/
+.claude/
+
+# Logs
+*.log
+logs/
+
+# Documentación que no afecta al build
+*.md
+memory-bank/
+openspec/
+docs/

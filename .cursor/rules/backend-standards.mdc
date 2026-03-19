@@ -1,0 +1,1404 @@
+---
+description: Estándares de desarrollo backend, mejores prácticas y convenciones para Adresles (SaaS B2B2C). Stack real: NestJS 10 (API) + Node.js puro (Worker BullMQ) + Prisma 5.22 (packages/prisma-db) + PostgreSQL + DynamoDB + Redis + OpenAI gpt-4o-mini. Arquitectura modular plana (sin capas DDD explícitas en MVP). Incluye patrones de validación, SSE, BullMQ, testing y deployment.
+globs: ["apps/api/src/**/*.ts", "apps/api/jest.config.js", "apps/api/tsconfig.json", "apps/api/package.json", "apps/worker/src/**/*.ts", "apps/worker/jest.config.js", "apps/worker/tsconfig.json", "apps/worker/package.json", "packages/prisma-db/**/*.{prisma,ts}", "packages/shared-types/src/**/*.ts"]
+alwaysApply: true
+---
+
+# Estándares y Mejores Prácticas del Proyecto Backend
+
+## Tabla de Contenidos
+
+- [Visión General](#visión-general)
+- [Stack Tecnológico](#stack-tecnológico)
+  - [Tecnologías Centrales](#tecnologías-centrales)
+  - [Base de Datos y ORM](#base-de-datos-y-orm)
+  - [Framework de Pruebas](#framework-de-pruebas)
+  - [Herramientas de Desarrollo](#herramientas-de-desarrollo)
+- [Visión General de Arquitectura](#visión-general-de-arquitectura)
+  - [Diseño Dirigido por el Dominio (DDD)](#diseño-dirigido-por-el-dominio-ddd)
+  - [Arquitectura en Capas](#arquitectura-en-capas)
+  - [Estructura del Proyecto](#estructura-del-proyecto)
+- [Principios de Diseño Dirigido por el Dominio](#principios-de-diseño-dirigido-por-el-dominio)
+  - [Entidades](#entidades)
+  - [Objetos de Valor](#objetos-de-valor)
+  - [Agregados](#agregados)
+  - [Repositorios](#repositorios)
+  - [Servicios de Dominio](#servicios-de-dominio)
+  - [Recomendaciones Adicionales](#recomendaciones-adicionales)
+- [Principios SOLID y DRY](#principios-solid-y-dry)
+  - [Principio de Responsabilidad Única (SRP)](#principio-de-responsabilidad-única-srp)
+  - [Principio Abierto/Cerrado (OCP)](#principio-abiertocerrado-ocp)
+  - [Principio de Sustitución de Liskov (LSP)](#principio-de-sustitución-de-liskov-lsp)
+  - [Principio de Segregación de Interfaces (ISP)](#principio-de-segregación-de-interfaces-isp)
+  - [Principio de Inversión de Dependencias (DIP)](#principio-de-inversión-de-dependencias-dip)
+  - [DRY (No Te Repitas)](#dry-no-te-repitas)
+- [Estándares de Codificación](#estándares-de-codificación)
+  - [Lenguaje y Convenciones de Nomenclatura](#lenguaje-y-convenciones-de-nomenclatura)
+  - [Uso de TypeScript](#uso-de-typescript)
+  - [Manejo de Errores](#manejo-de-errores)
+  - [Patrones de Validación](#patrones-de-validación)
+  - [Estándares de Logging](#estándares-de-logging)
+- [Estándares de Diseño de API](#estándares-de-diseño-de-api)
+  - [Endpoints REST](#endpoints-rest)
+  - [Patrones de Petición/Respuesta](#patrones-de-peticiónrespuesta)
+  - [Formato de Respuesta de Error](#formato-de-respuesta-de-error)
+  - [Configuración de CORS](#configuración-de-cors)
+- [Patrones de Base de Datos](#patrones-de-base-de-datos)
+  - [Esquema Prisma](#esquema-prisma)
+  - [Migraciones](#migraciones)
+  - [Patrón Repositorio](#patrón-repositorio)
+- [Estándares de Pruebas](#estándares-de-pruebas)
+  - [Pruebas Unitarias](#pruebas-unitarias)
+  - [Pruebas de Integración](#pruebas-de-integración)
+  - [Requisitos de Cobertura de Pruebas](#requisitos-de-cobertura-de-pruebas)
+  - [Estándares de Mocking](#estándares-de-mocking)
+- [Mejores Prácticas de Rendimiento](#mejores-prácticas-de-rendimiento)
+  - [Optimización de Consultas de Base de Datos](#optimización-de-consultas-de-base-de-datos)
+  - [Patrones Async/Await](#patrones-asyncawait)
+  - [Rendimiento del Manejo de Errores](#rendimiento-del-manejo-de-errores)
+- [Mejores Prácticas de Seguridad](#mejores-prácticas-de-seguridad)
+  - [Validación de Entrada](#validación-de-entrada)
+  - [Variables de Entorno](#variables-de-entorno)
+  - [Inyección de Dependencias](#inyección-de-dependencias)
+- [Flujo de Trabajo de Desarrollo](#flujo-de-trabajo-de-desarrollo)
+  - [Flujo de Trabajo de Git](#flujo-de-trabajo-de-git)
+  - [Scripts de Desarrollo](#scripts-de-desarrollo)
+  - [Calidad de Código](#calidad-de-código)
+- [Deployment en Servidor Dedicado](#deployment-en-servidor-dedicado)
+  - [Containerización](#containerización)
+  - [Orquestación con Docker Compose](#orquestación-con-docker-compose)
+  - [Framework de Deployment](#framework-de-deployment)
+
+---
+
+## Visión General
+
+Este documento describe las mejores prácticas, convenciones y estándares del backend de Adresles. El proyecto es un monorepo Turborepo/pnpm con dos apps backend y dos packages compartidos.
+
+## Stack Tecnológico
+
+### Apps Backend
+
+| App | Runtime | Propósito |
+|-----|---------|-----------|
+| `apps/api/` | NestJS 10 + Express | HTTP endpoints + SSE (puerto 3000) |
+| `apps/worker/` | **Node.js puro** (sin NestJS) | BullMQ Worker — procesamiento asíncrono IA |
+
+> **Importante**: El Worker NO usa NestJS. Es un proceso Node.js que instancia `Worker` de BullMQ directamente, sin inyección de dependencias ni decoradores.
+
+### Tecnologías Centrales
+
+| Tecnología | Versión | Uso |
+|-----------|---------|-----|
+| **Node.js** | 20 LTS | Runtime |
+| **TypeScript** | 5.x strict | Lenguaje principal |
+| **NestJS** | 10.x | Framework API (solo `apps/api/`) |
+| **Prisma** | 5.22.0 (pinned) | ORM — desde `packages/prisma-db/` |
+| **AWS SDK** | v3.x | Cliente DynamoDB |
+| **BullMQ** | 5.x | Colas de trabajos asíncronos |
+| **ioredis** | 5.x | Cliente Redis (colas + SSE pub/sub) |
+| **RxJS** | 7.x | Observable para SSE en la API |
+| **class-validator** | 0.14.x | Validación de DTOs |
+| **class-transformer** | 0.5.x | Transformación de payloads |
+
+### Packages Compartidos
+
+| Package | Nombre npm | Contenido |
+|---------|-----------|-----------|
+| `packages/prisma-db/` | `@adresles/prisma-db` | Schema Prisma 5.22, PrismaClient generado, migrations, seed |
+| `packages/shared-types/` | `@adresles/shared-types` | Interfaces de colas: `ProcessConversationJobData`, `ProcessResponseJobData`, `MockOrderContext` |
+
+### Base de Datos y Persistencia
+
+- **PostgreSQL 15**: Datos relacionales (17 modelos Prisma, 14 enums). En desarrollo: Docker Compose. En producción: Supabase.
+- **DynamoDB**: Mensajes de conversaciones (alta volumetría). PK: `conversation_id`, SK: `timestamp`, TTL 90 días. En desarrollo: `amazon/dynamodb-local` vía Docker.
+- **Redis 7**: Cache + colas BullMQ + SSE pub/sub. En desarrollo: Docker Compose.
+
+### Servicios Externos
+
+- **OpenAI API**: Motor conversacional — modelo **`gpt-4o-mini`** (ver [ADR-004](../../memory-bank/architecture/004-openai-gpt4.md))
+- **Google Maps API**: Validación y normalización de direcciones (en el Worker)
+
+### Framework de Pruebas
+- **Jest 29**: Framework de pruebas con soporte TypeScript (via `ts-jest`)
+- **@nestjs/testing**: Módulo de pruebas de NestJS para tests unitarios e integración
+- **supertest**: Pruebas HTTP de integración para controladores
+- **Umbral de Cobertura**: 90% para ramas, funciones, líneas y sentencias
+- **Ubicación de Pruebas**: Junto al código fuente, con el patrón `*.spec.ts` (ej. `orders.service.spec.ts`)
+
+### Herramientas de Desarrollo
+- **ESLint v9**: Linting con formato de configuración plana (`eslint.config.js`)
+- **@typescript-eslint v8**: Plugin y parser para TypeScript
+- **pnpm 9 + Turborepo 2.3**: Gestor de monorepo
+
+## Visión General de Arquitectura
+
+### Diseño Dirigido por el Dominio (DDD)
+
+El Diseño Dirigido por el Dominio es una metodología que se enfoca en modelar software según la lógica de negocio y el conocimiento del dominio. Al centrar el desarrollo en una comprensión profunda del dominio, DDD facilita la creación de sistemas complejos.
+
+**Beneficios:**
+- **Comunicación Mejorada**: Promueve un lenguaje común entre desarrolladores y expertos del dominio, mejorando la comunicación y reduciendo errores de interpretación.
+- **Modelos de Dominio Claros**: Ayuda a construir modelos que reflejan con precisión las reglas y procesos de negocio.
+- **Alta Mantenibilidad**: Al dividir el sistema en subdominios, facilita el mantenimiento y la evolución del software.
+
+### Arquitectura en Capas
+
+El MVP del backend usa una arquitectura **modular plana** en NestJS. Los módulos no implementan subcarpetas `domain/`, `application/`, `infrastructure/` en el MVP — la estructura es directa: Controller → Service → PrismaService/DynamoDB.
+
+**Flujo estándar en la API**:
+```
+HTTP Request → Controller (@Get/@Post) → Service (@Injectable) → PrismaService + DynamoDB
+```
+
+**Flujo del Worker** (procesamiento asíncrono de IA):
+```
+BullMQ Job → conversation.processor.ts → address.service.ts (Google Maps)
+                                        → dynamodb.service.ts (mensajes)
+                                        → OpenAI gpt-4o-mini
+                                        → redis-publisher.ts (SSE pub/sub)
+```
+
+> **Nota sobre DDD**: Los principios DDD (entidades, value objects, repositorios, bounded contexts) son la dirección arquitectural del proyecto, pero en el MVP se aplican de forma simplificada. Se documentan los principios para guiar el crecimiento del proyecto, pero la estructura de carpetas actual no implementa las subcapas formales. Ver [ADR-001](../../memory-bank/architecture/001-monolith-modular.md).
+
+### Estructura del Proyecto
+
+```
+# Monorepo (pnpm 9 + Turborepo 2.3)
+├── apps/
+│   ├── api/                      # NestJS 10 — Backend modular (HTTP + SSE)
+│   ├── worker/                   # Node.js puro — BullMQ Worker (IA)
+│   └── web-admin/                # Next.js 16 — Dashboard Admin
+│
+├── packages/
+│   ├── prisma-db/                # @adresles/prisma-db — Schema + Client + seed
+│   └── shared-types/             # @adresles/shared-types — Interfaces de colas
+│
+├── infrastructure/
+│   └── docker/
+│       └── docker-compose.yml    # Redis 7, DynamoDB-local, PostgreSQL 15
+│
+├── package.json                  # Root (monorepo)
+├── pnpm-workspace.yaml
+└── turbo.json
+
+# apps/api/src/ — Backend NestJS
+├── prisma/
+│   ├── prisma.module.ts          # PrismaModule (global)
+│   └── prisma.service.ts         # PrismaService extiende PrismaClient de @adresles/prisma-db
+│
+├── queue/
+│   ├── queue.module.ts
+│   └── queue.service.ts          # addProcessConversationJob(), addProcessResponseJob()
+│
+├── mock/                         # MockModule — simulación de pedidos eCommerce (MVP)
+│   ├── mock.module.ts            # imports: StoresModule, UsersModule, OrdersModule,
+│   │                             #          ConversationsModule, EcommerceSyncModule
+│   ├── mock-orders.controller.ts
+│   ├── mock-orders.service.ts
+│   ├── mock-conversations.controller.ts  # @Sse endpoint (tiempo real)
+│   ├── mock-conversations.service.ts
+│   ├── mock-sse.service.ts               # Redis psubscribe + RxJS Subject
+│   └── dto/
+│       ├── create-mock-order.dto.ts
+│       └── mock-conversation-reply.dto.ts
+│
+├── admin/                        # AdminModule — Dashboard Admin endpoints
+│   ├── admin.module.ts           # imports: PrismaModule, MockModule
+│   ├── admin.controller.ts       # GET /admin/orders, /users, /stores,
+│   │                             #     /conversations/:id/messages
+│   └── admin.service.ts
+│
+├── conversations/
+│   ├── conversations.module.ts
+│   └── conversations.service.ts
+│
+├── orders/
+│   ├── orders.module.ts
+│   └── orders.service.ts
+│
+├── users/
+│   ├── users.module.ts
+│   └── users.service.ts
+│
+├── stores/
+│   ├── stores.module.ts
+│   └── stores.service.ts
+│
+├── ecommerce-sync/
+│   ├── ecommerce-sync.module.ts
+│   └── ecommerce-sync.service.ts
+│
+├── shared/
+│   └── fee.utils.ts              # Cálculo del fee variable (2.5%-5%)
+│
+├── app.module.ts                 # AppModule: imports [ConfigModule, PrismaModule,
+│                                 #   QueueModule, MockModule, AdminModule]
+└── main.ts                       # Bootstrap: ValidationPipe global, CORS, prefix 'api', puerto 3000
+
+# apps/worker/src/ — Node.js PURO (sin NestJS)
+├── processors/
+│   └── conversation.processor.ts # Máquina de estados — 9 fases del journey
+├── services/
+│   └── address.service.ts        # Google Maps + extractAddressFromConversation +
+│                                 # interpretUserIntent + buildPendingAddress
+├── dynamodb/
+│   └── dynamodb.service.ts       # saveMessage, getMessages, saveConversationState,
+│                                 # getConversationState
+├── redis-publisher.ts            # publishConversationUpdate(), publishConversationComplete()
+└── main.ts                       # 2 Workers BullMQ (process-conversation, process-response)
+                                  # concurrency: 2 cada uno
+
+# packages/prisma-db/
+├── schema.prisma                 # Fuente única: 17 modelos, 14 enums
+├── seed.ts                       # Datos mock iniciales
+├── migrations/
+│   ├── migration_lock.toml
+│   ├── 20260218000000_init/
+│   │   └── migration.sql
+│   ├── 20260219192221_revision_incial/
+│   │   └── migration.sql
+│   └── 20260221000000_init/
+│       └── migration.sql
+└── generated/                    # PrismaClient generado (index.js, index.d.ts, runtime/)
+```
+
+## Principios de Diseño Dirigido por el Dominio (DDD)
+
+### Entidades
+
+Las entidades son objetos con una identidad distinta que persiste a lo largo del tiempo.
+
+**Antes:**
+```typescript
+// Anteriormente, los datos de candidato podrían haberse manejado como un simple objeto JSON sin métodos.
+const candidate = {
+    id: 1,
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john.doe@example.com'
+};
+```
+
+**Después:**
+```typescript
+export class Candidate {
+    id?: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    
+    // Constructor y métodos que encapsulan lógica de negocio
+    constructor(data: any) {
+        this.id = data.id;
+        this.firstName = data.firstName;
+        this.lastName = data.lastName;
+        this.email = data.email;
+    }
+}
+```
+
+**Explicación**: `Candidate` es una entidad porque tiene un identificador único (`id`) que lo distingue de otros candidatos, incluso si otras propiedades son idénticas.
+
+**Mejor Práctica**: Las entidades deben encapsular lógica de negocio relacionada con su concepto de dominio y mantener la consistencia de su estado interno.
+
+### Objetos de Valor
+
+Los Objetos de Valor describen aspectos del dominio sin identidad conceptual. Están definidos por sus atributos en lugar de un identificador.
+
+**Antes:**
+```typescript
+// Manejo de información de educación como un objeto simple
+const education = {
+    institution: 'University',
+    degree: 'Bachelor',
+    startDate: '2010-01-01',
+    endDate: '2014-01-01'
+};
+```
+
+**Después:**
+```typescript
+export class Education {
+    institution: string;
+    title: string;
+    startDate: Date;
+    endDate?: Date;
+    
+    constructor(data: any) {
+        this.institution = data.institution;
+        this.title = data.title;
+        this.startDate = new Date(data.startDate);
+        this.endDate = data.endDate ? new Date(data.endDate) : undefined;
+    }
+}
+```
+
+**Explicación**: `Education` puede considerarse un Objeto de Valor en algunos contextos, ya que describe la educación de un candidato sin necesitar un identificador único. Sin embargo, en el modelo actual, se le ha asignado un id, lo que podría contradecir la definición pura de un Objeto de Valor en DDD.
+
+**Recomendación**: Clases como `Education` y `WorkExperience` actualmente tienen identificadores únicos, clasificándolas como entidades. En muchos casos, estas podrían tratarse como Objetos de Valor dentro del contexto de un agregado `Candidate`. Considere eliminar identificadores únicos de clases que deberían ser Objetos de Valor, o incorporarlas como parte del documento Candidate si usa una base de datos NoSQL.
+
+### Agregados
+
+Los agregados son grupos de objetos que deben tratarse como una unidad. Tienen una entidad raíz que hace cumplir invariantes y límites de consistencia.
+
+**Antes:**
+```typescript
+// Datos de candidato y educación manejados por separado
+const candidate = { id: 1, name: 'John Doe' };
+const educations = [{ candidateId: 1, institution: 'University' }];
+```
+
+**Después:**
+```typescript
+export class Candidate {
+    id?: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    educations: Education[];
+    
+    constructor(data: any) {
+        this.id = data.id;
+        this.firstName = data.firstName;
+        this.lastName = data.lastName;
+        this.email = data.email;
+        this.educations = data.educations?.map(edu => new Education(edu)) || [];
+    }
+}
+```
+
+**Explicación**: `Candidate` actúa como raíz de agregado que contiene `Education`, `WorkExperience`, `Resume` y `Application`. `Candidate` es la raíz del agregado, ya que las otras entidades solo tienen sentido en relación con un candidato.
+
+**Recomendación**: Los agregados deben diseñarse cuidadosamente para asegurar que todas las operaciones dentro del límite del agregado mantengan consistencia. Las operaciones que afectan `Education` y `WorkExperience` deben manejarse a través de la raíz del agregado, `Candidate`, para mantener integridad y encapsulación.
+
+### Repositorios
+
+Los repositorios proporcionan interfaces para acceder a agregados y entidades, encapsulando lógica de acceso a datos.
+
+**Antes:**
+```typescript
+// Acceso directo a base de datos sin abstracción
+function getCandidateById(id: number) {
+    return database.query('SELECT * FROM candidates WHERE id = ?', [id]);
+}
+```
+
+**Después:**
+```typescript
+export interface ICandidateRepository {
+    findById(id: number): Promise<Candidate | null>;
+    save(candidate: Candidate): Promise<Candidate>;
+    findAll(): Promise<Candidate[]>;
+}
+
+export class CandidateRepository implements ICandidateRepository {
+    async findById(id: number): Promise<Candidate | null> {
+        const data = await prisma.candidate.findUnique({ where: { id } });
+        return data ? new Candidate(data) : null;
+    }
+    
+    async save(candidate: Candidate): Promise<Candidate> {
+        // Implementación con Prisma
+    }
+}
+```
+
+**Explicación**: `CandidateRepository` proporciona una interfaz clara para acceder a datos de candidato, encapsulando lógica de acceso a base de datos.
+
+**Recomendación**: 
+- Desarrollar interfaces de repositorio completas para cada entidad y agregado, asegurando que todas las interacciones de base de datos para esas entidades pasen por el repositorio
+- Implementar métodos de repositorio que manejen colecciones de entidades, como listas de Candidates, que puedan filtrarse o modificarse en masa
+- Usar inyección de dependencias para inyectar el cliente Prisma en repositorios
+
+### Servicios de Dominio
+
+Los Servicios de Dominio contienen lógica de negocio que no pertenece naturalmente a una entidad u objeto de valor.
+
+**Antes:**
+```typescript
+// Funciones sueltas para manejar lógica de negocio
+function calculateAge(candidate: any): number {
+    const today = new Date();
+    const birthDate = new Date(candidate.birthDate);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+}
+```
+
+**Después:**
+```typescript
+export class CandidateService {
+    static calculateAge(candidate: Candidate): number {
+        const today = new Date();
+        const birthDate = new Date(candidate.birthDate);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+}
+```
+
+**Explicación**: `CandidateService` encapsula lógica de negocio relacionada con candidatos, como calcular edad, proporcionando un punto centralizado y coherente para manejar estas operaciones.
+
+### Recomendaciones Adicionales
+
+**Uso de Factories**
+
+Las factories son útiles en DDD para encapsular la lógica de creación de objetos complejos, asegurando que todos los objetos creados cumplan con las reglas del dominio desde el momento de la creación.
+
+**Recomendación**: Implementar factories para la creación de entidades y agregados, especialmente aquellos que son complejos y requieren configuración inicial específica que cumpla con reglas de negocio.
+
+**Mejora en el Modelado de Relaciones**
+
+Las relaciones entre entidades y agregados deben ser claras y consistentes con las reglas de negocio.
+
+**Recomendación**: Revisar y posiblemente rediseñar relaciones entre entidades para asegurar que reflejen con precisión las necesidades y reglas del dominio. Esto puede incluir eliminar relaciones innecesarias o agregar nuevas relaciones que faciliten operaciones de negocio.
+
+**Integración de Eventos de Dominio**
+
+Los eventos de dominio son una parte importante de DDD y pueden usarse para manejar efectos secundarios de operaciones de dominio de manera desacoplada.
+
+**Recomendación**: Implementar un sistema de eventos de dominio que permita a entidades y agregados publicar eventos que otros componentes del sistema puedan manejar sin estar estrechamente acoplados a las entidades que los generan.
+
+## Principios SOLID y DRY
+
+### Principios SOLID
+
+Los principios SOLID son cinco principios de diseño orientado a objetos que ayudan a crear sistemas más comprensibles, flexibles y mantenibles.
+
+#### Principio de Responsabilidad Única (SRP)
+
+Cada clase debe tener una única responsabilidad o razón para cambiar.
+
+**Antes:**
+```typescript
+// Un método que maneja múltiples responsabilidades: validación y almacenamiento de datos
+function processCandidate(candidate: any) {
+    if (!candidate.email.includes('@')) {
+        console.error('Invalid email');
+        return;
+    }
+    database.save(candidate);
+    console.log('Candidate saved');
+}
+```
+
+**Después:**
+```typescript
+export class Candidate {
+    // La clase ahora solo maneja lógica relacionada con el candidato
+    validateEmail(): void {
+        if (!this.email.includes('@')) {
+            throw new Error('Invalid email');
+        }
+    }
+}
+
+export class CandidateRepository {
+    async save(candidate: Candidate): Promise<Candidate> {
+        candidate.validateEmail();
+        return await prisma.candidate.create({ data: candidate });
+    }
+}
+```
+
+**Explicación**: La clase `Candidate` ahora tiene métodos separados para validación, mientras que el repositorio maneja la persistencia de datos, cumpliendo con el principio de responsabilidad única.
+
+**Observación**: La clase `Candidate` en `backend/src/domain/models/Candidate.ts` maneja tanto lógica de negocio como lógica de acceso a datos.
+
+**Recomendación**: Separar la lógica de acceso a datos en una capa de repositorio para adherirse más estrictamente a SRP.
+
+#### Principio Abierto/Cerrado (OCP)
+
+Las entidades de software deben estar abiertas para extensión pero cerradas para modificación.
+
+**Antes:**
+```typescript
+// Modificación directa de la clase para agregar funcionalidad
+class Candidate {
+    saveToDatabase() {
+        // código para guardar en base de datos
+    }
+    // Para agregar nueva funcionalidad, modificamos la clase directamente
+    sendEmail() {
+        // código para enviar un email
+    }
+}
+```
+
+**Después:**
+```typescript
+export class Candidate {
+    saveToDatabase() {
+        // código para guardar en base de datos
+    }
+}
+
+// Extender funcionalidad sin modificar la clase existente
+class CandidateWithEmail extends Candidate {
+    sendEmail() {
+        // código para enviar un email
+    }
+}
+```
+
+**Explicación**: La funcionalidad de envío de email se extiende en una subclase, manteniendo la clase original cerrada para modificaciones pero abierta para extensiones.
+
+**Observación**: La función `addCandidate` en `backend/src/application/services/candidateService.ts` instancia directamente las clases `Candidate`, `Education`, `WorkExperience` y `Resume`.
+
+**Recomendación**: Usar métodos factory para crear instancias, permitiendo extensión más fácil sin modificar el código existente.
+
+#### Principio de Sustitución de Liskov (LSP)
+
+Los objetos de una clase derivada deben ser reemplazables con objetos de la clase base sin alterar la funcionalidad del programa.
+
+**Antes:**
+```typescript
+// Subclase que no puede reemplazar completamente su clase base
+class TemporaryCandidate extends Candidate {
+    saveToDatabase() {
+        throw new Error("Temporary candidates can't be saved.");
+    }
+}
+```
+
+**Después:**
+```typescript
+class TemporaryCandidate extends Candidate {
+    saveToDatabase() {
+        // Implementación apropiada que permite manejo temporal
+        console.log("Handled temporarily");
+        // Alternativa: Guardar en almacenamiento temporal
+    }
+}
+```
+
+**Explicación**: `TemporaryCandidate` ahora proporciona una implementación apropiada que respeta el contrato de la clase base, permitiendo sustitución sin errores.
+
+**Observación**: Actualmente, no hay herencia en uso donde LSP pueda ser violado. El proyecto usa composición sobre herencia, lo que generalmente soporta LSP.
+
+**Recomendación**: Continuar usando composición para evitar violaciones de LSP y asegurar que cualquier estructura de herencia futura permita que las clases derivadas sustituyan sus clases base sin alterar cómo funciona el programa.
+
+#### Principio de Segregación de Interfaces (ISP)
+
+Muchas interfaces específicas son mejores que una única interfaz general.
+
+**Antes:**
+```typescript
+// Una interfaz grande que los clientes pequeños no usan completamente
+interface CandidateOperations {
+    save(): void;
+    validate(): void;
+    sendEmail(): void;
+    generateReport(): void;
+}
+```
+
+**Después:**
+```typescript
+interface SaveOperation {
+    save(): void;
+}
+
+interface EmailOperations {
+    sendEmail(): void;
+}
+
+interface ReportOperations {
+    generateReport(): void;
+}
+
+class Candidate implements SaveOperation, EmailOperations {
+    save() {
+        // implementación
+    }
+    
+    sendEmail() {
+        // implementación
+    }
+}
+```
+
+**Explicación**: Las interfaces están segregadas en operaciones más pequeñas, permitiendo que las clases implementen solo las interfaces que necesitan.
+
+**Observación**: El proyecto actualmente no usa interfaces de TypeScript extensivamente para hacer cumplir contratos para clases.
+
+**Recomendación**: Definir interfaces más granulares para clases de servicio para asegurar que solo implementen los métodos que necesitan.
+
+#### Principio de Inversión de Dependencias (DIP)
+
+Los módulos de alto nivel no deben depender de módulos de bajo nivel; ambos deben depender de abstracciones.
+
+**Antes:**
+```typescript
+// Dependencia directa en una implementación concreta
+class Candidate {
+    private database = new PrismaClient();
+    
+    save() {
+        this.database.candidate.create({ data: this });
+    }
+}
+```
+
+**Después:**
+```typescript
+interface Database {
+    save(candidate: Candidate): Promise<Candidate>;
+}
+
+class Candidate {
+    private database: Database;
+    
+    constructor(database: Database) {
+        this.database = database;
+    }
+    
+    async save(): Promise<Candidate> {
+        return await this.database.save(this);
+    }
+}
+```
+
+**Explicación**: `Candidate` ahora depende de una abstracción (Database), no de una implementación concreta, lo que facilita flexibilidad y pruebas de código.
+
+**Observación**: Clases como `Candidate` dependen directamente del `PrismaClient` concreto para operaciones de base de datos.
+
+**Recomendación**: Usar inyección de dependencias para invertir la dependencia, confiando en abstracciones en lugar de implementaciones concretas. Inyectar `PrismaClient` a través del constructor o un método setter.
+
+### DRY (No Te Repitas)
+
+El principio DRY se enfoca en reducir duplicación en el código. Cada pieza de conocimiento debe tener una representación única, inequívoca y autoritativa dentro de un sistema.
+
+**Antes:**
+```typescript
+// Código repetido para validar emails en múltiples funciones
+function saveCandidate(candidate: Candidate) {
+    if (!candidate.email.includes('@')) {
+        throw new Error('Invalid email');
+    }
+    // lógica de guardado
+}
+
+function updateCandidate(candidate: Candidate) {
+    if (!candidate.email.includes('@')) {
+        throw new Error('Invalid email');
+    }
+    // lógica de actualización
+}
+```
+
+**Después:**
+```typescript
+export class Candidate {
+    validateEmail(): void {
+        if (!this.email.includes('@')) {
+            throw new Error('Invalid email');
+        }
+    }
+    
+    async save(): Promise<Candidate> {
+        this.validateEmail();
+        // lógica de guardado
+    }
+    
+    async update(): Promise<Candidate> {
+        this.validateEmail();
+        // lógica de actualización
+    }
+}
+```
+
+**Explicación**: La validación de email está centralizada en un único método `validateEmail`, eliminando duplicación de código en las funciones de guardado y actualización.
+
+**Observación**: Los métodos para guardar entidades como `Candidate`, `Education`, `WorkExperience` y `Resume` contienen lógica repetitiva para manejar operaciones de base de datos.
+
+**Recomendación**: Abstraer la lógica común de operaciones de base de datos en una función o clase reutilizable.
+
+## Estándares de Codificación
+
+### Convenciones de Nomenclatura
+
+- **Nomenclatura de Variables**: Usar camelCase para variables y funciones (ej., `candidateId`, `findCandidateById`)
+- **Nomenclatura de Clases**: Usar PascalCase para clases e interfaces (ej., `Candidate`, `CandidateRepository`)
+- **Nomenclatura de Constantes**: Usar UPPER_SNAKE_CASE para constantes (ej., `MAX_CANDIDATES_PER_PAGE`)
+- **Nomenclatura de Tipos**: Usar PascalCase para tipos e interfaces (ej., `CandidateData`, `ICandidateRepository`)
+- **Nomenclatura de Archivos**: Usar camelCase para nombres de archivos (ej., `candidateService.ts`, `candidateController.ts`)
+
+**Ejemplos:**
+
+```typescript
+// Bien: Comentarios en español
+// Bien: Código y nombres de variables en inglés
+export class CandidateRepository {
+    async findById(candidateId: number): Promise<Candidate | null> {
+        // Find candidate by ID in the database
+        const candidate = await this.prisma.candidate.findUnique({
+            where: { id: candidateId }
+        });
+        return candidate ? new Candidate(candidate) : null;
+    }
+}
+
+// Evitar: Comentarios en otro idioma diferente al español
+// Evitar: Nombres de variables o código en otro idioma diferente al inglés
+export class RepositorioCandidato {
+    async buscarPorId(idCandidato: number): Promise<Candidato | null> {
+        // BFind candidato by ID in the database
+        const candidato = await this.prisma.candidate.findUnique({
+            where: { id: idCandidato }
+        });
+        return candidato ? new Candidato(candidato) : null;
+    }
+}
+```
+
+**Mensajes de Error y Logs:**
+
+```typescript
+// Bien: Mensajes de error en español
+throw new NotFoundError('Candidato no encontrado con el ID proporcionado');
+logger.error('Error al crear candidato', { error: error.message });
+
+// Evitar: Mensajes en otro idioma
+throw new NotFoundError('Candidate not found with the provided ID');
+logger.error('Failed to create candidate', { error: error.message });
+```
+
+### Uso de TypeScript
+
+- **Modo Estricto**: Siempre habilitar modo estricto en `tsconfig.json`
+- **Definiciones de Tipos**: Usar tipos explícitos para parámetros de función y valores de retorno
+- **Interfaces**: Definir interfaces para estructuras de datos complejas
+- **Evitar `any`**: Usar `unknown` o tipos específicos en lugar de `any` cuando sea posible
+
+```typescript
+// Bien: Tipos explícitos
+async function findCandidateById(id: number): Promise<Candidate | null> {
+    // implementación
+}
+
+// Evitar: Usar any
+function processData(data: any): any {
+    // implementación
+}
+```
+
+### Manejo de Errores
+
+- **Clases de Error Personalizadas**: Crear clases de error específicas del dominio
+- **Middleware de Error**: Usar middleware de error global para respuestas de error consistentes
+- **Mensajes de Error**: Proporcionar mensajes de error descriptivos para depuración
+
+```typescript
+export class NotFoundError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'NotFoundError';
+    }
+}
+
+// En controlador
+try {
+    const candidate = await candidateService.findById(id);
+    if (!candidate) {
+        throw new NotFoundError('Candidato no encontrado');
+    }
+    res.json(candidate);
+} catch (error) {
+    next(error);
+}
+```
+
+### Patrones de Validación
+
+- **Validación de Entrada**: Validar todas las entradas en la capa de aplicación
+- **Validar Antes de Procesar**: Siempre validar antes de ejecutar lógica de negocio
+
+#### ValidationPipe Global (NestJS) — Regla Crítica
+
+El servidor configura un `ValidationPipe` global en `main.ts` con las opciones más estrictas:
+
+```typescript
+// apps/api/src/main.ts
+app.useGlobalPipes(new ValidationPipe({
+  whitelist: true,            // Elimina propiedades sin decoradores
+  forbidNonWhitelisted: true, // Devuelve HTTP 400 si hay propiedades no decoradas
+  transform: true,            // Transforma query strings a tipos primitivos
+}));
+```
+
+**Consecuencia directa**: **TODA** clase usada como DTO (`@Body()`, `@Query()`, `@Param()`) MUST declarar sus propiedades con decoradores de `class-validator`. Una propiedad sin decorador es tratada como "no permitida" y la petición devuelve `400 Bad Request`.
+
+Esto aplica especialmente a **Query DTOs**, que suelen omitirse por error:
+
+```typescript
+// ❌ INCORRECTO — query params ?page=1&limit=50 devuelven 400
+class PaginationQuery {
+  page?: string;
+  limit?: string;
+}
+
+// ✅ CORRECTO — decoradores obligatorios en todas las propiedades
+import { IsOptional, IsString } from 'class-validator';
+
+class PaginationQuery {
+  @IsOptional()
+  @IsString()
+  page?: string;
+
+  @IsOptional()
+  @IsString()
+  limit?: string;
+}
+```
+
+**Regla nemotécnica**: Si una propiedad puede llegar en la petición HTTP, necesita al menos `@IsOptional()` o un decorador de tipo (`@IsString()`, `@IsNumber()`, etc.).
+
+Ver patrón completo en [`memory-bank/patterns/validation-patterns.md`](../../memory-bank/patterns/validation-patterns.md).
+
+### Estándares de Logging
+
+- **Usar Clase Logger**: Usar el logger centralizado de `src/infrastructure/logger.ts`
+- **Niveles de Log**: Usar niveles de log apropiados (info, error, warn, debug)
+- **Logging Estructurado**: Incluir contexto relevante en mensajes de log
+
+```typescript
+import { Logger } from '../infrastructure/logger';
+
+const logger = new Logger();
+
+logger.info('Candidato creado', { candidateId: candidate.id });
+logger.error('Fallo al crear candidato', { error: error.message });
+```
+
+## Estándares de Diseño de API
+
+### Endpoints REST
+
+- **Nomenclatura RESTful**: Usar convenciones RESTful para nomenclatura de endpoints
+- **Métodos HTTP**: Usar métodos HTTP apropiados (GET, POST, PUT, DELETE, PATCH)
+- **URLs Basadas en Recursos**: Las URLs deben representar recursos, no acciones
+
+```typescript
+GET    /candidates          // Listar candidatos
+GET    /candidates/:id      // Obtener candidato por ID
+POST   /candidates          // Crear nuevo candidato
+PUT    /candidates/:id      // Actualizar candidato
+DELETE /candidates/:id      // Eliminar candidato
+```
+
+### Patrones de Petición/Respuesta
+
+- **Formato JSON**: Usar JSON para cuerpos de petición y respuesta
+- **Estructura Consistente**: Mantener estructura de respuesta consistente en todos los endpoints
+- **Códigos de Estado**: Usar códigos de estado HTTP apropiados
+
+```typescript
+// Respuesta exitosa
+{
+    "success": true,
+    "data": { ... },
+    "message": "Operación completada con éxito"
+}
+
+// Respuesta de error
+{
+    "success": false,
+    "error": {
+        "message": "Descripción del error",
+        "code": "ERROR_CODE"
+    }
+}
+```
+
+### Formato de Respuesta de Error
+
+- **Formato Consistente**: Todos los errores deben seguir la misma estructura de respuesta
+- **Códigos de Error**: Usar códigos de error significativos para diferentes tipos de error
+- **Códigos de Estado HTTP**: Mapear errores a códigos de estado HTTP apropiados
+
+```typescript
+// 400 Bad Request
+{
+    "success": false,
+    "error": {
+        "message": "Fallo Validación",
+        "code": "VALIDATION_ERROR",
+        "details": [ ... ]
+    }
+}
+
+// 404 Not Found
+{
+    "success": false,
+    "error": {
+        "message": "Recurso no encontrado",
+        "code": "NOT_FOUND"
+    }
+}
+```
+
+### Configuración de CORS
+
+- **Habilitar CORS**: Configurar CORS para permitir origen del frontend
+- **Configuración Segura**: Solo permitir orígenes específicos en producción
+- **Credenciales**: Configurar manejo de credenciales apropiadamente
+
+```typescript
+import cors from 'cors';
+
+const corsOptions = {
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true
+};
+
+app.use(cors(corsOptions));
+```
+
+## Patrones de Base de Datos
+
+### Esquema Prisma
+
+- **Fuente Única de Verdad**: `prisma/schema.prisma` es la fuente única de verdad para la estructura de base de datos
+- **Relaciones**: Definir relaciones usando relaciones de Prisma
+- **Convenciones de Nomenclatura**: Usar convenciones de nomenclatura consistentes (camelCase para campos, PascalCase para modelos)
+
+### Migraciones
+
+- **Control de Versiones**: Todos los cambios de base de datos deben estar bajo control de versiones mediante migraciones
+- **Nomenclatura de Migraciones**: Usar nombres descriptivos para migraciones
+- **Revisar Migraciones**: Revisar archivos de migración antes de aplicar
+
+```bash
+# Crear migración
+npx prisma migrate dev --name descriptive_migration_name
+
+# Aplicar migraciones en producción
+npx prisma migrate deploy
+```
+
+### Patrón Repositorio
+
+- **Interfaces de Repositorio**: Definir interfaces de repositorio en la capa de dominio
+- **Implementación con Prisma**: Implementar repositorios usando Prisma en la capa de infraestructura
+- **Inyección de Dependencias**: Inyectar cliente Prisma en repositorios
+
+```typescript
+// Interfaz de capa de dominio
+export interface ICandidateRepository {
+    findById(id: number): Promise<Candidate | null>;
+    save(candidate: Candidate): Promise<Candidate>;
+}
+
+// Implementación de capa de infraestructura
+export class CandidateRepository implements ICandidateRepository {
+    constructor(private prisma: PrismaClient) {}
+    
+    async findById(id: number): Promise<Candidate | null> {
+        const data = await this.prisma.candidate.findUnique({ where: { id } });
+        return data ? new Candidate(data) : null;
+    }
+}
+```
+
+## Estándares de Pruebas
+
+El proyecto tiene requisitos estrictos para calidad de código y mantenibilidad. Estos son los estándares y mejores prácticas de pruebas unitarias que deben aplicarse.
+
+### Estructura de Archivos de Prueba
+- Usar el patrón de nomenclatura: `[componentName].spec.ts` (ej. `orders.service.spec.ts`, `mock-orders.controller.spec.ts`)
+- Colocar archivos de prueba junto al código fuente que prueban (no en directorio `test/` separado)
+- Usar Jest como framework de pruebas con soporte para TypeScript via `ts-jest`
+- Mantener umbral de cobertura de 90% para ramas, funciones, líneas y sentencias
+
+
+### Patrón de Organización de Pruebas
+Plantilla:
+```typescript
+describe('[ComponentName] - [methodName]', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('should_[expected_behavior]_when_[condition]', () => {
+    it('should [specific test case]', async () => {
+      // Arrange
+      // Act  
+      // Assert
+    });
+  });
+});
+```
+
+Ejemplo real:
+```typescript
+describe('CandidateService - findById', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should return candidate when found', async () => {
+        // Arrange
+        const candidateId = 1;
+        const mockCandidate = new Candidate({ id: 1, firstName: 'John' });
+        (CandidateRepository.findById as jest.Mock).mockResolvedValue(mockCandidate);
+
+        // Act
+        const result = await candidateService.findById(candidateId);
+
+        // Assert
+        expect(result).toEqual(mockCandidate);
+        expect(CandidateRepository.findById).toHaveBeenCalledWith(candidateId);
+    });
+});
+```
+
+
+
+### Convención de Nomenclatura de Casos de Prueba
+- Usar nomenclatura descriptiva, dirigida por comportamiento: `should_[expected_behavior]_when_[condition]`
+- Agrupar casos de prueba relacionados bajo bloques `describe` descriptivos
+- Usar snake_case para bloques describe y camelCase para pruebas individuales
+
+### Estructura de Prueba (Patrón AAA)
+Siempre seguir el patrón Arrange-Act-Assert:
+```typescript
+it('should update candidate stage successfully when valid data provided', async () => {
+  // Arrange - Configurar datos de prueba y mocks
+  const candidateId = 1;
+  const applicationId = 1;
+  const newInterviewStep = 2;
+  
+  // Act - Ejecutar la función bajo prueba
+  const result = await updateCandidateStage(candidateId, applicationId, newInterviewStep);
+  
+  // Assert - Verificar el comportamiento esperado
+  expect(result).toEqual(expectedResult);
+});
+```
+
+Patrón de aserción:
+- Usar matchers específicos: `toHaveBeenCalledWith()`, `toHaveBeenCalledTimes()`
+- Verificar tanto operaciones exitosas como condiciones de error
+- Verificar que los mocks fueron llamados con parámetros correctos
+- Afirmar sobre valores de retorno y efectos secundarios
+
+
+
+
+
+
+
+### Estándares de Mocking
+
+- Hacer mock de todas las dependencias externas (modelos, servicios, clientes de base de datos)
+- Hacer mock de capas de repositorio en pruebas de servicio
+- Hacer mock de capas de servicio en pruebas de controlador
+- Usar `jest.mock()` al inicio de archivos de prueba para mocking a nivel de módulo
+- Crear instancias mock con estructuras de datos realistas
+- Limpiar todos los mocks en `beforeEach()` para asegurar aislamiento de pruebas
+
+
+### Requisitos de Cobertura de Pruebas
+
+- **Cobertura de pruebas integral**: Incluir estas categorías de prueba para cada función:
+1. **Pruebas de Ruta Feliz**: Entradas válidas produciendo salidas esperadas
+2. **Pruebas de Manejo de Errores**: Entradas inválidas, datos faltantes, errores de base de datos
+3. **Casos Extremos**: Valores límite, entradas null/undefined, datos vacíos
+4. **Pruebas de Validación**: Validación de entrada, aplicación de reglas de negocio
+5. **Puntos de Integración**: Llamadas a servicios externos, operaciones de base de datos
+
+- **Umbral**: 90% para ramas, funciones, líneas y sentencias
+- **Reportes de Cobertura**: Generar reportes de cobertura con `pnpm test:cov`
+- **Archivos de Cobertura**: Reportes de cobertura en directorio `coverage/` agregando la fecha, como YYYYMMDD-backend-coverage.md
+
+
+### Prueba de Errores
+- Probar tanto errores esperados como inesperados
+- Verificar que los mensajes de error sean descriptivos y útiles
+- Probar propagación de errores a través de capas de servicio
+- Asegurar códigos de estado HTTP apropiados en pruebas de controlador
+
+### Especificaciones de Pruebas de Controlador
+- Hacer mock completo de la capa de servicio
+- Probar manejo de petición/respuesta HTTP
+- Verificar parsing y validación de parámetros
+- Probar formato de respuesta de error
+- Usar mocks realistas de Request/Response de Express
+
+### Especificaciones de Pruebas de Servicio
+- Hacer mock de modelos de dominio y repositorios
+- Probar lógica de negocio en aislamiento
+- Verificar transformación y validación de datos
+- Probar manejo de errores y casos extremos
+- Hacer mock de dependencias externas (Prisma, validadores)
+
+### Pruebas de Base de Datos
+- Hacer mock del cliente Prisma y todas las operaciones de base de datos
+- Probar tanto operaciones exitosas como fallidas de base de datos
+- Verificar consultas y parámetros correctos de base de datos
+- Probar manejo de transacciones y escenarios de rollback
+
+### Pruebas Asíncronas
+- Siempre usar `async/await` para operaciones asíncronas
+- Usar `Promise.allSettled()` para probar operaciones concurrentes
+- Manejar apropiadamente rechazos de promesas en pruebas
+- Probar escenarios de timeout donde sea aplicable
+
+### Gestión de Datos de Prueba
+- Usar funciones factory para crear datos de prueba
+- Mantener datos de prueba consistentes y realistas
+- Evitar valores hardcodeados en múltiples lugares
+- Usar datos de prueba significativos que reflejen escenarios del mundo real
+
+### Pruebas de Integración
+
+- **Pruebas de Controlador**: Probar manejo de petición/respuesta HTTP
+- **Pruebas de Base de Datos**: Probar implementaciones de repositorio con base de datos
+- **Flujo End-to-End**: Probar flujos completos de petición
+
+
+### Estándares de Calidad de Código
+
+#### Uso de TypeScript
+- Usar tipado estricto para todos los parámetros y valores de retorno de prueba
+- Definir interfaces apropiadas para datos mock
+- Usar aserciones de tipo con moderación y con justificación apropiada
+- Aprovechar el sistema de tipos de TypeScript para mejor confiabilidad de pruebas
+
+#### Documentación
+- Escribir nombres de prueba claros y descriptivos que expliquen el escenario
+- Agregar comentarios para configuraciones de prueba complejas
+- Documentar cualquier condición especial de prueba o casos extremos
+- Mantener el código de prueba tan legible como el código de producción
+
+#### Consideraciones de Rendimiento
+- Mantener pruebas rápidas y enfocadas
+- Evitar operaciones asíncronas innecesarias en pruebas
+- Usar estrategias de mock apropiadas para evitar I/O real
+- Agrupar pruebas relacionadas para minimizar overhead de setup/teardown
+
+### Integración con Flujo de Trabajo de Desarrollo
+- Ejecutar pruebas antes de cada commit
+- Asegurar que todas las pruebas pasen antes de fusionar
+- Usar desarrollo guiado por pruebas cuando sea apropiado
+- Actualizar pruebas al modificar funcionalidad existente
+
+### Anti-Patrones Comunes a Evitar
+- No probar detalles de implementación, probar comportamiento
+- No crear configuraciones de prueba excesivamente complejas
+- No ignorar pruebas fallidas u omitir escenarios de error
+- No usar conexiones reales de base de datos en pruebas unitarias
+- No crear pruebas que dependan de servicios externos
+- No escribir pruebas demasiado acopladas a la implementación
+
+### Estructura de Prueba de Ejemplo
+
+
+
+## Mejores Prácticas de Rendimiento
+
+### Optimización de Consultas de Base de Datos
+
+- **Seleccionar Campos Específicos**: Solo seleccionar campos que se necesitan
+- **Usar Índices**: Asegurar índices apropiados de base de datos para campos consultados frecuentemente
+- **Evitar Consultas N+1**: Usar `include` de Prisma para obtener datos relacionados eficientemente
+
+```typescript
+// Bien: Obtener datos relacionados eficientemente
+const candidate = await prisma.candidate.findUnique({
+    where: { id },
+    include: {
+        educations: true,
+        workExperiences: true
+    }
+});
+
+// Evitar: Consultas N+1
+const candidate = await prisma.candidate.findUnique({ where: { id } });
+const educations = await prisma.education.findMany({ where: { candidateId: id } });
+```
+
+### Patrones Async/Await
+
+- **Siempre Usar Async/Await**: Usar async/await en lugar de cadenas de promesas
+- **Manejo de Errores**: Manejar apropiadamente errores en operaciones asíncronas
+- **Operaciones Paralelas**: Usar `Promise.all()` para operaciones paralelas cuando sea apropiado
+
+```typescript
+// Bien: Operaciones paralelas
+const [candidates, positions] = await Promise.all([
+    candidateService.findAll(),
+    positionService.findAll()
+]);
+```
+
+### Rendimiento del Manejo de Errores
+
+- **Retornos Tempranos**: Retornar temprano para evitar procesamiento innecesario
+- **Propagación de Errores**: Dejar que los errores se propaguen naturalmente a través de la pila de llamadas
+- **Evitar Sobre-Envolvimiento**: No envolver errores innecesariamente
+
+## Mejores Prácticas de Seguridad
+
+### Validación de Entrada
+
+- **Validar Todas las Entradas**: Validar todas las entradas de usuario antes de procesar
+- **Sanitizar Datos**: Sanitizar datos para prevenir ataques de inyección
+- **Verificación de Tipos**: Usar TypeScript y validación para asegurar seguridad de tipos
+
+### Variables de Entorno
+
+- **Nunca Hacer Commit de Secretos**: Nunca hacer commit de archivos `.env` o secretos en control de versiones
+- **Usar Variables de Entorno**: Usar variables de entorno para configuración
+- **Validar Entorno**: Validar variables de entorno requeridas al inicio
+
+```typescript
+// Validar variables de entorno requeridas
+const requiredEnvVars = ['DATABASE_URL', 'PORT'];
+requiredEnvVars.forEach(varName => {
+    if (!process.env[varName]) {
+        throw new Error(`Missing required environment variable: ${varName}`);
+    }
+});
+```
+
+### Inyección de Dependencias (NestJS)
+
+- **Providers NestJS**: Usar decorador `@Injectable()` para servicios
+- **Módulos NestJS**: Declarar providers, imports, exports en decorador `@Module()`
+- **Inyectar PrismaService**: Importar `PrismaModule` en el módulo y recibir `PrismaService` en el constructor
+- **PrismaService** está en `apps/api/src/prisma/prisma.service.ts` y extiende `PrismaClient` de `@adresles/prisma-db`
+- **Evitar Estado Global**: Evitar singletons globales para conexiones DB
+- **Testabilidad**: Usar DI de NestJS para facilitar mocking en tests
+
+```typescript
+// Ejemplo: Service con DI — patrón real del proyecto
+@Injectable()
+export class OrdersService {
+  constructor(private readonly prisma: PrismaService) {}
+  
+  async findAll(query: OrdersQuery) {
+    return this.prisma.order.findMany({
+      where: { /* filtros */ },
+      orderBy: { [query.sortBy]: query.sortDir },
+    });
+  }
+}
+```
+
+```typescript
+// Ejemplo: MockModule con imports transitivos
+@Module({
+  imports: [StoresModule, UsersModule, OrdersModule, ConversationsModule, EcommerceSyncModule],
+  controllers: [MockOrdersController, MockConversationsController],
+  providers: [MockOrdersService, MockConversationsService, MockSseService],
+})
+export class MockModule {}
+```
+
+## Flujo de Trabajo de Desarrollo
+
+### Flujo de Trabajo de Git
+
+- **Ramas de Funcionalidad**: Desarrollar funcionalidades en ramas separadas, agregando sufijo descriptivo "-backend" para permitir trabajar en paralelo y evitar conflictos o colisiones
+- **Commits Descriptivos**: Escribir mensajes de commit descriptivos en español
+- **Revisión de Código**: Revisión de código antes de fusionar
+- **Ramas Pequeñas**: Mantener ramas pequeñas y enfocadas
+
+### Scripts de Desarrollo
+
+```bash
+# Desde la raíz del monorepo:
+pnpm dev              # Arranca todas las apps (turbo dev)
+pnpm test             # Ejecutar pruebas de todo el monorepo
+
+# Desde apps/api o apps/worker:
+pnpm dev              # Servidor de desarrollo con recarga en caliente
+pnpm build            # Compilar para producción
+pnpm test             # Ejecutar pruebas Jest
+pnpm test:cov         # Ejecutar pruebas con cobertura
+
+# Prisma — SIEMPRE desde packages/prisma-db/ (no desde apps/api):
+pnpm prisma generate                              # Generar cliente Prisma en generated/
+pnpm prisma migrate dev --name nombre_desc        # Crear y aplicar nueva migración
+pnpm prisma migrate deploy                        # Aplicar migraciones en producción
+node -r dotenv/config -r ts-node/register seed.ts # Ejecutar seed con vars de entorno
+```
+
+> **Importante**: El schema Prisma reside en `packages/prisma-db/schema.prisma`. Todas las operaciones Prisma CLI deben ejecutarse desde `packages/prisma-db/`. La API apunta al schema vía `apps/api/prisma.config.ts`.
+
+### Calidad de Código
+
+- **Validación de ESLint**: Ejecutar ESLint antes de commits (configuración plana en `apps/api/eslint.config.js`)
+- **Compilación de TypeScript**: Asegurar que TypeScript compila sin errores
+- **Todas las Pruebas Pasando**: Asegurar que todas las pruebas pasen antes del despliegue
+- **Revisión de Código**: Revisar código para adherencia a estándares
+
+> **Nota**: El proyecto usa ESLint v9 con formato de configuración plana (`eslint.config.js`), no `.eslintrc`. La configuración cubre `src/**/*.ts` y `test/**/*.ts` con las reglas de `@typescript-eslint`.
+
+## Deployment en Servidor Dedicado
+
+### Containerización
+
+- **Dockerfile**: Aplicación empaquetada en contenedor Docker
+- **Multi-stage Build**: Build de TypeScript en stage separado para optimizar tamaño
+- **Imagen Base**: `node:20-alpine` para producción (mínima y segura)
+- **Variables de Entorno**: Inyectadas vía `.env` y `docker-compose.yml`
+- **Health Checks**: Endpoint `/health` para validar estado del servicio
+
+### Orquestación con Docker Compose
+
+- **Servicios Definidos**: API, Worker, Redis en `docker-compose.yml`
+- **Reverse Proxy**: Traefik maneja routing, SSL automático (Let's Encrypt) y load balancing
+- **Networking**: Red interna Docker para comunicación segura entre servicios
+- **Volumes**: Persistencia para Redis y logs
+- **Restart Policies**: `unless-stopped` para alta disponibilidad
+
+### Framework de Deployment
+
+- **Docker**: Containerización de aplicaciones (imagen base `node:20-alpine`, multi-stage build)
+- **Docker Compose**: Orquestación multi-servicio (API + Worker + Redis)
+- **Traefik**: Reverse proxy con SSL automático (Let's Encrypt)
+- **GitHub Actions**: CI/CD automatizado
+
+> **Nota**: El proyecto NO usa Serverless Framework ni AWS Lambda. El deployment es en servidor dedicado con Docker Compose.
+
+```yaml
+# docker-compose.yml (simplificado)
+services:
+  api:
+    build: ./apps/api
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - DYNAMODB_TABLE=${DYNAMODB_TABLE}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.adresles.com`)"
+  
+  worker:
+    build: ./apps/worker
+    depends_on:
+      - redis
+  
+  redis:
+    image: redis:7-alpine
+```
+
+Ver detalles completos: [Adresles_Business.md - Sección 4.6-4.7](../../Adresles_Business.md#46-diagrama-de-infraestructura-y-deployment)
+
+---
+
+---
+
+**Última actualización**: 2026-03-07  
+**Stack**: NestJS 10, Node.js puro (Worker), Prisma 5.22.0, PostgreSQL 15, DynamoDB, Redis 7, OpenAI `gpt-4o-mini`, pnpm 9 + Turborepo 2.3

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adresles - Mock Orders</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #333; }
+    textarea { width: 100%; height: 300px; font-family: monospace; font-size: 13px; padding: 8px; }
+    button { background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #1d4ed8; }
+    .result { margin-top: 1rem; padding: 1rem; background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; }
+    .error { background: #fef2f2; border-color: #ef4444; }
+    pre { margin: 0; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Adresles - Mock Orders (CU-01)</h1>
+  <p>Envía un JSON de compra mock al endpoint <code>POST /api/mock/orders</code></p>
+  <label for="apiUrl">API URL:</label>
+  <input type="text" id="apiUrl" value="http://localhost:3000/api" style="width: 100%; margin-bottom: 1rem; padding: 8px;">
+  <textarea id="jsonInput" placeholder='Pega aquí el JSON de compra...'>{
+  "store": { "name": "Tienda Mock", "url": "https://tiendamock.example.com" },
+  "external_order_id": "wc_12345",
+  "external_order_number": "#12345",
+  "buyer": {
+    "first_name": "Juan",
+    "last_name": "Pérez",
+    "phone": "+34612345678",
+    "email": "juan@example.com"
+  },
+  "mode": "adresles",
+  "items": [
+    { "name": "Camiseta Azul", "quantity": 2, "price": 19.95 },
+    { "name": "Pantalón", "quantity": 1, "price": 35.95 }
+  ],
+  "total_amount": 75.85,
+  "currency": "EUR"
+}</textarea>
+  <p style="margin-top: 0.5rem;">
+    <button onclick="sendOrder()">Enviar pedido</button>
+    <button onclick="loadTraditional()" style="background: #64748b;">Cargar ejemplo tradicional</button>
+  </p>
+  <div id="result"></div>
+
+  <script>
+    const defaultAdresles = {
+      store: { name: "Tienda Mock", url: "https://tiendamock.example.com" },
+      external_order_id: "wc_12345",
+      external_order_number: "#12345",
+      buyer: { first_name: "Juan", last_name: "Pérez", phone: "+34612345678", email: "juan@example.com" },
+      mode: "adresles",
+      items: [{ name: "Camiseta Azul", quantity: 2, price: 19.95 }, { name: "Pantalón", quantity: 1, price: 35.95 }],
+      total_amount: 75.85,
+      currency: "EUR"
+    };
+    const defaultTraditional = {
+      ...defaultAdresles,
+      mode: "tradicional",
+      address: {
+        full_address: "Calle Mayor 123, 28013 Madrid",
+        street: "Calle Mayor",
+        number: "123",
+        postal_code: "28013",
+        city: "Madrid",
+        province: "Madrid",
+        country: "ES"
+      }
+    };
+    function loadTraditional() {
+      document.getElementById('jsonInput').value = JSON.stringify(defaultTraditional, null, 2);
+    }
+    async function sendOrder() {
+      const resultEl = document.getElementById('result');
+      try {
+        const json = JSON.parse(document.getElementById('jsonInput').value);
+        const url = document.getElementById('apiUrl').value + '/mock/orders';
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(json)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          resultEl.className = 'result';
+          resultEl.innerHTML = '<strong>Éxito (201)</strong><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        } else {
+          resultEl.className = 'result error';
+          resultEl.innerHTML = '<strong>Error ' + res.status + '</strong><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+      } catch (e) {
+        resultEl.className = 'result error';
+        resultEl.innerHTML = '<strong>Error:</strong> ' + e.message;
+      }
+    }
+  </script>
+</body>
+</html>

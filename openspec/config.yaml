@@ -1,0 +1,60 @@
+# openspec/config.yaml
+schema: spec-driven
+
+context: |
+  Idioma: Español
+  
+  ## Contexto del Proyecto (Memory-Bank)
+  Antes de empezar, consulta:
+  - memory-bank/README.md para contexto general
+  - memory-bank/project-context/overview.md para entender Adresles
+  - memory-bank/architecture/ para decisiones arquitecturales clave
+  
+  Para información detallada:
+  - Adresles_Business.md (documento completo de diseño - 2130 líneas)
+  - memory-bank/references/business-doc-map.md (navegación rápida)
+  
+  ## Stack Tecnológico Principal
+  - Backend: Node.js + NestJS + TypeScript (arquitectura modular DDD)
+  - Frontend: React (Chat App) + Next.js (Dashboard Admin)
+  - Base de Datos: Supabase (PostgreSQL relacional) + DynamoDB (mensajes alta volumetría)
+  - IA: OpenAI GPT-4 (motor conversacional)
+  - Validación: Google Maps API (normalización direcciones)
+  - Infraestructura: Docker + Docker Compose + Traefik + Redis (cache/colas)
+  
+  ## Dominios DDD (Bounded Contexts)
+  - Conversations (módulo núcleo - orquestación IA)
+  - Orders (gestión de pedidos)
+  - Addresses (validación y gestión direcciones)
+  - Users (usuarios y autenticación)
+  - Stores (tiendas eCommerce y configuración)
+  
+  ## Proyecto: Adresles
+  Plugin SaaS B2B2C para eCommerce que revoluciona el checkout eliminando 
+  la fricción de introducir dirección manualmente. El usuario solo indica 
+  nombre + teléfono, y luego un agente IA conversacional obtiene la dirección 
+  mediante conversación natural.
+  
+  Cross-platform requirements:
+  - This tool runs on macOS, Linux, AND Windows
+  - Always use path.join() or path.resolve() for file paths
+  - Never hardcode slashes
+  - Tests must use path.join() for expected paths
+  - Consider case sensitivity differences in file systems
+
+rules:
+  proposal:
+    - Include rollback plan
+    - Keep under 500 words
+  specs:
+    - Use Given/When/Then format
+    - Reference existing patterns before inventing new ones
+    - Include scenarios for Windows path handling when dealing with file paths
+    - Requirements involving paths must specify cross-platform behavior
+  tasks:
+    - Add Windows CI verification as task when changes involve file paths
+    - Include cross-platform testing considerations
+    - Break tasks into chunks of max 2 hours
+  design:
+    - Document any platform-specific behavior or limitations
+    - Prefer Node.js path module over string manipulation

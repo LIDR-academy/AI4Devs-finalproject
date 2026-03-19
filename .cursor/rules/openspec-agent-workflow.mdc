@@ -1,0 +1,254 @@
+---
+description: Flujo de trabajo multi-agente para desarrollo con OpenSpec en Adresles. Define las 6 fases del ciclo de desarrollo, los agentes responsables de cada fase y cómo la IA debe comportarse al generar specs, tareas e implementaciones.
+globs:
+alwaysApply: true
+---
+
+# Flujo de Trabajo Multi-Agente OpenSpec
+
+## Descripción General
+
+El desarrollo en Adresles sigue un proceso estructurado de **6 fases** donde cuatro agentes especializados colaboran. Cada agente tiene un rol bien definido y produce artefactos específicos que alimentan la siguiente fase. Las fases y sus artefactos están directamente sincronizados con el schema de OpenSpec en `openspec/schemas/my-workflow/schema.yaml`.
+
+## Los Cuatro Agentes
+
+| Agente | Archivo | Rol | Color |
+|---|---|---|---|
+| `software-architect` | `openspec/.agents/software-architect.md` | Diseño, planificación, descomposición de tareas | Morado |
+| `backend-developer` | `openspec/.agents/backend-developer.md` | Implementación NestJS, Worker, Prisma | Rojo |
+| `frontend-developer` | `openspec/.agents/frontend-developer.md` | Implementación Next.js Dashboard Admin | Cyan |
+| `qa-engineer` | `openspec/.agents/qa-engineer.md` | Validación, testing, verificación de specs | Verde |
+
+## Las 6 Fases del Desarrollo
+
+El siguiente diagrama refleja exactamente la cadena de dependencias definida en `schema.yaml`:
+
+```
+Fase 1: Petición
+     ↓  openspec new change "<nombre>"
+Fase 2: Arquitecto → proposal.md
+     ↓  (requires: petición)
+Fase 3: Arquitecto → specs/**/*.md  +  design.md
+     ↓  (ambos requieren proposal; pueden generarse en paralelo)
+Fase 4: Arquitecto → tasks.md
+     ↓  (requiere specs AND design — ambos obligatorios)
+Fase 5: Ingenieros → implementación (opsx-apply)
+     ↓  (requiere tasks)
+Fase 6: QA → validación y cierre
+```
+
+---
+
+### Fase 1: Petición de Funcionalidad
+
+**Quién**: Usuario o producto  
+**Qué**: Descripción de la funcionalidad, historia de usuario o ticket  
+**Resultado**: Change creado con la CLI de OpenSpec
+
+```bash
+openspec new change "<nombre-kebab-case>"
+```
+
+---
+
+### Fase 2: Arquitecto — Proposal
+
+**Agente**: `software-architect`  
+**Artefacto**: `proposal.md`  
+**Requisito previo**: Petición de funcionalidad  
+
+**Qué contiene `proposal.md`**:
+- **Por Qué**: problema que resuelve el cambio
+- **Qué Cambia**: lista de modificaciones con breaking changes marcados
+- **Capacidades**: nuevas capacidades (cada una genera `specs/<nombre>/spec.md`) y capacidades modificadas
+- **Impacto**: código, APIs y sistemas afectados
+
+**Comportamiento de la IA en esta fase**:
+- Actuar como `software-architect`
+- Consultar el memory-bank antes de cualquier decisión
+- La sección Capacidades es el contrato entre proposal y specs — investigar `openspec/specs/` antes de escribirla
+- NO detallar la implementación aquí; eso va en `design.md`
+
+---
+
+### Fase 3: Arquitecto — Specs y Design
+
+**Agente**: `software-architect`  
+**Artefactos** (pueden generarse en paralelo, ambos requieren `proposal`):
+- `specs/<capability>/spec.md` — uno por cada capacidad listada en el proposal
+- `design.md` — diseño técnico con decisiones de implementación
+
+**Qué contiene cada `specs/<capability>/spec.md`**:
+- Requisitos en formato `### Requirement: <nombre>` con SHALL/MUST
+- Escenarios en formato `#### Scenario: <nombre>` con WHEN/THEN
+- Operaciones delta: `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`
+
+**Qué contiene `design.md`**:
+- **Contexto**: estado actual, restricciones, stakeholders
+- **Objetivos / No-Objetivos**: qué logra y qué excluye explícitamente
+- **Decisiones**: decisiones técnicas clave con justificación (por qué X y no Y)
+- **Riesgos / Compromisos**: limitaciones conocidas, formato `[Riesgo] → Mitigación`
+- **Plan de Migración**: pasos de despliegue y estrategia de rollback (si aplica)
+- **Preguntas Abiertas**: decisiones pendientes
+
+**Comportamiento de la IA en esta fase**:
+- Las specs definen el QUÉ; el design define el CÓMO
+- Cada escenario de spec es un caso de prueba potencial para QA
+- El design referencia la proposal para motivación y las specs para requisitos
+
+---
+
+### Fase 4: Arquitecto — Tasks
+
+**Agente**: `software-architect`  
+**Artefacto**: `tasks.md`  
+**Requisito previo**: `specs/**/*.md` AND `design.md` — **ambos obligatorios**
+
+**Regla crítica**: Cada tarea en `tasks.md` DEBE incluir una etiqueta de agente. Ver `.cursor/rules/openspec-task-tagging.mdc` para el formato completo.
+
+**Etiquetas válidas**: `[architect]`, `[backend]`, `[frontend]`, `[qa]`
+
+**Orden típico de tareas en `tasks.md`**:
+1. Tareas `[architect]` — decisiones de diseño pendientes, actualización de specs
+2. Tareas `[backend]` — schema Prisma, servicios, controladores
+3. Tareas `[frontend]` — tipos, API client, componentes, páginas
+4. Tareas `[qa]` — tests unitarios, tests de integración, verificación final
+
+**Ejemplo de `tasks.md` bien formado**:
+```markdown
+## 1. Backend — módulo de notificaciones
+
+- [ ] 1.1 [architect] Confirmar contratos TypeScript en design.md
+- [ ] 1.2 [backend] Crear `NotificationsModule` en `apps/api/src/notifications/`
+- [ ] 1.3 [backend] Implementar `NotificationsService.send()` con cola BullMQ
+- [ ] 1.4 [backend] Añadir endpoint `POST /api/notifications` en `NotificationsController`
+- [ ] 1.5 [qa] Tests unitarios para `NotificationsService.send()` (cobertura ≥90%)
+- [ ] 1.6 [qa] Test de integración para `POST /api/notifications`
+
+## 2. Frontend — integración
+
+- [ ] 2.1 [frontend] Añadir `sendNotification()` en `apps/web-admin/src/lib/api.ts`
+- [ ] 2.2 [frontend] Crear componente `NotificationBanner` en `components/notifications/`
+- [ ] 2.3 [qa] Verificar build sin errores TypeScript
+```
+
+---
+
+### Fase 5: Ingenieros — Implementación
+
+**Agentes**: `backend-developer` y `frontend-developer` (pueden trabajar en paralelo)  
+**Comando**: `opsx-apply` rastrea el progreso en `tasks.md`
+
+**Backend developer implementa tareas `[backend]`**:
+- Módulos NestJS, servicios, controladores, DTOs
+- Migraciones Prisma en `packages/prisma-db/`
+- Código del Worker en `apps/worker/`
+
+**Frontend developer implementa tareas `[frontend]`**:
+- Páginas Next.js App Router, componentes React, `lib/api.ts`, tipos
+
+**Comportamiento de la IA en esta fase**:
+- Actuar como el agente indicado por la etiqueta de cada tarea
+- Respetar los contratos de `design.md` y las specs sin modificarlos
+- Marcar cada tarea completada inmediatamente: `- [ ]` → `- [x]`
+- Si se detecta un problema arquitectónico, pausar y consultar al `software-architect`
+
+---
+
+### Fase 6: QA — Validación y Cierre
+
+**Agente**: `qa-engineer`  
+**Artefactos que produce**:
+- Tests en `*.spec.ts` junto al código de producción
+- `qa.md` — informe de verificación
+
+**Comportamiento de la IA en esta fase**:
+- Actuar como `qa-engineer`
+- Comparar la implementación contra:
+  - `proposal.md` — alcance y motivación
+  - `openspec/changes/<feature>/specs/<capability>/spec.md` — requisitos y escenarios
+  - `design.md` — decisiones técnicas
+- Detectar edge cases no cubiertos por los ingenieros
+- NO rediseñar ni proponer cambios funcionales — solo señalar desviaciones
+
+---
+
+## Comportamiento de la IA por Situación
+
+### Cuando se genera `proposal.md`
+
+La IA actúa como `software-architect`:
+- Investiga `openspec/specs/` antes de listar las Capacidades
+- Mantiene el documento conciso (1-2 páginas): WHY, not HOW
+
+### Cuando se generan `specs/**/*.md`
+
+La IA actúa como `software-architect`:
+- Crea un archivo por capacidad listada en el proposal
+- Cada requisito tiene al menos un escenario `#### Scenario:` con WHEN/THEN
+- Usa `####` (4 hashtags) para escenarios — nunca 3 hashtags ni bullets
+
+### Cuando se genera `design.md`
+
+La IA actúa como `software-architect`:
+- Referencia `proposal.md` para la motivación
+- Referencia las specs para los requisitos
+- Documenta decisiones técnicas con razonamiento (por qué X y no Y)
+
+### Cuando se genera `tasks.md`
+
+La IA actúa como `software-architect`:
+- Todas las tareas incluyen una etiqueta de agente y un prefijo numérico (`1.1`, `1.2`...)
+- Las tareas de `[backend]` van antes de las de `[frontend]` cuando el frontend depende de un endpoint
+- Las tareas de `[qa]` aparecen al final de cada sección
+- NO genera `tasks.md` si faltan `specs` o `design`
+
+### Cuando se implementan tareas
+
+La IA actúa como `backend-developer` o `frontend-developer` según la etiqueta:
+- Respeta los contratos de `design.md` y specs sin modificarlos
+- Sigue las reglas de `.cursor/rules/backend-standards.mdc` o `.cursor/rules/frontend-standards.mdc`
+- Marca cada tarea completada con `- [x]` inmediatamente
+
+### Cuando se valida la implementación
+
+La IA actúa como `qa-engineer`:
+- Verifica cada escenario de spec como caso de prueba
+- Escribe tests con el patrón AAA y umbrales de cobertura ≥90%
+- Genera el informe `qa.md` antes de archivar el change
+
+---
+
+## Mapa de Artefactos por Agente y Fase
+
+| Artefacto | Agente creador | Fase | Requisito previo |
+|---|---|---|---|
+| `proposal.md` | software-architect | 2 | — |
+| `specs/<capability>/spec.md` | software-architect | 3 | proposal |
+| `design.md` | software-architect | 3 | proposal |
+| `tasks.md` | software-architect | 4 | specs AND design |
+| `*.spec.ts` | qa-engineer | 5-6 | tasks (durante apply) |
+| `qa.md` | qa-engineer | 6 | implementación completa |
+
+---
+
+## Reglas Globales del Flujo
+
+1. **No saltarse fases**: `tasks.md` no puede generarse sin `specs` y `design` completos
+2. **No implementar sin tareas**: La fase de implementación (Fase 5) requiere `tasks.md` con tareas etiquetadas
+3. **No implementar sin specs y design**: Si alguno de los dos falta, el arquitecto debe crearlos primero
+4. **No archivar sin QA**: Un change no debe archivarse sin el informe `qa.md` y los tests escritos
+5. **Agente correcto para cada tarea**: La IA DEBE adoptar el rol del agente indicado por la etiqueta
+6. **Memory-bank antes que suposiciones**: Cualquier agente consulta `memory-bank/` antes de decisiones que puedan contradecir arquitectura existente
+
+---
+
+## Referencias
+
+- Schema OpenSpec: `openspec/schemas/my-workflow/schema.yaml`
+- Agentes: `openspec/.agents/`
+- Reglas de etiquetado: `.cursor/rules/openspec-task-tagging.mdc`
+- Estándares backend: `.cursor/rules/backend-standards.mdc`
+- Estándares frontend: `.cursor/rules/frontend-standards.mdc`
+- Estándares generales: `.cursor/rules/base-standards.mdc`
+- Contexto del proyecto: `memory-bank/README.md`

@@ -1,0 +1,888 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
+import { AdminService } from './admin.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { MockConversationsService } from '../mock/mock-conversations.service';
+
+const mockPrisma = {
+  order: {
+    findMany: jest.fn(),
+    count: jest.fn(),
+  },
+  user: {
+    findMany: jest.fn(),
+    count: jest.fn(),
+  },
+  address: {
+    findMany: jest.fn(),
+    count: jest.fn(),
+  },
+  conversation: {
+    findUnique: jest.fn(),
+  },
+  store: {
+    findMany: jest.fn(),
+  },
+  $transaction: jest.fn(),
+};
+
+const mockMockConversations = {
+  getConversationHistory: jest.fn(),
+};
+
+describe('AdminService', () => {
+  let service: AdminService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AdminService,
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: MockConversationsService, useValue: mockMockConversations },
+      ],
+    }).compile();
+
+    service = module.get<AdminService>(AdminService);
+    jest.clearAllMocks();
+  });
+
+  describe('getOrders', () => {
+    it('devuelve pedidos paginados con meta', async () => {
+      const orders = [{ id: 'o1', store: {}, user: { phone: {} }, conversations: [] }];
+      mockPrisma.$transaction.mockResolvedValue([orders, 1]);
+
+      const result = await service.getOrders(1, 50);
+
+      expect(result.data).toEqual(orders);
+      expect(result.meta).toEqual({ page: 1, limit: 50, total: 1 });
+      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    });
+
+    it('devuelve data vacía cuando no hay pedidos', async () => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+
+      const result = await service.getOrders(1, 50);
+
+      expect(result.data).toEqual([]);
+      expect(result.meta.total).toBe(0);
+    });
+
+    it('calcula skip correctamente en página 2', async () => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+      mockPrisma.order.findMany.mockResolvedValue([]);
+      mockPrisma.order.count.mockResolvedValue(0);
+
+      await service.getOrders(2, 10);
+
+      const transactionCall = mockPrisma.$transaction.mock.calls[0][0];
+      expect(transactionCall).toHaveLength(2);
+    });
+  });
+
+  describe('buildOrderBy (via getOrders)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sortBy=date → ordena por webhookReceivedAt', async () => {
+      await service.getOrders(1, 50, { sortBy: 'date', sortDir: 'desc' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
+      );
+    });
+
+    it('sortBy=date asc → ordena por webhookReceivedAt asc', async () => {
+      await service.getOrders(1, 50, { sortBy: 'date', sortDir: 'asc' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'asc' }] }),
+      );
+    });
+
+    it('sin sortBy (undefined) → fallback a date desc', async () => {
+      await service.getOrders(1, 50, {});
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
+      );
+    });
+
+    it('sortBy inválido → fallback a date desc', async () => {
+      await service.getOrders(1, 50, { sortBy: 'foobar', sortDir: 'asc' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ webhookReceivedAt: 'desc' }] }),
+      );
+    });
+
+    it('sortBy=ref → ordena por externalOrderId (NOT NULL, sin nulls)', async () => {
+      await service.getOrders(1, 50, { sortBy: 'ref', sortDir: 'asc' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ externalOrderId: 'asc' }],
+        }),
+      );
+    });
+
+    it('sortBy=store → ordena por store.name con subsort por externalOrderId', async () => {
+      await service.getOrders(1, 50, { sortBy: 'store', sortDir: 'asc' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { store: { name: 'asc' } },
+            { externalOrderId: 'asc' },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=store desc → subsort externalOrderId también desc', async () => {
+      await service.getOrders(1, 50, { sortBy: 'store', sortDir: 'desc' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { store: { name: 'desc' } },
+            { externalOrderId: 'desc' },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=user → ordena por firstName luego lastName', async () => {
+      await service.getOrders(1, 50, { sortBy: 'user', sortDir: 'asc' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ user: { firstName: 'asc' } }, { user: { lastName: 'asc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=amount → ordena por totalAmount', async () => {
+      await service.getOrders(1, 50, { sortBy: 'amount', sortDir: 'desc' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ totalAmount: 'desc' }] }),
+      );
+    });
+  });
+
+  describe('buildWhere (via getOrders)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sin filtros → where vacío {}', async () => {
+      await service.getOrders(1, 50, {});
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
+    });
+
+    it('q → OR sobre 4 columnas (externalOrderId, no externalOrderNumber) con mode insensitive', async () => {
+      await service.getOrders(1, 50, { q: 'garcia' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                OR: [
+                  { store: { name: { contains: 'garcia', mode: 'insensitive' } } },
+                  { externalOrderId: { contains: 'garcia', mode: 'insensitive' } },
+                  { user: { firstName: { contains: 'garcia', mode: 'insensitive' } } },
+                  { user: { lastName: { contains: 'garcia', mode: 'insensitive' } } },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('status CSV válido → { in: [...] }', async () => {
+      await service.getOrders(1, 50, { status: 'COMPLETED,CANCELED' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ status: { in: ['COMPLETED', 'CANCELED'] } }] },
+        }),
+      );
+    });
+
+    it('status con valor inválido en CSV → solo los válidos en el in', async () => {
+      await service.getOrders(1, 50, { status: 'COMPLETED,ROGUE' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ status: { in: ['COMPLETED'] } }] },
+        }),
+      );
+    });
+
+    it('status completamente inválido → no se añade filtro de status', async () => {
+      await service.getOrders(1, 50, { status: 'INVALID_STATUS' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
+    });
+
+    it('mode CSV válido → { in: [...] }', async () => {
+      await service.getOrders(1, 50, { mode: 'ADRESLES,TRADITIONAL' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ orderMode: { in: ['ADRESLES', 'TRADITIONAL'] } }] },
+        }),
+      );
+    });
+
+    it('solo from → { gte: Date 00:00:00Z }', async () => {
+      await service.getOrders(1, 50, { from: '2026-02-01' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                webhookReceivedAt: {
+                  gte: new Date('2026-02-01T00:00:00.000Z'),
+                },
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('solo to → { lte: Date 23:59:59.999Z }', async () => {
+      await service.getOrders(1, 50, { to: '2026-02-28' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                webhookReceivedAt: {
+                  lte: new Date('2026-02-28T23:59:59.999Z'),
+                },
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('from + to → { gte, lte } con horas correctas', async () => {
+      await service.getOrders(1, 50, { from: '2026-02-01', to: '2026-02-28' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                webhookReceivedAt: {
+                  gte: new Date('2026-02-01T00:00:00.000Z'),
+                  lte: new Date('2026-02-28T23:59:59.999Z'),
+                },
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('combinación q + status + from → AND entre los tres filtros', async () => {
+      await service.getOrders(1, 50, { q: 'zara', status: 'COMPLETED', from: '2026-02-01' });
+      expect(mockPrisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: expect.arrayContaining([
+              expect.objectContaining({ OR: expect.any(Array) }),
+              { status: { in: ['COMPLETED'] } },
+              expect.objectContaining({ webhookReceivedAt: expect.objectContaining({ gte: expect.any(Date) }) }),
+            ]),
+          },
+        }),
+      );
+    });
+
+    it('count se llama con el mismo where que findMany', async () => {
+      await service.getOrders(1, 50, { status: 'COMPLETED' });
+      expect(mockPrisma.order.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ status: { in: ['COMPLETED'] } }] },
+        }),
+      );
+    });
+  });
+
+  describe('getUsers', () => {
+    it('devuelve usuarios paginados con meta', async () => {
+      const users = [{ id: 'u1', phone: {}, _count: { orders: 1, addresses: 0 } }];
+      mockPrisma.$transaction.mockResolvedValue([users, 1]);
+
+      const result = await service.getUsers(1, 50);
+
+      expect(result.data).toEqual(users);
+      expect(result.meta).toEqual({ page: 1, limit: 50, total: 1 });
+    });
+
+    it('devuelve lista vacía cuando no hay usuarios', async () => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+
+      const result = await service.getUsers(1, 50, {});
+
+      expect(result.data).toEqual([]);
+      expect(result.meta.total).toBe(0);
+    });
+
+    it('siempre incluye isDeleted: false como condición base', async () => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+
+      await service.getUsers(1, 50, {});
+
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }] },
+        }),
+      );
+    });
+
+    it('count se llama con el mismo where que findMany', async () => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+
+      await service.getUsers(1, 50, { registered: 'true' });
+
+      expect(mockPrisma.user.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isRegistered: true }] },
+        }),
+      );
+    });
+  });
+
+  describe('buildUsersOrderBy (via getUsers)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sin sortBy → fallback a lastInteraction desc', async () => {
+      await service.getUsers(1, 50, {});
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ lastInteractionAt: { sort: 'desc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy inválido → fallback a lastInteraction desc', async () => {
+      await service.getUsers(1, 50, { sortBy: 'invalido', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ lastInteractionAt: { sort: 'desc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=name asc → firstName asc + lastName asc, nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'name', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { firstName: { sort: 'asc', nulls: 'last' } },
+            { lastName: { sort: 'asc', nulls: 'last' } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=name desc → firstName desc + lastName desc, nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'name', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { firstName: { sort: 'desc', nulls: 'last' } },
+            { lastName: { sort: 'desc', nulls: 'last' } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=email asc → email asc nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'email', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ email: { sort: 'asc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=email desc → email desc nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'email', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ email: { sort: 'desc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=orders asc → orders { _count: asc }', async () => {
+      await service.getUsers(1, 50, { sortBy: 'orders', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ orders: { _count: 'asc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=orders desc → orders { _count: desc }', async () => {
+      await service.getUsers(1, 50, { sortBy: 'orders', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ orders: { _count: 'desc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=addresses asc → addresses { _count: asc }', async () => {
+      await service.getUsers(1, 50, { sortBy: 'addresses', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ addresses: { _count: 'asc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=addresses desc → addresses { _count: desc }', async () => {
+      await service.getUsers(1, 50, { sortBy: 'addresses', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ addresses: { _count: 'desc' } }],
+        }),
+      );
+    });
+
+    it('sortBy=lastInteraction asc → lastInteractionAt asc nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'lastInteraction', sortDir: 'asc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ lastInteractionAt: { sort: 'asc', nulls: 'last' } }],
+        }),
+      );
+    });
+
+    it('sortBy=lastInteraction desc → lastInteractionAt desc nulls last', async () => {
+      await service.getUsers(1, 50, { sortBy: 'lastInteraction', sortDir: 'desc' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ lastInteractionAt: { sort: 'desc', nulls: 'last' } }],
+        }),
+      );
+    });
+  });
+
+  describe('buildUsersWhere (via getUsers)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sin params → solo isDeleted: false', async () => {
+      await service.getUsers(1, 50, {});
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }] },
+        }),
+      );
+    });
+
+    it('q → OR sobre firstName, lastName, email, mode insensitive', async () => {
+      await service.getUsers(1, 50, { q: 'garcia' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { isDeleted: false },
+              {
+                OR: [
+                  { firstName: { contains: 'garcia', mode: 'insensitive' } },
+                  { lastName: { contains: 'garcia', mode: 'insensitive' } },
+                  { email: { contains: 'garcia', mode: 'insensitive' } },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('registered=true → isRegistered: true', async () => {
+      await service.getUsers(1, 50, { registered: 'true' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isRegistered: true }] },
+        }),
+      );
+    });
+
+    it('registered=false → isRegistered: false', async () => {
+      await service.getUsers(1, 50, { registered: 'false' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isRegistered: false }] },
+        }),
+      );
+    });
+
+    it('q + registered=true → AND con ambos filtros', async () => {
+      await service.getUsers(1, 50, { q: 'garcia', registered: 'true' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { isDeleted: false },
+              { OR: expect.any(Array) },
+              { isRegistered: true },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('registered con valor inválido → se ignora (sin filtro isRegistered)', async () => {
+      await service.getUsers(1, 50, { registered: 'invalido' });
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }] },
+        }),
+      );
+    });
+  });
+
+  describe('getConversationMessages', () => {
+    const mockConversation = {
+      id: 'conv-1',
+      conversationType: 'GET_ADDRESS',
+      status: 'COMPLETED',
+      startedAt: new Date('2026-02-21T10:01:00Z'),
+      completedAt: new Date('2026-02-21T10:05:00Z'),
+      order: { externalOrderId: '100' },
+    };
+
+    const mockMessages = [
+      {
+        conversationId: 'conv-1',
+        messageId: 'msg-1',
+        role: 'assistant',
+        content: 'Hola!',
+        timestamp: '2026-02-21T10:01:00Z',
+        expiresAt: 1748822460,
+      },
+    ];
+
+    it('devuelve mensajes con metadata de conversación y externalOrderId directamente', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(mockConversation);
+      mockMockConversations.getConversationHistory.mockResolvedValue(mockMessages);
+
+      const result = await service.getConversationMessages('conv-1');
+
+      expect(result.conversationId).toBe('conv-1');
+      expect(result.conversation.type).toBe('GET_ADDRESS');
+      expect(result.conversation.status).toBe('COMPLETED');
+      expect(result.conversation.order.externalOrderId).toBe('100');
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].messageId).toBe('msg-1');
+    });
+
+    it('lanza NotFoundException cuando la conversación no existe en Prisma', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(null);
+
+      await expect(service.getConversationMessages('id-inexistente')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('devuelve messages vacío si DynamoDB no tiene mensajes', async () => {
+      mockPrisma.conversation.findUnique.mockResolvedValue(mockConversation);
+      mockMockConversations.getConversationHistory.mockResolvedValue([]);
+
+      const result = await service.getConversationMessages('conv-1');
+
+      expect(result.messages).toEqual([]);
+    });
+  });
+
+  describe('buildAddressesOrderBy (via getAddresses)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    const nullsLast = (dir: 'asc' | 'desc') => ({ sort: dir, nulls: 'last' });
+
+    it('sin sortBy → fallback a name asc (firstName + lastName)', async () => {
+      await service.getAddresses(1, 50, {});
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { user: { firstName: nullsLast('asc') } },
+            { user: { lastName: nullsLast('asc') } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy inválido → fallback a name asc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'invalido', sortDir: 'desc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { user: { firstName: nullsLast('asc') } },
+            { user: { lastName: nullsLast('asc') } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=name asc → firstName + lastName asc nulls last', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'name', sortDir: 'asc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { user: { firstName: nullsLast('asc') } },
+            { user: { lastName: nullsLast('asc') } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=name desc → firstName + lastName desc nulls last', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'name', sortDir: 'desc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [
+            { user: { firstName: nullsLast('desc') } },
+            { user: { lastName: nullsLast('desc') } },
+          ],
+        }),
+      );
+    });
+
+    it('sortBy=alias asc → label asc nulls last', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'alias', sortDir: 'asc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ label: nullsLast('asc') }] }),
+      );
+    });
+
+    it('sortBy=alias desc → label desc nulls last', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'alias', sortDir: 'desc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ label: nullsLast('desc') }] }),
+      );
+    });
+
+    it('sortBy=postalCode asc → postalCode asc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'postalCode', sortDir: 'asc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ postalCode: 'asc' }] }),
+      );
+    });
+
+    it('sortBy=postalCode desc → postalCode desc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'postalCode', sortDir: 'desc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ postalCode: 'desc' }] }),
+      );
+    });
+
+    it('sortBy=city asc → city asc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'city', sortDir: 'asc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ city: 'asc' }] }),
+      );
+    });
+
+    it('sortBy=city desc → city desc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'city', sortDir: 'desc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ city: 'desc' }] }),
+      );
+    });
+
+    it('sortBy=province asc → province asc nulls last', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'province', sortDir: 'asc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ province: nullsLast('asc') }] }),
+      );
+    });
+
+    it('sortBy=province desc → province desc nulls last', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'province', sortDir: 'desc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ province: nullsLast('desc') }] }),
+      );
+    });
+
+    it('sortBy=country asc → country asc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'country', sortDir: 'asc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ country: 'asc' }] }),
+      );
+    });
+
+    it('sortBy=country desc → country desc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'country', sortDir: 'desc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ country: 'desc' }] }),
+      );
+    });
+
+    it('sortBy=favorite asc → isDefault asc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'favorite', sortDir: 'asc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ isDefault: 'asc' }] }),
+      );
+    });
+
+    it('sortBy=favorite desc → isDefault desc', async () => {
+      await service.getAddresses(1, 50, { sortBy: 'favorite', sortDir: 'desc' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ isDefault: 'desc' }] }),
+      );
+    });
+  });
+
+  describe('buildAddressesWhere (via getAddresses)', () => {
+    beforeEach(() => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0]);
+    });
+
+    it('sin params → solo isDeleted: false', async () => {
+      await service.getAddresses(1, 50, {});
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }] },
+        }),
+      );
+    });
+
+    it('q → OR sobre 13 campos con mode insensitive', async () => {
+      await service.getAddresses(1, 50, { q: 'garcia' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { isDeleted: false },
+              {
+                OR: expect.arrayContaining([
+                  { user: { firstName: { contains: 'garcia', mode: 'insensitive' } } },
+                  { user: { lastName: { contains: 'garcia', mode: 'insensitive' } } },
+                  { label: { contains: 'garcia', mode: 'insensitive' } },
+                  { street: { contains: 'garcia', mode: 'insensitive' } },
+                  { city: { contains: 'garcia', mode: 'insensitive' } },
+                ]),
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('q OR tiene exactamente 13 condiciones', async () => {
+      await service.getAddresses(1, 50, { q: 'test' });
+      const findManyCall = mockPrisma.address.findMany.mock.calls[0][0];
+      const orConditions = findManyCall.where.AND[1].OR;
+      expect(orConditions).toHaveLength(13);
+    });
+
+    it('favorite=true → isDefault: true', async () => {
+      await service.getAddresses(1, 50, { favorite: 'true' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isDefault: true }] },
+        }),
+      );
+    });
+
+    it('favorite=false → isDefault: false', async () => {
+      await service.getAddresses(1, 50, { favorite: 'false' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isDefault: false }] },
+        }),
+      );
+    });
+
+    it('q + favorite=true → AND con OR de búsqueda y isDefault: true', async () => {
+      await service.getAddresses(1, 50, { q: 'garcia', favorite: 'true' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { isDeleted: false },
+              { OR: expect.any(Array) },
+              { isDefault: true },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('favorite con valor inválido → se ignora', async () => {
+      await service.getAddresses(1, 50, { favorite: 'invalido' });
+      expect(mockPrisma.address.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }] },
+        }),
+      );
+    });
+
+    it('count se llama con el mismo where que findMany', async () => {
+      await service.getAddresses(1, 50, { favorite: 'true' });
+      expect(mockPrisma.address.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ isDeleted: false }, { isDefault: true }] },
+        }),
+      );
+    });
+  });
+
+  describe('getStores', () => {
+    it('devuelve las tiendas activas mapeadas con ecommerceName', async () => {
+      const rawStores = [
+        {
+          id: 's1',
+          name: 'Tienda A',
+          url: 'https://a.com',
+          platform: 'WOOCOMMERCE',
+          ecommerce: { commercialName: 'EcomA', legalName: 'EcomA SL' },
+        },
+      ];
+      mockPrisma.store.findMany.mockResolvedValue(rawStores);
+
+      const result = await service.getStores();
+
+      expect(result.data).toEqual([
+        { id: 's1', name: 'Tienda A', url: 'https://a.com', platform: 'WOOCOMMERCE', ecommerceName: 'EcomA' },
+      ]);
+      expect(mockPrisma.store.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: 'ACTIVE' },
+          orderBy: [{ ecommerce: { commercialName: 'asc' } }, { name: 'asc' }],
+        }),
+      );
+    });
+
+    it('usa legalName como fallback cuando commercialName es null', async () => {
+      mockPrisma.store.findMany.mockResolvedValue([
+        {
+          id: 's2',
+          name: 'Tienda B',
+          url: 'https://b.com',
+          platform: 'SHOPIFY',
+          ecommerce: { commercialName: null, legalName: 'EcomB Legal SL' },
+        },
+      ]);
+
+      const result = await service.getStores();
+
+      expect(result.data[0].ecommerceName).toBe('EcomB Legal SL');
+    });
+
+    it('devuelve data vacía si no hay tiendas activas', async () => {
+      mockPrisma.store.findMany.mockResolvedValue([]);
+
+      const result = await service.getStores();
+
+      expect(result.data).toEqual([]);
+    });
+  });
+});

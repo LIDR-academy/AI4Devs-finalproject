@@ -1,0 +1,18 @@
+# Caddy sirve únicamente backend.adresles.com en el servidor Lightsail.
+# simulator.adresles.com (frontend) lo gestiona Vercel directamente — no pasa por aquí.
+# Caddy gestiona el certificado TLS de backend.adresles.com automáticamente vía Let's Encrypt.
+
+backend.adresles.com {
+    reverse_proxy api:3000
+    encode gzip
+
+    header {
+        -Server
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}

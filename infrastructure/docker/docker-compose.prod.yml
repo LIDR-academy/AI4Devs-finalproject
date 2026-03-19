@@ -1,0 +1,80 @@
+# Stack de producción: API + Worker + Redis + Caddy
+# Uso desde ~/adresles-prod en el servidor Lightsail:
+#   docker compose -f docker-compose.yml up -d
+#
+# Variables necesarias en .env (del servidor, no del app):
+#   ECR_REGISTRY=<account_id>.dkr.ecr.eu-central-1.amazonaws.com
+#   IMAGE_TAG=latest
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  api:
+    image: ${ECR_REGISTRY}/adresles-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    image: ${ECR_REGISTRY}/adresles-worker:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - app
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - app
+
+volumes:
+  redis-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  app:
+    driver: bridge
