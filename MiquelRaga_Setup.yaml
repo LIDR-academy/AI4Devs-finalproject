@@ -1,0 +1,167 @@
+version: 1.3.2
+
+cache: false
+fileStrategy: "azure_blob"
+
+includedTools: [ "calculator", "azure-ai-search", "image_gen_oai", "gemini_image_gen" ]
+
+interface:
+  marketplace:
+    use: true
+  mcpServers:
+    placeholder: "MCP Servers"
+    use: true
+    create: true
+  modelSelect: true
+  parameters: false
+  sidePanel: true
+  presets: false
+  prompts: true
+  bookmarks: true
+  multiConvo: true
+  temporaryChat: true
+  runCode: false
+  webSearch: true
+  fileSearch: false
+
+  customWelcome: "What can I help with? YOLOOOO!"
+
+registration:
+  socialLogins: [ "openid" ]
+  allowedDomains:
+  - "kavehome.com"
+
+balance:
+  enabled: true
+  startBalance: 2000000
+  autoRefillEnabled: true
+  refillIntervalValue: 1
+  refillIntervalUnit: "days"
+  refillAmount: 2000000
+
+memory:
+  disabled: false
+  tokenLimit: 1000
+  personalize: true
+  messageWindowSize: 3
+  agent:
+    provider: 'azureOpenAI'
+    model: 'gpt-5-mini'
+
+endpoints:
+  agents:
+    disableBuilder: false
+    recursionLimit: 5
+    maxRecursionLimit: 5
+    allowedProviders:
+    - azureOpenAI
+    - google
+    capabilities: [ "context", "file_search", "ocr", "actions", "tools", "chain", "artifacts" ]
+
+  azureOpenAI:
+    titleConvo: true
+    titleModel: gpt-5-mini
+    assistants: false
+    plugins: false
+    groups:
+    - group: "default"
+      apiKey: "foo"
+      instanceName: "myinstance"
+      version: "2025-04-01-preview"
+      models:
+        gpt-5.2:
+          deploymentName: gpt-5.2-chat
+        gpt-5.1:
+          deploymentName: gpt-5.1-chat
+        gpt-5-mini:
+          deploymentName: gpt-5-mini
+
+modelSpecs:
+  addedEndpoints: [ "agents" ]
+  prioritize: true
+  enforce: false
+  list:
+  - name: "julia"
+    label: "Julia"
+    default: true
+    description: "Default model based on GPT-5.2"
+    preset:
+      endpoint: "azureOpenAI"
+      model: "gpt-5.2-chat"
+      maxContextTokens: 80000
+      max_tokens: 4000
+      modelLabel: "Julia"
+      web_search: false
+      promptPrefix: |
+        Identity & Personality:
+          - You are Jul.ia, Kave Home's AI assistant
+          - Be warm, helpful, and genuinely interested in supporting the team
+          - Think of yourself as a knowledgeable colleague who's here to make everyone's work easier
+
+        Communication Style:
+          - Be helpful, conversational, and professional
+          - Use natural language while maintaining clarity
+          - Show empathy and adapt tone to the context (supportive for problem-solving, 
+            concise for quick questions)
+
+        Accuracy & Transparency:
+          - Clearly distinguish between facts, analysis, and possibilities
+          - When inferring or suggesting, use language like "This suggests..." or 
+            "Based on X, it appears..."
+          - If uncertain, say so explicitly: "I don't have enough information about..." 
+            or "I'm not certain, but..."
+          - Cite sources when using specific information (documents, data, research)
+
+        Clarification & Understanding:
+          - If a question is ambiguous, offer your best interpretation AND ask if 
+            that's what they meant
+          - Example: "It sounds like you're asking about X. Is that right, or did 
+            you mean Y?"
+          - Avoid filling gaps with assumptions—ask for missing details when needed
+
+        Privacy & Security:
+          - Never include personal identifiable information, credentials, or sensitive 
+            business data in responses
+          - If you need such information to help, request it through secure channels
+          - Flag if a request might involve sensitive data handling
+
+        Language:
+          - Respond in the language of the question
+          - For mixed-language input, ask which language to use or default to the 
+            primary language
+
+  - name: "gemini"
+    label: "Gemini 3 Flash"
+    default: false
+    preset:
+      endpoint: "google"
+      model: "gemini-3-flash"
+      maxContextTokens: 80000
+      maxOutputTokens: 4000
+      temperature: 0.8
+      top_p: 0.9
+      modelLabel: "Gemini 3 Flash"
+      web_search: true
+      thinking: true
+
+fileConfig:
+  avatarSizeLimit: 2 # Max size for user avatar uploads in MB
+  serverFileSizeLimit: 10 # Global max size for any file uploaded to the server in MB
+  fileTokenLimit: 100000
+  imageGeneration:
+    percentage: 100
+    px: 1024
+  endpoints:
+    azureOpenAI:
+      fileLimit: 2 # Max number of files allowed in a single upload request
+      totalSizeLimit: 20 # Total max size allowed for all files in a single request
+    google:
+      fileLimit: 2
+      totalSizeLimit: 20
+
+ocr:
+  mistralModel: "mistral-document-ai-2505"
+  apiKey: "foo"
+  baseURL: "https://foo.services.ai.azure.com/providers/mistral/azure/ocr"
+  strategy: "azure_mistral_ocr" # Use Azure strategy
+ 
