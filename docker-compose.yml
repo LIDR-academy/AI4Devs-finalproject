@@ -31,19 +31,25 @@ services:
       # on first container start (skipped if data volume exists).
       - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
+      # Use 127.0.0.1 (TCP) instead of localhost (Unix socket) so the
+      # check only passes once MySQL is actually listening on port 3306.
+      # During the init phase MySQL runs a temporary server on socket
+      # only (port 0), causing a false-positive with localhost.
       test:
         - "CMD"
         - "mysqladmin"
         - "ping"
         - "-h"
-        - "localhost"
+        - "127.0.0.1"
+        - "-P"
+        - "3306"
         - "-u"
         - "root"
         - "-p${MYSQL_ROOT_PASSWORD}"
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 30s
+      retries: 20
+      start_period: 15s
 
   # -----------------------------------------------------------
   # Flyway — ms-router
