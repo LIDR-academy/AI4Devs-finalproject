@@ -57,13 +57,13 @@ services:
       mysql:
         condition: service_healthy
     env_file: .env
-    command: >
-      -url=jdbc:mysql://mysql:3306/${ROUTER_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      -user=${ROUTER_DB_USER}
-      -password=${ROUTER_DB_PASSWORD}
-      -locations=filesystem:/flyway/sql
-      -baselineOnMigrate=true
-      migrate
+    command:
+      - migrate
+      - -url=jdbc:mysql://mysql:3306/${ROUTER_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - -user=${ROUTER_DB_USER}
+      - -password=${ROUTER_DB_PASSWORD}
+      - -locations=filesystem:/flyway/sql
+      - -baselineOnMigrate=true
     volumes:
       - ./ms-router/src/main/resources/db/migration:/flyway/sql:ro
 
@@ -78,13 +78,13 @@ services:
       mysql:
         condition: service_healthy
     env_file: .env
-    command: >
-      -url=jdbc:mysql://mysql:3306/${PLANIFICATIONS_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      -user=${PLANIFICATIONS_DB_USER}
-      -password=${PLANIFICATIONS_DB_PASSWORD}
-      -locations=filesystem:/flyway/sql
-      -baselineOnMigrate=true
-      migrate
+    command:
+      - migrate
+      - -url=jdbc:mysql://mysql:3306/${PLANIFICATIONS_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - -user=${PLANIFICATIONS_DB_USER}
+      - -password=${PLANIFICATIONS_DB_PASSWORD}
+      - -locations=filesystem:/flyway/sql
+      - -baselineOnMigrate=true
     volumes:
       - ./ms-planifications/src/main/resources/db/migration:/flyway/sql:ro
 
