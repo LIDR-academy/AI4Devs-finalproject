@@ -1,0 +1,96 @@
+# =============================================================
+# Route Searcher — Local Development  |  docker-compose.yml
+#
+# Usage:
+#   cp .env.example .env   # fill in credentials
+#   docker compose up
+#
+# Services:
+#   mysql                 — MySQL 8.0 with both microservice DBs
+#   flyway-router         — Applies ms-router migrations
+#   flyway-planifications — Applies ms-planifications migrations
+# =============================================================
+
+services:
+
+  # -----------------------------------------------------------
+  # MySQL 8
+  # -----------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: route_searcher_mysql
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    ports:
+      - "${MYSQL_HOST_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Init script creates both databases and dedicated users
+      # on first container start (skipped if data volume exists).
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - "CMD"
+        - "mysqladmin"
+        - "ping"
+        - "-h"
+        - "localhost"
+        - "-u"
+        - "root"
+        - "-p${MYSQL_ROOT_PASSWORD}"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # -----------------------------------------------------------
+  # Flyway — ms-router
+  # Runs once, exits 0 on success.  Re-runs are no-ops.
+  # -----------------------------------------------------------
+  flyway-router:
+    image: flyway/flyway:10
+    container_name: flyway_ms_router
+    restart: "no"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file: .env
+    command: >
+      -url=jdbc:mysql://mysql:3306/${ROUTER_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      -user=${ROUTER_DB_USER}
+      -password=${ROUTER_DB_PASSWORD}
+      -locations=filesystem:/flyway/sql
+      -baselineOnMigrate=true
+      migrate
+    volumes:
+      - ./ms-router/src/main/resources/db/migration:/flyway/sql:ro
+
+  # -----------------------------------------------------------
+  # Flyway — ms-planifications
+  # -----------------------------------------------------------
+  flyway-planifications:
+    image: flyway/flyway:10
+    container_name: flyway_ms_planifications
+    restart: "no"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file: .env
+    command: >
+      -url=jdbc:mysql://mysql:3306/${PLANIFICATIONS_DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      -user=${PLANIFICATIONS_DB_USER}
+      -password=${PLANIFICATIONS_DB_PASSWORD}
+      -locations=filesystem:/flyway/sql
+      -baselineOnMigrate=true
+      migrate
+    volumes:
+      - ./ms-planifications/src/main/resources/db/migration:/flyway/sql:ro
+
+# -------------------------------------------------------------
+# Volumes
+# -------------------------------------------------------------
+volumes:
+  mysql_data:
+    driver: local
