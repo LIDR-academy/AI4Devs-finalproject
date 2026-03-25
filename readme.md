@@ -94,7 +94,29 @@
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+### Endpoints Principales
+
+Se han documentado los **6 endpoints principales** que cubren el flujo de búsqueda, reservas y gestión de usuario.
+
+**Documentación completa:** [docs/4_especificacion_api.md](docs/4_especificacion_api.md)
+
+| Endpoint | Método | Servicio | Descripción |
+|----------|--------|----------|-------------|
+| `/api/v1/search/routes` | POST | Search Service | Búsqueda geoespacial de rutas con filtros de fecha, hora y tipo de viaje |
+| `/api/v1/routes/{routeId}/schedules` | GET | Routes Service | Consulta de horarios detallados de una ruta específica |
+| `/api/v1/sites/{siteId}/config` | GET | Sites Service | Configuración del sitio corporativo (radio de búsqueda, destinos) |
+| `/api/v1/bookings` | POST | Booking Service | Creación de reserva con validación de disponibilidad |
+| `/api/v1/bookings` | GET | Booking Service | Listado de reservas activas e históricas del usuario |
+| `/api/v1/users/me` | GET | Sites Service | Perfil del usuario autenticado y contexto del sitio |
+
+**Base URL:** `https://api.routesearch.busup.org/api/v1`
+
+**Características:**
+- ✅ Schemas completos en formato OpenAPI 3.0.3
+- ✅ Validaciones de datos (coordenadas, fechas, horas)
+- ✅ Manejo de errores con mensajes en español
+- ✅ Ejemplos de request/response con contexto real
+- ✅ Documentación de códigos de error (400, 403, 404)
 
 ---
 
