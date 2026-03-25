@@ -20,6 +20,9 @@ Marketplace de servicios bajo demanda que conecta a clientes con profesionales l
 https://tkooizxsdfcyorsfiuow.supabase.co (API Base)
 ### 0.5. URL o archivo comprimido del repositorio
 https://github.com/xaman1990/MarketService
+### 0.6. Fase Inicial y Especificaciones
+- **Fase Inicial:** El proyecto se armó inicialmente en esta sesión de ChatGPT: [Master Final Project](https://chatgpt.com/g/g-p-694b1bbf832c8191bba6ebae7d281f5a-masterfinal/project)
+- **Especificaciones Originales:** Las especificaciones iniciales obtenidas del prompt de ChatGPT se encuentran en el repositorio [MarketService](https://github.com/xaman1990/MarketService) en la ruta `/MarketService/openspec/specs`.
 ---
 ## 1. Descripción general del producto
 ### **1.1. Objetivo:**

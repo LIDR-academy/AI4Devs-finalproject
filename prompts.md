@@ -1,6 +1,13 @@
 # Prompts Reales (Traducidos) - Proyecto Xambi
 > Esta sección contiene los prompts reales utilizados durante el desarrollo de Xambi, todos traducidos al español para reflejar el lenguaje de trabajo del proyecto. Estos prompts demuestran cómo se guiaron las distintas fases del desarrollo.
+
 ---
+## 0. Fase Inicial y Especificaciones
+- **Fase Inicial:** El proyecto se armó inicialmente en esta sesión de ChatGPT: [Master Final Project](https://chatgpt.com/g/g-p-694b1bbf832c8191bba6ebae7d281f5a-masterfinal/project)
+- **Especificaciones Originales:** Las especificaciones iniciales obtenidas del prompt de ChatGPT se encuentran en el repositorio [MarketService](https://github.com/xaman1990/MarketService) en la ruta `/MarketService/openspec/specs`.
+
+---
+
 ## 1. Descripción general del producto
 **Prompt 1 (Visión del MVP):**
 > "Xambi es un Marketplace de Servicios diseñado para conectar clientes con proveedores verificados. El objetivo del MVP es digitalizar un mercado tradicional informal, proporcionando trazabilidad y control institucional a través de la gestión de solicitudes, propuestas, contratos, chats y verificaciones."
