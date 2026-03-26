@@ -1,4 +1,4 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -60,15 +60,8 @@ export const Header = ({
   showBackButton = false,
   onBack,
 }: HeaderProps) => {
-  const { isAuthenticated, user, logout } = useAuthContext();
+  const { isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
-  const location = useLocation();
-  const isHomePage = location.pathname === '/';
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   const handleBack = () => {
     if (onBack) {

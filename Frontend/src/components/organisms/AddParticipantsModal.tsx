@@ -282,7 +282,13 @@ export function AddParticipantsModal({
                 `Invitar (${emailsToAdd.length})`
               )}
             </Button>
-            <Button className="w-full sm:flex-1" variant="secondary" size="lg" onClick={handleClose} disabled={isSubmitting}>
+            <Button
+              className="w-full sm:flex-1"
+              variant="secondary"
+              size="lg"
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
           </div>

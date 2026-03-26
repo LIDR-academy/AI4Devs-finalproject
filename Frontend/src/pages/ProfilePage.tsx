@@ -231,7 +231,7 @@ export const ProfilePage = () => {
                 )}
               </Button>
             </form>
-            
+
             <div className="mt-8 pt-6 border-t border-slate-100">
               <Button
                 type="button"

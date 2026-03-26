@@ -16,7 +16,10 @@ export const usePageTitle = () => {
   useEffect(() => {
     if (routeTitles[location.pathname]) {
       document.title = routeTitles[location.pathname];
-    } else if (location.pathname.startsWith('/trips/') && location.pathname.endsWith('/expenses/new')) {
+    } else if (
+      location.pathname.startsWith('/trips/') &&
+      location.pathname.endsWith('/expenses/new')
+    ) {
       document.title = 'Agregar Gasto - TravelSplit';
     } else if (location.pathname.startsWith('/trips/')) {
       document.title = 'Detalle del Viaje - TravelSplit';
