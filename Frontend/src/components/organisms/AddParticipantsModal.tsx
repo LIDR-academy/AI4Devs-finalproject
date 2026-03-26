@@ -134,14 +134,21 @@ export function AddParticipantsModal({
   }, [tripId, emailsToAdd, onSuccess]);
 
   const handleClose = useCallback(() => {
-    if (!isSubmitting) {
-      setSearchEmail('');
-      setSearchResult(null);
-      setEmailsToAdd([]);
-      setRootError('');
-      onClose();
+    if (isSubmitting) return;
+
+    if (emailsToAdd.length > 0) {
+      const confirmed = window.confirm(
+        'Tienes participantes pendientes en la lista. ¿Seguro que deseas cerrar? Se perderán los cambios.',
+      );
+      if (!confirmed) return;
     }
-  }, [isSubmitting, onClose]);
+
+    setSearchEmail('');
+    setSearchResult(null);
+    setEmailsToAdd([]);
+    setRootError('');
+    onClose();
+  }, [isSubmitting, emailsToAdd.length, onClose]);
 
   if (!isOpen) return null;
 
@@ -279,7 +286,7 @@ export function AddParticipantsModal({
                   Agregando...
                 </span>
               ) : (
-                `Invitar (${emailsToAdd.length})`
+                `Agregar (${emailsToAdd.length})`
               )}
             </Button>
             <Button

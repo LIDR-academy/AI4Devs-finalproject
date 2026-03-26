@@ -1,5 +1,4 @@
 import type { TripParticipant } from '@/types/trip.types';
-import { EmailSearchInput } from './EmailSearchInput';
 
 interface BeneficiariesSelectorProps {
   participants: TripParticipant[];
@@ -8,8 +7,6 @@ interface BeneficiariesSelectorProps {
   onToggle: (userId: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
-  onAddByEmail: (userId: string) => void;
-  onInviteByEmail: (email: string) => Promise<void>;
   error?: string;
 }
 
@@ -25,8 +22,6 @@ export const BeneficiariesSelector = ({
   onToggle,
   onSelectAll,
   onDeselectAll,
-  onAddByEmail,
-  onInviteByEmail,
   error,
 }: BeneficiariesSelectorProps) => {
   // Filter out the payer from beneficiaries list
@@ -55,15 +50,6 @@ export const BeneficiariesSelector = ({
           </button>
         </div>
       </div>
-      {onAddByEmail && (
-        <div className="mb-3">
-          <EmailSearchInput
-            onAdd={onAddByEmail || (() => {})}
-            onInvite={onInviteByEmail}
-            existingEmails={participants.map(p => p.user?.email || '').filter(Boolean)}
-          />
-        </div>
-      )}
       <div className="space-y-2 max-h-48 overflow-y-auto">
         {availableBeneficiaries.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-4">
@@ -72,12 +58,15 @@ export const BeneficiariesSelector = ({
         ) : (
           availableBeneficiaries.map(participant => {
             const isSelected = selectedBeneficiaryIds.includes(participant.user_id);
+            const checkboxId = `beneficiary-${participant.user_id}`;
             return (
               <label
                 key={participant.id}
+                htmlFor={checkboxId}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors"
               >
                 <input
+                  id={checkboxId}
                   type="checkbox"
                   checked={isSelected}
                   onChange={() => onToggle(participant.user_id)}

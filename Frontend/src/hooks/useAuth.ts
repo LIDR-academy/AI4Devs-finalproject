@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loginUser, type LoginRequest, type LoginResponse } from '@/services/auth.service';
+import { queryClient } from '@/config/queryClient';
 
 const TOKEN_KEY = 'travelsplit_token';
 const USER_KEY = 'travelsplit_user';
@@ -74,6 +75,9 @@ export function useAuth() {
    * @returns Promise that resolves when login is successful
    */
   const login = useCallback(async (credentials: LoginRequest): Promise<LoginResponse> => {
+    // Clear any stale cached data from previous sessions
+    queryClient.clear();
+
     const response = await loginUser(credentials);
 
     // Store token and user data in localStorage first
@@ -99,6 +103,7 @@ export function useAuth() {
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    queryClient.clear();
     setAuthState({
       isAuthenticated: false,
       user: null,
@@ -113,6 +118,9 @@ export function useAuth() {
    * @param user - User data (id, nombre, email)
    */
   const setSession = useCallback((accessToken: string, user: User) => {
+    // Clear any stale cached data from previous sessions
+    queryClient.clear();
+
     localStorage.setItem(TOKEN_KEY, accessToken);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     setAuthState({

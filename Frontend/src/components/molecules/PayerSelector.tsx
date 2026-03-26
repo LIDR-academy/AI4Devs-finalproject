@@ -20,8 +20,11 @@ export const PayerSelector = ({
 }: PayerSelectorProps) => {
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-slate-700 mb-1">Pagador</label>
+      <label htmlFor="payer-select" className="block text-sm font-medium text-slate-700 mb-1">
+        Pagador
+      </label>
       <select
+        id="payer-select"
         value={selectedPayerId || ''}
         onChange={e => onSelect(e.target.value)}
         className={`w-full min-h-[48px] px-4 text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-600 focus-visible:ring-2 focus-visible:ring-violet-600 focus:border-transparent active:bg-slate-50 transition-colors ${

@@ -7,9 +7,9 @@ import { useExpenseForm } from '@/hooks/useExpenseForm';
 import { useExpenseFormData } from '@/hooks/useExpenseFormData';
 import { getTripById } from '@/services/trip.service';
 import { Card } from '@/components/molecules/Card';
+import { Header } from '@/components';
 import { Skeleton } from '@/components/atoms/Skeleton';
 import { Toast } from '@/components/atoms/Toast';
-import { DevIndicator } from '@/components/atoms/DevIndicator';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import type { TripCurrency } from '@/types/trip.types';
 
@@ -151,25 +151,28 @@ export const ExpenseFormPage = () => {
           duration={3500}
         />
       )}
-      <div className="min-h-screen bg-slate-50 pb-24">
-        <div className="max-w-md mx-auto px-6 py-8">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-heading font-bold text-slate-900">Nuevo Gasto</h1>
-            <DevIndicator isUsingMockData={isUsingMockData} />
+      <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
+        <Header
+          title="Nuevo Gasto"
+          showBackButton={true}
+          onBack={() => navigate(`/trips/${tripId}`)}
+        />
+        <main className="flex-1 px-6 py-8">
+          <div className="max-w-md mx-auto">
+            <Card>
+              <ExpenseForm
+                tripId={tripId || 'mock-trip'}
+                categories={categories}
+                participants={participants}
+                currentUserId={user.id}
+                currency={trip_currency}
+                onSubmit={submitExpense}
+                isLoading={isSubmitting}
+                error={expenseError}
+              />
+            </Card>
           </div>
-          <Card>
-            <ExpenseForm
-              tripId={tripId || 'mock-trip'}
-              categories={categories}
-              participants={participants}
-              currentUserId={user.id}
-              currency={trip_currency}
-              onSubmit={submitExpense}
-              isLoading={isSubmitting}
-              error={expenseError}
-            />
-          </Card>
-        </div>
+        </main>
       </div>
     </>
   );

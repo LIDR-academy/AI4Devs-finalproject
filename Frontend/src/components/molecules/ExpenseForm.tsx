@@ -57,6 +57,7 @@ export const ExpenseForm = ({
   const selectedPayerId = watch('payer_id');
   const selectedBeneficiaryIds = watch('beneficiary_ids') || [];
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [payerExcludedMessage, setPayerExcludedMessage] = useState<string | null>(null);
 
   // Set default payer to current user if available
   useEffect(() => {
@@ -91,8 +92,18 @@ export const ExpenseForm = ({
   const handlePayerSelect = (payerId: string) => {
     setValue('payer_id', payerId, { shouldValidate: true });
     // Remove payer from beneficiaries if they were selected
+    const wasInBeneficiaries = selectedBeneficiaryIds.includes(payerId);
     const currentBeneficiaries = selectedBeneficiaryIds.filter(id => id !== payerId);
     setValue('beneficiary_ids', currentBeneficiaries, { shouldValidate: true });
+
+    // Show feedback if payer was removed from beneficiaries
+    if (wasInBeneficiaries) {
+      const payerName = participants.find(p => p.user_id === payerId)?.user?.nombre || 'El pagador';
+      setPayerExcludedMessage(
+        `${payerName} fue removido de los beneficiarios (no puede pagarse a sí mismo)`,
+      );
+      setTimeout(() => setPayerExcludedMessage(null), 4000);
+    }
   };
 
   const handleBeneficiaryToggle = (userId: string) => {
@@ -121,23 +132,6 @@ export const ExpenseForm = ({
 
   const handleImageChange = (file: File | null) => {
     setReceiptFile(file);
-  };
-
-  const handleAddBeneficiaryByEmail = (userId: string) => {
-    // Add user to beneficiaries if not already selected
-    if (!selectedBeneficiaryIds.includes(userId)) {
-      setValue('beneficiary_ids', [...selectedBeneficiaryIds, userId], {
-        shouldValidate: true,
-      });
-    }
-  };
-
-  const handleInviteByEmail = async (email: string) => {
-    // TODO: Implement invitation logic
-    // For now, show a message that invitation would be sent
-    console.log('Invitation would be sent to:', email);
-    // In a real implementation, this would call an API to send the invitation
-    alert(`Se enviaría una invitación a ${email} para unirse al viaje.`);
   };
 
   return (
@@ -198,10 +192,14 @@ export const ExpenseForm = ({
         onToggle={handleBeneficiaryToggle}
         onSelectAll={handleSelectAll}
         onDeselectAll={handleDeselectAll}
-        onAddByEmail={handleAddBeneficiaryByEmail}
-        onInviteByEmail={handleInviteByEmail}
         error={errors.beneficiary_ids?.message}
       />
+
+      {payerExcludedMessage && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-sm text-amber-700">{payerExcludedMessage}</p>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-2">

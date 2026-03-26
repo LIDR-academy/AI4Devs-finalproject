@@ -1,6 +1,17 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { Users, Calendar, DollarSign, Settings, Crown, User, Receipt } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Users,
+  Calendar,
+  DollarSign,
+  Settings,
+  Crown,
+  User,
+  Receipt,
+  Copy,
+  Check,
+  Plus,
+} from 'lucide-react';
 import { Header } from '@/components';
 import { ErrorState } from '@/components/molecules/ErrorState';
 import { EmptyState } from '@/components/molecules/EmptyState';
@@ -99,6 +110,7 @@ export function TripDetailPage() {
   const [all_expenses, set_all_expenses] = useState<ExpenseListItem[]>([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isAddParticipantsModalOpen, setIsAddParticipantsModalOpen] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   const {
     trip,
@@ -173,6 +185,44 @@ export function TripDetailPage() {
     }
   };
 
+  const handleCopyCode = useCallback(async () => {
+    if (!trip?.code) return;
+    try {
+      await navigator.clipboard.writeText(trip.code);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch {
+      // Clipboard API not available
+    }
+  }, [trip?.code]);
+
+  const tabs = [
+    { key: 'gastos', label: 'Gastos' },
+    { key: 'saldos', label: 'Saldos' },
+    { key: 'participantes', label: 'Participantes' },
+  ] as const;
+
+  const handleTabKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const currentIndex = tabs.findIndex(t => t.key === activeTab);
+      let nextIndex: number | null = null;
+
+      if (e.key === 'ArrowRight') {
+        nextIndex = (currentIndex + 1) % tabs.length;
+      } else if (e.key === 'ArrowLeft') {
+        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      }
+
+      if (nextIndex !== null) {
+        e.preventDefault();
+        setActiveTab(tabs[nextIndex].key);
+        const nextTab = document.getElementById(`${tabs[nextIndex].key}-tab`);
+        nextTab?.focus();
+      }
+    },
+    [activeTab, tabs],
+  );
+
   // Loading state
   if (isLoading) {
     return <LoadingState />;
@@ -225,6 +275,11 @@ export function TripDetailPage() {
     );
   };
 
+  // Loading state
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header title={trip.name} showBackButton={true} onBack={() => navigate('/trips')} />
@@ -236,7 +291,22 @@ export function TripDetailPage() {
             <div className="flex items-start justify-between">
               <div className="space-y-2">
                 <h2 className="text-2xl font-heading font-bold text-slate-900">{trip.name}</h2>
-                <p className="text-sm text-slate-500">Código: {trip.code}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-slate-500">Código: {trip.code}</p>
+                  <button
+                    type="button"
+                    onClick={handleCopyCode}
+                    className="p-1.5 text-slate-400 hover:text-violet-600 active:text-violet-700 rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-violet-600"
+                    aria-label={copiedCode ? 'Código copiado' : 'Copiar código'}
+                    title={copiedCode ? 'Copiado' : 'Copiar código'}
+                  >
+                    {copiedCode ? (
+                      <Check size={16} className="text-emerald-600" />
+                    ) : (
+                      <Copy size={16} />
+                    )}
+                  </button>
+                </div>
               </div>
               {trip.userRole === 'CREATOR' && (
                 <button
@@ -252,14 +322,27 @@ export function TripDetailPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-6">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100">
-                  <Users className="w-5 h-5 text-violet-600" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100">
+                    <Users className="w-5 h-5 text-violet-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Participantes</p>
+                    <p className="text-lg font-semibold text-slate-900">{participantCount}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-slate-500">Participantes</p>
-                  <p className="text-lg font-semibold text-slate-900">{participantCount}</p>
-                </div>
+                {trip.userRole === 'CREATOR' && trip.status === 'ACTIVE' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddParticipantsModalOpen(true)}
+                    className="p-2 text-violet-600 bg-violet-50 hover:bg-violet-100 active:scale-95 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-violet-600 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    aria-label="Agregar participante"
+                    title="Agregar participante"
+                  >
+                    <Plus size={20} />
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -299,11 +382,7 @@ export function TripDetailPage() {
         <div className="sticky top-16 z-30 bg-slate-50">
           <div className="max-w-md mx-auto bg-white rounded-t-xl border-b border-slate-200 shadow-sm">
             <nav role="tablist" className="flex px-6">
-              {[
-                { key: 'gastos', label: 'Gastos' },
-                { key: 'saldos', label: 'Saldos' },
-                { key: 'participantes', label: 'Participantes' },
-              ].map(tab => (
+              {tabs.map(tab => (
                 <button
                   key={tab.key}
                   type="button"
@@ -311,7 +390,9 @@ export function TripDetailPage() {
                   aria-selected={activeTab === tab.key}
                   aria-controls={`${tab.key}-panel`}
                   id={`${tab.key}-tab`}
-                  onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                  tabIndex={activeTab === tab.key ? 0 : -1}
+                  onClick={() => setActiveTab(tab.key)}
+                  onKeyDown={handleTabKeyDown}
                   className={`flex-1 px-3 py-3 text-sm font-medium transition-all duration-200 focus-visible:outline-2 focus-visible:outline-violet-600 focus-visible:outline-offset-2 ${
                     activeTab === tab.key
                       ? 'text-violet-600 font-semibold border-b-2 border-violet-600'
@@ -332,7 +413,7 @@ export function TripDetailPage() {
               role="tabpanel"
               id="gastos-panel"
               aria-labelledby="gastos-tab"
-              className="bg-white rounded-b-xl p-6 shadow-md"
+              className="bg-white rounded-b-xl border-t-0 p-6 shadow-md"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3
@@ -428,10 +509,10 @@ export function TripDetailPage() {
               role="tabpanel"
               id="saldos-panel"
               aria-labelledby="saldos-tab"
-              className="space-y-6"
+              className="bg-white rounded-b-xl border-t-0 p-6 shadow-md space-y-6"
             >
               {/* Summary Section */}
-              <div className="bg-white rounded-b-xl p-6 shadow-md space-y-4">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3
                     id="balances-heading"
@@ -491,10 +572,7 @@ export function TripDetailPage() {
 
                     {/* Summary Stats */}
                     <div className="grid grid-cols-1 gap-3">
-                      <StatCard
-                        label="Gastos"
-                        value={formatCurrency(balances.total_expenses ?? 0, trip_currency)}
-                      />
+                      <StatCard label="Gastos" value={expenses_meta.total ?? 0} />
                       <StatCard
                         label="Monto total"
                         value={formatCurrency(balances.total_expenses ?? 0, trip_currency)}
@@ -601,7 +679,7 @@ export function TripDetailPage() {
               role="tabpanel"
               id="participantes-panel"
               aria-labelledby="participantes-tab"
-              className="bg-white rounded-b-xl p-6 shadow-md"
+              className="bg-white rounded-b-xl border-t-0 p-6 shadow-md"
             >
               {trip?.userRole === 'CREATOR' && (
                 <div className="flex items-center justify-between mb-4">

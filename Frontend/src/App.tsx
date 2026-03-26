@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createBrowserRouter, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuthContext } from './contexts/AuthContext';
+import { queryClient } from '@/config/queryClient';
 import { BottomTabBar } from '@/components/organisms/BottomTabBar';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -13,18 +14,6 @@ import { CreateTripPage } from '@/pages/CreateTripPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { ProtectedRoute } from '@/components/molecules/ProtectedRoute';
 import { usePageTitle } from '@/hooks/usePageTitle';
-
-/**
- * React Query client configuration
- */
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 /**
  * Layout component that conditionally shows BottomTabBar

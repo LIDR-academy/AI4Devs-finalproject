@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserCheck, UserX, X } from 'lucide-react';
+import { Search, UserCheck, UserX, X, Info } from 'lucide-react';
 import { Header } from '@/components';
 import { createTripSchema } from '@/schemas/trip.schema';
 
@@ -250,7 +250,7 @@ export function CreateTripPage() {
               {/* Information about code generation */}
               <div className="space-y-2">
                 <p className="text-sm text-slate-500 flex items-center gap-2">
-                  <span className="text-base">ℹ️</span>
+                  <Info size={16} className="text-slate-400 shrink-0" />
                   <span>Se generará un código único para invitar</span>
                 </p>
               </div>

@@ -187,25 +187,42 @@ export function TripsListPage() {
   // Empty state - No trips
   if (!trips || trips.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
         <Header title="Mis Viajes" actions={<TripsHeaderActions navigate={navigate} />} />
-        <main className="flex-1">
-          <EmptyState
-            icon={<MapIcon size={64} />}
-            title="¿Planeando una escapada?"
-            description="Crea tu primer viaje para empezar a dividir gastos fácilmente"
-            action={
-              <Button
-                variant="primary"
-                size="lg"
-                className="w-full"
-                onClick={() => navigate('/trips/new')}
-              >
-                + Crear mi primer viaje
-              </Button>
-            }
-          />
+        <main className="flex-1 px-6 py-8">
+          <div className="max-w-md mx-auto space-y-6">
+            <EmptyState
+              icon={<MapIcon size={64} />}
+              title="¿Planeando una escapada?"
+              description="Crea tu primer viaje o únete a uno existente con un código"
+              action={
+                <div className="space-y-3 w-full">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => navigate('/trips/new')}
+                  >
+                    + Crear mi primer viaje
+                  </Button>
+                  <JoinTripButton
+                    onSuccess={handleJoinSuccess}
+                    onError={handleJoinError}
+                    disabled={isJoining}
+                  />
+                </div>
+              }
+            />
+          </div>
         </main>
+
+        {/* Success Toast */}
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          isVisible={showToast}
+          onClose={() => setShowToast(false)}
+        />
       </div>
     );
   }

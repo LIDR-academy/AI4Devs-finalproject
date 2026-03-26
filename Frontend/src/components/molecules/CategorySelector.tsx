@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react';
 import { CategoryPill } from '../atoms/CategoryPill';
 import type { ExpenseCategory } from '@/types/expense.types';
 import { Utensils, Car, Home, Film, ShoppingBag, Coffee } from 'lucide-react';
@@ -30,24 +31,47 @@ export const CategorySelector = ({
   onSelect,
   error,
 }: CategorySelectorProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return undefined;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [categories]);
+
   const getIcon = (category: ExpenseCategory) => {
-    // Try to match icon name from category
     const iconName = category.icon?.toLowerCase() || category.name.toLowerCase();
     return categoryIconMap[iconName] || <ShoppingBag size={24} />;
   };
 
   return (
     <div className="w-full">
-      {/* Container that escapes Card padding: negative margin to use full width */}
-      <div className="-mx-6">
-        {/* Scroll container: must have defined width to enable overflow */}
-        {/* Removed flex justify-center to allow native scroll behavior with mouse/trackpad/touch */}
-        {/* touch-pan-x enables horizontal panning/scroll with touch devices */}
-        <div className="overflow-x-auto overflow-y-hidden scrollbar-hide w-full category-scroll">
-          {/* Content container: increased padding (px-8 = 32px) for better visual spacing from edges */}
-          {/* Using inline-flex to allow natural width expansion for scroll */}
-          {/* When content is smaller than container, it will be left-aligned but scrollable */}
-          {/* When content is larger, it will scroll horizontally */}
+      <div className="-mx-6 relative">
+        {canScrollLeft && (
+          <div className="absolute left-0 top-0 bottom-2 w-8 bg-linear-to-r from-white to-transparent z-10 pointer-events-none" />
+        )}
+        {canScrollRight && (
+          <div className="absolute right-0 top-0 bottom-2 w-8 bg-linear-to-l from-white to-transparent z-10 pointer-events-none" />
+        )}
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto overflow-y-hidden scrollbar-hide w-full category-scroll"
+        >
           <div className="inline-flex gap-3 pb-2 px-8">
             {categories.map(category => (
               <CategoryPill
@@ -58,7 +82,6 @@ export const CategorySelector = ({
                 onClick={() => onSelect(category.id)}
               />
             ))}
-            {/* Spacer to ensure last item is fully visible when scrolled to the end */}
             <div className="flex-shrink-0 w-8" aria-hidden="true" />
           </div>
         </div>
