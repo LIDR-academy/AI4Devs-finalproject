@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { ExpenseForm } from '@/components/molecules/ExpenseForm';
@@ -19,6 +19,7 @@ import type { TripCurrency } from '@/types/trip.types';
  */
 export const ExpenseFormPage = () => {
   const { tripId } = useParams<{ tripId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuthContext();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -46,7 +47,7 @@ export const ExpenseFormPage = () => {
   } = useExpenseForm({
     tripId: tripId || '',
     onSuccess: () => {
-      window.history.back();
+      navigate(`/trips/${tripId}`);
     },
     onSuccessMessage: message => {
       setSuccessMessage(message);

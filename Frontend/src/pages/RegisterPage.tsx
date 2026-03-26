@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
+import { Header } from '@/components';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { registerUser, type RegisterRequest } from '@/services/auth.service';
@@ -83,8 +84,10 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Header title="TravelSplit" showActions={false} />
+      <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
           <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 mb-2">
             Crear cuenta
@@ -174,7 +177,8 @@ export const RegisterPage = () => {
             </p>
           </div>
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

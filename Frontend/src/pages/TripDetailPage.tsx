@@ -229,8 +229,8 @@ export function TripDetailPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header title={trip.name} showBackButton={true} onBack={() => navigate('/trips')} />
 
-      <main className="flex-1 px-6 py-8">
-        <div className="max-w-md mx-auto space-y-6">
+      <main className="flex-1 px-6 pt-8 pb-32">
+        <div className="max-w-md mx-auto space-y-6 mb-6">
           {/* Trip Info Card */}
           <div className="bg-white rounded-xl p-6 shadow-md space-y-6">
             <div className="flex items-start justify-between">
@@ -332,7 +332,7 @@ export function TripDetailPage() {
               role="tabpanel"
               id="gastos-panel"
               aria-labelledby="gastos-tab"
-              className="bg-white rounded-xl p-6 shadow-md"
+              className="bg-white rounded-b-xl p-6 shadow-md"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3
@@ -431,7 +431,7 @@ export function TripDetailPage() {
               className="space-y-6"
             >
               {/* Summary Section */}
-              <div className="bg-white rounded-xl p-6 shadow-md space-y-4">
+              <div className="bg-white rounded-b-xl p-6 shadow-md space-y-4">
                 <div className="flex items-center justify-between">
                   <h3
                     id="balances-heading"
@@ -601,7 +601,7 @@ export function TripDetailPage() {
               role="tabpanel"
               id="participantes-panel"
               aria-labelledby="participantes-tab"
-              className="bg-white rounded-xl p-6 shadow-md"
+              className="bg-white rounded-b-xl p-6 shadow-md"
             >
               {trip?.userRole === 'CREATOR' && (
                 <div className="flex items-center justify-between mb-4">

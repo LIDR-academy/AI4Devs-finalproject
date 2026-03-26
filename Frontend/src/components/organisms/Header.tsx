@@ -78,31 +78,8 @@ export const Header = ({
     }
   };
 
-  const defaultActions = isAuthenticated ? (
+  const defaultActions = isAuthenticated ? null : (
     <nav className="flex items-center gap-4" aria-label="Main navigation">
-      {!isHomePage && (
-        <Link
-          to="/"
-          className="text-slate-700 hover:text-slate-900 active:text-slate-900 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 transition-colors transition-transform rounded-lg px-2 py-1"
-        >
-          Inicio
-        </Link>
-      )}
-      {user && <span className="text-slate-700 text-sm font-medium">{user.nombre}</span>}
-      <Button variant="secondary" size="sm" onClick={handleLogout}>
-        Cerrar Sesión
-      </Button>
-    </nav>
-  ) : (
-    <nav className="flex items-center gap-4" aria-label="Main navigation">
-      {!isHomePage && (
-        <Link
-          to="/"
-          className="text-slate-700 hover:text-slate-900 active:text-slate-900 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2 transition-colors transition-transform rounded-lg px-2 py-1"
-        >
-          Inicio
-        </Link>
-      )}
       <Button variant="primary" size="sm" onClick={() => navigate('/login')}>
         Iniciar Sesión
       </Button>

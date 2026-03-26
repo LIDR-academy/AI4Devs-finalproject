@@ -12,6 +12,7 @@ import { TripDetailPage } from '@/pages/TripDetailPage';
 import { CreateTripPage } from '@/pages/CreateTripPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { ProtectedRoute } from '@/components/molecules/ProtectedRoute';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * React Query client configuration
@@ -35,11 +36,20 @@ function AppLayout() {
   const hideNavRoutes = ['/login', '/register'];
   const isAuthPage = hideNavRoutes.includes(location.pathname);
 
+  // Update page title
+  usePageTitle();
+
   // Show BottomTabBar only if authenticated and not on auth pages
   const shouldShowNav = isAuthenticated && !isAuthPage;
 
   return (
     <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-[100] focus:px-4 focus:py-2 focus:bg-white focus:text-violet-600 focus:font-medium focus:shadow-md"
+      >
+        Saltar al contenido principal
+      </a>
       <Outlet />
       {shouldShowNav && <BottomTabBar />}
     </>
@@ -83,18 +93,18 @@ function App() {
               ),
             },
             {
-              path: '/trips/:id',
-              element: (
-                <ProtectedRoute>
-                  <TripDetailPage />
-                </ProtectedRoute>
-              ),
-            },
-            {
               path: '/trips/new',
               element: (
                 <ProtectedRoute>
                   <CreateTripPage />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: '/trips/:id',
+              element: (
+                <ProtectedRoute>
+                  <TripDetailPage />
                 </ProtectedRoute>
               ),
             },

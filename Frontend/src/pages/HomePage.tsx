@@ -67,7 +67,7 @@ const HomePageNotAuthenticated = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* Hero Section */}
         <section className="px-6 py-12 md:py-16">
           <div className="max-w-md mx-auto text-center">
@@ -170,9 +170,9 @@ const HomePageEmptyState = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <EmptyState
           icon={<MapIcon size={64} />}
           title="¿Planeando una escapada?"
@@ -218,7 +218,7 @@ const HomePageWithTrips = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
       <Header />
-      <main className="px-6 py-8">
+      <main id="main-content" className="px-6 py-8">
         <div className="max-w-md mx-auto space-y-8">
           <h1 className="sr-only">Resumen general de viajes</h1>
 

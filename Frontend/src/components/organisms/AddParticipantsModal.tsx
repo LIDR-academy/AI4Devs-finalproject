@@ -157,6 +157,7 @@ export function AddParticipantsModal({
       <div
         className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
         role="dialog"
+        aria-modal="true"
         aria-labelledby="add-participants-title"
       >
         <button
@@ -264,11 +265,11 @@ export function AddParticipantsModal({
             </div>
           )}
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button
               variant="primary"
               size="lg"
-              className="flex-1"
+              className="w-full sm:flex-1"
               disabled={emailsToAdd.length === 0 || isSubmitting}
               onClick={handleSubmit}
             >
@@ -281,7 +282,7 @@ export function AddParticipantsModal({
                 `Invitar (${emailsToAdd.length})`
               )}
             </Button>
-            <Button variant="secondary" size="lg" onClick={handleClose} disabled={isSubmitting}>
+            <Button className="w-full sm:flex-1" variant="secondary" size="lg" onClick={handleClose} disabled={isSubmitting}>
               Cancelar
             </Button>
           </div>

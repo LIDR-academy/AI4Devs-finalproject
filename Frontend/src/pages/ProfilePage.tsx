@@ -29,7 +29,7 @@ function getInitials(nombre: string): string {
  * Follows Design System: bg-slate-50, cards rounded-2xl shadow-lg, inputs h-12.
  */
 export const ProfilePage = () => {
-  const { user, setUser } = useAuthContext();
+  const { user, setUser, logout } = useAuthContext();
 
   const {
     register,
@@ -231,6 +231,20 @@ export const ProfilePage = () => {
                 )}
               </Button>
             </form>
+            
+            <div className="mt-8 pt-6 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                className="w-full text-red-600 hover:bg-red-50 border-red-200"
+                onClick={() => {
+                  logout();
+                }}
+              >
+                Cerrar Sesión
+              </Button>
+            </div>
           </div>
         </div>
       </main>

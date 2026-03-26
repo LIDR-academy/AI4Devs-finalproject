@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import { useEffect } from 'react';
+import { Header } from '@/components';
 import { Input } from '@/components/atoms/Input';
 import { Button } from '@/components/atoms/Button';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -15,8 +16,8 @@ import type { ApiError } from '@/types/api.types';
  * Validates: email format, password required (minimum 6 characters as per backlog)
  */
 const loginSchema = z.object({
-  email: z.string().email('El email debe tener un formato válido').min(1, 'El email es requerido'),
-  contraseña: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  email: z.string().min(1, 'El email es requerido').email('El email debe tener un formato válido'),
+  contraseña: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -87,8 +88,10 @@ export const LoginPage = () => {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Header title="TravelSplit" showActions={false} />
+      <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
           <h1 className="text-2xl md:text-3xl font-heading font-bold text-slate-900 mb-2">
             Iniciar sesión
@@ -168,7 +171,8 @@ export const LoginPage = () => {
             </p>
           </div>
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
