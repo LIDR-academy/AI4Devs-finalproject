@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://travelsplit.local/schema/case-bundle.schema.json",
+  "title": "CaseBundle",
+  "description": "JSON Schema for validating a test case bundle. A bundle is a collection of test cases (API or E2E) that can be executed together.",
+  "type": "object",
+  "required": ["id", "name", "description", "version", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier of the bundle",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the bundle",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the bundle scope and purpose",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the bundle (e.g. 1.0.0)",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.-]+)?(\\+[a-zA-Z0-9.-]+)?$"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of the case-bundle schema this file conforms to",
+      "const": "1.0.0"
+    },
+    "cases": {
+      "type": "array",
+      "description": "List of test cases in this bundle",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Case" }
+    }
+  },
+  "$defs": {
+    "Case": {
+      "type": "object",
+      "description": "A single test case (API or E2E)",
+      "required": ["id", "name", "description", "type", "expected"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the case within the bundle (e.g. CP-EXP-001)",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Short title of the test case",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "description": {
+          "type": "string",
+          "description": "Full description: preconditions, steps, expected outcome",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of test: api (contract/integration) or e2e (end-to-end)",
+          "enum": ["api", "e2e"]
+        },
+        "priority": {
+          "type": "string",
+          "description": "Execution priority",
+          "enum": ["critical", "high", "medium", "low"],
+          "default": "medium"
+        },
+        "request": {
+          "$ref": "#/$defs/ApiRequest",
+          "description": "Required when type is 'api'. Request definition."
+        },
+        "expect": {
+          "$ref": "#/$defs/ApiExpect",
+          "description": "Required when type is 'api'. Expected response."
+        },
+        "steps": {
+          "type": "array",
+          "description": "Required when type is 'e2e'. Ordered list of steps.",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/E2EStep" }
+        },
+        "expected": {
+          "$ref": "#/$defs/Expected",
+          "description": "Expected network response, UI feedback (toast or errorFields), and application state."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "api" } },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["request", "expect"],
+            "properties": {
+              "request": { "$ref": "#/$defs/ApiRequest" },
+              "expect": { "$ref": "#/$defs/ApiExpect" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "e2e" } },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["steps"],
+            "properties": {
+              "steps": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/E2EStep" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Expected": {
+      "type": "object",
+      "description": "Expected outcome: network status, UI (toast or errorFields), and state.",
+      "required": ["network", "ui", "state"],
+      "additionalProperties": false,
+      "properties": {
+        "network": {
+          "type": "object",
+          "description": "Expected network/HTTP response.",
+          "required": ["status"],
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "type": "integer",
+              "description": "Expected HTTP status code",
+              "minimum": 100,
+              "maximum": 599
+            }
+          }
+        },
+        "ui": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["toast"],
+              "additionalProperties": false,
+              "properties": {
+                "toast": { "type": "string", "description": "Expected toast message (success or info)." }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["errorFields"],
+              "additionalProperties": false,
+              "properties": {
+                "errorFields": {
+                  "type": "object",
+                  "description": "Expected field-level errors (field name -> message).",
+                  "additionalProperties": { "type": "string" }
+                }
+              }
+            }
+          ]
+        },
+        "state": {
+          "type": "object",
+          "description": "Expected application state after the action (e.g. redirect, route, or key values).",
+          "additionalProperties": true
+        }
+      }
+    },
+    "ApiRequest": {
+      "type": "object",
+      "description": "HTTP request definition for API test cases",
+      "required": ["method", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+          "description": "HTTP method"
+        },
+        "path": {
+          "type": "string",
+          "description": "Path (may include path parameters e.g. /trips/{trip_id}/expenses)",
+          "minLength": 1,
+          "pattern": "^/"
+        },
+        "body": {
+          "type": "object",
+          "description": "Request body (for POST, PUT, PATCH)"
+        },
+        "headers": {
+          "type": "object",
+          "description": "Additional headers (Authorization is usually injected by runner)",
+          "additionalProperties": { "type": "string" }
+        },
+        "query": {
+          "type": "object",
+          "description": "Query string parameters",
+          "additionalProperties": { "type": ["string", "number", "integer", "boolean"] }
+        }
+      }
+    },
+    "ApiExpect": {
+      "type": "object",
+      "description": "Expected response for API test cases",
+      "required": ["statusCode"],
+      "additionalProperties": false,
+      "properties": {
+        "statusCode": {
+          "type": "integer",
+          "description": "Expected HTTP status code",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "bodySchema": {
+          "type": "string",
+          "description": "Optional reference to JSON Schema or OpenAPI schema name for response body validation"
+        },
+        "bodyMatch": {
+          "type": "object",
+          "description": "Optional subset of response body that must match (partial match)"
+        }
+      }
+    },
+    "E2EStep": {
+      "type": "object",
+      "description": "A single step in an E2E test case",
+      "required": ["order", "action"],
+      "additionalProperties": false,
+      "properties": {
+        "order": {
+          "type": "integer",
+          "description": "Step execution order (1-based)",
+          "minimum": 1
+        },
+        "action": {
+          "type": "string",
+          "description": "Action to perform: navigate, click, type, select, submit, assertVisible, assertText, assertUrl, wait",
+          "enum": [
+            "navigate",
+            "click",
+            "type",
+            "select",
+            "submit",
+            "assertVisible",
+            "assertText",
+            "assertUrl",
+            "wait"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "description": "Selector or URL (for navigate), element identifier"
+        },
+        "value": {
+          "type": "string",
+          "description": "Value to type, select, or compare"
+        },
+        "expected": {
+          "type": "string",
+          "description": "Expected value or text for assertions"
+        }
+      }
+    }
+  }
+}

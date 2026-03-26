@@ -1,0 +1,53 @@
+# Single Web Service: frontend (static) + backend (NestJS) in one image.
+# Build from repo root: docker build -f Dockerfile.single -t travelsplit .
+# For same-origin deployment set VITE_API_BASE_URL=/api when building the frontend.
+
+# --- Frontend build ---
+FROM node:22-alpine AS frontend
+WORKDIR /app
+
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
+COPY Frontend/package.json Frontend/package-lock.json ./
+COPY Frontend/index.html Frontend/vite.config.ts Frontend/tsconfig.json Frontend/tsconfig.app.json Frontend/tsconfig.node.json ./
+COPY Frontend/tailwind.config.ts Frontend/postcss.config.js ./
+RUN npm ci
+
+COPY Frontend/src ./src
+RUN npm run build
+
+# --- Backend build ---
+FROM node:22-alpine AS backend
+WORKDIR /app
+
+COPY Backend/package.json Backend/package-lock.json ./
+COPY Backend/nest-cli.json Backend/tsconfig.json Backend/tsconfig.build.json Backend/data-source.ts ./
+RUN npm ci
+
+COPY Backend/scripts ./scripts
+RUN sed -i 's/\r$//' scripts/docker-entrypoint-production.sh && chmod +x scripts/docker-entrypoint-production.sh
+
+COPY Backend/src ./src
+RUN npm run build
+
+# --- Production image ---
+FROM node:22-alpine
+WORKDIR /app
+
+COPY Backend/package.json Backend/package-lock.json ./
+COPY Backend/nest-cli.json Backend/tsconfig.json Backend/tsconfig.build.json Backend/data-source.ts ./
+RUN npm ci
+
+COPY Backend/scripts ./scripts
+RUN sed -i 's/\r$//' scripts/docker-entrypoint-production.sh && chmod +x scripts/docker-entrypoint-production.sh
+
+COPY --from=backend /app/dist ./dist
+COPY Backend/src ./src
+
+COPY --from=frontend /app/dist ./public
+
+ENV NODE_ENV=production
+EXPOSE 3000
+
+ENTRYPOINT ["/bin/sh", "./scripts/docker-entrypoint-production.sh"]

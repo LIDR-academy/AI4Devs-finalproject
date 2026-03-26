@@ -1,0 +1,435 @@
+openapi: 3.0.3
+info:
+  title: TravelSplit Expenses API
+  description: |
+    Contract for the Expenses API used by the TravelSplit backend.
+    All expense endpoints are scoped under a trip and require JWT authentication.
+    Use this contract for E2E tests and client generation.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /trips/{trip_id}/expenses:
+    get:
+      operationId: listExpensesByTrip
+      summary: List expenses for a trip
+      description: |
+        Retrieves all expenses for a trip with pagination and optional filters.
+        Only participants (CREATOR or MEMBER) can view expenses.
+        Expenses are ordered by expense_date DESC, then createdAt DESC.
+      tags:
+        - expenses
+      parameters:
+        - $ref: '#/components/parameters/TripIdPath'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/CategoryIdQuery'
+      responses:
+        '200':
+          description: Lista de gastos obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFoundTrip'
+
+    post:
+      operationId: createExpense
+      summary: Create a new expense
+      description: |
+        Creates a new expense for a trip. Only participants (CREATOR or MEMBER) can create expenses.
+        The trip must be active. payer_id is set from the authenticated user token.
+      tags:
+        - expenses
+      parameters:
+        - $ref: '#/components/parameters/TripIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpenseRequest'
+      responses:
+        '201':
+          description: Gasto creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFoundTripOrCategory'
+
+  /trips/{trip_id}/expenses/{expense_id}:
+    get:
+      operationId: getExpenseById
+      summary: Get expense details
+      description: |
+        Retrieves details of a specific expense. Only participants can view expenses.
+      tags:
+        - expenses
+      parameters:
+        - $ref: '#/components/parameters/TripIdPath'
+        - $ref: '#/components/parameters/ExpenseIdPath'
+      responses:
+        '200':
+          description: Detalles del gasto obtenidos exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFoundExpense'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from login/register
+
+  parameters:
+    TripIdPath:
+      name: trip_id
+      in: path
+      required: true
+      description: ID del viaje
+      schema:
+        type: string
+        format: uuid
+        example: '123e4567-e89b-12d3-a456-426614174000'
+    ExpenseIdPath:
+      name: expense_id
+      in: path
+      required: true
+      description: ID del gasto
+      schema:
+        type: string
+        format: uuid
+        example: '223e4567-e89b-12d3-a456-426614174001'
+    PageQuery:
+      name: page
+      in: query
+      required: false
+      description: Número de página (default 1)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+        example: 1
+    LimitQuery:
+      name: limit
+      in: query
+      required: false
+      description: Límite de elementos por página (default 20, máximo 100)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+        example: 20
+    CategoryIdQuery:
+      name: category_id
+      in: query
+      required: false
+      description: Filtrar por ID de categoría
+      schema:
+        type: integer
+        example: 1
+
+  schemas:
+    CreateExpenseBeneficiary:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: ID del usuario beneficiario del gasto
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        amount_owed:
+          type: number
+          format: double
+          minimum: 0.01
+          description: Monto que debe pagar este beneficiario (opcional, se calcula equitativamente si no se proporciona)
+          example: 50000.0
+
+    CreateExpenseRequest:
+      type: object
+      required:
+        - title
+        - amount
+        - category_id
+        - expense_date
+        - beneficiaries
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          description: Título del gasto
+          example: 'Cena en restaurante'
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          description: Monto del gasto en COP (máximo 2 decimales)
+          example: 150000.0
+        category_id:
+          type: integer
+          description: ID de la categoría del gasto
+          example: 1
+        expense_date:
+          type: string
+          format: date
+          description: Fecha del gasto (YYYY-MM-DD)
+          example: '2024-01-15'
+        receipt_url:
+          type: string
+          format: uri
+          maxLength: 500
+          nullable: true
+          description: URL de la foto del recibo (opcional)
+          example: 'https://example.com/receipts/receipt123.jpg'
+        beneficiaries:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateExpenseBeneficiary'
+          description: Lista de beneficiarios. Si no se especifica amount_owed, se calcula equitativamente
+          example:
+            - user_id: '123e4567-e89b-12d3-a456-426614174000'
+            - user_id: '223e4567-e89b-12d3-a456-426614174001'
+              amount_owed: 75000.0
+
+    ExpenseBeneficiaryResponse:
+      type: object
+      required:
+        - user_id
+        - amount_owed
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: ID del usuario beneficiario
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        amount_owed:
+          type: number
+          format: double
+          description: Monto que debe pagar este beneficiario
+          example: 50000.0
+
+    ExpenseResponse:
+      type: object
+      required:
+        - id
+        - trip_id
+        - payer_id
+        - category_id
+        - category_name
+        - title
+        - amount
+        - expense_date
+        - beneficiaries
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID único del gasto
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        trip_id:
+          type: string
+          format: uuid
+          description: ID del viaje al que pertenece el gasto
+          example: '223e4567-e89b-12d3-a456-426614174001'
+        payer_id:
+          type: string
+          format: uuid
+          description: ID del usuario que pagó el gasto
+          example: '323e4567-e89b-12d3-a456-426614174002'
+        category_id:
+          type: integer
+          description: ID de la categoría del gasto
+          example: 1
+        category_name:
+          type: string
+          description: Nombre de la categoría
+          example: 'Comida'
+        title:
+          type: string
+          description: Título del gasto
+          example: 'Cena en restaurante'
+        amount:
+          type: number
+          format: double
+          description: Monto del gasto en COP
+          example: 150000.0
+        receipt_url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL de la foto del recibo (opcional)
+          example: 'https://example.com/receipts/receipt123.jpg'
+        expense_date:
+          type: string
+          format: date
+          description: Fecha del gasto
+          example: '2024-01-15'
+        beneficiaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpenseBeneficiaryResponse'
+          description: Lista de beneficiarios del gasto
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación del gasto
+          example: '2024-01-15T10:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización del gasto
+          example: '2024-01-15T10:30:00.000Z'
+
+    ExpensePaginationMeta:
+      type: object
+      required:
+        - total
+        - page
+        - limit
+        - hasMore
+      properties:
+        total:
+          type: integer
+          description: Total de gastos en el viaje
+          example: 45
+        page:
+          type: integer
+          description: Página actual
+          example: 1
+        limit:
+          type: integer
+          description: Límite de gastos por página
+          example: 20
+        hasMore:
+          type: boolean
+          description: Indica si hay más gastos en páginas siguientes
+          example: true
+
+    ExpenseListResponse:
+      type: object
+      required:
+        - expenses
+        - meta
+      properties:
+        expenses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpenseResponse'
+          description: Lista de gastos del viaje
+        meta:
+          $ref: '#/components/schemas/ExpensePaginationMeta'
+
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+        method:
+          type: string
+        message:
+          type: string
+          description: Error message (user-facing, may be in Spanish)
+
+  responses:
+    BadRequest:
+      description: Parámetros de consulta o datos de entrada inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            statusCode: 400
+            message: 'Datos de entrada inválidos'
+    Unauthorized:
+      description: No autorizado. Se requiere autenticación.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            statusCode: 401
+            message: 'Unauthorized'
+    Forbidden:
+      description: No eres participante de este viaje
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            statusCode: 403
+            message: 'No eres participante de este viaje'
+    NotFoundTrip:
+      description: El viaje no existe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            statusCode: 404
+            message: 'El viaje no existe'
+    NotFoundExpense:
+      description: El viaje o el gasto no existe, o el gasto no pertenece a este viaje
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            statusCode: 404
+            message: 'El viaje o el gasto no existe'
+    NotFoundTripOrCategory:
+      description: El viaje no existe o está cerrado, o la categoría no existe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            statusCode: 404
+            message: 'El viaje no existe o está cerrado, o la categoría no existe'
+
+tags:
+  - name: expenses
+    description: Expense operations scoped by trip (list, get, create)

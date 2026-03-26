@@ -1,0 +1,148 @@
+{
+  "id": "expenses-2026-03-16-bundle",
+  "name": "Expenses API and E2E bundle 2026-03-16",
+  "description": "Contract and E2E test cases for the Expenses API: list, get, create, validation errors, and UI flows.",
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "cases": [
+    {
+      "id": "CP-EXP-001",
+      "name": "List expenses for trip returns 200",
+      "description": "GET /trips/{trip_id}/expenses with valid token returns 200 and paginated list. UI shows expense list.",
+      "type": "api",
+      "priority": "high",
+      "request": {
+        "method": "GET",
+        "path": "/trips/{trip_id}/expenses",
+        "query": { "page": 1, "limit": 20 }
+      },
+      "expect": {
+        "statusCode": 200
+      },
+      "expected": {
+        "network": { "status": 200 },
+        "ui": { "toast": "Gastos cargados correctamente" },
+        "state": { "route": "/trips/{trip_id}/expenses", "screen": "expense-list" }
+      }
+    },
+    {
+      "id": "CP-EXP-002",
+      "name": "Create expense success",
+      "description": "POST /trips/{trip_id}/expenses with valid body returns 201. UI shows success toast and redirects.",
+      "type": "api",
+      "priority": "critical",
+      "request": {
+        "method": "POST",
+        "path": "/trips/{trip_id}/expenses",
+        "body": {
+          "title": "Cena en restaurante",
+          "amount": 150000,
+          "category_id": 1,
+          "expense_date": "2026-03-16",
+          "beneficiaries": [
+            { "user_id": "123e4567-e89b-12d3-a456-426614174000" },
+            { "user_id": "223e4567-e89b-12d3-a456-426614174001", "amount_owed": 75000 }
+          ]
+        }
+      },
+      "expect": {
+        "statusCode": 201
+      },
+      "expected": {
+        "network": { "status": 201 },
+        "ui": { "toast": "Gasto creado correctamente" },
+        "state": { "route": "/trips/{trip_id}", "screen": "trip-detail", "expenseCreated": true }
+      }
+    },
+    {
+      "id": "CP-EXP-003",
+      "name": "Create expense validation error",
+      "description": "POST with invalid body (missing title, negative amount) returns 400. UI shows field errors.",
+      "type": "api",
+      "priority": "high",
+      "request": {
+        "method": "POST",
+        "path": "/trips/{trip_id}/expenses",
+        "body": {
+          "title": "",
+          "amount": -100,
+          "category_id": 1,
+          "expense_date": "2026-03-16",
+          "beneficiaries": []
+        }
+      },
+      "expect": {
+        "statusCode": 400
+      },
+      "expected": {
+        "network": { "status": 400 },
+        "ui": {
+          "errorFields": {
+            "title": "El título es requerido",
+            "amount": "El monto debe ser un número positivo",
+            "beneficiaries": "Debe haber al menos un beneficiario para el gasto"
+          }
+        },
+        "state": { "route": "/trips/{trip_id}/expenses/new", "screen": "expense-form", "submitted": false }
+      }
+    },
+    {
+      "id": "CP-EXP-004",
+      "name": "Get expense by id success",
+      "description": "GET /trips/{trip_id}/expenses/{expense_id} returns 200. UI shows expense detail.",
+      "type": "api",
+      "priority": "medium",
+      "request": {
+        "method": "GET",
+        "path": "/trips/{trip_id}/expenses/{expense_id}"
+      },
+      "expect": {
+        "statusCode": 200
+      },
+      "expected": {
+        "network": { "status": 200 },
+        "ui": { "toast": "" },
+        "state": { "route": "/trips/{trip_id}/expenses/{expense_id}", "screen": "expense-detail" }
+      }
+    },
+    {
+      "id": "CP-EXP-005",
+      "name": "List expenses unauthorized",
+      "description": "GET /trips/{trip_id}/expenses without token returns 401. UI shows login prompt.",
+      "type": "api",
+      "priority": "high",
+      "request": {
+        "method": "GET",
+        "path": "/trips/{trip_id}/expenses"
+      },
+      "expect": {
+        "statusCode": 401
+      },
+      "expected": {
+        "network": { "status": 401 },
+        "ui": { "toast": "Tu sesión ha expirado. Por favor inicia sesión nuevamente." },
+        "state": { "route": "/login", "screen": "login", "authenticated": false }
+      }
+    },
+    {
+      "id": "CP-EXP-006",
+      "name": "E2E submit expense form and see list",
+      "description": "User fills expense form, submits, and sees new expense in list.",
+      "type": "e2e",
+      "priority": "critical",
+      "steps": [
+        { "order": 1, "action": "navigate", "target": "/trips/{trip_id}/expenses/new" },
+        { "order": 2, "action": "type", "target": "title", "value": "Desayuno" },
+        { "order": 3, "action": "type", "target": "amount", "value": "25000" },
+        { "order": 4, "action": "click", "target": ".category-scroll button" },
+        { "order": 5, "action": "submit", "target": "expense-form" },
+        { "order": 6, "action": "assertVisible", "target": "form", "expected": "true" }
+      ],
+      "expected": {
+        "network": { "status": 201 },
+        "ui": { "toast": "Gasto creado exitosamente" },
+        "state": { "route": "/", "screen": "home", "expenseCreated": true }
+      }
+    }
+  ]
+}
