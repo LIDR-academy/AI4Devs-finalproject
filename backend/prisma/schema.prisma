@@ -1,0 +1,155 @@
+// ─── latearte - Hub de Curaduría Cultural ───
+// Esquema Prisma alineado a la arquitectura de microservicios
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═══════════════════════════════════════════════
+// DOMINIO: User Service
+// ═══════════════════════════════════════════════
+
+enum UserRole {
+  USUARIO
+  CURADOR
+  ADMIN
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password_hash     String
+  nombre            String
+  avatar_url        String?
+  rol               UserRole  @default(USUARIO)
+  activo            Boolean   @default(true)
+  fecha_creacion    DateTime  @default(now())
+  fecha_actualizacion DateTime @updatedAt
+
+  // Relaciones
+  watchlist         Watchlist[]
+
+  @@map("usuarios")
+}
+
+// ═══════════════════════════════════════════════
+// DOMINIO: Curated Service (Curaduría)
+// ═══════════════════════════════════════════════
+
+enum EjeVertical {
+  SHORT_LIST  // Cortos
+  STAGE       // Escenarios (Conciertos, Ópera, Teatro)
+  CINEMA      // Cine de autor / independiente
+}
+
+enum EstadoAcceso {
+  ABIERTO       // 🟢 Gratuito
+  SUSCRIPCION   // 🟡 Requiere suscripción
+  VOD           // 🔵 Pago por ver
+}
+
+model PlataformaOrigen {
+  id                String    @id @default(uuid())
+  nombre            String    @unique  // YouTube, MUBI, Vimeo, Netflix...
+  url_base          String
+  logo_url          String?
+  permite_iframe    Boolean   @default(false)
+  activo            Boolean   @default(true)
+  fecha_creacion    DateTime  @default(now())
+  fecha_actualizacion DateTime @updatedAt
+
+  // Relaciones
+  obras             Obra[]
+
+  @@map("plataformas_origen")
+}
+
+model Obra {
+  id                  String        @id @default(uuid())
+  titulo              String
+  titulo_original     String?
+  sinopsis            String?
+  director            String?
+  anio                Int?
+  duracion_min        Int           // Clave para el "Dial de Tiempo"
+  vibe_mood           String?       // Ej: "Inspirador", "Reflexivo", "Energético"
+  valor_cultural      Int?          @default(0) // 0-100
+  imagen_poster_url   String?
+  url_contenido       String        // URL de reproducción o deep link
+  permite_iframe      Boolean       @default(false)  // Smart Embedding
+  eje_vertical        EjeVertical
+  estado_acceso       EstadoAcceso  @default(ABIERTO)
+  activo              Boolean       @default(true)
+  fecha_creacion      DateTime      @default(now())
+  fecha_actualizacion DateTime      @updatedAt
+
+  // FK
+  plataforma_id       String
+  plataforma          PlataformaOrigen @relation(fields: [plataforma_id], references: [id])
+
+  // Relaciones
+  hitos               Hito[]
+  datos_contexto      DatoContexto[]
+  watchlist_items      Watchlist[]
+
+  @@index([duracion_min])
+  @@index([vibe_mood])
+  @@map("obras")
+}
+
+model Hito {
+  id                String    @id @default(uuid())
+  nombre            String    // Ej: "Oscar Mejor Corto 2023"
+  categoria         String?   // Ej: "Mejor Cortometraje", "Palma de Oro"
+  festival          String?   // Ej: "Cannes", "Sundance", "Oscar"
+  anio              Int?
+  resultado         String?   // "Ganador", "Nominado"
+  fecha_creacion    DateTime  @default(now())
+  fecha_actualizacion DateTime @updatedAt
+
+  // FK
+  obra_id           String
+  obra              Obra      @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+
+  @@map("hitos")
+}
+
+model DatoContexto {
+  id                String    @id @default(uuid())
+  marca_tiempo      Int       // Segundos donde aparece el pop-up
+  titulo            String
+  descripcion       String
+  tipo              String?   // "Histórico", "Técnico", "Cultural"
+  fecha_creacion    DateTime  @default(now())
+  fecha_actualizacion DateTime @updatedAt
+
+  // FK
+  obra_id           String
+  obra              Obra      @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+
+  @@map("datos_contexto")
+}
+
+// ═══════════════════════════════════════════════
+// DOMINIO: Watchlist (User ↔ Obra)
+// ═══════════════════════════════════════════════
+
+model Watchlist {
+  id                String    @id @default(uuid())
+  notas             String?
+  fecha_creacion    DateTime  @default(now())
+
+  // FKs
+  usuario_id        String
+  usuario           User      @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  obra_id           String
+  obra              Obra      @relation(fields: [obra_id], references: [id], onDelete: Cascade)
+
+  @@unique([usuario_id, obra_id])
+  @@map("watchlist")
+}
