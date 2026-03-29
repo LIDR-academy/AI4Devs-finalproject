@@ -1,0 +1,39 @@
+{
+  "name": "@trace/frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "test:unit": "vitest",
+    "test:e2e": "node node_modules/@playwright/test/cli.js test",
+    "test:e2e:ui": "node node_modules/@playwright/test/cli.js test --ui"
+  },
+  "dependencies": {
+    "@headlessui/vue": "^1.7.17",
+    "@heroicons/vue": "^2.1.1",
+    "@pinia/nuxt": "^0.5.1",
+    "@vee-validate/zod": "^4.15.1",
+    "date-fns": "^4.1.0",
+    "nuxt": "^3.10.0",
+    "pdfjs-dist": "^5.4.530",
+    "pinia": "^2.1.7",
+    "socket.io-client": "^4.7.4",
+    "vee-validate": "^4.15.1",
+    "vue": "^3.4.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils": "^3.23.0",
+    "@playwright/test": "^1.58.0",
+    "@vue/test-utils": "^2.4.6",
+    "autoprefixer": "^10.4.17",
+    "happy-dom": "^20.3.9",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vitest": "^3.2.4"
+  }
+}

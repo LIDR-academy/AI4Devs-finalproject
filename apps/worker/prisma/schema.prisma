@@ -1,0 +1,117 @@
+// Minimal schema to validate setup
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String           @id @default(uuid())
+  email            String           @unique
+  passwordHash     String           @map("password_hash")
+  fullName         String?          @map("full_name")
+  role             Role             @default(CLIENT)
+  subscriptionTier SubscriptionTier @default(FREE) @map("subscription_tier")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  projects           Project[]       @relation("OwnerProjects")
+  projectMemberships ProjectMember[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  title       String
+  description String?
+  architectId String        @map("architect_id")
+  architect   User          @relation("OwnerProjects", fields: [architectId], references: [id])
+  status      ProjectStatus @default(ACTIVE)
+  deletedAt   DateTime?     @map("deleted_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  members     ProjectMember[]
+  plans       Plan[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(uuid())
+  projectId String      @map("project_id")
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String      @map("user_id")
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      ProjectRole @default(VIEWER)
+  joinedAt  DateTime    @default(now()) @map("joined_at")
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ProjectRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+}
+
+model Plan {
+  id        String     @id @default(uuid())
+  projectId String     @map("project_id")
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sheetName String     @map("sheet_name")
+  version   Int        @default(1)
+  status    PlanStatus @default(DRAFT)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  layers    Layer[]
+
+  @@unique([projectId, sheetName, version])
+  @@map("plans")
+}
+
+model Layer {
+  id        String    @id @default(uuid())
+  planId    String    @map("plan_id")
+  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name      String
+  imageUrl  String    @map("image_url")
+  type      LayerType @default(BASE)
+  status    String    @default("ACTIVE")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("layers")
+}
+
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum LayerType {
+  BASE
+  OVERLAY
+}

@@ -1,0 +1,46 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build Outputs
+dist/
+coverage/
+
+# Frontend (Nuxt/Vue)
+.nuxt/
+.output/
+.data/
+
+# Specific project build paths (redundant if root patterns catch them, but explicit is good)
+apps/frontend/.nuxt/
+apps/frontend/.output/
+apps/frontend/dist/
+apps/backend/dist/
+apps/worker/dist/
+
+# Prisma
+/apps/backend/prisma/migrations/*_*/migration.sql
+!/apps/backend/prisma/migrations/migration_lock.toml
+
+# Docker
+.docker/

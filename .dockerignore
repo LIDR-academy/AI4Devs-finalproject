@@ -1,0 +1,31 @@
+# Dependencies (instaladas dentro del contenedor)
+node_modules
+**/node_modules
+
+# Git
+.git
+.github
+
+# Build outputs
+**/dist
+**/.nuxt
+**/.output
+**/coverage
+
+# Env files (se montan o inyectan en runtime)
+.env
+.env.*
+
+# Docs y archivos de desarrollo
+docs
+*.md
+prompts.md
+readme.md
+
+# Test artifacts
+**/test-results
+**/playwright-report
+
+# OS
+.DS_Store
+Thumbs.db

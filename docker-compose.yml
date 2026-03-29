@@ -1,0 +1,70 @@
+services:
+  # Base de Datos PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: trace_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - trace_net
+
+  # Cache & Queues with Redis
+  redis:
+    image: redis:7-alpine
+    container_name: trace_redis
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - trace_net
+
+  # Object Storage (S3 Compatible)
+#   minio:
+#     image: minio/minio
+#     container_name: trace_minio
+#     command: server /data --console-address ":9001"
+#     environment:
+#       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+#       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+#     ports:
+#       - "9000:9000" # API
+#       - "9001:9001" # Console
+#     volumes:
+#       - minio_data:/data
+#     networks:
+#       - trace_net
+
+#   # CREATE BUCKETS automatically
+#   createbuckets:
+#     image: minio/mc
+#     depends_on:
+#       - minio
+#     entrypoint: >
+#       /bin/sh -c "
+#       /usr/bin/mc config host add myminio ${S3_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+#       /usr/bin/mc mb myminio/${S3_BUCKET_NAME};
+#       /usr/bin/mc anonymous set public myminio/${S3_BUCKET_NAME};
+#       exit 0;
+#       "
+#     networks:
+#       - trace_net
+
+
+
+networks:
+  trace_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  #minio_data:

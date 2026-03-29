@@ -1,0 +1,38 @@
+{
+  "name": "@trace/worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/index.js",
+    "lint": "eslint . --ext .ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "prisma:generate": "prisma generate --schema=../backend/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.504.0",
+    "@prisma/client": "^5.9.1",
+    "bullmq": "^5.1.5",
+    "dotenv": "^16.4.1",
+    "ghostscript-node": "^1.0.0",
+    "sharp": "^0.33.2",
+    "zod": "^3.22.4",
+    "@trace/core": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.11.16",
+    "jest": "^30.2.0",
+    "nodemon": "^3.0.3",
+    "prisma": "^5.9.1",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.10",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.3.3"
+  }
+}

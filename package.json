@@ -1,0 +1,11 @@
+{
+  "name": "ai4devs-finalproject",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces"
+  }
+}
