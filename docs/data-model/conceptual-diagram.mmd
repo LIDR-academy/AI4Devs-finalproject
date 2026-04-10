@@ -1,0 +1,94 @@
+%% My Tree Library — modelo conceptual de datos (Mermaid ER)
+%% Alineado con conceptual-diagram.puml
+%% Visualizar: https://mermaid.live o extensión Mermaid en IDE
+
+erDiagram
+  FAMILIA ||--o{ GENERO : "N_a_1_clasifica"
+  GENERO ||--o{ ESPECIE : "N_a_1_clasifica"
+  ESPECIE ||--o{ ARBOL : "N_a_1_clasifica"
+  PROVINCIA ||--o{ ARBOL : "N_a_1_provincia"
+  USUARIO ||--o{ ARBOL : "1_a_N_registra"
+  ARBOL ||--o{ CARACTERISTICA : "1_a_N"
+  ARBOL ||--o{ FOTOGRAFIA : "1_a_N_documenta"
+  USUARIO ||--o{ FOTOGRAFIA : "1_a_N_creador"
+  SUSCRIPTOR ||--o{ NOTIFICACION : "1_a_N_recibe"
+  ARBOL ||--o{ NOTIFICACION : "1_a_N_motiva"
+  USUARIO ||--o{ AUDITORIA : "0_a_N_actor_o_sistema"
+
+  USUARIO {
+    string usuario_id PK
+    enum rol
+  }
+
+  FAMILIA {
+    string familia_id PK
+    string nombre_cientifico
+    string nombre_comun
+  }
+
+  GENERO {
+    string genero_id PK
+    string nombre_cientifico
+    string nombre_comun
+  }
+
+  ESPECIE {
+    string especie_id PK
+    string nombre_cientifico
+    string nombre_comun
+  }
+
+  PROVINCIA {
+    string provincia_id PK
+    string nombre
+  }
+
+  ARBOL {
+    string arbol_id PK
+    string nombre_local
+    enum visibilidad_mapa_publico
+    decimal latitud
+    decimal longitud
+    datetime registrado_en
+  }
+
+  CARACTERISTICA {
+    string caracteristica_id PK
+    string texto_libre
+    datetime registrado_en
+    int orden_opcional
+  }
+
+  FOTOGRAFIA {
+    string fotografia_id PK
+    enum categoria_visibilidad
+    string referencia_contenido
+    datetime subida_en
+    int orden_opcional
+  }
+
+  SUSCRIPTOR {
+    string suscriptor_id PK
+    string email
+    enum estado_suscripcion
+    string token_confirmacion_baja
+    datetime alta_en
+  }
+
+  NOTIFICACION {
+    string notificacion_id PK
+    enum tipo_evento_catalogo
+    enum estado_envio
+    datetime generada_en
+    datetime enviada_en
+  }
+
+  AUDITORIA {
+    string auditoria_id PK
+    enum entidad_afectada
+    string id_entidad_logico
+    enum operacion
+    datetime ocurrido_en
+    string datos_previos_resumen_opcional
+    string datos_nuevos_resumen_opcional
+  }

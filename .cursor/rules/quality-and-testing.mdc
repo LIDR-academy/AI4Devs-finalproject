@@ -1,0 +1,23 @@
+---
+description: Reglas de calidad y pruebas
+alwaysApply: true
+---
+
+# Quality and testing rules
+
+- Todo código nuevo debe incluir validación y manejo básico de errores.
+- Añadir tests en cambios con lógica relevante.
+- No introducir duplicación innecesaria.
+- Si una clase o componente crece demasiado, proponer refactor.
+
+## Backend
+- Unit tests para servicios con lógica.
+- Integration tests para repositorios y endpoints críticos.
+
+## Frontend
+- Probar composables con lógica relevante.
+- Probar componentes críticos si gestionan estados importantes.
+
+## Revisión
+- Comprobar nombres, responsabilidad única y legibilidad.
+- Evitar soluciones demasiado complejas para el MVP.

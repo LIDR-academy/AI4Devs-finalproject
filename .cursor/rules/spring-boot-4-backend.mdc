@@ -1,0 +1,42 @@
+---
+description: Reglas backend para Spring Boot 4
+globs:
+  - "backend/**/*.java"
+  - "services/**/*.java"
+alwaysApply: false
+---
+
+# Spring Boot 4 rules
+
+- Seguir una arquitectura por capas clara:
+  - controller
+  - application/service
+  - domain
+  - repository
+  - infrastructure
+
+- No colocar lógica de negocio en controllers.
+- No exponer entidades JPA en respuestas REST.
+- Validar entradas con Jakarta Validation.
+- Gestionar errores con respuestas consistentes.
+
+## Persistencia
+- Usar Spring Data JPA de forma explícita y simple.
+- Declarar transacciones en capa de servicio.
+- Para filtros dinámicos usar Specifications.
+- Para lecturas parciales usar DTOs o proyecciones.
+
+## Configuración
+- Usar propiedades externas tipadas.
+- Evitar valores mágicos.
+- Encapsular integraciones externas en clientes dedicados.
+
+## Operación
+- Incluir health checks.
+- Incluir logs útiles y sin datos sensibles.
+- Preparar métricas básicas desde el inicio.
+
+## Código
+- Favorecer clases pequeñas.
+- Preferir composición frente a utilidades gigantes.
+- Mantener métodos cortos y con una sola responsabilidad.

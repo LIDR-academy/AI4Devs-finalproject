@@ -1,0 +1,124 @@
+@startuml modelo_conceptual_datos_mtl
+title My Tree Library — modelo conceptual de datos\n(sin asignación a tecnologías de almacenamiento)
+
+skinparam shadowing false
+skinparam linetype ortho
+hide circle
+skinparam roundcorner 8
+skinparam entity {
+  BackgroundColor #E8F4FC
+  BorderColor #2E6DA4
+}
+
+entity "USUARIO" as UP {
+  * usuario_id : string <<PK>>
+  --
+  rol : enum
+}
+
+entity "ESPECIE" as ESP {
+  * especie_id : string <<PK>>
+  --
+  nombre_cientifico : string
+  nombre_comun : string
+}
+
+entity "GENERO" as GEN {
+  * genero_id : string <<PK>>
+  --
+  nombre_cientifico : string
+  nombre_comun : string
+}
+
+entity "FAMILIA" as FAM {
+  * familia_id : string <<PK>>
+  --
+  nombre_cientifico : string
+  nombre_comun : string
+}
+
+entity "PROVINCIA" as PRO {
+  * provincia_id : string <<PK>>
+  --
+  nombre : string
+}
+
+entity "ARBOL" as ARB {
+  * arbol_id : string <<PK>>
+  --
+  nombre_local : string
+  visibilidad_mapa_publico : enum
+  latitud : decimal
+  longitud : decimal
+  registrado_en : datetime
+}
+
+entity "CARACTERISTICA" as CO {
+  * caracteristica_id : string <<PK>>
+  --
+  texto_libre : string
+  registrado_en : datetime
+  orden : int [opcional]
+}
+
+entity "FOTOGRAFIA" as FOT {
+  * fotografia_id : string <<PK>>
+  --
+  categoria_visibilidad : enum PUBLIC_PRIVATE_RESTRICTED
+  referencia_contenido : string
+  subida_en : datetime
+  orden : int [opcional]
+}
+
+entity "SUSCRIPTOR" as UN {
+  * suscriptor_id : string <<PK>>
+  --
+  email : string
+  estado_suscripcion : enum
+  token_confirmacion_baja : string
+  alta_en : datetime
+}
+
+entity "NOTIFICACION" as NOT {
+  * notificacion_id : string <<PK>>
+  --
+  tipo_evento_catalogo : enum
+  estado_envio : enum
+  generada_en : datetime
+  enviada_en : datetime
+}
+
+entity "AUDITORIA" as AUD {
+  * auditoria_id : string <<PK>>
+  --
+  entidad_afectada : enum
+  id_entidad_logico : string
+  operacion : enum
+  ocurrido_en : datetime
+  datos_previos_resumen : string [opcional]
+  datos_nuevos_resumen : string [opcional]
+}
+
+GEN ||--o{ ESP : "N : 1\nclasifica"
+FAM ||--o{ GEN : "N : 1\nclasifica"
+ESP ||--o{ ARB : "N : 1\nclasifica"
+PRO ||--o{ ARB : "N : 1\nprovincia"
+UP ||--o{ ARB : "1 : N\nregistra"
+ARB ||--o{ CO : "1 : N"
+ARB ||--o{ FOT : "1 : N"
+UP ||--o{ FOT : "1 : N\ncreador"
+UN ||--o{ NOT : "1 : N\nrecibe"
+ARB ||--o{ NOT : "1 : N\nmotiva"
+UP ||--o{ AUD : "0 : N\nactor (o sistema)"
+
+note bottom of FOT
+  Visibilidad: PUBLIC / PRIVATE / RESTRICTED
+  (reglas en modelo-conceptual.md)
+end note
+
+note bottom of AUD
+  Alta/modificación sobre maestros
+  y catálogo operativo (árbol, etc.)
+end note
+
+@enduml
