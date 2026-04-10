@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% set active = "conversations" %}
+
+{% block title %}Conversaciones · Admin{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Conversaciones</div>
+    <div class="topbar-sub">Historial completo de sesiones del chatbot</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-sm" onclick="loadConversations()">↻ Actualizar</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Sesiones recientes</span>
+      <span id="convCount" style="font-size:11px;color:var(--text3)">Cargando...</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Session ID</th>
+            <th>Usuario</th>
+            <th>Mensajes</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="convTable">
+          <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3)">
+            <div class="loading"><span></span><span></span><span></span></div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadConversations() {
+  try {
+    const data = await apiCall('/api/v1/conversations?limit=50');
+    const tbody = document.getElementById('convTable');
+    document.getElementById('convCount').textContent = `${data.length} sesiones`;
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5">
+        <div class="empty-state"><div class="icon">🗂</div><p>No hay conversaciones todavía.</p></div>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(c => `
+      <tr>
+        <td style="font-family:var(--mono);color:var(--text3);font-size:11px">${c.session_id}</td>
+        <td style="color:var(--text2)">${c.user_identifier || '<span style="color:var(--text3)">anónimo</span>'}</td>
+        <td>
+          <span style="color:var(--text)">${c.message_count}</span>
+          <span style="color:var(--text3);font-size:11px"> msgs</span>
+        </td>
+        <td style="color:var(--text3);font-size:11px">${timeAgo(c.created_at)}</td>
+        <td>
+          <a href="/admin/conversations/${c.id}" class="btn btn-ghost btn-sm">
+            Ver detalle →
+          </a>
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    showToast('Error cargando conversaciones: ' + e.message, 'error');
+  }
+}
+
+loadConversations();
+</script>
+{% endblock %}

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ChatBot Improvement System{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --surface2: #181c24;
+      --border: #1e2330;
+      --border2: #2a3040;
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --purple: #a855f7;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --text3: #475569;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+    }
+    .sidebar-logo {
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo .logo-tag {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .sidebar-logo .logo-name {
+      font-family: var(--sans);
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .sidebar-logo .logo-sub {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+    .sidebar-nav { padding: 12px 0; flex: 1; }
+    .nav-section {
+      padding: 8px 16px 4px;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--text3);
+      text-transform: uppercase;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 12px;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .nav-item:hover { color: var(--text); background: var(--surface2); }
+    .nav-item.active { color: var(--accent2); border-left-color: var(--accent); background: rgba(59,130,246,0.08); }
+    .nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text3);
+    }
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      margin-right: 5px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* MAIN */
+    .main {
+      margin-left: 220px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .topbar {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-title {
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .topbar-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+    .content { padding: 24px; flex: 1; }
+
+    /* COMPONENTS */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-pending { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-analysed { background: rgba(59,130,246,0.15); color: var(--accent2); border: 1px solid rgba(59,130,246,0.3); }
+    .badge-applied { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+    .badge-rejected { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .badge-prompt { background: rgba(168,85,247,0.15); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
+    .badge-active { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-success { background: rgba(34,197,94,0.2); color: var(--green); border: 1px solid rgba(34,197,94,0.4); }
+    .btn-success:hover { background: rgba(34,197,94,0.3); }
+    .btn-danger { background: rgba(239,68,68,0.2); color: var(--red); border: 1px solid rgba(239,68,68,0.4); }
+    .btn-danger:hover { background: rgba(239,68,68,0.3); }
+    .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text3); }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-title {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .card-body { padding: 18px; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      vertical-align: middle;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    tr:last-child td { border-bottom: none; }
+
+    .code-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text2);
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid;
+      animation: slideIn 0.2s ease;
+      max-width: 320px;
+    }
+    .toast-success { background: rgba(34,197,94,0.15); color: var(--green); border-color: rgba(34,197,94,0.3); }
+    .toast-error { background: rgba(239,68,68,0.15); color: var(--red); border-color: rgba(239,68,68,0.3); }
+    @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .loading {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .loading span {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: bounce 1s infinite;
+    }
+    .loading span:nth-child(2) { animation-delay: 0.15s; }
+    .loading span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text3);
+    }
+    .empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .stat-label { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .stat-value { font-family: var(--sans); font-size: 28px; font-weight: 800; color: var(--text); }
+    .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-tag">AI4Devs</div>
+    <div class="logo-name">MetaAgent<br>System</div>
+    <div class="logo-sub">v1.0 · Human-in-the-loop</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">Usuario</div>
+    <a href="/chat" class="nav-item {% if active == 'chat' %}active{% endif %}">
+      <span class="icon">💬</span> Chat
+    </a>
+    <div class="nav-section" style="margin-top:8px">Admin</div>
+    <a href="/admin/conversations" class="nav-item {% if active == 'conversations' %}active{% endif %}">
+      <span class="icon">🗂</span> Conversaciones
+    </a>
+    <a href="/admin/feedback" class="nav-item {% if active == 'feedback' %}active{% endif %}">
+      <span class="icon">📋</span> Feedback
+    </a>
+    <a href="/admin/prompts" class="nav-item {% if active == 'prompts' %}active{% endif %}">
+      <span class="icon">⚡</span> Prompts
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <div><span class="status-dot"></span>Sistema operativo</div>
+    <div style="margin-top:4px">GPT-4o-mini · OpenAI</div>
+  </div>
+</nav>
+
+<div class="main">
+  {% block content %}{% endblock %}
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+function showToast(msg, type='success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+async function apiCall(url, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Error desconocido' }));
+    throw new Error(err.detail || 'Error en la solicitud');
+  }
+  return res.json();
+}
+
+function timeAgo(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return d.toLocaleDateString('es-ES');
+}
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>
