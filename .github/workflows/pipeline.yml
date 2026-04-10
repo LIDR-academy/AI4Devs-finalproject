@@ -1,0 +1,62 @@
+name: CI Pipeline — ChatBot Self-Improvement System
+
+on:
+  push:
+    branches: [ finalproject-VSL ]
+    paths:
+      - 'finalproject-VSL/**'
+  pull_request:
+    branches: [ finalproject-VSL ]
+    paths:
+      - 'finalproject-VSL/**'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: finalproject-VSL/backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('finalproject-VSL/backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run all tests
+        env:
+          DATABASE_URL: sqlite:///./test.db
+          OPENAI_API_KEY: sk-test-key-not-real
+          ADMIN_API_KEY: test-admin-key
+          SECRET_KEY: test-secret-key
+          ENVIRONMENT: test
+        run: pytest tests/ -v --tb=short
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t chatbot-improvement-system:latest ./finalproject-VSL/backend
+          echo "✅ Docker image built successfully"
