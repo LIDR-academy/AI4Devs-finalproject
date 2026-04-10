@@ -1108,18 +1108,24 @@ pytest tests/e2e/ -v
 
 # 8. Guías y Demos
 
-*(Esta sección se completará con la Entrega Final)*
-
-- **URL pública:** `[pendiente despliegue en Railway]`
-- **Chatbot (usuario):** `/chat`
-- **Panel admin:** `/admin` — API Key: `[ver .env de demo]`
-- **API docs (Swagger):** `/docs`
+- **URL pública:** https://chatbot-self-improvement-production.up.railway.app/
+- **Chatbot (usuario):** https://chatbot-self-improvement-production.up.railway.app/chat
+- **Panel admin:** https://chatbot-self-improvement-production.up.railway.app/admin
+- **API docs (Swagger):** https://chatbot-self-improvement-production.up.railway.app/docs
 
 **Credenciales de demo:**
-- Admin API Key: se compartirá junto con el enlace de despliegue
+- Admin API Key: `admin-secret-key`
+
+**Flujo de demostración:**
+1. Ve a `/chat` y envía mensajes al bot
+2. Ve a `/admin/conversations` y selecciona la conversación
+3. Click en "Reportar" en una respuesta del bot
+4. Ve a `/admin/feedback` y click en "Analizar"
+5. Revisa la propuesta del meta-agente y aplícala
+6. Ve a `/admin/prompts` para ver el historial de versiones
 
 ---
 
-*Última actualización: Marzo 2026*  
+*Última actualización: Abril 2026*  
 *ChatBot Self-Improvement System — AI4Devs Final Project*  
 *Autor: Cronos Consulting — Iniciales: VSL*
