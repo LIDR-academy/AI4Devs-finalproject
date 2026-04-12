@@ -10,7 +10,7 @@
 | R2 | Cada **ÁRBOL** lleva **coordenadas** del ejemplar. |
 | R3 | **AUDITORÍA:** toda alta/modificación relevante sobre maestros y fichas operativas deja trazas de auditoría según política (p. ej. **AUDITORIA_CATALOGO** en catálogo; uso de IA acotado en **AUDITORIA_USO_IA**). |
 | R4 | **Fotografía – PUBLIC:** visible donde la ficha y el mapa lo permitan, incluido público no autenticado si la ficha es pública. |
-| R5 | **Fotografía – PRIVATE:** solo **Administrador** y el **USUARIO** creador. |
+| R5 | **Fotografía – PRIVATE:** solo **Administrador** y el **Colaborador** creador. |
 | R6 | **Fotografía – RESTRICTED:** **Administrador**, creador y **Colaboradores autenticados**; no el visitante sin sesión. |
 | R7 | **NOTIFICACION** a **SUSCRIPTOR** con suscripción válida tras alta/modificación de **ÁRBOL** (UC-09). |
 | R8 | **FAMILIA**, **GÉNERO**, **ESPECIE** y **PROVINCIA:** **gestión** solo **Administrador**; consulta para edición de ficha por roles autenticados según matriz acordada. |

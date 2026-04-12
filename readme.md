@@ -46,16 +46,11 @@ Desarrollar una plataforma web que permita registrar, organizar y consultar foto
 #### Valor aportado (qué soluciona)
 La solución combina la catalogación personal con la posibilidad de compartir y crear comunidad en torno a una misma afición.
 
-Además, la plataforma incorpora el uso de inteligencia artificial como apoyo a la identificación de especies a partir de fotografías, lo que enriquece la experiencia de uso, facilita el aprendizaje.
+Además, la plataforma incorpora el uso de inteligencia artificial como apoyo a la identificación de especies a partir de fotografías, lo que enriquece la experiencia de uso y facilita el aprendizaje.
 
 #### Destinatarios de la solución
 
 La solución está dirigida a aficionados a la naturaleza en general y puede resultar de especial utilidad para docentes y monitores de tiempo libre.
-
-#### Diagrama de Casos de Uso del sistema
-![Diagrama de casos de uso del sistema My Tree Library](docs/use-cases/use-case-model.png)
-
-*Fuentes:* [resumen de casos de uso](docs/use-cases/use-case-summary.md) · [modelo PlantUML](docs/use-cases/use-case-model.puml)
 
 
 ### **1.2. Características y funcionalidades principales:**
@@ -71,6 +66,11 @@ La solución debe ofrecer un sistema de notificaciones para comunicar novedades 
 
 #### Integración con IA
 El producto debe incluir integración con IA como apoyo a la identificación orientativa de árboles a partir de fotografías y como canal de interacción conversacional con el usuario.
+
+#### Diagrama de Casos de Uso del sistema
+![Diagrama de casos de uso del sistema My Tree Library](docs/use-cases/use-case-model.png)
+
+*Fuentes:* [resumen de casos de uso](docs/use-cases/use-case-summary.md) · [modelo PlantUML](docs/use-cases/use-case-model.puml)
 
 ### **1.3. Diseño y experiencia de usuario:**
 
@@ -90,7 +90,17 @@ La aplicación se desarrollará en microservicios con Spring en la parte de back
 
 #### Patrón y Stack tecnológico
 
-**Patrón y stack previstos:** microservicios por **contextos delimitados** (DDD ligero); **Spring Boot 4** en el backend, **Vue 3** en el frontend; **Keycloak** para OIDC y **JWT**; **Kafka** para eventos de dominio hacia notificaciones (p. ej. `catalog.arbol.evento`); **PostgreSQL** en **un servidor** con **cuatro esquemas** de aplicación (`catalog`, `media`, `notification`, `ai`) **con PostGIS en `catalog` para datos geoespaciales** (el esquema **`ai`** corresponde al **ai-assistant-service**); **MongoDB** (datos flexibles), **Redis** (caché), almacenamiento **compatible S3** (p. ej. MinIO en desarrollo).
+**Arquitecturas:** microservicios por **contextos delimitados** (DDD ligero); 
+**Seguridad:** OIDC y JWT
+
+**Spring Boot 4** en el backend 
+**Vue 3** en el frontend
+**Keycloak** para OIDC y JWT
+**Kafka** para eventos de dominio
+**PostgreSQL** como base de datos SQL
+**MongoDB** como base de datos NoSQL 
+**Redis** caché 
+**compatible S3** almacenamiento de imágenes
 
 #### C1 — Diagrama de contexto del sistema (nivel 1)
 
@@ -98,10 +108,10 @@ La aplicación se desarrollará en microservicios con Spring en la parte de back
 ```mermaid
 flowchart TB
   U[Usuario]
-  S[My_Tree_Library]
+  S[MyTreeLibrary]
   KC[Keycloak]
-  SMTP[Servidor_correo_SMTP]
-  PIA[Proveedor_IA_externo]
+  SMTP[Servidor_SMTP]
+  PIA[Proveedor_IA]
   U -->|Usa| S
   S -->|Autenticación OIDC / JWT| KC
   S -->|Notificaciones por correo| SMTP
@@ -149,7 +159,7 @@ flowchart TB
 
 *Keycloak suele desplegarse como IdP aparte; aquí se muestra en el mismo diagrama por dependencia de autenticación de la SPA y del gateway.*
 
-**C2 (detalle) — un servidor PostgreSQL con PostGIS, cuatro esquemas, un servicio por esquema:**
+**C2 (detalle) — un servidor PostgreSQL con PostGIS, cuatro esquemas, un esquema por servicio:**
 
 ```mermaid
 flowchart TB
@@ -170,9 +180,11 @@ flowchart TB
   AIS --> SCH_I
 ```
 
-**Comunicaciones principales:** el usuario interactúa con la SPA; la SPA obtiene tokens en Keycloak y llama al API Gateway; el gateway enruta a los microservicios; **catalog-service** publica en Kafka eventos como `catalog.arbol.evento`; **notification-service** consume Kafka y envía correo vía SMTP externo; **ai-assistant-service** invoca al proveedor de IA externo.
 
 **Flujo de notificación tras evento `catalog.arbol.evento` (Kafka):**
+
+
+**Comunicaciones principales:** el usuario interactúa con la SPA; la SPA obtiene tokens en Keycloak y llama al API Gateway; el gateway enruta a los microservicios; **catalog-service** publica en Kafka eventos como `catalog.arbol.evento`; **notification-service** consume Kafka y envía correo vía SMTP externo; **ai-assistant-service** invoca al proveedor de IA externo.
 
 ```mermaid
 sequenceDiagram
@@ -188,11 +200,6 @@ sequenceDiagram
   K->>N: Consume_evento
   N->>Mail: Email_bienvenida
 ```
-
-**Beneficios:** escalado por servicio, límites de dominio claros, notificaciones desacopladas por mensajería.
-
-**Sacrificios:** más operación y observabilidad distribuida; consistencia eventual en notificaciones; gobierno de contratos (API y eventos).
-
 
 
 **Flujo de consulta IA (datos de especie vía catalog-service):**
@@ -231,7 +238,7 @@ sequenceDiagram
 | catalog-service | **Spring Boot 4**, JPA, Flyway, PostgreSQL, PostGIS, Redis, Kafka producer | Árboles, coordenadas, publicación; **PostgreSQL** (esquema **catalog**) y **MongoDB** (enriquecimientos y proyección mínima para búsqueda); caché de mapa; eventos de dominio |
 | media-service | **Spring Boot 4**, JPA, Flyway, AWS SDK v2 (S3) | Metadatos solo en esquema **`media`**; objetos en bucket MinIO/S3; URLs prefirmadas |
 | notification-service | **Spring Boot 4**, JPA, Flyway, Spring Kafka, JavaMail | Consume `catalog.arbol.evento`; datos solo en esquema **`notification`**; envío SMTP |
-| ai-assistant-service | **Spring Boot 4**, Spring WebClient (o equivalente), Spring Data JPA | Orquestación hacia proveedor IA; datos solo en esquema **`ai`** (p. ej. **AUDITORIA_USO_IA**); delegación de datos de catálogo en **catalog-service** |
+| ai-assistant-service | **Spring Boot 4**, Spring WebClient (o equivalente), Spring Data JPA | Orquestación hacia proveedor IA; datos de auditoria en esquema **`ai`** (p. ej. **AUDITORIA_USO_IA**); delegación de datos de catálogo en **catalog-service** |
 | Keycloak | Keycloak 26 | Realm, clientes, roles, emisión de JWT |
 | Kafka | Apache Kafka (KRaft en dev) | Topics p. ej. `catalog.arbol.evento` |
 | PostgreSQL | 16 | **Un servidor** en dev; **cuatro esquemas** (`catalog`, `media`, `notification`, `ai`); extensión **PostGIS** en el esquema **catalog** para datos geoespaciales |
@@ -291,7 +298,7 @@ flowchart LR
 | Práctica | Descripción |
 |----------|-------------|
 | Autenticación OIDC | Keycloak como IdP; SPA con **Authorization Code + PKCE**; JWT firmados; `issuer-uri` alineado con el realm |
-| Autorización | Roles de realm `USER` y `ADMIN`; políticas en recursos sensibles (moderación, borrado masivo) |
+| Autorización | Roles de realm `COLABORADOR` y `ADMIN`; políticas en recursos sensibles |
 | Gateway | Validación de JWT (habilitar `spring-security-oauth2-resource-server` en el gateway cuando el realm esté configurado); cabeceras de correlación para auditoría |
 | Almacenamiento de objetos | Buckets privados; **URLs prefirmadas** de corta duración; sin credenciales en el cliente |
 | Datos personales | Suscripciones por email con **token hash** para baja; minimización de logs |
@@ -367,11 +374,11 @@ erDiagram
 
     ARBOL ||--o{ FOTOGRAFIA : asociado_logicamente
     ARBOL ||--o{ EVENTO_CATALOGO : origina
+    ARBOL ||--o{ AUDITORIA_USO_IA : usada_en_ia
     EVENTO_CATALOGO ||--o{ NOTIFICACION : genera
     ARBOL ||--o{ ENRIQUECIMIENTOS_ARBOL : documenta
     ESPECIE ||--o{ ENRIQUECIMIENTOS_ESPECIE : documenta
     ESPECIE ||--o{ ARBOL : clasifica
-    FOTOGRAFIA ||--o{ AUDITORIA_USO_IA : usada_en_ia
     NOTIFICACION ||--o{ ENVIO_NOTIFICACION : produce
     SUSCRIPTOR ||--o{ ENVIO_NOTIFICACION : recibe
 
