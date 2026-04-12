@@ -1,0 +1,30 @@
+---
+description: Reglas de diseño de API REST
+globs:
+  - "backend/**/controller/**/*.java"
+  - "backend/**/dto/**/*.java"
+alwaysApply: false
+---
+
+# API design rules
+
+- Diseñar endpoints orientados a recursos.
+- Mantener nombres consistentes y predecibles.
+- Versionar la API si aparece una necesidad real.
+- Usar DTOs separados para request y response.
+
+## Endpoints esperables del MVP
+- `/trees`
+- `/trees/{id}`
+- `/trees/{id}/photos`
+- `/public/trees`
+- `/public/map`
+- `/subscriptions`
+- `/ai/species-identification`
+- `/ai/chat`
+
+## Reglas
+- Los listados deben permitir paginación.
+- Los filtros deben ser simples y explícitos.
+- Las respuestas de error deben tener estructura común.
+- No devolver información interna innecesaria.

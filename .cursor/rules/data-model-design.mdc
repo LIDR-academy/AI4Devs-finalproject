@@ -1,0 +1,69 @@
+---
+description: Reglas para diseño de modelos de datos y entidades persistentes
+globs:
+  - "backend/**/domain/**/*.java"
+  - "backend/**/entity/**/*.java"
+  - "backend/**/model/**/*.java"
+alwaysApply: false
+---
+
+# Data model design rules
+
+## Objetivo
+Diseñar modelos de datos simples, consistentes, extensibles y adecuados para un sistema colaborativo de catálogo de árboles con fotos, ubicación, notificaciones y roles.
+
+## Reglas
+- Diseña primero desde el dominio y los casos de uso, no desde la base de datos.
+- Usa nombres de entidades y atributos expresivos, en singular y alineados con el lenguaje del negocio.
+- Separa claramente:
+  - entidades persistentes,
+  - DTOs de entrada/salida,
+  - objetos de dominio auxiliares,
+  - enums.
+- Evita entidades anémicas con campos ambiguos o genéricos como `value`, `data`, `info`, `type1`.
+
+## Modelado
+- Prefiere relaciones simples y explícitas.
+- Usa `@ManyToOne` y `@OneToMany` solo cuando aporten claridad real.
+- Evita relaciones bidireccionales innecesarias.
+- No modeles una relación `@ManyToMany` directa si puede crecer en funcionalidad; crea una entidad intermedia.
+- Usa claves primarias técnicas estables.
+- Añade restricciones de unicidad e índices cuando el caso de uso lo requiera.
+- Modela campos obligatorios como no nulos.
+- Para catálogos estables usa `enum`; para catálogos evolutivos usa entidad propia.
+
+## Auditoría y trazabilidad
+- Incluye campos de auditoría en entidades principales:
+  - creadoEn
+  - modificadoEn
+  - creadoPor
+  - modificadoPor
+- Si procede, prepara soft delete solo en agregados donde tenga sentido funcional.
+- No añadas borrado lógico por defecto a todo.
+
+## Rendimiento y consulta
+- Diseña entidades pensando en lectura pública frecuente.
+- No expongas entidades JPA directamente en la API.
+- Para listados, usa proyecciones o DTOs específicos en lugar de cargar agregados completos.
+- Para búsquedas con filtros dinámicos, favorece Specification en vez de multiplicar métodos derivados.
+- Evita `fetch = EAGER` salvo justificación clara.
+- Piensa explícitamente en N+1 queries al definir relaciones.
+
+## Geolocalización y multimedia
+- Modela ubicación de forma explícita y estable.
+- Si no hay GIS real, usa latitud y longitud como campos separados.
+- Las fotos deben modelarse como recurso asociado con metadatos mínimos:
+  - url o storageKey
+  - título opcional
+  - visibilidad pública
+  - fecha de alta
+  - autor
+- No guardes binarios en la entidad si el sistema usará almacenamiento externo.
+
+## Calidad
+- Cada entidad debe tener una responsabilidad clara.
+- Cada cambio de modelo debe venir acompañado de:
+  - migración de esquema,
+  - ajuste de DTOs,
+  - pruebas de persistencia si aplica.
+- Antes de crear una nueva entidad, valida si realmente representa un concepto del negocio.

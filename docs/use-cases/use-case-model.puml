@@ -1,0 +1,81 @@
+@startuml modelo_casos_uso_mtl
+title My Tree Library — modelo de casos de uso\n(ajustado a readme del proyecto e indicaciones de negocio)
+
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+left to right direction
+
+actor "Público" as Publico
+actor "Colaborador" as Colaborador
+actor "Administrador" as Administrador
+actor "Sistema\n(My Tree Library)" as Sistema
+actor "Proveedor\nde IA" as ProvIA
+actor "Servidor\nSMTP" as SMTP
+
+Publico <|-- Colaborador : generalización\n(rol)
+Colaborador <|-- Administrador : generalización\n(rol)
+
+rectangle "My Tree Library" #LightBlue {
+  usecase "UC-01\nConsultar árboles\npublicados y mapa" as UC1
+  usecase "UC-02\nRegistrarse para recibir\nnotificaciones (e-mail)" as UC2
+
+  usecase "UC-03\nRegistrar árbol\n(ficha, fotos, ubicación)" as UC3
+  usecase "UC-04\nModificar árboles\nregistrados por el usuario" as UC4
+  usecase "UC-05\nIdentificar árbol asistido\npor IA (imagen)" as UC5
+
+  usecase "UC-06\nConsultar asistente IA\n(chat conversacional)" as UC6
+
+  usecase "UC-07\nGestionar tablas\nde catálogo (maestros)" as UC7
+  usecase "UC-08\nGestionar solicitudes\nde notificación\n(inactivar / borrar)" as UC8
+
+  usecase "UC-09\nNotificar por correo\na suscriptores" as UC9
+}
+
+' --- Público (sin autenticación) ---
+Publico --> UC1
+Publico --> UC2
+
+' --- Colaborador (requiere autenticación; hereda Público) ---
+Colaborador --> UC3
+Colaborador --> UC4
+Colaborador --> UC6
+
+UC5 .> UC3 : <<extend>>\nPunto de extensión:\ndisponible al aportar\nimagen en el alta
+UC5 .> UC4 : <<extend>>\nPunto de extensión:\ndisponible al editar\ncon imagen
+
+' --- Administrador (requiere autenticación; hereda Colaborador) ---
+Administrador --> UC7
+Administrador --> UC8
+
+note bottom of Colaborador
+  **Restricción:** todos los casos
+  propios del Colaborador
+  exigen **usuario autenticado**
+  (rol Colaborador).
+end note
+
+note bottom of Administrador
+  **Restricción:** UC-07 y UC-08
+  exigen **usuario autenticado**
+  (rol Administrador).
+  Por generalización, puede ejecutar
+  también UC-01 … UC-06.
+end note
+
+' --- Notificaciones automáticas (sistema) ---
+Sistema --> UC9
+UC3 ..> UC9 : <<include>>
+UC4 ..> UC9 : <<include>>
+
+note right of UC9
+  Se dispara tras **alta** o **modificación**
+  de ficha de árbol según reglas de negocio
+  (p. ej. contenido relevante para suscriptores).
+end note
+
+UC9 --> SMTP
+
+UC5 --> ProvIA
+UC6 --> ProvIA
+
+@enduml
