@@ -23,11 +23,6 @@ pnpm-debug.log*
 hs_err_pid*.log
 replay_pid*.log
 
-# --- Gradle (if used) ---
-.gradle/
-**/gradle-app.setting
-!gradle-wrapper.jar
-
 # --- Env and secrets ---
 .env
 .env.*

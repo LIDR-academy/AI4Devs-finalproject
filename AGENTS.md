@@ -44,4 +44,4 @@ También debe permitir:
 ## Reglas de nomenclatura e idioma del proyecto
 - El idioma del proyecto es el español, la documentación se generará en este idioma
 - El nombre de los archivos de documentación generados será en INGLÉS, por coherencia con nomenclatura heredada (readme)
-- El nombre de las columnas en Base de datos
+- El nombre de las columnas en Base de datos será en español
