@@ -105,7 +105,7 @@ flowchart TB
   U -->|Usa| S
   S -->|Autenticación OIDC / JWT| KC
   S -->|Notificaciones por correo| SMTP
-  S -->|Identificación y chat (IA)| PIA
+  S -->|Identificación y chat IA| PIA
 ```
 
 #### C2 — Diagrama de contenedores (nivel 2)
