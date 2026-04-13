@@ -1,0 +1,146 @@
+# Infraestructura local de MyTreeLibrary (desarrollo).
+# Uso: desde este directorio →  docker compose up -d
+# Documentación: README.md en esta carpeta.
+
+name: mtl
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mtl}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mtl_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-mtl}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - mtl_pgdata:/var/lib/postgresql/data
+      - ./init/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - mtl
+
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-mtl}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-mtl_mongo_dev_password}
+    volumes:
+      - mtl_mongodata:/data/db
+    networks:
+      - mtl
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - mtl_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - mtl
+
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_dev_password}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - mtl_miniodata:/data
+    networks:
+      - mtl
+
+  kafka:
+    image: docker.io/bitnamilegacy/kafka:3.7.1-debian-12-r4
+    restart: unless-stopped
+    ports:
+      - "${KAFKA_PORT_INTERNAL:-9092}:9092"
+      - "${KAFKA_PORT_HOST:-9094}:9094"
+    environment:
+      KAFKA_CFG_NODE_ID: "0"
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    volumes:
+      - mtl_kafkadata:/bitnami/kafka
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/bitnami/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 40s
+    networks:
+      - mtl
+
+  kafka-init:
+    image: docker.io/bitnamilegacy/kafka:3.7.1-debian-12-r4
+    restart: "no"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - /opt/bitnami/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic catalog.arbol.evento --replication-factor 1 --partitions 1
+    networks:
+      - mtl
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    restart: unless-stopped
+    command:
+      - start-dev
+      - --http-enabled=true
+      - --hostname-strict=false
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_dev_password}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak_dev_password}
+    ports:
+      - "${KEYCLOAK_PORT:-8180}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mtl
+
+networks:
+  mtl:
+    driver: bridge
+
+volumes:
+  mtl_pgdata:
+  mtl_mongodata:
+  mtl_redisdata:
+  mtl_miniodata:
+  mtl_kafkadata:

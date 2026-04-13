@@ -1,5 +1,5 @@
 @startuml modelo_casos_uso_mtl
-title My Tree Library — modelo de casos de uso\n(ajustado a readme del proyecto e indicaciones de negocio)
+title MyTreeLibrary — modelo de casos de uso\n(ajustado a readme del proyecto e indicaciones de negocio)
 
 skinparam packageStyle rectangle
 skinparam actorStyle awesome
@@ -8,14 +8,14 @@ left to right direction
 actor "Público" as Publico
 actor "Colaborador" as Colaborador
 actor "Administrador" as Administrador
-actor "Sistema\n(My Tree Library)" as Sistema
+actor "Sistema\n(MyTreeLibrary)" as Sistema
 actor "Proveedor\nde IA" as ProvIA
 actor "Servidor\nSMTP" as SMTP
 
 Publico <|-- Colaborador : generalización\n(rol)
 Colaborador <|-- Administrador : generalización\n(rol)
 
-rectangle "My Tree Library" #LightBlue {
+rectangle "MyTreeLibrary" #LightBlue {
   usecase "UC-01\nConsultar árboles\npublicados y mapa" as UC1
   usecase "UC-02\nRegistrarse para recibir\nnotificaciones (e-mail)" as UC2
 
@@ -65,12 +65,12 @@ end note
 ' --- Notificaciones automáticas (sistema) ---
 Sistema --> UC9
 UC3 ..> UC9 : <<include>>
-UC4 ..> UC9 : <<include>>
 
 note right of UC9
-  Se dispara tras **alta** o **modificación**
-  de ficha de árbol según reglas de negocio
-  (p. ej. contenido relevante para suscriptores).
+  MVP: solo tras **alta** (creación)
+  de ficha de árbol (regla R7).
+  Las modificaciones (UC-04)
+  **no** disparan notificación.
 end note
 
 UC9 --> SMTP

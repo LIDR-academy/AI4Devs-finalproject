@@ -1,7 +1,6 @@
 ---
 description: Reglas backend para Spring Boot 4
 globs:
-  - "backend/**/*.java"
   - "services/**/*.java"
 alwaysApply: false
 ---

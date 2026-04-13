@@ -1,9 +1,9 @@
 ---
 description: Reglas para diseño de modelos de datos y entidades persistentes
 globs:
-  - "backend/**/domain/**/*.java"
-  - "backend/**/entity/**/*.java"
-  - "backend/**/model/**/*.java"
+  - "services/**/domain/**/*.java"
+  - "services/**/entity/**/*.java"
+  - "services/**/model/**/*.java"
 alwaysApply: false
 ---
 
@@ -14,7 +14,7 @@ Diseñar modelos de datos simples, consistentes, extensibles y adecuados para un
 
 ## Reglas
 - Diseña primero desde el dominio y los casos de uso, no desde la base de datos.
-- Usa nombres de entidades y atributos expresivos, en singular y alineados con el lenguaje del negocio.
+- Usa nombres en español de entidades y atributos expresivos, en singular y alineados con el lenguaje del negocio.
 - Separa claramente:
   - entidades persistentes,
   - DTOs de entrada/salida,
@@ -27,7 +27,7 @@ Diseñar modelos de datos simples, consistentes, extensibles y adecuados para un
 - Usa `@ManyToOne` y `@OneToMany` solo cuando aporten claridad real.
 - Evita relaciones bidireccionales innecesarias.
 - No modeles una relación `@ManyToMany` directa si puede crecer en funcionalidad; crea una entidad intermedia.
-- Usa claves primarias técnicas estables.
+- Usa claves primarias numéricas estables.
 - Añade restricciones de unicidad e índices cuando el caso de uso lo requiera.
 - Modela campos obligatorios como no nulos.
 - Para catálogos estables usa `enum`; para catálogos evolutivos usa entidad propia.
@@ -51,7 +51,8 @@ Diseñar modelos de datos simples, consistentes, extensibles y adecuados para un
 
 ## Geolocalización y multimedia
 - Modela ubicación de forma explícita y estable.
-- Si no hay GIS real, usa latitud y longitud como campos separados.
+- En **catalog-service** el `readme` prevé **PostgreSQL + PostGIS**: usa tipos espaciales apropiados (p. ej. `geometry`/`geography` o equivalente JPA/Hibernate) para el punto del ejemplar, no sustituir por simples lat/lon salvo decisión explícita en documentación.
+- Solo donde un agregado **no** disponga de PostGIS, latitud y longitud numéricas como campos separados son aceptables.
 - Las fotos deben modelarse como recurso asociado con metadatos mínimos:
   - url o storageKey
   - título opcional

@@ -72,6 +72,19 @@ Campos principales:
 - nombres en castellano
 - sin tildes ni `ñ` en nombres técnicos
 
+### Política de `_id` (MVP)
+
+No se adopta **`ObjectId`** autogenerado por defecto como convención del proyecto. Las dos colecciones usan **`_id` de tipo `string`**, estable y alineada con el maestro SQL donde aplica:
+
+| Colección | Regla | Ejemplo |
+|-----------|--------|---------|
+| `enriquecimientos_especie` | Un documento por especie. **`_id` = `esp_` + `idEspecie`** (valor SQL en decimal, sin ceros a la izquierda innecesarios). Debe ser coherente con el **índice único** en `idEspecie`. | `esp_45` si `idEspecie` es `45` |
+| `enriquecimientos_arbol` | Varios documentos por árbol. **`_id` = `arb_` + `idArbol` + `_` + `<token>`**, donde `<token>` es **único en toda la colección** (recomendado: **ULID** de 26 caracteres Crockford en mayúsculas). | `arb_1001_01ARZ3NDEKTSV4RRFFQ69G5FAV` |
+
+**Motivos:** lectura y depuración; en especie el `_id` fijado por `idEspecie` facilita **upsert** idempotente; en notas de árbol el sufijo ULID evita colisiones sin secuencia compartida.
+
+Si más adelante se optara por **`ObjectId`** u otra estrategia, habría que mantener al menos el **índice único** en `idEspecie` (especie) y documentar cómo se garantiza unicidad en notas de árbol, y actualizar esta sección y los validadores.
+
 ### Criterios
 
 - usar `datosNormalizados` para atributos frecuentes y gobernados
@@ -144,7 +157,7 @@ Campos principales:
 
 ```json
 {
-  "_id": "arb_1001_001",
+  "_id": "arb_1001_01ARZ3NDEKTSV4RRFFQ69G5FAV",
   "idArbol": 1001,
   "tipoNota": "observacion",
   "titulo": "Daños leves en ramas inferiores",
@@ -197,7 +210,7 @@ db.createCollection("enriquecimientos_especie", {
       properties: {
         _id: {
           bsonType: "string",
-          description: "Identificador interno del documento"
+          description: "Clave primaria Mongo; convención esp_<idEspecie> (véase Política de _id, MVP)"
         },
         idEspecie: {
           bsonType: ["long", "int", "decimal"],
@@ -309,7 +322,7 @@ db.createCollection("enriquecimientos_arbol", {
       properties: {
         _id: {
           bsonType: "string",
-          description: "Identificador interno del documento"
+          description: "Clave primaria Mongo; convención arb_<idArbol>_<ULID> u otro token globalmente único (véase Política de _id, MVP)"
         },
         idArbol: {
           bsonType: ["long", "int", "decimal"],
@@ -418,6 +431,7 @@ db.enriquecimientos_arbol.createIndex(
 
 ### Para `enriquecimientos_especie`
 
+- usar siempre `_id` en formato **`esp_<idEspecie>`**
 - crear o actualizar por `idEspecie`
 - mantener un único documento activo por especie
 - mapear campos conocidos en `datosNormalizados`
@@ -425,6 +439,7 @@ db.enriquecimientos_arbol.createIndex(
 
 ### Para `enriquecimientos_arbol`
 
+- generar `_id` en formato **`arb_<idArbol>_<token>`** con `token` único (recomendado ULID)
 - insertar una nueva nota por cada aportación del usuario
 - no sobrescribir notas previas salvo edición explícita
 - usar `tipoNota` con vocabulario controlado
@@ -446,14 +461,15 @@ Valores sugeridos para `tipoNota`:
 1. recibir respuesta JSON de ChatGPT
 2. normalizar campos conocidos
 3. separar campos no previstos
-4. hacer `upsert` sobre `enriquecimientos_especie` por `idEspecie`
+4. fijar `_id` = `esp_` + `idEspecie` y hacer `upsert` sobre `enriquecimientos_especie` por `idEspecie` (o por `_id`)
 
 ### Alta de nota de árbol
 
 1. recibir nota del usuario
 2. construir documento con `idArbol`
-3. añadir `auditoria`
-4. insertar en `enriquecimientos_arbol`
+3. asignar `_id` = `arb_` + `idArbol` + `_` + **ULID** (u otro token único en colección, según política de `_id`)
+4. añadir `auditoria`
+5. insertar en `enriquecimientos_arbol`
 
 ---
 
@@ -462,7 +478,7 @@ Valores sugeridos para `tipoNota`:
 - **SQL** sigue siendo el sistema maestro
 - **Mongo** almacena enriquecimiento y notas
 - puede existir **denormalización mínima** (p. ej. nombres de especie o de árbol) para búsqueda en Mongo sin SQL; debe mantenerse alineada con el maestro relacional
-- `idEspecie` e `idArbol` son referencias lógicas a SQL
+- `idEspecie` e `idArbol` son referencias lógicas a SQL; `_id` sigue la **política de string** del MVP (sección anterior)
 - no hay claves foráneas en Mongo; la integridad debe controlarse en aplicación
 - la estructura debe ser flexible, pero con validación mínima obligatoria
 
