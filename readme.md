@@ -68,7 +68,7 @@ La solución debe ofrecer un sistema de notificaciones para comunicar novedades 
 El producto debe incluir integración con IA como apoyo a la identificación orientativa de árboles a partir de fotografías y como canal de interacción conversacional con el usuario.
 
 #### Diagrama de Casos de Uso del sistema
-![Diagrama de casos de uso del sistema MyTreeLibrary](docs/use-cases/use-case-model.png)
+[Diagrama de casos de uso del sistema MyTreeLibrary](docs/use-cases/use-case-model.png)
 
 *Fuentes:* [resumen de casos de uso](docs/use-cases/use-case-summary.md) · [modelo PlantUML](docs/use-cases/use-case-model.puml)
 
