@@ -1,0 +1,54 @@
+﻿# --- Node / Vue ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+**/.vite/
+**/dist/
+**/coverage/
+**/.nuxt/
+**/.output/
+**/.turbo/
+
+# --- Java / Spring Boot ---
+**/target/
+**/build/
+!**/src/**/build/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*.log
+replay_pid*.log
+
+# --- Env and secrets ---
+.env
+.env.*
+!.env.example
+!.env*.example
+
+# --- IDE / OS ---
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.DS_Store
+Thumbs.db
+
+# --- Logs and temp ---
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+*.swp
+*~
+
+# --- Test output / coverage ---
+**/test-output/
+**/.pytest_cache/
+**/jacoco.exec
+**/site/

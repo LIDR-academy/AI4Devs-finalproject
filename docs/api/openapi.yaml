@@ -1,0 +1,367 @@
+openapi: 3.0.3
+info:
+  title: MyTreeLibrary API
+  description: >
+    Contrato HTTP expuesto al cliente a través del API Gateway (prefijos `/api/catalog`,
+    `/api/media`, `/api/notifications`, `/api/ai`). Las respuestas de error siguen RFC 9457
+    (`application/problem+json`). Reglas de diseño y convención de rutas en `.cursor/rules/api-design.mdc`.
+  version: 0.1.0
+
+servers:
+  - url: /
+    description: Origen del API Gateway (rutas absolutas desde la raíz del host publicado)
+
+tags:
+  - name: catalog
+    description: Catálogo de árboles (catalog-service)
+  - name: catalog-public
+    description: Consulta pública sin autenticación
+  - name: notifications
+    description: Suscripciones y notificaciones (notification-service)
+  - name: ai
+    description: Identificación orientativa y chat (ai-assistant-service)
+  - name: media
+    description: Metadatos de fotografías y subida a almacén objeto (media-service)
+
+paths:
+  /api/catalog/trees:
+    get:
+      tags: [catalog]
+      summary: Listar árboles del colaborador
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Listado paginado
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+    post:
+      tags: [catalog]
+      summary: Crear árbol
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: DTO de alta (detalle en implementación)
+      responses:
+        "201":
+          description: Creado
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+
+  /api/catalog/trees/{id}:
+    parameters:
+      - $ref: "#/components/parameters/TreeId"
+    get:
+      tags: [catalog]
+      summary: Obtener ficha de árbol
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Ficha
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+    put:
+      tags: [catalog]
+      summary: Reemplazar ficha de árbol
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Actualizado
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+    patch:
+      tags: [catalog]
+      summary: Actualizar parcialmente ficha de árbol
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Actualizado
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+  /api/catalog/trees/{id}/photos:
+    parameters:
+      - $ref: "#/components/parameters/TreeId"
+    get:
+      tags: [catalog]
+      summary: Listar fotos del árbol
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Listado
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+    post:
+      tags: [catalog]
+      summary: Asociar o registrar foto al árbol
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Creado
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+
+  /api/catalog/public/trees:
+    get:
+      tags: [catalog-public]
+      summary: Listar árboles publicados (público)
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Listado público
+
+  /api/catalog/public/map:
+    get:
+      tags: [catalog-public]
+      summary: Datos para mapa público
+      security: []
+      responses:
+        "200":
+          description: GeoJSON o DTO de mapa según implementación
+
+  /api/media/uploads/presign:
+    post:
+      tags: [media]
+      summary: Solicitar URL prefirmada para subida directa al bucket (S3/MinIO)
+      description: >
+        Alineado con la política del readme (objetos privados, sin credenciales en cliente).
+        El cuerpo exacto (árbol asociado, MIME, tamaño) se detalla en implementación.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Metadatos mínimos de la subida (p. ej. arbol_id, contentType, tamano_bytes)
+      responses:
+        "200":
+          description: Respuesta con URL prefirmada, storageKey y ventana de caducidad
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+
+  /api/media/photos/{photoId}:
+    parameters:
+      - $ref: "#/components/parameters/PhotoId"
+    get:
+      tags: [media]
+      summary: Obtener metadatos de una fotografía
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Metadatos (visibilidad, clave de objeto, orden, etc.)
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+  /api/notifications/subscriptions:
+    get:
+      tags: [notifications]
+      summary: Listar suscripciones (admin o según política)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Listado
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+    post:
+      tags: [notifications]
+      summary: Alta de suscripción por correo (público o flujo acordado)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "201":
+          description: Creada o pendiente de confirmación
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+
+  /api/ai/species-identification:
+    post:
+      tags: [ai]
+      summary: Identificación orientativa de especie desde imagen
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Sugerencias orientativas
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+
+  /api/ai/chat:
+    post:
+      tags: [ai]
+      summary: Chat asistido con IA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+      responses:
+        "200":
+          description: Respuesta del asistente
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT emitido por Keycloak (realm de la aplicación)
+
+  parameters:
+    TreeId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    PhotoId:
+      name: photoId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Identificador de FOTOGRAFIA (`fotografia_id`) en esquema media
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Índice de página (0-based)
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Tamaño de página
+
+  schemas:
+    Problem:
+      type: object
+      description: Problem Details (RFC 9457)
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+      required:
+        - title
+        - status
+
+  responses:
+    ProblemBadRequest:
+      description: Solicitud incorrecta
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemUnauthorized:
+      description: No autenticado
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemForbidden:
+      description: Prohibido
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemNotFound:
+      description: Recurso no encontrado
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"

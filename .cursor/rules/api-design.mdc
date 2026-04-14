@@ -1,0 +1,52 @@
+---
+description: Reglas de diseño de API REST
+globs:
+  - "services/**/controller/**/*.java"
+  - "services/**/dto/**/*.java"
+alwaysApply: false
+---
+
+# API design rules
+- Diseñar endpoints orientados a recursos.
+- Los nombres se propondrán en inglés, aunque el campo de base de datos y atributo estará en español
+- Mantener nombres consistentes y predecibles.
+- Versionar la API si aparece una necesidad real.
+- Usar DTOs separados para request y response.
+
+## Convención de URLs (API Gateway)
+
+La SPA y el resto de clientes llaman **solo** al **API Gateway** bajo el prefijo común **`/api/<contexto>/`**, alineado con cada carpeta en `services/`:
+
+| Prefijo `/api/...` | Microservicio (`services/`) |
+|--------------------|-----------------------------|
+| `catalog` | `catalog-service` |
+| `media` | `media-service` |
+| `notifications` | `notification-service` |
+| `ai` | `ai-assistant-service` |
+
+Los controladores de cada servicio pueden publicar rutas sin el prefijo `/api/<contexto>` si el gateway las **prefija o reescribe** al enrutar; lo normativo para el contrato externo son las rutas **completas** vistas desde el cliente.
+
+## Endpoints esperables del MVP (rutas expuestas por el gateway)
+
+- `GET`/`POST` `/api/catalog/trees`
+- `GET`/`PUT`/`PATCH` `/api/catalog/trees/{id}`
+- `GET`/`POST` `/api/catalog/trees/{id}/photos`
+- `GET` `/api/catalog/public/trees`
+- `GET` `/api/catalog/public/map`
+- `POST` `/api/media/uploads/presign`
+- `GET` `/api/media/photos/{photoId}`
+- `GET`/`POST` `/api/notifications/subscriptions`
+- `POST` `/api/ai/species-identification`
+- `POST` `/api/ai/chat`
+
+## Reglas
+- Los listados deben permitir paginación.
+- Los filtros deben ser simples y explícitos.
+- Las respuestas de error deben tener estructura común RFC 9457.
+- Los errores HTTP devueltos por el API deben seguir lo indicado en RFC 9110.
+- No devolver información interna innecesaria.
+
+## Documentación enlazada
+
+- Contrato OpenAPI: `docs/api/openapi.yaml`.
+- Seguridad: `.cursor/rules/api-security.mdc`; mantener cambios de API y OpenAPI alineados (`.cursor/rules/api-contract.mdc`).

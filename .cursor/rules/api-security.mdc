@@ -1,0 +1,37 @@
+---
+description: Seguridad OIDC/JWT, roles y exposición de APIs en gateway y microservicios
+globs:
+  - "services/**/*.java"
+alwaysApply: false
+---
+
+# Seguridad de API (MyTreeLibrary)
+
+Resumen ampliado coherente con [readme.md](../../readme.md) §2.5. La **fuente de verdad** de rutas y errores HTTP sigue en [docs/api/openapi.yaml](../../docs/api/openapi.yaml).
+
+## Autenticación y capa de confianza
+
+- La **SPA** obtiene tokens con **Authorization Code + PKCE** contra **Keycloak** (OIDC).
+- Los clientes llaman al **API Gateway**; la validación de **JWT** como *resource server* puede concentrarse en el **gateway** y/o repetirse en microservicios según se configure el despliegue: en cualquier caso, **no** aceptar peticiones sensibles sin comprobar el token cuando el caso de uso exija autenticación (véase [use-case-summary.md](../../docs/use-cases/use-case-summary.md)).
+- Configurar **`issuer-uri`** (o equivalente) alineado con el realm de Keycloak en todos los runtime que validen JWT.
+
+## Autorización por roles
+
+- Roles de realm previstos: **`COLABORADOR`** y **`ADMIN`** (nombre exacto según realm).
+- Endpoints de **gestión de maestros** y operaciones administrativas: solo **`ADMIN`** salvo que el modelo de casos de uso indique lo contrario.
+- **Registro y edición de árboles** del colaborador: **`COLABORADOR`** (o **`ADMIN`** actuando con las mismas reglas de propiedad que un colaborador, si se documenta).
+- Rutas **públicas** (`/api/catalog/public/...`, consulta sin login): **sin** requisito de JWT; seguir limitando datos a lo publicable según reglas de negocio ([data-model.md](../../docs/data-model/data-model.md)).
+
+## Datos sensibles y errores
+
+- **No** registrar tokens, contraseñas, secretos ni datos personales completos en logs.
+- Respuestas de error: **RFC 9457** (`application/problem+json`); códigos HTTP **RFC 9110**; sin stack traces ni mensajes internos al cliente.
+
+## Correlación y auditoría
+
+- Propagar **cabecera de correlación** (p. ej. `X-Correlation-Id` o el nombre acordado en gateway) en llamadas internas entre servicios cuando existan cadenas síncronas.
+- Las operaciones de negocio relevantes deben ser trazables según política de auditoría del dominio (véase reglas de datos y `AUDITORIA_*` en documentación).
+
+## Integración con almacenamiento
+
+- Objetos en **S3/MinIO**: buckets privados; al cliente solo **URLs prefirmadas** de corta duración; nunca credenciales de bucket en frontend o en respuestas API.
