@@ -25,7 +25,7 @@ Soy un apasionado de los árboles y quiero desarrollar un proyecto web para alma
 3.- la identificación con IA es una importante ayuda orientativa, aunque no una funcionalidad central 
 4.- quiero que el proyecto se perciba como  memoria/localización de árboles singulares añadiendo la componente de disfrute como hobby 
 5.- El sistema público permitirá consulta sin registrarse 
-6.- El nombre pensado es "My Tree Library"
+6.- El nombre pensado es "MyTreeLibrary"
 
 
 **Prompt 2:**

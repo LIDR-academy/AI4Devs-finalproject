@@ -1,11 +1,11 @@
 ---
-description: Contexto funcional de producto para My Tree Library
+description: Contexto funcional de producto para MyTreeLibrary
 alwaysApply: true
 ---
 
 # Product context
 
-My Tree Library es una plataforma colaborativa para amantes de la naturaleza.
+MyTreeLibrary es una plataforma colaborativa para amantes de la naturaleza.
 
 ## Casos de uso principales
 - Registrar árboles singulares
@@ -19,5 +19,10 @@ My Tree Library es una plataforma colaborativa para amantes de la naturaleza.
 ## Enfoque del producto
 - Priorizar simplicidad y utilidad real para el MVP
 - Favorecer comunidad y compartición entre aficionados
-- Tratar la IA como ayuda orientativa, no como fuente definitiva
 - Optimizar la experiencia de consulta pública
+
+## Inteligencia artificial (mensaje de producto)
+
+- La IA es **apoyo orientativo** (identificación por imagen, chat): **no** sustituye el criterio de expertos ni constituye una determinación científica oficial de especie o estado del ejemplar.
+- En interfaz y textos, **no** presentar resultados de IA como veredictos definitivos; ofrecer formulaciones del tipo sugerencia o posible identificación.
+- Cumplir la trazabilidad de uso de IA prevista en documentación de datos (`AUDITORIA_USO_IA`, políticas acordadas).

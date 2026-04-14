@@ -6,7 +6,7 @@ Aceptada
 
 ## Contexto
 
-En arquitecturas Spring Cloud suelen aparecer **Netflix Eureka** (u otro registro, p. ej. Consul) y **Spring Cloud Config Server** como piezas centrales. En **My Tree Library** se usa un **API Gateway** y microservicios desplegables en **Docker Compose** (desarrollo) y, a medio plazo, en un **orquestador** tipo **Kubernetes** (producción).
+En arquitecturas Spring Cloud suelen aparecer **Netflix Eureka** (u otro registro, p. ej. Consul) y **Spring Cloud Config Server** como piezas centrales. En **MyTreeLibrary** se usa un **API Gateway** y microservicios desplegables en **Docker Compose** (desarrollo) y, a medio plazo, en un **orquestador** tipo **Kubernetes** (producción).
 
 ## Funciones de las piezas que no adoptamos
 

@@ -19,19 +19,19 @@ Luís María de Frutos Redondo
 
 ### **0.2. Nombre del proyecto:**
 
-My Tree Library
+MyTreeLibrary
 
 ### **0.3. Descripción breve del proyecto:**
 
-My Tree Library es una solución digital para crear y gestionar tu colección personal de árboles singulares, almacenando fotografías, localización geográfica y datos relevantes de cada ejemplar. Diseñada para aficionados, permite compartir información públicamente y fomentar una comunidad colaborativa. La plataforma se complementa con el uso de la IA para la identificación de árboles a partir de imágenes.
+MyTreeLibrary es una solución digital para crear y gestionar tu colección personal de árboles singulares, almacenando fotografías, localización geográfica y datos relevantes de cada ejemplar. Diseñada para aficionados, permite compartir información públicamente y fomentar una comunidad colaborativa. La plataforma se complementa con el uso de la IA para la identificación de árboles a partir de imágenes.
 
 ### **0.4. URL del proyecto:**
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+https://github.com/ldefrutos1/AI4Devs-finalproject
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+https://github.com/ldefrutos1/AI4Devs-finalproject
 
 
 ---
@@ -68,7 +68,8 @@ La solución debe ofrecer un sistema de notificaciones para comunicar novedades 
 El producto debe incluir integración con IA como apoyo a la identificación orientativa de árboles a partir de fotografías y como canal de interacción conversacional con el usuario.
 
 #### Diagrama de Casos de Uso del sistema
-![Diagrama de casos de uso del sistema My Tree Library](docs/use-cases/use-case-model.png)
+
+<img src="docs/use-cases/use-case-model.png" alt="Diagrama de casos de uso del sistema MyTreeLibrary" />
 
 *Fuentes:* [resumen de casos de uso](docs/use-cases/use-case-summary.md) · [modelo PlantUML](docs/use-cases/use-case-model.puml)
 
@@ -78,7 +79,13 @@ El producto debe incluir integración con IA como apoyo a la identificación ori
 
 ### **1.4. Instrucciones de instalación:**
 
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.) *— pendiente de la fase de implementación.*
+**Infraestructura de apoyo:** en [infra/compose/](infra/compose/) hay un `docker-compose.yml` que levanta PostgreSQL 16 + PostGIS (BD `mtl`, esquemas `catalog`, `media`, `notification`, `ai` y BD `keycloak`), MongoDB 7, Redis 7, MinIO, Kafka (KRaft) con topic `catalog.arbol.evento`, y Keycloak 26 en modo desarrollo. 
+#### Pasos: 
+- Copiar `infra/compose/.env.example` a `infra/compose/.env` (en Windows `copy .env.example .env`; en Unix `cp .env.example .env`), 
+- Ejecutar `docker compose up -d` desde `infra/compose/`. 
+#### Detalle y puertos: [infra/compose/README.md](infra/compose/README.md).
+
+> Instrucciones de **microservicios, gateway, frontend, migraciones Flyway y semillas** *— pendientes de la fase de implementación* cuando existan proyectos bajo `services/` y `frontend/`.
 
 ---
 
@@ -90,17 +97,19 @@ La aplicación se desarrollará en microservicios con Spring en la parte de back
 
 #### Patrón y Stack tecnológico
 
-**Arquitecturas:** microservicios por **contextos delimitados** (DDD ligero); 
-**Seguridad:** OIDC y JWT
+- **Arquitectura:** Microservicios 
+- **Seguridad:** OIDC y JWT
 
-**Spring Boot 4** en el backend 
-**Vue 3** en el frontend
-**Keycloak** para OIDC y JWT
-**Kafka** para eventos de dominio
-**PostgreSQL** como base de datos SQL
-**MongoDB** como base de datos NoSQL 
-**Redis** caché 
-**compatible S3** almacenamiento de imágenes
+**Stack tecnológico principal:**
+
+- **Backend:** Spring Boot 4 y Maven
+- **Frontend:** Vue 3
+- **Identidad:** Keycloak para OIDC y JWT
+- **Eventos de dominio:** Kafka
+- **Base de datos SQL:** PostgreSQL
+- **Base de datos NoSQL:** MongoDB
+- **Caché:** Redis
+- **Almacenamiento de imágenes:** Compatible S3
 
 #### C1 — Diagrama de contexto del sistema (nivel 1)
 
@@ -123,7 +132,7 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  subgraph mtl [My_Tree_Library]
+  subgraph mtl [MyTreeLibrary]
     SPA[SPA_Vue3]
     GW[api-gateway]
     KC[Keycloak]
@@ -183,6 +192,7 @@ flowchart TB
 
 **Flujo de notificación tras evento `catalog.arbol.evento` (Kafka):**
 
+En el MVP, el evento con **fines de notificación por correo a suscriptores** se publica **solo tras la alta (creación)** de una ficha de árbol (regla **R7** en [data-model.md](docs/data-model/data-model.md)); las **modificaciones** de ficha **no** disparan este flujo. Contrato del mensaje: [docs/events/kafka-events.md](docs/events/kafka-events.md).
 
 **Comunicaciones principales:** el usuario interactúa con la SPA; la SPA obtiene tokens en Keycloak y llama al API Gateway; el gateway enruta a los microservicios; **catalog-service** publica en Kafka eventos como `catalog.arbol.evento`; **notification-service** consume Kafka y envía correo vía SMTP externo; **ai-assistant-service** invoca al proveedor de IA externo.
 
@@ -234,7 +244,7 @@ sequenceDiagram
 | Componente | Tecnología | Responsabilidad |
 |------------|------------|-----------------|
 | SPA | Vue 3, Vite, TypeScript | UI: biblioteca, mapa, IA, flujos OIDC con Keycloak |
-| API Gateway | Spring Cloud Gateway, **Spring Boot 4** | Enrutado `/api/catalog`, `/api/media`, `/api/ai`; preparado para validación JWT (Keycloak); actuator y métricas |
+| API Gateway | Spring Cloud Gateway, **Spring Boot 4** | Enrutado `/api/catalog`, `/api/media`, `/api/notifications`, `/api/ai`; preparado para validación JWT (Keycloak); actuator y métricas |
 | catalog-service | **Spring Boot 4**, JPA, Flyway, PostgreSQL, PostGIS, Redis, Kafka producer | Árboles, coordenadas, publicación; **PostgreSQL** (esquema **catalog**) y **MongoDB** (enriquecimientos y proyección mínima para búsqueda); caché de mapa; eventos de dominio |
 | media-service | **Spring Boot 4**, JPA, Flyway, AWS SDK v2 (S3) | Metadatos solo en esquema **`media`**; objetos en bucket MinIO/S3; URLs prefirmadas |
 | notification-service | **Spring Boot 4**, JPA, Flyway, Spring Kafka, JavaMail | Consume `catalog.arbol.evento`; datos solo en esquema **`notification`**; envío SMTP |
@@ -253,16 +263,23 @@ Estructura de repositorio **prevista** para la fase de implementación (monorepo
 ```
 proyecto/
 ├── frontend/                 # SPA Vue 3 (Vite)
-├── services/
+├── services/                 # Gateway + microservicios Spring Boot (un directorio por despliegue)
 │   ├── api-gateway/
 │   ├── catalog-service/
 │   ├── media-service/
 │   ├── notification-service/
 │   └── ai-assistant-service/
-├── docs/adr/                 # Architecture Decision Records
-├── docs/data-model/          # Modelo de datos (reglas, Mongo, readme §3)
-├── docs/use-cases/           # Casos de uso
-├── infra/                    # Docker Compose, manifests, etc.
+├── platform/
+│   └── observability/        # Configuración de telemetría/trazas/logs (OTel, Prometheus, Grafana…)
+├── infra/                    # Orquestación local y nube
+│   ├── compose/              # Docker Compose (infra de apoyo); ver README.md en esa carpeta
+│   └── k8s/                  # Manifiestos / Helm (según despliegue)
+├── docs/
+│   ├── adr/                  # Architecture Decision Records
+│   ├── api/                  # OpenAPI (contrato del gateway)
+│   ├── data-model/           # Modelo de datos (reglas, Mongo, readme §3)
+│   ├── events/               # Contrato de eventos Kafka
+│   └── use-cases/            # Casos de uso
 └── readme.md
 ```
 
@@ -272,7 +289,7 @@ proyecto/
 
 **Despliegue (alto nivel):** orquestación (p. ej. Kubernetes), secretos externos, Keycloak y Kafka en HA según entorno, bases gestionadas y almacenamiento de objetos S3 en nube.
 
-**Decisiones documentadas:** descubrimiento de servicios y configuración **sin Eureka ni Spring Cloud Config** (asumidas por Compose/Kubernetes) — [ADR-0001](docs/adr/0001-discovery-y-configuracion-por-orquestador.md).
+**Decisiones documentadas:** descubrimiento de servicios y configuración **sin Eureka ni Spring Cloud Config** (asumidas por Compose/Kubernetes) — [ADR-0001](docs/adr/0001-discovery-y-configuracion-por-orquestador.md). Claves primarias **numéricas** en SQL frente a UUID en el MVP — [ADR-0002](docs/adr/0002-claves-primarias-numericas-frente-a-uuid.md).
 
 ```mermaid
 flowchart LR
@@ -305,15 +322,17 @@ flowchart LR
 | Transporte | TLS en producción; CORS restringido al origen del SPA |
 | Observabilidad | Health/metrics Prometheus; trazas distribuidas (p. ej. OpenTelemetry) en despliegue |
 
+**Normativa ampliada en código asistido:** reglas Cursor `.cursor/rules/api-security.mdc` (JWT, roles `COLABORADOR`/`ADMIN`, rutas públicas, correlación, PII en logs). El contrato HTTP canónico para implementación y pruebas de contrato está en [docs/api/openapi.yaml](docs/api/openapi.yaml).
+
 ### **2.6. Tests**
 
-Estrategia prevista: pruebas unitarias de dominio; **integración** con **Testcontainers** (PostgreSQL con PostGIS, MongoDB, Kafka) donde aporte valor; contratos de API (OpenAPI) entre equipos; tests de capa web y de aceptación sobre flujos críticos (catalogo, notificaciones, IA).
+Estrategia prevista: pruebas unitarias de dominio; **integración** con **Testcontainers** (PostgreSQL con PostGIS, MongoDB, Kafka) donde aporte valor; **contrato de API** en [docs/api/openapi.yaml](docs/api/openapi.yaml) como referencia para pruebas de contrato y revisiones; tests de capa web y de aceptación sobre flujos críticos (catalogo, notificaciones, IA).
 
 ---
 
 ## 3. Modelo de Datos
 
-**Documentación relacionada:** [Notas de negocio y reglas](docs/data-model/data-model.md) · [Modelo técnico MongoDB (colecciones, validación, índices)](docs/data-model/mongo.md)
+**Documentación relacionada:** [Notas de negocio y reglas](docs/data-model/data-model.md) · [Modelo técnico MongoDB (colecciones, validación, índices)](docs/data-model/mongo.md) · [OpenAPI](docs/api/openapi.yaml) · [Eventos Kafka](docs/events/kafka-events.md)
 
 ### **3.1. Modelo lógico de entidades (referencia)**
 
@@ -382,7 +401,7 @@ erDiagram
     NOTIFICACION ||--o{ ENVIO_NOTIFICACION : produce
     SUSCRIPTOR ||--o{ ENVIO_NOTIFICACION : recibe
 
-```    
+```
 
 ### **3.2. Diagrama de persistencia (implementación)**
 
@@ -390,7 +409,8 @@ erDiagram
 ```mermaid
 erDiagram
     USUARIO_APP {
-        string usuario_id PK
+        bigint usuario_app_id PK
+        string subject_oidc UK
         string email
         string rol
         datetime creado_en
@@ -442,7 +462,7 @@ erDiagram
         bigint arbol_id PK
         bigint especie_id FK
         bigint provincia_id FK
-        string usuario_id FK
+        bigint usuario_app_id FK
         string nombre_comun
         string descripcion
         string visibilidad_mapa_publico
@@ -457,7 +477,7 @@ erDiagram
 
     AUDITORIA_CATALOGO {
         bigint auditoria_id PK
-        string actor_usuario_id
+        bigint actor_usuario_app_id FK
         string entidad_afectada
         string id_entidad_logico
         string operacion
@@ -527,7 +547,7 @@ erDiagram
     FOTOGRAFIA {
         bigint fotografia_id PK
         bigint arbol_id
-        string creador_usuario_id
+        bigint creador_usuario_app_id FK
         string categoria_visibilidad
         string bucket_almacenamiento
         string clave_objeto
@@ -597,7 +617,7 @@ erDiagram
 erDiagram
     AUDITORIA_USO_IA {
         bigint auditoria_ia_id PK
-        string usuario_id
+        bigint usuario_app_id FK
         string email_usuario
         string tipo_uso_ia
         bigint arbol_id
@@ -610,13 +630,19 @@ erDiagram
 
 ### **3.3. Descripción de entidades principales (orientación física)**
 
-Las entidades físicas se reparten por servicio y almacén como en §3.2: **PostgreSQL** en **un servidor** con esquemas `catalog`, `media`, `notification` y `ai` (este último para **ai-assistant-service**, p. ej. **AUDITORIA_USO_IA**); **MongoDB** bajo **catalog-service** según [mongo.md](docs/data-model/mongo.md). La descripción campo a campo quedará para la fase de implementación (OpenAPI, Flyway, etc.).
+Las entidades físicas se reparten por servicio y almacén como en §3.2: **PostgreSQL** en **un servidor** con esquemas `catalog`, `media`, `notification` y `ai` (este último para **ai-assistant-service**); **MongoDB** bajo **catalog-service** según [mongo.md](docs/data-model/mongo.md).
+
+**Usuario de aplicación:** `USUARIO_APP` usa **PK numérica** `usuario_app_id` (alineado con [ADR-0002](docs/adr/0002-claves-primarias-numericas-frente-a-uuid.md)); el identificador estable del proveedor OIDC (`sub`) se guarda en **`subject_oidc`** con unicidad, no como clave primaria. Las FK en otros esquemas/servicios (`usuario_app_id`, `creador_usuario_app_id`, etc.) referencian ese entero; No habrá FK cruzadas entre esquemas; cada microservicio tiene un esquema de Base de Datos independiente.
 
 ---
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+**Contrato canónico (OpenAPI 3):** [docs/api/openapi.yaml](docs/api/openapi.yaml) — rutas bajo el API Gateway (`/api/catalog`, `/api/media`, `/api/notifications`, `/api/ai`), seguridad JWT donde aplica, listados paginados (`page`, `size`) y errores en **RFC 9457** (`application/problem+json`).
+
+**Convenciones de diseño:** `.cursor/rules/api-design.mdc` y `.cursor/rules/api-contract.mdc` (cambios de API deben reflejarse en el OpenAPI).
+
+**Eventos asíncronos** (notificaciones, etc.): [docs/events/kafka-events.md](docs/events/kafka-events.md).
 
 ---
 
