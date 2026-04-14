@@ -27,11 +27,11 @@ MyTreeLibrary es una solución digital para crear y gestionar tu colección pers
 
 ### **0.4. URL del proyecto:**
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+https://github.com/ldefrutos1/AI4Devs-finalproject
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+https://github.com/ldefrutos1/AI4Devs-finalproject
 
 
 ---
@@ -78,7 +78,11 @@ El producto debe incluir integración con IA como apoyo a la identificación ori
 
 ### **1.4. Instrucciones de instalación:**
 
-**Infraestructura de apoyo (bases, colas, identidad, objetos):** en [infra/compose/](infra/compose/) hay un `docker-compose.yml` que levanta PostgreSQL 16 + PostGIS (BD `mtl`, esquemas `catalog`, `media`, `notification`, `ai` y BD `keycloak`), MongoDB 7, Redis 7, MinIO, Kafka (KRaft) con topic `catalog.arbol.evento`, y Keycloak 26 en modo desarrollo. Pasos: copiar `infra/compose/.env.example` a `infra/compose/.env` (en Windows `copy .env.example .env`; en Unix `cp .env.example .env`), ejecutar `docker compose up -d` desde `infra/compose/`. Detalle y puertos: [infra/compose/README.md](infra/compose/README.md).
+**Infraestructura de apoyo:** en [infra/compose/](infra/compose/) hay un `docker-compose.yml` que levanta PostgreSQL 16 + PostGIS (BD `mtl`, esquemas `catalog`, `media`, `notification`, `ai` y BD `keycloak`), MongoDB 7, Redis 7, MinIO, Kafka (KRaft) con topic `catalog.arbol.evento`, y Keycloak 26 en modo desarrollo. 
+#### Pasos: 
+- Copiar `infra/compose/.env.example` a `infra/compose/.env` (en Windows `copy .env.example .env`; en Unix `cp .env.example .env`), 
+- Ejecutar `docker compose up -d` desde `infra/compose/`. 
+#### Detalle y puertos: [infra/compose/README.md](infra/compose/README.md).
 
 > Instrucciones de **microservicios, gateway, frontend, migraciones Flyway y semillas** *— pendientes de la fase de implementación* cuando existan proyectos bajo `services/` y `frontend/`.
 
@@ -92,12 +96,12 @@ La aplicación se desarrollará en microservicios con Spring en la parte de back
 
 #### Patrón y Stack tecnológico
 
-- **Arquitectura:** Microservicios por *contextos delimitados* (DDD ligero)
+- **Arquitectura:** Microservicios 
 - **Seguridad:** OIDC y JWT
 
 **Stack tecnológico principal:**
 
-- **Backend:** Spring Boot 4
+- **Backend:** Spring Boot 4 y Maven
 - **Frontend:** Vue 3
 - **Identidad:** Keycloak para OIDC y JWT
 - **Eventos de dominio:** Kafka
@@ -398,8 +402,6 @@ erDiagram
 
 ```
 
-*Documentos Mongo (`ENRIQUECIMIENTOS_*`): el campo `_id` sigue la política del MVP (`esp_<idEspecie>`, `arb_<idArbol>_<ULID>`); ver [mongo.md](docs/data-model/mongo.md).*
-
 ### **3.2. Diagrama de persistencia (implementación)**
 
 ** PostgreSQL catalog_service:**
@@ -627,9 +629,9 @@ erDiagram
 
 ### **3.3. Descripción de entidades principales (orientación física)**
 
-Las entidades físicas se reparten por servicio y almacén como en §3.2: **PostgreSQL** en **un servidor** con esquemas `catalog`, `media`, `notification` y `ai` (este último para **ai-assistant-service**, p. ej. **AUDITORIA_USO_IA**); **MongoDB** bajo **catalog-service** según [mongo.md](docs/data-model/mongo.md). La descripción campo a campo quedará para la fase de implementación (OpenAPI, Flyway, etc.).
+Las entidades físicas se reparten por servicio y almacén como en §3.2: **PostgreSQL** en **un servidor** con esquemas `catalog`, `media`, `notification` y `ai` (este último para **ai-assistant-service**); **MongoDB** bajo **catalog-service** según [mongo.md](docs/data-model/mongo.md).
 
-**Usuario de aplicación:** `USUARIO_APP` usa **PK numérica** `usuario_app_id` (alineado con [ADR-0002](docs/adr/0002-claves-primarias-numericas-frente-a-uuid.md)); el identificador estable del proveedor OIDC (`sub`) se guarda en **`subject_oidc`** con unicidad, no como clave primaria. Las FK en otros esquemas/servicios (`usuario_app_id`, `creador_usuario_app_id`, etc.) referencian ese entero; las FK cruzadas entre esquemas asumen **un mismo servidor PostgreSQL** y permisos de integridad entre `catalog`, `media` y `ai` donde se definan.
+**Usuario de aplicación:** `USUARIO_APP` usa **PK numérica** `usuario_app_id` (alineado con [ADR-0002](docs/adr/0002-claves-primarias-numericas-frente-a-uuid.md)); el identificador estable del proveedor OIDC (`sub`) se guarda en **`subject_oidc`** con unicidad, no como clave primaria. Las FK en otros esquemas/servicios (`usuario_app_id`, `creador_usuario_app_id`, etc.) referencian ese entero; No habrá FK cruzadas entre esquemas; cada microservicio tiene un esquema de Base de Datos independiente.
 
 ---
 
