@@ -7,13 +7,13 @@ left to right direction
 
 actor "Público" as Publico
 actor "Colaborador" as Colaborador
-actor "Administrador" as Administrador
+actor "ADMIN" as Admin
 actor "Sistema\n(MyTreeLibrary)" as Sistema
 actor "Proveedor\nde IA" as ProvIA
 actor "Servidor\nSMTP" as SMTP
 
 Publico <|-- Colaborador : generalización\n(rol)
-Colaborador <|-- Administrador : generalización\n(rol)
+Colaborador <|-- Admin : generalización\n(rol)
 
 rectangle "MyTreeLibrary" #LightBlue {
   usecase "UC-01\nConsultar árboles\npublicados y mapa" as UC1
@@ -43,9 +43,9 @@ Colaborador --> UC6
 UC5 .> UC3 : <<extend>>\nPunto de extensión:\ndisponible al aportar\nimagen en el alta
 UC5 .> UC4 : <<extend>>\nPunto de extensión:\ndisponible al editar\ncon imagen
 
-' --- Administrador (requiere autenticación; hereda Colaborador) ---
-Administrador --> UC7
-Administrador --> UC8
+' --- ADMIN (requiere autenticación; hereda Colaborador) ---
+Admin --> UC7
+Admin --> UC8
 
 note bottom of Colaborador
   **Restricción:** todos los casos
@@ -54,10 +54,10 @@ note bottom of Colaborador
   (rol Colaborador).
 end note
 
-note bottom of Administrador
+note bottom of Admin
   **Restricción:** UC-07 y UC-08
   exigen **usuario autenticado**
-  (rol Administrador).
+  (rol ADMIN).
   Por generalización, puede ejecutar
   también UC-01 … UC-06.
 end note

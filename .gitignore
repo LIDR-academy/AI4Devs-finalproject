@@ -52,6 +52,7 @@ pnpm-debug.log*
 .sts4-cache/
 .vscode/*
 !.vscode/extensions.json
+!.vscode/launch.json
 !.vscode/settings.json.example
 
 # --- OS ---

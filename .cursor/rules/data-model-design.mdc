@@ -15,6 +15,7 @@ Diseñar modelos de datos simples, consistentes, extensibles y adecuados para un
 ## Reglas
 - Diseña primero desde el dominio y los casos de uso, no desde la base de datos.
 - Usa nombres en español de entidades y atributos expresivos, en singular y alineados con el lenguaje del negocio.
+- **Ubicación en código y API:** paquetes (`domain`, repositorios, proyecciones, `controller`, `dto`, sin exponer entidades JPA en REST) según [spring-boot-4-backend.mdc](spring-boot-4-backend.mdc) (*Plantilla de paquetes* y *Persistencia*).
 - Separa claramente:
   - entidades persistentes,
   - DTOs de entrada/salida,
@@ -43,7 +44,7 @@ Diseñar modelos de datos simples, consistentes, extensibles y adecuados para un
 
 ## Rendimiento y consulta
 - Diseña entidades pensando en lectura pública frecuente.
-- No expongas entidades JPA directamente en la API.
+- Respuestas REST: DTOs/proyecciones (política de API en `spring-boot-4-backend` y [api-contract.mdc](api-contract.mdc)).
 - Para listados, usa proyecciones o DTOs específicos en lugar de cargar agregados completos.
 - Para búsquedas con filtros dinámicos, favorece Specification en vez de multiplicar métodos derivados.
 - Evita `fetch = EAGER` salvo justificación clara.

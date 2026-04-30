@@ -1,43 +1,40 @@
 # AGENTS.md
 
-## Proyecto
-MyTreeLibrary es una aplicación web colaborativa para registrar, localizar y compartir árboles de tu ciudad.
+## Proyecto (resumen)
 
-## Objetivo funcional
-Permitir a colaboradores identificados registrar árboles con:
-- datos descriptivos
-- fotografías
-- ubicación geográfica
-- identificación orientativa mediante IA
-- chat asistido por IA
-
-También debe permitir a usuario anónimos:
-- consulta pública sin login
-- suscripción a notificaciones
-
-## Stack principal
-- Backend: Spring Boot 4
-- Frontend: Vue 3
-- Arquitectura: microservicios
-- API: REST
-- Persistencia: base de datos relacional y Mongo
+MyTreeLibrary: visión de producto, objetivos, stack y arquitectura en [readme.md](readme.md) (§§0–2). Regla de producto detallada: `.cursor/rules/product-context.mdc`.
 
 ## Estructura del repositorio (monorepo)
 
-Código y despliegue previstos bajo la raíz del proyecto: **`frontend/`** (Vue), **`services/`** (api-gateway y microservicios), **`platform/observability/`** (config de telemetría/trazas), **`infra/`** (Compose, K8s) y **`docs/`**. Detalle: [readme.md](readme.md) (apartado 2.3). Infra de apoyo con Docker: [infra/compose/README.md](infra/compose/README.md).
+Carpetas principales: **`frontend/`**, **`services/`**, **`platform/observability/`**, **`infra/`**, **`docs/`**. Árbol y contexto: [readme.md](readme.md) (§2.3). Infra Docker: [infra/compose/README.md](infra/compose/README.md).
+
+**Build, arranque local backend y puertos:** [services/README.md](services/README.md). **Tests Java (Surefire/Failsafe, `test` / `testIT`):** [docs/engineering/testing-java.md](docs/engineering/testing-java.md).
+
+## Encargos al agente (plantilla)
+
+**Texto de la plantilla (única fuente):** [`.cursor/skills/encargo-mtl/SKILL.md`](.cursor/skills/encargo-mtl/SKILL.md). **No** se repite aquí el cuerpo para evitar desalineación; modifica solo ese fichero si cambias la plantilla del equipo.
+
+**Uso en Cursor:** paso a paso en la sección **«Cómo usar»** del propio [`.cursor/skills/encargo-mtl/SKILL.md`](.cursor/skills/encargo-mtl/SKILL.md) (resumen: insertar con **`/`** o **`@`**, rellenar corchetes **en el mensaje antes de enviar**, opcionalmente **`@`** a archivos). También puedes copiar/pegar desde el editor o usar un snippet.
+
+**Hábitos de trabajo** (“cómo encargar”, “no tocar `docs/` salvo…”) pueden ampliar este `AGENTS.md` o **reglas cortas** en `.cursor/rules/*.mdc` enlazando a `docs/`. Reserva **`docs/`** para arquitectura, contrato y decisiones estables; evita ficheros nuevos sueltos en `docs/engineering/` salvo **guías estables** (p. ej. [canonical-sources.md](docs/engineering/canonical-sources.md)).
 
 ## Documentación normativa complementaria
 
-- **Seguridad API** (JWT, roles, correlación, logs): reglas en `.cursor/rules/api-security.mdc`; resumen en [readme.md](readme.md) §2.5.
-- **Contrato HTTP** (fuente de verdad para el cliente): [docs/api/openapi.yaml](docs/api/openapi.yaml); al cambiar endpoints, actualizar también `.cursor/rules/api-design.mdc` si afecta a convenciones.
-- **Eventos Kafka**: [docs/events/kafka-events.md](docs/events/kafka-events.md).
-- **Híbrido SQL + Mongo** en catálogo: [docs/data-model/mongo.md](docs/data-model/mongo.md) y `.cursor/rules/mongo-hybrid.mdc`.
+- **Índice `docs/`:** [docs/README.md](docs/README.md). **Reglas Cursor (globs, `alwaysApply`, uso):** [docs/onboarding/cursor-rules-primer.md](docs/onboarding/cursor-rules-primer.md).
+- **Mapa tema → fuente canónica:** [docs/engineering/canonical-sources.md](docs/engineering/canonical-sources.md).
+- **Backend Spring (paquetes, persistencia, Lombok, auditoría):** [.cursor/rules/spring-boot-4-backend.mdc](.cursor/rules/spring-boot-4-backend.mdc).
+- **Checklist al tocar `services/`** (definición de hecho en el propio fichero): [.cursor/rules/backend-generation-standard.mdc](.cursor/rules/backend-generation-standard.mdc).
+- **Patrones microservicios (MVP):** [.cursor/rules/microservices-patterns.mdc](.cursor/rules/microservices-patterns.mdc).
+- **Seguridad API / JWT:** [.cursor/rules/api-security.mdc](.cursor/rules/api-security.mdc) · [docs/security/jwt-gateway-strategy.md](docs/security/jwt-gateway-strategy.md) · Keycloak local: [infra/compose/README.md](infra/compose/README.md) · visión producto: [readme.md](readme.md) §2.5.
+- **Logging:** [.cursor/rules/logging.mdc](.cursor/rules/logging.mdc).
+- **Contrato HTTP (cliente):** [docs/api/openapi.yaml](docs/api/openapi.yaml) · convenciones [.cursor/rules/api-design.mdc](.cursor/rules/api-design.mdc) · reglas [.cursor/rules/api-contract.mdc](.cursor/rules/api-contract.mdc).
+- **Frontend Vue 3 (`frontend/`):** [.cursor/rules/vue3-frontend.mdc](.cursor/rules/vue3-frontend.mdc).
+- **Eventos Kafka:** [docs/events/kafka-events.md](docs/events/kafka-events.md) · [.cursor/rules/kafka-events.mdc](.cursor/rules/kafka-events.mdc).
+- **Híbrido SQL + Mongo (catálogo):** [docs/data-model/mongo.md](docs/data-model/mongo.md) · [.cursor/rules/mongo-hybrid.mdc](.cursor/rules/mongo-hybrid.mdc).
 
 ## Prioridades del MVP
-1. Registro y publicación de árboles
-2. Consulta pública con mapa
-3. Notificaciones a usuarios suscritos
-4. IA para identificación orientativa
+
+Funcionalidades y backlog: [readme.md](readme.md) (§1.2) · [docs/backlog/backlog.md](docs/backlog/backlog.md).
 
 ## Criterios generales
 - No exponer entidades JPA directamente en la API.
@@ -47,6 +44,7 @@ Código y despliegue previstos bajo la raíz del proyecto: **`frontend/`** (Vue)
 - Mantener el enfoque del producto: hobby, comunidad y memoria de árboles.
 
 ## Reglas de generación
+- Al **crear o ampliar un microservicio** Spring Boot con REST, seguir la **plantilla de paquetes** y la tabla módulo ↔ `com.mtl.*` en [`.cursor/rules/spring-boot-4-backend.mdc`](.cursor/rules/spring-boot-4-backend.mdc) y el checklist [`.cursor/rules/backend-generation-standard.mdc`](.cursor/rules/backend-generation-standard.mdc); tomar **catalog-service** como referencia de estructura hasta que exista un segundo servicio completo equivalente.
 - Antes de crear código nuevo, revisar si ya existe una pieza reutilizable.
 - Si una clase o componente crece demasiado, proponer división.
 - Si hay una decisión de diseño ambigua, escoger la opción más simple compatible con el MVP.

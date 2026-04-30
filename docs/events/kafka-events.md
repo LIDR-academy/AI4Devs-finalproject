@@ -30,7 +30,7 @@ Campos recomendados para el MVP (extensibles con cuidado):
 | Campo | Tipo | Obligatorio | Descripción |
 |-------|------|-------------|-------------|
 | `schemaVersion` | string | No | Versión del contrato del evento (p. ej. `1.0`). |
-| `evento_id` | long | Sí | Identificador único del evento (p. ej. alineado con `EVENTO_CATALOGO.evento_id` en SQL) para idempotencia en el consumidor. |
+| `evento_id` | long | Sí | Identificador **único del mensaje** para idempotencia en el consumidor (reentregas). Lo genera el **productor** (`catalog-service`) sin persistir filas en **`EVENTO_CATALOGO`** (esa entidad y su relación con **NOTIFICACION** son responsabilidad del **notification-service**, HU-007). El consumidor puede persistir su propio `evento_id` / clave de deduplicación alineada a este valor. |
 | `tipo_evento` | string | Sí | En el MVP, el único valor que debe disparar correo a suscriptores es **`ARBOL_CREADO`** (alta). Otros valores quedan reservados para evolución y no deben activar el flujo de notificación hasta que se documente lo contrario. |
 | `arbol_id` | long | Sí | Identificador del árbol en PostgreSQL (`catalog`). |
 | `ocurrido_en` | string (ISO-8601) | Sí | Instantánea UTC del hecho de dominio. |
@@ -39,4 +39,5 @@ Campos recomendados para el MVP (extensibles con cuidado):
 ### Notas
 
 - **Disparo de correo (MVP):** solo **`tipo_evento` = `ARBOL_CREADO`**, coherente con **R7** y [use-case-summary.md](../use-cases/use-case-summary.md) (UC-09 solo en alta).
+- **Límite de microservicio:** el productor (**catalog-service**, HU-005) **no** persiste **`EVENTO_CATALOGO`**; el consumidor (**notification-service**, HU-007) es quien registra el evento consumido y genera las **NOTIFICACION** asociadas.
 - No incluir en el payload **emails de suscriptores** ni datos personales masivos: el consumidor resuelve destinatarios desde su propia base (`notification`).

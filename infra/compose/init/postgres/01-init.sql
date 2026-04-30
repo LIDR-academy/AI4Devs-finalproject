@@ -5,6 +5,8 @@ CREATE SCHEMA IF NOT EXISTS notification;
 CREATE SCHEMA IF NOT EXISTS ai;
 
 CREATE EXTENSION IF NOT EXISTS postgis;
+-- Búsqueda insensible a acentos en catálogo (maestros); usada por catalog-service (unaccent + lower).
+CREATE EXTENSION IF NOT EXISTS unaccent;
 
 -- Rol y BD para Keycloak (contraseña alineada con KEYCLOAK_DB_PASSWORD en docker-compose / .env.example).
 DO $$

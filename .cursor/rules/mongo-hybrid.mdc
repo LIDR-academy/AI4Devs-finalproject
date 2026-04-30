@@ -9,6 +9,10 @@ alwaysApply: false
 
 Documentación detallada: **[docs/data-model/mongo.md](../../docs/data-model/mongo.md)** y reglas de negocio en [data-model.md](../../docs/data-model/data-model.md).
 
+## Estructura de paquetes (JPA + Mongo)
+
+La disposición de paquetes (**`domain`**, **`infrastructure.persistence.jpa.repository`** (+ **`…projection`** / **`…imp`**), **`infrastructure.persistence.mongo.*`**, orquestación en **`application`**) coincide con **## Persistencia** en [spring-boot-4-backend.mdc](spring-boot-4-backend.mdc). Aquí solo **reglas de negocio** del híbrido SQL + Mongo en catálogo (autoridad, colecciones, `_id`, etc.).
+
 ## Principios
 
 - **PostgreSQL** es la **autoridad** para **ARBOL**, **ESPECIE**, taxonomía y datos operativos del catálogo que deban ser transaccionales y consultables con integridad relacional.

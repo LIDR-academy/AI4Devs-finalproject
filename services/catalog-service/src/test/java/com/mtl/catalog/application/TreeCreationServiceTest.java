@@ -1,0 +1,318 @@
+package com.mtl.catalog.application;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.mtl.catalog.domain.Arbol;
+import com.mtl.catalog.domain.UsuarioApp;
+import com.mtl.catalog.exception.CatalogValidationException;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.UsuarioAppRepository;
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
+
+@ExtendWith(MockitoExtension.class)
+class TreeCreationServiceTest {
+
+  @Mock private UsuarioAppRepository usuarioAppRepository;
+  @Mock private EspecieReadRepository especieReadRepository;
+  @Mock private ProvinciaReadRepository provinciaReadRepository;
+  @Mock private ArbolRepository arbolRepository;
+
+  @InjectMocks private TreeCreationService service;
+
+  @Test
+  void create_persisteArbolConCreadorYMaestrosValidos() {
+    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(provinciaReadRepository.existsById(28L)).thenReturn(true);
+    UsuarioApp user = usuario(5L, "kc-sub-1");
+    when(usuarioAppRepository.findBySubjectOidc("kc-sub-1")).thenReturn(Optional.of(user));
+    when(arbolRepository.save(any(Arbol.class)))
+        .thenAnswer(
+            inv -> {
+              Arbol a = inv.getArgument(0);
+              a.setId(100L);
+              return a;
+            });
+
+    CreatedTreeResult result =
+        service.create(
+            new CreateTreeCommand(
+                "kc-sub-1",
+                10L,
+                28L,
+                new BigDecimal("40.4168"),
+                new BigDecimal("-3.7038"),
+                "a@b.co",
+                "Dev User",
+                " Madrid ",
+                "Nota",
+                600,
+                "publico",
+                "publicado"));
+
+    assertThat(result.arbolId()).isEqualTo(100L);
+    assertThat(result.actorUsuarioAppId()).isEqualTo(5L);
+    assertThat(result.ocurridoEn()).isNotNull();
+    ArgumentCaptor<Arbol> arbolCaptor = ArgumentCaptor.forClass(Arbol.class);
+    verify(arbolRepository).save(arbolCaptor.capture());
+    Arbol saved = arbolCaptor.getValue();
+    assertThat(result.ocurridoEn()).isEqualTo(saved.getCreadoEn());
+    assertThat(saved.getEspecieId()).isEqualTo(10L);
+    assertThat(saved.getProvinciaId()).isEqualTo(28L);
+    assertThat(saved.getUsuarioAppId()).isEqualTo(5L);
+    assertThat(saved.getCreadoPor()).isEqualTo(5L);
+    assertThat(saved.getModificadoPor()).isEqualTo(5L);
+    assertThat(saved.getMunicipio()).isEqualTo("Madrid");
+    assertThat(saved.getDescripcion()).isEqualTo("Nota");
+    assertThat(saved.getAltitud()).isEqualTo(600);
+    assertThat(saved.getVisibilidadMapaPublico()).isEqualTo("PUBLICO");
+    assertThat(saved.getEstadoPublicacion()).isEqualTo("PUBLICADO");
+  }
+
+  @Test
+  void create_sinEspecie_rechaza() {
+    when(especieReadRepository.existsById(1L)).thenReturn(false);
+
+    assertThatThrownBy(() -> baseCommand().withEspecie(1L).buildAndCreate())
+        .isInstanceOf(CatalogValidationException.class)
+        .hasMessageContaining("especie");
+  }
+
+  @Test
+  void create_sinProvincia_rechaza() {
+    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(provinciaReadRepository.existsById(99L)).thenReturn(false);
+
+    assertThatThrownBy(() -> baseCommand().withProvincia(99L).buildAndCreate())
+        .isInstanceOf(CatalogValidationException.class)
+        .hasMessageContaining("provincia");
+  }
+
+  @Test
+  void create_sinEmail_rechaza() {
+    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(provinciaReadRepository.existsById(28L)).thenReturn(true);
+
+    assertThatThrownBy(
+            () ->
+                service.create(
+                    new CreateTreeCommand(
+                        "sub",
+                        10L,
+                        28L,
+                        new BigDecimal("40.0"),
+                        new BigDecimal("-3.0"),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)))
+        .isInstanceOf(CatalogValidationException.class)
+        .hasMessageContaining("correo");
+  }
+
+  @Test
+  void create_latitudFueraDeRango_rechaza() {
+    assertThatThrownBy(
+            () ->
+                service.create(
+                    new CreateTreeCommand(
+                        "sub",
+                        1L,
+                        1L,
+                        new BigDecimal("91"),
+                        BigDecimal.ZERO,
+                        "a@b.co",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)))
+        .isInstanceOf(CatalogValidationException.class)
+        .hasMessageContaining("latitud");
+  }
+
+  @Test
+  void create_longitudFueraDeRango_rechaza() {
+    assertThatThrownBy(
+            () ->
+                service.create(
+                    new CreateTreeCommand(
+                        "sub",
+                        1L,
+                        1L,
+                        BigDecimal.ZERO,
+                        new BigDecimal("-181"),
+                        "a@b.co",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)))
+        .isInstanceOf(CatalogValidationException.class)
+        .hasMessageContaining("longitud");
+  }
+
+  @Test
+  void create_visibilidadMapaInvalida_rechaza() {
+    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(provinciaReadRepository.existsById(28L)).thenReturn(true);
+    when(usuarioAppRepository.findBySubjectOidc("sub")).thenReturn(Optional.of(usuario(5L, "sub")));
+
+    assertThatThrownBy(
+            () ->
+                service.create(
+                    new CreateTreeCommand(
+                        "sub",
+                        10L,
+                        28L,
+                        new BigDecimal("40.0"),
+                        new BigDecimal("-3.0"),
+                        "e@test.com",
+                        null,
+                        null,
+                        null,
+                        null,
+                        "VISIBLE",
+                        "BORRADOR")))
+        .isInstanceOf(CatalogValidationException.class)
+        .hasMessageContaining("publicMapVisibility");
+  }
+
+  @Test
+  void create_estadoPublicacionInvalido_rechaza() {
+    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(provinciaReadRepository.existsById(28L)).thenReturn(true);
+    when(usuarioAppRepository.findBySubjectOidc("sub")).thenReturn(Optional.of(usuario(5L, "sub")));
+
+    assertThatThrownBy(
+            () ->
+                service.create(
+                    new CreateTreeCommand(
+                        "sub",
+                        10L,
+                        28L,
+                        new BigDecimal("40.0"),
+                        new BigDecimal("-3.0"),
+                        "e@test.com",
+                        null,
+                        null,
+                        null,
+                        null,
+                        "PRIVADO",
+                        "EN_REVISION")))
+        .isInstanceOf(CatalogValidationException.class)
+        .hasMessageContaining("publicationState");
+  }
+
+  @Test
+  void create_subjectVacio_rechaza() {
+    assertThatThrownBy(() -> baseCommand().withSubject("  ").buildAndCreate())
+        .isInstanceOf(CatalogValidationException.class)
+        .hasMessageContaining("subject");
+  }
+
+  @Test
+  void create_usuarioConcurrente_recuperaTrasDataIntegrityViolation() {
+    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(provinciaReadRepository.existsById(28L)).thenReturn(true);
+    UsuarioApp existing = usuario(7L, "kc-sub-race");
+    when(usuarioAppRepository.findBySubjectOidc("kc-sub-race"))
+        .thenReturn(Optional.empty())
+        .thenReturn(Optional.of(existing));
+    AtomicInteger usuarioSaves = new AtomicInteger();
+    when(usuarioAppRepository.save(any(UsuarioApp.class)))
+        .thenAnswer(
+            inv -> {
+              if (usuarioSaves.getAndIncrement() == 0) {
+                throw new DataIntegrityViolationException("duplicate key");
+              }
+              return inv.getArgument(0);
+            });
+    when(arbolRepository.save(any(Arbol.class)))
+        .thenAnswer(
+            inv -> {
+              Arbol a = inv.getArgument(0);
+              a.setId(200L);
+              return a;
+            });
+
+    CreatedTreeResult result = baseCommand().withSubject("kc-sub-race").buildAndCreate();
+
+    assertThat(result.arbolId()).isEqualTo(200L);
+    assertThat(result.actorUsuarioAppId()).isEqualTo(7L);
+    verify(arbolRepository).save(any(Arbol.class));
+  }
+
+  private static UsuarioApp usuario(Long id, String subject) {
+    UsuarioApp u = new UsuarioApp();
+    u.setId(id);
+    u.setSubjectOidc(subject);
+    return u;
+  }
+
+  private CommandBuilder baseCommand() {
+    return new CommandBuilder(service);
+  }
+
+  private static final class CommandBuilder {
+    private final TreeCreationService service;
+    private String subject = "sub";
+    private Long especie = 10L;
+    private Long provincia = 28L;
+
+    CommandBuilder(TreeCreationService service) {
+      this.service = service;
+    }
+
+    CommandBuilder withEspecie(Long id) {
+      this.especie = id;
+      return this;
+    }
+
+    CommandBuilder withProvincia(Long id) {
+      this.provincia = id;
+      return this;
+    }
+
+    CommandBuilder withSubject(String s) {
+      this.subject = s;
+      return this;
+    }
+
+    CreatedTreeResult buildAndCreate() {
+      return service.create(
+          new CreateTreeCommand(
+              subject,
+              especie,
+              provincia,
+              new BigDecimal("40.0"),
+              new BigDecimal("-3.0"),
+              "e@test.com",
+              null,
+              null,
+              null,
+              null,
+              null,
+              null));
+    }
+  }
+}

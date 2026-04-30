@@ -10,21 +10,24 @@
 | R2 | Cada **ÁRBOL** lleva **coordenadas** del ejemplar. |
 | R3 | **AUDITORÍA:** toda alta/modificación relevante sobre maestros y fichas operativas deja trazas de auditoría según política (p. ej. **AUDITORIA_CATALOGO** en catálogo; uso de IA acotado en **AUDITORIA_USO_IA**). |
 | R4 | **Fotografía – PUBLIC:** visible donde la ficha y el mapa lo permitan, incluido público no autenticado si la ficha es pública. |
-| R5 | **Fotografía – PRIVATE:** solo **Administrador** y el **Colaborador** creador. |
-| R6 | **Fotografía – RESTRICTED:** **Administrador**, creador y **Colaboradores autenticados**; no el visitante sin sesión. |
+| R5 | **Fotografía – PRIVATE:** solo **ADMIN** y el **Colaborador** creador de la fotografía. |
 | R7 | **NOTIFICACION** a **SUSCRIPTOR** con suscripción válida tras la **alta** (creación) de una ficha de **ÁRBOL**; en el MVP **no** se envía notificación por **modificaciones** posteriores a la ficha (UC-09). |
-| R8 | **FAMILIA**, **GÉNERO**, **ESPECIE** y **PROVINCIA:** **gestión** solo **Administrador**; consulta para edición de ficha por roles autenticados según matriz acordada. |
+| R8 | **FAMILIA**, **GÉNERO**, **ESPECIE** y **PROVINCIA:** **gestión** solo **ADMIN**; consulta para edición de ficha por roles autenticados según matriz acordada. |
 | R9 | **Identificadores persistentes (SQL):** las claves primarias técnicas de las entidades en bases relacionales serán **numéricas autogeneradas** (por ejemplo `BIGINT` con secuencia o columna identidad); no se usará **UUID** como PK en el MVP. Contexto, alternativas y consecuencias: [ADR-0002](../adr/0002-claves-primarias-numericas-frente-a-uuid.md). |
+| R10 | En alta de **ÁRBOL**, `estado_publicacion` admite solo `BORRADOR` o `PUBLICADO`; `visibilidad_mapa_publico` admite solo `PRIVADO` o `PUBLICO`. |
+
+*R6 no se usa en el MVP (no hay categoría de fotografía intermedia entre PUBLIC y PRIVATE); R7 y siguientes conservan su numeración para no desalinear referencias en otros documentos.*
 
 ---
 
 ## 2. Matriz de visibilidad de fotografías (resumen)
 
-| Categoría | Público (sin login) | Colaborador autenticado | Administrador |
-|-----------|---------------------|-------------------------|---------------|
+En el MVP solo existen dos categorías de visibilidad por fotografía: **PUBLIC** y **PRIVATE** (reglas R4 y R5).
+
+| Categoría | Público (sin login) | Colaborador autenticado | ADMIN |
+|-----------|---------------------|-------------------------|-------|
 | PUBLIC | Sí, si la ficha/árbol es accesible en contexto público | Sí | Sí |
-| RESTRICTED | No | Sí | Sí |
-| PRIVATE | No | No (salvo que sea el creador) | Sí |
+| PRIVATE | No | No (salvo que sea el creador de la fotografía) | Sí |
 
 *El creador de la fotografía siempre puede ver su propia PRIVATE.*
 

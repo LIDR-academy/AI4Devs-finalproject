@@ -1,0 +1,19 @@
+---
+description: Regla UX mínima y concisa para frontend
+globs:
+  - "frontend/src/**/*.vue"
+  - "frontend/src/**/*.ts"
+  - "frontend/src/**/*.css"
+alwaysApply: false
+---
+
+# UX frontend (simple)
+
+- Mantener siempre estados de `loading`, `error` y `success` en vistas con API.
+- Formularios: `label` visible en cada campo, validación básica y botón con estado de envío.
+- Errores HTTP: `401` pedir login, `400` mostrar mensaje legible (`detail` si existe), `5xx` mensaje neutro.
+- Accesibilidad mínima: foco visible, navegación por teclado y HTML semántico nativo.
+- Consistencia visual: reutilizar tokens/clases del proyecto; evitar estilos inline.
+- **Filas de acciones** (formularios, filtros de listado, pie de vista con CTA): el contenedor ocupa el **ancho útil** del bloque (p. ej. `width: 100%` en la fila); botones **secundarios** (cancelar, limpiar, volver, «Más filtros»…) a la **izquierda** en orden de lectura; un único botón **primario** de envío o confirmación a la **derecha** (`margin-left: auto` en ese botón). En viewport muy estrecho se puede repartir el espacio (`flex: 1`) y anular el margen del primario para que quepan en una o varias líneas sin solaparse.
+- Copy en español claro; IA siempre como ayuda orientativa, nunca veredicto definitivo.
+- Internacionalización por defecto: textos en archivos de propiedades (`frontend/src/i18n/locales/*.ts|json`) y uso de `vue-i18n`; evitar hardcodear copy en `.vue` o composables nuevos.

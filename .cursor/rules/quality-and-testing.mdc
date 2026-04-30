@@ -13,10 +13,18 @@ alwaysApply: true
 ## Backend
 - Unit tests para servicios con lógica.
 - Integration tests para repositorios y endpoints críticos.
+- **Qué testear según la capa tocada** (sin umbral de cobertura % obligatorio): tabla en [testing-java.md](../../docs/engineering/testing-java.md) §2.
+
+### Nomenclatura de clases de prueba (Java / Maven)
+- Clases de **test unitario** o de **componente** (Surefire, `mvn test`): el nombre **termina en `Test`** (p. ej. `SpeciesLabelFormatterTest`, `CatalogMastersControllerWebMvcTest`).
+- Clases de **test de integración** (Failsafe, `mvn verify` / fase `integration-test`): el nombre **termina en `IT`** (p. ej. `CatalogSecurityIT`). En este monorepo suelen vivir bajo `src/testIT/java` y el padre Maven excluye `*IT` de Surefire para no duplicar ejecución.
+- No añadir un `*IT` que solo haga `contextLoads` con `@SpringBootTest` si otro `*IT` del mismo módulo ya arranca el **mismo** contexto (perfil y beans equivalentes); ver [testing-java.md](../../docs/engineering/testing-java.md) §4.
+- **Configuración o fixtures** solo para tests (p. ej. `@TestConfiguration`, beans `@Primary` de prueba): nombre con sufijo **`Test`** cuando sea una clase de soporte (p. ej. `JwtDecoderConfigTest`), no confundir con una clase JUnit que contenga `@Test`.
 
 ## Frontend
 - Probar composables con lógica relevante.
 - Probar componentes críticos si gestionan estados importantes.
+- En frontend, seguir además el estándar canónico de [testing-frontend.md](../../docs/engineering/testing-frontend.md) y su resumen operativo en `frontend-security.mdc` para Vitest, mocks y criterios mínimos por capa.
 
 ## Revisión
 - Comprobar nombres, responsabilidad única y legibilidad.

@@ -1,0 +1,29 @@
+---
+description: Checklist de homogeneidad al generar o ampliar código backend (Spring)
+globs:
+  - "services/**/*.java"
+  - "services/**/pom.xml"
+alwaysApply: false
+---
+
+# Generación homogénea de código backend
+
+Antes de implementar o al revisar un cambio en **`services/`**, aplicar **en conjunto** (no solo una regla suelta):
+
+1. **Arquitectura y capas:** [spring-boot-4-backend.mdc](spring-boot-4-backend.mdc) — tabla módulo ↔ paquete, **Plantilla de paquetes**, **Persistencia**, `application` vs `util`, subsección **API Gateway**; sin lógica de negocio en controllers ni entidades JPA en la API; REST alineado con **catalog-service**.
+2. **Contrato HTTP:** [api-contract.mdc](api-contract.mdc) y [docs/api/openapi.yaml](../../docs/api/openapi.yaml); convenciones en [api-design.mdc](api-design.mdc). Errores al cliente según OpenAPI / `web.error` del servicio.
+3. **Seguridad y correlación:** [api-security.mdc](api-security.mdc) — JWT, roles, cabeceras; no loguear tokens ni PII.
+4. **Logging:** [logging.mdc](logging.mdc) — SLF4J, niveles, MDC/correlación; mensajes parametrizados.
+5. **Calidad y pruebas:** [quality-and-testing.mdc](quality-and-testing.mdc) — validación y manejo de errores en código nuevo; **reglas mínimas por capa** en [testing-java.md](../../docs/engineering/testing-java.md) §2; **nomenclatura** `*Test` (Surefire) vs `*IT` (Failsafe / `src/testIT/java` cuando aplique el padre Maven).
+6. **Persistencia y modelo:** Flyway y esquema por servicio; JPA/Mongo según **## Persistencia** en [spring-boot-4-backend.mdc](spring-boot-4-backend.mdc); datos: [data-model](../../docs/data-model/data-model.md); híbrido catálogo: [mongo-hybrid.mdc](mongo-hybrid.mdc).
+7. **Contexto de producto:** [product-context.mdc](product-context.mdc) y [AGENTS.md](../../AGENTS.md) — prioridades MVP y mensajes (p. ej. IA orientativa).
+
+**Definición de hecho** — cierre de **ticket** o **PR** en **`services/`** que afecte a la **API REST** expuesta (paths, métodos, parámetros, cuerpos, códigos o seguridad por operación): en el **mismo cambio lógico**, mantener **[docs/api/openapi.yaml](../../docs/api/openapi.yaml)** según [api-contract.mdc](api-contract.mdc) y [api-design.mdc](api-design.mdc) si afecta a convenciones, **y** cumplir el punto **5** (tests mínimos por capa en [testing-java.md](../../docs/engineering/testing-java.md) §2).
+
+**Jackson / Spring Boot 4:** `JsonMapper` (Boot 4 / `tools.jackson…`) para serialización manual o Problem JSON; no asumir `ObjectMapper` de Jackson como bean por defecto.
+
+**Excepciones de dominio:** lanzar desde **application** / **domain**; controller delega; mapeo HTTP en **`web.error`** (véase punto **1** / **2** y [spring-boot-4-backend.mdc](spring-boot-4-backend.mdc)).
+
+**catalog-service — `POST /api/catalog/trees` y auditoría R3:** seguir [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md) (JWT/`usuario_app`, claims, transacción con `AUDITORIA_CATALOGO`).
+
+Si una decisión no está cubierta por las reglas anteriores, preferir la opción **más simple** compatible con el MVP ([AGENTS.md](../../AGENTS.md)).

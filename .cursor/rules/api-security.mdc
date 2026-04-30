@@ -7,13 +7,15 @@ alwaysApply: false
 
 # Seguridad de API (MyTreeLibrary)
 
-Resumen ampliado coherente con [readme.md](../../readme.md) §2.5. La **fuente de verdad** de rutas y errores HTTP sigue en [docs/api/openapi.yaml](../../docs/api/openapi.yaml).
+Visión de producto: [readme.md](../../readme.md) §2.5. **Rutas y contrato HTTP:** [docs/api/openapi.yaml](../../docs/api/openapi.yaml). **Flujo OIDC/JWT, gateway, relay y alternativas:** [jwt-gateway-strategy.md](../../docs/security/jwt-gateway-strategy.md) (no duplicar aquí el relato largo).
 
 ## Autenticación y capa de confianza
 
-- La **SPA** obtiene tokens con **Authorization Code + PKCE** contra **Keycloak** (OIDC).
-- Los clientes llaman al **API Gateway**; la validación de **JWT** como *resource server* puede concentrarse en el **gateway** y/o repetirse en microservicios según se configure el despliegue: en cualquier caso, **no** aceptar peticiones sensibles sin comprobar el token cuando el caso de uso exija autenticación (véase [use-case-summary.md](../../docs/use-cases/use-case-summary.md)).
-- Configurar **`issuer-uri`** (o equivalente) alineado con el realm de Keycloak en todos los runtime que validen JWT.
+- **SPA:** Authorization Code + PKCE contra **Keycloak**, realm **`mtl`**, cliente **`mtl-spa`** ([mtl-realm.json](../../infra/compose/init/keycloak/mtl-realm.json)).
+- Clientes → **API Gateway** con `Authorization: Bearer` (JWT de acceso).
+- **MVP:** gateway valida JWT (**OAuth2 Resource Server**); microservicios **revalidan** (**token relay**, mismo `issuer-uri`). Otras variantes solo con red de confianza documentada en **jwt-gateway-strategy**.
+- No aceptar operaciones sensibles sin token cuando el caso de uso lo exija ([use-case-summary.md](../../docs/use-cases/use-case-summary.md)).
+- **`issuer-uri`** alineado al realm (p. ej. `http://localhost:8180/realms/mtl`; puerto según `KEYCLOAK_PORT`).
 
 ## Autorización por roles
 
@@ -25,11 +27,11 @@ Resumen ampliado coherente con [readme.md](../../readme.md) §2.5. La **fuente d
 ## Datos sensibles y errores
 
 - **No** registrar tokens, contraseñas, secretos ni datos personales completos en logs.
-- Respuestas de error: **RFC 9457** (`application/problem+json`); códigos HTTP **RFC 9110**; sin stack traces ni mensajes internos al cliente.
+- **Cuerpo y códigos de error al cliente:** [api-contract.mdc](api-contract.mdc) y OpenAPI (Problem, sin stack ni detalle interno).
 
 ## Correlación y auditoría
 
-- Propagar **cabecera de correlación** (p. ej. `X-Correlation-Id` o el nombre acordado en gateway) en llamadas internas entre servicios cuando existan cadenas síncronas.
+- Propagar **cabecera de correlación** (p. ej. `X-Correlation-Id` o el nombre acordado en gateway) en llamadas internas entre servicios cuando existan cadenas síncronas; uso en **MDC** y niveles de log: [logging.mdc](logging.mdc).
 - Las operaciones de negocio relevantes deben ser trazables según política de auditoría del dominio (véase reglas de datos y `AUDITORIA_*` en documentación).
 
 ## Integración con almacenamiento

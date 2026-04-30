@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mtl_dev_password}
       POSTGRES_DB: ${POSTGRES_DB:-mtl}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - mtl_pgdata:/var/lib/postgresql/data
       - ./init/postgres:/docker-entrypoint-initdb.d:ro
@@ -61,6 +61,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_dev_password}
+      # CORS global (community): no usar `mc cors set` por bucket (no implementado). Orígenes típicos Vite.
+      MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_API_CORS_ALLOW_ORIGIN:-http://localhost:5173,http://127.0.0.1:5173}
     ports:
       - "${MINIO_API_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
@@ -68,6 +70,22 @@ services:
       - mtl_miniodata:/data
     networks:
       - mtl
+
+  # Bucket mtl-photos (idempotente). CORS: ver MINIO_API_CORS_ALLOW_ORIGIN en el servicio minio.
+  minio-init:
+    image: minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_started
+    networks:
+      - mtl
+    volumes:
+      - ./init/minio-bootstrap.sh:/config/minio-bootstrap.sh:ro
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_dev_password}
+    entrypoint: ["/bin/sh", "/config/minio-bootstrap.sh"]
 
   kafka:
     image: docker.io/bitnamilegacy/kafka:3.7.1-debian-12-r4
@@ -112,6 +130,8 @@ services:
     networks:
       - mtl
 
+  # Keycloak: start-dev es SOLO para desarrollo local (no producción). Ver infra/compose/README.md.
+  # Realm `mtl` se importa desde init/keycloak/ al arrancar con --import-realm (primera carga en BD vacía).
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.7
     restart: unless-stopped
@@ -119,6 +139,9 @@ services:
       - start-dev
       - --http-enabled=true
       - --hostname-strict=false
+      - --import-realm
+    volumes:
+      - ./init/keycloak:/opt/keycloak/data/import:ro
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_dev_password}
