@@ -11,37 +11,40 @@
 
 ---
 
-## 0. Ficha del proyecto
+## 1. Ficha del proyecto
 
-### **0.1. Tu nombre completo:**
+### **1.1. Tu nombre completo:**
 
 Luís María de Frutos Redondo
 
-### **0.2. Nombre del proyecto:**
+### **1.2. Nombre del proyecto:**
 
 MyTreeLibrary
 
-### **0.3. Descripción breve del proyecto:**
+### **1.3. Descripción breve del proyecto:**
 
 MyTreeLibrary es una solución digital para crear y gestionar tu colección personal de árboles singulares, almacenando fotografías, localización geográfica y datos relevantes de cada ejemplar. Diseñada para aficionados, permite compartir información públicamente y fomentar una comunidad colaborativa. La plataforma se complementa con el uso de la IA para la identificación de árboles a partir de imágenes.
 
-### **0.4. URL del proyecto:**
+### **1.4. URL del proyecto:**
 
 [https://github.com/ldefrutos1/AI4Devs-finalproject](https://github.com/ldefrutos1/AI4Devs-finalproject)
 
-### 0.5. URL o archivo comprimido del repositorio
+### 1.5. URL o archivo comprimido del repositorio
 
 [https://github.com/ldefrutos1/AI4Devs-finalproject](https://github.com/ldefrutos1/AI4Devs-finalproject)
 
 ---
 
-## 1. Descripción general del producto
+## 2. Descripción general del producto
 
-### **1.1. Objetivo:**
+### **2.1. Objetivo:**
 
 #### Propósito
 
 Desarrollar una plataforma web que permita registrar, organizar y consultar fotografías, ubicaciones y datos relevantes de árboles de tu ciudad, facilitando al usuario la creación de una biblioteca personal digital y la posibilidad de compartir esa información de forma pública.
+
+Se ha seleccionado una arquitectura de mircroservicios en Java con Spring y Vue con un proposito didactico para aprender estas tecnologías.
+
 
 #### Valor aportado (qué soluciona)
 
@@ -53,33 +56,33 @@ Además, la plataforma incorpora el uso de inteligencia artificial como apoyo a 
 
 La solución está dirigida a aficionados a la naturaleza en general y puede resultar de especial utilidad para docentes y monitores de tiempo libre.
 
-### **1.2. Características y funcionalidades principales:**
+### **2.2. Características y funcionalidades principales:**
 
 #### Registro y publicación de árboles
 
-La plataforma debe permitir registrar árboles mediante fichas con información relevante, fotografías y ubicación, posibilitando su publicación para consulta pública.
+La permite registrar árboles mediante fichas con información relevante, fotografías y ubicación, posibilitando su publicación para consulta pública.
 
 #### Consulta pública y visualización geográfica
 
-El sistema debe permitir la consulta pública de árboles publicados mediante listado y detalle, mostrando en la ficha de detalle su localización sobre mapa de forma clara e intuitiva.
+El sistema implementa una consulta pública de árboles publicados mediante listado y detalle, mostrando en la ficha de detalle las fotografias dde cada árbol y su localización sobre mapa de forma clara e intuitiva.
 
 #### Notificaciones
 
-La solución debe ofrecer un sistema de notificaciones para comunicar novedades a usuarios suscritos, sin necesidad de que estos dispongan de cuenta en la plataforma.
+La solución ofrece un sistema de notificaciones para comunicar novedades a usuarios suscritos, sin necesidad de que estos dispongan de cuenta en la plataforma.
 
 #### Integración con IA
 
-El producto debe incluir integración con IA como apoyo a la identificación orientativa de árboles a partir de fotografías y como canal de interacción conversacional con el usuario.
+El producto se ontegra con IA como apoyo a la identificación orientativa de árboles a partir de fotografías y como canal de interacción conversacional con el usuario.
 
 #### Diagrama de Casos de Uso del sistema
 
-
+![Casos de uso](./docs/use-cases/use-case-model.png)
 
 *Fuentes:* [resumen de casos de uso](docs/use-cases/use-case-summary.md) · [modelo PlantUML](docs/use-cases/use-case-model.puml)
 
-### **1.3. Diseño y experiencia de usuario:**
+### **2.3. Diseño y experiencia de usuario:**
 
-La aplicación implementa una navegación simple por roles con una **home única** que adapta bloques y llamadas a la acción según sesión/perfil.
+La aplicación implementa una navegación simple por roles con una **home de entrada** adaptada a cada perfil.
 
 #### Jerarquía de páginas (MVP)
 
@@ -99,20 +102,7 @@ La aplicación implementa una navegación simple por roles con una **home única
   - `Gestión de suscripciones` (`/admin/subscriptions`)
 
 
-#### Reglas de visibilidad por rol
-
-
-| Página                                                  | Público | Colaborador | ADMIN |
-| ------------------------------------------------------- | ------- | ----------- | ----- |
-| Home                                                    | Sí      | Sí          | Sí    |
-| Listado / detalle públicos (detalle con mapa integrado) | Sí      | Sí          | Sí    |
-| Suscripción email                                       | Sí      | Sí          | Sí    |
-| Alta y edición de árbol                                 | No      | Sí          | Sí    |
-| Maestros                                                | No      | No          | Sí    |
-| Gestión de suscripciones                                | No      | No          | Sí    |
-
-
-### **1.4. Instrucciones de instalación:**
+### **2.4. Instrucciones de instalación:**
 
 #### Infraestructura de apoyo
 
@@ -208,11 +198,11 @@ Además del init de Postgres/Keycloak en Compose, **catalog-service** aplica sem
 
 ---
 
-## 2. Arquitectura del sistema
+## 3. Arquitectura del sistema
 
-### **2.1. Diagrama de arquitectura:**
+### **3.1. Diagrama de arquitectura:**
 
-La aplicación se desarrollará en microservicios con Spring en la parte de backend y Vue como tecnología frontend. Aunque es una arquitectura sobredimensionada para el alcance real del sistema, ya que sería suficiente con un back monolítico comunicándose con API REST y JWT con el front y un módulo especial para la comunicación IA, se ha seleccionado esta implementación por motivos didácticos, con el fin de aprender la tecnología.
+La aplicación se desarrollará en microservicios con Spring en la parte de backend y Vue como tecnología frontend. Aunque es una arquitectura sobredimensionada para el alcance real del sistema, ya que sería suficiente con un back monolítico comunicándose con API REST y JWT con el front y un módulo especial para la comunicación IA, se ha seleccionado esta implementación por motivos didácticos, con el fin de adquirir experiencia en estas tecnologías.
 
 #### Patrón y Stack tecnológico
 
@@ -228,7 +218,7 @@ La aplicación se desarrollará en microservicios con Spring en la parte de back
 - **Base de datos SQL:** PostgreSQL
 - **Base de datos NoSQL:** MongoDB
 - **Caché:** Redis
-- **Almacenamiento de imágenes:** Compatible S3
+- **Almacenamiento de imágenes:** Compatible S3 (MinIO)
 
 #### C1 — Diagrama de contexto del sistema (nivel 1)
 
@@ -286,8 +276,6 @@ flowchart TB
 
 
 ```
-
-
 
 *Keycloak suele desplegarse como IdP aparte; aquí se muestra en el mismo diagrama por dependencia de autenticación de la SPA y del gateway.*
 
@@ -374,9 +362,9 @@ sequenceDiagram
 
 
 
-### 2.1.1 Autenticación en Front (Vue):
+### 3.1.1 Autenticación en Front (Vue):
 
-Descripción genérica del flujo de autenticación para SPA en **Vue 3** con **OIDC Authorization Code + PKCE** (IdP: Keycloak u otro compatible).  
+Descripción genérica del flujo de autenticación para SPA en **Vue 3** con **OIDC Authorization Code + PKCE** (IdP: Keycloak).  
 Objetivo: mantener rutas protegidas con sesión válida, renovar token de forma transparente y centralizar el manejo de `401` en cliente HTTP.
 
 #### C3 — Componentes (nivel 3): autenticación en el contenedor SPA Vue
@@ -475,7 +463,7 @@ Notas de diseño y seguridad:
 - Variables `VITE_*` no contienen secretos; tokens nunca en URL, logs ni servicios externos.
 - La validación de frontend mejora UX, pero la validación de negocio/autorización siempre se aplica en backend.
 
-### 2.1.2 Kafka:
+### 3.1.2 Kafka:
 
 #### C3 — Componentes (nivel 3): **catalog-service** y Kafka
 
@@ -507,12 +495,11 @@ flowchart TB
 ```
 
 
-
 En tiempo de ejecución, `**TreeRegistrationService**` depende de la interfaz `**ArbolCreadoEventPublisher**`; Spring inyecta `**KafkaArbolCreadoEventPublisher**` si `mtl.catalog.kafka.enabled=true`, o `**NoOpArbolCreadoEventPublisher**` si está en `false` (por defecto o perfil `test`).
 
 #### C4 — Código y comportamiento: secuencia de publicación **ARBOL_CREADO**
 
-A nivel de **código**, el flujo relevante es: validación y persistencia del **ARBOL** y auditoría **R3** dentro de una transacción; a continuación se registra una tarea `**afterCommit`** que, una vez confirmado el commit en PostgreSQL, obtiene `**evento_id**` con `nextval(catalog.seq_arbol_evento_id)`, serializa el cuerpo según [kafka-events.md](docs/events/kafka-events.md) y envía al topic `**catalog.arbol.evento**` con clave `**arbol_id**`. Si el envío a Kafka falla tras el **201**, el error se registra en logs (el consumidor **notification-service** debe ser idempotente ante reentregas). Detalle de clases: [services/README.md](services/README.md) (Kafka y **catalog-service**).
+A nivel de **código**, el flujo relevante es: validación y persistencia del **ARBOL** y auditoría  dentro de una transacción; a continuación se registra una tarea `**afterCommit`** que, una vez confirmado el commit en PostgreSQL, obtiene `**evento_id**` con `nextval(catalog.seq_arbol_evento_id)`, serializa el cuerpo según [kafka-events.md](docs/events/kafka-events.md) y envía al topic `**catalog.arbol.evento**` con clave `**arbol_id**`. Si el envío a Kafka falla tras el **201**, el error se registra en logs (el consumidor **notification-service** debe ser idempotente ante reentregas). Detalle de clases: [services/README.md](services/README.md) (Kafka y **catalog-service**).
 
 ```mermaid
 sequenceDiagram
@@ -548,9 +535,9 @@ sequenceDiagram
   Pub->>KB: send_catalog_arbol_evento_clave_arbol_id
 ```
 
-### 2.1.3 Almacenamiento de fotografías
+### 3.1.3 Almacenamiento de fotografías
 
-Las fotografías se almacenan como **objetos** en un almacén **S3-compatible** (p. ej. **MinIO** en desarrollo) y sus **metadatos** en PostgreSQL, esquema **`media`**, vía **media-service** detrás del **API Gateway**. La SPA obtiene primero una **URL prefirmada** (`POST /api/media/uploads/presign`) con JWT; el servicio valida reglas de negocio (MIME permitidos, tamaño máximo configurable y cupo de fotos por árbol) y devuelve la URL y la clave de objeto. El cliente sube el binario directamente al bucket y, a continuación, **confirma** la operación (`POST /api/media/photos/confirm`) para persistir metadatos: la **primera confirmación** por árbol queda como **foto principal**; el **orden** refleja la secuencia de confirmaciones (o el índice explícito enviado por la SPA si coincide con el esperado). La visibilidad efectiva de la imagen en consulta pública se **hereda de la ficha del árbol** (no hay categoría por foto en el MVP de subida); detalle funcional y criterios de aceptación: [HU-006](docs/backlog/HU-006-fotografias-asociadas-al-arbol.md) y contrato HTTP en [docs/api/openapi.yaml](docs/api/openapi.yaml).
+Las fotografías se almacenan como **objetos** en un almacén **S3-compatible** (**MinIO**) y sus **metadatos** en PostgreSQL, esquema **`media`**, vía **media-service** detrás del **API Gateway**. La SPA obtiene primero una **URL prefirmada** (`POST /api/media/uploads/presign`) con JWT; el servicio valida reglas de negocio (MIME permitidos, tamaño máximo configurable y cupo de fotos por árbol) y devuelve la URL y la clave de objeto. El cliente sube el binario directamente al bucket y, a continuación, **confirma** la operación (`POST /api/media/photos/confirm`) para persistir metadatos: la **primera confirmación** por árbol queda como **foto principal**; el **orden** refleja la secuencia de confirmaciones (o el índice explícito enviado por la SPA si coincide con el esperado). La visibilidad efectiva de la imagen en consulta pública se **hereda de la ficha del árbol**; detalle funcional y criterios de aceptación: [HU-006](docs/backlog/HU-006-fotografias-asociadas-al-arbol.md) y contrato HTTP en [docs/api/openapi.yaml](docs/api/openapi.yaml).
 
 Para **consulta pública mínima** ([HU-014](docs/backlog/HU-014-consulta-de-fotografias-del-arbol.md), sección 6 del refinamiento), existe `GET /api/media/public/trees/{treeId}/primary-photo` (**sin JWT** en gateway): media-service comprueba que el árbol sea visible vía catálogo público y devuelve el binario de la foto principal si existe en el bucket. La SPA lo usa, entre otros, para la **miniatura** del listado de árboles publicados.
 
@@ -584,7 +571,7 @@ sequenceDiagram
   end
 ```
 
-### **2.2. Descripción de componentes principales:**
+### **3.2. Descripción de componentes principales:**
 
 
 | Componente           | Tecnología                                                                                                                                                                                                        | Responsabilidad                                                                                                                                                                                                                                                                                                                                                                  |
@@ -597,13 +584,13 @@ sequenceDiagram
 | ai-assistant-service | **Spring Boot 4**, Spring WebClient (o equivalente), Spring Data JPA                                                                                                                                              | Orquestación hacia proveedor IA; datos de auditoria en esquema `**ai`** (p. ej. **AUDITORIA_USO_IA**); delegación de datos de catálogo en **catalog-service**                                                                                                                                                                                                                    |
 | Keycloak             | Keycloak 26                                                                                                                                                                                                       | Realm, clientes, roles, emisión de JWT                                                                                                                                                                                                                                                                                                                                           |
 | Kafka                | Apache Kafka (KRaft en dev)                                                                                                                                                                                       | Topics p. ej. `catalog.arbol.evento`                                                                                                                                                                                                                                                                                                                                             |
-| PostgreSQL           | 16                                                                                                                                                                                                                | **Un servidor** en dev; **cuatro esquemas** (`catalog`, `media`, `notification`, `ai`). En **catalog**, el DDL actual del MVP usa **latitud/longitud** `NUMERIC` (sin columna PostGIS); la extensión PostGIS puede estar prevista en el contenedor para iteraciones posteriores ([V1__baseline.sql](services/catalog-service/src/main/resources/db/migration/V1__baseline.sql)). |
+| PostgreSQL           | 16                                                                                                                                                                                                                | **Un servidor**; **cuatro esquemas** (`catalog`, `media`, `notification`, `ai`). En **catalog**, el DDL actual del MVP usa **latitud/longitud** `NUMERIC` (sin columna PostGIS); la extensión PostGIS está prevista en el contenedor para iteraciones posteriores ([V1__baseline.sql](services/catalog-service/src/main/resources/db/migration/V1__baseline.sql)). |
 | MongoDB              | 7                                                                                                                                                                                                                 | Colecciones de enriquecimiento y notas; proyección mínima para búsqueda sin SQL (véase [mongo.md](docs/data-model/mongo.md))                                                                                                                                                                                                                                                     |
 | Redis                | 7                                                                                                                                                                                                                 | Caché                                                                                                                                                                                                                                                                                                                                                                            |
 | MinIO                | S3 API                                                                                                                                                                                                            | Imágenes en desarrollo                                                                                                                                                                                                                                                                                                                                                           |
 
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+### **3.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
 Estructura de repositorio **prevista** para la fase de implementación (monorepo típico):
 
@@ -634,13 +621,13 @@ proyecto/
 └── readme.md
 ```
 
-### **2.4. Infraestructura y despliegue**
+### **3.4. Infraestructura y despliegue**
 
 **Desarrollo:** Docker Compose (o equivalente) con **un** PostgreSQL con extensión **PostGIS** (cuatro esquemas de aplicación: `catalog`, `media`, `notification`, `ai`), MongoDB, Redis, MinIO, Kafka y Keycloak; los microservicios pueden ejecutarse en el host o como contenedores.
 
-**Despliegue (alto nivel):** orquestación (p. ej. Kubernetes), secretos externos, Keycloak y Kafka en HA según entorno, bases gestionadas y almacenamiento de objetos S3 en nube.
+**Despliegue (alto nivel):** orquestación (Kubernetes), secretos externos, Keycloak y Kafka en HA según entorno, bases de datos gestionadas y almacenamiento de objetos S3 en nube.
 
-**Decisiones documentadas:** descubrimiento de servicios y configuración **sin Eureka ni Spring Cloud Config** (asumidas por Compose/Kubernetes) — [ADR-0001](docs/adr/0001-discovery-y-configuracion-por-orquestador.md). Claves primarias **numéricas** en SQL frente a UUID en el MVP — [ADR-0002](docs/adr/0002-claves-primarias-numericas-frente-a-uuid.md).
+**Decisiones documentadas:** descubrimiento de servicios y configuración **sin Eureka ni Spring Cloud Config** (asumidas por Compose/Kubernetes) — [ADR-0001](docs/adr/0001-discovery-y-configuracion-por-orquestador.md). Claves primarias **numéricas** en SQL frente a UUID — [ADR-0002](docs/adr/0002-claves-primarias-numericas-frente-a-uuid.md).
 
 ```mermaid
 flowchart LR
@@ -663,7 +650,7 @@ flowchart LR
 
 
 
-### **2.5. Seguridad**
+### **3.5. Seguridad**
 
 
 | Práctica                  | Descripción                                                                                                                                                                             |
@@ -679,7 +666,7 @@ flowchart LR
 
 **Implementación y normativa:** [docs/security/jwt-gateway-strategy.md](docs/security/jwt-gateway-strategy.md) · `.cursor/rules/api-security.mdc` · [docs/api/openapi.yaml](docs/api/openapi.yaml) · Keycloak: [infra/compose/README.md](infra/compose/README.md).
 
-### **2.6. Tests**
+### **3.6. Tests**
 
 Estrategia prevista: pruebas unitarias de dominio; **integración** con **Testcontainers** (PostgreSQL con PostGIS, MongoDB, Kafka) donde aporte valor; **contrato de API** en [docs/api/openapi.yaml](docs/api/openapi.yaml) como referencia para pruebas de contrato y revisiones; tests de capa web y de aceptación sobre flujos críticos (catalogo, notificaciones, IA).
 
@@ -687,13 +674,13 @@ Estrategia prevista: pruebas unitarias de dominio; **integración** con **Testco
 
 ---
 
-## 3. Modelo de datos
+## 4. Modelo de datos
 
 **Documentación relacionada:** [Notas de negocio y reglas](docs/data-model/data-model.md) · [Modelo técnico MongoDB (colecciones, validación, índices)](docs/data-model/mongo.md) · [OpenAPI](docs/api/openapi.yaml) · [Eventos Kafka](docs/events/kafka-events.md)
 
-### **3.1. Modelo lógico de entidades (referencia)**
+### **3.1. Modelo lógico del sistema completo**
 
-Vista unificada de entidades principales y relaciones; los tipos indican el modelo físico previsto alineado con §3.2.
+Vista unificada de entidades principales (se incluyen todas las entidades lógicas del sistema, independientemente del modo y servicio en el que se realice su implementación física) y relaciones; los tipos indican el modelo físico previsto alineado con §3.2.
 
 ```mermaid
 erDiagram
@@ -761,10 +748,11 @@ erDiagram
 ```
 
 
+### **4.2. Diagrama de persistencia (implementación)**
 
-### **3.2. Diagrama de persistencia (implementación)**
+#### **PostgreSQL: catalog_service:**
 
-#### ** PostgreSQL catalog_service:**
+Esquema con los datos generales de cada árbol y auditoria del usuario que los registró.
 
 ```mermaid
 erDiagram
@@ -778,8 +766,7 @@ erDiagram
     }
 
     FAMILIA {
-        bigint familia_id PK // ¿Tiene sentido usar solo int? Si la cantidad de familias no será muy grande, int sería suficiente, pero bigint ofrece mayor rango y flexibilidad a futuro.
-   
+        bigint familia_id PK
         string nombre_cientifico
         string nombre_comun
         datetime creado_en
@@ -858,15 +845,16 @@ erDiagram
 ```
 
 
-
-Para el alta de árbol en el MVP, los valores admitidos son:
+Para el alta de árbol, los valores admitidos son:
 
 - `estado_publicacion`: `BORRADOR` o `PUBLICADO`.
 - `visibilidad_mapa_publico`: `PRIVADO` o `PUBLICO`.
 
-#### ** Mongo catalog_service:**
+#### **Mongo catalog_service:**
 
-*Proyección mínima opcional (p. ej. `ESPECIE` / `ARBOL` con ids y nombres): facilita búsquedas en Mongo por nombre de especie u otros criterios sin join obligatorio con SQL; el maestro completo permanece en PostgreSQL. Núcleo flexible: colecciones `enriquecimientos_especie` y `enriquecimientos_arbol` — [mongo.md](docs/data-model/mongo.md).*
+Base de datos NoSQL que permite almacenar información no estructurada de cada árbol.
+
+*Tiene una proyección mínima de datos generales de  `ESPECIE` / `ARBOL` para facilitar búsquedas en Mongo por nombre de especie u otros criterios sin join obligatorio con SQL; el maestro completo permanece en PostgreSQL. Núcleo flexible: colecciones `enriquecimientos_especie` y `enriquecimientos_arbol` — [mongo.md](docs/data-model/mongo.md).*
 
 ```mermaid
 erDiagram
@@ -910,8 +898,9 @@ erDiagram
 ```
 
 
+#### **PostgreSQL media_service:**
 
-#### ** PostgreSQL media_service:**
+Información de las fotografías de cada árbol almacenadas en el  sistema.
 
 ```mermaid
 erDiagram
@@ -938,8 +927,9 @@ erDiagram
 ```
 
 
+#### **PostgreSQL notification_service:**
 
-#### ** PostgreSQL notification_service:**
+Avisos de de nuevas altas en el sistema a los suscriptores.
 
 ```mermaid
 erDiagram
@@ -988,7 +978,9 @@ erDiagram
 
 
 
-#### ** PostgreSQL ai_assistant_service (esquema `ai`):**
+#### **PostgreSQL ai_assistant_service (esquema `ai`):**
+
+Audtoría de las consultas realizadas al asistnete de IA (ChatGPT).
 
 ```mermaid
 erDiagram
@@ -1006,7 +998,7 @@ erDiagram
 
 
 
-### **3.3. Descripción de entidades principales (orientación física)**
+### **4.3. Descripción de entidades principales (orientación física)**
 
 Las entidades físicas se reparten por servicio y almacén como en §3.2: **PostgreSQL** en **un servidor** con esquemas `catalog`, `media`, `notification` y `ai` (este último para **ai-assistant-service**); **MongoDB** bajo **catalog-service** según [mongo.md](docs/data-model/mongo.md).
 
@@ -1014,7 +1006,7 @@ Las entidades físicas se reparten por servicio y almacén como en §3.2: **Post
 
 ---
 
-## 4. Especificación de la API
+## 5. Especificación de la API
 
 **Contrato canónico (OpenAPI 3):** [docs/api/openapi.yaml](docs/api/openapi.yaml) — rutas bajo el API Gateway (`/api/catalog`, `/api/media`, `/api/notifications`, `/api/ai`), seguridad JWT donde aplica, listados paginados (`page`, `size`) y errores en **RFC 9457** (`application/problem+json`).
 
@@ -1024,12 +1016,12 @@ Las entidades físicas se reparten por servicio y almacén como en §3.2: **Post
 
 ---
 
-## 5. Historias de usuario
+## 6. Historias de usuario
 
 Modelo de análisis (actores, casos de uso, diagrama PlantUML): [docs/use-cases/use-case-summary.md](docs/use-cases/use-case-summary.md).
-Para mantener formato homogéneo en la documentación se usan las skills `.cursor/skills/hu-refinement-mtl/SKILL.md` (generación/refinamiento de historias) y `.cursor/skills/hu-breakdown-mtl/SKILL.md` (desglose en tickets).
+Para mantener formato homogéneo en la documentación se han definido los siguientes prompts genéricos que se han guardado como skills de Cursor: `.cursor/skills/hu-refinement-mtl/SKILL.md` (generación/refinamiento de historias) y `.cursor/skills/hu-breakdown-mtl/SKILL.md` (desglose en tickets).
 
-Al comienzo de la historia se hacen unas comprobaciones iniciales que permiten detectar historias incompletas o mal formadas. 
+Por operativa práctica, al comienzo de la historia se hacen unas comprobaciones iniciales que permiten detectar historias incompletas o mal formadas.   
 > Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
 
 **Historia de Usuario 1**
@@ -1040,13 +1032,13 @@ Al comienzo de la historia se hacen unas comprobaciones iniciales que permiten d
 
 ---
 
-## 6. Tickets de trabajo
+## 7. Tickets de trabajo
 
 > Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
 >
-> Para mantener formato homogéneo en la documentación se usan las skills `.cursor/skills/hu-refinement-mtl/SKILL.md` (generación/refinamiento de historias) y `.cursor/skills/hu-breakdown-mtl/SKILL.md` (desglose en tickets).
+Como se ha comentado en el punto anterior, para mantener formato homogéneo se usa un prompt genérico que se ha almacenado como skill`.cursor/skills/hu-breakdown-mtl/SKILL.md` (desglose en tickets).
 
-En la generación ed ticket de trabajo se incluye una sección con las rules de cursor que debe aplicarse al implementarlos.
+En la generación ed ticket de trabajo se incluye explicitamente una sección con las rules de Cursor que debe aplicar el agente de IA al implementarlos.
 **Ticket 1**
 
 **Ticket 2**
@@ -1055,7 +1047,7 @@ En la generación ed ticket de trabajo se incluye una sección con las rules de 
 
 ---
 
-## 7. Pull requests
+## 8. Pull requests
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
