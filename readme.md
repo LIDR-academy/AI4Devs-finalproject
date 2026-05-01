@@ -263,6 +263,7 @@ flowchart TB
   GW --> CAT
   GW --> MED
   GW --> AIS
+  GW --> NOT
   CAT --> PG
   CAT --> RD
   CAT --> K
@@ -273,8 +274,6 @@ flowchart TB
   NOT --> K
   AIS --> PG
   AIS --> CAT
-
-
 ```
 
 *Keycloak suele desplegarse como IdP aparte; aquí se muestra en el mismo diagrama por dependencia de autenticación de la SPA y del gateway.*
@@ -858,9 +857,9 @@ Base de datos NoSQL que permite almacenar información no estructurada de cada �
 
 ```mermaid
 erDiagram
-    ESPECIE ||--o{ ARBOL : "clasifica"
-    ESPECIE ||--o| ENRIQUECIMIENTOS_ESPECIE : "tiene enriquecimiento"
-    ARBOL ||--o{ ENRIQUECIMIENTOS_ARBOL : "tiene notas"
+    ESPECIE ||--o{ ARBOL : clasifica
+    ESPECIE ||--|| ENRIQUECIMIENTOS_ESPECIE : tiene_enriquecimiento
+    ARBOL ||--o{ ENRIQUECIMIENTOS_ARBOL : tiene_notas
 
     ESPECIE {
         bigint idEspecie PK
