@@ -79,7 +79,7 @@ El producto se entegra con IA para obtener información de las características 
 ```mermaid
 flowchart TB
   U[Usuario]
-  S[MyTreeLibrary]
+  S[MyTreeLibrary<br/>Sistema principal]
   KC["**Keycloak**<br/>Autenticación<br/>(Soporte)"]
   SMTP["**Servidor SMTP**<br/>Notificaciones<br/>(Soporte)"]
   PIA["**Proveedor IA**<br/>Identificación / datos<br/>(Externo)"]
