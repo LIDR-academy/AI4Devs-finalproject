@@ -102,13 +102,12 @@ flowchart TB
 
 ```
 ```mermaid
-subgraph Leyenda
+flowchart TB
     direction LR
     L1["Sistema propio"]
-    L2["Identidad y notificación"]
-    L3["Servicios externos de datos"]
-  end
-  
+    L2["Soporte"]
+    L3["Servicios externos"]
+
   classDef sistema fill:#EEEDFE,stroke:#534AB7,stroke-width:2px,color:#3C3489
   classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041
   classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13
