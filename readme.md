@@ -90,6 +90,12 @@ flowchart TB
   S -->|LLM API| PIA
   S -->|Tiles / API| MAP
 
+  subgraph Leyenda
+    direction LR
+    L1["Sistema propio"]
+    L2["Identidad y notificación"]
+    L3["Servicios externos de datos"]
+  end
   
   classDef sistema fill:#EEEDFE,stroke:#534AB7,stroke-width:2px,color:#3C3489
   classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041
@@ -101,32 +107,10 @@ flowchart TB
   class PIA,MAP externo
   class U usuario
 
-```
-```mermaid
-flowchart TB
-
-  U["**Usuario**<br/>Coleccionista"]
-  S["**MyTreeLibrary**<br/>Sistema principal"]
-  KC["**Keycloak**<br/>Autenticación"]
-  SMTP["**Servidor SMTP**<br/>Notificaciones"]
-  PIA["**Proveedor IA**<br/>Identificación / datos"]
-  MAP["**OpenStreetMap**<br/>Geolocalización"]
-
-  U -->|Usa la aplicación| S
-  KC -->|OIDC / JWT| S
-  SMTP -->|Correo| S
-  PIA -->|LLM API| S
-  MAP -->|Tiles / API| S
-
-  classDef sistema fill:#EEEDFE,stroke:#534AB7,stroke-width:2px,color:#3C3489
-  classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041
-  classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13
-  classDef usuario fill:#F1EFE8,stroke:#5F5E5A,stroke-width:1px,color:#444441
-
-  class S sistema
-  class KC,SMTP soporte
-  class PIA,MAP externo
-  class U usuario
+  class L1 sistema
+  class L2 soporte
+  class L3 externo
+  
 ```
   
 #### Diagrama de Casos de Uso del sistema
