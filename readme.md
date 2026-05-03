@@ -101,7 +101,7 @@ flowchart TB
   class U usuario
 
 ```
-Leyenda
+**Leyenda**
 
 ```mermaid
 flowchart TB
@@ -113,7 +113,6 @@ flowchart TB
   classDef sistema fill:#EEEDFE,stroke:#534AB7,stroke-width:2px,color:#3C3489
   classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041
   classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13
-  classDef usuario fill:#F1EFE8,stroke:#5F5E5A,stroke-width:1px,color:#444441
 
   class L1 sistema
   class L2 soporte
