@@ -101,6 +101,8 @@ flowchart TB
   class U usuario
 
 ```
+Leyenda
+
 ```mermaid
 flowchart TB
     direction LR
