@@ -80,10 +80,10 @@ El producto se entegra con IA para obtener información de las características 
 flowchart TB
   U[Usuario]
   S[MyTreeLibrary]
-  KC["**Keycloak**<br/>Autenticación<br/>Soporte"]
-  SMTP["**Servidor SMTP**<br/>Notificaciones<br/>Soporte"]
-  PIA["**Proveedor IA**<br/>Identificación / datos<br/>Externo"]
-  MAP["**OpenStreetMap**<br/>Geolocalización<br/>Externo"] 
+  KC["**Keycloak**<br/>Autenticación<br/>(Soporte)"]
+  SMTP["**Servidor SMTP**<br/>Notificaciones<br/>(Soporte)"]
+  PIA["**Proveedor IA**<br/>Identificación / datos<br/>(Externo)"]
+  MAP["**OpenStreetMap**<br/>Geolocalización<br/>(Externo)"] 
   U -->|Usa la aplicación| S
   S -->|OIDC / JWT| KC
   S -->|correo| SMTP
@@ -100,23 +100,6 @@ flowchart TB
   class PIA,MAP externo
   class U usuario
 
-```
-**Leyenda**
-
-```mermaid
-flowchart TB
-    direction LR
-    L1["Sistema propio"]
-    L2["Soporte"]
-    L3["Servicios externos"]
-
-  classDef sistema fill:#EEEDFE,stroke:#534AB7,stroke-width:2px,color:#3C3489
-  classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041
-  classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13
-
-  class L1 sistema
-  class L2 soporte
-  class L3 externo
 ```
 
 #### Diagrama de Casos de Uso del sistema
