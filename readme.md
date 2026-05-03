@@ -80,15 +80,15 @@ El producto se entegra con IA para obtener información de las características 
 flowchart TB
   U[Usuario]
   S[MyTreeLibrary]
-  KC[Keycloak]
-  SMTP[Servidor_SMTP]
+  KC[Keycloak Autenticación]
+  SMTP[Servidor SMTP Notificaciones]
   PIA[Proveedor_IA]
-  MAP[OpenStreetMap] 
-  U -->|Usa| S
-  S -->|Autenticación OIDC / JWT| KC
-  S -->|Notificaciones por correo| SMTP
-  S -->|IA: Identificación y caraterísticas| PIA
-  S -->|Ubicación geográfica| MAP
+  MAP[OpenStreetMap Geolocalización] 
+  U -->|Usa la aplicación| S
+  S -->|OIDC / JWT| KC
+  S -->|correo| SMTP
+  S -->|LLM API| PIA
+  S -->|Tiles / API| MAP
 
   
   classDef sistema fill:#EEEDFE,stroke:#534AB7,stroke-width:2px,color:#3C3489
@@ -100,7 +100,7 @@ flowchart TB
   class KC,SMTP soporte
   class PIA,MAP externo
   class U usuario
-  
+
 ```
 ```mermaid
 flowchart TB
