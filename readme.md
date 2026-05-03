@@ -90,7 +90,7 @@ flowchart TB
   S -->|IA: Identificación y caraterísticas| PIA
   S -->|Ubicación geográfica| MAP
 ```
-```
+```mermaid
 flowchart TB
 
   U["**Usuario**<br/>Coleccionista"]
