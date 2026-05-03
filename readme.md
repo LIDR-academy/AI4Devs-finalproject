@@ -80,10 +80,10 @@ El producto se entegra con IA para obtener información de las características 
 flowchart TB
   U[Usuario]
   S[MyTreeLibrary]
-  KC[Keycloak Autenticación]
-  SMTP[Servidor SMTP Notificaciones]
-  PIA[Proveedor_IA]
-  MAP[OpenStreetMap Geolocalización] 
+  KC["**Keycloak**<br/>Autenticación"]
+  SMTP["**Servidor SMTP**<br/>Notificaciones"]
+  PIA["**Proveedor IA**<br/>Identificación / datos"]
+  MAP["**OpenStreetMap**<br/>Geolocalización"] 
   U -->|Usa la aplicación| S
   S -->|OIDC / JWT| KC
   S -->|correo| SMTP
