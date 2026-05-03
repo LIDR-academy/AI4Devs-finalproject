@@ -246,25 +246,27 @@ onMounted(async () => {
           />
         </div>
 
-        <div class="field">
-          <label class="form-label" for="tree-detail-latitude">{{ t('treesDetail.fields.latitude') }}</label>
-          <input id="tree-detail-latitude" class="form-control" type="text" :value="tree.latitud" readonly />
-        </div>
+        <div class="field-full tree-geo-row">
+          <div class="field">
+            <label class="form-label" for="tree-detail-latitude">{{ t('treesDetail.fields.latitude') }}</label>
+            <input id="tree-detail-latitude" class="form-control" type="text" :value="tree.latitud" readonly />
+          </div>
 
-        <div class="field">
-          <label class="form-label" for="tree-detail-longitude">{{ t('treesDetail.fields.longitude') }}</label>
-          <input id="tree-detail-longitude" class="form-control" type="text" :value="tree.longitud" readonly />
-        </div>
+          <div class="field">
+            <label class="form-label" for="tree-detail-longitude">{{ t('treesDetail.fields.longitude') }}</label>
+            <input id="tree-detail-longitude" class="form-control" type="text" :value="tree.longitud" readonly />
+          </div>
 
-        <div class="field">
-          <label class="form-label" for="tree-detail-altitude">{{ t('treesDetail.fields.altitude') }}</label>
-          <input
-            id="tree-detail-altitude"
-            class="form-control"
-            type="text"
-            :value="tree.altura ?? '-'"
-            readonly
-          />
+          <div class="field">
+            <label class="form-label" for="tree-detail-altitude">{{ t('treesDetail.fields.altitude') }}</label>
+            <input
+              id="tree-detail-altitude"
+              class="form-control"
+              type="text"
+              :value="tree.altura ?? '-'"
+              readonly
+            />
+          </div>
         </div>
 
         <div class="field">

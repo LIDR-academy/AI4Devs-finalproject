@@ -1,8 +1,7 @@
 package com.mtl.media.application;
 
 import com.mtl.media.domain.Fotografia;
-import com.mtl.media.domain.FotografiaRepository;
-import com.mtl.media.integration.catalog.CatalogMediaPermissionClient;
+import com.mtl.media.infrastructure.persistence.jpa.repository.FotografiaRepository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -14,25 +13,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class MediaTreePhotoGalleryService {
 
   private final FotografiaRepository fotografiaRepository;
-  private final CatalogMediaPermissionClient catalogMediaPermissionClient;
 
-  public MediaTreePhotoGalleryService(
-      FotografiaRepository fotografiaRepository,
-      CatalogMediaPermissionClient catalogMediaPermissionClient) {
+  public MediaTreePhotoGalleryService(FotografiaRepository fotografiaRepository) {
     this.fotografiaRepository = fotografiaRepository;
-    this.catalogMediaPermissionClient = catalogMediaPermissionClient;
   }
 
   @Transactional(readOnly = true)
   public List<Fotografia> findVisiblePhotos(long treeId, Jwt jwt) {
-    if (jwt == null) {
+    if (jwt == null || !hasRole(jwt, "ADMIN")) {
       return fotografiaRepository.findPublicForTreeOrdered(treeId);
     }
-    if (hasRole(jwt, "ADMIN")) {
-      return fotografiaRepository.findActiveForTreeOrdered(treeId);
-    }
-    long actorUsuarioAppId = catalogMediaPermissionClient.resolveActorUsuarioAppIdForTree(treeId, jwt);
-    return fotografiaRepository.findVisibleForActorOrdered(treeId, actorUsuarioAppId);
+    return fotografiaRepository.findActiveForTreeOrdered(treeId);
   }
 
   @SuppressWarnings("unchecked")

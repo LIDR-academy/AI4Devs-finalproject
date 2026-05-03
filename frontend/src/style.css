@@ -890,6 +890,12 @@ dialog.tree-photo-viewer-overlay::backdrop {
   grid-column: 1 / -1;
 }
 
+.tree-geo-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
 .form-label {
   font-weight: 600;
   font-size: 0.92rem;
@@ -984,6 +990,11 @@ select.form-control {
   }
 
   .tree-form {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .tree-geo-row {
     grid-template-columns: 1fr;
     gap: var(--space-3);
   }

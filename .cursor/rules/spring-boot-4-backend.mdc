@@ -9,8 +9,10 @@ alwaysApply: false
 
 ## Proyecto y paquetes (`com.mtl`)
 - **GroupId Maven:** `com.mtl`; **artifactId** alineado con la carpeta del servicio (p. ej. `catalog-service`).
-- **Paquete base** por servicio: `com.mtl.<contexto>` — ver tabla siguiente. Subpaquetes habituales en servicios **REST (MVC):** `config`, `controller`, `application`, `domain`, `dto`, `exception`, `web` (filtros servlet, `web.error` con `@RestControllerAdvice`), `infrastructure`, `util`. El acceso **JPA** vive bajo **`infrastructure.persistence.jpa`**, **Mongo** bajo **`infrastructure.persistence.mongo`**, solo si el servicio usa esa tecnología.
-- **Paquete `config`:** las clases anotadas con `@Configuration` (seguridad, WebMvc/WebFlux, beans de integración, `JpaAuditing`, etc.) van en **`com.mtl.<contexto>.config`**, no en la raíz del paquete del servicio. La clase **`@SpringBootApplication`** permanece en el paquete base (`com.mtl.<contexto>`).
+- **Paquete base** por servicio: `com.mtl.<contexto>` — ver tabla siguiente. La clase **`@SpringBootApplication`** solo en ese paquete base.
+- **Lista blanca — paquetes de primer nivel bajo `com.mtl.<contexto>` (REST/MVC):** `config`, `controller`, `application`, `domain`, `dto`, `exception`, `web`, `infrastructure`, `util`. **No** crear otros de primer nivel (p. ej. `api`, `integration`, `storage`). Clientes HTTP, almacenamiento, Kafka, etc. van **bajo `infrastructure`** (`…infrastructure.client`, `…infrastructure.storage`, `…infrastructure.messaging`, …). JPA/Mongo: solo bajo **`…infrastructure.persistence.jpa`** / **`…infrastructure.persistence.mongo`** (véase **Persistencia**).
+- **Fuera de lista blanca:** antes de añadir un paquete de primer nivel nuevo o una capa equivalente, **parar** y **pedir confirmación explícita al usuario** (motivo, alternativas dentro de `infrastructure` / `application`, y si aplica decisión en `docs/adr/`).
+- **Paquete `config`:** `@Configuration` (seguridad, WebMvc/WebFlux, beans de integración, `JpaAuditing`, etc.) en **`com.mtl.<contexto>.config`**, no en la raíz del contexto.
 
 ### Módulo Maven ↔ paquete Java raíz
 
@@ -24,27 +26,24 @@ alwaysApply: false
 
 Al generar código nuevo, **no** mezclar contextos (p. ej. clases de `catalog` dentro de `media`).
 
-### Plantilla de paquetes (microservicio REST + Resource Server)
+### Plantilla de capas (misma lista blanca; `catalog` como ejemplo de nombres)
 
-Para **media**, **notification**, **ai** y cualquier nuevo servicio Boot con API REST propia, replicar la misma **forma** que **catalog-service** (nombres adaptados al dominio):
+1. **`…controller`** — `@RestController`, **Jakarta Validation** en borde, delegación a `application`; rutas según [api-design.mdc](api-design.mdc).
+2. **`…application`** — `@Service`, `@Transactional`, orquestación, repositorios/clientes.
+3. **`…domain`** — `@Entity`, enums/value objects de persistencia; **no** en REST.
+4. **`…dto`** — request/response / paginación API.
+5. **`…exception`** — errores de negocio → `ProblemDetail`.
+6. **`…web`** / **`…web.error`** — filtros (p. ej. MDC), `@RestControllerAdvice`, Problem según [api-contract.mdc](api-contract.mdc).
+7. **`…infrastructure.persistence.jpa…`** / **`…mongo…`** — ver **Persistencia** y [mongo-hybrid.mdc](mongo-hybrid.mdc) si aplica.
+8. **`…util`** — helpers sin estado; no sustituir `application`.
 
-1. **`…controller`** — `@RestController`, validación de borde (**Jakarta Validation**) y delegación a `application` (sin lógica de negocio aquí); prefijo de ruta coherente con [api-design.mdc](api-design.mdc) (`/api/<contexto>/…` visto desde cliente).
-2. **`…application`** — `@Service`, `@Transactional` donde toque, orquestación, llamadas a repositorios/clientes.
-3. **`…domain`** — entidades JPA `@Entity` del servicio (maestro relacional), value objects/enums de persistencia si aplica; **no** exponerlas en la API.
-4. **`…dto`** — request/response y tipos de paginación expuestos por REST.
-5. **`…exception`** — jerarquía de errores de negocio mapeables a `ProblemDetail`.
-6. **`…web`** — filtros (p. ej. correlación en MDC), subpaquete **`…web.error`** — `@RestControllerAdvice`, escritura de errores al cliente según [api-contract.mdc](api-contract.mdc) / OpenAPI (`ProblemDetail`, `ProblemHttpWriter` / enriquecedor si aplica).
-7. **`…infrastructure.persistence.jpa.repository`** (+ **`projection`**, **`imp`**) — solo si hay Spring Data JPA; proyecciones de listado en **`projection`**.
-8. **`…infrastructure.persistence.mongo.…`** — solo si el servicio usa Mongo según modelo ([mongo-hybrid.mdc](mongo-hybrid.mdc) aplica principalmente a catálogo).
-9. **`…util`** — helpers sin estado; no sustituir casos de uso de `application`.
-
-**catalog-service — alta de árbol y auditoría R3:** DTO de entrada en `dto`, orquestación transaccional (`TreeRegistrationService` + `TreeCreationService` + `CatalogAuditService`), resolución de perfil OIDC y política de `usuario_app`/`AUDITORIA_CATALOGO` según [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md).
+**catalog — alta de árbol y auditoría R3:** [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md).
 
 Tests: **`src/test/java`** (`*Test`, Surefire), **`src/testIT/java`** (`*IT`, Failsafe) según el padre Maven en `services/pom.xml` y [docs/engineering/testing-java.md](../../docs/engineering/testing-java.md).
 
 ### API Gateway (`api-gateway`, WebFlux)
 
-- Paquete **`com.mtl.gateway`**: principalmente **`config`** (seguridad reactiva, rutas Gateway, beans OAuth2/JWT). **No** añadir capas JPA/Mongo al gateway salvo decisión explícita de arquitectura.
+- **`com.mtl.gateway`:** misma **lista blanca** de primer nivel; en la práctica casi todo en **`config`**. **No** JPA/Mongo salvo decisión explícita (ADR).
 - Misma disciplina de **no loguear secretos**, **correlación** y **contrato HTTP** hacia clientes donde el gateway emita respuestas propias; el detalle de rutas y JWT está en [api-security.mdc](api-security.mdc) y [jwt-gateway-strategy.md](../../docs/security/jwt-gateway-strategy.md).
 
 ## Build (padre Maven)
@@ -52,8 +51,6 @@ Tests: **`src/test/java`** (`*Test`, Surefire), **`src/testIT/java`** (`*IT`, Fa
 - **MapStruct** para mapeos DTO ↔ entidad/dominio; interfaces `@Mapper` en capa `application` o `infrastructure` según el caso.
 - **Flyway:** scripts en `src/main/resources/db/migration/`, convención `V{version}__{descripcion}.sql`, un **esquema PostgreSQL por servicio** (`catalog`, `media`, `notification`, `ai`) alineado con [infra compose](../../infra/compose/).
 - **Perfiles:** `dev` → PostgreSQL local (Compose); tests con `@ActiveProfiles("test")` y **H2 en memoria** (`application-test.properties`), Flyway desactivado en test salvo pruebas de migración dedicadas.
-
-Las capas concretas (`controller` → `application` → `domain` / persistencia → `dto` / `web`) están en la **plantilla numerada** arriba y en **Persistencia** más abajo; no duplicar listas genéricas.
 
 ### `application` frente a `util`
 

@@ -25,6 +25,10 @@ mvn -f services/pom.xml -pl catalog-service spring-boot:run -Dspring-boot.run.pr
 
 No ejecutes `mvn -pl catalog-service …` **desde dentro** de `catalog-service/` (sin el reactor del padre, Maven no resuelve `-pl`).
 
+### Spring Boot DevTools (IDE)
+
+Los servicios Boot incluyen `spring-boot-devtools`. El **restart** del contexto se dispara cuando cambian los `.class` en `target/classes` (no basta con guardar el `.java` si no se compila). En la raíz del monorepo, [`.vscode/settings.json`](../.vscode/settings.json) fija autocompilación Maven y actualización automática del proyecto para Cursor/VS Code. Si no ves el reinicio, ejecuta **`Java: Force Java Compilation`** o, con el servicio en marcha, `mvn -f services/pom.xml -pl <módulo> compile` desde otra terminal.
+
 ### Postgres en el host (puerto 5433)
 
 Por defecto el proyecto evita ocupar **5432** si ya tienes otro PostgreSQL local. En **`infra/compose/.env.example`** está `POSTGRES_PORT=5433`: el contenedor sigue escuchando en **5432 dentro de Docker**, pero en tu máquina la BD `mtl` queda en **`localhost:5433`**.

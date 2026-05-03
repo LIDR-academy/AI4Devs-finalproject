@@ -1,7 +1,7 @@
 package com.mtl.media.config;
 
-import com.mtl.media.storage.MinioObjectStoragePresigner;
-import com.mtl.media.storage.ObjectStoragePresigner;
+import com.mtl.media.infrastructure.storage.MinioObjectStoragePresigner;
+import com.mtl.media.infrastructure.storage.ObjectStoragePresigner;
 import io.minio.MinioClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

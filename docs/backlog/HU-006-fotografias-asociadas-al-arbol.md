@@ -75,6 +75,7 @@ Como usuario autenticado, quiero asociar una o varias fotografías a los árbole
 - Detalle del **JSON de presign** y del **DTO de metadatos** de fotografía en OpenAPI (campos obligatorios, indicador de foto principal y herencia de visibilidad desde árbol, sin enumeración por imagen).
 - Matriz concreta cuando **ADMIN** asocia fotos a un árbol creado por otro colaborador (permitido en MVP, condiciones o mismos endpoints que el colaborador con comprobación de rol en backend).
 - Regla de EXIF cerrada: si la primera imagen tiene latitud y longitud válidas, **sobrescribe** los valores actuales de coordenadas en pantalla.
+- En la primera versión la visibilidad de las fotografías se hereda de la visibilidad del árbol: las fotografías de un árbol público tienen visibiliadd pública
 
 ## 3. Criterios de aceptación (BDD)
 

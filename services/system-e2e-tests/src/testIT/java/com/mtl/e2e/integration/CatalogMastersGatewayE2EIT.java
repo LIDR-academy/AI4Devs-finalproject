@@ -2,8 +2,6 @@ package com.mtl.e2e.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -14,6 +12,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Llama al <strong>API Gateway</strong> real y valida el proxy hacia <strong>catalog-service</strong> en
@@ -37,7 +37,7 @@ class CatalogMastersGatewayE2EIT {
   private static final String JSON_TOTAL_ELEMENTS = "totalElements";
   private static final String JSON_UNPAGED = "unpaged";
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
   private static HttpClient httpClient;
   private static String gatewayBase;

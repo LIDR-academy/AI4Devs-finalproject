@@ -1,18 +1,17 @@
 package com.mtl.media.application;
 
-import com.mtl.media.api.dto.ConfirmPhotoUploadRequest;
-import com.mtl.media.api.dto.PhotoMetadataResponse;
-import com.mtl.media.api.dto.PresignUploadRequest;
-import com.mtl.media.api.dto.PresignUploadResponse;
 import com.mtl.media.config.MediaPresignProperties;
 import com.mtl.media.config.MediaStorageProperties;
 import com.mtl.media.domain.CategoriaFotografia;
 import com.mtl.media.domain.Fotografia;
-import com.mtl.media.domain.FotografiaRepository;
-import com.mtl.media.integration.catalog.CatalogMediaPermissionClient;
-import com.mtl.media.storage.ObjectStoragePresigner;
-import com.mtl.media.validation.MediaUploadPolicyValidator;
-import com.mtl.media.validation.MediaUploadValidationException;
+import com.mtl.media.dto.ConfirmPhotoUploadRequest;
+import com.mtl.media.dto.PhotoMetadataResponse;
+import com.mtl.media.dto.PresignUploadRequest;
+import com.mtl.media.dto.PresignUploadResponse;
+import com.mtl.media.exception.MediaUploadValidationException;
+import com.mtl.media.infrastructure.client.catalog.CatalogMediaPermissionClient;
+import com.mtl.media.infrastructure.persistence.jpa.repository.FotografiaRepository;
+import com.mtl.media.infrastructure.storage.ObjectStoragePresigner;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;

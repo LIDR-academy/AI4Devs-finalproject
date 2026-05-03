@@ -86,6 +86,13 @@ class GatewaySecurityWebIT {
                     .withStatus(201)
                     .withHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON)
                     .withBody("{}")));
+    upstream.stubFor(
+        get(urlPathMatching("/api/media/trees/[0-9]+/photos"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON)
+                    .withBody("[]")));
     webTestClient = WebTestClient.bindToServer().baseUrl("http://127.0.0.1:" + port).build();
   }
 
@@ -137,6 +144,21 @@ class GatewaySecurityWebIT {
                     UNAUTHORIZED.value(),
                     status,
                     "foto principal pública no debe exigir JWT (código aguas arriba puede ser 404)"));
+  }
+
+  @Test
+  void publicMediaGalleryRouteWithoutTokenDoesNotReturnUnauthorized() {
+    webTestClient
+        .get()
+        .uri("/api/media/trees/1/photos")
+        .exchange()
+        .expectStatus()
+        .value(
+            status ->
+                assertNotEquals(
+                    UNAUTHORIZED.value(),
+                    status,
+                    "galería de detalle en consulta no debe exigir JWT"));
   }
 
   @Test

@@ -2,7 +2,7 @@ package com.mtl.media.application;
 
 import com.mtl.media.domain.CategoriaFotografia;
 import com.mtl.media.domain.Fotografia;
-import com.mtl.media.domain.FotografiaRepository;
+import com.mtl.media.infrastructure.persistence.jpa.repository.FotografiaRepository;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.errors.ErrorResponseException;
