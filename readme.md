@@ -77,74 +77,34 @@ El producto se entegra con IA para obtener información de las características 
 #### Diagrama de contexto del sistema (C1)
 
 ```mermaid
-%% Diagrama de Contexto de Sistema (C1) para MyTreeLibrary
-%% Generado con un diseño profesional y limpio, siguiendo el estándar C4.
-
 graph TD
-    %% ==========================================
-    %% 1. DEFINICIÓN DE ESTILOS (ClassDefs)
-    %% ==========================================
-    %% Definimos una paleta de colores profesional y limitada.
-
-    %% Usuario: Azul claro con borde azul
+    %% Definicion de estilos
     classDef user fill:#E5F0FF,stroke:#2D71A8,stroke-width:1px,color:#2D71A8,stroke-dasharray: 0;
-    
-    %% Sistema Principal: Azul oscuro destacado, borde grueso, texto blanco y negrita
-    classDef system fill:#2D71A8,stroke:#1E4B73,stroke-width:3px,color:#FFFFFF,font-weight:bold,rx:5,ry:5;
-    
-    %% Sistemas de Soporte: Un verde suave pero profesional
+    classDef system fill:#2D71A8,stroke:#1E4B73,stroke-width:3px,color:#FFFFFF,font-weight:bold;
     classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041,stroke-dasharray: 0;
-    
-    %% Sistemas Externos: Un tono naranja-marrón apagado
     classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13,stroke-dasharray: 0;
 
-    %% ==========================================
-    %% 2. DECLARACIÓN DE NODOS Y GRUPOS
-    %% ==========================================
-
-    %% NODO USUARIO: Usamos (( )) para la forma circular que representa una persona.
+    %% Nodos
     U(("👤 Usuario")):::user
-
-    %% NODO SISTEMA PRINCIPAL: Es el foco del diagrama, usa una caja [] y el estilo 'system'.
     S["🖥️ MyTreeLibrary<br/>Sistema principal"]:::system
 
-    %% GRUPO DE DEPENDENCIAS: Usamos subgraph para agrupar y organizar visualmente los servicios externos.
     subgraph Dependencias [Sistemas Externos y de Soporte]
-        %% Dirección de flujo dentro del grupo (arriba a abajo)
         direction TB
-
-        %% Definición de los nodos de soporte y externos
-        KC["🔐 **Keycloak**<br/>Autenticación<br/>(Soporte)"]:::soporte
-        SMTP["📧 **Servidor SMTP**<br/>Notificaciones<br/>(Soporte)"]:::soporte
-        PIA["🧠 **Proveedor IA**<br/>Identificación / datos<br/>(Externo)"]:::externo
-        MAP["🗺️ **OpenStreetMap**<br/>Geolocalización<br/>(Externo)"]:::externo
+        KC["🔐 Keycloak<br/>Autenticación"]:::soporte
+        SMTP["📧 Servidor SMTP<br/>Notificaciones"]:::soporte
+        PIA["🧠 Proveedor IA<br/>Identificación"]:::externo
+        MAP["🗺️ OpenStreetMap<br/>Geolocalización"]:::externo
     end
 
-    %% ==========================================
-    %% 3. DEFINICIÓN DE RELACIONES (CONEXIONES)
-    %% ==========================================
-    %% Usamos etiquetas claras y directas en las flechas.
-
-    %% Relación principal: El usuario interactúa con el sistema.
-    U ==>|Usa la aplicación| S
-
-    %% Relaciones con los sistemas de soporte.
+    %% Relaciones
+    U -->|Usa la aplicacion| S
     S -->|OIDC / JWT| KC
     S -->|correo| SMTP
-
-    %% Relaciones con los sistemas externos.
     S -->|LLM API| PIA
     S -->|Tiles / API| MAP
 
-    %% ==========================================
-    %% 4. ESTILIZADO DE LÍNEAS (LinkStyles)
-    %% ==========================================
-    %% Hacemos la conexión principal más gruesa.
-
-    %% Línea Usuario -> MyTreeLibrary (gruesa)
+    %% Estilos de linea
     linkStyle 0 stroke-width:3px,stroke:#2D71A8;
-
-    %% Hacemos el resto de líneas más sutiles (gris, grosor 1px)
     linkStyle 1,2,3,4 stroke:#999,stroke-width:1px;
 ```
 
