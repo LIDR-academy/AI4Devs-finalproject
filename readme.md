@@ -77,37 +77,75 @@ El producto se entegra con IA para obtener información de las características 
 #### Diagrama de contexto del sistema (C1)
 
 ```mermaid
-flowchart TB
-    %% Configuración de estilo global
-    classDef system fill:#2D71A8,stroke:#1E4B73,stroke-width:2px,color:#FFFFFF,font-weight:bold
-    classDef external fill:#F9F9F9,stroke:#666666,stroke-width:1px,stroke-dasharray: 5 5,color:#333
-    classDef user fill:#E5F0FF,stroke:#2D71A8,stroke-width:1px,color:#2D71A8,stroke-dasharray: 0
+%% Diagrama de Contexto de Sistema (C1) para MyTreeLibrary
+%% Generado con un diseño profesional y limpio, siguiendo el estándar C4.
 
-    %% Nodo Usuario (Forma circular para denotar persona)
-    U((Usuario)):::user
+graph TD
+    %% ==========================================
+    %% 1. DEFINICIÓN DE ESTILOS (ClassDefs)
+    %% ==========================================
+    %% Definimos una paleta de colores profesional y limitada.
 
-    %% Nodo Sistema (El protagonista)
-    S[MyTreeLibrary System]:::system
+    %% Usuario: Azul claro con borde azul
+    classDef user fill:#E5F0FF,stroke:#2D71A8,stroke-width:1px,color:#2D71A8,stroke-dasharray: 0;
+    
+    %% Sistema Principal: Azul oscuro destacado, borde grueso, texto blanco y negrita
+    classDef system fill:#2D71A8,stroke:#1E4B73,stroke-width:3px,color:#FFFFFF,font-weight:bold,rx:5,ry:5;
+    
+    %% Sistemas de Soporte: Un verde suave pero profesional
+    classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041,stroke-dasharray: 0;
+    
+    %% Sistemas Externos: Un tono naranja-marrón apagado
+    classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13,stroke-dasharray: 0;
 
-    %% Agrupación de dependencias para limpieza visual
-    subgraph Dependencias [Sistemas Externos y Soporte]
+    %% ==========================================
+    %% 2. DECLARACIÓN DE NODOS Y GRUPOS
+    %% ==========================================
+
+    %% NODO USUARIO: Usamos (( )) para la forma circular que representa una persona.
+    U(("👤 Usuario")):::user
+
+    %% NODO SISTEMA PRINCIPAL: Es el foco del diagrama, usa una caja [] y el estilo 'system'.
+    S["🖥️ MyTreeLibrary<br/>Sistema principal"]:::system
+
+    %% GRUPO DE DEPENDENCIAS: Usamos subgraph para agrupar y organizar visualmente los servicios externos.
+    subgraph Dependencias [Sistemas Externos y de Soporte]
+        %% Dirección de flujo dentro del grupo (arriba a abajo)
         direction TB
-        KC["Keycloak<br/>Autenticación"]:::external
-        SMTP["Servidor SMTP<br/>Notificaciones"]:::external
-        PIA["Proveedor IA<br/>Identificación"]:::external
-        MAP["OpenStreetMap<br/>Geolocalización"]:::external
+
+        %% Definición de los nodos de soporte y externos
+        KC["🔐 **Keycloak**<br/>Autenticación<br/>(Soporte)"]:::soporte
+        SMTP["📧 **Servidor SMTP**<br/>Notificaciones<br/>(Soporte)"]:::soporte
+        PIA["🧠 **Proveedor IA**<br/>Identificación / datos<br/>(Externo)"]:::externo
+        MAP["🗺️ **OpenStreetMap**<br/>Geolocalización<br/>(Externo)"]:::externo
     end
 
-    %% Relaciones
-    U -->|Accede| S
+    %% ==========================================
+    %% 3. DEFINICIÓN DE RELACIONES (CONEXIONES)
+    %% ==========================================
+    %% Usamos etiquetas claras y directas en las flechas.
+
+    %% Relación principal: El usuario interactúa con el sistema.
+    U ==>|Usa la aplicación| S
+
+    %% Relaciones con los sistemas de soporte.
     S -->|OIDC / JWT| KC
-    S -->|Notifica| SMTP
-    S -->|API| PIA
-    S -->|API/Tiles| MAP
+    S -->|correo| SMTP
 
-    %% Estilos de las líneas (opcional: hacer más delgadas las líneas externas)
-    linkStyle 1,2,3,4 stroke:#999,stroke-width:1px,stroke-dasharray: 5 5
+    %% Relaciones con los sistemas externos.
+    S -->|LLM API| PIA
+    S -->|Tiles / API| MAP
 
+    %% ==========================================
+    %% 4. ESTILIZADO DE LÍNEAS (LinkStyles)
+    %% ==========================================
+    %% Hacemos la conexión principal más gruesa.
+
+    %% Línea Usuario -> MyTreeLibrary (gruesa)
+    linkStyle 0 stroke-width:3px,stroke:#2D71A8;
+
+    %% Hacemos el resto de líneas más sutiles (gris, grosor 1px)
+    linkStyle 1,2,3,4 stroke:#999,stroke-width:1px;
 ```
 
 #### Diagrama de Casos de Uso del sistema
