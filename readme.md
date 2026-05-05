@@ -415,27 +415,40 @@ Objetivo: mantener rutas protegidas con sesión válida, renovar token de forma 
 
 ```mermaid
 flowchart TB
-  subgraph SPA [frontend_spa_vue3]
-    direction TB
-    Router[Vue_Router_Guards]
-    Views[Views_y_Componentes]
-    AuthStore[Auth_Store_o_useAuth]
-    Oidc[oidc_service_UserManager]
-    Http[apiClient_interceptor_401]
-    CatalogSvc[catalogService]
+    %% --- Estilos (Consistentes con la arquitectura anterior) ---
+    classDef component fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041;
+    classDef external fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13;
+    classDef subgraphStyle fill:#F9F9F9,stroke:#999,stroke-dasharray: 5 5;
 
-    Views --> AuthStore
-    Views --> CatalogSvc
-    CatalogSvc --> Http
-    Http --> Oidc
-    Router --> AuthStore
-    Router --> Oidc
-    AuthStore --> Oidc
-  end
+    %% --- Subgraph Frontend ---
+    subgraph SPA [Frontend SPA Vue3]
+        direction TB
+        Router["🛡️ Vue Router Guards"]:::component
+        Views["🖼️ Views y Componentes"]:::component
+        AuthStore["💾 Auth Store"]:::component
+        Oidc["🔐 OIDC Service"]:::component
+        Http["📡 API Client Interceptor"]:::component
+        CatalogSvc["📂 Catalog Service"]:::component
 
-  Oidc -->|OIDC_Code+PKCE| IdP[Identity_Provider_Keycloak]
-  Http -->|Bearer_JWT| GW[API_Gateway]
-  GW --> Services[Microservicios]
+        %% Relaciones internas
+        Views --> AuthStore
+        Views --> CatalogSvc
+        CatalogSvc --> Http
+        Http --> Oidc
+        Router --> AuthStore
+        Router --> Oidc
+        AuthStore --> Oidc
+    end
+
+    %% --- Componentes Externos ---
+    IdP["🏢 Keycloak (IdP)"]:::external
+    GW["🌐 API Gateway"]:::external
+    Services["⚙️ Microservicios"]:::external
+
+    %% --- Conexiones externas ---
+    Oidc -->|OIDC Code + PKCE| IdP
+    Http -->|Bearer JWT| GW
+    GW --> Services
 ```
 
 
@@ -506,27 +519,40 @@ Vista de **componentes lógicos** dentro del contenedor **catalog-service** y su
 
 ```mermaid
 flowchart TB
-  subgraph catalogSvc [catalog_service]
-    direction TB
-    TreesCtrl[TreesController_REST]
-    TreeReg[TreeRegistrationService]
-    TreeCre[TreeCreationService]
-    CatAud[CatalogAuditService]
-    AfterCommit[AfterCommitTaskRegistrar]
-    KafkaPub[KafkaArbolCreadoEventPublisher]
-    EventoSeq[CatalogArbolEventoIdSequence]
-    JpaRepos[Repositorios_JPA]
-    TreesCtrl --> TreeReg
-    TreeReg --> TreeCre
-    TreeReg --> CatAud
-    TreeReg --> AfterCommit
-    AfterCommit --> KafkaPub
-    KafkaPub --> EventoSeq
-    KafkaPub --> KafkaBroker[Kafka_cluster]
-    TreeCre --> JpaRepos
-    CatAud --> JpaRepos
-    EventoSeq --> JpaRepos
-  end
+    %% --- Estilos Consistentes ---
+    classDef service fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041;
+    classDef repo fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#424242;
+    classDef infra fill:#FFF3E0,stroke:#EF6C00,stroke-width:1px,color:#BF360C;
+
+    subgraph catalogSvc [catalog_service]
+        direction TB
+        %% Componentes Logicos
+        TreesCtrl["🌐 TreesController"]:::service
+        TreeReg["⚙️ TreeRegistrationService"]:::service
+        TreeCre["🏗️ TreeCreationService"]:::service
+        CatAud["📝 CatalogAuditService"]:::service
+        AfterCommit["⏱️ AfterCommitRegistrar"]:::service
+        KafkaPub["📢 KafkaPublisher"]:::service
+        EventoSeq["🔢 ArbolEventoSequence"]:::service
+        
+        %% Componentes de Infraestructura / Datos
+        JpaRepos["💾 Repositorios JPA"]:::repo
+        KafkaBroker["⚡ Kafka Cluster"]:::infra
+
+        %% Flujo de ejecución
+        TreesCtrl --> TreeReg
+        TreeReg --> TreeCre
+        TreeReg --> CatAud
+        TreeReg --> AfterCommit
+        AfterCommit --> KafkaPub
+        KafkaPub --> EventoSeq
+        KafkaPub --> KafkaBroker
+        
+        %% Flujo de persistencia
+        TreeCre --> JpaRepos
+        CatAud --> JpaRepos
+        EventoSeq --> JpaRepos
+    end
 ```
 
 
@@ -666,21 +692,33 @@ proyecto/
 
 ```mermaid
 flowchart LR
-  subgraph dev [Entorno_desarrollo]
-    DC[Docker_Compose]
-    PGd[(PostgreSQL + PostGIS)]
-    MGd[(MongoDB)]
-    Rd[(Redis)]
-    S3d[(MinIO)]
-    Kd[Kafka]
-    KCd[Keycloak]
-  end
-  DC --> PGd
-  DC --> MGd
-  DC --> Rd
-  DC --> S3d
-  DC --> Kd
-  DC --> KCd
+    %% --- Estilos (Consistentes con toda la documentación) ---
+    classDef orch fill:#2D71A8,stroke:#1E4B73,stroke-width:2px,color:#FFFFFF,font-weight:bold;
+    classDef service fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041;
+    classDef db fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#424242,stroke-dasharray: 5 5;
+
+    subgraph dev [Entorno de Desarrollo]
+        direction TB
+        DC["🐳 Docker Compose"]:::orch
+        
+        %% Servicios
+        KCd["🔐 Keycloak"]:::service
+        Kd["⚡ Kafka"]:::service
+        
+        %% Almacenamiento
+        PGd[("🐘 Postgres + PostGIS")]:::db
+        MGd[("🍃 MongoDB")]:::db
+        Rd[("🚀 Redis")]:::db
+        S3d[("📦 MinIO")]:::db
+    end
+
+    %% --- Relaciones ---
+    DC --> PGd
+    DC --> MGd
+    DC --> Rd
+    DC --> S3d
+    DC --> Kd
+    DC --> KCd
 ```
 
 
