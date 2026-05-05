@@ -257,37 +257,62 @@ La aplicación se desarrollará en microservicios con Spring en la parte de back
 
 ```mermaid
 flowchart TB
-  subgraph mtl [MyTreeLibrary]
-    SPA[SPA_Vue3]
-    GW[api-gateway]
-    KC[Keycloak]
-    CAT[catalog_service]
-    MED[media_service]
-    NOT[notification_service]
-    AIS[ai_assistant_service]
-    K[Apache_Kafka]
-    PG[(PostgreSQL + PostGIS)]
-    MG[(MongoDB)]
-    RD[(Redis)]
-    OBJ[(S3)]
-  end
-  U[Usuario] -->|Usa| SPA
-  SPA --> GW
-  SPA --> KC
-  GW --> CAT
-  GW --> MED
-  GW --> AIS
-  GW --> NOT
-  CAT --> PG
-  CAT --> RD
-  CAT --> K
-  CAT --> MG
-  MED --> PG
-  MED --> OBJ
-  NOT --> PG
-  NOT --> K
-  AIS --> PG
-  AIS --> CAT
+    %% --- Estilos ---
+    classDef user fill:#E5F0FF,stroke:#2D71A8,stroke-width:1px,color:#2D71A8;
+    classDef web fill:#D1E7FF,stroke:#2D71A8,stroke-width:2px,color:#1E4B73,font-weight:bold;
+    classDef service fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041;
+    classDef infra fill:#FFF3E0,stroke:#EF6C00,stroke-width:1px,color:#BF360C;
+    classDef db fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#424242,stroke-dasharray: 5 5;
+
+    %% --- Usuario ---
+    U(("👤 Usuario")):::user
+
+    %% --- Límite del Sistema ---
+    subgraph MyTreeLibrary [MyTreeLibrary System C2]
+        direction TB
+        
+        %% Frontend y Entrada
+        SPA["🌐 SPA Vue3"]:::web
+        GW["⚙️ API Gateway"]:::web
+        
+        %% Servicios
+        KC["🔐 Keycloak"]:::service
+        CAT["📂 Catalog Service"]:::service
+        MED["🖼️ Media Service"]:::service
+        NOT["📧 Notification Service"]:::service
+        AIS["🧠 AI Assistant"]:::service
+        
+        %% Infraestructura y Datos
+        K["⚡ Apache Kafka"]:::infra
+        PG[("🐘 PostgreSQL + PostGIS")]:::db
+        MG[("🍃 MongoDB")]:::db
+        RD[("🚀 Redis")]:::db
+        OBJ[("📦 S3 Storage")]:::db
+    end
+
+    %% --- Relaciones ---
+    U -->|Usa| SPA
+    SPA -->|Autentica| KC
+    SPA -->|Requests| GW
+    
+    GW -->|Routing| CAT
+    GW -->|Routing| MED
+    GW -->|Routing| AIS
+    GW -->|Routing| NOT
+    
+    CAT --> PG
+    CAT --> RD
+    CAT --> K
+    CAT --> MG
+    
+    MED --> PG
+    MED --> OBJ
+    
+    NOT --> PG
+    NOT --> K
+    
+    AIS --> PG
+    AIS --> CAT
 ```
 
 **C2 (detalle) — un servidor PostgreSQL con PostGIS, cuatro esquemas, un esquema por servicio:**
