@@ -78,27 +78,35 @@ El producto se entegra con IA para obtener información de las características 
 
 ```mermaid
 flowchart TB
-  U[Usuario]
-  S[MyTreeLibrary<br/>Sistema principal]
-  KC["**Keycloak**<br/>Autenticación<br/>(Soporte)"]
-  SMTP["**Servidor SMTP**<br/>Notificaciones<br/>(Soporte)"]
-  PIA["**Proveedor IA**<br/>Identificación / datos<br/>(Externo)"]
-  MAP["**OpenStreetMap**<br/>Geolocalización<br/>(Externo)"] 
-  U -->|Usa la aplicación| S
-  S -->|OIDC / JWT| KC
-  S -->|correo| SMTP
-  S -->|LLM API| PIA
-  S -->|Tiles / API| MAP
+    %% Configuración de estilo global
+    classDef system fill:#2D71A8,stroke:#1E4B73,stroke-width:2px,color:#FFFFFF,font-weight:bold
+    classDef external fill:#F9F9F9,stroke:#666666,stroke-width:1px,stroke-dasharray: 5 5,color:#333
+    classDef user fill:#E5F0FF,stroke:#2D71A8,stroke-width:1px,color:#2D71A8,stroke-dasharray: 0
 
-  classDef sistema fill:#EEEDFE,stroke:#534AB7,stroke-width:2px,color:#3C3489
-  classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041
-  classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13
-  classDef usuario fill:#F1EFE8,stroke:#5F5E5A,stroke-width:1px,color:#444441
+    %% Nodo Usuario (Forma circular para denotar persona)
+    U((Usuario)):::user
 
-  class S sistema
-  class KC,SMTP soporte
-  class PIA,MAP externo
-  class U usuario
+    %% Nodo Sistema (El protagonista)
+    S[MyTreeLibrary System]:::system
+
+    %% Agrupación de dependencias para limpieza visual
+    subgraph Dependencias [Sistemas Externos y Soporte]
+        direction TB
+        KC["Keycloak<br/>Autenticación"]:::external
+        SMTP["Servidor SMTP<br/>Notificaciones"]:::external
+        PIA["Proveedor IA<br/>Identificación"]:::external
+        MAP["OpenStreetMap<br/>Geolocalización"]:::external
+    end
+
+    %% Relaciones
+    U -->|Accede| S
+    S -->|OIDC / JWT| KC
+    S -->|Notifica| SMTP
+    S -->|API| PIA
+    S -->|API/Tiles| MAP
+
+    %% Estilos de las líneas (opcional: hacer más delgadas las líneas externas)
+    linkStyle 1,2,3,4 stroke:#999,stroke-width:1px,stroke-dasharray: 5 5
 
 ```
 
