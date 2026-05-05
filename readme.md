@@ -319,21 +319,31 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  CAT[catalog_service]
-  MED[media_service]
-  NS[notification_service]
-  AIS[ai_assistant_service]
-  subgraph PG [PostgreSQL + PostGIS]
-    direction LR
-    SCH_C[catalog]
-    SCH_M[media]
-    SCH_N[notification]
-    SCH_I[ai]
-  end
-  CAT --> SCH_C
-  MED --> SCH_M
-  NS --> SCH_N
-  AIS --> SCH_I
+    %% --- Estilos (Consistentes con los anteriores) ---
+    classDef service fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041;
+    classDef db fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#424242,stroke-dasharray: 5 5;
+    classDef cluster fill:#FAFAFA,stroke:#333,stroke-width:1px,stroke-dasharray: 5 5;
+
+    %% --- Servicios (La capa de lógica) ---
+    CAT["📂 Catalog Service"]:::service
+    MED["🖼️ Media Service"]:::service
+    NS["📧 Notification Service"]:::service
+    AIS["🧠 AI Assistant"]:::service
+
+    %% --- Subgraph PostgreSQL (La capa de almacenamiento) ---
+    subgraph PG ["🐘 PostgreSQL + PostGIS"]
+        direction LR
+        SCH_C["📋 schema: catalog"]:::db
+        SCH_M["📸 schema: media"]:::db
+        SCH_N["🔔 schema: notification"]:::db
+        SCH_I["🤖 schema: ai"]:::db
+    end
+
+    %% --- Relaciones (Unívocas) ---
+    CAT --> SCH_C
+    MED --> SCH_M
+    NS --> SCH_N
+    AIS --> SCH_I
 ```
 
 
