@@ -302,14 +302,14 @@ flowchart TB
     
     CAT --> PG
     CAT --> RD
-    CAT --> K
+    CAT -->|Produce| K
     CAT --> MG
     
     MED --> PG
     MED --> OBJ
     
     NOT --> PG
-    NOT --> K
+    NOT -->|Consume| K
     
     AIS --> PG
     AIS --> CAT
