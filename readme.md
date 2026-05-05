@@ -78,16 +78,17 @@ El producto se entegra con IA para obtener información de las características 
 
 ```mermaid
 graph TD
-    %% Definicion de estilos
-    classDef user fill:#E5F0FF,stroke:#2D71A8,stroke-width:1px,color:#2D71A8,stroke-dasharray: 0;
-    classDef system fill:#2D71A8,stroke:#1E4B73,stroke-width:3px,color:#FFFFFF,font-weight:bold;
-    classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041,stroke-dasharray: 0;
-    classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13,stroke-dasharray: 0;
+    %% Definicion de estilos (CSS)
+    classDef user fill:#E5F0FF,stroke:#2D71A8,stroke-width:1px,color:#2D71A8;
+    classDef system fill:#2D71A8,stroke:#1E4B73,stroke-width:2px,color:#FFFFFF,font-weight:bold;
+    classDef soporte fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041;
+    classDef externo fill:#FAECE7,stroke:#993C1D,stroke-width:1px,color:#712B13;
 
     %% Nodos
     U(("👤 Usuario")):::user
     S["🖥️ MyTreeLibrary<br/>Sistema principal"]:::system
 
+    %% Agrupacion
     subgraph Dependencias [Sistemas Externos y de Soporte]
         direction TB
         KC["🔐 Keycloak<br/>Autenticación"]:::soporte
@@ -98,14 +99,10 @@ graph TD
 
     %% Relaciones
     U -->|Usa la aplicacion| S
-    S -->|OIDC / JWT| KC
-    S -->|correo| SMTP
-    S -->|LLM API| PIA
-    S -->|Tiles / API| MAP
-
-    %% Estilos de linea
-    linkStyle 0 stroke-width:3px,stroke:#2D71A8;
-    linkStyle 1,2,3,4 stroke:#999,stroke-width:1px;
+    S --> KC
+    S --> SMTP
+    S --> PIA
+    S --> MAP
 ```
 
 #### Diagrama de Casos de Uso del sistema
