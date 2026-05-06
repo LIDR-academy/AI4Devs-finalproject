@@ -1,0 +1,6 @@
+<li>
+  <%= link_to path, class: "group flex gap-x-3 rounded-md p-3 text-sm leading-6 font-semibold transition-all #{current_page?(current_page) ? 'bg-white bg-opacity-20 text-white' : 'text-gray-100 hover:text-white hover:bg-white hover:bg-opacity-10'}" do %>
+    <span class="text-xl"><%= icon %></span>
+    <%= title %>
+  <% end %>
+</li>

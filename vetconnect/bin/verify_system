@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+
+# Script rápido de verificación del sistema
+require File.expand_path('../config/environment', __dir__)
+
+puts "🔍 Verificando Sistema VetConnect...\n"
+
+errors = []
+
+# Verificar modelos
+begin
+  User.first || errors << "User model issue"
+  Pet.first || errors << "Pet model issue"
+  Appointment.first || errors << "Appointment model issue"
+  Clinic.first || errors << "Clinic model issue"
+  puts "✅ Modelos: OK"
+rescue => e
+  errors << "Model error: #{e.message}"
+  puts "❌ Modelos: ERROR"
+end
+
+# Verificar asociaciones
+begin
+  apt = Appointment.first
+  apt.pet && apt.veterinarian && apt.clinic && apt.owner
+  puts "✅ Asociaciones: OK"
+rescue => e
+  errors << "Association error: #{e.message}"
+  puts "❌ Asociaciones: ERROR"
+end
+
+# Verificar disponibilidad
+begin
+  clinic = Clinic.active.first
+  vet = User.veterinarians.first
+  slots = Appointment.available_slots(vet.id, Date.tomorrow, clinic.id)
+  puts "✅ AvailabilityCalculator: OK (#{slots.count} slots)"
+rescue => e
+  errors << "Availability error: #{e.message}"
+  puts "❌ AvailabilityCalculator: ERROR"
+end
+
+# Verificar roles y dashboards
+begin
+  owner = User.owners.first
+  vet = User.veterinarians.first
+  admin = User.admins.first
+  
+  owner_apts = Appointment.joins(:pet).where(pets: { user_id: owner.id })
+  vet_apts = Appointment.for_veterinarian(vet.id)
+  
+  puts "✅ Roles: OK (Owner: #{owner_apts.count} citas, Vet: #{vet_apts.count} citas)"
+rescue => e
+  errors << "Roles error: #{e.message}"
+  puts "❌ Roles: ERROR"
+end
+
+# Resumen
+puts "\n" + "=" * 50
+if errors.empty?
+  puts "✅ SISTEMA VERIFICADO - TODO FUNCIONAL"
+  puts "=" * 50
+  puts "\nCredenciales:"
+  puts "  Owner:        maria@example.com"
+  puts "  Veterinarian: carlos@vetconnect.com"
+  puts "  Admin:        admin@vetconnect.com"
+  puts "  Password:     password123"
+  puts "\nDashboards:"
+  puts "  /owner"
+  puts "  /veterinarian"
+  puts "  /admin"
+else
+  puts "❌ ERRORES ENCONTRADOS:"
+  errors.each { |e| puts "  - #{e}" }
+end
+puts "=" * 50

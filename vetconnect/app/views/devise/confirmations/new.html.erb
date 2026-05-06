@@ -1,0 +1,19 @@
+<h2>Resend Confirmation Email</h2>
+<p class="subtitle">Didn't receive your confirmation email?</p>
+
+<%= form_for(resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post }) do |f| %>
+  <%= render "devise/shared/error_messages", resource: resource %>
+
+  <div class="form-group">
+    <%= f.label :email, "Email Address" %>
+    <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control", placeholder: "your.email@example.com" %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit "Resend Confirmation", class: "btn btn-primary btn-block" %>
+  </div>
+<% end %>
+
+<div class="auth-links">
+  <%= render "devise/shared/links" %>
+</div>

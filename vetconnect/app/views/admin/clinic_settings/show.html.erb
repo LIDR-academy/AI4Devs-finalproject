@@ -1,0 +1,120 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Configuración de Clínicas 🏥</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Gestiona las clínicas veterinarias del sistema
+      </p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <%= link_to new_clinic_path, class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+        <span class="mr-2" aria-hidden="true">➕</span> Nueva Clínica
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Clinics List -->
+  <% if @clinics.any? %>
+    <div class="mt-8 space-y-6 animate-fade-in">
+      <% @clinics.each do |clinic| %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-start justify-between">
+              <!-- Clinic Info -->
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-4">
+                  <h3 class="text-xl font-bold text-gray-900"><%= clinic.name %></h3>
+                  <% if clinic.active? %>
+                    <span class="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800 uppercase">
+                      Activa
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800 uppercase">
+                      Inactiva
+                    </span>
+                  <% end %>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <p class="text-xs font-medium text-gray-500 mb-1">Dirección</p>
+                    <p class="text-sm text-gray-900"><%= clinic.address %></p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-medium text-gray-500 mb-1">Teléfono</p>
+                    <p class="text-sm text-gray-900">
+                      <a href="tel:<%= clinic.phone %>" class="text-indigo-600 hover:text-indigo-500">
+                        <%= clinic.phone %>
+                      </a>
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-medium text-gray-500 mb-1">Email</p>
+                    <p class="text-sm text-gray-900">
+                      <a href="mailto:<%= clinic.email %>" class="text-indigo-600 hover:text-indigo-500">
+                        <%= clinic.email %>
+                      </a>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Operating Hours -->
+                <div class="border-t border-gray-200 pt-4">
+                  <p class="text-sm font-semibold text-gray-900 mb-3">Horarios de Atención</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <% days = {
+                      monday: 'Lunes',
+                      tuesday: 'Martes',
+                      wednesday: 'Miércoles',
+                      thursday: 'Jueves',
+                      friday: 'Viernes',
+                      saturday: 'Sábado',
+                      sunday: 'Domingo'
+                    } %>
+                    <% days.each do |day_key, day_name| %>
+                      <% date_for_day = Date.today.beginning_of_week + (days.keys.index(day_key)).days %>
+                      <% hours = clinic.operating_hours_for(date_for_day) %>
+                      <div class="flex items-center justify-between py-2 px-3 rounded-lg <%= clinic.open_on?(date_for_day) ? 'bg-green-50' : 'bg-gray-50' %>">
+                        <span class="text-xs font-medium text-gray-900"><%= day_name %></span>
+                        <% if hours && hours['open'] %>
+                          <span class="text-xs text-gray-600 font-mono">
+                            <%= hours['start'] %> - <%= hours['end'] %>
+                          </span>
+                        <% else %>
+                          <span class="text-xs text-gray-400">Cerrado</span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="ml-6 flex flex-col gap-2">
+                <%= link_to edit_clinic_path(clinic), 
+                    class: "inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors min-h-[44px]",
+                    aria: { label: "Editar #{clinic.name}" } do %>
+                  Editar
+                <% end %>
+                <%= link_to clinic_path(clinic), 
+                    class: "inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]",
+                    aria: { label: "Ver detalles de #{clinic.name}" } do %>
+                  Ver
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- Empty State -->
+    <%= render 'shared/empty_state', 
+        icon: '🏥',
+        title: 'No hay clínicas configuradas',
+        message: 'Comienza creando la primera clínica veterinaria del sistema.',
+        action: { text: 'Crear Primera Clínica', path: new_clinic_path, icon: '➕' } %>
+  <% end %>
+</div>

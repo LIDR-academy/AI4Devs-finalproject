@@ -1,0 +1,85 @@
+<div class="container mt-4">
+  <h1>Crear Registro Médico</h1>
+
+  <%= form_with(model: @medical_record, url: veterinarian_medical_records_path, local: true) do |f| %>
+    <% if @medical_record.errors.any? %>
+      <div class="alert alert-danger">
+        <h4><%= pluralize(@medical_record.errors.count, "error") %> impidieron guardar este registro:</h4>
+        <ul>
+          <% @medical_record.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <%= f.label :pet_id, "Mascota", class: "form-label" %>
+              <%= f.collection_select :pet_id, @pets, :id, :name, { prompt: "Seleccionar mascota" }, class: "form-control" %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :visit_date, "Fecha de Visita", class: "form-label" %>
+              <%= f.date_field :visit_date, class: "form-control", value: Date.today %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :record_type, "Tipo de Registro", class: "form-label" %>
+              <%= f.select :record_type, 
+                  options_for_select([
+                    ['Consulta', 'consultation'],
+                    ['Vacunación', 'vaccination'],
+                    ['Cirugía', 'surgery'],
+                    ['Chequeo', 'checkup'],
+                    ['Emergencia', 'emergency']
+                  ]), 
+                  { prompt: "Seleccionar tipo" }, 
+                  class: "form-control" %>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-3">
+              <%= f.label :weight, "Peso (kg)", class: "form-label" %>
+              <%= f.number_field :weight, step: 0.1, class: "form-control" %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :temperature, "Temperatura (°C)", class: "form-label" %>
+              <%= f.number_field :temperature, step: 0.1, class: "form-control" %>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :diagnosis, "Diagnóstico", class: "form-label" %>
+          <%= f.text_area :diagnosis, rows: 3, class: "form-control" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :treatment, "Tratamiento", class: "form-label" %>
+          <%= f.text_area :treatment, rows: 3, class: "form-control" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :prescription, "Prescripción", class: "form-label" %>
+          <%= f.text_area :prescription, rows: 2, class: "form-control" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :notes, "Notas Adicionales", class: "form-label" %>
+          <%= f.text_area :notes, rows: 3, class: "form-control" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <%= f.submit "Crear Registro Médico", class: "btn btn-success" %>
+      <%= link_to "Cancelar", veterinarian_medical_records_path, class: "btn btn-secondary" %>
+    </div>
+  <% end %>
+</div>

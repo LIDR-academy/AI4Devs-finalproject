@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>VetConnect - <%= controller.action_name.titleize %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="auth-page">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <%= link_to root_path, class: "logo" do %>
+            <h1>🐾 VetConnect</h1>
+          <% end %>
+          <p class="tagline">Connect. Care. Cure.</p>
+        </div>
+
+        <%= render "shared/flash_messages" %>
+        
+        <div class="auth-content">
+          <%= yield %>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

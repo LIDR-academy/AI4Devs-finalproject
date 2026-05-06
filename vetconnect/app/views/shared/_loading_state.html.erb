@@ -1,0 +1,8 @@
+<%# 
+  Loading State Component
+  Usage: <%= render 'shared/loading_state', message: 'Cargando datos...' %>
+%>
+<div class="flex flex-col items-center justify-center py-12">
+  <div class="loading-spinner mb-4"></div>
+  <p class="text-sm text-gray-500"><%= message || 'Cargando...' %></p>
+</div>

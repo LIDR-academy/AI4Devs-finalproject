@@ -1,0 +1,135 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="animate-fade-in">
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Editar Usuario 👤</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Actualiza la información de <%= @user.full_name %>
+      </p>
+    </div>
+
+    <!-- Form -->
+    <div class="mt-8 bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-900">Información del Usuario</h2>
+      </div>
+      <div class="px-6 py-6">
+        <%= form_with(model: @user, url: admin_user_path(@user), local: true, class: "space-y-6") do |f| %>
+          <% if @user.errors.any? %>
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg" role="alert" aria-live="polite">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-red-800">
+                    <%= pluralize(@user.errors.count, "error") %> impidieron actualizar el usuario:
+                  </h3>
+                  <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                    <% @user.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- First Name -->
+            <div>
+              <%= f.label :first_name, "Nombre", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                Nombre <span class="text-red-500" aria-label="requerido">*</span>
+              <% end %>
+              <%= f.text_field :first_name, 
+                  class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+                  required: true,
+                  aria: { required: true } %>
+            </div>
+
+            <!-- Last Name -->
+            <div>
+              <%= f.label :last_name, "Apellido", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                Apellido <span class="text-red-500" aria-label="requerido">*</span>
+              <% end %>
+              <%= f.text_field :last_name, 
+                  class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+                  required: true,
+                  aria: { required: true } %>
+            </div>
+
+            <!-- Email -->
+            <div>
+              <%= f.label :email, "Correo Electrónico", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                Email <span class="text-red-500" aria-label="requerido">*</span>
+              <% end %>
+              <%= f.email_field :email, 
+                  class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+                  required: true,
+                  aria: { required: true } %>
+            </div>
+
+            <!-- Phone -->
+            <div>
+              <%= f.label :phone, "Teléfono", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= f.telephone_field :phone, 
+                  class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+                  aria: { describedby: "phone-help" } %>
+              <p id="phone-help" class="mt-1 text-xs text-gray-500">Opcional</p>
+            </div>
+
+            <!-- Role -->
+            <div>
+              <%= f.label :role, "Rol", class: "block text-sm font-medium text-gray-700 mb-2" do %>
+                Rol <span class="text-red-500" aria-label="requerido">*</span>
+              <% end %>
+              <%= f.select :role, 
+                  User.roles.keys.map { |role| [role.humanize, role] }, 
+                  {}, 
+                  { class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+                    required: true,
+                    aria: { required: true } } %>
+            </div>
+          </div>
+
+          <!-- Password Section -->
+          <div class="pt-6 border-t border-gray-200">
+            <h3 class="text-base font-semibold text-gray-900 mb-4">Cambiar Contraseña (opcional)</h3>
+            <p class="text-sm text-gray-500 mb-4">Deja en blanco si no quieres cambiar la contraseña</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Password -->
+              <div>
+                <%= f.label :password, "Nueva Contraseña", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= f.password_field :password, 
+                    autocomplete: "new-password",
+                    class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all",
+                    aria: { describedby: "new-password-help" } %>
+                <p id="new-password-help" class="mt-1 text-xs text-gray-500">Mínimo 6 caracteres</p>
+              </div>
+
+              <!-- Password Confirmation -->
+              <div>
+                <%= f.label :password_confirmation, "Confirmar Nueva Contraseña", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= f.password_field :password_confirmation, 
+                    autocomplete: "new-password",
+                    class: "w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-col sm:flex-row gap-4 pt-4">
+            <%= f.submit "Actualizar Usuario", 
+                class: "flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]",
+                aria: { label: "Actualizar información del usuario" } %>
+            <%= link_to "Cancelar", admin_user_path(@user), 
+                class: "flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors min-h-[44px] flex items-center justify-center" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

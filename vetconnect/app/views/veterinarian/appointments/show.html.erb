@@ -1,0 +1,143 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between mb-8 animate-fade-in">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Detalles de la Cita 📅</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Información completa de la cita veterinaria
+        </p>
+      </div>
+      <%= link_to veterinarian_appointments_path, 
+          class: "mt-4 sm:mt-0 inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50 transition-colors min-h-[44px]" do %>
+        <span class="mr-2" aria-hidden="true">←</span> Volver a Citas
+      <% end %>
+    </div>
+
+    <div class="space-y-6 animate-fade-in">
+      <!-- Patient Info Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-900">🐾 Información del Paciente</h2>
+        </div>
+        <div class="px-6 py-5">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Mascota</dt>
+              <dd class="mt-1 text-sm font-semibold text-gray-900"><%= @appointment.pet.name %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Especie</dt>
+              <dd class="mt-1 text-sm text-gray-900 capitalize"><%= @appointment.pet.species.humanize %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Raza</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @appointment.pet.breed %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Edad</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @appointment.pet.age %> años</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Dueño</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @appointment.owner.full_name %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Teléfono</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <a href="tel:<%= @appointment.owner.phone %>" class="text-indigo-600 hover:text-indigo-500">
+                  <%= @appointment.owner.phone %>
+                </a>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Appointment Info Card -->
+      <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-900">📋 Información de la Cita</h2>
+        </div>
+        <div class="px-6 py-5">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Fecha y Hora</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= @appointment.appointment_date.strftime('%d/%m/%Y a las %H:%M') %>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Duración</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @appointment.duration_minutes %> minutos</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Estado</dt>
+              <dd class="mt-1">
+                <span class="inline-flex items-center rounded-full status-<%= @appointment.status %> px-2.5 py-0.5 text-xs font-medium">
+                  <%= @appointment.status.humanize %>
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Clínica</dt>
+              <dd class="mt-1 text-sm text-gray-900">
+                <%= link_to @appointment.clinic.name, clinic_path(@appointment.clinic), 
+                    class: "text-indigo-600 hover:text-indigo-500" %>
+              </dd>
+            </div>
+            <div class="sm:col-span-2">
+              <dt class="text-sm font-medium text-gray-500 mb-2">Motivo</dt>
+              <dd class="text-sm text-gray-900"><%= simple_format(@appointment.reason) %></dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Notes Card -->
+      <% if @appointment.notes.present? || @appointment.pet.special_notes.present? %>
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+          <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">📝 Notas</h2>
+          </div>
+          <div class="px-6 py-5 space-y-4">
+            <% if @appointment.notes.present? %>
+              <div>
+                <dt class="text-sm font-medium text-gray-500 mb-2">Notas del Dueño</dt>
+                <dd class="text-sm text-gray-900"><%= simple_format(@appointment.notes) %></dd>
+              </div>
+            <% end %>
+            <% if @appointment.pet.special_notes.present? %>
+              <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                <dt class="text-sm font-medium text-yellow-800 mb-2">Notas Especiales de la Mascota</dt>
+                <dd class="text-sm text-yellow-700"><%= simple_format(@appointment.pet.special_notes) %></dd>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row gap-4">
+        <% if @appointment.can_be_cancelled? %>
+          <%= button_to complete_appointment_path(@appointment), 
+              method: :post,
+              data: { turbo: false, confirm: '¿Marcar esta cita como completada?' },
+              class: "flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors min-h-[44px]" do %>
+            ✓ Completar Cita
+          <% end %>
+          <%= button_to mark_no_show_appointment_path(@appointment), 
+              method: :post,
+              data: { turbo: false, confirm: '¿Marcar esta cita como no asistida?' },
+              class: "flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors min-h-[44px]" do %>
+            ⚠️ Marcar No Show
+          <% end %>
+        <% end %>
+        <%= link_to veterinarian_appointments_path, 
+            class: "flex-1 text-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors min-h-[44px] flex items-center justify-center" do %>
+          Volver a Citas
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

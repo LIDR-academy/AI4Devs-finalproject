@@ -1,0 +1,128 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="sm:flex sm:items-center sm:justify-between animate-fade-in">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Mis Citas 📅</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Gestiona todas tus citas veterinarias
+      </p>
+    </div>
+    <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+      <%= link_to new_appointment_path, class: "inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors min-h-[44px]" do %>
+        <span class="mr-2" aria-hidden="true">➕</span> Agendar Nueva Cita
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="mt-6 flex flex-wrap gap-2 animate-fade-in">
+    <%= link_to owner_appointments_path, class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:status].blank? ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors min-h-[44px]" do %>
+      Todas
+    <% end %>
+    <%= link_to owner_appointments_path(status: :scheduled), class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:status] == 'scheduled' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors min-h-[44px]" do %>
+      Programadas
+    <% end %>
+    <%= link_to owner_appointments_path(status: :confirmed), class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:status] == 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors min-h-[44px]" do %>
+      Confirmadas
+    <% end %>
+    <%= link_to owner_appointments_path(status: :completed), class: "inline-flex items-center rounded-full px-4 py-2 text-sm font-medium #{params[:status] == 'completed' ? 'bg-gray-100 text-gray-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors min-h-[44px]" do %>
+      Completadas
+    <% end %>
+  </div>
+
+  <!-- Appointments List -->
+  <% if @upcoming_appointments.any? || @past_appointments.any? %>
+    <div class="mt-8 space-y-8 animate-fade-in">
+      <!-- Upcoming Appointments -->
+      <% if @upcoming_appointments.any? %>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Próximas Citas</h2>
+          <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+            <div class="divide-y divide-gray-200">
+              <% @upcoming_appointments.each do |appointment| %>
+                <div class="p-6 hover:bg-gray-50 transition-colors">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-x-4 flex-1">
+                      <div class="flex-shrink-0">
+                        <div class="h-16 w-16 rounded-lg bg-blue-100 flex flex-col items-center justify-center">
+                          <span class="text-xs font-semibold text-blue-600"><%= appointment.appointment_date.strftime('%b').upcase %></span>
+                          <span class="text-xl font-bold text-blue-700"><%= appointment.appointment_date.day %></span>
+                        </div>
+                      </div>
+                      <div class="min-w-0 flex-auto">
+                        <p class="text-sm font-semibold text-gray-900"><%= appointment.pet.name %></p>
+                        <p class="mt-1 text-sm text-gray-500">
+                          <%= appointment.appointment_date.strftime('%H:%M') %> • Dr. <%= appointment.veterinarian.last_name %>
+                        </p>
+                        <p class="mt-1 text-sm text-gray-500"><%= appointment.clinic.name %></p>
+                        <p class="mt-1 text-xs text-gray-400"><%= truncate(appointment.reason, length: 50) %></p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-x-3">
+                      <span class="inline-flex items-center rounded-full status-<%= appointment.status %> px-2.5 py-0.5 text-xs font-medium">
+                        <%= appointment.status.humanize %>
+                      </span>
+                      <%= link_to owner_appointment_path(appointment), 
+                          class: "text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-2 py-1",
+                          aria: { label: "Ver detalles de la cita" } do %>
+                        Ver →
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Past Appointments -->
+      <% if @past_appointments.any? %>
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Citas Pasadas</h2>
+          <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+            <div class="divide-y divide-gray-200">
+              <% @past_appointments.each do |appointment| %>
+                <div class="p-6 hover:bg-gray-50 transition-colors">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-x-4 flex-1">
+                      <div class="flex-shrink-0">
+                        <div class="h-16 w-16 rounded-lg bg-gray-100 flex flex-col items-center justify-center">
+                          <span class="text-xs font-semibold text-gray-600"><%= appointment.appointment_date.strftime('%b').upcase %></span>
+                          <span class="text-xl font-bold text-gray-700"><%= appointment.appointment_date.day %></span>
+                        </div>
+                      </div>
+                      <div class="min-w-0 flex-auto">
+                        <p class="text-sm font-semibold text-gray-900"><%= appointment.pet.name %></p>
+                        <p class="mt-1 text-sm text-gray-500">
+                          <%= appointment.appointment_date.strftime('%H:%M') %> • Dr. <%= appointment.veterinarian.last_name %>
+                        </p>
+                        <p class="mt-1 text-sm text-gray-500"><%= appointment.clinic.name %></p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-x-3">
+                      <span class="inline-flex items-center rounded-full status-<%= appointment.status %> px-2.5 py-0.5 text-xs font-medium">
+                        <%= appointment.status.humanize %>
+                      </span>
+                      <%= link_to owner_appointment_path(appointment), 
+                          class: "text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-2 py-1" do %>
+                        Ver →
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- Empty State -->
+    <%= render 'shared/empty_state', 
+        icon: '📅',
+        title: 'No tienes citas',
+        message: params[:status].present? ? 'No hay citas con el estado seleccionado.' : 'Agenda tu primera cita veterinaria para comenzar.',
+        action: { text: 'Agendar Primera Cita', path: new_appointment_path, icon: '➕' } %>
+  <% end %>
+</div>

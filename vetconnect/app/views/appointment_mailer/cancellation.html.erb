@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #f44336; color: white; padding: 20px; text-align: center; }
+    .content { background-color: #f9f9f9; padding: 20px; margin: 20px 0; }
+    .details { background-color: white; padding: 15px; margin: 10px 0; border-left: 4px solid #f44336; }
+    .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>❌ Cita Cancelada - VetConnect</h1>
+    </div>
+    
+    <div class="content">
+      <h2>Hola <%= @owner.first_name %>,</h2>
+      
+      <p>Tu cita para <strong><%= @pet.name %></strong> ha sido cancelada.</p>
+      
+      <div class="details">
+        <h3>Detalles de la Cita Cancelada:</h3>
+        <ul>
+          <li><strong>Mascota:</strong> <%= @pet.name %> (<%= @pet.species.humanize %>)</li>
+          <li><strong>Fecha y Hora:</strong> <%= l(@appointment.appointment_date, format: :long) %></li>
+          <li><strong>Clínica:</strong> <%= @clinic.name %></li>
+        </ul>
+        
+        <% if @appointment.cancellation_reason.present? %>
+          <p><strong>Motivo de cancelación:</strong> <%= @appointment.cancellation_reason %></p>
+        <% end %>
+      </div>
+      
+      <p>Si deseas agendar una nueva cita, por favor contáctanos o accede a tu cuenta en VetConnect.</p>
+    </div>
+    
+    <div class="footer">
+      <p>VetConnect - Cuidando a tu mascota</p>
+      <p>Clínica: <%= @clinic.phone %></p>
+    </div>
+  </div>
+</body>
+</html>
