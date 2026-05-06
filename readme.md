@@ -13,11 +13,17 @@
 
 ## 0. Ficha del proyecto
 
-### **0.1. Tu nombre completo:** William Camilo Aucique Silva
+### **0.1. Tu nombre completo:** 
 
-### **0.2. Nombre del proyecto:** VetConnect
+William Camilo Aucique Silva
 
-### **0.3. Descripción breve del proyecto:** VetConnect es una plataforma digital integral diseñada para centralizar y gestionar toda la información relacionada con la salud de las mascotas, conectando de manera eficiente a los dueños de mascotas con las clínicas veterinarias.
+### **0.2. Nombre del proyecto:** 
+
+VetConnect
+
+### **0.3. Descripción breve del proyecto:** 
+
+VetConnect es una plataforma digital integral diseñada para centralizar y gestionar toda la información relacionada con la salud de las mascotas, conectando de manera eficiente a los dueños de mascotas con las clínicas veterinarias.
 
 ### **0.4. URL del proyecto:**
 
