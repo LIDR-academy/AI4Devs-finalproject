@@ -119,54 +119,35 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 
 ```mermaid
+graph TD
+    %% Definición de Estilos (Clases)
+    classDef principal fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b,font-weight:bold
+    classDef proceso fill:#ffffff,stroke:#333,stroke-width:1px
+    classDef critico fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#c62828
+    classDef soporte fill:#f5f5f5,stroke:#9e9e9e,stroke-dasharray: 5 5
 
-# 🗺️ Mapa de Navegación y Accesos
+    %% Estructura del Diagrama
+    Start((Inicio)) --> Init[Configuración de Entorno]
+    Init --> Decision{¿Datos Válidos?}
 
-Este documento detalla la estructura de páginas del sitio, organizada por niveles de autenticación y roles de usuario.
+    subgraph Operaciones_Core [Procesamiento Principal]
+        Decision -- Sí --> Proc1[Procesar Solicitud]
+        Proc1 --> Proc2[Almacenar en BD]
+    end
 
----
+    subgraph Gestion_Errores [Soporte y Logs]
+        Decision -- No --> Error[Generar Log de Error]
+        Error --> Alert[Notificar Administrador]
+    end
 
-## 👤 1. Nivel Público (Visitantes)
-*Acceso libre sin necesidad de iniciar sesión.*
+    Proc2 --> End(((Fin)))
+    Alert --> End
 
-- **Página de Inicio** (`/`): Landing page principal.
-- **Explorador de Árboles** (`/trees`): Listado completo de árboles publicados.
-- **Ficha de Árbol** (`/trees/:id`): Vista detallada de un ejemplar específico.
-- **Suscripciones** (`/subscriptions/new`): Formulario de registro para boletines por email.
-
----
-
-## 🔐 2. Nivel Colaborador (Autenticado)
-*Incluye todas las páginas del Nivel Público, más las siguientes funciones de gestión:*
-
-- **Aportar Contenido:**
-  - `➕` **Alta de Ficha** (`/trees/new`): Creación de nuevos registros botánicos.
-  - `✏️` **Edición de Contenido** (`/trees/:id/edit`): Modificación de árboles propios (con validación de autoría).
-- **Herramientas de IA:**
-  - **Identificación** (`/ai/identify`): Herramienta visual para identificar especies.
-  - **Asistente Virtual** (`/ai/chat`): Consultas interactivas sobre botánica.
-
----
-
-## 👑 3. Nivel Administrador (Staff)
-*Acceso total al sistema, incluyendo las funciones de Colaborador y herramientas de control:*
-
-- **Panel Maestro** (`/admin/masters`): Gestión del catálogo maestro de especies y taxonomías.
-- **Gestión de Comunidad** (`/admin/subscriptions`): Administración de la base de datos de suscriptores.
-
----
-
-## 📊 Resumen de Permisos
-
-
-| Módulo | Público | Colaborador | Admin |
-| :--- | :---: | :---: | :---: |
-| Ver Árboles | ✅ | ✅ | ✅ |
-| Suscribirse | ✅ | ✅ | ✅ |
-| Crear/Editar Propios | ❌ | ✅ | ✅ |
-| Herramientas IA | ❌ | ✅ | ✅ |
-| Gestión Maestra | ❌ | ❌ | ✅ |
-
+    %% Aplicación de Estilos a Nodos
+    class Start,End principal
+    class Proc1,Proc2 proceso
+    class Error,Alert critico
+    class Init soporte
 ```
 
 
