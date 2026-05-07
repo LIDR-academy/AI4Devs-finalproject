@@ -120,52 +120,51 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 ```mermaid
 graph TD
-    %% Definición de Estilos
-    classDef publico fill:#f9f9f9,stroke:#666,stroke-width:2px,color:#333
-    classDef colaborador fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b
-    classDef admin fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
-    classDef folder fill:#eee,stroke:#999,stroke-dasharray: 5 5
+    %% Definición de Estilos Profesionales
+    classDef navbar fill:#ffffff,stroke:#005c97,stroke-width:2px,color:#000,font-weight:bold
+    classDef action fill:#e0f2f1,stroke:#00897b,stroke-width:1px,color:#004d40
+    classDef session fill:#fff,stroke:#d1d5db,stroke-width:1px,color:#1f2937,rx:10
+    classDef ghost fill:none,stroke:none,color:#666,font-style:italic
 
-    %% Nivel Público
-    subgraph Nivel_Publico [👤 Nivel Público - Visitante]
-        Inicio["🏠 Inicio (/)"]
-        Explorador["🌳 Explorador de Árboles (/trees)"]
-        Ficha["📄 Ficha de Árbol (/trees/:id)"]
-        Suscripcion["📧 Suscripciones (/subscriptions/new)"]
+    %% Nodo Principal de la App
+    App((🌲 MyTreeLibrary))
+
+    %% Flujo Nivel Público
+    subgraph Nav_Publico [🌐 Menú Público]
+        P1[Inicio]
+        P2[Árboles]
+        P3[Suscripción]
+        Login[[Iniciar sesión]]
     end
 
-    %% Nivel Colaborador
-    subgraph Nivel_Colaborador [🔐 Nivel Colaborador - Autenticado]
-        Alta["➕ Alta de Ficha (/trees/new)"]
-        Edit["✏️ Edición Propia (/trees/:id/edit)"]
-        Identificador["🤖 Identificación IA (/ai/identify)"]
-        Chat["💬 Asistente Virtual (/ai/chat)"]
+    %% Flujo Nivel Colaborador
+    subgraph Nav_Colaborador [🔐 Menú Colaborador]
+        C1[Alta de árbol]
+        C2[Mis árboles]
+        Logout[[Cerrar sesión]]
     end
 
-    %% Nivel Administrador
-    subgraph Nivel_Admin [👑 Nivel Administrador - Staff]
-        Masters["🗄️ Panel Maestro (/admin/masters)"]
-        Comunidad["👥 Gestión Comunidad (/admin/subscriptions)"]
+    %% Flujo Nivel Admin
+    subgraph Nav_Admin [👑 Menú Administrador]
+        A1[Maestros]
+        A2[Suscripciones]
     end
 
-    %% Relaciones de Acceso
-    Inicio --> Explorador
-    Explorador --> Ficha
-    Ficha --> Suscripcion
-    
-    %% Conexiones entre niveles
-    Suscripcion -.->|Login| Alta
-    Alta --- Edit
-    Edit --- Identificador
-    Identificador --- Chat
+    %% Relaciones de Navegación
+    App --> P1
+    P1 --- P2 --- P3
+    P3 --> Login
 
-    Chat -.->|Permisos Elevados| Masters
-    Masters --- Comunidad
+    Login -.->|Autenticación| C1
+    C1 --- C2 --- Logout
 
-    %% Aplicación de Clases
-    class Inicio,Explorador,Ficha,Suscripcion publico
-    class Alta,Edit,Identificador,Chat colaborador
-    class Masters,Comunidad admin
+    C2 -.->|Rol Admin| A1
+    A1 --- A2
+
+    %% Asignación de Estilos
+    class P1,P2,P3,C1,C2,A1,A2 navbar
+    class Login,Logout session
+    class App action
 ```
 
 
