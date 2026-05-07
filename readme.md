@@ -117,73 +117,21 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 #### Jerarquía de páginas (MVP)
 
-
-```mermaid
-graph TD
-    %% Definición de Estilos Profesionales
-    classDef navbar fill:#ffffff,stroke:#005c97,stroke-width:2px,color:#000,font-weight:bold
-    classDef action fill:#e0f2f1,stroke:#00897b,stroke-width:1px,color:#004d40
-    classDef session fill:#fff,stroke:#d1d5db,stroke-width:1px,color:#1f2937,rx:10
-    classDef ghost fill:none,stroke:none,color:#666,font-style:italic
-
-    %% Nodo Principal de la App
-    App((🌲 MyTreeLibrary))
-
-    %% Flujo Nivel Público
-    subgraph Nav_Publico [🌐 Menú Público]
-        P1[Inicio]
-        P2[Árboles]
-        P3[Suscripción]
-        Login[[Iniciar sesión]]
-    end
-
-    %% Flujo Nivel Colaborador
-    subgraph Nav_Colaborador [🔐 Menú Colaborador]
-        C1[Alta de árbol]
-        C2[Mis árboles]
-        Logout[[Cerrar sesión]]
-    end
-
-    %% Flujo Nivel Admin
-    subgraph Nav_Admin [👑 Menú Administrador]
-        A1[Maestros]
-        A2[Suscripciones]
-    end
-
-    %% Relaciones de Navegación
-    App --> P1
-    P1 --- P2 --- P3
-    P3 --> Login
-
-    Login -.->|Autenticación| C1
-    C1 --- C2 --- Logout
-
-    C2 -.->|Rol Admin| A1
-    A1 --- A2
-
-    %% Asignación de Estilos
-    class P1,P2,P3,C1,C2,A1,A2 navbar
-    class Login,Logout session
-    class App action
-```
-
-
-
-
 - **Público (sin login):**
-  - `Home` (`/`)
-  - `Listado de árboles publicados` (`/trees`)
-  - `Detalle de árbol publicado` (`/trees/:id`)
-  - `Suscripción por email` (`/subscriptions/new`)
+  - `Inicio (Home)` (`/`)
+  - `Árboles (Listado de árboles` (`/trees`)
+    - `Detalle (Datos del árbol elegido` (`/trees/:id`)
+  - `Suscripción (Alta de suscriptor)` (`/subscriptions/new`)
 - **Colaborador (autenticado):**
   - Todas las páginas públicas
-  - `Alta de ficha` (`/trees/new`)
-  - `Edición de mis árboles` (`/trees/:id/edit`) con control de autoría
-  - `IA orientativa` (`/ai/identify`, `/ai/chat`) 
+  - `Alta de árbol (Nueva ficha)` (`/trees/new`)
+    - `IA orientativa` (`/ai/identify`, `/ai/chat
+  - `Mis árboles (Edición de mis árboles)` (`/trees/:id/edit`)
+    - `IA orientativa` (`/ai/identify`, `/ai/chat`) 
 - **ADMIN (autenticado):**
   - Todas las páginas de colaborador
-  - `Administración de maestro de especies` (`/admin/masters`)
-  - `Gestión de suscripciones` (`/admin/subscriptions`)
+  - `Maestros (Administración de maestro de especies)` (`/admin/masters`)
+  - `Suscripciones (Gestión de suscripciones)` (`/admin/subscriptions`)
 
 
 ### **2.4. Instrucciones de instalación:**
