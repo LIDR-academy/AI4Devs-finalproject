@@ -159,10 +159,32 @@ No generes código salvo que pida un snippet ilustrativo de una línea; prioriza
 ### 3. Modelo de Datos
 
 **Prompt 1:**
+Estoy diseñando el modelo de datos para una aplicación web que me permita gestionar mi colección personal de fotografías de árboles singulares. Además de las fotografías, cada ejemplar tiene una serie de datos asociados como especie, ubicación y descripción. La arquitectura definida consiste en una base de datos SQL (PostgreSQL) que mantiene el inventario y los datos esenciales mencionados anteriormente y una base de datos MongoDB que permite ampliar la información de cada ejemplar y especie con datos y notas sin una estructura claramente definida. Actúa como un ingeniero de datos experto, tu primer objetivo es validar la arquitectura propuesta y generar un primer diseño de alto nivel; solo con las entidades principales sin entrar por ahora en la definición de las columnas. El diseño debe ser profesional generando junto a la justificación los diagramas Mermaid ER correspondientes.
 
 **Prompt 2:**
 
+Una vez validada la arquitectura vamos a centrarnos solo en el diseño de la base de datos Mongo; ya si vamos a bajar al diseño de campos de cada entidad. Por decisión de diseño se ha decidido que las claves primarias serán numéricas; no uuid. Los metadatos asociados a cada fotografía se van a almacenar solo en PostgreSQL y la fotografía en S3; a partir de ahora no modeles estos conceptos relacionados con la imagen. Para facilitar búsquedas se quiere que el nombre común y científico de la especie también se guarde en MongoDB; estos dos datos se repetirán tanto en PostgreSQL como en MongoDB pero podemos considerarlo como una 'desnormalización' que nos permite ejecutar en MongoDB búsquedas más completas sin necesidad de acceder a PostgreSQL. Genera el modelo ER en Mermaid;
+
+P: En el modelo anterior teníamos EJEMPLAR_DETALLE y ESPECIE_DETALLE como colecciones separadas. ¿Cómo quieres estructurar la relación entre ambas en MongoDB?
+R: Si no ves problema en el diseño  EJEMPLAR_DETALLE y ESPECIE_DETALLE  serían colecciones independientes referenciadas por ID
+
+P: Las OBSERVACIONES del ejemplar, ¿cómo deben modelarse?
+R: Embebidas como array dentro de EJEMPLAR_DETALLE
+
+
 **Prompt 3:**
+. En el caso de uso los datos de ESPECIE_DETALLE se quieren cargar con una consulta a un LLM; define un JSON de ejemplo para cada colección que se pueda usar en la interacción con el LLM.
+
+Generame un md resumen con el diseño que hemos definido. Incluye un ER en mermaid, la definición del modelo, los indices, los JSON de ejemplo. Si ves algún punto relevante que deba estar en un diseño profesional, pregúntame para ver si lo incluimos.
+
+P: ¿Incluimos una sección de convenciones de nombrado y tipos de datos (ej: fechas en ISO 8601, IDs siempre int, arrays nunca null sino vacíos)?
+R: No es necesario
+
+P: ¿Incluimos consideraciones sobre la sincronización de los datos desnormalizados entre PostgreSQL y MongoDB (nombre_cientifico, nombre_comun)?
+R: No, se gestiona fuera de este documento
+
+P: ¿Incluimos una sección sobre el proceso de carga de ESPECIE_DETALLE vía LLM (prompt de referencia, campos a validar, riesgos)?
+R: Sí, inclúyela
 
 ---
 

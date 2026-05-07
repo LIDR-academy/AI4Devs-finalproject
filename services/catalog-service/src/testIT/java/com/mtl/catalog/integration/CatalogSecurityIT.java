@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.mtl.catalog.config.JwtDecoderConfigTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Verifica 401/403 con cuerpo RFC 9457 y el mismo {@link JwtDecoder} + conversor de roles que en
  * tiempo de ejecución (salvo el decoder sustituido en {@link JwtDecoderConfigTest}).
  */
+@Tag("integration")
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")

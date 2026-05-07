@@ -19,22 +19,3 @@
 *R6 no se usa en el MVP (no hay categoría de fotografía intermedia entre PUBLIC y PRIVATE); R7 y siguientes conservan su numeración para no desalinear referencias en otros documentos.*
 
 ---
-
-## 2. Matriz de visibilidad de fotografías (resumen)
-
-En el MVP solo existen dos categorías de visibilidad por fotografía: **PUBLIC** y **PRIVATE** (reglas R4 y R5).
-
-| Categoría | Público (sin login) | Colaborador autenticado | ADMIN |
-|-----------|---------------------|-------------------------|-------|
-| PUBLIC | Sí, si la ficha/árbol es accesible en contexto público | Sí | Sí |
-| PRIVATE | No | No (salvo que sea el creador de la fotografía) | Sí |
-
-*El creador de la fotografía siempre puede ver su propia PRIVATE.*
-
----
-
-
-## 3. Próximos pasos (fuera de este documento)
-
-- Detallar **máquina de estados** de SUSCRIPTOR y NOTIFICACION.
-- Si en el futuro se notificaran **cambios** (no solo alta), actualizar R7, UC-09, [kafka-events.md](../events/kafka-events.md) y el productor de eventos en **catalog-service** de forma coordinada.
