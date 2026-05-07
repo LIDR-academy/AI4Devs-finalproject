@@ -120,34 +120,52 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 ```mermaid
 graph TD
-    %% Definición de Estilos (Clases)
-    classDef principal fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b,font-weight:bold
-    classDef proceso fill:#ffffff,stroke:#333,stroke-width:1px
-    classDef critico fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#c62828
-    classDef soporte fill:#f5f5f5,stroke:#9e9e9e,stroke-dasharray: 5 5
+    %% Definición de Estilos
+    classDef publico fill:#f9f9f9,stroke:#666,stroke-width:2px,color:#333
+    classDef colaborador fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b
+    classDef admin fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
+    classDef folder fill:#eee,stroke:#999,stroke-dasharray: 5 5
 
-    %% Estructura del Diagrama
-    Start((Inicio)) --> Init[Configuración de Entorno]
-    Init --> Decision{¿Datos Válidos?}
-
-    subgraph Operaciones_Core [Procesamiento Principal]
-        Decision -- Sí --> Proc1[Procesar Solicitud]
-        Proc1 --> Proc2[Almacenar en BD]
+    %% Nivel Público
+    subgraph Nivel_Publico [👤 Nivel Público - Visitante]
+        Inicio["🏠 Inicio (/)"]
+        Explorador["🌳 Explorador de Árboles (/trees)"]
+        Ficha["📄 Ficha de Árbol (/trees/:id)"]
+        Suscripcion["📧 Suscripciones (/subscriptions/new)"]
     end
 
-    subgraph Gestion_Errores [Soporte y Logs]
-        Decision -- No --> Error[Generar Log de Error]
-        Error --> Alert[Notificar Administrador]
+    %% Nivel Colaborador
+    subgraph Nivel_Colaborador [🔐 Nivel Colaborador - Autenticado]
+        Alta["➕ Alta de Ficha (/trees/new)"]
+        Edit["✏️ Edición Propia (/trees/:id/edit)"]
+        Identificador["🤖 Identificación IA (/ai/identify)"]
+        Chat["💬 Asistente Virtual (/ai/chat)"]
     end
 
-    Proc2 --> End(((Fin)))
-    Alert --> End
+    %% Nivel Administrador
+    subgraph Nivel_Admin [👑 Nivel Administrador - Staff]
+        Masters["🗄️ Panel Maestro (/admin/masters)"]
+        Comunidad["👥 Gestión Comunidad (/admin/subscriptions)"]
+    end
 
-    %% Aplicación de Estilos a Nodos
-    class Start,End principal
-    class Proc1,Proc2 proceso
-    class Error,Alert critico
-    class Init soporte
+    %% Relaciones de Acceso
+    Inicio --> Explorador
+    Explorador --> Ficha
+    Ficha --> Suscripcion
+    
+    %% Conexiones entre niveles
+    Suscripcion -.->|Login| Alta
+    Alta --- Edit
+    Edit --- Identificador
+    Identificador --- Chat
+
+    Chat -.->|Permisos Elevados| Masters
+    Masters --- Comunidad
+
+    %% Aplicación de Clases
+    class Inicio,Explorador,Ficha,Suscripcion publico
+    class Alta,Edit,Identificador,Chat colaborador
+    class Masters,Comunidad admin
 ```
 
 
